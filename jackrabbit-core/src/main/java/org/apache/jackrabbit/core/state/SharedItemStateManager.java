@@ -1699,20 +1699,22 @@ public class SharedItemStateManager
             throws NoSuchItemStateException, ItemStateException {
         ItemState state = cache.retrieve(id);
         if (state == null) {
+            // not found in cache, load from persistent storage
+            state = loadItemState(id);
+            state.setStatus(ItemState.STATUS_EXISTING);
             synchronized (this) {
                 // Use a double check to ensure that the cache entry is
                 // not created twice. We don't synchronize the entire
                 // method to allow the first cache retrieval to proceed
                 // even when another thread is loading a new item state.
-                state = cache.retrieve(id);
-                if (state == null) {
-                    // not found in cache, load from persistent storage
-                    state = loadItemState(id);
-                    state.setStatus(ItemState.STATUS_EXISTING);
+                ItemState cachedState = cache.retrieve(id);
+                if (cachedState == null) {
                     // put it in cache
                     cache.cache(state);
                     // set parent container
                     state.setContainer(this);
+                } else {
+                    state = cachedState;
                 }
             }
         }
