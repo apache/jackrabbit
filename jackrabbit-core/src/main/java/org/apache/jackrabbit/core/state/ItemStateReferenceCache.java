@@ -54,7 +54,7 @@ public class ItemStateReferenceCache implements ItemStateCache, Dumpable {
      */
     @SuppressWarnings("unchecked")
     private final Map<ItemId, ItemState> refs =
-        new ReferenceMap(ReferenceMap.HARD, ReferenceMap.WEAK);
+        new ReferenceMap(ReferenceMap.HARD, ReferenceMap.SOFT);
 
     /**
      * secondary cache that automatically flushes entries based on some
