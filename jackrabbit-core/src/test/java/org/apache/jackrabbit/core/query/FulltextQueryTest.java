@@ -17,6 +17,9 @@
 package org.apache.jackrabbit.core.query;
 
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.Callable;
 
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
@@ -24,6 +27,9 @@ import javax.jcr.nodetype.NodeType;
 import javax.jcr.query.InvalidQueryException;
 import javax.jcr.query.Query;
 import javax.jcr.query.QueryResult;
+import javax.jcr.query.Row;
+
+import org.apache.jackrabbit.commons.iterator.RowIterable;
 
 /**
  * Performs tests with the <code>CONTAINS</code> function.
@@ -265,6 +271,46 @@ public class FulltextQueryTest extends AbstractQueryTest {
 
     public void testColonInContains() throws RepositoryException {
         executeContainsQuery("foo:bar", "foo:bar", true);
+    }
+
+    public void testMultipleOrExpressions() throws RepositoryException {
+        Node n = testRootNode.addNode("node1");
+        n.setProperty("prop1", "foo");
+        n.setProperty("prop2", "bar");
+        n.setProperty("prop3", "baz");
+
+        n = testRootNode.addNode("node2");
+        n.setProperty("prop1", "bar");
+        n.setProperty("prop2", "foo");
+        n.setProperty("prop3", "baz");
+
+        n = testRootNode.addNode("node3");
+        n.setProperty("prop1", "bar");
+        n.setProperty("prop2", "baz");
+        n.setProperty("prop3", "foo");
+
+        superuser.save();
+
+        List<String> r1 = new ArrayList<String>();
+        QueryResult result = qm.createQuery(testPath + "/*[jcr:contains(@prop1, 'foo') or jcr:contains(@prop2, 'foo') or jcr:contains(@prop3, 'foo')] order by @jcr:score descending", Query.XPATH).execute();
+        for (Row r : new RowIterable(result.getRows())) {
+            r1.add(r.getPath() + ":" + (int) (r.getScore() * 1000));
+        }
+
+        List<String> r2 = new ArrayList<String>();
+        result = qm.createQuery(testPath + "/*[jcr:contains(@prop3, 'foo') or jcr:contains(@prop1, 'foo') or jcr:contains(@prop2, 'foo')] order by @jcr:score descending", Query.XPATH).execute();
+        for (Row r : new RowIterable(result.getRows())) {
+            r2.add(r.getPath() + ":" + (int) (r.getScore() * 1000));
+        }
+
+        List<String> r3 = new ArrayList<String>();
+        result = qm.createQuery(testPath + "/*[jcr:contains(@prop2, 'foo') or jcr:contains(@prop3, 'foo') or jcr:contains(@prop1, 'foo')] order by @jcr:score descending", Query.XPATH).execute();
+        for (Row r : new RowIterable(result.getRows())) {
+            r3.add(r.getPath() + ":" + (int) (r.getScore() * 1000));
+        }
+
+        assertEquals(r1, r2);
+        assertEquals(r1, r3);
     }
 
     /**
