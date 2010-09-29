@@ -81,7 +81,7 @@ public class DomUtil {
     /**
      * Parses the given input stream and returns the resulting DOM document.
      *
-     * @param input XML input stream
+     * @param stream XML input stream
      * @return parsed DOM document
      * @throws ParserConfigurationException if the document can not be created
      * @throws SAXException if the document can not be parsed
