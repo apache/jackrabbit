@@ -69,6 +69,7 @@ import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.queryParser.ParseException;
 import org.apache.lucene.queryParser.QueryParser;
+import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.BooleanClause.Occur;
@@ -265,7 +266,28 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
         Object[] result = node.acceptOperands(this, null);
         for (Object aResult : result) {
             Query operand = (Query) aResult;
-            orQuery.add(operand, Occur.SHOULD);
+            if (operand instanceof BooleanQuery) {
+                // check if the clauses are all optional, then
+                // we can collapse into the the enclosing orQuery
+                boolean hasNonOptional = false;
+                for (BooleanClause clause : ((BooleanQuery) operand).getClauses()) {
+                    if (clause.isProhibited() || clause.isRequired()) {
+                        hasNonOptional = true;
+                        break;
+                    }
+                }
+                if (hasNonOptional) {
+                    // cannot collapse
+                    orQuery.add(operand, Occur.SHOULD);
+                } else {
+                    // collapse
+                    for (BooleanClause clause : ((BooleanQuery) operand).getClauses()) {
+                        orQuery.add(clause);
+                    }
+                }
+            } else {
+                orQuery.add(operand, Occur.SHOULD);
+            }
         }
         return orQuery;
     }
