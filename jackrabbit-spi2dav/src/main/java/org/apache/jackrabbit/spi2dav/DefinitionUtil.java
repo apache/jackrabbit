@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.spi2dav;
 
+import org.apache.jackrabbit.commons.webdav.NodeTypeConstants;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.QNodeTypeDefinition;
@@ -32,7 +33,6 @@ import org.apache.jackrabbit.spi.commons.nodetype.QNodeTypeDefinitionBuilder;
 import org.apache.jackrabbit.spi.commons.nodetype.constraint.ValueConstraint;
 import org.apache.jackrabbit.spi.commons.value.ValueFactoryQImpl;
 import org.apache.jackrabbit.spi.commons.value.ValueFormat;
-import org.apache.jackrabbit.webdav.jcr.nodetype.NodeTypeConstants;
 import org.apache.jackrabbit.webdav.xml.DomUtil;
 import org.apache.jackrabbit.webdav.xml.ElementIterator;
 import org.w3c.dom.Element;

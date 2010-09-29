@@ -19,16 +19,16 @@ package org.apache.jackrabbit.spi2davex;
 import static org.apache.jackrabbit.webdav.DavConstants.HEADER_ETAG;
 import static org.apache.jackrabbit.webdav.DavConstants.HEADER_LAST_MODIFIED;
 
+import org.apache.jackrabbit.commons.webdav.JcrRemotingConstants;
+import org.apache.jackrabbit.commons.webdav.ValueUtil;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.spi.commons.value.AbstractQValue;
 import org.apache.jackrabbit.spi.commons.value.ValueFactoryQImpl;
+import org.apache.jackrabbit.spi2dav.ItemResourceConstants;
 import org.apache.jackrabbit.util.TransientFileFactory;
-import org.apache.jackrabbit.webdav.DavException;
-import org.apache.jackrabbit.webdav.jcr.ItemResourceConstants;
-import org.apache.jackrabbit.webdav.jcr.property.ValuesProperty;
 import org.apache.jackrabbit.webdav.property.DavProperty;
 import org.apache.jackrabbit.webdav.property.DefaultDavProperty;
 import org.apache.jackrabbit.webdav.xml.DomUtil;
@@ -549,15 +549,11 @@ class QValueFactoryImpl extends org.apache.jackrabbit.spi.commons.value.QValueFa
                 // TODO: improve. jcr-server sends XML for multivalued properties
                 try {
                     Document doc = DomUtil.parseDocument(in);
-                    Element prop = DomUtil.getChildElement(doc, ItemResourceConstants.JCR_VALUES.getName(), ItemResourceConstants.JCR_VALUES.getNamespace());
+                    Element prop = DomUtil.getChildElement(doc, JcrRemotingConstants.JCR_VALUES_LN, ItemResourceConstants.NAMESPACE);
                     DavProperty<?> p = DefaultDavProperty.createFromXml(prop);
-                    ValuesProperty vp = new ValuesProperty(p, PropertyType.BINARY, vf);
-
-                    Value[] jcrVs = vp.getJcrValues();
+                    Value[] jcrVs = ValueUtil.valuesFromXml(p.getValue(), PropertyType.BINARY, vf);
                     init(jcrVs[index].getStream(), true);
                 } catch (RepositoryException e) {
-                    throw new IOException(e.getMessage());
-                }catch (DavException e) {
                     throw new IOException(e.getMessage());
                 } catch (SAXException e) {
                     throw new IOException(e.getMessage());

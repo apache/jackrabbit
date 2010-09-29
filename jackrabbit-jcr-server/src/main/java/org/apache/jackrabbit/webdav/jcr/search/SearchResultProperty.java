@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.webdav.jcr.search;
 
+import org.apache.jackrabbit.commons.webdav.QueryUtil;
 import org.apache.jackrabbit.value.ValueHelper;
 import org.apache.jackrabbit.webdav.jcr.ItemResourceConstants;
 import org.apache.jackrabbit.webdav.property.AbstractDavProperty;
@@ -30,7 +31,6 @@ import org.w3c.dom.Element;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
-import javax.jcr.ValueFormatException;
 import javax.jcr.ValueFactory;
 import java.util.ArrayList;
 import java.util.List;
@@ -43,8 +43,7 @@ public class SearchResultProperty extends AbstractDavProperty<Value[]> implement
 
     private static Logger log = LoggerFactory.getLogger(SearchResultProperty.class);
 
-    public static final DavPropertyName SEARCH_RESULT_PROPERTY = DavPropertyName.create("search-result-property", ItemResourceConstants.NAMESPACE);
-    private static final String COLUMN = "column";
+    private static final DavPropertyName SEARCH_RESULT_PROPERTY = DavPropertyName.create(JCR_QUERY_RESULT_LN, ItemResourceConstants.NAMESPACE);
 
     private final String[] columnNames;
     private final String[] selectorNames;
@@ -87,47 +86,12 @@ public class SearchResultProperty extends AbstractDavProperty<Value[]> implement
         List<String> colList = new ArrayList<String>();
         List<String> selList = new ArrayList<String>();
         List<Value> valList = new ArrayList<Value>();
-        Object propValue = property.getValue();
-        if (propValue instanceof List) {
-            for (Object o : ((List<?>) propValue)) {
-                if (o instanceof Element) {
-                    parseColumnElement((Element) o, colList, selList, valList, valueFactory);
-                }
-            }
-        } else if (propValue instanceof Element) {
-            parseColumnElement((Element)property.getValue(), colList, selList, valList, valueFactory);
-        } else {
-            throw new IllegalArgumentException("SearchResultProperty requires a list of 'dcr:column' xml elements.");
-        }
+
+        QueryUtil.parseResultPropertyValue(property.getValue(), colList, selList, valList, valueFactory);
 
         columnNames = colList.toArray(new String[colList.size()]);
         selectorNames = selList.toArray(new String[selList.size()]);
         values = valList.toArray(new Value[valList.size()]);
-    }
-
-    private void parseColumnElement(Element columnElement,
-                                    List<String> columnNames,
-                                    List<String> selectorNames,
-                                    List<Value> values,
-                                    ValueFactory valueFactory)
-        throws ValueFormatException, RepositoryException {
-        if (!DomUtil.matches(columnElement, COLUMN, ItemResourceConstants.NAMESPACE)) {
-            log.debug("dcr:column element expected within search result.");
-            return;
-        }
-        columnNames.add(DomUtil.getChildText(columnElement, JCR_NAME.getName(), JCR_NAME.getNamespace()));
-        selectorNames.add(DomUtil.getChildText(columnElement, JCR_SELECTOR_NAME.getName(), JCR_SELECTOR_NAME.getNamespace()));
-
-        Value jcrValue;
-        Element valueElement = DomUtil.getChildElement(columnElement, JCR_VALUE.getName(), JCR_VALUE.getNamespace());
-        if (valueElement != null) {
-            String typeStr = DomUtil.getAttribute(valueElement, ATTR_VALUE_TYPE, ItemResourceConstants.NAMESPACE);
-            jcrValue = ValueHelper.deserialize(DomUtil.getText(valueElement),
-                    PropertyType.valueFromName(typeStr), true, valueFactory);
-        } else {
-            jcrValue = null;
-        }
-        values.add(jcrValue);
     }
 
     /**
@@ -216,7 +180,7 @@ public class SearchResultProperty extends AbstractDavProperty<Value[]> implement
             String selectorName = selectorNames[i];
             Value propertyValue = values[i];
 
-            Element columnEl = DomUtil.addChildElement(elem, COLUMN, ItemResourceConstants.NAMESPACE);
+            Element columnEl = DomUtil.addChildElement(elem, XML_QUERY_RESULT_COLUMN, ItemResourceConstants.NAMESPACE);
             DomUtil.addChildElement(columnEl, JCR_NAME.getName(), JCR_NAME.getNamespace(), propertyName);
             if (propertyValue != null) {
                 try {

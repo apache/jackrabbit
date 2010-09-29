@@ -30,6 +30,7 @@ import org.apache.jackrabbit.spi.commons.value.ValueFormat;
 import org.apache.jackrabbit.webdav.observation.ObservationConstants;
 import org.apache.jackrabbit.webdav.xml.DomUtil;
 import org.apache.jackrabbit.webdav.xml.ElementIterator;
+import org.apache.jackrabbit.webdav.xml.Namespace;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Element;
@@ -96,6 +97,9 @@ public class EventImpl
         while (it.hasNext()) {
             Element el = it.nextElement();
             String uri = el.getNamespaceURI();
+            if (uri == null) {
+                uri = Namespace.EMPTY_NAMESPACE.getURI();
+            }
             String localName = el.getLocalName();
             String value = DomUtil.getTextTrim(el);
             try {

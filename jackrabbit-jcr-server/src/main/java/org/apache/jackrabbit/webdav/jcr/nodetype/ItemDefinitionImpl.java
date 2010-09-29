@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.webdav.jcr.nodetype;
 
+import org.apache.jackrabbit.commons.webdav.NodeTypeConstants;
 import org.apache.jackrabbit.webdav.xml.XmlSerializable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

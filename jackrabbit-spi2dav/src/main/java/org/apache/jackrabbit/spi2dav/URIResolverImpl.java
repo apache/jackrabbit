@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.spi2dav;
 
 import org.apache.commons.httpclient.URI;
+import org.apache.jackrabbit.commons.webdav.JcrRemotingConstants;
 import org.apache.jackrabbit.spi.commons.conversion.NameException;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
@@ -35,8 +36,6 @@ import org.apache.jackrabbit.webdav.MultiStatusResponse;
 import org.apache.jackrabbit.webdav.client.methods.DavMethodBase;
 import org.apache.jackrabbit.webdav.client.methods.PropFindMethod;
 import org.apache.jackrabbit.webdav.client.methods.ReportMethod;
-import org.apache.jackrabbit.webdav.jcr.ItemResourceConstants;
-import org.apache.jackrabbit.webdav.jcr.version.report.LocateByUuidReport;
 import org.apache.jackrabbit.webdav.property.DavPropertyNameSet;
 import org.apache.jackrabbit.webdav.property.DavPropertySet;
 import org.apache.jackrabbit.webdav.version.report.ReportInfo;
@@ -91,7 +90,7 @@ class URIResolverImpl implements URIResolver {
     }
 
     String getRootItemUri(String workspaceName) {
-        return getWorkspaceUri(workspaceName) + Text.escapePath(ItemResourceConstants.ROOT_ITEM_RESOURCEPATH);
+        return getWorkspaceUri(workspaceName) + Text.escapePath(JcrRemotingConstants.ROOT_ITEM_RESOURCEPATH);
     }
 
     String getItemUri(ItemId itemId, String workspaceName, SessionInfo sessionInfo)
@@ -114,7 +113,7 @@ class URIResolverImpl implements URIResolver {
                     uriBuffer.append(cache.getUri(uuidId));
                 } else {
                     // try to request locate-by-uuid report to build the uri
-                    ReportInfo rInfo = new ReportInfo(LocateByUuidReport.LOCATE_BY_UUID_REPORT);
+                    ReportInfo rInfo = new ReportInfo(JcrRemotingConstants.REPORT_LOCATE_BY_UUID, ItemResourceConstants.NAMESPACE);
                     rInfo.setContentElement(DomUtil.hrefToXml(uniqueID, domFactory));
 
                     ReportMethod rm = null;
@@ -198,7 +197,7 @@ class URIResolverImpl implements URIResolver {
 
         try {
             DavPropertySet propSet = response.getProperties(DavServletResponse.SC_OK);
-            Name name = resolver.getQName(propSet.get(ItemResourceConstants.JCR_NAME).getValue().toString());
+            Name name = resolver.getQName(propSet.get(JcrRemotingConstants.JCR_NAME_LN, ItemResourceConstants.NAMESPACE).getValue().toString());
             PropertyId propertyId = service.getIdFactory().createPropertyId(parentId, name);
 
             cache.add(response.getHref(), propertyId);
@@ -275,9 +274,9 @@ class URIResolverImpl implements URIResolver {
         }
 
         DavPropertyNameSet nameSet = new DavPropertyNameSet();
-        nameSet.add(ItemResourceConstants.JCR_UUID);
-        nameSet.add(ItemResourceConstants.JCR_NAME);
-        nameSet.add(ItemResourceConstants.JCR_INDEX);
+        nameSet.add(JcrRemotingConstants.JCR_UUID_LN, ItemResourceConstants.NAMESPACE);
+        nameSet.add(JcrRemotingConstants.JCR_NAME_LN, ItemResourceConstants.NAMESPACE);
+        nameSet.add(JcrRemotingConstants.JCR_INDEX_LN, ItemResourceConstants.NAMESPACE);
         DavMethodBase method = null;
         try {
             method = new PropFindMethod(uri, nameSet, DavConstants.DEPTH_0);

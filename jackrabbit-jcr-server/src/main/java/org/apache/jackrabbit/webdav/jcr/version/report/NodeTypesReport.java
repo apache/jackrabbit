@@ -17,12 +17,14 @@
 package org.apache.jackrabbit.webdav.jcr.version.report;
 
 import org.apache.jackrabbit.commons.iterator.NodeTypeIteratorAdapter;
+import org.apache.jackrabbit.commons.webdav.JcrRemotingConstants;
+import org.apache.jackrabbit.commons.webdav.NodeTypeConstants;
 import org.apache.jackrabbit.webdav.DavException;
 import org.apache.jackrabbit.webdav.DavResource;
 import org.apache.jackrabbit.webdav.DavServletResponse;
+import org.apache.jackrabbit.webdav.jcr.ItemResourceConstants;
 import org.apache.jackrabbit.webdav.jcr.JcrDavException;
 import org.apache.jackrabbit.webdav.jcr.nodetype.NodeDefinitionImpl;
-import org.apache.jackrabbit.webdav.jcr.nodetype.NodeTypeConstants;
 import org.apache.jackrabbit.webdav.jcr.nodetype.PropertyDefinitionImpl;
 import org.apache.jackrabbit.webdav.version.report.Report;
 import org.apache.jackrabbit.webdav.version.report.ReportInfo;
@@ -56,8 +58,6 @@ import java.util.List;
  * &lt;!ELEMENT mixin-nodetypes EMPTY &gt;
  * &lt;!ELEMENT primary-nodetypes EMPTY &gt;
  * </pre>
- *
- * @see NodeTypeConstants#NAMESPACE
  */
 //todo: currently the nodetype report is not consistent with the general way of representing nodetype names (with NodetypeElement) in order to be compatible with the jackrabbit nodetype registry...
 //todo: for the same reason, not the complete nodetype-definition, but only the nodetype def as stored is represented.
@@ -69,7 +69,7 @@ public class NodeTypesReport extends AbstractJcrReport implements NodeTypeConsta
     /**
      * The registered type of this report.
      */
-    public static final ReportType NODETYPES_REPORT = ReportType.register("nodetypes", NodeTypeConstants.NAMESPACE, NodeTypesReport.class);
+    public static final ReportType NODETYPES_REPORT = ReportType.register(JcrRemotingConstants.REPORT_NODETYPES, ItemResourceConstants.NAMESPACE, NodeTypesReport.class);
 
     private NodeTypeIterator ntIter;
 
@@ -173,16 +173,16 @@ public class NodeTypesReport extends AbstractJcrReport implements NodeTypeConsta
         NodeTypeManager ntMgr = session.getWorkspace().getNodeTypeManager();
 
         // check the simple types first...
-        if (info.containsContentElement(XML_REPORT_ALLNODETYPES, NAMESPACE)) {
+        if (info.containsContentElement(XML_REPORT_ALLNODETYPES, ItemResourceConstants.NAMESPACE)) {
             return ntMgr.getAllNodeTypes();
-        } else if (info.containsContentElement(XML_REPORT_MIXINNODETYPES, NAMESPACE)) {
+        } else if (info.containsContentElement(XML_REPORT_MIXINNODETYPES, ItemResourceConstants.NAMESPACE)) {
             return ntMgr.getMixinNodeTypes();
-        } else if (info.containsContentElement(XML_REPORT_PRIMARYNODETYPES, NAMESPACE)) {
+        } else if (info.containsContentElement(XML_REPORT_PRIMARYNODETYPES, ItemResourceConstants.NAMESPACE)) {
             return ntMgr.getPrimaryNodeTypes();
         } else {
             // None of the simple types. test if a report for individual
             // nodetype was request. If not, the request body is not valid.
-            List<Element> elemList = info.getContentElements(XML_NODETYPE, NAMESPACE);
+            List<Element> elemList = info.getContentElements(XML_NODETYPE, ItemResourceConstants.NAMESPACE);
             if (elemList.isEmpty()) {
                 // throw exception if the request body does not contain a single nodetype element
                 throw new DavException(DavServletResponse.SC_BAD_REQUEST, "NodeTypes report: request body has invalid format.");
@@ -191,7 +191,7 @@ public class NodeTypesReport extends AbstractJcrReport implements NodeTypeConsta
             // todo: find better solution...
             List<NodeType> ntList = new ArrayList<NodeType>();
             for (Element el : elemList) {
-                String nodetypeName = DomUtil.getChildTextTrim(el, XML_NODETYPENAME, NAMESPACE);
+                String nodetypeName = DomUtil.getChildTextTrim(el, XML_NODETYPENAME, ItemResourceConstants.NAMESPACE);
                 if (nodetypeName != null) {
                     ntList.add(ntMgr.getNodeType(nodetypeName));
                 }

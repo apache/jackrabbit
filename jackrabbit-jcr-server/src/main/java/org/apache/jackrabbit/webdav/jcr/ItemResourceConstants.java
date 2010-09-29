@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.webdav.jcr;
 
+import org.apache.jackrabbit.commons.webdav.JcrRemotingConstants;
 import org.apache.jackrabbit.webdav.DavResource;
 import org.apache.jackrabbit.webdav.lock.Scope;
 import org.apache.jackrabbit.webdav.observation.ObservationResource;
@@ -25,13 +26,11 @@ import org.apache.jackrabbit.webdav.security.Privilege;
 import org.apache.jackrabbit.webdav.version.DeltaVResource;
 import org.apache.jackrabbit.webdav.xml.Namespace;
 
-import javax.jcr.PropertyType;
-
 /**
  * <code>ItemResourceConstants</code> provides constants for any resources
  * representing repository items.
  */
-public interface ItemResourceConstants {
+public interface ItemResourceConstants extends JcrRemotingConstants {
 
     /**
      * Methods common to all item resources.
@@ -39,47 +38,9 @@ public interface ItemResourceConstants {
     public static final String METHODS = DavResource.METHODS + ", " + ObservationResource.METHODS + ", " + SearchResource.METHODS + ", " +DeltaVResource.METHODS;
 
     /**
-     * The resource path of the root-item-resource.
-     */
-    public static final String ROOT_ITEM_PATH = "/";
-    /**
-     * Placeholder resource path for the JCR root node.
-     */
-    public static final String ROOT_ITEM_RESOURCEPATH = "/jcr:root";
-
-    /**
-     * The version storage item resource path.
-     */
-    public static final String VERSIONSTORAGE_PATH = "/jcr:system/jcr:versionStorage";
-
-    /**
      * The namespace for all jcr specific extensions.
      */
-    public static final Namespace NAMESPACE = Namespace.getNamespace("dcr", "http://www.day.com/jcr/webdav/1.0");
-
-    public static final String IMPORT_UUID_BEHAVIOR = "ImportUUIDBehavior";
-
-    // xml element names
-    public static final String XML_PRIMARYNODETYPE = "primarynodetype";
-    public static final String XML_VALUE = "value";
-    /**
-     * 'type' attribute for the {@link #XML_VALUE value} element, reflecting the
-     * {@link PropertyType type} of the value being transported.
-     */
-    public static final String ATTR_VALUE_TYPE = "type";
-    public static final String XML_LENGTH = "length";
-    public static final String XML_EXCLUSIVE_SESSION_SCOPED = "exclusive-session-scoped";
-
-    // xml elements used to reflect the workspaces ns-registry
-    // TODO: to be reviewed...
-    public static final String XML_NAMESPACE = "namespace";
-    public static final String XML_PREFIX = "prefix";
-    public static final String XML_URI = "uri";
-
-    // xml elements used for repository-descriptors report
-    public static final String XML_DESCRIPTOR = "descriptor";
-    public static final String XML_DESCRIPTORKEY = "descriptorkey";
-    public static final String XML_DESCRIPTORVALUE = "descriptorvalue";
+    public static final Namespace NAMESPACE = Namespace.getNamespace(NS_PREFIX, NS_URI);
 
     /**
      * Extension to the WebDAV 'exclusive' lock, that allows to distinguish
@@ -89,65 +50,43 @@ public interface ItemResourceConstants {
      */
     public static final Scope EXCLUSIVE_SESSION = Scope.create(XML_EXCLUSIVE_SESSION_SCOPED, NAMESPACE);
 
-    /**
-     * The 'removeexisting' element is not defined by RFC 3253. If it is present
-     * in the UPDATE request body, uuid conflicts should be solved by removing
-     * the existing nodes.
-     *
-     * @see javax.jcr.Node#restore(javax.jcr.version.Version, boolean)
-     * @see javax.jcr.Workspace#restore(javax.jcr.version.Version[], boolean)
-     * @see org.apache.jackrabbit.webdav.version.UpdateInfo
-     */
-    public static final String XML_REMOVEEXISTING = "removeexisting";
-
-    /**
-     * The 'relpath' element is not defined by RFC 3253. If it is present
-     * in the UPDATE request body, the server is forced to used the text contained
-     * as 'relPath' argument for the {@link javax.jcr.Node#restore(javax.jcr.version.Version, String, boolean)
-     * Node.restore} call.
-     *
-     * @see javax.jcr.Node#restore(javax.jcr.version.Version, String, boolean)
-     * @see org.apache.jackrabbit.webdav.version.UpdateInfo
-     */
-    public static final String XML_RELPATH = "relpath";
-
     // name of the workspace for which the repository session has been created.
-    public static final DavPropertyName JCR_WORKSPACE_NAME = DavPropertyName.create("workspaceName", NAMESPACE);
+    public static final DavPropertyName JCR_WORKSPACE_NAME = DavPropertyName.create(JCR_WORKSPACE_NAME_LN, NAMESPACE);
 
     // general property names
-    public static final DavPropertyName JCR_NAME = DavPropertyName.create("name", NAMESPACE);
-    public static final DavPropertyName JCR_PATH = DavPropertyName.create("path", NAMESPACE);
-    public static final DavPropertyName JCR_DEPTH = DavPropertyName.create("depth", NAMESPACE);
-    public static final DavPropertyName JCR_PARENT = DavPropertyName.create("parent", NAMESPACE);
-    public static final DavPropertyName JCR_ISNEW = DavPropertyName.create("isnew", NAMESPACE);
-    public static final DavPropertyName JCR_ISMODIFIED = DavPropertyName.create("ismodified", NAMESPACE);
-    public static final DavPropertyName JCR_DEFINITION = DavPropertyName.create("definition", NAMESPACE);
-    public static final DavPropertyName JCR_SELECTOR_NAME = DavPropertyName.create("selectorName", NAMESPACE);
+    public static final DavPropertyName JCR_NAME = DavPropertyName.create(JCR_NAME_LN, NAMESPACE);
+    public static final DavPropertyName JCR_PATH = DavPropertyName.create(JCR_PATH_LN, NAMESPACE);
+    public static final DavPropertyName JCR_DEPTH = DavPropertyName.create(JCR_DEPTH_LN, NAMESPACE);
+    public static final DavPropertyName JCR_PARENT = DavPropertyName.create(JCR_PARENT_LN, NAMESPACE);
+    public static final DavPropertyName JCR_ISNEW = DavPropertyName.create(JCR_ISNEW_LN, NAMESPACE);
+    public static final DavPropertyName JCR_ISMODIFIED = DavPropertyName.create(JCR_ISMODIFIED_LN, NAMESPACE);
+    public static final DavPropertyName JCR_DEFINITION = DavPropertyName.create(JCR_DEFINITION_LN, NAMESPACE);
+    public static final DavPropertyName JCR_SELECTOR_NAME = DavPropertyName.create(JCR_SELECTOR_NAME_LN, NAMESPACE);
 
     // property names used for resources representing jcr-nodes
-    public static final DavPropertyName JCR_PRIMARYNODETYPE = DavPropertyName.create(XML_PRIMARYNODETYPE, NAMESPACE);
-    public static final DavPropertyName JCR_MIXINNODETYPES = DavPropertyName.create("mixinnodetypes", NAMESPACE);
-    public static final DavPropertyName JCR_INDEX = DavPropertyName.create("index", NAMESPACE);
-    public static final DavPropertyName JCR_REFERENCES = DavPropertyName.create("references", NAMESPACE);
+    public static final DavPropertyName JCR_PRIMARYNODETYPE = DavPropertyName.create(JCR_PRIMARYNODETYPE_LN, NAMESPACE);
+    public static final DavPropertyName JCR_MIXINNODETYPES = DavPropertyName.create(JCR_MIXINNODETYPES_LN, NAMESPACE);
+    public static final DavPropertyName JCR_INDEX = DavPropertyName.create(JCR_INDEX_LN, NAMESPACE);
+    public static final DavPropertyName JCR_REFERENCES = DavPropertyName.create(JCR_REFERENCES_LN, NAMESPACE);
     /**
      * @since JCR 2.0
      */
-    public static final DavPropertyName JCR_WEAK_REFERENCES = DavPropertyName.create("weakreferences", NAMESPACE);
-    public static final DavPropertyName JCR_UUID = DavPropertyName.create("uuid", NAMESPACE);
-    public static final DavPropertyName JCR_PRIMARYITEM = DavPropertyName.create("primaryitem", NAMESPACE);
+    public static final DavPropertyName JCR_WEAK_REFERENCES = DavPropertyName.create(JCR_WEAK_REFERENCES_LN, NAMESPACE);
+    public static final DavPropertyName JCR_UUID = DavPropertyName.create(JCR_UUID_LN, NAMESPACE);
+    public static final DavPropertyName JCR_PRIMARYITEM = DavPropertyName.create(JCR_PRIMARYITEM_LN, NAMESPACE);
 
     // property names used for resources representing jcr-properties
-    public static final DavPropertyName JCR_TYPE = DavPropertyName.create("type", NAMESPACE);
-    public static final DavPropertyName JCR_VALUE = DavPropertyName.create("value", NAMESPACE);
-    public static final DavPropertyName JCR_VALUES = DavPropertyName.create("values", NAMESPACE);
-    public static final DavPropertyName JCR_LENGTH = DavPropertyName.create("length", NAMESPACE);
-    public static final DavPropertyName JCR_LENGTHS = DavPropertyName.create("lengths", NAMESPACE);
+    public static final DavPropertyName JCR_TYPE = DavPropertyName.create(JCR_TYPE_LN, NAMESPACE);
+    public static final DavPropertyName JCR_VALUE = DavPropertyName.create(JCR_VALUE_LN, NAMESPACE);
+    public static final DavPropertyName JCR_VALUES = DavPropertyName.create(JCR_VALUES_LN, NAMESPACE);
+    public static final DavPropertyName JCR_LENGTH = DavPropertyName.create(JCR_LENGTH_LN, NAMESPACE);
+    public static final DavPropertyName JCR_LENGTHS = DavPropertyName.create(JCR_LENGTHS_LN, NAMESPACE);
 
     // property names used for resource representing a workspace
-    public static final DavPropertyName JCR_NAMESPACES = DavPropertyName.create("namespaces", NAMESPACE);
+    public static final DavPropertyName JCR_NAMESPACES = DavPropertyName.create(JCR_NAMESPACES_LN, NAMESPACE);
 
     // property names used for resource representing a version history
-    public static final DavPropertyName JCR_VERSIONABLEUUID = DavPropertyName.create("versionableuuid", NAMESPACE);
+    public static final DavPropertyName JCR_VERSIONABLEUUID = DavPropertyName.create(JCR_VERSIONABLEUUID_LN, NAMESPACE);
 
     //-----------------------------------------< JSR170 specific privileges >---
     /**

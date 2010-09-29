@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.webdav.jcr.property;
 
+import org.apache.jackrabbit.commons.webdav.ValueUtil;
 import org.apache.jackrabbit.value.ValueHelper;
 import org.apache.jackrabbit.webdav.DavException;
 import org.apache.jackrabbit.webdav.DavServletResponse;
@@ -23,7 +24,6 @@ import org.apache.jackrabbit.webdav.jcr.ItemResourceConstants;
 import org.apache.jackrabbit.webdav.property.AbstractDavProperty;
 import org.apache.jackrabbit.webdav.property.DavProperty;
 import org.apache.jackrabbit.webdav.property.DavPropertyName;
-import org.apache.jackrabbit.webdav.xml.DomUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
@@ -34,13 +34,12 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 import javax.jcr.ValueFormatException;
 import javax.jcr.ValueFactory;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
- * <code>ValuesProperty</code> extends {@link org.apache.jackrabbit.webdav.property.DavProperty} providing
- * utilities to handle the multiple values of the property item represented
- * by this resource.
+ * <code>ValuesProperty</code> implements {@link org.apache.jackrabbit.webdav.property.DavProperty}
+ * providing utilities to handle the value(s) of a JCR property item resource.
+ * In case the property is multivalued the DavProperty value consists of
+ * an element named {@link #JCR_VALUES} otherwise its name is {@link #JCR_VALUE}.
  */
 public class ValuesProperty extends AbstractDavProperty<Value[]> implements ItemResourceConstants {
 
@@ -90,38 +89,7 @@ public class ValuesProperty extends AbstractDavProperty<Value[]> implements Item
             throw new DavException(DavServletResponse.SC_BAD_REQUEST, "ValuesProperty may only be created with a property that has name="+JCR_VALUES.getName());
         }
 
-        // retrieve jcr-values from child 'value'-element(s)
-        List<Element> valueElements = new ArrayList<Element>();
-        Object propValue = property.getValue();
-        if (propValue == null) {
-            jcrValues = new Value[0];
-        } else { /* not null propValue */
-            if (isValueElement(propValue)) {
-                valueElements.add((Element) propValue);
-            } else if (propValue instanceof List) {
-                for (Object el : ((List<?>) property.getValue())) {
-                    /* make sure, only Elements with name 'value' are used for
-                    * the 'value' field. any other content (other elements, text,
-                    * comment etc.) is ignored. NO bad-request/conflict error is
-                    * thrown.
-                    */
-                    if (isValueElement(el)) {
-                        valueElements.add((Element) el);
-                    }
-                }
-            }
-            /* fill the 'value' with the valid 'value' elements found before */
-            jcrValues = new Value[valueElements.size()];
-            int i = 0;
-            for (Element element : valueElements) {
-                jcrValues[i] = getJcrValue(element, defaultType, valueFactory);
-                i++;
-            }
-        }
-    }
-
-    private static boolean isValueElement(Object obj) {
-        return obj instanceof Element && XML_VALUE.equals(((Element)obj).getLocalName());
+        jcrValues = ValueUtil.valuesFromXml(property.getValue(), defaultType, valueFactory);
     }
 
     private void checkPropertyName(DavPropertyName reqName) throws ValueFormatException {
@@ -131,32 +99,10 @@ public class ValuesProperty extends AbstractDavProperty<Value[]> implements Item
     }
 
     /**
-     *
-     * @param valueElement
-     * @param defaultType
-     * @return
-     * @throws ValueFormatException
-     * @throws RepositoryException
-     */
-    private static Value getJcrValue(Element valueElement, int defaultType,
-                                     ValueFactory valueFactory)
-        throws ValueFormatException, RepositoryException {
-        if (valueElement == null) {
-            return null;
-        }
-        // make sure the value is never 'null'
-        String value = DomUtil.getText(valueElement, "");
-        String typeStr = DomUtil.getAttribute(valueElement, ATTR_VALUE_TYPE, ItemResourceConstants.NAMESPACE);
-        int type = (typeStr == null) ? defaultType : PropertyType.valueFromName(typeStr);
-        // deserialize value ->> see #toXml where values are serialized
-        return ValueHelper.deserialize(value, type, true, valueFactory);
-    }
-
-    /**
      * Converts the value of this property to a {@link javax.jcr.Value value array}.
      *
      * @return Array of Value objects
-     * @throws ValueFormatException if convertion of the internal jcr values to
+     * @throws ValueFormatException if converting the internal jcr values to
      * the specified value type fails.
      */
     public Value[] getJcrValues(int propertyType, ValueFactory valueFactory) throws ValueFormatException {
@@ -165,7 +111,7 @@ public class ValuesProperty extends AbstractDavProperty<Value[]> implements Item
         for (int i = 0; i < jcrValues.length; i++) {
             vs[i] = ValueHelper.convert(jcrValues[i], propertyType, valueFactory);
         }
-        return jcrValues;
+        return vs;
     }
 
     /**
@@ -234,10 +180,7 @@ public class ValuesProperty extends AbstractDavProperty<Value[]> implements Item
         Element elem = getName().toXml(document);
         try {
             for (Value v : jcrValues) {
-                String type = PropertyType.nameFromValue(v.getType());
-                String serializedValue = ValueHelper.serialize(v, true);
-                Element xmlValue = DomUtil.createElement(document, XML_VALUE, ItemResourceConstants.NAMESPACE, serializedValue);
-                DomUtil.setAttribute(xmlValue, ATTR_VALUE_TYPE, ItemResourceConstants.NAMESPACE, type);
+                Element xmlValue = ValueUtil.valueToXml(v, document);
                 elem.appendChild(xmlValue);
             }
         } catch (RepositoryException e) {

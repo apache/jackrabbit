@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.spi2dav;
 
+import org.apache.jackrabbit.commons.webdav.JcrRemotingConstants;
+import org.apache.jackrabbit.commons.webdav.ValueUtil;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.PropertyId;
 import org.apache.jackrabbit.spi.PropertyInfo;
@@ -24,9 +26,7 @@ import org.apache.jackrabbit.spi.QValueFactory;
 import org.apache.jackrabbit.spi.commons.conversion.NameException;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.spi.commons.value.ValueFormat;
-import org.apache.jackrabbit.webdav.DavException;
-import org.apache.jackrabbit.webdav.jcr.ItemResourceConstants;
-import org.apache.jackrabbit.webdav.jcr.property.ValuesProperty;
+import org.apache.jackrabbit.webdav.property.DavProperty;
 import org.apache.jackrabbit.webdav.property.DavPropertySet;
 
 import javax.jcr.PropertyType;
@@ -58,36 +58,39 @@ public class PropertyInfoImpl extends ItemInfoImpl implements PropertyInfo {
     public PropertyInfoImpl(PropertyId id, DavPropertySet propSet,
                             NamePathResolver resolver, ValueFactory valueFactory,
                             QValueFactory qValueFactory)
-            throws RepositoryException, DavException, IOException, NameException {
+            throws RepositoryException, IOException, NameException {
 
         super(propSet, resolver);
         // set id
         this.id = id;
 
         // retrieve properties
-        String typeName = propSet.get(ItemResourceConstants.JCR_TYPE).getValue().toString();
+        String typeName = propSet.get(JcrRemotingConstants.JCR_TYPE_LN, ItemResourceConstants.NAMESPACE).getValue().toString();
         type = PropertyType.valueFromName(typeName);
 
         // values from jcr-server must be converted to SPI values.
-        if (propSet.contains(ItemResourceConstants.JCR_VALUE)) {
-            ValuesProperty vp = new ValuesProperty(propSet.get(ItemResourceConstants.JCR_VALUE), type, valueFactory);
-            Value jcrValue = vp.getJcrValue(type, valueFactory);
-            if (jcrValue == null) {
+        DavProperty<?> prop = propSet.get(JcrRemotingConstants.JCR_VALUE_LN, ItemResourceConstants.NAMESPACE);
+        if (prop != null) {
+            Value[] jcrValues = ValueUtil.valuesFromXml(prop.getValue(), type, valueFactory);
+            if (jcrValues == null || jcrValues.length == 0) {
                 // TODO: should never occur. since 'null' single values are not allowed. rather throw?
                 values = QValue.EMPTY_ARRAY;
             } else {
                 QValue qv;
                 if (type == PropertyType.BINARY) {
-                    qv = qValueFactory.create(jcrValue.getStream());
+                    qv = qValueFactory.create(jcrValues[0].getStream());
                 } else {
-                    qv = ValueFormat.getQValue(jcrValue, resolver, qValueFactory);
+                    qv = ValueFormat.getQValue(jcrValues[0], resolver, qValueFactory);
                 }
                 values = new QValue[] {qv};
             }
         } else {
             isMultiValued = true;
-            ValuesProperty vp = new ValuesProperty(propSet.get(ItemResourceConstants.JCR_VALUES), type, valueFactory);
-            Value[] jcrValues = vp.getJcrValues(type, valueFactory);
+            prop = propSet.get(JcrRemotingConstants.JCR_VALUES_LN, ItemResourceConstants.NAMESPACE);
+            if (prop == null) {
+                throw new RepositoryException("Item with id " + id.toString() + " doesn't represent a valid property.");
+            }
+            Value[] jcrValues = ValueUtil.valuesFromXml(prop.getValue(), type, valueFactory);
             values = new QValue[jcrValues.length];
             for (int i = 0; i < jcrValues.length; i++) {
                 if (type == PropertyType.BINARY) {

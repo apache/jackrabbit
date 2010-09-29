@@ -16,27 +16,23 @@
  */
 package org.apache.jackrabbit.webdav.jcr.nodetype;
 
+import org.apache.jackrabbit.commons.webdav.NodeTypeConstants;
+import org.apache.jackrabbit.commons.webdav.NodeTypeUtil;
 import org.apache.jackrabbit.webdav.property.AbstractDavProperty;
 import org.apache.jackrabbit.webdav.property.DavProperty;
 import org.apache.jackrabbit.webdav.property.DavPropertyName;
-import org.apache.jackrabbit.webdav.xml.DomUtil;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 import javax.jcr.nodetype.NodeType;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 /**
  * <code>NodeTypeProperty</code>...
  */
 public class NodeTypeProperty extends AbstractDavProperty<Set<String>> implements NodeTypeConstants {
-
-    private static Logger log = LoggerFactory.getLogger(NodeTypeProperty.class);
 
     private final Set<String> nodetypeNames = new HashSet<String>();
 
@@ -73,43 +69,17 @@ public class NodeTypeProperty extends AbstractDavProperty<Set<String>> implement
         if (property instanceof NodeTypeProperty) {
             nodetypeNames.addAll(((NodeTypeProperty) property).nodetypeNames);
         } else {
-            // assume property has be built from xml
-            Object propValue = property.getValue();
-            if (propValue instanceof List) {
-                retrieveNodeTypeNames(((List<?>)propValue));
-            } else if (propValue instanceof Element) {
-                List<Element> l = Collections.singletonList((Element) propValue);
-                retrieveNodeTypeNames(l);
-            } else {
-                log.debug("NodeTypeProperty '" + property.getName() + "' has no/unparsable value.");
-            }
-        }
-    }
-
-    private void retrieveNodeTypeNames(List<?> elementList) {
-        for (Object content : elementList) {
-            if (!(content instanceof Element)) {
-                continue;
-            }
-            Element el = (Element) content;
-            if (XML_NODETYPE.equals(el.getLocalName()) && NodeTypeConstants.NAMESPACE.isSame(el.getNamespaceURI())) {
-                String nodetypeName = DomUtil.getChildText(el, XML_NODETYPENAME, NodeTypeConstants.NAMESPACE);
-                if (nodetypeName != null && !"".equals(nodetypeName)) {
-                    nodetypeNames.add(nodetypeName);
-                }
-            } else {
-                log.debug("'dcr:nodetype' element expected -> ignoring element '" + ((Element) content).getNodeName() + "'");
-            }
+            nodetypeNames.addAll(NodeTypeUtil.ntNamesFromXml(property.getValue()));
         }
     }
 
     /**
-     * Return a set of nodetype names present in this property.
+     * Return a set of node type names present in this property.
      *
-     * @return set of nodetype names
+     * @return set of node type names
      */
     public Set<String> getNodeTypeNames() {
-        return nodetypeNames;
+        return Collections.unmodifiableSet(nodetypeNames);
     }
 
     /**
@@ -118,7 +88,7 @@ public class NodeTypeProperty extends AbstractDavProperty<Set<String>> implement
      * @return a Set of nodetype names (String).
      */
     public Set<String> getValue() {
-        return nodetypeNames;
+        return Collections.unmodifiableSet(nodetypeNames);
     }
 
     /**
@@ -128,8 +98,7 @@ public class NodeTypeProperty extends AbstractDavProperty<Set<String>> implement
     public Element toXml(Document document) {
         Element elem = getName().toXml(document);
         for (String name : getNodeTypeNames()) {
-            Element ntElem = DomUtil.addChildElement(elem, XML_NODETYPE, NodeTypeConstants.NAMESPACE);
-            DomUtil.addChildElement(ntElem, XML_NODETYPENAME, NodeTypeConstants.NAMESPACE, name);
+            elem.appendChild(NodeTypeUtil.ntNameToXml(name, document));
         }
         return elem;
     }

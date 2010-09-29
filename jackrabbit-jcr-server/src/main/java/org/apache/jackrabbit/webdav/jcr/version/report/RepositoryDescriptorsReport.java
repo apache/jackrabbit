@@ -65,7 +65,7 @@ public class RepositoryDescriptorsReport extends AbstractJcrReport implements It
     /**
      * The registered type of this report.
      */
-    public static final ReportType REPOSITORY_DESCRIPTORS_REPORT = ReportType.register("repositorydescriptors", ItemResourceConstants.NAMESPACE, RepositoryDescriptorsReport.class);
+    public static final ReportType REPOSITORY_DESCRIPTORS_REPORT = ReportType.register(REPORT_REPOSITORY_DESCRIPTORS, ItemResourceConstants.NAMESPACE, RepositoryDescriptorsReport.class);
 
     /**
      * Returns {@link #REPOSITORY_DESCRIPTORS_REPORT} type.

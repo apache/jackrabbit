@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.webdav.jcr.version.report;
 
+import org.apache.jackrabbit.commons.webdav.JcrRemotingConstants;
 import org.apache.jackrabbit.webdav.DavConstants;
 import org.apache.jackrabbit.webdav.DavException;
 import org.apache.jackrabbit.webdav.DavResource;
@@ -50,12 +51,10 @@ public class LocateByUuidReport extends AbstractJcrReport {
 
     private static Logger log = LoggerFactory.getLogger(LocateByUuidReport.class);
 
-    private static final String REPORT_NAME = "locate-by-uuid";
-
     /**
      * The exportview report type
      */
-    public static final ReportType LOCATE_BY_UUID_REPORT = ReportType.register(REPORT_NAME, ItemResourceConstants.NAMESPACE, LocateByUuidReport.class);
+    public static final ReportType LOCATE_BY_UUID_REPORT = ReportType.register(JcrRemotingConstants.REPORT_LOCATE_BY_UUID, ItemResourceConstants.NAMESPACE, LocateByUuidReport.class);
 
     private MultiStatus ms;
 

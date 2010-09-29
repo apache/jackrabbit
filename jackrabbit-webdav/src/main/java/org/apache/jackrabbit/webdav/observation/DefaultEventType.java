@@ -75,6 +75,22 @@ public class DefaultEventType implements EventType {
     }
 
     /**
+     * Factory method to create an array of new <code>EventType</code> for the
+     * specified localNames and the specified namespace.
+     *
+     * @param localNames
+     * @param namespace
+     * @return An array of event types.
+     */
+    public static EventType[] create(String[] localNames, Namespace namespace) {
+        EventType[] types = new EventType[localNames.length];
+        for (int i = 0; i < localNames.length; i++) {
+            types[i] = create(localNames[i], namespace);
+        }
+        return types;
+    }
+
+    /**
      * Retrieves one or multiple <code>EventType</code>s from the 'eventtype'
      * Xml element. While a subscription may register multiple types (thus
      * the 'eventtype' contains multiple child elements), a single event may only

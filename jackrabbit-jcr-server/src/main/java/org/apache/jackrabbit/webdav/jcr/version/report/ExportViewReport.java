@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.webdav.jcr.version.report;
 
+import org.apache.jackrabbit.commons.webdav.JcrRemotingConstants;
 import org.apache.jackrabbit.util.Text;
 import org.apache.jackrabbit.webdav.DavException;
 import org.apache.jackrabbit.webdav.DavResource;
@@ -40,7 +41,6 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 
 /**
  * <code>ExportViewReport</code> handles REPORT requests for the 'exportview'
@@ -64,12 +64,10 @@ public class ExportViewReport extends AbstractJcrReport {
 
     private static Logger log = LoggerFactory.getLogger(ExportViewReport.class);
 
-    private static final String REPORT_NAME = "exportview";
-
     /**
      * The exportview report type
      */
-    public static final ReportType EXPORTVIEW_REPORT = ReportType.register(REPORT_NAME, ItemResourceConstants.NAMESPACE, ExportViewReport.class);
+    public static final ReportType EXPORTVIEW_REPORT = ReportType.register(JcrRemotingConstants.REPORT_EXPORT_VIEW, ItemResourceConstants.NAMESPACE, ExportViewReport.class);
 
     private String absNodePath;
 
