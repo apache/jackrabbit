@@ -265,8 +265,7 @@ class CachingIndexReader extends FilterIndexReader {
                 docNumber2id.put(n, id);
             } else {
                 doc = new Document();
-                doc.add(new Field(FieldNames.UUID, id.toString(),
-                        Field.Store.YES, Field.Index.NOT_ANALYZED_NO_NORMS));
+                doc.add(new IDField(id));
             }
             return doc;
         } else {
