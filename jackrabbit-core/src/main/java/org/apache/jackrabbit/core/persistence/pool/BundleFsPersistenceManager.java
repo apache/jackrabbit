@@ -37,7 +37,6 @@ import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.NoSuchItemStateException;
 import org.apache.jackrabbit.core.state.NodeReferences;
 
-import java.io.DataOutputStream;
 import java.io.File;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -319,9 +318,11 @@ public class BundleFsPersistenceManager extends AbstractBundlePersistenceManager
                 itemFs.createFolder(dir);
             }
             OutputStream out = itemFs.getOutputStream(fileName);
-            DataOutputStream dout = new DataOutputStream(out);
-            binding.writeBundle(dout, bundle);
-            dout.close();
+            try {
+                binding.writeBundle(out, bundle);
+            } finally {
+                out.close();
+            }
         } catch (Exception e) {
             String msg = "failed to write bundle: " + bundle.getId();
             BundleFsPersistenceManager.log.error(msg, e);
