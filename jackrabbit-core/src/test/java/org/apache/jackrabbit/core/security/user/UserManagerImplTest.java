@@ -217,6 +217,56 @@ public class UserManagerImplTest extends AbstractUserTest {
         }
     }
 
+    public void testFindAuthorizableByRelativePath() throws NotExecutableException, RepositoryException {
+        Principal p = getTestPrincipal();
+        Authorizable auth = null;
+
+        try {
+            auth= userMgr.createGroup(p);
+            Value[] vs = new Value[] {
+                    superuser.getValueFactory().createValue("v1"),
+                    superuser.getValueFactory().createValue("v2")
+            };
+
+            String relPath = "relPath/" + propertyName1;
+            String relPath2 = "another/" + propertyName1;
+            String relPath3 = "relPath/relPath/" + propertyName1;
+            auth.setProperty(relPath, vs);
+            auth.setProperty(relPath2, vs);
+            auth.setProperty(relPath3, superuser.getValueFactory().createValue("v3"));
+            save(superuser);
+
+            // relPath = "prop1", v = "v1" -> should find the target group
+            Iterator<Authorizable> result = userMgr.findAuthorizables(propertyName1, "v1");
+            assertTrue("expected result", result.hasNext());
+            assertEquals(auth.getID(), result.next().getID());
+            assertFalse("expected no more results", result.hasNext());
+
+            // relPath = "prop1", v = "v1" -> should find the target group
+            result = userMgr.findAuthorizables(propertyName1, "v3");
+            assertTrue("expected result", result.hasNext());
+            assertEquals(auth.getID(), result.next().getID());
+            assertFalse("expected no more results", result.hasNext());
+
+            // relPath = "relPath/prop1", v = "v1" -> should find the target group
+            result = userMgr.findAuthorizables(relPath, "v1");
+            assertTrue("expected result", result.hasNext());
+            assertEquals(auth.getID(), result.next().getID());
+            assertFalse("expected no more results", result.hasNext());
+
+            // relPath : "./prop1", v = "v1" -> should not find the target group
+            result = userMgr.findAuthorizables("./" + propertyName1, "v1");
+            assertFalse("expected result", result.hasNext());
+            
+        } finally {
+            // remove the create group again.
+            if (auth != null) {
+                auth.remove();
+                save(superuser);
+            }
+        }
+    }
+
     public void testFindUser() throws RepositoryException, NotExecutableException {
         User u = null;
         try {
