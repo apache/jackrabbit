@@ -76,8 +76,7 @@ public class BundleBinding extends ItemStateBinding {
      */
     public NodePropBundle readBundle(DataInputStream in, NodeId id)
             throws IOException {
-
-        NodePropBundle bundle = new NodePropBundle(this, id);
+        NodePropBundle bundle = new NodePropBundle(id);
 
         // read version and primary type...special handling
         int index = in.readInt();

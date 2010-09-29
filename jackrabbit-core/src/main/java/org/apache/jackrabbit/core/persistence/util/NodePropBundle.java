@@ -18,7 +18,7 @@ package org.apache.jackrabbit.core.persistence.util;
 
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.Iterator;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
@@ -46,11 +46,6 @@ public class NodePropBundle {
      * default logger
      */
     private static Logger log = LoggerFactory.getLogger(NodePropBundle.class);
-
-    /**
-     * the bundle binding that handles this bundle
-     */
-    private final BundleBinding binding;
 
     /**
      * the node id
@@ -110,21 +105,20 @@ public class NodePropBundle {
 
     /**
      * Creates a "new" bundle with the given id
-     * @param binding the bundle binding
+     *
      * @param id the node id
      */
-    public NodePropBundle(BundleBinding binding, NodeId id) {
-        this.binding = binding;
+    public NodePropBundle(NodeId id) {
         this.id = id;
     }
 
     /**
      * Creates a bundle from the given state
-     * @param binding the bundle binding
+     *
      * @param state the node state
      */
-    public NodePropBundle(BundleBinding binding, NodeState state) {
-        this(binding, (NodeId) state.getId());
+    public NodePropBundle(NodeState state) {
+        this(state.getNodeId());
         update(state);
     }
 
@@ -332,12 +326,16 @@ public class NodePropBundle {
 
     /**
      * Creates a property entry from the given state and adds it.
+     *
      * @param state the property state
+     * @param blobStore BLOB store from where to delete previous property value
      */
-    public void addProperty(PropertyState state) {
-        PropertyEntry old = properties.put(state.getName(), new PropertyEntry(state));
+    @SuppressWarnings("deprecation")
+    public void addProperty(PropertyState state, BLOBStore blobStore) {
+        PropertyEntry old =
+            properties.put(state.getName(), new PropertyEntry(state));
         if (old != null) {
-            old.destroy(binding.getBlobStore());
+            old.destroy(blobStore);
         }
     }
 
@@ -381,24 +379,27 @@ public class NodePropBundle {
 
     /**
      * Removes all property entries
+     *
+     * @param blobStore BLOB store from where to delete property values
      */
-    public void removeAllProperties() {
-        Iterator<Name> iter = properties.keySet().iterator();
-        while (iter.hasNext()) {
-            Name name = (Name) iter.next();
-            removeProperty(name);
-            iter = properties.keySet().iterator();
+    @SuppressWarnings("deprecation")
+    public void removeAllProperties(BLOBStore blobStore) {
+        for (Name name : new HashSet<Name>(properties.keySet())) {
+            removeProperty(name, blobStore);
         }
     }
 
     /**
      * Removes the proprty with the given name from this bundle.
+     *
      * @param name the name of the property
+     * @param blobStore BLOB store from where to delete the property value
      */
-    public void removeProperty(Name name) {
-        PropertyEntry pe = (PropertyEntry) properties.remove(name);
+    @SuppressWarnings("deprecation")
+    public void removeProperty(Name name, BLOBStore blobStore) {
+        PropertyEntry pe = properties.remove(name);
         if (pe != null) {
-            pe.destroy(binding.getBlobStore());
+            pe.destroy(blobStore);
         }
     }
     
@@ -665,20 +666,21 @@ public class NodePropBundle {
          * Destroys this property state and deletes temporary blob file values.
          * @param blobStore the blobstore that will destroy the blobs
          */
+        @SuppressWarnings("deprecation")
         private void destroy(BLOBStore blobStore) {
             // delete blobs if needed
-            if (blobIds != null) {
-                for (int i = 0; i < blobIds.length; i++) {
-                    if (blobIds[i] != null) {
-                        try {
-                            blobStore.remove(blobIds[i]);
-                            log.debug("removed blob {}", blobIds[i]);
-                        } catch (Exception e) {
-                            log.error("Ingoring error while removing blob {}", blobIds[i], e);
-                        }
+            for (int i = 0; blobIds != null && i < blobIds.length; i++) {
+                if (blobIds[i] != null) {
+                    try {
+                        blobStore.remove(blobIds[i]);
+                        log.debug("removed blob {}", blobIds[i]);
+                    } catch (Exception e) {
+                        log.error("Ignoring error while removing blob " + blobIds[i], e);
                     }
                 }
             }
         }
+
     }
+
 }

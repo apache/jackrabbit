@@ -445,7 +445,7 @@ public abstract class AbstractBundlePersistenceManager implements
             } else {
                 throw new NoSuchItemStateException(id.toString());
             }
-            bundle.addProperty(state);
+            bundle.addProperty(state, getBinding().getBlobStore());
         }
         return state;
     }
@@ -531,7 +531,7 @@ public abstract class AbstractBundlePersistenceManager implements
         HashMap<ItemId, NodePropBundle> modified = new HashMap<ItemId, NodePropBundle>();
         for (ItemState state : changeLog.addedStates()) {
             if (state.isNode()) {
-                NodePropBundle bundle = new NodePropBundle(getBinding(), (NodeState) state);
+                NodePropBundle bundle = new NodePropBundle((NodeState) state);
                 modified.put(state.getId(), bundle);
             }
         }
@@ -565,7 +565,8 @@ public abstract class AbstractBundlePersistenceManager implements
                     }
                     modified.put(nodeId, bundle);
                 }
-                bundle.addProperty((PropertyState) state);
+                bundle.addProperty(
+                        (PropertyState) state, getBinding().getBlobStore());
             }
         }
         // add removed properties
@@ -590,7 +591,8 @@ public abstract class AbstractBundlePersistenceManager implements
                         }
                         modified.put(nodeId, bundle);
                     }
-                    bundle.removeProperty(id.getName());
+                    bundle.removeProperty(
+                            id.getName(), getBinding().getBlobStore());
                 }
             }
         }
@@ -615,7 +617,8 @@ public abstract class AbstractBundlePersistenceManager implements
                     }
                     modified.put(nodeId, bundle);
                 }
-                bundle.addProperty((PropertyState) state);
+                bundle.addProperty(
+                        (PropertyState) state, getBinding().getBlobStore());
             }
         }
 
@@ -667,7 +670,7 @@ public abstract class AbstractBundlePersistenceManager implements
      */
     private void deleteBundle(NodePropBundle bundle) throws ItemStateException {
         destroyBundle(bundle);
-        bundle.removeAllProperties();
+        bundle.removeAllProperties(getBinding().getBlobStore());
         bundles.remove(bundle.getId());
         missing.put(bundle.getId());
     }
