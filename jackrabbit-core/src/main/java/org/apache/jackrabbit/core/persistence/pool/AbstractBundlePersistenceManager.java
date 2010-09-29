@@ -33,7 +33,7 @@ import org.apache.jackrabbit.core.persistence.CachingPersistenceManager;
 import org.apache.jackrabbit.core.persistence.IterablePersistenceManager;
 import org.apache.jackrabbit.core.persistence.PMContext;
 import org.apache.jackrabbit.core.persistence.PersistenceManager;
-import org.apache.jackrabbit.core.persistence.util.BundleBinding;
+import org.apache.jackrabbit.core.persistence.util.BLOBStore;
 import org.apache.jackrabbit.core.persistence.util.BundleCache;
 import org.apache.jackrabbit.core.persistence.util.HashMapIndex;
 import org.apache.jackrabbit.core.persistence.util.LRUNodeIdCache;
@@ -370,10 +370,11 @@ public abstract class AbstractBundlePersistenceManager implements
             throws ItemStateException;
 
     /**
-     * Returns the bundle binding that is used for serializing the bundles.
-     * @return the bundle binding
+     * Returns the BLOB store used by this persistence manager.
+     *
+     * @return BLOB store
      */
-    protected abstract BundleBinding getBinding();
+    protected abstract BLOBStore getBlobStore();
 
     //-------------------------------------------------< PersistenceManager >---
 
@@ -445,7 +446,7 @@ public abstract class AbstractBundlePersistenceManager implements
             } else {
                 throw new NoSuchItemStateException(id.toString());
             }
-            bundle.addProperty(state, getBinding().getBlobStore());
+            bundle.addProperty(state, getBlobStore());
         }
         return state;
     }
@@ -565,8 +566,7 @@ public abstract class AbstractBundlePersistenceManager implements
                     }
                     modified.put(nodeId, bundle);
                 }
-                bundle.addProperty(
-                        (PropertyState) state, getBinding().getBlobStore());
+                bundle.addProperty((PropertyState) state, getBlobStore());
             }
         }
         // add removed properties
@@ -591,8 +591,7 @@ public abstract class AbstractBundlePersistenceManager implements
                         }
                         modified.put(nodeId, bundle);
                     }
-                    bundle.removeProperty(
-                            id.getName(), getBinding().getBlobStore());
+                    bundle.removeProperty(id.getName(), getBlobStore());
                 }
             }
         }
@@ -617,8 +616,7 @@ public abstract class AbstractBundlePersistenceManager implements
                     }
                     modified.put(nodeId, bundle);
                 }
-                bundle.addProperty(
-                        (PropertyState) state, getBinding().getBlobStore());
+                bundle.addProperty((PropertyState) state, getBlobStore());
             }
         }
 
@@ -670,7 +668,7 @@ public abstract class AbstractBundlePersistenceManager implements
      */
     private void deleteBundle(NodePropBundle bundle) throws ItemStateException {
         destroyBundle(bundle);
-        bundle.removeAllProperties(getBinding().getBlobStore());
+        bundle.removeAllProperties(getBlobStore());
         bundles.remove(bundle.getId());
         missing.put(bundle.getId());
     }

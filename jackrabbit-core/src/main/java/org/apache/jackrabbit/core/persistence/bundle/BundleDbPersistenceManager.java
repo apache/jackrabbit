@@ -623,8 +623,9 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
     /**
      * {@inheritDoc}
      */
-    protected BundleBinding getBinding() {
-        return binding;
+    @Override
+    protected BLOBStore getBlobStore() {
+        return blobStore;
     }
 
     /**
