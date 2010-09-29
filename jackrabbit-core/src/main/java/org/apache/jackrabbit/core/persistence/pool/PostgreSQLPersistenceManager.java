@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.core.persistence.pool;
 
-import java.io.DataInputStream;
 import java.io.InputStream;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -101,8 +100,7 @@ public class PostgreSQLPersistenceManager extends BundleDbPersistenceManager {
                 InputStream input = rs.getBinaryStream(1);
                 try {
                     TrackingInputStream cin = new TrackingInputStream(input);
-                    DataInputStream din = new DataInputStream(cin);
-                    NodePropBundle bundle = binding.readBundle(din, id);
+                    NodePropBundle bundle = binding.readBundle(cin, id);
                     bundle.setSize(cin.getPosition());
                     return bundle;
                 } finally {

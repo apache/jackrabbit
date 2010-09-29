@@ -37,7 +37,6 @@ import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.NoSuchItemStateException;
 import org.apache.jackrabbit.core.state.NodeReferences;
 
-import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.InputStream;
@@ -235,24 +234,24 @@ public class BundleFsPersistenceManager extends AbstractBundlePersistenceManager
      */
     protected synchronized NodePropBundle loadBundle(NodeId id)
             throws ItemStateException {
-        DataInputStream din = null;
         try {
             String path = buildNodeFilePath(null, id).toString();
             if (!itemFs.exists(path)) {
                 return null;
             }
             InputStream in = itemFs.getInputStream(path);
-            TrackingInputStream cin = new TrackingInputStream(in);
-            din = new DataInputStream(cin);
-            NodePropBundle bundle = binding.readBundle(din, id);
-            bundle.setSize(cin.getPosition());
-            return bundle;
+            try {
+                TrackingInputStream cin = new TrackingInputStream(in);
+                NodePropBundle bundle = binding.readBundle(cin, id);
+                bundle.setSize(cin.getPosition());
+                return bundle;
+            } finally {
+                IOUtils.closeQuietly(in);
+            }
         } catch (Exception e) {
             String msg = "failed to read bundle: " + id + ": " + e;
             log.error(msg);
             throw new ItemStateException(msg, e);
-        } finally {
-            IOUtils.closeQuietly(din);
         }
     }
 
