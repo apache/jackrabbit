@@ -451,6 +451,24 @@ public class NodePropBundle {
         this.size = size;
     }
 
+    //--------------------------------------------------------------< Object >
+
+    public boolean equals(Object object) {
+        if (object instanceof NodePropBundle) {
+            NodePropBundle that = (NodePropBundle) object;
+            return id.equals(that.id)
+                && parentId.equals(that.parentId)
+                && nodeTypeName.equals(that.nodeTypeName)
+                && mixinTypeNames.equals(that.mixinTypeNames)
+                && isReferenceable == that.isReferenceable
+                && sharedSet.equals(that.sharedSet)
+                && properties.equals(that.properties)
+                && childNodeEntries.equals(that.childNodeEntries);
+        } else {
+            return false;
+        }
+    }
+
     //-----------------------------------------------------< ChildNodeEntry >---
 
     /**

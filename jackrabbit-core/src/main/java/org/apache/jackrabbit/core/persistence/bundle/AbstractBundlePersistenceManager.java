@@ -39,7 +39,7 @@ import org.apache.jackrabbit.core.util.StringIndex;
 import org.apache.jackrabbit.core.persistence.util.BLOBStore;
 import org.apache.jackrabbit.core.persistence.util.BundleBinding;
 import org.apache.jackrabbit.core.persistence.util.BundleCache;
-import org.apache.jackrabbit.core.persistence.util.HashMapIndex;
+import org.apache.jackrabbit.core.persistence.util.FileBasedIndex;
 import org.apache.jackrabbit.core.persistence.util.LRUNodeIdCache;
 import org.apache.jackrabbit.core.persistence.util.NodePropBundle;
 import org.apache.jackrabbit.spi.Name;
@@ -249,7 +249,7 @@ public abstract class AbstractBundlePersistenceManager implements
                 // load name and ns index
                 FileSystemResource nsFile = new FileSystemResource(context.getFileSystem(), RES_NS_INDEX);
                 if (nsFile.exists()) {
-                    nsIndex = new HashMapIndex(nsFile);
+                    nsIndex = new FileBasedIndex(nsFile);
                 } else {
                     nsIndex = (StringIndex) context.getNamespaceRegistry();
                 }
@@ -270,7 +270,8 @@ public abstract class AbstractBundlePersistenceManager implements
     public StringIndex getNameIndex() {
         try {
             if (nameIndex == null) {
-                nameIndex = new HashMapIndex(new FileSystemResource(context.getFileSystem(), RES_NAME_INDEX));
+                nameIndex = new FileBasedIndex(new FileSystemResource(
+                        context.getFileSystem(), RES_NAME_INDEX));
             }
             return nameIndex;
         } catch (Exception e) {
