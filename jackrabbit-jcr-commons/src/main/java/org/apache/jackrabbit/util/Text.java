@@ -104,8 +104,7 @@ public class Text {
         MessageDigest md = MessageDigest.getInstance(algorithm);
         byte[] digest = md.digest(data);
         StringBuffer res = new StringBuffer(digest.length * 2);
-        for (int i = 0; i < digest.length; i++) {
-            byte b = digest[i];
+        for (byte b : digest) {
             res.append(hexTable[(b >> 4) & 15]);
             res.append(hexTable[b & 15]);
         }
