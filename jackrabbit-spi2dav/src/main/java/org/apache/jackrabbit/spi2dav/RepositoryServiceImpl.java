@@ -69,6 +69,12 @@ import org.apache.commons.httpclient.methods.HeadMethod;
 import org.apache.commons.httpclient.methods.InputStreamRequestEntity;
 import org.apache.commons.httpclient.methods.RequestEntity;
 import org.apache.commons.httpclient.methods.StringRequestEntity;
+import org.apache.jackrabbit.commons.webdav.EventUtil;
+import org.apache.jackrabbit.commons.webdav.JcrRemotingConstants;
+import org.apache.jackrabbit.commons.webdav.JcrValueType;
+import org.apache.jackrabbit.commons.webdav.NodeTypeConstants;
+import org.apache.jackrabbit.commons.webdav.NodeTypeUtil;
+import org.apache.jackrabbit.commons.webdav.ValueUtil;
 import org.apache.jackrabbit.spi.Batch;
 import org.apache.jackrabbit.spi.ChildInfo;
 import org.apache.jackrabbit.spi.Event;
@@ -148,17 +154,6 @@ import org.apache.jackrabbit.webdav.client.methods.UnSubscribeMethod;
 import org.apache.jackrabbit.webdav.client.methods.UpdateMethod;
 import org.apache.jackrabbit.webdav.header.CodedUrlHeader;
 import org.apache.jackrabbit.webdav.header.IfHeader;
-import org.apache.jackrabbit.webdav.jcr.ItemResourceConstants;
-import org.apache.jackrabbit.webdav.jcr.JcrValueType;
-import org.apache.jackrabbit.webdav.jcr.nodetype.NodeTypeConstants;
-import org.apache.jackrabbit.webdav.jcr.nodetype.NodeTypeProperty;
-import org.apache.jackrabbit.webdav.jcr.observation.SubscriptionImpl;
-import org.apache.jackrabbit.webdav.jcr.property.NamespacesProperty;
-import org.apache.jackrabbit.webdav.jcr.property.ValuesProperty;
-import org.apache.jackrabbit.webdav.jcr.version.report.JcrPrivilegeReport;
-import org.apache.jackrabbit.webdav.jcr.version.report.NodeTypesReport;
-import org.apache.jackrabbit.webdav.jcr.version.report.RegisteredNamespacesReport;
-import org.apache.jackrabbit.webdav.jcr.version.report.RepositoryDescriptorsReport;
 import org.apache.jackrabbit.webdav.lock.ActiveLock;
 import org.apache.jackrabbit.webdav.lock.LockDiscovery;
 import org.apache.jackrabbit.webdav.lock.Scope;
@@ -191,6 +186,7 @@ import org.apache.jackrabbit.webdav.version.report.ReportInfo;
 import org.apache.jackrabbit.webdav.xml.DomUtil;
 import org.apache.jackrabbit.webdav.xml.ElementIterator;
 import org.apache.jackrabbit.webdav.xml.Namespace;
+import org.apache.jackrabbit.webdav.xml.XmlSerializable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
@@ -206,7 +202,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
 
     private static Logger log = LoggerFactory.getLogger(RepositoryServiceImpl.class);
 
-    private static final SubscriptionInfo S_INFO = new SubscriptionInfo(SubscriptionImpl.getAllEventTypes(), true, INFINITE_TIMEOUT);
+    private static final SubscriptionInfo S_INFO = new SubscriptionInfo(DefaultEventType.create(EventUtil.EVENT_ALL, ItemResourceConstants.NAMESPACE), true, INFINITE_TIMEOUT);
 
     private final IdFactory idFactory;
     private final NameFactory nameFactory;
@@ -420,8 +416,9 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     private NodeId getParentId(DavPropertySet propSet, SessionInfo sessionInfo)
         throws RepositoryException {
         NodeId parentId = null;
-        if (propSet.contains(ItemResourceConstants.JCR_PARENT)) {
-            HrefProperty parentProp = new HrefProperty(propSet.get(ItemResourceConstants.JCR_PARENT));
+        DavProperty<?> p = propSet.get(JcrRemotingConstants.JCR_PARENT_LN, ItemResourceConstants.NAMESPACE);
+        if (p != null) {
+            HrefProperty parentProp = new HrefProperty(p);
             String parentHref = parentProp.getHrefs().get(0);
             if (parentHref != null && parentHref.length() > 0) {
                 parentId = uriResolver.getNodeId(parentHref, sessionInfo);
@@ -431,15 +428,16 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     }
 
     String getUniqueID(DavPropertySet propSet) {
-        if (propSet.contains(ItemResourceConstants.JCR_UUID)) {
-            return propSet.get(ItemResourceConstants.JCR_UUID).getValue().toString();
+        DavProperty<?> prop = propSet.get(JcrRemotingConstants.JCR_UUID_LN, ItemResourceConstants.NAMESPACE);
+        if (prop != null) {
+            return prop.getValue().toString();
         } else {
             return null;
         }
     }
 
     Name getQName(DavPropertySet propSet, NamePathResolver resolver) throws RepositoryException {
-        DavProperty<?> nameProp = propSet.get(ItemResourceConstants.JCR_NAME);
+        DavProperty<?> nameProp = propSet.get(JcrRemotingConstants.JCR_NAME_LN, ItemResourceConstants.NAMESPACE);
         if (nameProp != null && nameProp.getValue() != null) {
             // not root node. Note that 'unespacing' is not required since
             // the jcr:name property does not provide the value in escaped form.
@@ -456,7 +454,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
 
     int getIndex(DavPropertySet propSet) {
         int index = Path.INDEX_UNDEFINED;
-        DavProperty<?> indexProp = propSet.get(ItemResourceConstants.JCR_INDEX);
+        DavProperty<?> indexProp = propSet.get(JcrRemotingConstants.JCR_INDEX_LN, ItemResourceConstants.NAMESPACE);
         if (indexProp != null && indexProp.getValue() != null) {
             index = Integer.parseInt(indexProp.getValue().toString());
         }
@@ -524,7 +522,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
      */
     public Map<String, QValue[]> getRepositoryDescriptors() throws RepositoryException {
         if (descriptors == null) {
-            ReportInfo info = new ReportInfo(RepositoryDescriptorsReport.REPOSITORY_DESCRIPTORS_REPORT, DEPTH_0);
+            ReportInfo info = new ReportInfo(JcrRemotingConstants.REPORT_REPOSITORY_DESCRIPTORS, ItemResourceConstants.NAMESPACE);
             ReportMethod method = null;
             try {
                 method = new ReportMethod(uriResolver.getRepositoryUri(), info);
@@ -535,17 +533,17 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
                 descriptors = new HashMap<String, QValue[]>();
                 if (doc != null) {
                     Element rootElement = doc.getDocumentElement();
-                    ElementIterator nsElems = DomUtil.getChildren(rootElement, ItemResourceConstants.XML_DESCRIPTOR, ItemResourceConstants.NAMESPACE);
+                    ElementIterator nsElems = DomUtil.getChildren(rootElement, JcrRemotingConstants.XML_DESCRIPTOR, ItemResourceConstants.NAMESPACE);
                     while (nsElems.hasNext()) {
                         Element elem = nsElems.nextElement();
-                        String key = DomUtil.getChildText(elem, ItemResourceConstants.XML_DESCRIPTORKEY, ItemResourceConstants.NAMESPACE);
-                        ElementIterator it = DomUtil.getChildren(elem, ItemResourceConstants.XML_DESCRIPTORVALUE, ItemResourceConstants.NAMESPACE);
+                        String key = DomUtil.getChildText(elem, JcrRemotingConstants.XML_DESCRIPTORKEY, ItemResourceConstants.NAMESPACE);
+                        ElementIterator it = DomUtil.getChildren(elem, JcrRemotingConstants.XML_DESCRIPTORVALUE, ItemResourceConstants.NAMESPACE);
                         List<QValue> vs = new ArrayList<QValue>();
                         while (it.hasNext()) {
                             Element dv = it.nextElement();
                             String descriptor = DomUtil.getText(dv);
                             if (key != null && descriptor != null) {
-                                String typeStr = (DomUtil.getAttribute(dv, ItemResourceConstants.ATTR_VALUE_TYPE, null));
+                                String typeStr = (DomUtil.getAttribute(dv, JcrRemotingConstants.ATTR_VALUE_TYPE, null));
                                 int type = (typeStr == null) ? PropertyType.STRING : PropertyType.valueFromName(typeStr);
                                 vs.add(getQValueFactory().create(descriptor, type));
                             } else {
@@ -598,7 +596,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             // for backwards compat. -> retrieve DAV:workspace if the newly
             // added property (workspaceName) is not supported by the server.
             nameSet.add(DeltaVConstants.WORKSPACE);
-            nameSet.add(ItemResourceConstants.JCR_WORKSPACE_NAME);
+            nameSet.add(JcrRemotingConstants.JCR_WORKSPACE_NAME_LN, ItemResourceConstants.NAMESPACE);
 
             method = new PropFindMethod(uriResolver.getWorkspaceUri(workspaceName), nameSet, DEPTH_0);
             getClient(sessionInfo).executeMethod(method);
@@ -609,8 +607,9 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             }
 
             DavPropertySet props = responses[0].getProperties(DavServletResponse.SC_OK);
-            if (props.contains(ItemResourceConstants.JCR_WORKSPACE_NAME)) {
-                String wspName = props.get(ItemResourceConstants.JCR_WORKSPACE_NAME).getValue().toString();
+            DavProperty<?> prop = props.get(JcrRemotingConstants.JCR_WORKSPACE_NAME_LN, ItemResourceConstants.NAMESPACE);
+            if (prop != null) {
+                String wspName = prop.getValue().toString();
                 if (workspaceName == null) {
                     // login with 'null' workspace name -> retrieve the effective
                     // workspace name from the property and recreate the SessionInfo.
@@ -697,7 +696,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         ReportMethod method = null;
         try {
             String uri = getItemUri(itemId, sessionInfo);
-            ReportInfo reportInfo = new ReportInfo(JcrPrivilegeReport.PRIVILEGES_REPORT);
+            ReportInfo reportInfo = new ReportInfo(JcrRemotingConstants.REPORT_PRIVILEGES, ItemResourceConstants.NAMESPACE);
             reportInfo.setContentElement(DomUtil.hrefToXml(uri, domFactory));
 
             method = new ReportMethod(uriResolver.getWorkspaceUri(sessionInfo.getWorkspaceName()), reportInfo);
@@ -760,7 +759,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     private QItemDefinition getItemDefinition(SessionInfo sessionInfo, ItemId itemId) throws RepositoryException {
         // set of properties to be retrieved
         DavPropertyNameSet nameSet = new DavPropertyNameSet();
-        nameSet.add(ItemResourceConstants.JCR_DEFINITION);
+        nameSet.add(JcrRemotingConstants.JCR_DEFINITION_LN, ItemResourceConstants.NAMESPACE);
         nameSet.add(DavPropertyName.RESOURCETYPE);
 
         DavMethodBase method = null;
@@ -788,8 +787,8 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
 
             // build the definition
             QItemDefinition definition = null;
-            if (propertySet.contains(ItemResourceConstants.JCR_DEFINITION)) {
-                DavProperty<?> prop = propertySet.get(ItemResourceConstants.JCR_DEFINITION);
+            DavProperty<?> prop = propertySet.get(JcrRemotingConstants.JCR_DEFINITION_LN, ItemResourceConstants.NAMESPACE);
+            if (prop != null) {
                 Object value = prop.getValue();
                 if (value != null && value instanceof Element) {
                     Element idfElem = (Element) value;
@@ -821,14 +820,14 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     public NodeInfo getNodeInfo(SessionInfo sessionInfo, NodeId nodeId) throws RepositoryException {
         // set of properties to be retrieved
         DavPropertyNameSet nameSet = new DavPropertyNameSet();
-        nameSet.add(ItemResourceConstants.JCR_INDEX);
-        nameSet.add(ItemResourceConstants.JCR_PARENT);
-        nameSet.add(ItemResourceConstants.JCR_NAME);
-        nameSet.add(ItemResourceConstants.JCR_PRIMARYNODETYPE);
-        nameSet.add(ItemResourceConstants.JCR_MIXINNODETYPES);
-        nameSet.add(ItemResourceConstants.JCR_REFERENCES);
-        nameSet.add(ItemResourceConstants.JCR_UUID);
-        nameSet.add(ItemResourceConstants.JCR_PATH);
+        nameSet.add(JcrRemotingConstants.JCR_INDEX_LN, ItemResourceConstants.NAMESPACE);
+        nameSet.add(JcrRemotingConstants.JCR_PARENT_LN, ItemResourceConstants.NAMESPACE);
+        nameSet.add(JcrRemotingConstants.JCR_NAME_LN, ItemResourceConstants.NAMESPACE);
+        nameSet.add(JcrRemotingConstants.JCR_PRIMARYNODETYPE_LN, ItemResourceConstants.NAMESPACE);
+        nameSet.add(JcrRemotingConstants.JCR_MIXINNODETYPES_LN, ItemResourceConstants.NAMESPACE);
+        nameSet.add(JcrRemotingConstants.JCR_REFERENCES_LN, ItemResourceConstants.NAMESPACE);
+        nameSet.add(JcrRemotingConstants.JCR_UUID_LN, ItemResourceConstants.NAMESPACE);
+        nameSet.add(JcrRemotingConstants.JCR_PATH_LN, ItemResourceConstants.NAMESPACE);
         nameSet.add(DavPropertyName.RESOURCETYPE);
 
         DavMethodBase method = null;
@@ -917,8 +916,9 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
                                        NamePathResolver resolver) throws NameException, RepositoryException {
         NodeId id = uriResolver.buildNodeId(parentId, nodeResponse, sessionInfo.getWorkspaceName(), getNamePathResolver(sessionInfo));
         NodeInfoImpl nInfo = new NodeInfoImpl(id, propSet, resolver);
-        if (propSet.contains(ItemResourceConstants.JCR_REFERENCES)) {
-            HrefProperty refProp = new HrefProperty(propSet.get(ItemResourceConstants.JCR_REFERENCES));
+        DavProperty p = propSet.get(JcrRemotingConstants.JCR_REFERENCES_LN, ItemResourceConstants.NAMESPACE);
+        if (p != null) {
+            HrefProperty refProp = new HrefProperty(p);
             for (String propertyHref : refProp.getHrefs()) {
                 PropertyId propertyId = uriResolver.getPropertyId(propertyHref, sessionInfo);
                 nInfo.addReference(propertyId);
@@ -968,10 +968,10 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     public Iterator<ChildInfo> getChildInfos(SessionInfo sessionInfo, NodeId parentId) throws RepositoryException {
         // set of properties to be retrieved
         DavPropertyNameSet nameSet = new DavPropertyNameSet();
-        nameSet.add(ItemResourceConstants.JCR_NAME);
-        nameSet.add(ItemResourceConstants.JCR_INDEX);
-        nameSet.add(ItemResourceConstants.JCR_PARENT);
-        nameSet.add(ItemResourceConstants.JCR_UUID);
+        nameSet.add(JcrRemotingConstants.JCR_NAME_LN, ItemResourceConstants.NAMESPACE);
+        nameSet.add(JcrRemotingConstants.JCR_INDEX_LN, ItemResourceConstants.NAMESPACE);
+        nameSet.add(JcrRemotingConstants.JCR_PARENT_LN, ItemResourceConstants.NAMESPACE);
+        nameSet.add(JcrRemotingConstants.JCR_UUID_LN, ItemResourceConstants.NAMESPACE);
         nameSet.add(DavPropertyName.RESOURCETYPE);
 
         DavMethodBase method = null;
@@ -1028,9 +1028,9 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         // set of properties to be retrieved
         DavPropertyNameSet nameSet = new DavPropertyNameSet();
         if (weakReferences) {
-            nameSet.add(ItemResourceConstants.JCR_WEAK_REFERENCES);
+            nameSet.add(JcrRemotingConstants.JCR_WEAK_REFERENCES_LN, ItemResourceConstants.NAMESPACE);
         } else {
-            nameSet.add(ItemResourceConstants.JCR_REFERENCES);
+            nameSet.add(JcrRemotingConstants.JCR_REFERENCES_LN, ItemResourceConstants.NAMESPACE);
         }
 
         DavMethodBase method = null;
@@ -1051,9 +1051,9 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
                     DavPropertySet props = resp.getProperties(DavServletResponse.SC_OK);
                     DavProperty<?> p;
                     if (weakReferences) {
-                        p = props.get(ItemResourceConstants.JCR_WEAK_REFERENCES);
+                        p = props.get(JcrRemotingConstants.JCR_WEAK_REFERENCES_LN, ItemResourceConstants.NAMESPACE);
                     } else {
-                        p = props.get(ItemResourceConstants.JCR_REFERENCES);
+                        p = props.get(JcrRemotingConstants.JCR_REFERENCES_LN, ItemResourceConstants.NAMESPACE);
                     }
 
                     if (p != null) {
@@ -1157,16 +1157,14 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     private QValue[] getValues(InputStream response, NamePathResolver resolver, ItemId id) throws RepositoryException {
         try {
             Document doc = DomUtil.parseDocument(response);
-            Element prop = DomUtil.getChildElement(doc, ItemResourceConstants.JCR_VALUES.getName(), ItemResourceConstants.JCR_VALUES.getNamespace());
+            Element prop = DomUtil.getChildElement(doc, JcrRemotingConstants.JCR_VALUES_LN, ItemResourceConstants.NAMESPACE);
             if (prop == null) {
                 // no jcr-values present in the response body -> apparently
                 // not representation of a jcr-property
                 throw new ItemNotFoundException("No property found at " + saveGetIdString(id, resolver));
             } else {
                 DavProperty<?> p = DefaultDavProperty.createFromXml(prop);
-                ValuesProperty vp = new ValuesProperty(p, PropertyType.STRING, valueFactory);
-
-                Value[] jcrVs = vp.getJcrValues();
+                Value[] jcrVs = ValueUtil.valuesFromXml(p.getValue(), PropertyType.STRING, valueFactory);
                 QValue[] qvs = new QValue[jcrVs.length];
                 int type = (jcrVs.length > 0) ? jcrVs[0].getType() : PropertyType.STRING;
 
@@ -1190,14 +1188,12 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         } catch (ParserConfigurationException e) {
             log.warn("Internal error: ", e.getMessage());
             throw new RepositoryException(e);
-        } catch (DavException e) {
-            throw ExceptionConverter.generate(e);
         }
     }
 
     private int loadType(String propertyURI, HttpClient client, PropertyId propertyId, NamePathResolver resolver) throws IOException, DavException, RepositoryException {
         DavPropertyNameSet nameSet = new DavPropertyNameSet();
-        nameSet.add(ItemResourceConstants.JCR_TYPE);
+        nameSet.add(JcrRemotingConstants.JCR_TYPE_LN, ItemResourceConstants.NAMESPACE);
 
         DavMethodBase method = null;
         try {
@@ -1208,7 +1204,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             MultiStatusResponse[] responses = method.getResponseBodyAsMultiStatus().getResponses();
             if (responses.length == 1) {
                 DavPropertySet props = responses[0].getProperties(DavServletResponse.SC_OK);
-                DavProperty<?> type = props.get(ItemResourceConstants.JCR_TYPE);
+                DavProperty<?> type = props.get(JcrRemotingConstants.JCR_TYPE_LN, ItemResourceConstants.NAMESPACE);
                 if (type != null) {
                     return PropertyType.valueFromName(type.getValue().toString());
                 } else {
@@ -1284,7 +1280,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         Name nodeName = getNameFactory().create(Name.NS_DEFAULT_URI, UUID.randomUUID().toString());
         String uri = getItemUri(parentId, nodeName, sessionInfo);
         MkColMethod method = new MkColMethod(uri);
-        method.addRequestHeader(ItemResourceConstants.IMPORT_UUID_BEHAVIOR, Integer.toString(uuidBehaviour));
+        method.addRequestHeader(JcrRemotingConstants.IMPORT_UUID_BEHAVIOR, Integer.toString(uuidBehaviour));
         method.setRequestEntity(new InputStreamRequestEntity(xmlStream, "text/xml"));
         execute(method, sessionInfo);
     }
@@ -1336,7 +1332,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         // set of Dav-properties to be retrieved
         DavPropertyNameSet nameSet = new DavPropertyNameSet();
         nameSet.add(DavPropertyName.LOCKDISCOVERY);
-        nameSet.add(ItemResourceConstants.JCR_PARENT);
+        nameSet.add(JcrRemotingConstants.JCR_PARENT_LN, ItemResourceConstants.NAMESPACE);
 
         PropFindMethod method = null;
         try {
@@ -1450,7 +1446,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         ActiveLock activeLock = null;
         for (ActiveLock l : activeLocks) {
             Scope sc = l.getScope();
-            if (l.getType() == Type.WRITE && (sc == Scope.EXCLUSIVE || sc == ItemResourceConstants.EXCLUSIVE_SESSION)) {
+            if (l.getType() == Type.WRITE && (Scope.EXCLUSIVE.equals(sc) || sc == ItemResourceConstants.EXCLUSIVE_SESSION)) {
                 if (activeLock != null) {
                     throw new RepositoryException("Node " + saveGetIdString(nodeId, sessionInfo) + " contains multiple exclusive write locks.");
                 } else {
@@ -1606,10 +1602,10 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             if (removeExisting || relPath != null) {
                 Element uElem = UpdateInfo.createUpdateElement(updateSource, updateType, domFactory);
                 if (removeExisting) {
-                    DomUtil.addChildElement(uElem, ItemResourceConstants.XML_REMOVEEXISTING, ItemResourceConstants.NAMESPACE);
+                    DomUtil.addChildElement(uElem, JcrRemotingConstants.XML_REMOVEEXISTING, ItemResourceConstants.NAMESPACE);
                 }
                 if (relPath != null) {
-                    DomUtil.addChildElement(uElem, ItemResourceConstants.XML_RELPATH, ItemResourceConstants.NAMESPACE, getNamePathResolver(sessionInfo).getJCRPath(relPath));
+                    DomUtil.addChildElement(uElem, JcrRemotingConstants.XML_RELPATH, ItemResourceConstants.NAMESPACE, getNamePathResolver(sessionInfo).getJCRPath(relPath));
                 }
 
                 uInfo = new UpdateInfo(uElem);
@@ -2018,21 +2014,16 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             EventType[] et = DefaultEventType.createFromXml(typeEl);
             if (et.length == 0 || et.length > 1) {
                 // should not occur.
-                log.error("Ambigous event type definition: expected one single eventtype.");
+                log.error("Ambiguous event type definition: expected one single event type.");
                 continue;
             }
 
             String href = DomUtil.getChildTextTrim(evElem, XML_HREF, NAMESPACE);
 
-            int type;
+            int type = EventUtil.getJcrEventType(et[0].getName());
             Path eventPath;
             try {
-                type = SubscriptionImpl.getJcrEventType(et[0]);
                 eventPath = uriResolver.getQPath(href, sessionInfo);
-            } catch (DavException e) {
-                // should not occur
-                log.error("Internal error while building Event", e.getMessage());
-                continue;
             } catch (RepositoryException e) {
                 // should not occur
                 log.error("Internal error while building Event", e.getMessage());
@@ -2068,7 +2059,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
      * @see RepositoryService#getRegisteredNamespaces(SessionInfo)
      */
     public Map<String, String> getRegisteredNamespaces(SessionInfo sessionInfo) throws RepositoryException {
-        ReportInfo info = new ReportInfo(RegisteredNamespacesReport.REGISTERED_NAMESPACES_REPORT, DEPTH_0);
+        ReportInfo info = new ReportInfo(JcrRemotingConstants.REPORT_REGISTERED_NAMESPACES, ItemResourceConstants.NAMESPACE);
         ReportMethod method = null;
         try {
             method = new ReportMethod(uriResolver.getWorkspaceUri(sessionInfo.getWorkspaceName()), info);
@@ -2079,11 +2070,11 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             Map<String, String> namespaces = new HashMap<String, String>();
             if (doc != null) {
                 Element rootElement = doc.getDocumentElement();
-                ElementIterator nsElems = DomUtil.getChildren(rootElement, ItemResourceConstants.XML_NAMESPACE, ItemResourceConstants.NAMESPACE);
+                ElementIterator nsElems = DomUtil.getChildren(rootElement, JcrRemotingConstants.XML_NAMESPACE, ItemResourceConstants.NAMESPACE);
                 while (nsElems.hasNext()) {
                     Element elem = nsElems.nextElement();
-                    String prefix = DomUtil.getChildText(elem, ItemResourceConstants.XML_PREFIX, ItemResourceConstants.NAMESPACE);
-                    String uri = DomUtil.getChildText(elem, ItemResourceConstants.XML_URI, ItemResourceConstants.NAMESPACE);
+                    String prefix = DomUtil.getChildText(elem, JcrRemotingConstants.XML_PREFIX, ItemResourceConstants.NAMESPACE);
+                    String uri = DomUtil.getChildText(elem, JcrRemotingConstants.XML_URI, ItemResourceConstants.NAMESPACE);
                     // default namespace
                     if (prefix == null && uri == null) {
                         prefix = uri = "";
@@ -2183,7 +2174,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
      */
     private void internalSetNamespaces(SessionInfo sessionInfo, Map<String, String> namespaces) throws NamespaceException, UnsupportedRepositoryOperationException, AccessDeniedException, RepositoryException {
         DavPropertySet setProperties = new DavPropertySet();
-        setProperties.add(new NamespacesProperty(namespaces));
+        setProperties.add(createNamespaceProperty(namespaces));
 
         PropPatchMethod method = null;
         try {
@@ -2209,8 +2200,8 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
      * @see RepositoryService#getQNodeTypeDefinitions(SessionInfo)
      */
     public Iterator<QNodeTypeDefinition> getQNodeTypeDefinitions(SessionInfo sessionInfo) throws RepositoryException {
-        ReportInfo info = new ReportInfo(NodeTypesReport.NODETYPES_REPORT, DEPTH_0);
-        info.setContentElement(DomUtil.createElement(domFactory, NodeTypeConstants.XML_REPORT_ALLNODETYPES, NodeTypeConstants.NAMESPACE));
+        ReportInfo info = new ReportInfo(JcrRemotingConstants.REPORT_NODETYPES, ItemResourceConstants.NAMESPACE);
+        info.setContentElement(DomUtil.createElement(domFactory, NodeTypeConstants.XML_REPORT_ALLNODETYPES, ItemResourceConstants.NAMESPACE));
 
         ReportMethod method = null;
         try {
@@ -2296,6 +2287,65 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
                 }
             }
             return ntDefs.iterator();
+    }
+
+    private static DavProperty<List<XmlSerializable>> createValuesProperty(Value[] jcrValues) {
+        // convert the specified jcr values to a xml-serializable value
+        List<XmlSerializable> val = new ArrayList<XmlSerializable>();
+        for (final Value jcrValue : jcrValues) {
+            val.add(new XmlSerializable() {
+                public Element toXml(Document document) {
+                    try {
+                        return ValueUtil.valueToXml(jcrValue, document);
+                    } catch (RepositoryException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+            });
+        }
+        return new DefaultDavProperty<List<XmlSerializable>>(JcrRemotingConstants.JCR_VALUES_LN, val, ItemResourceConstants.NAMESPACE, false);
+    }
+
+    private static DavProperty<List<XmlSerializable>> createNamespaceProperty(final Map<String, String> namespaces) {
+        // convert the specified namespace to a xml-serializable value
+        List<XmlSerializable> val = new ArrayList<XmlSerializable>();
+        for (final String prefix : namespaces.keySet()) {
+            val.add(new XmlSerializable() {
+
+                public Element toXml(Document document) {
+                    Element nsElem = document.createElementNS(JcrRemotingConstants.NS_URI, JcrRemotingConstants.NS_PREFIX + ":" + JcrRemotingConstants.XML_NAMESPACE);
+                    Element prefixElem = document.createElementNS(JcrRemotingConstants.NS_URI, JcrRemotingConstants.NS_PREFIX + ":" + JcrRemotingConstants.XML_PREFIX);
+                    org.w3c.dom.Text txt = document.createTextNode(prefix);
+                    prefixElem.appendChild(txt);
+
+                    final String uri = namespaces.get(prefix);
+                    Element uriElem = document.createElementNS(JcrRemotingConstants.NS_URI, JcrRemotingConstants.NS_PREFIX + ":" + JcrRemotingConstants.XML_URI);
+                    org.w3c.dom.Text txt2 = document.createTextNode(uri);
+                    uriElem.appendChild(txt2);
+
+
+                    nsElem.appendChild(prefixElem);
+                    nsElem.appendChild(uriElem);
+
+                    return nsElem;
+                }
+            });
+        }
+        return new DefaultDavProperty<List<XmlSerializable>>(JcrRemotingConstants.JCR_NAMESPACES_LN, val, ItemResourceConstants.NAMESPACE, false);
+    }
+
+
+    private static DavProperty<List<XmlSerializable>> createNodeTypeProperty(String localName, String[] ntNames) {
+        // convert the specified node type names to a xml-serializable value
+        List<XmlSerializable> val = new ArrayList<XmlSerializable>();
+        for (final String ntName : ntNames) {
+            val.add(new XmlSerializable() {
+                public Element toXml(Document document) {
+                    return NodeTypeUtil.ntNameToXml(ntName, document);
+                }
+            });
+        }
+        return new DefaultDavProperty<List<XmlSerializable>>(localName, val, ItemResourceConstants.NAMESPACE, false);
     }
 
     /**
@@ -2475,7 +2525,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
                 for (int i = 0; i < values.length; i++) {
                     jcrValues[i] = ValueFormat.getJCRValue(values[i], resolver, valueFactory);
                 }
-                ValuesProperty vp = new ValuesProperty(jcrValues);
+                DavProperty<List<XmlSerializable>> vp = createValuesProperty(jcrValues);
                 PutMethod method = new PutMethod(uri);
                 method.setRequestBody(vp);
 
@@ -2521,7 +2571,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
                 for (int i = 0; i < values.length; i++) {
                     jcrValues[i] = ValueFormat.getJCRValue(values[i], resolver, valueFactory);
                 }
-                setProperties.add(new ValuesProperty(jcrValues));
+                setProperties.add(createValuesProperty(jcrValues));
                 try {
                     String uri = getItemUri(propertyId, sessionInfo);
                     PropPatchMethod method = new PropPatchMethod(uri, setProperties, new DavPropertyNameSet());
@@ -2612,14 +2662,14 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
                 if (mixinNodeTypeIds == null || mixinNodeTypeIds.length == 0) {
                     setProperties = new DavPropertySet();
                     removeProperties = new DavPropertyNameSet();
-                    removeProperties.add(ItemResourceConstants.JCR_MIXINNODETYPES);
+                    removeProperties.add(JcrRemotingConstants.JCR_MIXINNODETYPES_LN, ItemResourceConstants.NAMESPACE);
                 } else {
                     String[] ntNames = new String[mixinNodeTypeIds.length];
                     for (int i = 0; i < mixinNodeTypeIds.length; i++) {
                         ntNames[i] = resolver.getJCRName(mixinNodeTypeIds[i]);
                     }
                     setProperties = new DavPropertySet();
-                    setProperties.add(new NodeTypeProperty(ItemResourceConstants.JCR_MIXINNODETYPES, ntNames, false));
+                    setProperties.add(createNodeTypeProperty(JcrRemotingConstants.JCR_MIXINNODETYPES_LN, ntNames));
                     removeProperties = new DavPropertyNameSet();
                 }
 
@@ -2639,7 +2689,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             checkConsumed();
             try {
                 DavPropertySet setProperties = new DavPropertySet();
-                setProperties.add(new NodeTypeProperty(ItemResourceConstants.JCR_PRIMARYNODETYPE, new String[] {resolver.getJCRName(primaryNodeTypeName)}, false));
+                setProperties.add(createNodeTypeProperty(JcrRemotingConstants.JCR_PRIMARYNODETYPE_LN, new String[] {resolver.getJCRName(primaryNodeTypeName)}));
 
                 String uri = getItemUri(nodeId, sessionInfo);
                 PropPatchMethod method = new PropPatchMethod(uri, setProperties, new DavPropertyNameSet());

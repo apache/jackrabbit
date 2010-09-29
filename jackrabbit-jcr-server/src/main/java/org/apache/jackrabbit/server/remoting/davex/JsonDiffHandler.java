@@ -17,11 +17,11 @@
 package org.apache.jackrabbit.server.remoting.davex;
 
 import org.apache.jackrabbit.JcrConstants;
+import org.apache.jackrabbit.commons.webdav.JcrValueType;
 import org.apache.jackrabbit.server.util.RequestData;
 import org.apache.jackrabbit.commons.json.JsonHandler;
 import org.apache.jackrabbit.commons.json.JsonParser;
 import org.apache.jackrabbit.util.Text;
-import org.apache.jackrabbit.webdav.jcr.JcrValueType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.ContentHandler;

@@ -19,14 +19,15 @@ package org.apache.jackrabbit.spi2davex;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.HeadMethod;
+import org.apache.jackrabbit.commons.webdav.JcrRemotingConstants;
 import org.apache.jackrabbit.spi2dav.ExceptionConverter;
+import org.apache.jackrabbit.spi2dav.ItemResourceConstants;
 import org.apache.jackrabbit.webdav.DavConstants;
 import org.apache.jackrabbit.webdav.DavException;
 import org.apache.jackrabbit.webdav.DavServletResponse;
 import org.apache.jackrabbit.webdav.MultiStatusResponse;
 import org.apache.jackrabbit.webdav.client.methods.DavMethodBase;
 import org.apache.jackrabbit.webdav.client.methods.PropFindMethod;
-import org.apache.jackrabbit.webdav.jcr.ItemResourceConstants;
 import org.apache.jackrabbit.webdav.property.DavProperty;
 import org.apache.jackrabbit.webdav.property.DavPropertyNameSet;
 import org.apache.jackrabbit.webdav.property.DavPropertySet;
@@ -86,7 +87,7 @@ class ValueLoader {
 
     int loadType(String uri) throws RepositoryException, IOException {
         DavPropertyNameSet nameSet = new DavPropertyNameSet();
-        nameSet.add(ItemResourceConstants.JCR_TYPE);
+        nameSet.add(JcrRemotingConstants.JCR_TYPE_LN, ItemResourceConstants.NAMESPACE);
 
         DavMethodBase method = null;
         try {
@@ -97,7 +98,7 @@ class ValueLoader {
             MultiStatusResponse[] responses = method.getResponseBodyAsMultiStatus().getResponses();
             if (responses.length == 1) {
                 DavPropertySet props = responses[0].getProperties(DavServletResponse.SC_OK);
-                DavProperty<?> type = props.get(ItemResourceConstants.JCR_TYPE);
+                DavProperty<?> type = props.get(JcrRemotingConstants.JCR_TYPE_LN, ItemResourceConstants.NAMESPACE);
                 if (type != null) {
                     return PropertyType.valueFromName(type.getValue().toString());
                 } else {

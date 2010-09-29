@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.webdav.jcr.observation;
 
+import org.apache.jackrabbit.commons.webdav.EventUtil;
 import org.apache.jackrabbit.webdav.DavException;
 import org.apache.jackrabbit.webdav.DavResourceLocator;
 import org.apache.jackrabbit.webdav.DavServletResponse;
@@ -62,48 +63,6 @@ public class SubscriptionImpl implements Subscription, ObservationConstants, Eve
 
     private static Logger log = LoggerFactory.getLogger(SubscriptionImpl.class);
     private static final long DEFAULT_TIMEOUT = 300000; // 5 minutes
-
-    /**
-     * Element representing the 'nodeadded' event type.
-     * @see javax.jcr.observation.Event#NODE_ADDED
-     */
-    private static final String EVENT_NODEADDED = "nodeadded";
-
-    /**
-     * Element representing the 'noderemoved' event type.
-     * @see javax.jcr.observation.Event#NODE_REMOVED
-     */
-    private static final String EVENT_NODEREMOVED = "noderemoved";
-
-    /**
-     * Element representing the 'propertyadded' event type.
-     * @see javax.jcr.observation.Event#PROPERTY_ADDED
-     */
-    private static final String EVENT_PROPERTYADDED = "propertyadded";
-
-    /**
-     * Element representing the 'propertyremoved' event type.
-     * @see javax.jcr.observation.Event#PROPERTY_REMOVED
-     */
-    private static final String EVENT_PROPERTYREMOVED = "propertyremoved";
-
-    /**
-     * Element representing the 'propertychanged' event type.
-     * @see javax.jcr.observation.Event#PROPERTY_CHANGED
-     */
-    private static final String EVENT_PROPERTYCHANGED = "propertychanged";
-
-    /**
-     * Element representing the 'nodemoved' event type.
-     * @see javax.jcr.observation.Event#NODE_MOVED
-     */
-    private static final String EVENT_NODEMOVED = "nodemoved";
-
-    /**
-     * Element representing the 'persist' event type.
-     * @see javax.jcr.observation.Event#PERSIST
-     */
-    private static final String EVENT_PERSIST = "persist";
 
     private SubscriptionInfo info;
     private long expirationTime;
@@ -401,32 +360,7 @@ public class SubscriptionImpl implements Subscription, ObservationConstants, Eve
      * </ul>
      */
     public static EventType getEventType(int jcrEventType) {
-        String localName;
-        switch (jcrEventType) {
-            case Event.NODE_ADDED:
-                localName = EVENT_NODEADDED;
-                break;
-            case Event.NODE_REMOVED:
-                localName = EVENT_NODEREMOVED;
-                break;
-            case Event.PROPERTY_ADDED:
-                localName = EVENT_PROPERTYADDED;
-                break;
-            case Event.PROPERTY_CHANGED:
-                localName = EVENT_PROPERTYCHANGED;
-                break;
-            case Event.PROPERTY_REMOVED:
-                localName = EVENT_PROPERTYREMOVED;
-                break;
-            case Event.NODE_MOVED:
-                localName = EVENT_NODEMOVED;
-                break;
-            case Event.PERSIST:
-                localName = EVENT_PERSIST;
-                break;
-            default: // no default
-                throw new IllegalArgumentException("Invalid JCR event type: " + jcrEventType);
-        }
+        String localName = EventUtil.getEventName(jcrEventType);
         return DefaultEventType.create(localName, NAMESPACE);
     }
 
@@ -434,15 +368,7 @@ public class SubscriptionImpl implements Subscription, ObservationConstants, Eve
      * @return The DAV event type representation for all known JCR event types.
      */
     public static EventType[] getAllEventTypes() {
-        EventType[] types = new EventType[] {
-                getEventType(javax.jcr.observation.Event.NODE_ADDED),
-                getEventType(javax.jcr.observation.Event.NODE_REMOVED),
-                getEventType(javax.jcr.observation.Event.PROPERTY_ADDED),
-                getEventType(javax.jcr.observation.Event.PROPERTY_CHANGED),
-                getEventType(javax.jcr.observation.Event.PROPERTY_REMOVED),
-                getEventType(javax.jcr.observation.Event.NODE_MOVED),
-                getEventType(javax.jcr.observation.Event.PERSIST)
-        };
+        EventType[] types = DefaultEventType.create(EventUtil.EVENT_ALL, NAMESPACE);
         return types;
     }
 
@@ -470,26 +396,11 @@ public class SubscriptionImpl implements Subscription, ObservationConstants, Eve
         if (eventType == null || !NAMESPACE.equals(eventType.getNamespace())) {
             throw new DavException(DavServletResponse.SC_UNPROCESSABLE_ENTITY, "Invalid JCR event type: "+ eventType + ": Namespace mismatch.");
         }
-        int eType;
         String eventName = eventType.getName();
-        if (EVENT_NODEADDED.equals(eventName)) {
-            eType = Event.NODE_ADDED;
-        } else if (EVENT_NODEREMOVED.equals(eventName)) {
-            eType = Event.NODE_REMOVED;
-        } else if (EVENT_PROPERTYADDED.equals(eventName)) {
-            eType = Event.PROPERTY_ADDED;
-        } else if (EVENT_PROPERTYCHANGED.equals(eventName)) {
-            eType = Event.PROPERTY_CHANGED;
-        } else if (EVENT_PROPERTYREMOVED.equals(eventName)) {
-            eType = Event.PROPERTY_REMOVED;
-        } else if (EVENT_NODEMOVED.equals(eventName)) {
-            eType = Event.NODE_MOVED;
-        } else if (EVENT_PERSIST.equals(eventName)) {
-            eType = Event.PERSIST;
-        } else {
+        if (!EventUtil.isValidEventName(eventName)) {
             throw new DavException(DavServletResponse.SC_UNPROCESSABLE_ENTITY, "Invalid event type: "+eventName);
         }
-        return eType;
+        return EventUtil.getJcrEventType(eventName);
     }
 
     /**

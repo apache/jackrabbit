@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.webdav.jcr.version.report;
 
+import org.apache.jackrabbit.commons.webdav.JcrRemotingConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.jackrabbit.webdav.version.report.Report;
@@ -47,12 +48,10 @@ public class JcrPrivilegeReport extends AbstractJcrReport {
 
     private static Logger log = LoggerFactory.getLogger(JcrPrivilegeReport.class);
 
-    private static final String REPORT_NAME = "privileges";
-
     /**
      * The exportview report type
      */
-    public static final ReportType PRIVILEGES_REPORT = ReportType.register(REPORT_NAME, ItemResourceConstants.NAMESPACE, JcrPrivilegeReport.class);
+    public static final ReportType PRIVILEGES_REPORT = ReportType.register(JcrRemotingConstants.REPORT_PRIVILEGES, ItemResourceConstants.NAMESPACE, JcrPrivilegeReport.class);
 
     private static final Privilege[] PRIVS = new Privilege[] {
         ItemResourceConstants.PRIVILEGE_JCR_READ,

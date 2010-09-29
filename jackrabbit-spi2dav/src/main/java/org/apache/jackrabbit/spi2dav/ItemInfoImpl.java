@@ -16,15 +16,13 @@
  */
 package org.apache.jackrabbit.spi2dav;
 
+import org.apache.jackrabbit.commons.webdav.JcrRemotingConstants;
 import org.apache.jackrabbit.spi.ItemInfo;
 import org.apache.jackrabbit.spi.Path;
-import org.apache.jackrabbit.webdav.property.DavPropertySet;
-import org.apache.jackrabbit.webdav.property.DavProperty;
-import org.apache.jackrabbit.webdav.jcr.ItemResourceConstants;
-import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.spi.commons.conversion.NameException;
-import org.slf4j.LoggerFactory;
-import org.slf4j.Logger;
+import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
+import org.apache.jackrabbit.webdav.property.DavProperty;
+import org.apache.jackrabbit.webdav.property.DavPropertySet;
 
 import javax.jcr.NamespaceException;
 
@@ -32,8 +30,6 @@ import javax.jcr.NamespaceException;
  * <code>ItemInfoImpl</code>...
  */
 abstract class ItemInfoImpl implements ItemInfo {
-
-    private static Logger log = LoggerFactory.getLogger(ItemInfoImpl.class);
 
     private final Path path;
 
@@ -44,7 +40,7 @@ abstract class ItemInfoImpl implements ItemInfo {
     ItemInfoImpl(DavPropertySet propSet, NamePathResolver resolver)
             throws NameException, NamespaceException {
 
-        DavProperty<?> pathProp = propSet.get(ItemResourceConstants.JCR_PATH);
+        DavProperty<?> pathProp = propSet.get(JcrRemotingConstants.JCR_PATH_LN, ItemResourceConstants.NAMESPACE);
         String jcrPath = pathProp.getValue().toString();
         path = resolver.getQPath(jcrPath);
     }

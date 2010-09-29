@@ -16,7 +16,6 @@
 package org.apache.jackrabbit.spi2dav;
 
 import org.apache.jackrabbit.webdav.lock.ActiveLock;
-import org.apache.jackrabbit.webdav.jcr.ItemResourceConstants;
 import org.apache.jackrabbit.webdav.DavConstants;
 import org.apache.jackrabbit.spi.LockInfo;
 import org.apache.jackrabbit.spi.NodeId;
@@ -56,7 +55,7 @@ public class LockInfoImpl implements LockInfo {
     }
 
     public boolean isSessionScoped() {
-        return activeLock.getScope() == ItemResourceConstants.EXCLUSIVE_SESSION;
+        return ItemResourceConstants.EXCLUSIVE_SESSION.equals(activeLock.getScope());
     }
 
     public long getSecondsRemaining() {

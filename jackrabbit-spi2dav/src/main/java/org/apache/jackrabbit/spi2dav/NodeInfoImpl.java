@@ -16,8 +16,8 @@
  */
 package org.apache.jackrabbit.spi2dav;
 
-import org.apache.jackrabbit.webdav.jcr.nodetype.NodeTypeProperty;
-import org.apache.jackrabbit.webdav.jcr.ItemResourceConstants;
+import org.apache.jackrabbit.commons.webdav.JcrRemotingConstants;
+import org.apache.jackrabbit.commons.webdav.NodeTypeUtil;
 import org.apache.jackrabbit.webdav.property.DavPropertySet;
 import org.apache.jackrabbit.webdav.property.DavProperty;
 import org.apache.jackrabbit.spi.commons.conversion.NameException;
@@ -32,9 +32,9 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
 import javax.jcr.RepositoryException;
+import java.util.Collection;
 import java.util.List;
 import java.util.Iterator;
-import java.util.Set;
 import java.util.ArrayList;
 
 /**
@@ -61,7 +61,7 @@ public class NodeInfoImpl extends ItemInfoImpl implements NodeInfo {
         // set id
         this.id = id;
 
-        DavProperty<?> indexProp = propSet.get(ItemResourceConstants.JCR_INDEX);
+        DavProperty<?> indexProp = propSet.get(JcrRemotingConstants.JCR_INDEX_LN, ItemResourceConstants.NAMESPACE);
         if (indexProp != null && indexProp.getValue() != null) {
             index = Integer.parseInt(indexProp.getValue().toString());
         } else {
@@ -70,8 +70,9 @@ public class NodeInfoImpl extends ItemInfoImpl implements NodeInfo {
 
         // retrieve properties
         try {
-            if (propSet.contains(ItemResourceConstants.JCR_PRIMARYNODETYPE)) {
-                Iterator<String> it = new NodeTypeProperty(propSet.get(ItemResourceConstants.JCR_PRIMARYNODETYPE)).getNodeTypeNames().iterator();
+            DavProperty<?> prop = propSet.get(JcrRemotingConstants.JCR_PRIMARYNODETYPE_LN, ItemResourceConstants.NAMESPACE);
+            if (prop != null) {
+                Iterator<String> it = NodeTypeUtil.ntNamesFromXml(prop.getValue()).iterator();
                 if (it.hasNext()) {
                     String jcrName = it.next();
                     primaryNodeTypeName = resolver.getQName(jcrName);
@@ -81,8 +82,10 @@ public class NodeInfoImpl extends ItemInfoImpl implements NodeInfo {
             } else {
                 throw new RepositoryException("Missing primary nodetype for node " + id);
             }
-            if (propSet.contains(ItemResourceConstants.JCR_MIXINNODETYPES)) {
-                Set<String> mixinNames = new NodeTypeProperty(propSet.get(ItemResourceConstants.JCR_MIXINNODETYPES)).getNodeTypeNames();
+
+            prop = propSet.get(JcrRemotingConstants.JCR_MIXINNODETYPES_LN, ItemResourceConstants.NAMESPACE);
+            if (prop != null) {
+                Collection<String> mixinNames = NodeTypeUtil.ntNamesFromXml(prop.getValue());
                 mixinNodeTypeNames = new Name[mixinNames.size()];
                 int i = 0;
                 for (String jcrName : mixinNames) {

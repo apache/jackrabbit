@@ -76,8 +76,30 @@ public class ReportInfo implements XmlSerializable {
      * @param propertyNames
      */
     public ReportInfo(ReportType type, int depth, DavPropertyNameSet propertyNames) {
-        this.typeLocalName = type.getLocalName();
-        this.typeNamespace = type.getNamespace();
+        this(type.getLocalName(), type.getNamespace(), depth, propertyNames);
+    }
+
+    /**
+     * Create a new <code>ReportInfo</code>
+     * 
+     * @param typeLocalName
+     * @param typeNamespace
+     */
+    public ReportInfo(String typeLocalName, Namespace typeNamespace) {
+        this(typeLocalName, typeNamespace, DavConstants.DEPTH_0, null);
+    }
+
+    /**
+     * Create a new <code>ReportInfo</code>
+     * 
+     * @param typelocalName
+     * @param typeNamespace
+     * @param depth
+     * @param propertyNames
+     */
+    public ReportInfo(String typelocalName, Namespace typeNamespace, int depth, DavPropertyNameSet propertyNames) {
+        this.typeLocalName = typelocalName;
+        this.typeNamespace = typeNamespace;
         this.depth = depth;
         if (propertyNames != null) {
             this.propertyNames = new DavPropertyNameSet(propertyNames);

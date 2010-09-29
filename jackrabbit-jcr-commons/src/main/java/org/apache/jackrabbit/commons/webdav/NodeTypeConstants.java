@@ -14,10 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.webdav.jcr.nodetype;
-
-import org.apache.jackrabbit.webdav.jcr.ItemResourceConstants;
-import org.apache.jackrabbit.webdav.xml.Namespace;
+package org.apache.jackrabbit.commons.webdav;
 
 /**
  * <code>NodeTypeConstants</code> used to represent nodetype definitions in
@@ -26,8 +23,6 @@ import org.apache.jackrabbit.webdav.xml.Namespace;
  * @see javax.jcr.nodetype.NodeType
  */
 public interface NodeTypeConstants {
-
-    public static final Namespace NAMESPACE = ItemResourceConstants.NAMESPACE;
 
     public static final String XML_NODETYPENAME = "nodetypename";
 

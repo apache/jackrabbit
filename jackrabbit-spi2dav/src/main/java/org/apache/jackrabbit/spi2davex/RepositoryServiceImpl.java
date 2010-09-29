@@ -39,6 +39,8 @@ import org.apache.commons.httpclient.methods.multipart.PartBase;
 import org.apache.jackrabbit.JcrConstants;
 import org.apache.jackrabbit.commons.json.JsonParser;
 import org.apache.jackrabbit.commons.json.JsonUtil;
+import org.apache.jackrabbit.commons.webdav.JcrRemotingConstants;
+import org.apache.jackrabbit.commons.webdav.JcrValueType;
 import org.apache.jackrabbit.spi.Batch;
 import org.apache.jackrabbit.spi.ItemId;
 import org.apache.jackrabbit.spi.ItemInfo;
@@ -62,8 +64,6 @@ import org.apache.jackrabbit.util.Text;
 import org.apache.jackrabbit.webdav.DavException;
 import org.apache.jackrabbit.webdav.DavServletResponse;
 import org.apache.jackrabbit.webdav.header.IfHeader;
-import org.apache.jackrabbit.webdav.jcr.ItemResourceConstants;
-import org.apache.jackrabbit.webdav.jcr.JcrValueType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -156,7 +156,7 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
                     // fallback:
                     // calculated uri does not start with the rootURI
                     // -> search /jcr:root and start sub-string behind.
-                    String rootSegment = Text.escapePath(ItemResourceConstants.ROOT_ITEM_RESOURCEPATH);
+                    String rootSegment = Text.escapePath(JcrRemotingConstants.ROOT_ITEM_RESOURCEPATH);
                     jcrPath = uri.substring(uri.indexOf(rootSegment) + rootSegment.length());
                 }
                 jcrPath = Text.unescape(jcrPath);
@@ -187,7 +187,7 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
 
     private String getRootURI(SessionInfo sessionInfo) {
         StringBuffer sb = new StringBuffer(getWorkspaceURI(sessionInfo));
-        sb.append(Text.escapePath(ItemResourceConstants.ROOT_ITEM_RESOURCEPATH));
+        sb.append(Text.escapePath(JcrRemotingConstants.ROOT_ITEM_RESOURCEPATH));
         return sb.toString();
     }
 

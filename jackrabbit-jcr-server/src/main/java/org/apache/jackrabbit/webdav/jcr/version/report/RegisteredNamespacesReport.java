@@ -58,7 +58,7 @@ public class RegisteredNamespacesReport extends AbstractJcrReport implements Ite
     /**
      * The registered type of this report.
      */
-    public static final ReportType REGISTERED_NAMESPACES_REPORT = ReportType.register("registerednamespaces", ItemResourceConstants.NAMESPACE, RegisteredNamespacesReport.class);
+    public static final ReportType REGISTERED_NAMESPACES_REPORT = ReportType.register(REPORT_REGISTERED_NAMESPACES, ItemResourceConstants.NAMESPACE, RegisteredNamespacesReport.class);
 
     private NamespaceRegistry nsReg;
 

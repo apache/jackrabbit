@@ -16,13 +16,17 @@
  */
 package org.apache.jackrabbit.spi2dav;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
 
-import javax.jcr.Value;
 import javax.jcr.RepositoryException;
+import javax.jcr.Value;
 import javax.jcr.ValueFactory;
 
+import org.apache.jackrabbit.commons.webdav.JcrRemotingConstants;
+import org.apache.jackrabbit.commons.webdav.QueryUtil;
 import org.apache.jackrabbit.spi.QueryResultRow;
 import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.Name;
@@ -32,21 +36,23 @@ import org.apache.jackrabbit.spi.IdFactory;
 import org.apache.jackrabbit.spi.commons.value.ValueFormat;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
+import org.apache.jackrabbit.webdav.property.DavPropertyName;
 import org.apache.jackrabbit.webdav.property.DavPropertySet;
 import org.apache.jackrabbit.webdav.property.DavProperty;
 import org.apache.jackrabbit.webdav.DavServletResponse;
 import org.apache.jackrabbit.webdav.MultiStatusResponse;
-import org.apache.jackrabbit.webdav.jcr.search.SearchResultProperty;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
 /**
  * <code>QueryResultRowImpl</code> implements a QueryResultRow that is
- * initialized from a multi status response.
+ * initialized from a multistatus response.
  */
 public class QueryResultRowImpl implements QueryResultRow {
 
     private static final Logger log = LoggerFactory.getLogger(QueryResultRowImpl.class);
+
+    private static final DavPropertyName SEARCH_RESULT_PROPERTY = DavPropertyName.create(JcrRemotingConstants.JCR_QUERY_RESULT_LN, ItemResourceConstants.NAMESPACE);
 
     private final Map<Name, NodeId> nodeIds = new HashMap<Name, NodeId>();
 
@@ -70,16 +76,22 @@ public class QueryResultRowImpl implements QueryResultRow {
 
         String jcrPath = resolver.getJCRName(NameConstants.JCR_PATH);
         String jcrScore = resolver.getJCRName(NameConstants.JCR_SCORE);
-        DavProperty<?> davProp = okSet.get(SearchResultProperty.SEARCH_RESULT_PROPERTY);
-        SearchResultProperty resultProp = new SearchResultProperty(davProp, valueFactory);
-        Value[] values = resultProp.getValues();
-        String[] names = resultProp.getColumnNames();
-        String[] selectorNames = resultProp.getSelectorNames();
-        this.selectorNames = new Name[selectorNames.length];
+        DavProperty<?> davProp = okSet.get(SEARCH_RESULT_PROPERTY);
+
+        List<String> colList = new ArrayList<String>();
+        List<String> selList = new ArrayList<String>();
+        List<Value> valList = new ArrayList<Value>();
+        QueryUtil.parseResultPropertyValue(davProp.getValue(), colList, selList, valList, valueFactory);
+
+        String[] names = colList.toArray(new String[colList.size()]);
+        Value[] values = valList.toArray(new Value[valList.size()]);
+
+        this.selectorNames = new Name[selList.size()];
         for (int i = 0; i < values.length; i++) {
             try {
+                String selectorName = selList.get(i);
                 QValue v = (values[i] == null) ? null : ValueFormat.getQValue(values[i], resolver, qValueFactory);
-                this.selectorNames[i] = (selectorNames[i] == null) ? null : resolver.getQName(selectorNames[i]);
+                this.selectorNames[i] = (selectorName == null) ? null : resolver.getQName(selectorName);
                 if (jcrScore.equals(names[i])) {
                     Double score = 0.0;
                     if (v != null) {
