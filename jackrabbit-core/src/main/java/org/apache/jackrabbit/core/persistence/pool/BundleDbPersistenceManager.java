@@ -18,7 +18,6 @@ package org.apache.jackrabbit.core.persistence.pool;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FilterInputStream;
@@ -811,11 +810,9 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
                     try {
                         // parse and check bundle
                         // checkBundle will log any problems itself
-                        DataInputStream din = new DataInputStream(new ByteArrayInputStream(data));
-                        if (binding.checkBundle(din)) {
-                            // reset stream for readBundle()
-                            din = new DataInputStream(new ByteArrayInputStream(data));
-                            NodePropBundle bundle = binding.readBundle(din, id);
+                        if (binding.checkBundle(new ByteArrayInputStream(data))) {
+                            NodePropBundle bundle = binding.readBundle(
+                                    new ByteArrayInputStream(data), id);
                             checkBundleConsistency(id, bundle, fix, modifications);
                         } else {
                             log.error("invalid bundle '" + id + "', see previous BundleBinding error log entry");
@@ -1078,19 +1075,16 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
             }
             Blob b = rs.getBlob(1);
             byte[] bytes = getBytes(b);
-            DataInputStream din = new DataInputStream(new ByteArrayInputStream(bytes));
 
             if (checkBeforeLoading) {
-                if (binding.checkBundle(din)) {
-                    // reset stream for readBundle()
-                    din = new DataInputStream(new ByteArrayInputStream(bytes));
-                } else {
+                if (!binding.checkBundle(new ByteArrayInputStream(bytes))) {
                     // gets wrapped as proper ItemStateException below
                     throw new Exception("invalid bundle, see previous BundleBinding error log entry");
                 }
             }
 
-            NodePropBundle bundle = binding.readBundle(din, id);
+            NodePropBundle bundle =
+                binding.readBundle(new ByteArrayInputStream(bytes), id);
             bundle.setSize(bytes.length);
             return bundle;
         } catch (Exception e) {
