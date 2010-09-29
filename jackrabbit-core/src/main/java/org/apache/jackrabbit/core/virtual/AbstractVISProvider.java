@@ -71,7 +71,10 @@ public abstract class AbstractVISProvider implements VirtualItemStateProvider, I
      */
     @SuppressWarnings("unchecked")
     private final Map<NodeId, NodeState> nodes =
-        new ReferenceMap(ReferenceMap.HARD, ReferenceMap.SOFT);
+        // Using soft references instead of weak ones seems to have
+        // some unexpected performance consequences, so for now it's
+        // better to stick with weak references.
+        new ReferenceMap(ReferenceMap.HARD, ReferenceMap.WEAK);
 
     /**
      * Listeners (weak references)
