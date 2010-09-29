@@ -92,7 +92,7 @@ public class BundleBinding extends ItemStateBinding {
         bundle.setNodeTypeName(nodeTypeName);
 
         // parentUUID
-        bundle.setParentId(readID(in));
+        bundle.setParentId(readNodeId(in));
 
         // definitionId
         in.readUTF();
@@ -127,10 +127,10 @@ public class BundleBinding extends ItemStateBinding {
         bundle.setReferenceable(in.readBoolean());
 
         // child nodes (list of uuid/name pairs)
-        NodeId childId = readID(in);
+        NodeId childId = readNodeId(in);
         while (childId != null) {
             bundle.addChildNodeEntry(readQName(in), childId);
-            childId = readID(in);
+            childId = readNodeId(in);
         }
 
         // read modcount, since version 1.0
@@ -142,10 +142,10 @@ public class BundleBinding extends ItemStateBinding {
         Set<NodeId> sharedSet = new HashSet<NodeId>();
         if (version >= VERSION_2) {
             // shared set (list of parent uuids)
-            NodeId parentId = readID(in);
+            NodeId parentId = readNodeId(in);
             while (parentId != null) {
                 sharedSet.add(parentId);
-                parentId = readID(in);
+                parentId = readNodeId(in);
             }
         }
         bundle.setSharedSet(sharedSet);
@@ -181,7 +181,7 @@ public class BundleBinding extends ItemStateBinding {
             return false;
         }
         try {
-            NodeId parentId = readID(in);
+            NodeId parentId = readNodeId(in);
             log.debug("ParentUUID: " + parentId);
         } catch (IOException e) {
             log.error("Error while reading ParentUUID: " + e);
@@ -225,11 +225,11 @@ public class BundleBinding extends ItemStateBinding {
             return false;
         }
         try {
-            NodeId cneId = readID(in);
+            NodeId cneId = readNodeId(in);
             while (cneId != null) {
                 Name cneName = readQName(in);
                 log.debug("ChildNodentry: " + cneId + ":" + cneName);
-                cneId = readID(in);
+                cneId = readNodeId(in);
             }
         } catch (IOException e) {
             log.error("Error while reading child node entry: " + e);
@@ -265,7 +265,7 @@ public class BundleBinding extends ItemStateBinding {
         out.writeInt(nameIndex.stringToIndex(bundle.getNodeTypeName().getLocalName()));
 
         // parentUUID
-        writeID(out, bundle.getParentId());
+        writeNodeId(out, bundle.getParentId());
 
         // definitionId
         out.writeUTF("");
@@ -299,19 +299,19 @@ public class BundleBinding extends ItemStateBinding {
 
         // child nodes (list of uuid/name pairs)
         for (NodePropBundle.ChildNodeEntry entry : bundle.getChildNodeEntries()) {
-            writeID(out, entry.getId());  // uuid
+            writeNodeId(out, entry.getId());  // uuid
             writeQName(out, entry.getName());   // name
         }
-        writeID(out, null);
+        writeNodeId(out, null);
 
         // write mod count
         writeModCount(out, bundle.getModCount());
 
         // write shared set
         for (NodeId nodeId: bundle.getSharedSet()) {
-            writeID(out, nodeId);
+            writeNodeId(out, nodeId);
         }
-        writeID(out, null);
+        writeNodeId(out, null);
 
         // set size of bundle
         bundle.setSize(out.size() - size);
@@ -390,10 +390,10 @@ public class BundleBinding extends ItemStateBinding {
                     val = InternalValue.create(readQName(in));
                     break;
                 case PropertyType.WEAKREFERENCE:
-                    val = InternalValue.create(readID(in), true);
+                    val = InternalValue.create(readNodeId(in), true);
                     break;
                 case PropertyType.REFERENCE:
-                    val = InternalValue.create(readID(in), false);
+                    val = InternalValue.create(readNodeId(in), false);
                     break;
                 default:
                     // because writeUTF(String) has a size limit of 64k,
@@ -544,7 +544,7 @@ public class BundleBinding extends ItemStateBinding {
                 case PropertyType.WEAKREFERENCE:
                 case PropertyType.REFERENCE:
                     try {
-                        NodeId id = readID(in);
+                        NodeId id = readNodeId(in);
                         log.debug("  reference: " + id);
                     } catch (IOException e) {
                         log.error("Error while reading reference value: " + e);
@@ -717,7 +717,7 @@ public class BundleBinding extends ItemStateBinding {
                     break;
                 case PropertyType.WEAKREFERENCE:
                 case PropertyType.REFERENCE:
-                    writeID(out, val.getNodeId());
+                    writeNodeId(out, val.getNodeId());
                     break;
                 default:
                     // because writeUTF(String) has a size limit of 64k,

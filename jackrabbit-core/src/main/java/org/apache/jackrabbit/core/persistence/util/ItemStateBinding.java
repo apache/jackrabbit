@@ -155,7 +155,7 @@ public class ItemStateBinding {
         state.setNodeTypeName(NameFactoryImpl.getInstance().create(uri, local));
 
         // parentUUID
-        state.setParentId(readID(in));
+        state.setParentId(readNodeId(in));
         // definitionId
         in.readUTF();
 
@@ -177,7 +177,7 @@ public class ItemStateBinding {
         count = in.readInt();   // count
         for (int i = 0; i < count; i++) {
             Name name = readQName(in);
-            NodeId parentId = readID(in);
+            NodeId parentId = readNodeId(in);
             state.addChildNodeEntry(name, parentId);
         }
 
@@ -188,7 +188,7 @@ public class ItemStateBinding {
             // shared set (list of parent uuids)
             count = in.readInt();   // count
             for (int i = 0; i < count; i++) {
-                state.addShare(readID(in));
+                state.addShare(readNodeId(in));
             }
         }
         return state;
@@ -207,7 +207,7 @@ public class ItemStateBinding {
         out.writeInt((VERSION_CURRENT << 24) | nsIndex.stringToIndex(state.getNodeTypeName().getNamespaceURI()));
         out.writeUTF(state.getNodeTypeName().getLocalName());
         // parentUUID
-        writeID(out, state.getParentId());
+        writeNodeId(out, state.getParentId());
         // definitionId
         out.writeUTF("");
         // mixin types
@@ -229,7 +229,7 @@ public class ItemStateBinding {
         for (Iterator<ChildNodeEntry> iter = collChild.iterator(); iter.hasNext();) {
             ChildNodeEntry entry = iter.next();
             writeQName(out, entry.getName());   // name
-            writeID(out, entry.getId());  // uuid
+            writeNodeId(out, entry.getId());  // uuid
         }
         writeModCount(out, state.getModCount());
         
@@ -237,7 +237,7 @@ public class ItemStateBinding {
         Collection<NodeId> collShared = state.getSharedSet();
         out.writeInt(collShared.size()); // count
         for (Iterator<NodeId> iter = collShared.iterator(); iter.hasNext();) {
-            writeID(out, iter.next());
+            writeNodeId(out, iter.next());
         }
     }
 
@@ -263,12 +263,12 @@ public class ItemStateBinding {
      * @param id the node id
      * @throws IOException in an I/O error occurs.
      */
-    public void writeNodeId(DataOutputStream out, String id) throws IOException {
+    public void writeNodeId(DataOutputStream out, NodeId id) throws IOException {
         if (id == null) {
             out.writeBoolean(false);
         } else {
             out.writeBoolean(true);
-            out.write(new NodeId(id).getRawBytes());
+            out.write(id.getRawBytes());
         }
     }
 
@@ -300,40 +300,6 @@ public class ItemStateBinding {
             out.writeBoolean(true);
             // TODO more efficient serialization format
             out.writeUTF(decimal.toString());
-        }
-    }
-
-    /**
-     * Deserializes a NodeID
-     * @param in the input stream
-     * @return the uuid
-     * @throws IOException in an I/O error occurs.
-     */
-    public NodeId readID(DataInputStream in) throws IOException {
-        if (in.readBoolean()) {
-            byte[] bytes = new byte[16];
-            int pos = 0;
-            while (pos < 16) {
-                pos += in.read(bytes, pos, 16 - pos);
-            }
-            return new NodeId(bytes);
-        } else {
-            return null;
-        }
-    }
-
-    /**
-     * Serializes a node id
-     * @param out the output stream
-     * @param id the id
-     * @throws IOException in an I/O error occurs.
-     */
-    public void writeID(DataOutputStream out, NodeId id) throws IOException {
-        if (id == null) {
-            out.writeBoolean(false);
-        } else {
-            out.writeBoolean(true);
-            out.write(id.getRawBytes());
         }
     }
 
@@ -419,7 +385,7 @@ public class ItemStateBinding {
      * @throws IOException in an I/O error occurs.
      */
     public void writePropertyId(DataOutputStream out, PropertyId id) throws IOException {
-        writeID(out, id.getParentId());
+        writeNodeId(out, id.getParentId());
         writeQName(out, id.getName());
     }
 
