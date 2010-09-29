@@ -27,7 +27,6 @@ import org.apache.jackrabbit.core.state.NodeReferences;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -109,10 +108,9 @@ public class Oracle9PersistenceManager extends OraclePersistenceManager {
             throws ItemStateException {
         Blob blob = null;
         try {
-            ByteArrayOutputStream out = new ByteArrayOutputStream(INITIAL_BUFFER_SIZE);
-            DataOutputStream dout = new DataOutputStream(out);
-            binding.writeBundle(dout, bundle);
-            dout.close();
+            ByteArrayOutputStream out =
+                new ByteArrayOutputStream(INITIAL_BUFFER_SIZE);
+            binding.writeBundle(out, bundle);
 
             String sql = bundle.isNew() ? bundleInsertSQL : bundleUpdateSQL;
             blob = createTemporaryBlob(new ByteArrayInputStream(out.toByteArray()));

@@ -20,6 +20,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 
 import org.apache.jackrabbit.core.data.DataStore;
 import org.apache.jackrabbit.core.id.NodeId;
@@ -160,7 +161,7 @@ public class BundleBinding {
      * @param bundle the bundle to serialize
      * @throws IOException if an I/O error occurs.
      */
-    public void writeBundle(DataOutputStream out, NodePropBundle bundle)
+    public void writeBundle(OutputStream out, NodePropBundle bundle)
             throws IOException {
         new BundleWriter(this, out).writeBundle(bundle);
     }

@@ -19,8 +19,6 @@ package org.apache.jackrabbit.core.persistence.bundle;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FilterInputStream;
 import java.io.IOException;
@@ -1194,10 +1192,9 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
      */
     protected synchronized void storeBundle(NodePropBundle bundle) throws ItemStateException {
         try {
-            ByteArrayOutputStream out = new ByteArrayOutputStream(INITIAL_BUFFER_SIZE);
-            DataOutputStream dout = new DataOutputStream(out);
-            binding.writeBundle(dout, bundle);
-            dout.close();
+            ByteArrayOutputStream out =
+                new ByteArrayOutputStream(INITIAL_BUFFER_SIZE);
+            binding.writeBundle(out, bundle);
 
             String sql = bundle.isNew() ? bundleInsertSQL : bundleUpdateSQL;
             Object[] params = createParams(bundle.getId(), out.toByteArray(), true);
