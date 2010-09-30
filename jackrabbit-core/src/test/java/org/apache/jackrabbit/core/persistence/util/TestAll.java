@@ -26,6 +26,7 @@ public class TestAll extends TestCase {
         TestSuite suite = new TestSuite("Persistence utility tests");
 
         suite.addTestSuite(HashMapIndexTest.class);
+        suite.addTestSuite(BundleBindingTest.class);
 
         return suite;
     }

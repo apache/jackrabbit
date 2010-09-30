@@ -49,7 +49,6 @@ import org.apache.jackrabbit.spi.commons.value.AbstractQValue;
 import org.apache.jackrabbit.spi.commons.value.AbstractQValueFactory;
 import org.apache.jackrabbit.spi.commons.value.QValueValue;
 import org.apache.jackrabbit.util.ISO8601;
-import org.apache.commons.io.IOUtils;
 
 /**
  * <code>InternalValue</code> represents the internal format of a property value.
@@ -703,6 +702,15 @@ public class InternalValue extends AbstractQValue {
         if (type == PropertyType.BINARY) {
             BLOBFileValue bfv = (BLOBFileValue) val;
             bfv.delete(true);
+        }
+    }
+
+    public boolean equals(Object object) {
+        if (object instanceof InternalValue) {
+            InternalValue that = (InternalValue) object;
+            return type == that.type && val.equals(that.val);
+        } else {
+            return false;
         }
     }
 
