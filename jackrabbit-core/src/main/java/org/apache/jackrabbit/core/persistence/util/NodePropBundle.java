@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.core.persistence.util;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -511,6 +512,16 @@ public class NodePropBundle {
         public NodeId getId() {
             return id;
         }
+
+        public boolean equals(Object object) {
+            if (object instanceof ChildNodeEntry) {
+                ChildNodeEntry that = (ChildNodeEntry) object;
+                return name.equals(that.name) && id.equals(that.id);
+            } else {
+                return false;
+            }
+        }
+
     }
 
     //------------------------------------------------------< PropertyEntry >---
@@ -696,6 +707,18 @@ public class NodePropBundle {
                         log.error("Ignoring error while removing blob " + blobIds[i], e);
                     }
                 }
+            }
+        }
+
+        public boolean equals(Object object) {
+            if (object instanceof PropertyEntry) {
+                PropertyEntry that = (PropertyEntry) object;
+                return id.equals(that.id)
+                    && type == that.type
+                    && multiValued == that.multiValued
+                    && Arrays.equals(values, that.values);
+            } else {
+                return false;
             }
         }
 
