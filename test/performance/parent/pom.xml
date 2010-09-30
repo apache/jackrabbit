@@ -41,6 +41,7 @@
 
   <properties>
     <only>.*:.*</only>
+    <scale>0</scale>
   </properties>
 
   <build>
@@ -65,6 +66,10 @@
                 <name>only</name>
                 <value>${only}</value>
               </property>
+              <property>
+                <name>scale</name>
+                <value>${scale}</value>
+              </property>
             </systemProperties>
           </configuration>
         </plugin>
@@ -87,31 +92,6 @@
               <artifactId>maven-surefire-plugin</artifactId>
               <configuration>
                 <argLine>-agentlib:${agentlib}</argLine>
-              </configuration>
-            </plugin>
-          </plugins>
-        </pluginManagement>
-      </build>
-    </profile>
-    <profile>
-      <id>scaled</id>
-      <activation>
-        <property>
-          <name>scale</name>
-        </property>
-      </activation>
-      <build>
-        <pluginManagement>
-          <plugins>
-            <plugin>
-              <artifactId>maven-surefire-plugin</artifactId>
-              <configuration>
-                <systemProperties>
-                  <property>
-                    <name>scale</name>
-                    <value>${scale}</value>
-                  </property>
-                </systemProperties>
               </configuration>
             </plugin>
           </plugins>

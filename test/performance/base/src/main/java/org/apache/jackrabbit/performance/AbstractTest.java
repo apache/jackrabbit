@@ -40,7 +40,11 @@ public abstract class AbstractTest {
     private volatile boolean running;
 
     protected static int getScale(int def) {
-        return Integer.getInteger("scale", def);
+        int scale = Integer.getInteger("scale", 0);
+        if (scale == 0) {
+            scale = def;
+        }
+        return scale;
     }
 
     /**
