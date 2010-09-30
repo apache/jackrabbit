@@ -454,6 +454,31 @@ public class NodePropBundle {
 
     //--------------------------------------------------------------< Object >
 
+    public String toString() {
+        StringBuilder builder = new StringBuilder();
+        builder.append(id);
+        builder.append("(");
+        builder.append(parentId);
+        builder.append(",");
+        builder.append(nodeTypeName);
+        for (Name mixin : mixinTypeNames) {
+            builder.append(",");
+            builder.append(mixin);
+        }
+        if (isReferenceable) {
+            builder.append(",referenceable");
+        }
+        builder.append(") = ");
+        if (!sharedSet.isEmpty()) {
+            builder.append(sharedSet);
+            builder.append(" ");
+        }
+        builder.append(properties.values());
+        builder.append(" ");
+        builder.append(childNodeEntries);
+        return builder.toString();
+    }
+
     public boolean equals(Object object) {
         if (object instanceof NodePropBundle) {
             NodePropBundle that = (NodePropBundle) object;
@@ -511,6 +536,12 @@ public class NodePropBundle {
          */
         public NodeId getId() {
             return id;
+        }
+
+        //----------------------------------------------------------< Object >
+
+        public String toString() {
+            return name + " => " + id;
         }
 
         public boolean equals(Object object) {
@@ -708,6 +739,21 @@ public class NodePropBundle {
                     }
                 }
             }
+        }
+
+        //----------------------------------------------------------< Object >
+
+        public String toString() {
+            StringBuilder builder = new StringBuilder();
+            builder.append(id);
+            builder.append("(");
+            builder.append(PropertyType.nameFromValue(type));
+            if (multiValued) {
+                builder.append(",multiple");
+            }
+            builder.append(") = ");
+            builder.append(Arrays.toString(values));
+            return builder.toString();
         }
 
         public boolean equals(Object object) {
