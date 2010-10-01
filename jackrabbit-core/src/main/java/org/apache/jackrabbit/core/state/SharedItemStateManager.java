@@ -712,6 +712,14 @@ public class SharedItemStateManager
                 if (eventChannel != null) {
                     eventChannel.updatePrepared(this);
                 }
+                
+                try {
+                    validateHierarchy(local);
+                } catch (ItemStateException e) {
+                    throw e;
+                } catch (RepositoryException e) {
+                    throw new ItemStateException("Invalid hierarchy", e);
+                }
 
                 /* Push all changes from the local items to the shared items */
                 local.push();
@@ -1118,7 +1126,340 @@ public class SharedItemStateManager
         }
 
     }
+    
+    /**
+     * Validates the hierarchy consistency of the changes in the changelog.
+     * 
+     * @param changeLog
+     *            The local changelog the should be validated
+     * @throws ItemStateException
+     *             If the hierarchy changes are inconsistent.
+     * @throws RepositoryException
+     *             If the consistency could not be validated
+     * 
+     */
+    private void validateHierarchy(ChangeLog changeLog) throws ItemStateException, RepositoryException {
 
+        // Check the deleted node states
+        validateDeleted(changeLog);
+
+        // Check the added node states
+        validateAdded(changeLog);
+
+        // Check the modified node states
+        validateModified(changeLog);
+    }
+
+    /**
+     * Checks the parents and children of all deleted node states in the changelog.
+     * 
+     * @param changeLog
+     *            The local changelog the should be validated
+     * @throws ItemStateException
+     *             If the hierarchy changes are inconsistent.
+     */
+    private void validateDeleted(ChangeLog changeLog) throws ItemStateException {
+
+        // Check each deleted nodestate
+        for (Iterator it = changeLog.deletedStates(); it.hasNext(); ) {
+        	ItemState removedState = (ItemState) it.next();
+            if (removedState instanceof NodeState) {
+
+                // Get the next state
+                NodeState removedNodeState = (NodeState) removedState;
+                NodeId id = removedNodeState.getNodeId();
+
+                // Get and check the corresponding overlayed state
+                NodeState overlayedState = (NodeState) removedState.getOverlayedState();
+                if (overlayedState == null) {
+                    String message = "Unable to load persistent state for removed node " + id;
+                    overlayedState = (NodeState) SharedItemStateManager.this.getItemState(id);
+                    if (overlayedState == null) {
+                        log.error(message);
+                        throw new ItemStateException(message);
+                    }
+                }
+
+                // Check whether an version of this node has been restored
+                boolean addedAndRemoved = changeLog.has(removedNodeState.getId());
+                if (!addedAndRemoved) {
+
+                    // Check the old parent
+                    NodeId oldParentId = overlayedState.getParentId();
+                    if (changeLog.deleted(oldParentId)) {
+                        // parent has been deleted aswell
+                    } else if (changeLog.isModified(oldParentId)) {
+                        // the modified state will be check later on
+                    } else {
+                        String message = "Node with id " + id
+                                + " has been removed, but the parent node isn't part of the changelog " + oldParentId;
+                        log.error(message);
+                        throw new ItemStateException(message);
+                    }
+
+                    // Get the original list of child ids
+                    for (Iterator it2 = overlayedState.getChildNodeEntries().iterator(); it2.hasNext(); ) {
+                    	ChildNodeEntry entry = (ChildNodeEntry) it2.next();
+                        // Check the next child
+                        NodeId childId = entry.getId();
+
+                        if (changeLog.deleted(childId)) {
+                            // child has been deleted aswell
+                        } else if (changeLog.isModified(childId)) {
+
+                            // the modified state will be check later on
+                        } else {
+                            String message = "Node with id " + id
+                                    + " has been removed, but the old child node isn't part of the changelog "
+                                    + childId;
+                            log.error(message);
+                            throw new ItemStateException(message);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Checks the parents and children of all added node states in the changelog.
+     * 
+     * @param changeLog
+     *            The local changelog the should be validated
+     * @throws ItemStateException
+     *             If the hierarchy changes are inconsistent.
+     */
+    private void validateAdded(ChangeLog changeLog) throws ItemStateException {
+
+        // Check each added node
+        for (Iterator it = changeLog.addedStates(); it.hasNext(); ) {
+        	ItemState state = (ItemState) it.next();
+            if (state instanceof NodeState) {
+
+                // Get the next added node
+                NodeState addedNodeState = (NodeState) state;
+                NodeId id = addedNodeState.getNodeId();
+
+                // Check the parent
+                NodeId parentId = addedNodeState.getParentId();
+                if (changeLog.has(parentId)) { // Added or modified
+                    // the modified state will be check later on
+                    checkParent(changeLog, addedNodeState, parentId);
+                } else {
+                    String message = "Node with id " + id
+                            + " has been added, but the parent node isn't part of the changelog " + parentId;
+                    log.error(message);
+                    throw new ItemStateException(message);
+                }
+
+                // Check the children
+                for (Iterator it2 = addedNodeState.getChildNodeEntries().iterator(); it2.hasNext(); ) {
+                	ChildNodeEntry entry = (ChildNodeEntry) it2.next();
+                    // Get the next child
+                    NodeId childId = entry.getId();
+
+                    if (changeLog.has(childId)) {
+                        NodeState childState = (NodeState) changeLog.get(childId);
+                        checkParent(changeLog, childState, id);
+                        // the child state will be check later on
+
+                    } else {
+                        String message = "Node with id " + id
+                                + " has been added, but the child node isn't part of the changelog " + childId;
+                        log.error(message);
+                        throw new ItemStateException(message);
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Checks the parents and children of all modified node states in the changelog.
+     * 
+     * @param changeLog
+     *            The local changelog the should be validated
+     * @throws ItemStateException
+     *             If the hierarchy changes are inconsistent.
+     */
+    private void validateModified(ChangeLog changeLog) throws ItemStateException, RepositoryException {
+
+        // Check all modified nodes
+        for (Iterator it = changeLog.modifiedStates(); it.hasNext(); ) {
+        	ItemState state = (ItemState) it.next();
+            if (state instanceof NodeState) {
+
+                // Check the next node
+                NodeState modifiedNodeState = (NodeState) state;
+                NodeId id = modifiedNodeState.getNodeId();
+
+                // Check whether to overlayed state is present for determining diffs
+                NodeState overlayedState = (NodeState) modifiedNodeState.getOverlayedState();
+                if (overlayedState == null) {
+                    String message = "Unable to load persistent state for modified node " + id;
+                    log.error(message);
+                    throw new ItemStateException(message);
+                }
+
+                // Check the parent
+                NodeId parentId = modifiedNodeState.getParentId();
+                NodeId oldParentId = overlayedState.getParentId();
+
+                // The parent should not be deleted
+                if (parentId != null && changeLog.deleted(parentId)) {
+                    String message = "Parent of node with id " + id + " has been deleted";
+                    log.error(message);
+                    throw new ItemStateException(message);
+                }
+
+                if (parentId != null && changeLog.has(parentId)) {
+                    checkParent(changeLog, modifiedNodeState, parentId);
+                }
+
+                // Check whether this node is the root node
+                if (parentId == null && oldParentId == null) {
+                    // The root node can be ignored
+
+                } else if (!parentId.equals(oldParentId)) {
+
+                    // This node has been moved, check whether the parent has been modified aswell
+                    if (changeLog.has(parentId)) {
+                        checkParent(changeLog, modifiedNodeState, parentId);
+                    } else if (!isShareable(modifiedNodeState)) {
+                        String message = "New parent of node " + id + " is not present in the changelog " + id;
+                        log.error(message);
+                        throw new ItemStateException(message);
+                    }
+
+                    // The old parent must be modified or deleted
+                    if (!changeLog.isModified(oldParentId) && !changeLog.deleted(oldParentId)) {
+                        String message = "Node with id " + id
+                                + " has been move, but the original parent is not part of the changelog: "
+                                + oldParentId;
+                        log.error(message);
+                        throw new ItemStateException(message);
+                    }
+                }
+
+                // Check all assigned children
+                for (Iterator it2 = modifiedNodeState.getChildNodeEntries().iterator(); it2.hasNext(); ) {
+                	ChildNodeEntry entry = (ChildNodeEntry) it2.next(); 
+
+                    NodeId childId = entry.getId();
+
+                    // Check whether this node has a deleted childid
+                    if (changeLog.deleted(childId) && !changeLog.has(childId)) { // Versionable
+                        String message = "Node with id " + id + " has a deleted childid: " + childId;
+                        log.error(message);
+                        throw new ItemStateException(message);
+                    }
+
+                    if (changeLog.has(childId)) {
+                        NodeState childState = (NodeState) changeLog.get(childId);
+                        checkParent(changeLog, childState, id);
+                    }
+                }
+
+                // Check all children the have been added
+                for (Iterator it2 = modifiedNodeState.getAddedChildNodeEntries().iterator(); it2.hasNext(); ) {
+                	ChildNodeEntry entry = (ChildNodeEntry) it2.next();
+                    NodeId childId = entry.getId();
+                    if (!changeLog.has(childId)) {
+                        String message = "ChildId " + childId + " has been added to parent " + id
+                                + ", but is not present in the changelog";
+                        log.error(message);
+                        throw new ItemStateException(message);
+                    }
+                }
+
+                // Check all children the have been moved or removed
+                for (Iterator it2 = modifiedNodeState.getRemovedChildNodeEntries().iterator(); it2.hasNext(); ) {
+                	ChildNodeEntry entry = (ChildNodeEntry) it2.next();
+                    NodeId childId = entry.getId();
+                    if (!changeLog.isModified(childId) && !changeLog.deleted(childId)) {
+                        String message = "Child node entry with id " + childId
+                                + " has been removed, but is not present in the changelog";
+                        log.error(message);
+                        throw new ItemStateException(message);
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Check the consistency of a parent/child relationship.
+     * 
+     * @param changeLog
+     *            The changelog to check
+     * @param childState
+     *            The id of the node for which the parent/child relationship should be validated.
+     * @param expectedParent
+     *            The expected parent id of the child node.
+     * @throws ItemStateException
+     *             If a inconsistency has been detected.
+     */
+    void checkParent(ChangeLog changeLog, NodeState childState, NodeId expectedParent) throws ItemStateException {
+
+        // Check whether the the changelog contains an entry for the parent aswell.
+        NodeId parentId = childState.getParentId();
+        if (!parentId.equals(expectedParent)) {
+            Set sharedSet = childState.getSharedSet();
+            if (sharedSet.contains(expectedParent)) {
+                return;
+            }
+            String message = "Child node has another parent id " + parentId + ", expected " + expectedParent;
+            log.error(message);
+            throw new ItemStateException(message);
+        }
+
+        if (!changeLog.has(parentId)) {
+            String message = "Parent not part of changelog";
+            log.error(message);
+            throw new ItemStateException(message);
+        }
+
+        // Get the parent from the changelog
+        NodeState parent = (NodeState) changeLog.get(parentId);
+
+        // Get and check the child node entry from the parent
+        NodeId childId = childState.getNodeId();
+        ChildNodeEntry childNodeEntry = parent.getChildNodeEntry(childId);
+        if (childNodeEntry == null) {
+            String message = "Child not present in parent";
+            log.error(message);
+            throw new ItemStateException(message);
+        }
+    }
+
+    /**
+     * Determines whether the specified node is <i>shareable</i>, i.e. whether the mixin type <code>mix:shareable</code>
+     * is either directly assigned or indirectly inherited.
+     * 
+     * @param state
+     *            node state to check
+     * @return true if the specified node is <i>shareable</i>, false otherwise.
+     * @throws RepositoryException
+     *             if an error occurs
+     */
+    private boolean isShareable(NodeState state) throws RepositoryException {
+        // shortcut: check some wellknown built-in types first
+        Name primary = state.getNodeTypeName();
+        Set mixins = state.getMixinTypeNames();
+        if (mixins.contains(NameConstants.MIX_SHAREABLE)) {
+            return true;
+        }
+
+        try {
+            EffectiveNodeType type = ntReg.getEffectiveNodeType(primary, mixins);
+            return type.includesNodeType(NameConstants.MIX_SHAREABLE);
+        } catch (NodeTypeConflictException ntce) {
+            String msg = "internal error: failed to build effective node type for node " + state.getNodeId();
+            log.debug(msg);
+            throw new RepositoryException(msg, ntce);
+        }
+    }
+    
     /**
      * Begin update operation. This will return an object that can itself be
      * ended/canceled.

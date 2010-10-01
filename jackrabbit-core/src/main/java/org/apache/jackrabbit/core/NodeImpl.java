@@ -600,6 +600,8 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
         itemMgr.getItem(propId).setRemoved();
     }
 
+    // The index may have changed because of changes by another session. Use removeChildNode(NodeId childId)
+    // instead
     protected void removeChildNode(Name nodeName, int index)
             throws RepositoryException {
         // modify the state of 'this', i.e. the parent node
@@ -627,7 +629,30 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
             throw new RepositoryException(msg);
         }
     }
+    
+    protected void removeChildNode(NodeId childId) throws RepositoryException {
+        // modify the state of 'this', i.e. the parent node
+        NodeState thisState = (NodeState) getOrCreateTransientItemState();
+        ChildNodeEntry entry =
+                thisState.getChildNodeEntry(childId);
+        if (entry == null) {
+            String msg = "failed to remove child " + childId + " of " + this;
+            log.debug(msg);
+            throw new RepositoryException(msg);
+        }
 
+        // notify target of removal
+        NodeImpl childNode = itemMgr.getNode(childId, getNodeId());
+        childNode.onRemove(getNodeId());
+
+        // remove the child node entry
+        if (!thisState.removeChildNodeEntry(childId)) {
+            String msg = "failed to remove child " + childId + " of " + this;
+            log.debug(msg);
+            throw new RepositoryException(msg);
+        }
+    }
+    
     protected void onRedefine(NodeDef def) throws RepositoryException {
         NodeDefinitionImpl newDef =
                 session.getNodeTypeManager().getNodeDefinition(def);
@@ -670,7 +695,7 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
                 NodeImpl childNode = itemMgr.getNode(childId, getNodeId());
                 childNode.onRemove(thisState.getNodeId());
                 // remove the child node entry
-                thisState.removeChildNodeEntry(entry.getName(), entry.getIndex());
+                thisState.removeChildNodeEntry(childId);
             }
         }
 
@@ -1307,7 +1332,7 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
 
                 if (oldDef.isProtected()) {
                     // remove 'orphaned' protected child node immediately
-                    removeChildNode(entry.getName(), entry.getIndex());
+                    removeChildNode(entry.getId());
                     continue;
                 }
 
@@ -1322,7 +1347,7 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
                 } catch (ConstraintViolationException cve) {
                     // no suitable definition found for this child node,
                     // remove it
-                    removeChildNode(entry.getName(), entry.getIndex());
+                    removeChildNode(entry.getId());
                 }
             }
             success = true;
@@ -4932,7 +4957,7 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
                         NodeImpl node = (NodeImpl) itemMgr.getItem(nodeState.getId());
                         if (node.getDefinition().isProtected()) {
                             // remove 'orphaned' protected child node immediately
-                            removeChildNode(entry.getName(), entry.getIndex());
+                            removeChildNode(entry.getId());
                             continue;
                         }
                         NodeDefinitionImpl ndi = getApplicableChildNodeDefinition(
@@ -4945,7 +4970,7 @@ public class NodeImpl extends ItemImpl implements org.apache.jackrabbit.api.jsr2
                     } catch (ConstraintViolationException cve) {
                         // no suitable definition found for this child node,
                         // remove it
-                        removeChildNode(entry.getName(), entry.getIndex());
+                        removeChildNode(entry.getId());
                     }
                 }
             } catch (ItemStateException ise) {

@@ -145,6 +145,8 @@ class ChildNodeEntries implements Cloneable {
         }
     }
 
+    // The index may have changed because of changes by another session. Use remove(NodeId id)
+    // instead
     public ChildNodeEntry remove(Name nodeName, int index) {
         if (index < 1) {
             throw new IllegalArgumentException("index is 1-based");
@@ -224,7 +226,7 @@ class ChildNodeEntries implements Cloneable {
      * @return the removed entry or <code>null</code> if there is no such entry.
      */
     public ChildNodeEntry remove(ChildNodeEntry entry) {
-        return remove(entry.getName(), entry.getIndex());
+        return remove(entry.getId());
     }
 
     /**

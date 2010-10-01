@@ -569,14 +569,17 @@ public class BatchedItemOperations extends ItemValidator {
                 throw new UnsupportedRepositoryOperationException(msg);
             }
 
-            // remove child node entry from old parent
-            srcParent.removeChildNodeEntry(srcName.getName(), srcNameIndex);
+            // do move:
+            // 1. remove child node entry from old parent
+            boolean success = srcParent.removeChildNodeEntry(target.getNodeId());
+            if (success) {
 
-            // re-parent target node
-            target.setParentId(destParent.getNodeId());
+                // 2. re-parent target node
+                target.setParentId(destParent.getNodeId());
 
-            // add child node entry to new parent
-            destParent.addChildNodeEntry(destName.getName(), target.getNodeId());
+                // 3. add child node entry to new parent
+                destParent.addChildNodeEntry(destName.getName(), target.getNodeId());
+            }
         }
 
         // store states
