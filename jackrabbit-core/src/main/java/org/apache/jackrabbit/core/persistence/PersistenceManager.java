@@ -58,6 +58,15 @@ import org.apache.jackrabbit.core.state.ChangeLog;
  *       to close the persistence manager and release all acquired
  *       resources.
  * </ol>
+ *
+ * <h2>Concurrency</h2>
+ * <p>
+ * A persistence manager instance should be thread-safe and guarantee that
+ * the {@link #store(ChangeLog)} method calls are atomic. Any load() or
+ * exists() calls started after a store() call has returned must access
+ * the updated content. The client accessing a persistence manager must
+ * guarantee that no two concurrent {@link #store(ChangeLog)} calls will
+ * modify the same items.
  */
 public interface PersistenceManager {
 
