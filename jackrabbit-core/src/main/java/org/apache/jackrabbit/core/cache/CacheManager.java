@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.core.state;
+package org.apache.jackrabbit.core.cache;
 
 import java.util.ArrayList;
 import java.util.WeakHashMap;
