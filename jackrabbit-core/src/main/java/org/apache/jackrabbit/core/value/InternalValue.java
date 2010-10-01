@@ -708,7 +708,12 @@ public class InternalValue extends AbstractQValue {
     public boolean equals(Object object) {
         if (object instanceof InternalValue) {
             InternalValue that = (InternalValue) object;
-            return type == that.type && val.equals(that.val);
+            if (type == PropertyType.DATE) {
+                return that.type == PropertyType.DATE
+                    && getDate().getTimeInMillis() == that.getDate().getTimeInMillis();
+            } else {
+                return type == that.type && val.equals(that.val);
+            }
         } else {
             return false;
         }
