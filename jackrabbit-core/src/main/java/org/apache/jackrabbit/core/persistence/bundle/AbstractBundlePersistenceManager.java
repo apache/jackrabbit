@@ -18,7 +18,6 @@ package org.apache.jackrabbit.core.persistence.bundle;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.jackrabbit.core.cache.LRUCache;
 import org.apache.jackrabbit.core.fs.FileSystemResource;
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.state.ItemState;
@@ -38,6 +37,7 @@ import org.apache.jackrabbit.core.persistence.PMContext;
 import org.apache.jackrabbit.core.persistence.PersistenceManager;
 import org.apache.jackrabbit.core.util.StringIndex;
 import org.apache.jackrabbit.core.persistence.util.BLOBStore;
+import org.apache.jackrabbit.core.persistence.util.BundleCache;
 import org.apache.jackrabbit.core.persistence.util.FileBasedIndex;
 import org.apache.jackrabbit.core.persistence.util.LRUNodeIdCache;
 import org.apache.jackrabbit.core.persistence.util.NodePropBundle;
@@ -68,7 +68,7 @@ import javax.jcr.PropertyType;
  * included in the bundle but generated when required.
  * <p/>
  * In order to increase performance, there are 2 caches maintained. One is the
- * bundle cache that caches already loaded bundles. The other is the
+ * {@link BundleCache} that caches already loaded bundles. The other is the
  * {@link LRUNodeIdCache} that caches non-existent bundles. This is useful
  * because a lot of {@link #exists(NodeId)} calls are issued that would result
  * in a useless SQL execution if the desired bundle does not exist.
@@ -103,7 +103,7 @@ public abstract class AbstractBundlePersistenceManager implements
     private StringIndex nameIndex;
 
     /** the cache of loaded bundles */
-    private LRUCache<NodeId, NodePropBundle> bundles;
+    private BundleCache bundles;
 
     /** the cache of non-existent bundles */
     private LRUNodeIdCache missing;
@@ -387,7 +387,7 @@ public abstract class AbstractBundlePersistenceManager implements
     public void init(PMContext context) throws Exception {
         this.context = context;
         // init bundle cache
-        bundles = new LRUCache<NodeId, NodePropBundle>(bundleCacheSize);
+        bundles = new BundleCache(bundleCacheSize);
         missing = new LRUNodeIdCache();
     }
     
@@ -656,7 +656,7 @@ public abstract class AbstractBundlePersistenceManager implements
                 bundle = loadBundle(id);
                 if (bundle != null) {
                     bundle.markOld();
-                    bundles.put(id, bundle, bundle.getSize());
+                    bundles.put(bundle);
                 } else {
                     missing.put(id);
                 }
@@ -692,9 +692,8 @@ public abstract class AbstractBundlePersistenceManager implements
         missing.remove(bundle.getId());
         // only put to cache if already exists. this is to ensure proper overwrite
         // and not creating big contention during bulk loads
-        if (bundles.containsKey(bundle.getId())) {
-            bundles.remove(bundle.getId());
-            bundles.put(bundle.getId(), bundle, bundle.getSize());
+        if (bundles.contains(bundle.getId())) {
+            bundles.put(bundle);
         }
     }
 

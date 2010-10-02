@@ -41,7 +41,10 @@ public class ManagedMLRUItemStateCacheFactory implements ItemStateCacheFactory {
      * Create a new cache instance and link it to the cache manager.
      */
     public ItemStateCache newItemStateCache() {
-        return new MLRUItemStateCache(cacheMgr);
+        MLRUItemStateCache cache = new MLRUItemStateCache();
+        cacheMgr.add(cache);
+        cache.setAccessListener(cacheMgr);
+        return cache;
     }
 
 }
