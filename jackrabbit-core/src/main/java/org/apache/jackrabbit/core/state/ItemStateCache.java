@@ -83,6 +83,14 @@ public interface ItemStateCache {
     boolean isEmpty();
 
     /**
+     * Informs the cache that the item was modified and the cache might need to
+     * recalculate the items caching weight.
+     *
+     * @param id the id of the item that was modified.
+     */
+    void update(ItemId id);
+
+    /**
      * Informs the cache that it is no longer in use.
      */
     void dispose();
