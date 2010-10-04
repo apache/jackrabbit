@@ -320,17 +320,6 @@ public abstract class AbstractBundlePersistenceManager implements
             throws ItemStateException;
 
     /**
-     * Checks if a bundle exists in the underlying system.
-     *
-     * @param id the node id of the bundle
-     * @return <code>true</code> if the bundle exists;
-     *         <code>false</code> otherwise.
-     * @throws ItemStateException if an error while checking occurs.
-     */
-    protected abstract boolean existsBundle(NodeId id)
-            throws ItemStateException;
-
-    /**
      * Stores a bundle to the underlying system.
      *
      * @param bundle the bundle to store
@@ -634,7 +623,9 @@ public abstract class AbstractBundlePersistenceManager implements
     }
 
     /**
-     * Gets the bundle for the given node id.
+     * Gets the bundle for the given node id. Read/write synchronization
+     * happens higher up at the SISM level, so we don't need to worry about
+     * conflicts here.
      *
      * @param id the id of the bundle to retrieve.
      * @return the bundle or <code>null</code> if the bundle does not exist
@@ -646,14 +637,12 @@ public abstract class AbstractBundlePersistenceManager implements
         if (bundle == MISSING) {
             return null;
         } else if (bundle == null) {
-            synchronized (this) {
-                bundle = loadBundle(id);
-                if (bundle != null) {
-                    bundle.markOld();
-                    bundles.put(id, bundle, bundle.getSize());
-                } else {
-                    bundles.put(id, MISSING, 16);
-                }
+            bundle = loadBundle(id);
+            if (bundle != null) {
+                bundle.markOld();
+                bundles.put(id, bundle, bundle.getSize());
+            } else {
+                bundles.put(id, MISSING, 16);
             }
         }
         return bundle;
