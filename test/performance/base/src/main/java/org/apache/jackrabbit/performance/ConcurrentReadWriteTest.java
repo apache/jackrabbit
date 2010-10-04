@@ -36,7 +36,7 @@ public class ConcurrentReadWriteTest extends ConcurrentReadTest {
 
     private class Writer implements Runnable {
 
-        private final Session session = loginReader();
+        private final Session session = loginWriter();
 
         private final Random random = new Random();
 
