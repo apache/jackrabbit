@@ -26,6 +26,7 @@ import java.sql.Blob;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
@@ -713,7 +714,7 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
 
             try {
                 // analyze child node bundles
-                NodePropBundle child = loadBundle(entry.getId(), true);
+                NodePropBundle child = loadBundle(entry.getId());
                 if (child == null) {
                     log.error(
                             "NodeState '" + id + "' references inexistent child"
@@ -805,19 +806,14 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
                         DbUtility.close(bRs);
                     }
 
-
                     try {
                         // parse and check bundle
-                        // checkBundle will log any problems itself
-                        if (binding.checkBundle(new ByteArrayInputStream(data))) {
-                            NodePropBundle bundle = binding.readBundle(
-                                    new ByteArrayInputStream(data), id);
-                            checkBundleConsistency(id, bundle, fix, modifications);
-                        } else {
-                            log.error("invalid bundle '" + id + "', see previous BundleBinding error log entry");
-                        }
-                    } catch (Exception e) {
-                        log.error("Error in bundle " + id + ": " + e);
+                        NodePropBundle bundle = binding.readBundle(
+                                new ByteArrayInputStream(data), id);
+                        checkBundleConsistency(id, bundle, fix, modifications);
+                    } catch (IOException e) {
+                        log.error("Unable to parse bundle " + id
+                                + ": " + Arrays.toString(data), e);
                     }
                     count++;
                     if (count % 1000 == 0) {
@@ -854,7 +850,7 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
                 NodeId id = idList.get(i);
                 try {
                     // load the node from the database
-                    NodePropBundle bundle = loadBundle(id, true);
+                    NodePropBundle bundle = loadBundle(id);
 
                     if (bundle == null) {
                         log.error("No bundle found for uuid '" + id + "'");
@@ -1024,7 +1020,31 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
      * {@inheritDoc}
      */
     protected NodePropBundle loadBundle(NodeId id) throws ItemStateException {
-        return loadBundle(id, false);
+        ResultSet rs = null;
+        try {
+            rs = conHelper.exec(bundleSelectSQL, getKey(id), false, 0);
+            if (!rs.next()) {
+                return null;
+            }
+            byte[] bytes = getBytes(rs.getBlob(1));
+
+            try {
+                NodePropBundle bundle =
+                    binding.readBundle(new ByteArrayInputStream(bytes), id);
+                bundle.setSize(bytes.length);
+                return bundle;
+            } catch (IOException e) {
+                log.error("Unable to parse serialization of bundle " + id
+                        + ": " + Arrays.toString(bytes), e);
+                throw e;
+            }
+        } catch (Exception e) {
+            String msg = "failed to read bundle: " + id + ": " + e;
+            log.error(msg);
+            throw new ItemStateException(msg, e);
+        } finally {
+            DbUtility.close(rs);
+        }
     }
 
     /**
@@ -1048,49 +1068,6 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
             return bytes;
         } finally {
             IOUtils.closeQuietly(in);
-        }
-    }
-
-    /**
-     * Loads a bundle from the underlying system and optionally performs
-     * a check on the bundle first.
-     *
-     * @param id the node id of the bundle
-     * @param checkBeforeLoading check the bundle before loading it and log
-     *                           detailed information about it (slower)
-     * @return the loaded bundle or <code>null</code> if the bundle does not
-     *         exist.
-     * @throws ItemStateException if an error while loading occurs.
-     */
-    protected NodePropBundle loadBundle(NodeId id, boolean checkBeforeLoading)
-            throws ItemStateException {
-        ResultSet rs = null;
-        
-        try {
-            rs = conHelper.exec(bundleSelectSQL, getKey(id), false, 0);
-            if (!rs.next()) {
-                return null;
-            }
-            Blob b = rs.getBlob(1);
-            byte[] bytes = getBytes(b);
-
-            if (checkBeforeLoading) {
-                if (!binding.checkBundle(new ByteArrayInputStream(bytes))) {
-                    // gets wrapped as proper ItemStateException below
-                    throw new Exception("invalid bundle, see previous BundleBinding error log entry");
-                }
-            }
-
-            NodePropBundle bundle =
-                binding.readBundle(new ByteArrayInputStream(bytes), id);
-            bundle.setSize(bytes.length);
-            return bundle;
-        } catch (Exception e) {
-            String msg = "failed to read bundle: " + id + ": " + e;
-            log.error(msg);
-            throw new ItemStateException(msg, e);
-        } finally {
-            DbUtility.close(rs);
         }
     }
 

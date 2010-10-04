@@ -139,17 +139,6 @@ public class BundleBinding {
     }
 
     /**
-     * Checks a <code>NodePropBundle</code> from a data input stream.
-     *
-     * @param in the input stream
-     * @return <code>true</code> if the data is valid;
-     *         <code>false</code> otherwise.
-     */
-    public boolean checkBundle(InputStream in) {
-        return new BundleReader(this, in).checkBundle();
-    }
-
-    /**
      * Serializes a <code>NodePropBundle</code> to a data output stream
      *
      * @param out the output stream
