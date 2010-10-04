@@ -655,7 +655,6 @@ public abstract class AbstractBundlePersistenceManager implements
     private void deleteBundle(NodePropBundle bundle) throws ItemStateException {
         destroyBundle(bundle);
         bundle.removeAllProperties(getBlobStore());
-        bundles.remove(bundle.getId());
         bundles.put(bundle.getId(), MISSING, 16);
     }
 
@@ -673,7 +672,6 @@ public abstract class AbstractBundlePersistenceManager implements
         // only put to cache if already exists. this is to ensure proper
         // overwrite and not creating big contention during bulk loads
         if (bundles.containsKey(bundle.getId())) {
-            bundles.remove(bundle.getId());
             bundles.put(bundle.getId(), bundle, bundle.getSize());
         }
     }
