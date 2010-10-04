@@ -61,7 +61,6 @@ public class BundleBinding {
     /**
      * the blob store
      */
-    @SuppressWarnings("deprecation")
     protected final BLOBStore blobStore;
 
     /**
@@ -88,7 +87,6 @@ public class BundleBinding {
      * @param nameIndex the name index
      * @param dataStore the data store
      */
-    @SuppressWarnings("deprecation")
     public BundleBinding(
             ErrorHandling errorHandling, BLOBStore blobStore,
             StringIndex nsIndex, StringIndex nameIndex, DataStore dataStore) {
@@ -123,7 +121,6 @@ public class BundleBinding {
      * Returns the blob store that is assosiated with this binding.
      * @return the blob store
      */
-    @SuppressWarnings("deprecation")
     public BLOBStore getBlobStore() {
         return blobStore;
     }

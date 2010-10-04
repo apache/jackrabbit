@@ -331,7 +331,6 @@ public class NodePropBundle {
      * @param state the property state
      * @param blobStore BLOB store from where to delete previous property value
      */
-    @SuppressWarnings("deprecation")
     public void addProperty(PropertyState state, BLOBStore blobStore) {
         PropertyEntry old =
             properties.put(state.getName(), new PropertyEntry(state));
@@ -383,7 +382,6 @@ public class NodePropBundle {
      *
      * @param blobStore BLOB store from where to delete property values
      */
-    @SuppressWarnings("deprecation")
     public void removeAllProperties(BLOBStore blobStore) {
         for (Name name : new HashSet<Name>(properties.keySet())) {
             removeProperty(name, blobStore);
@@ -396,7 +394,6 @@ public class NodePropBundle {
      * @param name the name of the property
      * @param blobStore BLOB store from where to delete the property value
      */
-    @SuppressWarnings("deprecation")
     public void removeProperty(Name name, BLOBStore blobStore) {
         PropertyEntry pe = properties.remove(name);
         if (pe != null) {
@@ -726,7 +723,6 @@ public class NodePropBundle {
          * Destroys this property state and deletes temporary blob file values.
          * @param blobStore the blobstore that will destroy the blobs
          */
-        @SuppressWarnings("deprecation")
         private void destroy(BLOBStore blobStore) {
             // delete blobs if needed
             for (int i = 0; blobIds != null && i < blobIds.length; i++) {

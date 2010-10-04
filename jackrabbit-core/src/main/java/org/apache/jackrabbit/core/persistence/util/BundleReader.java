@@ -20,8 +20,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.id.PropertyId;
-import org.apache.jackrabbit.core.persistence.PersistenceManager;
-import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
@@ -501,64 +499,6 @@ class BundleReader {
             }
         }
         return true;
-    }
-
-    /**
-     * Deserializes a <code>NodeState</code> from the data input stream.
-     *
-     * @param id the id of the nodestate to read
-     * @param pMgr the persistence manager
-     * @return the node state
-     * @throws IOException in an I/O error occurs.
-     */
-    private NodeState readState(NodeId id, PersistenceManager pMgr)
-            throws IOException {
-        NodeState state = pMgr.createNew(id);
-        // primaryType & version
-        int index = in.readInt();
-        int version = (index >> 24) & 0x0ff;
-        String uri = binding.nsIndex.indexToString(index & 0x0ffffff);
-        String local = in.readUTF();
-        state.setNodeTypeName(NameFactoryImpl.getInstance().create(uri, local));
-
-        // parentUUID
-        state.setParentId(readNodeId());
-        // definitionId
-        in.readUTF();
-
-        // mixin types
-        int count = in.readInt();   // count
-        Set<Name> set = new HashSet<Name>(count);
-        for (int i = 0; i < count; i++) {
-            set.add(readQName()); // name
-        }
-        if (set.size() > 0) {
-            state.setMixinTypeNames(set);
-        }
-        // properties (names)
-        count = in.readInt();   // count
-        for (int i = 0; i < count; i++) {
-            state.addPropertyName(readIndexedQName()); // name
-        }
-        // child nodes (list of name/uuid pairs)
-        count = in.readInt();   // count
-        for (int i = 0; i < count; i++) {
-            Name name = readQName();
-            NodeId parentId = readNodeId();
-            state.addChildNodeEntry(name, parentId);
-        }
-
-        if (version >= BundleBinding.VERSION_1) {
-            state.setModCount(readModCount());
-        }
-        if (version >= BundleBinding.VERSION_2) {
-            // shared set (list of parent uuids)
-            count = in.readInt();   // count
-            for (int i = 0; i < count; i++) {
-                state.addShare(readNodeId());
-            }
-        }
-        return state;
     }
 
     /**
