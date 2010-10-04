@@ -126,7 +126,7 @@ class BundleReader {
 
         // read modcount, since version 1.0
         if (version >= BundleBinding.VERSION_1) {
-            bundle.setModCount(readModCount());
+            bundle.setModCount(in.readShort());
         }
 
         // read shared set, since version 2.0
@@ -246,9 +246,9 @@ class BundleReader {
      */
     private NodeId readNodeId() throws IOException {
         if (in.readBoolean()) {
-            byte[] bytes = new byte[16];
-            in.readFully(bytes);
-            return new NodeId(bytes);
+            long msb = in.readLong();
+            long lsb = in.readLong();
+            return new NodeId(msb, lsb);
         } else {
             return null;
         }
@@ -279,16 +279,6 @@ class BundleReader {
         String uri = binding.nsIndex.indexToString(in.readInt());
         String local = in.readUTF();
         return NameFactoryImpl.getInstance().create(uri, local);
-    }
-
-    /**
-     * Deserializes a mod-count
-     *
-     * @return the mod count
-     * @throws IOException in an I/O error occurs.
-     */
-    private short readModCount() throws IOException {
-        return in.readShort();
     }
 
     /**

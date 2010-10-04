@@ -117,7 +117,7 @@ class BundleWriter {
         writeNodeId(null);
 
         // write mod count
-        writeModCount(bundle.getModCount());
+        out.writeShort(bundle.getModCount());
 
         // write shared set
         for (NodeId nodeId: bundle.getSharedSet()) {
@@ -322,7 +322,8 @@ class BundleWriter {
             out.writeBoolean(false);
         } else {
             out.writeBoolean(true);
-            out.write(id.getRawBytes());
+            out.writeLong(id.getMostSignificantBits());
+            out.writeLong(id.getLeastSignificantBits());
         }
     }
 
@@ -340,16 +341,6 @@ class BundleWriter {
             // TODO more efficient serialization format
             out.writeUTF(decimal.toString());
         }
-    }
-
-    /**
-     * Sersializes a mod-count
-     *
-     * @param modCount the mod count
-     * @throws IOException in an I/O error occurs.
-     */
-    private void writeModCount(short modCount) throws IOException {
-        out.writeShort(modCount);
     }
 
     /**
