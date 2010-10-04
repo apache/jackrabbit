@@ -19,6 +19,8 @@ package org.apache.jackrabbit.core.query.lucene;
 import org.apache.lucene.index.FilterIndexReader;
 import org.apache.lucene.index.IndexReader;
 import org.apache.jackrabbit.core.id.NodeId;
+import org.apache.lucene.index.Term;
+import org.apache.lucene.index.TermDocs;
 
 import java.io.IOException;
 
@@ -62,6 +64,15 @@ public final class JackrabbitIndexReader
         }
         this.resolver = (HierarchyResolver) in;
         this.reader = (MultiIndexReader) in;
+    }
+
+    /**
+     * Overwrite <code>termDocs(Term)</code> and forward the call to the
+     * wrapped reader.
+     */
+    @Override
+    public TermDocs termDocs(Term term) throws IOException {
+        return in.termDocs(term);
     }
 
     //--------------------------< FilterIndexReader >---------------------------
