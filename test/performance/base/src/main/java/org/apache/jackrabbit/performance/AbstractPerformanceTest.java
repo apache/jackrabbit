@@ -111,6 +111,7 @@ public abstract class AbstractPerformanceTest {
         runTest(new UpdateManyChildNodesTest(), name, conf);
         runTest(new TransientManyChildNodesTest(), name, conf);
         runTest(new CreateUserTest(), name, conf);
+        runTest(new PathBasedQueryTest(), name, conf);
         try {
             runTest(new AddGroupMembersTest(), name, conf);
             runTest(new GroupMemberLookupTest(), name, conf);
