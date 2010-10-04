@@ -116,16 +116,12 @@ public class BundleBindingTest extends TestCase {
         binding.writeBundle(buffer, bundle);
         byte[] bytes = buffer.toByteArray();
 
-        assertTrue(binding.checkBundle(new ByteArrayInputStream(bytes)));
-
         assertEquals(bundle, binding.readBundle(
                 new ByteArrayInputStream(bytes), bundle.getId()));
     }
 
     private void assertBundleSerialization(NodePropBundle bundle, byte[] data)
             throws Exception {
-        assertTrue(binding.checkBundle(new ByteArrayInputStream(data)));
-
         assertEquals(bundle, binding.readBundle(
                 new ByteArrayInputStream(data), bundle.getId()));
     }

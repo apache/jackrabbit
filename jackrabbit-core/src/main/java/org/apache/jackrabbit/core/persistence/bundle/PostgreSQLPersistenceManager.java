@@ -85,6 +85,7 @@ public class PostgreSQLPersistenceManager extends BundleDbPersistenceManager {
         return SM_LONGLONG_KEYS;
     }
 
+    @Override
     protected synchronized NodePropBundle loadBundle(NodeId id)
             throws ItemStateException {
         try {

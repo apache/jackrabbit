@@ -91,6 +91,7 @@ public class PostgreSQLPersistenceManager extends BundleDbPersistenceManager {
      * 
      * {@inheritDoc}
      */
+    @Override
     protected NodePropBundle loadBundle(NodeId id) throws ItemStateException {
         ResultSet rs = null;
         try {
