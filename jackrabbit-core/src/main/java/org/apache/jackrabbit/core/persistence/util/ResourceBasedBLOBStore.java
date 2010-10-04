@@ -21,8 +21,8 @@ import org.apache.jackrabbit.core.fs.FileSystemResource;
 /**
  * <code>ResourceBasedBLOBStore</code> extends the <code>BLOBStore</code>
  * interface with the method {@link #getResource(String)}
- *
- * @deprecated the DataStore should be used instead
+ * <p>
+ * Note that The DataStore should nowadays be used instead of the BLOBStore.
  */
 public interface ResourceBasedBLOBStore extends BLOBStore {
     /**

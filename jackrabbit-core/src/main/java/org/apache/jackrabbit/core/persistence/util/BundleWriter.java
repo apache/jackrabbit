@@ -16,28 +16,24 @@
  */
 package org.apache.jackrabbit.core.persistence.util;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.apache.commons.io.IOUtils;
-import org.apache.jackrabbit.core.id.NodeId;
-import org.apache.jackrabbit.core.state.ChildNodeEntry;
-import org.apache.jackrabbit.core.state.NodeState;
-import org.apache.jackrabbit.core.value.InternalValue;
-import org.apache.jackrabbit.core.data.DataStore;
-import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.spi.commons.name.NameConstants;
-
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.math.BigDecimal;
-import java.util.Collection;
-import java.util.Iterator;
 
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
+
+import org.apache.commons.io.IOUtils;
+import org.apache.jackrabbit.core.data.DataStore;
+import org.apache.jackrabbit.core.id.NodeId;
+import org.apache.jackrabbit.core.value.InternalValue;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.commons.name.NameConstants;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Bundle serializater.
@@ -312,52 +308,6 @@ class BundleWriter {
                     + state.getId() + " idx=" + i + " value=" + value;
             log.error(msg, e);
             throw new IOException(msg);
-        }
-    }
-
-    /**
-     * Serializes a <code>NodeState</code> to the data output stream
-     *
-     * @param state the state to write
-     * @throws IOException in an I/O error occurs.
-     */
-    private void writeState(NodeState state) throws IOException {
-        // primaryType & version
-        out.writeInt((BundleBinding.VERSION_CURRENT << 24)
-                | binding.nsIndex.stringToIndex(state.getNodeTypeName().getNamespaceURI()));
-        out.writeUTF(state.getNodeTypeName().getLocalName());
-        // parentUUID
-        writeNodeId(state.getParentId());
-        // definitionId
-        out.writeUTF("");
-        // mixin types
-        Collection<Name> c = state.getMixinTypeNames();
-        out.writeInt(c.size()); // count
-        for (Iterator<Name> iter = c.iterator(); iter.hasNext();) {
-            writeQName(iter.next());
-        }
-        // properties (names)
-        c = state.getPropertyNames();
-        out.writeInt(c.size()); // count
-        for (Iterator<Name> iter = c.iterator(); iter.hasNext();) {
-            Name pName = iter.next();
-            writeIndexedQName(pName);
-        }
-        // child nodes (list of name/uuid pairs)
-        Collection<ChildNodeEntry> collChild = state.getChildNodeEntries();
-        out.writeInt(collChild.size()); // count
-        for (Iterator<ChildNodeEntry> iter = collChild.iterator(); iter.hasNext();) {
-            ChildNodeEntry entry = iter.next();
-            writeQName(entry.getName());   // name
-            writeNodeId(entry.getId());  // uuid
-        }
-        writeModCount(state.getModCount());
-        
-        // shared set (list of parent uuids)
-        Collection<NodeId> collShared = state.getSharedSet();
-        out.writeInt(collShared.size()); // count
-        for (Iterator<NodeId> iter = collShared.iterator(); iter.hasNext();) {
-            writeNodeId(iter.next());
         }
     }
 
