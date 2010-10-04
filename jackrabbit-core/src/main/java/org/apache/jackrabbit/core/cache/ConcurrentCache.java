@@ -22,9 +22,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 /**
  * Concurrent cache implementation that uses cache segments to minimize
  * the chance of lock contention. The LRU algorithm is used to evict excess
@@ -33,9 +30,6 @@ import org.slf4j.LoggerFactory;
  * methods of this class are synchronized, but they are all thread-safe.
  */
 public class ConcurrentCache<K, V> extends AbstractCache {
-
-    /** Logger instance */
-    private static Logger log = LoggerFactory.getLogger(ConcurrentCache.class);
 
     private static class E<V> {
 
@@ -150,16 +144,18 @@ public class ConcurrentCache<K, V> extends AbstractCache {
      * @param key entry key
      * @param value entry value
      * @param size entry size
+     * @return the previous value, or <code>null</code>
      */
-    public void put(K key, V value, long size) {
+    public V put(K key, V value, long size) {
         Map<K, E<V>> segment = getSegment(key);
         synchronized (segment) {
             recordSizeChange(size);
             E<V> previous = segment.put(key, new E<V>(value, size));
             if (previous != null) {
-                log.warn("Overwriting cached entry {} from {} to {}",
-                        new Object[] { key, previous.value, value });
                 recordSizeChange(-previous.size);
+                return previous.value;
+            } else {
+                return null;
             }
         }
     }
