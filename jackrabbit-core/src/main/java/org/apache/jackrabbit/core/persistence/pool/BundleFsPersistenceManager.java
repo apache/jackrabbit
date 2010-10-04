@@ -230,8 +230,7 @@ public class BundleFsPersistenceManager extends AbstractBundlePersistenceManager
     /**
      * {@inheritDoc}
      */
-    protected synchronized NodePropBundle loadBundle(NodeId id)
-            throws ItemStateException {
+    protected NodePropBundle loadBundle(NodeId id) throws ItemStateException {
         try {
             String path = buildNodeFilePath(null, id).toString();
             if (!itemFs.exists(path)) {
@@ -249,20 +248,6 @@ public class BundleFsPersistenceManager extends AbstractBundlePersistenceManager
         } catch (Exception e) {
             String msg = "failed to read bundle: " + id + ": " + e;
             log.error(msg);
-            throw new ItemStateException(msg, e);
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    protected synchronized boolean existsBundle(NodeId id) throws ItemStateException {
-        try {
-            StringBuffer buf = buildNodeFilePath(null, id);
-            return itemFs.exists(buf.toString());
-        } catch (Exception e) {
-            String msg = "failed to check existence of bundle: " + id;
-            BundleFsPersistenceManager.log.error(msg, e);
             throw new ItemStateException(msg, e);
         }
     }
