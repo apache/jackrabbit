@@ -76,9 +76,7 @@ public class ConnectionHelper {
 
     protected final DataSource dataSource;
 
-    private boolean inBatchMode = false;
-
-    private Connection batchConnection = null;
+    private ThreadLocal<Connection> batchConnectionTl = new ThreadLocal<Connection>();
 
     /**
      * @param dataSrc the {@link DataSource} on which this instance acts
@@ -147,6 +145,15 @@ public class ConnectionHelper {
     }
 
     /**
+     * Returns true if we are currently in a batch mode, false otherwise.
+     * @return true if the current thread is running in batch mode, false otherwise.
+     */
+    protected boolean inBatchMode()
+    {
+      return batchConnectionTl.get() != null;
+    }
+
+    /**
      * The default implementation returns the {@code extraNameCharacters} provided by the databases metadata.
      * 
      * @return the additional characters for identifiers supported by the db
@@ -201,19 +208,20 @@ public class ConnectionHelper {
      * @throws SQLException on error
      */
     public final void startBatch() throws SQLException {
-        if (inBatchMode) {
+        if (inBatchMode()) {
             throw new IllegalStateException("already in batch mode");
         }
+        Connection batchConnection = null;
         try {
             batchConnection = getConnection();
             batchConnection.setAutoCommit(false);
-            inBatchMode = true;
+            batchConnectionTl.set(batchConnection);
         } catch (SQLException e) {
             // Strive for failure atomicity
             if (batchConnection != null) {
                 DbUtility.close(batchConnection, null, null);
             }
-            batchConnection = null;
+            batchConnectionTl.remove();
             throw e;
         }
     }
@@ -226,19 +234,18 @@ public class ConnectionHelper {
      *             SQLException}
      */
     public final void endBatch(boolean commit) throws SQLException {
-        if (!inBatchMode) {
+        if (!inBatchMode()) {
             throw new IllegalStateException("not in batch mode");
         }
         try {
             if (commit) {
-                batchConnection.commit();
+                batchConnectionTl.get().commit();
             } else {
-                batchConnection.rollback();
+                batchConnectionTl.get().rollback();
             }
         } finally {
-            DbUtility.close(batchConnection, null, null);
-            batchConnection = null;
-            inBatchMode = false;
+            DbUtility.close(batchConnectionTl.get(), null, null);
+            batchConnectionTl.set(null);
         }
     }
 
@@ -358,7 +365,7 @@ public class ConnectionHelper {
             if (rs == null) {
                 return null;
             }
-            if (inBatchMode) {
+            if (inBatchMode()) {
                 return ResultSetWrapper.newInstance(null, stmt, rs);
             } else {
                 return ResultSetWrapper.newInstance(con, stmt, rs);
@@ -378,8 +385,8 @@ public class ConnectionHelper {
      * @throws SQLException on error
      */
     protected final Connection getConnection() throws SQLException {
-        if (inBatchMode) {
-            return batchConnection;
+        if (inBatchMode()) {
+            return batchConnectionTl.get();
         } else {
             Connection con = dataSource.getConnection();
             // JCR-1013: Setter may fail unnecessarily on a managed connection
@@ -398,7 +405,7 @@ public class ConnectionHelper {
      * @param rs a {@code ResultSet}
      */
     protected final void closeResources(Connection con, Statement stmt, ResultSet rs) {
-        if (inBatchMode) {
+        if (inBatchMode()) {
             DbUtility.close(null, stmt, rs);
         } else {
             DbUtility.close(con, stmt, rs);
@@ -439,7 +446,7 @@ public class ConnectionHelper {
     public abstract class RetryManager<T> {
 
         public final T doTry() throws SQLException {
-            if (inBatchMode) {
+            if (inBatchMode()) {
                 return call();
             } else {
                 boolean sleepInterrupted = false;
