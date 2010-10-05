@@ -66,17 +66,12 @@ public class HashMapIndex implements StringIndex {
             idx = stringToIndex.get(nsUri);
         }
         if (idx == null) {
-            // Need to use only 24 bits, since that's what
-            // the BundleBinding class stores in bundles
-            idx = nsUri.hashCode() & 0x00ffffff;
-            while (indexToString.containsKey(idx)) {
-                idx = (idx + 1) & 0x00ffffff;
-            }
+            idx = Integer.valueOf(indexToString.size());
             stringToIndex.put(nsUri, idx);
             indexToString.put(idx, nsUri);
             save();
         }
-        return idx;
+        return idx.intValue();
     }
 
     /**
