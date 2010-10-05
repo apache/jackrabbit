@@ -91,8 +91,6 @@ public class NamespaceRegistryImpl implements
     private HashMap<Integer, String> indexToURI = new HashMap<Integer, String>();
     private HashMap<String, Integer> uriToIndex = new HashMap<String, Integer>();
 
-    private int lastIndex;
-
     private final FileSystem nsRegStore;
 
     /**
@@ -143,10 +141,11 @@ public class NamespaceRegistryImpl implements
         uriToPrefix.put(uri, prefix);
         if (!uriToIndex.containsKey(uri)) {
             if (idx == null) {
-                idx = ++lastIndex;
-            } else {
-                if (idx.intValue() > lastIndex) {
-                    lastIndex = idx.intValue();
+                // Need to use only 24 bits, since that's what
+                // the BundleBinding class stores in bundles
+                idx = uri.hashCode() & 0x00ffffff;
+                while (indexToURI.containsKey(idx)) {
+                    idx = (idx + 1) & 0x00ffffff;
                 }
             }
             indexToURI.put(idx, uri);
@@ -339,7 +338,7 @@ public class NamespaceRegistryImpl implements
         if (idx == null) {
             throw new IllegalArgumentException("Namespace not registered: " + uri);
         }
-        return idx.intValue();
+        return idx;
     }
 
     /**
