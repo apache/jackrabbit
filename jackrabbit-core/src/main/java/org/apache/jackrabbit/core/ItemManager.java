@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.core;
 
-import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Map;
@@ -47,7 +46,6 @@ import org.apache.jackrabbit.core.state.NoSuchItemStateException;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.core.state.SessionItemStateManager;
-import org.apache.jackrabbit.core.util.Dumpable;
 import org.apache.jackrabbit.core.version.VersionHistoryImpl;
 import org.apache.jackrabbit.core.version.VersionImpl;
 import org.apache.jackrabbit.core.security.AccessManager;
@@ -85,7 +83,7 @@ import org.slf4j.LoggerFactory;
  * If the parent <code>Session</code> is an <code>XASession</code>, there is
  * one <code>ItemManager</code> instance per started global transaction.
  */
-public class ItemManager implements Dumpable, ItemStateListener {
+public class ItemManager implements ItemStateListener {
 
     private static Logger log = LoggerFactory.getLogger(ItemManager.class);
 
@@ -117,6 +115,7 @@ public class ItemManager implements Dumpable, ItemStateListener {
      * @param sessionContext component context of the associated session
      * @param rootNodeDef the definition of the root node
      */
+    @SuppressWarnings("unchecked")
     protected ItemManager(SessionContext sessionContext) {
         this.sism = sessionContext.getItemStateManager();
         this.hierMgr = sessionContext.getHierarchyManager();
@@ -999,31 +998,31 @@ public class ItemManager implements Dumpable, ItemStateListener {
         }
     }
 
-    //-------------------------------------------------------------< Dumpable >
+    //--------------------------------------------------------------< Object >
     /**
      * {@inheritDoc}
      */
-    public synchronized void dump(PrintStream ps) {
-        ps.println("ItemManager (" + this + ")");
-        ps.println();
-        ps.println("Items in cache:");
-        ps.println();
+    public synchronized String toString() {
+        StringBuilder builder = new StringBuilder();
+        builder.append("ItemManager (" + this + ")\n");
+        builder.append("Items in cache:\n");
         synchronized (itemCache) {
             for (ItemId id : itemCache.keySet()) {
                 ItemData item = itemCache.get(id);
                 if (item.isNode()) {
-                    ps.print("Node: ");
+                    builder.append("Node: ");
                 } else {
-                    ps.print("Property: ");
+                    builder.append("Property: ");
                 }
                 if (item.getState().isTransient()) {
-                    ps.print("transient ");
+                    builder.append("transient ");
                 } else {
-                    ps.print("          ");
+                    builder.append("          ");
                 }
-                ps.println(id + "\t" + safeGetJCRPath(id) + " (" + item + ")");
+                builder.append(id + "\t" + safeGetJCRPath(id) + " (" + item + ")\n");
             }
         }
+        return builder.toString();
     }
 
     //----------------------------------------------------< ItemStateListener >

@@ -16,13 +16,13 @@
  */
 package org.apache.jackrabbit.core.nodetype;
 
+import org.apache.jackrabbit.core.nodetype.EffectiveNodeTypeCache.Key;
 import org.apache.jackrabbit.spi.Name;
 
 import java.util.TreeSet;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.ArrayList;
-import java.io.PrintStream;
 
 import EDU.oswego.cs.dl.util.concurrent.ConcurrentReaderHashMap;
 
@@ -50,12 +50,12 @@ public class BitSetENTCacheImpl implements EffectiveNodeTypeCache {
     /**
      * An ordered set of the keys. This is used for {@link #findBest(Key)}.
      */
-    private final TreeSet sortedKeys;
+    private final TreeSet<Key> sortedKeys;
 
     /**
      * cache of pre-built aggregations of node types
      */
-    private final HashMap aggregates;
+    private final HashMap<Key, EffectiveNodeType> aggregates;
 
     /**
      * A lookup table for bit numbers for a given name.
@@ -75,8 +75,8 @@ public class BitSetENTCacheImpl implements EffectiveNodeTypeCache {
      * Creates a new bitset effective node type cache
      */
     BitSetENTCacheImpl() {
-        sortedKeys = new TreeSet();
-        aggregates = new HashMap();
+        sortedKeys = new TreeSet<Key>();
+        aggregates = new HashMap<Key, EffectiveNodeType>();
     }
 
     /**
@@ -109,9 +109,9 @@ public class BitSetENTCacheImpl implements EffectiveNodeTypeCache {
         if (contains(key)) {
             return key;
         }
-        Iterator iter = sortedKeys.iterator();
+        Iterator<Key> iter = sortedKeys.iterator();
         while (iter.hasNext()) {
-            Key k = (Key) iter.next();
+            Key k = iter.next();
             if (key.contains(k)) {
                 return k;
             }
@@ -127,9 +127,9 @@ public class BitSetENTCacheImpl implements EffectiveNodeTypeCache {
          * remove all affected effective node types from aggregates cache
          * (copy keys first to prevent ConcurrentModificationException)
          */
-        ArrayList keys = new ArrayList(aggregates.keySet());
-        for (Iterator keysIter = keys.iterator(); keysIter.hasNext();) {
-            Key k = (Key) keysIter.next();
+        ArrayList<Key> keys = new ArrayList<Key>(aggregates.keySet());
+        for (Iterator<Key> keysIter = keys.iterator(); keysIter.hasNext();) {
+            Key k = keysIter.next();
             EffectiveNodeType ent = get(k);
             if (ent.includesNodeType(name)) {
                 remove(k);
@@ -148,7 +148,7 @@ public class BitSetENTCacheImpl implements EffectiveNodeTypeCache {
      * {@inheritDoc}
      */
     public EffectiveNodeType get(Key key) {
-        return (EffectiveNodeType) aggregates.get(key);
+        return aggregates.get(key);
     }
 
     /**
@@ -196,7 +196,7 @@ public class BitSetENTCacheImpl implements EffectiveNodeTypeCache {
      *         never cached.
      */
     private EffectiveNodeType remove(Key key) {
-        EffectiveNodeType removed = (EffectiveNodeType) aggregates.remove(key);
+        EffectiveNodeType removed = aggregates.remove(key);
         if (removed != null) {
             // other than the original implementation, the weights in the
             // treeset are now the same as in the given keys. so we can use
@@ -222,17 +222,15 @@ public class BitSetENTCacheImpl implements EffectiveNodeTypeCache {
     /**
      * {@inheritDoc}
      */
-    public void dump(PrintStream ps) {
-        ps.println("EffectiveNodeTypeCache (" + this + ")");
-        ps.println();
-        ps.println("EffectiveNodeTypes in cache:");
-        ps.println();
-        Iterator iter = sortedKeys.iterator();
-        while (iter.hasNext()) {
-            Key k = (Key) iter.next();
-            //EffectiveNodeType ent = (EffectiveNodeType) aggregates.get(k);
-            ps.println(k);
+    public String toString() {
+        StringBuilder builder = new StringBuilder();
+        builder.append("EffectiveNodeTypeCache (" + this + ")\n");
+        builder.append("EffectiveNodeTypes in cache:\n");
+        for (Key key : sortedKeys) {
+            builder.append(key);
+            builder.append("\n");
         }
+        return builder.toString();
     }
 
     /**
@@ -397,7 +395,7 @@ public class BitSetENTCacheImpl implements EffectiveNodeTypeCache {
          * This compares 1. the cardinality (number of set bits) and 2. the
          * numeric value of the bit sets in descending order.
          */
-        public int compareTo(Object other) {
+        public int compareTo(Key other) {
             BitSetKey o = (BitSetKey) other;
             int res = o.names.length - names.length;
             if (res == 0) {

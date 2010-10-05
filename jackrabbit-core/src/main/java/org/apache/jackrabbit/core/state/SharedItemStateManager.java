@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.core.state;
 
-import java.io.PrintStream;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
@@ -39,7 +38,6 @@ import org.apache.jackrabbit.core.observation.EventStateCollection;
 import org.apache.jackrabbit.core.observation.EventStateCollectionFactory;
 import org.apache.jackrabbit.core.persistence.CachingPersistenceManager;
 import org.apache.jackrabbit.core.persistence.PersistenceManager;
-import org.apache.jackrabbit.core.util.Dumpable;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.virtual.VirtualItemStateProvider;
 import org.apache.jackrabbit.spi.Name;
@@ -110,7 +108,7 @@ import org.slf4j.LoggerFactory;
  * virtual node type representation don't allow such references.
  */
 public class SharedItemStateManager
-        implements ItemStateManager, ItemStateListener, Dumpable {
+        implements ItemStateManager, ItemStateListener {
 
     /**
      * Logger instance
@@ -435,17 +433,14 @@ public class SharedItemStateManager
         dispatcher.notifyStateDiscarded(discarded);
     }
 
-    //-------------------------------------------------------------< Dumpable >
+    //--------------------------------------------------------------< Object >
+
     /**
      * {@inheritDoc}
      */
-    public void dump(PrintStream ps) {
-        ps.println("SharedItemStateManager (" + this + ")");
-        if (cache instanceof Dumpable) {
-            ps.println();
-            ps.print("[referenceCache] ");
-            ((Dumpable) cache).dump(ps);
-        }
+    public String toString() {
+        return "SharedItemStateManager (" + this + ")\n"
+            + "[referenceCache]\n" + cache;
     }
 
     //-------------------------------------------------< misc. public methods >
