@@ -147,16 +147,21 @@ public class ConcurrentCache<K, V> extends AbstractCache {
      * @return the previous value, or <code>null</code>
      */
     public V put(K key, V value, long size) {
+        E<V> previous;
+
         Map<K, E<V>> segment = getSegment(key);
         synchronized (segment) {
             recordSizeChange(size);
-            E<V> previous = segment.put(key, new E<V>(value, size));
-            if (previous != null) {
-                recordSizeChange(-previous.size);
-                return previous.value;
-            } else {
-                return null;
-            }
+            previous = segment.put(key, new E<V>(value, size));
+        }
+
+        if (previous != null) {
+            recordSizeChange(-previous.size);
+            shrinkIfNeeded();
+            return previous.value;
+        } else {
+            shrinkIfNeeded();
+            return null;
         }
     }
 
@@ -210,7 +215,13 @@ public class ConcurrentCache<K, V> extends AbstractCache {
     @Override
     public void setMaxMemorySize(long size) {
         super.setMaxMemorySize(size);
+        shrinkIfNeeded();
+    }
 
+    /**
+     * Removes old entries from the cache until the cache is small enough.
+     */
+    private void shrinkIfNeeded() {
         // Semi-random start index to prevent bias against the first segments
         int start = (int) getAccessCount() % segments.length;
         for (int i = start; isTooBig(); i = (i + 1) % segments.length) {
@@ -218,10 +229,9 @@ public class ConcurrentCache<K, V> extends AbstractCache {
                 Iterator<Map.Entry<K, E<V>>> iterator =
                     segments[i].entrySet().iterator();
                 if (iterator.hasNext()) {
-                    Map.Entry<K, E<V>> entry = iterator.next();
                     // Removing and re-adding the first entry will
-                    // automatically the last entry if the cache is
-                    // too big
+                    // evict the last entry if the cache is too big
+                    Map.Entry<K, E<V>> entry = iterator.next();
                     segments[i].remove(entry.getKey());
                     segments[i].put(entry.getKey(), entry.getValue());
                 }
