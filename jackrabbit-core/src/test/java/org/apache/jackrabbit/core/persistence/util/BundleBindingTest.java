@@ -28,6 +28,7 @@ import javax.jcr.PropertyType;
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.id.PropertyId;
 import org.apache.jackrabbit.core.persistence.util.NodePropBundle.PropertyEntry;
+import org.apache.jackrabbit.core.util.StringIndex;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
@@ -39,8 +40,28 @@ public class BundleBindingTest extends TestCase {
     private BundleBinding binding;
 
     protected void setUp() throws Exception {
-        binding = new BundleBinding(
-                null, null, new HashMapIndex(), new HashMapIndex(), null);
+        final String[] strings = new String[] {
+                "http://www.jcp.org/jcr/1.0", 
+                "http://www.jcp.org/jcr/nt/1.0", 
+                "http://www.jcp.org/jcr/mix/1.0", 
+                "unstructured",
+                "created", 
+                "createdBy" 
+        };
+        StringIndex index = new StringIndex() {
+            public int stringToIndex(String string) {
+                for (int i = 0; i < strings.length; i++) {
+                    if (strings[i].equals(string)) {
+                        return i;
+                    }
+                }
+                throw new IllegalArgumentException(string);
+            }
+            public String indexToString(int idx) {
+                return strings[idx];
+            }
+        };
+        binding = new BundleBinding(null, null, index, index, null);
     }
 
     public void testEmptyBundle() throws Exception {
@@ -53,7 +74,7 @@ public class BundleBindingTest extends TestCase {
         assertBundleRoundtrip(bundle);
 
         assertBundleSerialization(bundle, new byte[] {
-                2, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0,
+                2, 0, 0, 1, 0, 0, 0, 3, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0,
                 0, 0, 0, 0, 0, 2, 0, 0, -1, -1, -1, -1, -1, -1, -1, -1,
                 0, 0, 0, 0, 0 });
     }
@@ -94,20 +115,20 @@ public class BundleBindingTest extends TestCase {
         assertBundleRoundtrip(bundle);
 
         assertBundleSerialization(bundle, new byte[] {
-                2, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0,
-                0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, -1, -1, -1, -1,
-                0, 0, 0, 2, 0, 0, 0, 2, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0,
-                0, 0, 4, 116, 101, 115, 116, 0, 0, 0, 2, 0, 0, 0, 1, 0, 0, 0,
-                5, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 29, 49, 57, 55, 48, 45, 48,
-                49, 45, 49, 53, 84, 48, 55, 58, 53, 54, 58, 48, 55, 46, 56,
-                57, 48, 43, 48, 49, 58, 48, 48, -1, -1, -1, -1, 1, 1, 0, 0,
-                0, 0, 0, 0, 0, 11, 0, 0, 0, 0, 0, 0, 0, 12, 0, 0, 0, 2, 0, 6,
-                115, 121, 115, 116, 101, 109, 1, 0, 0, 0, 0, 0, 0, 0, 13, 0,
-                0, 0, 0, 0, 0, 0, 14, 0, 0, 0, 2, 0, 14, 118, 101, 114, 115,
-                105, 111, 110, 83, 116, 111, 114, 97, 103, 101, 0, 0, 0, 1,
-                0, 0, 0, 0, 0, 0, 0, 7, 0, 0, 0, 0, 0, 0, 0, 8, 1, 0, 0, 0,
-                0, 0, 0, 0, 9, 0, 0, 0, 0, 0, 0, 0, 10, 1, 0, 0, 0, 0, 0, 0,
-                0, 5, 0, 0, 0, 0, 0, 0, 0, 6, 0 });
+                2, 0, 0, 1, 0, 0, 0, 3, 1, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0,
+                0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 2, 0, 0, 0, 4, -1, -1, -1, -1,
+                0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0,
+                0, 0, 4, 116, 101, 115, 116, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0,
+                0, 5, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 29, 49, 57, 55, 48, 45,
+                48, 49, 45, 49, 53, 84, 48, 55, 58, 53, 54, 58, 48, 55, 46,
+                56, 57, 48, 43, 48, 49, 58, 48, 48, -1, -1, -1, -1, 1, 1, 0,
+                0, 0, 0, 0, 0, 0, 11, 0, 0, 0, 0, 0, 0, 0, 12, 0, 0, 0, 0, 0,
+                6, 115, 121, 115, 116, 101, 109, 1, 0, 0, 0, 0, 0, 0, 0, 13,
+                0, 0, 0, 0, 0, 0, 0, 14, 0, 0, 0, 0, 0, 14, 118, 101, 114,
+                115, 105, 111, 110, 83, 116, 111, 114, 97, 103, 101, 0, 0, 0,
+                1, 0, 0, 0, 0, 0, 0, 0, 9, 0, 0, 0, 0, 0, 0, 0, 10, 1, 0, 0,
+                0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 6, 1, 0, 0, 0, 0, 0,
+                0, 0, 7, 0, 0, 0, 0, 0, 0, 0, 8, 0 });
     }
 
     private void assertBundleRoundtrip(NodePropBundle bundle)
