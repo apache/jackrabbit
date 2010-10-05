@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.core;
 
-import java.io.PrintStream;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -36,7 +35,6 @@ import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.NodeStateListener;
-import org.apache.jackrabbit.core.util.Dumpable;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
@@ -51,7 +49,7 @@ import org.slf4j.LoggerFactory;
  * items.
  */
 public class CachingHierarchyManager extends HierarchyManagerImpl
-        implements NodeStateListener, Dumpable {
+        implements NodeStateListener {
 
     /**
      * Default upper limit of cached states
@@ -751,31 +749,30 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
     }
 
     /**
-     * Dump contents of path map and elements included to <code>PrintStream</code> given.
-     *
-     * @param ps print stream to dump to
+     * Dump contents of path map and elements included to a string.
      */
-    public void dump(final PrintStream ps) {
+    public String toString() {
+        final StringBuilder builder = new StringBuilder();
         synchronized (cacheMonitor) {
             pathCache.traverse(new PathMap.ElementVisitor<LRUEntry>() {
                 public void elementVisited(PathMap.Element<LRUEntry> element) {
-                    StringBuffer line = new StringBuffer();
                     for (int i = 0; i < element.getDepth(); i++) {
-                        line.append("--");
+                        builder.append("--");
                     }
-                    line.append(element.getName());
+                    builder.append(element.getName());
                     int index = element.getIndex();
                     if (index != 0 && index != 1) {
-                        line.append('[');
-                        line.append(index);
-                        line.append(']');
+                        builder.append('[');
+                        builder.append(index);
+                        builder.append(']');
                     }
-                    line.append("  ");
-                    line.append(element.get());
-                    ps.println(line.toString());
+                    builder.append("  ");
+                    builder.append(element.get());
+                    builder.append("\n");
                 }
             }, true);
         }
+        return builder.toString();
     }
 
     /**

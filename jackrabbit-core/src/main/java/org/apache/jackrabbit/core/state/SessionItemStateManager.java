@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.core.state;
 
-import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -38,7 +37,6 @@ import org.apache.jackrabbit.core.ZombieHierarchyManager;
 import org.apache.jackrabbit.core.id.ItemId;
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.id.PropertyId;
-import org.apache.jackrabbit.core.util.Dumpable;
 import org.apache.jackrabbit.spi.Name;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,7 +45,7 @@ import org.slf4j.LoggerFactory;
  * Item state manager that handles both transient and persistent items.
  */
 public class SessionItemStateManager
-        implements UpdatableItemStateManager, Dumpable, NodeStateListener {
+        implements UpdatableItemStateManager, NodeStateListener {
 
     private static Logger log = LoggerFactory.getLogger(SessionItemStateManager.class);
 
@@ -119,28 +117,19 @@ public class SessionItemStateManager
         return new ZombieHierarchyManager(hierMgr, this, getAttic());
     }
 
-    //-------------------------------------------------------------< Dumpable >
+    //--------------------------------------------------------------< Object >
 
     /**
      * {@inheritDoc}
      */
-    public void dump(PrintStream ps) {
-        ps.println("SessionItemStateManager (" + this + ")");
-        ps.println();
-        ps.print("[transient] ");
-        if (transientStore instanceof Dumpable) {
-            ((Dumpable) transientStore).dump(ps);
-        } else {
-            ps.println(transientStore.toString());
-        }
-        ps.println();
-        ps.print("[attic]     ");
-        if (atticStore instanceof Dumpable) {
-            ((Dumpable) atticStore).dump(ps);
-        } else {
-            ps.println(atticStore.toString());
-        }
-        ps.println();
+    public String toString() {
+        StringBuilder builder = new StringBuilder();
+        builder.append("SessionItemStateManager (" + this + ")\n");
+        builder.append("[transient]\n");
+        builder.append(transientStore);
+        builder.append("[attic]\n");
+        builder.append(atticStore);
+        return builder.toString();
     }
 
     //-----------------------------------------------------< ItemStateManager >

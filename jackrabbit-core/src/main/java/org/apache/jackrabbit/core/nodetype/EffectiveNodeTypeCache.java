@@ -16,14 +16,13 @@
  */
 package org.apache.jackrabbit.core.nodetype;
 
-import org.apache.jackrabbit.core.util.Dumpable;
 import org.apache.jackrabbit.spi.Name;
 
 /**
  * <code>EffectiveNodeTypeCache</code> defines the interface for a cache for
  * effective node types. Effective node types are addressed by {@link Key}s.
  */
-public interface EffectiveNodeTypeCache extends Cloneable, Dumpable {
+public interface EffectiveNodeTypeCache extends Cloneable {
 
     /**
      * Puts an effective node type to the cache. The key is internally generated
@@ -90,7 +89,7 @@ public interface EffectiveNodeTypeCache extends Cloneable, Dumpable {
     * An <code>ENTKey</code> uniquely identifies
     * a combination (i.e. an aggregation) of one or more node types.
     */
-    interface Key extends Comparable {
+    interface Key extends Comparable<Key> {
 
         /**
          * Returns the node type names of this key.

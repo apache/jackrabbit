@@ -18,7 +18,6 @@ package org.apache.jackrabbit.core.nodetype;
 
 import org.apache.jackrabbit.spi.Name;
 
-import java.io.PrintStream;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
@@ -37,19 +36,19 @@ public class EffectiveNodeTypeCacheImpl implements EffectiveNodeTypeCache {
     /**
      * ordered set of keys
      */
-    private final TreeSet sortedKeys;
+    private final TreeSet<Key> sortedKeys;
 
     /**
      * cache of pre-built aggregations of node types
      */
-    private final HashMap aggregates;
+    private final HashMap<Key, EffectiveNodeType> aggregates;
 
     /**
      * Creates a new effective node type cache.
      */
     EffectiveNodeTypeCacheImpl() {
-        sortedKeys = new TreeSet();
-        aggregates = new HashMap();
+        sortedKeys = new TreeSet<Key>();
+        aggregates = new HashMap<Key, EffectiveNodeType>();
     }
 
     /**
@@ -91,7 +90,7 @@ public class EffectiveNodeTypeCacheImpl implements EffectiveNodeTypeCache {
      * {@inheritDoc}
      */
     public EffectiveNodeType get(Key key) {
-        return (EffectiveNodeType) aggregates.get(key);
+        return aggregates.get(key);
     }
 
     /**
@@ -101,16 +100,16 @@ public class EffectiveNodeTypeCacheImpl implements EffectiveNodeTypeCache {
      *         never cached.
      */
     private EffectiveNodeType remove(Key key) {
-        EffectiveNodeType removed = (EffectiveNodeType) aggregates.remove(key);
+        EffectiveNodeType removed = aggregates.remove(key);
         if (removed != null) {
             // remove index entry
 
             // FIXME: can't simply call TreeSet.remove(key) because the entry
             // in sortedKeys might have a different weight and would thus
             // not be found
-            Iterator iter = sortedKeys.iterator();
+            Iterator<Key> iter = sortedKeys.iterator();
             while (iter.hasNext()) {
-                Key k = (Key) iter.next();
+                Key k = iter.next();
                 // WeightedKey.equals(Object) ignores the weight
                 if (key.equals(k)) {
                     sortedKeys.remove(k);
@@ -127,9 +126,9 @@ public class EffectiveNodeTypeCacheImpl implements EffectiveNodeTypeCache {
     public void invalidate(Name name) {
         // remove all affected effective node types from aggregates cache
         // (copy keys first to prevent ConcurrentModificationException)
-        ArrayList keys = new ArrayList(sortedKeys);
-        for (Iterator keysIter = keys.iterator(); keysIter.hasNext();) {
-            Key k = (Key) keysIter.next();
+        ArrayList<Key> keys = new ArrayList<Key>(sortedKeys);
+        for (Iterator<Key> keysIter = keys.iterator(); keysIter.hasNext();) {
+            Key k = keysIter.next();
             EffectiveNodeType ent = get(k);
             if (ent.includesNodeType(name)) {
                 remove(k);
@@ -145,9 +144,9 @@ public class EffectiveNodeTypeCacheImpl implements EffectiveNodeTypeCache {
         if (contains(key)) {
             return key;
         }
-        Iterator iter = sortedKeys.iterator();
+        Iterator<Key> iter = sortedKeys.iterator();
         while (iter.hasNext()) {
-            Key k = (Key) iter.next();
+            Key k = iter.next();
             // check if the existing aggregate is a 'subset' of the one we're
             // looking for
             if (key.contains(k)) {
@@ -169,22 +168,20 @@ public class EffectiveNodeTypeCacheImpl implements EffectiveNodeTypeCache {
         return clone;
     }
 
-    //-------------------------------------------------------------< Dumpable >
+    //--------------------------------------------------------------< Object >
 
     /**
      * {@inheritDoc}
      */
-    public void dump(PrintStream ps) {
-        ps.println("EffectiveNodeTypeCache (" + this + ")");
-        ps.println();
-        ps.println("EffectiveNodeTypes in cache:");
-        ps.println();
-        Iterator iter = sortedKeys.iterator();
-        while (iter.hasNext()) {
-            Key k = (Key) iter.next();
-            //EffectiveNodeType ent = (EffectiveNodeType) aggregates.get(k);
-            ps.println(k);
+    public String toString() {
+        StringBuilder builder = new StringBuilder();
+        builder.append("EffectiveNodeTypeCache (" + this + ")\n");
+        builder.append("EffectiveNodeTypes in cache:\n");
+        for (Key key : sortedKeys) {
+            builder.append(key);
+            builder.append("\n");
         }
+        return builder.toString();
     }
 
     //--------------------------------------------------------< inner classes >
@@ -248,7 +245,7 @@ public class EffectiveNodeTypeCacheImpl implements EffectiveNodeTypeCache {
         /**
          * @param ntNames
          */
-        WeightedKey(Collection ntNames) {
+        WeightedKey(Collection<Name> ntNames) {
             this(ntNames, ntNames.size());
         }
 
@@ -272,7 +269,7 @@ public class EffectiveNodeTypeCacheImpl implements EffectiveNodeTypeCache {
          */
         public boolean contains(Key otherKey) {
             WeightedKey key = (WeightedKey) otherKey;
-            Set tmp = new HashSet(Arrays.asList(names));
+            Set<Name> tmp = new HashSet<Name>(Arrays.asList(names));
             for (int i = 0; i < key.names.length; i++) {
                 if (!tmp.contains(key.names[i])) {
                     return false;
@@ -286,7 +283,7 @@ public class EffectiveNodeTypeCacheImpl implements EffectiveNodeTypeCache {
          */
         public Key subtract(Key otherKey) {
             WeightedKey key = (WeightedKey) otherKey;
-            Set tmp = new HashSet(Arrays.asList(names));
+            Set<Name> tmp = new HashSet<Name>(Arrays.asList(names));
             tmp.removeAll(Arrays.asList(key.names));
             return new WeightedKey(tmp);
 
@@ -300,7 +297,7 @@ public class EffectiveNodeTypeCacheImpl implements EffectiveNodeTypeCache {
          * @param o the other key to compare
          * @return the result of the comparison
          */
-        public int compareTo(Object o) {
+        public int compareTo(Key o) {
             WeightedKey other = (WeightedKey) o;
 
             // compare weights

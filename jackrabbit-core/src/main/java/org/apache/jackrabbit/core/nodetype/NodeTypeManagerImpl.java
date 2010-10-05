@@ -19,7 +19,6 @@ package org.apache.jackrabbit.core.nodetype;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -50,7 +49,6 @@ import org.apache.jackrabbit.commons.cnd.ParseException;
 import org.apache.jackrabbit.commons.iterator.NodeTypeIteratorAdapter;
 import org.apache.jackrabbit.core.nodetype.xml.NodeTypeReader;
 import org.apache.jackrabbit.core.session.SessionContext;
-import org.apache.jackrabbit.core.util.Dumpable;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.QNodeTypeDefinition;
@@ -72,7 +70,7 @@ import org.xml.sax.SAXException;
  * NodeTypeManager.
  */
 public class NodeTypeManagerImpl extends AbstractNodeTypeManager
-        implements JackrabbitNodeTypeManager, Dumpable, NodeTypeRegistryListener {
+        implements JackrabbitNodeTypeManager, NodeTypeRegistryListener {
 
     /**
      * Component context of the current session.
@@ -231,7 +229,7 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager
 
                     Properties namespaces = ntr.getNamespaces();
                     if (namespaces != null) {
-                        Enumeration prefixes = namespaces.propertyNames();
+                        Enumeration<?> prefixes = namespaces.propertyNames();
                         while (prefixes.hasMoreElements()) {
                             String prefix = (String) prefixes.nextElement();
                             String uri = namespaces.getProperty(prefix);
@@ -320,18 +318,18 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager
         // flush all affected cache entries
         ntCache.remove(ntName);
         synchronized (pdCache) {
-            Iterator iter = pdCache.values().iterator();
+            Iterator<PropertyDefinitionImpl> iter = pdCache.values().iterator();
             while (iter.hasNext()) {
-                PropertyDefinitionImpl pd = (PropertyDefinitionImpl) iter.next();
+                PropertyDefinitionImpl pd = iter.next();
                 if (ntName.equals(pd.unwrap().getDeclaringNodeType())) {
                     iter.remove();
                 }
             }
         }
         synchronized (ndCache) {
-            Iterator iter = ndCache.values().iterator();
+            Iterator<NodeDefinitionImpl> iter = ndCache.values().iterator();
             while (iter.hasNext()) {
-                NodeDefinitionImpl nd = (org.apache.jackrabbit.spi.commons.nodetype.NodeDefinitionImpl) iter.next();
+                NodeDefinitionImpl nd = iter.next();
                 if (ntName.equals(nd.unwrap().getDeclaringNodeType())) {
                     iter.remove();
                 }
@@ -633,14 +631,14 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager
         return new QNodeTypeDefinitionImpl(definition, context, QValueFactoryImpl.getInstance());
     }
 
-    //-------------------------------------------------------------< Dumpable >
+    //--------------------------------------------------------------< Object >
+
     /**
      * {@inheritDoc}
      */
-    public void dump(PrintStream ps) {
-        ps.println("NodeTypeManager (" + this + ")");
-        ps.println();
-        context.getNodeTypeRegistry().dump(ps);
+    public String toString() {
+        return "NodeTypeManager(" + this + ")\n"
+            + context.getNodeTypeRegistry();
     }
 
 }

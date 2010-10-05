@@ -23,7 +23,6 @@ import static org.apache.jackrabbit.core.ItemValidator.CHECK_LOCK;
 import static org.apache.jackrabbit.core.ItemValidator.CHECK_RETENTION;
 
 import java.io.File;
-import java.io.PrintStream;
 import java.security.AccessControlException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -85,7 +84,6 @@ import org.apache.jackrabbit.core.session.SessionOperation;
 import org.apache.jackrabbit.core.session.SessionRefreshOperation;
 import org.apache.jackrabbit.core.session.SessionSaveOperation;
 import org.apache.jackrabbit.core.state.SessionItemStateManager;
-import org.apache.jackrabbit.core.util.Dumpable;
 import org.apache.jackrabbit.core.version.InternalVersionManager;
 import org.apache.jackrabbit.core.xml.ImportHandler;
 import org.apache.jackrabbit.core.xml.SessionImporter;
@@ -107,7 +105,7 @@ import org.xml.sax.ContentHandler;
  * A <code>SessionImpl</code> ...
  */
 public class SessionImpl extends AbstractSession
-        implements JackrabbitSession, NamespaceResolver, NamePathResolver, IdentifierResolver, Dumpable {
+        implements JackrabbitSession, NamespaceResolver, NamePathResolver, IdentifierResolver {
 
     /**
      * Name of the session attribute that controls whether the
@@ -169,6 +167,7 @@ public class SessionImpl extends AbstractSession
     /**
      * Listeners (weak references)
      */
+    @SuppressWarnings("unchecked")
     protected final Map<SessionListener, SessionListener> listeners =
         new ReferenceMap(ReferenceMap.WEAK, ReferenceMap.WEAK);
 
@@ -1190,24 +1189,6 @@ public class SessionImpl extends AbstractSession
             retentionManager = new RetentionManagerImpl(this);
         }
         return retentionManager;
-    }
-
-    //-------------------------------------------------------------< Dumpable >
-    /**
-     * {@inheritDoc}
-     */
-    public void dump(PrintStream ps) {
-        ps.print("Session: ");
-        if (userId == null) {
-            ps.print("unknown");
-        } else {
-            ps.print(userId);
-        }
-        ps.println(" (" + this + ")");
-        ps.println();
-        context.getItemManager().dump(ps);
-        ps.println();
-        context.getItemStateManager().dump(ps);
     }
 
     //--------------------------------------------------------------< Object >

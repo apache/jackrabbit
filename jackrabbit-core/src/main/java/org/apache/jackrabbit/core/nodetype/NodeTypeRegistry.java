@@ -20,7 +20,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.io.PrintStream;
 import java.io.Reader;
 import java.util.Arrays;
 import java.util.Collection;
@@ -48,7 +47,6 @@ import org.apache.jackrabbit.core.cluster.NodeTypeEventListener;
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.fs.FileSystemException;
 import org.apache.jackrabbit.core.fs.FileSystemResource;
-import org.apache.jackrabbit.core.util.Dumpable;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.QValueConstraint;
 import org.apache.jackrabbit.spi.QValue;
@@ -68,7 +66,7 @@ import EDU.oswego.cs.dl.util.concurrent.ConcurrentReaderHashMap;
 /**
  * A <code>NodeTypeRegistry</code> ...
  */
-public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
+public class NodeTypeRegistry implements NodeTypeEventListener {
 
     private static Logger log = LoggerFactory.getLogger(NodeTypeRegistry.class);
 
@@ -107,6 +105,7 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
     /**
      * Listeners (soft references)
      */
+    @SuppressWarnings("unchecked")
     private final Map<NodeTypeRegistryListener, NodeTypeRegistryListener> listeners =
             Collections.synchronizedMap(new ReferenceMap(ReferenceMap.WEAK, ReferenceMap.WEAK));
 
@@ -566,32 +565,31 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
         listeners.remove(listener);
     }
 
-    //-------------------------------------------------------------< Dumpable >
+    //--------------------------------------------------------------< Object >
+
     /**
      * {@inheritDoc}
      */
-    public void dump(PrintStream ps) {
-        ps.println("NodeTypeRegistry (" + this + ")");
-        ps.println();
-        ps.println("Registered NodeTypes:");
-        ps.println();
+    public String toString() {
+        StringBuilder builder = new StringBuilder();
+        builder.append("NodeTypeRegistry (" + this + ")\n");
+        builder.append("Registered NodeTypes:\n");
         for (QNodeTypeDefinition ntd : registeredNTDefs.values()) {
-            ps.println(ntd.getName());
-            Name[] supertypes = ntd.getSupertypes();
-            ps.println("\tSupertypes");
-            for (Name supertype : supertypes) {
-                ps.println("\t\t" + supertype);
-            }
-            ps.println("\tMixin\t" + ntd.isMixin());
-            ps.println("\tOrderableChildNodes\t" + ntd.hasOrderableChildNodes());
-            ps.println("\tPrimaryItemName\t" + (ntd.getPrimaryItemName() == null ? "<null>" : ntd.getPrimaryItemName().toString()));
+            builder.append(ntd.getName());
+            builder.append("\n");
+            builder.append(
+                    "\tSupertypes: "
+                    + Arrays.toString(ntd.getSupertypes()) + "\n");
+            builder.append("\tMixin\t" + ntd.isMixin() + "\n");
+            builder.append("\tOrderableChildNodes\t" + ntd.hasOrderableChildNodes() + "\n");
+            builder.append("\tPrimaryItemName\t" + (ntd.getPrimaryItemName() == null ? "<null>" : ntd.getPrimaryItemName().toString()) + "\n");
             QPropertyDefinition[] pd = ntd.getPropertyDefs();
             for (QPropertyDefinition aPd : pd) {
-                ps.print("\tPropertyDefinition");
-                ps.println(" (declared in " + aPd.getDeclaringNodeType() + ")");
-                ps.println("\t\tName\t\t" + (aPd.definesResidual() ? "*" : aPd.getName().toString()));
+                builder.append("\tPropertyDefinition\n");
+                builder.append(" (declared in " + aPd.getDeclaringNodeType() + ")\n");
+                builder.append("\t\tName\t\t" + (aPd.definesResidual() ? "*" : aPd.getName().toString()) + "\n");
                 String type = aPd.getRequiredType() == 0 ? "null" : PropertyType.nameFromValue(aPd.getRequiredType());
-                ps.println("\t\tRequiredType\t" + type);
+                builder.append("\t\tRequiredType\t" + type + "\n");
                 QValueConstraint[] vca = aPd.getValueConstraints();
                 StringBuffer constraints = new StringBuffer();
                 if (vca == null) {
@@ -604,7 +602,7 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
                         constraints.append(aVca.getString());
                     }
                 }
-                ps.println("\t\tValueConstraints\t" + constraints.toString());
+                builder.append("\t\tValueConstraints\t" + constraints + "\n");
                 QValue[] defVals = aPd.getDefaultValues();
                 StringBuffer defaultValues = new StringBuffer();
                 if (defVals == null) {
@@ -617,38 +615,37 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
                         defaultValues.append(defVal.toString());
                     }
                 }
-                ps.println("\t\tDefaultValue\t" + defaultValues.toString());
-                ps.println("\t\tAutoCreated\t" + aPd.isAutoCreated());
-                ps.println("\t\tMandatory\t" + aPd.isMandatory());
-                ps.println("\t\tOnVersion\t" + OnParentVersionAction.nameFromValue(aPd.getOnParentVersion()));
-                ps.println("\t\tProtected\t" + aPd.isProtected());
-                ps.println("\t\tMultiple\t" + aPd.isMultiple());
+                builder.append("\t\tDefaultValue\t" + defaultValues + "\n");
+                builder.append("\t\tAutoCreated\t" + aPd.isAutoCreated() + "\n");
+                builder.append("\t\tMandatory\t" + aPd.isMandatory() + "\n");
+                builder.append("\t\tOnVersion\t" + OnParentVersionAction.nameFromValue(aPd.getOnParentVersion()) + "\n");
+                builder.append("\t\tProtected\t" + aPd.isProtected() + "\n");
+                builder.append("\t\tMultiple\t" + aPd.isMultiple() + "\n");
             }
             QNodeDefinition[] nd = ntd.getChildNodeDefs();
             for (QNodeDefinition aNd : nd) {
-                ps.print("\tNodeDefinition");
-                ps.println(" (declared in " + aNd.getDeclaringNodeType() + ")");
-                ps.println("\t\tName\t\t" + (aNd.definesResidual() ? "*" : aNd.getName().toString()));
+                builder.append("\tNodeDefinition\\n");
+                builder.append(" (declared in " + aNd.getDeclaringNodeType() + ")\\n");
+                builder.append("\t\tName\t\t" + (aNd.definesResidual() ? "*" : aNd.getName().toString()) + "\n");
                 Name[] reqPrimaryTypes = aNd.getRequiredPrimaryTypes();
                 if (reqPrimaryTypes != null && reqPrimaryTypes.length > 0) {
                     for (Name reqPrimaryType : reqPrimaryTypes) {
-                        ps.print("\t\tRequiredPrimaryType\t" + reqPrimaryType);
+                        builder.append("\t\tRequiredPrimaryType\t" + reqPrimaryType + "\n");
                     }
                 }
                 Name defPrimaryType = aNd.getDefaultPrimaryType();
                 if (defPrimaryType != null) {
-                    ps.print("\n\t\tDefaultPrimaryType\t" + defPrimaryType);
+                    builder.append("\n\t\tDefaultPrimaryType\t" + defPrimaryType + "\n");
                 }
-                ps.println("\n\t\tAutoCreated\t" + aNd.isAutoCreated());
-                ps.println("\t\tMandatory\t" + aNd.isMandatory());
-                ps.println("\t\tOnVersion\t" + OnParentVersionAction.nameFromValue(aNd.getOnParentVersion()));
-                ps.println("\t\tProtected\t" + aNd.isProtected());
-                ps.println("\t\tAllowsSameNameSiblings\t" + aNd.allowsSameNameSiblings());
+                builder.append("\n\t\tAutoCreated\t" + aNd.isAutoCreated() + "\n");
+                builder.append("\t\tMandatory\t" + aNd.isMandatory() + "\n");
+                builder.append("\t\tOnVersion\t" + OnParentVersionAction.nameFromValue(aNd.getOnParentVersion()) + "\n");
+                builder.append("\t\tProtected\t" + aNd.isProtected() + "\n");
+                builder.append("\t\tAllowsSameNameSiblings\t" + aNd.allowsSameNameSiblings() + "\n");
             }
         }
-        ps.println();
-
-        entCache.dump(ps);
+        builder.append(entCache);
+        return builder.toString();
     }
 
     //------------------------------------------------< NodeTypeEventListener >

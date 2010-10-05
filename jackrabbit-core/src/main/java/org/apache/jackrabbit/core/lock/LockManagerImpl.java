@@ -39,7 +39,6 @@ import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.core.state.UpdatableItemStateManager;
-import org.apache.jackrabbit.core.util.Dumpable;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
@@ -64,7 +63,6 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
-import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -75,8 +73,8 @@ import java.util.concurrent.TimeUnit;
 /**
  * Provides the functionality needed for locking and unlocking nodes.
  */
-public class LockManagerImpl implements LockManager, SynchronousEventListener,
-        LockEventListener, Dumpable {
+public class LockManagerImpl
+        implements LockManager, SynchronousEventListener, LockEventListener {
 
     /**
      * Logger
@@ -1397,28 +1395,27 @@ public class LockManagerImpl implements LockManager, SynchronousEventListener,
     }
 
     /**
-     * Dump contents of path map and elements included to <code>PrintStream</code> given.
-     *
-     * @param ps print stream to dump to
+     * Dump contents of path map and elements included to a string.
      */
-    public void dump(final PrintStream ps) {
+    public String toString() {
+        final StringBuilder builder = new StringBuilder();
         lockMap.traverse(new PathMap.ElementVisitor<LockInfo>() {
             public void elementVisited(PathMap.Element<LockInfo> element) {
-                StringBuffer line = new StringBuffer();
                 for (int i = 0; i < element.getDepth(); i++) {
-                    line.append("--");
+                    builder.append("--");
                 }
-                line.append(element.getName());
+                builder.append(element.getName());
                 int index = element.getIndex();
                 if (index != 0 && index != 1) {
-                    line.append('[');
-                    line.append(index);
-                    line.append(']');
+                    builder.append('[');
+                    builder.append(index);
+                    builder.append(']');
                 }
-                line.append("  ");
-                line.append(element.get());
-                ps.println(line.toString());
+                builder.append("  ");
+                builder.append(element.get());
+                builder.append("\n");
             }
         }, true);
+        return builder.toString();
     }
 }
