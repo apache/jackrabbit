@@ -31,6 +31,19 @@ import java.util.Map;
  */
 public class ConcurrentCache<K, V> extends AbstractCache {
 
+    /**
+     * Default number of cache segments to use. Use the number of available
+     * processors (even if that might change during runtime!) as a reasonable
+     * approximation of the amount of parallelism we should expect in the
+     * worst case.
+     * <p>
+     * One reason for this value being a constant is that the
+     * {@link Runtime#availableProcessors()} call is somewhat expensive at
+     * least in some environments.
+     */
+    private static int DEFAULT_NUMBER_OF_SEGMENTS =
+        Runtime.getRuntime().availableProcessors();
+
     private static class E<V> {
 
         private final V value;
@@ -65,7 +78,7 @@ public class ConcurrentCache<K, V> extends AbstractCache {
     }
 
     public ConcurrentCache() {
-        this(Runtime.getRuntime().availableProcessors());
+        this(DEFAULT_NUMBER_OF_SEGMENTS);
     }
 
     /**
