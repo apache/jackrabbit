@@ -16,13 +16,21 @@
  */
 package org.apache.jackrabbit.performance;
 
+import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
+import javax.jcr.Session;
 
 public class LoginLogoutTest extends AbstractTest {
 
     public void runTest() throws RepositoryException {
+        Repository repository = getRepository();
         for (int i = 0; i < 1000; i++) {
-            getRepository().login().logout();
+            Session session = repository.login();
+            try {
+                session.getRootNode();
+            } finally {
+                session.logout();
+            }
         }
     }
 
