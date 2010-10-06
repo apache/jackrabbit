@@ -1720,20 +1720,26 @@ public class SharedItemStateManager
     private ItemState getNonVirtualItemState(ItemId id)
             throws NoSuchItemStateException, ItemStateException {
 
-        // check cache; synchronized to ensure an entry is not created twice.
-        synchronized (cache) {
-            ItemState state = cache.retrieve(id);
-            if (state == null) {
-                // not found in cache, load from persistent storage
-                state = loadItemState(id);
-                state.setStatus(ItemState.STATUS_EXISTING);
-                // put it in cache
-                cache.cache(state);
-                // set parent container
-                state.setContainer(this);
-            }
-            return state;
+        ItemState state = cache.retrieve(id);
+        if (state == null) {
+        	synchronized (this) {
+        	    // Use a double check to ensure that the cache entry is
+                // not created twice. We don't synchronize the entire
+                // method to allow the first cache retrieval to proceed
+                // even when another thread is loading a new item state.
+        		state = cache.retrieve(id);
+        		if (state == null) {
+	                // not found in cache, load from persistent storage
+	                state = loadItemState(id);
+	                state.setStatus(ItemState.STATUS_EXISTING);
+	                // put it in cache
+	                cache.cache(state);
+	                // set parent container
+	                state.setContainer(this);
+        		}
+        	}
         }
+        return state;
     }
 
     /**
