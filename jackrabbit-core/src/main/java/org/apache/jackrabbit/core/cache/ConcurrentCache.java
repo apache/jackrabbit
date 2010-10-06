@@ -63,7 +63,7 @@ public class ConcurrentCache<K, V> extends AbstractCache {
     public ConcurrentCache(int numberOfSegments) {
         this.segments = new Map[numberOfSegments];
         for (int i = 0; i < segments.length; i++) {
-            segments[i] = new LinkedHashMap<K, E<V>>(1024, 0.75f, true) {
+            segments[i] = new LinkedHashMap<K, E<V>>(16, 0.75f, true) {
                 @Override
                 protected boolean removeEldestEntry(Map.Entry<K, E<V>> eldest) {
                     if (isTooBig()) {
