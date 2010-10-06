@@ -32,6 +32,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicLong;
 
 import javax.jcr.AccessDeniedException;
 import javax.jcr.Credentials;
@@ -97,6 +98,7 @@ import org.apache.jackrabbit.spi.commons.conversion.NameException;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
+import org.apache.jackrabbit.util.Text;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.ContentHandler;
@@ -123,6 +125,11 @@ public class SessionImpl extends AbstractSession
     private static Logger log = LoggerFactory.getLogger(SessionImpl.class);
 
     /**
+     * Session counter. Used to generate unique internal session names.
+     */
+    private static final AtomicLong SESSION_COUNTER = new AtomicLong();
+
+    /**
      * The component context of this session.
      */
     protected final SessionContext context;
@@ -147,6 +154,12 @@ public class SessionImpl extends AbstractSession
      * the user ID that was used to acquire this session
      */
     protected final String userId;
+
+    /**
+     * Unique internal name of this session. Returned by the
+     * {@link #toString()} method for use in logging and debugging.
+     */
+    private final String sessionName;
 
     /**
      * the attributes of this session
@@ -230,6 +243,13 @@ public class SessionImpl extends AbstractSession
         this.subject = subject;
 
         this.userId = retrieveUserId(subject, wspConfig.getName());
+        long count = SESSION_COUNTER.incrementAndGet();
+        if (userId != null) {
+            String user = Text.escapeIllegalJcrChars(userId);
+            this.sessionName = "session-" + user + "-" + count;
+        } else {
+            this.sessionName = "session-" + count;
+        }
 
         namePathResolver = new DefaultNamePathResolver(this, this, true);
         context.setItemStateManager(createSessionItemStateManager());
@@ -1202,7 +1222,7 @@ public class SessionImpl extends AbstractSession
      */
     @Override
     public String toString() {
-        return context.toString();
+        return sessionName;
     }
 
     /**

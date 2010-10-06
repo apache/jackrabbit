@@ -136,6 +136,8 @@ public class SessionState {
      */
     public <T> T perform(SessionOperation<T> operation)
             throws RepositoryException {
+        String session = context.getSessionImpl().toString();
+
         // Acquire the exclusive lock for accessing session internals.
         // No other session should be holding the lock, so we log a
         // message to let the user know of such cases.
@@ -143,19 +145,19 @@ public class SessionState {
             if (isWriteOperation
                     && operation instanceof SessionWriteOperation) {
                 Exception trace = new Exception(
-                        "Stack trace of concurrent access to " + context);
+                        "Stack trace of concurrent access to " + session);
                 log.warn("Attempt to perform " + operation
                         + " while another thread is concurrently writing"
-                        + " to " + context + ". Blocking until the other"
+                        + " to " + session + ". Blocking until the other"
                         + " thread is finished using this session. Please"
                         + " review your code to avoid concurrent use of"
                         + " a session.", trace);
             } else if (log.isDebugEnabled()) {
                 Exception trace = new Exception(
-                        "Stack trace of concurrent access to " + context);
+                        "Stack trace of concurrent access to " + session);
                 log.debug("Attempt to perform " + operation + " while"
                         + " another thread is concurrently reading from "
-                        + context + ". Blocking until the other thread"
+                        + session + ". Blocking until the other thread"
                         + " is finished using this session. Please"
                         + " review your code to avoid concurrent use of"
                         + " a session.", trace);
@@ -226,10 +228,12 @@ public class SessionState {
      *         <code>false</code> if the session had already been closed
      */
     public boolean close() {
+        String session = context.getSessionImpl().toString();
+
         if (!lock.tryLock()) {
             Exception trace = new Exception(
-                    "Stack trace of concurrent access to " + context);
-            log.warn("Attempt to close " + context + " while another"
+                    "Stack trace of concurrent access to " + session);
+            log.warn("Attempt to close " + session + " while another"
                     + " thread is concurrently accessing this session."
                     + " Blocking until the other thread is finished"
                     + " using this session. Please review your code"
@@ -239,17 +243,17 @@ public class SessionState {
         try {
             if (isAlive()) {
                 closed = new Exception(
-                        "Stack trace of  where " + context
+                        "Stack trace of  where " + session
                         + " was originally closed");
                 return true;
             } else {
                 Exception trace = new Exception(
                         "Stack trace of the duplicate attempt to close "
-                        + context);
-                log.warn("Attempt to close " + context + " after it has"
+                        + session);
+                log.warn("Attempt to close " + session + " after it has"
                         + " already been closed. Please review your code"
                         + " for proper session management.", trace);
-                log.warn(context + " has already been closed. See the"
+                log.warn(session + " has already been closed. See the"
                         + " attached exception for a trace of where this"
                         + " session was closed.", closed);
                 return false;
