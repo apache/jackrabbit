@@ -1,9 +1,9 @@
-Release Notes -- Apache Jackrabbit -- Version 1.6.3
+Release Notes -- Apache Jackrabbit -- Version 1.6.4
 
 Introduction
 ------------
 
-Apache Jackrabbit 1.6.3 is a bug fix release that fixes issues reported
+Apache Jackrabbit 1.6.4 is a bug fix release that fixes issues reported
 against previous releases. This release is backwards-compatible with the
 earlier 1.6.x releases, but contains a change in persistence format that
 makes it impossible to downgrade to releases earlier than 1.6.2 after a
@@ -22,6 +22,7 @@ This release fixes the following issues:
   JCR-2613 NoSuchItemStateException on checkin after removeVersion in XA ...
   JCR-2651 Add a OnWorkspaceInconsistency with logging only
   JCR-2652 Can no longer set a Date property using a Long value
+  JCR-2656 Embedded Derby fails under JBoss because of JMX-related conflicts
   JCR-2659 Fails to remove a previously assigned mixin
   JCR-2667 NodeReferences are lost when deleting and setting the same ...
   JCR-2681 XMLPersistanceManager doesn't preserve a property's ...
