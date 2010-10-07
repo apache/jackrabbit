@@ -346,7 +346,7 @@ class DerefQuery extends Query {
                 // bitset.
                 hits.clear();
                 for (String uuid : uuids) {
-                    TermDocs node = reader.termDocs(new Term(FieldNames.UUID, uuid));
+                    TermDocs node = reader.termDocs(TermFactory.createUUIDTerm(uuid));
                     try {
                         while (node.next()) {
                             hits.set(node.doc());

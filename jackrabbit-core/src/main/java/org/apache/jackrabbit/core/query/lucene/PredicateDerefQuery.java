@@ -339,7 +339,7 @@ public class PredicateDerefQuery extends Query {
                         if (values[v].startsWith(prefix)) {
                             String uuid = values[v].substring(prefix.length());
                             
-                            TermDocs node = reader.termDocs(new Term(FieldNames.UUID, uuid));
+                            TermDocs node = reader.termDocs(TermFactory.createUUIDTerm(uuid));
                             try {
                                 while (node.next()) {
                                     if (subQueryHits.get(node.doc())) {

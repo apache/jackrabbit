@@ -192,7 +192,7 @@ class CachingIndexReader extends FilterIndexReader {
                     parent = DocId.create(parentUUIDs);
                 } else {
                     if (!existing) {
-                        Term id = new Term(FieldNames.UUID, parentUUIDs[0]);
+                        Term id = TermFactory.createUUIDTerm(parentUUIDs[0]);
                         TermDocs docs = termDocs(id);
                         try {
                             while (docs.next()) {
@@ -431,7 +431,7 @@ class CachingIndexReader extends FilterIndexReader {
 
             // initialize in multiple passes with
             // a fixed number of nodes at a time
-            final Term[] startUUID = new Term[]{new Term(FieldNames.UUID, "")};
+            final Term[] startUUID = new Term[]{TermFactory.createUUIDTerm("")};
 
             for (;;) {
                 final Map<Object, NodeInfo> docs = new HashMap<Object, NodeInfo>();
@@ -439,7 +439,7 @@ class CachingIndexReader extends FilterIndexReader {
 
                 if (startUUID[0].text().length() != 0) {
                     // force reading the next uuid after startUUID
-                    startUUID[0] = new Term(FieldNames.UUID, startUUID[0].text() + "_");
+                    startUUID[0] = TermFactory.createUUIDTerm(startUUID[0].text() + "_");
                 }
                 // read UUIDs
                 collectTermDocs(reader, startUUID[0], new TermDocsCollector() {
@@ -489,7 +489,7 @@ class CachingIndexReader extends FilterIndexReader {
                 });
 
                 // scan UUIDs again to get document numbers for parents
-                collectTermDocs(reader, new Term(FieldNames.UUID, ""), new TermDocsCollector() {
+                collectTermDocs(reader, TermFactory.createUUIDTerm(""), new TermDocsCollector() {
                     public boolean collect(Term term, TermDocs tDocs) throws IOException {
                         NodeId id = new NodeId(term.text());
                         while (tDocs.next()) {

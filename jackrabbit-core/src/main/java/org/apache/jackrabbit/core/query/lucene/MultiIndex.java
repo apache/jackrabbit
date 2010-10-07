@@ -504,7 +504,7 @@ public class MultiIndex {
         }
         int num;
         try {
-            Term idTerm = new Term(FieldNames.UUID, id.toString());
+            Term idTerm = TermFactory.createUUIDTerm(id.toString());
             executeAndLog(new Start(Action.INTERNAL_TRANSACTION));
             num = volatileIndex.removeDocument(idTerm);
             if (num > 0) {
@@ -1979,7 +1979,7 @@ public class MultiIndex {
                 Util.disposeDocument(doc);
                 index.notifyIfIndexingQueueIsEmpty();
             }
-            Term idTerm = new Term(FieldNames.UUID, uuidString);
+            Term idTerm = TermFactory.createUUIDTerm(uuidString);
             // if the document cannot be deleted from the volatile index
             // delete it from one of the persistent indexes.
             int num = index.volatileIndex.removeDocument(idTerm);

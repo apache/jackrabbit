@@ -639,7 +639,7 @@ class ChildAxisQuery extends Query implements JackrabbitQuery {
                     }
                     for (ChildNodeEntry entry : entries) {
                         NodeId childId = entry.getId();
-                        Term uuidTerm = new Term(FieldNames.UUID, childId.toString());
+                        Term uuidTerm = TermFactory.createUUIDTerm(childId.toString());
                         TermDocs docs = reader.termDocs(uuidTerm);
                         try {
                             if (docs.next()) {

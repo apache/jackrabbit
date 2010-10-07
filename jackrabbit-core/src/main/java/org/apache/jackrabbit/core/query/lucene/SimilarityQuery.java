@@ -55,7 +55,7 @@ public class SimilarityQuery extends Query {
         more.setFieldNames(new String[]{FieldNames.FULLTEXT});
         more.setMinWordLen(4);
         Query similarityQuery = null;
-        TermDocs td = reader.termDocs(new Term(FieldNames.UUID, uuid));
+        TermDocs td = reader.termDocs(TermFactory.createUUIDTerm(uuid));
         try {
             if (td.next()) {
                 similarityQuery = more.like(td.doc());
