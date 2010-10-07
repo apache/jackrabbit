@@ -102,7 +102,7 @@ public final class ScoreNode {
      */
     public int getDoc(IndexReader reader) throws IOException {
         if (doc == -1) {
-            TermDocs docs = reader.termDocs(new Term(FieldNames.UUID, id.toString()));
+            TermDocs docs = reader.termDocs(TermFactory.createUUIDTerm(id.toString()));
             try {
                 if (docs.next()) {
                     return docs.doc();

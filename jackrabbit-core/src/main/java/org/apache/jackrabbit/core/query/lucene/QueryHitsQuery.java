@@ -194,7 +194,7 @@ public class QueryHitsQuery extends Query implements JackrabbitQuery{
             try {
                 while ((node = hits.nextScoreNode()) != null) {
                     String uuid = node.getNodeId().toString();
-                    Term id = new Term(FieldNames.UUID, uuid);
+                    Term id = TermFactory.createUUIDTerm(uuid);
                     TermDocs tDocs = reader.termDocs(id);
                     try {
                         if (tDocs.next()) {

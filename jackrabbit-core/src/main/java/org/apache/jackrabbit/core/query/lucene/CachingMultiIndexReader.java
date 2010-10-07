@@ -182,7 +182,7 @@ public final class CachingMultiIndexReader
      * {@inheritDoc}
      */
     public ForeignSegmentDocId createDocId(NodeId id) throws IOException {
-        Term term = new Term(FieldNames.UUID, id.toString());
+        Term term = TermFactory.createUUIDTerm(id.toString());
         int doc;
         long tick;
         for (ReadOnlyIndexReader subReader : subReaders) {

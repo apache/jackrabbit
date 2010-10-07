@@ -82,7 +82,7 @@ public abstract class AbstractExcerpt implements HighlightingExcerptProvider {
         IndexReader reader = index.getIndexReader();
         try {
             checkRewritten(reader);
-            Term idTerm = new Term(FieldNames.UUID, id.toString());
+            Term idTerm = TermFactory.createUUIDTerm(id.toString());
             TermDocs tDocs = reader.termDocs(idTerm);
             int docNumber;
             Document doc;
