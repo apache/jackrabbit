@@ -107,6 +107,23 @@ public class JcrUtils {
      */
     public static Repository getRepository(Map<String, String> parameters)
             throws RepositoryException {
+        String newline = System.getProperty("line.separator");
+
+        // Prepare the potential error message (JCR-2459)
+        StringBuilder log = new StringBuilder("Unable to access a repository");
+        if (parameters != null) {
+            log.append(" with the following settings:");
+            for (Map.Entry<String, String> entry : parameters.entrySet()) {
+                log.append(newline);
+                log.append("    ");
+                log.append(entry.getKey());
+                log.append(": ");
+                log.append(entry.getValue());
+            }
+        } else {
+            log.append(" with the default settings.");
+        }
+
         // Use the query part of a repository URI as additional parameters
         if (parameters != null
                 && parameters.containsKey(JcrUtils.REPOSITORY_URI)) {
@@ -136,27 +153,15 @@ public class JcrUtils {
                     parameters = copy;
                 }
             } catch (URISyntaxException e) {
-                // Ignore invalid URIs
+                log.append(newline);
+                log.append("Note that the given repository URI was invalid:");
+                log.append(newline);
+                log.append("        " + uri);
+                log.append(newline);
+                log.append("        " + e.getMessage());
             } catch (UnsupportedEncodingException e) {
                 throw new RepositoryException("UTF-8 is not supported!", e);
             }
-        }
-
-        String newline = System.getProperty("line.separator");
-
-        // Prepare the potential error message (JCR-2459)
-        StringBuilder log = new StringBuilder("Unable to access a repository");
-        if (parameters != null) {
-            log.append(" with the following settings:");
-            for (Map.Entry<String, String> entry : parameters.entrySet()) {
-                log.append(newline);
-                log.append("    ");
-                log.append(entry.getKey());
-                log.append(": ");
-                log.append(entry.getValue());
-            }
-        } else {
-            log.append(" with the default settings.");
         }
 
         // Iterate through the available RepositoryFactories, with logging

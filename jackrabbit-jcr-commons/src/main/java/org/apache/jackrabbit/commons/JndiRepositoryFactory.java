@@ -24,6 +24,7 @@ import java.util.Map;
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.RepositoryFactory;
+import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 
@@ -52,7 +53,7 @@ import javax.naming.NamingException;
  *
  * @since Apache Jackrabbit 2.0
  */
-@SuppressWarnings("unchecked")
+@SuppressWarnings({ "rawtypes", "unchecked" })
 public class JndiRepositoryFactory implements RepositoryFactory {
 
     /**
@@ -75,8 +76,7 @@ public class JndiRepositoryFactory implements RepositoryFactory {
                 try {
                     URI uri = new URI(parameter.toString().trim());
                     if ("jndi".equalsIgnoreCase(uri.getScheme())) {
-                        String name = uri.getSchemeSpecificPart();
-                        return getRepository(name, environment);
+                        return getRepository(uri, environment);
                     } else {
                         return null; // not a jndi: URI
                     }
@@ -87,6 +87,27 @@ public class JndiRepositoryFactory implements RepositoryFactory {
                 return null; // unknown parameters
             }
         }
+    }
+
+    private Repository getRepository(URI uri, Hashtable environment)
+            throws RepositoryException {
+        String name;
+        if (uri.isOpaque()) {
+            name = uri.getSchemeSpecificPart();
+        } else {
+            name = uri.getPath();
+            if (name == null) {
+                name = "";
+            } else if (name.startsWith("/")) {
+                name = name.substring(1);
+            }
+            String authority = uri.getAuthority();
+            if (authority != null && authority.length() > 0) {
+                environment = new Hashtable(environment);
+                environment.put(Context.INITIAL_CONTEXT_FACTORY, authority);
+            }
+        }
+        return getRepository(name, environment);
     }
 
     private Repository getRepository(String name, Hashtable environment)
