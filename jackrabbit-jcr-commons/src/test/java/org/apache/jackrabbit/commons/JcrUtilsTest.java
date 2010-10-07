@@ -20,6 +20,7 @@ import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Map;
 
+import javax.jcr.RepositoryException;
 import javax.naming.InitialContext;
 
 public class JcrUtilsTest extends MockCase {
@@ -57,6 +58,13 @@ public class JcrUtilsTest extends MockCase {
         assertTrue(repository == JcrUtils.getRepository(
                 "jndi://org.osjava.sj.memory.MemoryContextFactory/repository"
                 + "?org.osjava.sj.jndi.shared=true"));
+
+        try {
+            JcrUtils.getRepository(
+                    "jndi://org.osjava.sj.memory.MemoryContextFactory/missing");
+            fail("Repository lookup failure should throw an exception");
+        } catch (RepositoryException expected) {
+        }
     }
 
 }
