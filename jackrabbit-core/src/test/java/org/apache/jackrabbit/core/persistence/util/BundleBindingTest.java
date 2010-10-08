@@ -18,6 +18,8 @@ package org.apache.jackrabbit.core.persistence.util;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.math.BigDecimal;
+import java.net.URI;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
@@ -31,7 +33,12 @@ import org.apache.jackrabbit.core.persistence.util.NodePropBundle.PropertyEntry;
 import org.apache.jackrabbit.core.util.StringIndex;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.NameFactory;
+import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.spi.PathFactory;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
+import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
+import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
 
 import junit.framework.TestCase;
 
@@ -46,7 +53,20 @@ public class BundleBindingTest extends TestCase {
                 "http://www.jcp.org/jcr/mix/1.0", 
                 "unstructured",
                 "created", 
-                "createdBy" 
+                "createdBy",
+                "",
+                "binary",
+                "boolean",
+                "date",
+                "decimal",
+                "double",
+                "long",
+                "name",
+                "path",
+                "reference",
+                "string",
+                "uri",
+                "weakreference"
         };
         StringIndex index = new StringIndex() {
             public int stringToIndex(String string) {
@@ -79,6 +99,9 @@ public class BundleBindingTest extends TestCase {
                 0, 0, 0, 0, 0 });
     }
 
+    /**
+     * Tests serialization of a complex bundle.
+     */
     public void testComplexBundle() throws Exception {
         NodeId id = new NodeId(1, 2);
         NodePropBundle bundle = new NodePropBundle(id);
@@ -90,45 +113,172 @@ public class BundleBindingTest extends TestCase {
         bundle.setSharedSet(new HashSet<NodeId>(Arrays.asList(
                 new NodeId(5, 6), new NodeId(7, 8), new NodeId(9, 10))));
 
-        PropertyEntry created = new PropertyEntry(
+        NameFactory factory = NameFactoryImpl.getInstance();
+        PropertyEntry property;
+
+        property = new PropertyEntry(
                 new PropertyId(id, NameConstants.JCR_CREATED));
-        created.setType(PropertyType.DATE);
-        created.setMultiValued(false);
+        property.setType(PropertyType.DATE);
+        property.setMultiValued(false);
         Calendar date = Calendar.getInstance();
         date.setTimeInMillis(1234567890);
-        created.setValues(new InternalValue[] { InternalValue.create(date) });
-        bundle.addProperty(created);
+        property.setValues(new InternalValue[] { InternalValue.create(date) });
+        bundle.addProperty(property);
 
-        PropertyEntry createdby = new PropertyEntry(
+        property = new PropertyEntry(
                 new PropertyId(id, NameConstants.JCR_CREATEDBY));
-        createdby.setType(PropertyType.STRING);
-        createdby.setMultiValued(false);
-        createdby.setValues(new InternalValue[] {
+        property.setType(PropertyType.STRING);
+        property.setMultiValued(false);
+        property.setValues(
+                new InternalValue[] { InternalValue.create("test") });
+        bundle.addProperty(property);
+
+        property = new PropertyEntry(
+                new PropertyId(id, factory.create("", "binary")));
+        property.setType(PropertyType.BINARY);
+        property.setMultiValued(false);
+        property.setValues(new InternalValue[] { InternalValue.create(
+                new byte[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 }) });
+        bundle.addProperty(property);
+
+        property = new PropertyEntry(
+                new PropertyId(id, factory.create("", "boolean")));
+        property.setType(PropertyType.BOOLEAN);
+        property.setMultiValued(true);
+        property.setValues(new InternalValue[] {
+                InternalValue.create(true), InternalValue.create(false) });
+        bundle.addProperty(property);
+
+        property = new PropertyEntry(
+                new PropertyId(id, factory.create("", "date")));
+        property.setType(PropertyType.DATE);
+        property.setMultiValued(false);
+        property.setValues(new InternalValue[] { InternalValue.create(date) });
+        bundle.addProperty(property);
+
+        property = new PropertyEntry(
+                new PropertyId(id, factory.create("", "decimal")));
+        property.setType(PropertyType.DECIMAL);
+        property.setMultiValued(false);
+        property.setValues(new InternalValue[] {
+                InternalValue.create(new BigDecimal("1234567890.0987654321")) });
+        bundle.addProperty(property);
+
+        property = new PropertyEntry(
+                new PropertyId(id, factory.create("", "double")));
+        property.setType(PropertyType.DOUBLE);
+        property.setMultiValued(true);
+        property.setValues(new InternalValue[] {
+                InternalValue.create(1.0), InternalValue.create(Math.PI) });
+        bundle.addProperty(property);
+
+        property = new PropertyEntry(
+                new PropertyId(id, factory.create("", "long")));
+        property.setType(PropertyType.LONG);
+        property.setMultiValued(false);
+        property.setValues(new InternalValue[] {
+                InternalValue.create(1234567890) });
+        bundle.addProperty(property);
+
+        property = new PropertyEntry(
+                new PropertyId(id, factory.create("", "name")));
+        property.setType(PropertyType.NAME);
+        property.setMultiValued(false);
+        property.setValues(new InternalValue[] {
+                InternalValue.create(NameConstants.JCR_MIMETYPE) });
+        bundle.addProperty(property);
+
+        property = new PropertyEntry(
+                new PropertyId(id, factory.create("", "path")));
+        property.setType(PropertyType.PATH);
+        property.setMultiValued(true);
+        PathFactory pathFactory = PathFactoryImpl.getInstance();
+        Path root = pathFactory.getRootPath();
+        Path path = pathFactory.create(root, NameConstants.JCR_SYSTEM, false);
+        property.setValues(new InternalValue[] {
+                InternalValue.create(root), InternalValue.create(path) });
+        bundle.addProperty(property);
+
+        property = new PropertyEntry(
+                new PropertyId(id, factory.create("", "reference")));
+        property.setType(PropertyType.REFERENCE);
+        property.setMultiValued(false);
+        property.setValues(new InternalValue[] {
+                InternalValue.create(new NodeId(11, 12)) });
+        bundle.addProperty(property);
+
+        property = new PropertyEntry(
+                new PropertyId(id, factory.create("", "string")));
+        property.setType(PropertyType.STRING);
+        property.setMultiValued(false);
+        property.setValues(new InternalValue[] {
                 InternalValue.create("test") });
-        bundle.addProperty(createdby);
+        bundle.addProperty(property);
+
+        property = new PropertyEntry(
+                new PropertyId(id, factory.create("", "uri")));
+        property.setType(PropertyType.URI);
+        property.setMultiValued(false);
+        property.setValues(new InternalValue[] {
+                InternalValue.create(new URI("http://jackrabbit.apache.org/")) });
+        bundle.addProperty(property);
+
+        property = new PropertyEntry(
+                new PropertyId(id, factory.create("", "weakreference")));
+        property.setType(PropertyType.WEAKREFERENCE);
+        property.setMultiValued(false);
+        property.setValues(new InternalValue[] {
+                InternalValue.create(new NodeId(13, 14), true) });
+        bundle.addProperty(property);
 
         bundle.addChildNodeEntry(
-                NameConstants.JCR_SYSTEM, new NodeId(11, 12));
+                NameConstants.JCR_SYSTEM, new NodeId(15, 16));
         bundle.addChildNodeEntry(
-                NameConstants.JCR_VERSIONSTORAGE, new NodeId(13, 14));
+                NameConstants.JCR_VERSIONSTORAGE, new NodeId(17, 18));
 
         assertBundleRoundtrip(bundle);
 
         assertBundleSerialization(bundle, new byte[] {
                 2, 0, 0, 1, 0, 0, 0, 3, 1, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0,
                 0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 2, 0, 0, 0, 4, -1, -1, -1, -1,
-                0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0,
-                0, 0, 4, 116, 101, 115, 116, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0,
-                0, 5, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 29, 49, 57, 55, 48, 45,
-                48, 49, 45, 49, 53, 84, 48, 55, 58, 53, 54, 58, 48, 55, 46,
-                56, 57, 48, 43, 48, 49, 58, 48, 48, -1, -1, -1, -1, 1, 1, 0,
-                0, 0, 0, 0, 0, 0, 11, 0, 0, 0, 0, 0, 0, 0, 12, 0, 0, 0, 0, 0,
-                6, 115, 121, 115, 116, 101, 109, 1, 0, 0, 0, 0, 0, 0, 0, 13,
-                0, 0, 0, 0, 0, 0, 0, 14, 0, 0, 0, 0, 0, 14, 118, 101, 114,
-                115, 105, 111, 110, 83, 116, 111, 114, 97, 103, 101, 0, 0, 0,
-                1, 0, 0, 0, 0, 0, 0, 0, 9, 0, 0, 0, 0, 0, 0, 0, 10, 1, 0, 0,
-                0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 6, 1, 0, 0, 0, 0, 0,
-                0, 0, 7, 0, 0, 0, 0, 0, 0, 0, 8, 0 });
+                0, 0, 0, 6, 0, 0, 0, 12, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 1, 0,
+                0, 0, 0, 73, -106, 2, -46, 0, 0, 0, 6, 0, 0, 0, 16, 0, 0, 0,
+                1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 4, 116, 101, 115, 116, 0, 0,
+                0, 6, 0, 0, 0, 8, 0, 0, 0, 6, 1, 0, 0, 0, 0, 0, 2, 1, 0, 0,
+                0, 0, 6, 0, 0, 0, 13, 0, 0, 0, 7, 0, 0, 0, 0, 0, 0, 1, 0, 0,
+                0, 0, 0, 8, 109, 105, 109, 101, 84, 121, 112, 101, 0, 0, 0, 6,
+                0, 0, 0, 15, 0, 0, 0, 9, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0,
+                0, 0, 0, 11, 0, 0, 0, 0, 0, 0, 0, 12, 0, 0, 0, 6, 0, 0, 0, 18,
+                0, 0, 0, 10, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 13,
+                0, 0, 0, 0, 0, 0, 0, 14, 0, 0, 0, 6, 0, 0, 0, 9, 0, 0, 0, 5,
+                0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 29, 49, 57, 55, 48, 45, 48, 49,
+                45, 49, 53, 84, 48, 55, 58, 53, 54, 58, 48, 55, 46, 56, 57,
+                48, 43, 48, 49, 58, 48, 48, 0, 0, 0, 6, 0, 0, 0, 7, 0, 0, 0,
+                2, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 10, 0, 1, 2, 3, 4, 5, 6, 7,
+                8, 9, 0, 0, 0, 6, 0, 0, 0, 17, 0, 0, 0, 11, 0, 0, 0, 0, 0, 0,
+                1, 0, 0, 0, 29, 104, 116, 116, 112, 58, 47, 47, 106, 97, 99,
+                107, 114, 97, 98, 98, 105, 116, 46, 97, 112, 97, 99, 104, 101,
+                46, 111, 114, 103, 47, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0, 1, 0,
+                0, 0, 0, 0, 0, 1, 0, 0, 0, 4, 116, 101, 115, 116, 0, 0, 0, 6,
+                0, 0, 0, 11, 0, 0, 0, 4, 1, 0, 0, 0, 0, 0, 2, 63, -16, 0, 0,
+                0, 0, 0, 0, 64, 9, 33, -5, 84, 68, 45, 24, 0, 0, 0, 0, 0, 0,
+                0, 4, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 29, 49, 57,
+                55, 48, 45, 48, 49, 45, 49, 53, 84, 48, 55, 58, 53, 54, 58,
+                48, 55, 46, 56, 57, 48, 43, 48, 49, 58, 48, 48, 0, 0, 0, 6,
+                0, 0, 0, 10, 0, 0, 0, 12, 0, 0, 0, 0, 0, 0, 1, 1, 0, 21, 49,
+                50, 51, 52, 53, 54, 55, 56, 57, 48, 46, 48, 57, 56, 55, 54,
+                53, 52, 51, 50, 49, 0, 0, 0, 6, 0, 0, 0, 14, 0, 0, 0, 8, 1,
+                0, 0, 0, 0, 0, 2, 0, 0, 0, 2, 123, 125, 0, 0, 0, 37, 123,
+                125, 9, 123, 104, 116, 116, 112, 58, 47, 47, 119, 119, 119,
+                46, 106, 99, 112, 46, 111, 114, 103, 47, 106, 99, 114, 47,
+                49, 46, 48, 125, 115, 121, 115, 116, 101, 109, -1, -1, -1,
+                -1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 15, 0, 0, 0, 0, 0, 0, 0, 16,
+                0, 0, 0, 0, 0, 6, 115, 121, 115, 116, 101, 109, 1, 0, 0, 0,
+                0, 0, 0, 0, 17, 0, 0, 0, 0, 0, 0, 0, 18, 0, 0, 0, 0, 0, 14,
+                118, 101, 114, 115, 105, 111, 110, 83, 116, 111, 114, 97,
+                103, 101, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 7, 0, 0, 0, 0,
+                0, 0, 0, 8, 1, 0, 0, 0, 0, 0, 0, 0, 9, 0, 0, 0, 0, 0, 0, 0,
+                10, 1, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 6, 0 });
     }
 
     private void assertBundleRoundtrip(NodePropBundle bundle)

@@ -309,7 +309,7 @@ public class InternalValue extends AbstractQValue {
      * @param value
      * @return the created value
      */
-    static InternalValue create(URI value) {
+    public static InternalValue create(URI value) {
         return new InternalValue(value);
     }
 
