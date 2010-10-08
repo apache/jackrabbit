@@ -54,10 +54,13 @@ class BundleWriter {
      *
      * @param binding bundle binding
      * @param stream stream to which the bundle will be written
+     * @throws IOException if an I/O error occurs.
      */
-    public BundleWriter(BundleBinding binding, OutputStream stream) {
+    public BundleWriter(BundleBinding binding, OutputStream stream)
+            throws IOException {
         this.binding = binding;
         this.out = new DataOutputStream(stream);
+        this.out.writeByte(BundleBinding.VERSION_CURRENT);
     }
 
     /**
@@ -71,10 +74,12 @@ class BundleWriter {
         long size = out.size();
 
         // primaryType and version
-        out.writeInt(
-                (BundleBinding.VERSION_CURRENT << 24)
-                | binding.nsIndex.stringToIndex(bundle.getNodeTypeName().getNamespaceURI()));
-        out.writeInt(binding.nameIndex.stringToIndex(bundle.getNodeTypeName().getLocalName()));
+        Name type = bundle.getNodeTypeName();
+        int index = binding.nsIndex.stringToIndex(type.getNamespaceURI());
+        out.writeByte(index >>> 16);
+        out.writeByte(index >>> 8);
+        out.writeByte(index);
+        out.writeInt(binding.nameIndex.stringToIndex(type.getLocalName()));
 
         // parentUUID
         writeNodeId(bundle.getParentId());
