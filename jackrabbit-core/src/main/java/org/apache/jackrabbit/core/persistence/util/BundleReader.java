@@ -48,15 +48,20 @@ class BundleReader {
 
     private final DataInputStream in;
 
+    private final int version;
+
     /**
      * Creates a new bundle deserializer.
      *
      * @param binding bundle binding
      * @param stream stream from which the bundle is read
+     * @throws IOException if an I/O error occurs.
      */
-    public BundleReader(BundleBinding binding, InputStream stream) {
+    public BundleReader(BundleBinding binding, InputStream stream)
+            throws IOException {
         this.binding = binding;
         this.in = new DataInputStream(stream);
+        this.version = in.readUnsignedByte();
     }
 
     /**
@@ -69,13 +74,11 @@ class BundleReader {
     public NodePropBundle readBundle(NodeId id) throws IOException {
         NodePropBundle bundle = new NodePropBundle(id);
 
-        // read version and primary type...special handling
-        int index = in.readInt();
-
-        // get version
-        int version = (index >> 24) & 0xff;
-        index &= 0x00ffffff;
-        String uri = binding.nsIndex.indexToString(index);
+        // read primary type...special handling
+        int a = in.readUnsignedByte();
+        int b = in.readUnsignedByte();
+        int c = in.readUnsignedByte();
+        String uri = binding.nsIndex.indexToString(a << 16 | b << 8 | c);
         String local = binding.nameIndex.indexToString(in.readInt());
         Name nodeTypeName = NameFactoryImpl.getInstance().create(uri, local);
 
