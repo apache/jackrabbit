@@ -47,21 +47,15 @@ public abstract class AbstractPerformanceTest {
     private final Credentials credentials =
         new SimpleCredentials("admin", "admin".toCharArray());
 
+    private Pattern repoPattern;
     private Pattern testPattern;
 
     protected void testPerformance(String name) throws Exception {
-        String only = System.getProperty("only", ".*:.*");
-        int colon = only.indexOf(':');
-        if (colon == -1) {
-            colon = only.length();
-            only = only + ":-1";
-        }
-
-        testPattern = Pattern.compile(only.substring(0, colon));
-        Pattern namePattern = Pattern.compile(only.substring(colon + 1));
+        repoPattern = Pattern.compile(System.getProperty("repo", "\\d\\.\\d"));
+        testPattern = Pattern.compile(System.getProperty("only", ".*"));
 
         // Create a repository using the Jackrabbit default configuration
-        if (namePattern.matcher(name).matches()) {
+        if (repoPattern.matcher(name).matches()) {
             testPerformance(name, getDefaultConfig());
         }
 
@@ -75,7 +69,7 @@ public abstract class AbstractPerformanceTest {
                 if (file.isFile() && xml.endsWith(".xml")) {
                     String repositoryName =
                         name + "-" + xml.substring(0, xml.length() - 4);
-                    if (namePattern.matcher(repositoryName).matches()) {
+                    if (repoPattern.matcher(repositoryName).matches()) {
                         testPerformance(
                                 repositoryName,
                                 FileUtils.openInputStream(file));
