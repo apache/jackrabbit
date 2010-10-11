@@ -40,7 +40,8 @@
   <packaging>pom</packaging>
 
   <properties>
-    <only>.*:.*</only>
+    <repo>\d\.\d</repo>
+    <only>.*</only>
     <scale>0</scale>
   </properties>
 
@@ -57,10 +58,15 @@
         <plugin>
           <artifactId>maven-surefire-plugin</artifactId>
           <configuration>
+            <enableAssertions>false</enableAssertions>
             <systemProperties>
               <property>
                 <name>derby.stream.error.file</name>
                 <value>target/derby.log</value>
+              </property>
+              <property>
+                <name>repo</name>
+                <value>${repo}</value>
               </property>
               <property>
                 <name>only</name>
