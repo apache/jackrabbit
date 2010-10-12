@@ -25,6 +25,7 @@ import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.id.ItemId;
 import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
 import org.apache.jackrabbit.core.observation.SynchronousEventListener;
+import org.apache.jackrabbit.core.security.AnonymousPrincipal;
 import org.apache.jackrabbit.core.security.SecurityConstants;
 import org.apache.jackrabbit.core.security.authorization.AbstractAccessControlProvider;
 import org.apache.jackrabbit.core.security.authorization.AbstractCompiledPermissions;
@@ -88,6 +89,17 @@ public class UserAccessControlProvider extends AbstractAccessControlProvider
         implements UserConstants {
 
     private static Logger log = LoggerFactory.getLogger(UserAccessControlProvider.class);
+        
+    /**
+     * Constant for the name of the configuration option "anonymousId".
+     * The option is a flag indicating the name of the anonymous user id.
+     */
+    public static final String PARAM_ANONYMOUS_ID = "anonymousId";
+    
+    /**
+     * Constant for the name of the configuration option "anonymousAccess".
+     */
+    public static final String PARAM_ANONYMOUS_ACCESS = "anonymousAccess";
 
     private final AccessControlPolicy policy;
 
@@ -101,6 +113,9 @@ public class UserAccessControlProvider extends AbstractAccessControlProvider
     private String groupAdminGroupPath;
     private String administratorsGroupPath;
     private boolean membersInProperty;
+    
+    private String anonymousId;   
+    private boolean anonymousAccess;
 
     /**
      *
@@ -164,6 +179,18 @@ public class UserAccessControlProvider extends AbstractAccessControlProvider
 
             membersInProperty = (!(uMgr instanceof UserManagerImpl)) || ((UserManagerImpl) uMgr).getGroupMembershipSplitSize() <= 0;
 
+            if (configuration.containsKey(PARAM_ANONYMOUS_ID)) {
+                anonymousId = (String) configuration.get(PARAM_ANONYMOUS_ID);
+            } else {
+                anonymousId = SecurityConstants.ANONYMOUS_ID;
+            }
+            
+            if (configuration.containsKey(PARAM_ANONYMOUS_ACCESS)) {
+                anonymousAccess = Boolean.parseBoolean((String) configuration.get(PARAM_ANONYMOUS_ACCESS));
+            } else {
+                anonymousAccess = true;
+            }
+            
         } else {
             throw new RepositoryException("SessionImpl (system session) expected.");
         }
@@ -205,6 +232,10 @@ public class UserAccessControlProvider extends AbstractAccessControlProvider
         if (isAdminOrSystem(principals)) {
             return getAdminPermissions();
         } else {
+            if (!anonymousAccess && isAnonymous(principals))  {
+                return CompiledPermissions.NO_PERMISSION;
+            }
+            
             // determined the 'user' present in the given set of principals.
             ItemBasedPrincipal userPrincipal = getUserPrincipal(principals);
             NodeImpl userNode = getUserNode(userPrincipal);
@@ -223,6 +254,9 @@ public class UserAccessControlProvider extends AbstractAccessControlProvider
      */
     public boolean canAccessRoot(Set<Principal> principals) throws RepositoryException {
         checkInitialized();
+        if (!anonymousAccess && isAnonymous(principals))  {
+            return false;
+        }
         return true;
     }
 
@@ -312,6 +346,17 @@ public class UserAccessControlProvider extends AbstractAccessControlProvider
             log.error("Error while initializing user/group administrators", e.getMessage());
         }
         return null;
+    }
+
+    private boolean isAnonymous(Set<Principal> principals) {
+        for (Principal p : principals) {
+            if (p instanceof AnonymousPrincipal) {
+                return true;
+            } else if (p.getName().equals(anonymousId)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     //--------------------------------------------------------< inner class >---

@@ -19,8 +19,10 @@ package org.apache.jackrabbit.core.security.user;
 import org.apache.jackrabbit.api.security.principal.ItemBasedPrincipal;
 import org.apache.jackrabbit.api.security.user.AbstractUserTest;
 import org.apache.jackrabbit.api.security.user.User;
+import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.RepositoryImpl;
 import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.security.SecurityConstants;
 import org.apache.jackrabbit.core.security.authorization.AccessControlProvider;
 import org.apache.jackrabbit.core.security.authorization.CompiledPermissions;
 import org.apache.jackrabbit.core.security.authorization.Permission;
@@ -30,10 +32,14 @@ import org.apache.jackrabbit.test.NotExecutableException;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.SimpleCredentials;
 import java.security.Principal;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -65,6 +71,15 @@ public class UserAccessControlProviderTest extends AbstractUserTest {
             s.logout();
         }
         super.cleanUp();
+    }
+
+    private Set<Principal> getAnonymousPrincipals() throws RepositoryException {
+        SessionImpl s = ((SessionImpl) getHelper().getRepository().login(new SimpleCredentials(SecurityConstants.ANONYMOUS_ID, "".toCharArray())));
+        try {
+            return new HashSet<Principal>(s.getSubject().getPrincipals());
+        } finally {
+            s.logout();
+        }
     }
 
     /**
@@ -126,6 +141,72 @@ public class UserAccessControlProviderTest extends AbstractUserTest {
                 assertFalse(cp.grants(rootPath, Permission.READ));
                 assertEquals(PrivilegeRegistry.NO_PRIVILEGE, cp.getPrivileges(rootPath));
             }
+        }
+    }
+
+    public void testAnonymousDefaultAccess() throws Exception {
+        Set<Principal> anonymousPrincipals = getAnonymousPrincipals();
+
+        assertTrue(provider.canAccessRoot(anonymousPrincipals));
+
+        CompiledPermissions cp = provider.compilePermissions(anonymousPrincipals);
+        assertTrue(cp.canReadAll());
+        assertFalse(CompiledPermissions.NO_PERMISSION.equals(cp));
+    }
+
+    public void testAnonymousAccessDenied() throws Exception {
+        Map<String, String> config = new HashMap<String, String>();
+        config.put(UserAccessControlProvider.PARAM_ANONYMOUS_ACCESS, "false");
+
+        AccessControlProvider p2 = new UserAccessControlProvider();
+        try {
+            p2.init(s, config);
+
+            Set<Principal> anonymousPrincipals = getAnonymousPrincipals();
+
+            assertFalse(p2.canAccessRoot(anonymousPrincipals));
+
+            CompiledPermissions cp = p2.compilePermissions(anonymousPrincipals);
+            try {
+                assertEquals(CompiledPermissions.NO_PERMISSION, cp);
+                assertFalse(cp.canReadAll());
+                assertFalse(cp.grants(((NodeImpl) s.getRootNode()).getPrimaryPath(), Permission.READ));
+            } finally {
+                cp.close();
+            }
+        } finally {
+            p2.close();
+        }
+    }
+
+    public void testAnonymousAccessDenied2() throws Exception {
+        Map<String, String> config = new HashMap<String, String>();
+        config.put(UserAccessControlProvider.PARAM_ANONYMOUS_ACCESS, "false");
+        config.put(UserAccessControlProvider.PARAM_ANONYMOUS_ID, "abc");
+
+        AccessControlProvider p2 = new UserAccessControlProvider();
+        try {
+            p2.init(s, config);
+
+            Principal princ = new Principal() {
+                public String getName() {
+                    return "abc";
+                }
+            };
+            Set<Principal> anonymousPrincipals = Collections.singleton(princ);
+
+            assertFalse(p2.canAccessRoot(anonymousPrincipals));
+
+            CompiledPermissions cp = p2.compilePermissions(anonymousPrincipals);
+            try {
+                assertEquals(CompiledPermissions.NO_PERMISSION, cp);
+                assertFalse(cp.canReadAll());
+                assertFalse(cp.grants(((NodeImpl) s.getRootNode()).getPrimaryPath(), Permission.READ));
+            } finally {
+                cp.close();
+            }
+        } finally {
+            p2.close();
         }
     }
 }
