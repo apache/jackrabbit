@@ -51,7 +51,6 @@ import javax.jcr.version.VersionException;
 
 import java.io.UnsupportedEncodingException;
 import java.security.Principal;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
