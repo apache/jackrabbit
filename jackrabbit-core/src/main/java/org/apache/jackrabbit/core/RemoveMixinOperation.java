@@ -248,9 +248,8 @@ class RemoveMixinOperation implements SessionWriteOperation<Object> {
             }
 
             for (ChildNodeEntry entry : affectedNodes.keySet()) {
-                NodeState nodeState =
-                    (NodeState) stateMgr.getItemState(entry.getId());
-                NodeImpl node = (NodeImpl) itemMgr.getItem(entry.getId());
+                NodeState nodeState = (NodeState) stateMgr.getItemState(entry.getId());
+                NodeImpl childNode = (NodeImpl) itemMgr.getItem(entry.getId());
                 NodeDefinition oldDef = affectedNodes.get(entry);
 
                 if (oldDef.isProtected()) {
@@ -267,7 +266,7 @@ class RemoveMixinOperation implements SessionWriteOperation<Object> {
                                 entry.getName(),
                                 nodeState.getNodeTypeName());
                     // redefine node
-                    node.onRedefine(newDef.unwrap());
+                    childNode.onRedefine(newDef.unwrap());
                 } catch (ConstraintViolationException cve) {
                     // no suitable definition found for this child node,
                     // remove it
