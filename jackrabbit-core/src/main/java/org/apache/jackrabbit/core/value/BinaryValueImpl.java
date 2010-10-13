@@ -19,6 +19,7 @@ package org.apache.jackrabbit.core.value;
 import javax.jcr.RepositoryException;
 import org.apache.jackrabbit.api.JackrabbitValue;
 import org.apache.jackrabbit.core.data.DataIdentifier;
+import org.apache.jackrabbit.core.data.DataStore;
 import org.apache.jackrabbit.value.BinaryValue;
 
 /**
@@ -50,6 +51,10 @@ class BinaryValueImpl extends BinaryValue implements JackrabbitValue {
      */
     DataIdentifier getDataIdentifier() {
         return blob.getDataIdentifier();
+    }
+
+    boolean usesDataStore(DataStore s) {
+        return blob.usesDataStore(s);
     }
 
 }

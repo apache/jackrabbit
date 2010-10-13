@@ -131,20 +131,38 @@ public class FileDataStore implements DataStore {
     }
 
     public DataRecord getRecordIfStored(DataIdentifier identifier) throws DataStoreException {
+        return getRecord(identifier, true);
+    }
+
+    /**
+     * Get a data record for the given identifier.
+     * This method only checks if the file exists if the verify flag is set.
+     * If the verify flag is set and the file doesn't exist, the method returns null.
+     *
+     * @param identifier the identifier
+     * @param verify whether to check if the file exists
+     * @return the data record or null
+     */
+    private DataRecord getRecord(DataIdentifier identifier, boolean verify) throws DataStoreException {
         File file = getFile(identifier);
         synchronized (this) {
-            if (!file.exists()) {
+            if (verify && !file.exists()) {
                 return null;
             }
-            if (minModifiedDate != 0 && file.canWrite()) {
+            if (minModifiedDate != 0) {
+                // only check when running garbage collection
                 long lastModified = file.lastModified();
                 if (lastModified == 0) {
                     throw new DataStoreException("Failed to read record modified date: " + identifier);
-                } 
+                }
                 if (lastModified < minModifiedDate) {
-                	    // The current GC approach depends on this call succeeding
-                    if (!file.setLastModified(System.currentTimeMillis() + ACCESS_TIME_RESOLUTION)) {
-                        throw new DataStoreException("Failed to update record modified date: " + identifier);
+                    // in most cases we can write to the file system, that's why we
+                    // don't call File.canWrite earlier (to save a system call)
+                    if (file.canWrite()) {
+                	        // The current GC approach depends on this call succeeding
+                        if (!file.setLastModified(System.currentTimeMillis() + ACCESS_TIME_RESOLUTION)) {
+                            throw new DataStoreException("Failed to update record modified date: " + identifier);
+                        }
                     }
                 }
             }
@@ -163,11 +181,7 @@ public class FileDataStore implements DataStore {
      * @return identified data record
      */
     public DataRecord getRecord(DataIdentifier identifier) throws DataStoreException {
-        DataRecord record = getRecordIfStored(identifier);
-        if (record == null) {
-            throw new DataStoreException("Record not found: " + identifier);
-        }
-        return record;
+        return getRecord(identifier, false);
     }
 
     private void usesIdentifier(DataIdentifier identifier) {
@@ -211,13 +225,13 @@ public class FileDataStore implements DataStore {
                 // move the temporary file in place if needed
                 usesIdentifier(identifier);
                 file = getFile(identifier);
-                File parent = file.getParentFile();
-                if (!parent.isDirectory()) {
-                    parent.mkdirs();
-                }
                 if (!file.exists()) {
-                    temporary.renameTo(file);
-                    if (!file.exists()) {
+                    File parent = file.getParentFile();
+                    parent.mkdirs();
+                    if (temporary.renameTo(file)) {
+                        // no longer need to delete the temporary file
+                        temporary = null;
+                    } else {
                         throw new IOException(
                                 "Can not rename " + temporary.getAbsolutePath()
                                 + " to " + file.getAbsolutePath()
@@ -238,12 +252,12 @@ public class FileDataStore implements DataStore {
                         }
                     }
                 }
-                // Sanity checks on the record file. These should never fail,
-                // but better safe than sorry...
-                if (!file.isFile()) {
-                    throw new IOException("Not a file: " + file);
-                }
                 if (file.length() != length) {
+                    // Sanity checks on the record file. These should never fail,
+                    // but better safe than sorry...
+                    if (!file.isFile()) {
+                        throw new IOException("Not a file: " + file);
+                    }
                     throw new IOException(DIGEST + " collision: " + file);
                 }
             }
@@ -289,9 +303,7 @@ public class FileDataStore implements DataStore {
      * @throws IOException
      */
     private File newTemporaryFile() throws IOException {
-        if (!directory.isDirectory()) {
-            directory.mkdirs();
-        }
+        // the directory is already created in the init method
         return File.createTempFile(TMP, null, directory);
     }
 
