@@ -120,12 +120,17 @@ public class InternalValue extends AbstractQValue {
                     BinaryValueImpl bin = (BinaryValueImpl) value;
                     DataIdentifier identifier = bin.getDataIdentifier();
                     if (identifier != null) {
-                        // access the record to ensure it is not garbage collected
-                        if (store.getRecordIfStored(identifier) != null) {
-                            // it exists - so we don't need to stream it again
-                            // but we need to create a new object because the original
-                            // one might be in a different data store (repository)
+                        if (bin.usesDataStore(store)) {
+                            // access the record to ensure it is not garbage collected
+                            store.getRecord(identifier);
                             blob = BLOBInDataStore.getInstance(store, identifier);
+                        } else {
+                            if (store.getRecordIfStored(identifier) != null) {
+                                // it exists - so we don't need to stream it again
+                                // but we need to create a new object because the original
+                                // one might be in a different data store (repository)
+                                blob = BLOBInDataStore.getInstance(store, identifier);
+                            }
                         }
                     }
                 }
@@ -253,16 +258,28 @@ public class InternalValue extends AbstractQValue {
         return tmp;
     }
 
-    static InternalValue getInternalValue(DataIdentifier identifier, DataStore store) throws DataStoreException {
-        // access the record to ensure it is not garbage collected
-        if (store.getRecordIfStored(identifier) != null) {
-            // it exists - so we don't need to stream it again
-            // but we need to create a new object because the original
-            // one might be in a different data store (repository)
-            BLOBFileValue blob = BLOBInDataStore.getInstance(store, identifier);
-            return new InternalValue(blob);
+    /**
+     * Get the internal value for this blob.
+     *
+     * @param identifier the identifier
+     * @param store the data store
+     * @param verify verify if the record exists, and return null if not
+     * @return the internal value or null
+     */
+    static InternalValue getInternalValue(DataIdentifier identifier, DataStore store, boolean verify) throws DataStoreException {
+        if (verify) {
+            if (store.getRecordIfStored(identifier) == null) {
+                return null;
+            }
+        } else {
+            // access the record to ensure it is not garbage collected
+            store.getRecord(identifier);
         }
-        return null;
+        // it exists - so we don't need to stream it again
+        // but we need to create a new object because the original
+        // one might be in a different data store (repository)
+        BLOBFileValue blob = BLOBInDataStore.getInstance(store, identifier);
+        return new InternalValue(blob);
     }
 
     /**

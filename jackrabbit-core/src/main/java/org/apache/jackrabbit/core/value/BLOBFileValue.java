@@ -23,6 +23,7 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Binary;
 
 import org.apache.jackrabbit.core.data.DataIdentifier;
+import org.apache.jackrabbit.core.data.DataStore;
 
 /**
  * Represents binary data which is backed by a resource or byte[].
@@ -90,6 +91,16 @@ abstract class BLOBFileValue implements Binary {
         } finally {
             in.close();
         }
+    }
+
+    /**
+     * Check if this blob uses the given data store.
+     *
+     * @param s the other data store
+     * @return true if it does
+     */
+    boolean usesDataStore(DataStore s) {
+        return false;
     }
 
 }

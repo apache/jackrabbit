@@ -85,8 +85,14 @@ public class ValueFactoryImpl extends ValueFactoryQImpl {
     public Value createValue(Binary binary) {
         try {
             if (binary instanceof BLOBInDataStore) {
-                DataIdentifier identifier = ((BLOBInDataStore) binary).getDataIdentifier();
-                InternalValue value = InternalValue.getInternalValue(identifier, store);
+                BLOBInDataStore blob = (BLOBInDataStore) binary;
+                DataIdentifier identifier = blob.getDataIdentifier();
+                InternalValue value;
+                if (blob.usesDataStore(store)) {
+                    value = InternalValue.getInternalValue(identifier, store, false);
+                } else {
+                    value = InternalValue.getInternalValue(identifier, store, true);
+                }
                 if (value != null) {
                     // if the value is already in this data store
                     return new BinaryValueImpl(value.getBLOBFileValue());

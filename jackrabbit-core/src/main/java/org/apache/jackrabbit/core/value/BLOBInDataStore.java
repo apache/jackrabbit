@@ -135,4 +135,8 @@ class BLOBInDataStore extends BLOBFileValue {
         return store.getRecord(identifier);
     }
 
+    boolean usesDataStore(DataStore s) {
+        return store == s;
+    }
+
 }
