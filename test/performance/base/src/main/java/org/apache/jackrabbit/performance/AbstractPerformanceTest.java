@@ -91,6 +91,7 @@ public abstract class AbstractPerformanceTest {
 
         runTest(new LoginTest(), name, conf);
         runTest(new LoginLogoutTest(), name, conf);
+        runTest(new ReadPropertyTest(), name, conf);
         runTest(new SetPropertyTest(), name, conf);
         runTest(new SmallFileReadTest(), name, conf);
         runTest(new SmallFileWriteTest(), name, conf);
