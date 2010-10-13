@@ -54,7 +54,7 @@
     <module>jackrabbit-spi2dav</module>
     <module>jackrabbit-jcr2dav</module>
     <module>jackrabbit-jcr-client</module>
-    <!--module>jackrabbit-standalone</module-->
+    <module>jackrabbit-standalone</module>
   </modules>
 
   <scm>
