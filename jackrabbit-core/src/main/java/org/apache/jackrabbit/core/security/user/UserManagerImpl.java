@@ -500,15 +500,11 @@ public class UserManagerImpl extends ProtectedItemModifier
     public User createUser(String userID, String password,
                            Principal principal, String intermediatePath)
             throws AuthorizableExistsException, RepositoryException {
-        if (userID == null || userID.length() == 0) {
-            throw new IllegalArgumentException("Cannot create user: UserID can neither be null nor empty String.");
-        }
+        checkValidID(userID);
         if (password == null) {
             throw new IllegalArgumentException("Cannot create user: null password.");
         }
-        if (internalGetAuthorizable(userID) != null) {
-            throw new AuthorizableExistsException("User for '" + userID + "' already exists");
-        }
+        // NOTE: principal validation during setPrincipal call.
 
         try {
             NodeImpl userNode = (NodeImpl) nodeCreator.createUserNode(userID, intermediatePath);
@@ -531,7 +527,15 @@ public class UserManagerImpl extends ProtectedItemModifier
     }
 
     /**
-     * Same as {@link #createGroup(java.security.Principal, String )} where the
+     * @see UserManager#createGroup(String)
+     */
+    public Group createGroup(String groupID)
+    		throws AuthorizableExistsException, RepositoryException {
+    	return createGroup(groupID, new PrincipalImpl(groupID), null);
+    }
+    
+    /**
+     * Same as {@link #createGroup(java.security.Principal, String)} where the
      * intermediate path is <code>null</code>.
      * @see UserManager#createGroup(Principal)
      */
@@ -540,12 +544,9 @@ public class UserManagerImpl extends ProtectedItemModifier
     }
 
     /**
-     * Create a new <code>Group</code> from the given <code>principal</code>.
-     * It will be created below the defined {@link #getGroupsPath() group path}.<br>
-     * Non-existent elements of the Path will be created as nodes
-     * of type {@link #NT_REP_AUTHORIZABLE_FOLDER rep:AuthorizableFolder}.
-     * The group ID will be generated from the principal name. If the name
-     * conflicts with an existing authorizable ID (may happen in cases where
+     * Same as {@link #createGroup(String, Principal, String)} where a groupID
+     * is generated from the principal name. If the name conflicts with an
+     * existing authorizable ID (may happen in cases where
      * principal name != ID) the principal name is expanded by a suffix;
      * otherwise the resulting group ID equals the principal name.
      *
@@ -558,13 +559,38 @@ public class UserManagerImpl extends ProtectedItemModifier
      * @see UserManager#createGroup(java.security.Principal, String)
      */
     public Group createGroup(Principal principal, String intermediatePath) throws AuthorizableExistsException, RepositoryException {
-        if (!isValidPrincipal(principal)) {
-            throw new IllegalArgumentException("Cannot create group: Principal may not be null and must have a valid name.");
-        }
+        checkValidPrincipal(principal);
+        
+        String groupID = getGroupId(principal.getName());
+        return createGroup(groupID, principal, intermediatePath);
+    }
+
+    /**
+     * Create a new <code>Group</code> from the given <code>groupID</code> and
+     * <code>principal</code>. It will be created below the defined
+     * {@link #getGroupsPath() group path}.<br>
+     * Non-existent elements of the Path will be created as nodes
+     * of type {@link #NT_REP_AUTHORIZABLE_FOLDER rep:AuthorizableFolder}.
+     *
+     * @param groupID A groupID that hasn't been used before for another
+     * user or group.
+     * @param principal A principal that doesn't yet represent an existing user
+     * or group.
+     * @param intermediatePath Is always ignored.
+     * @return A new group.
+     * @throws AuthorizableExistsException
+     * @throws RepositoryException
+     * @see UserManager#createGroup(String, java.security.Principal, String)
+     */
+    public Group createGroup(String groupID, Principal principal, String intermediatePath) throws AuthorizableExistsException, RepositoryException {
+        checkValidID(groupID);
+        // NOTE: principal validation during setPrincipal call.
         try {
-            String groupID = getGroupId(principal.getName());
             NodeImpl groupNode = (NodeImpl) nodeCreator.createGroupNode(groupID, intermediatePath);
-            setPrincipal(groupNode, principal);
+            
+            if (principal != null) {
+            	setPrincipal(groupNode, principal);
+            }
 
             Group group = createGroup(groupNode);
             if (isAutoSave()) {
@@ -623,9 +649,7 @@ public class UserManagerImpl extends ProtectedItemModifier
      * @throws RepositoryException If another error occurs.
      */
     void setPrincipal(NodeImpl node, Principal principal) throws AuthorizableExistsException, RepositoryException {
-        if (!isValidPrincipal(principal)) {
-            throw new IllegalArgumentException("Cannot create Authorizable: Principal may not be null and must have a valid name.");
-        }
+        checkValidPrincipal(principal);        
         /*
          Check if there is *another* authorizable with the same principal.
          The additional validation (nodes not be same) is required in order to
@@ -898,8 +922,33 @@ public class UserManagerImpl extends ProtectedItemModifier
         }
     }
 
-    private static boolean isValidPrincipal(Principal principal) {
-        return principal != null && principal.getName() != null && principal.getName().length() > 0;
+    /**
+     * Checks if the specified <code>id</code> is a non-empty string and not yet
+     * in use for another user or group.
+     *
+     * @param id The id of the user or group to be created.
+     * @throws IllegalArgumentException If the specified id is null or empty string.
+     * @throws AuthorizableExistsException If the id is already in use.
+     * @throws RepositoryException If another error occurs.
+     */
+    private void checkValidID(String id) throws IllegalArgumentException, AuthorizableExistsException, RepositoryException {
+        if (id == null || id.length() == 0) {
+            throw new IllegalArgumentException("Cannot create authorizable: ID can neither be null nor empty String.");
+        }
+        if (internalGetAuthorizable(id) != null) {
+            throw new AuthorizableExistsException("User or Group for '" + id + "' already exists");
+        }
+    }
+
+    /**
+     * Throws <code>IllegalArgumentException</code> if the specified principal
+     * is <code>null</code> or if it's name is <code>null</code> or empty string.
+     * @param principal
+     */
+    private static void checkValidPrincipal(Principal principal) {
+        if (principal == null || principal.getName() == null || "".equals(principal.getName())) {
+            throw new IllegalArgumentException("Principal may not be null and must have a valid name.");
+        }
     }
 
     private static int parseMembershipSplitSize(Object param) {
