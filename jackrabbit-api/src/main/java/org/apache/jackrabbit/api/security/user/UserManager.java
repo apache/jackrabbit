@@ -147,6 +147,22 @@ public interface UserManager {
                     String intermediatePath) throws AuthorizableExistsException, RepositoryException;
 
     /**
+     * Creates a Group for the given groupID, which must not be <code>null</code>.
+     * <br>
+     * Same as {@link #createGroup(String, Principal,String)} where the specified
+     * groupID is the name of the <code>Principal</code> the intermediate path
+     * is <code>null</code>.
+     *
+     * @param groupID The id of the new group; must not be <code>null</code>.
+     * @return The new <code>Group</code>.
+     * @throws AuthorizableExistsException in case the given groupID is already
+     * in use or another {@link Authorizable} with the same
+     * {@link Authorizable#getID() ID} or principal name already exists.
+     * @throws RepositoryException If another error occurs.
+     */
+    Group createGroup(String groupID) throws AuthorizableExistsException, RepositoryException;
+
+    /**
      * Creates a new <code>Group</code> that is based on the given principal.
      * Note that the group's ID is implementation specific. The implementation
      * may take the principal name as ID hint but must in any case assert that
@@ -154,14 +170,27 @@ public interface UserManager {
      *
      * @param principal A non-null <code>Principal</code>
      * @return The new <code>Group</code>.
-     * @throws AuthorizableExistsException in case the given principal is already
-     * in use with another Authorizable.
+     * @throws AuthorizableExistsException in case the given principal is
+     * already in use with another Authorizable.
      * @throws RepositoryException If another error occurs.
      */
     Group createGroup(Principal principal) throws AuthorizableExistsException, RepositoryException;
 
     /**
-     * Creates a new <code>Group</code> that is based on the given principal
+     * Same as {@link #createGroup(String, Principal, String)} where the
+     * name of the specified principal is used to create the group's ID. 
+     *
+     * @param principal
+     * @param intermediatePath
+     * @return The new <code>Group</code>.
+     * @throws AuthorizableExistsException in case the given principal is
+     * already in use with another Authorizable.
+     * @throws RepositoryException If another error occurs.
+     */
+    Group createGroup(Principal principal, String intermediatePath) throws AuthorizableExistsException, RepositoryException;
+
+    /**
+     * Creates a new <code>Group</code> that is based on the given id, principal
      * and the specified <code>intermediatePath</code> hint. If the implementation
      * is not able to deal with the <code>intermediatePath</code> this parameter
      * should be ignored.
@@ -173,7 +202,7 @@ public interface UserManager {
      * in use with another Authorizable.
      * @throws RepositoryException If another error occurs.
      */
-    Group createGroup(Principal principal, String intermediatePath) throws AuthorizableExistsException, RepositoryException;
+    Group createGroup(String groupID, Principal principal, String intermediatePath) throws AuthorizableExistsException, RepositoryException;
 
     /**
      * If any write operations executed through the User API are automatically

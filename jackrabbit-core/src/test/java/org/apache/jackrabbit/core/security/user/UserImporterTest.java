@@ -1413,11 +1413,19 @@ public class UserImporterTest extends AbstractJCRTest {
                     return null;
                 }
 
+                public Group createGroup(String groupID) throws AuthorizableExistsException, RepositoryException {
+                	return null;
+                }
+                
                 public Group createGroup(Principal principal) throws AuthorizableExistsException, RepositoryException {
                     return null;
                 }
 
                 public Group createGroup(Principal principal, String intermediatePath) throws AuthorizableExistsException, RepositoryException {
+                    return null;
+                }
+
+                public Group createGroup(String groupID, Principal principal, String intermediatePath) throws AuthorizableExistsException, RepositoryException {
                     return null;
                 }
 

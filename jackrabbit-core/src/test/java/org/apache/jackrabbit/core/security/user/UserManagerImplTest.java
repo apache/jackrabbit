@@ -18,6 +18,7 @@ package org.apache.jackrabbit.core.security.user;
 
 import org.apache.jackrabbit.api.security.user.AbstractUserTest;
 import org.apache.jackrabbit.api.security.user.Authorizable;
+import org.apache.jackrabbit.api.security.user.AuthorizableExistsException;
 import org.apache.jackrabbit.api.security.user.Group;
 import org.apache.jackrabbit.api.security.user.User;
 import org.apache.jackrabbit.api.security.user.UserManager;
@@ -33,7 +34,9 @@ import javax.jcr.SimpleCredentials;
 import javax.jcr.Value;
 import javax.jcr.Node;
 import java.security.Principal;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Set;
 import java.util.List;
 import java.util.ArrayList;
@@ -136,7 +139,101 @@ public class UserManagerImplTest extends AbstractUserTest {
         }
     }
 
-    public void testCreatingGroupWithNameMatchingExistingUserId() throws RepositoryException, NotExecutableException {
+    public void testCreateGroupWithInvalidIdOrPrincipal() throws RepositoryException, NotExecutableException {
+        Principal p = getTestPrincipal();
+        String uid = p.getName();
+
+        Map<String, Principal> fail = new HashMap<String, Principal>();
+        fail.put(uid, null);
+        fail.put(uid, new TestPrincipal(""));
+        fail.put(null, p);
+        fail.put("", p);      
+
+        for (String id : fail.keySet()) {
+            Group g = null;
+            try {
+                Principal princ = fail.get(id);
+                g = userMgr.createGroup(id, princ, null);
+                fail("Creating group with id '"+id+"' and principal '"+princ+"' should fail");
+            } catch (IllegalArgumentException e) {
+                // success
+            } finally {
+                if (g != null) {
+                    g.remove();
+                    save(superuser);
+                }
+            }
+        }
+    }
+
+    public void testCreateGroupWithId() throws RepositoryException, NotExecutableException {
+        Principal p = getTestPrincipal();
+        String uid = p.getName();
+
+        Group gr = null;
+        try {
+
+        	// assert group creation with exact ID
+            gr = userMgr.createGroup(uid);
+            save(superuser);
+            assertEquals("Expect group with exact ID", uid, gr.getID());
+
+        } finally {
+            if (gr != null) {
+                gr.remove();
+                save(superuser);
+            }
+        }
+    }
+
+    public void testCreateGroupWithIdAndPrincipal() throws RepositoryException, NotExecutableException {
+        Principal p = getTestPrincipal();
+        String uid = p.getName();
+
+        Group gr = null;
+        try {
+
+        	// assert group creation with exact ID
+            gr = userMgr.createGroup(uid, p, null);
+            save(superuser);
+
+            assertEquals("Expect group with exact ID", uid, gr.getID());
+            assertEquals("Expected group with exact principal name", p.getName(), gr.getPrincipal().getName());
+
+        } finally {
+            if (gr != null) {
+                gr.remove();
+                save(superuser);
+            }
+        }
+    }
+
+    public void testCreateGroupIdDifferentFromPrincipalName() throws RepositoryException, NotExecutableException {
+        Principal p = getTestPrincipal();
+        String uid = getTestUserId(p);
+
+        assertFalse(uid.equals(p.getName()));
+        
+        Group g = null;
+        Session uSession = null;
+        try {
+            g = userMgr.createGroup(uid, p, null);
+            save(superuser);
+
+            String msg = "Creating a Group with principal-name distinct from Principal-name must succeed as long as both are unique.";
+            assertEquals(msg, g.getID(), uid);
+            assertEquals(msg, p.getName(), g.getPrincipal().getName());
+            assertFalse(msg, g.getID().equals(g.getPrincipal().getName()));
+
+        } finally {
+            if (g != null) {
+                g.remove();
+                save(superuser);
+            }
+        }
+    }
+
+    public void testCreatingGroupWithPrincipalMatchingExistingUserId() throws RepositoryException, NotExecutableException {
         Principal p = getTestPrincipal();
         String uid = getTestUserId(p);
 
@@ -160,6 +257,202 @@ public class UserManagerImplTest extends AbstractUserTest {
             }
             if (gr != null) {
                 gr.remove();
+                save(superuser);
+            }
+        }
+    }
+
+    public void testCreateGroupWithExistingPrincipal() throws RepositoryException, NotExecutableException {
+        Principal p = getTestPrincipal();
+        String uid = p.getName();
+
+        User u = null;
+        try {
+        	// create a user with the given ID
+            u = userMgr.createUser(uid, buildPassword(uid), p, null);
+            save(superuser);
+
+            // assert AuthorizableExistsException for principal that is already in use
+            Group gr = null;
+            try {
+            	gr = userMgr.createGroup(p);
+            	fail("Principal " + p.getName() + " is already in use -> must throw AuthorizableExistsException.");
+            } catch (AuthorizableExistsException aee) {
+            	// expected this
+            } finally {
+                if (gr != null) {
+                    gr.remove();
+                    save(superuser);
+                }
+            }
+
+        } finally {
+            if (u != null) {
+                u.remove();
+                save(superuser);
+            }
+        }
+    }
+
+    public void testCreateGroupWithExistingPrincipal2() throws RepositoryException, NotExecutableException {
+        Principal p = getTestPrincipal();
+        String uid = getTestUserId(p);
+
+        assertFalse(uid.equals(p.getName()));
+
+        User u = null;
+        try {
+        	// create a user with the given ID
+            u = userMgr.createUser(uid, buildPassword(uid), p, null);
+            save(superuser);
+
+            // assert AuthorizableExistsException for principal that is already in use
+            Group gr = null;
+            try {
+            	gr = userMgr.createGroup(p);
+            	fail("Principal " + p.getName() + " is already in use -> must throw AuthorizableExistsException.");
+            } catch (AuthorizableExistsException aee) {
+            	// expected this
+            } finally {
+                if (gr != null) {
+                    gr.remove();
+                    save(superuser);
+                }
+            }
+
+        } finally {
+            if (u != null) {
+                u.remove();
+                save(superuser);
+            }
+        }
+    }
+
+    public void testCreateGroupWithExistingPrincipal3() throws RepositoryException, NotExecutableException {
+        Principal p = getTestPrincipal();
+        String uid = getTestUserId(p);
+
+        assertFalse(uid.equals(p.getName()));
+
+        User u = null;
+        try {
+        	// create a user with the given ID
+            u = userMgr.createUser(uid, buildPassword(uid), p, null);
+            save(superuser);
+
+            // assert AuthorizableExistsException for principal that is already in use
+            Group gr = null;
+            try {
+            	gr = userMgr.createGroup(getTestPrincipal().getName(), p, null);
+            	fail("Principal " + p.getName() + " is already in use -> must throw AuthorizableExistsException.");
+            } catch (AuthorizableExistsException aee) {
+            	// expected this
+            } finally {
+                if (gr != null) {
+                    gr.remove();
+                    save(superuser);
+                }
+            }
+
+        } finally {
+            if (u != null) {
+                u.remove();
+                save(superuser);
+            }
+        }
+    }
+
+    public void testCreateGroupWithExistingUserID() throws RepositoryException, NotExecutableException {
+        Principal p = getTestPrincipal();
+        String uid = getTestUserId(p);
+
+        User u = null;
+        try {
+        	// create a user with the given ID
+            u = userMgr.createUser(uid, buildPassword(uid), p, null);
+            save(superuser);
+            
+            // assert AuthorizableExistsException for id that is already in use
+            Group gr = null;
+            try {
+            	gr = userMgr.createGroup(uid);
+            	fail("ID " + uid + " is already in use -> must throw AuthorizableExistsException.");
+            } catch (AuthorizableExistsException aee) {
+            	// expected this
+            } finally {
+                if (gr != null) {
+                    gr.remove();
+                    save(superuser);
+                }
+            }
+            
+        } finally {
+            if (u != null) {
+                u.remove();
+                save(superuser);
+            }
+        }
+    }
+
+    public void testCreateGroupWithExistingGroupID() throws RepositoryException, NotExecutableException {
+        Principal p = getTestPrincipal();
+        String uid = getTestUserId(p);
+
+        Group g = null;
+        try {
+        	// create a user with the given ID
+            g = userMgr.createGroup(uid);
+            save(superuser);
+
+            // assert AuthorizableExistsException for id that is already in use
+            Group gr = null;
+            try {
+            	gr = userMgr.createGroup(uid);
+            	fail("ID " + uid + " is already in use -> must throw AuthorizableExistsException.");
+            } catch (AuthorizableExistsException aee) {
+            	// expected this
+            } finally {
+                if (gr != null) {
+                    gr.remove();
+                    save(superuser);
+                }
+            }
+
+        } finally {
+            if (g != null) {
+                g.remove();
+                save(superuser);
+            }
+        }
+    }
+
+    public void testCreateGroupWithExistingGroupID2() throws RepositoryException, NotExecutableException {
+        Principal p = getTestPrincipal();
+        String uid = getTestUserId(p);
+
+        Group g = null;
+        try {
+        	// create a user with the given ID
+            g = userMgr.createGroup(uid, p, null);
+            save(superuser);
+
+            // assert AuthorizableExistsException for id that is already in use
+            Group gr = null;
+            try {
+            	gr = userMgr.createGroup(uid, getTestPrincipal(), null);
+            	fail("ID " + uid + " is already in use -> must throw AuthorizableExistsException.");
+            } catch (AuthorizableExistsException aee) {
+            	// expected this
+            } finally {
+                if (gr != null) {
+                    gr.remove();
+                    save(superuser);
+                }
+            }
+
+        } finally {
+            if (g != null) {
+                g.remove();
                 save(superuser);
             }
         }
