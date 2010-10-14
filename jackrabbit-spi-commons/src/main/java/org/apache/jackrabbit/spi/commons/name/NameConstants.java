@@ -16,6 +16,9 @@
  */
 package org.apache.jackrabbit.spi.commons.name;
 
+import javax.jcr.Property;
+import javax.jcr.security.Privilege;
+
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.NameFactory;
 
@@ -130,6 +133,9 @@ public class NameConstants {
      * jcr:id
      */
     public static final Name JCR_ID = FACTORY.create(Name.NS_JCR_URI, "id");
+
+    /** jcr:title */
+    public static final Name JCR_TITLE = FACTORY.create(Property.JCR_TITLE);
 
     //--------------------------------------< xml related item name constants >
 
@@ -562,50 +568,77 @@ public class NameConstants {
     public static final Name NT_CONFIGURATION = FACTORY.create(Name.NS_NT_URI, "configuration");
 
     //--------------------------------------------------------------------------
-    /**
-     * rep:root
-     */
-    public static final Name REP_ROOT = FACTORY.create(Name.NS_REP_URI, "root");
 
-    /**
-     * rep:system
-     */
-    public static final Name REP_SYSTEM = FACTORY.create(Name.NS_REP_URI, "system");
+    private static final Name rep(String local) {
+        return FACTORY.create(Name.NS_REP_URI, local);
+    }
 
-    /**
-     * rep:versionStorage
-     */
-    public static final Name REP_VERSIONSTORAGE = FACTORY.create(Name.NS_REP_URI, "versionStorage");
+    /** rep:root */
+    public static final Name REP_ROOT = rep("root");
 
-    /**
-     * rep:Activities
-     */
-    public static final Name REP_ACTIVITIES = FACTORY.create(Name.NS_REP_URI, "Activities");
+    /** rep:system */
+    public static final Name REP_SYSTEM = rep("system");
 
-    /**
-     * rep:Configurations
-     */
-    public static final Name REP_CONFIGURATIONS = FACTORY.create(Name.NS_REP_URI, "Configurations");
+    /** rep:versionStorage */
+    public static final Name REP_VERSIONSTORAGE = rep("versionStorage");
 
-    /**
-     * rep:baseVersions
-     */
-    public static final Name REP_BASEVERSIONS = FACTORY.create(Name.NS_REP_URI, "baseVersions");
+    /** rep:Activities */
+    public static final Name REP_ACTIVITIES = rep("Activities");
 
-    /**
-     * rep:VersionReference
-     */
-    public static final Name REP_VERSION_REFERENCE = FACTORY.create(Name.NS_REP_URI, "VersionReference");
+    /** rep:Configurations */
+    public static final Name REP_CONFIGURATIONS = rep("Configurations");
 
-    /**
-     * rep:versions
-     */
-    public static final Name REP_VERSIONS = FACTORY.create(Name.NS_REP_URI, "versions");
+    /** rep:baseVersions */
+    public static final Name REP_BASEVERSIONS = rep("baseVersions");
+
+    /** rep:VersionReference */
+    public static final Name REP_VERSION_REFERENCE = rep("VersionReference");
+
+    /** rep:versions */
+    public static final Name REP_VERSIONS = rep("versions");
     
-    /**
-     * rep:nodeTypes
-     */
-    public static final Name REP_NODETYPES = FACTORY.create(Name.NS_REP_URI, "nodeTypes");
+    /** rep:nodeTypes */
+    public static final Name REP_NODETYPES = rep("nodeTypes");
+
+    /** rep:policy */
+    public static final Name REP_POLICY = rep("policy");
+
+    /** rep:accesscontrol */
+    public static final Name REP_ACCESSCONTROL = rep("accesscontrol");
+
+    /** rep:privileges  */
+    public static final Name REP_PRIVILEGES = rep("privileges");
+
+    /** rep:principalName  */
+    public static final Name REP_PRINCIPAL_NAME = rep("principalName");
+
+    /** rep:glob */
+    public static final Name REP_GLOB = rep("glob");
+
+    /** rep:AccessControllable */
+    public static final Name REP_ACCESS_CONTROLLABLE = rep("AccessControllable");
+
+    /** rep:ACL */
+    public static final Name REP_ACL = rep("ACL");
+
+    /** rep:ACE */
+    public static final Name REP_ACE = rep("ACE");
+
+    /** rep:GrantACE */
+    public static final Name REP_GRANT_ACE = rep("GrantACE");
+
+    /** rep:DenyACE */
+    public static final Name REP_DENY_ACE = rep("DenyACE");
+
+    /** rep:AccessControl */
+    public static final Name REP_ACCESS_CONTROL = rep("AccessControl");
+
+    /** rep:PrincipalAccessControl */
+    public static final Name REP_PRINCIPAL_ACCESS_CONTROL =
+        rep("PrincipalAccessControl");
+
+    /** rep:nodePath */
+    public static final Name REP_NODE_PATH = rep("nodePath");
 
     /**
      * The special wildcard name used as the name of residual item definitions.
@@ -637,5 +670,55 @@ public class NameConstants {
      * sv:multiple
      */
     public static final Name SV_MULTIPLE = FACTORY.create(Name.NS_SV_URI, "multiple");
+
+    //--------------------------------------------< privilege name constants >
+
+    /** jcr:read */
+    public static final Name JCR_READ =
+        FACTORY.create(Privilege.JCR_READ);
+
+    /** jcr:modifyProperties */
+    public static final Name JCR_MODIFY_PROPERTIES =
+        FACTORY.create(Privilege.JCR_MODIFY_PROPERTIES);
+
+    /** jcr:addChildNodes */
+    public static final Name JCR_ADD_CHILD_NODES =
+        FACTORY.create(Privilege.JCR_ADD_CHILD_NODES);
+
+    /** jcr:removeChildNodes */
+    public static final Name JCR_REMOVE_CHILD_NODES =
+        FACTORY.create(Privilege.JCR_REMOVE_CHILD_NODES);
+
+    /** jcr:removeNode */
+    public static final Name JCR_REMOVE_NODE =
+        FACTORY.create(Privilege.JCR_REMOVE_NODE);
+
+    /** jcr:readAccessControl */
+    public static final Name JCR_READ_ACCESS_CONTROL =
+        FACTORY.create(Privilege.JCR_READ_ACCESS_CONTROL);
+
+    /** jcr:modifyAccessControl */
+    public static final Name JCR_MODIFY_ACCESS_CONTROL =
+        FACTORY.create(Privilege.JCR_MODIFY_ACCESS_CONTROL);
+
+    /** jcr:nodeTypeManagement */
+    public static final Name JCR_NODE_TYPE_MANAGEMENT =
+        FACTORY.create(Privilege.JCR_NODE_TYPE_MANAGEMENT);
+
+    /** jcr:versionManagement */
+    public static final Name JCR_VERSION_MANAGEMENT =
+        FACTORY.create(Privilege.JCR_VERSION_MANAGEMENT);
+
+    /** jcr:lockManagement */
+    public static final Name JCR_LOCK_MANAGEMENT =
+        FACTORY.create(Privilege.JCR_LOCK_MANAGEMENT);
+
+    /** jcr:lifecycleManagement */
+    public static final Name JCR_LIFECYCLE_MANAGEMENT =
+        FACTORY.create(Privilege.JCR_LIFECYCLE_MANAGEMENT);
+
+    /** jcr:retentionManagement */
+    public static final Name JCR_RETENTION_MANAGEMENT =
+        FACTORY.create(Privilege.JCR_RETENTION_MANAGEMENT);
 
 }

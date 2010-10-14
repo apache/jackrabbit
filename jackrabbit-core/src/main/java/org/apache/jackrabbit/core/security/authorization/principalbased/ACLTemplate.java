@@ -25,6 +25,7 @@ import org.apache.jackrabbit.core.security.authorization.GlobPattern;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.spi.commons.conversion.NameResolver;
+import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -62,7 +63,7 @@ class ACLTemplate extends AbstractACLTemplate {
      * rep:nodePath property name (optional if the ACL is stored with the
      * node itself).
      */
-    static final Name P_NODE_PATH = NF.create(Name.NS_REP_URI, "nodePath");
+    static final Name P_NODE_PATH = NameConstants.REP_NODE_PATH;
 
     private final Principal principal;
 

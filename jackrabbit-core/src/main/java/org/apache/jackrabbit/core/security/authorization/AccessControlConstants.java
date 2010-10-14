@@ -17,21 +17,18 @@
 package org.apache.jackrabbit.core.security.authorization;
 
 import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.spi.NameFactory;
-import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
+import org.apache.jackrabbit.spi.commons.name.NameConstants;
 
 /**
  * <code>AccessControlConstants</code>...
  */
 public interface AccessControlConstants {
 
-    NameFactory NF = NameFactoryImpl.getInstance();
-
     //---------------------------------------------------------< node names >---
     /**
      * Default name for a node of type rep:Policy.
      */
-    Name N_POLICY = NF.create(Name.NS_REP_URI, "policy");
+    Name N_POLICY = NameConstants.REP_POLICY;
 
     /**
      * PrincipalBased-ACL:
@@ -39,55 +36,55 @@ public interface AccessControlConstants {
      * privileges for individual principals. This node is created upon
      * initializing this provider.
      */
-    Name N_ACCESSCONTROL = NF.create(Name.NS_REP_URI, "accesscontrol");
+    Name N_ACCESSCONTROL = NameConstants.REP_ACCESSCONTROL;
 
     //-----------------------------------------------------< property names >---
     /**
      * rep:privileges property name
      */
-    Name P_PRIVILEGES = NF.create(Name.NS_REP_URI, "privileges");
+    Name P_PRIVILEGES =  NameConstants.REP_PRIVILEGES;
     /**
      * rep:principalName property name
      */
-    Name P_PRINCIPAL_NAME = NF.create(Name.NS_REP_URI, "principalName");
+    Name P_PRINCIPAL_NAME = NameConstants.REP_PRINCIPAL_NAME;
 
     /**
      * rep:glob property name used to restrict the number of child nodes
      * or properties that are affected by an ACL inherited from a parent node.
      */
-    Name P_GLOB = NF.create(Name.NS_REP_URI, "glob");
+    Name P_GLOB = NameConstants.REP_GLOB;
 
     //----------------------------------------------------< node type names >---
     /**
      * rep:AccessControllable nodetype
      */
-    Name NT_REP_ACCESS_CONTROLLABLE = NF.create(Name.NS_REP_URI, "AccessControllable");
+    Name NT_REP_ACCESS_CONTROLLABLE = NameConstants.REP_ACCESS_CONTROLLABLE;
     /**
      * rep:ACL nodetype
      */
-    Name NT_REP_ACL = NF.create(Name.NS_REP_URI, "ACL");
+    Name NT_REP_ACL = NameConstants.REP_ACL;
     /**
      * rep:ACE nodetype
      */
-    Name NT_REP_ACE = NF.create(Name.NS_REP_URI, "ACE");
+    Name NT_REP_ACE = NameConstants.REP_ACE;
     /**
      * rep:GrantACE nodetype
      */
-    Name NT_REP_GRANT_ACE = NF.create(Name.NS_REP_URI, "GrantACE");
+    Name NT_REP_GRANT_ACE = NameConstants.REP_GRANT_ACE;
     /**
      * rep:DenyACE nodetype
      */
-    Name NT_REP_DENY_ACE = NF.create(Name.NS_REP_URI, "DenyACE");
+    Name NT_REP_DENY_ACE = NameConstants.REP_DENY_ACE;
 
     //----------------------------------< node types for principal based ac >---
     /**
      * rep:AccessControl nodetype
      */
-    Name NT_REP_ACCESS_CONTROL = NF.create(Name.NS_REP_URI, "AccessControl");
+    Name NT_REP_ACCESS_CONTROL = NameConstants.REP_ACCESS_CONTROL;
 
     /**
      * rep:PrincipalAccessControl nodetype
      */
-    Name NT_REP_PRINCIPAL_ACCESS_CONTROL = NF.create(Name.NS_REP_URI, "PrincipalAccessControl");
-    
+    Name NT_REP_PRINCIPAL_ACCESS_CONTROL = NameConstants.REP_PRINCIPAL_ACCESS_CONTROL;
+
 }
