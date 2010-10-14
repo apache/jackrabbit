@@ -353,7 +353,7 @@ public class EffectiveNodeType implements Cloneable {
         return defs.toArray(new QNodeDefinition[defs.size()]);
     }
 
-    public QItemDefinition[] getNamedNodeDefs() {
+    public QNodeDefinition[] getNamedNodeDefs() {
         if (namedItemDefs.size() == 0) {
             return QNodeDefinition.EMPTY_ARRAY;
         }
@@ -371,7 +371,7 @@ public class EffectiveNodeType implements Cloneable {
         return defs.toArray(new QNodeDefinition[defs.size()]);
     }
 
-    public QItemDefinition[] getNamedNodeDefs(Name name) {
+    public QNodeDefinition[] getNamedNodeDefs(Name name) {
         List<QItemDefinition> list = namedItemDefs.get(name);
         if (list == null || list.size() == 0) {
             return QNodeDefinition.EMPTY_ARRAY;
@@ -914,9 +914,9 @@ public class EffectiveNodeType implements Cloneable {
          * as there might be multiple definitions with the same name and we
          * don't know which one is applicable, we check all of them
          */
-        QItemDefinition[] defs = getNamedNodeDefs(name);
+        QNodeDefinition[] defs = getNamedNodeDefs(name);
         if (defs != null) {
-            for (QItemDefinition def : defs) {
+            for (QNodeDefinition def : defs) {
                 if (def.isMandatory()) {
                     throw new ConstraintViolationException("can't remove mandatory node");
                 }
