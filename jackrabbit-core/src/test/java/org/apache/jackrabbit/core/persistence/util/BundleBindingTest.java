@@ -281,6 +281,36 @@ public class BundleBindingTest extends TestCase {
                 10, 1, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 6, 0 });
     }
 
+    /**
+     * Tests serialization of custom namespaces.
+     */
+    public void testCustomNamespaces() throws Exception {
+        NodePropBundle bundle = new NodePropBundle(new NodeId());
+        bundle.setParentId(new NodeId());
+        bundle.setNodeTypeName(NameConstants.NT_UNSTRUCTURED);
+        bundle.setMixinTypeNames(Collections.<Name>emptySet());
+        bundle.setSharedSet(Collections.<NodeId>emptySet());
+
+        NameFactory factory = NameFactoryImpl.getInstance();
+        bundle.addChildNodeEntry(factory.create("ns1", "test"), new NodeId());
+        bundle.addChildNodeEntry(factory.create("ns2", "test"), new NodeId());
+        bundle.addChildNodeEntry(factory.create("ns3", "test"), new NodeId());
+        bundle.addChildNodeEntry(factory.create("ns4", "test"), new NodeId());
+        bundle.addChildNodeEntry(factory.create("ns5", "test"), new NodeId());
+        bundle.addChildNodeEntry(factory.create("ns6", "test"), new NodeId());
+        bundle.addChildNodeEntry(factory.create("ns7", "test"), new NodeId());
+        bundle.addChildNodeEntry(factory.create("ns8", "test"), new NodeId());
+        bundle.addChildNodeEntry(factory.create("ns1", "test"), new NodeId());
+        bundle.addChildNodeEntry(factory.create("ns1", "test"), new NodeId());
+        bundle.addChildNodeEntry(factory.create("ns2", "test"), new NodeId());
+        bundle.addChildNodeEntry(factory.create("ns3", "test"), new NodeId());
+        bundle.addChildNodeEntry(factory.create("ns1", "test"), new NodeId());
+        bundle.addChildNodeEntry(factory.create("ns2", "test"), new NodeId());
+        bundle.addChildNodeEntry(factory.create("ns3", "test"), new NodeId());
+
+        assertBundleRoundtrip(bundle);
+    }
+
     private void assertBundleRoundtrip(NodePropBundle bundle)
             throws Exception {
         ByteArrayOutputStream buffer = new ByteArrayOutputStream();
