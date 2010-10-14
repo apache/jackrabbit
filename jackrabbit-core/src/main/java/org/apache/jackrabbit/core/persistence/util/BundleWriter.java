@@ -89,9 +89,6 @@ class BundleWriter {
         // parentUUID
         writeNodeId(bundle.getParentId());
 
-        // definitionId
-        out.writeUTF("");
-
         // mixin types
         for (Name name : bundle.getMixinTypeNames()) {
             writeName(name);
@@ -127,7 +124,7 @@ class BundleWriter {
         writeNodeId(null);
 
         // write mod count
-        out.writeShort(bundle.getModCount());
+        writeInt(bundle.getModCount());
 
         // write shared set
         for (NodeId nodeId: bundle.getSharedSet()) {
@@ -140,22 +137,55 @@ class BundleWriter {
     }
 
     /**
-     * Serializes a <code>PropertyState</code> to the data output stream
+     * Serializes a property entry. The serialization begins with a single
+     * byte that encodes the type and multi-valuedness of the property:
+     * <pre>
+     * +-------------------------------+
+     * |   mv count    |     type      |
+     * +-------------------------------+
+     * </pre>
+     * <p>
+     * The lower four bits encode the property type (0-12 in JCR 2.0) and
+     * higher bits indicate whether this is a multi-valued property and how
+     * many property values there are. A value of 0 is reserved for
+     * single-valued properties (that are guaranteed to always have just a
+     * single value), and all non-zero values indicate a multi-valued property.
+     * <p>
+     * In multi-valued properties the exact value of the "mv count" field is
+     * the number of property values plus one and truncated at 15 (the highest
+     * four-bit value). If there are 14 or more (14 + 1 == 15) property values,
+     * then the number of additional values is serialized as a variable-length
+     * integer (see {@link #writeInt(int)}) right after this byte.
+     * <p>
+     * The modification count of the property state is written next as a
+     * variable-length integer, followed by the serializations of all the
+     * values of this property.
      *
      * @param state the property entry to store
      * @throws IOException if an I/O error occurs.
      */
     private void writeState(NodePropBundle.PropertyEntry state)
             throws IOException {
-        // type & mod count
-        out.writeInt(state.getType() | (state.getModCount() << 16));
-        // multiValued
-        out.writeBoolean(state.isMultiValued());
-        // definitionId
-        out.writeUTF("");
-        // values
         InternalValue[] values = state.getValues();
-        out.writeInt(values.length); // count
+
+        int type = state.getType();
+        assert 0 <= type && type <= 0x0f;
+        if (state.isMultiValued()) {
+            int len = values.length + 1;
+            if (len < 0x0f) {
+                out.writeByte(len << 4 | type);
+            } else {
+                out.writeByte(0xf0 | type);
+                writeInt(len - 0x0f);
+            }
+        } else {
+            assert values.length == 1;
+            out.writeByte(type);
+        }
+
+        writeInt(state.getModCount());
+
+        // values
         for (int i = 0; i < values.length; i++) {
             InternalValue val = values[i];
             switch (state.getType()) {
@@ -282,7 +312,7 @@ class BundleWriter {
                     // because writeUTF(String) has a size limit of 64k,
                     // we're using write(byte[]) instead
                     byte[] bytes = val.toString().getBytes("UTF-8");
-                    out.writeInt(bytes.length); // length of byte[]
+                    writeInt(bytes.length); // length of byte[]
                     out.write(bytes);   // byte[]
             }
         }
@@ -425,6 +455,40 @@ class BundleWriter {
             } else {
                 out.writeUTF(local);
             }
+        }
+    }
+
+    /**
+     * Serializes an integer using a variable-length encoding that favors
+     * small positive numbers. The serialization consists of one to five
+     * bytes of the following format:
+     * <pre>
+     * +-------------------------------+
+     * | c | 7 least significant bits  |
+     * +-------------------------------+
+     * </pre>
+     * <p>
+     * If the given integer fits in seven bits (i.e. the value between
+     * 0 and 127, inclusive), then it is written as-is in a single byte.
+     * Otherwise the continuation flag <code>c</code> is set and the least
+     * significant seven bits are written together with the flag as a single
+     * byte. The integer is then shifed right seven bits and the process
+     * continues from the beginning.
+     * <p>
+     * This format uses a single byte for values 0-127, two bytes for
+     * 128-16343, three for 16343-2097151, four for 2097152-268435455
+     * and five bytes for all other 32-bit numbers (including negative ones).
+     *
+     * @param integer integer value
+     * @throws IOException if an I/O error occurs
+     */
+    private void writeInt(int value) throws IOException {
+        int b = value & 0x7f;
+        if (b == value) {
+            out.writeByte(b);
+        } else {
+            out.writeByte(b | 0x80);
+            writeInt(value >>> 7);
         }
     }
 
