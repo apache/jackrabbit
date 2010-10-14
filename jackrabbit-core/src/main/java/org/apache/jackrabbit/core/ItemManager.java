@@ -113,7 +113,6 @@ public class ItemManager implements ItemStateListener {
      * Creates a new per-session instance <code>ItemManager</code> instance.
      *
      * @param sessionContext component context of the associated session
-     * @param rootNodeDef the definition of the root node
      */
     @SuppressWarnings("unchecked")
     protected ItemManager(SessionContext sessionContext) {
@@ -1004,7 +1003,7 @@ public class ItemManager implements ItemStateListener {
      */
     public synchronized String toString() {
         StringBuilder builder = new StringBuilder();
-        builder.append("ItemManager (" + this + ")\n");
+        builder.append("ItemManager (" + super.toString() + ")\n");
         builder.append("Items in cache:\n");
         synchronized (itemCache) {
             for (ItemId id : itemCache.keySet()) {
