@@ -35,7 +35,8 @@ import java.math.BigDecimal;
 import javax.jcr.PropertyType;
 
 /**
- * Bundle deserializater.
+ * Bundle deserializater. See the {@link BundleWriter} class for details of
+ * the serialization format.
  *
  * @see BundleWriter
  */
@@ -100,8 +101,10 @@ class BundleReader {
         // parentUUID
         bundle.setParentId(readNodeId());
 
-        // definitionId
-        in.readUTF();
+        if (version < BundleBinding.VERSION_3) {
+            // definitionId
+            in.readUTF();
+        }
 
         // mixin types
         Set<Name> mixinTypeNames = new HashSet<Name>();
@@ -137,7 +140,9 @@ class BundleReader {
         }
 
         // read modcount, since version 1.0
-        if (version >= BundleBinding.VERSION_1) {
+        if (version >= BundleBinding.VERSION_3) {
+            bundle.setModCount((short) readInt());
+        } else if (version >= BundleBinding.VERSION_1) {
             bundle.setModCount(in.readShort());
         }
 
@@ -166,23 +171,47 @@ class BundleReader {
     private NodePropBundle.PropertyEntry readPropertyEntry(PropertyId id)
             throws IOException {
         NodePropBundle.PropertyEntry entry = new NodePropBundle.PropertyEntry(id);
-        // type and modcount
-        int type = in.readInt();
-        entry.setModCount((short) ((type >> 16) & 0x0ffff));
-        type &= 0x0ffff;
-        entry.setType(type);
 
-        // multiValued
-        entry.setMultiValued(in.readBoolean());
-        // definitionId
-        in.readUTF();
+        int count = 1;
+        if (version >= BundleBinding.VERSION_3) {
+            int b = in.readUnsignedByte();
+
+            entry.setType(b & 0x0f);
+
+            int len = b >>> 4;
+            if (len != 0) {
+                entry.setMultiValued(true);
+                if (len == 0x0f) {
+                    count = readInt() + 0x0f - 1;
+                } else {
+                    count = len - 1;
+                }
+            }
+
+            entry.setModCount((short) readInt());
+        } else {
+            // type and modcount
+            int type = in.readInt();
+            entry.setModCount((short) ((type >> 16) & 0x0ffff));
+            type &= 0x0ffff;
+            entry.setType(type);
+
+            // multiValued
+            entry.setMultiValued(in.readBoolean());
+
+            // definitionId
+            in.readUTF();
+
+            // count
+            count = in.readInt();
+        }
+
         // values
-        int count = in.readInt();   // count
         InternalValue[] values = new InternalValue[count];
         String[] blobIds = new String[count];
         for (int i = 0; i < count; i++) {
             InternalValue val;
-            switch (type) {
+            switch (entry.getType()) {
                 case PropertyType.BINARY:
                     int size = in.readInt();
                     if (size == BundleBinding.BINARY_IN_DATA_STORE) {
@@ -237,10 +266,16 @@ class BundleReader {
                 default:
                     // because writeUTF(String) has a size limit of 64k,
                     // Strings are serialized as <length><byte[]>
-                    int len = in.readInt();
+                    int len;
+                    if (version >= BundleBinding.VERSION_3) {
+                        len = readInt();
+                    } else {
+                        len = in.readInt();
+                    }
                     byte[] bytes = new byte[len];
                     in.readFully(bytes);
-                    val = InternalValue.valueOf(new String(bytes, "UTF-8"), type);
+                    val = InternalValue.valueOf(
+                            new String(bytes, "UTF-8"), entry.getType());
             }
             values[i] = val;
         }
@@ -320,8 +355,6 @@ class BundleReader {
 
     /**
      * Deserializes a name written using bundle serialization version 3.
-     * See the {@link BundleWriter} class for details of the serialization
-     * format.
      *
      * @return deserialized name
      * @throws IOException if an I/O error occurs
@@ -353,6 +386,22 @@ class BundleReader {
             }
 
             return NameFactoryImpl.getInstance().create(uri, local);
+        }
+    }
+
+    /**
+     * Deserializes a variable-length integer written using bundle
+     * serialization version 3.
+     *
+     * @return deserialized name
+     * @throws IOException if an I/O error occurs
+     */
+    private int readInt() throws IOException {
+        int b = in.readUnsignedByte();
+        if ((b & 0x80) == 0) {
+            return b;
+        } else {
+            return readInt() << 7 | b & 0x7f;
         }
     }
 
