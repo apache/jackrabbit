@@ -34,9 +34,9 @@ import org.apache.jackrabbit.spi.commons.name.NameConstants;
 
 
 /**
- * Static collection of common JCR names and namespaces. This class is
- * used by the {@link BundleWriter} and {@link BundleReader} classes to
- * optimize the serialization of names used in bundles.
+ * Static collection of common JCR names. This class is used by the
+ * {@link BundleWriter} and {@link BundleReader} classes to optimize the
+ * serialization of names used in bundles.
  */
 class BundleNames {
 
@@ -163,32 +163,10 @@ class BundleNames {
     private static final Map<Name, Integer> NAME_MAP =
         new HashMap<Name, Integer>();
 
-    /**
-     * Static list of standard namespaces.
-     */
-    private static final String[] NAMESPACE_ARRAY = {
-        // WARNING: Only edit if you really know what you're doing!
-        Name.NS_DEFAULT_URI,
-        Name.NS_JCR_URI,
-        Name.NS_MIX_URI,
-        Name.NS_NT_URI,
-        Name.NS_XMLNS_URI,
-        Name.NS_XML_URI,
-        Name.NS_REP_URI
-    };  // WARNING: Only edit if you really know what you're doing!
-
-    private static final Map<String, Integer> NAMESPACE_MAP =
-        new HashMap<String, Integer>();
-
     static {
-        assert NAME_ARRAY.length < 0x80;
+        assert NAME_ARRAY.length <= 0x80;
         for (int i = 0; i < NAME_ARRAY.length; i++) {
             NAME_MAP.put(NAME_ARRAY[i], i);
-        }
-
-        assert NAMESPACE_ARRAY.length < 0x08;
-        for (int i = 0; i < NAMESPACE_ARRAY.length; i++) {
-            NAMESPACE_MAP.put(NAMESPACE_ARRAY[i], i);
         }
     }
 
@@ -214,31 +192,6 @@ class BundleNames {
         } catch (ArrayIndexOutOfBoundsException e) {
             throw new IOExceptionWithCause(
                     "Invalid common JCR name index: " + index, e);
-        }
-    }
-
-    /**
-     * Returns the three-bit index (0-6) of a common JCR namespace,
-     * or -1 if the given namespace URI is not known.
-     *
-     * @param uri namespace URI
-     * @return three-bit index of the namespace, or -1
-     */
-    public static int namespaceToIndex(String uri) {
-        Integer index = NAMESPACE_MAP.get(uri);
-        if (index != null) {
-            return index;
-        } else {
-            return -1;
-        }
-    }
-
-    public static String indexToNamespace(int index) throws IOException {
-        try {
-            return NAMESPACE_ARRAY[index];
-        } catch (ArrayIndexOutOfBoundsException e) {
-            throw new IOExceptionWithCause(
-                    "Invalid common JCR namespace index: " + index, e);
         }
     }
 

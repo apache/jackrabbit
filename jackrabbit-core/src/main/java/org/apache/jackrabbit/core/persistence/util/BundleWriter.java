@@ -50,6 +50,15 @@ class BundleWriter {
     private final DataOutputStream out;
 
     /**
+     * The default namespace and the first six other namespaces used in this
+     * bundle. Used by the {@link #writeName(Name)} method to keep track of
+     * already seen namespaces.
+     */
+    private final String[] namespaces =
+        // NOTE: The length of this array must be seven
+        { Name.NS_DEFAULT_URI, null, null, null, null, null, null };
+
+    /**
      * Creates a new bundle serializer.
      *
      * @param binding bundle binding
@@ -58,6 +67,7 @@ class BundleWriter {
      */
     public BundleWriter(BundleBinding binding, OutputStream stream)
             throws IOException {
+        assert namespaces.length == 7;
         this.binding = binding;
         this.out = new DataOutputStream(stream);
         this.out.writeByte(BundleBinding.VERSION_CURRENT);
@@ -363,11 +373,15 @@ class BundleWriter {
      * +-------------------------------+
      * </pre>
      * <p>
-     * The three-bit namespace index identifies either a known namespace
-     * in the {@link BundleNames} class (values 0 - 6) or an explicit
-     * namespace URI string that is written using
-     * {@link DataOutputStream#writeUTF(String)} right after this byte
-     * (value 7).
+     * The three-bit namespace index identifies the namespace of the name.
+     * The serializer keeps track of the default namespace (value 0) and at
+     * most six other other namespaces (values 1-6), in the order they appear
+     * in the bundle. When one of these six custom namespaces first appears
+     * in the bundle, then the namespace URI is written using
+     * {@link DataOutputStream#writeUTF(String)} right after this byte.
+     * Later uses of such a namespace simply refers back to the already read
+     * namespace URI string. Any other namespaces are identified with value 7
+     * and always written to the bundle after this byte.
      * <p>
      * The four-bit name length field indicates the length (in UTF-8 bytes)
      * of the local part of the name. Since zero-length local names are not
@@ -388,15 +402,23 @@ class BundleWriter {
             out.writeByte(index);
         } else {
             String uri = name.getNamespaceURI();
-            int ns = BundleNames.namespaceToIndex(uri) & 0x07;
+            int ns = 0;
+            while (ns < namespaces.length
+                    && namespaces[ns] != null
+                    && !namespaces[ns].equals(uri)) {
+                ns++;
+            }
 
             String local = name.getLocalName();
             byte[] bytes = local.getBytes("UTF-8");
             int len = Math.min(bytes.length - 1, 0x0f);
 
             out.writeByte(0x80 | ns << 4 | len);
-            if (ns == 0x07) {
+            if (ns == namespaces.length || namespaces[ns] == null) {
                 out.writeUTF(uri);
+                if (ns < namespaces.length) {
+                    namespaces[ns] = uri;
+                }
             }
             if (len != 0x0f) {
                 out.write(bytes);

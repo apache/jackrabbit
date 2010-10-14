@@ -51,6 +51,15 @@ class BundleReader {
     private final int version;
 
     /**
+     * The default namespace and the first six other namespaces used in this
+     * bundle. Used by the {@link #readName()} method to keep track of
+     * already seen namespaces.
+     */
+    private final String[] namespaces =
+        // NOTE: The length of this array must be seven
+        { Name.NS_DEFAULT_URI, null, null, null, null, null, null };
+
+    /**
      * Creates a new bundle deserializer.
      *
      * @param binding bundle binding
@@ -324,10 +333,13 @@ class BundleReader {
         } else {
             String uri;
             int ns = (b >> 4) & 0x07;
-            if (ns != 0x07) {
-                uri = BundleNames.indexToNamespace(ns);
+            if (ns < namespaces.length && namespaces[ns] != null) {
+                uri = namespaces[ns];
             } else {
                 uri = in.readUTF();
+                if (ns < namespaces.length) {
+                    namespaces[ns] = uri;
+                }
             }
 
             String local;
