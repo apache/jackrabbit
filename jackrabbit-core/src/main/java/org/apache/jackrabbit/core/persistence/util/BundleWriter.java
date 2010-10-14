@@ -73,13 +73,8 @@ class BundleWriter {
             throws IOException {
         long size = out.size();
 
-        // primaryType and version
-        Name type = bundle.getNodeTypeName();
-        int index = binding.nsIndex.stringToIndex(type.getNamespaceURI());
-        out.writeByte(index >>> 16);
-        out.writeByte(index >>> 8);
-        out.writeByte(index);
-        out.writeInt(binding.nameIndex.stringToIndex(type.getLocalName()));
+        // primaryType
+        writeName(bundle.getNodeTypeName());
 
         // parentUUID
         writeNodeId(bundle.getParentId());
@@ -89,9 +84,9 @@ class BundleWriter {
 
         // mixin types
         for (Name name : bundle.getMixinTypeNames()) {
-            writeIndexedQName(name);
+            writeName(name);
         }
-        writeIndexedQName(null);
+        writeName(null);
 
         // properties
         for (Name pName : bundle.getPropertyNames()) {
@@ -105,11 +100,11 @@ class BundleWriter {
             if (pState == null) {
                 log.error("PropertyState missing in bundle: " + pName);
             } else {
-                writeIndexedQName(pName);
+                writeName(pName);
                 writeState(pState);
             }
         }
-        writeIndexedQName(null);
+        writeName(null);
 
         // write uuid flag
         out.writeBoolean(bundle.isReferenceable());
@@ -117,7 +112,7 @@ class BundleWriter {
         // child nodes (list of uuid/name pairs)
         for (NodePropBundle.ChildNodeEntry entry : bundle.getChildNodeEntries()) {
             writeNodeId(entry.getId());  // uuid
-            writeQName(entry.getName());   // name
+            writeName(entry.getName());   // name
         }
         writeNodeId(null);
 
@@ -263,7 +258,7 @@ class BundleWriter {
                     break;
                 case PropertyType.NAME:
                     try {
-                        writeQName(val.getName());
+                        writeName(val.getName());
                     } catch (RepositoryException e) {
                         // should never occur
                         throw new IOException("Unexpected error while writing NAME value.");
@@ -349,28 +344,65 @@ class BundleWriter {
     }
 
     /**
-     * Serializes a Name
+     * Serializes a name. The name encoding works as follows:
+     * <p>
+     * First; if the name is known by the {@link BundleNames} class (this
+     * includes the <code>null</code> name), then the name is serialized
+     * as a single byte using the following format.
+     * <pre>
+     * +-------------------------------+
+     * | 0 |    common name index      |
+     * +-------------------------------+
+     * </pre>
+     * <p>
+     * Second; if the name is not known, it gets serialized as a
+     * variable-length field whose first byte looks like this:
+     * <pre>
+     * +-------------------------------+
+     * | 1 | ns index  |  name length  |
+     * +-------------------------------+
+     * </pre>
+     * <p>
+     * The three-bit namespace index identifies either a known namespace
+     * in the {@link BundleNames} class (values 0 - 6) or an explicit
+     * namespace URI string that is written using
+     * {@link DataOutputStream#writeUTF(String)} right after this byte
+     * (value 7).
+     * <p>
+     * The four-bit name length field indicates the length (in UTF-8 bytes)
+     * of the local part of the name. Since zero-length local names are not
+     * allowed, the length is first decremented by one before storing in this
+     * field. The UTF-8 byte sequence is written out after this byte and the
+     * possible namespace URI string. If the length of the local name is
+     * larger than 15 (i.e. would be stored as 0x0f or more), then the value
+     * 0x0f is stored as the name length and the name string is written
+     * using {@link DataOutputStream#writeUTF(String)}.
      *
      * @param name the name
      * @throws IOException in an I/O error occurs.
      */
-    private void writeQName(Name name) throws IOException {
-        out.writeInt(binding.nsIndex.stringToIndex(name.getNamespaceURI()));
-        out.writeUTF(name.getLocalName());
-    }
-
-    /**
-     * Serializes a indexed Name
-     *
-     * @param name the name
-     * @throws IOException in an I/O error occurs.
-     */
-    private void writeIndexedQName(Name name) throws IOException {
-        if (name == null) {
-            out.writeInt(-1);
+    private void writeName(Name name) throws IOException {
+        int index = BundleNames.nameToIndex(name);
+        if (index != -1) {
+            assert 0 <= index && index < 0x80;
+            out.writeByte(index);
         } else {
-            out.writeInt(binding.nsIndex.stringToIndex(name.getNamespaceURI()));
-            out.writeInt(binding.nameIndex.stringToIndex(name.getLocalName()));
+            String uri = name.getNamespaceURI();
+            int ns = BundleNames.namespaceToIndex(uri) & 0x07;
+
+            String local = name.getLocalName();
+            byte[] bytes = local.getBytes("UTF-8");
+            int len = Math.min(bytes.length - 1, 0x0f);
+
+            out.writeByte(0x80 | ns << 4 | len);
+            if (ns == 0x07) {
+                out.writeUTF(uri);
+            }
+            if (len != 0x0f) {
+                out.write(bytes);
+            } else {
+                out.writeUTF(local);
+            }
         }
     }
 

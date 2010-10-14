@@ -75,14 +75,17 @@ class BundleReader {
         NodePropBundle bundle = new NodePropBundle(id);
 
         // read primary type...special handling
-        int a = in.readUnsignedByte();
-        int b = in.readUnsignedByte();
-        int c = in.readUnsignedByte();
-        String uri = binding.nsIndex.indexToString(a << 16 | b << 8 | c);
-        String local = binding.nameIndex.indexToString(in.readInt());
-        Name nodeTypeName = NameFactoryImpl.getInstance().create(uri, local);
-
-        // primaryType
+        Name nodeTypeName;
+        if (version >= BundleBinding.VERSION_3) {
+            nodeTypeName = readName();
+        } else {
+            int a = in.readUnsignedByte();
+            int b = in.readUnsignedByte();
+            int c = in.readUnsignedByte();
+            String uri = binding.nsIndex.indexToString(a << 16 | b << 8 | c);
+            String local = binding.nameIndex.indexToString(in.readInt());
+            nodeTypeName = NameFactoryImpl.getInstance().create(uri, local);
+        }
         bundle.setNodeTypeName(nodeTypeName);
 
         // parentUUID
@@ -103,17 +106,14 @@ class BundleReader {
         // properties
         name = readIndexedQName();
         while (name != null) {
-            PropertyId pId = new PropertyId(bundle.getId(), name);
-            // skip redundant primaryType, mixinTypes and uuid properties
-            if (name.equals(NameConstants.JCR_PRIMARYTYPE)
-                || name.equals(NameConstants.JCR_MIXINTYPES)
-                || name.equals(NameConstants.JCR_UUID)) {
-                readPropertyEntry(pId);
-                name = readIndexedQName();
-                continue;
-            }
+            PropertyId pId = new PropertyId(id, name);
             NodePropBundle.PropertyEntry pState = readPropertyEntry(pId);
-            bundle.addProperty(pState);
+            // skip redundant primaryType, mixinTypes and uuid properties
+            if (!name.equals(NameConstants.JCR_PRIMARYTYPE)
+                && !name.equals(NameConstants.JCR_MIXINTYPES)
+                && !name.equals(NameConstants.JCR_UUID)) {
+                bundle.addProperty(pState);
+            }
             name = readIndexedQName();
         }
 
@@ -279,6 +279,10 @@ class BundleReader {
      * @throws IOException in an I/O error occurs.
      */
     private Name readQName() throws IOException {
+        if (version >= BundleBinding.VERSION_3) {
+            return readName();
+        }
+
         String uri = binding.nsIndex.indexToString(in.readInt());
         String local = in.readUTF();
         return NameFactoryImpl.getInstance().create(uri, local);
@@ -291,12 +295,51 @@ class BundleReader {
      * @throws IOException in an I/O error occurs.
      */
     private Name readIndexedQName() throws IOException {
+        if (version >= BundleBinding.VERSION_3) {
+            return readName();
+        }
+
         int index = in.readInt();
         if (index < 0) {
             return null;
         } else {
             String uri = binding.nsIndex.indexToString(index);
             String local = binding.nameIndex.indexToString(in.readInt());
+            return NameFactoryImpl.getInstance().create(uri, local);
+        }
+    }
+
+    /**
+     * Deserializes a name written using bundle serialization version 3.
+     * See the {@link BundleWriter} class for details of the serialization
+     * format.
+     *
+     * @return deserialized name
+     * @throws IOException if an I/O error occurs
+     */
+    private Name readName() throws IOException {
+        int b = in.readUnsignedByte();
+        if ((b & 0x80) == 0) {
+            return BundleNames.indexToName(b);
+        } else {
+            String uri;
+            int ns = (b >> 4) & 0x07;
+            if (ns != 0x07) {
+                uri = BundleNames.indexToNamespace(ns);
+            } else {
+                uri = in.readUTF();
+            }
+
+            String local;
+            int len = b & 0x0f;
+            if (b != 0x0f) {
+                byte[] buffer = new byte[len + 1];
+                in.readFully(buffer);
+                local = new String(buffer, "UTF-8");
+            } else {
+                local = in.readUTF();
+            }
+
             return NameFactoryImpl.getInstance().create(uri, local);
         }
     }

@@ -44,9 +44,14 @@ public class BundleBinding {
     static final int VERSION_2 = 2;
 
     /**
+     * serialization version 3
+     */
+    static final int VERSION_3 = 3;
+
+    /**
      * current version
      */
-    static final int VERSION_CURRENT = VERSION_2;
+    static final int VERSION_CURRENT = VERSION_3;
 
     /**
      * the namespace index
