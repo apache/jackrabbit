@@ -79,6 +79,12 @@ class NodeStateMerger {
                     return false;
                 }
 
+                // the primary node type
+                if (!state.getNodeTypeName().equals(overlayedState.getNodeTypeName())) {
+                    // the primary node type has changed either in 'state' or 'overlayedState'.
+                    return false;
+                }
+
                 // mixin types
                 if (!state.getMixinTypeNames().equals(overlayedState.getMixinTypeNames())) {
                     // the mixins have been modified but by just looking at the diff we
