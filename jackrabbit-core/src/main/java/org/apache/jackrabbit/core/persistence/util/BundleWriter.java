@@ -124,7 +124,7 @@ class BundleWriter {
         writeNodeId(null);
 
         // write mod count
-        writeInt(bundle.getModCount());
+        writeVarInt(bundle.getModCount());
 
         // write shared set
         for (NodeId nodeId: bundle.getSharedSet()) {
@@ -155,7 +155,7 @@ class BundleWriter {
      * the number of property values plus one and truncated at 15 (the highest
      * four-bit value). If there are 14 or more (14 + 1 == 15) property values,
      * then the number of additional values is serialized as a variable-length
-     * integer (see {@link #writeInt(int)}) right after this byte.
+     * integer (see {@link #writeVarInt(int)}) right after this byte.
      * <p>
      * The modification count of the property state is written next as a
      * variable-length integer, followed by the serializations of all the
@@ -176,14 +176,14 @@ class BundleWriter {
                 out.writeByte(len << 4 | type);
             } else {
                 out.writeByte(0xf0 | type);
-                writeInt(len - 0x0f);
+                writeVarInt(len - 0x0f);
             }
         } else {
             assert values.length == 1;
             out.writeByte(type);
         }
 
-        writeInt(state.getModCount());
+        writeVarInt(state.getModCount());
 
         // values
         for (int i = 0; i < values.length; i++) {
@@ -200,7 +200,7 @@ class BundleWriter {
                             } else {
                                 out.writeInt(BundleBinding.BINARY_IN_DATA_STORE);
                                 val.store(dataStore);
-                                out.writeUTF(val.toString());
+                                writeString(val.toString());
                             }
                             break;
                         }
@@ -248,7 +248,7 @@ class BundleWriter {
                                 val.discard();
                             }
                             // store id of blob as property value
-                            out.writeUTF(blobId);   // value
+                            writeString(blobId);   // value
                         } else {
                             // delete evt. blob
                             byte[] data = writeSmallBinary(val, state, i);
@@ -309,11 +309,8 @@ class BundleWriter {
                     writeNodeId(val.getNodeId());
                     break;
                 default:
-                    // because writeUTF(String) has a size limit of 64k,
-                    // we're using write(byte[]) instead
-                    byte[] bytes = val.toString().getBytes("UTF-8");
-                    writeInt(bytes.length); // length of byte[]
-                    out.write(bytes);   // byte[]
+                    writeString(val.toString());
+                    break;
             }
         }
     }
@@ -379,7 +376,7 @@ class BundleWriter {
         } else {
             out.writeBoolean(true);
             // TODO more efficient serialization format
-            out.writeUTF(decimal.toString());
+            writeString(decimal.toString());
         }
     }
 
@@ -408,7 +405,7 @@ class BundleWriter {
      * most six other other namespaces (values 1-6), in the order they appear
      * in the bundle. When one of these six custom namespaces first appears
      * in the bundle, then the namespace URI is written using
-     * {@link DataOutputStream#writeUTF(String)} right after this byte.
+     * {@link #writeString(String)} right after this byte.
      * Later uses of such a namespace simply refers back to the already read
      * namespace URI string. Any other namespaces are identified with value 7
      * and always written to the bundle after this byte.
@@ -419,8 +416,9 @@ class BundleWriter {
      * field. The UTF-8 byte sequence is written out after this byte and the
      * possible namespace URI string. If the length of the local name is
      * larger than 15 (i.e. would be stored as 0x0f or more), then the value
-     * 0x0f is stored as the name length and the name string is written
-     * using {@link DataOutputStream#writeUTF(String)}.
+     * 0x0f is stored as the name length and the name string is written as
+     * UTF-8 using {@link #writeBytes(byte[], int)} with a base length of
+     * 0x10 (0x0f + 1).
      *
      * @param name the name
      * @throws IOException in an I/O error occurs.
@@ -445,7 +443,7 @@ class BundleWriter {
 
             out.writeByte(0x80 | ns << 4 | len);
             if (ns == namespaces.length || namespaces[ns] == null) {
-                out.writeUTF(uri);
+                writeString(uri);
                 if (ns < namespaces.length) {
                     namespaces[ns] = uri;
                 }
@@ -453,7 +451,7 @@ class BundleWriter {
             if (len != 0x0f) {
                 out.write(bytes);
             } else {
-                out.writeUTF(local);
+                writeBytes(bytes, 0x0f + 1);
             }
         }
     }
@@ -482,14 +480,44 @@ class BundleWriter {
      * @param integer integer value
      * @throws IOException if an I/O error occurs
      */
-    private void writeInt(int value) throws IOException {
-        int b = value & 0x7f;
-        if (b == value) {
-            out.writeByte(b);
-        } else {
-            out.writeByte(b | 0x80);
-            writeInt(value >>> 7);
+    private void writeVarInt(int value) throws IOException {
+        while (true) {
+            int b = value & 0x7f;
+            if (b != value) {
+                out.writeByte(b | 0x80);
+                value >>>= 7; // unsigned shift
+            } else {
+                out.writeByte(b);
+                return;
+            }
         }
+    }
+
+    /**
+     * Serializes a string in UTF-8. The length of the UTF-8 byte sequence
+     * is first written as a variable-length string (see
+     * {@link #writeVarInt(int)}), and then the sequence itself is written.
+     *
+     * @param value string value
+     * @throws IOException if an I/O error occurs
+     */
+    private void writeString(String value) throws IOException {
+        writeBytes(value.getBytes("UTF-8"), 0);
+    }
+
+    /**
+     * Serializes the given array of bytes. The length of the byte array is
+     * first written as a {@link #writeVarInt(int) variable length integer},
+     * followed by the given bytes.
+     *
+     * @param bytes the bytes to be serialized
+     * @param base optional base length
+     * @throws IOException if an I/O error occurs
+     */
+    private void writeBytes(byte[] bytes, int base) throws IOException {
+        assert bytes.length >= base;
+        writeVarInt(bytes.length - base);
+        out.write(bytes);
     }
 
 }

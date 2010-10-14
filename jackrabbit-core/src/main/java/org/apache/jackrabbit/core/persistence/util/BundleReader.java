@@ -141,7 +141,7 @@ class BundleReader {
 
         // read modcount, since version 1.0
         if (version >= BundleBinding.VERSION_3) {
-            bundle.setModCount((short) readInt());
+            bundle.setModCount((short) readVarInt());
         } else if (version >= BundleBinding.VERSION_1) {
             bundle.setModCount(in.readShort());
         }
@@ -182,13 +182,13 @@ class BundleReader {
             if (len != 0) {
                 entry.setMultiValued(true);
                 if (len == 0x0f) {
-                    count = readInt() + 0x0f - 1;
+                    count = readVarInt() + 0x0f - 1;
                 } else {
                     count = len - 1;
                 }
             }
 
-            entry.setModCount((short) readInt());
+            entry.setModCount((short) readVarInt());
         } else {
             // type and modcount
             int type = in.readInt();
@@ -215,9 +215,9 @@ class BundleReader {
                 case PropertyType.BINARY:
                     int size = in.readInt();
                     if (size == BundleBinding.BINARY_IN_DATA_STORE) {
-                        val = InternalValue.create(binding.dataStore, in.readUTF());
+                        val = InternalValue.create(binding.dataStore, readString());
                     } else if (size == BundleBinding.BINARY_IN_BLOB_STORE) {
-                        blobIds[i] = in.readUTF();
+                        blobIds[i] = readString();
                         try {
                             BLOBStore blobStore = binding.getBlobStore();
                             if (blobStore instanceof ResourceBasedBLOBStore) {
@@ -264,18 +264,18 @@ class BundleReader {
                     val = InternalValue.create(readNodeId(), false);
                     break;
                 default:
-                    // because writeUTF(String) has a size limit of 64k,
-                    // Strings are serialized as <length><byte[]>
-                    int len;
                     if (version >= BundleBinding.VERSION_3) {
-                        len = readInt();
+                        val = InternalValue.valueOf(
+                                readString(), entry.getType());
                     } else {
-                        len = in.readInt();
+                        // because writeUTF(String) has a size limit of 64k,
+                        // Strings are serialized as <length><byte[]>
+                        int len = in.readInt();
+                        byte[] bytes = new byte[len];
+                        in.readFully(bytes);
+                        val = InternalValue.valueOf(
+                                new String(bytes, "UTF-8"), entry.getType());
                     }
-                    byte[] bytes = new byte[len];
-                    in.readFully(bytes);
-                    val = InternalValue.valueOf(
-                            new String(bytes, "UTF-8"), entry.getType());
             }
             values[i] = val;
         }
@@ -310,7 +310,7 @@ class BundleReader {
     private BigDecimal readDecimal() throws IOException {
         if (in.readBoolean()) {
             // TODO more efficient serialization format
-            return new BigDecimal(in.readUTF());
+            return new BigDecimal(readString());
         } else {
             return null;
         }
@@ -369,21 +369,13 @@ class BundleReader {
             if (ns < namespaces.length && namespaces[ns] != null) {
                 uri = namespaces[ns];
             } else {
-                uri = in.readUTF();
+                uri = readString();
                 if (ns < namespaces.length) {
                     namespaces[ns] = uri;
                 }
             }
 
-            String local;
-            int len = b & 0x0f;
-            if (b != 0x0f) {
-                byte[] buffer = new byte[len + 1];
-                in.readFully(buffer);
-                local = new String(buffer, "UTF-8");
-            } else {
-                local = in.readUTF();
-            }
+            String local = new String(readBytes((b & 0x0f) + 1, 0x10), "UTF-8");
 
             return NameFactoryImpl.getInstance().create(uri, local);
         }
@@ -396,13 +388,30 @@ class BundleReader {
      * @return deserialized name
      * @throws IOException if an I/O error occurs
      */
-    private int readInt() throws IOException {
+    private int readVarInt() throws IOException {
         int b = in.readUnsignedByte();
         if ((b & 0x80) == 0) {
             return b;
         } else {
-            return readInt() << 7 | b & 0x7f;
+            return readVarInt() << 7 | b & 0x7f;
         }
+    }
+
+    private String readString() throws IOException {
+        if (version >= BundleBinding.VERSION_3) {
+            return new String(readBytes(0, 0), "UTF-8");
+        } else {
+            return in.readUTF();
+        }
+    }
+
+    private byte[] readBytes(int len, int base) throws IOException {
+        if (len == base) {
+            len += readVarInt();
+        }
+        byte[] bytes = new byte[len];
+        in.readFully(bytes);
+        return bytes;
     }
 
 }
