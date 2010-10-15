@@ -67,7 +67,7 @@ class ACLTemplate extends AbstractACLTemplate {
     /**
      * List containing the entries of this ACL Template.
      */
-    private final List<Entry> entries = new ArrayList<Entry>();
+    private final List<AccessControlEntry> entries = new ArrayList<AccessControlEntry>();
 
     /**
      * The principal manager used for validation checks
@@ -197,9 +197,9 @@ class ACLTemplate extends AbstractACLTemplate {
     private List<Entry> internalGetEntries(Principal principal) {
         String principalName = principal.getName();
         List<Entry> entriesPerPrincipal = new ArrayList<Entry>(2);
-        for (Entry entry : entries) {
+        for (AccessControlEntry entry : entries) {
             if (principalName.equals(entry.getPrincipal().getName())) {
-                entriesPerPrincipal.add(entry);
+                entriesPerPrincipal.add((Entry) entry);
             }
         }
         return entriesPerPrincipal;
@@ -311,7 +311,7 @@ class ACLTemplate extends AbstractACLTemplate {
      * @see org.apache.jackrabbit.core.security.authorization.AbstractACLTemplate#getEntries()
      */
     @Override
-    protected List<? extends AccessControlEntry> getEntries() {
+    protected List<AccessControlEntry> getEntries() {
         return entries;
     }
 

@@ -78,7 +78,7 @@ public abstract class AbstractACLTemplate implements JackrabbitAccessControlList
      * @return the list of entries.
      * @see #orderBefore(AccessControlEntry, AccessControlEntry)
      */
-    protected abstract List<? extends AccessControlEntry> getEntries();
+    protected abstract List<AccessControlEntry> getEntries();
 
     //--------------------------------------< JackrabbitAccessControlPolicy >---
     /**
@@ -120,7 +120,7 @@ public abstract class AbstractACLTemplate implements JackrabbitAccessControlList
             return;
         }
 
-        List entries = getEntries();
+        List<AccessControlEntry> entries = getEntries();
         int index = (destEntry == null) ? entries.size()-1 : entries.indexOf(destEntry);
         if (index < 0) {
             throw new AccessControlException("destEntry not contained in this AccessControlList");
