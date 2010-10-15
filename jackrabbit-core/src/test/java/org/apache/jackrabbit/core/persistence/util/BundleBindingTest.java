@@ -44,6 +44,8 @@ import junit.framework.TestCase;
 
 public class BundleBindingTest extends TestCase {
 
+    private static final NameFactory factory = NameFactoryImpl.getInstance();
+
     private BundleBinding binding;
 
     protected void setUp() throws Exception {
@@ -113,7 +115,6 @@ public class BundleBindingTest extends TestCase {
         bundle.setSharedSet(new HashSet<NodeId>(Arrays.asList(
                 new NodeId(5, 6), new NodeId(7, 8), new NodeId(9, 10))));
 
-        NameFactory factory = NameFactoryImpl.getInstance();
         PropertyEntry property;
 
         property = new PropertyEntry(
@@ -291,7 +292,6 @@ public class BundleBindingTest extends TestCase {
         bundle.setMixinTypeNames(Collections.<Name>emptySet());
         bundle.setSharedSet(Collections.<NodeId>emptySet());
 
-        NameFactory factory = NameFactoryImpl.getInstance();
         bundle.addChildNodeEntry(factory.create("ns1", "test"), new NodeId());
         bundle.addChildNodeEntry(factory.create("ns2", "test"), new NodeId());
         bundle.addChildNodeEntry(factory.create("ns3", "test"), new NodeId());
@@ -309,6 +309,63 @@ public class BundleBindingTest extends TestCase {
         bundle.addChildNodeEntry(factory.create("ns3", "test"), new NodeId());
 
         assertBundleRoundtrip(bundle);
+    }
+
+    /**
+     * Tests serialization of date values.
+     */
+    public void testDateSerialization() throws Exception {
+        assertDateSerialization("2010-10-10T10:10:10.100Z");
+
+        // Different kinds of timezone offsets
+        assertDateSerialization("2010-10-10T10:10:10.100+11:00");
+        assertDateSerialization("2010-10-10T10:10:10.100-14:00");
+        assertDateSerialization("2010-10-10T10:10:10.100+00:12");
+        assertDateSerialization("2010-10-10T10:10:10.100-08:14");
+
+        // Different timestamp accuracies
+        assertDateSerialization("2010-10-10T10:10:00.000Z");
+        assertDateSerialization("2010-10-10T10:00:00.000Z");
+        assertDateSerialization("2010-10-10T00:00:00.000Z");
+
+        // Dates far from today
+        assertDateSerialization("1970-01-01T00:00:00.000Z");
+        assertDateSerialization("1970-01-01T12:34:56.789-13:45");
+        assertDateSerialization("2030-10-10T10:10:10.100+10:10");
+        assertDateSerialization("2345-10-10T10:10:10.100Z");
+        assertDateSerialization("+9876-10-10T10:10:10.100Z");
+        assertDateSerialization("-9876-10-10T10:10:10.100Z");
+    }
+
+    private void assertDateSerialization(String date) throws Exception {
+        assertValueSerialization(
+                InternalValue.valueOf(date, PropertyType.DATE));
+    }
+
+    private void assertValueSerialization(InternalValue value)
+            throws Exception {
+        NodePropBundle bundle = new NodePropBundle(new NodeId());
+        bundle.setParentId(new NodeId());
+        bundle.setNodeTypeName(NameConstants.NT_UNSTRUCTURED);
+        bundle.setMixinTypeNames(Collections.<Name>emptySet());
+        bundle.setSharedSet(Collections.<NodeId>emptySet());
+
+        Name name = factory.create("", "test");
+
+        PropertyEntry property =
+            new PropertyEntry(new PropertyId(bundle.getId(), name));
+        property.setType(value.getType());
+        property.setMultiValued(false);
+        property.setValues(new InternalValue[] { value });
+        bundle.addProperty(property);
+
+        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+        binding.writeBundle(buffer, bundle);
+        byte[] bytes = buffer.toByteArray();
+        NodePropBundle result =
+            binding.readBundle(new ByteArrayInputStream(bytes), bundle.getId());
+
+        assertEquals(value, result.getPropertyEntry(name).getValues()[0]);
     }
 
     private void assertBundleRoundtrip(NodePropBundle bundle)
