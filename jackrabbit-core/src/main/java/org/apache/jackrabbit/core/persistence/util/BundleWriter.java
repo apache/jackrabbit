@@ -24,6 +24,8 @@ import java.io.OutputStream;
 import java.math.BigDecimal;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
+import java.util.List;
+import java.util.Set;
 
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
@@ -32,6 +34,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.core.data.DataStore;
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.value.InternalValue;
+import org.apache.jackrabbit.core.persistence.util.NodePropBundle.ChildNodeEntry;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.slf4j.Logger;
@@ -119,23 +122,34 @@ class BundleWriter {
         out.writeBoolean(bundle.isReferenceable());
 
         // child nodes (list of uuid/name pairs)
-        for (NodePropBundle.ChildNodeEntry entry : bundle.getChildNodeEntries()) {
-            writeNodeId(entry.getId());  // uuid
-            writeName(entry.getName());   // name
-        }
-        writeNodeId(null);
+        writeChildNodeEntries(bundle);
 
         // write mod count
         writeVarInt(bundle.getModCount());
 
         // write shared set
-        for (NodeId nodeId: bundle.getSharedSet()) {
-            writeNodeId(nodeId);
-        }
-        writeNodeId(null);
+        writeSharedSet(bundle);
 
         // set size of bundle
         bundle.setSize(out.size() - size);
+    }
+
+    private void writeChildNodeEntries(NodePropBundle bundle)
+            throws IOException {
+        List<ChildNodeEntry> chilren = bundle.getChildNodeEntries();
+        writeVarInt(chilren.size());
+        for (ChildNodeEntry child : chilren) {
+            writeNodeId(child.getId());   // uuid
+            writeName(child.getName());   // name
+        }
+    }
+
+    private void writeSharedSet(NodePropBundle bundle) throws IOException {
+        Set<NodeId> sharedSet = bundle.getSharedSet();
+        writeVarInt(sharedSet.size());
+        for (NodeId nodeId: sharedSet) {
+            writeNodeId(nodeId);
+        }
     }
 
     /**
@@ -366,12 +380,10 @@ class BundleWriter {
      */
     private void writeNodeId(NodeId id) throws IOException {
         if (id == null) {
-            out.writeBoolean(false);
-        } else {
-            out.writeBoolean(true);
-            out.writeLong(id.getMostSignificantBits());
-            out.writeLong(id.getLeastSignificantBits());
+            id = BundleBinding.NULL_NODE_ID;
         }
+        out.writeLong(id.getMostSignificantBits());
+        out.writeLong(id.getLeastSignificantBits());
     }
 
     /**

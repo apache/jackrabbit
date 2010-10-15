@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.core.persistence.util;
 
+import static org.apache.jackrabbit.core.persistence.util.BundleBinding.NULL_NODE_ID;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.jackrabbit.core.id.NodeId;
@@ -29,6 +31,7 @@ import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.GregorianCalendar;
 import java.util.HashSet;
 import java.util.Set;
@@ -174,11 +177,7 @@ class BundleReader {
         bundle.setReferenceable(in.readBoolean());
 
         // child nodes (list of uuid/name pairs)
-        NodeId childId = readNodeId();
-        while (childId != null) {
-            bundle.addChildNodeEntry(readQName(), childId);
-            childId = readNodeId();
-        }
+        readChildNodeEntries(bundle);
 
         // read modcount, since version 1.0
         if (version >= BundleBinding.VERSION_3) {
@@ -188,18 +187,58 @@ class BundleReader {
         }
 
         // read shared set, since version 2.0
-        Set<NodeId> sharedSet = new HashSet<NodeId>();
-        if (version >= BundleBinding.VERSION_2) {
-            // shared set (list of parent uuids)
-            NodeId parentId = readNodeId();
-            while (parentId != null) {
-                sharedSet.add(parentId);
-                parentId = readNodeId();
-            }
-        }
-        bundle.setSharedSet(sharedSet);
+        readSharedSet(bundle);
 
         return bundle;
+    }
+
+    private void readSharedSet(NodePropBundle bundle) throws IOException {
+        Set<NodeId> sharedSet;
+        if (version >= BundleBinding.VERSION_3) {
+            int n = readVarInt();
+            if (n == 0) {
+                sharedSet = Collections.emptySet();
+            } else if (n == 1) {
+                sharedSet = Collections.singleton(readNodeId());
+            } else {
+                sharedSet = new HashSet<NodeId>();
+                for (int i = 0; i < n; i++) {
+                    sharedSet.add(readNodeId());
+                }
+            }
+        } else if (version == BundleBinding.VERSION_2) {
+            // shared set (list of parent uuids)
+            NodeId parentId = readNodeId();
+            if (parentId != null) {
+                sharedSet = new HashSet<NodeId>();
+                do {
+                    sharedSet.add(parentId);
+                    parentId = readNodeId();
+                } while (parentId != null);
+            } else {
+                sharedSet = Collections.emptySet();
+            }
+        } else {
+            sharedSet = Collections.emptySet();
+        }
+        bundle.setSharedSet(sharedSet);
+    }
+
+    private void readChildNodeEntries(NodePropBundle bundle) throws IOException {
+        if (version >= BundleBinding.VERSION_3) {
+            int n = readVarInt();
+            for (int i = 0; i < n; i++) {
+                NodeId id = readNodeId();
+                Name name = readQName();
+                bundle.addChildNodeEntry(name, id);
+            }
+        } else {
+            NodeId childId = readNodeId();
+            while (childId != null) {
+                bundle.addChildNodeEntry(readQName(), childId);
+                childId = readNodeId();
+            }
+        }
     }
 
     /**
@@ -342,10 +381,15 @@ class BundleReader {
      * @throws IOException in an I/O error occurs.
      */
     private NodeId readNodeId() throws IOException {
-        if (in.readBoolean()) {
+        if (version >= BundleBinding.VERSION_3 || in.readBoolean()) {
             long msb = in.readLong();
             long lsb = in.readLong();
-            return new NodeId(msb, lsb);
+            if (msb != NULL_NODE_ID.getMostSignificantBits()
+                    || lsb != NULL_NODE_ID.getLeastSignificantBits()) {
+                return new NodeId(msb, lsb);
+            } else {
+                return null;
+            }
         } else {
             return null;
         }
