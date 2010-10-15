@@ -25,8 +25,6 @@ import java.math.BigDecimal;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.GregorianCalendar;
-import java.util.List;
-import java.util.Set;
 
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
@@ -93,62 +91,62 @@ class BundleWriter {
         writeName(bundle.getNodeTypeName());
 
         // parentUUID
-        writeNodeId(bundle.getParentId());
-
-        // mixin types
-        writeMixinTypes(bundle);
-
-        // properties
-        writeProperties(bundle);
-
-        // write uuid flag
-        out.writeBoolean(bundle.isReferenceable());
-
-        // child nodes (list of uuid/name pairs)
-        writeChildNodeEntries(bundle);
+        NodeId parentId = bundle.getParentId();
+        if (parentId == null) {
+            parentId = BundleBinding.NULL_PARENT_ID;
+        }
+        writeNodeId(parentId);
 
         // write mod count
         writeVarInt(bundle.getModCount());
 
-        // write shared set
-        writeSharedSet(bundle);
+        Collection<Name> mixins = bundle.getMixinTypeNames();
+        Collection<PropertyEntry> properties = bundle.getPropertyEntries();
+        Collection<ChildNodeEntry> nodes = bundle.getChildNodeEntries();
+        Collection<NodeId> shared = bundle.getSharedSet();
 
-        // set size of bundle
-        bundle.setSize(out.size() - size);
-    }
+        int mn = mixins.size();
+        int pn = properties.size();
+        int nn = nodes.size();
+        int sn = shared.size();
+        int referenceable = 0;
+        if (bundle.isReferenceable()) {
+            referenceable = 1;
+        }
+        out.writeByte(
+                Math.min(mn, 1) << 7
+                | Math.min(pn, 7) << 4
+                | Math.min(nn, 3) << 2
+                | Math.min(sn, 1) << 1
+                | referenceable);
 
-    private void writeMixinTypes(NodePropBundle bundle) throws IOException {
-        Set<Name> mixins = bundle.getMixinTypeNames();
-        writeVarInt(mixins.size());
+        // mixin types
+        writeVarInt(mn, 1);
         for (Name name : mixins) {
             writeName(name);
         }
-    }
 
-    private void writeProperties(NodePropBundle bundle) throws IOException {
-        Collection<PropertyEntry> properties = bundle.getPropertyEntries();
-        writeVarInt(properties.size());
+        // properties
+        writeVarInt(pn, 7);
         for (PropertyEntry property : properties) {
             writeState(property);
         }
-    }
 
-    private void writeChildNodeEntries(NodePropBundle bundle)
-            throws IOException {
-        List<ChildNodeEntry> chilren = bundle.getChildNodeEntries();
-        writeVarInt(chilren.size());
-        for (ChildNodeEntry child : chilren) {
-            writeNodeId(child.getId());   // uuid
+        // child nodes (list of name/uuid pairs)
+        writeVarInt(nn, 3);
+        for (ChildNodeEntry child : nodes) {
             writeName(child.getName());   // name
+            writeNodeId(child.getId());   // uuid
         }
-    }
 
-    private void writeSharedSet(NodePropBundle bundle) throws IOException {
-        Set<NodeId> sharedSet = bundle.getSharedSet();
-        writeVarInt(sharedSet.size());
-        for (NodeId nodeId: sharedSet) {
+        // write shared set
+        writeVarInt(sn, 1);
+        for (NodeId nodeId: shared) {
             writeNodeId(nodeId);
         }
+
+        // set size of bundle
+        bundle.setSize(out.size() - size);
     }
 
     /**
@@ -381,9 +379,6 @@ class BundleWriter {
      * @throws IOException in an I/O error occurs.
      */
     private void writeNodeId(NodeId id) throws IOException {
-        if (id == null) {
-            id = BundleBinding.NULL_NODE_ID;
-        }
         out.writeLong(id.getMostSignificantBits());
         out.writeLong(id.getLeastSignificantBits());
     }
@@ -514,6 +509,12 @@ class BundleWriter {
                 out.writeByte(b);
                 return;
             }
+        }
+    }
+
+    private void writeVarInt(int value, int base) throws IOException {
+        if (value >= base) {
+            writeVarInt(value - base);
         }
     }
 

@@ -16,8 +16,6 @@
  */
 package org.apache.jackrabbit.core.persistence.util;
 
-import static org.apache.jackrabbit.core.persistence.util.BundleBinding.NULL_NODE_ID;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.jackrabbit.core.id.NodeId;
@@ -127,152 +125,149 @@ class BundleReader {
      */
     public NodePropBundle readBundle(NodeId id) throws IOException {
         NodePropBundle bundle = new NodePropBundle(id);
-
-        // read primary type...special handling
-        Name nodeTypeName;
         if (version >= BundleBinding.VERSION_3) {
-            nodeTypeName = readName();
+            readBundleNew(bundle);
         } else {
-            int a = in.readUnsignedByte();
-            int b = in.readUnsignedByte();
-            int c = in.readUnsignedByte();
-            String uri = binding.nsIndex.indexToString(a << 16 | b << 8 | c);
-            String local = binding.nameIndex.indexToString(in.readInt());
-            nodeTypeName = NameFactoryImpl.getInstance().create(uri, local);
+            readBundleOld(bundle);
         }
-        bundle.setNodeTypeName(nodeTypeName);
+        return bundle;
+    }
+
+    private void readBundleNew(NodePropBundle bundle) throws IOException {
+        // node type
+        bundle.setNodeTypeName(readName());
+
+        // parentUUID
+        NodeId parentId = readNodeId();
+        if (BundleBinding.NULL_PARENT_ID.equals(parentId)) {
+            parentId = null;
+        }
+        bundle.setParentId(parentId);
+
+        // read modcount
+        bundle.setModCount((short) readVarInt());
+
+        int b = in.readUnsignedByte();
+        bundle.setReferenceable((b & 1) != 0);
+
+        // mixin types
+        int mn = readVarInt((b >> 7) & 1, 1);
+        if (mn == 0) {
+            bundle.setMixinTypeNames(Collections.<Name>emptySet());
+        } else if (mn == 1) {
+            bundle.setMixinTypeNames(Collections.singleton(readName()));
+        } else {
+            Set<Name> mixins = new HashSet<Name>(mn * 2);
+            for (int i = 0; i < mn; i++) {
+                mixins.add(readName());
+            }
+            bundle.setMixinTypeNames(mixins);
+        }
+
+        // properties
+        int pn = readVarInt((b >> 4) & 7, 7);
+        for (int i = 0; i < pn; i++) {
+            PropertyId id = new PropertyId(bundle.getId(), readName());
+            bundle.addProperty(readPropertyEntry(id));
+        }
+
+        // child nodes (list of name/uuid pairs)
+        int nn = readVarInt((b >> 2) & 3, 3);
+        for (int i = 0; i < nn; i++) {
+            Name name = readQName();
+            NodeId id = readNodeId();
+            bundle.addChildNodeEntry(name, id);
+        }
+
+        // read shared set
+        int sn = readVarInt((b >> 1) & 1, 1);
+        if (sn == 0) {
+            bundle.setSharedSet(Collections.<NodeId>emptySet());
+        } else if (sn == 1) {
+            bundle.setSharedSet(Collections.singleton(readNodeId()));
+        } else {
+            Set<NodeId> shared = new HashSet<NodeId>();
+            for (int i = 0; i < sn; i++) {
+                shared.add(readNodeId());
+            }
+            bundle.setSharedSet(shared);
+        }
+    }
+
+    private void readBundleOld(NodePropBundle bundle) throws IOException {
+        // read primary type...special handling
+        int a = in.readUnsignedByte();
+        int b = in.readUnsignedByte();
+        int c = in.readUnsignedByte();
+        String uri = binding.nsIndex.indexToString(a << 16 | b << 8 | c);
+        String local = binding.nameIndex.indexToString(in.readInt());
+        bundle.setNodeTypeName(
+                NameFactoryImpl.getInstance().create(uri, local));
 
         // parentUUID
         bundle.setParentId(readNodeId());
 
-        if (version < BundleBinding.VERSION_3) {
-            // definitionId
-            in.readUTF();
-        }
+        // definitionId
+        in.readUTF();
 
         // mixin types
-        readMixinTypes(bundle);
+        Name name = readIndexedQName();
+        if (name != null) {
+            Set<Name> mixinTypeNames = new HashSet<Name>();
+            do {
+                mixinTypeNames.add(name);
+                name = readIndexedQName();
+            } while (name != null);
+            bundle.setMixinTypeNames(mixinTypeNames);
+        } else {
+            bundle.setMixinTypeNames(Collections.<Name>emptySet());
+        }
 
         // properties
-        readProperties(bundle);
+        name = readIndexedQName();
+        while (name != null) {
+            PropertyId pId = new PropertyId(bundle.getId(), name);
+            NodePropBundle.PropertyEntry pState = readPropertyEntry(pId);
+            // skip redundant primaryType, mixinTypes and uuid properties
+            if (!name.equals(NameConstants.JCR_PRIMARYTYPE)
+                    && !name.equals(NameConstants.JCR_MIXINTYPES)
+                    && !name.equals(NameConstants.JCR_UUID)) {
+                bundle.addProperty(pState);
+            }
+            name = readIndexedQName();
+        }
 
         // set referenceable flag
         bundle.setReferenceable(in.readBoolean());
 
         // child nodes (list of uuid/name pairs)
-        readChildNodeEntries(bundle);
+        NodeId childId = readNodeId();
+        while (childId != null) {
+            bundle.addChildNodeEntry(readQName(), childId);
+            childId = readNodeId();
+        }
 
         // read modcount, since version 1.0
-        if (version >= BundleBinding.VERSION_3) {
-            bundle.setModCount((short) readVarInt());
-        } else if (version >= BundleBinding.VERSION_1) {
+        if (version >= BundleBinding.VERSION_1) {
             bundle.setModCount(in.readShort());
         }
 
         // read shared set, since version 2.0
-        readSharedSet(bundle);
-
-        return bundle;
-    }
-
-    private void readMixinTypes(NodePropBundle bundle) throws IOException {
-        if (version >= BundleBinding.VERSION_3) {
-            int n = readVarInt();
-            if (n == 0) {
-                bundle.setMixinTypeNames(Collections.<Name>emptySet());
-            } else if (n == 1) {
-                bundle.setMixinTypeNames(Collections.singleton(readName()));
-            } else {
-                Set<Name> mixins = new HashSet<Name>(n * 2);
-                for (int i = 0; i < n; i++) {
-                    mixins.add(readName());
-                }
-                bundle.setMixinTypeNames(mixins);
-            }
-        } else {
-            Name name = readIndexedQName();
-            if (name == null) {
-                bundle.setMixinTypeNames(Collections.<Name>emptySet());
-            } else {
-                Set<Name> mixinTypeNames = new HashSet<Name>();
-                do {
-                    mixinTypeNames.add(name);
-                    name = readIndexedQName();
-                } while (name != null);
-                bundle.setMixinTypeNames(mixinTypeNames);
-            }
-        }
-    }
-
-    private void readProperties(NodePropBundle bundle) throws IOException {
-        if (version >= BundleBinding.VERSION_3) {
-            int n = readVarInt();
-            for (int i = 0; i < n; i++) {
-                PropertyId id = new PropertyId(bundle.getId(), readName());
-                bundle.addProperty(readPropertyEntry(id));
-            }
-        } else {
-            Name name = readIndexedQName();
-            while (name != null) {
-                PropertyId pId = new PropertyId(bundle.getId(), name);
-                NodePropBundle.PropertyEntry pState = readPropertyEntry(pId);
-                // skip redundant primaryType, mixinTypes and uuid properties
-                if (!name.equals(NameConstants.JCR_PRIMARYTYPE)
-                        && !name.equals(NameConstants.JCR_MIXINTYPES)
-                        && !name.equals(NameConstants.JCR_UUID)) {
-                    bundle.addProperty(pState);
-                }
-                name = readIndexedQName();
-            }
-        }
-    }
-
-    private void readSharedSet(NodePropBundle bundle) throws IOException {
-        Set<NodeId> sharedSet;
-        if (version >= BundleBinding.VERSION_3) {
-            int n = readVarInt();
-            if (n == 0) {
-                sharedSet = Collections.emptySet();
-            } else if (n == 1) {
-                sharedSet = Collections.singleton(readNodeId());
-            } else {
-                sharedSet = new HashSet<NodeId>();
-                for (int i = 0; i < n; i++) {
-                    sharedSet.add(readNodeId());
-                }
-            }
-        } else if (version == BundleBinding.VERSION_2) {
+        if (version >= BundleBinding.VERSION_2) {
             // shared set (list of parent uuids)
             NodeId parentId = readNodeId();
             if (parentId != null) {
-                sharedSet = new HashSet<NodeId>();
+                Set<NodeId> shared = new HashSet<NodeId>();
                 do {
-                    sharedSet.add(parentId);
+                    shared.add(parentId);
                     parentId = readNodeId();
                 } while (parentId != null);
+                bundle.setSharedSet(shared);
             } else {
-                sharedSet = Collections.emptySet();
+                bundle.setSharedSet(Collections.<NodeId>emptySet());
             }
         } else {
-            sharedSet = Collections.emptySet();
-        }
-        bundle.setSharedSet(sharedSet);
-    }
-
-    private void readChildNodeEntries(NodePropBundle bundle) throws IOException {
-        if (version >= BundleBinding.VERSION_3) {
-            int n = readVarInt();
-            for (int i = 0; i < n; i++) {
-                NodeId id = readNodeId();
-                Name name = readQName();
-                bundle.addChildNodeEntry(name, id);
-            }
-        } else {
-            NodeId childId = readNodeId();
-            while (childId != null) {
-                bundle.addChildNodeEntry(readQName(), childId);
-                childId = readNodeId();
-            }
+            bundle.setSharedSet(Collections.<NodeId>emptySet());
         }
     }
 
@@ -419,12 +414,7 @@ class BundleReader {
         if (version >= BundleBinding.VERSION_3 || in.readBoolean()) {
             long msb = in.readLong();
             long lsb = in.readLong();
-            if (msb != NULL_NODE_ID.getMostSignificantBits()
-                    || lsb != NULL_NODE_ID.getLeastSignificantBits()) {
-                return new NodeId(msb, lsb);
-            } else {
-                return null;
-            }
+            return new NodeId(msb, lsb);
         } else {
             return null;
         }
@@ -523,6 +513,14 @@ class BundleReader {
             return b;
         } else {
             return readVarInt() << 7 | b & 0x7f;
+        }
+    }
+
+    private int readVarInt(int value, int base) throws IOException {
+        if (value < base) {
+            return value;
+        } else {
+            return readVarInt() + base;
         }
     }
 
@@ -639,10 +637,7 @@ class BundleReader {
     }
 
     private byte[] readBytes(int len, int base) throws IOException {
-        if (len == base) {
-            len += readVarInt();
-        }
-        byte[] bytes = new byte[len];
+        byte[] bytes = new byte[readVarInt(len, base)];
         in.readFully(bytes);
         return bytes;
     }
