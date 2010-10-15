@@ -34,12 +34,12 @@ public class BundleBinding {
     static final int BINARY_IN_DATA_STORE = -2;
 
     /**
-     * A special UUID used to mark a <code>null</code> {@link NodeId} value.
-     * This is a proper type 1 UUID to prevent collisions with other
-     * identifiers, even special non-random ones like
+     * A special UUID used to mark the <code>null</code> parent identifier
+     * of the root node. This is a proper type 1 UUID to prevent collisions
+     * with other identifiers, even special non-random ones like
      * <code>00000000-0000-0000-0000-000000000000</code>.
      */
-    static final NodeId NULL_NODE_ID =
+    static final NodeId NULL_PARENT_ID =
         new NodeId("bb4e9d10-d857-11df-937b-0800200c9a66");
 
     /**
