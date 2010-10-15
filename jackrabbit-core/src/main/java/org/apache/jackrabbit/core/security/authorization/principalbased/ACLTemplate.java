@@ -185,7 +185,7 @@ class ACLTemplate extends AbstractACLTemplate {
      * @see org.apache.jackrabbit.core.security.authorization.AbstractACLTemplate#getEntries() 
      */
     @Override
-    protected List<? extends AccessControlEntry> getEntries() {
+    protected List<AccessControlEntry> getEntries() {
         return entries;
     }
 

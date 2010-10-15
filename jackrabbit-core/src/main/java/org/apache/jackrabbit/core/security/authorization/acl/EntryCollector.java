@@ -22,6 +22,7 @@ import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.security.authorization.AccessControlConstants;
 import org.apache.jackrabbit.core.security.authorization.AccessControlModifications;
 import org.apache.jackrabbit.core.security.authorization.AccessControlObserver;
+import org.apache.jackrabbit.core.security.authorization.PrivilegeRegistry;
 import org.apache.jackrabbit.util.Text;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,7 +34,6 @@ import javax.jcr.observation.EventIterator;
 import javax.jcr.observation.ObservationManager;
 import javax.jcr.security.AccessControlEntry;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -51,25 +51,36 @@ public class EntryCollector extends AccessControlObserver implements AccessContr
      * logger instance
      */
     private static final Logger log = LoggerFactory.getLogger(EntryCollector.class);
-        
+
+    /**
+     * The system session used to register an event listener and process the
+     * events as well as collect AC entries.
+     */
     protected final SessionImpl systemSession;
+
+    /**
+     * The root id.
+     */
     protected final NodeId rootID;
+
+    private final PrivilegeRegistry privilegeRegistry;
     
-    private final ACLEditor systemEditor;
-       
+    /**
+     * Standard JCR name form of the {@link #N_POLICY} constant.
+     */
     private final String repPolicyName;
 
     /**
      *
      * @param systemSession
-     * @param systemEditor
      * @param rootID
      * @throws RepositoryException
      */
-    protected EntryCollector(SessionImpl systemSession, ACLEditor systemEditor, NodeId rootID) throws RepositoryException {
+    protected EntryCollector(SessionImpl systemSession, NodeId rootID) throws RepositoryException {
         this.systemSession = systemSession;
-        this.systemEditor = systemEditor;
         this.rootID = rootID;
+
+        privilegeRegistry = new PrivilegeRegistry(systemSession);
         repPolicyName = systemSession.getJCRName(N_POLICY);
 
         ObservationManager observationMgr = systemSession.getWorkspace().getObservationManager();
@@ -95,6 +106,7 @@ public class EntryCollector extends AccessControlObserver implements AccessContr
      * Release all resources contained by this instance. It will no longer be
      * used. This implementation only stops listening to ac modification events.
      */
+    @Override
     protected void close() {
         super.close();
         try {
@@ -126,7 +138,7 @@ public class EntryCollector extends AccessControlObserver implements AccessContr
             next = getParentId(next);
         }
         
-        List<AccessControlEntry> entries = new ArrayList(userAces.size() + groupAces.size());
+        List<AccessControlEntry> entries = new ArrayList<AccessControlEntry>(userAces.size() + groupAces.size());
         entries.addAll(userAces);
         entries.addAll(groupAces);
 
@@ -147,7 +159,7 @@ public class EntryCollector extends AccessControlObserver implements AccessContr
         if (ACLProvider.isAccessControlled(node)) {
             // collect the aces of that node.
             NodeImpl aclNode = node.getNode(N_POLICY);
-            entries = Arrays.asList(systemEditor.getACL(aclNode).getAccessControlEntries());
+            entries = new ACLTemplate(aclNode, privilegeRegistry).getEntries();
         } else {
             // not access controlled
             entries = Collections.emptyList();
@@ -288,7 +300,7 @@ public class EntryCollector extends AccessControlObserver implements AccessContr
 
         if (!modMap.isEmpty()) {
             // notify listeners and eventually clean up internal caches.
-            notifyListeners(new AccessControlModifications(modMap));
+            notifyListeners(new AccessControlModifications<NodeId>(modMap));
         }
     }
 }

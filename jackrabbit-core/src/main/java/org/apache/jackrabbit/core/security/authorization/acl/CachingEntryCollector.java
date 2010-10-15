@@ -52,13 +52,12 @@ class CachingEntryCollector extends EntryCollector {
     /**
      * 
      * @param systemSession
-     * @param systemEditor
      * @param rootID
      * @throws RepositoryException
      */
     @SuppressWarnings("unchecked")    
-    CachingEntryCollector(SessionImpl systemSession, ACLEditor systemEditor, NodeId rootID) throws RepositoryException {
-        super(systemSession, systemEditor, rootID);
+    CachingEntryCollector(SessionImpl systemSession, NodeId rootID) throws RepositoryException {
+        super(systemSession, rootID);
         
         cache = new LRUMap(1000);
     }

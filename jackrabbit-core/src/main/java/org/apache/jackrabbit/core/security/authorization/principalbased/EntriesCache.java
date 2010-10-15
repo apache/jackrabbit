@@ -100,6 +100,7 @@ class EntriesCache extends AccessControlObserver implements AccessControlConstan
      * Release all resources contained by this instance. It will no longer be
      * used. This implementation only stops listening to ac modification events.
      */
+    @Override
     protected void close() {
         super.close();
         try {
@@ -110,7 +111,7 @@ class EntriesCache extends AccessControlObserver implements AccessControlConstan
     }
 
     List<AccessControlEntry> getEntries(Collection<Principal> principals) throws RepositoryException {
-        Object key = getCacheKey(principals);
+        String key = getCacheKey(principals);
         List<AccessControlEntry> entries;
         synchronized (monitor) {
             entries = cache.get(key);
@@ -134,7 +135,7 @@ class EntriesCache extends AccessControlObserver implements AccessControlConstan
         return entries;
     }
 
-    private static Object getCacheKey(Collection<Principal> principals) {
+    private static String getCacheKey(Collection<Principal> principals) {
         StringBuilder sb = new StringBuilder();
         for (Principal p : principals) {
             sb.append(p.getName()).append('/');
@@ -219,7 +220,7 @@ class EntriesCache extends AccessControlObserver implements AccessControlConstan
             synchronized (monitor) {
                 cache.clear();
             }
-            notifyListeners(new AccessControlModifications(modMap));
+            notifyListeners(new AccessControlModifications<String>(modMap));
         }
     }
 }
