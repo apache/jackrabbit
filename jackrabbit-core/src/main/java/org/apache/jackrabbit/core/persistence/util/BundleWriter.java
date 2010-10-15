@@ -22,6 +22,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.math.BigDecimal;
+import java.util.Calendar;
+import java.util.GregorianCalendar;
 
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
@@ -36,7 +38,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Bundle serializater.
+ * Bundle serializer.
  *
  * @see BundleReader
  */
@@ -282,7 +284,7 @@ class BundleWriter {
                     break;
                 case PropertyType.LONG:
                     try {
-                        out.writeLong(val.getLong());
+                        writeVarLong(val.getLong());
                     } catch (RepositoryException e) {
                         // should never occur
                         throw new IOException("Unexpected error while writing LONG value.");
@@ -307,6 +309,14 @@ class BundleWriter {
                 case PropertyType.WEAKREFERENCE:
                 case PropertyType.REFERENCE:
                     writeNodeId(val.getNodeId());
+                    break;
+                case PropertyType.DATE:
+                    try {
+                        writeDate(val.getCalendar());
+                    } catch (RepositoryException e) {
+                        // should never occur
+                        throw new IOException("Unexpected error while writing DATE value.");
+                    }
                     break;
                 default:
                     writeString(val.toString());
@@ -490,6 +500,179 @@ class BundleWriter {
                 out.writeByte(b);
                 return;
             }
+        }
+    }
+
+    /**
+     * Serializes a long value using a variable length encoding like the
+     * one used by {@link #writeVarInt(int)} for integer values. Before
+     * writing out, the value is first normalized to an unsigned value
+     * by moving the sign bit to be the end negating the other bits of
+     * a negative value. This normalization step maximizes the number of
+     * zero high order bits for typical small values (positive or negative),
+     * and thus keeps the serialization short.
+     *
+     * @param value long value
+     * @throws IOException if an I/O error occurs
+     */
+    private void writeVarLong(long value) throws IOException {
+        // Normalize to an unsigned value with the sign as the lowest bit
+        if (value < 0) {
+            value = ~value << 1 | 1;
+        } else {
+            value <<= 1;
+        }
+        while (true) {
+            long b = value & 0x7f;
+            if (b != value) {
+                out.writeByte((int) b | 0x80);
+                value >>>= 7; // unsigned shift
+            } else {
+                out.writeByte((int) b);
+                return;
+            }
+        }
+    }
+
+    /**
+     * Serializes a JCR date value using the {@link #writeVarLong(long)}
+     * serialization on a special 64-bit date encoding. This encoding maps
+     * the <code>sYYYY-MM-DDThh:mm:ss.sssTZD</code> date format used by
+     * JCR to an as small 64 bit integer (positive or negative) as possible,
+     * while preserving full accuracy (including time zone offsets) and
+     * favouring common levels of accuracy (per minute, hour and day) over
+     * full millisecond level detail.
+     * <p>
+     * Each date value is mapped to separate timestamp and timezone fields,
+     * both of whose lenghts are variable: 
+     * <pre>
+     * +----- ... ------- ... --+
+     * |  timestamp  | timezone |
+     * +----- ... ------- ... --+
+     * </pre>
+     * <p>
+     * The type and length of the timezone field can be determined by looking
+     * at the two least significant bits of the value:
+     * <dl>
+     *   <dt><code>?0</code></dt>
+     *   <dd>
+     *     UTC time. The length of the timezone field is just one bit,
+     *     i.e. the second bit is already a part of the timestamp field.
+     *   </dd>
+     *   <dt><code>01</code></dt>
+     *   <dd>
+     *     The offset is counted as hours from UTC, and stored as the number
+     *     of hours (positive or negative) in the next 5 bits (range from
+     *     -16 to +15 hours), making the timezone field 7 bits long in total.
+     *   </dd>
+     *   <dt><code>11</code></dt>
+     *   <dd>
+     *     The offset is counted as hours and minutes from UTC, and stored
+     *     as the total minute offset (positive or negative) in the next
+     *     11 bits (range from -17 to +17 hours), making the timezone field
+     *     13 bits long in total.
+     *   </dd>
+     * </dl>
+     * <p>
+     * The remaining 51-63 bits of the encoded value make up the timestamp
+     * field that also uses the two least significant bits to indicate the
+     * type and length of the field:
+     * <dl>
+     *   <dt><code>00</code></dt>
+     *   <dd>
+     *     <code>sYYYY-MM-DDT00:00:00.000</code>, i.e. midnight of the
+     *     specified date. The next 9 bits encode the day within the year
+     *     (starting from 1, maximum value 366) and the remaining bits are
+     *     used for the year, stored as an offset from year 2010.
+     *   </dd>
+     *   <dt><code>01</code></dt>
+     *   <dd>
+     *     <code>sYYYY-MM-DDThh:00:00.000</code>, i.e. at the hour. The
+     *     next 5 bits encode the hour within the day (starting from 0,
+     *     maximum value 23) and the remaining bits are used as described
+     *     above for the date.
+     *   </dd>
+     *   <dt><code>10</code></dt>
+     *   <dd>
+     *     <code>sYYYY-MM-DDThh:mm:00.000</code>, i.e. at the minute. The
+     *     next 11 bits encode the minute within the day (starting from 0,
+     *     maximum value 1439) and the remaining bits are used as described
+     *     above for the date.
+     *   </dd>
+     *   <dt><code>11</code></dt>
+     *   <dd>
+     *     <code>sYYYY-MM-DDThh:mm:ss.sss</code>, i.e. full millisecond
+     *     accuracy. The next 30 bits encode the millisecond within the
+     *     day (starting from 0, maximum value 87839999) and the remaining
+     *     bits are used as described above for the date.
+     *   </dd>
+     * </dl>
+     * <p>
+     * With full timezone and millisecond accuracies, this encoding leaves
+     * 10 bits (64 - 9 - 30 - 2 - 11 - 2) for the date offset, which allows
+     * for representation of all timestamps between years 1498 and 2521.
+     * Timestamps outside this range and with a minute-level timezone offset
+     * are automatically truncated to minute-level accuracy to support the
+     * full range of years -9999 to 9999 specified in JCR.
+     * <p>
+     * Note that the year, day of year, and time of day values are stored
+     * as separate bit sequences to avoid problems with changing leap second
+     * or leap year definitions. Bit fields are used for better encoding and
+     * decoding performance than what would be possible with the slightly more
+     * space efficient mechanism of using multiplication and modulo divisions
+     * to separate the different timestamp fields.
+     *
+     * @param value date value
+     * @throws IOException if an I/O error occurs
+     */
+    private void writeDate(Calendar value) throws IOException {
+        int y = value.get(Calendar.YEAR);
+        if (value.isSet(Calendar.ERA)
+                && value.get(Calendar.ERA) == GregorianCalendar.BC) {
+             y = 1 - y; // convert to an astronomical year
+        }
+        y -= 2010; // use a recent offset NOTE: do not change this!
+
+        int d = value.get(Calendar.DAY_OF_YEAR);
+        int h = value.get(Calendar.HOUR_OF_DAY);
+        int m = value.get(Calendar.MINUTE);
+        int s = value.get(Calendar.SECOND);
+        int u = value.get(Calendar.MILLISECOND);
+        int z = value.getTimeZone().getOffset(value.getTimeInMillis()) / (60 * 1000);
+        int zh = z / 60;
+        int zm = z - zh * 60;
+
+        long ts = y << 9 | d & 0x01ff;
+
+        if ((u != 0 || s != 0) && ((-512 <= y && y < 512) || zm == 0)) {
+            ts <<= 30;
+            ts |= (((h * 60 + m) * 60 + s) * 1000 + u) & 0x3fffffff; // 30 bits
+            ts <<= 2;
+            ts |= 3;
+        } else if (m != 0) {
+            ts <<= 11;
+            ts |= (h * 60 + m) & 0x07ff; // 11 bits
+            ts <<= 2;
+            ts |= 2;
+        } else if (h != 0) {
+            ts <<= 5;
+            ts |= h & 0x1f; // 5 bits
+            ts <<= 2;
+            ts |= 1;
+        } else {
+            ts <<= 2;
+        }
+
+        if (zm != 0) {
+            ts <<= 11;
+            ts |= z & 0x07ff; // 11 bits
+            writeVarLong(ts << 2 | 3);
+        } else if (zh != 0) {
+            ts <<= 5;
+            ts |= zh & 0x1f; // 5 bits
+            writeVarLong(ts << 2 | 1);
+        } else {
+            writeVarLong(ts << 1);
         }
     }
 

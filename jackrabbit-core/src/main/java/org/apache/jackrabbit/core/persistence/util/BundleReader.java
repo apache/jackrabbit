@@ -28,8 +28,11 @@ import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Calendar;
+import java.util.GregorianCalendar;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.TimeZone;
 import java.math.BigDecimal;
 
 import javax.jcr.PropertyType;
@@ -44,6 +47,44 @@ class BundleReader {
 
     /** Logger instance */
     private static Logger log = LoggerFactory.getLogger(BundleReader.class);
+
+    /**
+     * Pre-calculated {@link TimeZone} objects for common timezone offsets.
+     */
+    private static final TimeZone[] COMMON_TIMEZONES = {
+        TimeZone.getTimeZone("GMT+00:00"), // 0b00000
+        TimeZone.getTimeZone("GMT+01:00"), // 0b00001
+        TimeZone.getTimeZone("GMT+02:00"), // 0b00010
+        TimeZone.getTimeZone("GMT+03:00"), // 0b00011
+        TimeZone.getTimeZone("GMT+04:00"), // 0b00100
+        TimeZone.getTimeZone("GMT+05:00"), // 0b00101
+        TimeZone.getTimeZone("GMT+06:00"), // 0b00110
+        TimeZone.getTimeZone("GMT+07:00"), // 0b00111
+        TimeZone.getTimeZone("GMT+08:00"), // 0b01000
+        TimeZone.getTimeZone("GMT+09:00"), // 0b01001
+        TimeZone.getTimeZone("GMT+10:00"), // 0b01010
+        TimeZone.getTimeZone("GMT+11:00"), // 0b01011
+        TimeZone.getTimeZone("GMT+12:00"), // 0b01100
+        TimeZone.getTimeZone("GMT+13:00"), // 0b01101
+        TimeZone.getTimeZone("GMT+14:00"), // 0b01110
+        TimeZone.getTimeZone("GMT+15:00"), // 0b01111
+        TimeZone.getTimeZone("GMT-16:00"), // 0b10000
+        TimeZone.getTimeZone("GMT-15:00"), // 0b10001
+        TimeZone.getTimeZone("GMT-14:00"), // 0b10010
+        TimeZone.getTimeZone("GMT-13:00"), // 0b10011
+        TimeZone.getTimeZone("GMT-12:00"), // 0b10100
+        TimeZone.getTimeZone("GMT-11:00"), // 0b10101
+        TimeZone.getTimeZone("GMT-10:00"), // 0b10110
+        TimeZone.getTimeZone("GMT-09:00"), // 0b10111
+        TimeZone.getTimeZone("GMT-08:00"), // 0b11000
+        TimeZone.getTimeZone("GMT-07:00"), // 0b11001
+        TimeZone.getTimeZone("GMT-06:00"), // 0b11010
+        TimeZone.getTimeZone("GMT-05:00"), // 0b11011
+        TimeZone.getTimeZone("GMT-04:00"), // 0b11100
+        TimeZone.getTimeZone("GMT-03:00"), // 0b11101
+        TimeZone.getTimeZone("GMT-02:00"), // 0b11110
+        TimeZone.getTimeZone("GMT-01:00"), // 0b11111
+    };
 
     private final BundleBinding binding;
 
@@ -249,7 +290,11 @@ class BundleReader {
                     val = InternalValue.create(readDecimal());
                     break;
                 case PropertyType.LONG:
-                    val = InternalValue.create(in.readLong());
+                    if (version >= BundleBinding.VERSION_3) {
+                        val = InternalValue.create(readVarLong());
+                    } else {
+                        val = InternalValue.create(in.readLong());
+                    }
                     break;
                 case PropertyType.BOOLEAN:
                     val = InternalValue.create(in.readBoolean());
@@ -263,6 +308,11 @@ class BundleReader {
                 case PropertyType.REFERENCE:
                     val = InternalValue.create(readNodeId(), false);
                     break;
+                case PropertyType.DATE:
+                    if (version >= BundleBinding.VERSION_3) {
+                        val = InternalValue.create(readDate());
+                        break;
+                    } // else fall through
                 default:
                     if (version >= BundleBinding.VERSION_3) {
                         val = InternalValue.valueOf(
@@ -385,7 +435,7 @@ class BundleReader {
      * Deserializes a variable-length integer written using bundle
      * serialization version 3.
      *
-     * @return deserialized name
+     * @return deserialized integer
      * @throws IOException if an I/O error occurs
      */
     private int readVarInt() throws IOException {
@@ -395,6 +445,110 @@ class BundleReader {
         } else {
             return readVarInt() << 7 | b & 0x7f;
         }
+    }
+
+    /**
+     * Deserializes a variable-length long written using bundle
+     * serialization version 3.
+     *
+     * @return deserialized long
+     * @throws IOException if an I/O error occurs
+     */
+    private long readVarLong() throws IOException {
+        long value = 0;
+        int bits = 0;
+        long b;
+        do {
+            b = in.readUnsignedByte();
+            value = (b & 0x7f) << 57 | value >>> 7;
+            bits += 7;
+        } while ((b & 0x80) != 0);
+        value = value >>> (64 - bits);
+        if ((value & 1) != 0) {
+            return ~(value >>> 1);
+        } else {
+            return value >>> 1;
+        }
+    }
+
+    /**
+     * Deserializes a specially encoded date written using bundle
+     * serialization version 3.
+     *
+     * @return deserialized date
+     * @throws IOException if an I/O error occurs
+     */
+    private Calendar readDate() throws IOException {
+        long ts = readVarLong();
+
+        TimeZone tz;
+        if ((ts & 1) == 0) {
+            tz = COMMON_TIMEZONES[0];
+            ts >>= 1; 
+        } else if ((ts & 2) == 0) {
+            tz = COMMON_TIMEZONES[((int) ts >> 2) & 0x1f]; // 5 bits;
+            ts >>= 7;
+        } else {
+            int m = ((int) ts << 19) >> 21; // 11 bits, sign-extended
+            int h = m / 60;
+            String s;
+            if (m < 0) {
+                s = String.format("GMT-%02d:%02d", -h, h * 60 - m);
+            } else {
+                s = String.format("GMT+%02d:%02d", h, m - h * 60);
+            }
+            tz = TimeZone.getTimeZone(s);
+            ts >>= 13;
+        }
+
+        int u = 0;
+        int s = 0;
+        int m = 0;
+        int h = 0;
+        int type = (int) ts & 3;
+        ts >>= 2;
+        switch (type) {
+        case 3:
+            u = (int) ts & 0x3fffffff; // 30 bits
+            s = u / 1000;
+            m = s / 60;
+            h = m / 60;
+            m -= h * 60;
+            s -= (h * 60 + m) * 60;
+            u -= ((h * 60 + m) * 60 + s) * 1000;
+            ts >>= 30;
+            break;
+        case 2:
+            m = (int) ts & 0x07ff; // 11 bits
+            h = m / 60;
+            m -= h * 60;
+            ts >>= 11;
+            break;
+        case 1:
+            h = (int) ts & 0x1f; // 5 bits
+            ts >>= 5;
+            break;
+        }
+
+        int d = (int) ts & 0x01ff; // 9 bits;
+        ts >>= 9;
+        int y = (int) (ts + 2010);
+
+        Calendar value = Calendar.getInstance(tz);
+        if (y <= 0) {
+            value.set(Calendar.YEAR, 1 - y);
+            value.set(Calendar.ERA, GregorianCalendar.BC);
+        } else {
+            value.set(Calendar.YEAR, y);
+            value.set(Calendar.ERA, GregorianCalendar.AD);
+        }
+        value.set(Calendar.DAY_OF_YEAR, d);
+        value.set(Calendar.HOUR_OF_DAY, h);
+        value.set(Calendar.MINUTE, m);
+        value.set(Calendar.SECOND, s);
+        value.set(Calendar.MILLISECOND, u);
+
+        return value;
     }
 
     private String readString() throws IOException {
