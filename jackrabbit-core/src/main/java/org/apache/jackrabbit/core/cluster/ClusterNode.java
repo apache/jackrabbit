@@ -20,6 +20,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.jcr.RepositoryException;
 
@@ -127,7 +128,7 @@ public class ClusterNode implements Runnable,
      * @since Apache Jackrabbit 1.6
      * @see <a href="https://issues.apache.org/jira/browse/JCR-1753">JCR-1753</a>
      */
-    private volatile int syncCount;
+    private AtomicInteger syncCount = new AtomicInteger();
 
     /**
      * Status flag, one of {@link #NONE}, {@link #STARTED} or {@link #STOPPED}.
@@ -287,7 +288,7 @@ public class ClusterNode implements Runnable,
      * @throws ClusterException if an error occurs
      */
     public void sync() throws ClusterException {
-        int count = syncCount;
+        int count = syncCount.get();
 
         try {
             syncLock.acquire();
@@ -299,9 +300,9 @@ public class ClusterNode implements Runnable,
         try {
             // JCR-1753: Only synchronize if no other thread already did so
             // while we were waiting to acquire the syncLock.
-            if (count == syncCount) {
+            if (count == syncCount.get()) {
+                syncCount.incrementAndGet();
                 journal.sync();
-                syncCount++;
             }
         } catch (JournalException e) {
             throw new ClusterException(e.getMessage(), e.getCause());
