@@ -44,7 +44,7 @@ class BundleNames {
      */
     private static final Name[] NAME_ARRAY = {
         // WARNING: Only edit if you really know what you're doing!
-        null,
+
         // Most frequently used names
         NameConstants.NT_UNSTRUCTURED,
         NameConstants.NT_RESOURCE,

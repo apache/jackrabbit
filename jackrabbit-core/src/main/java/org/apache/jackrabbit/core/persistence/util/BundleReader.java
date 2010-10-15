@@ -151,27 +151,10 @@ class BundleReader {
         }
 
         // mixin types
-        Set<Name> mixinTypeNames = new HashSet<Name>();
-        Name name = readIndexedQName();
-        while (name != null) {
-            mixinTypeNames.add(name);
-            name = readIndexedQName();
-        }
-        bundle.setMixinTypeNames(mixinTypeNames);
+        readMixinTypes(bundle);
 
         // properties
-        name = readIndexedQName();
-        while (name != null) {
-            PropertyId pId = new PropertyId(id, name);
-            NodePropBundle.PropertyEntry pState = readPropertyEntry(pId);
-            // skip redundant primaryType, mixinTypes and uuid properties
-            if (!name.equals(NameConstants.JCR_PRIMARYTYPE)
-                && !name.equals(NameConstants.JCR_MIXINTYPES)
-                && !name.equals(NameConstants.JCR_UUID)) {
-                bundle.addProperty(pState);
-            }
-            name = readIndexedQName();
-        }
+        readProperties(bundle);
 
         // set referenceable flag
         bundle.setReferenceable(in.readBoolean());
@@ -190,6 +173,58 @@ class BundleReader {
         readSharedSet(bundle);
 
         return bundle;
+    }
+
+    private void readMixinTypes(NodePropBundle bundle) throws IOException {
+        if (version >= BundleBinding.VERSION_3) {
+            int n = readVarInt();
+            if (n == 0) {
+                bundle.setMixinTypeNames(Collections.<Name>emptySet());
+            } else if (n == 1) {
+                bundle.setMixinTypeNames(Collections.singleton(readName()));
+            } else {
+                Set<Name> mixins = new HashSet<Name>(n * 2);
+                for (int i = 0; i < n; i++) {
+                    mixins.add(readName());
+                }
+                bundle.setMixinTypeNames(mixins);
+            }
+        } else {
+            Name name = readIndexedQName();
+            if (name == null) {
+                bundle.setMixinTypeNames(Collections.<Name>emptySet());
+            } else {
+                Set<Name> mixinTypeNames = new HashSet<Name>();
+                do {
+                    mixinTypeNames.add(name);
+                    name = readIndexedQName();
+                } while (name != null);
+                bundle.setMixinTypeNames(mixinTypeNames);
+            }
+        }
+    }
+
+    private void readProperties(NodePropBundle bundle) throws IOException {
+        if (version >= BundleBinding.VERSION_3) {
+            int n = readVarInt();
+            for (int i = 0; i < n; i++) {
+                PropertyId id = new PropertyId(bundle.getId(), readName());
+                bundle.addProperty(readPropertyEntry(id));
+            }
+        } else {
+            Name name = readIndexedQName();
+            while (name != null) {
+                PropertyId pId = new PropertyId(bundle.getId(), name);
+                NodePropBundle.PropertyEntry pState = readPropertyEntry(pId);
+                // skip redundant primaryType, mixinTypes and uuid properties
+                if (!name.equals(NameConstants.JCR_PRIMARYTYPE)
+                        && !name.equals(NameConstants.JCR_MIXINTYPES)
+                        && !name.equals(NameConstants.JCR_UUID)) {
+                    bundle.addProperty(pState);
+                }
+                name = readIndexedQName();
+            }
+        }
     }
 
     private void readSharedSet(NodePropBundle bundle) throws IOException {

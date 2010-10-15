@@ -177,25 +177,6 @@ public class NodePropBundle {
     }
 
     /**
-     * Creates a property state from the values of this bundle
-     * @param pMgr the persistence manager
-     * @param name the name of the new property
-     * @return the new property state
-     */
-    public PropertyState createPropertyState(PersistenceManager pMgr, Name name) {
-        PropertyEntry p = getPropertyEntry(name);
-        if (p == null) {
-            return null;
-        }
-        PropertyState ps = pMgr.createNew(new PropertyId(id, name));
-        ps.setMultiValued(p.isMultiValued());
-        ps.setType(p.getType());
-        ps.setValues(p.getValues());
-        ps.setModCount(p.getModCount());
-        return ps;
-    }
-
-    /**
      * Checks if this bundle is new.
      * @return <code>true</code> if this bundle is new;
      *         <code>false</code> otherwise.
@@ -322,6 +303,9 @@ public class NodePropBundle {
      * @param entry the enrty to add
      */
     public void addProperty(PropertyEntry entry) {
+        assert !NameConstants.JCR_PRIMARYTYPE.equals(entry.getName());
+        assert !NameConstants.JCR_MIXINTYPES.equals(entry.getName());
+        assert !NameConstants.JCR_UUID.equals(entry.getName());
         properties.put(entry.getName(), entry);
     }
 
@@ -346,10 +330,7 @@ public class NodePropBundle {
      *         <code>false</code> otherwise.
      */
     public boolean hasProperty(Name name) {
-        return properties.containsKey(name)
-                || name.equals(NameConstants.JCR_PRIMARYTYPE)
-                || (isReferenceable && name.equals(NameConstants.JCR_UUID))
-                || (mixinTypeNames.size() > 0 && name.equals(NameConstants.JCR_MIXINTYPES));
+        return properties.containsKey(name);
     }
 
     /**
