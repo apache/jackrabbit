@@ -23,6 +23,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.math.BigDecimal;
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Set;
@@ -35,8 +36,8 @@ import org.apache.jackrabbit.core.data.DataStore;
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.persistence.util.NodePropBundle.ChildNodeEntry;
+import org.apache.jackrabbit.core.persistence.util.NodePropBundle.PropertyEntry;
 import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -95,28 +96,10 @@ class BundleWriter {
         writeNodeId(bundle.getParentId());
 
         // mixin types
-        for (Name name : bundle.getMixinTypeNames()) {
-            writeName(name);
-        }
-        writeName(null);
+        writeMixinTypes(bundle);
 
         // properties
-        for (Name pName : bundle.getPropertyNames()) {
-            // skip redundant primaryType, mixinTypes and uuid properties
-            if (pName.equals(NameConstants.JCR_PRIMARYTYPE)
-                || pName.equals(NameConstants.JCR_MIXINTYPES)
-                || pName.equals(NameConstants.JCR_UUID)) {
-                continue;
-            }
-            NodePropBundle.PropertyEntry pState = bundle.getPropertyEntry(pName);
-            if (pState == null) {
-                log.error("PropertyState missing in bundle: " + pName);
-            } else {
-                writeName(pName);
-                writeState(pState);
-            }
-        }
-        writeName(null);
+        writeProperties(bundle);
 
         // write uuid flag
         out.writeBoolean(bundle.isReferenceable());
@@ -132,6 +115,22 @@ class BundleWriter {
 
         // set size of bundle
         bundle.setSize(out.size() - size);
+    }
+
+    private void writeMixinTypes(NodePropBundle bundle) throws IOException {
+        Set<Name> mixins = bundle.getMixinTypeNames();
+        writeVarInt(mixins.size());
+        for (Name name : mixins) {
+            writeName(name);
+        }
+    }
+
+    private void writeProperties(NodePropBundle bundle) throws IOException {
+        Collection<PropertyEntry> properties = bundle.getPropertyEntries();
+        writeVarInt(properties.size());
+        for (PropertyEntry property : properties) {
+            writeState(property);
+        }
     }
 
     private void writeChildNodeEntries(NodePropBundle bundle)
@@ -153,8 +152,9 @@ class BundleWriter {
     }
 
     /**
-     * Serializes a property entry. The serialization begins with a single
-     * byte that encodes the type and multi-valuedness of the property:
+     * Serializes a property entry. The serialization begins with the
+     * property name followed by a single byte that encodes the type and
+     * multi-valuedness of the property:
      * <pre>
      * +-------------------------------+
      * |   mv count    |     type      |
@@ -182,6 +182,8 @@ class BundleWriter {
      */
     private void writeState(NodePropBundle.PropertyEntry state)
             throws IOException {
+        writeName(state.getName());
+
         InternalValue[] values = state.getValues();
 
         int type = state.getType();
