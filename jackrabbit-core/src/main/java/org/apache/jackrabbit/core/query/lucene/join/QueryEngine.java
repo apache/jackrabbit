@@ -26,7 +26,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -35,6 +34,7 @@ import java.util.Set;
 import javax.jcr.Node;
 import javax.jcr.PathNotFoundException;
 import javax.jcr.Property;
+import javax.jcr.PropertyType;
 import javax.jcr.RangeIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
@@ -45,6 +45,8 @@ import javax.jcr.Workspace;
 import javax.jcr.nodetype.NodeType;
 import javax.jcr.nodetype.NodeTypeManager;
 import javax.jcr.nodetype.PropertyDefinition;
+import javax.jcr.query.Query;
+import javax.jcr.query.QueryManager;
 import javax.jcr.query.QueryResult;
 import javax.jcr.query.Row;
 import javax.jcr.query.RowIterator;
@@ -82,7 +84,6 @@ import javax.jcr.query.qom.Source;
 import javax.jcr.query.qom.UpperCase;
 
 import org.apache.jackrabbit.commons.JcrUtils;
-import org.apache.jackrabbit.commons.flat.TreeTraverser;
 import org.apache.jackrabbit.commons.iterator.FilteredRangeIterator;
 import org.apache.jackrabbit.commons.iterator.RangeIteratorAdapter;
 import org.apache.jackrabbit.commons.iterator.RowIteratorAdapter;
@@ -522,10 +523,72 @@ public class QueryEngine {
         return paths;
     }
 
+    private String toSqlConstraint(Constraint constraint)
+            throws RepositoryException {
+        if (constraint instanceof And) {
+            And and = (And) constraint;
+            String c1 = toSqlConstraint(and.getConstraint1());
+            String c2 = toSqlConstraint(and.getConstraint2());
+            return "(" + c1 + ") AND (" + c2 + ")";
+        } else if (constraint instanceof Or) {
+            Or or = (Or) constraint;
+            String c1 = toSqlConstraint(or.getConstraint1());
+            String c2 = toSqlConstraint(or.getConstraint2());
+            return "(" + c1 + ") OR (" + c2 + ")";
+        } else if (constraint instanceof Not) {
+            Not or = (Not) constraint;
+            return "NOT (" + toSqlConstraint(or.getConstraint()) + ")";
+        } else if (constraint instanceof Comparison) {
+            Comparison c = (Comparison) constraint;
+            String left = toSqlOperand(c.getOperand1());
+            String right = toSqlOperand(c.getOperand2());
+            if (c.getOperator().equals(JCR_OPERATOR_EQUAL_TO)) {
+                return left + " = " + right;
+            } else {
+                throw new RepositoryException("Unsupported comparison: " + c);
+            }
+        } else if (constraint instanceof ChildNode) {
+            ChildNode cn = (ChildNode) constraint;
+            return "jcr:path LIKE '" + cn.getParentPath() + "/%'";
+        } else  {
+            throw new RepositoryException("Unsupported constraint: " + constraint);
+        }
+    }
+
+    private String toSqlOperand(Operand operand) throws RepositoryException {
+        if (operand instanceof PropertyValue) {
+            PropertyValue pv = (PropertyValue) operand;
+            return pv.getPropertyName();
+        } else if (operand instanceof Literal) {
+            Literal literal = (Literal) operand;
+            Value value = literal.getLiteralValue();
+            int type = value.getType();
+            if (type == PropertyType.LONG || type == PropertyType.DOUBLE) {
+                return value.getString();
+            } else {
+                return "'" + value.getString() + "'";
+            }
+        } else {
+            throw new RepositoryException("Uknown operand type: " + operand);
+        }
+    }
+
     protected QueryResult execute(
             Column[] columns, Selector selector,
             Constraint constraint, Ordering[] orderings)
             throws RepositoryException {
+        StringBuilder builder = new StringBuilder();
+        builder.append("SELECT * FROM ");
+        builder.append(selector.getNodeTypeName());
+        if (constraint != null) {
+            builder.append(" WHERE ");
+            builder.append(toSqlConstraint(constraint));
+        }
+        System.out.println(builder.toString());
+
+        QueryManager manager = session.getWorkspace().getQueryManager();
+        Query query = manager.createQuery(builder.toString(), Query.SQL);
+
         Map<String, NodeType> selectorMap = getSelectorNames(selector);
         final String[] selectorNames =
             selectorMap.keySet().toArray(new String[selectorMap.size()]);
@@ -537,9 +600,9 @@ public class QueryEngine {
 
         final double[] scores = new double[] { 1.0 };
 
-        Iterator<Node> nodes =
-            TreeTraverser.nodeIterator(session.getRootNode());
-        RangeIterator rows = new RangeIteratorAdapter(nodes) {
+//        Iterator<Node> nodes =
+//            TreeTraverser.nodeIterator(session.getRootNode());
+        RangeIterator rows = new RangeIteratorAdapter(query.execute().getNodes()) {
             @Override
             public Object next() {
                 try {
@@ -558,10 +621,10 @@ public class QueryEngine {
             }
         };
 
-        RangeIterator filtered = new FilteredRangeIterator(
-                rows, getPredicate(selector, constraint));
+//        RangeIterator filtered = new FilteredRangeIterator(
+//                rows, getPredicate(selector, constraint));
         QueryResult result = new SimpleQueryResult(
-                columnNames, selectorNames, new RowIteratorAdapter(filtered));
+                columnNames, selectorNames, new RowIteratorAdapter(rows));
         return sort(result, orderings);
     }
 
