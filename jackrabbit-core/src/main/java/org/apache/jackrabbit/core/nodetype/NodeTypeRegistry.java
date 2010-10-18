@@ -572,7 +572,7 @@ public class NodeTypeRegistry implements NodeTypeEventListener {
      */
     public String toString() {
         StringBuilder builder = new StringBuilder();
-        builder.append("NodeTypeRegistry (" + this + ")\n");
+        builder.append("NodeTypeRegistry (" + super.toString() + ")\n");
         builder.append("Registered NodeTypes:\n");
         for (QNodeTypeDefinition ntd : registeredNTDefs.values()) {
             builder.append(ntd.getName());

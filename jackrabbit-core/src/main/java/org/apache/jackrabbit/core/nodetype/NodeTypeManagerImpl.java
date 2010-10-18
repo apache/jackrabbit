@@ -623,7 +623,7 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager
      *
      * @param definition the definition
      * @return a <code>NodeTypeDef</code>
-     * @throws InvalidNodeTypeDefinitionException if the definiton is invalid
+     * @throws InvalidNodeTypeDefinitionException if the definition is invalid
      * @throws RepositoryException if a repository error occurs
      */
     private QNodeTypeDefinition toNodeTypeDef(NodeTypeDefinition definition)
@@ -637,7 +637,7 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager
      * {@inheritDoc}
      */
     public String toString() {
-        return "NodeTypeManager(" + this + ")\n"
+        return "NodeTypeManager(" + super.toString() + ")\n"
             + context.getNodeTypeRegistry();
     }
 

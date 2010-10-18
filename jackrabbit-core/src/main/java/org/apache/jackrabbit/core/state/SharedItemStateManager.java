@@ -439,7 +439,7 @@ public class SharedItemStateManager
      * {@inheritDoc}
      */
     public String toString() {
-        return "SharedItemStateManager (" + this + ")\n"
+        return "SharedItemStateManager (" + super.toString() + ")\n"
             + "[referenceCache]\n" + cache;
     }
 
