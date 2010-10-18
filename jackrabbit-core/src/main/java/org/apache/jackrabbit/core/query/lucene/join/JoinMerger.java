@@ -27,10 +27,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.UnsupportedRepositoryOperationException;
-import javax.jcr.Value;
 import javax.jcr.query.QueryResult;
 import javax.jcr.query.Row;
 import javax.jcr.query.RowIterator;
@@ -86,9 +84,9 @@ abstract class JoinMerger {
 
     private final String[] selectorNames;
 
-    private final String[] columnNames;
+    private final Map<String, PropertyValue> columns;
 
-    private final PropertyValue[] operands;
+    private final String[] columnNames;
 
     protected final OperandEvaluator evaluator;
 
@@ -109,10 +107,9 @@ abstract class JoinMerger {
         this.selectorNames =
             selectors.toArray(new String[selectors.size()]);
 
+        this.columns = columns;
         this.columnNames =
             columns.keySet().toArray(new String[columns.size()]);
-        this.operands =
-            columns.values().toArray(new PropertyValue[columns.size()]);
 
         this.evaluator = evaluator;
         this.factory = factory;
@@ -229,30 +226,8 @@ abstract class JoinMerger {
      * @throws RepositoryException if the rows can't be joined
      */
     private Row mergeRow(Row left, Row right) throws RepositoryException {
-        Node[] nodes = new Node[selectorNames.length];
-        double[] scores = new double[selectorNames.length];
-        for (int i = 0; i < selectorNames.length; i++) {
-            String selector = selectorNames[i];
-            if (left != null && leftSelectors.contains(selector)) {
-                nodes[i] = left.getNode(selector);
-                scores[i] = left.getScore(selector);
-            } else if (right != null && rightSelectors.contains(selector)) {
-                nodes[i] = right.getNode(selector);
-                scores[i] = right.getScore(selector);
-            } else {
-                nodes[i] = null;
-                scores[i] = 0.0;
-            }
-        }
-
-        Value[] values = new Value[operands.length];
-        Row row = new SimpleRow(
-                columnNames, values, selectorNames, nodes, scores);
-        for (int i = 0; i < operands.length; i++) {
-            values[i] = evaluator.getValue(operands[i], row);
-        }
-
-        return row;
+        return new JoinRow(
+                columns, evaluator, left, leftSelectors, right, rightSelectors);
     }
 
     public abstract Set<String> getLeftValues(Row row)

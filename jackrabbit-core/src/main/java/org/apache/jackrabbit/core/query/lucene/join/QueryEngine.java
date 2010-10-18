@@ -289,49 +289,19 @@ public class QueryEngine {
         final String[] columnNames =
             columnMap.keySet().toArray(new String[columnMap.size()]);
 
-        final double[] scores = new double[] { 1.0 };
-
-//        Iterator<Node> nodes =
-//            TreeTraverser.nodeIterator(session.getRootNode());
+        final String selectorName = selector.getSelectorName();
         RangeIterator rows = new RangeIteratorAdapter(query.execute().getNodes()) {
             @Override
             public Object next() {
-                try {
-                    Value[] values = new Value[columnNames.length];
-                    Row row = new SimpleRow(
-                            columnNames, values, selectorNames,
-                            new Node[] { (Node) super.next() }, scores);
-                    for (int i = 0; i < values.length; i++) {
-                        values[i] = combine(evaluator.getValues(
-                                columnMap.get(columnNames[i]), row));
-                    }
-                    return row;
-                } catch (RepositoryException e) {
-                    throw new RuntimeException(e);
-                }
+                Node node = (Node) super.next();
+                return new SelectorRow(
+                        columnMap, evaluator, selectorName, node, 1.0);
             }
         };
 
-//        RangeIterator filtered = new FilteredRangeIterator(
-//                rows, getPredicate(selector, constraint));
         QueryResult result = new SimpleQueryResult(
                 columnNames, selectorNames, new RowIteratorAdapter(rows));
         return sort(result, orderings);
-    }
-
-    private Value combine(Value[] values) throws RepositoryException {
-        if (values.length == 1) {
-            return values[0];
-        } else {
-            StringBuilder builder = new StringBuilder();
-            for (int i = 0; i < values.length; i++) {
-                if (i > 0) {
-                    builder.append('\n');
-                }
-                builder.append(values[i].getString());
-            }
-            return valueFactory.createValue(builder.toString());
-        }
     }
 
     private Map<String, PropertyValue> getColumnMap(
