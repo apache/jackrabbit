@@ -16,62 +16,56 @@
  */
 package org.apache.jackrabbit.core.query.lucene.join;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import javax.jcr.RepositoryException;
 import javax.jcr.query.qom.Constraint;
 import javax.jcr.query.qom.QueryObjectModelFactory;
 
 public class Constraints {
 
-    public static final Constraint TRUE = new Constraint() {};
-
-    public static final Constraint FALSE = new Constraint() {};
+    public static Constraint and(
+            QueryObjectModelFactory factory, List<Constraint> constraints)
+            throws RepositoryException {
+        int n = constraints.size();
+        if (n == 0) {
+            return null;
+        } else if (n == 1) {
+            return constraints.get(0);
+        } else {
+            int m = n / 2;
+            return factory.and(
+                    and(factory, constraints.subList(0, m)),
+                    and(factory, constraints.subList(m + 1, n)));
+        }
+    }
 
     public static Constraint and(
             QueryObjectModelFactory factory, Constraint... constraints)
             throws RepositoryException {
-        Constraint constraint = TRUE;
-        for (int i = 0; constraints != null && i < constraints.length; i++) {
-            if (constraints[i] == FALSE) {
-                return FALSE;
-            } else if (constraints[i] != TRUE) {
-                if (constraint == TRUE) {
-                    constraint = constraints[i];
-                } else {
-                    constraint = factory.and(constraint, constraints[i]);
-                }
+        List<Constraint> list = new ArrayList<Constraint>(constraints.length);
+        for (Constraint constraint : constraints) {
+            if (constraint != null) {
+                list.add(constraint);
             }
         }
-        return constraint;
+        return and(factory, list);
     }
-
 
     public static Constraint or(
-            QueryObjectModelFactory factory, Constraint... constraints)
+            QueryObjectModelFactory factory, List<Constraint> constraints)
             throws RepositoryException {
-        Constraint constraint = FALSE;
-        for (int i = 0; constraints != null && i < constraints.length; i++) {
-            if (constraints[i] == TRUE) {
-                return TRUE;
-            } else if (constraints[i] != FALSE) {
-                if (constraint == FALSE) {
-                    constraint = constraints[i];
-                } else {
-                    constraint = factory.or(constraint, constraints[i]);
-                }
-            }
-        }
-        return constraint;
-    }
-
-    public static Constraint not(
-            QueryObjectModelFactory factory, Constraint constraint)
-            throws RepositoryException {
-        if (constraint == TRUE) {
-            return FALSE;
-        } else if (constraint == FALSE) {
-            return TRUE;
+        int n = constraints.size();
+        if (n == 0) {
+            return null;
+        } else if (n == 1) {
+            return constraints.get(0);
         } else {
-            return factory.not(constraint);
+            int m = n / 2;
+            return factory.or(
+                    or(factory, constraints.subList(0, m)),
+                    or(factory, constraints.subList(m + 1, n)));
         }
     }
 
