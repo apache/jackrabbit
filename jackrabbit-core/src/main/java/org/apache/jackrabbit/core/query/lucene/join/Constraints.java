@@ -37,7 +37,7 @@ public class Constraints {
             int m = n / 2;
             return factory.and(
                     and(factory, constraints.subList(0, m)),
-                    and(factory, constraints.subList(m + 1, n)));
+                    and(factory, constraints.subList(m, n)));
         }
     }
 
@@ -65,7 +65,7 @@ public class Constraints {
             int m = n / 2;
             return factory.or(
                     or(factory, constraints.subList(0, m)),
-                    or(factory, constraints.subList(m + 1, n)));
+                    or(factory, constraints.subList(m, n)));
         }
     }
 

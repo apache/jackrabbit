@@ -58,8 +58,8 @@ class EquiJoinMerger extends JoinMerger {
             rightProperty = property2;
         } else if (leftSelectors.contains(property2.getSelectorName())
                 && rightSelectors.contains(property1.getSelectorName())) {
-            leftProperty = property1;
-            rightProperty = property2;
+            leftProperty = property2;
+            rightProperty = property1;
         } else {
             throw new RepositoryException("Invalid equi-join");
         }

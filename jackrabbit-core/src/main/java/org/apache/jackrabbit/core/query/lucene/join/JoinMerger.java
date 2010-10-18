@@ -161,8 +161,8 @@ abstract class JoinMerger {
             return mergeRight(map, rightRows);
         } else {
             Map<String, List<Row>> map = new HashMap<String, List<Row>>();
-            for (Row row : new RowIterable(leftRows)) {
-                for (String value : getLeftValues(row)) {
+            for (Row row : new RowIterable(rightRows)) {
+                for (String value : getRightValues(row)) {
                     List<Row> rows = map.get(value);
                     if (rows == null) {
                         rows = new ArrayList<Row>();
@@ -179,12 +179,16 @@ abstract class JoinMerger {
     private QueryResult mergeLeft(
             RowIterator leftRows, Map<String, List<Row>> rightRowMap,
             boolean outer) throws RepositoryException {
+        System.out.println("Available right matches " + rightRowMap.keySet());
         List<Row> rows = new ArrayList<Row>();
         for (Row leftRow : new RowIterable(leftRows)) {
+            System.out.println("Finding matchers for left row " + leftRow);
             for (String value : getLeftValues(leftRow)) {
+                System.out.println(" - checking for matches for " + value);
                 List<Row> rightRows = rightRowMap.get(value);
-                if (leftRows != null) {
+                if (rightRows != null) {
                     for (Row rightRow : rightRows) {
+                        System.out.println(" -> found matching row " + rightRow);
                         rows.add(mergeRow(leftRow, rightRow));
                     }
                 } else if (outer) {
