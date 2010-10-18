@@ -85,7 +85,7 @@ class ConstraintSplitter {
      * @return the left constraint
      */
     public Constraint getLeftConstraint() throws RepositoryException {
-        return Constraints.and(factory,leftConstraints);
+        return Constraints.and(factory, leftConstraints);
     }
 
     /**
