@@ -143,6 +143,7 @@ abstract class JoinMerger {
     public QueryResult merge(
             RowIterator leftRows, RowIterator rightRows)
             throws RepositoryException {
+        RowIterator joinRows;
         if (JCR_JOIN_TYPE_RIGHT_OUTER.equals(type)) {
             Map<String, List<Row>> map = new HashMap<String, List<Row>>();
             for (Row row : new RowIterable(leftRows)) {
@@ -155,7 +156,7 @@ abstract class JoinMerger {
                     rows.add(row);
                 }
             }
-            return mergeRight(map, rightRows);
+            joinRows = mergeRight(map, rightRows);
         } else {
             Map<String, List<Row>> map = new HashMap<String, List<Row>>();
             for (Row row : new RowIterable(rightRows)) {
@@ -169,52 +170,67 @@ abstract class JoinMerger {
                 }
             }
             boolean outer = JCR_JOIN_TYPE_LEFT_OUTER.equals(type);
-            return mergeLeft(leftRows, map, outer);
+            joinRows = mergeLeft(leftRows, map, outer);
         }
+        return new SimpleQueryResult(columnNames, selectorNames, joinRows);
     }
 
-    private QueryResult mergeLeft(
+    private RowIterator mergeLeft(
             RowIterator leftRows, Map<String, List<Row>> rightRowMap,
             boolean outer) throws RepositoryException {
-        System.out.println("Available right matches " + rightRowMap.keySet());
-        List<Row> rows = new ArrayList<Row>();
-        for (Row leftRow : new RowIterable(leftRows)) {
-            System.out.println("Finding matchers for left row " + leftRow);
-            for (String value : getLeftValues(leftRow)) {
-                System.out.println(" - checking for matches for " + value);
-                List<Row> rightRows = rightRowMap.get(value);
-                if (rightRows != null) {
-                    for (Row rightRow : rightRows) {
-                        System.out.println(" -> found matching row " + rightRow);
-                        rows.add(mergeRow(leftRow, rightRow));
+        if (!rightRowMap.isEmpty()) {
+            List<Row> rows = new ArrayList<Row>();
+            for (Row leftRow : new RowIterable(leftRows)) {
+                for (String value : getLeftValues(leftRow)) {
+                    List<Row> rightRows = rightRowMap.get(value);
+                    if (rightRows != null) {
+                        for (Row rightRow : rightRows) {
+                            rows.add(mergeRow(leftRow, rightRow));
+                        }
+                    } else if (outer) {
+                        rows.add(mergeRow(leftRow, null));
                     }
-                } else if (outer) {
-                    rows.add(mergeRow(leftRow, null));
                 }
             }
+            return new RowIteratorAdapter(rows);
+        } else if (outer) {
+            return new RowIteratorAdapter(leftRows) {
+                @Override
+                public Object next() {
+                    return mergeRow((Row) super.next(), null);
+                }
+            };
+        } else {
+            return new RowIteratorAdapter(Collections.emptySet());
         }
-        return new SimpleQueryResult(
-                columnNames, selectorNames, new RowIteratorAdapter(rows));
     }
 
-    private QueryResult mergeRight(
+    private RowIterator mergeRight(
             Map<String, List<Row>> leftRowMap, RowIterator rightRows)
             throws RepositoryException {
-        List<Row> rows = new ArrayList<Row>();
-        for (Row rightRow : new RowIterable(rightRows)) {
-            for (String value : getRightValues(rightRow)) {
-                List<Row> leftRows = leftRowMap.get(value);
-                if (leftRows != null) {
-                    for (Row leftRow : leftRows) {
-                        rows.add(mergeRow(leftRow, rightRow));
+        if (leftRowMap.isEmpty()) {
+            List<Row> rows = new ArrayList<Row>();
+            for (Row rightRow : new RowIterable(rightRows)) {
+                for (String value : getRightValues(rightRow)) {
+                    List<Row> leftRows = leftRowMap.get(value);
+                    if (leftRows != null) {
+                        for (Row leftRow : leftRows) {
+                            rows.add(mergeRow(leftRow, rightRow));
+                        }
+                    } else {
+                        rows.add(mergeRow(null, rightRow));
                     }
-                } else {
-                    rows.add(mergeRow(null, rightRow));
                 }
             }
+            return new RowIteratorAdapter(rows);
+        } else {
+            return new RowIteratorAdapter(rightRows) {
+                @Override
+                public Object next() {
+                    return mergeRow(null, (Row) super.next());
+                }
+            };
         }
-        return new SimpleQueryResult(
-                columnNames, selectorNames, new RowIteratorAdapter(rows));
     }
 
     /**
@@ -223,11 +239,11 @@ abstract class JoinMerger {
      * @param left left row, possibly <code>null</code> in a right outer join
      * @param right right row, possibly <code>null</code> in a left outer join
      * @return joined row
-     * @throws RepositoryException if the rows can't be joined
      */
-    private Row mergeRow(Row left, Row right) throws RepositoryException {
+    private Row mergeRow(Row left, Row right) {
         return new JoinRow(
-                columns, evaluator, left, leftSelectors, right, rightSelectors);
+                columns, evaluator,
+                left, leftSelectors, right, rightSelectors);
     }
 
     public abstract Set<String> getLeftValues(Row row)
