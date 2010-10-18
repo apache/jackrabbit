@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.commons.query;
+package org.apache.jackrabbit.core.query.lucene.join;
 
 import static java.util.Locale.ENGLISH;
 import static javax.jcr.PropertyType.NAME;
@@ -89,7 +89,6 @@ import org.apache.jackrabbit.commons.iterator.RowIteratorAdapter;
 import org.apache.jackrabbit.commons.predicate.Predicate;
 import org.apache.jackrabbit.commons.predicate.Predicates;
 import org.apache.jackrabbit.commons.predicate.RowPredicate;
-import org.apache.jackrabbit.commons.query.qom.Constraints;
 
 public class QueryEngine {
 

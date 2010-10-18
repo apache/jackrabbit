@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.commons.query;
+package org.apache.jackrabbit.core.query.lucene.join;
 
 import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
