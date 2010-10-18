@@ -17,7 +17,12 @@
 package org.apache.jackrabbit.core.query.lucene.join;
 
 import static javax.jcr.query.qom.QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO;
+import static javax.jcr.query.qom.QueryObjectModelConstants.JCR_OPERATOR_GREATER_THAN;
 import static javax.jcr.query.qom.QueryObjectModelConstants.JCR_OPERATOR_GREATER_THAN_OR_EQUAL_TO;
+import static javax.jcr.query.qom.QueryObjectModelConstants.JCR_OPERATOR_LESS_THAN;
+import static javax.jcr.query.qom.QueryObjectModelConstants.JCR_OPERATOR_LESS_THAN_OR_EQUAL_TO;
+import static javax.jcr.query.qom.QueryObjectModelConstants.JCR_OPERATOR_LIKE;
+import static javax.jcr.query.qom.QueryObjectModelConstants.JCR_OPERATOR_NOT_EQUAL_TO;
 import static javax.jcr.query.qom.QueryObjectModelConstants.JCR_ORDER_DESCENDING;
 
 import java.util.ArrayList;
@@ -49,20 +54,26 @@ import javax.jcr.query.QueryResult;
 import javax.jcr.query.Row;
 import javax.jcr.query.RowIterator;
 import javax.jcr.query.qom.And;
+import javax.jcr.query.qom.BindVariableValue;
 import javax.jcr.query.qom.ChildNode;
 import javax.jcr.query.qom.Column;
 import javax.jcr.query.qom.Comparison;
 import javax.jcr.query.qom.Constraint;
+import javax.jcr.query.qom.DescendantNode;
+import javax.jcr.query.qom.FullTextSearch;
 import javax.jcr.query.qom.Join;
 import javax.jcr.query.qom.Literal;
+import javax.jcr.query.qom.LowerCase;
 import javax.jcr.query.qom.Not;
 import javax.jcr.query.qom.Operand;
 import javax.jcr.query.qom.Or;
 import javax.jcr.query.qom.Ordering;
+import javax.jcr.query.qom.PropertyExistence;
 import javax.jcr.query.qom.PropertyValue;
 import javax.jcr.query.qom.QueryObjectModelFactory;
 import javax.jcr.query.qom.Selector;
 import javax.jcr.query.qom.Source;
+import javax.jcr.query.qom.UpperCase;
 
 import org.apache.jackrabbit.commons.JcrUtils;
 import org.apache.jackrabbit.commons.iterator.RangeIteratorAdapter;
@@ -231,14 +242,34 @@ public class QueryEngine {
             String right = toSqlOperand(c.getOperand2());
             if (c.getOperator().equals(JCR_OPERATOR_EQUAL_TO)) {
                 return left + " = " + right;
+            } else if (c.getOperator().equals(JCR_OPERATOR_GREATER_THAN)) {
+                return left + " > " + right;
             } else if (c.getOperator().equals(JCR_OPERATOR_GREATER_THAN_OR_EQUAL_TO)) {
                 return left + " >= " + right;
+            } else if (c.getOperator().equals(JCR_OPERATOR_LESS_THAN)) {
+                return left + " < " + right;
+            } else if (c.getOperator().equals(JCR_OPERATOR_LESS_THAN_OR_EQUAL_TO)) {
+                return left + " <= " + right;
+            } else if (c.getOperator().equals(JCR_OPERATOR_LIKE)) {
+                return left + " LIKE " + right;
+            } else if (c.getOperator().equals(JCR_OPERATOR_NOT_EQUAL_TO)) {
+                return left + " <> " + right;
             } else {
                 throw new RepositoryException("Unsupported comparison: " + c);
             }
         } else if (constraint instanceof ChildNode) {
             ChildNode cn = (ChildNode) constraint;
             return "jcr:path LIKE '" + cn.getParentPath() + "/%'";
+        } else if (constraint instanceof DescendantNode) {
+            DescendantNode dn = (DescendantNode) constraint;
+            return "jcr:path LIKE '" + dn.getAncestorPath() + "/%'";
+        } else if (constraint instanceof PropertyExistence) {
+            PropertyExistence pe = (PropertyExistence) constraint;
+            return pe.getPropertyName() + " IS NOT NULL";
+        } else if (constraint instanceof FullTextSearch) {
+            FullTextSearch fts = (FullTextSearch) constraint;
+            String expr = toSqlOperand(fts.getFullTextSearchExpression());
+            return "CONTAINS(" + fts.getPropertyName() + ", " + expr + ")";
         } else  {
             throw new RepositoryException("Unsupported constraint: " + constraint);
         }
@@ -248,9 +279,15 @@ public class QueryEngine {
         if (operand instanceof PropertyValue) {
             PropertyValue pv = (PropertyValue) operand;
             return pv.getPropertyName();
-        } else if (operand instanceof Literal) {
-            Literal literal = (Literal) operand;
-            Value value = literal.getLiteralValue();
+        } else if (operand instanceof LowerCase) {
+            LowerCase lc = (LowerCase) operand; 
+            return "LOWER(" + toSqlOperand(lc.getOperand()) + ")";
+        } else if (operand instanceof UpperCase) {
+            UpperCase uc = (UpperCase) operand; 
+            return "UPPER(" + toSqlOperand(uc.getOperand()) + ")";
+        } else if ((operand instanceof Literal)
+                || (operand instanceof BindVariableValue)) {
+            Value value = evaluator.getValue(operand, null);
             int type = value.getType();
             if (type == PropertyType.LONG || type == PropertyType.DOUBLE) {
                 return value.getString();

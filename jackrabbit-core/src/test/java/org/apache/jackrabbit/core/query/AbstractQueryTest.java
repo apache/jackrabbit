@@ -34,6 +34,7 @@ import javax.jcr.query.Row;
 import javax.jcr.query.RowIterator;
 import javax.jcr.query.qom.QueryObjectModelFactory;
 
+import org.apache.jackrabbit.commons.JcrUtils;
 import org.apache.jackrabbit.commons.iterator.NodeIteratorAdapter;
 import org.apache.jackrabbit.core.query.lucene.SearchIndex;
 import org.apache.jackrabbit.test.AbstractJCRTest;
@@ -70,10 +71,10 @@ public class AbstractQueryTest extends AbstractJCRTest {
     protected void checkResult(QueryResult result, int hits)
             throws RepositoryException {
         int count = 0;
-        log.println("Nodes:");
-        for (NodeIterator nodes = result.getNodes(); nodes.hasNext(); count++) {
-            Node n = nodes.nextNode();
-            log.println(" " + n.getPath());
+        log.println("Rows:");
+        for (Row row : JcrUtils.getRows(result)) {
+            log.println(" " + row);
+            count++;
         }
         if (count == 0) {
             log.println(" NONE");
