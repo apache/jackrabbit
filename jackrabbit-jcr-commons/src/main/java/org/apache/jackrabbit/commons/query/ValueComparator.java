@@ -88,4 +88,25 @@ public class ValueComparator implements Comparator<Value> {
         }
     }
 
+    /**
+     * Evaluates the given QOM comparison operation with the given value arrays.
+     *
+     * @param operator QOM comparison operator
+     * @param a left values
+     * @param b right values
+     * @return result of the comparison
+     */
+    public boolean evaluate(String operator, Value[] a, Value[] b) {
+        if (JCR_OPERATOR_EQUAL_TO.equals(operator)) {
+            for (int i = 0; i < a.length; i++) {
+                for (int j = 0; j < b.length; j++) {
+                    if (compare(a[i], b[j]) == 0) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false; // FIXME
+    }
+
 }

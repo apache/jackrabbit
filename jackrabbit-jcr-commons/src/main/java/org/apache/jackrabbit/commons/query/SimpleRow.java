@@ -97,4 +97,22 @@ public class SimpleRow implements Row {
         }
         throw new RepositoryException("Unknown selector name: " + selector);
     }
+
+    //--------------------------------------------------------------< Object >
+
+    public String toString() {
+        StringBuilder builder = new StringBuilder();
+        builder.append("{ ");
+        for (int i = 0; i < nodes.length; i++) {
+            if (i > 0) {
+                builder.append(", ");
+            }
+            builder.append(selectorNames[i]);
+            builder.append(": ");
+            builder.append(nodes[i]);
+        }
+        builder.append(" }");
+        return builder.toString();
+    }
+
 }
