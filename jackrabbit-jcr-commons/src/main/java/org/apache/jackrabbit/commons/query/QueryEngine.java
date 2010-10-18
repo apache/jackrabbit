@@ -17,12 +17,14 @@
 package org.apache.jackrabbit.commons.query;
 
 import static java.util.Locale.ENGLISH;
+import static javax.jcr.PropertyType.NAME;
 import static javax.jcr.query.qom.QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO;
 import static javax.jcr.query.qom.QueryObjectModelConstants.JCR_ORDER_DESCENDING;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -33,7 +35,6 @@ import java.util.Set;
 import javax.jcr.Node;
 import javax.jcr.PathNotFoundException;
 import javax.jcr.Property;
-import javax.jcr.PropertyType;
 import javax.jcr.RangeIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
@@ -72,6 +73,7 @@ import javax.jcr.query.qom.Or;
 import javax.jcr.query.qom.Ordering;
 import javax.jcr.query.qom.PropertyExistence;
 import javax.jcr.query.qom.PropertyValue;
+import javax.jcr.query.qom.QueryObjectModelConstants;
 import javax.jcr.query.qom.QueryObjectModelFactory;
 import javax.jcr.query.qom.SameNode;
 import javax.jcr.query.qom.SameNodeJoinCondition;
@@ -113,6 +115,10 @@ public class QueryEngine {
         this.variables = variables;
     }
 
+    public QueryEngine(Session session) throws RepositoryException {
+        this(session, new HashMap<String, Value>());
+    }
+
     public QueryResult execute(
             Column[] columns, Source source,
             Constraint constraint, Ordering[] orderings)
@@ -134,22 +140,83 @@ public class QueryEngine {
             Constraint constraint, Ordering[] orderings)
             throws RepositoryException {
         Source left = join.getLeft();
-        Set<String> leftSelectors = getSelectorNames(left).keySet();
+        Map<String, NodeType> leftSelectors = getSelectorNames(left);
 
         Source right = join.getRight();
-        Set<String> rightSelectors = getSelectorNames(right).keySet();
+        Map<String, NodeType> rightSelectors = getSelectorNames(right);
+
+        Constraint leftConstraint =
+            mapConstraintToSelectors(constraint, leftSelectors.keySet());
+        System.out.println("FROM " + left + " WHERE " + leftConstraint);
+        QueryResult leftResult = execute(null, left, leftConstraint, null);
 
         List<Row> leftRows = new ArrayList<Row>();
-        QueryResult leftResult =
-            execute(null, left, mapConstraintToSelectors(constraint, leftSelectors), null);
         for (Row row : JcrUtils.getRows(leftResult)) {
+            System.out.println(row);
             leftRows.add(row);
         }
 
-        QueryResult rightResult =
-            execute(null, right, mapConstraintToSelectors(constraint, rightSelectors), null);
+        Constraint joinConstraint = getJoinConstraint(
+                join.getJoinCondition(), leftSelectors.keySet(), leftRows);
+        Constraint rightConstraint = Constraints.and(
+                qomFactory, joinConstraint,
+                mapConstraintToSelectors(constraint, rightSelectors.keySet()));
+        System.out.println("FROM " + right + " WHERE " + rightConstraint);
+        QueryResult rightResult = execute(null, right, rightConstraint, null);
 
-        return null;
+        List<Row> rightRows = new ArrayList<Row>();
+        for (Row row : JcrUtils.getRows(rightResult)) {
+            System.out.println(row);
+            rightRows.add(row);
+        }
+
+        Map<String, NodeType> selectors = new LinkedHashMap<String, NodeType>();
+        selectors.putAll(leftSelectors);
+        selectors.putAll(rightSelectors);
+        String[] selectorNames =
+            selectors.keySet().toArray(new String[selectors.size()]);
+
+        Map<String, PropertyValue> columnMap = getColumnMap(columns, selectors);
+        String[] columnNames =
+            columnMap.keySet().toArray(new String[columnMap.size()]);
+        PropertyValue[] operands =
+            columnMap.values().toArray(new PropertyValue[columnMap.size()]);
+
+        double[] scores = new double[selectorNames.length];
+        for (int i = 0; i < scores.length; i++) {
+            scores[i] = 1.0;
+        }
+
+        Predicate predicate = Predicates.and(
+                getPredicate(join.getJoinCondition()),
+                getPredicate(constraint));
+
+        List<Row> joinRows = new ArrayList<Row>();
+        for (Row leftRow : leftRows) {
+            for (Row rightRow : rightRows) {
+                Node[] nodes = new Node[selectorNames.length];
+                for (int i = 0; i < selectorNames.length; i++) {
+                    String selector = selectorNames[i];
+                    if (leftSelectors.containsKey(selector)) {
+                        nodes[i] = leftRow.getNode(selector);
+                    } else {
+                        nodes[i] = rightRow.getNode(selector);
+                    }
+                }
+                Value[] values = new Value[operands.length];
+                Row row = new SimpleRow(
+                        columnNames, values, selectorNames, nodes, scores);
+                for (int i = 0; i < operands.length; i++) {
+                    values[i] = combine(getPropertyValues(operands[i], row));
+                }
+                if (predicate.evaluate(row)) {
+                    joinRows.add(row);
+                }
+            }
+        }
+
+        return new SimpleQueryResult(
+                columnNames, selectorNames, new RowIteratorAdapter(joinRows));
     }
 
     /**
@@ -268,26 +335,57 @@ public class QueryEngine {
         }
     }
 
-    protected Constraint narrow(
-            Constraint constraint, Set<String> selectors,
-            JoinCondition condition, List<Row> rows)
+    private Predicate getPredicate(JoinCondition condition)
             throws RepositoryException {
-        Constraint joinConstraint = Constraints.TRUE;
         if (condition instanceof EquiJoinCondition) {
-            joinConstraint = getJoinConstraint(
+            return getEquiJoinPredicate((EquiJoinCondition) condition);
+        } else if (condition instanceof SameNodeJoinCondition) {
+            return Predicate.TRUE; // FIXME
+        } else if (condition instanceof ChildNodeJoinCondition) {
+            return Predicate.TRUE; // FIXME
+        } else if (condition instanceof DescendantNodeJoinCondition) {
+            return Predicate.TRUE; // FIXME
+        } else {
+            return Predicate.TRUE; // FIXME
+        }
+    }
+
+    private Predicate getEquiJoinPredicate(final EquiJoinCondition condition)
+            throws RepositoryException {
+        final Operand operand1 = qomFactory.propertyValue(
+                condition.getSelector1Name(),
+                condition.getProperty1Name());
+        final Operand operand2 = qomFactory.propertyValue(
+                condition.getSelector2Name(),
+                condition.getProperty2Name());
+        return new RowPredicate() {
+            @Override
+            protected boolean evaluate(Row row) throws RepositoryException {
+                return new ValueComparator().evaluate(
+                        QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO,
+                        getValues(operand1, row), getValues(operand2, row));
+            }
+        };
+    }
+
+    protected Constraint getJoinConstraint(
+            JoinCondition condition, Set<String> selectors, List<Row> rows)
+            throws RepositoryException {
+        if (condition instanceof EquiJoinCondition) {
+            return getJoinConstraint(
                     (EquiJoinCondition) condition, rows, selectors);
         } else if (condition instanceof SameNodeJoinCondition) {
-            joinConstraint = getJoinConstraint(
+            return getJoinConstraint(
                     (SameNodeJoinCondition) condition, rows, selectors);
         } else if (condition instanceof ChildNodeJoinCondition) {
-            joinConstraint = getJoinConstraint(
+            return getJoinConstraint(
                     (ChildNodeJoinCondition) condition, rows, selectors);
         } else if (condition instanceof DescendantNodeJoinCondition) {
-            joinConstraint = getJoinConstraint(
+            return getJoinConstraint(
                     (DescendantNodeJoinCondition) condition, rows, selectors);
+        } else {
+            return Constraints.TRUE;
         }
-        return Constraints.and(
-                qomFactory, joinConstraint, mapConstraintToSelectors(constraint, selectors));
     }
 
     /**
@@ -322,7 +420,9 @@ public class QueryEngine {
         Set<Value> values = new HashSet<Value>();
         PropertyValue left = qomFactory.propertyValue(selector2, property2);
         for (Row row : leftRows) {
-            values.add(getValue(left, row));
+            for (Value value : getPropertyValues(left, row)) {
+                values.add(value);
+            }
         }
 
         // Convert each distinct value into a comparison constraint
@@ -449,8 +549,8 @@ public class QueryEngine {
                             columnNames, values, selectorNames,
                             new Node[] { (Node) super.next() }, scores);
                     for (int i = 0; i < values.length; i++) {
-                        values[i] =
-                            getValue(columnMap.get(columnNames[i]), row);
+                        values[i] = combine(getPropertyValues(
+                                columnMap.get(columnNames[i]), row));
                     }
                     return row;
                 } catch (RepositoryException e) {
@@ -464,6 +564,21 @@ public class QueryEngine {
         QueryResult result = new SimpleQueryResult(
                 columnNames, selectorNames, new RowIteratorAdapter(filtered));
         return sort(result, orderings);
+    }
+
+    private Value combine(Value[] values) throws RepositoryException {
+        if (values.length == 1) {
+            return values[0];
+        } else {
+            StringBuilder builder = new StringBuilder();
+            for (int i = 0; i < values.length; i++) {
+                if (i > 0) {
+                    builder.append('\n');
+                }
+                builder.append(values[i].getString());
+            }
+            return valueFactory.createValue(builder.toString());
+        }
     }
 
     private Predicate getPredicate(Selector selector, Constraint constraint)
@@ -529,8 +644,9 @@ public class QueryEngine {
             throws RepositoryException {
         if (source instanceof Selector) {
             Selector selector = (Selector) source;
-            String name = selector.getSelectorName();
-            return Collections.singletonMap(name, ntManager.getNodeType(name));
+            return Collections.singletonMap(
+                    selector.getSelectorName(),
+                    ntManager.getNodeType(selector.getNodeTypeName()));
         } else if (source instanceof Join) {
             Join join = (Join) source;
             Map<String, NodeType> map = new LinkedHashMap<String, NodeType>();
@@ -567,16 +683,19 @@ public class QueryEngine {
             Collections.sort(rows, new Comparator<Row>() {
                 public int compare(Row a, Row b) {
                     try {
+                        ValueComparator comparator = new ValueComparator();
                         for (Ordering ordering : orderings) {
                             Operand operand = ordering.getOperand();
-                            Value va = getValue(operand, a);
-                            Value vb = getValue(operand, b);
-                            int order = new ValueComparator().compare(va, vb);
-                            if (JCR_ORDER_DESCENDING.equals(ordering.getOrder())) {
-                                order = -order;
-                            }
-                            if (order != 0) {
-                                return order;
+                            Value[] va = getValues(operand, a);
+                            Value[] vb = getValues(operand, b);
+                            if (va.length == 1 && vb.length == 1) {
+                                int order = comparator.compare(va[0], vb[0]);
+                                if (JCR_ORDER_DESCENDING.equals(ordering.getOrder())) {
+                                    order = -order;
+                                }
+                                if (order != 0) {
+                                    return order;
+                                }
                             }
                         }
                         return 0;
@@ -632,8 +751,8 @@ public class QueryEngine {
                         throws RepositoryException {
                     return new ValueComparator().evaluate(
                             c.getOperator(),
-                            getValue(c.getOperand1(), row),
-                            getValue(c.getOperand2(), row));
+                            getValues(c.getOperand1(), row),
+                            getValues(c.getOperand2(), row));
                 }
             };
         } else if (constraint instanceof SameNode) {
@@ -694,26 +813,27 @@ public class QueryEngine {
      * @return value of the operand at the given row
      * @throws RepositoryException if the operand can't be evaluated
      */
-    public Value getValue(Operand operand, Row row)
+    public Value[] getValues(Operand operand, Row row)
             throws RepositoryException {
         if (operand instanceof BindVariableValue) {
-            return getValue((BindVariableValue) operand, row);
+            return getBindVariableValues((BindVariableValue) operand);
         } else if (operand instanceof FullTextSearchScore) {
-            return getValue((FullTextSearchScore) operand, row);
+            return getFullTextSearchScoreValues(
+                    (FullTextSearchScore) operand, row);
         } else if (operand instanceof Length) {
-            return getValue((Length) operand, row);
+            return getLengthValues((Length) operand, row);
         } else if (operand instanceof Literal) {
-            return getValue((Literal) operand, row);
+            return getLiteralValues((Literal) operand);
         } else if (operand instanceof LowerCase) {
-            return getValue((LowerCase) operand, row);
+            return getLowerCaseValues((LowerCase) operand, row);
         } else if (operand instanceof NodeLocalName) {
-            return getValue((NodeLocalName) operand, row);
+            return getNodeLocalNameValues((NodeLocalName) operand, row);
         } else if (operand instanceof NodeName) {
-            return getValue((NodeName) operand, row);
+            return getNodeNameValues((NodeName) operand, row);
         } else if (operand instanceof PropertyValue) {
-            return getValue((PropertyValue) operand, row);
+            return getPropertyValues((PropertyValue) operand, row);
         } else if (operand instanceof UpperCase) {
-            return getValue((UpperCase) operand, row);
+            return getUpperCaseValues((UpperCase) operand, row);
         } else {
             throw new UnsupportedRepositoryOperationException(
                     "Unknown operand type: " + operand);
@@ -722,144 +842,163 @@ public class QueryEngine {
 
     /**
      * Returns the value of the given variable value operand at the given row.
-     * Subclasses can override this method to customise the evaluation.
      *
      * @param operand variable value operand
-     * @param row row
      * @return value of the operand at the given row
-     * @throws RepositoryException if the operand can't be evaluated
      */
-    protected Value getValue(BindVariableValue operand, Row row)
-            throws RepositoryException {
-        String name = operand.getBindVariableName();
-        Value value = variables.get(name);
+    private Value[] getBindVariableValues(BindVariableValue operand) {
+        Value value = variables.get(operand.getBindVariableName());
         if (value != null) {
-            return value;
+            return new Value[] { value };
         } else {
-            throw new RepositoryException("Unknown bind variable: $" + name);
+            return new Value[0];
         }
     }
 
     /**
      * Returns the value of the given search score operand at the given row.
-     * Subclasses can override this method to customise the evaluation.
      *
      * @param operand search score operand
      * @param row row
      * @return value of the operand at the given row
      * @throws RepositoryException if the operand can't be evaluated
      */
-    protected Value getValue(FullTextSearchScore operand, Row row)
-            throws RepositoryException {
-        return valueFactory.createValue(row.getScore(operand.getSelectorName()));
+    private Value[] getFullTextSearchScoreValues(
+            FullTextSearchScore operand, Row row) throws RepositoryException {
+        double score = row.getScore(operand.getSelectorName());
+        return new Value[] { valueFactory.createValue(score) };
     }
 
     /**
-     * Returns the value of the given value length operand at the given row.
-     * Subclasses can override this method to customise the evaluation.
+     * Returns the values of the given value length operand at the given row.
      *
      * @see #getProperty(PropertyValue, Row)
      * @param operand value length operand
      * @param row row
-     * @return value of the operand at the given row
+     * @return values of the operand at the given row
      * @throws RepositoryException if the operand can't be evaluated
      */
-    protected Value getValue(Length operand, Row row)
+    private Value[] getLengthValues(Length operand, Row row)
             throws RepositoryException {
         Property property = getProperty(operand.getPropertyValue(), row);
-        return valueFactory.createValue(property.getLength());
+        if (property == null) {
+            return new Value[0];
+        } else if (property.isMultiple()) {
+            long[] lengths = property.getLengths();
+            Value[] values = new Value[lengths.length];
+            for (int i = 0; i < lengths.length; i++) {
+                values[i] = valueFactory.createValue(lengths[i]);
+            }
+            return values;
+        } else {
+            long length = property.getLength();
+            return new Value[] { valueFactory.createValue(length) };
+        }
     }
 
     /**
-     * Returns the value of the given literal value operand at the given row.
-     * Subclasses can override this method to customise the evaluation.
+     * Returns the value of the given literal value operand.
      *
      * @param operand literal value operand
-     * @param row row
-     * @return value of the operand at the given row
-     * @throws RepositoryException if the operand can't be evaluated
+     * @return value of the operand
      */
-    protected Value getValue(Literal operand, Row row) {
-        return operand.getLiteralValue();
+    protected Value[] getLiteralValues(Literal operand) {
+        return new Value[] { operand.getLiteralValue() };
     }
 
     /**
-     * Returns the value of the given lower case operand at the given row.
-     * Subclasses can override this method to customise the evaluation.
+     * Returns the values of the given lower case operand at the given row.
      *
      * @param operand lower case operand
      * @param row row
-     * @return value of the operand at the given row
+     * @return values of the operand at the given row
      * @throws RepositoryException if the operand can't be evaluated
      */
-    protected Value getValue(LowerCase operand, Row row)
+    private Value[] getLowerCaseValues(LowerCase operand, Row row)
             throws RepositoryException {
-        Value value = getValue(operand.getOperand(), row);
-        return valueFactory.createValue(value.getString().toLowerCase(ENGLISH));
+        Value[] values = getValues(operand.getOperand(), row);
+        for (int i = 0; i < values.length; i++) {
+            String value = values[i].getString();
+            String lower = value.toLowerCase(ENGLISH);
+            if (!value.equals(lower)) {
+                values[i] = valueFactory.createValue(lower);
+            }
+        }
+        return values;
     }
 
     /**
      * Returns the value of the given local name operand at the given row.
-     * Subclasses can override this method to customise the evaluation.
      *
      * @param operand local name operand
      * @param row row
      * @return value of the operand at the given row
      * @throws RepositoryException if the operand can't be evaluated
      */
-    protected Value getValue(NodeLocalName operand, Row row)
+    private Value[] getNodeLocalNameValues(NodeLocalName operand, Row row)
             throws RepositoryException {
         String name = row.getNode(operand.getSelectorName()).getName();
         int colon = name.indexOf(':');
         if (colon != -1) {
             name = name.substring(colon + 1);
         }
-        return valueFactory.createValue(name, PropertyType.NAME);
+        return new Value[] { valueFactory.createValue(name, NAME) };
     }
 
     /**
      * Returns the value of the given node name operand at the given row.
-     * Subclasses can override this method to customise the evaluation.
      *
      * @param operand node name operand
      * @param row row
      * @return value of the operand at the given row
      * @throws RepositoryException if the operand can't be evaluated
      */
-    protected Value getValue(NodeName operand, Row row)
+    private Value[] getNodeNameValues(NodeName operand, Row row)
             throws RepositoryException {
         Node node = row.getNode(operand.getSelectorName());
-        return valueFactory.createValue(node.getName(), PropertyType.NAME);
+        return new Value[] { valueFactory.createValue(node.getName(), NAME) };
     }
 
     /**
-     * Returns the value of the given property value operand at the given row.
-     * Subclasses can override this method to customise the evaluation.
+     * Returns the values of the given property value operand at the given row.
      *
      * @see #getProperty(PropertyValue, Row)
      * @param operand property value operand
      * @param row row
-     * @return value of the operand at the given row
+     * @return values of the operand at the given row
      * @throws RepositoryException if the operand can't be evaluated
      */
-    protected Value getValue(PropertyValue operand, Row row)
+    private Value[] getPropertyValues(PropertyValue operand, Row row)
             throws RepositoryException {
-        return getProperty(operand, row).getValue();
+        Property property = getProperty(operand, row);
+        if (property == null) {
+            return new Value[0];
+        } else if (property.isMultiple()) {
+            return property.getValues();
+        } else {
+            return new Value[] { property.getValue() };
+        }
     }
 
     /**
-     * Returns the value of the given upper case operand at the given row.
-     * Subclasses can override this method to customise the evaluation.
+     * Returns the values of the given upper case operand at the given row.
      *
      * @param operand upper case operand
      * @param row row
-     * @return value of the operand at the given row
+     * @return values of the operand at the given row
      * @throws RepositoryException if the operand can't be evaluated
      */
-    protected Value getValue(UpperCase operand, Row row)
+    private Value[] getUpperCaseValues(UpperCase operand, Row row)
             throws RepositoryException {
-        Value value = getValue(operand.getOperand(), row);
-        return valueFactory.createValue(value.getString().toUpperCase(ENGLISH));
+        Value[] values = getValues(operand.getOperand(), row);
+        for (int i = 0; i < values.length; i++) {
+            String value = values[i].getString();
+            String upper = value.toLowerCase(ENGLISH);
+            if (!value.equals(upper)) {
+                values[i] = valueFactory.createValue(upper);
+            }
+        }
+        return values;
     }
 
     /**
@@ -870,14 +1009,18 @@ public class QueryEngine {
      *
      * @param operand property value operand
      * @param row row
-     * @return the identified property
+     * @return the identified property, or <code>null</code>
      * @throws RepositoryException if the property can't be accessed
      */
     protected Property getProperty(PropertyValue operand, Row row)
             throws RepositoryException {
-        String selector = operand.getSelectorName();
-        String property = operand.getPropertyName();
-        return row.getNode(selector).getProperty(property);
+        try {
+            String selector = operand.getSelectorName();
+            String property = operand.getPropertyName();
+            return row.getNode(selector).getProperty(property);
+        } catch (PathNotFoundException e) {
+            return null;
+        }
     }
 
 }
