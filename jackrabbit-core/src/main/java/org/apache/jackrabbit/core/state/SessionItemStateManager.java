@@ -124,7 +124,7 @@ public class SessionItemStateManager
      */
     public String toString() {
         StringBuilder builder = new StringBuilder();
-        builder.append("SessionItemStateManager (" + this + ")\n");
+        builder.append("SessionItemStateManager (" + super.toString() + ")\n");
         builder.append("[transient]\n");
         builder.append(transientStore);
         builder.append("[attic]\n");

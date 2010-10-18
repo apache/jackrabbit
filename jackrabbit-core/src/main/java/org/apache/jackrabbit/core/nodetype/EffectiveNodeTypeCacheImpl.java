@@ -175,7 +175,7 @@ public class EffectiveNodeTypeCacheImpl implements EffectiveNodeTypeCache {
      */
     public String toString() {
         StringBuilder builder = new StringBuilder();
-        builder.append("EffectiveNodeTypeCache (" + this + ")\n");
+        builder.append("EffectiveNodeTypeCache (" + super.toString() + ")\n");
         builder.append("EffectiveNodeTypes in cache:\n");
         for (Key key : sortedKeys) {
             builder.append(key);

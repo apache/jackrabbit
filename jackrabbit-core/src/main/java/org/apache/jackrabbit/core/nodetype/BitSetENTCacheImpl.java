@@ -224,7 +224,7 @@ public class BitSetENTCacheImpl implements EffectiveNodeTypeCache {
      */
     public String toString() {
         StringBuilder builder = new StringBuilder();
-        builder.append("EffectiveNodeTypeCache (" + this + ")\n");
+        builder.append("BitSetENTCacheImpl (" + super.toString() + ")\n");
         builder.append("EffectiveNodeTypes in cache:\n");
         for (Key key : sortedKeys) {
             builder.append(key);
