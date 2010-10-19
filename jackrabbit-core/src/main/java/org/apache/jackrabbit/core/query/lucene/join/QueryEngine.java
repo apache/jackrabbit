@@ -215,8 +215,10 @@ public class QueryEngine {
             }
             rightRows = new RowIteratorAdapter(list);
         }
-        return merger.merge(
+
+        QueryResult result = merger.merge(
                 new RowIteratorAdapter(leftRows), rightRows, offset, limit);
+        return sort(result, orderings);
     }
 
     private String toSqlConstraint(Constraint constraint)

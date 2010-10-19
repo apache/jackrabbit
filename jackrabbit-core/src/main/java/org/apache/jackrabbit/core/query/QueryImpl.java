@@ -92,12 +92,12 @@ public class QueryImpl extends AbstractQueryImpl {
     /**
      * The maximum result size
      */
-    private long limit = -1;
+    protected long limit = -1;
 
     /**
      * The offset in the total result set
      */
-    private long offset;
+    protected long offset;
 
     /**
      * @inheritDoc
