@@ -57,10 +57,10 @@ class ChildNodeJoinMerger extends JoinMerger {
     }
 
     @Override
-    public Constraint getRightJoinConstraint(List<Row> leftRows)
+    public List<Constraint> getRightJoinConstraints(List<Row> leftRows)
             throws RepositoryException {
         // TODO Auto-generated method stub
-        return null;
+        return Collections.emptyList();
     }
 
     private Set<String> getValues(Set<String> selectors, Row row)

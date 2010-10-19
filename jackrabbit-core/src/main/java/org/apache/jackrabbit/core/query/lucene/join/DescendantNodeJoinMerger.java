@@ -27,7 +27,6 @@ import javax.jcr.RepositoryException;
 import javax.jcr.query.Row;
 import javax.jcr.query.qom.Constraint;
 import javax.jcr.query.qom.DescendantNodeJoinCondition;
-import javax.jcr.query.qom.EquiJoinCondition;
 import javax.jcr.query.qom.Join;
 import javax.jcr.query.qom.PropertyValue;
 import javax.jcr.query.qom.QueryObjectModelFactory;
@@ -59,10 +58,10 @@ class DescendantNodeJoinMerger extends JoinMerger {
     }
 
     @Override
-    public Constraint getRightJoinConstraint(List<Row> leftRows)
+    public List<Constraint> getRightJoinConstraints(List<Row> leftRows)
             throws RepositoryException {
         // TODO Auto-generated method stub
-        return null;
+        return Collections.emptyList();
     }
 
     private Set<String> getValues(Set<String> selectors, Row row)
