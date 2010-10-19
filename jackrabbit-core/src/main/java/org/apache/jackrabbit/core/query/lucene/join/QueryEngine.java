@@ -28,15 +28,12 @@ import static javax.jcr.query.qom.QueryObjectModelConstants.JCR_ORDER_DESCENDING
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import javax.jcr.Node;
-import javax.jcr.PathNotFoundException;
+import javax.jcr.NodeIterator;
 import javax.jcr.PropertyType;
 import javax.jcr.RangeIterator;
 import javax.jcr.RepositoryException;
@@ -76,6 +73,7 @@ import javax.jcr.query.qom.Source;
 import javax.jcr.query.qom.UpperCase;
 
 import org.apache.jackrabbit.commons.JcrUtils;
+import org.apache.jackrabbit.commons.iterator.NodeIteratorAdapter;
 import org.apache.jackrabbit.commons.iterator.RangeIteratorAdapter;
 import org.apache.jackrabbit.commons.iterator.RowIteratorAdapter;
 
@@ -150,20 +148,18 @@ public class QueryEngine {
         this.evaluator = new OperandEvaluator(valueFactory, variables);
     }
 
-    public QueryEngine(Session session) throws RepositoryException {
-        this(session, new HashMap<String, Value>());
-    }
-
     public QueryResult execute(
-            Column[] columns, Source source,
-            Constraint constraint, Ordering[] orderings)
+            Column[] columns, Source source, Constraint constraint,
+            Ordering[] orderings, long offset, long limit)
             throws RepositoryException {
         if (source instanceof Selector) {
             Selector selector = (Selector) source;
-            return execute(columns, selector, constraint, orderings);
+            return execute(
+                    columns, selector, constraint, orderings, offset, limit);
         } else if (source instanceof Join) {
             Join join = (Join) source;
-            return execute(columns, join, constraint, orderings);
+            return execute(
+                    columns, join, constraint, orderings, offset, limit);
         } else {
             throw new UnsupportedRepositoryOperationException(
                     "Unknown source type: " + source);
@@ -171,8 +167,8 @@ public class QueryEngine {
     }
 
     protected QueryResult execute(
-            Column[] columns, Join join,
-            Constraint constraint, Ordering[] orderings)
+            Column[] columns, Join join, Constraint constraint,
+            Ordering[] orderings, long offset, long limit)
             throws RepositoryException {
         JoinMerger merger = JoinMerger.getJoinMerger(
                 join, getColumnMap(columns, getSelectorNames(join)),
@@ -183,42 +179,42 @@ public class QueryEngine {
 
         Source left = join.getLeft();
         Constraint leftConstraint = splitter.getLeftConstraint();
-        System.out.println("FROM " + left + " WHERE " + leftConstraint);
-        QueryResult leftResult = execute(null, left, leftConstraint, null);
+        QueryResult leftResult =
+            execute(null, left, leftConstraint, null, 0, -1);
         List<Row> leftRows = new ArrayList<Row>();
         for (Row row : JcrUtils.getRows(leftResult)) {
-            System.out.println(row);
             leftRows.add(row);
         }
 
+        RowIterator rightRows;
         Source right = join.getRight();
-        Constraint rightConstraint = Constraints.and(
-                qomFactory,
-                merger.getRightJoinConstraint(leftRows),
-                splitter.getRightConstraint());
-        System.out.println("FROM " + right + " WHERE " + rightConstraint);
-        QueryResult rightResult = execute(null, right, rightConstraint, null);
-
-        return merger.merge(
-                new RowIteratorAdapter(leftRows), rightResult.getRows());
-    }
-
-    private Set<String> getPaths(
-            String selectorName, String relativePath, List<Row> rows)
-            throws RepositoryException {
-        Set<String> paths = new HashSet<String>();
-        for (Row row : rows) {
-            try {
-                Node node = row.getNode(selectorName);
-                if (relativePath != null) {
-                    node = node.getNode(relativePath);
+        List<Constraint> rightConstraints =
+            merger.getRightJoinConstraints(leftRows);
+        if (rightConstraints.size() < 500) {
+            Constraint rightConstraint = Constraints.and(
+                    qomFactory,
+                    Constraints.or(qomFactory, rightConstraints),
+                    splitter.getRightConstraint());
+            rightRows =
+                execute(null, right, rightConstraint, null, 0, -1).getRows();
+        } else {
+            List<Row> list = new ArrayList<Row>();
+            for (int i = 0; i < rightConstraints.size(); i += 500) {
+                Constraint rightConstraint = Constraints.and(
+                        qomFactory,
+                        Constraints.or(qomFactory, rightConstraints.subList(
+                                i, Math.min(i + 500, rightConstraints.size()))),
+                        splitter.getRightConstraint());
+                QueryResult rigthResult =
+                    execute(null, right, rightConstraint, null, 0, -1);
+                for (Row row : JcrUtils.getRows(rigthResult)) {
+                    list.add(row);
                 }
-                paths.add(node.getPath());
-            } catch (PathNotFoundException e) {
-                // Node at relative path not found, skip
             }
+            rightRows = new RowIteratorAdapter(list);
         }
-        return paths;
+        return merger.merge(
+                new RowIteratorAdapter(leftRows), rightRows, offset, limit);
     }
 
     private String toSqlConstraint(Constraint constraint)
@@ -302,8 +298,8 @@ public class QueryEngine {
     }
 
     protected QueryResult execute(
-            Column[] columns, Selector selector,
-            Constraint constraint, Ordering[] orderings)
+            Column[] columns, Selector selector, Constraint constraint,
+            Ordering[] orderings, long offset, long limit)
             throws RepositoryException {
         StringBuilder builder = new StringBuilder();
         builder.append("SELECT * FROM ");
@@ -312,7 +308,6 @@ public class QueryEngine {
             builder.append(" WHERE ");
             builder.append(toSqlConstraint(constraint));
         }
-        System.out.println(builder.toString());
 
         QueryManager manager = session.getWorkspace().getQueryManager();
         Query query = manager.createQuery(builder.toString(), Query.SQL);
@@ -326,8 +321,20 @@ public class QueryEngine {
         final String[] columnNames =
             columnMap.keySet().toArray(new String[columnMap.size()]);
 
+        NodeIterator nodes = query.execute().getNodes();
+        while ((offset-- > 0 || limit == 0) && nodes.hasNext()) {
+            nodes.next();
+        }
+        if (limit > 0) {
+            List<Node> list = new ArrayList<Node>((int) limit);
+            for (int i = 0; i < limit && nodes.hasNext(); i++) {
+                list.add(nodes.nextNode());
+            }
+            nodes = new NodeIteratorAdapter(list);
+        }
+
         final String selectorName = selector.getSelectorName();
-        RangeIterator rows = new RangeIteratorAdapter(query.execute().getNodes()) {
+        RangeIterator rows = new RangeIteratorAdapter(nodes) {
             @Override
             public Object next() {
                 Node node = (Node) super.next();

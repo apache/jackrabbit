@@ -76,7 +76,7 @@ class EquiJoinMerger extends JoinMerger {
     }
 
     @Override
-    public Constraint getRightJoinConstraint(List<Row> leftRows)
+    public List<Constraint> getRightJoinConstraints(List<Row> leftRows)
             throws RepositoryException {
         Map<String, Literal> literals = new HashMap<String, Literal>();
         for (Row leftRow : leftRows) {
@@ -91,8 +91,7 @@ class EquiJoinMerger extends JoinMerger {
             constraints.add(factory.comparison(
                     rightProperty, JCR_OPERATOR_EQUAL_TO, literal));
         }
-
-        return Constraints.or(factory, constraints);
+        return constraints;
     }
 
     private Set<String> getValues(PropertyValue property, Row row)
