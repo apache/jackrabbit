@@ -16,6 +16,11 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
+import static org.apache.jackrabbit.core.query.lucene.FieldNames.PROPERTIES;
+import static org.apache.jackrabbit.spi.commons.name.NameConstants.JCR_MIXINTYPES;
+import static org.apache.jackrabbit.spi.commons.name.NameConstants.JCR_PRIMARYTYPE;
+import static org.apache.lucene.search.BooleanClause.Occur.SHOULD;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -28,6 +33,7 @@ import javax.jcr.nodetype.NodeTypeIterator;
 import javax.jcr.nodetype.NodeTypeManager;
 import javax.jcr.query.InvalidQueryException;
 import javax.jcr.query.qom.Literal;
+import javax.jcr.query.qom.Selector;
 import javax.jcr.query.qom.StaticOperand;
 
 import org.apache.lucene.analysis.Analyzer;
@@ -40,6 +46,7 @@ import org.apache.lucene.search.Query;
 import org.apache.jackrabbit.core.HierarchyManager;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.commons.conversion.IllegalNameException;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.spi.commons.query.qom.BindVariableValueImpl;
@@ -60,6 +67,11 @@ public class LuceneQueryFactory {
      * Session of the user executing this query
      */
     private final SessionImpl session;
+
+    /**
+     * Node type manager
+     */
+    private final NodeTypeManager ntManager;
 
     /**
      * The hierarchy manager.
@@ -96,6 +108,10 @@ public class LuceneQueryFactory {
      */
     private final Map<Name, Value> bindVariables;
 
+    private final String mixinTypesField;
+
+    private final String primaryTypeField;
+
     /**
      * Creates a new lucene query factory.
      *
@@ -112,8 +128,9 @@ public class LuceneQueryFactory {
             SessionImpl session, HierarchyManager hmgr,
             NamespaceMappings nsMappings, Analyzer analyzer,
             SynonymProvider synonymProvider, IndexFormatVersion version,
-            Map<Name, Value> bindVariables) {
+            Map<Name, Value> bindVariables) throws RepositoryException {
         this.session = session;
+        this.ntManager = session.getWorkspace().getNodeTypeManager();
         this.hmgr = hmgr;
         this.nsMappings = nsMappings;
         this.analyzer = analyzer;
@@ -121,6 +138,8 @@ public class LuceneQueryFactory {
         this.version = version;
         this.npResolver = NamePathResolverImpl.create(nsMappings);
         this.bindVariables = bindVariables;
+        this.mixinTypesField = nsMappings.translateName(JCR_MIXINTYPES);
+        this.primaryTypeField = nsMappings.translateName(JCR_PRIMARYTYPE);
     }
 
     /**
@@ -131,66 +150,43 @@ public class LuceneQueryFactory {
      * @throws RepositoryException if an error occurs while creating the query.
      */
     public Query create(SelectorImpl selector) throws RepositoryException {
-        List<Term> terms = new ArrayList<Term>();
-        String mixinTypesField = npResolver.getJCRName(NameConstants.JCR_MIXINTYPES);
-        String primaryTypeField = npResolver.getJCRName(NameConstants.JCR_PRIMARYTYPE);
+        return create(ntManager.getNodeType(selector.getNodeTypeName()));
+    }
 
-        NodeTypeManager ntMgr = session.getWorkspace().getNodeTypeManager();
-        NodeType base = null;
-        try {
-            base = ntMgr.getNodeType(session.getJCRName(selector.getNodeTypeQName()));
-        } catch (RepositoryException e) {
-            // node type does not exist
-        }
-
-        if (base != null && base.isMixin()) {
+    private Term createNodeTypeTerm(NodeType type) throws RepositoryException {
+        String field;
+        if (type.isMixin()) {
             // search for nodes where jcr:mixinTypes is set to this mixin
-            Term t = new Term(FieldNames.PROPERTIES,
-                    FieldNames.createNamedValue(mixinTypesField,
-                            npResolver.getJCRName(selector.getNodeTypeQName())));
-            terms.add(t);
+            field = mixinTypesField;
         } else {
             // search for nodes where jcr:primaryType is set to this type
-            Term t = new Term(FieldNames.PROPERTIES,
-                    FieldNames.createNamedValue(primaryTypeField,
-                            npResolver.getJCRName(selector.getNodeTypeQName())));
-            terms.add(t);
+            field = primaryTypeField;
         }
+        String name = nsMappings.translateName(session.getQName(type.getName()));
+        return new Term(PROPERTIES, FieldNames.createNamedValue(field, name));
+    }
 
-        // now search for all node types that are derived from base
-        if (base != null) {
-            NodeTypeIterator allTypes = ntMgr.getAllNodeTypes();
-            while (allTypes.hasNext()) {
-                NodeType nt = allTypes.nextNodeType();
-                NodeType[] superTypes = nt.getSupertypes();
-                if (Arrays.asList(superTypes).contains(base)) {
-                    Name n = session.getQName(nt.getName());
-                    String ntName = nsMappings.translateName(n);
-                    Term t;
-                    if (nt.isMixin()) {
-                        // search on jcr:mixinTypes
-                        t = new Term(FieldNames.PROPERTIES,
-                                FieldNames.createNamedValue(mixinTypesField, ntName));
-                    } else {
-                        // search on jcr:primaryType
-                        t = new Term(FieldNames.PROPERTIES,
-                                FieldNames.createNamedValue(primaryTypeField, ntName));
-                    }
-                    terms.add(t);
-                }
+    private Query create(NodeType type) throws RepositoryException {
+        List<Term> terms = new ArrayList<Term>();
+
+        String name = type.getName();
+        NodeTypeIterator allTypes = ntManager.getAllNodeTypes();
+        while (allTypes.hasNext()) {
+            NodeType nt = allTypes.nextNodeType();
+            if (nt.isNodeType(name)) {
+                terms.add(createNodeTypeTerm(nt));
             }
         }
-        Query q;
+
         if (terms.size() == 1) {
-            q = new JackrabbitTermQuery(terms.get(0));
+            return new JackrabbitTermQuery(terms.get(0));
         } else {
             BooleanQuery b = new BooleanQuery();
             for (Term term : terms) {
-                b.add(new JackrabbitTermQuery(term), BooleanClause.Occur.SHOULD);
+                b.add(new JackrabbitTermQuery(term), SHOULD);
             }
-            q = b;
+            return b;
         }
-        return q;
     }
 
     /**
