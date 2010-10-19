@@ -30,6 +30,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import javax.jcr.Node;
@@ -68,6 +69,7 @@ import javax.jcr.query.qom.Ordering;
 import javax.jcr.query.qom.PropertyExistence;
 import javax.jcr.query.qom.PropertyValue;
 import javax.jcr.query.qom.QueryObjectModelFactory;
+import javax.jcr.query.qom.SameNode;
 import javax.jcr.query.qom.Selector;
 import javax.jcr.query.qom.Source;
 import javax.jcr.query.qom.UpperCase;
@@ -253,6 +255,9 @@ public class QueryEngine {
             } else {
                 throw new RepositoryException("Unsupported comparison: " + c);
             }
+        } else if (constraint instanceof SameNode) {
+            SameNode sn = (SameNode) constraint;
+            return "jcr:path = '" + sn.getPath() + "'";
         } else if (constraint instanceof ChildNode) {
             ChildNode cn = (ChildNode) constraint;
             return "jcr:path LIKE '" + cn.getParentPath() + "/%'";
@@ -271,24 +276,52 @@ public class QueryEngine {
         }
     }
 
+    private static enum Transform {
+        NONE,
+        UPPER,
+        LOWER
+    }
+
     private String toSqlOperand(Operand operand) throws RepositoryException {
+        return toSqlOperand(operand, Transform.NONE);
+    }
+
+    private String toSqlOperand(Operand operand, Transform transform)
+            throws RepositoryException {
         if (operand instanceof PropertyValue) {
             PropertyValue pv = (PropertyValue) operand;
-            return pv.getPropertyName();
+            switch (transform) {
+            case UPPER:
+                return "UPPER(" + pv.getPropertyName() + ")";
+            case LOWER:
+                return "LOWER(" + pv.getPropertyName() + ")";
+            default:
+                return pv.getPropertyName();
+            } 
         } else if (operand instanceof LowerCase) {
-            LowerCase lc = (LowerCase) operand; 
-            return "LOWER(" + toSqlOperand(lc.getOperand()) + ")";
+            LowerCase lc = (LowerCase) operand;
+            if (transform == Transform.NONE) {
+                transform = Transform.LOWER;
+            }
+            return toSqlOperand(lc.getOperand(), transform);
         } else if (operand instanceof UpperCase) {
-            UpperCase uc = (UpperCase) operand; 
-            return "UPPER(" + toSqlOperand(uc.getOperand()) + ")";
+            UpperCase uc = (UpperCase) operand;
+            if (transform == Transform.NONE) {
+                transform = Transform.UPPER;
+            }
+            return toSqlOperand(uc.getOperand(), transform);
         } else if ((operand instanceof Literal)
                 || (operand instanceof BindVariableValue)) {
             Value value = evaluator.getValue(operand, null);
             int type = value.getType();
             if (type == PropertyType.LONG || type == PropertyType.DOUBLE) {
                 return value.getString();
-            } else if (type == PropertyType.DATE) {
+            } else if (type == PropertyType.DATE && transform == Transform.NONE) {
                 return "TIMESTAMP '" + value.getString() + "'";
+            } else if (transform == Transform.UPPER) {
+                return "'" + value.getString().toUpperCase(Locale.ENGLISH) + "'";
+            } else if (transform == Transform.LOWER) {
+                return "'" + value.getString().toLowerCase(Locale.ENGLISH) + "'";
             } else {
                 return "'" + value.getString() + "'";
             }

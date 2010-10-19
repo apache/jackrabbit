@@ -68,7 +68,7 @@ abstract class JoinMerger {
                     (ChildNodeJoinCondition) condition);
         } else if (condition instanceof DescendantNodeJoinCondition) {
             return new DescendantNodeJoinMerger(
-                    join, null, evaluator, factory,
+                    join, columns, evaluator, factory,
                     (DescendantNodeJoinCondition) condition);
         } else {
             throw new UnsupportedRepositoryOperationException(
