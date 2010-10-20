@@ -22,7 +22,6 @@ import static org.apache.jackrabbit.spi.commons.name.NameConstants.JCR_PRIMARYTY
 import static org.apache.lucene.search.BooleanClause.Occur.SHOULD;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -33,22 +32,18 @@ import javax.jcr.nodetype.NodeTypeIterator;
 import javax.jcr.nodetype.NodeTypeManager;
 import javax.jcr.query.InvalidQueryException;
 import javax.jcr.query.qom.Literal;
-import javax.jcr.query.qom.Selector;
 import javax.jcr.query.qom.StaticOperand;
 
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.queryParser.ParseException;
 import org.apache.lucene.queryParser.QueryParser;
-import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.Query;
 import org.apache.jackrabbit.core.HierarchyManager;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.spi.commons.conversion.IllegalNameException;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
-import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.spi.commons.query.qom.BindVariableValueImpl;
 import org.apache.jackrabbit.spi.commons.query.qom.DefaultQOMTreeVisitor;
 import org.apache.jackrabbit.spi.commons.query.qom.JoinConditionImpl;
@@ -150,26 +145,9 @@ public class LuceneQueryFactory {
      * @throws RepositoryException if an error occurs while creating the query.
      */
     public Query create(SelectorImpl selector) throws RepositoryException {
-        return create(ntManager.getNodeType(selector.getNodeTypeName()));
-    }
-
-    private Term createNodeTypeTerm(NodeType type) throws RepositoryException {
-        String field;
-        if (type.isMixin()) {
-            // search for nodes where jcr:mixinTypes is set to this mixin
-            field = mixinTypesField;
-        } else {
-            // search for nodes where jcr:primaryType is set to this type
-            field = primaryTypeField;
-        }
-        String name = nsMappings.translateName(session.getQName(type.getName()));
-        return new Term(PROPERTIES, FieldNames.createNamedValue(field, name));
-    }
-
-    private Query create(NodeType type) throws RepositoryException {
         List<Term> terms = new ArrayList<Term>();
 
-        String name = type.getName();
+        String name = selector.getNodeTypeName();
         NodeTypeIterator allTypes = ntManager.getAllNodeTypes();
         while (allTypes.hasNext()) {
             NodeType nt = allTypes.nextNodeType();
@@ -187,6 +165,19 @@ public class LuceneQueryFactory {
             }
             return b;
         }
+    }
+
+    private Term createNodeTypeTerm(NodeType type) throws RepositoryException {
+        String field;
+        if (type.isMixin()) {
+            // search for nodes where jcr:mixinTypes is set to this mixin
+            field = mixinTypesField;
+        } else {
+            // search for nodes where jcr:primaryType is set to this type
+            field = primaryTypeField;
+        }
+        String name = nsMappings.translateName(session.getQName(type.getName()));
+        return new Term(PROPERTIES, FieldNames.createNamedValue(field, name));
     }
 
     /**
