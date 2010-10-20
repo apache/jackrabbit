@@ -45,7 +45,11 @@ class SeededSecureRandom extends SecureRandom implements Runnable {
      */
     public static Random getInstance() {
         if (instance == null) {
-            instance = new SeededSecureRandom();
+            synchronized (SeededSecureRandom.class) {
+                if (instance == null) {
+                    instance = new SeededSecureRandom();
+                }
+            }
         }
         return instance;
     }
@@ -72,6 +76,14 @@ class SeededSecureRandom extends SecureRandom implements Runnable {
         if (!seeded) {
             // Alternative seed algorithm if the default is very slow
             setSeed(System.currentTimeMillis());
+            setSeed(System.nanoTime());
+            setSeed(new Object().hashCode());
+            Runtime runtime = Runtime.getRuntime();
+            setSeed(runtime.freeMemory());
+            setSeed(runtime.maxMemory());
+            setSeed(runtime.totalMemory());
+            setSeed(System.getProperties().toString().hashCode());
+
             // Thread timing (a second thread is already running)
             for (int j = 0; j < 16; j++) {
                 int i = 0;
