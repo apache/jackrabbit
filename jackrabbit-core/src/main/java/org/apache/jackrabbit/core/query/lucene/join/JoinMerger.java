@@ -140,8 +140,7 @@ abstract class JoinMerger {
         }
     }
 
-    public QueryResult merge(
-            RowIterator leftRows, RowIterator rightRows, long offset, long limit)
+    public QueryResult merge(RowIterator leftRows, RowIterator rightRows)
             throws RepositoryException {
         RowIterator joinRows;
         if (JCR_JOIN_TYPE_RIGHT_OUTER.equals(type)) {
@@ -171,16 +170,6 @@ abstract class JoinMerger {
             }
             boolean outer = JCR_JOIN_TYPE_LEFT_OUTER.equals(type);
             joinRows = mergeLeft(leftRows, map, outer);
-        }
-        while ((offset-- > 0 || limit == 0) && joinRows.hasNext()) {
-            joinRows.nextRow();
-        }
-        if (limit > 0) {
-            List<Row> rows = new ArrayList<Row>((int) limit);
-            for (int i = 0; i < limit && joinRows.hasNext(); i++) {
-                rows.add(joinRows.nextRow());
-            }
-            joinRows = new RowIteratorAdapter(rows);
         }
         return new SimpleQueryResult(columnNames, selectorNames, joinRows);
     }
