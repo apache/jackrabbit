@@ -16,7 +16,9 @@
  */
 package org.apache.jackrabbit.core.query.lucene.join;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -59,8 +61,20 @@ class ChildNodeJoinMerger extends JoinMerger {
     @Override
     public List<Constraint> getRightJoinConstraints(List<Row> leftRows)
             throws RepositoryException {
-        // TODO Auto-generated method stub
-        return Collections.emptyList();
+        Set<String> paths = new HashSet<String>();
+        for (Row row : leftRows) {
+            paths.addAll(getLeftValues(row));
+        }
+
+        List<Constraint> constraints = new ArrayList<Constraint>();
+        for (String path: paths) {
+            if (rightSelectors.contains(childSelector)) {
+                constraints.add(factory.childNode(childSelector, path));
+            } else {
+                constraints.add(factory.sameNode(parentSelector, path));
+            }
+        }
+        return constraints;
     }
 
     private Set<String> getValues(Set<String> selectors, Row row)

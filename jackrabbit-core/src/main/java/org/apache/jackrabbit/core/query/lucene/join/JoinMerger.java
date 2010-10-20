@@ -47,8 +47,28 @@ import javax.jcr.query.qom.Source;
 import org.apache.jackrabbit.commons.iterator.RowIterable;
 import org.apache.jackrabbit.commons.iterator.RowIteratorAdapter;
 
+/**
+ * A join merger is used by the {@link QueryEngine} class to efficiently
+ * merge together two parts of a join query.
+ * <p>
+ * Each join condition type ({@link EquiJoinCondition equi-} and
+ * {@link SameNodeJoinCondition same}, {@link ChildNodeJoinCondition child}
+ * or {@link DescendantJoinCondition descendant} node joins) has it's own
+ * merger class that extends the functionality of this abstract base class
+ * with functionality specific to that join condition.
+ */
 abstract class JoinMerger {
 
+    /**
+     * Static factory method for creating a merger for the given join.
+     *
+     * @param join join
+     * @param columns columns of the query
+     * @param evaluator operand evaluator
+     * @param factory QOM factory
+     * @return join merger
+     * @throws RepositoryException if the merger can not be created
+     */
     public static JoinMerger getJoinMerger(
             Join join, Map<String, PropertyValue> columns,
             OperandEvaluator evaluator, QueryObjectModelFactory factory)
