@@ -216,9 +216,9 @@ public class QueryEngine {
             rightRows = new RowIteratorAdapter(list);
         }
 
-        QueryResult result = merger.merge(
-                new RowIteratorAdapter(leftRows), rightRows, offset, limit);
-        return sort(result, orderings);
+        QueryResult result =
+            merger.merge(new RowIteratorAdapter(leftRows), rightRows);
+        return sort(result, orderings, offset, limit);
     }
 
     private String toSqlConstraint(Constraint constraint)
@@ -357,19 +357,8 @@ public class QueryEngine {
             columnMap.keySet().toArray(new String[columnMap.size()]);
 
         NodeIterator nodes = query.execute().getNodes();
-        while ((offset-- > 0 || limit == 0) && nodes.hasNext()) {
-            nodes.next();
-        }
-        if (limit > 0) {
-            List<Node> list = new ArrayList<Node>((int) limit);
-            for (int i = 0; i < limit && nodes.hasNext(); i++) {
-                list.add(nodes.nextNode());
-            }
-            nodes = new NodeIteratorAdapter(list);
-        }
-
         final String selectorName = selector.getSelectorName();
-        RangeIterator rows = new RangeIteratorAdapter(nodes) {
+        RowIterator rows = new RowIteratorAdapter(nodes) {
             @Override
             public Object next() {
                 Node node = (Node) super.next();
@@ -378,9 +367,9 @@ public class QueryEngine {
             }
         };
 
-        QueryResult result = new SimpleQueryResult(
-                columnNames, selectorNames, new RowIteratorAdapter(rows));
-        return sort(result, orderings);
+        QueryResult result =
+            new SimpleQueryResult(columnNames, selectorNames, rows);
+        return sort(result, orderings, offset, limit);
     }
 
     private Map<String, PropertyValue> getColumnMap(
@@ -451,12 +440,16 @@ public class QueryEngine {
      *
      * @param result original query results
      * @param orderings QOM orderings
+     * @param offset result offset
+     * @param limit result limit
      * @return sorted query results
      * @throws RepositoryException if the results can not be sorted
      */
-    public QueryResult sort(QueryResult result, final Ordering[] orderings)
-            throws RepositoryException {
-        if (orderings != null && orderings.length > 0) {
+    public QueryResult sort(
+            QueryResult result, final Ordering[] orderings,
+            long offset, long limit) throws RepositoryException {
+        if ((orderings != null && orderings.length > 0)
+                || offset != 0 || limit >= 0) {
             List<Row> rows = new ArrayList<Row>();
 
             RowIterator iterator = result.getRows();
@@ -464,7 +457,18 @@ public class QueryEngine {
                 rows.add(iterator.nextRow());
             }
 
-            Collections.sort(rows, new RowComparator(orderings));
+            if (orderings != null && orderings.length > 0) {
+                Collections.sort(rows, new RowComparator(orderings));
+            }
+
+            if (offset != 0 || limit >= 0) {
+                int from = (int) offset;
+                int to = rows.size();
+                if (limit >= 0 && offset + limit < to) {
+                    to = (int) (offset + limit);
+                }
+                rows = rows.subList(from, to);
+            }
 
             return new SimpleQueryResult(
                     result.getColumnNames(), result.getSelectorNames(),
