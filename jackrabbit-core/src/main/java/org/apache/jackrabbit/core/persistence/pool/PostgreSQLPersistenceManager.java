@@ -92,10 +92,9 @@ public class PostgreSQLPersistenceManager extends BundleDbPersistenceManager {
      * 
      * {@inheritDoc}
      */
-    protected synchronized NodePropBundle loadBundle(NodeId id)
-            throws ItemStateException {
+    protected NodePropBundle loadBundle(NodeId id) throws ItemStateException {
         ResultSet rs = null;
-        try {        	
+        try {
             rs = conHelper.exec(bundleSelectSQL, getKey(id), false, 0);
             if (rs.next()) {
                 InputStream input = rs.getBinaryStream(1);

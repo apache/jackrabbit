@@ -18,11 +18,11 @@ package org.apache.jackrabbit.core.state;
 
 import org.apache.commons.collections.map.ReferenceMap;
 import org.apache.jackrabbit.core.id.ItemId;
-import org.apache.jackrabbit.core.util.Dumpable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.PrintStream;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -43,36 +43,27 @@ import java.util.Map;
  * </ul>
  * This implementation of ItemStateCache is thread-safe.
  */
-public class ItemStateReferenceCache implements ItemStateCache, Dumpable {
+public class ItemStateReferenceCache implements ItemStateCache {
 
     /** Logger instance */
     private static Logger log = LoggerFactory.getLogger(ItemStateReferenceCache.class);
 
     /**
-     * primary cache storing weak references to <code>ItemState</code>
-     * instances.
-     */
-    @SuppressWarnings("unchecked")
-    private final Map<ItemId, ItemState> refs =
-        // I tried using soft instead of weak references here, but that
-        // seems to have some unexpected performance consequences (notable
-        // increase in the JCR TCK run time). So even though soft references
-        // are generally recommended over weak references for caching
-        // purposes, it seems that using weak references is safer here.
-        new ReferenceMap(ReferenceMap.HARD, ReferenceMap.WEAK);
-
-    /**
-     * secondary cache that automatically flushes entries based on some
-     * eviction policy; entries flushed from the secondary cache will be
-     * indirectly flushed from the primary (reference) cache by the garbage
-     * collector if they thus are rendered weakly reachable.
+     * Cache that automatically flushes entries based on some eviction policy;
+     * entries flushed from the secondary cache will be indirectly flushed
+     * from the reference map by the garbage collector if they thus are
+     * rendered weakly reachable.
      */
     private final ItemStateCache cache;
 
     /**
+     * Segments of the weak reference map used to keep track of item states.
+     */
+    private final Map<ItemId, ItemState>[] segments;
+
+    /**
      * Creates a new <code>ItemStateReferenceCache</code> that uses a
-     * <code>MLRUItemStateCache</code> instance as internal secondary
-     * cache.
+     * <code>MLRUItemStateCache</code> instance as internal cache.
      */
     public ItemStateReferenceCache(ItemStateCacheFactory cacheFactory) {
         this(cacheFactory.newItemStateCache());
@@ -85,103 +76,143 @@ public class ItemStateReferenceCache implements ItemStateCache, Dumpable {
      *
      * @param cache secondary cache implementing a custom eviction policy
      */
+    @SuppressWarnings("unchecked")
     public ItemStateReferenceCache(ItemStateCache cache) {
         this.cache = cache;
+        this.segments = new Map[Runtime.getRuntime().availableProcessors()];
+        for (int i = 0; i < segments.length; i++) {
+            // I tried using soft instead of weak references here, but that
+            // seems to have some unexpected performance consequences (notable
+            // increase in the JCR TCK run time). So even though soft references
+            // are generally recommended over weak references for caching
+            // purposes, it seems that using weak references is safer here.
+            segments[i] =
+                new ReferenceMap(ReferenceMap.HARD, ReferenceMap.WEAK);
+        }
+    }
+
+    /**
+     * Returns the reference map segment for the given entry key. The segment
+     * is selected based on the hash code of the key, after a transformation
+     * to prevent interfering with the optimal performance of the segment
+     * hash map.
+     *
+     * @param id item identifer
+     * @return reference map segment
+     */
+    private Map<ItemId, ItemState> getSegment(ItemId id) {
+        // Unsigned shift right to prevent negative indexes and to
+        // prevent too similar keys to all get stored in the same segment
+        return segments[(id.hashCode() >>> 1) % segments.length];
     }
 
     //-------------------------------------------------------< ItemStateCache >
     /**
      * {@inheritDoc}
      */
-    public synchronized boolean isCached(ItemId id) {
-        // check primary cache
-        return refs.containsKey(id);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public synchronized ItemState retrieve(ItemId id) {
-        // fake call to update stats of secondary cache
-        cache.retrieve(id);
-
-        // retrieve from primary cache
-        return refs.get(id);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public synchronized ItemState[] retrieveAll() {
-        // values of primary cache
-        return (ItemState[]) refs.values().toArray(new ItemState[refs.size()]);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public synchronized void cache(ItemState state) {
-        ItemId id = state.getId();
-        if (refs.containsKey(id)) {
-            log.warn("overwriting cached entry " + id);
+    public boolean isCached(ItemId id) {
+        Map<ItemId, ItemState> segment = getSegment(id);
+        synchronized (segment) {
+            return segment.containsKey(id);
         }
-        // fake call to update stats of secondary cache
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public ItemState retrieve(ItemId id) {
+        // Update the access statistics in the cache
+        ItemState state = cache.retrieve(id);
+        if (state != null) {
+            // Return fast to avoid the second lookup below
+            return state;
+        }
+
+        Map<ItemId, ItemState> segment = getSegment(id);
+        synchronized (segment) {
+            return segment.get(id);
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public ItemState[] retrieveAll() {
+        List<ItemState> states = new ArrayList<ItemState>();
+        for (int i = 0; i < segments.length; i++) {
+            synchronized (segments[i]) {
+                states.addAll(segments[i].values());
+            }
+        }
+        return states.toArray(new ItemState[states.size()]);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public void cache(ItemState state) {
+        // Update the cache
         cache.cache(state);
-        // store weak reference in primary cache
-        refs.put(id, state);
 
+        // Store a weak reference in the reference map
+        ItemId id = state.getId();
+        Map<ItemId, ItemState> segment = getSegment(id);
+        synchronized (segment) {
+            if (segment.containsKey(id)) {
+                log.warn("overwriting cached entry " + id);
+            }
+            segment.put(id, state);
+        }
     }
 
     /**
      * {@inheritDoc}
      */
-    public synchronized void evict(ItemId id) {
-        // fake call to update stats of secondary cache
+    public void evict(ItemId id) {
+        // Update the cache
         cache.evict(id);
-        // remove from primary cache
-        refs.remove(id);
+        // Remove from reference map
+        // TODO: Allow the weak reference to be cleared automatically?
+        Map<ItemId, ItemState> segment = getSegment(id);
+        synchronized (segment) {
+            segment.remove(id);
+        }
     }
 
     /**
      * {@inheritDoc}
      */
-    public synchronized void dispose() {
+    public void dispose() {
         cache.dispose();
     }
 
     /**
      * {@inheritDoc}
      */
-    public synchronized void evictAll() {
-        // fake call to update stats of secondary cache
+    public void evictAll() {
+        // Update the cache
         cache.evictAll();
-        // remove all weak references from primary cache
-        refs.clear();
+        // remove all weak references from reference map
+        // TODO: Allow the weak reference to be cleared automatically?
+        for (int i = 0; i < segments.length; i++) {
+            synchronized (segments[i]) {
+                segments[i].clear();
+            }
+        }
     }
 
     /**
      * {@inheritDoc}
      */
-    public synchronized void update(ItemId id) {
-        // delegate
-        cache.update(id);
+    public boolean isEmpty() {
+        for (int i = 0; i < segments.length; i++) {
+            synchronized (segments[i]) {
+                if (!segments[i].isEmpty()) {
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    public synchronized boolean isEmpty() {
-        // check primary cache
-        return refs.isEmpty();
-    }
-
-    //-------------------------------------------------------------< Dumpable >
-    /**
-     * {@inheritDoc}
-     */
-    public synchronized void dump(PrintStream ps) {
-        ps.println("ItemStateReferenceCache (" + this + ")");
-        ps.println("  refs: " + refs.keySet());
-        ps.println();
-    }
 }

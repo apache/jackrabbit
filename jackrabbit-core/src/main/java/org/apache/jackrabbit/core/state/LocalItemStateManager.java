@@ -163,19 +163,17 @@ public class LocalItemStateManager
             return state;
         }
 
-        // check cache. synchronized to ensure an entry is not created twice.
-        synchronized (this) {
-            state = cache.retrieve(id);
-            if (state == null) {
-                // regular behaviour
-                if (id.denotesNode()) {
-                    state = getNodeState((NodeId) id);
-                } else {
-                    state = getPropertyState((PropertyId) id);
-                }
+        // check cache
+        state = cache.retrieve(id);
+        if (state == null) {
+            // regular behaviour
+            if (id.denotesNode()) {
+                state = getNodeState((NodeId) id);
+            } else {
+                state = getPropertyState((PropertyId) id);
             }
-            return state;
         }
+        return state;
     }
 
     /**
