@@ -257,9 +257,12 @@ public class SharedItemStateManager
         ISMLocking.ReadLock readLock = acquireReadLock(id);
         try {
             // check internal first
-            if (hasNonVirtualItemState(id)) {
-                return getNonVirtualItemState(id);
-            }
+            return getNonVirtualItemState(id);
+        } catch (NoSuchItemStateException e) {
+            // Fall through to virtual state providers. We can afford the
+            // exception-for-control-flow performance hit here, as almost
+            // all performance-critical content is non-virtual. With this
+            // catch we can avoid an extra hasNonVirtualItemState() call.
         } finally {
             readLock.release();
         }
@@ -1702,20 +1705,22 @@ public class SharedItemStateManager
             throws NoSuchItemStateException, ItemStateException {
         ItemState state = cache.retrieve(id);
         if (state == null) {
+            // not found in cache, load from persistent storage
+            state = loadItemState(id);
+            state.setStatus(ItemState.STATUS_EXISTING);
             synchronized (this) {
                 // Use a double check to ensure that the cache entry is
                 // not created twice. We don't synchronize the entire
                 // method to allow the first cache retrieval to proceed
                 // even when another thread is loading a new item state.
-                state = cache.retrieve(id);
-                if (state == null) {
-                    // not found in cache, load from persistent storage
-                    state = loadItemState(id);
-                    state.setStatus(ItemState.STATUS_EXISTING);
+                ItemState cachedState = cache.retrieve(id);
+                if (cachedState == null) {
                     // put it in cache
                     cache.cache(state);
                     // set parent container
                     state.setContainer(this);
+                } else {
+                    state = cachedState;
                 }
             }
         }
