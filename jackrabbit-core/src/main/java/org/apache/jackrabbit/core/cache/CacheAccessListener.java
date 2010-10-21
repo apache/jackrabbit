@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.core.state;
+package org.apache.jackrabbit.core.cache;
 
 /**
  * The cache access listener can be registered to a class.
