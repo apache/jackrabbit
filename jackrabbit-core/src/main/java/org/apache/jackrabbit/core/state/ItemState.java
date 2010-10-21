@@ -421,4 +421,5 @@ public abstract class ItemState {
      * @return the approximate memory consumption of this state.
      */
     public abstract long calculateMemoryFootprint();
+
 }
