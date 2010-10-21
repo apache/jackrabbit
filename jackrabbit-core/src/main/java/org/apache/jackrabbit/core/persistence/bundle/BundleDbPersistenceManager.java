@@ -779,7 +779,7 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
         try {
             // skip root nodes (that point to itself)
             if (parentId != null && !id.toString().endsWith("babecafebabe")) {
-                if (!existsBundle(parentId)) {
+                if (loadBundle(parentId) == null) {
                     log.error("NodeState '" + id + "' references inexistent parent uuid '" + parentId + "'");
                 }
             }
@@ -1167,25 +1167,6 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
         } catch (Exception e) {
             String msg = "failed to read bundle: " + id + ": " + e;
             log.error(msg);
-            throw new ItemStateException(msg, e);
-        } finally {
-            closeResultSet(rs);
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    protected synchronized boolean existsBundle(NodeId id) throws ItemStateException {
-        ResultSet rs = null;
-        try {
-            Statement stmt = connectionManager.executeStmt(bundleSelectSQL, getKey(id));
-            rs = stmt.getResultSet();
-            // a bundle exists, if the result has at least one entry
-            return rs.next();
-        } catch (Exception e) {
-            String msg = "failed to check existence of bundle: " + id;
-            log.error(msg, e);
             throw new ItemStateException(msg, e);
         } finally {
             closeResultSet(rs);

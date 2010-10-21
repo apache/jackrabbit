@@ -744,7 +744,7 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
         try {
             // skip root nodes (that point to itself)
             if (parentId != null && !id.toString().endsWith("babecafebabe")) {
-                if (!existsBundle(parentId)) {
+                if (loadBundle(parentId) == null) {
                     log.error("NodeState '" + id + "' references inexistent parent uuid '" + parentId + "'");
                 }
             }
@@ -1024,8 +1024,7 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
     /**
      * {@inheritDoc}
      */
-    protected synchronized NodePropBundle loadBundle(NodeId id)
-            throws ItemStateException {
+    protected NodePropBundle loadBundle(NodeId id) throws ItemStateException {
         return loadBundle(id, false);
     }
 
@@ -1064,7 +1063,7 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
      *         exist.
      * @throws ItemStateException if an error while loading occurs.
      */
-    protected synchronized NodePropBundle loadBundle(NodeId id, boolean checkBeforeLoading)
+    protected NodePropBundle loadBundle(NodeId id, boolean checkBeforeLoading)
             throws ItemStateException {
         ResultSet rs = null;
         
@@ -1093,24 +1092,6 @@ public class BundleDbPersistenceManager extends AbstractBundlePersistenceManager
         } catch (Exception e) {
             String msg = "failed to read bundle: " + id + ": " + e;
             log.error(msg);
-            throw new ItemStateException(msg, e);
-        } finally {
-            DbUtility.close(rs);
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    protected synchronized boolean existsBundle(NodeId id) throws ItemStateException {
-        ResultSet rs = null;
-        try {
-            rs = conHelper.exec(bundleSelectSQL, getKey(id), false, 0);
-            // a bundle exists, if the result has at least one entry
-            return rs.next();
-        } catch (Exception e) {
-            String msg = "failed to check existence of bundle: " + id;
-            log.error(msg, e);
             throw new ItemStateException(msg, e);
         } finally {
             DbUtility.close(rs);

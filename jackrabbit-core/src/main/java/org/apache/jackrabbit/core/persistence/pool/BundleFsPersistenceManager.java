@@ -231,8 +231,7 @@ public class BundleFsPersistenceManager extends AbstractBundlePersistenceManager
     /**
      * {@inheritDoc}
      */
-    protected synchronized NodePropBundle loadBundle(NodeId id)
-            throws ItemStateException {
+    protected NodePropBundle loadBundle(NodeId id) throws ItemStateException {
         DataInputStream din = null;
         try {
             String path = buildNodeFilePath(null, id).toString();
@@ -251,20 +250,6 @@ public class BundleFsPersistenceManager extends AbstractBundlePersistenceManager
             throw new ItemStateException(msg, e);
         } finally {
             IOUtils.closeQuietly(din);
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    protected synchronized boolean existsBundle(NodeId id) throws ItemStateException {
-        try {
-            StringBuffer buf = buildNodeFilePath(null, id);
-            return itemFs.exists(buf.toString());
-        } catch (Exception e) {
-            String msg = "failed to check existence of bundle: " + id;
-            BundleFsPersistenceManager.log.error(msg, e);
-            throw new ItemStateException(msg, e);
         }
     }
 
