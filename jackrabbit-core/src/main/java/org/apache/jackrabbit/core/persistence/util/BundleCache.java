@@ -16,7 +16,9 @@
  */
 package org.apache.jackrabbit.core.persistence.util;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.jackrabbit.core.id.NodeId;
@@ -71,10 +73,14 @@ public class BundleCache {
             @Override
             protected boolean removeEldestEntry(
                     Map.Entry<NodeId, NodePropBundle> e) {
-                if (curSize > BundleCache.this.maxSize) {
+                long maxSize = BundleCache.this.maxSize;
+                if (curSize <= maxSize) {
+                    return false;
+                } else if (curSize - e.getValue().getSize() <= maxSize) {
                     curSize -= e.getValue().getSize();
                     return true;
                 } else {
+                    shrink();
                     return false;
                 }
             }
@@ -97,6 +103,20 @@ public class BundleCache {
      */
     public void setMaxSize(long maxSize) {
         this.maxSize = maxSize;
+
+        if (curSize > maxSize) {
+            shrink();
+        }
+    }
+
+    private void shrink() {
+        List<NodePropBundle> list =
+            new ArrayList<NodePropBundle>(bundles.values());
+        for (int i = list.size() - 1; curSize > maxSize && i >= 0; i--) {
+            NodePropBundle bundle = list.get(i);
+            curSize -= bundle.getSize();
+            bundles.remove(bundle.getId());
+        }
     }
 
     /**
