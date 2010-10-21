@@ -405,7 +405,7 @@ public abstract class AbstractBundlePersistenceManager implements
      *
      * Loads the state via the appropriate NodePropBundle.
      */
-    public synchronized NodeState load(NodeId id) throws NoSuchItemStateException, ItemStateException {
+    public NodeState load(NodeId id) throws NoSuchItemStateException, ItemStateException {
         NodePropBundle bundle = getBundle(id);
         if (bundle == null) {
             throw new NoSuchItemStateException(id.toString());
@@ -418,7 +418,7 @@ public abstract class AbstractBundlePersistenceManager implements
      *
      * Loads the state via the appropriate NodePropBundle.
      */
-    public synchronized PropertyState load(PropertyId id) throws NoSuchItemStateException, ItemStateException {
+    public PropertyState load(PropertyId id) throws NoSuchItemStateException, ItemStateException {
         NodePropBundle bundle = getBundle(id.getParentId());
         if (bundle == null) {
             throw new NoSuchItemStateException(id.toString());
@@ -455,7 +455,7 @@ public abstract class AbstractBundlePersistenceManager implements
      *
      * Loads the state via the appropriate NodePropBundle.
      */
-    public synchronized boolean exists(PropertyId id) throws ItemStateException {
+    public boolean exists(PropertyId id) throws ItemStateException {
         NodePropBundle bundle = getBundle(id.getParentId());
         return bundle != null && bundle.hasProperty(id.getName());
     }
@@ -465,7 +465,7 @@ public abstract class AbstractBundlePersistenceManager implements
      *
      * Checks the existence via the appropriate NodePropBundle.
      */
-    public synchronized boolean exists(NodeId id) throws ItemStateException {
+    public boolean exists(NodeId id) throws ItemStateException {
         // anticipating a load followed by a exists
         return getBundle(id) != null;
     }
@@ -648,12 +648,14 @@ public abstract class AbstractBundlePersistenceManager implements
         }
         NodePropBundle bundle = bundles.get(id);
         if (bundle == null) {
-            bundle = loadBundle(id);
-            if (bundle != null) {
-                bundle.markOld();
-                bundles.put(bundle);
-            } else {
-                missing.put(id);
+            synchronized (this) {
+                bundle = loadBundle(id);
+                if (bundle != null) {
+                    bundle.markOld();
+                    bundles.put(bundle);
+                } else {
+                    missing.put(id);
+                }
             }
         }
         return bundle;

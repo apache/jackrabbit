@@ -35,8 +35,8 @@ import org.apache.jackrabbit.core.persistence.CachingPersistenceManager;
 import org.apache.jackrabbit.core.persistence.IterablePersistenceManager;
 import org.apache.jackrabbit.core.persistence.PMContext;
 import org.apache.jackrabbit.core.persistence.PersistenceManager;
-import org.apache.jackrabbit.core.util.StringIndex;
 import org.apache.jackrabbit.core.persistence.util.BundleBinding;
+import org.apache.jackrabbit.core.util.StringIndex;
 import org.apache.jackrabbit.core.persistence.util.BundleCache;
 import org.apache.jackrabbit.core.persistence.util.HashMapIndex;
 import org.apache.jackrabbit.core.persistence.util.LRUNodeIdCache;
@@ -405,7 +405,7 @@ public abstract class AbstractBundlePersistenceManager implements
      *
      * Loads the state via the appropriate NodePropBundle.
      */
-    public synchronized NodeState load(NodeId id)
+    public NodeState load(NodeId id)
             throws NoSuchItemStateException, ItemStateException {
         NodePropBundle bundle = getBundle(id);
         if (bundle == null) {
@@ -419,7 +419,7 @@ public abstract class AbstractBundlePersistenceManager implements
      *
      * Loads the state via the appropriate NodePropBundle.
      */
-    public synchronized PropertyState load(PropertyId id)
+    public PropertyState load(PropertyId id)
             throws NoSuchItemStateException, ItemStateException {
         NodePropBundle bundle = getBundle(id.getParentId());
         if (bundle == null) {
@@ -457,7 +457,7 @@ public abstract class AbstractBundlePersistenceManager implements
      *
      * Loads the state via the appropriate NodePropBundle.
      */
-    public synchronized boolean exists(PropertyId id) throws ItemStateException {
+    public boolean exists(PropertyId id) throws ItemStateException {
         NodePropBundle bundle = getBundle(id.getParentId());
         return bundle != null && bundle.hasProperty(id.getName());
     }
@@ -467,7 +467,7 @@ public abstract class AbstractBundlePersistenceManager implements
      *
      * Checks the existence via the appropriate NodePropBundle.
      */
-    public synchronized boolean exists(NodeId id) throws ItemStateException {
+    public boolean exists(NodeId id) throws ItemStateException {
         // anticipating a load followed by a exists
         return getBundle(id) != null;
     }
@@ -650,12 +650,14 @@ public abstract class AbstractBundlePersistenceManager implements
         }
         NodePropBundle bundle = bundles.get(id);
         if (bundle == null) {
-            bundle = loadBundle(id);
-            if (bundle != null) {
-                bundle.markOld();
-                bundles.put(bundle);
-            } else {
-                missing.put(id);
+            synchronized (this) {
+                bundle = loadBundle(id);
+                if (bundle != null) {
+                    bundle.markOld();
+                    bundles.put(bundle);
+                } else {
+                    missing.put(id);
+                }
             }
         }
         return bundle;
