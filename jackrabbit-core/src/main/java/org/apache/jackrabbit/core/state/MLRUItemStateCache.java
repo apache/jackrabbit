@@ -22,6 +22,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.collections.map.LinkedMap;
+import org.apache.jackrabbit.core.cache.Cache;
+import org.apache.jackrabbit.core.cache.CacheAccessListener;
 import org.apache.jackrabbit.core.id.ItemId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -84,10 +86,14 @@ public class MLRUItemStateCache implements ItemStateCache, Cache {
                 maxMem / 1024, 0.75f, true /* access-ordered */) {
             @Override
             protected boolean removeEldestEntry(Map.Entry<ItemId, Entry> e) {
-                if (totalMem > MLRUItemStateCache.this.maxMem) {
+                long maxMem = MLRUItemStateCache.this.maxMem;
+                if (totalMem <= maxMem) {
+                    return false;
+                } else if (totalMem - e.getValue().size <= maxMem) {
                     totalMem -= e.getValue().size;
                     return true;
                 } else {
+                    shrink();
                     return false;
                 }
             }
@@ -248,18 +254,18 @@ public class MLRUItemStateCache implements ItemStateCache, Cache {
 
             // remove items, if too many
             if (totalMem > maxMem) {
-                totalMem = 0;
-                List<Map.Entry<ItemId, Entry>> entries =
-                    new ArrayList<Map.Entry<ItemId, Entry>>(cache.entrySet());
-                for (Map.Entry<ItemId, Entry> entry : entries) {
-                    long entrySize = entry.getValue().size;
-                    if (totalMem + entrySize > maxMem) {
-                        cache.remove(entry.getKey());
-                    } else {
-                        totalMem += entrySize;
-                    }
-                }
+                shrink();
             }
+        }
+    }
+
+    private void shrink() {
+        List<Map.Entry<ItemId, Entry>> list =
+            new ArrayList<Map.Entry<ItemId, Entry>>(cache.entrySet());
+        for (int i = list.size() - 1; totalMem > maxMem && i >= 0; i--) {
+            Map.Entry<ItemId, Entry> last = list.get(i);
+            totalMem -= last.getValue().size;
+            cache.remove(last.getKey());
         }
     }
 

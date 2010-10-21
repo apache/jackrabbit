@@ -95,7 +95,7 @@ import org.apache.jackrabbit.core.retention.RetentionRegistryImpl;
 import org.apache.jackrabbit.core.security.JackrabbitSecurityManager;
 import org.apache.jackrabbit.core.security.authentication.AuthContext;
 import org.apache.jackrabbit.core.security.simple.SimpleSecurityManager;
-import org.apache.jackrabbit.core.state.CacheManager;
+import org.apache.jackrabbit.core.cache.CacheManager;
 import org.apache.jackrabbit.core.state.ChangeLog;
 import org.apache.jackrabbit.core.state.ISMLocking;
 import org.apache.jackrabbit.core.state.ItemStateCacheFactory;
