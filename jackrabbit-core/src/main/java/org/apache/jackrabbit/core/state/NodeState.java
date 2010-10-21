@@ -802,27 +802,26 @@ public class NodeState extends ItemState {
     /**
      * {@inheritDoc}
      */
+    @Override
     public long calculateMemoryFootprint() {
         /*
         private Name nodeTypeName;
         private Set mixinTypeNames = Collections.EMPTY_SET;
         private NodeId id;
         private NodeId parentId;
-        private NodeDefId defId;
         private ChildNodeEntries childNodeEntries = new ChildNodeEntries();
-        private boolean sharedChildNodeEntries = false;
         private HashSet propertyNames = new HashSet();
-        private boolean sharedPropertyNames = false;
+        private boolean sharedSet = Set<NodeId>;
+        private boolean sharedSetRW = false;
+        private NodeStateListener listener = ...;
 
-        we assume an average Name localname of 30 chars.
-        NodeId = 8 + UUID(24) + hashcode(4) = 36
-        Name = 8 + hash(4) + string(38+2*len) + namespace(4) + localName(38+2*len) ~ 250
-        NodeDefId = 8 + id(4) = 12
-        ChildNodeEntries = 8 + n * (name(256) + index(4) + id(36) + hashentry(16)) ~ n*300
-        PropNames = 8 + n * ( name(250))
+        We assume only 16 bytes per name or node id,
+        as they are shared between states
+        ChildNodeEntries = 8 + n * (name(16) + index(4) + id(16) + hashentry(16)) ~ n*52
+        MixinTypeNames/PropNames = 8 + n * (name(16) + hashentry(16))
         */
-        return 350 + mixinTypeNames.size() * 250 + childNodeEntries.size() * 300
-                + propertyNames.size() * 250;
+        return 100 + mixinTypeNames.size() * 32 + childNodeEntries.size() * 52
+                + propertyNames.size() * 32;
     }
 
     /**
