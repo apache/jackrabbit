@@ -194,23 +194,16 @@ public class PropertyState extends ItemState {
     }
 
     /**
-     * {@inheritDoc}
+     * Returns an estimate of the memory size of this property state. The
+     * return value actually highly overestimates the amount of required
+     * memory, but changing the estimates would likely cause OOMs in many
+     * downstream deployments that have set their cache sizes based on
+     * experience with these erroneous size estimates. So we don't change
+     * the formula used by this method.
      */
     @Override
     public long calculateMemoryFootprint() {
-        /*
-        private PropertyId id;
-        private InternalValue[] values;
-        private int type;
-        private boolean multiValued;
-
-        We assume only 16 bytes per name or node id,
-        as they are shared between states
-        PropertyId = 8 + nodeId(16) + name(16) + hash(4) ~ 44;
-        InternalValue = 8 + n * (values) ~ 8 + n*100;
-        value=approx 100 bytes.
-        */
-        return 64 + values.length * 100;
+        return 350 + values.length * 100;
     }
 
 }

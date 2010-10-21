@@ -16,12 +16,14 @@
  */
 package org.apache.jackrabbit.core.state;
 
+import org.apache.commons.collections.map.ReferenceMap;
 import org.apache.jackrabbit.core.id.ItemId;
 import org.apache.jackrabbit.core.util.Dumpable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.PrintStream;
+import java.util.Map;
 
 /**
  * <code>ItemStateReferenceCache</code> internally consists of 2 components:
@@ -50,7 +52,15 @@ public class ItemStateReferenceCache implements ItemStateCache, Dumpable {
      * primary cache storing weak references to <code>ItemState</code>
      * instances.
      */
-    private final ItemStateReferenceMap refs;
+    @SuppressWarnings("unchecked")
+    private final Map<ItemId, ItemState> refs =
+        // I tried using soft instead of weak references here, but that
+        // seems to have some unexpected performance consequences (notable
+        // increase in the JCR TCK run time). So even though soft references
+        // are generally recommended over weak references for caching
+        // purposes, it seems that using weak references is safer here.
+        new ReferenceMap(ReferenceMap.HARD, ReferenceMap.WEAK);
+
     /**
      * secondary cache that automatically flushes entries based on some
      * eviction policy; entries flushed from the secondary cache will be
@@ -77,7 +87,6 @@ public class ItemStateReferenceCache implements ItemStateCache, Dumpable {
      */
     public ItemStateReferenceCache(ItemStateCache cache) {
         this.cache = cache;
-        refs = new ItemStateReferenceMap();
     }
 
     //-------------------------------------------------------< ItemStateCache >
@@ -86,7 +95,7 @@ public class ItemStateReferenceCache implements ItemStateCache, Dumpable {
      */
     public synchronized boolean isCached(ItemId id) {
         // check primary cache
-        return refs.contains(id);
+        return refs.containsKey(id);
     }
 
     /**
@@ -113,13 +122,13 @@ public class ItemStateReferenceCache implements ItemStateCache, Dumpable {
      */
     public synchronized void cache(ItemState state) {
         ItemId id = state.getId();
-        if (refs.contains(id)) {
+        if (refs.containsKey(id)) {
             log.warn("overwriting cached entry " + id);
         }
         // fake call to update stats of secondary cache
         cache.cache(state);
         // store weak reference in primary cache
-        refs.put(state);
+        refs.put(id, state);
 
     }
 
@@ -172,8 +181,7 @@ public class ItemStateReferenceCache implements ItemStateCache, Dumpable {
      */
     public synchronized void dump(PrintStream ps) {
         ps.println("ItemStateReferenceCache (" + this + ")");
+        ps.println("  refs: " + refs.keySet());
         ps.println();
-        ps.print("[refs] ");
-        refs.dump(ps);
     }
 }

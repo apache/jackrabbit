@@ -800,28 +800,20 @@ public class NodeState extends ItemState {
     //-------------------------------------------------< misc. helper methods >
 
     /**
-     * {@inheritDoc}
+     * Returns an estimate of the memory size of this node state. The return
+     * value actually highly overestimates the amount of required memory, but
+     * changing the estimates would likely cause OOMs in many downstream
+     * deployments that have set their cache sizes based on experience with
+     * these erroneous size estimates. So we don't change the formula used
+     * by this method.
      */
     @Override
     public long calculateMemoryFootprint() {
-        /*
-        private Name nodeTypeName;
-        private Set mixinTypeNames = Collections.EMPTY_SET;
-        private NodeId id;
-        private NodeId parentId;
-        private ChildNodeEntries childNodeEntries = new ChildNodeEntries();
-        private HashSet propertyNames = new HashSet();
-        private boolean sharedSet = Set<NodeId>;
-        private boolean sharedSetRW = false;
-        private NodeStateListener listener = ...;
-
-        We assume only 16 bytes per name or node id,
-        as they are shared between states
-        ChildNodeEntries = 8 + n * (name(16) + index(4) + id(16) + hashentry(16)) ~ n*52
-        MixinTypeNames/PropNames = 8 + n * (name(16) + hashentry(16))
-        */
-        return 100 + mixinTypeNames.size() * 32 + childNodeEntries.size() * 52
-                + propertyNames.size() * 32;
+        // Don't change this formula! See javadoc above.
+        return 350
+            + mixinTypeNames.size() * 250
+            + childNodeEntries.size() * 300
+            + propertyNames.size() * 250;
     }
 
     /**
