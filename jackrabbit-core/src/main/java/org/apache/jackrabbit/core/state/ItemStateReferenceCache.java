@@ -54,6 +54,11 @@ public class ItemStateReferenceCache implements ItemStateCache, Dumpable {
      */
     @SuppressWarnings("unchecked")
     private final Map<ItemId, ItemState> refs =
+        // I tried using soft instead of weak references here, but that
+        // seems to have some unexpected performance consequences (notable
+        // increase in the JCR TCK run time). So even though soft references
+        // are generally recommended over weak references for caching
+        // purposes, it seems that using weak references is safer here.
         new ReferenceMap(ReferenceMap.HARD, ReferenceMap.WEAK);
 
     /**
