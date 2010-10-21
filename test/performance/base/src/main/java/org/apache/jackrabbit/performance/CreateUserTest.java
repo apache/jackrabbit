@@ -19,31 +19,30 @@ package org.apache.jackrabbit.performance;
 import org.apache.jackrabbit.api.JackrabbitSession;
 import org.apache.jackrabbit.api.security.user.UserManager;
 
-import javax.jcr.Session;
-
 public class CreateUserTest extends AbstractTest {
-    private Session session;
+
+    private static final int SCALE = getScale(100);
+
     private UserManager userMgr;
     private int userCount;
 
     @Override
     protected void beforeSuite() throws Exception {
-        session = getRepository().login(getCredentials());
-        userMgr = ((JackrabbitSession) session).getUserManager();
+        userMgr = ((JackrabbitSession) loginWriter()).getUserManager();
     }
 
     @Override
     protected void runTest() throws Exception {
-        userMgr.createUser("user_" + userCount, "pass");
-        userCount++;
+        for (int i = 0; i < SCALE; i++, userCount++) {
+            userMgr.createUser("user_" + userCount, "pass");
+        }
     }
 
     @Override
     protected void afterSuite() throws Exception {
-        for (int k = 0; k < userCount; k++) {
-            userMgr.getAuthorizable("user_" + k).remove();
+        for (int i = 0; i < userCount; i++) {
+            userMgr.getAuthorizable("user_" + i).remove();
         }
-        session.logout();
     }
 
 }

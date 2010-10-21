@@ -20,27 +20,25 @@ import org.apache.jackrabbit.api.JackrabbitSession;
 import org.apache.jackrabbit.api.security.user.Group;
 import org.apache.jackrabbit.api.security.user.UserManager;
 
-import javax.jcr.Session;
-
 import java.security.Principal;
 import java.util.Iterator;
 
 public class GroupGetMembersTest extends AbstractTest {
-    private static int USER_COUNT = 2000;
+
+    private static final int USER_COUNT = getScale(2000);
+
     private static final Principal GROUP_PRINCIPAL = new Principal() {
         public String getName() {
             return "test_group";
         }
     };
 
-    private Session session;
     private UserManager userMgr;
     private Group group;
 
     @Override
     protected void beforeSuite() throws Exception {
-        session = getRepository().login(getCredentials());
-        userMgr = ((JackrabbitSession) session).getUserManager();
+        userMgr = ((JackrabbitSession) loginWriter()).getUserManager();
         group = userMgr.createGroup(GROUP_PRINCIPAL);
         for (int k = 0; k < USER_COUNT; k++) {
             group.addMember(userMgr.createUser("user_" + k, "pass"));
@@ -64,7 +62,6 @@ public class GroupGetMembersTest extends AbstractTest {
             userMgr.getAuthorizable("user_" + k).remove();
         }
         group.remove();
-        session.logout();
     }
 
 }

@@ -21,48 +21,48 @@ import org.apache.jackrabbit.api.security.user.Group;
 import org.apache.jackrabbit.api.security.user.User;
 import org.apache.jackrabbit.api.security.user.UserManager;
 
-import javax.jcr.Session;
-
 import java.security.Principal;
 
 public class AddGroupMembersTest extends AbstractTest {
+
+    private static final int SCALE = getScale(100);
+
     private static final Principal GROUP_PRINCIPAL = new Principal() {
         public String getName() {
             return "test_group";
         }
     };
 
-    private Session session;
     private UserManager userMgr;
-    private int userCount;
     private Group group;
-    private User currentUser;
+    private User[] users = new User[SCALE];
+    private int userCount;
 
     @Override
     protected void beforeSuite() throws Exception {
-        session = getRepository().login(getCredentials());
-        userMgr = ((JackrabbitSession) session).getUserManager();
+        userMgr = ((JackrabbitSession) loginWriter()).getUserManager();
         group = userMgr.createGroup(GROUP_PRINCIPAL);
     }
 
     @Override
     protected void beforeTest() throws Exception {
-        currentUser = userMgr.createUser("user_" + userCount, "pass");
-        userCount++;
+        for (int i = 0; i < users.length; i++, userCount++) {
+            users[i] = userMgr.createUser("user_" + userCount, "pass");
+        }
     }
 
     @Override
     protected void runTest() throws Exception {
-        group.addMember(currentUser);
+        for (User user : users) {
+            group.addMember(user);
+        }
     }
 
     @Override
     protected void afterSuite() throws Exception {
-        for (int k = 0; k < userCount; k++) {
-            userMgr.getAuthorizable("user_" + k).remove();
+        for (int i = 0; i < userCount; i++) {
+            userMgr.getAuthorizable("user_" + i).remove();
         }
-        group.remove();
-        session.logout();
     }
 
 }
