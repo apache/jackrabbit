@@ -46,7 +46,21 @@ import java.util.Map;
 public class ItemStateReferenceCache implements ItemStateCache {
 
     /** Logger instance */
-    private static Logger log = LoggerFactory.getLogger(ItemStateReferenceCache.class);
+    private static final Logger log =
+        LoggerFactory.getLogger(ItemStateReferenceCache.class);
+
+    /**
+     * The number of cache segments to use. Use the number of available
+     * processors (even if that might change during runtime!) as a reasonable
+     * approximation of the amount of parallelism we should expect in the
+     * worst case.
+     * <p>
+     * One reason for this value being a constant is that the
+     * {@link Runtime#availableProcessors()} call is somewhat expensive at
+     * least in some environments.
+     */
+    private static int NUMBER_OF_SEGMENTS =
+        Runtime.getRuntime().availableProcessors();
 
     /**
      * Cache that automatically flushes entries based on some eviction policy;
@@ -79,7 +93,7 @@ public class ItemStateReferenceCache implements ItemStateCache {
     @SuppressWarnings("unchecked")
     public ItemStateReferenceCache(ItemStateCache cache) {
         this.cache = cache;
-        this.segments = new Map[Runtime.getRuntime().availableProcessors()];
+        this.segments = new Map[NUMBER_OF_SEGMENTS];
         for (int i = 0; i < segments.length; i++) {
             // I tried using soft instead of weak references here, but that
             // seems to have some unexpected performance consequences (notable
