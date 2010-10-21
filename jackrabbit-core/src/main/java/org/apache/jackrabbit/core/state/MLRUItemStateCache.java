@@ -22,6 +22,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.collections.map.LinkedMap;
+import org.apache.jackrabbit.core.cache.Cache;
+import org.apache.jackrabbit.core.cache.CacheAccessListener;
 import org.apache.jackrabbit.core.id.ItemId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

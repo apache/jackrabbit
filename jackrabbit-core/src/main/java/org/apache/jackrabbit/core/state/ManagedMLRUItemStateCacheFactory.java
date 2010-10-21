@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.core.state;
 
+import org.apache.jackrabbit.core.cache.CacheManager;
+
 /**
  * This class constructs new MLRUItemStateCache.
  * This class adds the new caches to the cache manager,
