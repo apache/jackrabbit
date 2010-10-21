@@ -24,6 +24,7 @@ import javax.jcr.PropertyType;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.apache.jackrabbit.core.cache.ConcurrentCache;
 import org.apache.jackrabbit.core.fs.FileSystemResource;
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.id.ItemId;
@@ -34,9 +35,7 @@ import org.apache.jackrabbit.core.persistence.IterablePersistenceManager;
 import org.apache.jackrabbit.core.persistence.PMContext;
 import org.apache.jackrabbit.core.persistence.PersistenceManager;
 import org.apache.jackrabbit.core.persistence.util.BundleBinding;
-import org.apache.jackrabbit.core.persistence.util.BundleCache;
 import org.apache.jackrabbit.core.persistence.util.HashMapIndex;
-import org.apache.jackrabbit.core.persistence.util.LRUNodeIdCache;
 import org.apache.jackrabbit.core.persistence.util.NodePropBundle;
 import org.apache.jackrabbit.core.state.ItemState;
 import org.apache.jackrabbit.core.state.ChangeLog;
@@ -68,7 +67,7 @@ import org.apache.jackrabbit.spi.commons.name.NameConstants;
  * included in the bundle but generated when required.
  * <p/>
  * In order to increase performance, there are 2 caches maintained. One is the
- * {@link BundleCache} that caches already loaded bundles. The other is the
+ * bundle cache that caches already loaded bundles. The other is the
  * {@link LRUNodeIdCache} that caches non-existent bundles. This is useful
  * because a lot of {@link #exists(NodeId)} calls are issued that would result
  * in a useless SQL execution if the desired bundle does not exist.
@@ -96,6 +95,10 @@ public abstract class AbstractBundlePersistenceManager implements
     /** the name of the namespace-index resource */
     protected static final String RES_NS_INDEX = "/namespaces.properties";
 
+    /** Sentinel instance used to mark a non-existent bundle in the cache */
+    private static final NodePropBundle MISSING =
+        new NodePropBundle(null, new NodeId());
+
     /** the index for namespaces */
     private StringIndex nsIndex;
 
@@ -103,10 +106,7 @@ public abstract class AbstractBundlePersistenceManager implements
     private StringIndex nameIndex;
 
     /** the cache of loaded bundles */
-    private BundleCache bundles;
-
-    /** the cache of non-existent bundles */
-    private LRUNodeIdCache missing;
+    private ConcurrentCache<NodeId, NodePropBundle> bundles;
 
     /** the persistence manager context */
     protected PMContext context;
@@ -286,25 +286,22 @@ public abstract class AbstractBundlePersistenceManager implements
      */
     public synchronized void onExternalUpdate(ChangeLog changes) {
         for (ItemState state : changes.modifiedStates()) {
-            if (state.isNode()) {
-                bundles.remove((NodeId) state.getId());
-            } else {
-                bundles.remove(state.getParentId());
-            }
+            bundles.remove(getBundleId(state));
         }
         for (ItemState state : changes.deletedStates()) {
-            if (state.isNode()) {
-                bundles.remove((NodeId) state.getId());
-            } else {
-                bundles.remove(state.getParentId());
-            }
+            bundles.remove(getBundleId(state));
         }
         for (ItemState state : changes.addedStates()) {
-            if (state.isNode()) {
-                missing.remove((NodeId) state.getId());
-            } else {
-                missing.remove(state.getParentId());
-            }
+            // There may have been a cache miss entry
+            bundles.remove(getBundleId(state));
+        }
+    }
+
+    private NodeId getBundleId(ItemState state) {
+        if (state.isNode()) {
+            return (NodeId) state.getId();
+        } else {
+            return state.getParentId();
         }
     }
 
@@ -385,19 +382,18 @@ public abstract class AbstractBundlePersistenceManager implements
     public void init(PMContext context) throws Exception {
         this.context = context;
         // init bundle cache
-        bundles = new BundleCache(bundleCacheSize);
-        missing = new LRUNodeIdCache();
+        bundles = new ConcurrentCache<NodeId, NodePropBundle>();
+        bundles.setMaxMemorySize(bundleCacheSize);
     }
 
     /**
      * {@inheritDoc}
      *
-     *  Closes the persistence manager, release acquired resourecs.
+     *  Closes the persistence manager, release acquired resources.
      */
     public void close() throws Exception {
         // clear caches
         bundles.clear();
-        missing.clear();
     }
 
     /**
@@ -502,7 +498,6 @@ public abstract class AbstractBundlePersistenceManager implements
         } finally {
             if (!success) {
                 bundles.clear();
-                missing.clear();
             }
         }
     }
@@ -643,18 +638,17 @@ public abstract class AbstractBundlePersistenceManager implements
      * @throws ItemStateException if an error occurs.
      */
     private NodePropBundle getBundle(NodeId id) throws ItemStateException {
-        if (missing.contains(id)) {
-            return null;
-        }
         NodePropBundle bundle = bundles.get(id);
-        if (bundle == null) {
+        if (bundle == MISSING) {
+            return null;
+        } else if (bundle == null) {
             synchronized (this) {
                 bundle = loadBundle(id);
                 if (bundle != null) {
                     bundle.markOld();
-                    bundles.put(bundle);
+                    bundles.put(id, bundle, bundle.getSize());
                 } else {
-                    missing.put(id);
+                    bundles.put(id, MISSING, 16);
                 }
             }
         }
@@ -671,7 +665,7 @@ public abstract class AbstractBundlePersistenceManager implements
         destroyBundle(bundle);
         bundle.removeAllProperties();
         bundles.remove(bundle.getId());
-        missing.put(bundle.getId());
+        bundles.put(bundle.getId(), MISSING, 16);
     }
 
     /**
@@ -685,11 +679,11 @@ public abstract class AbstractBundlePersistenceManager implements
         bundle.markOld();
         log.debug("stored bundle {}", bundle.getId());
 
-        missing.remove(bundle.getId());
-        // only put to cache if already exists. this is to ensure proper overwrite
-        // and not creating big contention during bulk loads
-        if (bundles.contains(bundle.getId())) {
-            bundles.put(bundle);
+        // only put to cache if already exists. this is to ensure proper
+        // overwrite and not creating big contention during bulk loads
+        if (bundles.containsKey(bundle.getId())) {
+            bundles.remove(bundle.getId());
+            bundles.put(bundle.getId(), bundle, bundle.getSize());
         }
     }
 
