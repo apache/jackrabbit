@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.core.virtual;
 
+import org.apache.commons.collections.map.ReferenceMap;
 import org.apache.jackrabbit.core.id.ItemId;
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.id.PropertyId;
@@ -27,7 +28,6 @@ import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.NoSuchItemStateException;
 import org.apache.jackrabbit.core.state.NodeReferences;
 import org.apache.jackrabbit.core.state.NodeState;
-import org.apache.jackrabbit.core.state.ItemStateReferenceMap;
 import org.apache.jackrabbit.core.state.ItemStateListener;
 import org.apache.jackrabbit.core.state.ChildNodeEntry;
 import org.apache.jackrabbit.spi.Name;
@@ -39,6 +39,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.jcr.RepositoryException;
 import java.util.Collection;
+import java.util.Map;
 
 /**
  * This Class implements a virtual item state provider, in order to expose the
@@ -68,11 +69,14 @@ public abstract class AbstractVISProvider implements VirtualItemStateProvider, I
     /**
      * the cache node states. key=ItemId, value=ItemState
      */
-    private ItemStateReferenceMap nodes = new ItemStateReferenceMap();
+    @SuppressWarnings("unchecked")
+    private final Map<NodeId, NodeState> nodes =
+        new ReferenceMap(ReferenceMap.HARD, ReferenceMap.SOFT);
 
     /**
      * Listeners (weak references)
      */
+    @SuppressWarnings("unchecked")
     private final transient Collection<ItemStateListener> listeners =
         new WeakIdentityCollection(5);
 
@@ -102,7 +106,7 @@ public abstract class AbstractVISProvider implements VirtualItemStateProvider, I
      */
     public boolean hasItemState(ItemId id) {
         if (id instanceof NodeId) {
-            if (nodes.contains(id)) {
+            if (nodes.containsKey(id)) {
                 return true;
             } else if (id.equals(rootNodeId)) {
                 return true;
@@ -122,7 +126,7 @@ public abstract class AbstractVISProvider implements VirtualItemStateProvider, I
 
         if (id instanceof NodeId) {
             ItemState s;
-            if (nodes.contains(id)) {
+            if (nodes.containsKey(id)) {
                 s = nodes.get(id);
             } else if (id.equals(rootNodeId)) {
                 s = getRootState();
@@ -321,7 +325,7 @@ public abstract class AbstractVISProvider implements VirtualItemStateProvider, I
      */
     protected NodeState cache(NodeState state) {
         if (state != null) {
-            nodes.put(state);
+            nodes.put(state.getNodeId(), state);
             log.debug("item added to cache. size=" + nodes.size());
         }
         return state;
