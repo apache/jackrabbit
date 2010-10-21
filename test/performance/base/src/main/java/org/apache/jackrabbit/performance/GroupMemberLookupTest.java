@@ -17,17 +17,17 @@
 package org.apache.jackrabbit.performance;
 
 import org.apache.jackrabbit.api.JackrabbitSession;
-import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.jackrabbit.api.security.user.Group;
+import org.apache.jackrabbit.api.security.user.User;
 import org.apache.jackrabbit.api.security.user.UserManager;
-
-import javax.jcr.Session;
 
 import java.security.Principal;
 import java.util.Random;
 
 public class GroupMemberLookupTest extends AbstractTest {
-    private static int USER_COUNT = 2000;
+
+    private static final int USER_COUNT = getScale(2000);
+
     private static final Principal GROUP_PRINCIPAL = new Principal() {
         public String getName() {
             return "test_group";
@@ -36,39 +36,33 @@ public class GroupMemberLookupTest extends AbstractTest {
 
     private final Random rng = new Random();
 
-    private Session session;
-    private UserManager userMgr;
     private Group group;
-    private Authorizable user;
+    private User[] users;
 
     @Override
     protected void beforeSuite() throws Exception {
-        session = getRepository().login(getCredentials());
-        userMgr = ((JackrabbitSession) session).getUserManager();
+        UserManager userMgr = ((JackrabbitSession) loginWriter()).getUserManager();
         group = userMgr.createGroup(GROUP_PRINCIPAL);
-        for (int k = 0; k < USER_COUNT; k++) {
-            group.addMember(userMgr.createUser("user_" + k, "pass"));
+        users = new User[USER_COUNT];
+        for (int i = 0; i < users.length; i++) {
+            users[i] = userMgr.createUser("user_" + i, "pass");
+            group.addMember(users[i]);
         }
-    }
-
-    @Override
-    protected void beforeTest() throws Exception {
-        String id = "user_" + rng.nextInt(USER_COUNT);
-        user = userMgr.getAuthorizable(id);
     }
 
     @Override
     protected void runTest() throws Exception {
-        group.isMember(user);
+        for (int i = 0; i < 1000; i++) {
+            group.isMember(users[rng.nextInt(users.length)]);
+        }
     }
 
     @Override
     protected void afterSuite() throws Exception {
-        for (int k = 0; k < USER_COUNT; k++) {
-            userMgr.getAuthorizable("user_" + k).remove();
+        for (User user : users) {
+            user.remove();
         }
         group.remove();
-        session.logout();
     }
 
 }
