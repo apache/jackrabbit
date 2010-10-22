@@ -16,10 +16,7 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
-import java.util.Map;
-
 import javax.jcr.RepositoryException;
-import javax.jcr.Value;
 import javax.jcr.Workspace;
 import javax.jcr.query.qom.QueryObjectModelFactory;
 
@@ -54,10 +51,6 @@ public abstract class AbstractQueryImpl implements ExecutableQuery {
      */
     private boolean documentOrder = true;
 
-    /** Bind variables of this query */
-    private final Map<String, Value> variables;
-
-
     /**
      * Creates a new query instance from a query string.
      *
@@ -67,11 +60,10 @@ public abstract class AbstractQueryImpl implements ExecutableQuery {
      */
     public AbstractQueryImpl(
             SessionContext sessionContext, SearchIndex index,
-            PropertyTypeRegistry propReg, Map<String, Value> variables) {
+            PropertyTypeRegistry propReg) {
         this.sessionContext = sessionContext;
         this.index = index;
         this.propReg = propReg;
-        this.variables = variables;
     }
 
     /**
@@ -99,33 +91,6 @@ public abstract class AbstractQueryImpl implements ExecutableQuery {
      */
     public void setRespectDocumentOrder(boolean documentOrder) {
         this.documentOrder = documentOrder;
-    }
-
-    /**
-     * Binds the given <code>value</code> to the variable named
-     * <code>varName</code>.
-     *
-     * @param varName name of variable in query
-     * @param value   value to bind
-     * @throws IllegalArgumentException if <code>varName</code> is not a valid
-     *                                  variable in this query.
-     * @throws RepositoryException      if an error occurs.
-     */
-    public void bindValue(String varName, Value value)
-            throws IllegalArgumentException, RepositoryException {
-        if (variables.containsKey(varName)) {
-            variables.put(varName, value);
-        } else {
-            throw new IllegalArgumentException(
-                    varName + " is not a valid variable in this query");
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public Map<String, Value> getBindVariables() {
-        return variables;
     }
 
     /**

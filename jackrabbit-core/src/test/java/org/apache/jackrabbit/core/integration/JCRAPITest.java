@@ -18,7 +18,33 @@ package org.apache.jackrabbit.core.integration;
 
 import junit.framework.Test;
 import junit.framework.TestCase;
+import junit.framework.TestSuite;
+
 import org.apache.jackrabbit.test.JCRTestSuite;
+import org.apache.jackrabbit.test.api.query.qom.AndConstraintTest;
+import org.apache.jackrabbit.test.api.query.qom.BindVariableValueTest;
+import org.apache.jackrabbit.test.api.query.qom.ChildNodeJoinConditionTest;
+import org.apache.jackrabbit.test.api.query.qom.ChildNodeTest;
+import org.apache.jackrabbit.test.api.query.qom.ColumnTest;
+import org.apache.jackrabbit.test.api.query.qom.DescendantNodeJoinConditionTest;
+import org.apache.jackrabbit.test.api.query.qom.DescendantNodeTest;
+import org.apache.jackrabbit.test.api.query.qom.EquiJoinConditionTest;
+import org.apache.jackrabbit.test.api.query.qom.FullTextSearchScoreTest;
+import org.apache.jackrabbit.test.api.query.qom.GetQueryTest;
+import org.apache.jackrabbit.test.api.query.qom.LengthTest;
+import org.apache.jackrabbit.test.api.query.qom.NodeLocalNameTest;
+import org.apache.jackrabbit.test.api.query.qom.NodeNameTest;
+import org.apache.jackrabbit.test.api.query.qom.NotConstraintTest;
+import org.apache.jackrabbit.test.api.query.qom.OrConstraintTest;
+import org.apache.jackrabbit.test.api.query.qom.OrderingTest;
+import org.apache.jackrabbit.test.api.query.qom.PropertyExistenceTest;
+import org.apache.jackrabbit.test.api.query.qom.PropertyValueTest;
+import org.apache.jackrabbit.test.api.query.qom.QueryObjectModelFactoryTest;
+import org.apache.jackrabbit.test.api.query.qom.RowTest;
+import org.apache.jackrabbit.test.api.query.qom.SameNodeJoinConditionTest;
+import org.apache.jackrabbit.test.api.query.qom.SameNodeTest;
+import org.apache.jackrabbit.test.api.query.qom.SelectorTest;
+import org.apache.jackrabbit.test.api.query.qom.UpperLowerCaseTest;
 
 /**
  * Test suite that includes all test suites from jackrabbit-jcr-tests.
@@ -26,7 +52,35 @@ import org.apache.jackrabbit.test.JCRTestSuite;
 public class JCRAPITest extends TestCase {
 
     public static Test suite() {
-        return new JCRTestSuite();
+        // return new JCRTestSuite();
+        TestSuite suite = new TestSuite("QOM tests");
+
+        suite.addTestSuite(AndConstraintTest.class);
+        suite.addTestSuite(BindVariableValueTest.class);
+        suite.addTestSuite(ChildNodeJoinConditionTest.class);
+        suite.addTestSuite(ChildNodeTest.class);
+        suite.addTestSuite(ColumnTest.class);
+        suite.addTestSuite(DescendantNodeJoinConditionTest.class);
+        suite.addTestSuite(DescendantNodeTest.class);
+        suite.addTestSuite(EquiJoinConditionTest.class);
+        suite.addTestSuite(FullTextSearchScoreTest.class);
+        suite.addTestSuite(GetQueryTest.class);
+        suite.addTestSuite(LengthTest.class);
+        suite.addTestSuite(NodeLocalNameTest.class);
+        suite.addTestSuite(NodeNameTest.class);
+        suite.addTestSuite(NotConstraintTest.class);
+        suite.addTestSuite(OrConstraintTest.class);
+        suite.addTestSuite(OrderingTest.class);
+        suite.addTestSuite(PropertyExistenceTest.class);
+        suite.addTestSuite(PropertyValueTest.class);
+        suite.addTestSuite(QueryObjectModelFactoryTest.class);
+        suite.addTestSuite(RowTest.class);
+        suite.addTestSuite(SameNodeJoinConditionTest.class); 
+        suite.addTestSuite(SameNodeTest.class);
+        suite.addTestSuite(SelectorTest.class);
+        suite.addTestSuite(UpperLowerCaseTest.class);
+
+        return suite;
     }
 
 }

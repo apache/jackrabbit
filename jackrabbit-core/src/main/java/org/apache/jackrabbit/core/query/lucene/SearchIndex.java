@@ -16,10 +16,9 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
-import java.io.InputStream;
-
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -39,7 +38,6 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
 import org.apache.jackrabbit.core.HierarchyManager;
-import org.apache.jackrabbit.core.ItemManager;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.fs.FileSystemException;
@@ -60,12 +58,10 @@ import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.PathFactory;
-import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
 import org.apache.jackrabbit.spi.commons.query.DefaultQueryNodeFactory;
 import org.apache.jackrabbit.spi.commons.query.qom.OrderingImpl;
-import org.apache.jackrabbit.spi.commons.query.qom.QueryObjectModelTree;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.Token;
 import org.apache.lucene.document.Document;
@@ -678,28 +674,6 @@ public class SearchIndex extends AbstractQueryHandler {
         QueryImpl query = new QueryImpl(
                 sessionContext, this, getContext().getPropertyTypeRegistry(),
                 statement, language, getQueryNodeFactory());
-        query.setRespectDocumentOrder(documentOrder);
-        return query;
-    }
-
-    /**
-     * Creates a new query by specifying the query object model. If the query
-     * object model is considered invalid for the implementing class, an
-     * InvalidQueryException is thrown.
-     *
-     * @param sessionContext component context of the current session
-     * @param qomTree query query object model tree.
-     * @return A <code>Query</code> object.
-     * @throws javax.jcr.query.InvalidQueryException
-     *          if the query object model tree is invalid.
-     * @see QueryHandler#createExecutableQuery(SessionImpl, ItemManager, QueryObjectModelTree)
-     */
-    public ExecutableQuery createExecutableQuery(
-            SessionContext sessionContext, QueryObjectModelTree qomTree)
-            throws InvalidQueryException {
-        QueryObjectModelImpl query = new QueryObjectModelImpl(
-                sessionContext, this, getContext().getPropertyTypeRegistry(),
-                qomTree);
         query.setRespectDocumentOrder(documentOrder);
         return query;
     }
