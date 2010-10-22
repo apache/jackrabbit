@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.core.query;
 
-import org.apache.jackrabbit.spi.Name;
+import java.util.Map;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
@@ -45,17 +45,16 @@ public interface ExecutableQuery {
      *
      * @param varName name of variable in query
      * @param value   value to bind
-     * @throws IllegalArgumentException      if <code>varName</code> is not a
-     *                                       valid variable in this query.
-     * @throws RepositoryException if an error occurs.
+     * @throws RepositoryException if <code>varName</code> is not a
+     *                             valid variable in this query.
      */
-    void bindValue(Name varName, Value value)
-        throws IllegalArgumentException, RepositoryException;
+    void bindValue(String varName, Value value) throws RepositoryException;
 
     /**
-     * @return the names of the bind variables in this query.
+     * Returns the bind variables of this query.
      *
-     * @throws RepositoryException if an error occurs.
+     * @return bind variables
      */
-    Name[] getBindVariableNames() throws RepositoryException;
+    Map<String, Value> getBindVariables();
+
 }

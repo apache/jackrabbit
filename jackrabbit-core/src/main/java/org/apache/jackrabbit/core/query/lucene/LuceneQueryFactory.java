@@ -16,42 +16,70 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
+import static javax.jcr.PropertyType.DATE;
+import static javax.jcr.PropertyType.DOUBLE;
+import static javax.jcr.PropertyType.LONG;
+import static javax.jcr.PropertyType.NAME;
+import static javax.jcr.PropertyType.STRING;
+import static javax.jcr.PropertyType.UNDEFINED;
+import static javax.jcr.query.qom.QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO;
+import static javax.jcr.query.qom.QueryObjectModelConstants.JCR_OPERATOR_GREATER_THAN;
+import static javax.jcr.query.qom.QueryObjectModelConstants.JCR_OPERATOR_GREATER_THAN_OR_EQUAL_TO;
+import static javax.jcr.query.qom.QueryObjectModelConstants.JCR_OPERATOR_LESS_THAN;
+import static javax.jcr.query.qom.QueryObjectModelConstants.JCR_OPERATOR_LESS_THAN_OR_EQUAL_TO;
+import static javax.jcr.query.qom.QueryObjectModelConstants.JCR_OPERATOR_LIKE;
+import static javax.jcr.query.qom.QueryObjectModelConstants.JCR_OPERATOR_NOT_EQUAL_TO;
 import static org.apache.jackrabbit.core.query.lucene.FieldNames.PROPERTIES;
 import static org.apache.jackrabbit.spi.commons.name.NameConstants.JCR_MIXINTYPES;
 import static org.apache.jackrabbit.spi.commons.name.NameConstants.JCR_PRIMARYTYPE;
+import static org.apache.lucene.search.BooleanClause.Occur.MUST;
 import static org.apache.lucene.search.BooleanClause.Occur.SHOULD;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
+import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.Value;
 import javax.jcr.nodetype.NodeType;
 import javax.jcr.nodetype.NodeTypeIterator;
 import javax.jcr.nodetype.NodeTypeManager;
-import javax.jcr.query.InvalidQueryException;
-import javax.jcr.query.qom.Literal;
+import javax.jcr.nodetype.PropertyDefinition;
+import javax.jcr.query.qom.And;
+import javax.jcr.query.qom.ChildNode;
+import javax.jcr.query.qom.Comparison;
+import javax.jcr.query.qom.Constraint;
+import javax.jcr.query.qom.DescendantNode;
+import javax.jcr.query.qom.DynamicOperand;
+import javax.jcr.query.qom.FullTextSearch;
+import javax.jcr.query.qom.Not;
+import javax.jcr.query.qom.Or;
+import javax.jcr.query.qom.PropertyExistence;
+import javax.jcr.query.qom.PropertyValue;
+import javax.jcr.query.qom.SameNode;
 import javax.jcr.query.qom.StaticOperand;
 
+import org.apache.jackrabbit.core.HierarchyManager;
+import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.query.lucene.join.OperandEvaluator;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
+import org.apache.jackrabbit.spi.commons.query.qom.DefaultQOMTreeVisitor;
+import org.apache.jackrabbit.spi.commons.query.qom.FullTextSearchImpl;
+import org.apache.jackrabbit.spi.commons.query.qom.JoinConditionImpl;
+import org.apache.jackrabbit.spi.commons.query.qom.JoinImpl;
+import org.apache.jackrabbit.spi.commons.query.qom.PropertyExistenceImpl;
+import org.apache.jackrabbit.spi.commons.query.qom.SelectorImpl;
+import org.apache.jackrabbit.spi.commons.query.qom.SourceImpl;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.queryParser.ParseException;
 import org.apache.lucene.queryParser.QueryParser;
+import org.apache.lucene.search.BooleanClause.Occur;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.Query;
-import org.apache.jackrabbit.core.HierarchyManager;
-import org.apache.jackrabbit.core.SessionImpl;
-import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
-import org.apache.jackrabbit.spi.commons.query.qom.BindVariableValueImpl;
-import org.apache.jackrabbit.spi.commons.query.qom.DefaultQOMTreeVisitor;
-import org.apache.jackrabbit.spi.commons.query.qom.JoinConditionImpl;
-import org.apache.jackrabbit.spi.commons.query.qom.SelectorImpl;
-import org.apache.jackrabbit.spi.commons.query.qom.FullTextSearchImpl;
-import org.apache.jackrabbit.spi.commons.query.qom.PropertyExistenceImpl;
-import org.apache.jackrabbit.spi.commons.query.qom.SourceImpl;
-import org.apache.jackrabbit.spi.commons.query.qom.JoinImpl;
 
 /**
  * Factory that creates Lucene queries from QOM elements.
@@ -98,10 +126,8 @@ public class LuceneQueryFactory {
      */
     private final IndexFormatVersion version;
 
-    /**
-     * The Bind Variable values.
-     */
-    private final Map<Name, Value> bindVariables;
+    /** Operand evaluator */
+    private final OperandEvaluator evaluator;
 
     private final String mixinTypesField;
 
@@ -123,7 +149,7 @@ public class LuceneQueryFactory {
             SessionImpl session, HierarchyManager hmgr,
             NamespaceMappings nsMappings, Analyzer analyzer,
             SynonymProvider synonymProvider, IndexFormatVersion version,
-            Map<Name, Value> bindVariables) throws RepositoryException {
+            Map<String, Value> bindVariables) throws RepositoryException {
         this.session = session;
         this.ntManager = session.getWorkspace().getNodeTypeManager();
         this.hmgr = hmgr;
@@ -132,7 +158,8 @@ public class LuceneQueryFactory {
         this.synonymProvider = synonymProvider;
         this.version = version;
         this.npResolver = NamePathResolverImpl.create(nsMappings);
-        this.bindVariables = bindVariables;
+        this.evaluator =
+            new OperandEvaluator(session.getValueFactory(), bindVariables);
         this.mixinTypesField = nsMappings.translateName(JCR_MIXINTYPES);
         this.primaryTypeField = nsMappings.translateName(JCR_PRIMARYTYPE);
     }
@@ -205,20 +232,7 @@ public class LuceneQueryFactory {
                 fieldname, analyzer, synonymProvider);
         try {
             StaticOperand expr = fts.getFullTextSearchExpression();
-            if (expr instanceof Literal) {
-                return parser.parse(
-                        ((Literal) expr).getLiteralValue().getString());
-            } else if (expr instanceof BindVariableValueImpl) {
-                Value value = this.bindVariables.get(
-                        ((BindVariableValueImpl) expr).getBindVariableQName());
-                if (value == null) {
-                    throw new InvalidQueryException("Bind variable not bound");
-                }
-                return parser.parse(value.getString());
-            } else {
-                throw new RepositoryException(
-                        "Unknown static operand type: " + expr);
-            }
+            return parser.parse(evaluator.getValue(expr).getString());
         } catch (ParseException e) {
             throw new RepositoryException(e);
         }
@@ -275,6 +289,156 @@ public class LuceneQueryFactory {
         MultiColumnQuery right = create((SourceImpl) join.getRight());
         return new JoinQuery(left, right, join.getJoinTypeInstance(),
                 (JoinConditionImpl) join.getJoinCondition(), nsMappings, hmgr);
+    }
+
+    public Query create(
+            Constraint constraint, Map<String, NodeType> selectorMap)
+            throws RepositoryException {
+        if (constraint instanceof And) {
+            return getAndQuery((And) constraint, selectorMap);
+        } else if (constraint instanceof Or) {
+            return getOrQuery((Or) constraint, selectorMap);
+        } else if (constraint instanceof Not) {
+            return getNotQuery((Not) constraint, selectorMap);
+        } else if (constraint instanceof PropertyExistence) {
+            return getPropertyExistenceQuery((PropertyExistence) constraint);
+        } else if (constraint instanceof Comparison) {
+            return getComparisonQuery((Comparison) constraint, selectorMap);
+        } else if (constraint instanceof FullTextSearch) {
+            return null; // FIXME
+        } else if (constraint instanceof SameNode) {
+            return null; // FIXME
+        } else if (constraint instanceof ChildNode) {
+            return null; // FIXME
+        } else if (constraint instanceof DescendantNode) {
+            return null; // FIXME
+        } else {
+            throw new UnsupportedRepositoryOperationException(
+                    "Unknown constraint type: " + constraint);
+        }
+    }
+
+    private BooleanQuery getAndQuery(
+            And and, Map<String, NodeType> selectorMap)
+            throws RepositoryException {
+        BooleanQuery query = new BooleanQuery();
+        addBooleanConstraint(query, and.getConstraint1(), MUST, selectorMap);
+        addBooleanConstraint(query, and.getConstraint2(), MUST, selectorMap);
+        return query;
+    }
+
+    private BooleanQuery getOrQuery(Or or, Map<String, NodeType> selectorMap)
+            throws RepositoryException {
+        BooleanQuery query = new BooleanQuery();
+        addBooleanConstraint(query, or.getConstraint1(), SHOULD, selectorMap);
+        addBooleanConstraint(query, or.getConstraint2(), SHOULD, selectorMap);
+        return query;
+    }
+
+    private void addBooleanConstraint(
+            BooleanQuery query, Constraint constraint, Occur occur,
+            Map<String, NodeType> selectorMap) throws RepositoryException {
+        if (occur == MUST && constraint instanceof And) {
+            And and = (And) constraint;
+            addBooleanConstraint(query, and.getConstraint1(), occur, selectorMap);
+            addBooleanConstraint(query, and.getConstraint2(), occur, selectorMap);
+        } else if (occur == SHOULD && constraint instanceof Or) {
+            Or or = (Or) constraint;
+            addBooleanConstraint(query, or.getConstraint1(), occur, selectorMap);
+            addBooleanConstraint(query, or.getConstraint2(), occur, selectorMap);
+        } else {
+            query.add(create(constraint, selectorMap), occur);
+        }
+    }
+
+    private NotQuery getNotQuery(Not not, Map<String, NodeType> selectorMap)
+            throws RepositoryException {
+        return new NotQuery(create(not.getConstraint(), selectorMap));
+    }
+
+    private Query getPropertyExistenceQuery(PropertyExistence property)
+            throws RepositoryException {
+        String name = npResolver.getJCRName(session.getQName(
+                property.getPropertyName()));
+        return Util.createMatchAllQuery(name, version);
+    }
+
+    private Query getComparisonQuery(
+            Comparison comparison, Map<String, NodeType> selectorMap)
+            throws RepositoryException {
+        DynamicOperand operand = comparison.getOperand1();
+        if (operand instanceof PropertyValue) {
+            PropertyValue property = (PropertyValue) operand;
+            String field = npResolver.getJCRName(session.getQName(
+                    property.getPropertyName()));
+            int type = PropertyType.UNDEFINED;
+            NodeType nt = selectorMap.get(property.getSelectorName());
+            if (nt != null) {
+                for (PropertyDefinition pd : nt.getPropertyDefinitions()) {
+                    if (pd.getName().equals(property.getPropertyName())) {
+                        type = pd.getRequiredType();
+                    }
+                }
+            }
+            return getPropertyValueQuery(
+                    field, comparison.getOperator(),
+                    evaluator.getValue(comparison.getOperand2()), type);
+        } else {
+            throw new UnsupportedRepositoryOperationException(); // FIXME
+        }
+    }
+
+    private Query getPropertyValueQuery(
+            String field, String operator, Value value, int type)
+            throws RepositoryException {
+        Term term = getTerm(field, getValueString(value, type));
+        if (JCR_OPERATOR_EQUAL_TO.equals(operator)) {
+            return new JackrabbitTermQuery(term);
+        } else if (JCR_OPERATOR_GREATER_THAN.equals(operator)) {
+            return new RangeQuery(term, getTerm(field, "\uFFFF"), false);
+        } else if (JCR_OPERATOR_GREATER_THAN_OR_EQUAL_TO.equals(operator)) {
+            return new RangeQuery(term, getTerm(field, "\uFFFF"), true);
+        } else if (JCR_OPERATOR_LESS_THAN.equals(operator)) {
+            return new RangeQuery(getTerm(field, ""), term, false);
+        } else if (JCR_OPERATOR_LESS_THAN_OR_EQUAL_TO.equals(operator)) {
+            return new RangeQuery(getTerm(field, ""), term, true);
+        } else if (JCR_OPERATOR_NOT_EQUAL_TO.equals(operator)) {
+            BooleanQuery or = new BooleanQuery();
+            or.add(new RangeQuery(getTerm(field, ""), term, false), SHOULD);
+            or.add(new RangeQuery(term, getTerm(field, "\uFFFF"), false), SHOULD);
+            return or;
+        } else if (JCR_OPERATOR_LIKE.equals(operator)) {
+            throw new UnsupportedRepositoryOperationException(); // FIXME
+        } else {
+            throw new UnsupportedRepositoryOperationException(); // FIXME
+        }
+    }
+
+    private Term getTerm(String field, String value) {
+        return new Term(PROPERTIES, FieldNames.createNamedValue(field, value));
+    }
+
+    private String getValueString(Value value, int type)
+            throws RepositoryException {
+        switch (value.getType()) {
+        case DATE:
+            return DateField.dateToString(value.getDate().getTime());
+        case DOUBLE:
+            return DoubleField.doubleToString(value.getDouble());
+        case LONG:
+            return LongField.longToString(value.getLong());
+        case NAME:
+            return npResolver.getJCRName(session.getQName(value.getString()));
+        default:
+            String string = value.getString();
+            if (type != UNDEFINED && type != STRING) {
+                return getValueString(
+                        session.getValueFactory().createValue(string, type),
+                        UNDEFINED);
+            } else {
+                return string;
+            }
+        }
     }
 
 }

@@ -16,21 +16,16 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
-import org.apache.jackrabbit.core.query.ExecutableQuery;
-import org.apache.jackrabbit.core.query.PropertyTypeRegistry;
-import org.apache.jackrabbit.core.session.SessionContext;
-import org.apache.jackrabbit.spi.Name;
+import java.util.Map;
 
-import javax.jcr.Value;
 import javax.jcr.RepositoryException;
+import javax.jcr.Value;
 import javax.jcr.Workspace;
 import javax.jcr.query.qom.QueryObjectModelFactory;
 
-import java.util.Set;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.HashMap;
-import java.util.Collections;
+import org.apache.jackrabbit.core.query.ExecutableQuery;
+import org.apache.jackrabbit.core.query.PropertyTypeRegistry;
+import org.apache.jackrabbit.core.session.SessionContext;
 
 /**
  * <code>AbstractQueryImpl</code> provides a base class for executable queries
@@ -59,15 +54,8 @@ public abstract class AbstractQueryImpl implements ExecutableQuery {
      */
     private boolean documentOrder = true;
 
-    /**
-     * Set&lt;Name>, where Name is a variable name in the query statement.
-     */
-    private final Set<Name> variableNames = new HashSet<Name>();
-
-    /**
-     * Binding of variable name to value. Maps {@link Name} to {@link Value}.
-     */
-    private final Map<Name, Value> bindValues = new HashMap<Name, Value>();
+    /** Bind variables of this query */
+    private final Map<String, Value> variables;
 
 
     /**
@@ -79,10 +67,11 @@ public abstract class AbstractQueryImpl implements ExecutableQuery {
      */
     public AbstractQueryImpl(
             SessionContext sessionContext, SearchIndex index,
-            PropertyTypeRegistry propReg) {
+            PropertyTypeRegistry propReg, Map<String, Value> variables) {
         this.sessionContext = sessionContext;
         this.index = index;
         this.propReg = propReg;
+        this.variables = variables;
     }
 
     /**
@@ -122,37 +111,21 @@ public abstract class AbstractQueryImpl implements ExecutableQuery {
      *                                  variable in this query.
      * @throws RepositoryException      if an error occurs.
      */
-    public void bindValue(Name varName, Value value)
+    public void bindValue(String varName, Value value)
             throws IllegalArgumentException, RepositoryException {
-        if (!variableNames.contains(varName)) {
-            throw new IllegalArgumentException("not a valid variable in this query");
+        if (variables.containsKey(varName)) {
+            variables.put(varName, value);
         } else {
-            bindValues.put(varName, value);
+            throw new IllegalArgumentException(
+                    varName + " is not a valid variable in this query");
         }
     }
 
     /**
      * {@inheritDoc}
      */
-    public Name[] getBindVariableNames() throws RepositoryException {
-        return variableNames.toArray(new Name[variableNames.size()]);
-    }
-
-    /**
-     * Adds a name to the set of variables.
-     *
-     * @param varName the name of the variable.
-     */
-    protected void addVariableName(Name varName) {
-        variableNames.add(varName);
-    }
-
-    /**
-     * @return an unmodifieable map, which contains the variable names and their
-     *         respective value.
-     */
-    protected Map<Name, Value> getBindVariableValues() {
-        return Collections.unmodifiableMap(bindValues);
+    public Map<String, Value> getBindVariables() {
+        return variables;
     }
 
     /**

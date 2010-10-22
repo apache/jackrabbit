@@ -17,9 +17,12 @@
 package org.apache.jackrabbit.core.query.lucene;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.jcr.RepositoryException;
+import javax.jcr.Value;
 import javax.jcr.nodetype.PropertyDefinition;
 import javax.jcr.query.InvalidQueryException;
 import javax.jcr.query.QueryResult;
@@ -63,10 +66,9 @@ public class QueryObjectModelImpl extends AbstractQueryImpl {
             SessionContext sessionContext, SearchIndex index,
             PropertyTypeRegistry propReg, QueryObjectModelTree qomTree)
             throws InvalidQueryException {
-        super(sessionContext, index, propReg);
+        super(sessionContext, index, propReg, extractBindVariables(qomTree));
         this.qomTree = qomTree;
         checkNodeTypes();
-        extractBindVariableNames();
     }
 
     /**
@@ -98,13 +100,13 @@ public class QueryObjectModelImpl extends AbstractQueryImpl {
                 session, index.getContext().getHierarchyManager(),
                 index.getNamespaceMappings(), index.getTextAnalyzer(),
                 index.getSynonymProvider(), index.getIndexFormatVersion(),
-                getBindVariableValues());
+                getBindVariables());
 
         MultiColumnQuery query = factory.create(qomTree.getSource());
 
         if (qomTree.getConstraint() != null) {
             Constraint c = ConstraintBuilder.create(qomTree.getConstraint(),
-                    getBindVariableValues(), qomTree.getSource().getSelectors(),
+                    getBindVariables(), qomTree.getSource().getSelectors(),
                     factory, session.getValueFactory());
             query = new FilterMultiColumnQuery(query, c);
         }
@@ -145,17 +147,20 @@ public class QueryObjectModelImpl extends AbstractQueryImpl {
      * Extracts all {@link BindVariableValueImpl} from the {@link #qomTree}
      * and adds it to the set of known variable names.
      */
-    private void extractBindVariableNames() {
+    private static Map<String, Value> extractBindVariables(
+            QueryObjectModelTree qomTree) {
+        final Map<String, Value> variables = new HashMap<String, Value>();
         try {
             qomTree.accept(new DefaultTraversingQOMTreeVisitor() {
                 public Object visit(BindVariableValueImpl node, Object data) {
-                    addVariableName(node.getBindVariableQName());
+                    variables.put(node.getBindVariableName(), null);
                     return data;
                 }
             }, null);
         } catch (Exception e) {
             // will never happen
         }
+        return variables;
     }
 
     /**

@@ -21,6 +21,7 @@ import static org.apache.jackrabbit.spi.commons.name.NameConstants.JCR_STATEMENT
 import static org.apache.jackrabbit.spi.commons.name.NameConstants.NT_QUERY;
 
 import java.text.NumberFormat;
+import java.util.Set;
 
 import javax.jcr.ItemExistsException;
 import javax.jcr.ItemNotFoundException;
@@ -37,7 +38,6 @@ import javax.jcr.version.VersionException;
 
 import org.apache.jackrabbit.core.session.SessionContext;
 import org.apache.jackrabbit.core.session.SessionOperation;
-import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.commons.conversion.NameException;
 import org.slf4j.Logger;
@@ -211,12 +211,8 @@ public class QueryImpl extends AbstractQueryImpl {
      * {@inheritDoc}
      */
     public String[] getBindVariableNames() throws RepositoryException {
-        Name[] names = query.getBindVariableNames();
-        String[] strNames = new String[names.length];
-        for (int i = 0; i < names.length; i++) {
-            strNames[i] = sessionContext.getJCRName(names[i]);
-        }
-        return strNames;
+        Set<String> names = query.getBindVariables().keySet();
+        return names.toArray(new String[names.size()]);
     }
 
     /**
@@ -233,7 +229,7 @@ public class QueryImpl extends AbstractQueryImpl {
             throws IllegalArgumentException, RepositoryException {
         checkInitialized();
         try {
-            query.bindValue(sessionContext.getQName(varName), value);
+            query.bindValue(varName, value);
         } catch (NameException e) {
             throw new RepositoryException(e.getMessage());
         }

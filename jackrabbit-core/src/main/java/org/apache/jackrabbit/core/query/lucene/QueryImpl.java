@@ -16,10 +16,12 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
 import javax.jcr.RepositoryException;
+import javax.jcr.Value;
 import javax.jcr.Workspace;
 import javax.jcr.nodetype.PropertyDefinition;
 import javax.jcr.query.InvalidQueryException;
@@ -86,7 +88,8 @@ public class QueryImpl extends AbstractQueryImpl {
             SessionContext sessionContext, SearchIndex index,
             PropertyTypeRegistry propReg, String statement, String language,
             QueryNodeFactory factory) throws InvalidQueryException {
-        super(sessionContext, index, propReg);
+        super(sessionContext, index, propReg,
+                Collections.<String, Value>emptyMap());
         // parse query according to language
         // build query tree using the passed factory
         this.root = QueryParser.parse(

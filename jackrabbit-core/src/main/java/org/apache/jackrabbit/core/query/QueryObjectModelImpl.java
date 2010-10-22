@@ -51,8 +51,6 @@ public class QueryObjectModelImpl extends QueryImpl implements QueryObjectModel 
      */
     protected QueryObjectModelTree qomTree;
 
-    private final Map<String, Value> variables = new HashMap<String, Value>();
-
     /**
      * {@inheritDoc}
      * @throws UnsupportedOperationException always.
@@ -91,17 +89,7 @@ public class QueryObjectModelImpl extends QueryImpl implements QueryObjectModel 
         this.node = node;
         this.statement = QueryObjectModelBuilderRegistry.getQueryObjectModelBuilder(language).toString(this);
         this.query = handler.createExecutableQuery(sessionContext, qomTree);
-        for (Name name : query.getBindVariableNames()) {
-            variables.put(sessionContext.getJCRName(name), null);
-        }
         setInitialized();
-    }
-
-    @Override
-    public void bindValue(String varName, Value value)
-            throws IllegalArgumentException, RepositoryException {
-        super.bindValue(varName, value);
-        variables.put(varName, value);
     }
 
     public QueryResult execute() throws RepositoryException {
@@ -111,7 +99,7 @@ public class QueryObjectModelImpl extends QueryImpl implements QueryObjectModel 
             if (JCR_JOIN_TYPE_INNER.equals(join.getJoinType())
                     && join.getJoinCondition() instanceof EquiJoinCondition) {
                 QueryEngine engine =
-                    new QueryEngine(sessionContext.getSessionImpl(), variables);
+                    new QueryEngine(sessionContext.getSessionImpl(), query.getBindVariables());
                 return engine.execute(
                         getColumns(), getSource(), getConstraint(),
                         getOrderings(), offset, limit);

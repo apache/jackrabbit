@@ -73,7 +73,7 @@ public class ConstraintBuilder {
      *                             constraint.
      */
     public static Constraint create(ConstraintImpl constraint,
-                                    Map<Name, Value> bindVariableValues,
+                                    Map<String, Value> bindVariableValues,
                                     SelectorImpl[] selectors,
                                     LuceneQueryFactory factory,
                                     ValueFactory vf)
@@ -96,7 +96,7 @@ public class ConstraintBuilder {
         /**
          * The bind variables and their values.
          */
-        private final Map<Name, Value> bindVariableValues;
+        private final Map<String, Value> bindVariableValues;
 
         /**
          * The selectors of the query.
@@ -121,7 +121,7 @@ public class ConstraintBuilder {
          * @param factory            the lucene query factory.
          * @param vf                 the value factory of the current session.
          */
-        Visitor(Map<Name, Value> bindVariableValues,
+        Visitor(Map<String, Value> bindVariableValues,
                 SelectorImpl[] selectors,
                 LuceneQueryFactory factory,
                 ValueFactory vf) {
@@ -140,7 +140,14 @@ public class ConstraintBuilder {
 
         public Object visit(BindVariableValueImpl node, Object data)
                 throws Exception {
-            return bindVariableValues.get(node.getBindVariableQName());
+            String name = node.getBindVariableName();
+            Value value = bindVariableValues.get(name);
+            if (value != null) {
+                return value;
+            } else {
+                throw new RepositoryException(
+                        "No value specified for bind variable " + name);
+            }
         }
 
         public Object visit(ChildNodeImpl node, Object data) throws Exception {
