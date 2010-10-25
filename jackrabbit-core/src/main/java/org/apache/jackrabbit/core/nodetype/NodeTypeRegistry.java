@@ -483,6 +483,21 @@ public class NodeTypeRegistry implements NodeTypeEventListener {
     }
 
     /**
+     * Returns the effective node type representation of the given node types.
+     *
+     * @param mixins mixin types of the node (set of {@link Name names});
+     * @return effective node type
+     * @throws NodeTypeConflictException if the given types are conflicting
+     * @throws NoSuchNodeTypeException if one of the given types is not found
+     */
+    public EffectiveNodeType getEffectiveNodeType(Set<Name> mixins)
+            throws NodeTypeConflictException, NoSuchNodeTypeException {
+        Name[] names = new Name[mixins.size()];
+        mixins.toArray(names);
+        return getEffectiveNodeType(names, entCache, registeredNTDefs);
+    }
+
+    /**
      * Returns the names of those registered node types that have
      * dependencies on the given node type.
      *

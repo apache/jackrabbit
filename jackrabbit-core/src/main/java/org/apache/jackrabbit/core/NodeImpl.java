@@ -22,6 +22,8 @@ import static org.apache.jackrabbit.spi.commons.name.NameConstants.JCR_ISCHECKED
 import static org.apache.jackrabbit.spi.commons.name.NameConstants.JCR_LIFECYCLE_POLICY;
 import static org.apache.jackrabbit.spi.commons.name.NameConstants.MIX_LIFECYCLE;
 import static org.apache.jackrabbit.spi.commons.name.NameConstants.MIX_REFERENCEABLE;
+import static org.apache.jackrabbit.spi.commons.name.NameConstants.MIX_SIMPLE_VERSIONABLE;
+import static org.apache.jackrabbit.spi.commons.name.NameConstants.MIX_VERSIONABLE;
 
 import java.io.InputStream;
 import java.math.BigDecimal;
@@ -31,9 +33,11 @@ import java.util.BitSet;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javax.jcr.AccessDeniedException;
@@ -60,6 +64,7 @@ import javax.jcr.lock.Lock;
 import javax.jcr.lock.LockException;
 import javax.jcr.lock.LockManager;
 import javax.jcr.nodetype.ConstraintViolationException;
+import javax.jcr.nodetype.ItemDefinition;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
 import javax.jcr.nodetype.NodeDefinition;
 import javax.jcr.nodetype.NodeType;
@@ -3561,6 +3566,240 @@ public class NodeImpl extends ItemImpl implements Node, JackrabbitNode {
 
         // delegate to parent
         parent.renameChildNode(getNodeId(), qName, true);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public void setMixins(String[] mixinNames)
+            throws NoSuchNodeTypeException, VersionException,
+            ConstraintViolationException, LockException, RepositoryException {
+
+        // check state of this instance
+        sanityCheck();
+
+        NodeTypeManagerImpl ntMgr = sessionContext.getNodeTypeManager();
+
+        Set<Name> newMixins = new HashSet<Name>();
+        for (String name : mixinNames) {
+            Name qName = sessionContext.getQName(name);
+            if (! ntMgr.getNodeType(qName).isMixin()) {
+                throw new RepositoryException(
+                        sessionContext.getJCRName(qName) + " is not a mixin node type");
+            }
+            newMixins.add(qName);
+        }
+
+        // make sure this node is checked-out, neither protected nor locked and
+        // the editing session has sufficient permission to change the mixin types.
+
+        // special handling of mix:(simple)versionable. since adding the
+        // mixin alters the version storage jcr:versionManagement privilege
+        // is required in addition.
+        int permissions = Permission.NODE_TYPE_MNGMT;
+        if (newMixins.contains(MIX_VERSIONABLE)
+                || newMixins.contains(MIX_SIMPLE_VERSIONABLE)) {
+            permissions |= Permission.VERSION_MNGMT;
+        }
+        int options = ItemValidator.CHECK_CHECKED_OUT | ItemValidator.CHECK_LOCK
+                | ItemValidator.CHECK_CONSTRAINTS | ItemValidator.CHECK_HOLD;
+        sessionContext.getItemValidator().checkModify(this, options, permissions);
+
+        final NodeState state = data.getNodeState();
+
+        // build effective node type of primary type & new mixin's
+        // in order to detect conflicts
+        NodeTypeRegistry ntReg = ntMgr.getNodeTypeRegistry();
+        EffectiveNodeType entNew, entOld, entAll;
+        try {
+            entNew = ntReg.getEffectiveNodeType(newMixins);
+            entOld = ntReg.getEffectiveNodeType(state.getMixinTypeNames());
+
+            // try to build new effective node type (will throw in case of conflicts)
+            entAll = ntReg.getEffectiveNodeType(state.getNodeTypeName(), newMixins);
+        } catch (NodeTypeConflictException ntce) {
+            throw new ConstraintViolationException(ntce.getMessage());
+        }
+
+        // added child item definitions
+        Set<QItemDefinition> addedDefs = new HashSet<QItemDefinition>(Arrays.asList(entNew.getAllItemDefs()));
+        addedDefs.removeAll(Arrays.asList(entOld.getAllItemDefs()));
+
+        // referential integrity check
+        boolean referenceableOld = getEffectiveNodeType().includesNodeType(NameConstants.MIX_REFERENCEABLE);
+        boolean referenceableNew = entAll.includesNodeType(NameConstants.MIX_REFERENCEABLE);
+        if (referenceableOld && !referenceableNew) {
+            // node would become non-referenceable;
+            // make sure no references exist
+            PropertyIterator iter = getReferences();
+            if (iter.hasNext()) {
+                throw new ConstraintViolationException(
+                        "the new mixin types cannot be set as it would render "
+                                + "this node 'non-referenceable' while it is still being "
+                                + "referenced through at least one property of type REFERENCE");
+            }
+        }
+
+        // gather currently assigned definitions *before* doing actual modifications
+        Map<ItemId, ItemDefinition> oldDefs = new HashMap<ItemId, ItemDefinition>();
+        for (Name name : getNodeState().getPropertyNames()) {
+            PropertyId id = new PropertyId(getNodeId(), name);
+            try {
+                PropertyState propState = (PropertyState) stateMgr.getItemState(id);
+                oldDefs.put(id, itemMgr.getDefinition(propState));
+            } catch (ItemStateException ise) {
+                String msg = name + ": failed to retrieve property state";
+                log.error(msg, ise);
+                throw new RepositoryException(msg, ise);
+            }
+        }
+        for (ChildNodeEntry cne : getNodeState().getChildNodeEntries()) {
+            try {
+                NodeState nodeState = (NodeState) stateMgr.getItemState(cne.getId());
+                oldDefs.put(cne.getId(), itemMgr.getDefinition(nodeState));
+            } catch (ItemStateException ise) {
+                String msg = cne + ": failed to retrieve node state";
+                log.error(msg, ise);
+                throw new RepositoryException(msg, ise);
+            }
+        }
+
+        // now do the actual modifications in content as mandated by the new mixins
+
+        // modify the state of this node
+        NodeState thisState = (NodeState) getOrCreateTransientItemState();
+        thisState.setMixinTypeNames(newMixins);
+
+        // set jcr:mixinTypes property
+        setMixinTypesProperty(newMixins);
+
+        // walk through properties and child nodes and change definition as necessary
+
+        // use temp set to avoid ConcurrentModificationException
+        HashSet<Name> set = new HashSet<Name>(thisState.getPropertyNames());
+        for (Name propName : set) {
+            PropertyState propState = null;
+            try {
+                propState = (PropertyState) stateMgr.getItemState(
+                                new PropertyId(thisState.getNodeId(), propName));
+                // the following call triggers ConstraintViolationException
+                // if there isn't any suitable definition anymore
+                itemMgr.getDefinition(propState);
+            } catch (ConstraintViolationException cve) {
+                // no suitable definition found for this property
+                // try to find new applicable definition first and
+                // redefine property if possible
+                try {
+                    if (oldDefs.get(propState.getId()).isProtected()) {
+                        // remove 'orphaned' protected properties immediately
+                        removeChildProperty(propName);
+                        continue;
+                    }
+                    PropertyDefinitionImpl pdi = getApplicablePropertyDefinition(
+                            propName, propState.getType(),
+                            propState.isMultiValued(), false);
+                    PropertyImpl prop = (PropertyImpl) itemMgr.getItem(propState.getId());
+                    if (pdi.getRequiredType() != PropertyType.UNDEFINED
+                            && pdi.getRequiredType() != propState.getType()) {
+                        // value conversion required
+                        if (propState.isMultiValued()) {
+                            // convert value
+                            Value[] values =
+                                    ValueHelper.convert(
+                                            prop.getValues(),
+                                            pdi.getRequiredType(),
+                                            getSession().getValueFactory());
+                            // redefine property
+                            prop.onRedefine(pdi.unwrap());
+                            // set converted values
+                            prop.setValue(values);
+                        } else {
+                            // convert value
+                            Value value =
+                                    ValueHelper.convert(
+                                            prop.getValue(),
+                                            pdi.getRequiredType(),
+                                            getSession().getValueFactory());
+                            // redefine property
+                            prop.onRedefine(pdi.unwrap());
+                            // set converted values
+                            prop.setValue(value);
+                        }
+                    } else {
+                        // redefine property
+                        prop.onRedefine(pdi.unwrap());
+                    }
+                    // update collection of added definitions
+                    addedDefs.remove(pdi.unwrap());
+                } catch (ValueFormatException vfe) {
+                    // value conversion failed, remove it
+                    removeChildProperty(propName);
+                } catch (ConstraintViolationException cve1) {
+                    // no suitable definition found for this property,
+                    // remove it
+                    removeChildProperty(propName);
+                }
+            } catch (ItemStateException ise) {
+                String msg = propName + ": failed to retrieve property state";
+                log.error(msg, ise);
+                throw new RepositoryException(msg, ise);
+            }
+        }
+
+        // use temp array to avoid ConcurrentModificationException
+        ArrayList<ChildNodeEntry> list = new ArrayList<ChildNodeEntry>(thisState.getChildNodeEntries());
+        // start from tail to avoid problems with same-name siblings
+        for (int i = list.size() - 1; i >= 0; i--) {
+            ChildNodeEntry entry = list.get(i);
+            NodeState nodeState = null;
+            try {
+                nodeState = (NodeState) stateMgr.getItemState(entry.getId());
+                // the following call triggers ConstraintViolationException
+                // if there isn't any suitable definition anymore
+                itemMgr.getDefinition(nodeState);
+            } catch (ConstraintViolationException cve) {
+                // no suitable definition found for this child node
+                // try to find new applicable definition first and
+                // redefine node if possible
+                try {
+                    if (oldDefs.get(nodeState.getId()).isProtected()) {
+                        // remove 'orphaned' protected child node immediately
+                        removeChildNode(entry.getId());
+                        continue;
+                    }
+                    NodeDefinitionImpl ndi = getApplicableChildNodeDefinition(
+                            entry.getName(),
+                            nodeState.getNodeTypeName());
+                    NodeImpl node = (NodeImpl) itemMgr.getItem(nodeState.getId());
+                    // redefine node
+                    node.onRedefine(ndi.unwrap());
+                    // update collection of added definitions
+                    addedDefs.remove(ndi.unwrap());
+                } catch (ConstraintViolationException cve1) {
+                    // no suitable definition found for this child node,
+                    // remove it
+                    removeChildNode(entry.getId());
+                }
+            } catch (ItemStateException ise) {
+                String msg = entry + ": failed to retrieve node state";
+                log.error(msg, ise);
+                throw new RepositoryException(msg, ise);
+            }
+        }
+
+        // create items that are defined as auto-created by the new mixins
+        // and at the same time were not present with the old mixins
+        for (QItemDefinition def : addedDefs) {
+            if (def.isAutoCreated()) {
+                if (def.definesNode()) {
+                    NodeDefinitionImpl ndi = ntMgr.getNodeDefinition((QNodeDefinition) def);
+                    createChildNode(def.getName(), (NodeTypeImpl) ndi.getDefaultPrimaryType(), null);
+                } else {
+                    PropertyDefinitionImpl pdi = ntMgr.getPropertyDefinition((QPropertyDefinition) def);
+                    createChildProperty(pdi.unwrap().getName(), pdi.getRequiredType(), pdi);
+                }
+            }
+        }
     }
 
     //--------------------------------------------------------------< Object >

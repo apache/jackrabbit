@@ -17,6 +17,10 @@
 package org.apache.jackrabbit.api;
 
 import javax.jcr.RepositoryException;
+import javax.jcr.lock.LockException;
+import javax.jcr.nodetype.ConstraintViolationException;
+import javax.jcr.nodetype.NoSuchNodeTypeException;
+import javax.jcr.version.VersionException;
 
 /**
  * The Jackrabbit Node interface. This interface contains the
@@ -30,4 +34,17 @@ public interface JackrabbitNode {
      * @throws javax.jcr.RepositoryException
      */
     void rename(String newName) throws RepositoryException;
+
+    /**
+     *
+     * @param mixinNames
+     * @throws NoSuchNodeTypeException
+     * @throws VersionException
+     * @throws ConstraintViolationException
+     * @throws LockException
+     * @throws RepositoryException
+     */
+    void setMixins(String[] mixinNames)
+            throws NoSuchNodeTypeException, VersionException,
+            ConstraintViolationException, LockException, RepositoryException;
 }
