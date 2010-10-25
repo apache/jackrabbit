@@ -250,10 +250,10 @@ public class QPropertyDefinitionImpl extends QItemDefinitionImpl
                     && multiple == other.isMultiple()
                     && fullTextSearchable == other.isFullTextSearchable()
                     && queryOrderable == other.isQueryOrderable()
-                    && (valueConstraints == null || other.getValueConstraints() == null) ? (valueConstraints == other.getValueConstraints())
-                        : new HashSet(Arrays.asList(valueConstraints)).equals(new HashSet(Arrays.asList(other.getValueConstraints())))
-                    && (defaultValues == null || other.getDefaultValues() == null) ? (defaultValues == other.getDefaultValues())
-                        : new HashSet(Arrays.asList(defaultValues)).equals(new HashSet(Arrays.asList(other.getDefaultValues())))
+                    && ((valueConstraints == null || other.getValueConstraints() == null) ? (valueConstraints == other.getValueConstraints())
+                        : new HashSet(Arrays.asList(valueConstraints)).equals(new HashSet(Arrays.asList(other.getValueConstraints()))))
+                    && ((defaultValues == null || other.getDefaultValues() == null) ? (defaultValues == other.getDefaultValues())
+                        : new HashSet(Arrays.asList(defaultValues)).equals(new HashSet(Arrays.asList(other.getDefaultValues()))))
                     && new HashSet(Arrays.asList(availableQueryOperators)).equals(new HashSet(Arrays.asList(other.getAvailableQueryOperators())));
         }
         return false;
