@@ -1,38 +1,39 @@
-Release Notes -- Apache Jackrabbit -- Version 2.0.2
+Release Notes -- Apache Jackrabbit -- Version 2.0.3
 
 Introduction
 ------------
 
-Apache Jackrabbit 2.0.2 is a bug fix release that fixes issues reported
+Apache Jackrabbit 2.0.3 is a bug fix release that fixes issues reported
 against previous releases. This release is fully compatible with the
-earlier 2.0.0 release.
+earlier 2.0.x releases.
 
 Changes in this release
 -----------------------
 
-This release fixes the following issues:
+Improvements
 
-  JCR-2475 Test failures when running "mvn cobertura:check"
-  JCR-2577 SISM.checkAddedChildNodes() prevents merging of concurrent changes
-  JCR-2579 InvalidItemStateException when attempting concurrent, non ...
-  JCR-2588 UserManager.getAuthorizable() may fail with InvalidQueryException
+  [JCR-2699] Improve read/write concurrency
+
+Bug fixes
+
+  [JCR-2341] Unable to add/lock and unlock/remove Node with shared Session ... 
+  [JCR-2420] Node removal fails with AccessDeniedException
+  [JCR-2475] Test failures when running "mvn cobertura:check"
+  [JCR-2577] SISM.checkAddedChildNodes() prevents merging of concurrent changes
+  [JCR-2579] InvalidItemStateException when attempting concurrent, non ...
+  [JCR-2588] UserManager.getAuthorizable() may fail with InvalidQueryException
+  [JCR-2598] Saving concurrent sessions executing random operations causes ...
+  [JCR-2613] NoSuchItemStateException on checkin after removeVersion in XA ...
+  [JCR-2630] UserAccessControlProvider handles users who dont have ...
+  [JCR-2681] XMLPersistanceManager doesn't preserve a property's ...
+  [JCR-2747] ConcurrentModificationException in IndexMerger
+  [JCR-2770] Initial size of ConcurrentCache depends on number of segments ...
 
 See the Jackrabbit issue tracker for more details about these changes:
 
   https://issues.apache.org/jira/browse/JCR
 
 The issue tracker also documents all the known issues in this release.
-
-Contributors
-------------
-
-The following people have contributed to this release by submitting bug
-reports or by participating in the issue resolution process.
-
-    Dan Diephouse          Jukka Zitting          Marcel Reutegger
-    Tobias Bocanegra
-
-Thank you to everyone involved!
 
 Release Contents
 ----------------
