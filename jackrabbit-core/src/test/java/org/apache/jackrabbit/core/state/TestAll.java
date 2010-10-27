@@ -40,6 +40,7 @@ public class TestAll extends TestCase {
         suite.addTestSuite(DefaultISMLockingDeadlockTest.class);
         suite.addTestSuite(FineGrainedISMLockingTest.class);
         suite.addTestSuite(NameSetTest.class);
+        suite.addTestSuite(NodeStateMergerTest.class);
 
         return suite;
     }
