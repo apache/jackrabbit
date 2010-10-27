@@ -215,7 +215,6 @@ public class UserManagerImplTest extends AbstractUserTest {
         assertFalse(uid.equals(p.getName()));
         
         Group g = null;
-        Session uSession = null;
         try {
             g = userMgr.createGroup(uid, p, null);
             save(superuser);
