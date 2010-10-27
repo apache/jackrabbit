@@ -17,12 +17,22 @@
 package org.apache.jackrabbit.core.state;
 
 import org.apache.jackrabbit.core.id.ItemId;
-import org.apache.jackrabbit.core.id.PropertyId;
 import org.apache.jackrabbit.core.id.NodeId;
+import org.apache.jackrabbit.core.id.PropertyId;
+import org.apache.jackrabbit.core.nodetype.EffectiveNodeType;
 import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.QNodeDefinition;
+import org.apache.jackrabbit.spi.QNodeTypeDefinition;
+import org.apache.jackrabbit.spi.QPropertyDefinition;
+import org.apache.jackrabbit.spi.commons.name.NameConstants;
 
+import javax.jcr.nodetype.NoSuchNodeTypeException;
+import javax.jcr.nodetype.NodeDefinition;
+import javax.jcr.nodetype.NodeType;
+import javax.jcr.nodetype.PropertyDefinition;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Internal utility class used for merging concurrent changes that occurred
@@ -86,11 +96,7 @@ class NodeStateMerger {
                 }
 
                 // mixin types
-                if (!state.getMixinTypeNames().equals(overlayedState.getMixinTypeNames())) {
-                    // the mixins have been modified but by just looking at the diff we
-                    // can't determine where the change happened since the diffs of either
-                    // removing a mixin from the overlayed or adding a mixin to the
-                    // transient state would look identical...
+                if (!mergeMixinTypes(state, overlayedState, context)) {
                     return false;
                 }
 
@@ -189,6 +195,175 @@ class NodeStateMerger {
         }
     }
 
+    /**
+     * 
+     * @param state
+     * @param overlayedState
+     * @return true if the mixin type names are the same in both node states or
+     * if the mixin modifications do not conflict (and could be merged); false
+     * otherwise.
+     */
+    private static boolean mergeMixinTypes(NodeState state, NodeState overlayedState, MergeContext ctx) {
+        Set<Name> mixins = new HashSet<Name>(state.getMixinTypeNames());
+        Set<Name> overlayedMixins = new HashSet<Name>(overlayedState.getMixinTypeNames());
+        if (mixins.equals(overlayedMixins)) {
+            // no net effect modifications at all -> merge child items defined
+            // by the mixins according to the general rule.
+            return true;
+        }
+
+        PropertyId mixinPropId = new PropertyId(state.getNodeId(), NameConstants.JCR_MIXINTYPES);
+
+        boolean mergeDone;
+        if (ctx.isAdded(mixinPropId)) {
+            // jcr:mixinTypes property was created for 'state'.
+            // changes is safe (without need to merge),
+            // - overlayed state doesn't have any mixins OR
+            // - overlayed state got the same (or a subset) added
+            // and non of the items defined by the new mixin(s) collides with
+            // existing items on the overlayed state
+            if (overlayedMixins.isEmpty() || mixins.containsAll(overlayedMixins)) {
+                mixins.removeAll(overlayedMixins);
+                mergeDone = !conflicts(state, mixins, ctx, true);
+            } else {
+                // different mixins added in overlayedState and state
+                // -> don't merge
+                mergeDone = false;
+            }
+        } else if (ctx.isDeleted(mixinPropId)) {
+            // jcr:mixinTypes property was removed in 'state'.
+            // we can't determine if there was any change to mixin types in the
+            // overlayed state.
+            // -> don't merge.
+            mergeDone = false;
+        } else if (ctx.isModified(mixinPropId)) {
+            /* jcr:mixinTypes property was modified in 'state'.
+               NOTE: if the mixins of the overlayed state was modified as well
+               the property (jcr:mixinTypes) cannot not be persisted (stale).
+
+               since there is not way to determine if the overlayed mixins have
+               been modified just check for conflicts related to a net mixin
+               addition.
+             */
+            if (mixins.containsAll(overlayedMixins)) {
+                // net result of modifications is only addition.
+                // -> so far the changes are save if there are no conflicts
+                //    caused by mixins modification in 'state'.
+                //    NOTE: the save may still fail if the mixin property has
+                //    been modified in the overlayed state as well.
+                mixins.removeAll(overlayedMixins);
+                mergeDone = !conflicts(state, mixins, ctx, true);
+            } else {
+                // net result is either a removal in 'state' or modifications
+                // in both node states.
+                // -> don't merge.
+                mergeDone = false;
+            }
+        } else {
+            // jcr:mixinTypes property was added or modified in the overlayed
+            // state but neither added nor modified in 'state'.
+            if (overlayedMixins.containsAll(mixins)) {
+                // the modification in the overlayed state only includes the
+                // addition of mixin node types, but no removal.
+                // -> need to check if any added items from state would
+                //    collide with the items defined by the new mixin on the
+                //    overlayed state.
+                overlayedMixins.removeAll(mixins);
+                if (!conflicts(state, overlayedMixins, ctx, false)) {
+                    // update the mixin names in 'state'. the child items defined
+                    // by the new mixins will be added later on during merge of
+                    // child nodes and properties.
+                    state.setMixinTypeNames(overlayedMixins);
+                    mergeDone = true;
+                } else {
+                    mergeDone = false;
+                }
+            } else {
+                // either remove-mixin(s) or both add and removal of mixin in
+                // the overlayed state.
+                // -> we cannot merge easily
+                mergeDone = false;
+            }
+        }
+
+        return mergeDone;
+    }
+
+    /**
+     *
+     * @param state The state of the node to be saved.
+     * @param addedMixins The added mixins to be used for testing
+     * @param ctx
+     * @param compareToOverlayed
+     * @return true if a conflict can be determined, false otherwise.
+     */
+    private static boolean conflicts(NodeState state,
+                                     Set<Name> addedMixins,
+                                     MergeContext ctx, boolean compareToOverlayed) {
+        try {
+            // check for all added mixin types in one state if there are colliding
+            // child items in the other state.
+            // this is currently a simple check for named item definitions;
+            // if the mixin defines residual item definitions -> return false.
+            for (Name mixinName : addedMixins) {
+                EffectiveNodeType ent = ctx.getEffectiveNodeType(mixinName);
+
+                if (ent.getUnnamedItemDefs().length > 0) {
+                    // the mixin defines residual child definitions -> cannot
+                    // easily determine conflicts
+                    return false;
+                }
+
+                NodeState overlayed = (NodeState) state.getOverlayedState();
+                for (ChildNodeEntry cne : state.getChildNodeEntries()) {
+                    if (ent.getNamedNodeDefs(cne.getName()).length > 0) {
+                        if (ctx.isAdded(cne.getId()) || isAutoCreated(cne, ent)) {
+                            if (!compareToOverlayed || overlayed.hasChildNodeEntry(cne.getName())) {
+                                return true;
+                            }
+                        } // else: neither added nor autocreated in 'state' .
+
+                    } // else: child node not defined by the added mixin type
+                }
+
+                for (Name propName : state.getPropertyNames()) {
+                    if (ent.getNamedPropDefs(propName).length > 0) {
+                        PropertyId pid = new PropertyId(state.getNodeId(), propName);
+                        if (ctx.isAdded(pid) || isAutoCreated(propName, ent)) {
+                            if (!compareToOverlayed || overlayed.hasPropertyName(propName)) {
+                                return true;
+                            }
+                        } // else: neither added nor autocreated in 'state'
+                    } // else: property not defined by added mixin
+                }
+            }
+        } catch (NoSuchNodeTypeException e) {
+            // unable to determine collision
+            return true;
+        }
+
+        // no conflict detected
+        return false;
+    }
+
+    private static boolean isAutoCreated(ChildNodeEntry cne, EffectiveNodeType ent) {
+        for (QNodeDefinition def : ent.getAutoCreateNodeDefs()) {
+            if (def.getName().equals(cne.getName())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static boolean isAutoCreated(Name propertyName, EffectiveNodeType ent) {
+        for (QPropertyDefinition def : ent.getAutoCreatePropDefs()) {
+            if (def.getName().equals(propertyName)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     //-----------------------------------------------------< inner interfaces >
 
     /**
@@ -199,5 +374,6 @@ class NodeStateMerger {
         boolean isDeleted(ItemId id);
         boolean isModified(ItemId id);
         boolean allowsSameNameSiblings(NodeId id);
+        EffectiveNodeType getEffectiveNodeType(Name ntName) throws NoSuchNodeTypeException;
     }
 }

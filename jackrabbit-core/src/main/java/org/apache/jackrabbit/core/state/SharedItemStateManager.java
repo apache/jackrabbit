@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.core.state;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -24,6 +25,7 @@ import javax.jcr.PropertyType;
 import javax.jcr.ReferentialIntegrityException;
 import javax.jcr.RepositoryException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
+import javax.jcr.nodetype.NodeType;
 
 import org.apache.jackrabbit.core.RepositoryImpl;
 import org.apache.jackrabbit.core.cluster.UpdateEventChannel;
@@ -246,9 +248,9 @@ public class SharedItemStateManager
     public ItemState getItemState(ItemId id)
             throws NoSuchItemStateException, ItemStateException {
         // check the virtual root ids (needed for overlay)
-        for (int i = 0; i < virtualProviders.length; i++) {
-            if (virtualProviders[i].isVirtualRoot(id)) {
-                return virtualProviders[i].getItemState(id);
+        for (VirtualItemStateProvider virtualProvider : virtualProviders) {
+            if (virtualProvider.isVirtualRoot(id)) {
+                return virtualProvider.getItemState(id);
             }
         }
 
@@ -266,9 +268,9 @@ public class SharedItemStateManager
         }
 
         // check if there is a virtual state for the specified item
-        for (int i = 0; i < virtualProviders.length; i++) {
-            if (virtualProviders[i].hasItemState(id)) {
-                return virtualProviders[i].getItemState(id);
+        for (VirtualItemStateProvider virtualProvider : virtualProviders) {
+            if (virtualProvider.hasItemState(id)) {
+                return virtualProvider.getItemState(id);
             }
         }
 
@@ -280,8 +282,8 @@ public class SharedItemStateManager
      */
     public boolean hasItemState(ItemId id) {
         // check the virtual root ids (needed for overlay)
-        for (int i = 0; i < virtualProviders.length; i++) {
-            if (virtualProviders[i].isVirtualRoot(id)) {
+        for (VirtualItemStateProvider virtualProvider : virtualProviders) {
+            if (virtualProvider.isVirtualRoot(id)) {
                 return true;
             }
         }
@@ -307,8 +309,8 @@ public class SharedItemStateManager
         }
 
         // otherwise check virtual ones
-        for (int i = 0; i < virtualProviders.length; i++) {
-            if (virtualProviders[i].hasItemState(id)) {
+        for (VirtualItemStateProvider virtualProvider : virtualProviders) {
+            if (virtualProvider.hasItemState(id)) {
                 return true;
             }
         }
@@ -334,9 +336,9 @@ public class SharedItemStateManager
         }
 
         // check virtual providers
-        for (int i = 0; i < virtualProviders.length; i++) {
+        for (VirtualItemStateProvider virtualProvider : virtualProviders) {
             try {
-                return virtualProviders[i].getNodeReferences(id);
+                return virtualProvider.getNodeReferences(id);
             } catch (NoSuchItemStateException e) {
                 // ignore
             }
@@ -370,8 +372,8 @@ public class SharedItemStateManager
         }
 
         // check virtual providers
-        for (int i = 0; i < virtualProviders.length; i++) {
-            if (virtualProviders[i].hasNodeReferences(id)) {
+        for (VirtualItemStateProvider virtualProvider : virtualProviders) {
+            if (virtualProvider.hasNodeReferences(id)) {
                 return true;
             }
         }
@@ -449,8 +451,8 @@ public class SharedItemStateManager
      */
     public void dispose() {
         // remove virtual item state providers (see JCR-2023)
-        for (int i = 0; i < virtualProviders.length; i++) {
-            virtualProviders[i].removeListener(this);
+        for (VirtualItemStateProvider virtualProvider : virtualProviders) {
+            virtualProvider.removeListener(this);
         }
         virtualProviders = new VirtualItemStateProvider[0];
 
@@ -636,6 +638,10 @@ public class SharedItemStateManager
                                                 log.warn("Unable to get node definition", e);
                                                 return false;
                                             }
+                                        }
+
+                                        public EffectiveNodeType getEffectiveNodeType(Name ntName) throws NoSuchNodeTypeException {
+                                            return ntReg.getEffectiveNodeType(ntName);
                                         }
 
                                         protected NodeState getNodeState(NodeId id)
@@ -1422,7 +1428,7 @@ public class SharedItemStateManager
     private boolean isShareable(NodeState state) throws RepositoryException {
         // shortcut: check some wellknown built-in types first
         Name primary = state.getNodeTypeName();
-        Set mixins = state.getMixinTypeNames();
+        Set<Name> mixins = state.getMixinTypeNames();
         if (mixins.contains(NameConstants.MIX_SHAREABLE)) {
             return true;
         }
