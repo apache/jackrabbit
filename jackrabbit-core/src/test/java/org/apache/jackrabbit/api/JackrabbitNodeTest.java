@@ -16,11 +16,14 @@
  */
 package org.apache.jackrabbit.api;
 
+import org.apache.jackrabbit.commons.cnd.CndImporter;
 import org.apache.jackrabbit.test.AbstractJCRTest;
 
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
+import java.io.InputStreamReader;
+import java.io.Reader;
 
 /**
  * <code>JackrabbitNodeTest</code>...
@@ -31,12 +34,18 @@ public class JackrabbitNodeTest  extends AbstractJCRTest {
     static final String SEQ_AFTER =  "jackraBbit";
     static final int RELPOS = 6;
 
+    static final String TEST_NODETYPES = "org/apache/jackrabbit/api/test_mixin_nodetypes.cnd";
+
     protected void setUp() throws Exception {
         super.setUp();
         assertTrue(testRootNode.getPrimaryNodeType().hasOrderableChildNodes());
         for (char c : SEQ_BEFORE.toCharArray()) {
             testRootNode.addNode(new String(new char[]{c}));
         }
+
+        Reader cnd = new InputStreamReader(getClass().getClassLoader().getResourceAsStream(TEST_NODETYPES));
+        CndImporter.registerNodeTypes(cnd, superuser);
+        cnd.close();
     }
 
     public void testRename() throws RepositoryException {
@@ -66,5 +75,44 @@ public class JackrabbitNodeTest  extends AbstractJCRTest {
             }
             pos++;
         }
+    }
+
+    public void testSetMixins() throws RepositoryException {
+        // create node with mixin test:AA
+        Node n = testRootNode.addNode("foo", "nt:folder");
+        n.addMixin("test:AA");
+        n.setProperty("test:propAA", "AA");
+        n.setProperty("test:propA", "A");
+        superuser.save();
+
+        // 'downgrade' from test:AA to test:A
+        ((JackrabbitNode) n).setMixins(new String[]{"test:A"});
+        superuser.save();
+
+        assertTrue(n.hasProperty("test:propA"));
+        assertFalse(n.hasProperty("test:propAA"));
+
+        // 'upgrade' from test:A to test:AA
+        ((JackrabbitNode) n).setMixins(new String[]{"test:AA"});
+        n.setProperty("test:propAA", "AA");
+        superuser.save();
+
+        assertTrue(n.hasProperty("test:propA"));
+        assertTrue(n.hasProperty("test:propAA"));
+
+        // replace test:AA with mix:title
+        ((JackrabbitNode) n).setMixins(new String[]{"mix:title"});
+        n.setProperty("jcr:title", "...");
+        n.setProperty("jcr:description", "blah blah");
+        superuser.save();
+
+        assertTrue(n.hasProperty("jcr:title"));
+        assertTrue(n.hasProperty("jcr:description"));
+        assertFalse(n.hasProperty("test:propA"));
+        assertFalse(n.hasProperty("test:propAA"));
+
+        // clean up
+        n.remove();
+        superuser.save();
     }
 }
