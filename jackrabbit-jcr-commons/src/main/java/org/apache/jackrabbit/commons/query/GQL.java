@@ -74,6 +74,9 @@ import org.apache.jackrabbit.util.Text;
  * are omitted and only one value is specified GQL will return at most this
  * number of results. E.g. <code>limit:10</code> (will return the first 10
  * results)</li>
+ * <li><code><b>name:</b></code> a constraint on the name of the returned nodes.
+ * The following wild cards are allowed: '*', matching any character sequence of
+ * length 0..n; '?', matching any single character.</li>
  * </ul>
  * <p/>
  * <b>Property name</b>
@@ -148,6 +151,11 @@ public final class GQL {
      * Constant for <code>limit</code> keyword.
      */
     private static final String LIMIT = "limit";
+
+    /**
+     * Constant for <code>name</code> keyword.
+     */
+    private static final String NAME = "name";
 
     /**
      * Constant for <code>OR</code> operator.
@@ -699,6 +707,11 @@ public final class GQL {
                     // noise
                 case '*':
                 case '?':
+                    if (property.toString().equals(NAME)) {
+                        // allow wild cards in name
+                        value.append(c);
+                        break;
+                    }
                 case '\'':
                 case '~':
                 case '^':
@@ -775,7 +788,13 @@ public final class GQL {
                 }
             }
         } else {
-            ContainsExpression expr = new ContainsExpression(property, value);
+            Expression expr;
+            if (property.equals(NAME)) {
+                expr = new NameExpression(value);
+            } else {
+                expr = new ContainsExpression(property, value);
+            }
+
             if (optional) {
                 Expression last = conditions.get(conditions.size() - 1);
                 if (last instanceof OptionalExpression) {
@@ -864,6 +883,30 @@ public final class GQL {
 
         PrimaryTypeComparision(String value) {
             super(JCR_PRIMARY_TYPE, value);
+        }
+    }
+
+    /**
+     * A name expression.
+     */
+    private class NameExpression implements Expression {
+
+        private final String value;
+
+        NameExpression(String value) {
+            String tmp = value;
+            tmp = tmp.replaceAll("'", "''");
+            tmp = tmp.replaceAll("\\*", "\\%");
+            tmp = tmp.replaceAll("\\?", "\\_");
+            tmp = tmp.toLowerCase();
+            this.value = tmp;
+        }
+
+        public void toString(StringBuffer buffer)
+                throws RepositoryException {
+            buffer.append("jcr:like(fn:lower-case(fn:name()), '");
+            buffer.append(value);
+            buffer.append("')");
         }
     }
 

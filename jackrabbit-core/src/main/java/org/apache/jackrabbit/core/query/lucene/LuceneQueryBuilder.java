@@ -44,6 +44,7 @@ import org.apache.jackrabbit.spi.PathFactory;
 import org.apache.jackrabbit.spi.commons.conversion.NameException;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
+import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
 import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
 import org.apache.jackrabbit.spi.commons.query.AndQueryNode;
 import org.apache.jackrabbit.spi.commons.query.DefaultQueryNodeVisitor;
@@ -69,9 +70,7 @@ import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.queryParser.ParseException;
 import org.apache.lucene.queryParser.QueryParser;
-import org.apache.lucene.search.BooleanClause;
-import org.apache.lucene.search.BooleanQuery;
-import org.apache.lucene.search.Query;
+import org.apache.lucene.search.*;
 import org.apache.lucene.search.BooleanClause.Occur;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -98,6 +97,11 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
      * The name of a parent path element.
      */
     private static final Name PARENT_ELEMENT_NAME = PATH_FACTORY.getParentElement().getName();
+
+    /**
+     * Name constant for fn:name()
+     */
+    private static final Name FN_NAME = NameFactoryImpl.getInstance().create(SearchManager.NS_FN_URI, "name()");
 
     /**
      * Root node of the abstract query tree
@@ -709,35 +713,44 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
         }
 
         // support for fn:name()
-        if (propertyName.getNamespaceURI().equals(SearchManager.NS_FN_URI)
-                && propertyName.getLocalName().equals("name()")) {
+        if (propertyName.equals(FN_NAME)) {
             if (node.getValueType() != QueryConstants.TYPE_STRING) {
                 exceptions.add(new InvalidQueryException("Name function can "
                         + "only be used in conjunction with a string literal"));
                 return data;
             }
-            if (node.getOperation() != QueryConstants.OPERATION_EQ_VALUE
-                    && node.getOperation() != QueryConstants.OPERATION_EQ_GENERAL) {
-                exceptions.add(new InvalidQueryException("Name function can "
-                        + "only be used in conjunction with an equals operator"));
-                return data;
-            }
-            // check if string literal is a valid XML Name
-            if (XMLChar.isValidName(node.getStringValue())) {
-                // parse string literal as JCR Name
-                try {
-                    Name n = session.getQName(ISO9075.decode(node.getStringValue()));
-                    query = new NameQuery(n, indexFormatVersion, nsMappings);
-                } catch (NameException e) {
-                    exceptions.add(e);
-                    return data;
-                } catch (NamespaceException e) {
-                    exceptions.add(e);
-                    return data;
+            if (node.getOperation() == QueryConstants.OPERATION_EQ_VALUE
+                    || node.getOperation() == QueryConstants.OPERATION_EQ_GENERAL) {
+                // check if string literal is a valid XML Name
+                if (XMLChar.isValidName(node.getStringValue())) {
+                    // parse string literal as JCR Name
+                    try {
+                        Name n = session.getQName(ISO9075.decode(node.getStringValue()));
+                        query = new NameQuery(n, indexFormatVersion, nsMappings);
+                    } catch (NameException e) {
+                        exceptions.add(e);
+                        return data;
+                    } catch (NamespaceException e) {
+                        exceptions.add(e);
+                        return data;
+                    }
+                } else {
+                    // will never match -> create dummy query
+                    query = new BooleanQuery();
+                }
+            } else if (node.getOperation() == QueryConstants.OPERATION_LIKE) {
+                // the like operation always has one string value.
+                // no coercing, see above
+                if (stringValues[0].equals("%")) {
+                    query = new org.apache.lucene.search.MatchAllDocsQuery();
+                } else {
+                    query = new WildcardNameQuery(stringValues[0], 
+                            transform[0], session, nsMappings);
                 }
             } else {
-                // will never match -> create dummy query
-                query = new BooleanQuery();
+                exceptions.add(new InvalidQueryException("Name function can "
+                        + "only be used in conjunction with the following operators: equals, like"));
+                return data;
             }
         } else {
             switch (node.getOperation()) {
