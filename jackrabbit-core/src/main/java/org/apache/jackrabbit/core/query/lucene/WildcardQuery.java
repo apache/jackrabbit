@@ -61,9 +61,9 @@ public class WildcardQuery extends Query implements Transformable {
     private final String field;
 
     /**
-     * Name of the property to search.
+     * Creates a term value for a given string.
      */
-    private final String propName;
+    private final WildcardTermEnum.TermValueFactory tvf;
 
     /**
      * The wildcard pattern.
@@ -71,7 +71,7 @@ public class WildcardQuery extends Query implements Transformable {
     private final String pattern;
 
     /**
-     * How property values are tranformed before they are matched using the
+     * How property values are transformed before they are matched using the
      * provided pattern.
      */
     private int transform = TRANSFORM_NONE;
@@ -91,11 +91,20 @@ public class WildcardQuery extends Query implements Transformable {
      * @param transform how property values are transformed before they are
      *                  matched using the <code>pattern</code>.
      */
-    public WildcardQuery(String field, String propName, String pattern, int transform) {
+    public WildcardQuery(String field, final String propName, String pattern, int transform) {
         this.field = field.intern();
-        this.propName = propName;
         this.pattern = pattern;
         this.transform = transform;
+        if (propName != null) {
+            tvf = new WildcardTermEnum.TermValueFactory() {
+                @Override
+                public String createValue(String s) {
+                    return FieldNames.createNamedValue(propName, s);
+                }
+            };
+        } else {
+            tvf = new WildcardTermEnum.TermValueFactory();
+        }
     }
 
     /**
@@ -128,7 +137,7 @@ public class WildcardQuery extends Query implements Transformable {
     public Query rewrite(IndexReader reader) throws IOException {
         Query stdWildcardQuery = new MultiTermQuery(new Term(field, pattern)) {
             protected FilteredTermEnum getEnum(IndexReader reader) throws IOException {
-                return new WildcardTermEnum(reader, field, propName, pattern, transform);
+                return new WildcardTermEnum(reader, field, tvf, pattern, transform);
             }
         };
         try {
@@ -158,7 +167,7 @@ public class WildcardQuery extends Query implements Transformable {
      * @return a string representation of this query.
      */
     public String toString(String field) {
-        return propName + ":" + pattern;
+        return field + ":" + tvf.createValue(pattern);
     }
 
     /**
@@ -277,7 +286,7 @@ public class WildcardQuery extends Query implements Transformable {
         WildcardQueryScorer(Similarity similarity, IndexReader reader) {
             super(similarity);
             this.reader = reader;
-            this.cacheKey = field + '\uFFFF' + propName + '\uFFFF' + transform + '\uFFFF' + pattern;
+            this.cacheKey = field + '\uFFFF' + tvf.createValue('\uFFFF' + pattern) + '\uFFFF' + transform;
             // check cache
             PerQueryCache cache = PerQueryCache.getInstance();
             Map<String, BitSet> m = (Map<String, BitSet>) cache.get(WildcardQueryScorer.class, reader);
@@ -344,7 +353,7 @@ public class WildcardQuery extends Query implements Transformable {
             if (hitsCalculated) {
                 return;
             }
-            TermEnum terms = new WildcardTermEnum(reader, field, propName, pattern, transform);
+            TermEnum terms = new WildcardTermEnum(reader, field, tvf, pattern, transform);
             try {
                 // use unpositioned TermDocs
                 TermDocs docs = reader.termDocs();

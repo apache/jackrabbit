@@ -297,6 +297,50 @@ public class GQLTest extends AbstractQueryTest {
         checkResultSequence(rows, new Node[]{n2});
     }
 
+    public void testName() throws RepositoryException {
+        Node file1 = addFile(testRootNode, "file1.txt", SAMPLE_CONTENT);
+        superuser.save();
+
+        String stmt = createStatement("\"quick brown\" name:file1.txt");
+        checkResultWithRetries(stmt, "jcr:content", new Node[]{file1});
+
+        stmt = createStatement("\"quick brown\" name:file?.txt");
+        checkResultWithRetries(stmt, "jcr:content", new Node[]{file1});
+
+        stmt = createStatement("\"quick brown\" name:?ile1.txt");
+        checkResultWithRetries(stmt, "jcr:content", new Node[]{file1});
+
+        stmt = createStatement("\"quick brown\" name:file1.tx?");
+        checkResultWithRetries(stmt, "jcr:content", new Node[]{file1});
+
+        stmt = createStatement("\"quick brown\" name:file1.???");
+        checkResultWithRetries(stmt, "jcr:content", new Node[]{file1});
+
+        stmt = createStatement("\"quick brown\" name:fil*xt");
+        checkResultWithRetries(stmt, "jcr:content", new Node[]{file1});
+
+        stmt = createStatement("\"quick brown\" name:*.txt");
+        checkResultWithRetries(stmt, "jcr:content", new Node[]{file1});
+
+        stmt = createStatement("\"quick brown\" name:file1.*");
+        checkResultWithRetries(stmt, "jcr:content", new Node[]{file1});
+
+        stmt = createStatement("\"quick brown\" name:*");
+        checkResultWithRetries(stmt, "jcr:content", new Node[]{file1});
+
+        stmt = createStatement("\"quick brown\" name:fIlE1.*");
+        checkResultWithRetries(stmt, "jcr:content", new Node[]{file1});
+
+        stmt = createStatement("\"quick brown\" name:file2.txt");
+        checkResultWithRetries(stmt, "jcr:content", new Node[]{});
+
+        stmt = createStatement("\"quick brown\" name:file1.t?");
+        checkResultWithRetries(stmt, "jcr:content", new Node[]{});
+
+        stmt = createStatement("\"quick brown\" name:?le1.txt");
+        checkResultWithRetries(stmt, "jcr:content", new Node[]{});
+    }
+
     public void XXXtestQueryDestruction() throws RepositoryException {
         char[] stmt = createStatement("title:jackrabbit \"apache software\" type:file order:+title limit:10..20").toCharArray();
         for (char c = 0; c < 255; c++) {
@@ -343,11 +387,15 @@ public class GQLTest extends AbstractQueryTest {
      */
     protected void checkResultWithRetries(String gql, String cpp, Node[] nodes)
             throws RepositoryException {
-        for (int i = 0; i < 10; i++) {
+        int retries = 10;
+        for (int i = 0; i < retries; i++) {
             try {
                 checkResult(GQL.execute(gql, superuser, cpp), nodes);
                 break;
             } catch (AssertionFailedError e) {
+                if (i + 1 == retries) {
+                    throw e;
+                }
                 try {
                     // sleep for a second and retry
                     Thread.sleep(1000);

@@ -24,7 +24,7 @@ import javax.jcr.Node;
  */
 public class FnNameQueryTest extends AbstractQueryTest {
 
-    public void testFnName() throws RepositoryException {
+    public void testSimple() throws RepositoryException {
         Node n1 = testRootNode.addNode(nodeName1);
         n1.setProperty(propertyName1, 1);
         Node n2 = testRootNode.addNode(nodeName2);
@@ -32,7 +32,7 @@ public class FnNameQueryTest extends AbstractQueryTest {
         Node n3 = testRootNode.addNode(nodeName3);
         n3.setProperty(propertyName1, 3);
 
-        testRootNode.save();
+        superuser.save();
 
         String base = testPath + "/*[@" + propertyName1;
         executeXPathQuery(base + " = 1 and fn:name() = '" + nodeName1 + "']",
@@ -47,16 +47,104 @@ public class FnNameQueryTest extends AbstractQueryTest {
                 new Node[]{n2, n3});
     }
 
-    public void testFnNameWithSpace() throws RepositoryException {
+    public void testWithSpace() throws RepositoryException {
         Node n1 = testRootNode.addNode("My Documents");
         n1.setProperty(propertyName1, 1);
 
-        testRootNode.save();
+        superuser.save();
 
         String base = testPath + "/*[@" + propertyName1;
         executeXPathQuery(base + " = 1 and fn:name() = 'My Documents']",
                 new Node[]{});
         executeXPathQuery(base + " = 1 and fn:name() = 'My_x0020_Documents']",
                 new Node[]{n1});
+    }
+
+    public void testLikeWithWildcard() throws RepositoryException {
+        Node n1 = testRootNode.addNode("Foo");
+        n1.setProperty(propertyName1, 1);
+
+        superuser.save();
+
+        String prefix = testPath + "/*[@" + propertyName1 + " = 1 and jcr:like(fn:name(), '";
+        String suffix = "')]";
+        executeXPathQuery(prefix + "F%" + suffix, new Node[]{n1});
+        executeXPathQuery(prefix + "Fo%" + suffix, new Node[]{n1});
+        executeXPathQuery(prefix + "Foo%" + suffix, new Node[]{n1});
+        executeXPathQuery(prefix + "Fooo%" + suffix, new Node[]{});
+        executeXPathQuery(prefix + "%o" + suffix, new Node[]{n1});
+        executeXPathQuery(prefix + "%oo" + suffix, new Node[]{n1});
+        executeXPathQuery(prefix + "%Foo" + suffix, new Node[]{n1});
+        executeXPathQuery(prefix + "%Foo%" + suffix, new Node[]{n1});
+        executeXPathQuery(prefix + "%oo%" + suffix, new Node[]{n1});
+        executeXPathQuery(prefix + "%" + suffix, new Node[]{n1});
+
+        executeXPathQuery(prefix + "F__" + suffix, new Node[]{n1});
+        executeXPathQuery(prefix + "Fo_" + suffix, new Node[]{n1});
+        executeXPathQuery(prefix + "F_o" + suffix, new Node[]{n1});
+        executeXPathQuery(prefix + "Foo_" + suffix, new Node[]{});
+    }
+
+    public void testLikeWithWildcardAndLowerCase()
+            throws RepositoryException {
+        Node n1 = testRootNode.addNode("Foo");
+        n1.setProperty(propertyName1, 1);
+
+        superuser.save();
+
+        String prefix = testPath + "/*[@" + propertyName1 + " = 1 and jcr:like(fn:lower-case(fn:name()), '";
+        String suffix = "')]";
+
+        executeXPathQuery(prefix + "f%" + suffix, new Node[]{n1});
+        executeXPathQuery(prefix + "fo%" + suffix, new Node[]{n1});
+        executeXPathQuery(prefix + "foo%" + suffix, new Node[]{n1});
+        executeXPathQuery(prefix + "fooo%" + suffix, new Node[]{});
+        executeXPathQuery(prefix + "%o" + suffix, new Node[]{n1});
+        executeXPathQuery(prefix + "%oo" + suffix, new Node[]{n1});
+        executeXPathQuery(prefix + "%foo" + suffix, new Node[]{n1});
+        executeXPathQuery(prefix + "%foo%" + suffix, new Node[]{n1});
+        executeXPathQuery(prefix + "%oo%" + suffix, new Node[]{n1});
+
+        executeXPathQuery(prefix + "f__" + suffix, new Node[]{n1});
+        executeXPathQuery(prefix + "fo_" + suffix, new Node[]{n1});
+        executeXPathQuery(prefix + "f_o" + suffix, new Node[]{n1});
+        executeXPathQuery(prefix + "_oo" + suffix, new Node[]{n1});
+        executeXPathQuery(prefix + "foo_" + suffix, new Node[]{});
+
+        // all non-matching
+        executeXPathQuery(prefix + "F%" + suffix, new Node[]{});
+        executeXPathQuery(prefix + "fO%" + suffix, new Node[]{});
+        executeXPathQuery(prefix + "foO%" + suffix, new Node[]{});
+        executeXPathQuery(prefix + "%O" + suffix, new Node[]{});
+        executeXPathQuery(prefix + "%Oo" + suffix, new Node[]{});
+        executeXPathQuery(prefix + "%Foo" + suffix, new Node[]{});
+        executeXPathQuery(prefix + "%FOO%" + suffix, new Node[]{});
+        executeXPathQuery(prefix + "%oO%" + suffix, new Node[]{});
+
+        executeXPathQuery(prefix + "F__" + suffix, new Node[]{});
+        executeXPathQuery(prefix + "fO_" + suffix, new Node[]{});
+        executeXPathQuery(prefix + "F_o" + suffix, new Node[]{});
+        executeXPathQuery(prefix + "_oO" + suffix, new Node[]{});
+    }
+
+    public void testLikeWithPrefix() throws RepositoryException {
+        Node n1 = testRootNode.addNode("jcr:content");
+        n1.setProperty(propertyName1, 1);
+
+        superuser.save();
+
+        String prefix = testPath + "/*[@" + propertyName1 + " = 1 and jcr:like(fn:name(), '";
+        String suffix = "')]";
+
+        executeXPathQuery(prefix + "jcr:%" + suffix, new Node[]{n1});
+        executeXPathQuery(prefix + "jcr:c%" + suffix, new Node[]{n1});
+        executeXPathQuery(prefix + "jcr:%ten%" + suffix, new Node[]{n1});
+        executeXPathQuery(prefix + "jcr:c_nt%" + suffix, new Node[]{n1});
+        executeXPathQuery(prefix + "jcr:%nt" + suffix, new Node[]{n1});
+
+        // non-matching
+        executeXPathQuery(prefix + "invalid:content" + suffix, new Node[]{});
+        executeXPathQuery(prefix + "%:content" + suffix, new Node[]{});
+        executeXPathQuery(prefix + "%:%" + suffix, new Node[]{});
     }
 }

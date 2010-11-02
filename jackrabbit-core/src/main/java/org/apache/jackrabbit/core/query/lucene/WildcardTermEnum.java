@@ -46,6 +46,11 @@ class WildcardTermEnum extends FilteredTermEnum implements TransformConstants {
     private final String field;
 
     /**
+     * Factory for term values.
+     */
+    private final TermValueFactory tvf;
+
+    /**
      * The term prefix without wildcards
      */
     private final String prefix;
@@ -70,8 +75,7 @@ class WildcardTermEnum extends FilteredTermEnum implements TransformConstants {
      *
      * @param reader    the index reader.
      * @param field     the lucene field to search.
-     * @param propName  the embedded jcr property name or <code>null</code> if
-     *                  there is not embedded property name.
+     * @param tvf       the term value factory.
      * @param pattern   the pattern to match the values.
      * @param transform the transformation that should be applied to the term
      *                  enum from the index reader.
@@ -82,7 +86,7 @@ class WildcardTermEnum extends FilteredTermEnum implements TransformConstants {
      */
     public WildcardTermEnum(IndexReader reader,
                             String field,
-                            String propName,
+                            TermValueFactory tvf,
                             String pattern,
                             int transform) throws IOException {
         if (transform < TRANSFORM_NONE || transform > TRANSFORM_UPPER_CASE) {
@@ -90,6 +94,7 @@ class WildcardTermEnum extends FilteredTermEnum implements TransformConstants {
         }
         this.field = field;
         this.transform = transform;
+        this.tvf = tvf;
 
         int idx = 0;
 
@@ -97,17 +102,13 @@ class WildcardTermEnum extends FilteredTermEnum implements TransformConstants {
             // optimize the term comparison by removing the prefix from the pattern
             // and therefore use a more precise range scan
             while (idx < pattern.length()
-                    && Character.isLetterOrDigit(pattern.charAt(idx))) {
+                    && (Character.isLetterOrDigit(pattern.charAt(idx)) || pattern.charAt(idx) == ':')) {
                 idx++;
             }
 
-            if (propName == null) {
-                prefix = pattern.substring(0, idx);
-            } else {
-                prefix = FieldNames.createNamedValue(propName, pattern.substring(0, idx));
-            }
+            prefix = tvf.createValue(pattern.substring(0, idx));
         } else {
-            prefix = FieldNames.createNamedValue(propName, "");
+            prefix = tvf.createValue("");
         }
 
         // initialize with prefix as dummy value
@@ -117,7 +118,7 @@ class WildcardTermEnum extends FilteredTermEnum implements TransformConstants {
         if (transform == TRANSFORM_NONE) {
             setEnum(reader.terms(new Term(field, prefix)));
         } else {
-            setEnum(new LowerUpperCaseTermEnum(reader, field, propName, pattern, transform));
+            setEnum(new LowerUpperCaseTermEnum(reader, field, pattern, transform));
         }
     }
 
@@ -172,7 +173,6 @@ class WildcardTermEnum extends FilteredTermEnum implements TransformConstants {
 
         public LowerUpperCaseTermEnum(IndexReader reader,
                                       String field,
-                                      String propName,
                                       String pattern,
                                       int transform) throws IOException {
             if (transform != TRANSFORM_LOWER_CASE && transform != TRANSFORM_UPPER_CASE) {
@@ -201,28 +201,28 @@ class WildcardTermEnum extends FilteredTermEnum implements TransformConstants {
                     String patternPrefix = pattern.substring(0, idx);
                     if (patternPrefix.length() == 0) {
                         // scan full property range
-                        String prefix = FieldNames.createNamedValue(propName, "");
-                        String limit = FieldNames.createNamedValue(propName, "\uFFFF");
+                        String prefix = tvf.createValue("");
+                        String limit = tvf.createValue("\uFFFF");
                         rangeScans.add(new RangeScan(reader,
                                 new Term(field, prefix), new Term(field, limit)));
                     } else {
                         // start with initial lower case
                         StringBuffer lowerLimit = new StringBuffer(patternPrefix.toUpperCase());
                         lowerLimit.setCharAt(0, Character.toLowerCase(lowerLimit.charAt(0)));
-                        String prefix = FieldNames.createNamedValue(propName, lowerLimit.toString());
+                        String prefix = tvf.createValue(lowerLimit.toString());
 
                         StringBuffer upperLimit = new StringBuffer(patternPrefix.toLowerCase());
                         upperLimit.append('\uFFFF');
-                        String limit = FieldNames.createNamedValue(propName, upperLimit.toString());
+                        String limit = tvf.createValue(upperLimit.toString());
                         rangeScans.add(new RangeScan(reader,
                                 new Term(field, prefix), new Term(field, limit)));
 
                         // second scan with upper case start
-                        prefix = FieldNames.createNamedValue(propName, patternPrefix.toUpperCase());
+                        prefix = tvf.createValue(patternPrefix.toUpperCase());
                         upperLimit = new StringBuffer(patternPrefix.toLowerCase());
                         upperLimit.setCharAt(0, Character.toUpperCase(upperLimit.charAt(0)));
                         upperLimit.append('\uFFFF');
-                        limit = FieldNames.createNamedValue(propName, upperLimit.toString());
+                        limit = tvf.createValue(upperLimit.toString());
                         rangeScans.add(new RangeScan(reader,
                                 new Term(field, prefix), new Term(field, limit)));
                     }
@@ -297,6 +297,21 @@ class WildcardTermEnum extends FilteredTermEnum implements TransformConstants {
          */
         private void getNext() {
             current = it.hasNext() ? it.next() : null;
+        }
+    }
+
+    public static class TermValueFactory {
+
+        /**
+         * Creates a term value from the given string. This implementation
+         * simply returns the given string. Sub classes my apply some
+         * transformation to the string.
+         *
+         * @param s the string.
+         * @return the term value to use in the query.
+         */
+        public String createValue(String s) {
+            return s;
         }
     }
 }
