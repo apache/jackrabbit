@@ -470,9 +470,9 @@ class IndexMerger implements IndexListener {
         private final CountDownLatch start = new CountDownLatch(1);
 
         /**
-         * Flat that indicates whether this woker has finished its work.
+         * Flag that indicates whether this worker has finished its work.
          */
-        private final AtomicBoolean terminated = new AtomicBoolean(true);
+        private final AtomicBoolean terminated = new AtomicBoolean(false);
 
         /**
          * The merge task.
