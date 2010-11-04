@@ -111,7 +111,7 @@ public class DefaultISMLocking implements ISMLocking {
 
     /**
      * Increments the writer count, sets the writer identifier and returns
-     * the acquired read lock once there are no other active readers or
+     * the acquired write lock once there are no other active readers or
      * writers or the current writer shares the thread id with this writer.
      */
     public synchronized WriteLock acquireWriteLock(ChangeLog changeLog)
