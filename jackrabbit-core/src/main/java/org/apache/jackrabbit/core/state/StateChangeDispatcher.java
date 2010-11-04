@@ -16,13 +16,13 @@
  */
 package org.apache.jackrabbit.core.state;
 
-import EDU.oswego.cs.dl.util.concurrent.CopyOnWriteArrayList;
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.spi.Name;
 
 import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
 import java.util.Collection;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * Component that holds references to listeners interested in changes to item
@@ -34,13 +34,15 @@ public class StateChangeDispatcher {
      * Simple item state listeners.
      * A copy on write array list is used so that no synchronization is required.
      */
-    private final Collection<WeakReference<ItemStateListener>> listeners = new CopyOnWriteArrayList();
+    private final Collection<WeakReference<ItemStateListener>> listeners =
+        new CopyOnWriteArrayList<WeakReference<ItemStateListener>>();
 
     /**
      * Node state listeners
      * A copy on write array list is used so that no synchronization is required.
      */
-    private final transient Collection<WeakReference<NodeStateListener>> nsListeners = new CopyOnWriteArrayList();
+    private final Collection<WeakReference<NodeStateListener>> nsListeners =
+        new CopyOnWriteArrayList<WeakReference<NodeStateListener>>();
 
     /**
      * Add an <code>ItemStateListener</code>.
