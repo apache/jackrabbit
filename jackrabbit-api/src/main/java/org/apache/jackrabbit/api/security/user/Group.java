@@ -40,6 +40,14 @@ public interface Group extends Authorizable {
     Iterator<Authorizable> getMembers() throws RepositoryException;
 
     /**
+     * Test whether an {@link Authorizable} is a declared member of this group.
+     * @param authorizable  The <code>Authorizable</code> to test.
+     * @return  <code>true</code> if the Authorizable to test is a direct member
+     * @throws RepositoryException  If an error occurs.
+     */
+    boolean isDeclaredMember(Authorizable authorizable) throws RepositoryException;
+    
+    /**
      * @param authorizable The <code>Authorizable</code> to test.
      * @return true if the Authorizable to test is a direct or indirect member
      * of this Group.

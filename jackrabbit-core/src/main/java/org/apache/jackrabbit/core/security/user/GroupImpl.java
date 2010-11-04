@@ -104,6 +104,16 @@ class GroupImpl extends AuthorizableImpl implements Group {
         return getMembers(true, UserManager.SEARCH_TYPE_AUTHORIZABLE);
     }
 
+    public boolean isDeclaredMember(Authorizable authorizable) throws RepositoryException {
+        if (authorizable == null || !(authorizable instanceof AuthorizableImpl)
+                || getNode().isSame(((AuthorizableImpl) authorizable).getNode())) {
+            return false;
+        }
+        else {
+            return getMembershipProvider(getNode()).hasMember((AuthorizableImpl) authorizable);
+        }
+    }
+
     /**
      * @see Group#isMember(Authorizable)
      */
@@ -330,6 +340,7 @@ class GroupImpl extends AuthorizableImpl implements Group {
         boolean addMember(AuthorizableImpl authorizable) throws RepositoryException;
         boolean removeMember(AuthorizableImpl authorizable) throws RepositoryException;
         Iterator<Authorizable> getMembers(boolean includeIndirect, int type) throws RepositoryException;
+        boolean hasMember(AuthorizableImpl authorizable) throws RepositoryException;
     }
 
     private class PropertyBasedMembershipProvider implements MembershipProvider {
@@ -410,6 +421,21 @@ class GroupImpl extends AuthorizableImpl implements Group {
             }
             else {
                 return Iterators.empty();
+            }
+        }
+
+        public boolean hasMember(AuthorizableImpl authorizable) throws RepositoryException {
+            if (node.hasProperty(P_MEMBERS)) {
+                Value[] members = node.getProperty(P_MEMBERS).getValues();
+                for (Value v : members) {
+                    if (authorizable.getNode().getIdentifier().equals(v.getString())) {
+                        return true;
+                    }
+                }
+                return false;
+            }
+            else {
+                return false;
             }
         }
 
@@ -507,6 +533,16 @@ class GroupImpl extends AuthorizableImpl implements Group {
             }
             else {
                 return Iterators.empty();
+            }
+        }
+
+        public boolean hasMember(AuthorizableImpl authorizable) throws RepositoryException {
+            if (node.hasNode(N_MEMBERS)) {
+                PropertySequence members = getPropertySequence(node.getNode(N_MEMBERS), userManager);
+                return members.hasItem(authorizable.getID());
+            }
+            else {
+                return false;
             }
         }
 
