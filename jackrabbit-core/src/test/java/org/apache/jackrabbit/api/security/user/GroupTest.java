@@ -258,6 +258,43 @@ public class GroupTest extends AbstractUserTest {
         }
     }
 
+    public void testIsDeclaredMember() throws RepositoryException, NotExecutableException {
+        User auth = getTestUser(superuser);
+        Group newGroup1 = null;
+        Group newGroup2 = null;
+        try {
+            newGroup1 = userMgr.createGroup(getTestPrincipal());
+            newGroup2 = userMgr.createGroup(getTestPrincipal());
+            save(superuser);
+
+            assertFalse(newGroup1.isDeclaredMember(auth));
+            assertFalse(newGroup2.isDeclaredMember(auth));
+
+            assertTrue(newGroup2.addMember(auth));
+            save(superuser);
+            assertTrue(newGroup2.isDeclaredMember(auth));
+            assertTrue(newGroup2.isDeclaredMember(userMgr.getAuthorizable(auth.getID())));
+
+            assertTrue(newGroup1.addMember(newGroup2));
+            save(superuser);
+            assertTrue(newGroup1.isDeclaredMember(newGroup2));
+            assertTrue(newGroup1.isDeclaredMember(userMgr.getAuthorizable(newGroup2.getID())));
+            assertTrue(newGroup1.isMember(auth));
+            assertTrue(newGroup1.isMember(userMgr.getAuthorizable(auth.getID())));
+            assertFalse(newGroup1.isDeclaredMember(auth));
+            assertFalse(newGroup1.isDeclaredMember(userMgr.getAuthorizable(auth.getID())));
+        } finally {
+            if (newGroup1 != null) {
+                newGroup1.remove();
+                save(superuser);
+            }
+            if (newGroup2 != null) {
+                newGroup2.remove();
+                save(superuser);
+            }
+        }
+    }
+
     public void testAddMemberTwice() throws NotExecutableException, RepositoryException {
         User auth = getTestUser(superuser);
         Group newGroup = null;
@@ -532,4 +569,5 @@ public class GroupTest extends AbstractUserTest {
             assertFalse(groupId.equals(it.next().getID()));
         }
     }
+
 }
