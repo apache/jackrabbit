@@ -1,0 +1,628 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package org.apache.jackrabbit.api.security.user;
+
+import org.apache.jackrabbit.api.security.user.QueryBuilder.RelationOp;
+import org.apache.jackrabbit.api.security.user.QueryBuilder.Selector;
+import org.apache.jackrabbit.api.security.user.QueryBuilder.Direction;
+import org.apache.jackrabbit.spi.commons.iterator.Iterators;
+import org.apache.jackrabbit.spi.commons.iterator.Predicate;
+
+import javax.jcr.RepositoryException;
+import javax.jcr.Value;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
+
+public class UserManagerSearchTest extends AbstractUserTest {
+
+    // users
+    private User blackWidow;
+    private User gardenSpider;
+    private User jumpingSpider;
+    private User ant;
+    private User bee;
+    private User fly;
+    private User jackrabbit;
+    private User deer;
+    private User opposum;
+    private User kangaroo;
+    private User elephant;
+    private User lemur;
+    private User gibbon;
+    private User crocodile;
+    private User turtle;
+    private User lizard;
+    private User kestrel;
+    private User goose;
+    private User pelican;
+    private User dove;
+    private User salamander;
+    private User goldenToad;
+    private User poisonDartFrog;
+
+    private final Set<User> users = new HashSet<User>();
+
+    // groups
+    private Group animals;
+    private Group invertebrates;
+    private Group arachnids;
+    private Group insects;
+    private Group vertebrates;
+    private Group mammals;
+    private Group apes;
+    private Group reptiles;
+    private Group birds;
+    private Group amphibians;
+
+    private final Set<Group> groups = new HashSet<Group>();
+    private final Set<Authorizable> authorizables = new HashSet<Authorizable>();
+
+    @Override
+    public void setUp() throws Exception {
+        super.setUp();
+
+        // Create a zoo. Please excuse my ignorance in zoology ;-)
+        animals = createGroup("animals");
+            invertebrates = createGroup("invertebrates");
+                arachnids = createGroup("arachnids");
+                insects = createGroup("insects");
+            vertebrates = createGroup("vertebrates");
+                mammals = createGroup("mammals");
+                    apes = createGroup("apes");
+                reptiles = createGroup("reptiles");
+                birds = createGroup("birds");
+                amphibians = createGroup("amphibians");
+
+        animals.addMember(invertebrates);
+        animals.addMember(vertebrates);
+        invertebrates.addMember(arachnids);
+        invertebrates.addMember(insects);
+        vertebrates.addMember(mammals);
+        vertebrates.addMember(reptiles);
+        vertebrates.addMember(birds);
+        vertebrates.addMember(amphibians);
+        mammals.addMember(apes);
+
+        blackWidow = createUser("black widow", "flies", 2, false);
+        gardenSpider = createUser("garden spider", "flies", 2, false);
+        jumpingSpider = createUser("jumping spider", "insects", 1, false);
+        addMembers(arachnids, blackWidow, gardenSpider, jumpingSpider);
+
+        ant = createUser("ant", "leaves", 0.5, false);
+        bee = createUser("bee", "honey", 2.5, true);
+        fly = createUser("fly", "dirt", 1.3, false);
+        addMembers(insects, ant, bee, fly);
+
+        jackrabbit = createUser("jackrabbit", "carrots", 2500, true);
+        deer = createUser("deer", "leaves", 120000, true);
+        opposum = createUser("opposum", "fruit", 1200, true);
+        kangaroo = createUser("kangaroo", "grass", 80000, true);
+        elephant = createUser("elephant", "leaves", 5000000, true);
+        addMembers(mammals, jackrabbit, deer, opposum, kangaroo, elephant);
+
+        lemur = createUser("lemur", "nectar", 1100, true);
+        gibbon = createUser("gibbon", "meat", 20000, true);
+        addMembers(apes, lemur, gibbon);
+
+        crocodile = createUser("crocodile", "meat", 80000, false);
+        turtle = createUser("turtle", "leaves", 10000, true);
+        lizard = createUser("lizard", "leaves", 2000, false);
+        addMembers(reptiles, crocodile, turtle, lizard);
+
+        kestrel = createUser("kestrel", "mice", 2000, false);
+        goose = createUser("goose", "snails", 10000, true);
+        pelican = createUser("pelican", "fish", 15000, true);
+        dove = createUser("dove", "insects", 1600, false);
+        addMembers(birds, kestrel, goose, pelican, dove);
+
+        salamander = createUser("salamander", "insects", 800, true);
+        goldenToad = createUser("golden toad", "insects", 700, false);
+        poisonDartFrog = createUser("poison dart frog", "insects", 40, false);
+        addMembers(amphibians, salamander, goldenToad, poisonDartFrog);
+
+        setProperty("canFly", vf.createValue(true), bee, fly, kestrel, goose, pelican, dove);
+        setProperty("poisonous",vf.createValue(true), blackWidow, bee, poisonDartFrog );
+        setProperty("poisonous", vf.createValue(false), turtle, lemur);
+        setProperty("hasWings", vf.createValue(false), blackWidow, gardenSpider, jumpingSpider, ant,
+                jackrabbit, deer, opposum, kangaroo, elephant, lemur, gibbon, crocodile, turtle, lizard,
+                salamander, goldenToad, poisonDartFrog);
+        setProperty("color", vf.createValue("black"), blackWidow, gardenSpider, ant, fly, lizard, salamander);
+        setProperty("color", vf.createValue("white"), opposum, goose, pelican, dove);
+        setProperty("color", vf.createValue("gold"), goldenToad);
+        setProperty("numberOfLegs", vf.createValue(2), kangaroo, gibbon, kestrel, goose, dove);
+        setProperty("numberOfLegs", vf.createValue(4), jackrabbit, deer, opposum, elephant, lemur, crocodile,
+                turtle, lizard, salamander, goldenToad, poisonDartFrog);
+        setProperty("numberOfLegs", vf.createValue(6), ant, bee, fly);
+        setProperty("numberOfLegs", vf.createValue(8), blackWidow, gardenSpider, jumpingSpider);
+
+        elephant.getImpersonation().grantImpersonation(jackrabbit.getPrincipal());
+
+        authorizables.addAll(users);
+        authorizables.addAll(groups);
+
+        if (!userMgr.isAutoSave()) {
+            superuser.save();
+        }
+
+    }
+
+    @Override
+    public void tearDown() throws Exception {
+        for (Authorizable authorizable : authorizables) {
+            authorizable.remove();
+        }
+        authorizables.clear();
+        groups.clear();
+        users.clear();
+
+        if (!userMgr.isAutoSave()) {
+            superuser.save();
+        }
+
+        super.tearDown();
+    }
+
+    public void testAny() throws RepositoryException {
+        Iterator<Authorizable> result = userMgr.findAuthorizables(new Query() {
+            public <T> void build(QueryBuilder<T> builder) { /* any */ }
+        });
+
+        assertContainsAll(result, authorizables.iterator());
+    }
+
+    public void testSelector() throws RepositoryException {
+        for (final Selector s : Selector.values()) {
+            Iterator<Authorizable> result = userMgr.findAuthorizables(new Query() {
+                public <T> void build(QueryBuilder<T> builder) {
+                    builder.setSelector(s);
+                }
+            });
+
+            switch (s) {
+                case AUTHORIZABLE:
+                    assertContainsAll(result, authorizables.iterator());
+                    break;
+
+                case USER:
+                    assertContainsAll(result, users.iterator());
+                    break;
+
+                case GROUP:
+                    assertContainsAll(result, groups.iterator());
+                    break;
+
+                default:
+                    fail("Fall through in switch");
+            }
+
+        }
+    }
+
+    public void testDirectScope() throws RepositoryException {
+        Group[] groups = new Group[]{mammals, vertebrates, apes};
+        for (final Group g : groups) {
+            Iterator<Authorizable> result = userMgr.findAuthorizables(new Query() {
+                public <T> void build(QueryBuilder<T> builder) {
+                    try {
+                        builder.setScope(g.getID(), true);
+                    } catch (RepositoryException e) {
+                        fail(e.getMessage());
+                    }
+                }
+            });
+
+            Iterator<Authorizable> members = g.getDeclaredMembers();
+            assertSameElements(result, members);
+        }
+    }
+
+    public void testIndirectScope() throws RepositoryException {
+        Group[] groups = new Group[]{mammals, vertebrates, apes};
+        for (final Group g : groups) {
+            Iterator<Authorizable> result = userMgr.findAuthorizables(new Query() {
+                public <T> void build(QueryBuilder<T> builder) {
+                    try {
+                        builder.setScope(g.getID(), false);
+                    } catch (RepositoryException e) {
+                        fail(e.getMessage());
+                    }
+                }
+            });
+
+            Iterator<Authorizable> members = g.getMembers();
+            assertSameElements(result, members);
+        }
+    }
+
+    public void testFindUsersInGroup() throws RepositoryException {
+        Group[] groups = new Group[]{mammals, vertebrates, apes};
+        for (final Group g : groups) {
+            Iterator<Authorizable> result = userMgr.findAuthorizables(new Query() {
+                public <T> void build(QueryBuilder<T> builder) {
+                    try {
+                        builder.setSelector(Selector.USER);
+                        builder.setScope(g.getID(), false);
+                    } catch (RepositoryException e) {
+                        fail(e.getMessage());
+                    }
+                }
+            });
+
+            Iterator<Authorizable> members = g.getMembers();
+            Iterator<Authorizable> users = Iterators.filterIterator(members, new Predicate<Authorizable>() {
+                public boolean evaluate(Authorizable authorizable) {
+                    return !authorizable.isGroup();
+                }
+            });
+            assertSameElements(result, users);
+        }
+    }
+
+    public void testFindGroupsInGroup() throws RepositoryException {
+        Group[] groups = new Group[]{mammals, vertebrates, apes};
+        for (final Group g : groups) {
+            Iterator<Authorizable> result = userMgr.findAuthorizables(new Query() {
+                public <T> void build(QueryBuilder<T> builder) {
+                    try {
+                        builder.setSelector(Selector.GROUP);
+                        builder.setScope(g.getID(), true);
+                    } catch (RepositoryException e) {
+                        fail(e.getMessage());
+                    }
+                }
+            });
+
+            Iterator<Authorizable> members = g.getDeclaredMembers();
+            Iterator<Authorizable> users = Iterators.filterIterator(members, new Predicate<Authorizable>() {
+                public boolean evaluate(Authorizable authorizable) {
+                    return authorizable.isGroup();
+                }
+            });
+            assertSameElements(result, users);
+        }
+    }
+
+    public void testFindProperty1() throws RepositoryException {
+        Iterator<Authorizable> result = userMgr.findAuthorizables(new Query() {
+            public <T> void build(QueryBuilder<T> builder) {
+                builder.setCondition(builder.
+                        property("@canFly", RelationOp.EQ, vf.createValue(true)));
+            }
+        });
+
+        Iterator<User> expected = Iterators.filterIterator(users.iterator(), new Predicate<User>() {
+            public boolean evaluate(User user) {
+                try {
+                    Value[] canFly = user.getProperty("canFly");
+                    return canFly != null && canFly.length == 1 && canFly[0].getBoolean();
+                } catch (RepositoryException e) {
+                    fail(e.getMessage());
+                }
+                return false;
+            }
+        });
+
+        assertTrue(result.hasNext());
+        assertSameElements(result, expected);
+    }
+
+    public void testFindProperty2() throws RepositoryException {
+        Iterator<Authorizable> result = userMgr.findAuthorizables(new Query() {
+            public <T> void build(QueryBuilder<T> builder) {
+                builder.setCondition(builder.
+                        property("profile/@weight", RelationOp.GT, vf.createValue(2000.0)));
+            }
+        });
+
+        Iterator<User> expected = Iterators.filterIterator(users.iterator(), new Predicate<User>() {
+            public boolean evaluate(User user) {
+                try {
+                    Value[] weight = user.getProperty("profile/weight");
+                    return weight != null && weight.length == 1 && weight[0].getDouble() > 2000.0;
+                } catch (RepositoryException e) {
+                    fail(e.getMessage());
+                }
+                return false;
+            }
+        });
+
+        assertTrue(result.hasNext());
+        assertSameElements(result, expected);
+    }
+
+    public void testFindProperty3() throws RepositoryException {
+        Iterator<Authorizable> result = userMgr.findAuthorizables(new Query() {
+            public <T> void build(QueryBuilder<T> builder) {
+                builder.setCondition(builder.
+                        property("@numberOfLegs", RelationOp.EQ, vf.createValue(8)));
+            }
+        });
+
+        Iterator<User> expected = Iterators.filterIterator(users.iterator(), new Predicate<User>() {
+            public boolean evaluate(User user) {
+                try {
+                    Value[] numberOfLegs = user.getProperty("numberOfLegs");
+                    return numberOfLegs != null && numberOfLegs.length == 1 && numberOfLegs[0].getLong() == 8;
+                } catch (RepositoryException e) {
+                    fail(e.getMessage());
+                }
+                return false;
+            }
+        });
+
+        assertTrue(result.hasNext());
+        assertSameElements(result, expected);
+    }
+
+    public void testPropertyExistence() throws RepositoryException {
+        Iterator<Authorizable> result = userMgr.findAuthorizables(new Query() {
+            public <T> void build(QueryBuilder<T> builder) {
+                builder.setCondition(builder.
+                        property("@poisonous", RelationOp.EX, null));
+            }
+        });
+
+        Iterator<User> expected = Iterators.filterIterator(users.iterator(), new Predicate<User>() {
+            public boolean evaluate(User user) {
+                try {
+                    Value[] poisonous = user.getProperty("poisonous");
+                    return poisonous != null && poisonous.length == 1;
+                } catch (RepositoryException e) {
+                    fail(e.getMessage());
+                }
+                return false;
+            }
+        });
+
+        assertTrue(result.hasNext());
+        assertSameElements(result, expected);
+    }
+
+    public void testContains1() throws RepositoryException {
+        Iterator<Authorizable> result = userMgr.findAuthorizables(new Query() {
+            public <T> void build(QueryBuilder<T> builder) {
+                builder.setCondition(builder.
+                        contains(".", "gold"));
+            }
+        });
+
+        Iterator<User> expected = Iterators.singleton(goldenToad);
+        assertTrue(result.hasNext());
+        assertSameElements(result, expected);
+    }
+
+    public void testContains2() throws RepositoryException {
+        Iterator<Authorizable> result = userMgr.findAuthorizables(new Query() {
+            public <T> void build(QueryBuilder<T> builder) {
+                builder.setCondition(builder.
+                        contains("@color", "gold"));
+            }
+        });
+
+        Iterator<User> expected = Iterators.singleton(goldenToad);
+        assertTrue(result.hasNext());
+        assertSameElements(result, expected);
+    }
+
+    public void testContains3() throws RepositoryException {
+        Iterator<Authorizable> result = userMgr.findAuthorizables(new Query() {
+            public <T> void build(QueryBuilder<T> builder) {
+                builder.setCondition(builder.
+                        contains("profile/.", "grass"));
+            }
+        });
+
+        Iterator<User> expected = Iterators.singleton(kangaroo);
+        assertTrue(result.hasNext());
+        assertSameElements(result, expected);
+    }
+
+    public void testContains4() throws RepositoryException {
+        Iterator<Authorizable> result = userMgr.findAuthorizables(new Query() {
+            public <T> void build(QueryBuilder<T> builder) {
+                builder.setCondition(builder.
+                        contains("profile/@food", "grass"));
+            }
+        });
+
+        Iterator<User> expected = Iterators.singleton(kangaroo);
+        assertTrue(result.hasNext());
+        assertSameElements(result, expected);
+    }
+
+    public void testCondition1() throws RepositoryException {
+        Iterator<Authorizable> result = userMgr.findAuthorizables(new Query() {
+            public <T> void build(QueryBuilder<T> builder) {
+                builder.setCondition(builder.
+                        and(builder.
+                            property("profile/@cute", RelationOp.EQ, vf.createValue(true)), builder.
+                            not(builder.
+                                property("@color", RelationOp.EQ, vf.createValue("black")))));
+            }
+        });
+
+        Iterator<User> expected = Iterators.filterIterator(users.iterator(), new Predicate<User>() {
+            public boolean evaluate(User user) {
+                try {
+                    Value[] cute = user.getProperty("profile/cute");
+                    Value[] black = user.getProperty("color");
+                    return cute != null && cute.length == 1 && cute[0].getBoolean() &&
+                           !(black != null && black.length == 1 && black[0].getString().equals("black"));
+                } catch (RepositoryException e) {
+                    fail(e.getMessage());
+                }
+                return false;
+            }
+        });
+
+        assertTrue(result.hasNext());
+        assertSameElements(result, expected);
+    }
+
+    public void testCondition2() throws RepositoryException {
+        Iterator<Authorizable> result = userMgr.findAuthorizables(new Query() {
+            public <T> void build(QueryBuilder<T> builder) {
+                builder.setCondition(builder.
+                        or(builder.
+                            property("profile/@food", RelationOp.EQ, vf.createValue("mice")), builder.
+                            property("profile/@food", RelationOp.EQ, vf.createValue("nectar"))));
+            }
+        });
+
+        Iterator<User> expected = Iterators.filterIterator(users.iterator(), new Predicate<User>() {
+            public boolean evaluate(User user) {
+                try {
+                    Value[] food = user.getProperty("profile/food");
+                    return food != null && food.length == 1 &&
+                          (food[0].getString().equals("mice") || food[0].getString().equals("nectar"));
+                } catch (RepositoryException e) {
+                    fail(e.getMessage());
+                }
+                return false;
+            }
+        });
+
+        assertTrue(result.hasNext());
+        assertSameElements(result, expected);
+    }
+
+    public void testImpersonation() throws RepositoryException {
+        Iterator<Authorizable> result = userMgr.findAuthorizables(new Query() {
+            public <T> void build(QueryBuilder<T> builder) {
+                builder.setCondition(builder.
+                        impersonates("jackrabbit"));
+            }
+        });
+
+        Iterator<User> expected = Iterators.singleton(elephant);
+        assertTrue(result.hasNext());
+        assertSameElements(result, expected);
+    }
+
+    public void testSortOrder1() throws RepositoryException {
+        Iterator<Authorizable> result = userMgr.findAuthorizables(new Query() {
+            public <T> void build(QueryBuilder<T> builder) {
+                builder.setCondition(
+                        builder.property("@color", RelationOp.EX, null));
+                builder.setSortOrder("@color", Direction.DESCENDING);
+            }
+        });
+
+        assertTrue(result.hasNext());
+        String prev = null;
+        while (result.hasNext()) {
+            Authorizable authorizable = result.next();
+            Value[] color = authorizable.getProperty("color");
+            assertNotNull(color);
+            assertEquals(1, color.length);
+            assertTrue(prev == null || prev.compareTo(color[0].getString()) >= 0);
+            prev = color[0].getString();
+        }
+    }
+
+    public void testSortOrder2() throws RepositoryException {
+        Iterator<Authorizable> result = userMgr.findAuthorizables(new Query() {
+            public <T> void build(QueryBuilder<T> builder) {
+                builder.setCondition(
+                        builder.property("profile/@weight", RelationOp.EX, null));
+                builder.setSortOrder("profile/@weight", Direction.ASCENDING);
+            }
+        });
+
+        assertTrue(result.hasNext());
+        double prev = Double.MIN_VALUE;
+        while (result.hasNext()) {
+            Authorizable authorizable = result.next();
+            Value[] weight = authorizable.getProperty("profile/weight");
+            assertNotNull(weight);
+            assertEquals(1, weight.length);
+            assertTrue(prev <= weight[0].getDouble());
+            prev = weight[0].getDouble();
+        }
+    }
+
+    //------------------------------------------< private >---
+
+    private static void addMembers(Group group, Authorizable... authorizables) throws RepositoryException {
+        for (Authorizable authorizable : authorizables) {
+            group.addMember(authorizable);
+        }
+    }
+
+    private Group createGroup(String name) throws RepositoryException {
+        Group group = userMgr.createGroup(name);
+        groups.add(group);
+        return group;
+    }
+
+    private User createUser(String name, String food, double weight, boolean cute) throws RepositoryException {
+        User user = userMgr.createUser(name, "");
+        user.setProperty("profile/food", vf.createValue(food));
+        user.setProperty("profile/weight", vf.createValue(weight));
+        user.setProperty("profile/cute", vf.createValue(cute));
+        users.add(user);
+        return user;
+    }
+
+    private static void setProperty(String relPath, Value value, Authorizable... authorizables) throws RepositoryException {
+        for (Authorizable authorizable : authorizables) {
+            authorizable.setProperty(relPath, value);
+        }
+    }
+
+    private static <T> void assertContainsAll(Iterator<? extends T> it1, Iterator<? extends T> it2) {
+        Set<? extends T> set1 = toSet(it1);
+        Set<? extends T> set2 = toSet(it2);
+        set2.removeAll(set1);
+        if (!set2.isEmpty()) {
+            fail("Missing elements in query result: " + set2);
+        }
+    }
+
+    private static <T> void assertSameElements(Iterator<? extends T> it1, Iterator<? extends T> it2) {
+        Set<? extends T> set1 = toSet(it1);
+        Set<? extends T> set2 = toSet(it2);
+
+        Set<? super T> missing = new HashSet<T>();
+        missing.addAll(set2);
+        missing.removeAll(set1);
+
+        Set<? super T> excess = new HashSet<T>();
+        excess.addAll(set1);
+        excess.removeAll(set2);
+
+        if (!missing.isEmpty()) {
+            fail("Missing elements in query result: " + missing);
+        }
+
+        if (!excess.isEmpty()) {
+            fail("Excess elements in query result: " + excess);
+        }
+    }
+
+    private static <T> Set<T> toSet(Iterator<T> it) {
+        Set<T> set = new HashSet<T>();
+        while (it.hasNext()) {
+            set.add(it.next());
+        }
+        return set;
+    }
+
+
+}

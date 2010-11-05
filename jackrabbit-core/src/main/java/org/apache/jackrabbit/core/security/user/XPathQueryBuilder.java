@@ -1,0 +1,264 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package org.apache.jackrabbit.core.security.user;
+
+import org.apache.jackrabbit.api.security.user.QueryBuilder;
+
+import javax.jcr.RepositoryException;
+import javax.jcr.Value;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+
+public class XPathQueryBuilder implements QueryBuilder<XPathQueryBuilder.Condition> {
+
+    interface Condition {
+        void accept(ConditionVisitor visitor) throws RepositoryException;
+    }
+
+    interface ConditionVisitor {
+        void visit(PropertyCondition condition) throws RepositoryException;
+        void visit(ContainsCondition condition);
+        void visit(ImpersonationCondition condition);
+        void visit(NotCondition condition) throws RepositoryException;
+        void visit(AndCondition condition) throws RepositoryException;
+        void visit(OrCondition condition) throws RepositoryException;
+    }
+
+    private Selector selector = Selector.AUTHORIZABLE;
+    private String groupName;
+    private boolean declaredMembersOnly;
+    private Condition condition;
+    private String sortProperty;
+    private Direction sortDirection = Direction.ASCENDING;
+    private String offset;
+    private int maxCount = -1;
+    private boolean forward = true;
+
+    Selector getSelector() {
+        return selector;
+    }
+
+    public String getGroupName() {
+        return groupName;
+    }
+
+    public boolean isDeclaredMembersOnly() {
+        return declaredMembersOnly;
+    }
+    
+    Condition getCondition() {
+        return condition;
+    }
+
+    String getSortProperty() {
+        return sortProperty;
+    }
+
+    Direction getSortDirection() {
+        return sortDirection;
+    }
+
+    String getOffset() {
+        return offset;
+    }
+
+    int getMaxCount() {
+        return maxCount;
+    }
+
+    boolean isForward() {
+        return forward;
+    }
+    
+    //------------------------------------------< QueryBuilder >---
+
+    public void setSelector(Selector selector) {
+        this.selector = selector;
+    }
+
+    public void setScope(String groupName, boolean declaredOnly) {
+        this.groupName = groupName;
+        declaredMembersOnly = declaredOnly;
+    }
+
+    public void setCondition(Condition condition) {
+        this.condition = condition;
+    }
+
+    public void setSortOrder(String propertyName, Direction direction) {
+        sortProperty = propertyName;
+        sortDirection = direction;
+    }
+
+    public void setLimit(String offset, int maxCount, boolean forward) {
+        this.offset = offset;
+        this.maxCount = maxCount;
+        this.forward = true;
+        throw new UnsupportedOperationException("limit is not yet supported");     // todo implement: limit
+    }
+
+    public Condition property(String relPath, RelationOp op, Value value) {
+        return new PropertyCondition(relPath, op, value);
+    }
+
+    public Condition contains(String relPath, String searchExpr) {
+        return new ContainsCondition(relPath, searchExpr);
+    }
+
+    public Condition impersonates(String name) {
+        return new ImpersonationCondition(name);
+    }
+
+    public Condition not(Condition condition) {
+        return new NotCondition(condition);
+    }
+
+    public Condition and(Condition condition1, Condition condition2) {
+        return new AndCondition(condition1, condition2);
+    }
+
+    public Condition or(Condition condition1, Condition condition2) {
+        return new OrCondition(condition1, condition2);
+    }
+
+    //------------------------------------------< private >---
+
+    static class PropertyCondition implements Condition {
+        private final String relPath;
+        private final RelationOp op;
+        private final Value value;
+
+        public PropertyCondition(String relPath, RelationOp op, Value value) {
+            this.relPath = relPath;
+            this.op = op;
+            this.value = value;
+        }
+
+        public String getRelPath() {
+            return relPath;
+        }
+
+        public RelationOp getOp() {
+            return op;
+        }
+
+        public Value getValue() {
+            return value;
+        }
+
+        public void accept(ConditionVisitor visitor) throws RepositoryException {
+            visitor.visit(this);
+        }
+    }
+
+    static class ContainsCondition implements Condition {
+        private final String relPath;
+        private final String searchExpr;
+
+        public ContainsCondition(String relPath, String searchExpr) {
+            this.relPath = relPath;
+            this.searchExpr = searchExpr;
+        }
+
+        public String getRelPath() {
+            return relPath;
+        }
+
+        public String getSearchExpr() {
+            return searchExpr;
+        }
+
+        public void accept(ConditionVisitor visitor) {
+            visitor.visit(this);
+        }
+    }
+
+    static class ImpersonationCondition implements Condition {
+        private final String name;
+
+        public ImpersonationCondition(String name) {
+            this.name = name;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public void accept(ConditionVisitor visitor) {
+            visitor.visit(this);
+        }
+    }
+
+    static class NotCondition implements Condition {
+        private final Condition condition;
+
+        public NotCondition(Condition condition) {
+            this.condition = condition;
+        }
+
+        public Condition getCondition() {
+            return condition;
+        }
+
+        public void accept(ConditionVisitor visitor) throws RepositoryException {
+            visitor.visit(this);
+        }
+    }
+
+    abstract static class CompoundCondition implements Condition, Iterable<Condition> {
+        private final List<Condition> conditions = new ArrayList<Condition>();
+
+        public CompoundCondition() {
+            super();
+        }
+
+        public CompoundCondition(Condition condition1, Condition condition2) {
+            conditions.add(condition1);
+            conditions.add(condition2);
+        }
+
+        public void addCondition(Condition condition) {
+            conditions.add(condition);
+        }
+
+        public Iterator<Condition> iterator() {
+            return conditions.iterator();
+        }
+    }
+
+    static class AndCondition extends CompoundCondition {
+        public AndCondition(Condition condition1, Condition condition2) {
+            super(condition1, condition2);
+        }
+
+        public void accept(ConditionVisitor visitor) throws RepositoryException {
+            visitor.visit(this);
+        }
+    }
+
+    static class OrCondition extends CompoundCondition {
+        public OrCondition(Condition condition1, Condition condition2) {
+            super(condition1, condition2);
+        }
+
+        public void accept(ConditionVisitor visitor) throws RepositoryException {
+            visitor.visit(this);
+        }
+    }
+}
