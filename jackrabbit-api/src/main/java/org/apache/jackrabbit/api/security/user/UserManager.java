@@ -111,6 +111,15 @@ public interface UserManager {
     Iterator<Authorizable> findAuthorizables(String relPath, String value, int searchType) throws RepositoryException;
 
     /**
+     * Return {@link Authorizable}s that match a specific {@link Query}.
+     *
+     * @param query  A query
+     * @return  Iterator of authorizables witch match the <code>query</code>.
+     * @throws RepositoryException  If an error occurs.
+     */
+    Iterator<Authorizable> findAuthorizables(Query query) throws RepositoryException;
+
+    /**
      * Creates an User for the given userID / password pair; neither of the
      * specified parameters can be <code>null</code>.<br>
      * Same as {@link #createUser(String,String,Principal,String)} where
