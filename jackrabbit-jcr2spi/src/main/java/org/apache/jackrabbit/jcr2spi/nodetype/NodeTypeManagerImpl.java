@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.jcr2spi.nodetype;
 
-import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -41,7 +40,6 @@ import javax.jcr.version.OnParentVersionAction;
 import org.apache.commons.collections.map.ReferenceMap;
 import org.apache.jackrabbit.commons.iterator.NodeTypeIteratorAdapter;
 import org.apache.jackrabbit.jcr2spi.ManagerProvider;
-import org.apache.jackrabbit.jcr2spi.util.Dumpable;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.QNodeTypeDefinition;
@@ -59,7 +57,7 @@ import org.slf4j.LoggerFactory;
  * A <code>NodeTypeManagerImpl</code> implements a session dependant
  * NodeTypeManager.
  */
-public class NodeTypeManagerImpl extends AbstractNodeTypeManager implements NodeTypeDefinitionProvider, NodeTypeRegistryListener, Dumpable {
+public class NodeTypeManagerImpl extends AbstractNodeTypeManager implements NodeTypeDefinitionProvider, NodeTypeRegistryListener {
 
     /**
      * Logger instance for this class
@@ -405,33 +403,33 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager implements Node
         getNodeTypeRegistry().unregisterNodeTypes(ntNames);
     }
 
-    //-----------------------------------------------------------< Dumpable >---
+    //-------------------------------------------------------------< Object >---
+
     /**
-     * {@inheritDoc}
+     * Returns the the state of this instance in a human readable format.
      */
-    public void dump(PrintStream ps) {
-        ps.println("NodeTypeManager (" + this + ")");
-        ps.println();
-        ps.println("All NodeTypes:");
-        ps.println();
+    public String toString() {
+        StringBuilder builder = new StringBuilder();
+        builder.append("NodeTypeManager (" + super.toString() + ")\n");
+        builder.append("All NodeTypes:\n");
         try {
             NodeTypeIterator iter = this.getAllNodeTypes();
             while (iter.hasNext()) {
                 NodeType nt = iter.nextNodeType();
-                ps.println(nt.getName());
-                ps.println("\tSupertypes");
+                builder.append(nt.getName());
+                builder.append("\n\tSupertypes");
                 for (NodeType supertype : nt.getSupertypes()) {
-                    ps.println("\t\t" + supertype.getName());
+                    builder.append("\n\t\t" + supertype.getName());
                 }
-                ps.println("\tMixin\t" + nt.isMixin());
-                ps.println("\tOrderableChildNodes\t" + nt.hasOrderableChildNodes());
-                ps.println("\tPrimaryItemName\t" + (nt.getPrimaryItemName() == null ? "<null>" : nt.getPrimaryItemName()));
+                builder.append("\n\tMixin\t" + nt.isMixin());
+                builder.append("\n\tOrderableChildNodes\t" + nt.hasOrderableChildNodes());
+                builder.append("\n\tPrimaryItemName\t" + (nt.getPrimaryItemName() == null ? "<null>" : nt.getPrimaryItemName()));
                 for (PropertyDefinition aPd : nt.getPropertyDefinitions()) {
-                    ps.print("\tPropertyDefinition");
-                    ps.println(" (declared in " + aPd.getDeclaringNodeType().getName() + ") ");
-                    ps.println("\t\tName\t\t" + (aPd.getName()));
+                    builder.append("\n\tPropertyDefinition");
+                    builder.append(" (declared in " + aPd.getDeclaringNodeType().getName() + ") ");
+                    builder.append("\n\t\tName\t\t" + (aPd.getName()));
                     String type = aPd.getRequiredType() == 0 ? "null" : PropertyType.nameFromValue(aPd.getRequiredType());
-                    ps.println("\t\tRequiredType\t" + type);
+                    builder.append("\n\t\tRequiredType\t" + type);
                     String[] vca = aPd.getValueConstraints();
                     StringBuffer constraints = new StringBuffer();
                     if (vca == null) {
@@ -444,7 +442,7 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager implements Node
                             constraints.append(aVca);
                         }
                     }
-                    ps.println("\t\tValueConstraints\t" + constraints.toString());
+                    builder.append("\n\t\tValueConstraints\t" + constraints.toString());
                     Value[] defVals = aPd.getDefaultValues();
                     StringBuffer defaultValues = new StringBuffer();
                     if (defVals == null) {
@@ -457,37 +455,37 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager implements Node
                             defaultValues.append(defVal.getString());
                         }
                     }
-                    ps.println("\t\tDefaultValue\t" + defaultValues.toString());
-                    ps.println("\t\tAutoCreated\t" + aPd.isAutoCreated());
-                    ps.println("\t\tMandatory\t" + aPd.isMandatory());
-                    ps.println("\t\tOnVersion\t" + OnParentVersionAction.nameFromValue(aPd.getOnParentVersion()));
-                    ps.println("\t\tProtected\t" + aPd.isProtected());
-                    ps.println("\t\tMultiple\t" + aPd.isMultiple());
+                    builder.append("\n\t\tDefaultValue\t" + defaultValues.toString());
+                    builder.append("\n\t\tAutoCreated\t" + aPd.isAutoCreated());
+                    builder.append("\n\t\tMandatory\t" + aPd.isMandatory());
+                    builder.append("\n\t\tOnVersion\t" + OnParentVersionAction.nameFromValue(aPd.getOnParentVersion()));
+                    builder.append("\n\t\tProtected\t" + aPd.isProtected());
+                    builder.append("\n\t\tMultiple\t" + aPd.isMultiple());
                 }
                 for (NodeDefinition aNd : nt.getChildNodeDefinitions()) {
-                    ps.print("\tNodeDefinition");
-                    ps.println(" (declared in " + aNd.getDeclaringNodeType() + ") ");
-                    ps.println("\t\tName\t\t" + aNd.getName());
+                    builder.append("\n\tNodeDefinition");
+                    builder.append(" (declared in " + aNd.getDeclaringNodeType() + ") ");
+                    builder.append("\n\t\tName\t\t" + aNd.getName());
                     NodeType[] reqPrimaryTypes = aNd.getRequiredPrimaryTypes();
                     if (reqPrimaryTypes != null && reqPrimaryTypes.length > 0) {
                         for (NodeType reqPrimaryType : reqPrimaryTypes) {
-                            ps.print("\t\tRequiredPrimaryType\t" + reqPrimaryType.getName());
+                            builder.append("\n\t\tRequiredPrimaryType\t" + reqPrimaryType.getName());
                         }
                     }
                     NodeType defPrimaryType = aNd.getDefaultPrimaryType();
                     if (defPrimaryType != null) {
-                        ps.print("\n\t\tDefaultPrimaryType\t" + defPrimaryType.getName());
+                        builder.append("\n\t\tDefaultPrimaryType\t" + defPrimaryType.getName());
                     }
-                    ps.println("\n\t\tAutoCreated\t" + aNd.isAutoCreated());
-                    ps.println("\t\tMandatory\t" + aNd.isMandatory());
-                    ps.println("\t\tOnVersion\t" + OnParentVersionAction.nameFromValue(aNd.getOnParentVersion()));
-                    ps.println("\t\tProtected\t" + aNd.isProtected());
-                    ps.println("\t\tAllowsSameNameSiblings\t" + aNd.allowsSameNameSiblings());
+                    builder.append("\n\t\tAutoCreated\t" + aNd.isAutoCreated());
+                    builder.append("\n\t\tMandatory\t" + aNd.isMandatory());
+                    builder.append("\n\t\tOnVersion\t" + OnParentVersionAction.nameFromValue(aNd.getOnParentVersion()));
+                    builder.append("\n\t\tProtected\t" + aNd.isProtected());
+                    builder.append("\n\t\tAllowsSameNameSiblings\t" + aNd.allowsSameNameSiblings());
                 }
             }
-            ps.println();
         } catch (RepositoryException e) {
-            e.printStackTrace(ps);
+            builder.append(e.getMessage());
         }
+        return builder.toString();
     }
 }

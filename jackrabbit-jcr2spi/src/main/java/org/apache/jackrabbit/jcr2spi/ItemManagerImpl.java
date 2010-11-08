@@ -25,7 +25,6 @@ import org.apache.jackrabbit.jcr2spi.state.ItemStateCreationListener;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
 import org.apache.jackrabbit.jcr2spi.state.PropertyState;
 import org.apache.jackrabbit.jcr2spi.state.Status;
-import org.apache.jackrabbit.jcr2spi.util.Dumpable;
 import org.apache.jackrabbit.jcr2spi.util.LogUtil;
 import org.apache.jackrabbit.jcr2spi.version.VersionHistoryImpl;
 import org.apache.jackrabbit.jcr2spi.version.VersionImpl;
@@ -44,13 +43,12 @@ import javax.jcr.Property;
 import javax.jcr.PropertyIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.Workspace;
-import java.io.PrintStream;
 import java.util.Iterator;
 
 /**
  * <code>ItemManagerImpl</code> implements the <code>ItemManager</code> interface.
  */
-public class ItemManagerImpl implements Dumpable, ItemManager, ItemStateCreationListener {
+public class ItemManagerImpl implements ItemManager, ItemStateCreationListener {
 
     private static Logger log = LoggerFactory.getLogger(ItemManagerImpl.class);
 
@@ -287,20 +285,17 @@ public class ItemManagerImpl implements Dumpable, ItemManager, ItemStateCreation
         return new LazyItemIterator(this, propEntries);
     }
 
-    //-----------------------------------------------------------< Dumpable >---
+    //-------------------------------------------------------------< Object >---
+
     /**
-     * @see Dumpable#dump(PrintStream)
+     * Returns the the state of this instance in a human readable format.
      */
-    public void dump(PrintStream ps) {
-        ps.println("ItemManager (" + this + ")");
-        ps.println();
-        ps.println("Items in cache:");
-        ps.println();
-        if (itemCache instanceof Dumpable) {
-            ((Dumpable) itemCache).dump(ps);
-        } else {
-            ps.println("ItemCache (" + itemCache.toString() + ")");
-        }
+    public String toString() {
+        StringBuilder builder = new StringBuilder();
+        builder.append("ItemManager (" + super.toString() + ")\n");
+        builder.append("Items in cache:\n");
+        builder.append(itemCache);
+        return builder.toString();
     }
 
     //----------------------------------------------------< private methods >---
