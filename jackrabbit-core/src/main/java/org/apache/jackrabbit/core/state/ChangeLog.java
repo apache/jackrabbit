@@ -265,20 +265,9 @@ public class ChangeLog {
             }
         }
 
-        // add 'added' state, but respect previously deleted
+        // add 'added' states
         for (ItemState state : other.addedStates()) {
-            ItemState deletedState = deletedStates.remove(state.getId());
-            if (deletedState != null) {
-                // the newly 'added' state had previously been deleted;
-                // merging those two operations results in a modified state
-
-                // adapt status/modCount and add to modified
-                state.setStatus(deletedState.getStatus());
-                state.setModCount(deletedState.getModCount());
-                modifiedStates.put(state.getId(), state);
-            } else {
-                addedStates.put(state.getId(), state);
-            }
+            addedStates.put(state.getId(), state);
         }
 
         // add refs
