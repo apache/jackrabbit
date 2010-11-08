@@ -66,7 +66,11 @@ import java.util.Iterator;
  * <p>
  * See the {@link SimpleDbPersistenceManager} for a detailed description
  * of the available configuration options and database behaviour.
+ *
+ * @deprecated Please migrate to a bundle persistence manager
+ *   (<a href="https://issues.apache.org/jira/browse/JCR-2802">JCR-2802</a>)
  */
+@Deprecated
 public abstract class DatabasePersistenceManager extends AbstractPersistenceManager {
 
     /**

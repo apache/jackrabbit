@@ -129,7 +129,11 @@ import javax.jcr.RepositoryException;
  * &lt;param name="url" value="java:comp/env/jdbc/Test" />
  * </pre>
  * See also {@link DerbyPersistenceManager}, {@link OraclePersistenceManager}.
+ *
+ * @deprecated Please migrate to a bundle persistence manager
+ *   (<a href="https://issues.apache.org/jira/browse/JCR-2802">JCR-2802</a>)
  */
+@Deprecated
 public class SimpleDbPersistenceManager extends DatabasePersistenceManager implements DatabaseAware {
 
     protected String driver;

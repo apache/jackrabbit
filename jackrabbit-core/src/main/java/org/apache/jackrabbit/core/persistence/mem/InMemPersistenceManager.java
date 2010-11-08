@@ -64,7 +64,11 @@ import java.util.Map;
  * if <code>false</code> nothing is persisted</li>
  * </ul>
  * <b>Please note that this class should only be used for testing purposes.</b>
+ *
+ * @deprecated Please migrate to a bundle persistence manager
+ *   (<a href="https://issues.apache.org/jira/browse/JCR-2802">JCR-2802</a>)
  */
+@Deprecated
 public class InMemPersistenceManager extends AbstractPersistenceManager {
 
     private static Logger log = LoggerFactory.getLogger(InMemPersistenceManager.class);

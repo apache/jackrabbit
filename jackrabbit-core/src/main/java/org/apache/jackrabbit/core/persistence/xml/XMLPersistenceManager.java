@@ -63,7 +63,11 @@ import java.util.Set;
  * <code>XMLPersistenceManager</code> is a <code>FileSystem</code>-based
  * <code>PersistenceManager</code> that persists <code>ItemState</code>
  * and <code>NodeReferences</code> objects in XML format.
+ *
+ * @deprecated Please migrate to a bundle persistence manager
+ *   (<a href="https://issues.apache.org/jira/browse/JCR-2802">JCR-2802</a>)
  */
+@Deprecated
 public class XMLPersistenceManager extends AbstractPersistenceManager {
 
     private static Logger log = LoggerFactory.getLogger(XMLPersistenceManager.class);
