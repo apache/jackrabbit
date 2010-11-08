@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.jcr2spi.nodetype;
 
-import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -39,7 +38,6 @@ import javax.jcr.nodetype.NodeTypeExistsException;
 import javax.jcr.version.OnParentVersionAction;
 
 import org.apache.commons.collections.map.ReferenceMap;
-import org.apache.jackrabbit.jcr2spi.util.Dumpable;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.QItemDefinition;
 import org.apache.jackrabbit.spi.QNodeDefinition;
@@ -54,7 +52,7 @@ import org.slf4j.LoggerFactory;
 /**
  * A <code>NodeTypeRegistry</code> ...
  */
-public class NodeTypeRegistryImpl implements Dumpable, NodeTypeRegistry, EffectiveNodeTypeProvider {
+public class NodeTypeRegistryImpl implements NodeTypeRegistry, EffectiveNodeTypeProvider {
 
     private static Logger log = LoggerFactory.getLogger(NodeTypeRegistryImpl.class);
 
@@ -639,19 +637,19 @@ public class NodeTypeRegistryImpl implements Dumpable, NodeTypeRegistry, Effecti
         }
     }
 
-    //-----------------------------------------------------------< Dumpable >---
-    /**
-     * {@inheritDoc}
-     */
-    public void dump(PrintStream ps) {
-        ps.println("NodeTypeRegistry (" + this + ")");
-        ps.println();
-        ps.println("Known NodeTypes:");
-        ps.println();
-        registeredNTDefs.dump(ps);
-        ps.println();
+    //-------------------------------------------------------------< Object >---
 
-        entCache.dump(ps);
+    /**
+     * Returns the the state of this instance in a human readable format.
+     */
+    public String toString() {
+        StringBuilder builder = new StringBuilder();
+        builder.append("NodeTypeRegistry (" + this + ")\n");
+        builder.append("Known NodeTypes:\n");
+        builder.append(registeredNTDefs);
+        builder.append("\n");
+        builder.append(entCache);
+        return builder.toString();
     }
 
     //--------------------------------------------------------< inner class >---
@@ -659,7 +657,7 @@ public class NodeTypeRegistryImpl implements Dumpable, NodeTypeRegistry, Effecti
      * Inner class representing the map of <code>QNodeTypeDefinition</code>s
      * that have been loaded yet.
      */
-    private class NodeTypeDefinitionMap implements Map<Name, QNodeTypeDefinition>, Dumpable {
+    private class NodeTypeDefinitionMap implements Map<Name, QNodeTypeDefinition> {
 
         // map of node type names and node type definitions
         private final ConcurrentHashMap<Name, QNodeTypeDefinition> nodetypeDefinitions =
@@ -791,39 +789,45 @@ public class NodeTypeRegistryImpl implements Dumpable, NodeTypeRegistry, Effecti
             return nodetypeDefinitions.remove(key);
         }
 
-        //-------------------------------------------------------< Dumpable >---
-        public void dump(PrintStream ps) {
+        //---------------------------------------------------------< Object >---
+
+        /**
+         * Returns the the state of this instance in a human readable format.
+         */
+        public String toString() {
+            StringBuilder builder = new StringBuilder();
             for (QNodeTypeDefinition ntd : getValues()) {
-                ps.println(ntd.getName());
+                builder.append(ntd.getName());
                 Name[] supertypes = ntd.getSupertypes();
-                ps.println("\tSupertypes");
+                builder.append("\n\tSupertypes");
                 for (int i = 0; i < supertypes.length; i++) {
-                    ps.println("\t\t" + supertypes[i]);
+                    builder.append("\n\t\t" + supertypes[i]);
                 }
-                ps.println("\tMixin\t" + ntd.isMixin());
-                ps.println("\tOrderableChildNodes\t" + ntd.hasOrderableChildNodes());
-                ps.println("\tPrimaryItemName\t" + (ntd.getPrimaryItemName() == null ? "<null>" : ntd.getPrimaryItemName().toString()));
-                QPropertyDefinition[] pd = ntd.getPropertyDefs();
-                for (int i = 0; i < pd.length; i++) {
-                    ps.print("\tPropertyDefinition");
-                    ps.println(" (declared in " + pd[i].getDeclaringNodeType() + ") ");
-                    ps.println("\t\tName\t\t" + (pd[i].definesResidual() ? "*" : pd[i].getName().toString()));
-                    String type = pd[i].getRequiredType() == 0 ? "null" : PropertyType.nameFromValue(pd[i].getRequiredType());
-                    ps.println("\t\tRequiredType\t" + type);
-                    QValueConstraint[] vca = pd[i].getValueConstraints();
-                    StringBuffer constraints = new StringBuffer();
+                builder.append("\n\tMixin\t" + ntd.isMixin());
+                builder.append("\n\tOrderableChildNodes\t" + ntd.hasOrderableChildNodes());
+                builder.append("\n\tPrimaryItemName\t" + (ntd.getPrimaryItemName() == null ? "<null>" : ntd.getPrimaryItemName().toString()));
+                for (QPropertyDefinition pd : ntd.getPropertyDefs()) {
+                    builder.append("\n\tPropertyDefinition");
+                    builder.append(" (declared in " + pd.getDeclaringNodeType() + ") ");
+                    builder.append("\n\t\tName\t\t" + (pd.definesResidual() ? "*" : pd.getName().toString()));
+                    String type = "null";
+                        if (pd.getRequiredType() != 0) {
+                            type = PropertyType.nameFromValue(pd.getRequiredType());
+                        }
+                    builder.append("\n\t\tRequiredType\t" + type);
+                    builder.append("\n\t\tValueConstraints\t");
+                    QValueConstraint[] vca = pd.getValueConstraints();
                     if (vca == null) {
-                        constraints.append("<null>");
+                        builder.append("<null>");
                     } else {
                         for (int n = 0; n < vca.length; n++) {
-                            if (constraints.length() > 0) {
-                                constraints.append(", ");
+                            if (n > 0) {
+                                builder.append(", ");
                             }
-                            constraints.append(vca[n].getString());
+                            builder.append(vca[n].getString());
                         }
                     }
-                    ps.println("\t\tValueConstraints\t" + constraints.toString());
-                    QValue[] defVals = pd[i].getDefaultValues();
+                    QValue[] defVals = pd.getDefaultValues();
                     StringBuffer defaultValues = new StringBuffer();
                     if (defVals == null) {
                         defaultValues.append("<null>");
@@ -839,35 +843,38 @@ public class NodeTypeRegistryImpl implements Dumpable, NodeTypeRegistry, Effecti
                             }
                         }
                     }
-                    ps.println("\t\tDefaultValue\t" + defaultValues.toString());
-                    ps.println("\t\tAutoCreated\t" + pd[i].isAutoCreated());
-                    ps.println("\t\tMandatory\t" + pd[i].isMandatory());
-                    ps.println("\t\tOnVersion\t" + OnParentVersionAction.nameFromValue(pd[i].getOnParentVersion()));
-                    ps.println("\t\tProtected\t" + pd[i].isProtected());
-                    ps.println("\t\tMultiple\t" + pd[i].isMultiple());
+                    builder.append("\n\t\tDefaultValue\t" + defaultValues.toString());
+                    builder.append("\n\t\tAutoCreated\t" + pd.isAutoCreated());
+                    builder.append("\n\t\tMandatory\t" + pd.isMandatory());
+                    builder.append("\n\t\tOnVersion\t" + OnParentVersionAction.nameFromValue(pd.getOnParentVersion()));
+                    builder.append("\n\t\tProtected\t" + pd.isProtected());
+                    builder.append("\n\t\tMultiple\t" + pd.isMultiple());
                 }
                 QNodeDefinition[] nd = ntd.getChildNodeDefs();
                 for (QNodeDefinition aNd : nd) {
-                    ps.print("\tNodeDefinition");
-                    ps.println(" (declared in " + aNd.getDeclaringNodeType() + ") ");
-                    ps.println("\t\tName\t\t" + (aNd.definesResidual() ? "*" : aNd.getName().toString()));
+                    builder.append("\n\tNodeDefinition");
+                    builder.append(" (declared in " + aNd.getDeclaringNodeType() + ") ");
+                    builder.append("\n\t\tName\t\t" + (aNd.definesResidual() ? "*" : aNd.getName().toString()));
                     Name[] reqPrimaryTypes = aNd.getRequiredPrimaryTypes();
                     if (reqPrimaryTypes != null && reqPrimaryTypes.length > 0) {
                         for (int n = 0; n < reqPrimaryTypes.length; n++) {
-                            ps.print("\t\tRequiredPrimaryType\t" + reqPrimaryTypes[n]);
+                            builder.append("\n\t\tRequiredPrimaryType\t" + reqPrimaryTypes[n]);
                         }
                     }
                     Name defPrimaryType = aNd.getDefaultPrimaryType();
                     if (defPrimaryType != null) {
-                        ps.print("\n\t\tDefaultPrimaryType\t" + defPrimaryType);
+                        builder.append("\n\t\tDefaultPrimaryType\t" + defPrimaryType);
                     }
-                    ps.println("\n\t\tAutoCreated\t" + aNd.isAutoCreated());
-                    ps.println("\t\tMandatory\t" + aNd.isMandatory());
-                    ps.println("\t\tOnVersion\t" + OnParentVersionAction.nameFromValue(aNd.getOnParentVersion()));
-                    ps.println("\t\tProtected\t" + aNd.isProtected());
-                    ps.println("\t\tAllowsSameNameSiblings\t" + aNd.allowsSameNameSiblings());
+                    builder.append("\n\t\tAutoCreated\t" + aNd.isAutoCreated());
+                    builder.append("\n\t\tMandatory\t" + aNd.isMandatory());
+                    builder.append("\n\t\tOnVersion\t" + OnParentVersionAction.nameFromValue(aNd.getOnParentVersion()));
+                    builder.append("\n\t\tProtected\t" + aNd.isProtected());
+                    builder.append("\n\t\tAllowsSameNameSiblings\t" + aNd.allowsSameNameSiblings());
                 }
             }
+            return builder.toString();
         }
+
     }
+
 }

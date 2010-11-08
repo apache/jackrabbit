@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.jcr2spi.nodetype;
 
-import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.TreeSet;
@@ -227,19 +226,20 @@ class BitsetENTCacheImpl implements EffectiveNodeTypeCache {
         return clone;
     }
 
-    //-----------------------------------------------------------< Dumpable >---
+    //-------------------------------------------------------------< Object >---
+
     /**
-     * @see org.apache.jackrabbit.jcr2spi.util.Dumpable#dump(PrintStream)
+     * Returns the the state of this instance in a human readable format.
      */
-    public void dump(PrintStream ps) {
-        ps.println("EffectiveNodeTypeCache (" + this + ")");
-        ps.println();
-        ps.println("EffectiveNodeTypes in cache:");
-        ps.println();
+    public String toString() {
+        StringBuilder builder = new StringBuilder();
+        builder.append("EffectiveNodeTypeCache (" + super.toString() + ")\n");
+        builder.append("EffectiveNodeTypes in cache:\n");
         for (Key k : sortedKeys) {
-            //EffectiveNodeType ent = (EffectiveNodeType) aggregates.get(k);
-            ps.println(k);
+            builder.append(k);
+            builder.append('\n');
         }
+        return builder.toString();
     }
 
     //----------------------------------------------------------------< Key >---

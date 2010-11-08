@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.jcr2spi;
 
-import java.io.PrintStream;
 import java.util.Map;
 
 import javax.jcr.Item;
@@ -24,14 +23,13 @@ import javax.jcr.RepositoryException;
 
 import org.apache.commons.collections.map.LRUMap;
 import org.apache.jackrabbit.jcr2spi.state.ItemState;
-import org.apache.jackrabbit.jcr2spi.util.Dumpable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * <code>ItemCacheImpl</code>...
  */
-public class ItemCacheImpl implements ItemCache, Dumpable {
+public class ItemCacheImpl implements ItemCache {
 
     private static Logger log = LoggerFactory.getLogger(ItemCacheImpl.class);
 
@@ -137,25 +135,27 @@ public class ItemCacheImpl implements ItemCache, Dumpable {
         cache.remove(itemState);
     }
 
-    //-----------------------------------------------------------< Dumpable >---
+    //--------------------------------------------------------==---< Object >---
+
     /**
-     * @see Dumpable#dump(PrintStream)
+     * Returns the the state of this instance in a human readable format.
      */
-    public void dump(PrintStream ps) {
+    public String toString() {
+        StringBuilder builder = new StringBuilder();
         for (Map.Entry<ItemState, Item> entry : cache.entrySet()) {
             ItemState state = entry.getKey();
             Item item = entry.getValue();
             if (item.isNode()) {
-                ps.print("Node: ");
+                builder.append("Node: ");
             } else {
-                ps.print("Property: ");
+                builder.append("Property: ");
             }
             if (item.isNew()) {
-                ps.print("new ");
+                builder.append("new ");
             } else if (item.isModified()) {
-                ps.print("modified ");
+                builder.append("modified ");
             } else {
-                ps.print("- ");
+                builder.append("- ");
             }
             String path;
             try {
@@ -163,7 +163,8 @@ public class ItemCacheImpl implements ItemCache, Dumpable {
             } catch (RepositoryException e) {
                 path = "-";
             }
-            ps.println(state + "\t" + path + " (" + item + ")");
+            builder.append(state + "\t" + path + " (" + item + ")\n");
         }
+        return builder.toString();
     }
 }
