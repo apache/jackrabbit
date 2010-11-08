@@ -172,14 +172,17 @@ public class BeanConfig {
      */
     @SuppressWarnings("unchecked")
     public <T> T newInstance(Class<T> klass) throws ConfigurationException {
+        String cname = getClassName();
         try {
-            Class<?> objectClass =
-                Class.forName(getClassName(), true, getClassLoader());
+            Class<?> objectClass = Class.forName(cname, true, getClassLoader());
             if (!klass.isAssignableFrom(objectClass)) {
                 throw new ConfigurationException(
-                        "Configured class "+getClassName()
+                        "Configured class " + cname
                         + " does not implement " + klass.getName()
                         + ". Please fix the repository configuration.");
+            }
+            if (objectClass.getAnnotation(Deprecated.class) != null) {
+                log.warn("{} has been deprecated", cname);
             }
 
             // Instantiate the object using the default constructor
@@ -192,11 +195,15 @@ public class BeanConfig {
                 String name = enumeration.nextElement().toString();
                 Method setter = setters.get(name);
                 if (setter != null) {
+                    if (setter.getAnnotation(Deprecated.class) != null) {
+                        log.warn("Parameter {} of {} has been deprecated",
+                                name, cname);
+                    }
                     String value = properties.getProperty(name);
                     setProperty(instance, name, setter, value);
                 } else if (validate) {
                     throw new ConfigurationException(
-                            "Configured class " + getClassName()
+                            "Configured class " + cname
                             + " does not contain a property named " + name);
                 }
             }
@@ -208,15 +215,15 @@ public class BeanConfig {
             return (T) instance;
         } catch (ClassNotFoundException e) {
             throw new ConfigurationException(
-                    "Configured bean implementation class " + getClassName()
+                    "Configured bean implementation class " + cname
                     + " was not found.", e);
         } catch (InstantiationException e) {
             throw new ConfigurationException(
-                    "Configured bean implementation class " + getClassName()
+                    "Configured bean implementation class " + cname
                     + " can not be instantiated.", e);
         } catch (IllegalAccessException e) {
             throw new ConfigurationException(
-                    "Configured bean implementation class " + getClassName()
+                    "Configured bean implementation class " + cname
                     + " is protected.", e);
         }
     }
