@@ -18,6 +18,7 @@ package org.apache.jackrabbit.core.query.lucene;
 
 import java.util.concurrent.Executor;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
@@ -42,10 +43,17 @@ public class DynamicPooledExecutor implements Executor {
      * Creates a new DynamicPooledExecutor.
      */
     public DynamicPooledExecutor() {
+        ThreadFactory f = new ThreadFactory() {
+            public Thread newThread(Runnable r) {
+                Thread t = new Thread(r, "DynamicPooledExecutor");
+                t.setDaemon(true);
+                return t;
+            }
+        };
         this.executor = new ThreadPoolExecutor(
                 1, Runtime.getRuntime().availableProcessors(),
                 500, TimeUnit.MILLISECONDS,
-                new LinkedBlockingQueue<Runnable>());
+                new LinkedBlockingQueue<Runnable>(), f);
         this.lastCheck = System.currentTimeMillis();
     }
 
