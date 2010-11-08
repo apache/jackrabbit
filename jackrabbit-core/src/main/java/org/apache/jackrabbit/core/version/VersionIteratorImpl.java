@@ -43,7 +43,7 @@ class VersionIteratorImpl implements VersionIterator {
     /**
      * the id's of the versions to return
      */
-    private LinkedList<NodeId> versions = new LinkedList<NodeId>();
+    private final LinkedList<NodeId> versions = new LinkedList<NodeId>();
 
     /**
      * the current position
