@@ -28,7 +28,11 @@ import org.apache.jackrabbit.core.state.PropertyState;
 /**
  * Implementation <code>PersistenceManager</code> that handles some
  * concepts.
+ *
+ * @deprecated Please migrate to a bundle persistence manager
+ *   (<a href="https://issues.apache.org/jira/browse/JCR-2802">JCR-2802</a>)
  */
+@Deprecated
 public abstract class AbstractPersistenceManager implements PersistenceManager {
 
     /**

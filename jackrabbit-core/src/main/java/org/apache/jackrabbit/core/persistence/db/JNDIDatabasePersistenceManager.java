@@ -32,7 +32,11 @@ import java.sql.SQLException;
  * <strong>WARNING:</strong> The acquired database connection is kept
  * for the entire lifetime of the persistence manager instance. The
  * configured data source should be prepared for this.
+ *
+ * @deprecated Please migrate to a bundle persistence manager
+ *   (<a href="https://issues.apache.org/jira/browse/JCR-2802">JCR-2802</a>)
  */
+@Deprecated
 public class JNDIDatabasePersistenceManager extends DatabasePersistenceManager {
 
     /**

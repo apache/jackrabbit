@@ -80,7 +80,11 @@ import java.sql.Statement;
  *       &lt;param name="externalBLOBs" value="false"/&gt;
  *  &lt;/PersistenceManager&gt;
  * </pre>
+ *
+ * @deprecated Please migrate to a bundle persistence manager
+ *   (<a href="https://issues.apache.org/jira/browse/JCR-2802">JCR-2802</a>)
  */
+@Deprecated
 public class OraclePersistenceManager extends SimpleDbPersistenceManager {
 
     /**

@@ -55,7 +55,11 @@ import org.apache.jackrabbit.util.Text;
  *       &lt;param name="externalBLOBs" value="false"/&gt;
  *  &lt;/PersistenceManager&gt;
  * </pre>
+ *
+ * @deprecated Please migrate to a bundle persistence manager
+ *   (<a href="https://issues.apache.org/jira/browse/JCR-2802">JCR-2802</a>)
  */
+@Deprecated
 public class MSSqlPersistenceManager extends SimpleDbPersistenceManager {
 
     /** the variable for the MSSql table space */

@@ -49,7 +49,11 @@ import java.security.NoSuchAlgorithmException;
  * <code>PersistenceManager</code> that persists <code>ItemState</code>
  * and <code>NodeReferences</code> objects using a simple custom binary
  * serialization format (see {@link Serializer}).
+ *
+ * @deprecated Please migrate to a bundle persistence manager
+ *   (<a href="https://issues.apache.org/jira/browse/JCR-2802">JCR-2802</a>)
  */
+@Deprecated
 public class ObjectPersistenceManager extends AbstractPersistenceManager {
 
     private static Logger log = LoggerFactory.getLogger(ObjectPersistenceManager.class);
