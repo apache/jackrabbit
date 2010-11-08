@@ -28,6 +28,7 @@ import javax.jcr.Property;
 import javax.jcr.InvalidItemStateException;
 import javax.jcr.version.VersionException;
 import javax.jcr.version.Version;
+import javax.jcr.version.VersionManager;
 import javax.jcr.lock.Lock;
 import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.NodeType;
@@ -102,6 +103,47 @@ public class XATest extends AbstractJCRTest {
     protected void runTest() throws Throwable {
         if (isSupported(Repository.OPTION_TRANSACTIONS_SUPPORTED)) {
             super.runTest();
+        }
+    }
+
+    /**
+     * Test case for
+     * <a href="https://issues.apache.org/jira/browse/JCR-2796">JCR-2796</a>.
+     */
+    public void testRestore() throws Exception {
+        Session session = getHelper().getSuperuserSession();
+        try {
+            VersionManager vm = session.getWorkspace().getVersionManager();
+
+            // make sure that 'testNode' does not exist at the beginning
+            // of the test
+            while (session.nodeExists("/testNode")) {
+                session.getNode("/testNode").remove();
+                session.save();
+            }
+
+            // 1) create 'testNode' that has a child and a grandchild
+            Node node = session.getRootNode().addNode("testNode");
+            node.addMixin(NodeType.MIX_VERSIONABLE);
+            node.addNode("child").addNode("grandchild");
+            session.save();
+
+            // 2) check in 'testNode' and give a version-label
+            Version version = vm.checkin(node.getPath());
+            vm.getVersionHistory(node.getPath()).addVersionLabel(
+                    version.getName(), "testLabel", false);
+
+            // 3) do restore by label
+            UserTransaction utx = new UserTransactionImpl(session);
+            utx.begin();
+            vm.restoreByLabel(node.getPath(), "testLabel", true);
+            utx.commit();
+
+            // 4) try to get the grandchild (fails if the restoring has
+            // been done within a transaction)
+            assertTrue(node.hasNode("child/grandchild"));
+        } finally {
+            session.logout();
         }
     }
 
