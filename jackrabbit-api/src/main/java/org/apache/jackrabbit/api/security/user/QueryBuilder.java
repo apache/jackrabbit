@@ -25,17 +25,23 @@ public interface QueryBuilder<T> {
      * The sort order of the result set of a query.
      */
     enum Direction {
-        ASCENDING("ascending"),
-        DESCENDING("descending");
+        ASCENDING("ascending", RelationOp.GT),
+        DESCENDING("descending", RelationOp.LT);
 
         private final String direction;
+        private RelationOp relOp;
 
-        Direction(String direction) {
+        Direction(String direction, RelationOp relOp) {
             this.direction = direction;
+            this.relOp = relOp;
         }
 
         public String getDirection() {
             return direction;
+        }
+
+        public RelationOp getRelOp() {
+            return relOp;
         }
     }
 
@@ -120,21 +126,31 @@ public interface QueryBuilder<T> {
     void setSortOrder(String propertyName, Direction direction);
 
     /**
-     * Set the limit of the query. A limit consists of an offset, a maximal number of results
-     * to include and a direction. The offset refers to the value of the sort order property.
-     * If <code>forward</code> is <code>true</code> (<code>false</code>) the query returns
-     * at most the <code>maxCount</code> {@link Authorizable}s whose value of the sort order
-     * property follows (precedes)the specified <code>offset</code> in the given sort
-     * {@link Direction direction}. This method has no effect if the
-     * {@link #setSortOrder(String, Direction) sort order} is not also specified.
-     * @see #setSortOrder(String, Direction)
+     * Set limits for the query. The limits consists of a bound and a maximal
+     * number of results. The bound refers to the value of the
+     * {@link #setSortOrder(String, Direction) sort order} property. The
+     * query returns at most <code>maxCount</code> {@link Authorizable}s whose
+     * values of the sort order property follow <code>bound</code> in the sort
+     * direction. This method has no effect if the sort order is not specified.
      *
-     * @param offset  Offset from where to start returning results. <code>null</code> for no offset
-     * @param maxCount  Maximal number of results to return. -1 for all.
-     * @param forward  If <code>true</code> return the following <code>count</code> records.
-     * Otherwise return the preceding <code>count</code> records wrt. <code>offset</code>.
+     * @param bound  Bound from where to start returning results. <code>null</code>
+     * for no bound
+     * @param maxCount  Maximal number of results to return. -1 for no limit.
      */
-    void setLimit(String offset, int maxCount, boolean forward);
+    void setLimit(Value bound, long maxCount);
+
+    /**
+     * Set limits for the query. The limits consists of an offset and a maximal
+     * number of results. <code>offset</code> refers to the offset within the full
+     * result set at which the returned result set should start expressed in terms 
+     * of the number of {@link Authorizable}s to skip. <code>limit</code> sets the
+     * maximum size of the result set expressed in terms of the number of authorizables
+     * to return.
+     *
+     * @param offset  Offset from where to start returning results. <code>0</code> for no offset.
+     * @param maxCount  Maximal number of results to return. -1 for no limit.
+     */
+    void setLimit(long offset, long maxCount);
 
     /**
      * Create a condition which holds iff the node of an {@link Authorizable} has a

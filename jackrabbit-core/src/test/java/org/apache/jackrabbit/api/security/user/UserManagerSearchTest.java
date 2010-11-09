@@ -17,17 +17,15 @@
 
 package org.apache.jackrabbit.api.security.user;
 
+import org.apache.jackrabbit.api.security.user.QueryBuilder.Direction;
 import org.apache.jackrabbit.api.security.user.QueryBuilder.RelationOp;
 import org.apache.jackrabbit.api.security.user.QueryBuilder.Selector;
-import org.apache.jackrabbit.api.security.user.QueryBuilder.Direction;
 import org.apache.jackrabbit.spi.commons.iterator.Iterators;
 import org.apache.jackrabbit.spi.commons.iterator.Predicate;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
+import java.util.*;
 
 public class UserManagerSearchTest extends AbstractUserTest {
 
@@ -112,7 +110,7 @@ public class UserManagerSearchTest extends AbstractUserTest {
         jackrabbit = createUser("jackrabbit", "carrots", 2500, true);
         deer = createUser("deer", "leaves", 120000, true);
         opposum = createUser("opposum", "fruit", 1200, true);
-        kangaroo = createUser("kangaroo", "grass", 80000, true);
+        kangaroo = createUser("kangaroo", "grass", 90000, true);
         elephant = createUser("elephant", "leaves", 5000000, true);
         addMembers(mammals, jackrabbit, deer, opposum, kangaroo, elephant);
 
@@ -122,11 +120,11 @@ public class UserManagerSearchTest extends AbstractUserTest {
 
         crocodile = createUser("crocodile", "meat", 80000, false);
         turtle = createUser("turtle", "leaves", 10000, true);
-        lizard = createUser("lizard", "leaves", 2000, false);
+        lizard = createUser("lizard", "leaves", 1900, false);
         addMembers(reptiles, crocodile, turtle, lizard);
 
         kestrel = createUser("kestrel", "mice", 2000, false);
-        goose = createUser("goose", "snails", 10000, true);
+        goose = createUser("goose", "snails", 13000, true);
         pelican = createUser("pelican", "fish", 15000, true);
         dove = createUser("dove", "insects", 1600, false);
         addMembers(birds, kestrel, goose, pelican, dove);
@@ -557,6 +555,85 @@ public class UserManagerSearchTest extends AbstractUserTest {
         }
     }
 
+    public void testOffset() throws RepositoryException {
+        long[] offsets = {2, 0, 3, 0,      100000};
+        long[] counts =  {4, 4, 0, 100000, 100000};
+
+        for (int k = 0; k < offsets.length; k++) {
+            final long offset = offsets[k];
+            final long count = counts[k];
+            Iterator<Authorizable> result = userMgr.findAuthorizables(new Query() {
+                public <T> void build(QueryBuilder<T> builder) {
+                    builder.setSortOrder("profile/@weight", Direction.ASCENDING);
+                    builder.setLimit(offset, count);
+                }
+            });
+
+            Iterator<Authorizable> expected = userMgr.findAuthorizables(new Query() {
+                public <T> void build(QueryBuilder<T> builder) {
+                    builder.setSortOrder("profile/@weight", Direction.ASCENDING);
+                }
+            });
+
+            skip(expected, offset);
+            assertSame(expected, result, count);
+            assertFalse(result.hasNext());
+        }
+    }
+
+    public void testSetBound() throws RepositoryException {
+        List<User> sortedUsers = new ArrayList<User>(users);
+        Comparator<? super User> comp = new Comparator<User>() {
+            public int compare(User user1, User user2) {
+                try {
+                    Value[] weight1 = user1.getProperty("profile/weight");
+                    assertNotNull(weight1);
+                    assertEquals(1, weight1.length);
+
+                    Value[] weight2 = user2.getProperty("profile/weight");
+                    assertNotNull(weight2);
+                    assertEquals(1, weight2.length);
+
+                    return weight1[0].getDouble() < weight2[0].getDouble() ? -1 : 1;
+                } catch (RepositoryException e) {
+                    fail(e.getMessage());
+                    return 0;  // Make the compiler happy
+                }
+            }
+        };
+        Collections.sort(sortedUsers, comp);
+
+        long[] counts = {4, 0, 100000};
+        for (final long count : counts) {
+            Iterator<Authorizable> result = userMgr.findAuthorizables(new Query() {
+                public <T> void build(QueryBuilder<T> builder) {
+                    builder.setCondition(builder.
+                            property("profile/@cute", RelationOp.EQ, vf.createValue(true)));
+                    builder.setSortOrder("profile/@weight", Direction.ASCENDING);
+                    builder.setLimit(vf.createValue(1000.0), count);
+                }
+            });
+
+            Iterator<User> expected = Iterators.filterIterator(sortedUsers.iterator(), new Predicate<User>() {
+                public boolean evaluate(User user) {
+                    try {
+                        Value[] cute = user.getProperty("profile/cute");
+                        Value[] weight = user.getProperty("profile/weight");
+                        return cute != null && cute.length == 1 && cute[0].getBoolean() &&
+                                weight != null && weight.length == 1 && weight[0].getDouble() > 1000.0;
+
+                    } catch (RepositoryException e) {
+                        fail(e.getMessage());
+                    }
+                    return false;
+                }
+            });
+
+            assertSame(expected, result, count);
+            assertFalse(result.hasNext());
+        }
+    }
+
     //------------------------------------------< private >---
 
     private static void addMembers(Group group, Authorizable... authorizables) throws RepositoryException {
@@ -622,6 +699,19 @@ public class UserManagerSearchTest extends AbstractUserTest {
             set.add(it.next());
         }
         return set;
+    }
+
+    private static <T> void assertSame(Iterator<? extends T> expected, Iterator<? extends T> actual, long count) {
+        for (int k = 0; k < count && actual.hasNext(); k++) {
+            assertTrue(expected.hasNext());
+            assertEquals(expected.next(), actual.next());
+        }
+    }
+
+    private static <T> void skip(Iterator<T> iterator, long count) {
+        for (int k = 0; k < count && iterator.hasNext(); k++) {
+            iterator.next();
+        }
     }
 
 

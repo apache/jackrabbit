@@ -46,9 +46,9 @@ public class XPathQueryBuilder implements QueryBuilder<XPathQueryBuilder.Conditi
     private Condition condition;
     private String sortProperty;
     private Direction sortDirection = Direction.ASCENDING;
-    private String offset;
-    private int maxCount = -1;
-    private boolean forward = true;
+    private Value bound;
+    private long offset;
+    private long maxCount = -1;
 
     Selector getSelector() {
         return selector;
@@ -74,16 +74,16 @@ public class XPathQueryBuilder implements QueryBuilder<XPathQueryBuilder.Conditi
         return sortDirection;
     }
 
-    String getOffset() {
+    Value getBound() {
+        return bound;
+    }
+
+    long getOffset() {
         return offset;
     }
 
-    int getMaxCount() {
+    long getMaxCount() {
         return maxCount;
-    }
-
-    boolean isForward() {
-        return forward;
     }
     
     //------------------------------------------< QueryBuilder >---
@@ -106,11 +106,16 @@ public class XPathQueryBuilder implements QueryBuilder<XPathQueryBuilder.Conditi
         sortDirection = direction;
     }
 
-    public void setLimit(String offset, int maxCount, boolean forward) {
+    public void setLimit(Value bound, long maxCount) {
+        offset = 0;   // Unset any previously set offset
+        this.bound = bound;
+        this.maxCount = maxCount;
+    }
+
+    public void setLimit(long offset, long maxCount) {
+        bound = null; // Unset any previously set bound
         this.offset = offset;
         this.maxCount = maxCount;
-        this.forward = true;
-        throw new UnsupportedOperationException("limit is not yet supported");     // todo implement: limit
     }
 
     public Condition property(String relPath, RelationOp op, Value value) {
