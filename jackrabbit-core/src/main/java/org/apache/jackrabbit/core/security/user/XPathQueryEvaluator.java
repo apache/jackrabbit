@@ -19,6 +19,8 @@ package org.apache.jackrabbit.core.security.user;
 
 import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.jackrabbit.api.security.user.Group;
+import org.apache.jackrabbit.core.security.user.XPathQueryBuilder.Condition;
+import org.apache.jackrabbit.api.security.user.QueryBuilder.Direction;
 import org.apache.jackrabbit.api.security.user.QueryBuilder.RelationOp;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.spi.commons.iterator.Iterators;
@@ -59,29 +61,53 @@ public class XPathQueryEvaluator implements XPathQueryBuilder.ConditionVisitor {
              .append(builder.getSelector().getNtName())
              .append(')');
 
-        XPathQueryBuilder.Condition condition = builder.getCondition();
+        Value bound = builder.getBound();
+        long offset = builder.getOffset();
+        if (bound != null && offset > 0) {
+            log.warn("Found bound {} and offset {} in limit. Discarding offset.", bound, offset);
+            offset = 0;
+        }
+
+        Condition condition = builder.getCondition();
+        String sortCol = builder.getSortProperty();
+        Direction sortDir = builder.getSortDirection();
+        if (bound != null) {
+            if (sortCol == null) {
+                log.warn("Ignoring bound {} since no sort order is specified");
+            }
+            else {
+                Condition boundCondition = builder.property(sortCol, sortDir.getRelOp(), bound);
+                condition = condition == null 
+                        ? boundCondition
+                        : builder.and(condition, boundCondition);
+            }
+        }
+
         if (condition != null) {
             xPath.append('[');
             condition.accept(this);
             xPath.append(']');
         }
 
-        String sortCol = builder.getSortProperty();
         if (sortCol != null) {
             xPath.append(" order by ")
                  .append(sortCol)
                  .append(' ')
-                 .append(builder.getSortDirection().getDirection());
+                 .append(sortDir.getDirection());
         }
 
         Query query = queryManager.createQuery(xPath.toString(), Query.XPATH);
-        int count = builder.getMaxCount();
-        if (count == 0) {
+        long maxCount = builder.getMaxCount();
+        if (maxCount == 0) {
             return Iterators.empty();
         }
 
-        if (count > 0) {
-            query.setLimit(count);
+        if (maxCount > 0) {
+            query.setLimit(maxCount);
+        }
+
+        if (offset > 0) {
+            query.setOffset(offset);
         }
 
         return filter(toAuthorizables(execute(query)), builder.getGroupName(), builder.isDeclaredMembersOnly());
@@ -123,7 +149,7 @@ public class XPathQueryEvaluator implements XPathQueryBuilder.ConditionVisitor {
 
     public void visit(XPathQueryBuilder.AndCondition condition) throws RepositoryException {
         int count = 0;
-        for (XPathQueryBuilder.Condition c : condition) {
+        for (Condition c : condition) {
             xPath.append(count++ > 0 ? " and " : "");
             c.accept(this);
         }
@@ -133,7 +159,7 @@ public class XPathQueryEvaluator implements XPathQueryBuilder.ConditionVisitor {
         int pos = xPath.length();
 
         int count = 0;
-        for (XPathQueryBuilder.Condition c : condition) {
+        for (Condition c : condition) {
             xPath.append(count++ > 0 ? " or " : "");
             c.accept(this);
         }
