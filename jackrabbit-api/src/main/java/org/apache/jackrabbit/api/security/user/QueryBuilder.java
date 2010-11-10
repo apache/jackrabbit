@@ -29,47 +29,33 @@ public interface QueryBuilder<T> {
         DESCENDING("descending", RelationOp.LT);
 
         private final String direction;
-        private RelationOp relOp;
+        private final RelationOp collation;
 
-        Direction(String direction, RelationOp relOp) {
+        Direction(String direction, RelationOp collation) {
             this.direction = direction;
-            this.relOp = relOp;
+            this.collation = collation;
         }
 
         public String getDirection() {
             return direction;
         }
 
-        public RelationOp getRelOp() {
-            return relOp;
+        public RelationOp getCollation() {
+            return collation;
         }
     }
 
     /**
      * The selectors for a query. 
      */
-    enum Selector { 
-        AUTHORIZABLE("rep:Authorizable"), 
-        USER("rep:User"), 
-        GROUP("rep:Group");
-
-        private final String ntName;
-
-        Selector(String ntName) {
-            this.ntName = ntName;
-        }
-
-        public String getNtName() {
-            return ntName;   
-        }
-    }
+    enum Selector { AUTHORIZABLE, USER, GROUP }
 
     /**
      * Relational operators for comparing a property to a value. Correspond
      * to the general comparison operators as define in JSR-170.
      * The {@link #EX} tests for existence of a property.   
      */
-    enum RelationOp {
+    enum RelationOp { 
         NE("!="),
         EQ("="),
         LT("<"),
