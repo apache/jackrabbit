@@ -469,7 +469,7 @@ public class UserManagerImpl extends ProtectedItemModifier
     public Iterator<Authorizable> findAuthorizables(Query query) throws RepositoryException {
         XPathQueryBuilder builder = new XPathQueryBuilder();
         query.build(builder);
-        return new XPathQueryEvaluator(builder, this, session.getWorkspace().getQueryManager()).eval();
+        return new XPathQueryEvaluator(builder, this, session).eval();
     }
 
     /**

@@ -19,10 +19,12 @@ package org.apache.jackrabbit.core.security.user;
 
 import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.jackrabbit.api.security.user.Group;
-import org.apache.jackrabbit.core.security.user.XPathQueryBuilder.Condition;
 import org.apache.jackrabbit.api.security.user.QueryBuilder.Direction;
 import org.apache.jackrabbit.api.security.user.QueryBuilder.RelationOp;
+import org.apache.jackrabbit.api.security.user.QueryBuilder.Selector;
 import org.apache.jackrabbit.core.NodeImpl;
+import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.security.user.XPathQueryBuilder.Condition;
 import org.apache.jackrabbit.spi.commons.iterator.Iterators;
 import org.apache.jackrabbit.spi.commons.iterator.Predicate;
 import org.apache.jackrabbit.spi.commons.iterator.Predicates;
@@ -30,10 +32,7 @@ import org.apache.jackrabbit.spi.commons.iterator.Transformer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.jcr.Node;
-import javax.jcr.PropertyType;
-import javax.jcr.RepositoryException;
-import javax.jcr.Value;
+import javax.jcr.*;
 import javax.jcr.query.Query;
 import javax.jcr.query.QueryManager;
 import java.util.Iterator;
@@ -47,18 +46,18 @@ public class XPathQueryEvaluator implements XPathQueryBuilder.ConditionVisitor {
 
     private final XPathQueryBuilder builder;
     private final UserManagerImpl userManager;
-    private final QueryManager queryManager;
+    private final SessionImpl session;
     private final StringBuilder xPath = new StringBuilder();
 
-    public XPathQueryEvaluator(XPathQueryBuilder builder, UserManagerImpl userManager, QueryManager queryManager) {
+    public XPathQueryEvaluator(XPathQueryBuilder builder, UserManagerImpl userManager, SessionImpl session) {
         this.builder = builder;
         this.userManager = userManager;
-        this.queryManager = queryManager;
+        this.session = session;
     }
 
     public Iterator<Authorizable> eval() throws RepositoryException {
         xPath.append("//element(*,")
-             .append(builder.getSelector().getNtName())
+             .append(getNtName(builder.getSelector()))
              .append(')');
 
         Value bound = builder.getBound();
@@ -76,7 +75,7 @@ public class XPathQueryEvaluator implements XPathQueryBuilder.ConditionVisitor {
                 log.warn("Ignoring bound {} since no sort order is specified");
             }
             else {
-                Condition boundCondition = builder.property(sortCol, sortDir.getRelOp(), bound);
+                Condition boundCondition = builder.property(sortCol, sortDir.getCollation(), bound);
                 condition = condition == null 
                         ? boundCondition
                         : builder.and(condition, boundCondition);
@@ -96,6 +95,7 @@ public class XPathQueryEvaluator implements XPathQueryBuilder.ConditionVisitor {
                  .append(sortDir.getDirection());
         }
 
+        QueryManager queryManager = session.getWorkspace().getQueryManager();
         Query query = queryManager.createQuery(xPath.toString(), Query.XPATH);
         long maxCount = builder.getMaxCount();
         if (maxCount == 0) {
@@ -121,7 +121,7 @@ public class XPathQueryEvaluator implements XPathQueryBuilder.ConditionVisitor {
             xPath.append(condition.getRelPath());
         }
         else {
-            xPath.append(condition.getRelPath())    
+            xPath.append(condition.getRelPath())
                  .append(condition.getOp().getOp())
                  .append(format(condition.getValue()));
         }
@@ -129,7 +129,7 @@ public class XPathQueryEvaluator implements XPathQueryBuilder.ConditionVisitor {
 
     public void visit(XPathQueryBuilder.ContainsCondition condition) {
         xPath.append("jcr:contains(")
-             .append(condition.getRelPath())     
+             .append(condition.getRelPath())
              .append(",'")
              .append(condition.getSearchExpr())
              .append("')");
@@ -172,6 +172,22 @@ public class XPathQueryEvaluator implements XPathQueryBuilder.ConditionVisitor {
     }
 
     //------------------------------------------< private >---
+
+    private String getNtName(Selector selector) throws RepositoryException {
+        switch (selector) {
+            case AUTHORIZABLE:
+                return session.getJCRName(UserConstants.NT_REP_AUTHORIZABLE);
+
+            case USER:
+                return session.getJCRName(UserConstants.NT_REP_USER);
+
+            case GROUP:
+                return session.getJCRName(UserConstants.NT_REP_GROUP);
+
+            default:
+                throw new RepositoryException("Invalid selector: " + selector);
+        }
+    }
 
     private static String format(Value value) throws RepositoryException {
         switch (value.getType()) {
