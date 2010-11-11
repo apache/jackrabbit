@@ -1879,8 +1879,7 @@ public class RepositoryImpl extends AbstractRepository
                 // lock manager is lazily instantiated in order to avoid
                 // 'chicken & egg' bootstrap problems
                 if (lockMgr == null) {
-                    lockMgr =
-                        new LockManagerImpl(getSystemSession(), fs, executor);
+                    lockMgr = createLockManager();
                     ClusterNode clusterNode = context.getClusterNode();
                     if (clusterNode != null && config.isClustered()) {
                         lockChannel = clusterNode.createLockChannel(getName());
@@ -1889,6 +1888,16 @@ public class RepositoryImpl extends AbstractRepository
                 }
                 return lockMgr;
             }
+        }
+
+        /**
+         * Create a new lock manager. This method is only called once within
+         * getLockManager().
+         *
+         * @return the lock manager
+         */
+        protected LockManagerImpl createLockManager() throws RepositoryException {
+            return new LockManagerImpl(getSystemSession(), fs, executor);
         }
 
         /**
