@@ -28,6 +28,32 @@ import java.util.List;
 
 public class XPathQueryBuilder implements QueryBuilder<XPathQueryBuilder.Condition> {
 
+    /**
+     * Relational operators for comparing a property to a value. Correspond
+     * to the general comparison operators as define in JSR-170.
+     * The {@link #EX} tests for existence of a property.
+     */
+    enum RelationOp {
+        NE("!="),
+        EQ("="),
+        LT("<"),
+        LE("<="),
+        GT(">"),
+        GE("=>"),
+        EX(""),
+        LIKE("like");
+
+        private final String op;
+
+        RelationOp(String op) {
+            this.op = op;
+        }
+
+        public String getOp() {
+            return op;
+        }
+    }
+    
     interface Condition {
         void accept(ConditionVisitor visitor) throws RepositoryException;
     }
@@ -123,6 +149,38 @@ public class XPathQueryBuilder implements QueryBuilder<XPathQueryBuilder.Conditi
         return new PropertyCondition(relPath, op, value);
     }
 
+    public Condition neq(String relPath, Value value) {
+        return new PropertyCondition(relPath, RelationOp.NE, value);
+    }
+
+    public Condition eq(String relPath, Value value) {
+        return new PropertyCondition(relPath, RelationOp.EQ, value);
+    }
+
+    public Condition lt(String relPath, Value value) {
+        return new PropertyCondition(relPath, RelationOp.LT, value);
+    }
+
+    public Condition le(String relPath, Value value){
+        return new PropertyCondition(relPath, RelationOp.LE, value);
+    }
+
+    public Condition gt(String relPath, Value value) {
+        return new PropertyCondition(relPath, RelationOp.GT, value);
+    }
+
+    public Condition ge(String relPath, Value value) {
+        return new PropertyCondition(relPath, RelationOp.GE, value);
+    }
+
+    public Condition exists(String relPath) {
+        return new PropertyCondition(relPath, RelationOp.EX);
+    }
+
+    public Condition like(String relPath, String pattern) {
+        return new PropertyCondition(relPath, RelationOp.LIKE, pattern);
+    }
+
     public Condition contains(String relPath, String searchExpr) {
         return new ContainsCondition(relPath, searchExpr);
     }
@@ -149,11 +207,27 @@ public class XPathQueryBuilder implements QueryBuilder<XPathQueryBuilder.Conditi
         private final String relPath;
         private final RelationOp op;
         private final Value value;
+        private final String pattern;
 
         public PropertyCondition(String relPath, RelationOp op, Value value) {
             this.relPath = relPath;
             this.op = op;
             this.value = value;
+            pattern = null;
+        }
+
+        public PropertyCondition(String relPath, RelationOp op, String pattern) {
+            this.relPath = relPath;
+            this.op = op;
+            value = null;
+            this.pattern = pattern;
+        }
+
+        public PropertyCondition(String relPath, RelationOp op) {
+            this.relPath = relPath;
+            this.op = op;
+            value = null;
+            pattern = null;
         }
 
         public String getRelPath() {
@@ -166,6 +240,10 @@ public class XPathQueryBuilder implements QueryBuilder<XPathQueryBuilder.Conditi
 
         public Value getValue() {
             return value;
+        }
+
+        public String getPattern() {
+            return pattern;
         }
 
         public void accept(ConditionVisitor visitor) throws RepositoryException {

@@ -18,7 +18,6 @@
 package org.apache.jackrabbit.api.security.user;
 
 import org.apache.jackrabbit.api.security.user.QueryBuilder.Direction;
-import org.apache.jackrabbit.api.security.user.QueryBuilder.RelationOp;
 import org.apache.jackrabbit.spi.commons.iterator.Iterators;
 import org.apache.jackrabbit.spi.commons.iterator.Predicate;
 
@@ -296,7 +295,7 @@ public class UserManagerSearchTest extends AbstractUserTest {
         Iterator<Authorizable> result = userMgr.findAuthorizables(new Query() {
             public <T> void build(QueryBuilder<T> builder) {
                 builder.setCondition(builder.
-                        property("@canFly", RelationOp.EQ, vf.createValue(true)));
+                        eq("@canFly", vf.createValue(true)));
             }
         });
 
@@ -320,7 +319,7 @@ public class UserManagerSearchTest extends AbstractUserTest {
         Iterator<Authorizable> result = userMgr.findAuthorizables(new Query() {
             public <T> void build(QueryBuilder<T> builder) {
                 builder.setCondition(builder.
-                        property("profile/@weight", RelationOp.GT, vf.createValue(2000.0)));
+                        gt("profile/@weight", vf.createValue(2000.0)));
             }
         });
 
@@ -344,7 +343,7 @@ public class UserManagerSearchTest extends AbstractUserTest {
         Iterator<Authorizable> result = userMgr.findAuthorizables(new Query() {
             public <T> void build(QueryBuilder<T> builder) {
                 builder.setCondition(builder.
-                        property("@numberOfLegs", RelationOp.EQ, vf.createValue(8)));
+                        eq("@numberOfLegs", vf.createValue(8)));
             }
         });
 
@@ -368,7 +367,7 @@ public class UserManagerSearchTest extends AbstractUserTest {
         Iterator<Authorizable> result = userMgr.findAuthorizables(new Query() {
             public <T> void build(QueryBuilder<T> builder) {
                 builder.setCondition(builder.
-                        property("@poisonous", RelationOp.EX, null));
+                        exists("@poisonous"));
             }
         });
 
@@ -377,6 +376,36 @@ public class UserManagerSearchTest extends AbstractUserTest {
                 try {
                     Value[] poisonous = user.getProperty("poisonous");
                     return poisonous != null && poisonous.length == 1;
+                } catch (RepositoryException e) {
+                    fail(e.getMessage());
+                }
+                return false;
+            }
+        });
+
+        assertTrue(result.hasNext());
+        assertSameElements(result, expected);
+    }
+
+    public void testPropertyLike() throws RepositoryException {
+        Iterator<Authorizable> result = userMgr.findAuthorizables(new Query() {
+            public <T> void build(QueryBuilder<T> builder) {
+                builder.setCondition(builder.
+                        like("profile/@food", "m%"));
+            }
+        });
+
+        Iterator<User> expected = Iterators.filterIterator(users.iterator(), new Predicate<User>() {
+            public boolean evaluate(User user) {
+                try {
+                    Value[] food = user.getProperty("profile/food");
+                    if (food == null || food.length != 1) {
+                        return false;
+                    }
+                    else {
+                        String value = food[0].getString();
+                        return value.length() > 0 && value.charAt(0) == 'm';
+                    }
                 } catch (RepositoryException e) {
                     fail(e.getMessage());
                 }
@@ -445,9 +474,9 @@ public class UserManagerSearchTest extends AbstractUserTest {
             public <T> void build(QueryBuilder<T> builder) {
                 builder.setCondition(builder.
                         and(builder.
-                            property("profile/@cute", RelationOp.EQ, vf.createValue(true)), builder.
+                            eq("profile/@cute", vf.createValue(true)), builder.
                             not(builder.
-                                property("@color", RelationOp.EQ, vf.createValue("black")))));
+                                eq("@color", vf.createValue("black")))));
             }
         });
 
@@ -474,8 +503,8 @@ public class UserManagerSearchTest extends AbstractUserTest {
             public <T> void build(QueryBuilder<T> builder) {
                 builder.setCondition(builder.
                         or(builder.
-                            property("profile/@food", RelationOp.EQ, vf.createValue("mice")), builder.
-                            property("profile/@food", RelationOp.EQ, vf.createValue("nectar"))));
+                            eq("profile/@food", vf.createValue("mice")), builder.
+                            eq("profile/@food", vf.createValue("nectar"))));
             }
         });
 
@@ -512,8 +541,8 @@ public class UserManagerSearchTest extends AbstractUserTest {
     public void testSortOrder1() throws RepositoryException {
         Iterator<Authorizable> result = userMgr.findAuthorizables(new Query() {
             public <T> void build(QueryBuilder<T> builder) {
-                builder.setCondition(
-                        builder.property("@color", RelationOp.EX, null));
+                builder.setCondition(builder.
+                        exists("@color"));
                 builder.setSortOrder("@color", Direction.DESCENDING);
             }
         });
@@ -533,8 +562,8 @@ public class UserManagerSearchTest extends AbstractUserTest {
     public void testSortOrder2() throws RepositoryException {
         Iterator<Authorizable> result = userMgr.findAuthorizables(new Query() {
             public <T> void build(QueryBuilder<T> builder) {
-                builder.setCondition(
-                        builder.property("profile/@weight", RelationOp.EX, null));
+                builder.setCondition(builder.
+                        exists("profile/@weight"));
                 builder.setSortOrder("profile/@weight", Direction.ASCENDING);
             }
         });
@@ -604,7 +633,7 @@ public class UserManagerSearchTest extends AbstractUserTest {
             Iterator<Authorizable> result = userMgr.findAuthorizables(new Query() {
                 public <T> void build(QueryBuilder<T> builder) {
                     builder.setCondition(builder.
-                            property("profile/@cute", RelationOp.EQ, vf.createValue(true)));
+                            eq("profile/@cute", vf.createValue(true)));
                     builder.setSortOrder("profile/@weight", Direction.ASCENDING);
                     builder.setLimit(vf.createValue(1000.0), count);
                 }
