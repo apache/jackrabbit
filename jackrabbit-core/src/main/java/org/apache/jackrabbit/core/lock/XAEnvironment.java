@@ -149,7 +149,7 @@ class XAEnvironment {
 
         // create a new lock info for this node
         String lockOwner = (ownerInfo != null) ? ownerInfo : node.getSession().getUserID();
-        info = new XALockInfo(node, isSessionScoped, isDeep, lockOwner);
+        info = new XALockInfo(node, isSessionScoped, isDeep, timeoutHint, lockOwner);
         SessionImpl session = (SessionImpl) node.getSession();
         info.setLockHolder(session);
         info.setLive(true);
@@ -444,8 +444,8 @@ class XAEnvironment {
          */
         public XALockInfo(
                 NodeImpl node,
-                boolean sessionScoped, boolean deep, String lockOwner) {
-            super(node.getNodeId(), sessionScoped, deep, lockOwner, Long.MAX_VALUE);
+                boolean sessionScoped, boolean deep, long timeoutHint, String lockOwner) {
+            super(node.getNodeId(), sessionScoped, deep, lockOwner, timeoutHint);
             this.node = node;
         }
 
@@ -481,7 +481,9 @@ class XAEnvironment {
             } else {
                 LockInfo internalLock = lockMgr.internalLock(
                         node, isDeep(), isSessionScoped(),
-                        getTimeoutTime(), getLockOwner());
+                        getTimeoutHint(),
+//                        getTimeoutTime(),
+                        getLockOwner());
                 LockInfo xaEnvLock = getLockInfo(node);
                 // Check if the lockToken has been removed in the transaction ...
                 if (xaEnvLock != null && xaEnvLock.getLockHolder() == null) {

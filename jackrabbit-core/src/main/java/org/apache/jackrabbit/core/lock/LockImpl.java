@@ -139,8 +139,9 @@ class LockImpl implements javax.jcr.lock.Lock {
             return Long.MAX_VALUE;
         }
 
-        long now = (System.currentTimeMillis() + 999) / 1000; // round up
-        return Math.max(timeout - now, 1); // must always be positive
+        long remainingSeconds = (timeout - System.currentTimeMillis()) / 1000;
+
+        return Math.max(remainingSeconds, 1); // must always be positive
     }
 
     /**
