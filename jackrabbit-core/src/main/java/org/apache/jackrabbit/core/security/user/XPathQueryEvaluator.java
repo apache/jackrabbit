@@ -21,7 +21,7 @@ import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.jackrabbit.api.security.user.Group;
 import org.apache.jackrabbit.api.security.user.QueryBuilder.Direction;
 import org.apache.jackrabbit.api.security.user.QueryBuilder.RelationOp;
-import org.apache.jackrabbit.api.security.user.QueryBuilder.Selector;
+import org.apache.jackrabbit.api.security.user.User;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.security.user.XPathQueryBuilder.Condition;
@@ -32,7 +32,10 @@ import org.apache.jackrabbit.spi.commons.iterator.Transformer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.jcr.*;
+import javax.jcr.Node;
+import javax.jcr.PropertyType;
+import javax.jcr.RepositoryException;
+import javax.jcr.Value;
 import javax.jcr.query.Query;
 import javax.jcr.query.QueryManager;
 import java.util.Iterator;
@@ -173,19 +176,15 @@ public class XPathQueryEvaluator implements XPathQueryBuilder.ConditionVisitor {
 
     //------------------------------------------< private >---
 
-    private String getNtName(Selector selector) throws RepositoryException {
-        switch (selector) {
-            case AUTHORIZABLE:
-                return session.getJCRName(UserConstants.NT_REP_AUTHORIZABLE);
-
-            case USER:
-                return session.getJCRName(UserConstants.NT_REP_USER);
-
-            case GROUP:
-                return session.getJCRName(UserConstants.NT_REP_GROUP);
-
-            default:
-                throw new RepositoryException("Invalid selector: " + selector);
+    private String getNtName(Class<? extends Authorizable> selector) throws RepositoryException {
+        if (User.class.isAssignableFrom(selector)) {
+            return session.getJCRName(UserConstants.NT_REP_USER);
+        }
+        else if (Group.class.isAssignableFrom(selector)) {
+            return session.getJCRName(UserConstants.NT_REP_GROUP);
+        }
+        else {
+            return session.getJCRName(UserConstants.NT_REP_AUTHORIZABLE);
         }
     }
 

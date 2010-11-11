@@ -46,11 +46,6 @@ public interface QueryBuilder<T> {
     }
 
     /**
-     * The selectors for a query. 
-     */
-    enum Selector { AUTHORIZABLE, USER, GROUP }
-
-    /**
      * Relational operators for comparing a property to a value. Correspond
      * to the general comparison operators as define in JSR-170.
      * The {@link #EX} tests for existence of a property.   
@@ -76,11 +71,12 @@ public interface QueryBuilder<T> {
     }
 
     /**
-     * Set the selector for the query.
+     * Set the selector for the query. The selector determines whether the query
+     * returns all {@link Authorizable}s or just {@link User}s respectively {@link Group}s. 
      *
-     * @param selector  One of {@link Selector#AUTHORIZABLE}, {@link Selector#USER} or {@link Selector#GROUP} 
+     * @param selector  The selector for the query
      */
-    void setSelector(Selector selector);
+    void setSelector(Class<? extends Authorizable> selector);
 
     /**
      * Set the scope for the query. If set, the query will only return members of a specific group.

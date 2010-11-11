@@ -19,7 +19,6 @@ package org.apache.jackrabbit.api.security.user;
 
 import org.apache.jackrabbit.api.security.user.QueryBuilder.Direction;
 import org.apache.jackrabbit.api.security.user.QueryBuilder.RelationOp;
-import org.apache.jackrabbit.api.security.user.QueryBuilder.Selector;
 import org.apache.jackrabbit.spi.commons.iterator.Iterators;
 import org.apache.jackrabbit.spi.commons.iterator.Predicate;
 
@@ -185,30 +184,27 @@ public class UserManagerSearchTest extends AbstractUserTest {
     }
 
     public void testSelector() throws RepositoryException {
-        for (final Selector s : Selector.values()) {
+        List<Class<? extends Authorizable>> selectors = new ArrayList<Class<? extends Authorizable>>();
+        selectors.add(Authorizable.class);
+        selectors.add(Group.class);
+        selectors.add(User.class);
+
+        for (final Class<? extends Authorizable> s : selectors) {
             Iterator<Authorizable> result = userMgr.findAuthorizables(new Query() {
                 public <T> void build(QueryBuilder<T> builder) {
                     builder.setSelector(s);
                 }
             });
 
-            switch (s) {
-                case AUTHORIZABLE:
-                    assertContainsAll(result, authorizables.iterator());
-                    break;
-
-                case USER:
-                    assertContainsAll(result, users.iterator());
-                    break;
-
-                case GROUP:
-                    assertContainsAll(result, groups.iterator());
-                    break;
-
-                default:
-                    fail("Fall through in switch");
+            if (User.class.isAssignableFrom(s)) {
+                assertContainsAll(result, users.iterator());
             }
-
+            else if (Group.class.isAssignableFrom(s)) {
+                assertContainsAll(result, groups.iterator());
+            }
+            else {
+                assertContainsAll(result, authorizables.iterator());
+            }
         }
     }
 
@@ -254,7 +250,7 @@ public class UserManagerSearchTest extends AbstractUserTest {
             Iterator<Authorizable> result = userMgr.findAuthorizables(new Query() {
                 public <T> void build(QueryBuilder<T> builder) {
                     try {
-                        builder.setSelector(Selector.USER);
+                        builder.setSelector(User.class);
                         builder.setScope(g.getID(), false);
                     } catch (RepositoryException e) {
                         fail(e.getMessage());
@@ -278,7 +274,7 @@ public class UserManagerSearchTest extends AbstractUserTest {
             Iterator<Authorizable> result = userMgr.findAuthorizables(new Query() {
                 public <T> void build(QueryBuilder<T> builder) {
                     try {
-                        builder.setSelector(Selector.GROUP);
+                        builder.setSelector(Group.class);
                         builder.setScope(g.getID(), true);
                     } catch (RepositoryException e) {
                         fail(e.getMessage());
