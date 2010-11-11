@@ -17,6 +17,7 @@
 
 package org.apache.jackrabbit.core.security.user;
 
+import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.jackrabbit.api.security.user.QueryBuilder;
 
 import javax.jcr.RepositoryException;
@@ -40,7 +41,7 @@ public class XPathQueryBuilder implements QueryBuilder<XPathQueryBuilder.Conditi
         void visit(OrCondition condition) throws RepositoryException;
     }
 
-    private Selector selector = Selector.AUTHORIZABLE;
+    private Class<? extends Authorizable> selector = Authorizable.class;
     private String groupName;
     private boolean declaredMembersOnly;
     private Condition condition;
@@ -50,7 +51,7 @@ public class XPathQueryBuilder implements QueryBuilder<XPathQueryBuilder.Conditi
     private long offset;
     private long maxCount = -1;
 
-    Selector getSelector() {
+    Class<? extends Authorizable> getSelector() {
         return selector;
     }
 
@@ -88,7 +89,7 @@ public class XPathQueryBuilder implements QueryBuilder<XPathQueryBuilder.Conditi
     
     //------------------------------------------< QueryBuilder >---
 
-    public void setSelector(Selector selector) {
+    public void setSelector(Class<? extends Authorizable> selector) {
         this.selector = selector;
     }
 
