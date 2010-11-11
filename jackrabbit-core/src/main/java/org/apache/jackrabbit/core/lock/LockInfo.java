@@ -63,7 +63,7 @@ public abstract class LockInfo {
     private final long timeoutHint;
 
     /**
-     * Time (in seconds since epoch) when this lock will timeout. Set to
+     * Time (in milliseconds since the epoch) when this lock will timeout. Set to
      * {@link Long#MAX_VALUE} if this lock will not timeout.
      */
     private long timeoutTime;
@@ -128,7 +128,7 @@ public abstract class LockInfo {
 
     /**
      * Return the lock owner.
-     * 
+     *
      * @return lock owner
      */
     public String getLockOwner() {
@@ -137,7 +137,7 @@ public abstract class LockInfo {
 
     /**
      * Return a flag indicating whether the lock is deep.
-     * 
+     *
      * @return <code>true</code> if the lock is deep;
      *         <code>false</code> otherwise
      */
@@ -146,7 +146,7 @@ public abstract class LockInfo {
     }
 
     /**
-     * Return a flag indicating whether the session given is lock holder. 
+     * Return a flag indicating whether the session given is lock holder.
      *
      * @param session session to compare with
      */
@@ -219,9 +219,9 @@ public abstract class LockInfo {
     }
 
     /**
-     * Returns the time when this lock will expire. 
+     * Returns the time when this lock will expire.
      *
-     * @return timeout time in seconds after epoch
+     * @return timeout time in milliseconds since the epoch
      */
     public long getTimeoutTime() {
         return timeoutTime;
@@ -229,7 +229,7 @@ public abstract class LockInfo {
 
     public boolean isExpired() {
         return timeoutTime != Long.MAX_VALUE
-            && timeoutTime * 1000 > System.currentTimeMillis();
+            && System.currentTimeMillis() > timeoutTime;
     }
 
     /**
@@ -239,8 +239,8 @@ public abstract class LockInfo {
      */
     public void updateTimeoutTime() {
         if (timeoutHint > 0 && timeoutHint <= MAXIMUM_TIMEOUT) {
-            long now = (System.currentTimeMillis() + 999) / 1000; // round up
-            this.timeoutTime = now + timeoutHint;
+            long now = System.currentTimeMillis();
+            this.timeoutTime = now + timeoutHint * 1000;
         } else {
             this.timeoutTime = Long.MAX_VALUE;
         }
@@ -287,9 +287,9 @@ public abstract class LockInfo {
         }
         buffer.append("holder:");
         if (lockHolder != null) {
-            buffer.append(lockHolder.getUserID());
+            buffer.append(lockHolder.getUserID()).append(' ');
         } else {
-            buffer.append("none");
+            buffer.append("none ");
         }
         buffer.append("owner:").append(lockOwner);
         buffer.append(')');
