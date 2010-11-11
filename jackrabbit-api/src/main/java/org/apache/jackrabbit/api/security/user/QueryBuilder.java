@@ -25,48 +25,17 @@ public interface QueryBuilder<T> {
      * The sort order of the result set of a query.
      */
     enum Direction {
-        ASCENDING("ascending", RelationOp.GT),
-        DESCENDING("descending", RelationOp.LT);
+        ASCENDING("ascending"),
+        DESCENDING("descending");
 
         private final String direction;
-        private final RelationOp collation;
 
-        Direction(String direction, RelationOp collation) {
+        Direction(String direction) {
             this.direction = direction;
-            this.collation = collation;
         }
 
         public String getDirection() {
             return direction;
-        }
-
-        public RelationOp getCollation() {
-            return collation;
-        }
-    }
-
-    /**
-     * Relational operators for comparing a property to a value. Correspond
-     * to the general comparison operators as define in JSR-170.
-     * The {@link #EX} tests for existence of a property.   
-     */
-    enum RelationOp { 
-        NE("!="),
-        EQ("="),
-        LT("<"),
-        LE("<="),
-        GT(">"),
-        GE("=>"),
-        EX("");
-
-        private final String op;
-
-        RelationOp(String op) {
-            this.op = op;
-        }
-
-        public String getOp() {
-            return op;
         }
     }
 
@@ -136,19 +105,109 @@ public interface QueryBuilder<T> {
 
     /**
      * Create a condition which holds iff the node of an {@link Authorizable} has a
-     * property at <code>relPath</code> which relates to <code>value</code> through
-     * <code>op</<code>. The format of the <code>relPath</code> argument is the same
-     * as in XPath: <code>@attributeName</code> for an attribute on this node and
+     * property at <code>relPath</code> which is not equal to <code>value</code>.
+     * The format of the <code>relPath</code> argument is the same as in XPath:
+     * <code>@attributeName</code> for an attribute on this node and
      * <code>relative/path/@attributeName</code> for an attribute of a descendant node.
-     * {@link RelationOp#EX} tests for existence of a property. In this case the
-     * <code>value</code> argument is ignored. 
      *
      * @param relPath  Relative path from the authorizable's node to the property
-     * @param op  Comparison operator
      * @param value  Value to compare the property at <code>relPath</code> to
      * @return  A condition
      */
-    T property(String relPath, RelationOp op, Value value); 
+    T neq(String relPath, Value value);
+
+    /**
+     * Create a condition which holds iff the node of an {@link Authorizable} has a
+     * property at <code>relPath</code> which is equal to <code>value</code>.
+     * The format of the <code>relPath</code> argument is the same as in XPath:
+     * <code>@attributeName</code> for an attribute on this node and
+     * <code>relative/path/@attributeName</code> for an attribute of a descendant node.
+     *
+     * @param relPath  Relative path from the authorizable's node to the property
+     * @param value  Value to compare the property at <code>relPath</code> to
+     * @return  A condition
+     */
+    T eq(String relPath, Value value);
+
+    /**
+     * Create a condition which holds iff the node of an {@link Authorizable} has a
+     * property at <code>relPath</code> which is smaller than <code>value</code>.
+     * The format of the <code>relPath</code> argument is the same as in XPath:
+     * <code>@attributeName</code> for an attribute on this node and
+     * <code>relative/path/@attributeName</code> for an attribute of a descendant node.
+     *
+     * @param relPath  Relative path from the authorizable's node to the property
+     * @param value  Value to compare the property at <code>relPath</code> to
+     * @return  A condition
+     */
+    T lt(String relPath, Value value);
+
+    /**
+     * Create a condition which holds iff the node of an {@link Authorizable} has a
+     * property at <code>relPath</code> which is smaller than or equal to <code>value</code>.
+     * The format of the <code>relPath</code> argument is the same as in XPath:
+     * <code>@attributeName</code> for an attribute on this node and
+     * <code>relative/path/@attributeName</code> for an attribute of a descendant node.
+     *
+     * @param relPath  Relative path from the authorizable's node to the property
+     * @param value  Value to compare the property at <code>relPath</code> to
+     * @return  A condition
+     */
+    T le(String relPath, Value value);
+
+    /**
+     * Create a condition which holds iff the node of an {@link Authorizable} has a
+     * property at <code>relPath</code> which is greater than <code>value</code>.
+     * The format of the <code>relPath</code> argument is the same as in XPath:
+     * <code>@attributeName</code> for an attribute on this node and
+     * <code>relative/path/@attributeName</code> for an attribute of a descendant node.
+     *
+     * @param relPath  Relative path from the authorizable's node to the property
+     * @param value  Value to compare the property at <code>relPath</code> to
+     * @return  A condition
+     */
+    T gt(String relPath, Value value);
+
+    /**
+     * Create a condition which holds iff the node of an {@link Authorizable} has a
+     * property at <code>relPath</code> which is greater than or equal to <code>value</code>.
+     * The format of the <code>relPath</code> argument is the same as in XPath:
+     * <code>@attributeName</code> for an attribute on this node and
+     * <code>relative/path/@attributeName</code> for an attribute of a descendant node.
+     *
+     * @param relPath  Relative path from the authorizable's node to the property
+     * @param value  Value to compare the property at <code>relPath</code> to
+     * @return  A condition
+     */
+    T ge(String relPath, Value value);
+
+    /**
+     * Create a condition which holds iff the node of an {@link Authorizable} has a
+     * property at <code>relPath</code>.
+     * The format of the <code>relPath</code> argument is the same as in XPath:
+     * <code>@attributeName</code> for an attribute on this node and
+     * <code>relative/path/@attributeName</code> for an attribute of a descendant node.
+     *
+     * @param relPath  Relative path from the authorizable's node to the property
+     * @return  A condition
+     */
+    T exists(String relPath);
+
+    /**
+     * Create a condition which holds iff the node of an {@link Authorizable} has a
+     * property at <code>relPath</code> which matches the pattern in <code>pattern</code>.
+     * The percent character Ô%Õ represents any string of zero or more characters and the
+     * underscore character Ô_Õ represents any single character. Any literal use of these characters
+     * and the backslash character Ô\Õ must be escaped with a backslash character.
+     * The format of the <code>relPath</code> argument is the same as in XPath:
+     * <code>@attributeName</code> for an attribute on this node and
+     * <code>relative/path/@attributeName</code> for an attribute of a descendant node.
+     *
+     * @param relPath  Relative path from the authorizable's node to the property
+     * @param pattern  Pattern to match the property at <code>relPath</code> against
+     * @return  A condition
+     */
+    T like(String relPath, String pattern);
 
     /**
      * Create a full text search condition. The condition holds iff the node of an

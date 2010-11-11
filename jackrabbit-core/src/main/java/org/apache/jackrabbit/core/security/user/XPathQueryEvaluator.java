@@ -20,11 +20,11 @@ package org.apache.jackrabbit.core.security.user;
 import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.jackrabbit.api.security.user.Group;
 import org.apache.jackrabbit.api.security.user.QueryBuilder.Direction;
-import org.apache.jackrabbit.api.security.user.QueryBuilder.RelationOp;
 import org.apache.jackrabbit.api.security.user.User;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.security.user.XPathQueryBuilder.Condition;
+import org.apache.jackrabbit.core.security.user.XPathQueryBuilder.RelationOp;
 import org.apache.jackrabbit.spi.commons.iterator.Iterators;
 import org.apache.jackrabbit.spi.commons.iterator.Predicate;
 import org.apache.jackrabbit.spi.commons.iterator.Predicates;
@@ -78,7 +78,7 @@ public class XPathQueryEvaluator implements XPathQueryBuilder.ConditionVisitor {
                 log.warn("Ignoring bound {} since no sort order is specified");
             }
             else {
-                Condition boundCondition = builder.property(sortCol, sortDir.getCollation(), bound);
+                Condition boundCondition = builder.property(sortCol, getCollation(sortDir), bound);
                 condition = condition == null 
                         ? boundCondition
                         : builder.and(condition, boundCondition);
@@ -122,6 +122,13 @@ public class XPathQueryEvaluator implements XPathQueryBuilder.ConditionVisitor {
         RelationOp relOp = condition.getOp();
         if (relOp == RelationOp.EX) {
             xPath.append(condition.getRelPath());
+        }
+        else if (relOp == RelationOp.LIKE) {
+            xPath.append("jcr:like(")
+                 .append(condition.getRelPath())
+                 .append(",'")
+                 .append(condition.getPattern())
+                 .append("')");
         }
         else {
             xPath.append(condition.getRelPath())
@@ -204,6 +211,19 @@ public class XPathQueryEvaluator implements XPathQueryBuilder.ConditionVisitor {
             default:
                 throw new RepositoryException("Property of type " + PropertyType.nameFromValue(value.getType()) +
                         " not supported");
+        }
+    }
+
+    private static RelationOp getCollation(Direction direction) throws RepositoryException {
+        switch (direction) {
+            case ASCENDING:
+                return RelationOp.GT;
+
+            case DESCENDING:
+                return RelationOp.LT;
+
+            default:
+                throw new RepositoryException("Unknown sort order " + direction);
         }
     }
 
