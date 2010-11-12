@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.LinkedList;
 import java.util.Map;
@@ -477,7 +478,8 @@ public class SessionItemStateManager
                     }
                     // remove any descendant candidates
                     boolean skip = false;
-                    for (NodeId id : candidateIds) {
+                    for (Iterator<NodeId> it = candidateIds.iterator(); it.hasNext();) {
+                        NodeId id = it.next();    
                         if (nodeId.equals(id) || hierMgr.isAncestor(id, nodeId)) {
                             // already a candidate or a descendant thereof
                             // => skip
@@ -486,7 +488,7 @@ public class SessionItemStateManager
                         }
                         if (hierMgr.isAncestor(nodeId, id)) {
                             // candidate is a descendant => remove
-                            candidateIds.remove(id);
+                            it.remove();
                         }
                     }
                     if (!skip) {
