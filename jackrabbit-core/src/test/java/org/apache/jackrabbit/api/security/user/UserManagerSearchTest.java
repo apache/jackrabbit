@@ -23,6 +23,7 @@ import org.apache.jackrabbit.spi.commons.iterator.Predicate;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
+import java.security.Principal;
 import java.util.*;
 
 public class UserManagerSearchTest extends AbstractUserTest {
@@ -69,9 +70,24 @@ public class UserManagerSearchTest extends AbstractUserTest {
     private final Set<Group> groups = new HashSet<Group>();
     private final Set<Authorizable> authorizables = new HashSet<Authorizable>();
 
+    private final Set<Authorizable> systemDefined = new HashSet<Authorizable>();
+
     @Override
     public void setUp() throws Exception {
         super.setUp();
+
+        // todo P_PRINCIPAL_NAME
+        Iterator<Authorizable> systemAuthorizables = userMgr.findAuthorizables("rep:principalName", null);
+        while (systemAuthorizables.hasNext()) {
+            Authorizable authorizable =  systemAuthorizables.next();
+            if (authorizable.isGroup()) {
+                groups.add((Group) authorizable);
+            }
+            else {
+                users.add((User) authorizable);
+            }
+            systemDefined.add(authorizable);
+        }
 
         // Create a zoo. Please excuse my ignorance in zoology ;-)
         animals = createGroup("animals");
@@ -161,7 +177,9 @@ public class UserManagerSearchTest extends AbstractUserTest {
     @Override
     public void tearDown() throws Exception {
         for (Authorizable authorizable : authorizables) {
-            authorizable.remove();
+            if (!systemDefined.contains(authorizable)) {
+                authorizable.remove();
+            }
         }
         authorizables.clear();
         groups.clear();
@@ -179,7 +197,7 @@ public class UserManagerSearchTest extends AbstractUserTest {
             public <T> void build(QueryBuilder<T> builder) { /* any */ }
         });
 
-        assertContainsAll(result, authorizables.iterator());
+        assertSameElements(result, authorizables.iterator());
     }
 
     public void testSelector() throws RepositoryException {
@@ -196,13 +214,13 @@ public class UserManagerSearchTest extends AbstractUserTest {
             });
 
             if (User.class.isAssignableFrom(s)) {
-                assertContainsAll(result, users.iterator());
+                assertSameElements(result, users.iterator());
             }
             else if (Group.class.isAssignableFrom(s)) {
-                assertContainsAll(result, groups.iterator());
+                assertSameElements(result, groups.iterator());
             }
             else {
-                assertContainsAll(result, authorizables.iterator());
+                assertSameElements(result, authorizables.iterator());
             }
         }
     }
@@ -289,6 +307,30 @@ public class UserManagerSearchTest extends AbstractUserTest {
             });
             assertSameElements(result, users);
         }
+    }
+
+    public void testNameMatch() throws RepositoryException {
+        Iterator<Authorizable> result = userMgr.findAuthorizables(new Query() {
+            public <T> void build(QueryBuilder<T> builder) {
+                builder.setCondition(builder.nameMatches("a%"));
+            }
+        });
+
+        Iterator<Authorizable> expected = Iterators.filterIterator(authorizables.iterator(), new Predicate<Authorizable>() {
+            public boolean evaluate(Authorizable authorizable) {
+                try {
+                    String name = authorizable.getID();
+                    Principal principal = authorizable.getPrincipal();
+                    return name.startsWith("a") || principal != null && principal.getName().startsWith("a");
+                } catch (RepositoryException e) {
+                    fail(e.getMessage());
+                }
+                return false;
+            }
+        });
+
+        assertTrue(result.hasNext());
+        assertSameElements(result, expected);
     }
 
     public void testFindProperty1() throws RepositoryException {
@@ -404,7 +446,7 @@ public class UserManagerSearchTest extends AbstractUserTest {
                     }
                     else {
                         String value = food[0].getString();
-                        return value.length() > 0 && value.charAt(0) == 'm';
+                        return value.startsWith("m");
                     }
                 } catch (RepositoryException e) {
                     fail(e.getMessage());
@@ -608,6 +650,8 @@ public class UserManagerSearchTest extends AbstractUserTest {
 
     public void testSetBound() throws RepositoryException {
         List<User> sortedUsers = new ArrayList<User>(users);
+        sortedUsers.removeAll(systemDefined);  // remove system defined users: no @weight  
+
         Comparator<? super User> comp = new Comparator<User>() {
             public int compare(User user1, User user2) {
                 try {
@@ -685,15 +729,6 @@ public class UserManagerSearchTest extends AbstractUserTest {
     private static void setProperty(String relPath, Value value, Authorizable... authorizables) throws RepositoryException {
         for (Authorizable authorizable : authorizables) {
             authorizable.setProperty(relPath, value);
-        }
-    }
-
-    private static <T> void assertContainsAll(Iterator<? extends T> it1, Iterator<? extends T> it2) {
-        Set<? extends T> set1 = toSet(it1);
-        Set<? extends T> set2 = toSet(it2);
-        set2.removeAll(set1);
-        if (!set2.isEmpty()) {
-            fail("Missing elements in query result: " + set2);
         }
     }
 

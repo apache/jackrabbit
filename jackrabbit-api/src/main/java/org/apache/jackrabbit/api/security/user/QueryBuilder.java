@@ -104,6 +104,20 @@ public interface QueryBuilder<T> {
     void setLimit(long offset, long maxCount);
 
     /**
+     * Create a condition which holds iff the name of the {@link Authorizable}
+     * matches a <code>pattern</code>.
+     * The percent character Ô%Õ represents any string of zero or more characters and the
+     * underscore character Ô_Õ represents any single character. Any literal use of these characters
+     * and the backslash character Ô\Õ must be escaped with a backslash character.
+     * The pattern is matched against the {@link Authorizable#getID() id} and the
+     * {@link Authorizable#getPrincipal() principal}.
+     *
+     * @param pattern  Pattern to match the property at <code>relPath</code> against
+     * @return  A condition
+     */
+    T nameMatches(String pattern);
+
+    /**
      * Create a condition which holds iff the node of an {@link Authorizable} has a
      * property at <code>relPath</code> which is not equal to <code>value</code>.
      * The format of the <code>relPath</code> argument is the same as in XPath:

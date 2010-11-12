@@ -29,6 +29,7 @@ import org.apache.jackrabbit.spi.commons.iterator.Iterators;
 import org.apache.jackrabbit.spi.commons.iterator.Predicate;
 import org.apache.jackrabbit.spi.commons.iterator.Predicates;
 import org.apache.jackrabbit.spi.commons.iterator.Transformer;
+import org.apache.jackrabbit.test.api.util.Text;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -118,6 +119,22 @@ public class XPathQueryEvaluator implements XPathQueryBuilder.ConditionVisitor {
 
     //------------------------------------------< ConditionVisitor >---
 
+    public void visit(XPathQueryBuilder.NodeCondition condition) throws RepositoryException {
+        String repPrincipal = session.getJCRName(UserConstants.P_PRINCIPAL_NAME);
+
+        xPath.append('(')
+             .append("jcr:like(")
+             .append(repPrincipal)
+             .append(",'")
+             .append(condition.getPattern())
+             .append("')")
+             .append(" or ")
+             .append("jcr:like(fn:name(.),'")
+             .append(escape(condition.getPattern()))
+             .append("')")
+             .append(')');
+    }
+
     public void visit(XPathQueryBuilder.PropertyCondition condition) throws RepositoryException {
         RelationOp relOp = condition.getOp();
         if (relOp == RelationOp.EX) {
@@ -182,6 +199,37 @@ public class XPathQueryEvaluator implements XPathQueryBuilder.ConditionVisitor {
     }
 
     //------------------------------------------< private >---
+
+    /**
+     * Escape <code>string</code> for matching in jcr escaped node names
+     * @param string  string to escape
+     * @return  escaped string
+     */
+    public static String escape(String string) {
+        StringBuilder result = new StringBuilder();
+
+        int k = 0;
+        int j;
+        do {
+            j = string.indexOf('%', k); // split on %
+            if (j < 0) {
+                // jcr escape trail
+                result.append(Text.escapeIllegalJcrChars(string.substring(k)));
+            }
+            else if (j > 0 && string.charAt(j - 1) == '\\') {
+                // literal occurrence of % -> jcr escape
+                result.append(Text.escapeIllegalJcrChars(string.substring(k, j) + '%'));
+            }
+            else {
+                // wildcard occurrence of % -> jcr escape all but %
+                result.append(Text.escapeIllegalJcrChars(string.substring(k, j))).append('%');
+            }
+
+            k = j + 1;
+        } while (j >= 0);
+
+        return result.toString();
+    }
 
     private String getNtName(Class<? extends Authorizable> selector) throws RepositoryException {
         if (User.class.isAssignableFrom(selector)) {

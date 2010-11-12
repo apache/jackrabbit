@@ -59,6 +59,7 @@ public class XPathQueryBuilder implements QueryBuilder<XPathQueryBuilder.Conditi
     }
 
     interface ConditionVisitor {
+        void visit(NodeCondition nodeCondition) throws RepositoryException;
         void visit(PropertyCondition condition) throws RepositoryException;
         void visit(ContainsCondition condition);
         void visit(ImpersonationCondition condition);
@@ -149,6 +150,10 @@ public class XPathQueryBuilder implements QueryBuilder<XPathQueryBuilder.Conditi
         return new PropertyCondition(relPath, op, value);
     }
 
+    public Condition nameMatches(String pattern) {
+        return new NodeCondition(pattern);
+    }
+
     public Condition neq(String relPath, Value value) {
         return new PropertyCondition(relPath, RelationOp.NE, value);
     }
@@ -202,6 +207,22 @@ public class XPathQueryBuilder implements QueryBuilder<XPathQueryBuilder.Conditi
     }
 
     //------------------------------------------< private >---
+
+    static class NodeCondition implements Condition {
+        private final String pattern;
+
+        public NodeCondition(String pattern) {
+            this.pattern = pattern;
+        }
+
+        public String getPattern() {
+            return pattern;
+        }
+
+        public void accept(ConditionVisitor visitor) throws RepositoryException {
+            visitor.visit(this);
+        }
+    }
 
     static class PropertyCondition implements Condition {
         private final String relPath;
