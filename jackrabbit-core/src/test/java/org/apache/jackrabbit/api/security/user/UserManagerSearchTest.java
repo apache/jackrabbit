@@ -76,7 +76,6 @@ public class UserManagerSearchTest extends AbstractUserTest {
     public void setUp() throws Exception {
         super.setUp();
 
-        // todo P_PRINCIPAL_NAME
         Iterator<Authorizable> systemAuthorizables = userMgr.findAuthorizables("rep:principalName", null);
         while (systemAuthorizables.hasNext()) {
             Authorizable authorizable =  systemAuthorizables.next();
