@@ -30,7 +30,6 @@ import javax.jcr.version.VersionException;
 
 import org.apache.commons.collections.map.ReferenceMap;
 import org.apache.jackrabbit.core.SessionImpl;
-import org.apache.jackrabbit.core.RepositoryImpl;
 import org.apache.jackrabbit.core.cluster.UpdateEventChannel;
 import org.apache.jackrabbit.core.cluster.UpdateEventListener;
 import org.apache.jackrabbit.core.fs.FileSystem;
@@ -59,9 +58,9 @@ import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.virtual.VirtualItemStateProvider;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
-import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
+import org.apache.jackrabbit.spi.PathFactory;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
-import org.apache.jackrabbit.spi.commons.name.PathBuilder;
+import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -81,39 +80,10 @@ public class InternalVersionManagerImpl extends InternalVersionManagerBase
      */
     private static final Path SYSTEM_PATH;
 
-    /**
-     * The path to the version storage: /jcr:system/jcr:versionStorage
-     */
-    private static final Path HISTORIES_PATH;
-
-    /**
-     * The path to the version storage: /jcr:system/jcr:versionStorage/jcr:activities
-     */
-    private static final Path ACTIVITIES_PATH;
-
     static {
-        try {
-            PathBuilder builder = new PathBuilder();
-            builder.addRoot();
-            builder.addLast(NameConstants.JCR_SYSTEM);
-            SYSTEM_PATH = builder.getPath();
-
-            builder = new PathBuilder();
-            builder.addRoot();
-            builder.addLast(NameConstants.JCR_SYSTEM);
-            builder.addLast(NameConstants.JCR_VERSIONSTORAGE);
-            HISTORIES_PATH = builder.getPath();
-
-            builder = new PathBuilder();
-            builder.addRoot();
-            builder.addLast(NameConstants.JCR_SYSTEM);
-            builder.addLast(NameConstants.JCR_ACTIVITIES);
-            ACTIVITIES_PATH = builder.getPath();
-
-        } catch (MalformedPathException e) {
-            // will not happen. path is always valid
-            throw new InternalError("Cannot initialize path");
-        }
+        PathFactory factory = PathFactoryImpl.getInstance();
+        SYSTEM_PATH = factory.getRootPath().resolve(
+                factory.createElement(NameConstants.JCR_SYSTEM));
     }
 
     /**
@@ -185,28 +155,6 @@ public class InternalVersionManagerImpl extends InternalVersionManagerBase
             this.pMgr = pMgr;
             this.fs = fs;
             this.escFactory = new DynamicESCFactory(obsMgr);
-
-            // need to recreate the jcr:system node in this pm, too. so that
-            // it can act as parent for the histories and activities.
-            if (false && !pMgr.exists(systemId)) {
-                NodeState root = pMgr.createNew(systemId);
-                root.setParentId(RepositoryImpl.ROOT_NODE_ID);
-                root.setNodeTypeName(NameConstants.REP_SYSTEM);
-                PropertyState pt = pMgr.createNew(new PropertyId(systemId, NameConstants.JCR_PRIMARYTYPE));
-                pt.setMultiValued(false);
-                pt.setType(PropertyType.NAME);
-                pt.setValues(new InternalValue[]{InternalValue.create(NameConstants.REP_SYSTEM)});
-                root.addPropertyName(pt.getName());
-
-                // add version storage and activities as child node entries
-                root.addChildNodeEntry(NameConstants.JCR_VERSIONSTORAGE, historiesId);
-                root.addChildNodeEntry(NameConstants.JCR_ACTIVITIES, activitiesId);
-
-                ChangeLog cl = new ChangeLog();
-                cl.added(root);
-                cl.added(pt);
-                pMgr.store(cl);
-            }
 
             // need to store the version storage root directly into the persistence manager
             if (!pMgr.exists(historiesId)) {
@@ -711,13 +659,13 @@ public class InternalVersionManagerImpl extends InternalVersionManagerBase
         /**
          * the observation manager
          */
-        private DelegatingObservationDispatcher obsMgr;
+        private final DelegatingObservationDispatcher obsMgr;
 
         /**
-         * the current event source
+         * The event source of the current thread.
          */
-        private SessionImpl source;
-
+        private final ThreadLocal<SessionImpl> source =
+            new ThreadLocal<SessionImpl>();
 
         /**
          * Creates a new event state collection factory
@@ -735,12 +683,14 @@ public class InternalVersionManagerImpl extends InternalVersionManagerBase
          * association between update operation and session who actually invoked
          * the update, an internal event source is used.
          */
-        public synchronized EventStateCollection createEventStateCollection()
+        public EventStateCollection createEventStateCollection()
                 throws RepositoryException {
-            if (source == null) {
+            SessionImpl session = source.get();
+            if (session != null) {
+                return createEventStateCollection(session);
+            } else {
                 throw new RepositoryException("Unknown event source.");
             }
-            return createEventStateCollection(source);
         }
 
         /**
@@ -763,15 +713,16 @@ public class InternalVersionManagerImpl extends InternalVersionManagerBase
          * @return the return value of the executed runnable
          * @throws RepositoryException if an error occurs
          */
-        public synchronized Object doSourced(SessionImpl eventSource, SourcedTarget runnable)
+        public Object doSourced(SessionImpl eventSource, SourcedTarget runnable)
                 throws RepositoryException {
-            this.source = eventSource;
+            source.set(eventSource);
             try {
                 return runnable.run();
             } finally {
-                this.source = null;
+                source.remove();
             }
         }
+
     }
 
     private abstract class SourcedTarget {
