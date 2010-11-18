@@ -94,22 +94,6 @@ public class PersistenceManagerTest extends TestCase {
         assertPersistenceManager(manager);
     }
 
-    public void testDerbyBundlePersistenceManager() throws Exception {
-        org.apache.jackrabbit.core.persistence.bundle.DerbyPersistenceManager manager =
-            new org.apache.jackrabbit.core.persistence.bundle.DerbyPersistenceManager();
-        manager.setDriver("org.apache.derby.jdbc.EmbeddedDriver");
-        manager.setUrl("jdbc:derby:" + database.getPath() + ";create=true");
-        assertPersistenceManager(manager);
-    }
-
-    public void testH2BundlePersistenceManager() throws Exception {
-        org.apache.jackrabbit.core.persistence.bundle.H2PersistenceManager manager =
-            new org.apache.jackrabbit.core.persistence.bundle.H2PersistenceManager();
-        manager.setDriver("org.h2.Driver");
-        manager.setUrl("jdbc:h2:mem:" + database.getPath());
-        assertPersistenceManager(manager);
-    }
-
     public void testDerbyPoolPersistenceManager() throws Exception {
         org.apache.jackrabbit.core.persistence.pool.DerbyPersistenceManager manager =
             new org.apache.jackrabbit.core.persistence.pool.DerbyPersistenceManager();
