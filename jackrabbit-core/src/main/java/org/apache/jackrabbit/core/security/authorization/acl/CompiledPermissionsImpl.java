@@ -24,12 +24,7 @@ import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.id.ItemId;
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.id.PropertyId;
-import org.apache.jackrabbit.core.security.authorization.AbstractCompiledPermissions;
-import org.apache.jackrabbit.core.security.authorization.AccessControlListener;
-import org.apache.jackrabbit.core.security.authorization.AccessControlModifications;
-import org.apache.jackrabbit.core.security.authorization.AccessControlUtils;
-import org.apache.jackrabbit.core.security.authorization.Permission;
-import org.apache.jackrabbit.core.security.authorization.PrivilegeRegistry;
+import org.apache.jackrabbit.core.security.authorization.*;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.util.Text;
@@ -38,11 +33,7 @@ import javax.jcr.ItemNotFoundException;
 import javax.jcr.RepositoryException;
 import javax.jcr.security.AccessControlEntry;
 import java.security.Principal;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * <code>CompiledPermissionsImpl</code>...
@@ -53,8 +44,19 @@ class CompiledPermissionsImpl extends AbstractCompiledPermissions implements Acc
     private final SessionImpl session;
     private final EntryCollector entryCollector;
     private final AccessControlUtils util;
-    
-    private final Map<ItemId, Boolean> readCache = new LRUMap(5000);
+
+    /*
+     * Start with initial map size of 1024 and grow up to 5000 before
+     * removing LRU items.
+     */
+    @SuppressWarnings("unchecked")
+    private final Map<ItemId, Boolean> readCache = new LRUMap(1024) {
+        @Override
+        protected boolean removeLRU(LinkEntry entry) {
+            return size() > 5000;
+        }
+    };
+
     private final Object monitor = new Object();
 
     CompiledPermissionsImpl(Set<Principal> principals, SessionImpl session,
