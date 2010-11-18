@@ -306,8 +306,14 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
 
         private boolean canReadAll;
 
-        // TODO find optimal cache size and ev. make it configurable (see also JCR-2573).        
-        private final Map<ItemId, Boolean> readCache = new LRUMap(5000);
+        @SuppressWarnings("unchecked")
+        private final Map<ItemId, Boolean> readCache = new LRUMap(1024) {
+            @Override
+            protected boolean removeLRU(LinkEntry entry) {
+                return size() > 5000;
+            }
+        };
+
         private final Object monitor = new Object();
 
         /**
