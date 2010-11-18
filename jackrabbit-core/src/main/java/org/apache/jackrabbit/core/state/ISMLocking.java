@@ -42,7 +42,9 @@ import org.apache.jackrabbit.core.id.ItemId;
  * <li>While a write lock is held for a change log <code>C</code>, the holder
  * of the write lock (and any related threads) needs to be able to acquire
  * a read lock even if other writers are waiting for the lock. This behaviour
- * must continue also when the write lock has been downgraded.</li>
+ * must continue also when the write lock has been downgraded. Note that it
+ * is not necessary for a holder of a read lock to be able to upgrade to a
+ * write lock.</li>
  * </ul>
  */
 public interface ISMLocking {

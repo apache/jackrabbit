@@ -23,6 +23,7 @@ import org.apache.jackrabbit.util.Timer;
 import javax.transaction.xa.XAException;
 import javax.transaction.xa.Xid;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -338,4 +339,36 @@ public class TransactionContext extends Timer.Task {
     public static Xid getCurrentXid() {
         return CURRENT_XID.get();
     }
+
+    /**
+     * Returns the current thread identifier. The identifier is either the
+     * current thread instance or the global transaction identifier when
+     * running under a transaction.
+     *
+     * @return current thread identifier
+     */
+    public static Object getCurrentThreadId() {
+        Xid xid = TransactionContext.getCurrentXid();
+        if (xid != null) {
+            return xid.getGlobalTransactionId();
+        } else {
+            return Thread.currentThread();
+        }
+    }
+
+    /**
+     * Compares the given thread identifiers for equality.
+     *
+     * @see #getCurrentThreadId()
+     */
+    public static boolean isSameThreadId(Object a, Object b) {
+        if (a == b) {
+            return true;
+        } else if (a instanceof byte[] && b instanceof byte[]) {
+            return Arrays.equals((byte[]) a, (byte[]) b);
+        } else {
+            return false;
+        }
+    }
+
 }
