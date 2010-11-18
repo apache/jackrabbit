@@ -20,11 +20,28 @@ import static org.apache.jackrabbit.spi.commons.name.NameConstants.JCR_MIXINTYPE
 import static org.apache.jackrabbit.spi.commons.name.NameConstants.JCR_PRIMARYTYPE;
 import static org.apache.jackrabbit.spi.commons.name.NameConstants.JCR_UUID;
 
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Set;
+
+import javax.jcr.PropertyType;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.jackrabbit.core.cache.ConcurrentCache;
 import org.apache.jackrabbit.core.fs.FileSystemResource;
 import org.apache.jackrabbit.core.fs.FileSystem;
+import org.apache.jackrabbit.core.id.ItemId;
+import org.apache.jackrabbit.core.id.NodeId;
+import org.apache.jackrabbit.core.id.PropertyId;
+import org.apache.jackrabbit.core.persistence.CachingPersistenceManager;
+import org.apache.jackrabbit.core.persistence.IterablePersistenceManager;
+import org.apache.jackrabbit.core.persistence.PMContext;
+import org.apache.jackrabbit.core.persistence.PersistenceManager;
+import org.apache.jackrabbit.core.persistence.util.BLOBStore;
+import org.apache.jackrabbit.core.persistence.util.FileBasedIndex;
+import org.apache.jackrabbit.core.persistence.util.NodePropBundle;
+import org.apache.jackrabbit.core.persistence.util.NodePropBundle.PropertyEntry;
 import org.apache.jackrabbit.core.state.ItemState;
 import org.apache.jackrabbit.core.state.ChangeLog;
 import org.apache.jackrabbit.core.state.ItemStateException;
@@ -32,26 +49,9 @@ import org.apache.jackrabbit.core.state.NodeReferences;
 import org.apache.jackrabbit.core.state.NoSuchItemStateException;
 import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.core.state.NodeState;
-import org.apache.jackrabbit.core.id.ItemId;
-import org.apache.jackrabbit.core.id.NodeId;
-import org.apache.jackrabbit.core.id.PropertyId;
-import org.apache.jackrabbit.core.value.InternalValue;
-import org.apache.jackrabbit.core.persistence.CachingPersistenceManager;
-import org.apache.jackrabbit.core.persistence.IterablePersistenceManager;
-import org.apache.jackrabbit.core.persistence.PMContext;
-import org.apache.jackrabbit.core.persistence.PersistenceManager;
 import org.apache.jackrabbit.core.util.StringIndex;
-import org.apache.jackrabbit.core.persistence.util.BLOBStore;
-import org.apache.jackrabbit.core.persistence.util.FileBasedIndex;
-import org.apache.jackrabbit.core.persistence.util.NodePropBundle;
-import org.apache.jackrabbit.core.persistence.util.NodePropBundle.PropertyEntry;
+import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.spi.Name;
-
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Set;
-
-import javax.jcr.PropertyType;
 
 /**
  * The <code>AbstractBundlePersistenceManager</code> acts as base for all
@@ -380,11 +380,11 @@ public abstract class AbstractBundlePersistenceManager implements
         bundles = new ConcurrentCache<NodeId, NodePropBundle>();
         bundles.setMaxMemorySize(bundleCacheSize);
     }
-    
+
     /**
      * {@inheritDoc}
-     *  
-     *  Closes the persistence manager, release acquired resourecs.
+     *
+     *  Closes the persistence manager, release acquired resources.
      */
     public void close() throws Exception {
         // clear caches
@@ -396,8 +396,7 @@ public abstract class AbstractBundlePersistenceManager implements
      *
      * Loads the state via the appropriate NodePropBundle.
      */
-    public NodeState load(NodeId id)
-            throws NoSuchItemStateException, ItemStateException {
+    public NodeState load(NodeId id) throws NoSuchItemStateException, ItemStateException {
         NodePropBundle bundle = getBundle(id);
         if (bundle == null) {
             throw new NoSuchItemStateException(id.toString());
@@ -410,8 +409,7 @@ public abstract class AbstractBundlePersistenceManager implements
      *
      * Loads the state via the appropriate NodePropBundle.
      */
-    public PropertyState load(PropertyId id)
-            throws NoSuchItemStateException, ItemStateException {
+    public PropertyState load(PropertyId id) throws NoSuchItemStateException, ItemStateException {
         NodePropBundle bundle = getBundle(id.getParentId());
         if (bundle != null) {
             PropertyState state = createNew(id);
@@ -513,7 +511,7 @@ public abstract class AbstractBundlePersistenceManager implements
 
     /**
      * Stores the given changelog and updates the bundle cache.
-     * 
+     *
      * @param changeLog the changelog to store
      * @throws ItemStateException on failure
      */
@@ -543,7 +541,7 @@ public abstract class AbstractBundlePersistenceManager implements
         for (ItemState state : changeLog.modifiedStates()) {
             if (state.isNode()) {
                 NodeId nodeId = (NodeId) state.getId();
-                NodePropBundle bundle = (NodePropBundle) modified.get(nodeId);
+                NodePropBundle bundle = modified.get(nodeId);
                 if (bundle == null) {
                     bundle = getBundle(nodeId);
                     if (bundle == null) {
@@ -561,7 +559,7 @@ public abstract class AbstractBundlePersistenceManager implements
                     continue;
                 }
                 NodeId nodeId = id.getParentId();
-                NodePropBundle bundle = (NodePropBundle) modified.get(nodeId);
+                NodePropBundle bundle = modified.get(nodeId);
                 if (bundle == null) {
                     bundle = getBundle(nodeId);
                     if (bundle == null) {
@@ -584,7 +582,7 @@ public abstract class AbstractBundlePersistenceManager implements
                 PropertyId id = (PropertyId) state.getId();
                 NodeId nodeId = id.getParentId();
                 if (!deleted.contains(nodeId)) {
-                    NodePropBundle bundle = (NodePropBundle) modified.get(nodeId);
+                    NodePropBundle bundle = modified.get(nodeId);
                     if (bundle == null) {
                         // should actually not happen
                         log.warn("deleted property state's parent not modified!");
@@ -609,7 +607,7 @@ public abstract class AbstractBundlePersistenceManager implements
                     continue;
                 }
                 NodeId nodeId = id.getParentId();
-                NodePropBundle bundle = (NodePropBundle) modified.get(nodeId);
+                NodePropBundle bundle = modified.get(nodeId);
                 if (bundle == null) {
                     // should actually not happen
                     log.warn("added property state's parent not modified!");
@@ -687,8 +685,8 @@ public abstract class AbstractBundlePersistenceManager implements
         bundle.markOld();
         log.debug("stored bundle {}", bundle.getId());
 
-        // only put to cache if already exists. this is to ensure proper overwrite
-        // and not creating big contention during bulk loads
+        // only put to cache if already exists. this is to ensure proper
+        // overwrite and not creating big contention during bulk loads
         if (bundles.containsKey(bundle.getId())) {
             bundles.put(bundle.getId(), bundle, bundle.getSize());
         }
