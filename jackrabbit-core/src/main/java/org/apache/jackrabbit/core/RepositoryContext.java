@@ -154,7 +154,6 @@ public class RepositoryContext {
      * @return internal version manager
      */
     public InternalVersionManagerImpl getInternalVersionManager() {
-        assert internalVersionManager != null;
         return internalVersionManager;
     }
 
