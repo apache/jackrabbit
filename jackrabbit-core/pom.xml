@@ -233,18 +233,6 @@ org.apache.jackrabbit.test.api.ShareableNodeTest#testGetNodesByPattern
         </exclusion>
       </exclusions>
     </dependency>
-    <!-- JCR-2502: Force a PDFBox upgrade until Tika 0.7 is out -->
-    <dependency>
-      <groupId>org.apache.pdfbox</groupId>
-      <artifactId>pdfbox</artifactId>
-      <version>1.0.0</version>
-      <exclusions>
-        <exclusion>
-          <groupId>commons-logging</groupId>
-          <artifactId>commons-logging</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>

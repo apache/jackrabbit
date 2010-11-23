@@ -77,10 +77,14 @@ class JackrabbitParser implements Parser {
         InputStream stream =
             JackrabbitParser.class.getResourceAsStream("tika-config.xml");
         try {
-            try {
-                parser = new AutoDetectParser(new TikaConfig(stream));
-            } finally {
-                stream.close();
+            if (stream != null) {
+                try {
+                    parser = new AutoDetectParser(new TikaConfig(stream));
+                } finally {
+                    stream.close();
+                }
+            } else {
+                parser = new AutoDetectParser();
             }
         } catch (Exception e) {
             // Should never happen
@@ -98,80 +102,70 @@ class JackrabbitParser implements Parser {
      * @param classes configured list of text extractor classes
      */
     public void setTextFilterClasses(String classes) {
-        Map<String, Parser> parsers = new HashMap<String, Parser>();
+        Map<MediaType, Parser> parsers = new HashMap<MediaType, Parser>();
 
         StringTokenizer tokenizer = new StringTokenizer(classes, ", \t\n\r\f");
         while (tokenizer.hasMoreTokens()) {
             String name = tokenizer.nextToken();
             if (name.equals(
                     "org.apache.jackrabbit.extractor.HTMLTextExtractor")) {
-                parsers.put("text/html", new HtmlParser());
-            } else if (name.equals(
-                    "org.apache.jackrabbit.extractor.MsExcelTextExtractor")) {
+                parsers.put(MediaType.text("html"), new HtmlParser());
+            } else if (name.equals("org.apache.jackrabbit.extractor.MsExcelTextExtractor")) {
                 Parser parser = new OfficeParser();
-                parsers.put("application/vnd.ms-excel", parser);
-                parsers.put("application/msexcel", parser);
-                parsers.put("application/excel", parser);
-            } else if (name.equals(
-                    "org.apache.jackrabbit.extractor.MsOutlookTextExtractor")) {
-                parsers.put("application/vnd.ms-outlook", new OfficeParser());
-            } else if (name.equals(
-                    "org.apache.jackrabbit.extractor.MsPowerPointExtractor")) {
+                parsers.put(MediaType.application("vnd.ms-excel"), parser);
+                parsers.put(MediaType.application("msexcel"), parser);
+                parsers.put(MediaType.application("excel"), parser);
+            } else if (name.equals("org.apache.jackrabbit.extractor.MsOutlookTextExtractor")) {
+                parsers.put(MediaType.application("vnd.ms-outlook"), new OfficeParser());
+            } else if (name.equals("org.apache.jackrabbit.extractor.MsPowerPointExtractor")
+                    || name.equals("org.apache.jackrabbit.extractor.MsPowerPointTextExtractor")) {
                 Parser parser = new OfficeParser();
-                parsers.put("application/vnd.ms-powerpoint", parser);
-                parsers.put("application/mspowerpoint", parser);
-                parsers.put("application/powerpoint", parser);
-            } else if (name.equals(
-                    "org.apache.jackrabbit.extractor.MsWordTextExtractor")) {
+                parsers.put(MediaType.application("vnd.ms-powerpoint"), parser);
+                parsers.put(MediaType.application("mspowerpoint"), parser);
+                parsers.put(MediaType.application("powerpoint"), parser);
+            } else if (name.equals("org.apache.jackrabbit.extractor.MsWordTextExtractor")) {
                 Parser parser = new OfficeParser();
-                parsers.put("application/vnd.ms-word", parser);
-                parsers.put("application/msword", parser);
-            } else if (name.equals(
-                    "org.apache.jackrabbit.extractor.MsTextExtractor")) {
+                parsers.put(MediaType.application("vnd.ms-word"), parser);
+                parsers.put(MediaType.application("msword"), parser);
+            } else if (name.equals("org.apache.jackrabbit.extractor.MsTextExtractor")) {
                 Parser parser = new OfficeParser();
-                parsers.put("application/vnd.ms-word", parser); 
-                parsers.put("application/msword", parser);
-                parsers.put("application/vnd.ms-powerpoint", parser);
-                parsers.put("application/mspowerpoint", parser);
-                parsers.put("application/vnd.ms-excel", parser);
-                parsers.put("application/vnd.openxmlformats-officedocument.wordprocessingml.document", parser);
-                parsers.put("application/vnd.openxmlformats-officedocument.presentationml.presentation", parser);
-                parsers.put("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", parser);
-            } else if (name.equals(
-                    "org.apache.jackrabbit.extractor.OpenOfficeTextExtractor")) {
+                parsers.put(MediaType.application("vnd.ms-word"), parser); 
+                parsers.put(MediaType.application("msword"), parser);
+                parsers.put(MediaType.application("vnd.ms-powerpoint"), parser);
+                parsers.put(MediaType.application("mspowerpoint"), parser);
+                parsers.put(MediaType.application("vnd.ms-excel"), parser);
+                parsers.put(MediaType.application("vnd.openxmlformats-officedocument.wordprocessingml.document"), parser);
+                parsers.put(MediaType.application("vnd.openxmlformats-officedocument.presentationml.presentation"), parser);
+                parsers.put(MediaType.application("vnd.openxmlformats-officedocument.spreadsheetml.sheet"), parser);
+            } else if (name.equals("org.apache.jackrabbit.extractor.OpenOfficeTextExtractor")) {
                 Parser parser = new OpenDocumentParser();
-                parsers.put("application/vnd.oasis.opendocument.database", parser);
-                parsers.put("application/vnd.oasis.opendocument.formula", parser);
-                parsers.put("application/vnd.oasis.opendocument.graphics", parser);
-                parsers.put("application/vnd.oasis.opendocument.presentation", parser);
-                parsers.put("application/vnd.oasis.opendocument.spreadsheet", parser);
-                parsers.put("application/vnd.oasis.opendocument.text", parser);
-                parsers.put("application/vnd.sun.xml.calc", parser);
-                parsers.put("application/vnd.sun.xml.draw", parser);
-                parsers.put("application/vnd.sun.xml.impress", parser);
-                parsers.put("application/vnd.sun.xml.writer", parser);
-            } else if (name.equals(
-                    "org.apache.jackrabbit.extractor.PdfTextExtractor")) {
-                parsers.put("application/pdf", new PDFParser());
-            } else if (name.equals(
-                    "org.apache.jackrabbit.extractor.PlainTextExtractor")) {
-                parsers.put("text/plain", new TXTParser());
-            } else if (name.equals(
-                    "org.apache.jackrabbit.extractor.PngTextExtractor")) {
+                parsers.put(MediaType.application("vnd.oasis.opendocument.database"), parser);
+                parsers.put(MediaType.application("vnd.oasis.opendocument.formula"), parser);
+                parsers.put(MediaType.application("vnd.oasis.opendocument.graphics"), parser);
+                parsers.put(MediaType.application("vnd.oasis.opendocument.presentation"), parser);
+                parsers.put(MediaType.application("vnd.oasis.opendocument.spreadsheet"), parser);
+                parsers.put(MediaType.application("vnd.oasis.opendocument.text"), parser);
+                parsers.put(MediaType.application("vnd.sun.xml.calc"), parser);
+                parsers.put(MediaType.application("vnd.sun.xml.draw"), parser);
+                parsers.put(MediaType.application("vnd.sun.xml.impress"), parser);
+                parsers.put(MediaType.application("vnd.sun.xml.writer"), parser);
+            } else if (name.equals("org.apache.jackrabbit.extractor.PdfTextExtractor")) {
+                parsers.put(MediaType.application("pdf"), new PDFParser());
+            } else if (name.equals("org.apache.jackrabbit.extractor.PlainTextExtractor")) {
+                parsers.put(MediaType.TEXT_PLAIN, new TXTParser());
+            } else if (name.equals("org.apache.jackrabbit.extractor.PngTextExtractor")) {
                 Parser parser = new ImageParser();
-                parsers.put("image/png", parser);
-                parsers.put("image/apng", parser);
-                parsers.put("image/mng", parser);
-            } else if (name.equals(
-                    "org.apache.jackrabbit.extractor.RTFTextExtractor")) {
+                parsers.put(MediaType.image("png"), parser);
+                parsers.put(MediaType.image("apng"), parser);
+                parsers.put(MediaType.image("mng"), parser);
+            } else if (name.equals("org.apache.jackrabbit.extractor.RTFTextExtractor")) {
                 Parser parser = new RTFParser();
-                parsers.put("application/rtf", parser);
-                parsers.put("text/rtf", parser);
-            } else if (name.equals(
-                    "org.apache.jackrabbit.extractor.XMLTextExtractor")) {
+                parsers.put(MediaType.application("rtf"), parser);
+                parsers.put(MediaType.text("rtf"), parser);
+            } else if (name.equals("org.apache.jackrabbit.extractor.XMLTextExtractor")) {
                 Parser parser = new XMLParser();
-                parsers.put("application/xml", parser);
-                parsers.put("text/xml", parser);
+                parsers.put(MediaType.APPLICATION_XML, parser);
+                parsers.put(MediaType.text("xml"), parser);
             } else {
                 logger.warn("Ignoring unknown text extractor class: {}", name);
             }
