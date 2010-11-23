@@ -19,129 +19,29 @@
 
 <properties>
 
-  <mimeTypeRepository resource="/org/apache/tika/mime/tika-mimetypes.xml" magic="false"/>
-
   <parsers>
 
-    <parser name="parse-dcxml" class="org.apache.tika.parser.xml.DcXMLParser">
-      <mime>application/xml</mime>
-      <mime>image/svg+xml</mime>
-    </parser>
+    <parser class="org.apache.tika.parser.DefaultParser"/>
 
-    <parser name="parse-office" class="org.apache.tika.parser.microsoft.OfficeParser">
-      <mime>application/x-tika-msoffice</mime>
-      <mime>application/msword</mime>
-      <mime>application/vnd.ms-excel</mime>
-      <mime>application/vnd.ms-excel.sheet.binary.macroenabled.12</mime>
-      <mime>application/vnd.ms-powerpoint</mime>
-      <mime>application/vnd.visio</mime>
-      <mime>application/vnd.ms-outlook</mime>
-    </parser>
-
-    <parser name="parse-ooxml" class="org.apache.tika.parser.microsoft.ooxml.OOXMLParser">
-      <mime>application/x-tika-ooxml</mime>
-      <mime>application/vnd.openxmlformats-package.core-properties+xml</mime>
-      <mime>application/vnd.openxmlformats-officedocument.spreadsheetml.sheet</mime>
-      <mime>application/vnd.openxmlformats-officedocument.spreadsheetml.template</mime>
-      <mime>application/vnd.ms-excel.sheet.macroenabled.12</mime>
-      <mime>application/vnd.ms-excel.template.macroenabled.12</mime>
-      <mime>application/vnd.ms-excel.addin.macroenabled.12</mime>
-      <mime>application/vnd.openxmlformats-officedocument.presentationml.presentation</mime>
-      <mime>application/vnd.openxmlformats-officedocument.presentationml.template</mime>
-      <mime>application/vnd.openxmlformats-officedocument.presentationml.slideshow</mime>
-      <mime>application/vnd.ms-powerpoint.presentation.macroenabled.12</mime>
-      <mime>application/vnd.ms-powerpoint.slideshow.macroenabled.12</mime>
-      <mime>application/vnd.ms-powerpoint.addin.macroenabled.12</mime>
-      <mime>application/vnd.openxmlformats-officedocument.wordprocessingml.document</mime>
-      <mime>application/vnd.openxmlformats-officedocument.wordprocessingml.template</mime>
-      <mime>application/vnd.ms-word.document.macroenabled.12</mime>
-      <mime>application/vnd.ms-word.template.macroenabled.12</mime>
-    </parser>
-
-    <parser name="parse-html" class="org.apache.tika.parser.html.HtmlParser">
-      <mime>text/html</mime>
-      <mime>application/xhtml+xml</mime>
-      <mime>application/vnd.wap.xhtml+xml</mime>
-      <mime>application/x-asp</mime>
-    </parser>
-
-    <parser mame="parse-rtf" class="org.apache.tika.parser.rtf.RTFParser">
-      <mime>application/rtf</mime>
-    </parser>
-
-    <parser name="parse-pdf" class="org.apache.tika.parser.pdf.PDFParser">
-      <mime>application/pdf</mime>
-    </parser>
-
-    <parser name="parse-txt" class="org.apache.tika.parser.txt.TXTParser">
-      <mime>text/plain</mime>
-    </parser>
-
-    <parser name="parse-openoffice" class="org.apache.tika.parser.opendocument.OpenOfficeParser">
-      <mime>application/vnd.sun.xml.writer</mime>
-      <mime>application/vnd.oasis.opendocument.text</mime>
-      <mime>application/vnd.oasis.opendocument.graphics</mime>
-      <mime>application/vnd.oasis.opendocument.presentation</mime>
-      <mime>application/vnd.oasis.opendocument.spreadsheet</mime>
-      <mime>application/vnd.oasis.opendocument.chart</mime>
-      <mime>application/vnd.oasis.opendocument.image</mime>
-      <mime>application/vnd.oasis.opendocument.formula</mime>
-      <mime>application/vnd.oasis.opendocument.text-master</mime>
-      <mime>application/vnd.oasis.opendocument.text-web</mime>
-      <mime>application/vnd.oasis.opendocument.text-template</mime>
-      <mime>application/vnd.oasis.opendocument.graphics-template</mime>
-      <mime>application/vnd.oasis.opendocument.presentation-template</mime>
-      <mime>application/vnd.oasis.opendocument.spreadsheet-template</mime>
-      <mime>application/vnd.oasis.opendocument.chart-template</mime>
-      <mime>application/vnd.oasis.opendocument.image-template</mime>
-      <mime>application/vnd.oasis.opendocument.formula-template</mime>
-      <mime>application/x-vnd.oasis.opendocument.text</mime>
-      <mime>application/x-vnd.oasis.opendocument.graphics</mime>
-      <mime>application/x-vnd.oasis.opendocument.presentation</mime>
-      <mime>application/x-vnd.oasis.opendocument.spreadsheet</mime>
-      <mime>application/x-vnd.oasis.opendocument.chart</mime>
-      <mime>application/x-vnd.oasis.opendocument.image</mime>
-      <mime>application/x-vnd.oasis.opendocument.formula</mime>
-      <mime>application/x-vnd.oasis.opendocument.text-master</mime>
-      <mime>application/x-vnd.oasis.opendocument.text-web</mime>
-      <mime>application/x-vnd.oasis.opendocument.text-template</mime>
-      <mime>application/x-vnd.oasis.opendocument.graphics-template</mime>
-      <mime>application/x-vnd.oasis.opendocument.presentation-template</mime>
-      <mime>application/x-vnd.oasis.opendocument.spreadsheet-template</mime>
-      <mime>application/x-vnd.oasis.opendocument.chart-template</mime>
-      <mime>application/x-vnd.oasis.opendocument.image-template</mime>
-      <mime>application/x-vnd.oasis.opendocument.formula-template</mime>
-    </parser>
-
-    <parser name="parse-class" class="org.apache.tika.parser.asm.ClassParser">
-      <mime>application/java-vm</mime>
-    </parser>
-
-    <parser name="parse-mp3" class="org.apache.tika.parser.mp3.Mp3Parser">
-      <mime>audio/mpeg</mime>
-    </parser>
-
-    <parser name="parse-midi" class="org.apache.tika.parser.audio.MidiParser">
-      <mime>application/x-midi</mime>
-      <mime>audio/midi</mime>
-    </parser>
-
-    <parser name="parse-audio" class="org.apache.tika.parser.audio.AudioParser">
-      <mime>audio/basic</mime>
-      <mime>audio/x-wav</mime>
-      <mime>audio/x-aiff</mime>
-    </parser>
-
-    <parser name="parse-mbox" class="org.apache.tika.parser.mbox.MboxParser">
-      <mime>application/mbox</mime>
-    </parser>
-
-    <parser name="parse-epub" class="org.apache.tika.parser.epub.EpubParser">
-      <mime>application/epub+zip</mime>
-    </parser>
-
-    <parser name="parse-flv" class="org.apache.tika.parser.video.FLVParser">
-      <mime>video/x-flv</mime>
+    <parser class="org.apache.tika.parser.EmptyParser">
+      <!-- Disable package extraction as it's too resource-intensive -->
+      <mime>application/x-archive</mime>
+      <mime>application/x-bzip</mime>
+      <mime>application/x-bzip2</mime>
+      <mime>application/x-cpio</mime>
+      <mime>application/x-gtar</mime>
+      <mime>application/x-gzip</mime>
+      <mime>application/x-tar</mime>
+      <mime>application/zip</mime>
+      <!-- Disable image extraction as there's no text to be found -->
+      <mime>image/bmp</mime>
+      <mime>image/gif</mime>
+      <mime>image/jpeg</mime>
+      <mime>image/png</mime>
+      <mime>image/vnd.wap.wbmp</mime>
+      <mime>image/x-icon</mime>
+      <mime>image/x-psd</mime>
+      <mime>image/x-xcf</mime>
     </parser>
 
   </parsers>
