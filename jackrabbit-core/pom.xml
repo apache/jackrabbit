@@ -224,6 +224,10 @@ org.apache.jackrabbit.test.api.ShareableNodeTest#testGetNodesByPattern
       <artifactId>tika-parsers</artifactId>
       <exclusions>
         <exclusion>
+          <groupId>edu.ucar</groupId>
+          <artifactId>netcdf</artifactId>
+        </exclusion>
+        <exclusion>
           <groupId>commons-logging</groupId>
           <artifactId>commons-logging</artifactId>
         </exclusion>
