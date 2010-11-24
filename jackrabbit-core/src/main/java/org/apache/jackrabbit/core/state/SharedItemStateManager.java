@@ -18,6 +18,8 @@ package org.apache.jackrabbit.core.state;
 
 import java.io.PrintStream;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -1692,20 +1694,64 @@ public class SharedItemStateManager
     }
 
     /**
+     * Identifiers of the item states that are currently being loaded from
+     * the underlying persistence manager. Used exclusively by the
+     * {@link #getNonVirtualItemState(ItemId)} method to prevent two threads
+     * from concurrently loading the same items.
+     */
+    private final Set<ItemId> currentlyLoading = new HashSet<ItemId>();
+
+    /**
      * Returns the item state for the given id without considering virtual
      * item state providers.
      */
     private ItemState getNonVirtualItemState(ItemId id)
             throws NoSuchItemStateException, ItemStateException {
+        // First check if the item state is already in the cache
         ItemState state = cache.retrieve(id);
-        if (state == null) {
-            // not found in cache, load from persistent storage
+        if (state != null) {
+            return state;
+        }
+
+        // Wait if another thread is already loading this item state
+        synchronized (this) {
+            while (currentlyLoading.contains(id)) {
+                try {
+                    wait();
+                } catch (InterruptedException e) {
+                    throw new ItemStateException(
+                            "Interrupted while waiting for " + id, e);
+                }
+            }
+
+            state = cache.retrieve(id);
+            if (state != null) {
+                return state;
+            }
+
+            // No other thread has loaded the item state, so we'll do it
+            currentlyLoading.add(id);
+        }
+
+        try {
+            // Load the item state from persistent storage
+            // NOTE: This needs to happen outside a synchronized block!
             state = loadItemState(id);
             state.setStatus(ItemState.STATUS_EXISTING);
             state.setContainer(this);
+
+            // put it in cache
             cache.cache(state);
+
+            return state;
+        } finally {
+            // Notify other concurrent threads that we're done with this item
+            // NOTE: This needs to happen within the finally block!
+            synchronized (this) {
+                currentlyLoading.remove(id);
+                notifyAll();
+            }
         }
-        return state;
     }
 
     /**
