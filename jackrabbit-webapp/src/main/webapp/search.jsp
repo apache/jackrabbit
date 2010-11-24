@@ -69,6 +69,7 @@
             String stmt;
             if (q.startsWith("related:")) {
                 String path = q.substring("related:".length());
+                path = path.replaceAll("'", "''");
                 stmt = "//element(*, nt:file)[rep:similar(jcr:content, '" + path + "/jcr:content')]/rep:excerpt(.) order by @jcr:score descending";
                 queryTerms = "similar to <b>" + Text.encodeIllegalXMLCharacters(path) + "</b>";
             } else {
