@@ -39,6 +39,12 @@ import org.apache.jackrabbit.core.id.ItemId;
  * is free to block requests entirely for additional write lock while a write
  * lock is active. It is not a requirement to support concurrent write locks.
  * </li>
+ * <li>While a write lock is held for a change log <code>C</code>, the holder
+ * of the write lock (and any related threads) needs to be able to acquire
+ * a read lock even if other writers are waiting for the lock. This behaviour
+ * must continue also when the write lock has been downgraded. Note that it
+ * is not necessary for a holder of a read lock to be able to upgrade to a
+ * write lock.</li>
  * </ul>
  */
 public interface ISMLocking {
@@ -81,10 +87,8 @@ public interface ISMLocking {
          * used to further release the read lock.
          *
          * @return the read lock downgraded from this write lock.
-         * @throws InterruptedException if the current thread is interrupted
-         *                              while downgrading the write lock.
          */
-        ReadLock downgrade() throws InterruptedException;
+        ReadLock downgrade();
 
     }
 
