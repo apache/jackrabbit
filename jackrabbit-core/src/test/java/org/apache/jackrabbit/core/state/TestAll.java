@@ -37,6 +37,7 @@ public class TestAll extends TestCase {
 
         suite.addTestSuite(ChangeLogTest.class);
         suite.addTestSuite(DefaultISMLockingTest.class);
+        suite.addTestSuite(DefaultISMLockingDeadlockTest.class);
         suite.addTestSuite(FineGrainedISMLockingTest.class);
         suite.addTestSuite(NameSetTest.class);
 
