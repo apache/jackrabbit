@@ -16,137 +16,143 @@
  */
 package org.apache.jackrabbit.core.state;
 
-import java.util.Arrays;
-
-import javax.transaction.xa.Xid;
+import static org.apache.jackrabbit.core.TransactionContext.getCurrentThreadId;
+import static org.apache.jackrabbit.core.TransactionContext.isSameThreadId;
 
 import org.apache.jackrabbit.core.id.ItemId;
 import org.apache.jackrabbit.core.TransactionContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import EDU.oswego.cs.dl.util.concurrent.ReentrantWriterPreferenceReadWriteLock;
-import EDU.oswego.cs.dl.util.concurrent.Sync;
-
 /**
- * <code>DefaultISMLocking</code> implements the default locking strategy using
- * coarse grained locking on an ItemStateManager wide read-write lock. E.g.
- * while a write lock is held, no read lock can be acquired.
+ * Default item state locking strategy. The default strategy is simply to use
+ * a single coarse-grained read-write lock over the entire workspace.
  */
 public class DefaultISMLocking implements ISMLocking {
 
     /**
-     * Logger instance
+     * The read lock instance used by readers to release the acquired lock.
      */
-    private static final Logger log = LoggerFactory.getLogger(DefaultISMLocking.class);
-
-    /**
-     * The internal read-write lock.
-     */
-    private final RWLock rwLock = new RWLock();
-
-    /**
-     * {@inheritDoc}
-     */
-    public ReadLock acquireReadLock(ItemId id)
-            throws InterruptedException {
-        return new ReadLockImpl(rwLock.readLock());
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public WriteLock acquireWriteLock(ChangeLog changeLog)
-            throws InterruptedException {
-        return new WriteLock() {
-
-            {
-                rwLock.writeLock().acquire();
-                rwLock.setActiveXid(TransactionContext.getCurrentXid());
-            }
-
-            /**
-             * {@inheritDoc}
-             */
-            public void release() {
-                rwLock.writeLock().release();
-            }
-
-            /**
-             * {@inheritDoc}
-             */
-            public ReadLock downgrade() throws InterruptedException {
-                ReadLock rLock = new ReadLockImpl(rwLock.readLock());
-                release();
-                return rLock;
-            }
-        };
-    }
-
-    private static final class ReadLockImpl implements ReadLock {
-
-        private final Sync readLock;
-
-        private ReadLockImpl(Sync readLock) throws InterruptedException {
-            this.readLock = readLock;
-            this.readLock.acquire();
-        }
-
-        /**
-         * {@inheritDoc}
-         */
+    private final ReadLock readLock = new ReadLock() {
         public void release() {
-            readLock.release();
+            releaseReadLock();
+        }
+    };
+
+    /**
+     * The write lock instance used by writers to release or downgrade the
+     * acquired lock.
+     */
+    private final WriteLock writeLock = new WriteLock() {
+        public void release() {
+            releaseWriteLock(false);
+        }
+        public ReadLock downgrade() {
+            releaseWriteLock(true);
+            return readLock;
+        }
+    };
+
+    /**
+     * Number of writer threads waiting. While greater than zero, no new
+     * (unrelated) readers are allowed to proceed.
+     */
+    private int writersWaiting = 0;
+
+    /**
+     * The thread identifier of the current writer, or <code>null</code> if
+     * no write is in progress. A thread with the same identifier (i.e. the
+     * same thread or another thread in the same transaction) can re-acquire
+     * read or write locks without limitation, while all other readers and
+     * writers remain blocked. Note that a downgraded write lock still retains
+     * the writer thread identifier, which allows related threads to reacquire
+     * read or write locks even when there are concurrent writers waiting.
+     */
+    private Object writerId = null;
+
+    /**
+     * Number of acquired write locks. All the concurrent write locks are
+     * guaranteed to share the same thread identifier (see {@link #writerId}).
+     */
+    private int writerCount = 0;
+
+    /**
+     * Number of acquired read locks.
+     */
+    private int readerCount = 0;
+
+    /**
+     * Increments the reader count and returns the acquired read lock once
+     * there are no more writers or the current writer shares the thread id
+     * with this reader.
+     */
+    public synchronized ReadLock acquireReadLock(ItemId id)
+            throws InterruptedException {
+        Object currentId = getCurrentThreadId();
+        while (writerId != null
+                ? (writerCount > 0 && !isSameThreadId(writerId, currentId))
+                : writersWaiting > 0) {
+            wait();
+        }
+
+        readerCount++;
+        return readLock;
+    }
+
+    /**
+     * Decrements the reader count and notifies all pending threads if the
+     * lock is now available. Used by the {@link #readLock} instance.
+     */
+    private synchronized void releaseReadLock() {
+        readerCount--;
+        if (readerCount == 0 && writerCount == 0) {
+            writerId = null;
+            notifyAll();
         }
     }
 
-    private static final class RWLock extends ReentrantWriterPreferenceReadWriteLock {
+    /**
+     * Increments the writer count, sets the writer identifier and returns
+     * the acquired read lock once there are no other active readers or
+     * writers or the current writer shares the thread id with this writer.
+     */
+    public synchronized WriteLock acquireWriteLock(ChangeLog changeLog)
+            throws InterruptedException {
+        Object currentId = getCurrentThreadId();
 
-        private Xid activeXid;
-
-        /**
-         * Allow reader when there is no active writer, or current thread owns
-         * the write lock (reentrant).
-         */
-        protected boolean allowReader() {
-            return TransactionContext.isCurrentXid(activeXid, (activeWriter_ == null || activeWriter_ == Thread.currentThread()));
+        writersWaiting++;
+        try {
+            while (writerId != null
+                    ? !isSameThreadId(writerId, currentId) : readerCount > 0) {
+                wait();
+            }
+        } finally {
+            writersWaiting--;
         }
 
-        /**
-         * Sets the active Xid
-         * @param xid
-         */
-        synchronized void setActiveXid(Xid xid) {
-            if (activeXid != null && xid != null) {
-                boolean sameGTI = Arrays.equals(activeXid.getGlobalTransactionId(), xid.getGlobalTransactionId());
-                if (!sameGTI) {
-                    log.warn("Unable to set the ActiveXid while a other one is associated with a different GloalTransactionId with this RWLock.");
-                    return;
-                }
-            }
-            activeXid = xid;
+        if (writerCount++ == 0) {
+            writerId = currentId;
         }
+        return writeLock;
+    }
 
-        /**
-         * {@inheritDoc}
-         * 
-         * If there are no more writeHolds the activeXid will be set to null
-         */
-        protected synchronized Signaller endWrite() {
-            --writeHolds_;
-            if (writeHolds_ > 0) {  // still being held
-                return null;
-            } else {
-                activeXid = null;
-                activeWriter_ = null;
-                if (waitingReaders_ > 0 && allowReader()) {
-                    return readerLock_;
-                } else if (waitingWriters_ > 0) {
-                    return writerLock_;
-                } else {
-                    return null;
-                }
+    /**
+     * Decrements the writer count (and possibly clears the writer identifier)
+     * and notifies all pending threads if the lock is now available. If the
+     * downgrade argument is true, then the reader count is incremented before
+     * notifying any pending threads. Used by the {@link #writeLock} instance.
+     */
+    private synchronized void releaseWriteLock(boolean downgrade) {
+        writerCount--;
+        if (downgrade) {
+            readerCount++;
+        }
+        if (writerCount == 0) {
+            if (readerCount == 0) {
+                writerId = null;
             }
+            notifyAll();
         }
     }
+
 }
