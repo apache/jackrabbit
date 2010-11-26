@@ -30,7 +30,6 @@ import org.apache.jackrabbit.core.persistence.util.ErrorHandling;
 import org.apache.jackrabbit.core.persistence.util.FileSystemBLOBStore;
 import org.apache.jackrabbit.core.persistence.util.NodePropBundle;
 import org.apache.jackrabbit.core.persistence.util.Serializer;
-import org.apache.jackrabbit.core.util.TrackingInputStream;
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.id.PropertyId;
 import org.apache.jackrabbit.core.state.ItemStateException;
@@ -239,10 +238,7 @@ public class BundleFsPersistenceManager extends AbstractBundlePersistenceManager
             }
             InputStream in = itemFs.getInputStream(path);
             try {
-                TrackingInputStream cin = new TrackingInputStream(in);
-                NodePropBundle bundle = binding.readBundle(cin, id);
-                bundle.setSize(cin.getPosition());
-                return bundle;
+                return binding.readBundle(in, id);
             } finally {
                 IOUtils.closeQuietly(in);
             }
