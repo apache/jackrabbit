@@ -16,11 +16,11 @@
  */
 package org.apache.jackrabbit.core.data.db;
 
+import org.apache.commons.io.input.CountingInputStream;
 import org.apache.jackrabbit.core.data.DataIdentifier;
 import org.apache.jackrabbit.core.data.DataRecord;
 import org.apache.jackrabbit.core.data.DataStore;
 import org.apache.jackrabbit.core.data.DataStoreException;
-import org.apache.jackrabbit.core.util.TrackingInputStream;
 import org.apache.jackrabbit.core.util.db.CheckSchemaOperation;
 import org.apache.jackrabbit.core.util.db.ConnectionFactory;
 import org.apache.jackrabbit.core.util.db.ConnectionHelper;
@@ -343,7 +343,7 @@ public class DbDataStore implements DataStore, DatabaseAware {
             temporaryInUse.add(tempId);
             MessageDigest digest = getDigest();
             DigestInputStream dIn = new DigestInputStream(stream, digest);
-            TrackingInputStream in = new TrackingInputStream(dIn);
+            CountingInputStream in = new CountingInputStream(dIn);
             StreamWrapper wrapper;
             if (STORE_SIZE_MINUS_ONE.equals(storeStream)) {
                 wrapper = new StreamWrapper(in, -1);
@@ -360,7 +360,7 @@ public class DbDataStore implements DataStore, DatabaseAware {
             // UPDATE DATASTORE SET DATA=? WHERE ID=?
             conHelper.exec(updateDataSQL, new Object[]{wrapper, tempId});
             now = System.currentTimeMillis();
-            long length = in.getPosition();
+            long length = in.getByteCount();
             DataIdentifier identifier = new DataIdentifier(digest.digest());
             usesIdentifier(identifier);
             id = identifier.toString();
