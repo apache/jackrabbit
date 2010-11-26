@@ -25,8 +25,8 @@ import java.io.InputStream;
 import java.sql.Blob;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Types;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
@@ -41,11 +41,11 @@ import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.id.PropertyId;
 import org.apache.jackrabbit.core.persistence.PMContext;
 import org.apache.jackrabbit.core.persistence.bundle.AbstractBundlePersistenceManager;
+import org.apache.jackrabbit.core.persistence.util.BLOBStore;
 import org.apache.jackrabbit.core.persistence.util.BundleBinding;
 import org.apache.jackrabbit.core.persistence.util.ErrorHandling;
-import org.apache.jackrabbit.core.persistence.util.NodePropBundle;
-import org.apache.jackrabbit.core.persistence.util.BLOBStore;
 import org.apache.jackrabbit.core.persistence.util.FileSystemBLOBStore;
+import org.apache.jackrabbit.core.persistence.util.NodePropBundle;
 import org.apache.jackrabbit.core.persistence.util.Serializer;
 import org.apache.jackrabbit.core.state.ChangeLog;
 import org.apache.jackrabbit.core.state.ItemStateException;
@@ -796,27 +796,20 @@ public class BundleDbPersistenceManager
 
                     // issuing 2nd statement to circumvent issue JCR-1474
                     ResultSet bRs = null;
-                    byte[] data = null;
                     try {
                         bRs = conHelper.exec(bundleSelectSQL, getKey(id), false, 0);
                         if (!bRs.next()) {
                             throw new SQLException("bundle cannot be retrieved?");
                         }
-                        Blob blob = bRs.getBlob(1);
-                        data = getBytes(blob);
+                        // parse and check bundle
+                        NodePropBundle bundle = readBundle(id, bRs, 1);
+                        checkBundleConsistency(id, bundle, fix, modifications);
+                    } catch (SQLException e) {
+                        log.error("Unable to parse bundle " + id, e);
                     } finally {
                         DbUtility.close(bRs);
                     }
 
-                    try {
-                        // parse and check bundle
-                        NodePropBundle bundle = binding.readBundle(
-                                new ByteArrayInputStream(data), id);
-                        checkBundleConsistency(id, bundle, fix, modifications);
-                    } catch (IOException e) {
-                        log.error("Unable to parse bundle " + id
-                                + ": " + Arrays.toString(data), e);
-                    }
                     count++;
                     if (count % 1000 == 0) {
                         log.info(name + ": checked " + count + "/" + total + " bundles...");
@@ -1021,55 +1014,57 @@ public class BundleDbPersistenceManager
     /**
      * {@inheritDoc}
      */
+    @Override
     protected NodePropBundle loadBundle(NodeId id) throws ItemStateException {
-        ResultSet rs = null;
         try {
-            rs = conHelper.exec(bundleSelectSQL, getKey(id), false, 0);
-            if (!rs.next()) {
-                return null;
-            }
-            byte[] bytes = getBytes(rs.getBlob(1));
-
+            ResultSet rs =
+                conHelper.exec(bundleSelectSQL, getKey(id), false, 0);
             try {
-                NodePropBundle bundle =
-                    binding.readBundle(new ByteArrayInputStream(bytes), id);
-                bundle.setSize(bytes.length);
-                return bundle;
-            } catch (IOException e) {
-                log.error("Unable to parse serialization of bundle " + id
-                        + ": " + Arrays.toString(bytes), e);
-                throw e;
+                if (rs.next()) {
+                    return readBundle(id, rs, 1);
+                } else {
+                    return null;
+                }
+            } finally {
+                rs.close();
             }
-        } catch (Exception e) {
+        } catch (SQLException e) {
             String msg = "failed to read bundle: " + id + ": " + e;
             log.error(msg);
             throw new ItemStateException(msg, e);
-        } finally {
-            DbUtility.close(rs);
         }
     }
 
     /**
-     * Reads the blob's bytes and returns it. this is a helper method to
-     * circumvent issue JCR-1039 and JCR-1474
-     * @param blob blob to read
-     * @return bytes of the blob
-     * @throws SQLException if an SQL error occurs
-     * @throws IOException if an I/O error occurs
+     * Reads and parses a bundle from the BLOB in the given column of the
+     * current row of the given result set. This is a helper method to
+     * circumvent issues JCR-1039 and JCR-1474.
+     *
+     * @param id bundle identifier
+     * @param rs result set
+     * @param column BLOB column
+     * @return parsed bundle
+     * @throws SQLException if the bundle can not be read or parsed
      */
-    private byte[] getBytes(Blob blob) throws SQLException, IOException {
-        InputStream in = null;
+    private NodePropBundle readBundle(NodeId id, ResultSet rs, int column)
+            throws SQLException {
         try {
-            long length = blob.length();
-            byte[] bytes = new byte[(int) length];
-            in = blob.getBinaryStream();
-            int read, pos = 0;
-            while ((read = in.read(bytes, pos, bytes.length - pos)) > 0) {
-                pos += read;
+            InputStream in;
+            if (rs.getMetaData().getColumnType(column) == Types.BLOB) {
+                in = rs.getBlob(column).getBinaryStream();
+            } else {
+                in = rs.getBinaryStream(column);
             }
-            return bytes;
-        } finally {
-            IOUtils.closeQuietly(in);
+            try {
+                return binding.readBundle(in, id);
+            } finally {
+                in.close();
+            }
+        } catch (IOException e) {
+            SQLException exception =
+                new SQLException("Failed to parse bundle " + id);
+            exception.initCause(e);
+            throw exception;
         }
     }
 
