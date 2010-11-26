@@ -53,7 +53,7 @@ public final class JCAManagedConnection
     /**
      * Session instance.
      */
-    private final XASession session;
+    private XASession session;
 
     /**
      * XAResource instance.
@@ -78,10 +78,12 @@ public final class JCAManagedConnection
     /**
      * Construct the managed connection.
      */
-    public JCAManagedConnection(JCAManagedConnectionFactory mcf, JCAConnectionRequestInfo cri, XASession session) {
+    public JCAManagedConnection(
+            JCAManagedConnectionFactory mcf, JCAConnectionRequestInfo cri)
+            throws ResourceException {
         this.mcf = mcf;
         this.cri = cri;
-        this.session = session;
+        this.session = openSession();
         this.listeners = new LinkedList<ConnectionEventListener>();
         this.handles = new LinkedList<JCASessionHandle>();
         if (this.mcf.getBindSessionToTransaction().booleanValue()) {
@@ -92,10 +94,22 @@ public final class JCAManagedConnection
     }
 
     /**
-     * Return the repository.
+     * Create a new session.
      */
-    private Repository getRepository() {
-        return mcf.getRepository();
+    @SuppressWarnings("deprecation")
+    private XASession openSession() throws ResourceException {
+        try {
+            XASession session = (XASession) mcf.getRepository().login(
+                    cri.getCredentials(), cri.getWorkspace());
+            log("Created session (" + session + ")");
+            return session;
+        } catch (RepositoryException e) {
+            log("Failed to create session", e);
+            ResourceException exception = new ResourceException(
+                    "Failed to create session: " + e.getMessage());
+            exception.setLinkedException(e);
+            throw exception;
+        }
     }
 
     /**
@@ -154,14 +168,8 @@ public final class JCAManagedConnection
     public void cleanup()
             throws ResourceException {
         synchronized (handles) {
-            try {
-                this.session.refresh(false);
-            } catch (RepositoryException e) {
-                ResourceException exception =
-                    new ResourceException("unable to cleanup connection");
-                exception.setLinkedException(e);
-                throw exception;
-            }
+            this.session.logout();
+            this.session = openSession();
             this.handles.clear();
         }
     }
@@ -228,20 +236,31 @@ public final class JCAManagedConnection
         }
     }
 
+    @SuppressWarnings("deprecation")
+    private String getDescriptor(String key) throws ResourceException {
+        try {
+            return mcf.getRepository().getDescriptor(key);
+        } catch (RepositoryException e) {
+            log("Failed to access the repository", e);
+            ResourceException exception = new ResourceException(
+                    "Failed to access the repository: " + e.getMessage());
+            exception.setLinkedException(e);
+            throw exception;
+        }
+    }
+
     /**
      * Return the product name.
      */
-    public String getEISProductName()
-            throws ResourceException {
-        return getRepository().getDescriptor(Repository.REP_NAME_DESC);
+    public String getEISProductName() throws ResourceException {
+        return getDescriptor(Repository.REP_NAME_DESC);
     }
 
     /**
      * Return the product version.
      */
-    public String getEISProductVersion()
-            throws ResourceException {
-        return getRepository().getDescriptor(Repository.REP_VERSION_DESC);
+    public String getEISProductVersion() throws ResourceException {
+        return getDescriptor(Repository.REP_VERSION_DESC);
     }
 
     /**
