@@ -65,14 +65,15 @@ public class QueryUtil implements JcrRemotingConstants {
         columnNames.add(XMLUtil.getChildText(columnElement, JCR_NAME_LN, NS_URI));
         selectorNames.add(XMLUtil.getChildText(columnElement, JCR_SELECTOR_NAME_LN, NS_URI));
 
-        Value jcrValue;
+        Value jcrValue = null;
         Element valueElement = XMLUtil.getChildElement(columnElement, JCR_VALUE_LN, NS_URI);
         if (valueElement != null) {
-            String typeStr = XMLUtil.getAttribute(valueElement, ATTR_VALUE_TYPE, NS_URI);
-            jcrValue = ValueHelper.deserialize(XMLUtil.getText(valueElement),
-                    PropertyType.valueFromName(typeStr), true, valueFactory);
-        } else {
-            jcrValue = null;
+            String text = XMLUtil.getText(valueElement);
+            if (text != null) {
+                String typeStr = XMLUtil.getAttribute(valueElement, ATTR_VALUE_TYPE, NS_URI);
+                jcrValue = ValueHelper.deserialize(
+                        text, PropertyType.valueFromName(typeStr), true, valueFactory);
+            }
         }
         values.add(jcrValue);
     }
