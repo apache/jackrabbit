@@ -16,8 +16,6 @@
  */
 package org.apache.jackrabbit.core.query;
 
-import static javax.jcr.query.qom.QueryObjectModelConstants.JCR_JOIN_TYPE_INNER;
-
 import java.util.HashMap;
 import java.util.Map;
 
@@ -28,17 +26,17 @@ import javax.jcr.query.InvalidQueryException;
 import javax.jcr.query.QueryResult;
 import javax.jcr.query.qom.Column;
 import javax.jcr.query.qom.Constraint;
-import javax.jcr.query.qom.EquiJoinCondition;
-import javax.jcr.query.qom.Join;
 import javax.jcr.query.qom.Ordering;
 import javax.jcr.query.qom.QueryObjectModel;
-import javax.jcr.query.qom.QueryObjectModelConstants;
 import javax.jcr.query.qom.Source;
 
 import org.apache.jackrabbit.commons.query.QueryObjectModelBuilderRegistry;
+import org.apache.jackrabbit.core.query.lucene.LuceneQueryFactory;
+import org.apache.jackrabbit.core.query.lucene.SearchIndex;
 import org.apache.jackrabbit.core.query.lucene.join.QueryEngine;
 import org.apache.jackrabbit.core.session.SessionContext;
-import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.commons.query.qom.BindVariableValueImpl;
+import org.apache.jackrabbit.spi.commons.query.qom.DefaultTraversingQOMTreeVisitor;
 import org.apache.jackrabbit.spi.commons.query.qom.QueryObjectModelTree;
 
 /**
@@ -50,6 +48,11 @@ public class QueryObjectModelImpl extends QueryImpl implements QueryObjectModel 
      * The query object model tree.
      */
     protected QueryObjectModelTree qomTree;
+
+    /** Bind variables */
+    private final Map<String, Value> variables = new HashMap<String, Value>();
+
+    private LuceneQueryFactory lqf;
 
     /**
      * {@inheritDoc}
@@ -88,24 +91,46 @@ public class QueryObjectModelImpl extends QueryImpl implements QueryObjectModel 
         this.qomTree = qomTree;
         this.node = node;
         this.statement = QueryObjectModelBuilderRegistry.getQueryObjectModelBuilder(language).toString(this);
-        this.query = handler.createExecutableQuery(sessionContext, qomTree);
+
+        try {
+            qomTree.accept(new DefaultTraversingQOMTreeVisitor() {
+                @Override
+                public Object visit(BindVariableValueImpl node, Object data) {
+                    variables.put(node.getBindVariableName(), null);
+                    return data;
+                }
+            }, null);
+        } catch (Exception ignore) {
+        }
+        this.lqf = new LuceneQueryFactory(
+                sessionContext.getSessionImpl(), (SearchIndex) handler,
+                variables);
         setInitialized();
     }
 
     public QueryResult execute() throws RepositoryException {
-        Source source = getSource();
-        if (source instanceof Join) {
-            Join join = (Join) source;
-            if (JCR_JOIN_TYPE_INNER.equals(join.getJoinType())
-                    && join.getJoinCondition() instanceof EquiJoinCondition) {
-                QueryEngine engine =
-                    new QueryEngine(sessionContext.getSessionImpl(), query.getBindVariables());
-                return engine.execute(
-                        getColumns(), getSource(), getConstraint(),
-                        getOrderings(), offset, limit);
-            }
+        QueryEngine engine = new QueryEngine(
+                sessionContext.getSessionImpl(), lqf, variables);
+        return engine.execute(
+                getColumns(), getSource(), getConstraint(),
+                getOrderings(), offset, limit);
+    }
+
+
+    @Override
+    public String[] getBindVariableNames() {
+        return variables.keySet().toArray(new String[variables.size()]);
+    }
+
+    @Override
+    public void bindValue(String varName, Value value)
+            throws IllegalArgumentException {
+        if (variables.containsKey(varName)) {
+            variables.put(varName, value);
+        } else {
+            throw new IllegalArgumentException(
+                    "No such bind variable: " + varName);
         }
-        return super.execute();
     }
 
     //-------------------------< QueryObjectModel >-----------------------------

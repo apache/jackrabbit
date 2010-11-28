@@ -26,11 +26,15 @@ import static javax.jcr.query.qom.QueryObjectModelConstants.JCR_OPERATOR_GREATER
 import static javax.jcr.query.qom.QueryObjectModelConstants.JCR_OPERATOR_LESS_THAN;
 import static javax.jcr.query.qom.QueryObjectModelConstants.JCR_OPERATOR_LESS_THAN_OR_EQUAL_TO;
 import static javax.jcr.query.qom.QueryObjectModelConstants.JCR_OPERATOR_LIKE;
+import static javax.jcr.query.qom.QueryObjectModelConstants.JCR_OPERATOR_NOT_EQUAL_TO;
 
 import java.util.Comparator;
+import java.util.regex.Pattern;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
+
+import org.apache.jackrabbit.core.query.lucene.Util;
 
 /**
  * Comparator for {@link Value} instances.
@@ -78,10 +82,16 @@ public class ValueComparator implements Comparator<Value> {
             return compare(a, b) < 0;
         } else if (JCR_OPERATOR_LESS_THAN_OR_EQUAL_TO.equals(operator)) {
             return compare(a, b) <= 0;
+        } else if (JCR_OPERATOR_NOT_EQUAL_TO.equals(operator)) {
+            return compare(a, b) != 0;
         } else if (JCR_OPERATOR_LIKE.equals(operator)) {
-            // TODO: Implement LIKE support
-            throw new RuntimeException(
-                    "LIKE comparisions are not currently supported");
+            try {
+                Pattern pattern = Util.createRegexp(b.getString());
+                return pattern.matcher(a.getString()).matches();
+            } catch (RepositoryException e) {
+                throw new RuntimeException(
+                        "Unable to compare values " + a + " and " + b, e);
+            }
         } else {
             throw new IllegalArgumentException(
                     "Unknown comparison operator: " + operator);
