@@ -16,10 +16,7 @@
  */
 package org.apache.jackrabbit.core.query;
 
-import java.util.Map;
-
 import javax.jcr.RepositoryException;
-import javax.jcr.Value;
 import javax.jcr.query.QueryResult;
 
 /**
@@ -38,23 +35,5 @@ public interface ExecutableQuery {
      * @throws RepositoryException if an error occurs
      */
     QueryResult execute(long offset, long limit) throws RepositoryException;
-
-    /**
-     * Binds the given <code>value</code> to the variable named
-     * <code>varName</code>.
-     *
-     * @param varName name of variable in query
-     * @param value   value to bind
-     * @throws RepositoryException if <code>varName</code> is not a
-     *                             valid variable in this query.
-     */
-    void bindValue(String varName, Value value) throws RepositoryException;
-
-    /**
-     * Returns the bind variables of this query.
-     *
-     * @return bind variables
-     */
-    Map<String, Value> getBindVariables();
 
 }

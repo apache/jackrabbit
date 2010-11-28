@@ -24,6 +24,7 @@ import java.util.Map;
 import javax.jcr.Node;
 import javax.jcr.PathNotFoundException;
 import javax.jcr.Property;
+import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.Value;
@@ -65,6 +66,21 @@ public class OperandEvaluator {
             ValueFactory factory, Map<String, Value> variables) {
         this.factory = factory;
         this.variables = variables;
+    }
+
+    public Value getValue(StaticOperand operand, int type) throws RepositoryException {
+        Value value = getValue(operand);
+        if (type == PropertyType.UNDEFINED || type == value.getType()) {
+            return value;
+        } if (type == PropertyType.LONG) {
+            return factory.createValue(value.getLong());
+        } if (type == PropertyType.DOUBLE) {
+            return factory.createValue(value.getDouble());
+        } if (type == PropertyType.DATE) {
+            return factory.createValue(value.getDate());
+        } else {
+            return factory.createValue(value.getString(), type);
+        }
     }
 
     /**
@@ -280,11 +296,14 @@ public class OperandEvaluator {
      */
     private Property getProperty(PropertyValue operand, Row row)
             throws RepositoryException {
-        try {
-            String selector = operand.getSelectorName();
-            String property = operand.getPropertyName();
-            return row.getNode(selector).getProperty(property);
-        } catch (PathNotFoundException e) {
+        Node node = row.getNode(operand.getSelectorName());
+        if (node != null) {
+            try {
+                return node.getProperty(operand.getPropertyName());
+            } catch (PathNotFoundException e) {
+                return null;
+            }
+        } else {
             return null;
         }
     }

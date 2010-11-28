@@ -26,7 +26,6 @@ import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.session.SessionContext;
 import org.apache.jackrabbit.core.state.NodeState;
-import org.apache.jackrabbit.spi.commons.query.qom.QueryObjectModelTree;
 
 /**
  * Defines an interface for the actual node indexing and query execution.
@@ -111,20 +110,6 @@ public interface QueryHandler {
             SessionContext sessionContext, String statement, String language)
             throws InvalidQueryException;
 
-    /**
-     * Creates a new query by specifying the query object model. If the query
-     * object model is considered invalid for the implementing class, an
-     * InvalidQueryException is thrown.
-     *
-     * @param sessionContext component context of the current session
-     * @param qomTree query query object model tree.
-     * @return A <code>Query</code> object.
-     * @throws InvalidQueryException if the query object model tree is invalid.
-     */
-    ExecutableQuery createExecutableQuery(
-            SessionContext sessionContext, QueryObjectModelTree qomTree)
-            throws InvalidQueryException;
-    
     /**
      * @return the name of the query class to use.
      */

@@ -21,7 +21,6 @@ import static org.apache.jackrabbit.spi.commons.name.NameConstants.JCR_STATEMENT
 import static org.apache.jackrabbit.spi.commons.name.NameConstants.NT_QUERY;
 
 import java.text.NumberFormat;
-import java.util.Set;
 
 import javax.jcr.ItemExistsException;
 import javax.jcr.ItemNotFoundException;
@@ -97,7 +96,7 @@ public class QueryImpl extends AbstractQueryImpl {
     /**
      * The offset in the total result set
      */
-    protected long offset;
+    protected long offset = 0;
 
     /**
      * @inheritDoc
@@ -210,29 +209,19 @@ public class QueryImpl extends AbstractQueryImpl {
     /**
      * {@inheritDoc}
      */
-    public String[] getBindVariableNames() throws RepositoryException {
-        Set<String> names = query.getBindVariables().keySet();
-        return names.toArray(new String[names.size()]);
+    public String[] getBindVariableNames() {
+        return new String[0];
     }
 
     /**
-     * Binds the given <code>value</code> to the variable named
-     * <code>varName</code>.
+     * Throws an {@link IllegalArgumentException} as XPath and SQL1 queries
+     * have no bind variables.
      *
-     * @param varName name of variable in query
-     * @param value   value to bind
-     * @throws IllegalArgumentException      if <code>varName</code> is not a
-     *                                       valid variable in this query.
-     * @throws javax.jcr.RepositoryException if an error occurs.
+     * @throws IllegalArgumentException always thrown
      */
     public void bindValue(String varName, Value value)
-            throws IllegalArgumentException, RepositoryException {
-        checkInitialized();
-        try {
-            query.bindValue(varName, value);
-        } catch (NameException e) {
-            throw new RepositoryException(e.getMessage());
-        }
+            throws IllegalArgumentException {
+        throw new IllegalArgumentException("No such bind variable: " + varName);
     }
 
     /**
