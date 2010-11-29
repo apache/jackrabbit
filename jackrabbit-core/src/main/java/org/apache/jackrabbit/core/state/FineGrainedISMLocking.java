@@ -16,6 +16,9 @@
  */
 package org.apache.jackrabbit.core.state;
 
+import static org.apache.jackrabbit.core.TransactionContext.getCurrentThreadId;
+import static org.apache.jackrabbit.core.TransactionContext.isSameThreadId;
+
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -52,7 +55,7 @@ public class FineGrainedISMLocking implements ISMLocking {
      */
     private WriteLockImpl activeWriter;
 
-    private volatile Thread activeWriterThread;
+    private volatile Object activeWriterId;
 
     private ReadWriteLock writerStateRWLock = new WriterPreferenceReadWriteLock();
 
@@ -79,7 +82,7 @@ public class FineGrainedISMLocking implements ISMLocking {
      */
     public ReadLock acquireReadLock(ItemId id)
             throws InterruptedException {
-        if (activeWriterThread == Thread.currentThread()) {
+        if (isSameThreadId(activeWriterId, getCurrentThreadId())) {
             // we hold the write lock
             readLockMap.addLock(id);
             return new ReadLockImpl(id);
@@ -126,7 +129,7 @@ public class FineGrainedISMLocking implements ISMLocking {
                 if (activeWriter == null
                         && !readLockMap.hasDependency(changeLog)) {
                     activeWriter = new WriteLockImpl(changeLog);
-                    activeWriterThread = Thread.currentThread();
+                    activeWriterId = getCurrentThreadId();
                     return activeWriter;
                 } else {
                     signal = new Latch();
@@ -164,7 +167,7 @@ public class FineGrainedISMLocking implements ISMLocking {
             }
             try {
                 activeWriter = null;
-                activeWriterThread = null;
+                activeWriterId = null;
                 notifyWaitingReaders();
                 notifyWaitingWriters();
             } finally {
@@ -186,7 +189,6 @@ public class FineGrainedISMLocking implements ISMLocking {
             }
             try {
                 activeWriter = null;
-                activeWriterThread = null;
                 // only notify waiting readers since we still hold a down
                 // graded lock, which is kind of exclusiv with respect to
                 // other writers
@@ -224,7 +226,7 @@ public class FineGrainedISMLocking implements ISMLocking {
             }
             try {
                 readLockMap.removeLock(id);
-                if (activeWriterThread != Thread.currentThread()) {
+                if (!isSameThreadId(activeWriterId, getCurrentThreadId())) {
                     // only notify waiting writers if we do *not* hold a write
                     // lock at the same time. that would be a waste of cpu time.
                     notifyWaitingWriters();
