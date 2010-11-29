@@ -39,6 +39,16 @@ public class Base64Test extends TestCase {
     }
 
     /**
+     * Tests that whitespace characters are ignored within base64 data.
+     */
+    public void testWhitespace() throws Exception {
+        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+        Base64.decode(" d G\tV \tzdA\n= =\n", buffer);
+        byte[] data = buffer.toByteArray();
+        assertEquals("test", new String(data, "US-ASCII"));
+    }
+
+    /**
      * Tests that base 64 encoding/decoding round trips are lossless.
      */
     public void testBase64() throws Exception {
