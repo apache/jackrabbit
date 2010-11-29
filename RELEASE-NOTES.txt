@@ -14,6 +14,10 @@ earlier 2.1.x releases.
 Changes in this release
 -----------------------
 
+Improvements
+
+  [JCR-2812] Allow whitespaces in base64 encoded binary fields of XML ...
+
 Bug fixes
 
   [JCR-2523] StaleItemStateException during distributed transaction

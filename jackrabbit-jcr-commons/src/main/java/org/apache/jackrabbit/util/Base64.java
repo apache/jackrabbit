@@ -278,7 +278,7 @@ public class Base64 {
                     }
                     posChunk = 0;
                 }
-            } else {
+            } else if (!Character.isWhitespace(c)) {
                 throw new IllegalArgumentException("specified data is not base64 encoded");
             }
         }
