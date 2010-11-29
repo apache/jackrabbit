@@ -1,33 +1,21 @@
-Release Notes -- Apache Jackrabbit -- Version 2.0.3
+Release Notes -- Apache Jackrabbit -- Version 2.0.4
 
 Introduction
 ------------
 
-Apache Jackrabbit 2.0.3 is a bug fix release that fixes issues reported
+Apache Jackrabbit 2.0.4 is a bug fix release that fixes issues reported
 against previous releases. This release is fully compatible with the
 earlier 2.0.x releases.
 
 Changes in this release
 -----------------------
 
-Improvements
-
-  [JCR-2699] Improve read/write concurrency
-
 Bug fixes
 
-  [JCR-2341] Unable to add/lock and unlock/remove Node with shared Session ... 
-  [JCR-2420] Node removal fails with AccessDeniedException
-  [JCR-2475] Test failures when running "mvn cobertura:check"
-  [JCR-2577] SISM.checkAddedChildNodes() prevents merging of concurrent changes
-  [JCR-2579] InvalidItemStateException when attempting concurrent, non ...
-  [JCR-2588] UserManager.getAuthorizable() may fail with InvalidQueryException
-  [JCR-2598] Saving concurrent sessions executing random operations causes ...
-  [JCR-2613] NoSuchItemStateException on checkin after removeVersion in XA ...
-  [JCR-2630] UserAccessControlProvider handles users who dont have ...
-  [JCR-2681] XMLPersistanceManager doesn't preserve a property's ...
-  [JCR-2747] ConcurrentModificationException in IndexMerger
-  [JCR-2770] Initial size of ConcurrentCache depends on number of segments ...
+  [JCR-2523] StaleItemStateException during distributed transaction
+  [JCR-2753] Deadlock in DefaultISMLocking
+  [JCR-2813] "overwriting cached entry" warnings
+  [JCR-2820] FineGrainedISMLocking problems
 
 See the Jackrabbit issue tracker for more details about these changes:
 
