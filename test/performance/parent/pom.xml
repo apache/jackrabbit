@@ -58,6 +58,7 @@
         <plugin>
           <artifactId>maven-surefire-plugin</artifactId>
           <configuration>
+			<argLine>-Xms256m -Xmx512m</argLine>
             <enableAssertions>false</enableAssertions>
             <systemProperties>
               <property>
@@ -97,7 +98,7 @@
             <plugin>
               <artifactId>maven-surefire-plugin</artifactId>
               <configuration>
-                <argLine>-agentlib:${agentlib}</argLine>
+				<argLine>-Xmx512m -XX:MaxPermSize=512m -agentlib:${agentlib}</argLine>
               </configuration>
             </plugin>
           </plugins>

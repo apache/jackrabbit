@@ -21,10 +21,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-import javax.jcr.Credentials;
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
-import javax.jcr.Session;
 import javax.resource.ResourceException;
 import javax.resource.spi.ConnectionManager;
 import javax.resource.spi.ConnectionRequestInfo;
@@ -32,7 +30,6 @@ import javax.resource.spi.ManagedConnection;
 import javax.resource.spi.ManagedConnectionFactory;
 import javax.security.auth.Subject;
 
-import org.apache.jackrabbit.api.XASession;
 import org.apache.jackrabbit.commons.JcrUtils;
 
 /**
@@ -134,32 +131,9 @@ public final class JCAManagedConnectionFactory
      */
     public Object createConnectionFactory(ConnectionManager cm)
             throws ResourceException {
-        createRepository();
         JCARepositoryHandle handle = new JCARepositoryHandle(this, cm);
         log("Created repository handle (" + handle + ")");
         return handle;
-    }
-
-    /**
-     * Create a new session.
-     */
-    private Session openSession(JCAConnectionRequestInfo cri)
-            throws ResourceException {
-        createRepository();
-        Credentials creds = cri.getCredentials();
-        String workspace = cri.getWorkspace();
-
-        try {
-            Session session = getRepository().login(creds, workspace);
-            log("Created session (" + session + ")");
-            return session;
-        } catch (RepositoryException e) {
-            log("Failed to create session", e);
-            ResourceException exception = new ResourceException(
-                    "Failed to create session: " + e.getMessage());
-            exception.setLinkedException(e);
-            throw exception;
-        }
     }
 
     /**
@@ -186,13 +160,12 @@ public final class JCAManagedConnectionFactory
      */
     private ManagedConnection createManagedConnection(JCAConnectionRequestInfo cri)
             throws ResourceException {
-        return new JCAManagedConnection(this, cri, openSession(cri));
+        return new JCAManagedConnection(this, cri);
     }
 
     /**
      * Returns a matched connection from the candidate set of connections.
      */
-    @SuppressWarnings("unchecked")
     public ManagedConnection matchManagedConnections(
             Set set, Subject subject, ConnectionRequestInfo cri)
             throws ResourceException {
@@ -212,9 +185,14 @@ public final class JCAManagedConnectionFactory
     }
 
     /**
-     * Return the repository.
+     * Return the repository, automatically creating it if needed.
      */
-    public Repository getRepository() {
+    public synchronized Repository getRepository() throws RepositoryException {
+        if (repository == null) {
+            JCARepositoryManager mgr = JCARepositoryManager.getInstance();
+            repository = mgr.createRepository(parameters);
+            log("Created repository (" + repository + ")");
+        }
         return repository;
     }
 
@@ -263,26 +241,6 @@ public final class JCAManagedConnectionFactory
      */
     private boolean equals(JCAManagedConnectionFactory o) {
         return parameters.equals(o.parameters);
-    }
-
-    /**
-     * Create repository.
-     */
-    private void createRepository()
-            throws ResourceException {
-        if (repository == null) {
-            try {
-                JCARepositoryManager mgr = JCARepositoryManager.getInstance();
-                repository = mgr.createRepository(parameters);
-                log("Created repository (" + repository + ")");
-            } catch (RepositoryException e) {
-                log("Failed to create repository", e);
-                ResourceException exception = new ResourceException(
-                        "Failed to create session: " + e.getMessage());
-                exception.setLinkedException(e);
-                throw exception;
-            }
-        }
     }
 
     /**

@@ -66,6 +66,7 @@ public final class JCARepositoryHandle extends ProxyRepository
     /**
      * Creates a new session.
      */
+    @SuppressWarnings("deprecation")
     public Session login(Credentials creds, String workspace)
             throws RepositoryException {
         try {
@@ -113,7 +114,7 @@ public final class JCARepositoryHandle extends ProxyRepository
             this.mcf = mcf;
         }
 
-        public Repository getRepository() {
+        public Repository getRepository() throws RepositoryException {
             return mcf.getRepository();
         }
 

@@ -88,8 +88,7 @@ public class QueryImpl extends AbstractQueryImpl {
             SessionContext sessionContext, SearchIndex index,
             PropertyTypeRegistry propReg, String statement, String language,
             QueryNodeFactory factory) throws InvalidQueryException {
-        super(sessionContext, index, propReg,
-                Collections.<String, Value>emptyMap());
+        super(sessionContext, index, propReg);
         // parse query according to language
         // build query tree using the passed factory
         this.root = QueryParser.parse(

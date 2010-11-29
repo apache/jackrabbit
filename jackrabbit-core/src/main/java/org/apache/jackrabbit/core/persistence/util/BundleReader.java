@@ -18,6 +18,7 @@ package org.apache.jackrabbit.core.persistence.util;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.apache.commons.io.input.CountingInputStream;
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.id.PropertyId;
 import org.apache.jackrabbit.core.value.InternalValue;
@@ -89,6 +90,14 @@ class BundleReader {
 
     private final BundleBinding binding;
 
+    /**
+     * Counter for the number of bytes read from the input stream.
+     */
+    private final CountingInputStream cin;
+
+    /**
+     * Wrapper for reading structured data from the input stream.
+     */
     private final DataInputStream in;
 
     private final int version;
@@ -112,7 +121,8 @@ class BundleReader {
     public BundleReader(BundleBinding binding, InputStream stream)
             throws IOException {
         this.binding = binding;
-        this.in = new DataInputStream(stream);
+        this.cin = new CountingInputStream(stream);
+        this.in = new DataInputStream(cin);
         this.version = in.readUnsignedByte();
     }
 
@@ -124,12 +134,14 @@ class BundleReader {
      * @throws IOException if an I/O error occurs.
      */
     public NodePropBundle readBundle(NodeId id) throws IOException {
+        long start = cin.getByteCount();
         NodePropBundle bundle = new NodePropBundle(id);
         if (version >= BundleBinding.VERSION_3) {
             readBundleNew(bundle);
         } else {
             readBundleOld(bundle);
         }
+        bundle.setSize(cin.getByteCount() - start);
         return bundle;
     }
 

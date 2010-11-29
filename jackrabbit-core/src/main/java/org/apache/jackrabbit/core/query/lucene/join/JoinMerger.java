@@ -17,7 +17,6 @@
 package org.apache.jackrabbit.core.query.lucene.join;
 
 import static javax.jcr.query.qom.QueryObjectModelConstants.JCR_JOIN_TYPE_LEFT_OUTER;
-import static javax.jcr.query.qom.QueryObjectModelConstants.JCR_JOIN_TYPE_RIGHT_OUTER;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -163,93 +162,47 @@ abstract class JoinMerger {
     public QueryResult merge(RowIterator leftRows, RowIterator rightRows)
             throws RepositoryException {
         RowIterator joinRows;
-        if (JCR_JOIN_TYPE_RIGHT_OUTER.equals(type)) {
-            Map<String, List<Row>> map = new HashMap<String, List<Row>>();
-            for (Row row : new RowIterable(leftRows)) {
-                for (String value : getLeftValues(row)) {
-                    List<Row> rows = map.get(value);
-                    if (rows == null) {
-                        rows = new ArrayList<Row>();
-                        map.put(value, rows);
-                    }
-                    rows.add(row);
-                }
-            }
-            joinRows = mergeRight(map, rightRows);
-        } else {
-            Map<String, List<Row>> map = new HashMap<String, List<Row>>();
-            for (Row row : new RowIterable(rightRows)) {
-                for (String value : getRightValues(row)) {
-                    List<Row> rows = map.get(value);
-                    if (rows == null) {
-                        rows = new ArrayList<Row>();
-                        map.put(value, rows);
-                    }
-                    rows.add(row);
-                }
-            }
-            boolean outer = JCR_JOIN_TYPE_LEFT_OUTER.equals(type);
-            joinRows = mergeLeft(leftRows, map, outer);
-        }
-        return new SimpleQueryResult(columnNames, selectorNames, joinRows);
-    }
 
-    private RowIterator mergeLeft(
-            RowIterator leftRows, Map<String, List<Row>> rightRowMap,
-            boolean outer) throws RepositoryException {
-        if (!rightRowMap.isEmpty()) {
+        Map<String, List<Row>> map = new HashMap<String, List<Row>>();
+        for (Row row : new RowIterable(rightRows)) {
+            for (String value : getRightValues(row)) {
+                List<Row> rows = map.get(value);
+                if (rows == null) {
+                    rows = new ArrayList<Row>();
+                    map.put(value, rows);
+                }
+                rows.add(row);
+            }
+        }
+
+        if (!map.isEmpty()) {
             List<Row> rows = new ArrayList<Row>();
             for (Row leftRow : new RowIterable(leftRows)) {
                 for (String value : getLeftValues(leftRow)) {
-                    List<Row> rightRows = rightRowMap.get(value);
-                    if (rightRows != null) {
-                        for (Row rightRow : rightRows) {
+                    List<Row> matchingRows = map.get(value);
+                    if (matchingRows != null) {
+                        for (Row rightRow : matchingRows) {
                             rows.add(mergeRow(leftRow, rightRow));
                         }
-                    } else if (outer) {
+                    } else if (JCR_JOIN_TYPE_LEFT_OUTER.equals(type)) {
+                        // No matches in an outer join -> add a null row
                         rows.add(mergeRow(leftRow, null));
                     }
                 }
             }
-            return new RowIteratorAdapter(rows);
-        } else if (outer) {
-            return new RowIteratorAdapter(leftRows) {
+            joinRows = new RowIteratorAdapter(rows);
+        } else if (JCR_JOIN_TYPE_LEFT_OUTER.equals(type)) {
+            joinRows = new RowIteratorAdapter(leftRows) {
                 @Override
                 public Object next() {
                     return mergeRow((Row) super.next(), null);
                 }
             };
         } else {
-            return new RowIteratorAdapter(Collections.emptySet());
+            joinRows = new RowIteratorAdapter(Collections.emptySet());
         }
-    }
 
-    private RowIterator mergeRight(
-            Map<String, List<Row>> leftRowMap, RowIterator rightRows)
-            throws RepositoryException {
-        if (leftRowMap.isEmpty()) {
-            List<Row> rows = new ArrayList<Row>();
-            for (Row rightRow : new RowIterable(rightRows)) {
-                for (String value : getRightValues(rightRow)) {
-                    List<Row> leftRows = leftRowMap.get(value);
-                    if (leftRows != null) {
-                        for (Row leftRow : leftRows) {
-                            rows.add(mergeRow(leftRow, rightRow));
-                        }
-                    } else {
-                        rows.add(mergeRow(null, rightRow));
-                    }
-                }
-            }
-            return new RowIteratorAdapter(rows);
-        } else {
-            return new RowIteratorAdapter(rightRows) {
-                @Override
-                public Object next() {
-                    return mergeRow(null, (Row) super.next());
-                }
-            };
-        }
+        return new SimpleQueryResult(columnNames, selectorNames, joinRows);
     }
 
     /**
