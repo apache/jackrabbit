@@ -16,18 +16,9 @@
  */
 package org.apache.jackrabbit.core.persistence.pool;
 
-import java.io.InputStream;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 
-import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.persistence.PMContext;
-import org.apache.jackrabbit.core.persistence.util.NodePropBundle;
-import org.apache.jackrabbit.core.state.ItemStateException;
-import org.apache.jackrabbit.core.util.TrackingInputStream;
-import org.apache.jackrabbit.core.util.db.DbUtility;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Extends the {@link BundleDbPersistenceManager} by PostgreSQL specific code.
@@ -47,12 +38,6 @@ import org.slf4j.LoggerFactory;
  * </ul>
  */
 public class PostgreSQLPersistenceManager extends BundleDbPersistenceManager {
-
-    /**
-     * Logger instance.
-     */
-    private static Logger log =
-        LoggerFactory.getLogger(PostgreSQLPersistenceManager.class);
 
     /**
      * {@inheritDoc}
@@ -85,36 +70,4 @@ public class PostgreSQLPersistenceManager extends BundleDbPersistenceManager {
         return SM_LONGLONG_KEYS;
     }
 
-    /**
-     * PostgreSQL needs slightly different handling of the binary value that is received:
-     * rs.getBinaryStream vs rs.getBlob in the super class.
-     * 
-     * {@inheritDoc}
-     */
-    @Override
-    protected NodePropBundle loadBundle(NodeId id) throws ItemStateException {
-        ResultSet rs = null;
-        try {
-            rs = conHelper.exec(bundleSelectSQL, getKey(id), false, 0);
-            if (rs.next()) {
-                InputStream input = rs.getBinaryStream(1);
-                try {
-                    TrackingInputStream cin = new TrackingInputStream(input);
-                    NodePropBundle bundle = binding.readBundle(cin, id);
-                    bundle.setSize(cin.getPosition());
-                    return bundle;
-                } finally {
-                    input.close();
-                }
-            } else {
-                return null;
-            }
-        } catch (Exception e) {
-            String msg = "failed to read bundle: " + id + ": " + e;
-            log.error(msg);
-            throw new ItemStateException(msg, e);
-        } finally {
-           DbUtility.close(rs);
-        }
-    }
 }

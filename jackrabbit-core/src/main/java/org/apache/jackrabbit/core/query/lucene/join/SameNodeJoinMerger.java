@@ -33,6 +33,8 @@ import javax.jcr.query.qom.PropertyValue;
 import javax.jcr.query.qom.QueryObjectModelFactory;
 import javax.jcr.query.qom.SameNodeJoinCondition;
 
+import org.apache.jackrabbit.spi.commons.conversion.PathResolver;
+
 class SameNodeJoinMerger extends JoinMerger {
 
     private final String selector1;
@@ -91,10 +93,14 @@ class SameNodeJoinMerger extends JoinMerger {
             Node node = row.getNode(selector2);
             if (node != null) {
                 try {
-                    if (path != null) {
-                        node = node.getNode(path);
+                    String p = node.getPath();
+                    if (path != null && !".".equals(path)) {
+                        if (!"/".equals(p)) {
+                            p += "/";
+                        }
+                        p += path;
                     }
-                    return Collections.singleton(node.getPath());
+                    return Collections.singleton(p);
                 } catch (PathNotFoundException e) {
                     // fall through
                 }

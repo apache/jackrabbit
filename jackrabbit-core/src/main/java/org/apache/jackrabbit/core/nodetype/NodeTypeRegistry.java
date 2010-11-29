@@ -74,7 +74,7 @@ public class NodeTypeRegistry implements NodeTypeEventListener {
             "org/apache/jackrabbit/core/nodetype/builtin_nodetypes.cnd";
 
     private static final String CUSTOM_NODETYPES_RESOURCE_NAME =
-            "nodetypes/custom_nodetypes.xml";
+            "/nodetypes/custom_nodetypes.xml";
 
     /**
      * resource holding custom node type definitions which are represented as
