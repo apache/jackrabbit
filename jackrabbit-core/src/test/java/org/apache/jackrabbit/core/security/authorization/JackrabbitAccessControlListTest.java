@@ -44,6 +44,7 @@ public class JackrabbitAccessControlListTest extends AbstractAccessControlTest {
 
     private JackrabbitAccessControlList templ;
 
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
 
@@ -63,6 +64,7 @@ public class JackrabbitAccessControlListTest extends AbstractAccessControlTest {
         }
     }
 
+    @Override
     protected void tearDown() throws Exception {
         // make sure transient ac-changes are reverted.
         superuser.refresh(false);
@@ -83,11 +85,11 @@ public class JackrabbitAccessControlListTest extends AbstractAccessControlTest {
         }
     }
 
-    public void testGetRestrictionNames() {
+    public void testGetRestrictionNames() throws RepositoryException {
         assertNotNull(templ.getRestrictionNames());
     }
 
-    public void testGetRestrictionType() {
+    public void testGetRestrictionType() throws RepositoryException {
         String[] names = templ.getRestrictionNames();
         for (String name : names) {
             int type = templ.getRestrictionType(name);
