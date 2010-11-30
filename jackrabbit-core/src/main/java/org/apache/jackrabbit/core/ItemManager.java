@@ -713,7 +713,7 @@ public class ItemManager implements ItemStateListener {
             childIds.add(entry.getId());
         }
 
-        return new LazyItemIterator(this, childIds, parentId);
+        return new LazyItemIterator(sessionContext, childIds, parentId);
     }
 
     /**
@@ -774,7 +774,7 @@ public class ItemManager implements ItemStateListener {
             childIds.add(id);
         }
 
-        return new LazyItemIterator(this, childIds);
+        return new LazyItemIterator(sessionContext, childIds);
     }
 
     //-------------------------------------------------< item factory methods >
