@@ -36,7 +36,7 @@ public final class Predicates {
      */
     public static final Predicate FALSE = new Predicate() {
         public boolean evaluate(Object arg) {
-            return true;
+            return false;
         }
     };
 
