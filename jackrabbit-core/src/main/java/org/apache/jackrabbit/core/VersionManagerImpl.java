@@ -413,7 +413,7 @@ public class VersionManagerImpl extends VersionManagerImplConfig
                         Permission.VERSION_MNGMT);
                 List<ItemId> failedIds = new LinkedList<ItemId>();
                 mergeOrUpdate(state, srcWorkspaceName, failedIds, bestEffort, isShallow);
-                return new LazyItemIterator(session.getItemManager(), failedIds);
+                return new LazyItemIterator(context, failedIds);
             }
             public String toString() {
                 return "versionManager.merge("
@@ -592,7 +592,7 @@ public class VersionManagerImpl extends VersionManagerImplConfig
         }
         List<ItemId> failedIds = new ArrayList<ItemId>();
         merge(activity, failedIds);
-        return new LazyItemIterator(session.getItemManager(), failedIds);
+        return new LazyItemIterator(context, failedIds);
     }
 
     /**
