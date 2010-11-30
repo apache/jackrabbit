@@ -31,6 +31,11 @@ public class SimpleSearchTest extends AbstractTest {
 
     private Node root;
 
+    protected Query createQuery(QueryManager manager, int i)
+            throws RepositoryException {
+        return manager.createQuery("//*[@testcount=" + i + "]", Query.XPATH);
+    }
+
     public void beforeSuite() throws RepositoryException {
         session = getRepository().login(getCredentials());
 
@@ -48,8 +53,7 @@ public class SimpleSearchTest extends AbstractTest {
     public void runTest() throws Exception {
         QueryManager manager = session.getWorkspace().getQueryManager();
         for (int i = 0; i < NODE_COUNT; i++) {
-            Query query =
-                manager.createQuery("//*[@testcount=" + i + "]", Query.XPATH);
+            Query query = createQuery(manager, i);
             NodeIterator iterator = query.execute().getNodes();
             while (iterator.hasNext()) {
                 Node node = iterator.nextNode();
