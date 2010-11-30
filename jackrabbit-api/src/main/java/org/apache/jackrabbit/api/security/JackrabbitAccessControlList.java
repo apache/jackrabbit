@@ -41,8 +41,9 @@ public interface JackrabbitAccessControlList extends JackrabbitAccessControlPoli
      *
      * @return the names of the supported restrictions or an empty array.
      * @see #addEntry(Principal, Privilege[], boolean, Map)
+     * @throws RepositoryException If an error occurs.
      */
-    String[] getRestrictionNames();
+    String[] getRestrictionNames() throws RepositoryException;
 
     /**
      * Return the expected {@link javax.jcr.PropertyType property type} of the
@@ -51,8 +52,9 @@ public interface JackrabbitAccessControlList extends JackrabbitAccessControlPoli
      * @param restrictionName Any of the restriction names retrieved from
      * {@link #getRestrictionNames()}.
      * @return expected {@link javax.jcr.PropertyType property type}.
+     * @throws RepositoryException If an error occurs.
      */
-    int getRestrictionType(String restrictionName);
+    int getRestrictionType(String restrictionName) throws RepositoryException;
 
     /**
      * Returns <code>true</code> if this policy does not yet define any
