@@ -29,7 +29,7 @@ import org.apache.jackrabbit.spi.commons.iterator.Iterators;
 import org.apache.jackrabbit.spi.commons.iterator.Predicate;
 import org.apache.jackrabbit.spi.commons.iterator.Predicates;
 import org.apache.jackrabbit.spi.commons.iterator.Transformer;
-import org.apache.jackrabbit.test.api.util.Text;
+import org.apache.jackrabbit.util.Text;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
