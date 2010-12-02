@@ -401,26 +401,15 @@ public class InternalVersionManagerImpl extends InternalVersionManagerBase
      * item-reading listeners in the observation thread.
      */
     public InternalVersion checkin(
-            final Session session,
-            final NodeStateEx node, final Calendar created)
+            Session session, final NodeStateEx node, final Calendar created)
             throws RepositoryException {
-        return (InternalVersion)
-                escFactory.doSourced((SessionImpl) session, new SourcedTarget() {
-            public Object run() throws RepositoryException {
-                InternalVersionHistoryImpl vh;
-                if (node.getEffectiveNodeType().includesNodeType(NameConstants.MIX_VERSIONABLE)) {
-                    // in full versioning, the history id can be retrieved via
-                    // the property
-                    NodeId histId = node.getPropertyValue(NameConstants.JCR_VERSIONHISTORY).getNodeId();
-                    vh = (InternalVersionHistoryImpl) getVersionHistory(histId);
-                    return internalCheckin(vh, node, false, created);
-                } else {
-                    // in simple versioning the history id needs to be calculated
-                    vh = (InternalVersionHistoryImpl) getVersionHistoryOfNode(node.getNodeId());
-                    return internalCheckin(vh, node, true, created);
-                }
-            }
-        });
+        return (InternalVersion) escFactory.doSourced(
+                (SessionImpl) session,
+                new SourcedTarget() {
+                    public Object run() throws RepositoryException {
+                        return checkin(node, created);
+                    }
+                });
     }
 
     /**

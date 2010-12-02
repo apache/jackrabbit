@@ -233,20 +233,7 @@ public class InternalXAVersionManager extends InternalVersionManagerBase
             Session session, NodeStateEx node, Calendar created)
             throws RepositoryException {
         if (isInXA()) {
-            InternalVersionHistoryImpl vh;
-            InternalVersion version;
-            if (node.getEffectiveNodeType().includesNodeType(NameConstants.MIX_VERSIONABLE)) {
-                // in full versioning, the history id can be retrieved via
-                // the property
-                NodeId histId = node.getPropertyValue(NameConstants.JCR_VERSIONHISTORY).getNodeId();
-                vh = (InternalVersionHistoryImpl) getVersionHistory(histId);
-                version = internalCheckin(vh, node, false, created);
-            } else {
-                // in simple versioning the history id needs to be calculated
-                vh = (InternalVersionHistoryImpl) getVersionHistoryOfNode(node.getNodeId());
-                version = internalCheckin(vh, node, true, created);
-            }
-            return version;
+            return checkin(node, created);
         } else {
             return vMgr.checkin(session, node, created);
         }
@@ -480,6 +467,7 @@ public class InternalXAVersionManager extends InternalVersionManagerBase
      * <p/>
      * Before modifying version history given, make a local copy of it.
      */
+    @Override
     protected InternalVersion internalCheckin(
             InternalVersionHistoryImpl history,
             NodeStateEx node, boolean simple, Calendar created)
