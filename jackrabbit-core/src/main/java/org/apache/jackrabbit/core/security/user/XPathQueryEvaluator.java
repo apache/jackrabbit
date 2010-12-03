@@ -110,11 +110,21 @@ public class XPathQueryEvaluator implements XPathQueryBuilder.ConditionVisitor {
             query.setLimit(maxCount);
         }
 
-        if (offset > 0) {
-            query.setOffset(offset);
+        // If we are scoped to a group and have an offset, we need to skip to that offset
+        // here (inefficient!) otherwise we can apply the offset in the query
+        if (builder.getGroupName() == null) {
+            if (offset > 0) {
+                query.setOffset(offset);
+            }
+            return toAuthorizables(execute(query));
         }
-
-        return filter(toAuthorizables(execute(query)), builder.getGroupName(), builder.isDeclaredMembersOnly());
+        else {
+            Iterator<Authorizable> result = filter(toAuthorizables(execute(query)), builder.getGroupName(), builder.isDeclaredMembersOnly());
+            for (int c = 0; c < offset && result.hasNext(); c++) {
+                result.next();
+            }
+            return result;
+        }
     }
 
     //------------------------------------------< ConditionVisitor >---
@@ -300,43 +310,38 @@ public class XPathQueryEvaluator implements XPathQueryBuilder.ConditionVisitor {
                                           boolean declaredMembersOnly) throws RepositoryException {
 
         Predicate<Authorizable> predicate;
-        if (groupName == null) {
-            predicate = Predicates.TRUE();
+        Authorizable groupAuth = userManager.getAuthorizable(groupName);
+        if (groupAuth == null || !groupAuth.isGroup()) {
+            predicate = Predicates.FALSE();
         }
         else {
-            Authorizable groupAuth = userManager.getAuthorizable(groupName);
-            if (groupAuth == null || !groupAuth.isGroup()) {
-                predicate = Predicates.FALSE();
+            final Group group = (Group) groupAuth;
+            if (declaredMembersOnly) {
+                predicate = new Predicate<Authorizable>() {
+                    public boolean evaluate(Authorizable authorizable) {
+                        try {
+                            return authorizable != null && group.isDeclaredMember(authorizable);
+                        } catch (RepositoryException e) {
+                            log.warn("Cannot determine whether {} is member of group {}", authorizable, group);
+                            log.debug(e.getMessage(), e);
+                            return false;
+                        }
+                    }
+                };
+
             }
             else {
-                final Group group = (Group) groupAuth;
-                if (declaredMembersOnly) {
-                    predicate = new Predicate<Authorizable>() {
-                        public boolean evaluate(Authorizable authorizable) {
-                            try {
-                                return authorizable != null && group.isDeclaredMember(authorizable);
-                            } catch (RepositoryException e) {
-                                log.warn("Cannot determine whether {} is member of group {}", authorizable, group);
-                                log.debug(e.getMessage(), e);
-                                return false;
-                            }
+                predicate = new Predicate<Authorizable>() {
+                    public boolean evaluate(Authorizable authorizable) {
+                        try {
+                            return authorizable != null && group.isMember(authorizable);
+                        } catch (RepositoryException e) {
+                            log.warn("Cannot determine whether {} is member of group {}", authorizable, group);
+                            log.debug(e.getMessage(), e);
+                            return false;
                         }
-                    };
-
-                }
-                else {
-                    predicate = new Predicate<Authorizable>() {
-                        public boolean evaluate(Authorizable authorizable) {
-                            try {
-                                return authorizable != null && group.isMember(authorizable);
-                            } catch (RepositoryException e) {
-                                log.warn("Cannot determine whether {} is member of group {}", authorizable, group);
-                                log.debug(e.getMessage(), e);
-                                return false;
-                            }
-                        }
-                    };
-                }
+                    }
+                };
             }
         }
 
