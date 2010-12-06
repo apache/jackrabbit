@@ -122,6 +122,17 @@ public class SessionImpl extends AbstractSession
     public static final String DISABLE_CLUSTER_SYNC_ON_REFRESH =
         "org.apache.jackrabbit.disableClusterSyncOnRefresh";
 
+    /**
+     * Name of the session attribute that controls whether repository
+     * inconsistencies should be automatically fixed when traversing over child
+     * nodes, when trying to add a child node, or removing a child node.
+     *
+     * @since Apache Jackrabbit 2.2
+     * @see <a href="https://issues.apache.org/jira/browse/JCR-2740">JCR-2740</a>
+     */
+    public static final String AUTO_FIX_CORRUPTIONS =
+        "org.apache.jackrabbit.autoFixCorruptions";
+
     private static Logger log = LoggerFactory.getLogger(SessionImpl.class);
 
     /**
@@ -769,6 +780,20 @@ public class SessionImpl extends AbstractSession
      */
     protected boolean clusterSyncOnRefresh() {
         return getAttribute(DISABLE_CLUSTER_SYNC_ON_REFRESH) == null;
+    }
+
+    /**
+     * Checks whether repository inconsistencies should be automatically fixed
+     * when traversing over child nodes, when trying to add a child node, or
+     * when removing a child node.
+     *
+     * @return <code>true</code> if the {@link #AUTO_FIX_CORRUPTIONS}
+     *         attribute is set, <code>false</code> otherwise
+     * @since Apache Jackrabbit 2.2
+     * @see <a href="https://issues.apache.org/jira/browse/JCR-2740">JCR-2740</a>
+     */
+    protected boolean autoFixCorruptions() {
+        return getAttribute(AUTO_FIX_CORRUPTIONS) != null;
     }
 
     /**

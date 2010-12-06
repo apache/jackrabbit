@@ -98,6 +98,7 @@ import org.apache.jackrabbit.core.session.SessionWriteOperation;
 import org.apache.jackrabbit.core.state.ChildNodeEntry;
 import org.apache.jackrabbit.core.state.ItemState;
 import org.apache.jackrabbit.core.state.ItemStateException;
+import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.apache.jackrabbit.core.state.NodeReferences;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.PropertyState;
@@ -555,7 +556,7 @@ public class NodeImpl extends ItemImpl implements Node, JackrabbitNode {
      * @param id
      * @param newName
      * @throws RepositoryException
-     * @deprecated use #renameChildNode(NodeId, Name, boolean) 
+     * @deprecated use #renameChildNode(NodeId, Name, boolean)
      */
     protected void renameChildNode(Name oldName, int index, NodeId id,
                                    Name newName)
@@ -613,8 +614,24 @@ public class NodeImpl extends ItemImpl implements Node, JackrabbitNode {
         }
 
         // notify target of removal
-        NodeImpl childNode = itemMgr.getNode(childId, getNodeId());
-        childNode.onRemove(getNodeId());
+        try {
+            NodeImpl childNode = itemMgr.getNode(childId, getNodeId());
+            childNode.onRemove(getNodeId());
+        } catch (ItemNotFoundException e) {
+            boolean ignoreError = false;
+            if (sessionContext.getSessionImpl().autoFixCorruptions()) {
+                // it might be an access right problem
+                // we need to check if the item doesn't exist in the ism
+                ItemStateManager ism = sessionContext.getItemStateManager();
+                if (!ism.hasItemState(childId)) {
+                    log.warn("Node " + childId + " not found, ignore", e);
+                    ignoreError = true;
+                }
+            }
+            if (!ignoreError) {
+                throw e;
+            }
+        }
 
         // remove the child node entry
         if (!thisState.removeChildNodeEntry(childId)) {
@@ -663,9 +680,28 @@ public class NodeImpl extends ItemImpl implements Node, JackrabbitNode {
                 // recursively remove child node
                 NodeId childId = entry.getId();
                 //NodeImpl childNode = (NodeImpl) itemMgr.getItem(childId);
-                NodeImpl childNode = itemMgr.getNode(childId, getNodeId());
-                childNode.onRemove(thisState.getNodeId());
-                // remove the child node entry
+                try {
+                    NodeImpl childNode = itemMgr.getNode(childId, getNodeId());
+                    childNode.onRemove(thisState.getNodeId());
+                    // remove the child node entry
+                } catch (ItemNotFoundException e) {
+                    boolean ignoreError = false;
+                    if (parentId != null && sessionContext.getSessionImpl().autoFixCorruptions()) {
+                        // it might be an access right problem
+                        // we need to check if the item doesn't exist in the ism
+                        ItemStateManager ism = sessionContext.getItemStateManager();
+                        if (!ism.hasItemState(childId)) {
+                            log.warn("Child named " + entry.getName() + " (index " + entry.getIndex() + ", " +
+                                    "node id " + childId + ") " +
+                                    "not found when trying to remove " + getPath() + " " +
+                                    "(node id " + getNodeId() + ") - ignored", e);
+                            ignoreError = true;
+                        }
+                    }
+                    if (!ignoreError) {
+                        throw e;
+                    }
+                }
                 thisState.removeChildNodeEntry(childId);
             }
         }
@@ -1418,7 +1454,7 @@ public class NodeImpl extends ItemImpl implements Node, JackrabbitNode {
             log.debug(msg);
             throw new AccessDeniedException(msg);
         }
-        
+
         ArrayList<ChildNodeEntry> list = new ArrayList<ChildNodeEntry>(data.getNodeState().getChildNodeEntries());
         int srcInd = -1, destInd = -1;
         for (int i = 0; i < list.size(); i++) {
@@ -3022,7 +3058,7 @@ public class NodeImpl extends ItemImpl implements Node, JackrabbitNode {
                     }
                     idList = filteredList;
                 }
-                return new LazyItemIterator(itemMgr, idList);
+                return new LazyItemIterator(sessionContext, idList);
             } else {
                 // there are no references, return empty iterator
                 return PropertyIteratorAdapter.EMPTY;

@@ -31,6 +31,8 @@ import javax.jcr.RepositoryException;
 
 import org.apache.jackrabbit.core.id.ItemId;
 import org.apache.jackrabbit.core.id.NodeId;
+import org.apache.jackrabbit.core.session.SessionContext;
+import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,6 +55,11 @@ public class LazyItemIterator implements NodeIterator, PropertyIterator {
     /** Logger instance for this class */
     private static Logger log = LoggerFactory.getLogger(LazyItemIterator.class);
 
+    /**
+     * The session context used to access the repository.
+     */
+    private final SessionContext sessionContext;
+
     /** the item manager that is used to lazily fetch the items */
     private final ItemManager itemMgr;
 
@@ -71,11 +78,11 @@ public class LazyItemIterator implements NodeIterator, PropertyIterator {
     /**
      * Creates a new <code>LazyItemIterator</code> instance.
      *
-     * @param itemMgr item manager
+     * @param sessionContext session context
      * @param idList  list of item id's
      */
-    public LazyItemIterator(ItemManager itemMgr, List< ? extends ItemId> idList) {
-        this(itemMgr, idList, null);
+    public LazyItemIterator(SessionContext sessionContext, List< ? extends ItemId> idList) {
+        this(sessionContext, idList, null);
     }
 
     /**
@@ -83,12 +90,13 @@ public class LazyItemIterator implements NodeIterator, PropertyIterator {
      * a parent id as parameter. This version should be invoked to strictly return
      * children nodes of a node.
      *
-     * @param itemMgr item manager
+     * @param sessionContext session context
      * @param idList  list of item id's
      * @param parentId parent id.
      */
-    public LazyItemIterator(ItemManager itemMgr, List< ? extends ItemId> idList, NodeId parentId) {
-        this.itemMgr = itemMgr;
+    public LazyItemIterator(SessionContext sessionContext, List< ? extends ItemId> idList, NodeId parentId) {
+        this.sessionContext = sessionContext;
+        this.itemMgr = sessionContext.getSessionImpl().getItemManager();
         this.idList = new ArrayList<ItemId>(idList);
         this.parentId = parentId;
         // prefetch first item
@@ -117,6 +125,24 @@ public class LazyItemIterator implements NodeIterator, PropertyIterator {
                 log.debug("ignoring nonexistent item " + id);
                 // remove invalid id
                 idList.remove(pos);
+
+                // maybe fix the root cause
+                if (parentId != null && sessionContext.getSessionImpl().autoFixCorruptions()) {
+                    try {
+                        // it might be an access right problem
+                        // we need to check if the item doesn't exist in the ism
+                        ItemStateManager ism = sessionContext.getItemStateManager();
+                        if (!ism.hasItemState(id)) {
+                            NodeImpl p = (NodeImpl) itemMgr.getItem(parentId);
+                            p.removeChildNode((NodeId) id);
+                            p.save();
+                        }
+                    } catch (RepositoryException e2) {
+                        log.error("could not fix repository inconsistency", e);
+                        // ignore
+                    }
+                }
+
                 // try next
             } catch (AccessDeniedException e) {
                 log.debug("ignoring nonexistent item " + id);
