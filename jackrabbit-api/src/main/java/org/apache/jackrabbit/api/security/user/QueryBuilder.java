@@ -94,7 +94,7 @@ public interface QueryBuilder<T> {
      * Set limits for the query. The limits consists of an offset and a maximal
      * number of results. <code>offset</code> refers to the offset within the full
      * result set at which the returned result set should start expressed in terms 
-     * of the number of {@link Authorizable}s to skip. <code>limit</code> sets the
+     * of the number of {@link Authorizable}s to skip. <code>maxCount</code> sets the
      * maximum size of the result set expressed in terms of the number of authorizables
      * to return.
      *

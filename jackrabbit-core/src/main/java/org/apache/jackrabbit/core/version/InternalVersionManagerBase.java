@@ -16,6 +16,10 @@
  */
 package org.apache.jackrabbit.core.version;
 
+import static org.apache.jackrabbit.spi.commons.name.NameConstants.JCR_ACTIVITY;
+import static org.apache.jackrabbit.spi.commons.name.NameConstants.JCR_VERSIONHISTORY;
+import static org.apache.jackrabbit.spi.commons.name.NameConstants.MIX_VERSIONABLE;
+
 import java.util.Calendar;
 
 import javax.jcr.ItemNotFoundException;
@@ -554,6 +558,45 @@ abstract class InternalVersionManagerBase implements InternalVersionManager {
     }
 
     /**
+     * Creates a new version of the given node using the given version
+     * creation time.
+     *
+     * @param node the node to be checked in
+     * @param created version creation time
+     * @return the new version
+     * @throws RepositoryException if an error occurs
+     */
+    protected InternalVersion checkin(NodeStateEx node, Calendar created)
+            throws RepositoryException {
+        WriteOperation operation = startWriteOperation();
+        try {
+            boolean simple =
+                !node.getEffectiveNodeType().includesNodeType(MIX_VERSIONABLE);
+            InternalVersionHistoryImpl vh;
+            if (simple) {
+                // in simple versioning the history id needs to be calculated
+                vh = (InternalVersionHistoryImpl) getVersionHistoryOfNode(
+                        node.getNodeId());
+            } else {
+                // in full versioning, the history id can be retrieved via
+                // the property
+                vh = (InternalVersionHistoryImpl) getVersionHistory(
+                        node.getPropertyValue(JCR_VERSIONHISTORY).getNodeId());
+            }
+
+            InternalVersion version =
+                internalCheckin(vh, node, simple, created);
+
+            operation.save();
+            return version;
+        } catch (ItemStateException e) {
+            throw new RepositoryException(e);
+        } finally {
+            operation.close();
+        }
+    }
+
+    /**
      * Checks in a node
      *
      * @param history the version history
@@ -568,26 +611,19 @@ abstract class InternalVersionManagerBase implements InternalVersionManager {
             InternalVersionHistoryImpl history,
             NodeStateEx node, boolean simple, Calendar created)
             throws RepositoryException {
-        WriteOperation operation = startWriteOperation();
-        try {
-            String versionName = calculateCheckinVersionName(history, node, simple);
-            InternalVersionImpl v = history.checkin(
-                    NameFactoryImpl.getInstance().create("", versionName),
-                    node, created);
+        String versionName = calculateCheckinVersionName(history, node, simple);
+        InternalVersionImpl v = history.checkin(
+                NameFactoryImpl.getInstance().create("", versionName),
+                node, created);
 
-            // check for jcr:activity
-            if (node.hasProperty(NameConstants.JCR_ACTIVITY)) {
-                NodeId actId = node.getPropertyValue(NameConstants.JCR_ACTIVITY).getNodeId();
-                InternalActivityImpl act = (InternalActivityImpl) getItem(actId);
-                act.addVersion(v);
-            }
-            operation.save();
-            return v;
-        } catch (ItemStateException e) {
-            throw new RepositoryException(e);
-        } finally {
-            operation.close();
+        // check for jcr:activity
+        if (node.hasProperty(JCR_ACTIVITY)) {
+            NodeId actId = node.getPropertyValue(JCR_ACTIVITY).getNodeId();
+            InternalActivityImpl act = (InternalActivityImpl) getItem(actId);
+            act.addVersion(v);
         }
+
+        return v;
     }
 
     /**

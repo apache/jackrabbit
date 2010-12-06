@@ -33,6 +33,10 @@
   <name>Jackrabbit Core</name>
   <description>Jackrabbit content repository implementation</description>
 
+  <properties>
+    <org.apache.jackrabbit.test.integration>false</org.apache.jackrabbit.test.integration>
+  </properties>
+
   <build>
     <plugins>
       <plugin>
@@ -105,6 +109,10 @@ org.apache.jackrabbit.test.api.ShareableNodeTest#testGetNode
 org.apache.jackrabbit.test.api.ShareableNodeTest#testGetNodes
 org.apache.jackrabbit.test.api.ShareableNodeTest#testGetNodesByPattern
               </value>
+            </property>
+            <property>
+              <name>org.apache.jackrabbit.test.integration</name>
+              <value>${org.apache.jackrabbit.test.integration}</value>
             </property>
           </systemProperties>
         </configuration>
@@ -287,15 +295,21 @@ org.apache.jackrabbit.test.api.ShareableNodeTest#testGetNodesByPattern
     </dependency>
   </dependencies>
 
-  <!--
-    These profiles can be used to run the (integration) tests against different DB backends.
-    For instance, if you want to run the integration tests against MySQL backend, do:
-    
-      mvn clean integration-test -Pmysql,use-descriptor-overlay
-    
-    Note: the ${config.db.name} database is dropped and re-created in the clean phase. 
-  -->
   <profiles>
+    <profile>
+      <id>integrationTesting</id>
+      <properties>
+        <org.apache.jackrabbit.test.integration>true</org.apache.jackrabbit.test.integration>
+      </properties>
+    </profile>
+    <!--
+      These profiles can be used to run the (integration) tests against different DB backends.
+      For instance, if you want to run the integration tests against MySQL backend, do:
+
+        mvn clean integration-test -Pmysql,use-descriptor-overlay
+
+      Note: the ${config.db.name} database is dropped and re-created in the clean phase. 
+    -->
     <profile>
       <id>mysql</id>
       <properties>
