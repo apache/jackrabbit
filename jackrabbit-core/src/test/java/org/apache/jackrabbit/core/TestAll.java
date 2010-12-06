@@ -58,6 +58,20 @@ public class TestAll extends TestCase {
         suite.addTestSuite(ConcurrentReorderTest.class);
         suite.addTestSuite(ConcurrentAddRemoveNodeTest.class);
 
+        if (Boolean.getBoolean("org.apache.jackrabbit.test.integration")) {
+            suite.addTestSuite(ConcurrencyTest.class);
+            // suite.addTestSuite(ConcurrencyTest3.class);
+            suite.addTestSuite(ConcurrentVersioningTest.class);
+            // suite.addTestSuite(ConcurrentVersioningWithTransactionsTest.class);
+            suite.addTestSuite(ConcurrentCheckinMixedTransactionTest.class);
+            suite.addTestSuite(ConcurrentLoginTest.class);
+            suite.addTestSuite(ConcurrentNodeModificationTest.class);
+            suite.addTestSuite(ConcurrentReadWriteTest.class);
+            suite.addTestSuite(ConcurrentRenameTest.class);
+            suite.addTestSuite(ConcurrentSaveTest.class);
+            suite.addTestSuite(ConcurrentWorkspaceCopyTest.class);
+        }
+
         suite.addTestSuite(UserPerWorkspaceSecurityManagerTest.class);
 
         suite.addTestSuite(PersistenceManagerTest.class);
