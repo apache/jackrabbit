@@ -53,18 +53,24 @@ public class XPathQueryBuilder implements QueryBuilder<XPathQueryBuilder.Conditi
             return op;
         }
     }
-    
+
     interface Condition {
         void accept(ConditionVisitor visitor) throws RepositoryException;
     }
 
     interface ConditionVisitor {
         void visit(NodeCondition nodeCondition) throws RepositoryException;
+
         void visit(PropertyCondition condition) throws RepositoryException;
+
         void visit(ContainsCondition condition);
+
         void visit(ImpersonationCondition condition);
+
         void visit(NotCondition condition) throws RepositoryException;
+
         void visit(AndCondition condition) throws RepositoryException;
+
         void visit(OrCondition condition) throws RepositoryException;
     }
 
@@ -89,7 +95,7 @@ public class XPathQueryBuilder implements QueryBuilder<XPathQueryBuilder.Conditi
     public boolean isDeclaredMembersOnly() {
         return declaredMembersOnly;
     }
-    
+
     Condition getCondition() {
         return condition;
     }
@@ -113,7 +119,7 @@ public class XPathQueryBuilder implements QueryBuilder<XPathQueryBuilder.Conditi
     long getMaxCount() {
         return maxCount;
     }
-    
+
     //------------------------------------------< QueryBuilder >---
 
     public void setSelector(Class<? extends Authorizable> selector) {
@@ -166,7 +172,7 @@ public class XPathQueryBuilder implements QueryBuilder<XPathQueryBuilder.Conditi
         return new PropertyCondition(relPath, RelationOp.LT, value);
     }
 
-    public Condition le(String relPath, Value value){
+    public Condition le(String relPath, Value value) {
         return new PropertyCondition(relPath, RelationOp.LE, value);
     }
 
