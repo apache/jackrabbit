@@ -61,7 +61,29 @@ public class UserImpl extends AuthorizableImpl implements User {
         }
     }
 
-    //------------------------------------------------< User >------------------
+    //-------------------------------------------------------< Authorizable >---
+    /**
+     * @see org.apache.jackrabbit.api.security.user.Authorizable#isGroup()
+     */
+    public boolean isGroup() {
+        return false;
+    }
+
+    /**
+     * @see org.apache.jackrabbit.api.security.user.Authorizable#getPrincipal()
+     */
+    public Principal getPrincipal() throws RepositoryException {
+        if (principal == null) {
+            if (isAdmin()) {
+                principal = new NodeBasedAdminPrincipal(getPrincipalName());
+            } else {
+                principal = new NodeBasedPrincipal(getPrincipalName());
+            }
+        }
+        return principal;
+    }
+
+    //---------------------------------------------------------------< User >---
     /**
      * @see User#isAdmin()
      */
@@ -87,26 +109,6 @@ public class UserImpl extends AuthorizableImpl implements User {
         } catch (UnsupportedEncodingException e) {
             throw new RepositoryException(e);
         }
-    }
-    /**
-     * @see User#isGroup()
-     */
-    public boolean isGroup() {
-        return false;
-    }
-
-    /**
-     * @see User#getPrincipal()
-     */
-    public Principal getPrincipal() throws RepositoryException {
-        if (principal == null) {
-            if (isAdmin()) {
-                principal = new NodeBasedAdminPrincipal(getPrincipalName());
-            } else {
-                principal = new NodeBasedPrincipal(getPrincipalName());
-            }
-        }
-        return principal;
     }
 
     /**
