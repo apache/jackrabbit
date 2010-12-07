@@ -28,7 +28,6 @@ import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.security.authorization.Permission;
 import org.apache.jackrabbit.core.session.SessionContext;
 import org.apache.jackrabbit.core.session.SessionWriteOperation;
-import org.apache.jackrabbit.spi.Path;
 
 /**
  * Session operation for removing a given item, optionally with constraint
