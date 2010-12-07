@@ -17,8 +17,17 @@
 package org.apache.jackrabbit.core.security.user;
 
 import org.apache.jackrabbit.api.security.principal.ItemBasedPrincipal;
-import org.apache.jackrabbit.api.security.user.*;
-import org.apache.jackrabbit.core.*;
+import org.apache.jackrabbit.api.security.user.Authorizable;
+import org.apache.jackrabbit.api.security.user.AuthorizableExistsException;
+import org.apache.jackrabbit.api.security.user.Group;
+import org.apache.jackrabbit.api.security.user.Query;
+import org.apache.jackrabbit.api.security.user.User;
+import org.apache.jackrabbit.api.security.user.UserManager;
+import org.apache.jackrabbit.core.ItemImpl;
+import org.apache.jackrabbit.core.NodeImpl;
+import org.apache.jackrabbit.core.ProtectedItemModifier;
+import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.SessionListener;
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.security.SystemPrincipal;
 import org.apache.jackrabbit.core.security.principal.PrincipalImpl;
@@ -29,13 +38,25 @@ import org.apache.jackrabbit.util.Text;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.jcr.*;
+import javax.jcr.AccessDeniedException;
+import javax.jcr.ItemExistsException;
+import javax.jcr.ItemNotFoundException;
+import javax.jcr.Node;
+import javax.jcr.NodeIterator;
+import javax.jcr.RepositoryException;
+import javax.jcr.UnsupportedRepositoryOperationException;
+import javax.jcr.Value;
 import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.version.VersionException;
 import java.io.UnsupportedEncodingException;
 import java.security.Principal;
-import java.util.*;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.NoSuchElementException;
+import java.util.Properties;
+import java.util.Set;
+import java.util.UUID;
 
 /**
  * Default implementation of the <code>UserManager</code> interface with the
