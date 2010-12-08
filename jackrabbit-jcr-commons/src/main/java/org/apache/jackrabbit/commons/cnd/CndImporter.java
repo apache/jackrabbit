@@ -76,6 +76,36 @@ public final class CndImporter {
     }
 
     /**
+     * Shortcut for
+     * <pre>
+     *   registerNodeTypes(cnd, "cnd input stream", wsp.getNodeTypeManager(),
+     *          wsp.getNamespaceRegistry(), session.getValueFactory(), reregisterExisting);
+     * </pre>
+     * where <code>wsp</code> is the workspace of the <code>session</code> passed.
+     * @see #registerNodeTypes(Reader, String, NodeTypeManager, NamespaceRegistry, ValueFactory, boolean)
+     * @param cnd
+     * @param session  the session to use for registering the node types
+     * @param reregisterExisting  <code>true</code> if existing node types should be re-registered
+     *     with those present in the cnd. <code>false</code> otherwise.
+     * @return  the registered node types
+     *
+     * @throws InvalidNodeTypeDefinitionException
+     * @throws NodeTypeExistsException
+     * @throws UnsupportedRepositoryOperationException
+     * @throws ParseException
+     * @throws RepositoryException
+     * @throws IOException
+     */
+    public static NodeType[] registerNodeTypes(Reader cnd, Session session, boolean reregisterExisting)
+            throws InvalidNodeTypeDefinitionException, NodeTypeExistsException,
+            UnsupportedRepositoryOperationException, ParseException, RepositoryException, IOException {
+
+        Workspace wsp = session.getWorkspace();
+        return registerNodeTypes(cnd, "cnd input stream", wsp.getNodeTypeManager(), wsp.getNamespaceRegistry(),
+                session.getValueFactory(), reregisterExisting);
+    }
+
+    /**
      * Registers nodetypes in <code>cnd</code> format.
      * @param cnd  a reader to the cnd. The reader is closed on return.
      * @param systemId  a informative id of the given cnd input.
