@@ -23,6 +23,11 @@
 
     <parser class="org.apache.tika.parser.DefaultParser"/>
 
+    <parser class="org.apache.jackrabbit.core.query.pdf.PDFParser">
+      <!-- JCR-2838: Override the faulty PDF parser in Tika 0.8 -->
+      <mime>application/pdf</mime>
+    </parser>
+
     <parser class="org.apache.tika.parser.EmptyParser">
       <!-- Disable package extraction as it's too resource-intensive -->
       <mime>application/x-archive</mime>
