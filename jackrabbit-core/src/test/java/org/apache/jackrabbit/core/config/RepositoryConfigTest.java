@@ -222,7 +222,7 @@ public class RepositoryConfigTest extends TestCase {
         AccessManagerConfig amc =
             config.getSecurityConfig().getAccessManagerConfig();
         assertEquals(
-                "org.apache.jackrabbit.core.security.simple.SimpleAccessManager",
+                "org.apache.jackrabbit.core.security.DefaultAccessManager",
                 amc.getClassName());
         assertTrue(amc.getParameters().isEmpty());
 

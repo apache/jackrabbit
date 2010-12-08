@@ -52,11 +52,11 @@
             access manager:
             class: FQN of class implementing the AccessManager interface
         -->
-        <AccessManager class="org.apache.jackrabbit.core.security.simple.SimpleAccessManager">
+        <AccessManager class="org.apache.jackrabbit.core.security.DefaultAccessManager">
             <!-- <param name="config" value="${rep.home}/access.xml"/> -->
         </AccessManager>
 
-        <LoginModule class="org.apache.jackrabbit.core.security.simple.SimpleLoginModule">
+        <LoginModule class="org.apache.jackrabbit.core.security.authentication.DefaultLoginModule">
            <!-- 
               anonymous user name ('anonymous' is the default value)
             -->
