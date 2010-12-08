@@ -44,7 +44,6 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.RMIServerSocketFactory;
 import java.rmi.server.UnicastRemoteObject;
-import java.util.NoSuchElementException;
 import java.util.Properties;
 
 import javax.jcr.Repository;
@@ -239,10 +238,11 @@ public class RepositoryStartupServlet extends AbstractRepositoryServlet {
         }
         log.info("RepositoryStartupServlet initializing...");
         try {
-            configure();
-            initRepository();
-            registerRMI();
-            registerJNDI();
+            if (configure()) {
+                initRepository();
+                registerRMI();
+                registerJNDI();
+            }
             log.info("RepositoryStartupServlet initialized.");
         } catch (ServletException e) {
             // shutdown repository
@@ -321,7 +321,7 @@ public class RepositoryStartupServlet extends AbstractRepositoryServlet {
      * successful.
      * @throws ServletException if an error occurs.
      */
-    private void configure() throws ServletException {
+    private boolean configure() throws ServletException {
         // check if there is a loadable bootstrap config
         Properties bootstrapProps = new Properties();
         String bstrp = getServletConfig().getInitParameter(INIT_PARAM_BOOTSTRAP_CONFIG);
@@ -366,15 +366,16 @@ public class RepositoryStartupServlet extends AbstractRepositoryServlet {
                 || config.getRepositoryConfig() == null) {
             if (bstrp == null) {
                 log.error("Repository startup configuration is not valid.");
-                throw new ServletException("Repository startup configuration is not valid.");
             } else {
                 log.error("Repository startup configuration is not valid but a bootstrap config is specified.");
                 log.error("Either create the {} file or", bstrp);
                 log.error("use the '/config/index.jsp' for easy configuration.");
-                throw new ServletException("Repository startup configuration is not valid.");
             }
+            return false;
+        } else {
+            config.logInfos();
+            return true;
         }
-        config.logInfos();
     }
 
     /**
