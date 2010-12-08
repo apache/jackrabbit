@@ -122,15 +122,14 @@ public class UserImporter implements ProtectedPropertyImporter, ProtectedNodeImp
 
     private static final Logger log = LoggerFactory.getLogger(UserImporter.class);
 
+    /**
+     * Parameter name for the import behavior configuration option.
+     */
     public static final String PARAM_IMPORT_BEHAVIOR = "importBehavior";
 
     private JackrabbitSession session;
 
     private NamePathResolver resolver;
-
-    private boolean isWorkspaceImport;
-
-    private int uuidBehavior;
 
     private ReferenceChangeTracker referenceTracker;
 
@@ -148,8 +147,6 @@ public class UserImporter implements ProtectedPropertyImporter, ProtectedNodeImp
 
         this.session = session;
         this.resolver = resolver;
-        this.isWorkspaceImport = isWorkspaceImport;
-        this.uuidBehavior = uuidBehavior;
         this.referenceTracker = referenceTracker;
 
         if (initialized) {
@@ -299,10 +296,9 @@ public class UserImporter implements ProtectedPropertyImporter, ProtectedNodeImp
                 // since group-members are references to user/groups that potentially
                 // are to be imported later on -> postpone processing to the end.
                 // see -> processRefeferences
-                Value[] vs = protectedPropInfo.getValues(PropertyType.WEAKREFERENCE, resolver);
                 Membership membership = new Membership(a.getID());
-                for (int i = 0; i < vs.length; i++) {
-                    membership.addMember(new NodeId(vs[i].getString()));
+                for (Value v : protectedPropInfo.getValues(PropertyType.WEAKREFERENCE, resolver)) {
+                    membership.addMember(new NodeId(v.getString()));
                 }
                 referenceTracker.processedReference(membership);
                 return true;
@@ -551,10 +547,9 @@ public class UserImporter implements ProtectedPropertyImporter, ProtectedNodeImp
 
         if (UserConstants.NT_REP_MEMBERS.equals(childInfo.getNodeTypeName())) {
             for (PropInfo prop : propInfos) {
-                Value[] vs = prop.getValues(PropertyType.WEAKREFERENCE, resolver);
-                for (int i = 0; i < vs.length; i++) {
+                for (Value v : prop.getValues(PropertyType.WEAKREFERENCE, resolver)) {
                     String name = resolver.getJCRName(prop.getName());
-                    NodeId id = new NodeId(vs[i].getString());
+                    NodeId id = new NodeId(v.getString());
                     currentMembership.addMember(name, id);
                 }
             }

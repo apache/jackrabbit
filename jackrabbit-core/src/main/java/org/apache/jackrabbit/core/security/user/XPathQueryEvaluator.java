@@ -43,7 +43,7 @@ import java.util.Iterator;
 
 /**
  * This evaluator for {@link org.apache.jackrabbit.api.security.user.Query}s use XPath
- * and some minimal client side filtering.  
+ * and some minimal client side filtering.
  */
 public class XPathQueryEvaluator implements XPathQueryBuilder.ConditionVisitor {
     static final Logger log = LoggerFactory.getLogger(XPathQueryEvaluator.class);
@@ -61,8 +61,8 @@ public class XPathQueryEvaluator implements XPathQueryBuilder.ConditionVisitor {
 
     public Iterator<Authorizable> eval() throws RepositoryException {
         xPath.append("//element(*,")
-             .append(getNtName(builder.getSelector()))
-             .append(')');
+                .append(getNtName(builder.getSelector()))
+                .append(')');
 
         Value bound = builder.getBound();
         long offset = builder.getOffset();
@@ -77,10 +77,9 @@ public class XPathQueryEvaluator implements XPathQueryBuilder.ConditionVisitor {
         if (bound != null) {
             if (sortCol == null) {
                 log.warn("Ignoring bound {} since no sort order is specified");
-            }
-            else {
+            } else {
                 Condition boundCondition = builder.property(sortCol, getCollation(sortDir), bound);
-                condition = condition == null 
+                condition = condition == null
                         ? boundCondition
                         : builder.and(condition, boundCondition);
             }
@@ -94,9 +93,9 @@ public class XPathQueryEvaluator implements XPathQueryBuilder.ConditionVisitor {
 
         if (sortCol != null) {
             xPath.append(" order by ")
-                 .append(sortCol)
-                 .append(' ')
-                 .append(sortDir.getDirection());
+                    .append(sortCol)
+                    .append(' ')
+                    .append(sortDir.getDirection());
         }
 
         QueryManager queryManager = session.getWorkspace().getQueryManager();
@@ -117,8 +116,7 @@ public class XPathQueryEvaluator implements XPathQueryBuilder.ConditionVisitor {
                 query.setOffset(offset);
             }
             return toAuthorizables(execute(query));
-        }
-        else {
+        } else {
             Iterator<Authorizable> result = filter(toAuthorizables(execute(query)), builder.getGroupName(), builder.isDeclaredMembersOnly());
             for (int c = 0; c < offset && result.hasNext(); c++) {
                 result.next();
@@ -133,49 +131,47 @@ public class XPathQueryEvaluator implements XPathQueryBuilder.ConditionVisitor {
         String repPrincipal = session.getJCRName(UserConstants.P_PRINCIPAL_NAME);
 
         xPath.append('(')
-             .append("jcr:like(")
-             .append(repPrincipal)
-             .append(",'")
-             .append(condition.getPattern())
-             .append("')")
-             .append(" or ")
-             .append("jcr:like(fn:name(.),'")
-             .append(escape(condition.getPattern()))
-             .append("')")
-             .append(')');
+                .append("jcr:like(")
+                .append(repPrincipal)
+                .append(",'")
+                .append(condition.getPattern())
+                .append("')")
+                .append(" or ")
+                .append("jcr:like(fn:name(.),'")
+                .append(escape(condition.getPattern()))
+                .append("')")
+                .append(')');
     }
 
     public void visit(XPathQueryBuilder.PropertyCondition condition) throws RepositoryException {
         RelationOp relOp = condition.getOp();
         if (relOp == RelationOp.EX) {
             xPath.append(condition.getRelPath());
-        }
-        else if (relOp == RelationOp.LIKE) {
+        } else if (relOp == RelationOp.LIKE) {
             xPath.append("jcr:like(")
-                 .append(condition.getRelPath())
-                 .append(",'")
-                 .append(condition.getPattern())
-                 .append("')");
-        }
-        else {
+                    .append(condition.getRelPath())
+                    .append(",'")
+                    .append(condition.getPattern())
+                    .append("')");
+        } else {
             xPath.append(condition.getRelPath())
-                 .append(condition.getOp().getOp())
-                 .append(format(condition.getValue()));
+                    .append(condition.getOp().getOp())
+                    .append(format(condition.getValue()));
         }
     }
 
     public void visit(XPathQueryBuilder.ContainsCondition condition) {
         xPath.append("jcr:contains(")
-             .append(condition.getRelPath())
-             .append(",'")
-             .append(condition.getSearchExpr())
-             .append("')");
+                .append(condition.getRelPath())
+                .append(",'")
+                .append(condition.getSearchExpr())
+                .append("')");
     }
 
     public void visit(XPathQueryBuilder.ImpersonationCondition condition) {
         xPath.append("@rep:impersonators='")
-             .append(condition.getName())
-             .append('\'');
+                .append(condition.getName())
+                .append('\'');
     }
 
     public void visit(XPathQueryBuilder.NotCondition condition) throws RepositoryException {
@@ -212,8 +208,9 @@ public class XPathQueryEvaluator implements XPathQueryBuilder.ConditionVisitor {
 
     /**
      * Escape <code>string</code> for matching in jcr escaped node names
-     * @param string  string to escape
-     * @return  escaped string
+     *
+     * @param string string to escape
+     * @return escaped string
      */
     public static String escape(String string) {
         StringBuilder result = new StringBuilder();
@@ -225,12 +222,10 @@ public class XPathQueryEvaluator implements XPathQueryBuilder.ConditionVisitor {
             if (j < 0) {
                 // jcr escape trail
                 result.append(Text.escapeIllegalJcrChars(string.substring(k)));
-            }
-            else if (j > 0 && string.charAt(j - 1) == '\\') {
+            } else if (j > 0 && string.charAt(j - 1) == '\\') {
                 // literal occurrence of % -> jcr escape
                 result.append(Text.escapeIllegalJcrChars(string.substring(k, j) + '%'));
-            }
-            else {
+            } else {
                 // wildcard occurrence of % -> jcr escape all but %
                 result.append(Text.escapeIllegalJcrChars(string.substring(k, j))).append('%');
             }
@@ -244,11 +239,9 @@ public class XPathQueryEvaluator implements XPathQueryBuilder.ConditionVisitor {
     private String getNtName(Class<? extends Authorizable> selector) throws RepositoryException {
         if (User.class.isAssignableFrom(selector)) {
             return session.getJCRName(UserConstants.NT_REP_USER);
-        }
-        else if (Group.class.isAssignableFrom(selector)) {
+        } else if (Group.class.isAssignableFrom(selector)) {
             return session.getJCRName(UserConstants.NT_REP_GROUP);
-        }
-        else {
+        } else {
             return session.getJCRName(UserConstants.NT_REP_AUTHORIZABLE);
         }
     }
@@ -313,8 +306,7 @@ public class XPathQueryEvaluator implements XPathQueryBuilder.ConditionVisitor {
         Authorizable groupAuth = userManager.getAuthorizable(groupName);
         if (groupAuth == null || !groupAuth.isGroup()) {
             predicate = Predicates.FALSE();
-        }
-        else {
+        } else {
             final Group group = (Group) groupAuth;
             if (declaredMembersOnly) {
                 predicate = new Predicate<Authorizable>() {
@@ -329,8 +321,7 @@ public class XPathQueryEvaluator implements XPathQueryBuilder.ConditionVisitor {
                     }
                 };
 
-            }
-            else {
+            } else {
                 predicate = new Predicate<Authorizable>() {
                     public boolean evaluate(Authorizable authorizable) {
                         try {
