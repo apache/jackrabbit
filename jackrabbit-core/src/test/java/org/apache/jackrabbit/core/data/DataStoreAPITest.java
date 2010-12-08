@@ -16,22 +16,19 @@
  */
 package org.apache.jackrabbit.core.data;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.Properties;
-
-import javax.jcr.RepositoryException;
-import javax.jcr.Session;
-import javax.jcr.SimpleCredentials;
-
 import junit.framework.TestCase;
-
 import org.apache.commons.io.FileUtils;
 import org.apache.jackrabbit.api.JackrabbitRepository;
 import org.apache.jackrabbit.api.JackrabbitRepositoryFactory;
 import org.apache.jackrabbit.api.management.DataStoreGarbageCollector;
 import org.apache.jackrabbit.api.management.RepositoryManager;
 import org.apache.jackrabbit.core.RepositoryFactoryImpl;
+
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
+import java.io.File;
+import java.io.IOException;
+import java.util.Properties;
 
 /**
  * Test data store garbage collection as described in the wiki at
@@ -53,7 +50,7 @@ public class DataStoreAPITest extends TestCase {
         RepositoryManager rm = rf.getRepositoryManager(rep);
 
         // need to login to start the repository
-        Session session = rep.login(new SimpleCredentials("", "".toCharArray()));
+        Session session = rep.login();
 
         DataStoreGarbageCollector gc = rm.createDataStoreGarbageCollector();
         try {
