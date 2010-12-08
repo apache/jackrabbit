@@ -3,14 +3,42 @@ Release Notes -- Apache Jackrabbit -- Version 2.2.0
 Introduction
 ------------
 
-This is the Apache Jackrabbit 2.2.0 release. This release is a fully compliant
-implementation of the JCR 2.0 API that was specified by the Java Specification
-Request 283 (JSR 283, http://jcp.org/en/jsr/detail?id=283).
+This is Apache Jackrabbit(TM) 2.2, a fully compliant implementation of the
+Content Repository for Java(TM) Technology API, version 2.0 (JCR 2.0) as
+specified in the Java Specification Request 283 (JSR 283).
 
 Changes in this release
 -----------------------
 
-TODO
+Jackrabbit 2.2 is an incremental feature release based on the earlier
+2.x releases. The most notable changes in this release are:
+
+  * Performance improvements. The performance of features like access
+    control, user and group management, concurrent read/write operations
+    and join queries have been notably improved. A performance test suite
+    was added to track improvements and prevent regressions.
+
+  * Deprecation of old persistence managers. All non-bundle persistence
+    managers and also non-pooled bundle database persistence managers have
+    been deprecated in preparation for potential future changes of the
+    persistence layer. All the deprecated persistence managers will remain
+    functional and supported in future 2.x releases, but will most likely
+    be removed in Jackrabbit 3.0.
+
+  * Better thread-safety. Significant effort has been spent on making
+    Jackrabbit more resilient against various kinds of concurrency issues.
+    Most notably Jackrabbit no longer assumes that clients will follow the
+    JCR specification in not using a single session concurrently from multiple
+    threads. Doing so is still not recommended, but it's no longer likely to
+    cause significant trouble.
+
+  * Switch from log4j to Logback. The default Jackrabbit deployment
+    packages (jar, war, rar) now use Logback instead of log4j for improved
+    logging functionality. Thanks to the SLF4J logging framework it is still
+    easy for downstream deployments to switch to another logging backend for
+    example if support for existing configurations is needed.
+
+  * Over 150 other fixes and improvements.
 
 For more detailed information about all the changes in this and other
 Jackrabbit releases, please see the Jackrabbit issue tracker at
