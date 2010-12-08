@@ -76,6 +76,7 @@
         <artifactId>apache-rat-plugin</artifactId>
         <configuration>
           <excludes>
+            <exclude>release.properties</exclude>
             <exclude>test/**/target/**</exclude>
             <exclude>test/**/.*/**</exclude>
             <exclude>test/**/*.log</exclude>
