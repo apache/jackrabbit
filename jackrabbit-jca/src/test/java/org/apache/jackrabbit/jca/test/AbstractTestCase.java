@@ -16,18 +16,12 @@
  */
 package org.apache.jackrabbit.jca.test;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.InputStream;
-import java.io.OutputStream;
-
 import junit.framework.TestCase;
-
-import org.apache.jackrabbit.core.RepositoryImpl;
 import org.apache.jackrabbit.jca.JCAManagedConnectionFactory;
 
 import javax.jcr.Credentials;
 import javax.jcr.SimpleCredentials;
+import java.io.File;
 
 /**
  * This implements the abstract test case.
@@ -50,7 +44,7 @@ public abstract class AbstractTestCase
      * Default credentials.
      */
     public static final Credentials JCR_SUPERUSER =
-            new SimpleCredentials("superuser", new char[0]);
+            new SimpleCredentials("admin", "admin".toCharArray());
 
     /**
      * Anonymous credentials.

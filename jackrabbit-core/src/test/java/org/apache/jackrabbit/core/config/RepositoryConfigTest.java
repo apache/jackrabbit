@@ -206,7 +206,7 @@ public class RepositoryConfigTest extends TestCase {
         SecurityManagerConfig smc =
             config.getSecurityConfig().getSecurityManagerConfig();
         assertEquals(
-                "org.apache.jackrabbit.core.security.simple.SimpleSecurityManager",
+                "org.apache.jackrabbit.core.DefaultSecurityManager",
                 smc.getClassName());
         assertTrue(smc.getParameters().isEmpty());
         assertNotNull(smc.getWorkspaceName());
