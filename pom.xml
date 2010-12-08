@@ -71,6 +71,18 @@
           <skip>true</skip>
         </configuration>
       </plugin>
+      <plugin>
+        <groupId>org.apache.rat</groupId>
+        <artifactId>apache-rat-plugin</artifactId>
+        <configuration>
+          <excludes>
+            <exclude>test/**/target/**</exclude>
+            <exclude>test/**/.*/**</exclude>
+            <exclude>test/**/*.log</exclude>
+            <exclude>.git/**</exclude>
+          </excludes>
+        </configuration>
+      </plugin>
     </plugins>
   </build>
 
