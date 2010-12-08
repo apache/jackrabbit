@@ -16,14 +16,11 @@
  */
 package org.apache.jackrabbit.core.xml;
 
-import javax.jcr.RepositoryException;
-
 import org.apache.jackrabbit.core.NodeImpl;
-import org.apache.jackrabbit.core.util.ReferenceChangeTracker;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
-import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
-import org.apache.jackrabbit.api.JackrabbitSession;
+
+import javax.jcr.RepositoryException;
 
 /**
  * <code>ProtectedPropertyImporter</code> is in charge of importing single
