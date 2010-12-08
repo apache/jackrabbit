@@ -375,6 +375,18 @@ public class UserManagerImpl extends ProtectedItemModifier
      */
     public MembershipCache getMembershipCache() {
         return membershipCache;
+    }  
+
+    /**
+     * Maximum number of properties on the group membership node structure under
+     * {@link UserConstants#N_MEMBERS} until additional intermediate nodes are inserted.
+     * If 0 (default), {@link UserConstants#P_MEMBERS} is used to record group
+     * memberships.
+     *
+     * @return
+     */
+    public int getGroupMembershipSplitSize() {
+        return groupMembershipSplitSize;
     }
 
     //--------------------------------------------------------< UserManager >---
@@ -487,6 +499,9 @@ public class UserManagerImpl extends ProtectedItemModifier
         return new AuthorizableIterator(nodes);
     }
 
+    /**
+     * @see UserManager#findAuthorizables(Query)
+     */
     public Iterator<Authorizable> findAuthorizables(Query query) throws RepositoryException {
         XPathQueryBuilder builder = new XPathQueryBuilder();
         query.build(builder);
@@ -631,18 +646,6 @@ public class UserManagerImpl extends ProtectedItemModifier
      */
     public void autoSave(boolean enable) throws UnsupportedRepositoryOperationException, RepositoryException {
         throw new UnsupportedRepositoryOperationException("Cannot change autosave behavior.");
-    }
-
-    /**
-     * Maximum number of properties on the group membership node structure under
-     * {@link UserConstants#N_MEMBERS} until additional intermediate nodes are inserted.
-     * If 0 (default), {@link UserConstants#P_MEMBERS} is used to record group
-     * memberships.
-     *
-     * @return
-     */
-    public int getGroupMembershipSplitSize() {
-        return groupMembershipSplitSize;
     }
 
     //--------------------------------------------------------------------------
