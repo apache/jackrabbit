@@ -154,7 +154,6 @@ class CachingEntryCollector extends EntryCollector {
      */
     private static boolean hasEntries(NodeImpl n) throws RepositoryException {
         if (ACLProvider.isAccessControlled(n)) {
-            // collect the aces of that node.
             NodeImpl aclNode = n.getNode(N_POLICY);
             return aclNode.hasNodes();
         }
