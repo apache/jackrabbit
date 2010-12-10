@@ -24,6 +24,7 @@ import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
+import org.apache.jackrabbit.core.security.principal.EveryonePrincipal;
 import org.apache.jackrabbit.core.security.principal.PrincipalImpl;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.util.Text;
@@ -326,6 +327,10 @@ abstract class AuthorizableImpl implements Authorizable, UserConstants {
     String getPrincipalName() throws RepositoryException {
         // principal name is mandatory property -> no check required.
         return node.getProperty(P_PRINCIPAL_NAME).getString();
+    }
+
+    boolean isEveryone() throws RepositoryException {
+        return isGroup() && EveryonePrincipal.NAME.equals(getPrincipalName());
     }
 
     private Iterator<Group> collectMembership(boolean includeIndirect) throws RepositoryException {

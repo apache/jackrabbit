@@ -121,15 +121,13 @@ public class DefaultPrincipalProvider extends AbstractPrincipalProvider implemen
      */
     @Override
     protected Principal providePrincipal(String principalName) {
-        // check for 'everyone'
-        if (everyonePrincipal.getName().equals(principalName)) {
-            return everyonePrincipal;
-        }
         try {
             Principal principal = new PrincipalImpl(principalName);
             Authorizable ath = userManager.getAuthorizable(principal);
             if (ath != null) {
                 return ath.getPrincipal();
+            } else if (EveryonePrincipal.NAME.equals(principalName)) {
+                return everyonePrincipal;
             }
         } catch (RepositoryException e) {
             log.error("Failed to access Authorizable for Principal " + principalName, e);
@@ -351,6 +349,9 @@ public class DefaultPrincipalProvider extends AbstractPrincipalProvider implemen
             while (authorizableItr.hasNext()) {
                 try {
                     Principal p = authorizableItr.next().getPrincipal();
+                    if (everyonePrincipal.equals(p)) {
+                        addEveryone = false;
+                    }
                     addToCache(p);
                     return p;
                 } catch (RepositoryException e) {
