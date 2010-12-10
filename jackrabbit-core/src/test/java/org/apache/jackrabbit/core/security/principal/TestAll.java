@@ -36,6 +36,7 @@ public class TestAll extends TestCase {
         TestSuite suite = new TestSuite("core.security.principal tests");
 
         suite.addTestSuite(AbstractPrincipalProviderTest.class);
+        suite.addTestSuite(EveryonePrincipalTest.class);
         
         return suite;
     }

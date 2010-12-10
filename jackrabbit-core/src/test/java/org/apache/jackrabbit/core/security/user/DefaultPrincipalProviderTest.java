@@ -181,4 +181,50 @@ public class DefaultPrincipalProviderTest extends AbstractUserTest {
             save(superuser);
         }
     }
+
+    public void testEveryonePrincipal() throws Exception {
+        Principal p = principalProvider.getPrincipal(EveryonePrincipal.NAME);
+        assertNotNull(p);
+        assertEquals(EveryonePrincipal.getInstance(), p);
+
+        PrincipalIterator pit = principalProvider.findPrincipals(EveryonePrincipal.NAME);
+        assertNotNull(pit);
+        if (pit.getSize() == -1) {
+            assertTrue(pit.hasNext());
+            assertEquals(EveryonePrincipal.getInstance(), pit.nextPrincipal());
+            assertFalse(pit.hasNext());
+        } else {
+            assertEquals(1, pit.getSize());
+            assertEquals(EveryonePrincipal.getInstance(), pit.nextPrincipal());
+        }
+    }
+
+    public void testEveryonePrincipal2() throws Exception {
+        Group g = null;
+        try {
+            g = userMgr.createGroup(EveryonePrincipal.NAME);
+            save(superuser);
+
+            Principal p = principalProvider.getPrincipal(EveryonePrincipal.NAME);
+            assertNotNull(p);
+            assertEquals(EveryonePrincipal.getInstance(), p);
+
+            PrincipalIterator pit = principalProvider.findPrincipals(EveryonePrincipal.NAME);
+            assertNotNull(pit);
+            if (pit.getSize() == -1) {
+                assertTrue(pit.hasNext());
+                assertEquals(EveryonePrincipal.getInstance(), pit.nextPrincipal());
+                assertFalse(pit.hasNext());
+            } else {
+                assertEquals(1, pit.getSize());
+                assertEquals(EveryonePrincipal.getInstance(), pit.nextPrincipal());
+            }
+
+        } finally {
+            if (g != null) {
+                g.remove();
+                save(superuser);
+            }
+        }
+    }
 }

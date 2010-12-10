@@ -16,15 +16,17 @@
  */
 package org.apache.jackrabbit.core.security.principal;
 
+import org.apache.jackrabbit.api.security.principal.JackrabbitPrincipal;
+
 import java.security.Principal;
 import java.util.Enumeration;
 
 /**
  * The EveryonePrincipal contains all principals (excluding itself).
  */
-public final class EveryonePrincipal implements java.security.acl.Group {
+public final class EveryonePrincipal implements java.security.acl.Group, JackrabbitPrincipal {
 
-    private static final String NAME = "everyone";
+    public static final String NAME = "everyone";
     private static final EveryonePrincipal INSTANCE = new EveryonePrincipal();
 
     private EveryonePrincipal() { }
@@ -64,6 +66,11 @@ public final class EveryonePrincipal implements java.security.acl.Group {
 
     @Override
     public boolean equals(Object obj) {
-        return obj == this || obj instanceof EveryonePrincipal;
+        if (obj == this || obj instanceof EveryonePrincipal) {
+            return true;
+        } else if (obj instanceof JackrabbitPrincipal) {
+            return NAME.equals(((JackrabbitPrincipal) obj).getName());
+        }
+        return false;
     }
 }
