@@ -35,6 +35,7 @@ public class TestAll extends TestCase {
         suite.addTestSuite(UserManagerImplTest.class);
         suite.addTestSuite(AuthorizableImplTest.class);
         suite.addTestSuite(UserImplTest.class);
+        suite.addTestSuite(GroupImplTest.class);
         suite.addTestSuite(ImpersonationImplTest.class);
 
         suite.addTestSuite(UserAdministratorTest.class);

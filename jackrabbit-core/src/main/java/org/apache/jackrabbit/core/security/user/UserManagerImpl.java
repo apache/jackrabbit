@@ -30,6 +30,7 @@ import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.SessionListener;
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.security.SystemPrincipal;
+import org.apache.jackrabbit.core.security.principal.EveryonePrincipal;
 import org.apache.jackrabbit.core.security.principal.PrincipalImpl;
 import org.apache.jackrabbit.core.session.SessionOperation;
 import org.apache.jackrabbit.spi.Name;
@@ -580,7 +581,7 @@ public class UserManagerImpl extends ProtectedItemModifier
      * @see UserManager#createGroup(java.security.Principal, String)
      */
     public Group createGroup(Principal principal, String intermediatePath) throws AuthorizableExistsException, RepositoryException {
-        checkValidPrincipal(principal);
+        checkValidPrincipal(principal, true);
         
         String groupID = getGroupId(principal.getName());
         return createGroup(groupID, principal, intermediatePath);
@@ -658,7 +659,7 @@ public class UserManagerImpl extends ProtectedItemModifier
      * @throws RepositoryException If another error occurs.
      */
     void setPrincipal(NodeImpl node, Principal principal) throws AuthorizableExistsException, RepositoryException {
-        checkValidPrincipal(principal);        
+        checkValidPrincipal(principal, node.isNodeType(NT_REP_GROUP));        
         /*
          Check if there is *another* authorizable with the same principal.
          The additional validation (nodes not be same) is required in order to
@@ -953,10 +954,14 @@ public class UserManagerImpl extends ProtectedItemModifier
      * Throws <code>IllegalArgumentException</code> if the specified principal
      * is <code>null</code> or if it's name is <code>null</code> or empty string.
      * @param principal
+     * @param isGroup
      */
-    private static void checkValidPrincipal(Principal principal) {
+    private static void checkValidPrincipal(Principal principal, boolean isGroup) {
         if (principal == null || principal.getName() == null || "".equals(principal.getName())) {
             throw new IllegalArgumentException("Principal may not be null and must have a valid name.");
+        }
+        if (!isGroup && EveryonePrincipal.NAME.equals(principal.getName())) {
+            throw new IllegalArgumentException("'everyone' is a reserved group principal name.");
         }
     }
 
