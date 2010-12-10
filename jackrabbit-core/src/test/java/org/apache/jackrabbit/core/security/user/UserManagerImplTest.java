@@ -24,6 +24,7 @@ import org.apache.jackrabbit.api.security.user.User;
 import org.apache.jackrabbit.api.security.user.UserManager;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.security.TestPrincipal;
+import org.apache.jackrabbit.core.security.principal.EveryonePrincipal;
 import org.apache.jackrabbit.test.NotExecutableException;
 import org.apache.jackrabbit.spi.commons.conversion.NameResolver;
 
@@ -164,6 +165,21 @@ public class UserManagerImplTest extends AbstractUserTest {
                 }
             }
         }
+    }
+
+    public void testCreateEveryoneUser() throws Exception {
+        User u = null;
+        try {
+            u = userMgr.createUser(EveryonePrincipal.NAME, "pw");
+            fail("everyone is a reserved group name");
+        } catch (IllegalArgumentException e) {
+            // success
+        } finally {
+            if (u != null) {
+                u.remove();
+            }
+        }
+
     }
 
     public void testCreateGroupWithId() throws RepositoryException, NotExecutableException {

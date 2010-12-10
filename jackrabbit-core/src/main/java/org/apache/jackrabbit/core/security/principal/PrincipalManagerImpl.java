@@ -144,7 +144,11 @@ public class PrincipalManagerImpl implements PrincipalManager {
      */
     public Principal getEveryone() {
         checkIsValid();
-        return EveryonePrincipal.getInstance();
+        Principal everyone = getPrincipal(EveryonePrincipal.NAME);
+        if (everyone == null) {
+            everyone = EveryonePrincipal.getInstance();
+        }
+        return everyone;
     }
 
     //--------------------------------------------------------------------------

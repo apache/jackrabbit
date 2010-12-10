@@ -27,6 +27,7 @@ import org.apache.jackrabbit.commons.flat.TreeManager;
 import org.apache.jackrabbit.commons.iterator.LazyIteratorChain;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.PropertyImpl;
+import org.apache.jackrabbit.core.security.principal.EveryonePrincipal;
 import org.apache.jackrabbit.core.session.SessionContext;
 import org.apache.jackrabbit.core.session.SessionWriteOperation;
 import org.apache.jackrabbit.spi.commons.iterator.Iterators;
@@ -94,22 +95,31 @@ class GroupImpl extends AuthorizableImpl implements Group {
      * @see Group#getDeclaredMembers()
      */
     public Iterator<Authorizable> getDeclaredMembers() throws RepositoryException {
-        return getMembers(false, UserManager.SEARCH_TYPE_AUTHORIZABLE);
+        if (isEveryone()) {
+            return userManager.findAuthorizables(getSession().getJCRName(P_PRINCIPAL_NAME), null, UserManager.SEARCH_TYPE_AUTHORIZABLE);
+        } else {
+            return getMembers(false, UserManager.SEARCH_TYPE_AUTHORIZABLE);
+        }
     }
 
     /**
      * @see Group#getMembers()
      */
     public Iterator<Authorizable> getMembers() throws RepositoryException {
-        return getMembers(true, UserManager.SEARCH_TYPE_AUTHORIZABLE);
+        if (isEveryone()) {
+            return getDeclaredMembers();
+        } else {
+            return getMembers(true, UserManager.SEARCH_TYPE_AUTHORIZABLE);
+        }
     }
 
     public boolean isDeclaredMember(Authorizable authorizable) throws RepositoryException {
         if (authorizable == null || !(authorizable instanceof AuthorizableImpl)
                 || getNode().isSame(((AuthorizableImpl) authorizable).getNode())) {
             return false;
-        }
-        else {
+        } else if (isEveryone()) {
+            return true;
+        } else {
             return getMembershipProvider(getNode()).hasMember((AuthorizableImpl) authorizable);
         }
     }
@@ -121,6 +131,8 @@ class GroupImpl extends AuthorizableImpl implements Group {
         if (authorizable == null || !(authorizable instanceof AuthorizableImpl)
                 || getNode().isSame(((AuthorizableImpl) authorizable).getNode())) {
             return false;
+        } else if (isEveryone()) {
+            return true;
         } else {
             String thisID = getID();
             AuthorizableImpl impl = (AuthorizableImpl) authorizable;
@@ -139,6 +151,9 @@ class GroupImpl extends AuthorizableImpl implements Group {
     public boolean addMember(Authorizable authorizable) throws RepositoryException {
         if (!(authorizable instanceof AuthorizableImpl)) {
             log.warn("Invalid Authorizable: {}", authorizable);
+            return false;
+        }
+        if (isEveryone() || ((AuthorizableImpl) authorizable).isEveryone()) {
             return false;
         }
 
@@ -165,6 +180,9 @@ class GroupImpl extends AuthorizableImpl implements Group {
     public boolean removeMember(Authorizable authorizable) throws RepositoryException {
         if (!(authorizable instanceof AuthorizableImpl)) {
             log.warn("Invalid Authorizable: {}", authorizable);
+            return false;
+        }
+        if (isEveryone()) {
             return false;
         }
 

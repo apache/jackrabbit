@@ -66,7 +66,6 @@ public class PrincipalImpl implements JackrabbitPrincipal, Serializable {
             return true;
         }
         if (obj instanceof JackrabbitPrincipal) {
-            // TODO: check if correct
             return name.equals(((Principal) obj).getName());
         }
         return false;
