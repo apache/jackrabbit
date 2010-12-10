@@ -101,6 +101,8 @@ public abstract class AbstractPerformanceTest {
         runTest(new ConcurrentReadWriteTest(), name, conf);
         runTest(new SimpleSearchTest(), name, conf);
         runTest(new SQL2SearchTest(), name, conf);
+        runTest(new DescendantSearchTest(), name, conf);
+        runTest(new SQL2DescendantSearchTest(), name, conf);
         runTest(new TwoWayJoinTest(), name, conf);
         runTest(new ThreeWayJoinTest(), name, conf);
         runTest(new CreateManyChildNodesTest(), name, conf);
