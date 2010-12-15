@@ -102,4 +102,28 @@ public class GroupImplTest extends AbstractUserTest {
             save(superuser);            
         }
     }
+
+    public void testEveryoneGroupPrincipal() throws Exception {
+        Group g = null;
+        try {
+            g = userMgr.createGroup(EveryonePrincipal.NAME);
+            save(superuser);
+
+            java.security.acl.Group principal = (java.security.acl.Group) g.getPrincipal();
+            assertTrue(principal.isMember(new Principal() {
+
+                public String getName() {
+                    return "test";
+                }
+            }));
+
+            assertFalse(principal.isMember(principal));
+
+        } finally {
+            if (g != null) {
+                g.remove();
+                save(superuser);
+            }
+        }
+    }
 }
