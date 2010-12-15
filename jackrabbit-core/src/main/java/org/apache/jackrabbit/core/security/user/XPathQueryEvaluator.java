@@ -25,6 +25,7 @@ import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.security.user.XPathQueryBuilder.Condition;
 import org.apache.jackrabbit.core.security.user.XPathQueryBuilder.RelationOp;
+import org.apache.jackrabbit.spi.commons.iterator.BoundedIterator;
 import org.apache.jackrabbit.spi.commons.iterator.Iterators;
 import org.apache.jackrabbit.spi.commons.iterator.Predicate;
 import org.apache.jackrabbit.spi.commons.iterator.Predicates;
@@ -105,23 +106,20 @@ public class XPathQueryEvaluator implements XPathQueryBuilder.ConditionVisitor {
             return Iterators.empty();
         }
 
-        if (maxCount > 0) {
-            query.setLimit(maxCount);
-        }
-
-        // If we are scoped to a group and have an offset, we need to skip to that offset
-        // here (inefficient!) otherwise we can apply the offset in the query
+        // If we are scoped to a group and have a limit, we have to apply the limit
+        // here (inefficient!) otherwise we can apply the limit in the query
         if (builder.getGroupName() == null) {
             if (offset > 0) {
                 query.setOffset(offset);
             }
+            if (maxCount > 0) {
+                query.setLimit(maxCount);
+            }
             return toAuthorizables(execute(query));
         } else {
-            Iterator<Authorizable> result = filter(toAuthorizables(execute(query)), builder.getGroupName(), builder.isDeclaredMembersOnly());
-            for (int c = 0; c < offset && result.hasNext(); c++) {
-                result.next();
-            }
-            return result;
+            Iterator<Authorizable> result = toAuthorizables(execute(query));
+            Iterator<Authorizable> filtered = filter(result, builder.getGroupName(), builder.isDeclaredMembersOnly());
+            return BoundedIterator.create(offset, maxCount, filtered);
         }
     }
 
