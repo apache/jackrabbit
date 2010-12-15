@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.core.security.authorization.acl;
 
+import org.apache.jackrabbit.api.JackrabbitSession;
 import org.apache.jackrabbit.api.security.JackrabbitAccessControlList;
 import org.apache.jackrabbit.core.security.authorization.AbstractEvaluationTest;
 import org.apache.jackrabbit.core.security.authorization.AccessControlConstants;
@@ -42,6 +43,7 @@ public class ReadTest extends AbstractEvaluationTest {
     private String path;
     private String childNPath;
 
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
 
@@ -54,14 +56,17 @@ public class ReadTest extends AbstractEvaluationTest {
         childNPath = cn1.getPath();
     }
 
+    @Override
     protected boolean isExecutable() {
         return EvaluationUtil.isExecutable(acMgr);
     }
 
+    @Override
     protected JackrabbitAccessControlList getPolicy(AccessControlManager acM, String path, Principal principal) throws RepositoryException, AccessDeniedException, NotExecutableException {
         return EvaluationUtil.getPolicy(acM, path, principal);
     }
 
+    @Override
     protected Map<String, Value> getRestrictions(Session s, String path) {
         return Collections.emptyMap();
     }
@@ -85,6 +90,220 @@ public class ReadTest extends AbstractEvaluationTest {
         n.getDefinition();
     }
 
+    public void testDenyUserAllowGroup() throws Exception {
+        Privilege[] privileges = privilegesFromName(Privilege.JCR_READ);
+        Principal group = getTestGroup().getPrincipal();
+
+        /*
+         deny READ privilege for testUser at 'path'
+         */
+        withdrawPrivileges(path, testUser.getPrincipal(), privileges, getRestrictions(superuser, path));
+        /*
+         allow READ privilege for group at 'path'
+         */
+        givePrivileges(path, group, privileges, getRestrictions(superuser, path));
+
+        Session testSession = getTestSession();
+        assertFalse(testSession.nodeExists(path));
+    }
+
+    public void testAllowGroupDenyUser() throws Exception {
+        Privilege[] privileges = privilegesFromName(Privilege.JCR_READ);
+        Principal group = getTestGroup().getPrincipal();
+
+        /*
+        allow READ privilege for group at 'path'
+        */
+        givePrivileges(path, group, privileges, getRestrictions(superuser, path));
+        /*
+        deny READ privilege for testUser at 'path'
+        */
+        withdrawPrivileges(path, testUser.getPrincipal(), privileges, getRestrictions(superuser, path));
+
+        Session testSession = getTestSession();
+        assertFalse(testSession.nodeExists(path));
+    }
+
+    public void testAllowUserDenyGroup() throws Exception {
+        Privilege[] privileges = privilegesFromName(Privilege.JCR_READ);
+        Principal group = getTestGroup().getPrincipal();
+
+        /*
+         allow READ privilege for testUser at 'path'
+         */
+        givePrivileges(path, testUser.getPrincipal(), privileges, getRestrictions(superuser, path));
+        /*
+         deny READ privilege for group at 'path'
+         */
+        withdrawPrivileges(path, group, privileges, getRestrictions(superuser, path));
+
+        Session testSession = getTestSession();
+        assertTrue(testSession.nodeExists(path));
+    }
+
+    public void testDenyGroupAllowUser() throws Exception {
+        Privilege[] privileges = privilegesFromName(Privilege.JCR_READ);
+        Principal group = getTestGroup().getPrincipal();
+
+        /*
+         deny READ privilege for group at 'path'
+         */
+        withdrawPrivileges(path, group, privileges, getRestrictions(superuser, path));
+
+        /*
+         allow READ privilege for testUser at 'path'
+         */
+        givePrivileges(path, testUser.getPrincipal(), privileges, getRestrictions(superuser, path));
+
+        Session testSession = getTestSession();
+        assertTrue(testSession.nodeExists(path));
+    }
+
+    public void testDenyGroupAllowEveryone() throws Exception {
+        Privilege[] privileges = privilegesFromName(Privilege.JCR_READ);
+        Principal group = getTestGroup().getPrincipal();
+        Principal everyone = ((JackrabbitSession) superuser).getPrincipalManager().getEveryone();
+
+        /*
+         deny READ privilege for group at 'path'
+         */
+        withdrawPrivileges(path, group, privileges, getRestrictions(superuser, path));
+
+        /*
+         allow READ privilege for everyone at 'path'
+         */
+        givePrivileges(path, everyone, privileges, getRestrictions(superuser, path));
+
+        Session testSession = getTestSession();
+        assertTrue(testSession.nodeExists(path));
+    }
+
+    public void testAllowEveryoneDenyGroup() throws Exception {
+        Privilege[] privileges = privilegesFromName(Privilege.JCR_READ);
+        Principal group = getTestGroup().getPrincipal();
+        Principal everyone = ((JackrabbitSession) superuser).getPrincipalManager().getEveryone();
+
+        /*
+         allow READ privilege for everyone at 'path'
+         */
+        givePrivileges(path, everyone, privileges, getRestrictions(superuser, path));
+
+        /*
+         deny READ privilege for group at 'path'
+         */
+        withdrawPrivileges(path, group, privileges, getRestrictions(superuser, path));
+
+        Session testSession = getTestSession();
+        assertFalse(testSession.nodeExists(path));
+    }
+
+    public void testDenyGroupPathAllowEveryoneChildPath() throws Exception {
+        Privilege[] privileges = privilegesFromName(Privilege.JCR_READ);
+        Principal group = getTestGroup().getPrincipal();
+        Principal everyone = ((JackrabbitSession) superuser).getPrincipalManager().getEveryone();
+
+        /*
+         deny READ privilege for group at 'path'
+         */
+        withdrawPrivileges(path, group, privileges, getRestrictions(superuser, path));
+
+        /*
+         allow READ privilege for everyone at 'childNPath'
+         */
+        givePrivileges(path, everyone, privileges, getRestrictions(superuser, childNPath));
+
+        Session testSession = getTestSession();
+        assertTrue(testSession.nodeExists(childNPath));
+    }
+
+    public void testAllowEveryonePathDenyGroupChildPath() throws Exception {
+        Privilege[] privileges = privilegesFromName(Privilege.JCR_READ);
+        Principal group = getTestGroup().getPrincipal();
+        Principal everyone = ((JackrabbitSession) superuser).getPrincipalManager().getEveryone();
+
+        /*
+         allow READ privilege for everyone at 'path'
+         */
+        givePrivileges(path, everyone, privileges, getRestrictions(superuser, path));
+
+        /*
+         deny READ privilege for group at 'childNPath'
+         */
+        withdrawPrivileges(path, group, privileges, getRestrictions(superuser, childNPath));
+
+        Session testSession = getTestSession();
+        assertFalse(testSession.nodeExists(childNPath));
+    }
+
+    public void testAllowUserPathDenyGroupChildPath() throws Exception {
+        Privilege[] privileges = privilegesFromName(Privilege.JCR_READ);
+        Principal group = getTestGroup().getPrincipal();
+
+        /*
+         allow READ privilege for testUser at 'path'
+         */
+        givePrivileges(path, testUser.getPrincipal(), privileges, getRestrictions(superuser, path));
+        /*
+         deny READ privilege for group at 'childPath'
+         */
+        withdrawPrivileges(path, group, privileges, getRestrictions(superuser, childNPath));
+
+        Session testSession = getTestSession();
+        assertTrue(testSession.nodeExists(childNPath));
+    }
+
+    public void testDenyGroupPathAllowUserChildPath() throws Exception {
+        Privilege[] privileges = privilegesFromName(Privilege.JCR_READ);
+        Principal group = getTestGroup().getPrincipal();
+
+        /*
+         deny READ privilege for group at 'path'
+         */
+        withdrawPrivileges(path, group, privileges, getRestrictions(superuser, path));
+
+        /*
+         allow READ privilege for testUser at 'childNPath'
+         */
+        givePrivileges(path, testUser.getPrincipal(), privileges, getRestrictions(superuser, childNPath));
+
+        Session testSession = getTestSession();
+        assertTrue(testSession.nodeExists(childNPath));
+    }
+
+    public void testDenyUserPathAllowGroupChildPath() throws Exception {
+        Privilege[] privileges = privilegesFromName(Privilege.JCR_READ);
+        Principal group = getTestGroup().getPrincipal();
+
+        /*
+         deny READ privilege for testUser at 'path'
+         */
+        withdrawPrivileges(path, testUser.getPrincipal(), privileges, getRestrictions(superuser, path));
+        /*
+         allow READ privilege for group at 'childNPath'
+         */
+        givePrivileges(path, group, privileges, getRestrictions(superuser, childNPath));
+
+        Session testSession = getTestSession();
+        assertFalse(testSession.nodeExists(childNPath));
+    }
+
+    public void testAllowGroupPathDenyUserChildPath() throws Exception {
+        Privilege[] privileges = privilegesFromName(Privilege.JCR_READ);
+        Principal group = getTestGroup().getPrincipal();
+
+        /*
+        allow READ privilege for everyone at 'path'
+        */
+        givePrivileges(path, group, privileges, getRestrictions(superuser, path));
+        /*
+        deny READ privilege for testUser at 'childNPath'
+        */
+        withdrawPrivileges(path, testUser.getPrincipal(), privileges, getRestrictions(superuser, childNPath));
+
+        Session testSession = getTestSession();
+        assertFalse(testSession.nodeExists(childNPath));
+    }
+
     public void testGlobRestriction() throws Exception {
         Session testSession = getTestSession();
         AccessControlManager testAcMgr = getTestACManager();
@@ -96,13 +315,9 @@ public class ReadTest extends AbstractEvaluationTest {
         checkReadOnly(path);
         checkReadOnly(childNPath);
 
-        Node child = superuser.getNode(childNPath).addNode(nodeName3);
-        superuser.save();
-        String childchildPath = child.getPath();
-
         Privilege[] read = privilegesFromName(Privilege.JCR_READ);
 
-        Map<String, Value> restrictions = new HashMap(getRestrictions(superuser, path));
+        Map<String, Value> restrictions = new HashMap<String, Value>(getRestrictions(superuser, path));
         restrictions.put(AccessControlConstants.P_GLOB.toString(), vf.createValue("*/"+jcrPrimaryType));
 
         withdrawPrivileges(path, read, restrictions);
