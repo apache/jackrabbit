@@ -218,7 +218,7 @@ class CompiledPermissionsImpl extends AbstractCompiledPermissions implements Acc
         ItemId id = (itemId == null) ? session.getHierarchyManager().resolvePath(path) : itemId;
         // no extra check for existence as method may only be called for existing items.
         boolean isExistingNode = id.denotesNode();
-        boolean canRead;
+        boolean canRead = false;
         synchronized (monitor) {
             if (readCache.containsKey(id)) {
                 canRead = readCache.get(id);
@@ -226,11 +226,36 @@ class CompiledPermissionsImpl extends AbstractCompiledPermissions implements Acc
                 ItemManager itemMgr = session.getItemManager();
                 NodeId nodeId = (isExistingNode) ? (NodeId) id : ((PropertyId) id).getParentId();
                 NodeImpl node = (NodeImpl) itemMgr.getItem(nodeId);
-                // TODO: check again if retrieving the path can be avoided
-                Path absPath = (path == null) ? session.getHierarchyManager().getPath(id) : path;
-                Result result = buildResult(node, isExistingNode, util.isAcItem(node), new EntryFilterImpl(principalNames, absPath, session));
 
-                canRead = result.grants(Permission.READ);
+                boolean isAcItem = util.isAcItem(node);
+                EntryFilterImpl filter;
+                if (path == null) {
+                    filter = new EntryFilterImpl(principalNames, id, session);
+                } else {
+                    filter = new EntryFilterImpl(principalNames, path, session);
+                }
+
+                if (isAcItem) {
+                    /* item defines ac content -> regular evaluation */
+                    Result result = buildResult(node, isExistingNode, util.isAcItem(node), filter);
+                    canRead = result.grants(Permission.READ);
+                } else {
+                    /*
+                     simplified evaluation focusing on READ permission. this allows
+                     to omit evaluation of parent node permissions that are
+                     required when calculating the complete set of permissions
+                     (see special treatment of remove, create or ac-specific
+                      permissions).
+                     */
+                    for (AccessControlEntry accessControlEntry : entryCollector.collectEntries(node, filter)) {
+                        ACLTemplate.Entry ace = (ACLTemplate.Entry) accessControlEntry;
+                        int entryBits = ace.getPrivilegeBits();
+                        if ((entryBits & Permission.READ) == Permission.READ) {
+                            canRead = ace.isAllow();
+                            break;
+                        }
+                    }
+                }
                 readCache.put(id, canRead);
             }
         }

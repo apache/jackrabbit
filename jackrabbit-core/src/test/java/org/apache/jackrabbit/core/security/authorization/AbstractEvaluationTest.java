@@ -18,9 +18,11 @@ package org.apache.jackrabbit.core.security.authorization;
 
 import org.apache.jackrabbit.api.JackrabbitSession;
 import org.apache.jackrabbit.api.security.JackrabbitAccessControlList;
+import org.apache.jackrabbit.api.security.user.Group;
 import org.apache.jackrabbit.api.security.user.User;
 import org.apache.jackrabbit.api.security.user.UserManager;
 import org.apache.jackrabbit.api.security.user.Authorizable;
+import org.apache.jackrabbit.core.security.TestPrincipal;
 import org.apache.jackrabbit.test.NotExecutableException;
 import org.apache.jackrabbit.test.api.security.AbstractAccessControlTest;
 import org.slf4j.Logger;
@@ -49,6 +51,8 @@ public abstract class AbstractEvaluationTest extends AbstractAccessControlTest {
     private String uid;
     protected User testUser;
     protected Credentials creds;
+
+    protected Group testGroup;    
     
     private Session testSession;
     private AccessControlManager testAccessControlManager;
@@ -81,32 +85,41 @@ public abstract class AbstractEvaluationTest extends AbstractAccessControlTest {
 
     @Override
     protected void tearDown() throws Exception {
-        for (String path : toClear) {
-            try {
-                AccessControlPolicy[] policies = acMgr.getPolicies(path);
-                for (AccessControlPolicy policy : policies) {
-                    acMgr.removePolicy(path, policy);
-                }
-                superuser.save();
-            } catch (RepositoryException e) {
-                // log error and ignore
-                log.debug(e.getMessage());
-            }
-        }
-
-        if (testSession != null && testSession.isLive()) {
-            testSession.logout();
-        }
-        if (uid != null) {
-            Authorizable a = getUserManager(superuser).getAuthorizable(uid);
-            if (a != null) {
-                a.remove();
-                if (!getUserManager(superuser).isAutoSave()) {
+        try {
+            for (String path : toClear) {
+                try {
+                    AccessControlPolicy[] policies = acMgr.getPolicies(path);
+                    for (AccessControlPolicy policy : policies) {
+                        acMgr.removePolicy(path, policy);
+                    }
                     superuser.save();
+                } catch (RepositoryException e) {
+                    // log error and ignore
+                    log.debug(e.getMessage());
                 }
             }
+
+            if (testSession != null && testSession.isLive()) {
+                testSession.logout();
+            }
+            if (testGroup != null && testUser != null) {
+                if (testGroup.isDeclaredMember(testUser)) {
+                    testGroup.removeMember(testUser);
+                }
+                testGroup.remove();
+            }
+            if (uid != null) {
+                Authorizable a = getUserManager(superuser).getAuthorizable(uid);
+                if (a != null) {
+                    a.remove();
+                }
+            }
+            if (!getUserManager(superuser).isAutoSave() && superuser.hasPendingChanges()) {
+                superuser.save();
+            }
+        } finally {
+            super.tearDown();
         }
-        super.tearDown();
     }
 
     protected static UserManager getUserManager(Session session) throws
@@ -133,6 +146,20 @@ public abstract class AbstractEvaluationTest extends AbstractAccessControlTest {
             testAccessControlManager = getAccessControlManager(getTestSession());
         }
         return testAccessControlManager;
+    }
+    
+    protected Group getTestGroup() throws RepositoryException, NotExecutableException {
+        if (testGroup == null) {
+            // create the testGroup
+            Principal principal = new TestPrincipal("testGroup" + UUID.randomUUID());
+            UserManager umgr = getUserManager(superuser);
+            testGroup = umgr.createGroup(principal);
+            testGroup.addMember(testUser);
+            if (!umgr.isAutoSave() && superuser.hasPendingChanges()) {
+                superuser.save();
+            }
+        }
+        return testGroup;
     }
     
     protected Node getTestNode() throws RepositoryException {

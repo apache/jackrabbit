@@ -55,8 +55,6 @@ public abstract class AbstractWriteTest extends AbstractEvaluationTest {
 
     protected static final long DEFAULT_WAIT_TIMEOUT = 5000;
 
-    protected Group testGroup;
-
     protected String path;
     protected String childNPath;
     protected String childNPath2;
@@ -88,35 +86,6 @@ public abstract class AbstractWriteTest extends AbstractEvaluationTest {
         childPPath = cp1.getPath();
         childchildPPath = ccp1.getPath();
         siblingPath = n2.getPath();
-    }
-
-    @Override
-    protected void tearDown() throws Exception {
-        try {
-            if (testGroup != null && testUser != null) {
-                testGroup.removeMember(testUser);
-                testGroup.remove();
-                if (!getUserManager(superuser).isAutoSave() && superuser.hasPendingChanges()) {
-                    superuser.save();
-                }
-            }
-        } finally {
-            super.tearDown();
-        }
-    }
-
-    protected Group getTestGroup() throws RepositoryException, NotExecutableException {
-        if (testGroup == null) {
-            // create the testGroup
-            Principal principal = new TestPrincipal("testGroup" + UUID.randomUUID());
-            UserManager umgr = getUserManager(superuser);
-            testGroup = umgr.createGroup(principal);
-            testGroup.addMember(testUser);
-            if (!umgr.isAutoSave() && superuser.hasPendingChanges()) {
-                superuser.save();
-            }
-        }
-        return testGroup;
     }
 
     public void testGrantedPermissions() throws RepositoryException, AccessDeniedException, NotExecutableException {
@@ -1095,7 +1064,7 @@ public abstract class AbstractWriteTest extends AbstractEvaluationTest {
 
         // permissions defined @ path
         // restriction: grants write priv to all nodeName3 children
-        Map<String, Value> restrictions = new HashMap(getRestrictions(superuser, path));        
+        Map<String, Value> restrictions = new HashMap<String, Value>(getRestrictions(superuser, path));
         restrictions.put(AccessControlConstants.P_GLOB.toString(), vf.createValue("/*"+nodeName3));
         givePrivileges(path, write, restrictions);
 
@@ -1136,7 +1105,7 @@ public abstract class AbstractWriteTest extends AbstractEvaluationTest {
         Privilege[] addNode = privilegesFromName(Privilege.JCR_ADD_CHILD_NODES);
         Privilege[] rmNode = privilegesFromName(Privilege.JCR_REMOVE_NODE);
 
-        Map<String, Value> restrictions = new HashMap(getRestrictions(superuser, path));
+        Map<String, Value> restrictions = new HashMap<String, Value>(getRestrictions(superuser, path));
 
         // permissions defined @ path
         // restriction: grants write-priv to nodeName3 grand-children but not direct nodeName3 children.
@@ -1177,7 +1146,7 @@ public abstract class AbstractWriteTest extends AbstractEvaluationTest {
         Privilege[] addNode = privilegesFromName(Privilege.JCR_ADD_CHILD_NODES);
         String writeActions = Session.ACTION_ADD_NODE +","+Session.ACTION_REMOVE +","+ Session.ACTION_SET_PROPERTY;
 
-        Map<String, Value> restrictions = new HashMap(getRestrictions(superuser, path));
+        Map<String, Value> restrictions = new HashMap<String, Value>(getRestrictions(superuser, path));
 
         // permissions defined @ path
         // restriction: allows write to nodeName3 children
@@ -1219,7 +1188,7 @@ public abstract class AbstractWriteTest extends AbstractEvaluationTest {
         Privilege[] write = privilegesFromName(PrivilegeRegistry.REP_WRITE);
         Privilege[] addNode = privilegesFromName(Privilege.JCR_ADD_CHILD_NODES);
 
-        Map<String, Value> restrictions = new HashMap(getRestrictions(superuser, path));
+        Map<String, Value> restrictions = new HashMap<String, Value>(getRestrictions(superuser, path));
         restrictions.put(AccessControlConstants.P_GLOB.toString(), vf.createValue("/*"+nodeName3));
         givePrivileges(path, write, restrictions);
 
@@ -1256,7 +1225,7 @@ public abstract class AbstractWriteTest extends AbstractEvaluationTest {
         Privilege[] write = privilegesFromName(PrivilegeRegistry.REP_WRITE);
         Privilege[] addNode = privilegesFromName(Privilege.JCR_ADD_CHILD_NODES);
 
-        Map<String, Value> restrictions = new HashMap(getRestrictions(superuser, path));
+        Map<String, Value> restrictions = new HashMap<String, Value>(getRestrictions(superuser, path));
         restrictions.put(AccessControlConstants.P_GLOB.toString(), vf.createValue(""));
         givePrivileges(path, write, restrictions);
 
