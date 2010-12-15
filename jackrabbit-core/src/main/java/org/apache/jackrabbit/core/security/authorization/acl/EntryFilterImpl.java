@@ -16,19 +16,21 @@
  */
 package org.apache.jackrabbit.core.security.authorization.acl;
 
+import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.id.ItemId;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.commons.conversion.PathResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.jcr.NamespaceException;
+import javax.jcr.RepositoryException;
 import javax.jcr.security.AccessControlEntry;
 import java.security.acl.Group;
 import java.util.Collection;
 import java.util.List;
 
 /**
- * <code>PrincipalEntryFilter</code>...
+ * <code>EntryFilterImpl</code>...
  */
 class EntryFilterImpl implements EntryFilter {
 
@@ -38,15 +40,27 @@ class EntryFilterImpl implements EntryFilter {
     private static final Logger log = LoggerFactory.getLogger(EntryFilterImpl.class);
 
     private final Collection<String> principalNames;
-    private final Path path;
-    private final PathResolver resolver;
+    private final PathProvider pathProvider;
 
     private String itemPath;
 
-    EntryFilterImpl(Collection<String> principalNames, Path path, PathResolver resolver) {
+    EntryFilterImpl(Collection<String> principalNames, final ItemId id, final SessionImpl sessionImpl) {
         this.principalNames = principalNames;
-        this.path = path;
-        this.resolver = resolver;
+        this.pathProvider = new PathProvider() {
+            public String getPath() throws RepositoryException {
+                Path p = sessionImpl.getHierarchyManager().getPath(id);
+                return sessionImpl.getJCRPath(p);
+            }
+        };
+    }
+
+    EntryFilterImpl(Collection<String> principalNames, final Path absPath, final PathResolver pathResolver) {
+        this.principalNames = principalNames;
+        this.pathProvider = new PathProvider() {
+            public String getPath() throws RepositoryException {
+                return pathResolver.getJCRPath(absPath);
+            }
+        };
     }
 
     /**
@@ -88,7 +102,8 @@ class EntryFilterImpl implements EntryFilter {
 
     private boolean matches(AccessControlEntry ace) {
         if (principalNames == null || principalNames.contains(ace.getPrincipal().getName())) {
-            if (((ACLTemplate.Entry) ace).getRestrictions().isEmpty()) {
+            ACLTemplate.Entry entry = (ACLTemplate.Entry) ace;
+            if (!entry.hasRestrictions()) {
                 // short cut: there is no glob-restriction -> the entry matches
                 // because it is either defined on the node or inherited.
                 return true;
@@ -96,8 +111,8 @@ class EntryFilterImpl implements EntryFilter {
                 // there is a glob-restriction: check if the target path matches
                 // this entry.
                 try {
-                    return ((ACLTemplate.Entry) ace).matches(getPath());
-                } catch (NamespaceException e) {
+                    return entry.matches(getPath());
+                } catch (RepositoryException e) {
                     log.error("Cannot determine ACE match.", e);
                 }
             }
@@ -107,10 +122,21 @@ class EntryFilterImpl implements EntryFilter {
         return false;
     }
 
-    String getPath() throws NamespaceException {
+    String getPath() throws RepositoryException {
         if (itemPath == null) {
-            itemPath = resolver.getJCRPath(path);
+            itemPath = pathProvider.getPath();
         }
         return itemPath;
+    }
+
+    //--------------------------------------------------------------------------
+    /**
+     * Interface for lazy calculation of the JCR path used for evaluation of ACE
+     * matching in case of entries defining restriction(s).
+     */
+    private interface PathProvider {
+
+        String getPath() throws RepositoryException;
+
     }
 }
