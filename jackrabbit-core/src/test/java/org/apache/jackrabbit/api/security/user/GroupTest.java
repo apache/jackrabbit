@@ -403,6 +403,46 @@ public class GroupTest extends AbstractUserTest {
         }
     }
 
+    public void testMembersInPrincipal() throws NotExecutableException, RepositoryException {
+        User auth = getTestUser(superuser);
+        Group newGroup = null;
+        Group newGroup2 = null;
+        try {
+            newGroup = userMgr.createGroup(getTestPrincipal());
+            newGroup2 = userMgr.createGroup(getTestPrincipal());
+            save(superuser);
+
+            newGroup.addMember(newGroup2);
+            save(superuser);
+            newGroup2.addMember(auth);
+            save(superuser);
+
+            java.security.acl.Group ngPrincipal = (java.security.acl.Group) newGroup.getPrincipal();
+            java.security.acl.Group ng2Principal = (java.security.acl.Group) newGroup2.getPrincipal();
+
+            assertFalse(ng2Principal.isMember(ngPrincipal));
+
+            // newGroup2 must be member of newGroup's principal
+            assertTrue(ngPrincipal.isMember(newGroup2.getPrincipal()));
+
+            // testuser must be member of newGroup2's and newGroup's principal (indirect)
+            assertTrue(ng2Principal.isMember(auth.getPrincipal()));
+            assertTrue(ngPrincipal.isMember(auth.getPrincipal()));
+
+        } finally {
+            if (newGroup != null) {
+                newGroup.removeMember(newGroup2);
+                newGroup.remove();
+                save(superuser);
+            }
+            if (newGroup2 != null) {
+                newGroup2.removeMember(auth);
+                newGroup2.remove();
+                save(superuser);
+            }
+        }
+    }
+
     public void testDeeplyNestedGroups() throws NotExecutableException, RepositoryException {
         Set<Group> groups = new HashSet<Group>();
         try {
