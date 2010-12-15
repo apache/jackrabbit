@@ -726,6 +726,29 @@ public class UserManagerSearchTest extends AbstractUserTest {
         assertFalse(result.hasNext());
     }
 
+    public void testScopeWithMax() throws RepositoryException {
+        final int offset = 0;
+        final int count = 22;
+
+        Iterator<Authorizable> result = userMgr.findAuthorizables(new Query() {
+            public <T> void build(QueryBuilder<T> builder) {
+                builder.setScope("vertebrates", false);
+                builder.setSortOrder("profile/@weight", Direction.ASCENDING);
+                builder.setLimit(offset, count);
+            }
+        });
+
+        Iterator<Authorizable> expected = userMgr.findAuthorizables(new Query() {
+            public <T> void build(QueryBuilder<T> builder) {
+                builder.setScope("vertebrates", false);
+                builder.setSortOrder("profile/@weight", Direction.ASCENDING);
+            }
+        });
+
+        assertSameElements(expected, result);
+        assertFalse(result.hasNext());
+    }
+
     //------------------------------------------< private >---
 
     private static void addMembers(Group group, Authorizable... authorizables) throws RepositoryException {
