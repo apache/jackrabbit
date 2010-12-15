@@ -27,7 +27,6 @@ import org.apache.jackrabbit.commons.flat.TreeManager;
 import org.apache.jackrabbit.commons.iterator.LazyIteratorChain;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.PropertyImpl;
-import org.apache.jackrabbit.core.security.principal.EveryonePrincipal;
 import org.apache.jackrabbit.core.session.SessionContext;
 import org.apache.jackrabbit.core.session.SessionWriteOperation;
 import org.apache.jackrabbit.spi.commons.iterator.Iterators;
