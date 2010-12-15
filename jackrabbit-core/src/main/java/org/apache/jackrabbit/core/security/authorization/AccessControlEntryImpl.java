@@ -167,6 +167,16 @@ public abstract class AccessControlEntryImpl implements JackrabbitAccessControlE
     }
 
     /**
+     * Returns <code>true</code> if this ACE defines any restriction.
+     *
+     * @return <code>true</code> if this ACE defines any restriction;
+     * <code>false</code> otherwise.
+     */
+    public boolean hasRestrictions() {
+        return !restrictions.isEmpty();
+    }
+
+    /**
      * Returns the restrictions defined for this entry.
      *
      * @return the restrictions defined for this entry.
