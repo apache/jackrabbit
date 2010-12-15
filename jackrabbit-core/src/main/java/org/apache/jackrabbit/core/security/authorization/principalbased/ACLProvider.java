@@ -155,7 +155,10 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
             log.debug("... policy for principal  '"+principal.getName()+"'  already present.");
         }
     }
-    
+
+    /**
+     * @see org.apache.jackrabbit.core.security.authorization.AccessControlProvider#close()
+     */
     @Override
     public void close() {
         super.close();        
