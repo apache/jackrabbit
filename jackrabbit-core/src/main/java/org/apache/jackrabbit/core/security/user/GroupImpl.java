@@ -260,7 +260,9 @@ class GroupImpl extends AuthorizableImpl implements Group {
     }
 
     //------------------------------------------------------< inner classes >---
-
+    /**
+     * Principal Implementation
+     */
     private class NodeBasedGroup extends NodeBasedPrincipal implements java.security.acl.Group {
 
         private Set<Principal> members;
@@ -287,20 +289,18 @@ class GroupImpl extends AuthorizableImpl implements Group {
          * @see java.security.acl.Group#isMember(Principal)
          */
         public boolean isMember(Principal member) {
-            Collection<Principal> members = getMembers();
-            if (members.contains(member)) {
-                // shortcut.
-                return true;
-            }
-
-            // test if member of a member-group
-            for (Principal p : members) {
-                if (p instanceof java.security.acl.Group &&
-                        ((java.security.acl.Group) p).isMember(member)) {
-                    return true;
+            // shortcut for everyone group -> avoid collecting all members
+            // as all users and groups are member of everyone.
+            try {
+                if (isEveryone()) {
+                    return !getPrincipal().equals(member);
                 }
+            } catch (RepositoryException e) {
+                // continue using regular membership evaluation
             }
-            return false;
+           
+            Collection<Principal> members = getMembers();
+            return members.contains(member);
         }
 
         /**
