@@ -40,7 +40,7 @@ import javax.jcr.Session;
 public interface AccessControlProviderFactory {
 
     /**
-     * Initalize this factory.
+     * Initialize this factory.
      *
      * @param securitySession Security Session.
      * @throws RepositoryException If an error occurs.

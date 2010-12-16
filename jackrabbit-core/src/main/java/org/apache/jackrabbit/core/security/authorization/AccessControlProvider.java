@@ -128,7 +128,7 @@ public interface AccessControlProvider {
      *
      * @param principals Set of principals to compile the permissions for. If
      * the order of evaluating permissions for principals is meaningful, the
-     * caller is adviced to pass a Set that respects the order of insertion.
+     * caller should pass a Set that respects the order of insertion.
      * @return The effective, compiled CompiledPolicy that applies for the
      * specified set of principals.
      * @throws RepositoryException If an error occurs.

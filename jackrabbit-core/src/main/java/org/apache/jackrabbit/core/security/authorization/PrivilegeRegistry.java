@@ -170,7 +170,7 @@ public final class PrivilegeRegistry {
      * Returns an array of registered <code>Privilege</code>s. If the specified
      * <code>bits</code> represent a registered privilege the returned array
      * contains a single element. Otherwise the returned array contains the
-     * individual registered privileges that are combined in the givent
+     * individual registered privileges that are combined in the given
      * <code>bits</code>. If <code>bits</code> is {@link #NO_PRIVILEGE 0} or
      * does not match to any registered privilege an empty array will be returned.
      *
