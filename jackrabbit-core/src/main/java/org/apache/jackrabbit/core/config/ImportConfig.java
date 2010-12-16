@@ -45,7 +45,7 @@ public class ImportConfig {
     }
 
     public List<? extends ProtectedItemImporter> getProtectedItemImporters() {
-        List<ProtectedItemImporter> piis = new ArrayList();
+        List<ProtectedItemImporter> piis = new ArrayList<ProtectedItemImporter>();
         for (BeanConfig bc : protectedItemImporters) {
             try {
                 piis.add(bc.newInstance(ProtectedItemImporter.class));

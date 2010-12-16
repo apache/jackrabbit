@@ -54,27 +54,27 @@ public class UserManagerConfig extends BeanConfig {
      * an new instance from the <code>initArgs</code> matching the
      * <code>parameterTypes</code>.
      * 
-     * @param assignablefrom An UserManager class from which the configured
+     * @param assignableFrom An UserManager class from which the configured
      * implementation must be assignable.
      * @param parameterTypes Array of classes used to lookup the constructor.
      * @param initArgs The arguments to create the new user manager instance
      * matching the <code>parameterTypes</code>.
      * @return A new instance of <code>UserManager</code> that is assignable from
-     * the class passed as <code>assignablefrom</code>.
+     * the class passed as <code>assignableFrom</code>.
      * @throws ConfigurationException If the configured user manager implementation
      * is not assignable from the given UserManager class, does not provide
      * a constructor matching <code>parameterTypes</code> or creating the instance
      * fails.
      */
-    public UserManager getUserManager(Class<? extends UserManager> assignablefrom, Class<?>[] parameterTypes, Object... initArgs) throws ConfigurationException {
+    public UserManager getUserManager(Class<? extends UserManager> assignableFrom, Class<?>[] parameterTypes, Object... initArgs) throws ConfigurationException {
         if (constr == null) {
             String msg = "Invalid UserManager implementation '" + getClassName() + "'.";
             try {
                 Class<?> umgrCl = Class.forName(getClassName(), true, getClassLoader());
-                if (assignablefrom.isAssignableFrom(umgrCl)) {
+                if (assignableFrom.isAssignableFrom(umgrCl)) {
                     constr = umgrCl.getConstructor(parameterTypes);
                 } else {
-                    throw new ConfigurationException("Configured UserManager '" + getClassName() + "' is not assignable from " + assignablefrom);
+                    throw new ConfigurationException("Configured UserManager '" + getClassName() + "' is not assignable from " + assignableFrom);
                 }
             } catch (ClassNotFoundException e) {
                 throw new ConfigurationException(msg, e);
