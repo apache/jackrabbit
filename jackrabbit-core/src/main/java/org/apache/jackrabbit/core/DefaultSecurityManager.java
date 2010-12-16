@@ -172,7 +172,7 @@ public class DefaultSecurityManager implements JackrabbitSecurityManager {
         } else if (authContextProvider.isJAAS()) {
             log.info("init: use JAAS login-configuration for " + config.getAppName());
         } else {
-            String msg = "Neither JAAS nor RepositoryConfig contained a valid Configuriation for " + config.getAppName();
+            String msg = "Neither JAAS nor RepositoryConfig contained a valid configuration for " + config.getAppName();
             log.error(msg);
             throw new RepositoryException(msg);
         }
@@ -589,7 +589,7 @@ public class DefaultSecurityManager implements JackrabbitSecurityManager {
     }
 
     /**
-     * Make sure the sytem users (admin and anonymous) exist.
+     * Make sure the system users (admin and anonymous) exist.
      *
      * @param userManager Manager to create users/groups.
      * @param session

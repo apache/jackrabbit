@@ -137,7 +137,7 @@ public class UserPerWorkspaceSecurityManager extends DefaultSecurityManager {
     }
 
     /**
-     * As this implementation expectes that users information in present in
+     * As this implementation expects that users information in present in
      * every workspace, the UserManager is always created with the given
      * session.
      * 
@@ -240,7 +240,7 @@ public class UserPerWorkspaceSecurityManager extends DefaultSecurityManager {
      * @param session Session for the principal manager must be created.
      * @return A new instance of PrincipalManagerImpl. Note that this implementation
      * uses a workspace specific principal provider registry, that retrieves
-     * the configured providers from the registry obtained throug
+     * the configured providers from the registry obtained through
      * {@link #getPrincipalProviderRegistry()} but has a workspace specific
      * default provider.
      * @throws RepositoryException
@@ -252,13 +252,13 @@ public class UserPerWorkspaceSecurityManager extends DefaultSecurityManager {
 
     /**
      * Returns a new instance of <code>SimpleWorkspaceAccessManager</code>, since
-     * with the <code>DefaultLoginModule</code> the existance of the user
+     * with the <code>DefaultLoginModule</code> the existence of the user
      * is checked in order to successfully complete the login. Since with this
      * SecurityManager users are stored separately in each workspace, a user
      * may only login to a workspace if the corresponding user node exists.
      * Consequently a lazy workspace access manager is sufficient.<p/>
      *
-     * If this SecurityManager is used with a distict <code>LoginModule</code>
+     * If this SecurityManager is used with a distinct <code>LoginModule</code>
      * implementation, the {@link org.apache.jackrabbit.core.config.SecurityManagerConfig#getWorkspaceAccessConfig() configuration}
      * for <code>WorkspaceAccessManager</code> should be adjusted as well.
      *
@@ -272,7 +272,7 @@ public class UserPerWorkspaceSecurityManager extends DefaultSecurityManager {
     //--------------------------------------------------------------------------
     /**
      * Workaround to get a default (user-based) principal provider depending
-     * on the workspace beeing accessed. This is required for this security
+     * on the workspace being accessed. This is required for this security
      * manager as users aren't stored in a single, dedicated workspace.
      */
     private final class WorkspaceBasedPrincipalProviderRegistry implements PrincipalProviderRegistry {
