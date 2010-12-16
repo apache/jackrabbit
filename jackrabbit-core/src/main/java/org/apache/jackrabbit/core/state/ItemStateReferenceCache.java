@@ -111,7 +111,7 @@ public class ItemStateReferenceCache implements ItemStateCache {
      * to prevent interfering with the optimal performance of the segment
      * hash map.
      *
-     * @param id item identifer
+     * @param id item identifier
      * @return reference map segment
      */
     private Map<ItemId, ItemState> getSegment(ItemId id) {

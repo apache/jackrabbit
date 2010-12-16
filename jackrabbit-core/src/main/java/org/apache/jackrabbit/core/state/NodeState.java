@@ -380,9 +380,9 @@ public class NodeState extends ItemState {
      * with a new entry. Note that the entry will <i>overwrite</i> the old
      * entry at the same relative position within the child node entries list.
      *
-     * @param oldId id the entry to be replaced is refering to.
+     * @param oldId id the entry to be replaced is referring to.
      * @param newName <code>Name</code> object specifying the entry's new name
-     * @param newId the id the new entry is refering to.
+     * @param newId the id the new entry is referring to.
      * @return <code>true</code> if the entry was successfully replaced;
      *         otherwise <code>false</code>
      */
