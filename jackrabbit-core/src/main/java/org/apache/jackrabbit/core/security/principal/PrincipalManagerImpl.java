@@ -205,7 +205,7 @@ public class PrincipalManagerImpl implements PrincipalManager {
 
     //--------------------------------------------------------------------------
     /**
-     * An implementation of the <code>Group</code> interface that wrapps another
+     * An implementation of the <code>Group</code> interface that wraps another
      * Group and makes sure, that all exposed members are visible to the Session
      * the <code>PrincipalManager</code> has been built for. This is required
      * due to the fact, that the principal provider is not bound to a particular

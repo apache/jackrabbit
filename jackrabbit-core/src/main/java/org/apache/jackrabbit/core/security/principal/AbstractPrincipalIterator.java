@@ -25,7 +25,7 @@ import java.util.NoSuchElementException;
 
 /**
  * Lazy implementation of the <code>PrincipalIterator</code> that allows to
- * avoid determing all elements of the iteration beforehand.
+ * avoid retrieving all elements beforehand.
  * NOTE: Subclasses must call {#link seekNext()}
  * upon object construction and assign the value to the 'next' field.
  */
