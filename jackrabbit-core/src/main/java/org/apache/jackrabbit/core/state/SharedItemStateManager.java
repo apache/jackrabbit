@@ -18,7 +18,6 @@ package org.apache.jackrabbit.core.state;
 
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -26,7 +25,6 @@ import javax.jcr.PropertyType;
 import javax.jcr.ReferentialIntegrityException;
 import javax.jcr.RepositoryException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
-import javax.jcr.nodetype.NodeType;
 
 import org.apache.jackrabbit.core.RepositoryImpl;
 import org.apache.jackrabbit.core.cluster.UpdateEventChannel;
@@ -1176,7 +1174,7 @@ public class SharedItemStateManager
                     // Check the old parent
                     NodeId oldParentId = overlayedState.getParentId();
                     if (changeLog.deleted(oldParentId)) {
-                        // parent has been deleted aswell
+                        // parent has been deleted as well
                     } else if (changeLog.isModified(oldParentId)) {
                         // the modified state will be check later on
                     } else {
@@ -1193,7 +1191,7 @@ public class SharedItemStateManager
                         NodeId childId = entry.getId();
 
                         if (changeLog.deleted(childId)) {
-                            // child has been deleted aswell
+                            // child has been deleted as well
                         } else if (changeLog.isModified(childId)) {
 
                             // the modified state will be check later on
@@ -1385,7 +1383,7 @@ public class SharedItemStateManager
      */
     void checkParent(ChangeLog changeLog, NodeState childState, NodeId expectedParent) throws ItemStateException {
 
-        // Check whether the the changelog contains an entry for the parent aswell.
+        // Check whether the the changelog contains an entry for the parent as well.
         NodeId parentId = childState.getParentId();
         if (!parentId.equals(expectedParent)) {
             Set sharedSet = childState.getSharedSet();
