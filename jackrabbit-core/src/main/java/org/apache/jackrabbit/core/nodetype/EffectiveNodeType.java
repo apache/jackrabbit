@@ -642,7 +642,7 @@ public class EffectiveNodeType implements Cloneable {
         try {
             getApplicableChildNodeDef(name, null, null);
         } catch (NoSuchNodeTypeException nsnte) {
-            String msg = "internal eror: inconsistent node type";
+            String msg = "internal error: inconsistent node type";
             log.debug(msg);
             throw new ConstraintViolationException(msg, nsnte);
         }
@@ -1145,6 +1145,7 @@ public class EffectiveNodeType implements Cloneable {
         }
     }
 
+    @Override
     protected Object clone() {
         EffectiveNodeType clone = new EffectiveNodeType();
 
