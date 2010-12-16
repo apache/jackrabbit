@@ -247,7 +247,7 @@ class XAEnvironment {
             throws RepositoryException {
         ArrayList<LockInfo> result = new ArrayList<LockInfo>();
 
-        // get lock informations from global lock manager first
+        // get lock information from global lock manager first
         for (LockInfo info : lockMgr.getLockInfos(session)) {
             // check negative set
             if (!unlockedNodesMap.containsKey(info.getId())) {
@@ -255,10 +255,10 @@ class XAEnvironment {
             }
         }
 
-        // add 'uncommitted' lock informations
+        // add 'uncommitted' lock information
         result.addAll(lockedNodesMap.values());
 
-        return (LockInfo[]) result.toArray(new LockInfo[result.size()]);
+        return result.toArray(new LockInfo[result.size()]);
     }
 
     /**
@@ -520,6 +520,7 @@ class XAEnvironment {
          * As long as the XA environment is neither committed nor rolled back,
          * associated lock information is subject to change.
          */
+        @Override
         public boolean mayChange() {
             if (status != STATUS_COMMITTED
                     && status != STATUS_ROLLED_BACK) {
