@@ -34,7 +34,7 @@ import javax.jcr.RepositoryException;
  * is restored.<br/>
  * The <code>Node.restoreByLabel()</code> uses the
  * {@link LabelVersionSelector} which is initialized with the label of the
- * version to be restored. This selector selectes the version with the same
+ * version to be restored. This selector selects the version with the same
  * label. if no such version exists, the initial one is restored.
  * <p/>
  *

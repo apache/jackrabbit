@@ -36,7 +36,7 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
 /**
- * The JCR Version Manager impementation is split in several classes in order to
+ * The JCR Version Manager implementation is split in several classes in order to
  * group related methods together.
  * <p/>
  * this class provides methods for the configuration and baselines related operations.

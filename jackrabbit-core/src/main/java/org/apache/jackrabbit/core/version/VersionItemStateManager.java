@@ -36,7 +36,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Spezialized SharedItemStateManager that filters out NodeReferences to
+ * Specialized SharedItemStateManager that filters out NodeReferences to
  * non-versioning states.
  */
 public class VersionItemStateManager extends SharedItemStateManager {

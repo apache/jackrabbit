@@ -72,7 +72,7 @@ public interface InternalFrozenNode extends InternalFreeze {
     Set<Name> getFrozenMixinTypes();
 
     /**
-     * Checks if this frozen node had the inidcated child node.
+     * Checks if this frozen node had the indicated child node.
      * @param name name of the childnode
      * @param idx 1-based index
      * @return <code>true</code> if the child node exists

@@ -48,7 +48,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The JCR Version Manager impementation is split in several classes in order to
+ * The JCR Version Manager implementation is split in several classes in order to
  * group related methods together.
  * </p>
  * this class provides methods for the merge operations.
@@ -79,7 +79,7 @@ abstract public class VersionManagerImplMerge extends VersionManagerImplRestore 
      * @param state state to merge or update
      * @param srcRoot src workspace root node
      * @param failedIds list of failed ids
-     * @param bestEffort best effor flag
+     * @param bestEffort best effort flag
      * @param shallow is shallow flag
      * @throws RepositoryException if an error occurs
      * @throws ItemStateException if an error occurs
@@ -119,7 +119,7 @@ abstract public class VersionManagerImplMerge extends VersionManagerImplRestore 
      * @param state state to merge or update
      * @param srcRoot src workspace root node
      * @param failedIds list of failed ids
-     * @param bestEffort best effor flag
+     * @param bestEffort best effort flag
      * @param shallow is shallow flag
      * @throws RepositoryException if an error occurs
      * @throws ItemStateException if an error occurs

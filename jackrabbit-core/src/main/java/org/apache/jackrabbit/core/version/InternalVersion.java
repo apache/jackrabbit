@@ -104,7 +104,7 @@ public interface InternalVersion extends InternalVersionItem {
     boolean isMoreRecent(InternalVersion v);
 
     /**
-     * returns the internal version history in wich this version lifes in.
+     * returns the internal version history in which this version lives in.
      *
      * @return the version history for this version.
      */
@@ -119,7 +119,7 @@ public interface InternalVersion extends InternalVersionItem {
     boolean isRootVersion();
 
     /**
-     * Checks, if this version has the given label assosiated
+     * Checks, if this version has the given label associated
      *
      * @param label the label to check.
      * @return <code>true</code> if the label is assigned to this version;

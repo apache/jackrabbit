@@ -24,7 +24,7 @@ import org.apache.jackrabbit.core.id.NodeId;
 abstract class InternalVersionItemImpl implements InternalVersionItem {
 
     /**
-     * the underlying persistance node
+     * the underlying persistence node
      */
     protected final NodeStateEx node;
 
