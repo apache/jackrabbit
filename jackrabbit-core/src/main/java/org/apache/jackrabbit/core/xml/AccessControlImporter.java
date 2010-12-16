@@ -255,7 +255,7 @@ public class AccessControlImporter extends DefaultProtectedNodeImporter {
                     status = STATUS_ACE;
                     break;
                 default:
-                    throw new ConstraintViolationException("Cannot handle childInfo " + childInfo + "; inexpected status " + status + " .");
+                    throw new ConstraintViolationException("Cannot handle childInfo " + childInfo + "; unexpected status " + status + " .");
 
             }
         }
