@@ -97,10 +97,7 @@ public class BatchedItemOperations extends ItemValidator {
      * Creates a new <code>BatchedItemOperations</code> instance.
      *
      * @param stateMgr   item state manager
-     * @param ntReg      node type registry
-     * @param lockMgr    lock manager
-     * @param session    current session
-     * @param hierMgr    hierarchy manager
+     * @param sessionContext the session context
      * @throws RepositoryException
      */
     public BatchedItemOperations(
@@ -361,7 +358,7 @@ public class BatchedItemOperations extends ItemValidator {
      * @throws ItemExistsException
      * @throws LockException
      * @throws RepositoryException
-     * @throws IllegalStateException        if the state mananger is not in edit mode
+     * @throws IllegalStateException if the state manager is not in edit mode.
      */
     public NodeId copy(Path srcPath,
                        ItemStateManager srcStateMgr,
@@ -1047,7 +1044,7 @@ public class BatchedItemOperations extends ItemValidator {
      * @throws ItemExistsException
      * @throws ConstraintViolationException
      * @throws RepositoryException
-     * @throws IllegalStateException        if the state mananger is not in edit mode
+     * @throws IllegalStateException if the state manager is not in edit mode.
      */
     public NodeState createNodeState(NodeState parent,
                                      Name nodeName,
@@ -1173,7 +1170,7 @@ public class BatchedItemOperations extends ItemValidator {
      * @throws ItemExistsException
      * @throws ConstraintViolationException
      * @throws RepositoryException
-     * @throws IllegalStateException        if the state mananger is not in edit mode
+     * @throws IllegalStateException if the state manager is not in edit mode
      */
     public PropertyState createPropertyState(NodeState parent,
                                              Name propName,
