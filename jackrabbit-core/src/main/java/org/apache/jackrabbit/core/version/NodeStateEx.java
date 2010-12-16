@@ -439,8 +439,8 @@ public class NodeStateEx {
      * retrieves the child node with the given name and 1-base index or
      * <code>null</code> if the node does not exist.
      *
-     * @param name name of hte child node
-     * @param index index of thechild node
+     * @param name name of the child node
+     * @param index index of the child node
      * @return the node state.
      * @throws RepositoryException if an error occurs
      */

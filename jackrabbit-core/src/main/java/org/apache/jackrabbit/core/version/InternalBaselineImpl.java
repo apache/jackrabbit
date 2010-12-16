@@ -34,7 +34,7 @@ class InternalBaselineImpl extends InternalVersionImpl
 
     /**
      * Creates a new internal baseline with the given version history and
-     * persistance node. please note, that versions must be created by the
+     * persistence node. please note, that versions must be created by the
      * version history.
      *
      * @param vh containing version history

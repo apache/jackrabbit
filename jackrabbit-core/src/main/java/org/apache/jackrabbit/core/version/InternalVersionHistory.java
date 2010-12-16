@@ -27,7 +27,7 @@ import javax.jcr.version.VersionException;
 public interface InternalVersionHistory extends InternalVersionItem {
 
     /**
-     * Equivalalent to {@link javax.jcr.version.VersionHistory#getRootVersion()}.
+     * Equivalent to {@link javax.jcr.version.VersionHistory#getRootVersion()}.
      *
      * @return the root version
      * @see javax.jcr.version.VersionHistory#getRootVersion()
@@ -63,7 +63,7 @@ public interface InternalVersionHistory extends InternalVersionItem {
     InternalVersion getVersion(NodeId id);
 
     /**
-     * Equivalalent to {@link javax.jcr.version.VersionHistory#getVersionByLabel(java.lang.String)}
+     * Equivalent to {@link javax.jcr.version.VersionHistory#getVersionByLabel(java.lang.String)}
      * but returns <code>null</code> if the version does not exists.
      *
      * @param label the lable

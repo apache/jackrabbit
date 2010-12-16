@@ -23,7 +23,7 @@ import javax.jcr.RepositoryException;
 import org.apache.jackrabbit.core.id.NodeId;
 
 /**
- * This Class implements a version selector that is based on a set of verions.
+ * This Class implements a version selector that is based on a set of versions.
  */
 public class VersionSet implements VersionSelector {
 

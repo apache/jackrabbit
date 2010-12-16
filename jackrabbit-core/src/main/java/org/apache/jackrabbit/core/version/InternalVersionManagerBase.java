@@ -338,7 +338,7 @@ abstract class InternalVersionManagerBase implements InternalVersionManager {
      * @param node versionable node state
      * @param copiedFrom node id for the jcr:copiedFrom property
      * @return identifier of the new version history node
-     * @throws RepositoryException if an error occurrs
+     * @throws RepositoryException if an error occurs
      * @see #getVersionHistory(Session, NodeState, NodeId)
      */
     protected abstract VersionHistoryInfo createVersionHistory(Session session,

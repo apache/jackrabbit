@@ -31,7 +31,7 @@ import java.util.NoSuchElementException;
  * This Class implements a VersionIterator that iterates over a version
  * graph following the successor nodes. When this iterator is created, it gathers
  * the id's of the versions and returns them when iterating. please note, that
- * a version can be deleted while traversing this iterator and the 'nextVesion'
+ * a version can be deleted while traversing this iterator and the 'nextVersion'
  * would produce a  ConcurrentModificationException.
  * <p/>
  * If this iterator is initialized with a base version, it will only iterate

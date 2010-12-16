@@ -20,7 +20,7 @@ import org.apache.jackrabbit.spi.Name;
 
 /**
  * the base interface for nodes that were versioned and turned either into
- * InternalFrozenNode or InteralFrozenVersionHistory.
+ * InternalFrozenNode or InternalFrozenVersionHistory.
  */
 public interface InternalFreeze extends InternalVersionItem {
 
