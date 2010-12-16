@@ -52,7 +52,7 @@ public class CallbackHandlerImpl implements CallbackHandler {
     private final String anonymousId;
 
     /**
-     * Instanciate with the data needed to handle callbacks
+     * Instantiate with the data needed to handle callbacks
      *
      * @param credentials
      * @param session
