@@ -114,7 +114,7 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
     }
 
     /**
-     * Initialies the history and loads all internal caches
+     * Initializes the history and loads all internal caches
      *
      * @throws RepositoryException if an error occurs
      */
@@ -243,6 +243,7 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
     /**
      * {@inheritDoc}
      */
+    @Override
     public NodeId getId() {
         return historyId;
     }
@@ -250,6 +251,7 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
     /**
      * {@inheritDoc}
      */
+    @Override
     public InternalVersionItem getParent() {
         return null;
     }

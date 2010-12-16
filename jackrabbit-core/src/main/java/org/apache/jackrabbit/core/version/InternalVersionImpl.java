@@ -71,7 +71,7 @@ class InternalVersionImpl extends InternalVersionItemImpl
 
     /**
      * Creates a new internal version with the given version history and
-     * persistance node. please note, that versions must be created by the
+     * persistence node. please note, that versions must be created by the
      * version history.
      *
      * @param vh containing version history
@@ -94,6 +94,7 @@ class InternalVersionImpl extends InternalVersionItemImpl
     /**
      * {@inheritDoc}
      */
+    @Override
     public NodeId getId() {
         return node.getNodeId();
     }
@@ -101,6 +102,7 @@ class InternalVersionImpl extends InternalVersionItemImpl
     /**
      * {@inheritDoc}
      */
+    @Override
     public InternalVersionItem getParent() {
         return versionHistory;
     }
@@ -265,7 +267,7 @@ class InternalVersionImpl extends InternalVersionItemImpl
     }
 
     /**
-     * stores the given successors or predecessors to the persistance node
+     * stores the given successors or predecessors to the persistence node
      *
      * @param cessors list of versions to store
      * @param propname property name to store
