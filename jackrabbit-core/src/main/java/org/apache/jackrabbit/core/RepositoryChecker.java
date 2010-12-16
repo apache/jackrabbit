@@ -98,7 +98,7 @@ class RepositoryChecker {
                         "Failed to fix workspace inconsistencies", e);
             }
         } else {
-            log.info("No repository inconcistencies found");
+            log.info("No repository inconsistencies found");
         }
     }
 
