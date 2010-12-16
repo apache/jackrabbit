@@ -697,8 +697,8 @@ public class WorkspaceImporter implements Importer {
             wsp.sanityCheck();
 
             /**
-             * adjust references that refer to uuid's which have been mapped to
-             * newly gererated uuid's on import
+             * adjust references that refer to uuids which have been mapped to
+             * newly generated uuids on import
              */
             Iterator<Object> iter = refTracker.getProcessedReferences();
             while (iter.hasNext()) {
