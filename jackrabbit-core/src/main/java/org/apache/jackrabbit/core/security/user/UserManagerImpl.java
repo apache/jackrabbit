@@ -123,7 +123,7 @@ import java.util.UUID;
  * If missing set to {@link #USERS_PATH}.</li>
  * <li>{@link #PARAM_GROUPS_PATH}. Defines where group nodes are created.
  * If missing set to {@link #GROUPS_PATH}.</li>
- * <li>{@link #PARAM_COMPATIBILE_JR16}: If the param is present and its
+ * <li>{@link #PARAM_COMPATIBLE_JR16}: If the param is present and its
  * value is <code>true</code> looking up authorizables by ID will use the
  * <code>NodeResolver</code> if not found otherwise.<br>
  * If the parameter is missing (or false) users and groups created
@@ -160,6 +160,11 @@ public class UserManagerImpl extends ProtectedItemModifier
     public static final String PARAM_GROUPS_PATH = "groupsPath";
 
     /**
+     * @deprecate Use {@link #PARAM_COMPATIBLE_JR16} instead.
+     */
+    public static final String PARAM_COMPATIBILE_JR16 = "compatibleJR16";
+
+    /**
      * Flag to enable a minimal backwards compatibility with Jackrabbit &lt;
      * v2.0<br>
      * If the param is present and its value is <code>true</code> looking up
@@ -169,7 +174,7 @@ public class UserManagerImpl extends ProtectedItemModifier
      * with a Jackrabbit repository &lt; v2.0 will not be found any more.<br>
      * By default this option is disabled.
      */
-    public static final String PARAM_COMPATIBILE_JR16 = "compatibleJR16";
+    public static final String PARAM_COMPATIBLE_JR16 = "compatibleJR16";
 
     /**
      * Parameter used to change the number of levels that are used by default
@@ -315,7 +320,7 @@ public class UserManagerImpl extends ProtectedItemModifier
         param = (config != null) ? config.get(PARAM_GROUPS_PATH) : null;
         groupsPath = (param != null) ? param.toString() : GROUPS_PATH;
 
-        param = (config != null) ? config.get(PARAM_COMPATIBILE_JR16) : null;
+        param = (config != null) ? config.get(PARAM_COMPATIBLE_JR16) : null;
         compatibleJR16 = (param != null) && Boolean.parseBoolean(param.toString());
 
         param = (config != null) ? config.get(PARAM_GROUP_MEMBERSHIP_SPLIT_SIZE) : null;
@@ -350,7 +355,7 @@ public class UserManagerImpl extends ProtectedItemModifier
     }
 
     /**
-     * Implementation specific methods releaving where users are created within
+     * Implementation specific methods revealing where users are created within
      * the content.
      *
      * @return root path for user content.
@@ -361,7 +366,7 @@ public class UserManagerImpl extends ProtectedItemModifier
     }
 
     /**
-     * Implementation specific methods releaving where groups are created within
+     * Implementation specific methods revealing where groups are created within
      * the content.
      *
      * @return root path for group content.
