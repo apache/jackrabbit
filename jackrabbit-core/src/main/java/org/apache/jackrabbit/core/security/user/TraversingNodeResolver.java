@@ -49,7 +49,7 @@ class TraversingNodeResolver extends NodeResolver {
     private static final Logger log = LoggerFactory.getLogger(TraversingNodeResolver.class);
 
     /**
-     * Additonally to the NodeType-Argument the resolvers searched is narrowed
+     * Additionally to the NodeType-Argument the resolvers searched is narrowed
      * by indicating a Path to an {@link javax.jcr.Item} as start for the search
      *
      * @param session to use for repository access

@@ -324,7 +324,7 @@ class GroupImpl extends AuthorizableImpl implements Group {
         //---------------------------------------------------< Serializable >---
 
         /**
-         * implement the writeObject method to assert initalization of all members
+         * implement the writeObject method to assert initialization of all members
          * before serialization.
          *
          * @param stream The object output stream.
