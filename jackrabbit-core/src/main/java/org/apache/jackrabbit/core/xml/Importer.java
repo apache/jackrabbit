@@ -43,7 +43,7 @@ public interface Importer {
      * same node information.
      *
      * @param nodeInfo information about the node being imported
-     * @param propInfos information abouth the properties being imported
+     * @param propInfos information about the properties being imported
      *                  (list of {@link PropInfo} instances)
      * @throws RepositoryException on a repository error
      */
