@@ -83,7 +83,7 @@ public interface PrincipalProvider {
      * principal is either direct or indirect member of. If a principal is
      * a direct member of a group, then <code>{@link java.security.acl.Group#isMember(Principal)}</code>
      * evaluates to <code>true</code>. A principal is an indirect member of a
-     * group if any of its groups (to any degree of separation) is direct memeber
+     * group if any of its groups (to any degree of separation) is direct member
      * of the group.
      * <p/>
      * Example:<br>
@@ -105,14 +105,14 @@ public interface PrincipalProvider {
     /**
      * This is called when a provider is not longer used by the repository.
      * An implementation can then release any resources bound to this
-     * provider, eg. disconnect from a backend system.
+     * provider, eg. disconnect from a back end system.
      */
     void close();
 
     /**
      * Tests if the provided session is allowed to read the given principal.
      * Since the principal providers do not restrict the access
-     * on the prinicipals they provide, this method is used by the PrincipalManger
+     * on the principals they provide, this method is used by the PrincipalManger
      * to ensure proper access rights for the client requesting the principals.
      *
      * @param session

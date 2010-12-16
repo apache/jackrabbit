@@ -105,7 +105,7 @@ public class ProviderRegistryImpl implements PrincipalProviderRegistry {
 
     //--------------------------------------------------------------------------
     /**
-     * Read the map and instanciate the class indicated by the
+     * Read the map and instantiate the class indicated by the
      * {@link LoginModuleConfig#PARAM_PRINCIPAL_PROVIDER_CLASS} key.<br>
      * The class gets set the properties of the given map, via a Bean mechanism
      *

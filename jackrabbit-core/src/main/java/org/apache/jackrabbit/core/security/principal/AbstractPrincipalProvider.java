@@ -24,10 +24,10 @@ import java.util.Properties;
 /**
  * A base class of a principal provider implementing common tasks and a
  * caching facility. Extending classes should only deal with the retrieval of
- * {@link Principal}s from their source, the caching of the principials is done
+ * {@link Principal}s from their source, the caching of the principals is done
  * by this implementation.
  * <p/>
- * The {@link PrincipalProvider} mehtods that that involve searching like
+ * The {@link PrincipalProvider} methods that that involve searching like
  * {@link PrincipalProvider#getGroupMembership(Principal)} are not cached.
  */
 public abstract class AbstractPrincipalProvider implements PrincipalProvider {

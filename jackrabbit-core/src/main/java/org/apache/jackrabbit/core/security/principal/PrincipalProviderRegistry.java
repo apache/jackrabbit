@@ -32,7 +32,7 @@ public interface PrincipalProviderRegistry {
      * {@link org.apache.jackrabbit.core.config.LoginModuleConfig#PARAM_PRINCIPAL_PROVIDER_CLASS}
      * to be able to create a instance of PrincipalProvider.
      * <p/>
-     * The Properties will be passed to the instanciated Provider via
+     * The Properties will be passed to the instantiated Provider via
      * {@link PrincipalProvider#init(Properties)}
      *
      * @param configuration Properties for the Provider
