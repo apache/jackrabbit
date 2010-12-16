@@ -64,7 +64,7 @@ public abstract class AbstractNodeData extends ItemData {
     }
 
     /**
-     * Return the associated node defintion.
+     * Return the associated node definition.
      *
      * @return node definition
      * @throws RepositoryException if the definition cannot be retrieved.
@@ -74,7 +74,7 @@ public abstract class AbstractNodeData extends ItemData {
     }
 
     /**
-     * Sets the associated node defintion.
+     * Sets the associated node definition.
      *
      * @param definition new node definition
      */
@@ -88,6 +88,7 @@ public abstract class AbstractNodeData extends ItemData {
      *
      * @return parent id
      */
+    @Override
     public NodeId getParentId() {
         if (primaryParentId != null) {
             return primaryParentId;
@@ -118,6 +119,7 @@ public abstract class AbstractNodeData extends ItemData {
     /**
      * {@inheritDoc}
      */
+    @Override
     public boolean isNode() {
         return true;
     }

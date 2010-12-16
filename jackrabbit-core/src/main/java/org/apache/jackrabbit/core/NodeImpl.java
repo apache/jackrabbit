@@ -324,9 +324,10 @@ public class NodeImpl extends ItemImpl implements Node, JackrabbitNode {
         if (isTransient()) {
             return true;
         }
-        return !stateMgr.getDescendantTransientItemStates((NodeId) id).isEmpty();
+        return !stateMgr.getDescendantTransientItemStates(id).isEmpty();
     }
 
+    @Override
     protected synchronized ItemState getOrCreateTransientItemState()
             throws RepositoryException {
 
@@ -443,7 +444,7 @@ public class NodeImpl extends ItemImpl implements Node, JackrabbitNode {
     /**
      * Creates a new property with the given name and <code>type</code> hint and
      * property definition. If the given property definition is not of type
-     * <code>UNDEFINED</code>, then it takes precendence over the
+     * <code>UNDEFINED</code>, then it takes precedence over the
      * <code>type</code> hint.
      *
      * @param name the name of the property to create.
@@ -836,6 +837,7 @@ public class NodeImpl extends ItemImpl implements Node, JackrabbitNode {
         return sessionContext.getNodeTypeManager().getPropertyDefinition(pd);
     }
 
+    @Override
     protected void makePersistent() throws InvalidItemStateException {
         if (!isTransient()) {
             log.debug(this + " (" + id + "): there's no transient state to persist");
@@ -1349,6 +1351,7 @@ public class NodeImpl extends ItemImpl implements Node, JackrabbitNode {
     /**
      * @see ItemImpl#getQName()
      */
+    @Override
     public Name getQName() throws RepositoryException {
         HierarchyManager hierMgr = sessionContext.getHierarchyManager();
         Name name;
@@ -1664,6 +1667,7 @@ public class NodeImpl extends ItemImpl implements Node, JackrabbitNode {
     /**
      * {@inheritDoc}
      */
+    @Override
     public boolean isNode() {
         return true;
     }
@@ -1671,6 +1675,7 @@ public class NodeImpl extends ItemImpl implements Node, JackrabbitNode {
     /**
      * {@inheritDoc}
      */
+    @Override
     public String getName() throws RepositoryException {
         return perform(new SessionOperation<String>() {
             public String perform(SessionContext context)
@@ -1698,6 +1703,7 @@ public class NodeImpl extends ItemImpl implements Node, JackrabbitNode {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void accept(ItemVisitor visitor) throws RepositoryException {
         // check state of this instance
         sanityCheck();
@@ -1708,6 +1714,7 @@ public class NodeImpl extends ItemImpl implements Node, JackrabbitNode {
     /**
      * {@inheritDoc}
      */
+    @Override
     public Node getParent() throws RepositoryException {
         return perform(new SessionOperation<Node>() {
             public Node perform(SessionContext context)
@@ -2754,6 +2761,7 @@ public class NodeImpl extends ItemImpl implements Node, JackrabbitNode {
      *          concatenating the parent path + this node's name and index:
      *          rather use hierarchy manager to do this
      */
+    @Override
     public Path getPrimaryPath() throws RepositoryException {
         if (!isShareable()) {
             return super.getPrimaryPath();
@@ -3027,7 +3035,7 @@ public class NodeImpl extends ItemImpl implements Node, JackrabbitNode {
      * {@inheritDoc}
      */
     public String getIdentifier() throws RepositoryException {
-        return ((NodeId) id).toString();
+        return id.toString();
     }
 
     /**
