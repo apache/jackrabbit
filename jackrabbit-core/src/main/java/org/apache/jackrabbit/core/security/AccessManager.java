@@ -193,7 +193,7 @@ public interface AccessManager {
     /**
      * Determines whether the subject of the current context is granted access
      * to the given workspace. Note that an implementation is free to test for
-     * the existance of a workspace with the specified name. In this case
+     * the existence of a workspace with the specified name. In this case
      * the expected return value is <code>false</code>, if no such workspace
      * exists.
      *
