@@ -63,9 +63,9 @@ public abstract class AbstractACLTemplate implements JackrabbitAccessControlList
      *
      * @param principal The principal to create the ACE for.
      * @param privileges The privileges to be granted/denied by the ACE.
-     * @param isAllow Defines if the priveleges are allowed or denied.
+     * @param isAllow Defines if the privileges are allowed or denied.
      * @param restrictions The additional restrictions.
-     * @throws AccessControlException If any of the given params is invalid.
+     * @throws AccessControlException If any of the given parameters is invalid.
      */
     protected abstract void checkValidEntry(Principal principal,
                                             Privilege[] privileges,
@@ -73,7 +73,7 @@ public abstract class AbstractACLTemplate implements JackrabbitAccessControlList
                                             Map<String, Value> restrictions) throws AccessControlException;
 
     /**
-     * Return the list of entries, if they are held in a orderable list.
+     * Return the list of entries, if they are held in an orderable list.
      *
      * @return the list of entries.
      * @see #orderBefore(AccessControlEntry, AccessControlEntry)
