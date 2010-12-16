@@ -131,7 +131,7 @@ public class SecurityConfigTest extends AbstractJCRTest {
         Properties params = umc.getParameters();
         assertNotNull(params);
 
-        assertFalse(params.containsKey(UserManagerImpl.PARAM_COMPATIBILE_JR16));
+        assertFalse(params.containsKey(UserManagerImpl.PARAM_COMPATIBLE_JR16));
         assertTrue(Boolean.parseBoolean(params.getProperty(UserManagerImpl.PARAM_AUTO_EXPAND_TREE)));
         assertEquals(4, Integer.parseInt(params.getProperty(UserManagerImpl.PARAM_DEFAULT_DEPTH)));
         assertEquals(2000, Long.parseLong(params.getProperty(UserManagerImpl.PARAM_AUTO_EXPAND_SIZE)));
