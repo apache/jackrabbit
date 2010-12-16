@@ -51,7 +51,7 @@ public interface LockManager {
      * @param node Node to create the lock for.
      * @param isDeep whether the lock applies to this node only
      * @param isSessionScoped whether the lock is session scoped
-     * @param timoutHint Desired lock timeout in seconds.
+     * @param timeoutHint Desired lock timeout in seconds.
      * @param ownerInfo Optional string acting as information about the owner.
      * @return the lock.
      * @throws LockException if this node already is locked, or some descendant
@@ -59,7 +59,7 @@ public interface LockManager {
      * @see javax.jcr.lock.LockManager#lock(String, boolean, boolean, long, String)
      * @throws RepositoryException
      */
-    Lock lock(NodeImpl node, boolean isDeep, boolean isSessionScoped, long timoutHint, String ownerInfo)
+    Lock lock(NodeImpl node, boolean isDeep, boolean isSessionScoped, long timeoutHint, String ownerInfo)
             throws LockException, RepositoryException;
 
     /**
