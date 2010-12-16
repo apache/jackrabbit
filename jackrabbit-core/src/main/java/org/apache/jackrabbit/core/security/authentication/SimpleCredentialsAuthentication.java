@@ -27,7 +27,7 @@ import java.io.UnsupportedEncodingException;
 import java.security.NoSuchAlgorithmException;
 
 /**
- * This <code>Authentication</code> implementation compairs
+ * This <code>Authentication</code> implementation compare
  * {@link javax.jcr.SimpleCredentials SimpleCredentials} stored
  * for a given {@link org.apache.jackrabbit.api.security.user.User#getCredentials() User}
  * to the credentials passed to {@link #authenticate(Credentials)}.
@@ -81,7 +81,7 @@ class SimpleCredentialsAuthentication implements Authentication {
     }
 
     /**
-     * Compairs the
+     * Compare the
      * {@link org.apache.jackrabbit.api.security.user.User#getCredentials() Credentials} obtained from the <code>User</code>
      * with the specified <code>credentials</code>.<br>
      * If the specified <code>credentials</code> are an instance of

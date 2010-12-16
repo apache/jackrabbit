@@ -51,7 +51,7 @@ import org.slf4j.LoggerFactory;
  * On successful authentication it associates the credentials to principals
  * using the {@link PrincipalProvider} configured for this LoginModule<p />
  * Jackrabbit distinguishes between Login and Impersonation dispatching the
- * the correspoding Repository/Session methods to
+ * the corresponding Repository/Session methods to
  * {@link #authenticate(java.security.Principal, javax.jcr.Credentials)} and
  * {@link #impersonate(java.security.Principal, javax.jcr.Credentials)}, respectively.
  * <br>
@@ -109,7 +109,7 @@ public abstract class AbstractLoginModule implements LoginModule {
      * </ul>
      * Implementations are called via
      * {@link #doInit(CallbackHandler, Session, Map)} to implement
-     * additional initalization
+     * additional initialization
      *
      * @param subject         the <code>Subject</code> to be authenticated. <p>
      * @param callbackHandler a <code>CallbackHandler</code> for communicating
@@ -132,7 +132,7 @@ public abstract class AbstractLoginModule implements LoginModule {
 
         // initialize the login module
         try {
-            log.debug("Initalize LoginModule: ");
+            log.debug("Initialize LoginModule: ");
             RepositoryCallback repositoryCb = new RepositoryCallback();
             callbackHandler.handle(new Callback[]{repositoryCb});
 
@@ -208,8 +208,8 @@ public abstract class AbstractLoginModule implements LoginModule {
      *
      * @param callbackHandler as passed by {@link javax.security.auth.login.LoginContext}
      * @param session         to security-workspace of Jackrabbit
-     * @param options         options from Logini config
-     * @throws LoginException in case initialization failes
+     * @param options         options from LoginModule config
+     * @throws LoginException in case initialization fails.
      */
     protected abstract void doInit(CallbackHandler callbackHandler,
                                    Session session,
@@ -228,7 +228,7 @@ public abstract class AbstractLoginModule implements LoginModule {
 
     /**
      * Method to authenticate a <code>Subject</code> (phase 1).<p/>
-     * The login is devided into 3 Phases:<p/>
+     * The login is divided into 3 Phases:<p/>
      *
      * <b>1) User-ID resolution</b><br>
      * In a first step it is tried to resolve a User-ID for further validation.
@@ -256,7 +256,7 @@ public abstract class AbstractLoginModule implements LoginModule {
      *
      * <b>3) Verification</b><br>
      * There are four cases, how the User-ID can be verified:
-     * The login is anonymous, preauthenticated or the login is the result of
+     * The login is anonymous, pre-authenticated or the login is the result of
      * an impersonation request (see {@link javax.jcr.Session#impersonate(Credentials)}
      * or of a login to the Repository ({@link javax.jcr.Repository#login(Credentials)}).
      * The concrete implementation of the LoginModule is responsible for all
@@ -491,7 +491,7 @@ public abstract class AbstractLoginModule implements LoginModule {
             throws RepositoryException;
 
     /**
-     * Method tries to acquire an Impersonator in the follwing order:
+     * Method tries to acquire an Impersonator in the following order:
      * <ul>
      * <li> Try to access it from the {@link Credentials} via {@link SimpleCredentials#getAttribute(String)}</li>
      * <li> Ask CallbackHandler for Impersonator with use of {@link ImpersonationCallback}.</li>
@@ -524,7 +524,7 @@ public abstract class AbstractLoginModule implements LoginModule {
     /**
      * Method tries to resolve the {@link Credentials} used for login. It takes
      * authentication-extension of an already authenticated {@link Subject} into
-     * accout.
+     * account.
      * <p/>
      * Therefore the credentials are retrieved as follows:
      * <ol>
@@ -534,7 +534,7 @@ public abstract class AbstractLoginModule implements LoginModule {
      * to return an instance of {@link Credentials}.</li>
      * <li>Ask the Subject for its public <code>SimpleCredentials</code> see
      * {@link Subject#getPublicCredentials(Class)}, thus enabling to
-     * preauthenticate the Subject.</li>
+     * pre-authenticate the Subject.</li>
      * </ol>
      *
      * @return Credentials or null if not found
@@ -591,7 +591,7 @@ public abstract class AbstractLoginModule implements LoginModule {
     }
 
     /**
-     * Method supports tries to acquire a UserID in the follwing order:
+     * Method supports tries to acquire a UserID in the following order:
      * <ol>
      * <li>If passed credentials are {@link GuestCredentials} the anonymous user id
      * is returned.</li>

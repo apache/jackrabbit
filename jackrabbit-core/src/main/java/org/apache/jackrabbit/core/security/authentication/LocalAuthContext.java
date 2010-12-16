@@ -53,7 +53,7 @@ public class LocalAuthContext implements AuthContext {
     /**
      * Create Context and set Subject to extend its authentication
      *
-     * @param config    Condiguration to be used for the LoginModule
+     * @param config    Configuration to be used for the LoginModule
      * @param cbHandler CallbackHandler for the LoginModule
      * @param subject   Subject if a pre-authenticated exists
      */
