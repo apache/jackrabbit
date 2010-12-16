@@ -102,7 +102,7 @@ public class LockManagerImpl
     private final ReentrantLock xidlockMapLock = new ReentrantLock(){
 
     	/**
-    	 * The actice Xid of this {@link ReentrantLock}
+    	 * The active Xid of this {@link ReentrantLock}
     	 */
         private Xid activeXid;
 
@@ -848,7 +848,7 @@ public class LockManagerImpl
 
     /**
      * Return the path of an item given its id. This method will lookup the
-     * item inside the systme session.
+     * item inside the system session.
      */
     private Path getPath(SessionImpl session, ItemId id) throws RepositoryException {
         return session.getHierarchyManager().getPath(id);
