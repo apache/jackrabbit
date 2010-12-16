@@ -215,7 +215,7 @@ public class ConcurrentCache<K, V> extends AbstractCache {
     }
 
     /**
-     * Checks if the cache size is zore.
+     * Checks if the cache size is zero.
      */
     public boolean isEmpty() {
         return getMemoryUsed() == 0;
