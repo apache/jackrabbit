@@ -151,7 +151,7 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
     /** Name of the application name configuration attribute. */
     public static final String APP_NAME_ATTRIBUTE = "appName";
 
-    /** Name of the workspace conaining security data. */
+    /** Name of the workspace containing security data. */
     public static final String WSP_NAME_ATTRIBUTE = "workspaceName";
 
     /** Name of the root path configuration attribute. */
