@@ -927,7 +927,7 @@ public class RepositoryConfig
     /**
      * Returns the repository security configuration.
      *
-     * @return security configutation
+     * @return security configuration
      */
     public SecurityConfig getSecurityConfig() {
         return sec;
