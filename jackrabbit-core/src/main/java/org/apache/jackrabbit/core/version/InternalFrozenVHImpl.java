@@ -50,6 +50,7 @@ class InternalFrozenVHImpl extends InternalFreezeImpl
     /**
      * {@inheritDoc}
      */
+    @Override
     public NodeId getId() {
         return node.getNodeId();
     }
@@ -81,9 +82,17 @@ class InternalFrozenVHImpl extends InternalFreezeImpl
     }
 
     /**
-     * {@inheritDoc}
+     * @deprecate Use {@link #getBaseVersion()} instead.
      */
     public InternalVersion getBaseVesion()
+            throws VersionException {
+        return getBaseVersion();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public InternalVersion getBaseVersion()
             throws VersionException {
         try {
             InternalVersionHistory history = vMgr.getVersionHistory(getVersionHistoryId());

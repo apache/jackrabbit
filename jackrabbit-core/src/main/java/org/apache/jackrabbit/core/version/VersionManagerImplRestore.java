@@ -580,7 +580,7 @@ abstract public class VersionManagerImplRestore extends VersionManagerImplBase {
                         // choose the initial one
                         List<InternalVersion> vs = vh.getRootVersion().getSuccessors();
                         if (vs.isEmpty()) {
-                            String msg = "Unable to select appropariate version for "
+                            String msg = "Unable to select appropriate version for "
                                     + child.getName() + " using " + vsel;
                             log.error(msg);
                             throw new VersionException(msg);

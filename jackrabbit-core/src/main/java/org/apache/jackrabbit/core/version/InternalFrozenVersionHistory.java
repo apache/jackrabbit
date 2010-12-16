@@ -53,11 +53,16 @@ public interface InternalFrozenVersionHistory extends InternalFreeze {
     NodeId getBaseVersionId();
 
     /**
+     * @deprecate use {@link #getBaseVersion()} instead
+     */
+    InternalVersion getBaseVesion() throws VersionException;
+
+    /**
      * Returns the base version that was assigned to the node at
      * the time it was versioned.
      *
-     * @return the inernal base version
+     * @return the internal base version
      * @throws VersionException if the version could not be retrieved
      */
-    InternalVersion getBaseVesion() throws VersionException;
+    InternalVersion getBaseVersion() throws VersionException;
 }
