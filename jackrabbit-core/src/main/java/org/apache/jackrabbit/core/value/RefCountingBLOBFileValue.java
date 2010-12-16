@@ -30,7 +30,7 @@ import org.slf4j.LoggerFactory;
  * {@link RefCountBinary} is created and the reference count {@link #refCount}
  * is incremented. The underlying value is discarded once this
  * {@link RefCountingBLOBFileValue} and all its light weight
- * {@link RefCountBinary} intances have been discarded.
+ * {@link RefCountBinary} instances have been discarded.
  */
 public class RefCountingBLOBFileValue extends BLOBFileValue {
 
@@ -67,7 +67,7 @@ public class RefCountingBLOBFileValue extends BLOBFileValue {
     //----------------------------< BLOBFileValue >-----------------------------
 
     /**
-     * Discards the underyling value if the reference count drops to zero.
+     * Discards the underlying value if the reference count drops to zero.
      */
     public synchronized void dispose() {
         if (refCount > 0) {
@@ -89,6 +89,7 @@ public class RefCountingBLOBFileValue extends BLOBFileValue {
      * @param pruneEmptyParentDirs if <code>true</code>, empty parent
      *                             directories will automatically be deleted
      */
+    @Override
     void delete(boolean pruneEmptyParentDirs) {
         value.delete(pruneEmptyParentDirs);
     }
@@ -100,6 +101,7 @@ public class RefCountingBLOBFileValue extends BLOBFileValue {
      * @throws RepositoryException if an error occurs while creating the copy or
      *                             if this value has been disposed already.
      */
+    @Override
     synchronized BLOBFileValue copy() throws RepositoryException {
         if (refCount <= 0) {
             throw new RepositoryException("this BLOBFileValue has been disposed");
@@ -136,6 +138,7 @@ public class RefCountingBLOBFileValue extends BLOBFileValue {
         return value.getStream();
     }
 
+    @Override
     protected void finalize() throws Throwable {
         if (!disposed) {
             dispose();
@@ -166,10 +169,12 @@ public class RefCountingBLOBFileValue extends BLOBFileValue {
             }
         }
 
+        @Override
         void delete(boolean pruneEmptyParentDirs) {
             getInternalValue().delete(pruneEmptyParentDirs);
         }
 
+        @Override
         BLOBFileValue copy() throws RepositoryException {
             checkDisposed();
             return getInternalValue().copy();
@@ -191,6 +196,7 @@ public class RefCountingBLOBFileValue extends BLOBFileValue {
             return 0;
         }
 
+        @Override
         protected void finalize() throws Throwable {
             dispose();
             super.finalize();
