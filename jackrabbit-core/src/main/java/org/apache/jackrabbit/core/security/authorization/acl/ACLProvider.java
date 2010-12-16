@@ -282,11 +282,11 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
      * Set-up minimal permissions for the workspace:
      *
      * <ul>
-     * <li>adminstrators principal -> all privileges</li>
-     * <li>everybody -> read privilege</li>
+     * <li>'adminstrators' principal -> all privileges</li>
+     * <li>'everyone' -> read privilege</li>
      * </ul>
      *
-     * @param session to the workspace to set-up inital ACL to
+     * @param session to the workspace to set-up initial ACL to
      * @param editor for the specified session.
      * @throws RepositoryException If an error occurs.
      */
