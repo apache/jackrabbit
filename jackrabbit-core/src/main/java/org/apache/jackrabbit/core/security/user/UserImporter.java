@@ -257,7 +257,7 @@ public class UserImporter implements ProtectedPropertyImporter, ProtectedNodeImp
 
                 // since impersonators may be imported later on, postpone processing
                 // to the end.
-                // see -> processRefeferences
+                // see -> process References
                 Value[] vs = protectedPropInfo.getValues(PropertyType.STRING, resolver);
                 referenceTracker.processedReference(new Impersonators(a.getID(), vs));
                 return true;
@@ -295,7 +295,7 @@ public class UserImporter implements ProtectedPropertyImporter, ProtectedNodeImp
 
                 // since group-members are references to user/groups that potentially
                 // are to be imported later on -> postpone processing to the end.
-                // see -> processRefeferences
+                // see -> process References
                 Membership membership = new Membership(a.getID());
                 for (Value v : protectedPropInfo.getValues(PropertyType.WEAKREFERENCE, resolver)) {
                     membership.addMember(new NodeId(v.getString()));

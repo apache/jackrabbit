@@ -327,7 +327,7 @@ public class MembershipCache implements UserConstants, SynchronousEventListener,
             }
         }
 
-        // Based on the user's setting return either of the found membership informations
+        // Based on the user's setting return either of the found membership information
         return select(pIds, nIds);
     }
 
@@ -374,7 +374,7 @@ public class MembershipCache implements UserConstants, SynchronousEventListener,
             visitor.visit(groupsNode);
         } // else: no groups exist -> nothing to do.
 
-        // Based on the user's setting return either of the found membership informations
+        // Based on the user's setting return either of the found membership information
         return select(pIds, nIds);
     }
 
