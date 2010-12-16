@@ -223,7 +223,7 @@ public class WorkspaceImpl extends AbstractWorkspace
             tmpSession = manager.createSession(session.getSubject(), name);
             WorkspaceImpl newWsp = (WorkspaceImpl) tmpSession.getWorkspace();
 
-            // Workspace#clone(String, String, String, booelan) doesn't
+            // Workspace#clone(String, String, String, boolean) doesn't
             // allow to clone to "/"...
             //newWsp.clone(srcWorkspace, "/", "/", false);
            Node root = getSession().getRootNode();
