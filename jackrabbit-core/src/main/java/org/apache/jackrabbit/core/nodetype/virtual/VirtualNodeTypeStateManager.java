@@ -135,7 +135,7 @@ public class VirtualNodeTypeStateManager implements NodeTypeRegistryListener {
 
     /**
      * Sets the system session. This is needed, since the session should be
-     * set, after the workspaces are initialzed.
+     * set, after the workspaces are initialized.
      *
      * @param systemSession
      */
@@ -156,7 +156,7 @@ public class VirtualNodeTypeStateManager implements NodeTypeRegistryListener {
                 // generate observation events
                 NodeImpl root = (NodeImpl) systemSession.getItemManager().getItem(rootNodeId);
                 NodeImpl child = root.getNode(ntName);
-                List events = new ArrayList();
+                List<EventState> events = new ArrayList<EventState>();
                 recursiveAdd(events, root, child);
                 obsDispatcher.dispatch(events, systemSession,
                         NODE_TYPES_PATH, null);

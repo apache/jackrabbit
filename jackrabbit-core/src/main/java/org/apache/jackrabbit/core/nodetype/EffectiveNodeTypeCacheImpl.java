@@ -161,6 +161,7 @@ public class EffectiveNodeTypeCacheImpl implements EffectiveNodeTypeCache {
     /**
      * {@inheritDoc}
      */
+    @Override
     public Object clone() {
         EffectiveNodeTypeCacheImpl clone = new EffectiveNodeTypeCacheImpl();
         clone.sortedKeys.addAll(sortedKeys);
@@ -190,7 +191,7 @@ public class EffectiveNodeTypeCacheImpl implements EffectiveNodeTypeCache {
      * a combination (i.e. an aggregation) of one or more node types.
      * The weight is an indicator for the cost involved in building such an
      * aggregate (e.g. an aggregation of multiple complex node types with deep
-     * inheritance trees is more costly to build/validate than an agreggation
+     * inheritance trees is more costly to build/validate than an aggregation
      * of two very simple node types with just one property definition each).
      * <p/>
      * A very simple (and not very accurate) approximation of the weight would
@@ -331,9 +332,9 @@ public class EffectiveNodeTypeCacheImpl implements EffectiveNodeTypeCache {
         public int hashCode() {
             int h = 17;
             // ignore weight
-            for (int i = 0; i < names.length; i++) {
+            for (Name name : names) {
                 h *= 37;
-                h += names[i].hashCode();
+                h += name.hashCode();
             }
             return h;
         }
