@@ -176,18 +176,21 @@ public class LuceneQueryFactory {
 
             Predicate filter = Predicate.TRUE;
             BooleanQuery query = new BooleanQuery();
+
+            QueryPair qp = new QueryPair(query);
+
             query.add(create(selector), MUST);
             if (constraint != null) {
                 String name = selector.getSelectorName();
                 NodeType type =
                     ntManager.getNodeType(selector.getNodeTypeName());
-                filter = mapConstraintToQueryAndFilter(
-                        query, constraint, Collections.singletonMap(name, type),
+                filter = mapConstraintToQueryAndFilter(qp,
+                        constraint, Collections.singletonMap(name, type),
                         searcher, reader);
             }
 
             List<Row> rows = new ArrayList<Row>();
-            QueryHits hits = searcher.evaluate(query);
+            QueryHits hits = searcher.evaluate(qp.mainQuery);
             ScoreNode node = hits.nextScoreNode();
             while (node != null) {
                 try {
@@ -240,7 +243,7 @@ public class LuceneQueryFactory {
         }
     }
 
-    private Term createNodeTypeTerm(NodeType type) throws RepositoryException {
+    protected Term createNodeTypeTerm(NodeType type) throws RepositoryException {
         String field;
         if (type.isMixin()) {
             // search for nodes where jcr:mixinTypes is set to this mixin
@@ -296,8 +299,8 @@ public class LuceneQueryFactory {
         return Util.createMatchAllQuery(propName, index.getIndexFormatVersion());
     }
 
-    private Predicate mapConstraintToQueryAndFilter(
-            BooleanQuery query, Constraint constraint,
+    protected Predicate mapConstraintToQueryAndFilter(
+            QueryPair query, Constraint constraint,
             Map<String, NodeType> selectorMap,
             JackrabbitIndexSearcher searcher, IndexReader reader)
             throws RepositoryException, IOException {
@@ -349,15 +352,20 @@ public class LuceneQueryFactory {
             } else {
                 Query cq = getComparisonQuery(
                         left, transform.transform, operator, right, selectorMap);
-                query.add(cq, MUST);
+                query.subQuery.add(cq, MUST);
             }
+        } else if (constraint instanceof DescendantNode) {
+            final DescendantNode descendantNode = (DescendantNode) constraint;
+            Query context = getNodeIdQuery(UUID, descendantNode.getAncestorPath());
+            query.mainQuery = new DescendantSelfAxisQuery(context, query.subQuery, false);
         } else {
-            query.add(create(constraint, selectorMap, searcher), MUST);
+            query.subQuery.add(create(constraint, selectorMap, searcher), MUST);
         }
         return filter;
     }
 
-    private Query create(
+
+    protected Query create(
             Constraint constraint, Map<String, NodeType> selectorMap,
             JackrabbitIndexSearcher searcher)
             throws RepositoryException, IOException {
@@ -392,7 +400,7 @@ public class LuceneQueryFactory {
         }
     }
 
-    private Query getDescendantNodeQuery(
+    protected Query getDescendantNodeQuery(
             DescendantNode dn, JackrabbitIndexSearcher searcher)
             throws RepositoryException, IOException {
         BooleanQuery query = new BooleanQuery();
@@ -423,7 +431,7 @@ public class LuceneQueryFactory {
         return query;
     }
 
-    private Query getFullTextSearchQuery(FullTextSearch fts)
+    protected Query getFullTextSearchQuery(FullTextSearch fts)
             throws RepositoryException {
         String field = FieldNames.FULLTEXT;
         String property = fts.getPropertyName();
@@ -445,7 +453,7 @@ public class LuceneQueryFactory {
         }
     }
 
-    private BooleanQuery getAndQuery(
+    protected BooleanQuery getAndQuery(
             And and, Map<String, NodeType> selectorMap,
             JackrabbitIndexSearcher searcher)
             throws RepositoryException, IOException {
@@ -457,7 +465,7 @@ public class LuceneQueryFactory {
         return query;
     }
 
-    private BooleanQuery getOrQuery(
+    protected BooleanQuery getOrQuery(
             Or or, Map<String, NodeType> selectorMap,
             JackrabbitIndexSearcher searcher)
             throws RepositoryException, IOException {
@@ -469,7 +477,7 @@ public class LuceneQueryFactory {
         return query;
     }
 
-    private void addBooleanConstraint(
+    protected void addBooleanConstraint(
             BooleanQuery query, Constraint constraint, Occur occur,
             Map<String, NodeType> selectorMap, JackrabbitIndexSearcher searcher)
             throws RepositoryException, IOException {
@@ -490,21 +498,21 @@ public class LuceneQueryFactory {
         }
     }
 
-    private NotQuery getNotQuery(
+    protected NotQuery getNotQuery(
             Not not, Map<String, NodeType> selectorMap,
             JackrabbitIndexSearcher searcher)
             throws RepositoryException, IOException {
         return new NotQuery(create(not.getConstraint(), selectorMap, searcher));
     }
 
-    private Query getPropertyExistenceQuery(PropertyExistence property)
+    protected Query getPropertyExistenceQuery(PropertyExistence property)
             throws RepositoryException {
         String name = npResolver.getJCRName(session.getQName(
                 property.getPropertyName()));
         return Util.createMatchAllQuery(name, index.getIndexFormatVersion());
     }
 
-    private static class Transform {
+    protected static class Transform {
 
         private final DynamicOperand operand;
 
@@ -534,7 +542,7 @@ public class LuceneQueryFactory {
         }
     }
 
-    private Query getComparisonQuery(
+    protected Query getComparisonQuery(
             DynamicOperand left, int transform, String operator,
             StaticOperand rigth, Map<String, NodeType> selectorMap)
             throws RepositoryException {
@@ -563,7 +571,7 @@ public class LuceneQueryFactory {
         }
     }
 
-    private Query getNodeNameQuery(
+    protected Query getNodeNameQuery(
             int transform, String operator, StaticOperand right)
             throws RepositoryException {
         if (transform != TRANSFORM_NONE
@@ -599,7 +607,7 @@ public class LuceneQueryFactory {
         }
     }
 
-    private Query getNodeLocalNameQuery(
+    protected Query getNodeLocalNameQuery(
             int transform, String operator, StaticOperand right)
             throws RepositoryException {
         if (transform != TRANSFORM_NONE
@@ -611,7 +619,7 @@ public class LuceneQueryFactory {
         return new JackrabbitTermQuery(new Term(LOCAL_NAME, name));
     }
 
-    private Query getNodeIdQuery(String field, String path)
+    protected Query getNodeIdQuery(String field, String path)
             throws RepositoryException {
         String value;
         try {
@@ -623,7 +631,7 @@ public class LuceneQueryFactory {
         return new JackrabbitTermQuery(new Term(field, value));
     }
 
-    private Query getPropertyValueQuery(
+    protected Query getPropertyValueQuery(
             String field, String operator, Value value,
             int type, int transform) throws RepositoryException {
         String string = getValueString(value, type);
@@ -669,11 +677,11 @@ public class LuceneQueryFactory {
         }
     }
 
-    private Term getTerm(String field, String value) {
+    protected Term getTerm(String field, String value) {
         return new Term(PROPERTIES, FieldNames.createNamedValue(field, value));
     }
 
-    private String getValueString(Value value, int type)
+    protected String getValueString(Value value, int type)
             throws RepositoryException {
         switch (value.getType()) {
         case DATE:
@@ -697,6 +705,16 @@ public class LuceneQueryFactory {
             } else {
                 return string;
             }
+        }
+    }
+
+    protected class QueryPair {
+        Query mainQuery;
+        BooleanQuery subQuery;
+
+        QueryPair(BooleanQuery mainQuery) {
+            this.mainQuery = mainQuery;
+            this.subQuery = mainQuery;
         }
     }
 

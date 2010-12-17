@@ -36,7 +36,7 @@ public class DescendantSearchTest extends AbstractTest {
 
     protected Query createQuery(QueryManager manager, int i)
             throws RepositoryException {
-        return manager.createQuery("/testroot//*[@testcount=" + i + "]", Query.XPATH);
+        return manager.createQuery("/jcr:root/testroot//element(*,nt:base)[@testcount=" + i + "]", Query.XPATH);
     }
 
     public void beforeSuite() throws RepositoryException {
