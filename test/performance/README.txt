@@ -18,6 +18,10 @@ be combined into an HTML report by running the following command on a
 
     sh plot.sh
 
+Mac OS X note : if you want to execute the above script, you will need
+to install gnuplot and imagemagick2-svg from the Fink project. For
+more information : http://finkproject.org 
+
 Selecting which tests to run
 ----------------------------
 
