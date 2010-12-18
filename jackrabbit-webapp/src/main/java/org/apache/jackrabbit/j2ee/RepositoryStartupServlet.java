@@ -483,7 +483,7 @@ public class RepositoryStartupServlet extends AbstractRepositoryServlet {
      * the repository with an RMI registry.
      * @throws ServletException if an error occurs.
      */
-    private void registerRMI() throws ServletException {
+    private void registerRMI() {
         RMIConfig rc = config.getRmiConfig();
         if (!rc.isValid() || !rc.enabled()) {
             return;
@@ -492,16 +492,16 @@ public class RepositoryStartupServlet extends AbstractRepositoryServlet {
         // try to create remote repository
         Remote remote;
         try {
-            Class clazz = Class.forName(getRemoteFactoryDelegaterClass());
+            Class<?> clazz = Class.forName(getRemoteFactoryDelegaterClass());
             RemoteFactoryDelegater rmf = (RemoteFactoryDelegater) clazz.newInstance();
             remote = rmf.createRemoteRepository(repository);
         } catch (RemoteException e) {
-            log.error("Unable to create RMI repository.", e);
-            throw new ServletExceptionWithCause("Unable to create remote repository.", e);
+            log.warn("Unable to create RMI repository.", e);
+            return;
         } catch (Throwable t) {
-            log.error("Unable to create RMI repository.", t);
-            throw new ServletExceptionWithCause(
-                    "Unable to create RMI repository. jcr-rmi.jar might be missing.", t);
+            log.warn("Unable to create RMI repository."
+                    + " The jcr-rmi jar might be missing.", t);
+            return;
         }
 
         try {
@@ -551,7 +551,7 @@ public class RepositoryStartupServlet extends AbstractRepositoryServlet {
                 try {
                     reg = LocateRegistry.getRegistry(rc.getRmiHost(), rc.rmiPort());
                 } catch (RemoteException re) {
-                    log.error("Cannot create the reference to the registry at "
+                    log.warn("Cannot create the reference to the registry at "
                             + rc.getRmiHost() + ":" + rc.getRmiPort(), re);
                 }
             }
@@ -569,13 +569,10 @@ public class RepositoryStartupServlet extends AbstractRepositoryServlet {
             } else {
                 log.info("RMI registry missing, cannot bind repository via RMI");
             }
-
         } catch (RemoteException e) {
-            throw new ServletExceptionWithCause(
-                    "Unable to bind repository via RMI: " + rc.getRmiUri(), e);
+            log.warn("Unable to bind repository via RMI: " + rc.getRmiUri(), e);
         } catch (AlreadyBoundException e) {
-            throw new ServletExceptionWithCause(
-                    "Unable to bind repository via RMI: " + rc.getRmiUri(), e);
+            log.warn("Unable to bind repository via RMI: " + rc.getRmiUri(), e);
         }
     }
 
