@@ -117,32 +117,32 @@ public class LuceneQueryFactory {
     /**
      * Session of the user executing this query
      */
-    private final SessionImpl session;
+    protected final SessionImpl session;
 
     /**
      * Node type manager
      */
-    private final NodeTypeManager ntManager;
+    protected final NodeTypeManager ntManager;
 
     /** Lucene search index */
-    private final SearchIndex index;
+    protected final SearchIndex index;
 
     /**
      * Namespace mappings to internal prefixes
      */
-    private final NamespaceMappings nsMappings;
+    protected final NamespaceMappings nsMappings;
 
     /**
      * NamePathResolver to map namespace mappings to internal prefixes
      */
-    private final NamePathResolver npResolver;
+    protected final NamePathResolver npResolver;
 
     /** Operand evaluator */
-    private final OperandEvaluator evaluator;
+    protected final OperandEvaluator evaluator;
 
-    private final String mixinTypesField;
+    protected final String mixinTypesField;
 
-    private final String primaryTypeField;
+    protected final String primaryTypeField;
 
     /**
      * Creates a new lucene query factory.
