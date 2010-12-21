@@ -16,14 +16,20 @@
  */
 package org.apache.jackrabbit.core.security.authentication;
 
+import org.apache.jackrabbit.api.security.authentication.token.TokenCredentials;
+import org.apache.jackrabbit.api.security.principal.ItemBasedPrincipal;
 import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.jackrabbit.api.security.user.User;
 import org.apache.jackrabbit.api.security.user.UserManager;
+import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.security.authentication.token.TokenBasedAuthentication;
+import org.apache.jackrabbit.core.security.user.UserImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.jcr.Credentials;
+import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.security.auth.Subject;
@@ -37,10 +43,16 @@ import java.util.Map;
  * The <code>DefaultLoginModule</code> authenticates Credentials related to
  * a {@link User} of the Repository<br>
  * In any other case it is marked to be ignored.<p>
- * This Module can deal only with <code>SimpleCredentials</code> since it
- * uses by default the {@link SimpleCredentialsAuthentication}. Impersonation is
- * delegated to the <code>User</code>'s {@link User#getImpersonation()
- * Impersonation} object
+ * This Module can deal with the following credentials
+ * <ul>
+ * <li><code>SimpleCredentials</code> -&gt; handled by {@link SimpleCredentialsAuthentication}.</li>
+ * <li><code>TokenCredentials</code> -&gt; handled by {@link TokenBasedAuthentication}.</li>
+ * </ul>
+ * In both cases the login is successful if the system contains a non-disabled,
+ * valid user that matches the given credentials.
+ * <p/>
+ * Correspondingly impersonation is delegated to the <code>User</code>'s
+ * {@link User#getImpersonation() Impersonation} object.
  *
  * @see AbstractLoginModule
  */
@@ -48,9 +60,64 @@ public class DefaultLoginModule extends AbstractLoginModule {
 
     private static final Logger log = LoggerFactory.getLogger(DefaultLoginModule.class);
 
+    /**
+     * Flag indicating if Token-based authentication is disabled by the
+     * LoginModule configuration.
+     */
+    private boolean disableTokenAuth;
+
+    /**
+     * The expiration time for login tokens as set by the LoginModule configuration.
+     */
+    private long tokenExpiration = TokenBasedAuthentication.TOKEN_EXPIRATION;
+
+    /**
+     * The user object retrieved during the authentication process.
+     */
     protected User user;
+    private SessionImpl session;
     private UserManager userManager;
 
+    /**
+     * The login token extracted from TokenCredentials or null in case of
+     * another credentials.
+     */
+    private String loginToken;
+
+    //--------------------------------------------------------< LoginModule >---
+    /**
+     * @see javax.security.auth.spi.LoginModule#commit()
+     */
+    @Override
+    public boolean commit() throws LoginException {
+        boolean success = super.commit();
+        if (success && !disableTokenAuth && TokenBasedAuthentication.doCreateToken(credentials)) {
+            Session s = null;
+            try {
+                /*
+                use a different session instance to create the token
+                node in order to prevent concurrent modifications with
+                the shared system session.
+                */
+                s = session.createSession(session.getWorkspace().getName());
+                Credentials tc = TokenBasedAuthentication.createToken(user, credentials, tokenExpiration, s);
+                if (tc != null) {
+                    subject.getPublicCredentials().add(tc);
+                }
+            } catch (RepositoryException e) {
+                LoginException le = new LoginException("Failed to commit: " + e.getMessage());
+                le.initCause(e);
+                throw le;
+            } finally {
+                if (s != null) {
+                    s.logout();
+                }
+            }
+        }
+        return success;
+    }
+
+    //------------------------------------------------< AbstractLoginModule >---
     /**
      * Retrieves the user manager from the specified session. If this fails
      * this login modules initialization must fail.
@@ -63,7 +130,8 @@ public class DefaultLoginModule extends AbstractLoginModule {
             throw new LoginException("Unable to initialize LoginModule: SessionImpl expected.");
         }
         try {
-            userManager = ((SessionImpl) session).getUserManager();
+            this.session = (SessionImpl) session;
+            userManager = this.session.getUserManager();
             log.debug("- UserManager -> '" + userManager.getClass().getName() + "'");
         } catch (RepositoryException e) {
             throw new LoginException("Unable to initialize LoginModule: " + e.getMessage());
@@ -103,10 +171,78 @@ public class DefaultLoginModule extends AbstractLoginModule {
     }
 
     /**
+     * @see AbstractLoginModule#supportsCredentials(javax.jcr.Credentials)
+     */
+    @Override
+    protected boolean supportsCredentials(Credentials creds) {
+        if (creds instanceof TokenCredentials) {
+            return !disableTokenAuth;
+        } else {
+            return super.supportsCredentials(creds);
+        }
+    }
+
+    /**
+     * @see AbstractLoginModule#getUserID(javax.jcr.Credentials)
+     */
+    @Override
+    protected String getUserID(Credentials credentials) {
+        // shortcut to avoid duplicate evaluation.
+        if (user != null) {
+            try {
+                return user.getID();
+            } catch (RepositoryException e) {
+                log.warn("Failed to retrieve userID from user", e);
+                // ignore and re-evaluate credentials.
+            }
+        }
+
+        // handle TokenCredentials
+        if (!disableTokenAuth && TokenBasedAuthentication.isTokenBasedLogin(credentials)) {
+            // special token based login
+            loginToken = ((TokenCredentials) credentials).getToken();
+            try {
+                Node n = session.getNodeByIdentifier(loginToken);
+                final NodeImpl userNode = (NodeImpl) n.getParent().getParent();
+                final String principalName = userNode.getProperty(UserImpl.P_PRINCIPAL_NAME).getString();
+                if (userNode.isNodeType(UserImpl.NT_REP_USER)) {
+                    Authorizable a = userManager.getAuthorizable(new ItemBasedPrincipal() {
+                        public String getPath() throws RepositoryException {
+                            return userNode.getPath();
+                        }
+                        public String getName() {
+                            return principalName;
+                        }
+                    });
+                    return a.getID();
+                }
+            } catch (RepositoryException e) {
+                if (log.isDebugEnabled()) {
+                    log.warn("Failed to retrieve UserID from token-based credentials", e);
+                } else {
+                    log.warn("Failed to retrieve UserID from token-based credentials: {}", e.toString());
+                }
+            }
+            // failed to retrieve the user from loginToken.
+            return null;
+        } else {
+            // regular login -> extraction of userID is handled by the super class.
+            return super.getUserID(credentials);
+        }
+    }
+
+    /**
      * @see AbstractLoginModule#getAuthentication(Principal, Credentials)
      */
     @Override
     protected Authentication getAuthentication(Principal principal, Credentials creds) throws RepositoryException {
+        if (!disableTokenAuth && loginToken != null) {
+            Authentication authentication = new TokenBasedAuthentication(loginToken, tokenExpiration, session);
+            if (authentication.canHandle(creds)) {
+                return authentication;
+            }
+        }
+
         if (user != null) {
             Authentication authentication = new SimpleCredentialsAuthentication(user);
             if (authentication.canHandle(creds)) {
@@ -146,5 +282,43 @@ public class DefaultLoginModule extends AbstractLoginModule {
             log.debug("Failed to retrieve user to impersonate for principal name " + principal.getName());
             return false;
         }
+    }
+
+    //--------------------------------------------------------------------------
+    // methods used for token based login
+    //--------------------------------------------------------------------------
+    /**
+     * Return a flag indicating if token based authentication is disabled.
+     *
+     * @return <code>true</code> if token based authentication is disabled;
+     * <code>false</code> otherwise.
+     */
+    public boolean isDisableTokenAuth() {
+        return disableTokenAuth;
+    }
+
+    /**
+     * Set a flag indicating if token based authentication is disabled.
+     *
+     * @param disableTokenAuth <code>true</code> to disable token based
+     * authentication; <code>false</code> otherwise
+     */
+    public void setDisableTokenAuth(boolean disableTokenAuth) {
+        this.disableTokenAuth = disableTokenAuth;
+    }
+
+    /**
+     * @return The configured expiration time for login tokens in milliseconds.
+     */
+    public long getTokenExpiration() {
+        return tokenExpiration;
+    }
+
+    /**
+     * @param tokenExpiration Sets the configured expiration time (in milliseconds)
+     * of login tokens.
+     */
+    public void setTokenExpiration(long tokenExpiration) {
+        this.tokenExpiration = tokenExpiration;
     }
 }

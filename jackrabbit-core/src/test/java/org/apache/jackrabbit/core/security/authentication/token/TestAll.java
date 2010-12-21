@@ -14,24 +14,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.core.security.authentication;
+package org.apache.jackrabbit.core.security.authentication.token;
 
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
-/** <code>TestAll</code>... */
+/**
+ * Test suite that includes all test cases for package org.apache.jackrabbit.core.security.authentication.token.
+ */
 public class TestAll extends TestCase {
 
+    /**
+     * Returns a <code>Test</code> suite that executes all tests inside this
+     * package.
+     */
     public static Test suite() {
-        TestSuite suite = new TestSuite("core.security.authentication tests");
+        TestSuite suite = new TestSuite("org.apache.jackrabbit.core.security.authentication.token tests");
 
-        suite.addTestSuite(GuestLoginTest.class);
-        suite.addTestSuite(NullLoginTest.class);
-        suite.addTestSuite(SimpleCredentialsAuthenticationTest.class);
-        suite.addTestSuite(CryptedSimpleCredentialsTest.class);
-        suite.addTestSuite(LoginModuleTest.class);
-        suite.addTestSuite(DefaultLoginModuleTest.class);
+        suite.addTestSuite(TokenBasedAuthenticationTest.class);
+        suite.addTestSuite(TokenBasedLoginTest.class);
 
         return suite;
     }
