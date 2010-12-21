@@ -57,6 +57,7 @@ import org.apache.commons.collections.map.ReferenceMap;
 import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.api.JackrabbitRepository;
 import org.apache.jackrabbit.api.management.RepositoryManager;
+import org.apache.jackrabbit.api.security.authentication.token.TokenCredentials;
 import org.apache.jackrabbit.commons.AbstractRepository;
 import org.apache.jackrabbit.core.cluster.ClusterContext;
 import org.apache.jackrabbit.core.cluster.ClusterException;
@@ -1472,6 +1473,11 @@ public class RepositoryImpl extends AbstractRepository
                 SimpleCredentials sc = (SimpleCredentials) credentials;
                 for (String name : sc.getAttributeNames()) {
                     session.setAttribute(name, sc.getAttribute(name));
+                }
+            } else if (credentials instanceof TokenCredentials) {
+                TokenCredentials tc = (TokenCredentials) credentials;
+                for (String name : tc.getAttributeNames()) {
+                    session.setAttribute(name, tc.getAttribute(name));
                 }
             }
 
