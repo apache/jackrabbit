@@ -80,6 +80,7 @@ public class XPathQueryBuilder implements QueryBuilder<XPathQueryBuilder.Conditi
     private Condition condition;
     private String sortProperty;
     private Direction sortDirection = Direction.ASCENDING;
+    private boolean sortIgnoreCase; 
     private Value bound;
     private long offset;
     private long maxCount = -1;
@@ -106,6 +107,10 @@ public class XPathQueryBuilder implements QueryBuilder<XPathQueryBuilder.Conditi
 
     Direction getSortDirection() {
         return sortDirection;
+    }
+
+    boolean getSortIgnoreCase() {
+        return sortIgnoreCase;
     }
 
     Value getBound() {
@@ -135,9 +140,14 @@ public class XPathQueryBuilder implements QueryBuilder<XPathQueryBuilder.Conditi
         this.condition = condition;
     }
 
-    public void setSortOrder(String propertyName, Direction direction) {
+    public void setSortOrder(String propertyName, Direction direction, boolean ignoreCase) {
         sortProperty = propertyName;
         sortDirection = direction;
+        sortIgnoreCase = ignoreCase;
+    }
+
+    public void setSortOrder(String propertyName, Direction direction) {
+        setSortOrder(propertyName, direction, false);
     }
 
     public void setLimit(Value bound, long maxCount) {

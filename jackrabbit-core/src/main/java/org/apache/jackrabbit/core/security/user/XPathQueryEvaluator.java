@@ -93,9 +93,11 @@ public class XPathQueryEvaluator implements XPathQueryBuilder.ConditionVisitor {
         }
 
         if (sortCol != null) {
-            xPath.append(" order by ")
+            boolean ignoreCase = builder.getSortIgnoreCase();
+            xPath.append(" order by ") 
+                    .append(ignoreCase ? "" : "fn:lower-case(")
                     .append(sortCol)
-                    .append(' ')
+                    .append(ignoreCase ? " " : ") ")
                     .append(sortDir.getDirection());
         }
 

@@ -73,8 +73,22 @@ public interface QueryBuilder<T> {
      *
      * @param propertyName  The name of the property to sort on
      * @param direction  Direction to sort. Either {@link Direction#ASCENDING} or {@link Direction#DESCENDING}
+     * @param ignoreCase  Ignore character case in sort iff <code>true</code>. Note: For <code>false</code>
+     * sorting is done lexicographically even for non string properties.
      */
-    void setSortOrder(String propertyName, Direction direction);
+    void setSortOrder(String propertyName, Direction direction, boolean ignoreCase);
+
+    /**
+     * Set the sort order of the {@link Authorizable}s returned by the query.
+     * The format of the <code>propertyName</code> is the same as in XPath:
+     * <code>@propertyName</code> sorts on a property of the current node.
+     * <code>relative/path/@propertyName</code> sorts on a property of a
+     * descendant node. Character case is taken into account for the sort order.
+     *
+     * @param propertyName  The name of the property to sort on
+     * @param direction  Direction to sort. Either {@link Direction#ASCENDING} or {@link Direction#DESCENDING}
+     */
+    void setSortOrder(String propertyName, Direction direction); 
 
     /**
      * Set limits for the query. The limits consists of a bound and a maximal
