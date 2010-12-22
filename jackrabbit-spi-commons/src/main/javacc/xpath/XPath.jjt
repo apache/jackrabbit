@@ -686,7 +686,7 @@ TOKEN :
  < Except : "except" > : DEFAULT
 }
 
-<OPERATOR, ITEMTYPE>
+<DEFAULT, OPERATOR, ITEMTYPE>
 TOKEN :
 {
  < As : "as" > : ITEMTYPE
@@ -714,12 +714,6 @@ TOKEN :
 TOKEN :
 {
  < Castable : "castable" (<skip_>)+ "as" > : SINGLETYPE
-}
-
-<DEFAULT, OPERATOR, ITEMTYPE>
-TOKEN :
-{
- < RparAs : ")" (<skip_>)* "as" > : ITEMTYPE
 }
 
 <ITEMTYPE>
@@ -1888,7 +1882,7 @@ void ConstructionDecl()  :
 void FunctionDecl()  :
 {}
 {
-  <DefineFunction>{jjtThis.processToken(token);} #DefineFunction(true) <QNameLpar>{jjtThis.processToken(token);} #QNameLpar(true) [ParamList()] (<Rpar> | (<RparAs>{jjtThis.processToken(token);} #RparAs(true) SequenceType())) (EnclosedExpr() | <External>{jjtThis.processToken(token);} #External(true))
+  <DefineFunction>{jjtThis.processToken(token);} #DefineFunction(true) <QNameLpar>{jjtThis.processToken(token);} #QNameLpar(true) [ParamList()] (<Rpar> (<As> {jjtThis.processToken(token);} #As(true) SequenceType())?) (EnclosedExpr() | <External>{jjtThis.processToken(token);} #External(true))
 }
 
 void ParamList()  :

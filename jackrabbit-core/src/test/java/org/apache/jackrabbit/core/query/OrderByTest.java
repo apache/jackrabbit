@@ -16,19 +16,18 @@
  */
 package org.apache.jackrabbit.core.query;
 
-import java.util.List;
-import java.util.Arrays;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Calendar;
-
 import javax.jcr.Node;
-import javax.jcr.RepositoryException;
 import javax.jcr.NodeIterator;
-import javax.jcr.Value;
 import javax.jcr.PropertyType;
+import javax.jcr.RepositoryException;
+import javax.jcr.Value;
 import javax.jcr.query.Query;
 import javax.jcr.query.QueryResult;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * Tests queries with order by.
@@ -59,6 +58,40 @@ public class OrderByTest extends AbstractIndexingTest {
         q = session.getWorkspace().getQueryManager().createQuery(xpath, Query.XPATH);
         result = q.execute();
         checkResult(result, 3);
+    }
+
+    public void testOrderByUpperCase() throws RepositoryException {
+        Node n1 = testRootNode.addNode("node1");
+        Node n2 = testRootNode.addNode("node2");
+        Node n3 = testRootNode.addNode("node3");
+
+        n1.setProperty("text", "Amundsen");
+        n2.setProperty("text", "barents");
+        n3.setProperty("text", "Wegener");
+
+        testRootNode.save();
+
+        String xpath = "/" + testRoot + "/*[@jcr:primaryType='nt:unstructured'] order by fn:upper-case(@text)";
+        Query q = session.getWorkspace().getQueryManager().createQuery(xpath, Query.XPATH);
+        QueryResult result = q.execute();
+        checkResult(result, new Node[]{n1, n2, n3});
+    }
+
+    public void testOrderByLowerCase() throws RepositoryException {
+        Node n1 = testRootNode.addNode("node1");
+        Node n2 = testRootNode.addNode("node2");
+        Node n3 = testRootNode.addNode("node3");
+
+        n1.setProperty("text", "Amundsen");
+        n2.setProperty("text", "barents");
+        n3.setProperty("text", "Wegener");
+
+        testRootNode.save();
+
+        String xpath = "/" + testRoot + "/*[@jcr:primaryType='nt:unstructured'] order by fn:lower-case(@text)";
+        Query q = session.getWorkspace().getQueryManager().createQuery(xpath, Query.XPATH);
+        QueryResult result = q.execute();
+        checkResult(result, new Node[]{n1, n2, n3});
     }
 
     public void testChildAxisString() throws RepositoryException {

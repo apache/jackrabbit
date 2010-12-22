@@ -16,18 +16,6 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.Map;
-
-import javax.jcr.RepositoryException;
-import javax.jcr.Value;
-import javax.jcr.Workspace;
-import javax.jcr.nodetype.PropertyDefinition;
-import javax.jcr.query.InvalidQueryException;
-import javax.jcr.query.QueryResult;
-import javax.jcr.query.qom.QueryObjectModelFactory;
-
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
 import org.apache.jackrabbit.core.query.PropertyTypeRegistry;
@@ -50,6 +38,15 @@ import org.apache.jackrabbit.spi.commons.query.qom.ColumnImpl;
 import org.apache.lucene.search.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.jcr.RepositoryException;
+import javax.jcr.Workspace;
+import javax.jcr.nodetype.PropertyDefinition;
+import javax.jcr.query.InvalidQueryException;
+import javax.jcr.query.QueryResult;
+import javax.jcr.query.qom.QueryObjectModelFactory;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 /**
  * Implements the {@link org.apache.jackrabbit.core.query.ExecutableQuery}
@@ -126,15 +123,17 @@ public class QueryImpl extends AbstractQueryImpl {
         }
         Path[] orderProperties = new Path[orderSpecs.length];
         boolean[] ascSpecs = new boolean[orderSpecs.length];
+        String[] orderFuncs = new String[orderSpecs.length];
         for (int i = 0; i < orderSpecs.length; i++) {
             orderProperties[i] = orderSpecs[i].getPropertyPath();
             ascSpecs[i] = orderSpecs[i].isAscending();
+            orderFuncs[i] = orderSpecs[i].getFunction();
         }
 
         return new SingleColumnQueryResult(
                 index, sessionContext, this, query,
                 new SpellSuggestion(index.getSpellChecker(), root),
-                getColumns(), orderProperties, ascSpecs,
+                getColumns(), orderProperties, ascSpecs, orderFuncs,
                 orderProperties.length == 0 && getRespectDocumentOrder(),
                 offset, limit);
     }

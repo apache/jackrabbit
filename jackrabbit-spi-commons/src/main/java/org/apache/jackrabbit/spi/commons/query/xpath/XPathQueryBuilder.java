@@ -16,16 +16,6 @@
  */
 package org.apache.jackrabbit.spi.commons.query.xpath;
 
-import java.io.StringReader;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.List;
-import java.util.Map;
-
-import javax.jcr.NamespaceException;
-import javax.jcr.RepositoryException;
-import javax.jcr.query.InvalidQueryException;
-
 import org.apache.commons.collections.map.ReferenceMap;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.NameFactory;
@@ -56,6 +46,15 @@ import org.apache.jackrabbit.spi.commons.query.RelationQueryNode;
 import org.apache.jackrabbit.spi.commons.query.TextsearchQueryNode;
 import org.apache.jackrabbit.util.ISO8601;
 import org.apache.jackrabbit.util.ISO9075;
+
+import javax.jcr.NamespaceException;
+import javax.jcr.RepositoryException;
+import javax.jcr.query.InvalidQueryException;
+import java.io.StringReader;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Query builder that translates a XPath statement into a query tree structure.
@@ -439,7 +438,7 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
                         || queryNode.getType() == QueryNode.TYPE_PATH) {
                     createNodeTest(node, queryNode);
                 } else if (queryNode.getType() == QueryNode.TYPE_ORDER) {
-                    createOrderSpec(node, (OrderQueryNode) queryNode);
+                    setOrderSpecPath(node, (OrderQueryNode) queryNode);
                 } else {
                     // traverse
                     node.childrenAccept(this, queryNode);
@@ -523,11 +522,18 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
                 queryNode = root.getOrderNode();
                 node.childrenAccept(this, queryNode);
                 break;
+            case JJTORDERSPEC:
+                OrderQueryNode orderQueryNode = (OrderQueryNode) queryNode;
+                orderQueryNode.newOrderSpec();
+                node.childrenAccept(this, queryNode);
+                if (!orderQueryNode.isValid()) {
+                    exceptions.add(new InvalidQueryException("Invalid order specification. (Missing @?)"));
+                }
+                break;
             case JJTORDERMODIFIER:
                 if (node.jjtGetNumChildren() > 0
                         && ((SimpleNode) node.jjtGetChild(0)).getId() == JJTDESCENDING) {
-                    OrderQueryNode.OrderSpec[] specs = ((OrderQueryNode) queryNode).getOrderSpecs();
-                    specs[specs.length - 1].setAscending(false);
+                    ((OrderQueryNode) queryNode).setAscending(false);
                 }
                 break;
             case JJTPREDICATELIST:
@@ -962,7 +968,7 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
                 }
             } else if (JCR_SCORE.equals(funName)) {
                 if (queryNode.getType() == QueryNode.TYPE_ORDER) {
-                    createOrderSpec(node, (OrderQueryNode) queryNode);
+                    setOrderSpecPath(node, (OrderQueryNode) queryNode);
                 } else {
                     exceptions.add(new InvalidQueryException("Unsupported location for jcr:score()"));
                 }
@@ -974,6 +980,9 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
                                 relNode, PropertyFunctionQueryNode.LOWER_CASE));
                         // get property name
                         node.jjtGetChild(1).jjtAccept(this, relNode);
+                    } else if (queryNode.getType() == QueryNode.TYPE_ORDER) {
+                        ((OrderQueryNode) queryNode).setFunction(FN_LOWER_CASE.getLocalName());
+                        node.childrenAccept(this, queryNode);
                     } else {
                         exceptions.add(new InvalidQueryException("Unsupported location for fn:lower-case()"));
                     }
@@ -988,6 +997,9 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
                                 relNode, PropertyFunctionQueryNode.UPPER_CASE));
                         // get property name
                         node.jjtGetChild(1).jjtAccept(this, relNode);
+                    } else if (queryNode.getType() == QueryNode.TYPE_ORDER) {
+                        ((OrderQueryNode) queryNode).setFunction(FN_UPPER_CASE.getLocalName());
+                        node.childrenAccept(this, queryNode);
                     } else {
                         exceptions.add(new InvalidQueryException("Unsupported location for fn:upper-case()"));
                     }
@@ -1120,10 +1132,8 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
         return derefNode;
     }
 
-    private OrderQueryNode.OrderSpec createOrderSpec(SimpleNode node,
-                                                     OrderQueryNode queryNode) {
+    private void setOrderSpecPath(SimpleNode node, OrderQueryNode queryNode) {
         SimpleNode child = (SimpleNode) node.jjtGetChild(0);
-        OrderQueryNode.OrderSpec spec = null;
         try {
             String propName = child.getValue();
             if (child.getId() == JJTQNAMELPAR) {
@@ -1139,14 +1149,12 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
             } else {
                 path = PathFactoryImpl.getInstance().create(element);
             }
-            spec = new OrderQueryNode.OrderSpec(path, true);
-            queryNode.addOrderSpec(spec);
+            queryNode.setPath(path);
         } catch (NameException e) {
             exceptions.add(new InvalidQueryException("Illegal name: " + child.getValue()));
         } catch (NamespaceException e) {
             exceptions.add(new InvalidQueryException("Illegal name: " + child.getValue()));
         }
-        return spec;
     }
 
     /**
