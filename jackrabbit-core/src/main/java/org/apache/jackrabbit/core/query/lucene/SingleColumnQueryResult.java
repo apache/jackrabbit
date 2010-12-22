@@ -16,14 +16,13 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
-import java.io.IOException;
-
-import javax.jcr.RepositoryException;
-
 import org.apache.jackrabbit.core.session.SessionContext;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.commons.query.qom.ColumnImpl;
 import org.apache.lucene.search.Query;
+
+import javax.jcr.RepositoryException;
+import java.io.IOException;
 
 /**
  * <code>SingleColumnQueryResult</code> implements a query result that returns
@@ -46,17 +45,23 @@ public class SingleColumnQueryResult extends QueryResultImpl {
      */
     protected final boolean[] orderSpecs;
 
+    /**
+     * Function for each of the order properties (or <code>null</code> if none).
+     */
+    private String[] orderFuncs;
+
     public SingleColumnQueryResult(
             SearchIndex index, SessionContext sessionContext,
             AbstractQueryImpl queryImpl, Query query,
             SpellSuggestion spellSuggestion, ColumnImpl[] columns,
-            Path[] orderProps, boolean[] orderSpecs, boolean documentOrder,
+            Path[] orderProps, boolean[] orderSpecs, String[] orderFuncs, boolean documentOrder,
             long offset, long limit) throws RepositoryException {
         super(index, sessionContext, queryImpl, spellSuggestion,
                 columns, documentOrder, offset, limit);
         this.query = query;
         this.orderProps = orderProps;
         this.orderSpecs = orderSpecs;
+        this.orderFuncs = orderFuncs;
         // if document order is requested get all results right away
         getResults(docOrder ? Integer.MAX_VALUE : index.getResultFetchSize());
     }
@@ -68,7 +73,7 @@ public class SingleColumnQueryResult extends QueryResultImpl {
             throws IOException {
         return index.executeQuery(
                 sessionContext.getSessionImpl(), queryImpl, query,
-                orderProps, orderSpecs, resultFetchHint);
+                orderProps, orderSpecs, orderFuncs, resultFetchHint);
     }
 
     /**

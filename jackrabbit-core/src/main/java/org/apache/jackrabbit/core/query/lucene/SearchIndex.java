@@ -769,8 +769,8 @@ public class SearchIndex extends AbstractQueryHandler {
      * @param orderSpecs      the order specs for the sort order properties.
      *                        <code>true</code> indicates ascending order,
      *                        <code>false</code> indicates descending.
-     * @param resultFetchHint a hint on how many results should be fetched.
-     * @return the query hits.
+     * @param orderFuncs      functions for the properties for sort order. 
+     * @param resultFetchHint a hint on how many results should be fetched.  @return the query hits.
      * @throws IOException if an error occurs while searching the index.
      */
     public MultiColumnQueryHits executeQuery(SessionImpl session,
@@ -778,11 +778,11 @@ public class SearchIndex extends AbstractQueryHandler {
                                              Query query,
                                              Path[] orderProps,
                                              boolean[] orderSpecs,
-                                             long resultFetchHint)
+                                             String[] orderFuncs, long resultFetchHint)
             throws IOException {
         checkOpen();
 
-        Sort sort = new Sort(createSortFields(orderProps, orderSpecs));
+        Sort sort = new Sort(createSortFields(orderProps, orderSpecs, orderFuncs));
 
         final IndexReader reader = getIndexReader(queryImpl.needsSystemTree());
         JackrabbitIndexSearcher searcher = new JackrabbitIndexSearcher(
@@ -1016,10 +1016,11 @@ public class SearchIndex extends AbstractQueryHandler {
      *
      * @param orderProps the order properties.
      * @param orderSpecs the order specs for the properties.
+     * @param orderFuncs the functions for the properties. 
      * @return an array of sort fields
      */
     protected SortField[] createSortFields(Path[] orderProps,
-                                           boolean[] orderSpecs) {
+                                           boolean[] orderSpecs, String[] orderFuncs) {
         List<SortField> sortFields = new ArrayList<SortField>();
         for (int i = 0; i < orderProps.length; i++) {
             if (orderProps[i].getLength() == 1
@@ -1030,7 +1031,13 @@ public class SearchIndex extends AbstractQueryHandler {
                 // are first.
                 sortFields.add(new SortField(null, SortField.SCORE, orderSpecs[i]));
             } else {
-                sortFields.add(new SortField(orderProps[i].getString(), scs, !orderSpecs[i]));
+                if ("upper-case".equals(orderFuncs[i])) {
+                    sortFields.add(new SortField(orderProps[i].getString(), new UpperCaseSortComparator(scs), !orderSpecs[i]));
+                } else if ("lower-case".equals(orderFuncs[i])) {
+                    sortFields.add(new SortField(orderProps[i].getString(), new LowerCaseSortComparator(scs), !orderSpecs[i]));
+                } else {
+                    sortFields.add(new SortField(orderProps[i].getString(), scs, !orderSpecs[i]));
+                }
             }
         }
         return sortFields.toArray(new SortField[sortFields.size()]);

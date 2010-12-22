@@ -16,15 +16,14 @@
  */
 package org.apache.jackrabbit.spi.commons.query;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.jcr.RepositoryException;
-
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
-import org.apache.jackrabbit.spi.commons.name.PathBuilder;
 import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
+import org.apache.jackrabbit.spi.commons.name.PathBuilder;
+
+import javax.jcr.RepositoryException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Implements a query node that defines the order of nodes according to the
@@ -35,7 +34,7 @@ public class OrderQueryNode extends QueryNode {
     /**
      * The order spects
      */
-    private final List specs = new ArrayList();
+    private final List<OrderSpec> specs = new ArrayList<OrderSpec>();
 
     /**
      * Creates a new <code>OrderQueryNode</code> with a reference to a parent
@@ -54,6 +53,78 @@ public class OrderQueryNode extends QueryNode {
      */
     public int getType() {
         return QueryNode.TYPE_ORDER;
+    }
+
+    /**
+     * Create and add a new (empty) order specification to this query node.
+     */
+    public void newOrderSpec() {
+        specs.add(new OrderSpec((Path) null, true));
+    }
+
+    /**
+     * Set the last order specification of this query node to ascending/descending
+     * @see OrderSpec#setAscending(boolean)
+     *
+     * @param value  <code>true</code>true> for ascending and <code>false</code> for
+     * descending.
+     * @throws  IllegalStateException  if no order specification is set
+     */
+    public void setAscending(boolean value) {
+        if (specs.size() == 0) {
+            throw new IllegalStateException("No order specification set");
+        }
+
+        OrderSpec orderSpec = specs.get(specs.size() - 1);
+        orderSpec.setAscending(value);
+    }
+
+    /**
+     * Set the path of the last order specification of this query node.
+     * @see OrderSpec#setPath(org.apache.jackrabbit.spi.Path)
+     *
+     * @param path  a path
+     * @throws  IllegalStateException  if no order specification is set
+     */
+    public void setPath(Path path) {
+        if (specs.size() == 0) {
+            throw new IllegalStateException("No order specification set");
+        }
+
+        OrderSpec orderSpec = specs.get(specs.size() - 1);
+        orderSpec.setPath(path);
+    }
+
+    /**
+     * Set the function of the last order specification of this query node.
+     * @see OrderSpec#setFunction(String)
+     *
+     * @param name  a function name
+     * @throws  IllegalStateException  if no order specification is set
+     */
+    public void setFunction(String name) {
+        if (specs.size() == 0) {
+            throw new IllegalStateException("No order specification set");
+        }
+        
+        OrderSpec orderSpec = specs.get(specs.size() - 1);
+        orderSpec.setFunction(name);
+    }
+
+    /**
+     * Checks whether all order specifications of this query node have at least
+     * its path specified (i.e. non <code>null</code>.)
+     *
+     * @return  <code>true</code> iff all order specification of this query node are valid.
+     */
+    public boolean isValid() {
+        for (OrderSpec spec : specs) {
+            if (spec.getPropertyPath() == null) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /**
@@ -106,7 +177,7 @@ public class OrderQueryNode extends QueryNode {
      *                                   index <code>i</code>.
      */
     public boolean isAscending(int i) throws IndexOutOfBoundsException {
-        return ((OrderSpec) specs.get(i)).ascending;
+        return specs.get(i).ascending;
     }
 
     /**
@@ -116,7 +187,7 @@ public class OrderQueryNode extends QueryNode {
      * @return order by specs.
      */
     public OrderSpec[] getOrderSpecs() {
-        return (OrderSpec[]) specs.toArray(new OrderSpec[specs.size()]);
+        return specs.toArray(new OrderSpec[specs.size()]);
     }
 
     /**
@@ -141,12 +212,17 @@ public class OrderQueryNode extends QueryNode {
         /**
          * The relative path to of the property
          */
-        private final Path property;
+        private Path property;
 
         /**
-         * If <code>true</code> this property is orderd ascending
+         * If <code>true</code> this property is ordered ascending
          */
         private boolean ascending;
+
+        /**
+         * The function applied to the property
+         */
+        private String function;
 
         /**
          * Creates a new <code>OrderSpec</code> for <code>property</code>.
@@ -213,6 +289,31 @@ public class OrderQueryNode extends QueryNode {
         }
 
         /**
+         * Set a new value for the path
+         *
+         * @param path  a path
+         */
+        public void setPath(Path path) {
+            this.property = path;
+        }
+
+        /**
+         * Set a new value for a function
+         *
+         * @param name a function name
+         */
+        public void setFunction(String name) {
+            this.function = name;
+        }
+
+        /**
+         * @return  name of the function 
+         */
+        public String getFunction() {
+            return function;
+        }
+        
+        /**
          * Returns <code>true</code> if <code>this</code> order spec is equal
          * to <code>obj</code>
          * @param obj the reference object with which to compare.
@@ -227,6 +328,7 @@ public class OrderQueryNode extends QueryNode {
             }
             return false;
         }
+
     }
 
     /**
