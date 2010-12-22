@@ -154,7 +154,7 @@ public class UserManagerSearchTest extends AbstractUserTest {
                 jackrabbit, deer, opposum, kangaroo, elephant, lemur, gibbon, crocodile, turtle, lizard,
                 salamander, goldenToad, poisonDartFrog);
         setProperty("color", vf.createValue("black"), blackWidow, gardenSpider, ant, fly, lizard, salamander);
-        setProperty("color", vf.createValue("white"), opposum, goose, pelican, dove);
+        setProperty("color", vf.createValue("WHITE"), opposum, goose, pelican, dove);
         setProperty("color", vf.createValue("gold"), goldenToad);
         setProperty("numberOfLegs", vf.createValue(2), kangaroo, gibbon, kestrel, goose, dove);
         setProperty("numberOfLegs", vf.createValue(4), jackrabbit, deer, opposum, elephant, lemur, crocodile,
@@ -595,7 +595,7 @@ public class UserManagerSearchTest extends AbstractUserTest {
             Value[] color = authorizable.getProperty("color");
             assertNotNull(color);
             assertEquals(1, color.length);
-            assertTrue(prev == null || prev.compareTo(color[0].getString()) >= 0);
+            assertTrue(prev == null || prev.compareToIgnoreCase(color[0].getString()) >= 0);
             prev = color[0].getString();
         }
     }
@@ -605,7 +605,7 @@ public class UserManagerSearchTest extends AbstractUserTest {
             public <T> void build(QueryBuilder<T> builder) {
                 builder.setCondition(builder.
                         exists("profile/@weight"));
-                builder.setSortOrder("profile/@weight", Direction.ASCENDING);
+                builder.setSortOrder("profile/@weight", Direction.ASCENDING, true);
             }
         });
 
@@ -677,7 +677,7 @@ public class UserManagerSearchTest extends AbstractUserTest {
                 public <T> void build(QueryBuilder<T> builder) {
                     builder.setCondition(builder.
                             eq("profile/@cute", vf.createValue(true)));
-                    builder.setSortOrder("profile/@weight", Direction.ASCENDING);
+                    builder.setSortOrder("profile/@weight", Direction.ASCENDING, true);
                     builder.setLimit(vf.createValue(1000.0), count);
                 }
             });
