@@ -55,9 +55,9 @@ public class TransactionContext extends Timer.Task {
     private static final ThreadLocal<Xid> CURRENT_XID = new ThreadLocal<Xid>();
 
     /**
-     * Create a global timer for all transaction contexts.
+     * Timer for all transaction contexts.
      */
-    private static final Timer TIMER = new Timer(true);
+    private final Timer timer;
 
     /**
      * Transactional resources.
@@ -95,10 +95,13 @@ public class TransactionContext extends Timer.Task {
      * @param resources transactional resources
      * @param timeout timeout, in seconds
      */
-    public TransactionContext(Xid xid, InternalXAResource[] resources, int timeout) {
+    public TransactionContext(
+            Xid xid, InternalXAResource[] resources,
+            int timeout, Timer timer) {
         this.xid = xid;
         this.resources = resources;
         this.timeout = timeout;
+        this.timer = timer;
     }
 
     /**
@@ -174,7 +177,7 @@ public class TransactionContext extends Timer.Task {
         }
 
         // start rollback task in case the commit is never issued
-        TIMER.schedule(this, timeout * 1000, Integer.MAX_VALUE);
+        timer.schedule(this, timeout * 1000, Integer.MAX_VALUE);
     }
 
     /**
