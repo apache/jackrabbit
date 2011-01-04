@@ -18,7 +18,12 @@ request.setAttribute("title", "JCR API Not Found");
 %><jsp:include page="../header.jsp"/>
 <p>
 The <code>javax.jcr.Repository</code> interface from the JCR API could not
-be loaded. To resolve this issue, you need to make the jcr-1.0.jar available
-in the shared classpath of the servlet container.
+be loaded.
+</p>
+<p>
+To resolve this issue, you need to make the <code>jcr-2.0.jar</code> file
+available in the shared classpath of the servlet container. The file is
+available for download from the
+<a href="http://www.jcp.org/en/jsr/summary?id=283">JSR 283</a> web page.
 </p>
 <jsp:include page="../footer.jsp"/>
