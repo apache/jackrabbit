@@ -26,8 +26,8 @@ import javax.servlet.ServletContextListener;
 
 /**
  * Servlet context listener that releases all remaining Derby resources
- * when the web application is undeployed. Should only be used when the
- * Derby library has been deployed as a part of this webapp.
+ * when the web application is undeployed. The resources are released only
+ * if the Derby classes were loaded from within this webapp.
  *
  * @see <a href="https://issues.apache.org/jira/browse/JCR-1301">JCR-1301</a>
  */
@@ -39,10 +39,14 @@ public class DerbyShutdown implements ServletContextListener {
     public void contextDestroyed(ServletContextEvent event) {
         try {
             String shutdown = "jdbc:derby:;shutdown=true";
+            // Try to find the Derby JDBC driver
             Driver driver = DriverManager.getDriver(shutdown);
+            // Check if the Derby driver comes from this webapp
             if (driver.getClass().getClassLoader()
                     == DerbyShutdown.class.getClassLoader()) {
+                // Unregister the automatically loaded driver
                 DriverManager.deregisterDriver(driver);
+                // Tell Derby to release all remaining resources
                 driver.connect(shutdown, new Properties());
             }
         } catch (SQLException ignore) {
