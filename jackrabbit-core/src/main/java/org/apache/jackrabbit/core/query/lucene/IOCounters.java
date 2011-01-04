@@ -16,37 +16,30 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
+import java.util.Map;
+import java.util.WeakHashMap;
+
 /**
  * <code>IOCounters</code> provides a basic mechanism to track I/O during query
  * execution.
  */
 public class IOCounters {
 
-    /**
-     * The key in the per-query-cache that identifies the read count.
-     */
-    private static final Object READ_COUNT = new Object();
+    private static final Map<Thread, Long> counts =
+        new WeakHashMap<Thread, Long>();
 
     /**
      * @return the current read count for caused by the current thread.
      */
-    public static long getReads() {
-        Long value = (Long) PerQueryCache.getInstance().get(IOCounters.class,  READ_COUNT);
-        if (value == null) {
-            value = 0L;
-        }
-        return value;
+    public static synchronized long getReads() {
+        Long count = counts.get(Thread.currentThread());
+        return count != null ? count : 0;
     }
 
     /**
      * Increments the read count caused by the current thread.
      */
-    public static void incrRead() {
-        PerQueryCache cache = PerQueryCache.getInstance();
-        Long value = (Long) cache.get(IOCounters.class,  READ_COUNT);
-        if (value == null) {
-            value = 0L;
-        }
-        cache.put(IOCounters.class, READ_COUNT, value + 1);
+    public static synchronized void incrRead() {
+        counts.put(Thread.currentThread(), getReads() + 1);
     }
 }
