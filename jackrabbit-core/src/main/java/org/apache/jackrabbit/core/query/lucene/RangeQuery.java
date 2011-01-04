@@ -74,6 +74,8 @@ public class RangeQuery extends Query implements Transformable {
      */
     private int transform = TRANSFORM_NONE;
 
+    private final PerQueryCache cache;
+
     /**
      * The rewritten range query or <code>null</code> if the range spans more
      * than {@link org.apache.lucene.search.BooleanQuery#maxClauseCount} terms.
@@ -88,8 +90,10 @@ public class RangeQuery extends Query implements Transformable {
      * @param upperTerm the upper term of the interval, or <code>null</code>.
      * @param inclusive if <code>true</code> the interval is inclusive.
      */
-    public RangeQuery(Term lowerTerm, Term upperTerm, boolean inclusive) {
-        this(lowerTerm, upperTerm, inclusive, TRANSFORM_NONE);
+    public RangeQuery(
+            Term lowerTerm, Term upperTerm, boolean inclusive,
+            PerQueryCache cache) {
+        this(lowerTerm, upperTerm, inclusive, TRANSFORM_NONE, cache);
     }
 
     /**
@@ -101,7 +105,9 @@ public class RangeQuery extends Query implements Transformable {
      * @param inclusive if <code>true</code> the interval is inclusive.
      * @param transform how term enums are transformed when read from the index.
      */
-    public RangeQuery(Term lowerTerm, Term upperTerm, boolean inclusive, int transform) {
+    public RangeQuery(
+            Term lowerTerm, Term upperTerm, boolean inclusive, int transform,
+            PerQueryCache cache) {
         if (lowerTerm == null && upperTerm == null) {
             throw new IllegalArgumentException("At least one term must be non-null");
         }
@@ -119,6 +125,7 @@ public class RangeQuery extends Query implements Transformable {
         this.upperTerm = upperTerm;
         this.inclusive = inclusive;
         this.transform = transform;
+        this.cache = cache;
     }
 
     /**
@@ -163,7 +170,7 @@ public class RangeQuery extends Query implements Transformable {
      * @return the <code>Weigth</code> for this query.
      */
     protected Weight createWeight(Searcher searcher) {
-        return new RangeQueryWeight(searcher);
+        return new RangeQueryWeight(searcher, cache);
     }
 
     /**
@@ -212,14 +219,17 @@ public class RangeQuery extends Query implements Transformable {
      */
     private class RangeQueryWeight extends AbstractWeight {
 
+        private final PerQueryCache cache;
+
         /**
          * Creates a new <code>RangeQueryWeight</code> instance using
          * <code>searcher</code>.
          *
          * @param searcher a <code>Searcher</code> instance.
          */
-        RangeQueryWeight(Searcher searcher) {
+        RangeQueryWeight(Searcher searcher, PerQueryCache cache) {
             super(searcher);
+            this.cache = cache;
         }
 
         /**
@@ -229,7 +239,7 @@ public class RangeQuery extends Query implements Transformable {
          * @return a {@link RangeQueryScorer} instance
          */
         protected Scorer createScorer(IndexReader reader) {
-            return new RangeQueryScorer(searcher.getSimilarity(), reader);
+            return new RangeQueryScorer(searcher.getSimilarity(), reader, cache);
         }
 
         /**
@@ -312,7 +322,9 @@ public class RangeQuery extends Query implements Transformable {
          * @param reader the index reader to use.
          */
         @SuppressWarnings({"unchecked"})
-        RangeQueryScorer(Similarity similarity, IndexReader reader) {
+        RangeQueryScorer(
+                Similarity similarity, IndexReader reader,
+                PerQueryCache cache) {
             super(similarity);
             this.reader = reader;
             StringBuffer key = new StringBuffer();
@@ -327,7 +339,6 @@ public class RangeQuery extends Query implements Transformable {
             key.append(transform);
             this.cacheKey = key.toString();
             // check cache
-            PerQueryCache cache = PerQueryCache.getInstance();
             Map<String, BitSet> m = (Map<String, BitSet>) cache.get(RangeQueryScorer.class, reader);
             if (m == null) {
                 m = new HashMap<String, BitSet>();

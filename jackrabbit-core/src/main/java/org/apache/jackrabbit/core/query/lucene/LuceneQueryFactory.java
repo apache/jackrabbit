@@ -144,6 +144,8 @@ public class LuceneQueryFactory {
 
     protected final String primaryTypeField;
 
+    private final PerQueryCache cache = new PerQueryCache();
+
     /**
      * Creates a new lucene query factory.
      *
@@ -208,7 +210,6 @@ public class LuceneQueryFactory {
             }
             return rows;
         } finally {
-            PerQueryCache.getInstance().dispose();
             Util.closeOrRelease(reader);
         }
     }
@@ -278,7 +279,8 @@ public class LuceneQueryFactory {
             fieldname = tmp.toString();
         }
         QueryParser parser = new JackrabbitQueryParser(
-                fieldname, index.getTextAnalyzer(), index.getSynonymProvider());
+                fieldname, index.getTextAnalyzer(),
+                index.getSynonymProvider(), cache);
         try {
             StaticOperand expr = fts.getFullTextSearchExpression();
             return parser.parse(evaluator.getValue(expr).getString());
@@ -296,7 +298,8 @@ public class LuceneQueryFactory {
      */
     public Query create(PropertyExistenceImpl prop) throws RepositoryException {
         String propName = npResolver.getJCRName(prop.getPropertyQName());
-        return Util.createMatchAllQuery(propName, index.getIndexFormatVersion());
+        return Util.createMatchAllQuery(
+                propName, index.getIndexFormatVersion(), cache);
     }
 
     protected Predicate mapConstraintToQueryAndFilter(
@@ -445,7 +448,8 @@ public class LuceneQueryFactory {
         String query = evaluator.getValue(expression).getString();
         try {
             QueryParser parser = new JackrabbitQueryParser(
-                    field, index.getTextAnalyzer(), index.getSynonymProvider());
+                    field, index.getTextAnalyzer(),
+                    index.getSynonymProvider(), cache);
             return parser.parse(query);
         } catch (ParseException e) {
             throw new RepositoryException(
@@ -509,7 +513,8 @@ public class LuceneQueryFactory {
             throws RepositoryException {
         String name = npResolver.getJCRName(session.getQName(
                 property.getPropertyName()));
-        return Util.createMatchAllQuery(name, index.getIndexFormatVersion());
+        return Util.createMatchAllQuery(
+                name, index.getIndexFormatVersion(), cache);
     }
 
     protected static class Transform {
@@ -636,7 +641,7 @@ public class LuceneQueryFactory {
             int type, int transform) throws RepositoryException {
         String string = getValueString(value, type);
         if (JCR_OPERATOR_LIKE.equals(operator)) {
-            return new WildcardQuery(PROPERTIES, field, string, transform);
+            return new WildcardQuery(PROPERTIES, field, string, transform, cache);
         }
 
         Term term = getTerm(field, string);
@@ -650,17 +655,17 @@ public class LuceneQueryFactory {
                 return new JackrabbitTermQuery(term);
             }
         } else if (JCR_OPERATOR_GREATER_THAN.equals(operator)) {
-            return new RangeQuery(term, getTerm(field, "\uFFFF"), false, transform);
+            return new RangeQuery(term, getTerm(field, "\uFFFF"), false, transform, cache);
         } else if (JCR_OPERATOR_GREATER_THAN_OR_EQUAL_TO.equals(operator)) {
-            return new RangeQuery(term, getTerm(field, "\uFFFF"), true, transform);
+            return new RangeQuery(term, getTerm(field, "\uFFFF"), true, transform, cache);
         } else if (JCR_OPERATOR_LESS_THAN.equals(operator)) {
-            return new RangeQuery(getTerm(field, ""), term, false, transform);
+            return new RangeQuery(getTerm(field, ""), term, false, transform, cache);
         } else if (JCR_OPERATOR_LESS_THAN_OR_EQUAL_TO.equals(operator)) {
-            return new RangeQuery(getTerm(field, ""), term, true, transform);
+            return new RangeQuery(getTerm(field, ""), term, true, transform, cache);
         } else if (JCR_OPERATOR_NOT_EQUAL_TO.equals(operator)) {
             BooleanQuery query = new BooleanQuery();
             query.add(Util.createMatchAllQuery(
-                    field, index.getIndexFormatVersion()), SHOULD);
+                    field, index.getIndexFormatVersion(), cache), SHOULD);
             switch (transform) {
             case TRANSFORM_UPPER_CASE:
                 query.add(new CaseTermQuery.Upper(term), MUST_NOT);

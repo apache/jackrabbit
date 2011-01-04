@@ -40,6 +40,8 @@ class MatchAllWeight extends AbstractWeight {
      */
     private final Query query;
 
+    private final PerQueryCache cache;
+
     /**
      * the weight value
      */
@@ -60,10 +62,12 @@ class MatchAllWeight extends AbstractWeight {
      * @param searcher
      * @param field name of the field to match
      */
-    MatchAllWeight(Query query, Searcher searcher, String field) {
+    MatchAllWeight(
+            Query query, Searcher searcher, String field, PerQueryCache cache) {
         super(searcher);
         this.query = query;
         this.field = field;
+        this.cache = cache;
     }
 
     /**
@@ -73,7 +77,7 @@ class MatchAllWeight extends AbstractWeight {
      * @return a {@link MatchAllScorer} instance
      */
     protected Scorer createScorer(IndexReader reader) throws IOException {
-        return new MatchAllScorer(reader, field);
+        return new MatchAllScorer(reader, field, cache);
     }
 
     /**
