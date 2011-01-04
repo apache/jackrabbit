@@ -24,6 +24,7 @@ import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.security.JackrabbitSecurityManager;
 import org.apache.jackrabbit.core.state.ItemStateCacheFactory;
 import org.apache.jackrabbit.core.version.InternalVersionManagerImpl;
+import org.apache.jackrabbit.util.Timer;
 
 /**
  * Internal component context of a Jackrabbit content repository.
@@ -90,6 +91,11 @@ public class RepositoryContext {
     private ItemStateCacheFactory itemStateCacheFactory;
 
     /**
+     * Repository-wide timer instance.
+     */
+    private final Timer timer = new Timer(false);
+
+    /**
      * Creates a component context for the given repository.
      *
      * @param repository repository instance
@@ -106,6 +112,15 @@ public class RepositoryContext {
      */
     public RepositoryImpl getRepository() {
         return repository;
+    }
+
+    /**
+     * Returns the repository-wide timer instance.
+     *
+     * @return repository timer
+     */
+    public Timer getTimer() {
+        return timer;
     }
 
     /**

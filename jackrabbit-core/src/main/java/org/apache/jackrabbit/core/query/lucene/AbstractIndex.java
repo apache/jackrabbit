@@ -63,7 +63,7 @@ abstract class AbstractIndex {
     private static final LoggingPrintStream STREAM_LOGGER = new LoggingPrintStream();
 
     /** Executor with a pool size equal to the number of available processors */
-    private static final DynamicPooledExecutor EXECUTOR = new DynamicPooledExecutor();
+    private final DynamicPooledExecutor executor = new DynamicPooledExecutor();
 
     /** The currently set IndexWriter or <code>null</code> if none is set */
     private IndexWriter indexWriter;
@@ -181,7 +181,7 @@ abstract class AbstractIndex {
 
         final IndexWriter writer = getIndexWriter();
         for (final Document doc : docs) {
-            EXECUTOR.execute(new Runnable() {
+            executor.execute(new Runnable() {
                 public void run() {
                     try {
                         // check if text extractor completed its work
@@ -409,6 +409,7 @@ abstract class AbstractIndex {
                 directory = null;
             }
         }
+        executor.close();
     }
 
     /**

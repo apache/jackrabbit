@@ -625,9 +625,8 @@ public class RepositoryImpl extends AbstractRepository
         if (systemSearchMgr == null) {
             if (repConfig.isSearchEnabled()) {
                 systemSearchMgr = new SearchManager(
+                        context,
                         repConfig,
-                        context.getNamespaceRegistry(),
-                        context.getNodeTypeRegistry(),
                         getWorkspaceInfo(wspName).itemStateMgr,
                         context.getInternalVersionManager().getPersistenceManager(),
                         SYSTEM_ROOT_NODE_ID,
@@ -1166,6 +1165,8 @@ public class RepositoryImpl extends AbstractRepository
                 log.error("failed to release the repository lock", e);
             }
         }
+
+        context.getTimer().cancel();
 
         log.info("Repository has been shutdown");
     }
@@ -1851,9 +1852,8 @@ public class RepositoryImpl extends AbstractRepository
                     // search manager is lazily instantiated in order to avoid
                     // 'chicken & egg' bootstrap problems
                     searchMgr = new SearchManager(
+                            context,
                             config,
-                            context.getNamespaceRegistry(),
-                            context.getNodeTypeRegistry(),
                             itemStateMgr, persistMgr,
                             context.getRootNodeId(),
                             getSystemSearchManager(getName()),

@@ -183,12 +183,7 @@ public class MultiIndex {
     private final IndexMerger merger;
 
     /**
-     * Timer to schedule flushes of this index after some idle time.
-     */
-    private static final Timer FLUSH_TIMER = new Timer(true);
-
-    /**
-     * Task that is periodically called by {@link #FLUSH_TIMER} and checks
+     * Task that is periodically called by the repository timer for checking
      * if index should be flushed.
      */
     private final Timer.Task flushTask;
@@ -275,7 +270,7 @@ public class MultiIndex {
         this.indexingQueue = new IndexingQueue(store);
 
         // open persistent indexes
-        for (Iterator it = indexNames.iterator(); it.hasNext(); ) {
+        for (Iterator<?> it = indexNames.iterator(); it.hasNext(); ) {
             IndexInfo info = (IndexInfo) it.next();
             String name = info.getName();
             // only open if it still exists
@@ -1081,7 +1076,7 @@ public class MultiIndex {
 
     private void scheduleFlushTask() {
         lastFlushTime = System.currentTimeMillis();
-        FLUSH_TIMER.schedule(flushTask, 0, 1000);
+        handler.getContext().getTimer().schedule(flushTask, 0, 1000);
     }
 
     /**
