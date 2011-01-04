@@ -22,9 +22,6 @@
 
     <listener>
         <!-- Releases all Derby resources when the webapp is undeployed.  -->
-        <!-- You should comment out this entry if you are not using Derby -->
-        <!-- for Jackrabbit persistence, or if you've deployed the Derby  -->
-        <!-- outside the Jackrabbit webapp.                               -->
         <!-- See https://issues.apache.org/jira/browse/JCR-1301           -->
         <listener-class>
             org.apache.jackrabbit.j2ee.DerbyShutdown
