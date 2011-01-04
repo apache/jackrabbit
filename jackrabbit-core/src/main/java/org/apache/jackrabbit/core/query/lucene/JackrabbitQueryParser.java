@@ -36,6 +36,8 @@ public class JackrabbitQueryParser extends QueryParser {
      */
     private final SynonymProvider synonymProvider;
 
+    private final PerQueryCache cache;
+
     /**
      * Creates a new query parser instance.
      *
@@ -46,9 +48,11 @@ public class JackrabbitQueryParser extends QueryParser {
      */
     public JackrabbitQueryParser(String fieldName,
                                  Analyzer analyzer,
-                                 SynonymProvider synonymProvider) {
+                                 SynonymProvider synonymProvider,
+                                 PerQueryCache cache) {
         super(fieldName, analyzer);
         this.synonymProvider = synonymProvider;
+        this.cache = cache;
         setAllowLeadingWildcard(true);
         setDefaultOperator(Operator.AND);
     }
@@ -155,7 +159,7 @@ public class JackrabbitQueryParser extends QueryParser {
         if (getLowercaseExpandedTerms()) {
             termStr = termStr.toLowerCase();
         }
-        return new WildcardQuery(field, null, translateWildcards(termStr));
+        return new WildcardQuery(field, null, translateWildcards(termStr), cache);
     }
 
     /**

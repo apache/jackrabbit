@@ -97,12 +97,13 @@ public class Util {
      * @return Query that matches all nodes that have a property with the given
      *         <code>name</code>.
      */
-    public static Query createMatchAllQuery(String name, IndexFormatVersion version) {
+    public static Query createMatchAllQuery(
+            String name, IndexFormatVersion version, PerQueryCache cache) {
         if (version.getVersion() >= IndexFormatVersion.V2.getVersion()) {
             // new index format style
             return new JackrabbitTermQuery(new Term(FieldNames.PROPERTIES_SET, name));
         } else {
-            return new MatchAllQuery(name);
+            return new MatchAllQuery(name, cache);
         }
     }
 

@@ -158,6 +158,8 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
      */
     private final List<Exception> exceptions = new ArrayList<Exception>();
 
+    private final PerQueryCache cache;
+
     /**
      * Creates a new <code>LuceneQueryBuilder</code> instance.
      *
@@ -182,7 +184,8 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                                Analyzer analyzer,
                                PropertyTypeRegistry propReg,
                                SynonymProvider synonymProvider,
-                               IndexFormatVersion indexFormatVersion) {
+                               IndexFormatVersion indexFormatVersion,
+                               PerQueryCache cache) {
         this.root = root;
         this.session = session;
         this.sharedItemMgr = sharedItemMgr;
@@ -192,6 +195,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
         this.propRegistry = propReg;
         this.synonymProvider = synonymProvider;
         this.indexFormatVersion = indexFormatVersion;
+        this.cache = cache;
 
         this.resolver = NamePathResolverImpl.create(nsMappings);
     }
@@ -221,13 +225,15 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                                     Analyzer analyzer,
                                     PropertyTypeRegistry propReg,
                                     SynonymProvider synonymProvider,
-                                    IndexFormatVersion indexFormatVersion)
+                                    IndexFormatVersion indexFormatVersion,
+                                    PerQueryCache cache)
             throws RepositoryException {
         HierarchyManager hmgr = new HierarchyManagerImpl(
                 RepositoryImpl.ROOT_NODE_ID, sharedItemMgr);
         LuceneQueryBuilder builder = new LuceneQueryBuilder(
                 root, session, sharedItemMgr, hmgr, nsMappings,
-                analyzer, propReg, synonymProvider, indexFormatVersion);
+                analyzer, propReg, synonymProvider, indexFormatVersion,
+                cache);
 
         Query q = builder.createLuceneQuery();
         if (builder.exceptions.size() > 0) {
@@ -416,7 +422,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                 fieldname = tmp.toString();
             }
             QueryParser parser = new JackrabbitQueryParser(
-                    fieldname, analyzer, synonymProvider);
+                    fieldname, analyzer, synonymProvider, cache);
             Query context = parser.parse(node.getQuery());
             if (relPath != null && (!node.getReferencesProperty() || relPath.getLength() > 1)) {
                 // text search on some child axis
@@ -611,7 +617,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
             String refProperty = resolver.getJCRName(node.getRefProperty());
 
             if (node.getIncludeDescendants()) {
-                Query refPropQuery = Util.createMatchAllQuery(refProperty, indexFormatVersion);
+                Query refPropQuery = Util.createMatchAllQuery(refProperty, indexFormatVersion, cache);
                 context = new DescendantSelfAxisQuery(context, refPropQuery, false);
             }
 
@@ -745,7 +751,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                     query = new org.apache.lucene.search.MatchAllDocsQuery();
                 } else {
                     query = new WildcardNameQuery(stringValues[0], 
-                            transform[0], session, nsMappings);
+                            transform[0], session, nsMappings, cache);
                 }
             } else {
                 exceptions.add(new InvalidQueryException("Name function can "
@@ -782,7 +788,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                     for (String value : stringValues) {
                         Term lower = new Term(FieldNames.PROPERTIES, FieldNames.createNamedValue(field, value));
                         Term upper = new Term(FieldNames.PROPERTIES, FieldNames.createNamedValue(field, "\uFFFF"));
-                        or.add(new RangeQuery(lower, upper, true, transform[0]), Occur.SHOULD);
+                        or.add(new RangeQuery(lower, upper, true, transform[0], cache), Occur.SHOULD);
                     }
                     query = or;
                     if (node.getOperation() == QueryConstants.OPERATION_GE_VALUE) {
@@ -795,7 +801,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                     for (String value : stringValues) {
                         Term lower = new Term(FieldNames.PROPERTIES, FieldNames.createNamedValue(field, value));
                         Term upper = new Term(FieldNames.PROPERTIES, FieldNames.createNamedValue(field, "\uFFFF"));
-                        or.add(new RangeQuery(lower, upper, false, transform[0]), Occur.SHOULD);
+                        or.add(new RangeQuery(lower, upper, false, transform[0], cache), Occur.SHOULD);
                     }
                     query = or;
                     if (node.getOperation() == QueryConstants.OPERATION_GT_VALUE) {
@@ -808,7 +814,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                     for (String value : stringValues) {
                         Term lower = new Term(FieldNames.PROPERTIES, FieldNames.createNamedValue(field, ""));
                         Term upper = new Term(FieldNames.PROPERTIES, FieldNames.createNamedValue(field, value));
-                        or.add(new RangeQuery(lower, upper, true, transform[0]), Occur.SHOULD);
+                        or.add(new RangeQuery(lower, upper, true, transform[0], cache), Occur.SHOULD);
                     }
                     query = or;
                     if (node.getOperation() == QueryConstants.OPERATION_LE_VALUE) {
@@ -819,9 +825,9 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                     // the like operation always has one string value.
                     // no coercing, see above
                     if (stringValues[0].equals("%")) {
-                        query = Util.createMatchAllQuery(field, indexFormatVersion);
+                        query = Util.createMatchAllQuery(field, indexFormatVersion, cache);
                     } else {
-                        query = new WildcardQuery(FieldNames.PROPERTIES, field, stringValues[0], transform[0]);
+                        query = new WildcardQuery(FieldNames.PROPERTIES, field, stringValues[0], transform[0], cache);
                     }
                     break;
                 case QueryConstants.OPERATION_LT_VALUE:      // <
@@ -830,7 +836,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                     for (String value : stringValues) {
                         Term lower = new Term(FieldNames.PROPERTIES, FieldNames.createNamedValue(field, ""));
                         Term upper = new Term(FieldNames.PROPERTIES, FieldNames.createNamedValue(field, value));
-                        or.add(new RangeQuery(lower, upper, false, transform[0]), Occur.SHOULD);
+                        or.add(new RangeQuery(lower, upper, false, transform[0], cache), Occur.SHOULD);
                     }
                     query = or;
                     if (node.getOperation() == QueryConstants.OPERATION_LT_VALUE) {
@@ -840,7 +846,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                 case QueryConstants.OPERATION_NE_VALUE:      // !=
                     // match nodes with property 'field' that includes svp and mvp
                     BooleanQuery notQuery = new BooleanQuery();
-                    notQuery.add(Util.createMatchAllQuery(field, indexFormatVersion), Occur.SHOULD);
+                    notQuery.add(Util.createMatchAllQuery(field, indexFormatVersion, cache), Occur.SHOULD);
                     // exclude all nodes where 'field' has the term in question
                     for (String value : stringValues) {
                         Term t = new Term(FieldNames.PROPERTIES, FieldNames.createNamedValue(field, value));
@@ -867,7 +873,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                     // minus the nodes that have a multi-valued property 'field' and
                     //    all values are equal to term in question
                     notQuery = new BooleanQuery();
-                    notQuery.add(Util.createMatchAllQuery(field, indexFormatVersion), Occur.SHOULD);
+                    notQuery.add(Util.createMatchAllQuery(field, indexFormatVersion, cache), Occur.SHOULD);
                     for (String value : stringValues) {
                         // exclude the nodes that have the term and are single valued
                         Term t = new Term(FieldNames.PROPERTIES, FieldNames.createNamedValue(field, value));
@@ -891,7 +897,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                     query = notQuery;
                     break;
                 case QueryConstants.OPERATION_NULL:
-                    query = new NotQuery(Util.createMatchAllQuery(field, indexFormatVersion));
+                    query = new NotQuery(Util.createMatchAllQuery(field, indexFormatVersion, cache));
                     break;
                 case QueryConstants.OPERATION_SIMILAR:
                     try {
@@ -907,10 +913,10 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                     }
                     break;
                 case QueryConstants.OPERATION_NOT_NULL:
-                    query = Util.createMatchAllQuery(field, indexFormatVersion);
+                    query = Util.createMatchAllQuery(field, indexFormatVersion, cache);
                     break;
                 case QueryConstants.OPERATION_SPELLCHECK:
-                    query = Util.createMatchAllQuery(field, indexFormatVersion);
+                    query = Util.createMatchAllQuery(field, indexFormatVersion, cache);
                     break;
                 default:
                     throw new IllegalArgumentException("Unknown relation operation: "

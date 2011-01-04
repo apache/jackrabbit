@@ -69,7 +69,7 @@ class MatchAllScorer extends Scorer {
      * @throws IOException if an error occurs while collecting hits.
      *                     e.g. while reading from the search index.
      */
-    MatchAllScorer(IndexReader reader, String field)
+    MatchAllScorer(IndexReader reader, String field, PerQueryCache cache)
             throws IOException {
         super(Similarity.getDefault());
         this.reader = reader;
@@ -78,7 +78,7 @@ class MatchAllScorer extends Scorer {
                 = new Explanation(Similarity.getDefault().idf(reader.maxDoc(),
                         reader.maxDoc()),
                         "matchAll");
-        calculateDocFilter();
+        calculateDocFilter(cache);
     }
 
     /**
@@ -136,8 +136,7 @@ class MatchAllScorer extends Scorer {
      *                     the search index.
      */
     @SuppressWarnings({"unchecked"})
-    private void calculateDocFilter() throws IOException {
-        PerQueryCache cache = PerQueryCache.getInstance();
+    private void calculateDocFilter(PerQueryCache cache) throws IOException {
         Map<String, BitSet> readerCache = (Map<String, BitSet>) cache.get(MatchAllScorer.class, reader);
         if (readerCache == null) {
             readerCache = new HashMap<String, BitSet>();

@@ -306,8 +306,6 @@ public abstract class QueryResultImpl implements QueryResult {
                     log.warn("Unable to close query result: " + e);
                 }
             }
-            // make sure PerQueryCache is disposed
-            PerQueryCache.getInstance().dispose();
         }
     }
 

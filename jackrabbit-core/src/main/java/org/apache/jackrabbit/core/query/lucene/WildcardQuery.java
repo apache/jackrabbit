@@ -76,6 +76,8 @@ public class WildcardQuery extends Query implements Transformable {
      */
     private int transform = TRANSFORM_NONE;
 
+    private final PerQueryCache cache;
+
     /**
      * The standard multi term query to execute wildcard queries. This is only
      * set if the pattern matches less than {@link org.apache.lucene.search.BooleanQuery#maxClauseCount}.
@@ -91,10 +93,13 @@ public class WildcardQuery extends Query implements Transformable {
      * @param transform how property values are transformed before they are
      *                  matched using the <code>pattern</code>.
      */
-    public WildcardQuery(String field, final String propName, String pattern, int transform) {
+    public WildcardQuery(
+            String field, final String propName, String pattern, int transform,
+            PerQueryCache cache) {
         this.field = field.intern();
         this.pattern = pattern;
         this.transform = transform;
+        this.cache = cache;
         if (propName != null) {
             tvf = new WildcardTermEnum.TermValueFactory() {
                 @Override
@@ -114,8 +119,9 @@ public class WildcardQuery extends Query implements Transformable {
      * @param propName name of the property to search.
      * @param pattern  the wildcard pattern.
      */
-    public WildcardQuery(String field, String propName, String pattern) {
-        this(field, propName, pattern, TRANSFORM_NONE);
+    public WildcardQuery(
+            String field, String propName, String pattern, PerQueryCache cache) {
+        this(field, propName, pattern, TRANSFORM_NONE, cache);
     }
 
     /**
@@ -157,7 +163,7 @@ public class WildcardQuery extends Query implements Transformable {
      * @return the <code>Weigth</code> for this query.
      */
     protected Weight createWeight(Searcher searcher) {
-        return new WildcardQueryWeight(searcher);
+        return new WildcardQueryWeight(searcher, cache);
     }
 
     /**
@@ -184,14 +190,17 @@ public class WildcardQuery extends Query implements Transformable {
      */
     private class WildcardQueryWeight extends AbstractWeight {
 
+        private final PerQueryCache cache;
+
         /**
          * Creates a new <code>WildcardQueryWeight</code> instance using
          * <code>searcher</code>.
          *
          * @param searcher a <code>Searcher</code> instance.
          */
-        public WildcardQueryWeight(Searcher searcher) {
+        public WildcardQueryWeight(Searcher searcher, PerQueryCache cache) {
             super(searcher);
+            this.cache = cache;
         }
 
         /**
@@ -201,7 +210,7 @@ public class WildcardQuery extends Query implements Transformable {
          * @return a {@link WildcardQueryScorer} instance
          */
         protected Scorer createScorer(IndexReader reader) {
-            return new WildcardQueryScorer(searcher.getSimilarity(), reader);
+            return new WildcardQueryScorer(searcher.getSimilarity(), reader, cache);
         }
 
         /**
@@ -283,12 +292,13 @@ public class WildcardQuery extends Query implements Transformable {
          * @param reader     the index reader to use.
          */
         @SuppressWarnings({"unchecked"})
-        WildcardQueryScorer(Similarity similarity, IndexReader reader) {
+        WildcardQueryScorer(
+                Similarity similarity, IndexReader reader,
+                PerQueryCache cache) {
             super(similarity);
             this.reader = reader;
             this.cacheKey = field + '\uFFFF' + tvf.createValue('\uFFFF' + pattern) + '\uFFFF' + transform;
             // check cache
-            PerQueryCache cache = PerQueryCache.getInstance();
             Map<String, BitSet> m = (Map<String, BitSet>) cache.get(WildcardQueryScorer.class, reader);
             if (m == null) {
                 m = new HashMap<String, BitSet>();

@@ -114,7 +114,8 @@ public class QueryImpl extends AbstractQueryImpl {
                 index.getContext().getItemStateManager(),
                 index.getNamespaceMappings(), index.getTextAnalyzer(),
                 propReg, index.getSynonymProvider(),
-                index.getIndexFormatVersion());
+                index.getIndexFormatVersion(),
+                cache);
 
         OrderQueryNode orderNode = root.getOrderNode();
 
