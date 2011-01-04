@@ -21,11 +21,13 @@ import java.util.concurrent.Executor;
 import org.apache.jackrabbit.core.CachingHierarchyManager;
 import org.apache.jackrabbit.core.HierarchyManager;
 import org.apache.jackrabbit.core.NamespaceRegistryImpl;
+import org.apache.jackrabbit.core.RepositoryContext;
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.persistence.PersistenceManager;
 import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.apache.jackrabbit.core.state.SharedItemStateManager;
+import org.apache.jackrabbit.util.Timer;
 
 /**
  * Acts as an argument for the {@link QueryHandler} to keep the interface
@@ -33,6 +35,11 @@ import org.apache.jackrabbit.core.state.SharedItemStateManager;
  * handler is running in.
  */
 public class QueryHandlerContext {
+
+    /**
+     * Repository context.
+     */
+    private final RepositoryContext repositoryContext;
 
     /**
      * The persistent <code>ItemStateManager</code>
@@ -48,16 +55,6 @@ public class QueryHandlerContext {
      * The underlying persistence manager.
      */
     private final PersistenceManager pm;
-
-    /**
-     * The node type registry of the repository
-     */
-    private final NodeTypeRegistry ntRegistry;
-
-    /**
-     * The namespace registry of the repository.
-     */
-    private final NamespaceRegistryImpl nsRegistry;
 
     /**
      * The id of the root node.
@@ -90,8 +87,6 @@ public class QueryHandlerContext {
      * @param stateMgr         provides persistent item states.
      * @param pm               the underlying persistence manager.
      * @param rootId           the id of the root node.
-     * @param ntRegistry       the node type registry.
-     * @param nsRegistry       the namespace registry.
      * @param parentHandler    the parent query handler or <code>null</code> it
      *                         there is no parent handler.
      * @param excludedNodeId   id of the node that should be excluded from
@@ -99,21 +94,21 @@ public class QueryHandlerContext {
      *                         excluded from indexing.
      * @param executor         background task executor
      */
-    public QueryHandlerContext(SharedItemStateManager stateMgr,
-                               PersistenceManager pm,
-                               NodeId rootId,
-                               NodeTypeRegistry ntRegistry,
-                               NamespaceRegistryImpl nsRegistry,
-                               QueryHandler parentHandler,
-                               NodeId excludedNodeId,
-                               Executor executor) {
+    public QueryHandlerContext(
+            RepositoryContext repositoryContext,
+            SharedItemStateManager stateMgr,
+            PersistenceManager pm,
+            NodeId rootId,
+            QueryHandler parentHandler,
+            NodeId excludedNodeId,
+            Executor executor) {
+        this.repositoryContext = repositoryContext;
         this.stateMgr = stateMgr;
         this.hmgr = new CachingHierarchyManager(rootId, stateMgr);
         this.stateMgr.addListener(hmgr);
         this.pm = pm;
         this.rootId = rootId;
-        this.ntRegistry = ntRegistry;
-        this.nsRegistry = nsRegistry;
+        NodeTypeRegistry ntRegistry = repositoryContext.getNodeTypeRegistry();
         propRegistry = new PropertyTypeRegistry(ntRegistry);
         this.parentHandler = parentHandler;
         this.excludedNodeId = excludedNodeId;
@@ -170,7 +165,7 @@ public class QueryHandlerContext {
      * @return the NodeTypeRegistry for this repository.
      */
     public NodeTypeRegistry getNodeTypeRegistry() {
-        return ntRegistry;
+        return repositoryContext.getNodeTypeRegistry();
     }
 
     /**
@@ -178,7 +173,7 @@ public class QueryHandlerContext {
      * @return the NamespaceRegistryImpl for this repository.
      */
     public NamespaceRegistryImpl getNamespaceRegistry() {
-        return nsRegistry;
+        return repositoryContext.getNamespaceRegistry();
     }
 
     /**
@@ -203,7 +198,7 @@ public class QueryHandlerContext {
      * Destroys this context and releases resources.
      */
     public void destroy() {
-        ntRegistry.removeListener(propRegistry);
+        repositoryContext.getNodeTypeRegistry().removeListener(propRegistry);
     }
 
     /**
@@ -213,6 +208,15 @@ public class QueryHandlerContext {
      */
     public Executor getExecutor() {
         return executor;
+    }
+
+    /**
+     * Returns the repository timer.
+     *
+     * @return repository timer
+     */
+    public Timer getTimer() {
+        return repositoryContext.getTimer();
     }
 
 }
