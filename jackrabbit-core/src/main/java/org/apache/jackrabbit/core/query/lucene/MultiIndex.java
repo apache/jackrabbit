@@ -185,7 +185,7 @@ public class MultiIndex {
     /**
      * Timer to schedule flushes of this index after some idle time.
      */
-    private static final Timer FLUSH_TIMER = new Timer(true);
+    private final Timer flushTimer = new Timer(true);
 
     /**
      * Task that is periodically called by {@link #FLUSH_TIMER} and checks
@@ -804,6 +804,7 @@ public class MultiIndex {
         synchronized (this) {
             // stop timer
             flushTask.cancel();
+            flushTimer.cancel();
 
             // commit / close indexes
             try {
@@ -1081,7 +1082,7 @@ public class MultiIndex {
 
     private void scheduleFlushTask() {
         lastFlushTime = System.currentTimeMillis();
-        FLUSH_TIMER.schedule(flushTask, 0, 1000);
+        flushTimer.schedule(flushTask, 0, 1000);
     }
 
     /**
