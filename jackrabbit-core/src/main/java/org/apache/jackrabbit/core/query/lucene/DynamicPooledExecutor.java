@@ -30,37 +30,32 @@ import java.util.concurrent.TimeUnit;
 public class DynamicPooledExecutor implements Executor {
 
     /**
+     * Number of instances that access the underlying executor.
+     * Used to automatically shutdown the thread pool when unused.
+     */
+    private static int instances = 0;
+
+    /**
      * The underlying pooled executor.
      */
-    private final ThreadPoolExecutor executor;
+    private static ThreadPoolExecutor executor = null;
 
     /**
      * The time (in milliseconds) when the pool size was last checked.
      */
-    private long lastCheck;
+    private static long lastCheck;
 
     /**
      * Creates a new DynamicPooledExecutor.
      */
     public DynamicPooledExecutor() {
-        ThreadFactory f = new ThreadFactory() {
-            public Thread newThread(Runnable r) {
-                Thread t = new Thread(r, "DynamicPooledExecutor");
-                t.setDaemon(true);
-                return t;
-            }
-        };
-        this.executor = new ThreadPoolExecutor(
-                1, Runtime.getRuntime().availableProcessors(),
-                500, TimeUnit.MILLISECONDS,
-                new LinkedBlockingQueue<Runnable>(), f);
-        this.lastCheck = System.currentTimeMillis();
+        startInstance();
     }
 
     /**
      * Adjusts the pool size at most once every second.
      */
-    private synchronized void adjustPoolSize() {
+    private static synchronized ThreadPoolExecutor adjustPoolSize() {
         long now = System.currentTimeMillis();
         if (lastCheck + 1000 < now) {
             int n = Runtime.getRuntime().availableProcessors();
@@ -69,6 +64,7 @@ public class DynamicPooledExecutor implements Executor {
             }
             lastCheck = now;
         }
+        return executor;
     }
 
     /**
@@ -81,12 +77,47 @@ public class DynamicPooledExecutor implements Executor {
      * @param command the command to execute.
      */
     public void execute(Runnable command) {
-        adjustPoolSize();
+        ThreadPoolExecutor executor = adjustPoolSize();
         if (executor.getMaximumPoolSize() == 1) {
             // if there is only one processor execute with current thread
             command.run();
         } else {
             executor.execute(command);
+        }
+    }
+
+    public void close() {
+        stopInstance();
+    }
+
+    private static synchronized void startInstance() {
+        instances++;
+        if (executor == null) {
+            ThreadFactory f = new ThreadFactory() {
+                public Thread newThread(Runnable r) {
+                    Thread t = new Thread(r, "DynamicPooledExecutor");
+                    t.setDaemon(true);
+                    return t;
+                }
+            };
+            executor = new ThreadPoolExecutor(
+                    1, Runtime.getRuntime().availableProcessors(),
+                    500, TimeUnit.MILLISECONDS,
+                    new LinkedBlockingQueue<Runnable>(), f);
+            lastCheck = System.currentTimeMillis();
+        }
+    }
+
+    private static synchronized void stopInstance() {
+        instances--;
+        if (instances == 0) {
+            executor.shutdown();
+            try {
+                executor.awaitTermination(10, TimeUnit.SECONDS);
+            } catch (InterruptedException e) {
+                // ignore and continue
+            }
+            executor = null;
         }
     }
 
