@@ -127,16 +127,16 @@ public class SearchManager implements SynchronousEventListener {
      *                       excluded from indexing.
      * @throws RepositoryException if the search manager cannot be initialized
      */
-    public SearchManager(QueryHandlerFactory qhf,
-                         final NamespaceRegistryImpl nsReg,
-                         NodeTypeRegistry ntReg,
+    public SearchManager(
+            RepositoryContext repositoryContext,
+            QueryHandlerFactory qhf,
                          SharedItemStateManager itemMgr,
                          PersistenceManager pm,
                          NodeId rootNodeId,
                          SearchManager parentMgr,
                          NodeId excludedNodeId,
                          Executor executor) throws RepositoryException {
-        this.nsReg = nsReg;
+        this.nsReg = repositoryContext.getNamespaceRegistry();
         this.itemMgr = itemMgr;
         this.parentHandler = (parentMgr != null) ? parentMgr.handler : null;
 
@@ -172,7 +172,8 @@ public class SearchManager implements SynchronousEventListener {
 
         // initialize query handler
         this.handler = qhf.getQueryHandler(new QueryHandlerContext(
-                itemMgr, pm, rootNodeId, ntReg, nsReg,
+                repositoryContext,
+                itemMgr, pm, rootNodeId,
                 parentHandler, excludedNodeId, executor));
     }
 
