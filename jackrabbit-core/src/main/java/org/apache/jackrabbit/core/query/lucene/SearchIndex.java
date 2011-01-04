@@ -795,7 +795,6 @@ public class SearchIndex extends AbstractQueryHandler {
                 try {
                     super.close();
                 } finally {
-                    PerQueryCache.getInstance().dispose();
                     Util.closeOrRelease(reader);
                 }
             }
@@ -829,7 +828,6 @@ public class SearchIndex extends AbstractQueryHandler {
                 try {
                     super.close();
                 } finally {
-                    PerQueryCache.getInstance().dispose();
                     Util.closeOrRelease(reader);
                 }
             }

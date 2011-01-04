@@ -51,6 +51,8 @@ public abstract class AbstractQueryImpl implements ExecutableQuery {
      */
     private boolean documentOrder = true;
 
+    protected final PerQueryCache cache = new PerQueryCache();
+
     /**
      * Creates a new query instance from a query string.
      *

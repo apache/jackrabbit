@@ -59,6 +59,8 @@ public class NameRangeQuery extends Query {
      */
     private final NamespaceMappings nsMappings;
 
+    private final PerQueryCache cache;
+
     /**
      * Creates a new NameRangeQuery. The lower or the upper name may be
      * <code>null</code>, but not both!
@@ -73,7 +75,8 @@ public class NameRangeQuery extends Query {
                           Name upperName,
                           boolean inclusive,
                           IndexFormatVersion version,
-                          NamespaceMappings nsMappings) {
+                          NamespaceMappings nsMappings,
+                          PerQueryCache cache) {
         if (lowerName == null && upperName == null) {
             throw new IllegalArgumentException("At least one term must be non-null");
         }
@@ -86,23 +89,28 @@ public class NameRangeQuery extends Query {
         this.inclusive = inclusive;
         this.version = version;
         this.nsMappings = nsMappings;
+        this.cache = cache;
     }
 
     /**
      * {@inheritDoc}
      */
     public Query rewrite(IndexReader reader) throws IOException {
+        Query q;
         if (version.getVersion() >= IndexFormatVersion.V3.getVersion()) {
-            RangeQuery localNames = new RangeQuery(getLowerLocalNameTerm(),
-                    getUpperLocalNameTerm(), inclusive);
+            RangeQuery localNames = new RangeQuery(
+                    getLowerLocalNameTerm(), getUpperLocalNameTerm(),
+                    inclusive, cache);
             BooleanQuery query = new BooleanQuery();
             query.add(new JackrabbitTermQuery(new Term(FieldNames.NAMESPACE_URI,
                     getNamespaceURI())), BooleanClause.Occur.MUST);
             query.add(localNames, BooleanClause.Occur.MUST);
-            return query.rewrite(reader);
+            q = query;
         } else {
-            return new RangeQuery(getLowerTerm(), getUpperTerm(), inclusive).rewrite(reader);
+            q = new RangeQuery(
+                    getLowerTerm(), getUpperTerm(), inclusive, cache);
         }
+        return q.rewrite(reader);
     }
 
     /**

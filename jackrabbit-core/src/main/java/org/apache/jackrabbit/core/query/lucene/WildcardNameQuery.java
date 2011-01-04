@@ -53,9 +53,10 @@ public class WildcardNameQuery extends WildcardQuery {
     public WildcardNameQuery(String pattern,
                              int transform,
                              NamespaceResolver resolver,
-                             NamespaceMappings nsMappings) {
+                             NamespaceMappings nsMappings,
+                             PerQueryCache cache) {
         super(FieldNames.LABEL, null,
-                convertPattern(pattern, resolver, nsMappings), transform);
+                convertPattern(pattern, resolver, nsMappings), transform, cache);
     }
 
     private static String convertPattern(String pattern,

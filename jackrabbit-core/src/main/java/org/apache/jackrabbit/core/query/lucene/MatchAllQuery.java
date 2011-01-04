@@ -30,6 +30,8 @@ class MatchAllQuery extends Query {
 
     private final String field;
 
+    private final PerQueryCache cache;
+
     /**
      * Creates a new <code>MatchAllQuery</code> .
      * <p/>
@@ -37,11 +39,13 @@ class MatchAllQuery extends Query {
      * @param field the field name.
      * @throws NullPointerException if <code>field</code> is null.
      */
-    MatchAllQuery(String field) throws NullPointerException {
+    MatchAllQuery(String field, PerQueryCache cache)
+            throws NullPointerException {
         if (field == null) {
             throw new NullPointerException("field");
         }
         this.field = field.intern();
+        this.cache = cache;
     }
 
     /**
@@ -51,7 +55,7 @@ class MatchAllQuery extends Query {
      * @return the <code>Weight</code> for this Query.
      */
     protected Weight createWeight(Searcher searcher) {
-        return new MatchAllWeight(this, searcher, field);
+        return new MatchAllWeight(this, searcher, field, cache);
     }
 
     /**

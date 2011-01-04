@@ -34,8 +34,9 @@ public class LocalNameRangeQuery extends RangeQuery {
      */
     public LocalNameRangeQuery(String lowerName,
                                String upperName,
-                               boolean inclusive) {
-        super(getLowerTerm(lowerName), getUpperTerm(upperName), inclusive);
+                               boolean inclusive,
+                               PerQueryCache cache) {
+        super(getLowerTerm(lowerName), getUpperTerm(upperName), inclusive, cache);
     }
 
     /**
