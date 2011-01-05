@@ -30,6 +30,7 @@ import javax.jcr.query.qom.Comparison;
 import javax.jcr.query.qom.Constraint;
 import javax.jcr.query.qom.DescendantNode;
 import javax.jcr.query.qom.DynamicOperand;
+import javax.jcr.query.qom.FullTextSearch;
 import javax.jcr.query.qom.FullTextSearchScore;
 import javax.jcr.query.qom.Length;
 import javax.jcr.query.qom.LowerCase;
@@ -173,6 +174,9 @@ class ConstraintSplitter {
         } else if (constraint instanceof DescendantNode) {
             DescendantNode dn = (DescendantNode) constraint;
             return Collections.singleton(dn.getSelectorName());
+        } else if (constraint instanceof FullTextSearch) {
+            FullTextSearch fts = (FullTextSearch) constraint;
+            return Collections.singleton(fts.getSelectorName());
         } else {
             throw new UnsupportedRepositoryOperationException(
                     "Unknown constraint type: " + constraint);
