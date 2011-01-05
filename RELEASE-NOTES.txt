@@ -25,6 +25,7 @@ Bug fixes
   [JCR-1301] Trouble undeploying jackrabbit-webapp from Tomcat
   [JCR-2836] Unclosed threads in Jackrabbit
   [JCR-2840] Inconsistencies if "everyone" Group is created by User Management
+  [JCR-2843] ConstraintSplitter.getSelectorNames doesn't support ...
   [JCR-2844] MaxCount not working correctly in user/group query when ...
   [JCR-2850] RMI problems prevent proper startup of the Jackrabbit webapp
 
