@@ -68,7 +68,7 @@ public class ImportHandler extends DefaultHandler {
      * to instantiate the local namespace context in
      * {@link #startElement(String, String, String, Attributes)}.
      */
-    private Map localNamespaceMappings;
+    private Map<String, String> localNamespaceMappings;
 
     public ImportHandler(Importer importer, Session session)
             throws RepositoryException {
@@ -82,6 +82,7 @@ public class ImportHandler extends DefaultHandler {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void warning(SAXParseException e) throws SAXException {
         // log exception and carry on...
         log.warn("warning encountered at line: " + e.getLineNumber()
@@ -92,6 +93,7 @@ public class ImportHandler extends DefaultHandler {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void error(SAXParseException e) throws SAXException {
         // log exception and carry on...
         log.error("error encountered at line: " + e.getLineNumber()
@@ -102,6 +104,7 @@ public class ImportHandler extends DefaultHandler {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void fatalError(SAXParseException e) throws SAXException {
         // log and re-throw exception
         log.error("fatal error encountered at line: " + e.getLineNumber()
@@ -115,6 +118,7 @@ public class ImportHandler extends DefaultHandler {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void endDocument() throws SAXException {
         // delegate to target handler
         if (targetHandler != null) {
@@ -134,6 +138,7 @@ public class ImportHandler extends DefaultHandler {
      * @param prefix namespace prefix
      * @param uri namespace URI
      */
+    @Override
     public void startPrefixMapping(String prefix, String uri)
             throws SAXException {
         localNamespaceMappings.put(prefix, uri);
@@ -147,6 +152,7 @@ public class ImportHandler extends DefaultHandler {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void startElement(String namespaceURI, String localName, String qName,
                              Attributes atts) throws SAXException {
         if (targetHandler == null) {
@@ -172,6 +178,7 @@ public class ImportHandler extends DefaultHandler {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void characters(char[] ch, int start, int length) throws SAXException {
         // delegate to target handler
         targetHandler.characters(ch, start, length);
@@ -182,6 +189,7 @@ public class ImportHandler extends DefaultHandler {
      * handler to end the current namespace context.
      * {@inheritDoc}
      */
+    @Override
     public void endElement(String namespaceURI, String localName, String qName)
             throws SAXException {
         targetHandler.endElement(namespaceURI, localName, qName);
@@ -191,6 +199,7 @@ public class ImportHandler extends DefaultHandler {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void setDocumentLocator(Locator locator) {
         this.locator = locator;
     }

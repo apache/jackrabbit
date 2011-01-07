@@ -17,7 +17,6 @@
 package org.apache.jackrabbit.commons;
 
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 
 import javax.jcr.NamespaceException;
@@ -72,11 +71,11 @@ public class NamespaceHelper {
      * @return namespace mappings
      * @throws RepositoryException if the namespaces could not be retrieved
      */
-    public Map getNamespaces() throws RepositoryException {
-        Map namespaces = new HashMap();
+    public Map<String, String> getNamespaces() throws RepositoryException {
+        Map<String, String> namespaces = new HashMap<String, String>();
         String[] prefixes = session.getNamespacePrefixes();
-        for (int i = 0; i < prefixes.length; i++) {
-            namespaces.put(prefixes[i], session.getNamespaceURI(prefixes[i]));
+        for (String prefixe : prefixes) {
+            namespaces.put(prefixe, session.getNamespaceURI(prefixe));
         }
         return namespaces;
     }
@@ -103,7 +102,7 @@ public class NamespaceHelper {
      * session, or <code>null</code> if the namespace does not exist.
      *
      * @see Session#getNamespaceURI(String)
-     * @param uri namespace URI
+     * @param prefix namespace prefix
      * @return namespace prefix, or <code>null</code>
      * @throws RepositoryException if the namespace could not be retrieved
      */
@@ -231,12 +230,10 @@ public class NamespaceHelper {
      * @param namespaces namespace mappings
      * @throws RepositoryException if the namespaces could not be registered
      */
-    public void registerNamespaces(Map namespaces) throws RepositoryException {
-        Iterator iterator = namespaces.entrySet().iterator();
-        while (iterator.hasNext()) {
-            Map.Entry entry = (Map.Entry) iterator.next();
-            registerNamespace(
-                    (String) entry.getKey(), (String) entry.getValue());
+    public void registerNamespaces(Map<String,String> namespaces) throws RepositoryException {
+        for (Map.Entry<String, String> stringStringEntry : namespaces.entrySet()) {
+            Map.Entry<String, String> entry = stringStringEntry;
+            registerNamespace(entry.getKey(), entry.getValue());
         }
     }
 
