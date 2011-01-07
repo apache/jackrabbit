@@ -59,8 +59,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * <code>UserImporter</code> implements a
- * <code>DefaultProtectedPropertyImporter</code> that is able to deal with
+ * <code>UserImporter</code> implements a <code>DefaultProtectedPropertyImporter</code>
+ * and <code>DefaultProtectedNodeImporter</code> that is able to deal with
  * user/group content as defined by the default user related node types present
  * with jackrabbit-core.<p/>
  *
@@ -73,7 +73,7 @@ import org.slf4j.LoggerFactory;
  * Note the following restrictions:
  * <ul>
  * <li>The importer will only be initialized if the user manager is an instance
- * of <code>TransientChangeUserManager</code>.
+ * of <code>UserPerWorkspaceUserManager</code>.
  * </li>
  * <li>The importer will only be initialized if the editing session starting
  * this import is the same as the UserManager's Session instance.
