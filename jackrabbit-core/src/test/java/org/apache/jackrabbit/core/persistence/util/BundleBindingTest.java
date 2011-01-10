@@ -50,11 +50,11 @@ public class BundleBindingTest extends TestCase {
 
     protected void setUp() throws Exception {
         final String[] strings = new String[] {
-                "http://www.jcp.org/jcr/1.0", 
-                "http://www.jcp.org/jcr/nt/1.0", 
-                "http://www.jcp.org/jcr/mix/1.0", 
+                "http://www.jcp.org/jcr/1.0",
+                "http://www.jcp.org/jcr/nt/1.0",
+                "http://www.jcp.org/jcr/mix/1.0",
                 "unstructured",
-                "created", 
+                "created",
                 "createdBy",
                 "",
                 "binary",
@@ -87,7 +87,7 @@ public class BundleBindingTest extends TestCase {
     }
 
     public void testEmptyBundle() throws Exception {
-        NodePropBundle bundle = new NodePropBundle(new NodeId());
+        NodePropBundle bundle = new NodePropBundle(NodeId.randomId());
         bundle.setParentId(new NodeId(1, 2));
         bundle.setNodeTypeName(NameConstants.NT_UNSTRUCTURED);
         bundle.setMixinTypeNames(Collections.<Name>emptySet());
@@ -286,27 +286,27 @@ public class BundleBindingTest extends TestCase {
      * Tests serialization of custom namespaces.
      */
     public void testCustomNamespaces() throws Exception {
-        NodePropBundle bundle = new NodePropBundle(new NodeId());
-        bundle.setParentId(new NodeId());
+        NodePropBundle bundle = new NodePropBundle(NodeId.randomId());
+        bundle.setParentId(NodeId.randomId());
         bundle.setNodeTypeName(NameConstants.NT_UNSTRUCTURED);
         bundle.setMixinTypeNames(Collections.<Name>emptySet());
         bundle.setSharedSet(Collections.<NodeId>emptySet());
 
-        bundle.addChildNodeEntry(factory.create("ns1", "test"), new NodeId());
-        bundle.addChildNodeEntry(factory.create("ns2", "test"), new NodeId());
-        bundle.addChildNodeEntry(factory.create("ns3", "test"), new NodeId());
-        bundle.addChildNodeEntry(factory.create("ns4", "test"), new NodeId());
-        bundle.addChildNodeEntry(factory.create("ns5", "test"), new NodeId());
-        bundle.addChildNodeEntry(factory.create("ns6", "test"), new NodeId());
-        bundle.addChildNodeEntry(factory.create("ns7", "test"), new NodeId());
-        bundle.addChildNodeEntry(factory.create("ns8", "test"), new NodeId());
-        bundle.addChildNodeEntry(factory.create("ns1", "test"), new NodeId());
-        bundle.addChildNodeEntry(factory.create("ns1", "test"), new NodeId());
-        bundle.addChildNodeEntry(factory.create("ns2", "test"), new NodeId());
-        bundle.addChildNodeEntry(factory.create("ns3", "test"), new NodeId());
-        bundle.addChildNodeEntry(factory.create("ns1", "test"), new NodeId());
-        bundle.addChildNodeEntry(factory.create("ns2", "test"), new NodeId());
-        bundle.addChildNodeEntry(factory.create("ns3", "test"), new NodeId());
+        bundle.addChildNodeEntry(factory.create("ns1", "test"), NodeId.randomId());
+        bundle.addChildNodeEntry(factory.create("ns2", "test"), NodeId.randomId());
+        bundle.addChildNodeEntry(factory.create("ns3", "test"), NodeId.randomId());
+        bundle.addChildNodeEntry(factory.create("ns4", "test"), NodeId.randomId());
+        bundle.addChildNodeEntry(factory.create("ns5", "test"), NodeId.randomId());
+        bundle.addChildNodeEntry(factory.create("ns6", "test"), NodeId.randomId());
+        bundle.addChildNodeEntry(factory.create("ns7", "test"), NodeId.randomId());
+        bundle.addChildNodeEntry(factory.create("ns8", "test"), NodeId.randomId());
+        bundle.addChildNodeEntry(factory.create("ns1", "test"), NodeId.randomId());
+        bundle.addChildNodeEntry(factory.create("ns1", "test"), NodeId.randomId());
+        bundle.addChildNodeEntry(factory.create("ns2", "test"), NodeId.randomId());
+        bundle.addChildNodeEntry(factory.create("ns3", "test"), NodeId.randomId());
+        bundle.addChildNodeEntry(factory.create("ns1", "test"), NodeId.randomId());
+        bundle.addChildNodeEntry(factory.create("ns2", "test"), NodeId.randomId());
+        bundle.addChildNodeEntry(factory.create("ns3", "test"), NodeId.randomId());
 
         assertBundleRoundtrip(bundle);
     }
@@ -344,8 +344,8 @@ public class BundleBindingTest extends TestCase {
 
     private void assertValueSerialization(InternalValue value)
             throws Exception {
-        NodePropBundle bundle = new NodePropBundle(new NodeId());
-        bundle.setParentId(new NodeId());
+        NodePropBundle bundle = new NodePropBundle(NodeId.randomId());
+        bundle.setParentId(NodeId.randomId());
         bundle.setNodeTypeName(NameConstants.NT_UNSTRUCTURED);
         bundle.setMixinTypeNames(Collections.<Name>emptySet());
         bundle.setSharedSet(Collections.<NodeId>emptySet());

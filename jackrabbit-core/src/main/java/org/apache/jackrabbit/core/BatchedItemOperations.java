@@ -1099,8 +1099,7 @@ public class BatchedItemOperations extends ItemValidator {
             throw new ItemExistsException(safeGetJCRPath(errorId));
         }
         if (id == null) {
-            // create new id
-            id = new NodeId();
+            id = context.getNodeIdFactory().newNodeId();
         }
         if (nodeTypeName == null) {
             // no primary node type specified,
@@ -1617,8 +1616,8 @@ public class BatchedItemOperations extends ItemValidator {
                         sharedState.addShare(destParentId);
                         return sharedState;
                     }
-                    // always create new uuid
-                    id = new NodeId();
+                    // always create new node id
+                    id = context.getNodeIdFactory().newNodeId();
                     if (referenceable) {
                         // remember uuid mapping
                         refTracker.mappedId(srcState.getNodeId(), id);
@@ -1626,8 +1625,8 @@ public class BatchedItemOperations extends ItemValidator {
                     break;
                 case CLONE:
                     if (!referenceable) {
-                        // non-referenceable node: always create new uuid
-                        id = new NodeId();
+                        // non-referenceable node: always create new node id
+                        id = context.getNodeIdFactory().newNodeId();
                         break;
                     }
                     // use same uuid as source node
@@ -1645,8 +1644,8 @@ public class BatchedItemOperations extends ItemValidator {
                     break;
                 case CLONE_REMOVE_EXISTING:
                     if (!referenceable) {
-                        // non-referenceable node: always create new uuid
-                        id = new NodeId();
+                        // non-referenceable node: always create new node id
+                        id = context.getNodeIdFactory().newNodeId();
                         break;
                     }
                     // use same uuid as source node
@@ -1756,7 +1755,7 @@ public class BatchedItemOperations extends ItemValidator {
             }
             // copy properties
             for (Name propName : srcState.getPropertyNames()) {
-                Path propPath = PathFactoryImpl.getInstance().create(srcPath, propName, true);                
+                Path propPath = PathFactoryImpl.getInstance().create(srcPath, propName, true);
                 PropertyId propId = new PropertyId(srcState.getNodeId(), propName);
                 if (!srcAccessMgr.canRead(propPath, propId)) {
                     continue;

@@ -117,7 +117,7 @@ public class PersistenceManagerIteratorTest extends AbstractJCRTest {
 
                 log("Random access");
                 for (int j = 0; j < 50; j++) {
-                    after = new NodeId();
+                    after = NodeId.randomId();
                     log(" bigger than: " + after);
                     for (NodeId id : apm.getAllNodeIds(after, 2)) {
                         log("    " + id);

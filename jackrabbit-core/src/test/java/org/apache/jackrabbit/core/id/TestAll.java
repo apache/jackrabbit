@@ -32,7 +32,10 @@ public class TestAll extends TestCase {
      */
     public static Test suite() {
         TestSuite suite = new TestSuite("Identifier tests");
+
+        suite.addTestSuite(NodeIdFactoryTest.class);
         suite.addTestSuite(NodeIdTest.class);
+
         return suite;
     }
 }

@@ -40,7 +40,7 @@ public class ChangeLogTest extends AbstractJCRTest {
      * entry in either the added nor the removed states
      */
     public void testAddDelete() throws Exception {
-        PropertyId id = new PropertyId(new NodeId(), factory.create("", "a"));
+        PropertyId id = new PropertyId(NodeId.randomId(), factory.create("", "a"));
         ItemState state = new PropertyState(id, ItemState.STATUS_NEW, false);
 
         ChangeLog log = new ChangeLog();
@@ -59,7 +59,7 @@ public class ChangeLogTest extends AbstractJCRTest {
      * in the added states.
      */
     public void testAddModify() throws Exception {
-        PropertyId id = new PropertyId(new NodeId(), factory.create("", "a"));
+        PropertyId id = new PropertyId(NodeId.randomId(), factory.create("", "a"));
         ItemState state = new PropertyState(id, ItemState.STATUS_NEW, false);
 
         ChangeLog log = new ChangeLog();
@@ -80,7 +80,7 @@ public class ChangeLogTest extends AbstractJCRTest {
     public void testPreserveOrder() throws Exception {
         ItemState[] states = new ItemState[10];
         for (int i = 0; i < states.length; i++) {
-            PropertyId id = new PropertyId(new NodeId(), factory.create("", "a" + i));
+            PropertyId id = new PropertyId(NodeId.randomId(), factory.create("", "a" + i));
             states[i] = new PropertyState(id, ItemState.STATUS_NEW, false);
         }
 

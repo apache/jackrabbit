@@ -62,7 +62,7 @@ public class EntryTest extends AbstractEntryTest {
         // false since acl has been created from path only -> no id
         assertFalse(entry.isLocal(((NodeImpl) testRootNode).getNodeId()));
         // false since internal id is null -> will never match.
-        assertFalse(entry.isLocal(new NodeId()));
+        assertFalse(entry.isLocal(NodeId.randomId()));
     }
 
     public void testIsLocal2()  throws NotExecutableException, RepositoryException {
@@ -80,14 +80,14 @@ public class EntryTest extends AbstractEntryTest {
         assertTrue(acls[0] instanceof ACLTemplate);
 
         ACLTemplate acl = (ACLTemplate) acls[0];
-        assertEquals(path, acl.getPath());       
+        assertEquals(path, acl.getPath());
 
         ACLTemplate.Entry entry = acl.createEntry(testPrincipal, new Privilege[] {acMgr.privilegeFromName(Privilege.JCR_READ)}, true, Collections.<String,Value>emptyMap());
 
         // node is must be present + must match to testrootnodes id.
         assertTrue(entry.isLocal(((NodeImpl) testRootNode).getNodeId()));
         // but not to a random id.
-        assertFalse(entry.isLocal(new NodeId()));
+        assertFalse(entry.isLocal(NodeId.randomId()));
     }
 
     public void testRestrictions() throws RepositoryException {

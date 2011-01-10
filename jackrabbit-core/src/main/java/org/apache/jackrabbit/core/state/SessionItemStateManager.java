@@ -37,6 +37,7 @@ import org.apache.jackrabbit.core.HierarchyManager;
 import org.apache.jackrabbit.core.ZombieHierarchyManager;
 import org.apache.jackrabbit.core.id.ItemId;
 import org.apache.jackrabbit.core.id.NodeId;
+import org.apache.jackrabbit.core.id.NodeIdFactory;
 import org.apache.jackrabbit.core.id.PropertyId;
 import org.apache.jackrabbit.spi.Name;
 import org.slf4j.Logger;
@@ -479,7 +480,7 @@ public class SessionItemStateManager
                     // remove any descendant candidates
                     boolean skip = false;
                     for (Iterator<NodeId> it = candidateIds.iterator(); it.hasNext();) {
-                        NodeId id = it.next();    
+                        NodeId id = it.next();
                         if (nodeId.equals(id) || hierMgr.isAncestor(id, nodeId)) {
                             // already a candidate or a descendant thereof
                             // => skip
@@ -968,4 +969,9 @@ public class SessionItemStateManager
             return false;
         }
     }
+
+    public NodeIdFactory getNodeIdFactory() {
+        return stateMgr.getNodeIdFactory();
+    }
+
 }

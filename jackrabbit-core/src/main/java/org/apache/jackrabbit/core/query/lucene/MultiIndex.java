@@ -1645,7 +1645,7 @@ public class MultiIndex {
          */
         private static final int ENTRY_LENGTH =
             Long.toString(Long.MAX_VALUE).length() + Action.ADD_NODE.length()
-            + new NodeId().toString().length() + 2;
+            + new NodeId(0, 0).toString().length() + 2;
 
         /**
          * The id of the node to add.
@@ -1928,7 +1928,7 @@ public class MultiIndex {
          */
         private static final int ENTRY_LENGTH =
             Long.toString(Long.MAX_VALUE).length() + Action.DELETE_NODE.length()
-            + new NodeId().toString().length() + 2;
+            + new NodeId(0, 0).toString().length() + 2;
 
         /**
          * The id of the node to remove.

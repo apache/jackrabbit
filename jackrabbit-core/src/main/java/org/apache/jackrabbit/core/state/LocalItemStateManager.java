@@ -20,6 +20,7 @@ import javax.jcr.ReferentialIntegrityException;
 
 import org.apache.jackrabbit.core.id.ItemId;
 import org.apache.jackrabbit.core.id.NodeId;
+import org.apache.jackrabbit.core.id.NodeIdFactory;
 import org.apache.jackrabbit.core.id.PropertyId;
 import org.apache.jackrabbit.core.observation.EventStateCollectionFactory;
 import org.apache.jackrabbit.spi.Name;
@@ -76,8 +77,8 @@ public class LocalItemStateManager
 
     /**
      * Creates a new {@code LocalItemStateManager} instance and registers it as an {@link ItemStateListener}
-     * with the given {@link SharedItemStateManager}. 
-     * 
+     * with the given {@link SharedItemStateManager}.
+     *
      * @param sharedStateMgr the {@link SharedItemStateManager}
      * @param factory the {@link EventStateCollectionFactory}
      * @param cacheFactory the {@link ItemStateCacheFactory}
@@ -548,4 +549,9 @@ public class LocalItemStateManager
     public void nodeRemoved(NodeState state, Name name, int index, NodeId id) {
         dispatcher.notifyNodeRemoved(state, name, index, id);
     }
+
+    public NodeIdFactory getNodeIdFactory() {
+        return sharedStateMgr.getNodeIdFactory();
+    }
+
 }

@@ -29,6 +29,7 @@ import javax.jcr.Session;
 import javax.jcr.version.VersionException;
 
 import org.apache.jackrabbit.core.id.NodeId;
+import org.apache.jackrabbit.core.id.NodeIdFactory;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.state.DefaultISMLocking;
 import org.apache.jackrabbit.core.state.ISMLocking.ReadLock;
@@ -76,12 +77,16 @@ abstract class InternalVersionManagerBase implements InternalVersionManager {
      */
     private final DefaultISMLocking rwLock = new DefaultISMLocking();
 
+    private final NodeIdFactory nodeIdFactory;
+
     protected InternalVersionManagerBase(NodeTypeRegistry ntReg,
                                          NodeId historiesId,
-                                         NodeId activitiesId) {
+                                         NodeId activitiesId,
+                                         NodeIdFactory nodeIdFactory) {
         this.ntReg = ntReg;
         this.historiesId = historiesId;
         this.activitiesId = activitiesId;
+        this.nodeIdFactory = nodeIdFactory;
     }
 
 //-------------------------------------------------------< InternalVersionManager >
@@ -449,7 +454,7 @@ abstract class InternalVersionManagerBase implements InternalVersionManager {
         WriteOperation operation = startWriteOperation();
         try {
             // create deep path
-            NodeId activityId = new NodeId();
+            NodeId activityId = nodeIdFactory.newNodeId();
             NodeStateEx parent = getParentNode(getActivitiesRoot(), activityId.toString(), NameConstants.REP_ACTIVITIES);
             Name name = getName(activityId.toString());
 
@@ -728,7 +733,7 @@ abstract class InternalVersionManagerBase implements InternalVersionManager {
 
     /**
      * Set version label on the specified version.
-     * 
+     *
      * @param history version history
      * @param version version name
      * @param label version label
@@ -816,4 +821,9 @@ abstract class InternalVersionManagerBase implements InternalVersionManager {
             throw new RepositoryException(e);
         }
     }
+
+    public NodeIdFactory getNodeIdFactory() {
+        return nodeIdFactory;
+    }
+
 }

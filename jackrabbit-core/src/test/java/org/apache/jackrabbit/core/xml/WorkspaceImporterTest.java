@@ -53,7 +53,7 @@ public class WorkspaceImporterTest extends AbstractJCRTest {
      */
     public void testReferenceImport() throws Exception {
         try {
-            NodeId id = new NodeId();
+            NodeId id = NodeId.randomId();
             String xml =
                 "<sv:node sv:name=\"a\""
                 + " xmlns:jcr=\"http://www.jcp.org/jcr/1.0\""

@@ -160,22 +160,16 @@ public class NodeId implements ItemId, Comparable<NodeId> {
     }
 
     /**
-     * Creates a node identifier using the given random number generator.
-     *
-     * @param random random number generator
-     */
-    public NodeId(Random random) {
-        this(   // Most significant 64 bits, with version field set to 4
-                random.nextLong() & 0xFfffFfffFfff0fffL | 0x0000000000004000L,
-                // Least significant 64 bits, with variant field set to IETF
-                random.nextLong() & 0x3fffFfffFfffFfffL | 0x8000000000000000L);
-    }
-
-    /**
      * Creates a random node identifier using a secure random number generator.
      */
-    public NodeId() {
-        this(SeededSecureRandom.getInstance());
+    public static NodeId randomId() {
+        Random random = SeededSecureRandom.getInstance();
+        return new NodeId(
+                // Most significant 64 bits, with version field set to 4
+                random.nextLong() & 0xFfffFfffFfff0fffL | 0x0000000000004000L,
+                // Least significant 64 bits, with variant field set to IETF
+                random.nextLong() & 0x3fffFfffFfffFfffL | 0x8000000000000000L
+            );
     }
 
     /**

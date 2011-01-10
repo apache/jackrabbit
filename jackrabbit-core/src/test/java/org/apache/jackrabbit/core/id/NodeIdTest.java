@@ -21,7 +21,7 @@ import junit.framework.TestCase;
 public class NodeIdTest extends TestCase {
 
     private static final NodeId[] ids = {
-        new NodeId(), // random id
+        NodeId.randomId(), // random id
         new NodeId(0, 0),
         new NodeId(-1, -1),
         new NodeId("cafebabe-cafe-babe-cafe-babecafebabe")
@@ -81,7 +81,7 @@ public class NodeIdTest extends TestCase {
     public void testUuidFormat() {
         long maxHigh = 0, maxLow = 0, minHigh = -1L, minLow = -1L;
         for (int i = 0; i < 100; i++) {
-            NodeId id = new NodeId();
+            NodeId id = NodeId.randomId();
             assertUuidFormat(id);
             maxHigh |= id.getMostSignificantBits();
             maxLow |= id.getLeastSignificantBits();

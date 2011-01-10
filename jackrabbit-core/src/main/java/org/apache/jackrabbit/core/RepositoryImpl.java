@@ -80,6 +80,7 @@ import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.fs.FileSystemException;
 import org.apache.jackrabbit.core.fs.FileSystemResource;
 import org.apache.jackrabbit.core.id.NodeId;
+import org.apache.jackrabbit.core.id.NodeIdFactory;
 import org.apache.jackrabbit.core.lock.LockManager;
 import org.apache.jackrabbit.core.lock.LockManagerImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
@@ -183,6 +184,8 @@ public class RepositoryImpl extends AbstractRepository
 
     // configuration of the repository
     protected final RepositoryConfig repConfig;
+
+    protected NodeIdFactory nodeIdFactory;
 
     /**
      * the delegating observation dispatcher for all workspaces
@@ -303,6 +306,10 @@ public class RepositoryImpl extends AbstractRepository
                 context.setDataStore(dataStore);
             }
 
+            nodeIdFactory = new NodeIdFactory(repConfig.getHomeDir());
+            nodeIdFactory.open();
+            context.setNodeIdFactory(nodeIdFactory);
+
             context.setWorkspaceManager(new WorkspaceManager(this));
 
             // init workspace configs
@@ -391,7 +398,7 @@ public class RepositoryImpl extends AbstractRepository
                     // ensure this exception does not overlay the original
                     // startup exception and only log it
                     log.error("In addition to startup fail, another unexpected problem " +
-                    		"occurred while shutting down the repository again.", t);
+                            "occurred while shutting down the repository again.", t);
                 }
             }
         }
@@ -510,7 +517,8 @@ public class RepositoryImpl extends AbstractRepository
                 VERSION_STORAGE_NODE_ID,
                 ACTIVITIES_NODE_ID,
                 context.getItemStateCacheFactory(),
-                ismLocking);
+                ismLocking,
+                context.getNodeIdFactory());
     }
 
     /**
@@ -1138,6 +1146,12 @@ public class RepositoryImpl extends AbstractRepository
             log.error("error while closing repository file system", e);
         }
 
+        try {
+            nodeIdFactory.close();
+        } catch (RepositoryException e) {
+            log.error("error while closing repository file system", e);
+        }
+
         // make sure this instance is not used anymore
         disposed = true;
 
@@ -1377,7 +1391,8 @@ public class RepositoryImpl extends AbstractRepository
                 context.getNodeTypeRegistry(),
                 true,
                 context.getItemStateCacheFactory(),
-                locking);
+                locking,
+                context.getNodeIdFactory());
     }
 
     /**

@@ -30,6 +30,7 @@ import org.apache.jackrabbit.core.RepositoryImpl;
 import org.apache.jackrabbit.core.cluster.UpdateEventChannel;
 import org.apache.jackrabbit.core.id.ItemId;
 import org.apache.jackrabbit.core.id.NodeId;
+import org.apache.jackrabbit.core.id.NodeIdFactory;
 import org.apache.jackrabbit.core.id.PropertyId;
 import org.apache.jackrabbit.core.nodetype.EffectiveNodeType;
 import org.apache.jackrabbit.core.nodetype.NodeTypeConflictException;
@@ -181,6 +182,8 @@ public class SharedItemStateManager
      */
     private UpdateEventChannel eventChannel;
 
+    private final NodeIdFactory nodeIdFactory;
+
     /**
      * Creates a new <code>SharedItemStateManager</code> instance.
      *
@@ -193,7 +196,8 @@ public class SharedItemStateManager
                                   NodeTypeRegistry ntReg,
                                   boolean usesReferences,
                                   ItemStateCacheFactory cacheFactory,
-                                  ISMLocking locking)
+                                  ISMLocking locking,
+                                  NodeIdFactory nodeIdFactory)
             throws ItemStateException {
         cache = new ItemStateReferenceCache(cacheFactory);
         this.persistMgr = persistMgr;
@@ -201,6 +205,7 @@ public class SharedItemStateManager
         this.usesReferences = usesReferences;
         this.rootNodeId = rootNodeId;
         this.ismLocking = locking;
+        this.nodeIdFactory = nodeIdFactory;
         // create root node state if it doesn't yet exist
         if (!hasNonVirtualItemState(rootNodeId)) {
             createRootNodeState(rootNodeId, ntReg);
@@ -1114,17 +1119,17 @@ public class SharedItemStateManager
         }
 
     }
-    
+
     /**
      * Validates the hierarchy consistency of the changes in the changelog.
-     * 
+     *
      * @param changeLog
      *            The local changelog the should be validated
      * @throws ItemStateException
      *             If the hierarchy changes are inconsistent.
      * @throws RepositoryException
      *             If the consistency could not be validated
-     * 
+     *
      */
     private void validateHierarchy(ChangeLog changeLog) throws ItemStateException, RepositoryException {
 
@@ -1140,7 +1145,7 @@ public class SharedItemStateManager
 
     /**
      * Checks the parents and children of all deleted node states in the changelog.
-     * 
+     *
      * @param changeLog
      *            The local changelog the should be validated
      * @throws ItemStateException
@@ -1210,7 +1215,7 @@ public class SharedItemStateManager
 
     /**
      * Checks the parents and children of all added node states in the changelog.
-     * 
+     *
      * @param changeLog
      *            The local changelog the should be validated
      * @throws ItemStateException
@@ -1262,7 +1267,7 @@ public class SharedItemStateManager
 
     /**
      * Checks the parents and children of all modified node states in the changelog.
-     * 
+     *
      * @param changeLog
      *            The local changelog the should be validated
      * @throws ItemStateException
@@ -1371,7 +1376,7 @@ public class SharedItemStateManager
 
     /**
      * Check the consistency of a parent/child relationship.
-     * 
+     *
      * @param changeLog
      *            The changelog to check
      * @param childState
@@ -1417,7 +1422,7 @@ public class SharedItemStateManager
     /**
      * Determines whether the specified node is <i>shareable</i>, i.e. whether the mixin type <code>mix:shareable</code>
      * is either directly assigned or indirectly inherited.
-     * 
+     *
      * @param state
      *            node state to check
      * @return true if the specified node is <i>shareable</i>, false otherwise.
@@ -1441,7 +1446,7 @@ public class SharedItemStateManager
             throw new RepositoryException(msg, ntce);
         }
     }
-    
+
     /**
      * Begin update operation. This will return an object that can itself be
      * ended/canceled.
@@ -1848,4 +1853,9 @@ public class SharedItemStateManager
             throw new ItemStateException("Interrupted while acquiring write lock");
         }
     }
+
+    public NodeIdFactory getNodeIdFactory() {
+        return this.nodeIdFactory;
+    }
+
 }

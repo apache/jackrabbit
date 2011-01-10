@@ -144,7 +144,7 @@ public class ClusterRecordTest extends JUnitTest {
      * @throws Exception
      */
     public void testLockOperation() throws Exception {
-        LockEvent event = new LockEvent(new NodeId(), true, "admin");
+        LockEvent event = new LockEvent(NodeId.randomId(), true, "admin");
 
         master.createLockChannel(DEFAULT_WORKSPACE).create(event.getNodeId(),
                 event.isDeep(), event.getUserId()).ended(true);
@@ -162,7 +162,7 @@ public class ClusterRecordTest extends JUnitTest {
      * @throws Exception
      */
     public void testUnlockOperation() throws Exception {
-        UnlockEvent event = new UnlockEvent(new NodeId());
+        UnlockEvent event = new UnlockEvent(NodeId.randomId());
 
         master.createLockChannel(DEFAULT_WORKSPACE).create(event.getNodeId()).ended(true);
 

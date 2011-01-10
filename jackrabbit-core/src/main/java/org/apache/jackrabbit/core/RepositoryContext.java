@@ -20,6 +20,7 @@ import org.apache.jackrabbit.core.cluster.ClusterNode;
 import org.apache.jackrabbit.core.data.DataStore;
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.id.NodeId;
+import org.apache.jackrabbit.core.id.NodeIdFactory;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.security.JackrabbitSecurityManager;
 import org.apache.jackrabbit.core.state.ItemStateCacheFactory;
@@ -89,6 +90,8 @@ public class RepositoryContext {
      * Item state cache factory of this repository.
      */
     private ItemStateCacheFactory itemStateCacheFactory;
+
+    private NodeIdFactory nodeIdFactory;
 
     /**
      * Repository-wide timer instance.
@@ -321,6 +324,14 @@ public class RepositoryContext {
     void setItemStateCacheFactory(ItemStateCacheFactory itemStateCacheFactory) {
         assert itemStateCacheFactory != null;
         this.itemStateCacheFactory = itemStateCacheFactory;
+    }
+
+    public void setNodeIdFactory(NodeIdFactory nodeIdFactory) {
+        this.nodeIdFactory = nodeIdFactory;
+    }
+
+    public NodeIdFactory getNodeIdFactory() {
+        return nodeIdFactory;
     }
 
 }

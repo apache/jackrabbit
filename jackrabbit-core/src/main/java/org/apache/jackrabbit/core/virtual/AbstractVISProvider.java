@@ -319,12 +319,10 @@ public abstract class AbstractVISProvider implements VirtualItemStateProvider, I
                                             NodeId id, Name nodeTypeName)
             throws RepositoryException {
 
+        assert id != null;
+
         // create a new node state
-        VirtualNodeState state;
-        if (id == null) {
-            id = new NodeId();
-        }
-        state = new VirtualNodeState(this, parent.getNodeId(), id, nodeTypeName, Name.EMPTY_ARRAY);
+        VirtualNodeState state = new VirtualNodeState(this, parent.getNodeId(), id, nodeTypeName, Name.EMPTY_ARRAY);
 
         cache(state);
         return state;

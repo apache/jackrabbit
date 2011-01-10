@@ -36,7 +36,7 @@ public class SlowQueryHandler extends SearchIndex {
         } catch (InterruptedException e) {
             // ignore
         }
-        getContext().getItemStateManager().hasItemState(new NodeId());
+        getContext().getItemStateManager().hasItemState(NodeId.randomId());
         super.doInit();
     }
 
