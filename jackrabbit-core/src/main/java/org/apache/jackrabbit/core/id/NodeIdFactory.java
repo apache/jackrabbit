@@ -17,8 +17,8 @@
 package org.apache.jackrabbit.core.id;
 
 import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Properties;
 import java.util.UUID;
@@ -71,7 +71,7 @@ public class NodeIdFactory {
                 }
             }
             Properties p = new Properties();
-            p.load(new FileReader(n));
+            p.load(new FileInputStream(n));
             String defaultMsb = "", defaultLsb = "0";
             int index = seq.indexOf("/");
             if (index >= 0) {
@@ -105,7 +105,7 @@ public class NodeIdFactory {
         p.setProperty(NEXT_LSB, Long.toHexString(lsb));
         try {
             File temp = new File(repositoryHome, NODE_ID_FILE_TEMP);
-            p.store(new FileWriter(temp), null);
+            p.store(new FileOutputStream(temp), null);
             File n = new File(repositoryHome, NODE_ID_FILE);
             n.delete();
             temp.renameTo(n);
