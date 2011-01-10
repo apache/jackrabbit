@@ -115,7 +115,7 @@ public class InternalXAVersionManager extends InternalVersionManagerBase
     public InternalXAVersionManager(InternalVersionManagerImpl vMgr, NodeTypeRegistry ntReg,
                             SessionImpl session, ItemStateCacheFactory cacheFactory)
             throws RepositoryException {
-        super(ntReg, vMgr.historiesId, vMgr.activitiesId);
+        super(ntReg, vMgr.historiesId, vMgr.activitiesId, vMgr.getNodeIdFactory());
         this.vMgr = vMgr;
         this.session = session;
         this.stateMgr = XAItemStateManager.createInstance(vMgr.getSharedStateMgr(),

@@ -101,7 +101,7 @@ public abstract class AbstractBundlePersistenceManager implements
 
     /** Sentinel instance used to mark a non-existent bundle in the cache */
     private static final NodePropBundle MISSING =
-        new NodePropBundle(new NodeId());
+        new NodePropBundle(NodeId.randomId());
 
     /** the index for namespaces */
     private StringIndex nsIndex;

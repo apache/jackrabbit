@@ -30,6 +30,7 @@ import org.apache.jackrabbit.core.WorkspaceImpl;
 import org.apache.jackrabbit.core.config.WorkspaceConfig;
 import org.apache.jackrabbit.core.data.DataStore;
 import org.apache.jackrabbit.core.id.NodeId;
+import org.apache.jackrabbit.core.id.NodeIdFactory;
 import org.apache.jackrabbit.core.nodetype.NodeTypeManagerImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.observation.ObservationManagerImpl;
@@ -284,6 +285,10 @@ public class SessionContext implements NamePathResolver {
             ObservationManagerImpl observationManager) {
         assert observationManager != null;
         this.observationManager = observationManager;
+    }
+
+    public NodeIdFactory getNodeIdFactory() {
+        return repositoryContext.getNodeIdFactory();
     }
 
     //--------------------------------------------------------< NameResolver >

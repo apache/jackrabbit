@@ -27,7 +27,7 @@ import junit.framework.TestCase;
 public class IDFieldTest extends TestCase {
 
     public void testPerformance() {
-        NodeId id = new NodeId();
+        NodeId id = NodeId.randomId();
         long time = System.currentTimeMillis();
         for (int i = 0; i < 1000 * 1000; i++) {
             new IDField(id);

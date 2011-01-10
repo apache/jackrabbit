@@ -35,6 +35,7 @@ import org.apache.jackrabbit.core.cluster.UpdateEventListener;
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.id.ItemId;
 import org.apache.jackrabbit.core.id.NodeId;
+import org.apache.jackrabbit.core.id.NodeIdFactory;
 import org.apache.jackrabbit.core.id.PropertyId;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.observation.DelegatingObservationDispatcher;
@@ -120,7 +121,7 @@ public class InternalVersionManagerImpl extends InternalVersionManagerBase
      * Persistent root node of the activities.
      */
     private final NodeStateEx activitiesRoot;
-    
+
     /**
      * Map of returned items. this is kept for invalidating
      */
@@ -149,8 +150,9 @@ public class InternalVersionManagerImpl extends InternalVersionManagerBase
                               NodeId historiesId,
                               NodeId activitiesId,
                               ItemStateCacheFactory cacheFactory,
-                              ISMLocking ismLocking) throws RepositoryException {
-        super(ntReg, historiesId, activitiesId);
+                              ISMLocking ismLocking,
+                              NodeIdFactory nodeIdFactory) throws RepositoryException {
+        super(ntReg, historiesId, activitiesId, nodeIdFactory);
         try {
             this.pMgr = pMgr;
             this.fs = fs;
@@ -188,7 +190,7 @@ public class InternalVersionManagerImpl extends InternalVersionManagerBase
                 pMgr.store(cl);
             }
 
-            sharedStateMgr = createItemStateManager(pMgr, systemId, ntReg, cacheFactory, ismLocking);
+            sharedStateMgr = createItemStateManager(pMgr, systemId, ntReg, cacheFactory, ismLocking, nodeIdFactory);
 
             stateMgr = LocalItemStateManager.createInstance(sharedStateMgr, escFactory, cacheFactory);
             stateMgr.addListener(this);
@@ -572,9 +574,10 @@ public class InternalVersionManagerImpl extends InternalVersionManagerBase
                                                              NodeId rootId,
                                                              NodeTypeRegistry ntReg,
                                                              ItemStateCacheFactory cacheFactory,
-                                                             ISMLocking ismLocking)
+                                                             ISMLocking ismLocking,
+                                                             NodeIdFactory nodeIdFactory)
             throws ItemStateException {
-        return new VersionItemStateManager(pMgr, rootId, ntReg, cacheFactory, ismLocking);
+        return new VersionItemStateManager(pMgr, rootId, ntReg, cacheFactory, ismLocking, nodeIdFactory);
     }
 
     /**

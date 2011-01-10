@@ -74,7 +74,7 @@ public interface VirtualItemStateProvider extends ItemStateManager {
      *
      * @param parent
      * @param name
-     * @param id
+     * @param id (must not be null)
      * @param nodeTypeName
      * @return
      * @throws RepositoryException

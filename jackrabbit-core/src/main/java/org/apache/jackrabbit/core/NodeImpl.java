@@ -503,7 +503,7 @@ public class NodeImpl extends ItemImpl implements Node, JackrabbitNode {
         NodeState nodeState;
         try {
             if (id == null) {
-                id = new NodeId();
+                id = sessionContext.getNodeIdFactory().newNodeId();
             }
             nodeState =
                     stateMgr.createTransientNodeState(id, nodeType.getQName(),

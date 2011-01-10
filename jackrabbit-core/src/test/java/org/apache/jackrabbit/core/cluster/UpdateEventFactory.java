@@ -156,7 +156,7 @@ public class UpdateEventFactory {
     protected NodeState createNodeState() {
         Name ntName = nameFactory.create("{}testnt");
         NodeState n = new NodeState(
-                new NodeId(), ntName,
+                NodeId.randomId(), ntName,
                 ROOT_NODE_ID, NodeState.STATUS_EXISTING, false);
         n.setMixinTypeNames(Collections.EMPTY_SET);
         return n;

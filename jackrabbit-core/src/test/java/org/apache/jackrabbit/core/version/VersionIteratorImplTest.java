@@ -64,9 +64,9 @@ public class VersionIteratorImplTest extends TestCase {
 
     public void testVersionIterator() throws Exception {
 
-        InternalVersion version = new DummyInternalVersion(new InternalVersion[] {}, new NodeId());
+        InternalVersion version = new DummyInternalVersion(new InternalVersion[] {}, NodeId.randomId());
         for (int i = 1; i < VERSION_COUNT; i++) {
-            version = new DummyInternalVersion(new InternalVersion[] {version}, new NodeId());
+            version = new DummyInternalVersion(new InternalVersion[] {version}, NodeId.randomId());
         }
 
         try {

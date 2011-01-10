@@ -38,7 +38,7 @@ public class InternalValueFactoryTest extends QValueFactoryTest {
         factory = InternalValueFactory.getInstance();
         rootPath = PathFactoryImpl.getInstance().getRootPath();
         testName = NameFactoryImpl.getInstance().create(Name.NS_JCR_URI, "data");
-        reference = new NodeId().toString();
+        reference = NodeId.randomId().toString();
     }
 
     protected void tearDown() throws Exception {

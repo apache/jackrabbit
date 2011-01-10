@@ -46,9 +46,9 @@ import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
 
 public class PersistenceManagerTest extends TestCase {
 
-    private static final NodeId NODE_ID = new NodeId();
+    private static final NodeId NODE_ID = NodeId.randomId();
 
-    private static final NodeId CHILD_ID = new NodeId();
+    private static final NodeId CHILD_ID = NodeId.randomId();
 
     private static final Name TEST =
         NameFactoryImpl.getInstance().create("", "test");

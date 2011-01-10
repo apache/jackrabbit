@@ -181,7 +181,7 @@ abstract public class VersionManagerImplConfig extends VersionManagerImplMerge {
         Name name = InternalVersionManagerBase.getName(rootId.toString());
 
         if (configId == null) {
-            configId = new NodeId();
+            configId = context.getNodeIdFactory().newNodeId();
         }
         NodeStateEx config = configParent.addNode(name, NameConstants.NT_CONFIGURATION, configId, true);
         Set<Name> mix = new HashSet<Name>();

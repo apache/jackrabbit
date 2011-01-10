@@ -118,7 +118,7 @@ public class AccessManagerTest extends AbstractJCRTest {
 
     public void testCheckPermissionWithUnknowId() throws RepositoryException, NotExecutableException {
         Session s = getHelper().getReadOnlySession();
-        NodeId id = new NodeId();
+        NodeId id = NodeId.randomId();
         try {
             AccessManager acMgr = getAccessManager(s);
             acMgr.checkPermission(id, AccessManager.READ);

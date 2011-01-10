@@ -55,7 +55,7 @@ public abstract class AbstractISMLockingTest extends TestCase {
     protected void setUp() throws Exception {
         super.setUp();
         locking = createISMLocking();
-        NodeId id = new NodeId();
+        NodeId id = NodeId.randomId();
         state = new NodeState(id, NameConstants.NT_BASE, null, ItemState.STATUS_EXISTING, true);
         refs = new NodeReferences(state.getNodeId());
         logs = new ArrayList<ChangeLog>();
@@ -82,7 +82,7 @@ public abstract class AbstractISMLockingTest extends TestCase {
      * Checks the following requirement: <p/> <i>While a read lock is held for a given item with id
      * <code>I</code> an implementation must ensure that no write lock is issued for a change log that
      * contains a reference to an item with id <code>I</code>. </i>
-     * 
+     *
      * @throws InterruptedException on interruption; this will err the test
      */
     public void testReadBlocksWrite() throws InterruptedException {
@@ -98,7 +98,7 @@ public abstract class AbstractISMLockingTest extends TestCase {
      * <code>C</code> an implementation must ensure that no read lock is issued for an item that is contained
      * in <code>C</code>, unless the current thread is the owner of the write lock!</i> <p/> The "unless"
      * clause is tested by {@link #testWriteBlocksRead_notIfSameThread()} test.
-     * 
+     *
      * @throws InterruptedException on interruption; this will err the test
      */
     public void testWriteBlocksRead() throws InterruptedException {
@@ -132,7 +132,7 @@ public abstract class AbstractISMLockingTest extends TestCase {
      * with <code>C</code>. That is both change logs contain a reference to the same item. Please note that an
      * implementation is free to block requests entirely for additional write lock while a write lock is
      * active. It is not a requirement to support concurrent write locks.
-     * 
+     *
      * @throws InterruptedException on interruption; this will err the test
      */
     public void testIntersectingWrites() throws InterruptedException {
@@ -147,7 +147,7 @@ public abstract class AbstractISMLockingTest extends TestCase {
 
     /**
      * Checks if a downgraded write lock allows other threads to read again.
-     * 
+     *
      * @throws InterruptedException on interruption; this will err the test
      */
     public void testDowngrade() throws InterruptedException {
@@ -166,7 +166,7 @@ public abstract class AbstractISMLockingTest extends TestCase {
      * Creates and starts a thread that acquires and releases the write lock of the given
      * <code>ISMLocking</code> for the given changelog. The thread's interrupted status is set if it was
      * interrupted during the acquire-release sequence and could therefore not finish it.
-     * 
+     *
      * @param lock the <code>ISMLocking</code> to use
      * @param changeLog the <code>ChangeLog</code> to use
      * @return a thread that has been started
@@ -190,7 +190,7 @@ public abstract class AbstractISMLockingTest extends TestCase {
      * Creates and starts an thread that acquires and releases the read lock of the given
      * <code>ISMLocking</code> for the given id. The thread's interrupted status is set if it was interrupted
      * during the acquire-release sequence and could therefore not finish it.
-     * 
+     *
      * @param lock the <code>ISMLocking</code> to use
      * @param id the id to use
      * @return a thread that has been started
@@ -214,7 +214,7 @@ public abstract class AbstractISMLockingTest extends TestCase {
      * Verifies that the given thread is blocked. Then it interrupts the thread and waits a certain amount of
      * time for it to complete. (If it doesn't complete within that time then the test that calls this method
      * fails).
-     * 
+     *
      * @param other a started thread
      * @throws InterruptedException on interruption
      */
@@ -230,7 +230,7 @@ public abstract class AbstractISMLockingTest extends TestCase {
      * Verifies that the given thread is not blocked and runs to completion within a certain amount of time
      * and without interruption. (If it doesn't complete within that time without interruption then the test
      * that calls this method fails).
-     * 
+     *
      * @param other a started thread
      * @throws InterruptedException on interruption
      */

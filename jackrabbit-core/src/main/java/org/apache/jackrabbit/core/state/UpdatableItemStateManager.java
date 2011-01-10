@@ -18,6 +18,7 @@ package org.apache.jackrabbit.core.state;
 
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.core.id.NodeId;
+import org.apache.jackrabbit.core.id.NodeIdFactory;
 
 import javax.jcr.ReferentialIntegrityException;
 
@@ -120,4 +121,7 @@ public interface UpdatableItemStateManager extends ItemStateManager {
      * Disposes this <code>UpdatableItemStateManager</code> and frees resources.
      */
     void dispose();
+
+    NodeIdFactory getNodeIdFactory();
+
 }
