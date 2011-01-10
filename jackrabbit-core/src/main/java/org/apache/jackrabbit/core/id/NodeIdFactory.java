@@ -80,7 +80,7 @@ public class NodeIdFactory {
             }
             String m = p.getProperty(MSB, defaultMsb);
             if (m.length() == 0) {
-                msb = UUID.randomUUID().getLeastSignificantBits();
+                msb = UUID.randomUUID().getMostSignificantBits();
                 // ensure it doesn't conflict with version 1-5 UUIDs
                 msb &= ~0xf000;
             } else {
