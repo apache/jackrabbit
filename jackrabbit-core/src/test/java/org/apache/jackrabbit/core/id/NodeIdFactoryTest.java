@@ -27,15 +27,16 @@ public class NodeIdFactoryTest extends TestCase {
     private static final String factoryDir = "target/temp/nodeIdFactory";
 
     public void setUp() throws IOException {
+        System.clearProperty(NodeIdFactory.SEQUENTIAL_NODE_ID);
         FileUtils.deleteDirectory(new File(factoryDir));
     }
 
     public void tearDown() throws IOException {
         setUp();
+        System.clearProperty(NodeIdFactory.SEQUENTIAL_NODE_ID);
     }
 
     public void testRandomVersusSequential() throws RepositoryException {
-        System.clearProperty(NodeIdFactory.SEQUENTIAL_NODE_ID);
         NodeIdFactory f = new NodeIdFactory(factoryDir);
         f.open();
         NodeId id = f.newNodeId();
@@ -50,15 +51,43 @@ public class NodeIdFactoryTest extends TestCase {
         f.close();
     }
 
+    /**
+     * Test that the version field is reset (0), and that all other MSB bits are
+     * 1 at some point. This also tests the LSB bits.
+     */
+    public void testUUIDVersionFieldReset() throws Exception {
+        System.setProperty(NodeIdFactory.SEQUENTIAL_NODE_ID, "true");
+        long msbOr = 0, msbAnd = -1, lsbOr = 0, lsbAnd = -1;
+        for (int i = 0; i < 0x1f; i++) {
+            FileUtils.deleteDirectory(new File(factoryDir));
+            NodeIdFactory f = new NodeIdFactory(factoryDir);
+            f.open();
+            for (int j = 0; j < 8; j++) {
+                NodeId x = f.newNodeId();
+                msbOr |= x.getMostSignificantBits();
+                msbAnd &= x.getMostSignificantBits();
+                lsbAnd &= x.getLeastSignificantBits();
+                lsbOr |= x.getLeastSignificantBits();
+            }
+            f.close();
+        }
+        System.out.println(Long.toHexString(msbOr));
+        System.out.println(Long.toHexString(lsbOr));
+        assertEquals(0xffffffffffff0fffL, msbOr);
+        assertEquals(0, msbAnd);
+        assertEquals(7, lsbOr);
+        assertEquals(0, lsbAnd);
+     }
+
     public void testNormalUsage() throws RepositoryException {
         System.setProperty(NodeIdFactory.SEQUENTIAL_NODE_ID, "true");
         NodeIdFactory f = new NodeIdFactory(factoryDir);
         f.open();
-        assertEquals("00000000-0000-0000-0000-000000000000", f.newNodeId().toString());
+        assertTrue(f.newNodeId().toString().endsWith("-0000-000000000000"));
         f.close();
         f = new NodeIdFactory(factoryDir);
         f.open();
-        assertEquals("00000000-0000-0000-0000-000000000001", f.newNodeId().toString());
+        assertTrue(f.newNodeId().toString().endsWith("-0000-000000000001"));
         f.close();
     }
 
@@ -104,7 +133,7 @@ public class NodeIdFactoryTest extends TestCase {
         System.setProperty(NodeIdFactory.SEQUENTIAL_NODE_ID, "true");
         NodeIdFactory f = new NodeIdFactory(factoryDir);
         f.open();
-        assertEquals("00000000-0000-0000-0000-000000000000", f.newNodeId().toString());
+        assertTrue(f.newNodeId().toString().endsWith("-0000-000000000000"));
         f.close();
         File id = new File(factoryDir, "nodeId.properties");
         assertTrue(id.exists());
@@ -112,7 +141,7 @@ public class NodeIdFactoryTest extends TestCase {
         id.renameTo(idTemp);
         f = new NodeIdFactory(factoryDir);
         f.open();
-        assertEquals("00000000-0000-0000-0000-000000000001", f.newNodeId().toString());
+        assertTrue(f.newNodeId().toString().endsWith("-0000-000000000001"));
         assertFalse(idTemp.exists());
         f.close();
     }
