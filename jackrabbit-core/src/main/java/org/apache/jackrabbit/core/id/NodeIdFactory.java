@@ -71,7 +71,12 @@ public class NodeIdFactory {
                 }
             }
             Properties p = new Properties();
-            p.load(new FileInputStream(n));
+            FileInputStream in = new FileInputStream(n);
+            try {
+                p.load(in);
+            } finally {
+                in.close();
+            }
             String defaultMsb = "", defaultLsb = "0";
             int index = seq.indexOf("/");
             if (index >= 0) {
@@ -84,7 +89,12 @@ public class NodeIdFactory {
                 // ensure it doesn't conflict with version 1-5 UUIDs
                 msb &= ~0xf000;
             } else {
-                msb = Long.parseLong(m, 16);
+                if (m.length() == 16) {
+                    msb = (Long.parseLong(m.substring(0, 8), 16) << 32) |
+                        Long.parseLong(m.substring(8), 16);
+                } else {
+                    msb = Long.parseLong(m, 16);
+                }
             }
             storedLsb = nextLsb = Long.parseLong(p.getProperty(NEXT_LSB, defaultLsb), 16);
         } catch (Exception e) {
@@ -105,7 +115,12 @@ public class NodeIdFactory {
         p.setProperty(NEXT_LSB, Long.toHexString(lsb));
         try {
             File temp = new File(repositoryHome, NODE_ID_FILE_TEMP);
-            p.store(new FileOutputStream(temp), null);
+            FileOutputStream out = new FileOutputStream(temp);
+            try {
+                p.store(out, null);
+            } finally {
+                out.close();
+            }
             File n = new File(repositoryHome, NODE_ID_FILE);
             n.delete();
             temp.renameTo(n);
