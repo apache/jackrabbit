@@ -2010,13 +2010,7 @@ public class RepositoryImpl extends AbstractRepository
                     new File(config.getHomeDir()), fs,
                     config.getPersistenceManagerConfig());
 
-            // JCR-2551: Recovery from a lost version history
-            if (Boolean.getBoolean("org.apache.jackrabbit.version.recovery")) {
-                RepositoryChecker checker = new RepositoryChecker(
-                        persistMgr, context.getInternalVersionManager());
-                checker.check(ROOT_NODE_ID, true);
-                checker.fix();
-            }
+            doVersionRecovery();
 
             ISMLocking ismLocking = config.getISMLocking();
 
@@ -2048,6 +2042,19 @@ public class RepositoryImpl extends AbstractRepository
 
             // register the observation factory of that workspace
             delegatingDispatcher.addDispatcher(dispatcher);
+        }
+
+        /**
+         * If necessary, recover from a lost version history.
+         */
+        protected void doVersionRecovery() throws RepositoryException {
+            // JCR-2551: Recovery from a lost version history
+            if (Boolean.getBoolean("org.apache.jackrabbit.version.recovery")) {
+                RepositoryChecker checker = new RepositoryChecker(
+                        persistMgr, context.getInternalVersionManager());
+                checker.check(ROOT_NODE_ID, true);
+                checker.fix();
+            }
         }
 
         /**
