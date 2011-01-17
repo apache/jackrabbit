@@ -102,6 +102,7 @@ import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.ManagedMLRUItemStateCacheFactory;
 import org.apache.jackrabbit.core.state.SharedItemStateManager;
 import org.apache.jackrabbit.core.util.RepositoryLockMechanism;
+import org.apache.jackrabbit.core.version.InternalVersionManager;
 import org.apache.jackrabbit.core.version.InternalVersionManagerImpl;
 import org.apache.jackrabbit.core.xml.ClonedInputSource;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
@@ -1113,7 +1114,10 @@ public class RepositoryImpl extends AbstractRepository
         }
 
         try {
-            context.getInternalVersionManager().close();
+            InternalVersionManager m = context.getInternalVersionManager();
+            if (m != null) {
+                m.close();
+            }
         } catch (Exception e) {
             log.error("Error while closing Version Manager.", e);
         }
