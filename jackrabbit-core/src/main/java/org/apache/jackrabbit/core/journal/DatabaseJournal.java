@@ -436,7 +436,7 @@ public class DatabaseJournal extends AbstractJournal implements DatabaseAware {
 
     /**
      * Synchronize contents from journal. May be overridden by subclasses.
-     * Override to do it in batchMode, since some databases (PSQL) when 
+     * Override to do it in batchMode, since some databases (PSQL) when
      * not in transactional mode, load all results in memory which causes
      * out of memory.
      *
@@ -447,16 +447,13 @@ public class DatabaseJournal extends AbstractJournal implements DatabaseAware {
     protected void doSync(long startRevision) throws JournalException {
         try {
             conHelper.startBatch();
-            super.doSync(startRevision);
-        } catch (SQLException e) {
-            // Should throw journal exception instead of just logging it?
-            log.error("couldn't sync the cluster node", e);
-        } finally {
             try {
+                super.doSync(startRevision);
+            } finally {
                 conHelper.endBatch(true);
-            } catch (SQLException e) {
-                log.warn("couldn't close connection", e);
             }
+        } catch (SQLException e) {
+            throw new JournalException("Couldn't sync the cluster node", e);
         }
     }
 
