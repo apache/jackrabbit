@@ -435,6 +435,32 @@ public class DatabaseJournal extends AbstractJournal implements DatabaseAware {
     }
 
     /**
+     * Synchronize contents from journal. May be overridden by subclasses.
+     * Override to do it in batchMode, since some databases (PSQL) when 
+     * not in transactional mode, load all results in memory which causes
+     * out of memory.
+     *
+     * @param startRevision start point (exclusive)
+     * @throws JournalException if an error occurs
+     */
+    @Override
+    protected void doSync(long startRevision) throws JournalException {
+        try {
+            conHelper.startBatch();
+            super.doSync(startRevision);
+        } catch (SQLException e) {
+            // Should throw journal exception instead of just logging it?
+            log.error("couldn't sync the cluster node", e);
+        } finally {
+            try {
+                conHelper.endBatch(true);
+            } catch (SQLException e) {
+                log.warn("couldn't close connection", e);
+            }
+        }
+    }
+
+    /**
      * {@inheritDoc}
      * <p/>
      * This journal is locked by incrementing the current value in the table
