@@ -355,6 +355,8 @@ public final class ConnectionFactory {
             return "select 1";
         } else if (url.contains("h2")) {
             return "select 1";
+        } else if (url.contains("db2")) {
+            return "values(1)";
         }
         log.warn("Failed to guess validation query for URL " + url);
         return null;
