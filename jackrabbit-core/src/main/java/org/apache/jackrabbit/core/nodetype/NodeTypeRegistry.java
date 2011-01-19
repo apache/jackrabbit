@@ -162,23 +162,30 @@ public class NodeTypeRegistry implements NodeTypeEventListener {
      * @throws InvalidNodeTypeDefException if the given node type definition is invalid.
      * @throws RepositoryException if a repository error occurs.
      */
-    public synchronized EffectiveNodeType registerNodeType(QNodeTypeDefinition ntd)
+    public EffectiveNodeType registerNodeType(QNodeTypeDefinition ntd)
             throws InvalidNodeTypeDefException, RepositoryException {
-        // validate and register new node type definition
-        EffectiveNodeType ent = internalRegister(ntd);
 
-        // persist new node type definition
-        customNTDefs.add(ntd);
-        persistCustomNodeTypeDefs(customNTDefs);
+        EffectiveNodeType ent;
+
+        synchronized (this) {
+
+            // validate and register new node type definition
+            ent = internalRegister(ntd);
+
+            // persist new node type definition
+            customNTDefs.add(ntd);
+            persistCustomNodeTypeDefs(customNTDefs);
+
+            // notify listeners
+            notifyRegistered(ntd.getName());
+
+        }
 
         if (eventChannel != null) {
             Set<QNodeTypeDefinition> ntDefs = new HashSet<QNodeTypeDefinition>();
             ntDefs.add(ntd);
             eventChannel.registered(ntDefs);
         }
-
-        // notify listeners
-        notifyRegistered(ntd.getName());
 
         return ent;
     }
@@ -209,27 +216,32 @@ public class NodeTypeRegistry implements NodeTypeEventListener {
      * @throws InvalidNodeTypeDefException if the given node type definition is invalid.
      * @throws RepositoryException if a repository error occurs.
      */
-    private synchronized void registerNodeTypes(Collection<QNodeTypeDefinition> ntDefs,
+    private void registerNodeTypes(Collection<QNodeTypeDefinition> ntDefs,
                                                 boolean external)
             throws InvalidNodeTypeDefException, RepositoryException {
 
-        // validate and register new node type definitions
-        internalRegister(ntDefs);
-        // persist new node type definitions
-        for (QNodeTypeDefinition ntDef: ntDefs) {
-            customNTDefs.add(ntDef);
+        synchronized (this) {
+
+            // validate and register new node type definitions
+            internalRegister(ntDefs);
+            // persist new node type definitions
+            for (QNodeTypeDefinition ntDef: ntDefs) {
+                customNTDefs.add(ntDef);
+            }
+            persistCustomNodeTypeDefs(customNTDefs);
+
+            // notify listeners
+            for (QNodeTypeDefinition ntDef : ntDefs) {
+                notifyRegistered(ntDef.getName());
+            }
+
         }
-        persistCustomNodeTypeDefs(customNTDefs);
 
         // inform cluster if this is not an external invocation
         if (!external && eventChannel != null) {
             eventChannel.registered(ntDefs);
         }
 
-        // notify listeners
-        for (QNodeTypeDefinition ntDef : ntDefs) {
-            notifyRegistered(ntDef.getName());
-        }
     }
 
     /**
@@ -261,54 +273,59 @@ public class NodeTypeRegistry implements NodeTypeEventListener {
      *                                 denote a registered node type.
      * @throws RepositoryException if another error occurs
      */
-    private synchronized void unregisterNodeTypes(
+    private void unregisterNodeTypes(
             Collection<Name> ntNames, boolean external)
             throws NoSuchNodeTypeException, RepositoryException {
 
-        // do some preliminary checks
-        for (Name ntName: ntNames) {
-            if (!registeredNTDefs.containsKey(ntName)) {
-                throw new NoSuchNodeTypeException(ntName.toString());
-            }
-            if (builtInNTDefs.contains(ntName)) {
-                throw new RepositoryException(ntName.toString()
-                        + ": can't unregister built-in node type.");
-            }
-            // check for node types other than those to be unregistered
-            // that depend on the given node types
-            Set<Name> dependents = getDependentNodeTypes(ntName);
-            dependents.removeAll(ntNames);
-            if (dependents.size() > 0) {
-                StringBuffer msg = new StringBuffer();
-                msg.append(ntName).append(" can not be removed because the following node types depend on it: ");
-                for (Name dependent : dependents) {
-                    msg.append(dependent);
-                    msg.append(" ");
+        synchronized (this) {
+
+            // do some preliminary checks
+            for (Name ntName: ntNames) {
+                if (!registeredNTDefs.containsKey(ntName)) {
+                    throw new NoSuchNodeTypeException(ntName.toString());
                 }
-                throw new RepositoryException(msg.toString());
+                if (builtInNTDefs.contains(ntName)) {
+                    throw new RepositoryException(ntName.toString()
+                            + ": can't unregister built-in node type.");
+                }
+                // check for node types other than those to be unregistered
+                // that depend on the given node types
+                Set<Name> dependents = getDependentNodeTypes(ntName);
+                dependents.removeAll(ntNames);
+                if (dependents.size() > 0) {
+                    StringBuffer msg = new StringBuffer();
+                    msg.append(ntName).append(" can not be removed because the following node types depend on it: ");
+                    for (Name dependent : dependents) {
+                        msg.append(dependent);
+                        msg.append(" ");
+                    }
+                    throw new RepositoryException(msg.toString());
+                }
             }
-        }
 
-        // make sure node types are not currently in use
-        for (Name ntName : ntNames) {
-            checkForReferencesInContent(ntName);
-        }
+            // make sure node types are not currently in use
+            for (Name ntName : ntNames) {
+                checkForReferencesInContent(ntName);
+            }
 
-        // all preconditions are met, node types can now safely be unregistered
-        internalUnregister(ntNames);
+            // all preconditions are met, node types can now safely be unregistered
+            internalUnregister(ntNames);
+
+            // persist removal of node type definitions & notify listeners
+            for (Name ntName : ntNames) {
+                customNTDefs.remove(ntName);
+            }
+            notifyUnregistered(ntNames);
+
+            persistCustomNodeTypeDefs(customNTDefs);
+
+        }
 
         // inform cluster if this is not an external invocation
         if (!external && eventChannel != null) {
             eventChannel.unregistered(ntNames);
         }
 
-        // persist removal of node type definitions & notify listeners
-        for (Name ntName : ntNames) {
-            customNTDefs.remove(ntName);
-        }
-        notifyUnregistered(ntNames);
-
-        persistCustomNodeTypeDefs(customNTDefs);
     }
 
     /**
@@ -364,36 +381,70 @@ public class NodeTypeRegistry implements NodeTypeEventListener {
      *                                     is invalid
      * @throws RepositoryException if another error occurs
      */
-    private synchronized EffectiveNodeType reregisterNodeType(QNodeTypeDefinition ntd,
+    private EffectiveNodeType reregisterNodeType(QNodeTypeDefinition ntd,
                                                               boolean external)
             throws NoSuchNodeTypeException, InvalidNodeTypeDefException,
             RepositoryException {
 
-        Name name = ntd.getName();
-        if (!registeredNTDefs.containsKey(name)) {
-            throw new NoSuchNodeTypeException(name.toString());
-        }
-        if (builtInNTDefs.contains(name)) {
-            throw new RepositoryException(name.toString()
-                    + ": can't reregister built-in node type.");
-        }
+        EffectiveNodeType entNew;
 
-        /**
-         * validate new node type definition
-         */
-        ntd = checkNtBaseSubtyping(ntd, registeredNTDefs);
-        validateNodeTypeDef(ntd, entCache, registeredNTDefs, nsReg, false);
+        synchronized (this) {
 
-        /**
-         * build diff of current and new definition and determine type of change
-         */
-        QNodeTypeDefinition ntdOld = registeredNTDefs.get(name);
-        NodeTypeDefDiff diff = NodeTypeDefDiff.create(ntdOld, ntd);
-        if (!diff.isModified()) {
-            // the definition has not been modified, there's nothing to do here...
-            return getEffectiveNodeType(name);
-        }
-        if (diff.isTrivial()) {
+            Name name = ntd.getName();
+            if (!registeredNTDefs.containsKey(name)) {
+                throw new NoSuchNodeTypeException(name.toString());
+            }
+            if (builtInNTDefs.contains(name)) {
+                throw new RepositoryException(name.toString()
+                        + ": can't reregister built-in node type.");
+            }
+
+            /**
+             * validate new node type definition
+             */
+            ntd = checkNtBaseSubtyping(ntd, registeredNTDefs);
+            validateNodeTypeDef(ntd, entCache, registeredNTDefs, nsReg, false);
+
+            /**
+             * build diff of current and new definition and determine type of change
+             */
+            QNodeTypeDefinition ntdOld = registeredNTDefs.get(name);
+            NodeTypeDefDiff diff = NodeTypeDefDiff.create(ntdOld, ntd);
+            if (!diff.isModified()) {
+                // the definition has not been modified, there's nothing to do here...
+                return getEffectiveNodeType(name);
+            }
+
+            if (!diff.isTrivial()) {
+
+                // TODO Implement checkForConflictingContent()
+                // make sure existing content would not conflict
+                // with new node type definition
+                //checkForConflictingContent(ntd);
+                //
+                // unregister old node type definition
+                //internalUnregister(name);
+                // register new definition
+                //EffectiveNodeType entNew = internalRegister(ntd);
+                //
+                // persist modified node type definitions
+                //customNTDefs.remove(name);
+                //customNTDefs.add(ntd);
+                //persistCustomNodeTypeDefs(customNTDefs);
+                //
+                // notify listeners
+                //notifyReRegistered(name);
+                //return entNew;
+
+                String message =
+                    "The following node type change contains non-trivial changes."
+                    + "Up until now only trivial changes are supported."
+                    + " (see javadoc for "
+                    + NodeTypeDefDiff.class.getName()
+                    + "):\n" + diff.toString();
+                throw new RepositoryException(message);
+            }
+
             /**
              * the change is trivial and has no effect on current content
              * (e.g. that would be the case when non-mandatory properties had
@@ -405,49 +456,25 @@ public class NodeTypeRegistry implements NodeTypeEventListener {
             // remove old node type definition from store
             customNTDefs.remove(name);
 
-            EffectiveNodeType entNew = internalRegister(ntd);
+            entNew = internalRegister(ntd);
 
             // add new node type definition to store
             customNTDefs.add(ntd);
             // persist node type definitions
             persistCustomNodeTypeDefs(customNTDefs);
 
-            // inform cluster if this is not an external invocation
-            if (!external && eventChannel != null) {
-                eventChannel.reregistered(ntd);
-            }
-
             // notify listeners
             notifyReRegistered(name);
-            return entNew;
+
         }
 
-        String message =
-            "The following node type change contains non-trivial changes."
-            + "Up until now only trivial changes are supported."
-            + " (see javadoc for "
-            + NodeTypeDefDiff.class.getName()
-            + "):\n" + diff.toString();
-        throw new RepositoryException(message);
+        // inform cluster if this is not an external invocation
+        if (!external && eventChannel != null) {
+            eventChannel.reregistered(ntd);
+        }
 
-        // TODO Implement checkForConflictingContent()
-        // make sure existing content would not conflict
-        // with new node type definition
-        //checkForConflictingContent(ntd);
-        //
-        // unregister old node type definition
-        //internalUnregister(name);
-        // register new definition
-        //EffectiveNodeType entNew = internalRegister(ntd);
-        //
-        // persist modified node type definitions
-        //customNTDefs.remove(name);
-        //customNTDefs.add(ntd);
-        //persistCustomNodeTypeDefs(customNTDefs);
-        //
-        // notify listeners
-        //notifyReRegistered(name);
-        //return entNew;
+        return entNew;
+
     }
 
     /**
