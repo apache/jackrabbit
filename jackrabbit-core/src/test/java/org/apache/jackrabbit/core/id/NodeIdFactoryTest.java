@@ -71,8 +71,6 @@ public class NodeIdFactoryTest extends TestCase {
             }
             f.close();
         }
-        System.out.println(Long.toHexString(msbOr));
-        System.out.println(Long.toHexString(lsbOr));
         assertEquals(0xffffffffffff0fffL, msbOr);
         assertEquals(0, msbAnd);
         assertEquals(7, lsbOr);
