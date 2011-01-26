@@ -43,6 +43,7 @@ public class TestAll extends TestCase {
 
         suite.addTestSuite(ReadTest.class);
         suite.addTestSuite(WriteTest.class);
+        suite.addTestSuite(AcReadWriteTest.class);
         suite.addTestSuite(LockTest.class);
         suite.addTestSuite(VersionTest.class);
         suite.addTestSuite(NodeTypeTest.class);
