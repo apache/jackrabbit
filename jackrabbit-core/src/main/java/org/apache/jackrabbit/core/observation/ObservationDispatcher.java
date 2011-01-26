@@ -122,7 +122,7 @@ public final class ObservationDispatcher extends EventDispatcher
     }
 
     /**
-     * Returns an unmodifieable <code>Set</code> of <code>EventConsumer</code>s.
+     * Returns an unmodifiable <code>Set</code> of <code>EventConsumer</code>s.
      *
      * @return <code>Set</code> of <code>EventConsumer</code>s.
      */
@@ -173,7 +173,7 @@ public final class ObservationDispatcher extends EventDispatcher
     /**
      * {@inheritDoc}
      * <p/>
-     * Gives this observation manager the oportunity to
+     * Gives this observation manager the opportunity to
      * prepare the events for dispatching.
      */
     void prepareEvents(EventStateCollection events) {
