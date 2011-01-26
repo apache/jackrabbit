@@ -157,7 +157,7 @@ public abstract class AbstractAccessControlProvider implements AccessControlProv
         Path.Element[] elems = absPath.getElements();
         // start looking for a rep:policy name starting from the last element.
         // NOTE: with the current content structure max. 3 levels must be looked
-        // at as the rep:policy node may only have ACE nodes with a properties.
+        // at as the rep:policy node may only have ACE nodes with properties.
         if (elems.length > 1) {
             for (int index = elems.length-1, j = 1; index >= 0 && j <= 3; index--, j++) {
                 if (N_POLICY.equals(elems[index].getName())) {
