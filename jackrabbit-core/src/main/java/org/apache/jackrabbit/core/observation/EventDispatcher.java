@@ -26,7 +26,7 @@ import org.apache.jackrabbit.core.state.ChangeLog;
 abstract class EventDispatcher {
 
     /**
-     * Gives this dispatcher the oportunity to prepare the events for
+     * Gives this dispatcher the opportunity to prepare the events for
      * dispatching.
      *
      * @param events the {@link EventState}s to prepare.

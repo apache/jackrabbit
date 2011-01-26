@@ -74,10 +74,10 @@ public final class EventImpl implements JackrabbitEvent, Event {
      * Creates a new {@link javax.jcr.observation.Event} instance based on an
      * {@link EventState eventState}.
      *
-     * @param session    the session of the registerd <code>EventListener</code>
+     * @param session    the session of the registered <code>EventListener</code>
      *                   where this <code>Event</code> will be delivered to.
      * @param eventState the underlying <code>EventState</code>.
-     * @param timestamp  the time when the change occured that caused this event.
+     * @param timestamp  the time when the change occurred that caused this event.
      * @param userData   the user data associated with this event.
      */
     EventImpl(SessionImpl session, EventState eventState,

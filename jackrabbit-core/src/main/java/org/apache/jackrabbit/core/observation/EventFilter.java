@@ -69,7 +69,7 @@ public class EventFilter {
 
     /**
      * If <code>noLocal</code> is true this filter will block events from
-     * the session that registerd this filter.
+     * the session that registered this filter.
      */
     private final boolean noLocal;
 
@@ -150,8 +150,8 @@ public class EventFilter {
             Set<NodeType> eventTypes = eventState.getNodeTypes(session.getNodeTypeManager());
             boolean match = false;
             for (int i = 0; i < nodeTypes.length && !match; i++) {
-                for (Iterator<NodeType> iter = eventTypes.iterator(); iter.hasNext();) {
-                    NodeTypeImpl nodeType = (NodeTypeImpl) iter.next();
+                for (NodeType eventType : eventTypes) {
+                    NodeTypeImpl nodeType = (NodeTypeImpl) eventType;
                     match |= nodeType.getQName().equals(nodeTypes[i].getQName())
                             || nodeType.isDerivedFrom(nodeTypes[i].getQName());
                 }
@@ -189,6 +189,7 @@ public class EventFilter {
          *
          * @return always <code>true</code>.
          */
+        @Override
         boolean blocks(EventState eventState) {
             return true;
         }
