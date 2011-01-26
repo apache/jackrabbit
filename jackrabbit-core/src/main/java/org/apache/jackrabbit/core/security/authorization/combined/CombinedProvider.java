@@ -57,6 +57,7 @@ public class CombinedProvider extends AbstractAccessControlProvider {
     /**
      * @see AccessControlUtils#isAcItem(Path)
      */
+    @Override
     public boolean isAcItem(Path absPath) throws RepositoryException {
         for (AccessControlProvider provider : providers) {
             if (provider instanceof AccessControlUtils && ((AccessControlUtils) provider).isAcItem(absPath)) {
@@ -69,6 +70,7 @@ public class CombinedProvider extends AbstractAccessControlProvider {
     /**
      * @see AccessControlUtils#isAcItem(ItemImpl)
      */
+    @Override
     public boolean isAcItem(ItemImpl item) throws RepositoryException {
         for (AccessControlProvider provider : providers) {
             if (provider instanceof AccessControlUtils && ((AccessControlUtils) provider).isAcItem(item)) {
