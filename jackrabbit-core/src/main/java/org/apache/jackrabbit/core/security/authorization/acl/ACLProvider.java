@@ -361,8 +361,11 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
             Name ntName = ((NodeTypeImpl) targetNode.getPrimaryNodeType()).getQName();
             if (ntName.equals(NT_REP_ACL)) {
                 node = (NodeImpl) targetNode.getParent();
-            } else {
+            } else if (ntName.equals(NT_REP_GRANT_ACE) || ntName.equals(NT_REP_DENY_ACE)) {
                 node = (NodeImpl) targetNode.getParent().getParent();
+            } else {
+                // target node already points to the nearest existing ancestor of the ac-item
+                node = targetNode;
             }
         } else {
             node = targetNode;
