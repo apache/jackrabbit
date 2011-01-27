@@ -30,6 +30,7 @@ import java.io.IOException;
 /**
  * <code>NameRangeQuery</code>...
  */
+@SuppressWarnings("serial")
 public class NameRangeQuery extends Query {
 
     /**

@@ -16,16 +16,16 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
+import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.query.lucene.hits.AbstractHitCollector;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.search.Explanation;
-import org.apache.lucene.search.HitCollector;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.Scorer;
 import org.apache.lucene.search.Searcher;
 import org.apache.lucene.search.Similarity;
-import org.apache.lucene.search.Weight;
 import org.apache.lucene.search.Sort;
-import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.lucene.search.Weight;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,16 +33,17 @@ import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import java.io.IOException;
 import java.util.BitSet;
-import java.util.Set;
-import java.util.Map;
-import java.util.TreeMap;
 import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
 
 /**
  * Implements a lucene <code>Query</code> which filters a sub query by checking
  * whether the nodes selected by that sub query are descendants or self of
  * nodes selected by a context query.
  */
+@SuppressWarnings("serial")
 class DescendantSelfAxisQuery extends Query implements JackrabbitQuery {
 
     /**
@@ -171,7 +172,7 @@ class DescendantSelfAxisQuery extends Query implements JackrabbitQuery {
      * @param searcher the <code>Searcher</code> instance to use.
      * @return a <code>DescendantSelfAxisWeight</code>.
      */
-    protected Weight createWeight(Searcher searcher) {
+    public Weight createWeight(Searcher searcher) {
         return new DescendantSelfAxisWeight(searcher);
     }
 
@@ -321,7 +322,7 @@ class DescendantSelfAxisQuery extends Query implements JackrabbitQuery {
      * The <code>Weight</code> implementation for this
      * <code>DescendantSelfAxisWeight</code>.
      */
-    private class DescendantSelfAxisWeight implements Weight {
+    private class DescendantSelfAxisWeight extends Weight {
 
         /**
          * The searcher in use
@@ -376,9 +377,10 @@ class DescendantSelfAxisQuery extends Query implements JackrabbitQuery {
          * @return a <code>DescendantSelfAxisScorer</code>.
          * @throws IOException if an error occurs while reading from the index.
          */
-        public Scorer scorer(IndexReader reader) throws IOException {
-            contextScorer = contextQuery.weight(searcher).scorer(reader);
-            subScorer = subQuery.weight(searcher).scorer(reader);
+        public Scorer scorer(IndexReader reader, boolean scoreDocsInOrder,
+                boolean topScorer) throws IOException {
+            contextScorer = contextQuery.weight(searcher).scorer(reader, scoreDocsInOrder, topScorer);
+            subScorer = subQuery.weight(searcher).scorer(reader, scoreDocsInOrder, topScorer);
             HierarchyResolver resolver = (HierarchyResolver) reader;
             return new DescendantSelfAxisScorer(searcher.getSimilarity(), reader, resolver);
         }
@@ -429,6 +431,11 @@ class DescendantSelfAxisQuery extends Query implements JackrabbitQuery {
         private final int[] singleDoc = new int[1];
 
         /**
+         * The next document id to be returned
+         */
+        private int currentDoc = -1;
+
+        /**
          * Creates a new <code>DescendantSelfAxisScorer</code>.
          *
          * @param similarity the <code>Similarity</code> instance to use.
@@ -444,59 +451,59 @@ class DescendantSelfAxisQuery extends Query implements JackrabbitQuery {
             this.contextHits = new BitSet(reader.maxDoc());
         }
 
-        /**
-         * {@inheritDoc}
-         */
-        public boolean next() throws IOException {
-            collectContextHits();
-            if (!subScorer.next() || contextHits.isEmpty()) {
-                return false;
+        @Override
+        public int nextDoc() throws IOException {
+            if (currentDoc == NO_MORE_DOCS) {
+                return currentDoc;
             }
-            int nextDoc = subScorer.doc();
-            while (nextDoc > -1) {
 
-                if (isValid(nextDoc)) {
-                    return true;
+            collectContextHits();
+            currentDoc = subScorer.nextDoc();
+            if (contextHits.isEmpty()) {
+                currentDoc = NO_MORE_DOCS;
+            }
+            while (currentDoc != NO_MORE_DOCS) {
+                if (isValid(currentDoc)) {
+                    return currentDoc;
                 }
 
                 // try next
-                nextDoc = subScorer.next() ? subScorer.doc() : -1;
+                currentDoc = subScorer.nextDoc();
             }
-            return false;
+            return currentDoc;
         }
 
-        /**
-         * {@inheritDoc}
-         */
-        public int doc() {
-            return subScorer.doc();
+        @Override
+        public int docID() {
+            return currentDoc;
         }
 
-        /**
-         * {@inheritDoc}
-         */
+        @Override
         public float score() throws IOException {
             return subScorer.score();
         }
 
-        /**
-         * {@inheritDoc}
-         */
-        public boolean skipTo(int target) throws IOException {
-            boolean match = subScorer.skipTo(target);
-            if (match) {
-                collectContextHits();
-                return isValid(subScorer.doc()) || next();
+        @Override
+        public int advance(int target) throws IOException {
+            if (currentDoc == NO_MORE_DOCS) {
+                return currentDoc;
+            }
+
+            currentDoc = subScorer.nextDoc();
+            if (currentDoc == NO_MORE_DOCS) {
+                return NO_MORE_DOCS;
             } else {
-                return false;
+                collectContextHits();
+                return isValid(currentDoc) ? currentDoc : nextDoc();
             }
         }
 
         private void collectContextHits() throws IOException {
             if (!contextHitsCalculated) {
                 long time = System.currentTimeMillis();
-                contextScorer.score(new HitCollector() {
-                    public void collect(int doc, float score) {
+                contextScorer.score(new AbstractHitCollector() {
+                    @Override
+                    protected void collect(int doc, float score) {
                         contextHits.set(doc);
                     }
                 }); // find all
@@ -511,14 +518,6 @@ class DescendantSelfAxisQuery extends Query implements JackrabbitQuery {
                             });
                 }
             }
-        }
-
-        /**
-         * @throws UnsupportedOperationException this implementation always
-         *                                       throws an <code>UnsupportedOperationException</code>.
-         */
-        public Explanation explain(int doc) throws IOException {
-            throw new UnsupportedOperationException();
         }
 
         /**

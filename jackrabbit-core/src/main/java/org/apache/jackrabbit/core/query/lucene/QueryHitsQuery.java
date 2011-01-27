@@ -39,6 +39,7 @@ import java.util.TreeSet;
  * <code>QueryHitsQuery</code> exposes a {@link QueryHits} implementation again
  * as a Lucene Query.
  */
+@SuppressWarnings("serial")
 public class QueryHitsQuery extends Query implements JackrabbitQuery{
 
     /**
@@ -58,7 +59,7 @@ public class QueryHitsQuery extends Query implements JackrabbitQuery{
     /**
      * {@inheritDoc}
      */
-    protected Weight createWeight(Searcher searcher) throws IOException {
+    public Weight createWeight(Searcher searcher) throws IOException {
         return new QueryHitsQueryWeight(searcher.getSimilarity());
     }
 
@@ -96,7 +97,7 @@ public class QueryHitsQuery extends Query implements JackrabbitQuery{
     /**
      * The Weight implementation for this query.
      */
-    public class QueryHitsQueryWeight implements Weight {
+    public class QueryHitsQueryWeight extends Weight {
 
         /**
          * The similarity.
@@ -142,7 +143,8 @@ public class QueryHitsQuery extends Query implements JackrabbitQuery{
         /**
          * {@inheritDoc}
          */
-        public Scorer scorer(IndexReader reader) throws IOException {
+        public Scorer scorer(IndexReader reader, boolean scoreDocsInOrder,
+                boolean topScorer) throws IOException {
             return new QueryHitsQueryScorer(reader, similarity);
         }
 
@@ -165,7 +167,7 @@ public class QueryHitsQuery extends Query implements JackrabbitQuery{
          * Iterator over <code>Integer</code> instances identifying the
          * lucene documents. Document numbers are iterated in ascending order.
          */
-        private final Iterator docs;
+        private final Iterator<Integer> docs;
 
         /**
          * Maps <code>Integer</code> document numbers to <code>Float</code>
@@ -212,48 +214,39 @@ public class QueryHitsQuery extends Query implements JackrabbitQuery{
             docs = sortedDocs.iterator();
         }
 
-        /**
-         * {@inheritDoc}
-         */
-        public boolean next() throws IOException {
-            if (docs.hasNext()) {
-                currentDoc = (Integer) docs.next();
-                return true;
+        @Override
+        public int nextDoc() throws IOException {
+            if (currentDoc == NO_MORE_DOCS) {
+                return currentDoc;
             }
-            return false;
-        }
 
-        /**
-         * {@inheritDoc}
-         */
-        public int doc() {
+            currentDoc = docs.hasNext() ? docs.next() : NO_MORE_DOCS;
             return currentDoc;
         }
 
-        /**
-         * {@inheritDoc}
-         */
+        @Override
+        public int docID() {
+            return currentDoc == null ? -1 : currentDoc;
+        }
+
+        @Override
         public float score() throws IOException {
             return scores.get(currentDoc);
         }
 
-        /**
-         * {@inheritDoc}
-         */
-        public boolean skipTo(int target) throws IOException {
+        @Override
+        public int advance(int target) throws IOException {
+            if (currentDoc == NO_MORE_DOCS) {
+                return currentDoc;
+            }
+
             do {
-                if (!next()) {
-                    return false;
+                if (nextDoc() == NO_MORE_DOCS) {
+                    return NO_MORE_DOCS;
                 }
-            } while (target > doc());
-            return true;
+            } while (target > docID());
+            return docID();
         }
 
-        /**
-         * {@inheritDoc}
-         */
-        public Explanation explain(int doc) throws IOException {
-            return new Explanation();
-        }
     }
 }

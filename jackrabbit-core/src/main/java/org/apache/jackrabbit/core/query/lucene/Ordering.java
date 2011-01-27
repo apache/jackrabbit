@@ -16,22 +16,21 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
-import javax.jcr.RepositoryException;
-
-import org.apache.jackrabbit.spi.commons.query.qom.OrderingImpl;
-import org.apache.jackrabbit.spi.commons.query.qom.QOMTreeVisitor;
+import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.commons.query.qom.DefaultTraversingQOMTreeVisitor;
-import org.apache.jackrabbit.spi.commons.query.qom.LengthImpl;
-import org.apache.jackrabbit.spi.commons.query.qom.PropertyValueImpl;
-import org.apache.jackrabbit.spi.commons.query.qom.LowerCaseImpl;
 import org.apache.jackrabbit.spi.commons.query.qom.DynamicOperandImpl;
-import org.apache.jackrabbit.spi.commons.query.qom.UpperCaseImpl;
 import org.apache.jackrabbit.spi.commons.query.qom.FullTextSearchScoreImpl;
+import org.apache.jackrabbit.spi.commons.query.qom.LengthImpl;
+import org.apache.jackrabbit.spi.commons.query.qom.LowerCaseImpl;
 import org.apache.jackrabbit.spi.commons.query.qom.NodeLocalNameImpl;
 import org.apache.jackrabbit.spi.commons.query.qom.NodeNameImpl;
-import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.commons.query.qom.OrderingImpl;
+import org.apache.jackrabbit.spi.commons.query.qom.PropertyValueImpl;
+import org.apache.jackrabbit.spi.commons.query.qom.QOMTreeVisitor;
+import org.apache.jackrabbit.spi.commons.query.qom.UpperCaseImpl;
 import org.apache.lucene.search.SortField;
-import org.apache.lucene.search.SortComparatorSource;
+
+import javax.jcr.RepositoryException;
 
 /**
  * <code>Ordering</code> implements a single ordering specification.
@@ -84,7 +83,7 @@ public class Ordering {
      *                             QOM ordering.
      */
     public static Ordering fromQOM(final OrderingImpl ordering,
-                                    final SortComparatorSource scs,
+                                    final SharedFieldComparatorSource scs,
                                     final NamespaceMappings nsMappings)
             throws RepositoryException {
         final Name[] selectorName = new Name[1];
@@ -103,7 +102,7 @@ public class Ordering {
                 SortField sf = (SortField) ((DynamicOperandImpl) node.getOperand()).accept(this, data);
                 selectorName[0] = node.getSelectorQName();
                 return new SortField(sf.getField(),
-                        new LowerCaseSortComparator(sf.getFactory()),
+                        new LowerCaseSortComparator(sf.getComparatorSource()),
                         !ordering.isAscending());
             }
 
@@ -112,7 +111,7 @@ public class Ordering {
                 SortField sf = (SortField) ((DynamicOperandImpl) node.getOperand()).accept(this, data);
                 selectorName[0] = node.getSelectorQName();
                 return new SortField(sf.getField(),
-                        new UpperCaseSortComparator(sf.getFactory()),
+                        new UpperCaseSortComparator(sf.getComparatorSource()),
                         !ordering.isAscending());
             }
 

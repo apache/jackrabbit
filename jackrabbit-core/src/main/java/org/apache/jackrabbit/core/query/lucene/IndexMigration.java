@@ -113,7 +113,7 @@ public class IndexMigration {
                     IndexWriter.MaxFieldLength.UNLIMITED);
             try {
                 IndexReader r = new MigrationIndexReader(
-                        IndexReader.open(index.getDirectory()),
+                        IndexReader.open(index.getDirectory(), true),
                         oldSeparatorChar);
                 try {
                     writer.addIndexes(new IndexReader[]{r});

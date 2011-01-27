@@ -17,7 +17,6 @@
 package org.apache.jackrabbit.core.query.lucene;
 
 import org.apache.lucene.search.Scorer;
-import org.apache.lucene.search.Explanation;
 import org.apache.lucene.search.Similarity;
 
 import java.io.IOException;
@@ -42,12 +41,12 @@ class MultiScorer extends Scorer {
     /**
      * Index of the current scorer.
      */
-    private int current = 0;
+    private int currentScorer;
 
     /**
-     * Indicates if there are more documents.
+     * The next document id to be returned
      */
-    private boolean hasNext = true;
+    private int currentDoc = -1;
 
     /**
      * Creates a new <code>MultiScorer</code> that spans multiple
@@ -63,62 +62,54 @@ class MultiScorer extends Scorer {
         this.starts = starts;
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    public boolean next() throws IOException {
-        while (hasNext) {
-            if (scorers[current].next()) {
-                return true;
-            } else if (++current < scorers.length) {
+    @Override
+    public int nextDoc() throws IOException {
+        while (currentDoc != NO_MORE_DOCS) {
+            if (scorers[currentScorer].nextDoc() != NO_MORE_DOCS) {
+                currentDoc = scorers[currentScorer].docID() + starts[currentScorer];
+                return currentDoc;
+            } else if (++currentScorer < scorers.length) {
                 // advance to next scorer
             } else {
                 // no more scorers
-                hasNext = false;
+                currentDoc = NO_MORE_DOCS;
             }
         }
-        return hasNext;
+
+        return currentDoc;
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    public int doc() {
-        return scorers[current].doc() + starts[current];
+    @Override
+    public int docID() {
+        return currentDoc;
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    @Override
     public float score() throws IOException {
-        return scorers[current].score();
+        return scorers[currentScorer].score();
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    public boolean skipTo(int target) throws IOException {
-        current = scorerIndex(target);
-        if (scorers[current].skipTo(target - starts[current])) {
-            return true;
+    @Override
+    public int advance(int target) throws IOException {
+        if (currentDoc == NO_MORE_DOCS) {
+            return currentDoc;
+        }
+
+        currentScorer = scorerIndex(target);
+        if (scorers[currentScorer].advance(target - starts[currentScorer]) != NO_MORE_DOCS) {
+            currentDoc = scorers[currentScorer].docID() + starts[currentScorer];
+            return currentDoc;
         } else {
-            if (++current < scorers.length) {
+            if (++currentScorer < scorers.length) {
                 // simply move to the next if there is any
-                return next();
+                currentDoc = nextDoc();
+                return currentDoc;
             } else {
                 // no more document
-                hasNext = false;
-                return hasNext;
+                currentDoc = NO_MORE_DOCS;
+                return currentDoc;
             }
         }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public Explanation explain(int doc) throws IOException {
-        int scorerIndex = scorerIndex(doc);
-        return scorers[scorerIndex].explain(doc - starts[scorerIndex]);
     }
 
     //--------------------------< internal >------------------------------------

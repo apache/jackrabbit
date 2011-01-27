@@ -18,17 +18,16 @@ package org.apache.jackrabbit.core.query.lucene;
 
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.Term;
+import org.apache.lucene.index.TermDocs;
 import org.apache.lucene.index.TermEnum;
 import org.apache.lucene.index.TermPositions;
-import org.apache.lucene.index.TermDocs;
-import org.apache.lucene.search.SortComparatorSource;
+import org.apache.lucene.search.FieldComparator;
 
+import javax.jcr.PropertyType;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.WeakHashMap;
-
-import javax.jcr.PropertyType;
 
 /**
  * Implements a variant of the lucene class <code>org.apache.lucene.search.FieldCacheImpl</code>.
@@ -139,7 +138,7 @@ public class SharedFieldCache {
      * @param reader     the <code>IndexReader</code>.
      * @param field      name of the shared field.
      * @param prefix     the property name, will be used as term prefix.
-     * @param comparator the sort comparator instance.
+     * @param comparator the field comparator instance.
      * @return a ValueIndex that contains the field values and order
      *         information.
      * @throws IOException if an error occurs while reading from the index.
@@ -147,7 +146,7 @@ public class SharedFieldCache {
     public ValueIndex getValueIndex(IndexReader reader,
                                     String field,
                                     String prefix,
-                                    SortComparatorSource comparator)
+                                    FieldComparator comparator)
             throws IOException {
 
         if (reader instanceof ReadOnlyIndexReader) {
@@ -225,7 +224,7 @@ public class SharedFieldCache {
      * See if a <code>ValueIndex</code> object is in the cache.
      */
     ValueIndex lookup(IndexReader reader, String field,
-                      String prefix, SortComparatorSource comparer) {
+                      String prefix, FieldComparator comparer) {
         Key key = new Key(field, prefix, comparer);
         synchronized (this) {
             Map<Key, ValueIndex> readerCache = cache.get(reader);
@@ -240,7 +239,7 @@ public class SharedFieldCache {
      * Put a <code>ValueIndex</code> <code>value</code> to cache.
      */
     ValueIndex store(IndexReader reader, String field, String prefix,
-                 SortComparatorSource comparer, ValueIndex value) {
+                 FieldComparator comparer, ValueIndex value) {
         Key key = new Key(field, prefix, comparer);
         synchronized (this) {
             Map<Key, ValueIndex> readerCache = cache.get(reader);
@@ -285,12 +284,12 @@ public class SharedFieldCache {
 
         private final String field;
         private final String prefix;
-        private final SortComparatorSource comparator;
+        private final Object comparator;
 
         /**
          * Creates <code>Key</code> for ValueIndex lookup.
          */
-        Key(String field, String prefix, SortComparatorSource comparator) {
+        Key(String field, String prefix, FieldComparator comparator) { 
             this.field = field.intern();
             this.prefix = prefix.intern();
             this.comparator = comparator;

@@ -59,7 +59,9 @@ public final class ScoreNodeMap {
             existing = nodes;
             map.put(key, existing);
         } else if (existing instanceof List) {
-            ((List) existing).add(nodes);
+            @SuppressWarnings("unchecked")
+            List<ScoreNode[]> existingNodes = (List<ScoreNode[]>) existing;
+            existingNodes.add(nodes);
         } else {
             // ScoreNode[]
             List<ScoreNode[]> tmp = new ArrayList<ScoreNode[]>();
@@ -83,6 +85,7 @@ public final class ScoreNodeMap {
         if (sn == null) {
             return null;
         } else if (sn instanceof List) {
+            @SuppressWarnings("unchecked")
             List<ScoreNode[]> list = (List<ScoreNode[]>) sn;
             return list.toArray(new ScoreNode[list.size()][]);
         } else {

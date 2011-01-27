@@ -16,27 +16,28 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
-import java.io.IOException;
-import java.util.BitSet;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
-
+import org.apache.jackrabbit.core.query.lucene.hits.AbstractHitCollector;
 import org.apache.jackrabbit.core.query.lucene.hits.Hits;
 import org.apache.jackrabbit.core.query.lucene.hits.ScorerHits;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.search.Explanation;
-import org.apache.lucene.search.HitCollector;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.Scorer;
 import org.apache.lucene.search.Searcher;
 import org.apache.lucene.search.Similarity;
 import org.apache.lucene.search.Weight;
 
+import java.io.IOException;
+import java.util.BitSet;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+
 /**
  * <code>ParentAxisQuery</code> selects the parent nodes of a context query.
  */
+@SuppressWarnings("serial")
 class ParentAxisQuery extends Query {
 
     /**
@@ -89,7 +90,7 @@ class ParentAxisQuery extends Query {
      * @param searcher the <code>Searcher</code> instance to use.
      * @return a <code>ParentAxisWeight</code>.
      */
-    protected Weight createWeight(Searcher searcher) {
+    public Weight createWeight(Searcher searcher) {
         return new ParentAxisWeight(searcher);
     }
 
@@ -133,7 +134,7 @@ class ParentAxisQuery extends Query {
     /**
      * The <code>Weight</code> implementation for this <code>ParentAxisQuery</code>.
      */
-    private class ParentAxisWeight implements Weight {
+    private class ParentAxisWeight extends Weight {
 
         /**
          * The searcher in use
@@ -186,8 +187,9 @@ class ParentAxisQuery extends Query {
          * @return a <code>ParentAxisScorer</code>.
          * @throws IOException if an error occurs while reading from the index.
          */
-        public Scorer scorer(IndexReader reader) throws IOException {
-            contextScorer = contextQuery.weight(searcher).scorer(reader);
+        public Scorer scorer(IndexReader reader, boolean scoreDocsInOrder,
+                boolean topScorer) throws IOException {
+            contextScorer = contextQuery.weight(searcher).scorer(reader, scoreDocsInOrder, topScorer);
             HierarchyResolver resolver = (HierarchyResolver) reader;
             return new ParentAxisScorer(searcher.getSimilarity(),
                     reader, searcher, resolver);
@@ -266,25 +268,26 @@ class ParentAxisQuery extends Query {
             this.hResolver = resolver;
         }
 
-        /**
-         * {@inheritDoc}
-         */
-        public boolean next() throws IOException {
+        @Override
+        public int nextDoc() throws IOException {
+            if (nextDoc == NO_MORE_DOCS) {
+                return nextDoc;
+            }
+
             calculateParent();
             nextDoc = hits.nextSetBit(nextDoc + 1);
-            return nextDoc > -1;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        public int doc() {
+            if (nextDoc < 0) {
+                nextDoc = NO_MORE_DOCS;
+            }
             return nextDoc;
         }
 
-        /**
-         * {@inheritDoc}
-         */
+        @Override
+        public int docID() {
+            return nextDoc;
+        }
+
+        @Override
         public float score() throws IOException {
             Float score = scores.get(nextDoc);
             if (score == null) {
@@ -293,23 +296,18 @@ class ParentAxisQuery extends Query {
             return score;
         }
 
-        /**
-         * {@inheritDoc}
-         */
-        public boolean skipTo(int target) throws IOException {
+        @Override
+        public int advance(int target) throws IOException {
+            if (nextDoc == NO_MORE_DOCS) {
+                return nextDoc;
+            }
+
             calculateParent();
             nextDoc = hits.nextSetBit(target);
-            return nextDoc > -1;
-        }
-
-        /**
-         * {@inheritDoc}
-         *
-         * @throws UnsupportedOperationException this implementation always
-         *                                       throws an <code>UnsupportedOperationException</code>.
-         */
-        public Explanation explain(int doc) throws IOException {
-            throw new UnsupportedOperationException();
+            if (nextDoc < 0) {
+                nextDoc = NO_MORE_DOCS;
+            }
+            return nextDoc;
         }
 
         private void calculateParent() throws IOException {
@@ -317,36 +315,38 @@ class ParentAxisQuery extends Query {
                 hits = new BitSet(reader.maxDoc());
 
                 final IOException[] ex = new IOException[1];
-                contextScorer.score(new HitCollector() {
+                if (contextScorer != null) {
+                    contextScorer.score(new AbstractHitCollector() {
+                        private int[] docs = new int[1];
 
-                    private int[] docs = new int[1];
-
-                    public void collect(int doc, float score) {
-                        try {
-                            docs = hResolver.getParents(doc, docs);
-                            if (docs.length == 1) {
-                                // optimize single value
-                                hits.set(docs[0]);
-                                if (firstScore == null) {
-                                    firstScore = score;
-                                } else if (firstScore != score) {
-                                    scores.put(doc, score);
-                                }
-                            } else {
-                                for (int docNum : docs) {
-                                    hits.set(docNum);
+                        @Override
+                        protected void collect(int doc, float score) {
+                            try {
+                                docs = hResolver.getParents(doc, docs);
+                                if (docs.length == 1) {
+                                    // optimize single value
+                                    hits.set(docs[0]);
                                     if (firstScore == null) {
                                         firstScore = score;
                                     } else if (firstScore != score) {
                                         scores.put(doc, score);
                                     }
+                                } else {
+                                    for (int docNum : docs) {
+                                        hits.set(docNum);
+                                        if (firstScore == null) {
+                                            firstScore = score;
+                                        } else if (firstScore != score) {
+                                            scores.put(doc, score);
+                                        }
+                                    }
                                 }
+                            } catch (IOException e) {
+                                ex[0] = e;
                             }
-                        } catch (IOException e) {
-                            ex[0] = e;
                         }
-                    }
-                });
+                    });
+                }
 
                 if (ex[0] != null) {
                     throw ex[0];
@@ -355,7 +355,7 @@ class ParentAxisQuery extends Query {
                 // filter out documents that do not match the name test
                 if (nameTest != null) {
                     Query nameQuery = new NameQuery(nameTest, version, nsMappings);
-                    Hits nameHits = new ScorerHits(nameQuery.weight(searcher).scorer(reader));
+                    Hits nameHits = new ScorerHits(nameQuery.weight(searcher).scorer(reader, true, false));
                     for (int i = hits.nextSetBit(0); i >= 0; i = hits.nextSetBit(i + 1)) {
                         int doc = nameHits.skipTo(i);
                         if (doc == -1) {

@@ -17,7 +17,6 @@
 package org.apache.jackrabbit.core.query.lucene;
 
 import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermEnum;
 import org.apache.lucene.index.TermDocs;
 import org.apache.lucene.search.FilteredTermEnum;
@@ -29,6 +28,7 @@ import org.apache.lucene.search.Searcher;
 import org.apache.lucene.search.Scorer;
 import org.apache.lucene.search.Explanation;
 import org.apache.lucene.search.Similarity;
+import org.apache.lucene.util.ToStringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,6 +48,7 @@ import java.util.Set;
  * <li><code>_</code> : matches exactly one character</li>
  * </ul>
  */
+@SuppressWarnings("serial")
 public class WildcardQuery extends Query implements Transformable {
 
     /**
@@ -140,10 +141,21 @@ public class WildcardQuery extends Query implements Transformable {
      * @return the rewritten query.
      * @throws IOException if an error occurs while reading from the index.
      */
+    @Override
     public Query rewrite(IndexReader reader) throws IOException {
-        Query stdWildcardQuery = new MultiTermQuery(new Term(field, pattern)) {
+        Query stdWildcardQuery = new MultiTermQuery() {
             protected FilteredTermEnum getEnum(IndexReader reader) throws IOException {
                 return new WildcardTermEnum(reader, field, tvf, pattern, transform);
+            }
+
+            /** Prints a user-readable version of this query. */
+            @Override
+            public String toString(String field) {
+                StringBuffer buffer = new StringBuffer();
+                buffer.append(field);
+                buffer.append(':');
+                buffer.append(ToStringUtils.boost(getBoost()));
+                return buffer.toString();
             }
         };
         try {
@@ -162,7 +174,8 @@ public class WildcardQuery extends Query implements Transformable {
      * @param searcher the searcher to use for the <code>Weight</code>.
      * @return the <code>Weigth</code> for this query.
      */
-    protected Weight createWeight(Searcher searcher) {
+    @Override
+    public Weight createWeight(Searcher searcher) {
         return new WildcardQueryWeight(searcher, cache);
     }
 
@@ -172,13 +185,12 @@ public class WildcardQuery extends Query implements Transformable {
      * @param field the field name for which to create a string representation.
      * @return a string representation of this query.
      */
+    @Override
     public String toString(String field) {
         return field + ":" + tvf.createValue(pattern);
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    @Override
     public void extractTerms(Set terms) {
         if (multiTermQuery != null) {
             multiTermQuery.extractTerms(terms);
@@ -209,7 +221,8 @@ public class WildcardQuery extends Query implements Transformable {
          * @param reader index reader
          * @return a {@link WildcardQueryScorer} instance
          */
-        protected Scorer createScorer(IndexReader reader) {
+        protected Scorer createScorer(IndexReader reader, boolean scoreDocsInOrder,
+                boolean topScorer) {
             return new WildcardQueryScorer(searcher.getSimilarity(), reader, cache);
         }
 
@@ -218,33 +231,26 @@ public class WildcardQuery extends Query implements Transformable {
          *
          * @return this <code>WildcardQuery</code>.
          */
+        @Override
         public Query getQuery() {
             return WildcardQuery.this;
         }
 
-        /**
-         * {@inheritDoc}
-         */
+        @Override
         public float getValue() {
             return 1.0f;
         }
 
-        /**
-         * {@inheritDoc}
-         */
+        @Override
         public float sumOfSquaredWeights() throws IOException {
             return 1.0f;
         }
 
-        /**
-         * {@inheritDoc}
-         */
+        @Override
         public void normalize(float norm) {
         }
 
-        /**
-         * {@inheritDoc}
-         */
+        @Override
         public Explanation explain(IndexReader reader, int doc) throws IOException {
             return new Explanation();
         }
@@ -315,44 +321,42 @@ public class WildcardQuery extends Query implements Transformable {
             hits = result;
         }
 
-        /**
-         * {@inheritDoc}
-         */
-        public boolean next() throws IOException {
+        @Override
+        public int nextDoc() throws IOException {
+            if (nextDoc == NO_MORE_DOCS) {
+                return nextDoc;
+            }
+
             calculateHits();
             nextDoc = hits.nextSetBit(nextDoc + 1);
-            return nextDoc > -1;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        public int doc() {
+            if (nextDoc < 0) {
+                nextDoc = NO_MORE_DOCS;
+            }
             return nextDoc;
         }
 
-        /**
-         * {@inheritDoc}
-         */
+        @Override
+        public int docID() {
+            return nextDoc;
+        }
+
+        @Override
         public float score() {
             return 1.0f;
         }
 
-        /**
-         * {@inheritDoc}
-         */
-        public boolean skipTo(int target) throws IOException {
+        @Override
+        public int advance(int target) throws IOException {
+            if (nextDoc == NO_MORE_DOCS) {
+                return nextDoc;
+            }
+
             calculateHits();
             nextDoc = hits.nextSetBit(target);
-            return nextDoc > -1;
-        }
-
-        /**
-         * Returns an empty Explanation object.
-         * @return an empty Explanation object.
-         */
-        public Explanation explain(int doc) {
-            return new Explanation();
+            if (nextDoc < 0) {
+                nextDoc = NO_MORE_DOCS;
+            }
+            return nextDoc;
         }
 
         /**

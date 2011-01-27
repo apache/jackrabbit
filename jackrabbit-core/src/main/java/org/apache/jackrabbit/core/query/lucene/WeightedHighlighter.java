@@ -140,7 +140,7 @@ public class WeightedHighlighter extends DefaultHighlighter {
                         break;
                     }
                 }
-                bestFragments.insert(fi);
+                bestFragments.insertWithOverflow(fi);
             }
         }
 
@@ -189,7 +189,7 @@ public class WeightedHighlighter extends DefaultHighlighter {
             int limit = Math.max(0, fi.getStartOffset() / 2 + fi.getEndOffset() / 2 - surround);
             int len = startFragment(sb, text, fi.getStartOffset(), limit);
             TermVectorOffsetInfo lastOffsetInfo = null;
-            Iterator fIt = fi.iterator();
+            Iterator<TermVectorOffsetInfo> fIt = fi.iterator();
             while (fIt.hasNext()) {
                 TermVectorOffsetInfo oi = (TermVectorOffsetInfo) fIt.next();
                 if (lastOffsetInfo != null) {

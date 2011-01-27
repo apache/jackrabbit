@@ -16,12 +16,13 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
-import java.io.IOException;
-import java.util.BitSet;
-
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermDocs;
 import org.apache.lucene.index.TermPositions;
+
+import java.io.IOException;
+import java.util.BitSet;
+import java.util.Map;
 
 /**
  * Overwrites the methods that would modify the index and throws an
@@ -175,7 +176,8 @@ class ReadOnlyIndexReader extends RefCountingIndexReader {
     /**
      * @exception UnsupportedOperationException always
      */
-    protected final void doCommit() {
+    @Override
+    protected void doCommit(Map commitUserData) throws IOException { 
         throw new UnsupportedOperationException("IndexReader is read-only");
     }
 

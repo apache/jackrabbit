@@ -110,7 +110,7 @@ public final class CachingMultiIndexReader
      * {@inheritDoc}
      */
     public TermDocs termDocs(Term term) throws IOException {
-        if (term.field() == FieldNames.UUID) {
+        if (term != null && term.field() == FieldNames.UUID) {
             // check cache
             DocNumberCache.Entry e = cache.get(term.text());
             if (e != null) {

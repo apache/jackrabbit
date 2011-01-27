@@ -16,19 +16,6 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
-import java.math.BigDecimal;
-import java.net.URI;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.Executor;
-
-import javax.jcr.NamespaceException;
-import javax.jcr.PropertyType;
-import javax.jcr.RepositoryException;
-
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.id.PropertyId;
 import org.apache.jackrabbit.core.state.ChildNodeEntry;
@@ -49,6 +36,18 @@ import org.apache.tika.metadata.Metadata;
 import org.apache.tika.parser.Parser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.jcr.NamespaceException;
+import javax.jcr.PropertyType;
+import javax.jcr.RepositoryException;
+import java.math.BigDecimal;
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.Executor;
 
 /**
  * Creates a lucene <code>Document</code> object from a {@link javax.jcr.Node}.
@@ -369,7 +368,7 @@ public class NodeIndexer {
                     // never fulltext index jcr:uuid String
                     if (name.equals(NameConstants.JCR_UUID)) {
                         addStringValue(doc, fieldName, value.getString(),
-                                false, false, DEFAULT_BOOST);
+                                false, false, DEFAULT_BOOST, true);
                     } else {
                         addStringValue(doc, fieldName, value.getString(),
                                 true, isIncludedInNodeIndex(name),
@@ -666,7 +665,7 @@ public class NodeIndexer {
      *             addStringValue(Document, String, Object, boolean)} instead.
      */
     protected void addStringValue(Document doc, String fieldName, Object internalValue) {
-        addStringValue(doc, fieldName, internalValue, true, true, DEFAULT_BOOST);
+        addStringValue(doc, fieldName, internalValue, true, true, DEFAULT_BOOST, true);
     }
 
     /**
@@ -682,7 +681,7 @@ public class NodeIndexer {
      */
     protected void addStringValue(Document doc, String fieldName,
                                   Object internalValue, boolean tokenized) {
-        addStringValue(doc, fieldName, internalValue, tokenized, true, DEFAULT_BOOST);
+        addStringValue(doc, fieldName, internalValue, tokenized, true, DEFAULT_BOOST, true);
     }
 
     /**
@@ -814,14 +813,10 @@ public class NodeIndexer {
             tv = Field.TermVector.NO;
         }
         if (store) {
-            // store field compressed if greater than 16k
-            Field.Store stored;
-            if (value.length() > 0x4000) {
-                stored = Field.Store.COMPRESS;
-            } else {
-                stored = Field.Store.YES;
-            }
-            return new Field(FieldNames.FULLTEXT, value, stored,
+            // We would be able to store the field compressed or not depending
+            // on a criterion but then we could not determine later is this field
+            // has been compressed or not, so we choose to store it uncompressed
+            return new Field(FieldNames.FULLTEXT, value, Field.Store.YES,
                     Field.Index.ANALYZED, tv);
         } else {
             return new Field(FieldNames.FULLTEXT, value,

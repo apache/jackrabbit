@@ -39,7 +39,7 @@ public class JackrabbitTermQuery extends TermQuery {
         super(t);
     }
 
-    protected Weight createWeight(Searcher searcher) throws IOException {
+    public Weight createWeight(Searcher searcher) throws IOException {
         return new JackrabbitTermWeight(searcher, super.createWeight(searcher));
     }
 
@@ -63,8 +63,9 @@ public class JackrabbitTermQuery extends TermQuery {
         /**
          * {@inheritDoc}
          */
-        protected Scorer createScorer(IndexReader reader) throws IOException {
-            return weight.scorer(reader);
+        protected Scorer createScorer(IndexReader reader, boolean scoreDocsInOrder,
+                boolean topScorer) throws IOException {
+            return weight.scorer(reader, scoreDocsInOrder, topScorer);
         }
 
         /**

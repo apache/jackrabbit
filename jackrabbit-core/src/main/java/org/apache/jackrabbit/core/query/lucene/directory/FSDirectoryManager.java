@@ -16,10 +16,6 @@
  */
 package org.apache.jackrabbit.core.query.lucene.directory;
 
-import java.io.File;
-import java.io.FileFilter;
-import java.io.IOException;
-
 import org.apache.jackrabbit.core.query.lucene.IOCounters;
 import org.apache.jackrabbit.core.query.lucene.SearchIndex;
 import org.apache.lucene.store.Directory;
@@ -29,6 +25,10 @@ import org.apache.lucene.store.IndexOutput;
 import org.apache.lucene.store.Lock;
 import org.apache.lucene.store.LockFactory;
 import org.apache.lucene.store.NativeFSLockFactory;
+
+import java.io.File;
+import java.io.FileFilter;
+import java.io.IOException;
 
 /**
  * <code>FSDirectoryManager</code> implements a directory manager for
@@ -141,11 +141,17 @@ public class FSDirectoryManager implements DirectoryManager {
         private final FSDirectory directory;
 
         public FSDir(File dir) throws IOException {
-            directory = FSDirectory.getDirectory(dir,
+            if (!dir.mkdirs()) {
+                if (!dir.isDirectory()) {
+                    throw new IOException("Unable to create directory: '" + dir + "'");
+                }
+            }
+            directory = FSDirectory.open(dir,
                     new NativeFSLockFactory(dir));
         }
 
-        public String[] list() throws IOException {
+        @Override
+        public String[] listAll() throws IOException {
             File[] files = directory.getFile().listFiles(FILTER);
             if (files == null) {
                 return null;
@@ -157,71 +163,81 @@ public class FSDirectoryManager implements DirectoryManager {
             return names;
         }
 
+        @Override
         public boolean fileExists(String name) throws IOException {
             return directory.fileExists(name);
         }
 
+        @Override
         public long fileModified(String name) throws IOException {
             return directory.fileModified(name);
         }
 
+        @Override
         public void touchFile(String name) throws IOException {
             directory.touchFile(name);
         }
 
+        @Override
         public void deleteFile(String name) throws IOException {
             directory.deleteFile(name);
         }
 
-        public void renameFile(String from, String to) throws IOException {
-            directory.renameFile(from, to);
-        }
-
+        @Override
         public long fileLength(String name) throws IOException {
             return directory.fileLength(name);
         }
 
+        @Override
         public IndexOutput createOutput(String name) throws IOException {
             return directory.createOutput(name);
         }
 
+        @Override
         public IndexInput openInput(String name) throws IOException {
             IndexInput in = directory.openInput(name);
             return new IndexInputLogWrapper(in);
         }
 
+        @Override
         public void close() throws IOException {
             directory.close();
         }
 
+        @Override
         public IndexInput openInput(String name, int bufferSize)
                 throws IOException {
             IndexInput in = directory.openInput(name, bufferSize);
             return new IndexInputLogWrapper(in);
         }
 
+        @Override
         public Lock makeLock(String name) {
             return directory.makeLock(name);
         }
 
+        @Override
         public void clearLock(String name) throws IOException {
             directory.clearLock(name);
         }
 
+        @Override
         public void setLockFactory(LockFactory lockFactory) {
             directory.setLockFactory(lockFactory);
         }
 
+        @Override
         public LockFactory getLockFactory() {
             return directory.getLockFactory();
         }
 
+        @Override
         public String getLockID() {
             return directory.getLockID();
         }
 
         public String toString() {
-            return this.getClass().getName() + "@" + directory;
+            return getClass().getName() + '@' + directory;
         }
     }
 
@@ -237,27 +253,33 @@ public class FSDirectoryManager implements DirectoryManager {
             this.in = in;
         }
 
+        @Override
         public byte readByte() throws IOException {
             return in.readByte();
         }
 
+        @Override
         public void readBytes(byte[] b, int offset, int len) throws IOException {
             IOCounters.incrRead();
             in.readBytes(b, offset, len);
         }
 
+        @Override
         public void close() throws IOException {
             in.close();
         }
 
+        @Override
         public long getFilePointer() {
             return in.getFilePointer();
         }
 
+        @Override
         public void seek(long pos) throws IOException {
             in.seek(pos);
         }
 
+        @Override
         public long length() {
             return in.length();
         }

@@ -37,7 +37,7 @@ public class NodeTraversingQueryHits extends AbstractQueryHits {
     /**
      * The nodes to traverse.
      */
-    private final Iterator nodes;
+    private final Iterator<Node> nodes;
 
     /**
      * Creates query hits that consist of the nodes that are traversed from a

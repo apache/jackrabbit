@@ -16,19 +16,19 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
-import org.apache.lucene.search.Query;
-import org.apache.lucene.search.BooleanQuery;
-import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.index.Term;
-import org.apache.lucene.index.TermDocs;
-import org.apache.lucene.analysis.Analyzer;
-
 import java.io.IOException;
+
+import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.index.TermDocs;
+import org.apache.lucene.search.BooleanQuery;
+import org.apache.lucene.search.Query;
 
 /**
  * <code>SimilarityQuery</code> implements a query that returns similar nodes
  * for a given node UUID.
  */
+@SuppressWarnings("serial")
 public class SimilarityQuery extends Query {
 
     /**

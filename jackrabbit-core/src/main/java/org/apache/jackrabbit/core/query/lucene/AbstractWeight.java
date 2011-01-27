@@ -27,7 +27,8 @@ import java.io.IOException;
  * <code>AbstractWeight</code> implements base functionality for custom lucene
  * weights in jackrabbit.
  */
-abstract class AbstractWeight implements Weight {
+@SuppressWarnings("serial")
+abstract class AbstractWeight extends Weight {
 
     /**
      * The searcher for this weight.
@@ -52,8 +53,8 @@ abstract class AbstractWeight implements Weight {
      * @return the scorer instance
      * @throws IOException if an error occurs while reading from the index
      */
-    protected abstract Scorer createScorer(IndexReader reader)
-            throws IOException;
+    protected abstract Scorer createScorer(IndexReader reader, boolean scoreDocsInOrder,
+            boolean topScorer) throws IOException;
 
     /**
      * {@inheritDoc}
@@ -61,7 +62,8 @@ abstract class AbstractWeight implements Weight {
      * Returns a {@link MultiScorer} if the passed <code>reader</code> is of
      * type {@link MultiIndexReader}.
      */
-    public Scorer scorer(IndexReader reader) throws IOException {
+    public Scorer scorer(IndexReader reader, boolean scoreDocsInOrder,
+            boolean topScorer) throws IOException {
         if (reader instanceof MultiIndexReader) {
             MultiIndexReader mir = (MultiIndexReader) reader;
             IndexReader[] readers = mir.getIndexReaders();
@@ -75,12 +77,12 @@ abstract class AbstractWeight implements Weight {
             starts[readers.length] = maxDoc;
             Scorer[] scorers = new Scorer[readers.length];
             for (int i = 0; i < readers.length; i++) {
-                scorers[i] = scorer(readers[i]);
+                scorers[i] = scorer(readers[i], scoreDocsInOrder, topScorer);
             }
 
             return new MultiScorer(searcher.getSimilarity(), scorers, starts);
         } else {
-            return createScorer(reader);
+            return createScorer(reader, scoreDocsInOrder, topScorer);
         }
     }
 

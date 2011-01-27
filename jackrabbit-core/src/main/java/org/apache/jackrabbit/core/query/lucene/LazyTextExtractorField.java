@@ -42,6 +42,7 @@ import org.xml.sax.helpers.DefaultHandler;
  *
  * @see #isExtractorFinished()
  */
+@SuppressWarnings("serial")
 public class LazyTextExtractorField extends AbstractField {
 
     /**

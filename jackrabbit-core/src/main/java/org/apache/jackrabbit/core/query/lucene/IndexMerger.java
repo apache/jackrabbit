@@ -329,7 +329,7 @@ class IndexMerger implements IndexListener {
      * many document it contains. <code>Index</code> is comparable using the
      * number of documents it contains.
      */
-    private static final class Index implements Comparable {
+    private static final class Index implements Comparable<Index> {
 
         /**
          * The name of the index.
@@ -361,8 +361,7 @@ class IndexMerger implements IndexListener {
          *         Index is less than, equal to, or greater than the specified
          *         Index.
          */
-        public int compareTo(Object o) {
-            Index other = (Index) o;
+        public int compareTo(Index other) {
             int val = numDocs < other.numDocs ? -1 : (numDocs == other.numDocs ? 0 : 1);
             if (val != 0) {
                 return val;

@@ -60,9 +60,9 @@ public class SimpleExcerptProvider implements ExcerptProvider {
         try {
             NodeState nodeState = (NodeState) ism.getItemState(id);
             String separator = "";
-            Iterator it = nodeState.getPropertyNames().iterator();
+            Iterator<Name> it = nodeState.getPropertyNames().iterator();
             while (it.hasNext() && text.length() < maxFragmentSize) {
-                PropertyId propId = new PropertyId(id, (Name) it.next());
+                PropertyId propId = new PropertyId(id, it.next());
                 PropertyState propState = (PropertyState) ism.getItemState(propId);
                 if (propState.getType() == PropertyType.STRING) {
                     text.append(separator);

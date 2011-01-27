@@ -24,6 +24,7 @@ import org.apache.lucene.queryParser.QueryParser;
 import org.apache.lucene.queryParser.ParseException;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.BooleanClause;
+import org.apache.lucene.util.Version;
 
 /**
  * <code>JackrabbitQueryParser</code> extends the standard lucene query parser
@@ -50,7 +51,7 @@ public class JackrabbitQueryParser extends QueryParser {
                                  Analyzer analyzer,
                                  SynonymProvider synonymProvider,
                                  PerQueryCache cache) {
-        super(fieldName, analyzer);
+        super(Version.LUCENE_24, fieldName, analyzer);
         this.synonymProvider = synonymProvider;
         this.cache = cache;
         setAllowLeadingWildcard(true);

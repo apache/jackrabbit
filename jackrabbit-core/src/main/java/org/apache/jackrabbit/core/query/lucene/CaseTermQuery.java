@@ -21,6 +21,7 @@ import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.TermEnum;
 import org.apache.lucene.search.MultiTermQuery;
 import org.apache.lucene.search.FilteredTermEnum;
+import org.apache.lucene.util.ToStringUtils;
 
 import java.io.IOException;
 import java.util.List;
@@ -33,6 +34,7 @@ import java.util.Map;
  * <code>CaseTermQuery</code> implements a term query which convert the term
  * from the index either to upper or lower case before it is matched.
  */
+@SuppressWarnings("serial")
 abstract class CaseTermQuery extends MultiTermQuery implements TransformConstants {
 
     /**
@@ -40,17 +42,32 @@ abstract class CaseTermQuery extends MultiTermQuery implements TransformConstant
      * upper-cased.
      */
     protected final int transform;
+    private final Term term;
 
     CaseTermQuery(Term term, int transform) {
-        super(term);
+        this.term = term;
         this.transform = transform;
     }
 
     /**
      * {@inheritDoc}
      */
+    @Override
     protected FilteredTermEnum getEnum(IndexReader reader) throws IOException {
         return new CaseTermEnum(reader);
+    }
+
+    /** Prints a user-readable version of this query. */
+    @Override
+    public String toString(String field) {
+        StringBuffer buffer = new StringBuffer();
+        if (!term.field().equals(field)) {
+            buffer.append(term.field());
+            buffer.append(':');
+        }
+        buffer.append(term.text());
+        buffer.append(ToStringUtils.boost(getBoost()));
+        return buffer.toString();
     }
 
     static final class Upper extends CaseTermQuery {
@@ -65,7 +82,6 @@ abstract class CaseTermQuery extends MultiTermQuery implements TransformConstant
         Lower(Term term) {
             super(term, TRANSFORM_LOWER_CASE);
         }
-
     }
 
     private final class CaseTermEnum extends FilteredTermEnum {
@@ -76,9 +92,7 @@ abstract class CaseTermQuery extends MultiTermQuery implements TransformConstant
             final Map<Term, Integer> orderedTerms =
                 new LinkedHashMap<Term, Integer>();
 
-            Term term = getTerm();
-
-            // there are always two range scanse: one with an initial
+            // there are always two range scans: one with an initial
             // lower case character and another one with an initial upper case
             // character
             List<RangeScan> rangeScans = new ArrayList<RangeScan>(2);
@@ -158,20 +172,24 @@ abstract class CaseTermQuery extends MultiTermQuery implements TransformConstant
                     getNext();
                 }
 
+                @Override
                 public boolean next() {
                     getNext();
                     return current != null;
                 }
 
+                @Override
                 public Term term() {
                     return current;
                 }
 
+                @Override
                 public int docFreq() {
                     Integer docFreq = orderedTerms.get(current);
                     return docFreq != null ? docFreq : 0;
                 }
 
+                @Override
                 public void close() {
                     // nothing to close
                 }
@@ -182,15 +200,18 @@ abstract class CaseTermQuery extends MultiTermQuery implements TransformConstant
             });
         }
 
+        @Override
         protected boolean termCompare(Term term) {
             // they all match
             return true;
         }
 
+        @Override
         public float difference() {
             return 1.0f;
         }
 
+        @Override
         protected boolean endEnum() {
             // todo correct?
             return false;

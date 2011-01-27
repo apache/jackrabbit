@@ -106,6 +106,11 @@ public final class JackrabbitIndexReader
         return reader.getIndexReaders();
     }
 
+    public IndexReader[] getSequentialSubReaders() {
+      // No sequential sub-readers
+      return null;
+    }
+
     /**
      * {@inheritDoc}
      */

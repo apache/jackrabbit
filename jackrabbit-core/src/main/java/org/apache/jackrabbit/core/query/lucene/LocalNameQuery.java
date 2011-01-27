@@ -26,6 +26,7 @@ import java.util.Set;
 /**
  * <code>LocalNameQuery</code> implements a query for the local name of a node.
  */
+@SuppressWarnings("serial")
 public class LocalNameQuery extends Query {
 
     /**

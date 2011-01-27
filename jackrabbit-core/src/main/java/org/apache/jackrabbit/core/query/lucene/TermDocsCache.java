@@ -94,7 +94,7 @@ public class TermDocsCache {
      * @throws IOException if an error occurs while reading from the index.
      */
     public TermDocs termDocs(final Term t) throws IOException {
-        if (t.field() != field) {
+        if (t == null || t.field() != field) {
             return reader.termDocs(t);
         }
 
@@ -270,14 +270,13 @@ public class TermDocsCache {
         }
     }
 
-    private static final class CacheEntry implements Comparable {
+    private static final class CacheEntry implements Comparable<CacheEntry> {
 
         private volatile int numAccessed = 1;
 
         private volatile BitSet bits;
 
-        public int compareTo(Object o) {
-            CacheEntry other = (CacheEntry) o;
+        public int compareTo(CacheEntry other) {
             return (numAccessed < other.numAccessed ? -1 : (numAccessed == other.numAccessed ? 0 : 1));
         }
     }

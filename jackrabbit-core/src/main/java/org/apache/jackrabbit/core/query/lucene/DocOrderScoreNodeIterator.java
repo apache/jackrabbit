@@ -270,6 +270,7 @@ class DocOrderScoreNodeIterator implements ScoreNodeIterator {
     /**
      * Indicates that sorting failed.
      */
+    @SuppressWarnings("serial")
     private static final class SortFailedException extends RuntimeException {
     }
 }
