@@ -16,19 +16,19 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
+import org.apache.jackrabbit.spi.Name;
+import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.search.FieldComparator;
+import org.apache.lucene.search.ScoreDoc;
+import org.apache.lucene.search.SortField;
+
 import java.io.IOException;
-import java.util.List;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
-import java.util.Arrays;
-import java.util.ArrayList;
-import java.util.Collections;
-
-import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.search.SortField;
-import org.apache.lucene.search.ScoreDocComparator;
-import org.apache.lucene.search.ScoreDoc;
-import org.apache.jackrabbit.spi.Name;
+import java.util.List;
 
 /**
  * <code>SortedMultiColumnQueryHits</code> implements sorting of query hits
@@ -61,7 +61,7 @@ public class SortedMultiColumnQueryHits extends FilterMultiColumnQueryHits {
         }
         try {
             Collections.sort(sortedHits, new ScoreNodeComparator(
-                    reader, orderings, hits.getSelectorNames()));
+                    reader, orderings, hits.getSelectorNames(), sortedHits.size()));
         } catch (RuntimeException e) {
             // might be thrown by ScoreNodeComparator#compare
             throw Util.createIOException(e);
@@ -142,7 +142,8 @@ public class SortedMultiColumnQueryHits extends FilterMultiColumnQueryHits {
          */
         private ScoreNodeComparator(IndexReader reader,
                                     Ordering[] orderings,
-                                    Name[] selectorNames)
+                                    Name[] selectorNames,
+                                    int numHits)
                 throws IOException {
             this.reader = reader;
             this.orderings = orderings;
@@ -153,8 +154,11 @@ public class SortedMultiColumnQueryHits extends FilterMultiColumnQueryHits {
             for (int i = 0; i < orderings.length; i++) {
                 idx[i] = names.indexOf(orderings[i].getSelectorName());
                 SortField sf = orderings[i].getSortField();
-                if (sf.getFactory() != null) {
-                    comparators[i] = sf.getFactory().newComparator(reader, sf.getField());
+                if (sf.getComparatorSource() != null) {
+                    FieldComparator c = sf.getComparatorSource().newComparator(sf.getField(), numHits, 0, false);
+                    assert c instanceof FieldComparatorBase;
+                    comparators[i] = new ScoreDocComparator((FieldComparatorBase) c);
+                    comparators[i].setNextReader(reader, 0);
                 }
                 isReverse[i] = sf.getReverse();
             }
@@ -184,7 +188,7 @@ public class SortedMultiColumnQueryHits extends FilterMultiColumnQueryHits {
                     } catch (IOException e) {
                         throw new RuntimeException(e.getMessage(), e);
                     }
-                    c = comparators[i].compare(doc1, doc2);
+                    c = comparators[i].compareDocs(doc1.doc, doc2.doc);
                 } else {
                     // compare score
                     c = new Float(n1.getScore()).compareTo(n2.getScore());
@@ -198,5 +202,19 @@ public class SortedMultiColumnQueryHits extends FilterMultiColumnQueryHits {
             }
             return 0;
         }
+
     }
+
+    private static final class ScoreDocComparator extends FieldComparatorDecorator {
+
+        public ScoreDocComparator(FieldComparatorBase base) {
+            super(base);
+        }
+
+        public int compareDocs(int doc1, int doc2) {
+            return compare(sortValue(doc1), sortValue(doc2));
+        }
+
+    }
+
 }

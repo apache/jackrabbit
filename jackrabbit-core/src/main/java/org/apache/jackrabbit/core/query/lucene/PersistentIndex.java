@@ -130,7 +130,7 @@ class PersistentIndex extends AbstractIndex {
         byte[] buffer = new byte[1024];
         Directory dir = index.getDirectory();
         Directory dest = getDirectory();
-        String[] files = dir.list();
+        String[] files = dir.listAll();
         for (String file : files) {
             IndexInput in = dir.openInput(file);
             try {

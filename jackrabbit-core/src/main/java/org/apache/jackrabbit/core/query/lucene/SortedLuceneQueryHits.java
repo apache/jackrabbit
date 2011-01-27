@@ -16,18 +16,19 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.Sort;
-import org.apache.lucene.search.TopFieldDocCollector;
+import org.apache.lucene.search.TopFieldCollector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * Wraps a lucene query result and adds a close method that allows to release
@@ -155,15 +156,14 @@ public final class SortedLuceneQueryHits extends AbstractQueryHits {
     //-------------------------------< internal >-------------------------------
 
     private void getHits() throws IOException {
-        TopFieldDocCollector collector = new TopFieldDocCollector(reader, sort, numHits);
+        TopFieldCollector collector = TopFieldCollector.create(sort, numHits, false, true, false, false);
         searcher.search(query, collector);
-        this.size = collector.getTotalHits();
+        size = collector.getTotalHits();
         ScoreDoc[] docs = collector.topDocs().scoreDocs;
-        for (int i = scoreDocs.size(); i < docs.length; i++) {
-            scoreDocs.add(docs[i]);
-        }
+        scoreDocs.addAll(Arrays.asList(docs).subList(scoreDocs.size(), docs.length));
         log.debug("getHits() {}/{}", scoreDocs.size(), numHits);
         // double hits for next round
         numHits *= 2;
     }
+
 }

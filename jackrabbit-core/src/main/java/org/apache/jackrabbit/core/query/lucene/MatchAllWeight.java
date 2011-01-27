@@ -28,6 +28,7 @@ import java.io.IOException;
 /**
  * This class implements the Weight calculation for the MatchAllQuery.
  */
+@SuppressWarnings("serial")
 class MatchAllWeight extends AbstractWeight {
 
     /**
@@ -76,7 +77,8 @@ class MatchAllWeight extends AbstractWeight {
      * @param reader index reader
      * @return a {@link MatchAllScorer} instance
      */
-    protected Scorer createScorer(IndexReader reader) throws IOException {
+    protected Scorer createScorer(IndexReader reader, boolean scoreDocsInOrder,
+            boolean topScorer) throws IOException {
         return new MatchAllScorer(reader, field, cache);
     }
 

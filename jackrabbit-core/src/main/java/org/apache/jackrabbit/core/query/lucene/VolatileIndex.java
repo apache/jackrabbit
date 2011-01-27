@@ -39,7 +39,8 @@ class VolatileIndex extends AbstractIndex {
     /**
      * Map of pending documents to add to the index
      */
-    private final Map pending = new LinkedMap();
+    @SuppressWarnings("unchecked")
+    private final Map<String, Document> pending = new LinkedMap();
 
     /**
      * Number of documents that are buffered before they are added to the index.

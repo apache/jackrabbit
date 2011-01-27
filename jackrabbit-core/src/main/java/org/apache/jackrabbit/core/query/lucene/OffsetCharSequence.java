@@ -20,7 +20,7 @@ package org.apache.jackrabbit.core.query.lucene;
  * CharSequence that applies an offset to a base CharSequence. The base
  * CharSequence can be replaced without creating a new CharSequence.
  */
-final class OffsetCharSequence implements CharSequence, Comparable, TransformConstants {
+final class OffsetCharSequence implements CharSequence, Comparable<OffsetCharSequence>, TransformConstants {
 
     /**
      * Indicates how the underlying char sequence is exposed / tranformed.
@@ -128,8 +128,7 @@ final class OffsetCharSequence implements CharSequence, Comparable, TransformCon
      * @return as defined in {@link String#compareTo(Object)} but also takes
      *         {@link #transform} into account.
      */
-    public int compareTo(Object o) {
-        OffsetCharSequence other = (OffsetCharSequence) o;
+    public int compareTo(OffsetCharSequence other) {
         int len1 = length();
         int len2 = other.length();
         int lim = Math.min(len1, len2);

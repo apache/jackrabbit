@@ -79,7 +79,7 @@ public class IndexDeletionPolicyImpl implements IndexDeletionPolicy {
 
     void readCurrentGeneration() throws IOException {
         Directory dir = index.getDirectory();
-        String[] names = dir.list();
+        String[] names = dir.listAll();
         long max = 0;
         if (names != null) {
             for (String name : names) {

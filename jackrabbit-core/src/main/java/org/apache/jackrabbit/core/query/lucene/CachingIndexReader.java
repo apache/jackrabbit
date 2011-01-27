@@ -17,7 +17,6 @@
 package org.apache.jackrabbit.core.query.lucene;
 
 import org.apache.lucene.document.Document;
-import org.apache.lucene.document.Field;
 import org.apache.lucene.document.FieldSelector;
 import org.apache.lucene.index.FilterIndexReader;
 import org.apache.lucene.index.IndexReader;
@@ -287,7 +286,7 @@ class CachingIndexReader extends FilterIndexReader {
      * @throws IOException if an error occurs while reading from the index.
      */
     public TermDocs termDocs(Term term) throws IOException {
-        if (term.field() == FieldNames.UUID) {
+        if (term != null && term.field() == FieldNames.UUID) {
             // check cache if we have one
             if (cache != null) {
                 DocNumberCache.Entry e = cache.get(term.text());

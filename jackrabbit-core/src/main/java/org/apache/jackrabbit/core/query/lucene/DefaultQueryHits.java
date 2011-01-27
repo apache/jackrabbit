@@ -34,7 +34,7 @@ public class DefaultQueryHits extends AbstractQueryHits {
     /**
      * An iterator over the query nodes.
      */
-    private final Iterator scoreNodes;
+    private final Iterator<ScoreNode> scoreNodes;
 
     /**
      * Creates a new <code>DefaultQueryHits</code> instance based on the passed
@@ -42,7 +42,7 @@ public class DefaultQueryHits extends AbstractQueryHits {
      *
      * @param scoreNodes a collection of {@link ScoreNode}s.
      */
-    public DefaultQueryHits(Collection scoreNodes) {
+    public DefaultQueryHits(Collection<ScoreNode> scoreNodes) {
         this.size = scoreNodes.size();
         this.scoreNodes = scoreNodes.iterator();
     }

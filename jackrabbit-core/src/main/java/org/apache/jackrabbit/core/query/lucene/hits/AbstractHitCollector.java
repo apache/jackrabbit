@@ -18,48 +18,43 @@ package org.apache.jackrabbit.core.query.lucene.hits;
 
 import java.io.IOException;
 
-import org.apache.lucene.search.DocIdSetIterator;
+import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.search.Collector;
 import org.apache.lucene.search.Scorer;
 
 /**
- * Wraps a {@link org.apache.lucene.search.Scorer} in a {@link Hits} instance.
+ * Collector implementation which simply provides the collection
+ * of re-based doc base with scorer.
  */
-public class ScorerHits implements Hits {
+public abstract class AbstractHitCollector extends Collector {
+    protected int base = 0;
+    protected Scorer scorer = null;
 
-    private final Scorer scorer;
+    @Override
+    public void setNextReader(IndexReader reader, int docBase) throws IOException {
+        base = docBase;
+    }
 
-    public ScorerHits(Scorer scorer) {
+    @Override
+    public void setScorer(Scorer scorer) throws IOException {
         this.scorer = scorer;
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    public void set(int doc) {
-        throw new UnsupportedOperationException();
+    @Override
+    public void collect(int doc) throws IOException {
+        collect(base + doc, scorer.score());
     }
 
     /**
-     * {@inheritDoc}
+     * Called once for every document matching a query, with the re-based document
+     * number and its computed score.
+     * @param doc the re-based document number.
+     * @param doc the document's score.
      */
-    public int next() throws IOException {
-        int docId = scorer.nextDoc();
-        if (docId != DocIdSetIterator.NO_MORE_DOCS) {
-            return docId;
-        } else {
-            return -1;
-        }
-    }
+    protected abstract void collect(int doc, float score);
 
-    /**
-     * {@inheritDoc}
-     */
-    public int skipTo(int target) throws IOException {
-        int docId = scorer.advance(target);
-        if (docId != DocIdSetIterator.NO_MORE_DOCS) {
-            return docId;
-        } else {
-            return -1;
-        }
+    @Override
+    public boolean acceptsDocsOutOfOrder() {
+        return false;
     }
 }

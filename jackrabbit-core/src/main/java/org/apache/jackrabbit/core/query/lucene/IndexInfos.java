@@ -157,8 +157,8 @@ class IndexInfos implements Cloneable {
                 dataOut.writeInt(WITH_GENERATION);
                 dataOut.writeInt(counter);
                 dataOut.writeInt(indexes.size());
-                for (Iterator it = iterator(); it.hasNext(); ) {
-                    IndexInfo info = (IndexInfo) it.next();
+                for (Iterator<IndexInfo> it = iterator(); it.hasNext(); ) {
+                    IndexInfo info = it.next();
                     dataOut.writeUTF(info.getName());
                     dataOut.writeLong(info.getGeneration());
                     log.debug("  + {}:{}", info.getName(), info.getGeneration());
@@ -185,7 +185,7 @@ class IndexInfos implements Cloneable {
      * @return an iterator over the {@link IndexInfo}s contained in this index
      *          infos.
      */
-    Iterator iterator() {
+    Iterator<IndexInfo> iterator() {
         return indexes.values().iterator();
     }
 
@@ -267,10 +267,11 @@ class IndexInfos implements Cloneable {
      *
      * @return a clone of this index infos.
      */
+    @SuppressWarnings("unchecked")
     public IndexInfos clone() {
         try {
             IndexInfos clone = (IndexInfos) super.clone();
-            clone.indexes = (LinkedHashMap) indexes.clone();
+            clone.indexes = (LinkedHashMap<String, IndexInfo>) indexes.clone();
             for (Map.Entry<String, IndexInfo> entry : clone.indexes.entrySet()) {
                 entry.setValue(entry.getValue().clone());
             }
@@ -342,11 +343,14 @@ class IndexInfos implements Cloneable {
      * @return names of all generation files of this index infos.
      */
     private static String[] getFileNames(Directory directory, final String base) {
-        String[] names = new String[0];
+        String[] names = null;
         try {
-            names = directory.list();
+            names = directory.listAll();
         } catch (IOException e) {
             // TODO: log warning? or throw?
+        }
+        if (names == null) {
+            return new String[0];
         }
         List<String> nameList = new ArrayList<String>(names.length);
         for (String n : names) {

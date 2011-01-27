@@ -151,7 +151,8 @@ public class IndexingConfigurationImpl
                     if (analyzerNode.getNodeName().equals("analyzer")) {
                         String analyzerClassName = analyzerNode.getAttributes().getNamedItem("class").getNodeValue();
                         try {
-                        Class clazz = Class.forName(analyzerClassName);
+                            @SuppressWarnings("rawtypes")
+                            Class clazz = Class.forName(analyzerClassName);
                             if (clazz == JackrabbitAnalyzer.class) {
                                 log.warn("Not allowed to configure " + JackrabbitAnalyzer.class.getName() +  " for a property. "
                                         + "Using default analyzer for that property.");

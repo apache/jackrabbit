@@ -33,6 +33,7 @@ import java.util.Set;
  * Documents that did not match the context query will be selected by this
  * <code>NotQuery</code>.
  */
+@SuppressWarnings("serial")
 class NotQuery extends Query {
 
     /**
@@ -56,7 +57,7 @@ class NotQuery extends Query {
     /**
      * {@inheritDoc}
      */
-    protected Weight createWeight(Searcher searcher) {
+    public Weight createWeight(Searcher searcher) {
         return new NotQueryWeight(searcher);
     }
 
@@ -89,7 +90,7 @@ class NotQuery extends Query {
     /**
      * Implements a weight for this <code>NotQuery</code>.
      */
-    private class NotQueryWeight implements Weight {
+    private class NotQueryWeight extends Weight {
 
         /**
          * The searcher to access the index.
@@ -134,8 +135,9 @@ class NotQuery extends Query {
         /**
          * @inheritDoc
          */
-        public Scorer scorer(IndexReader reader) throws IOException {
-            contextScorer = context.weight(searcher).scorer(reader);
+        public Scorer scorer(IndexReader reader, boolean scoreDocsInOrder,
+                boolean topScorer) throws IOException {
+            contextScorer = context.weight(searcher).scorer(reader, scoreDocsInOrder, topScorer);
             return new NotQueryScorer(reader);
         }
 
@@ -177,14 +179,17 @@ class NotQuery extends Query {
             this.reader = reader;
         }
 
-        /**
-         * {@inheritDoc}
-         */
-        public boolean next() throws IOException {
+        @Override
+        public int nextDoc() throws IOException {
+            if (docNo == NO_MORE_DOCS) {
+                return docNo;
+            }
+
             if (docNo == -1) {
                 // get first doc of context scorer
-                if (contextScorer.next()) {
-                    contextNo = contextScorer.doc();
+                int docId = contextScorer.nextDoc();
+                if (docId != NO_MORE_DOCS) {
+                    contextNo = docId;
                 }
             }
             // move to next candidate
@@ -195,49 +200,38 @@ class NotQuery extends Query {
             // check with contextScorer
             while (contextNo != -1 && contextNo == docNo) {
                 docNo++;
-                if (contextScorer.next()) {
-                    contextNo = contextScorer.doc();
-                } else {
-                    contextNo = -1;
-                }
+                int docId = contextScorer.nextDoc();
+                contextNo = docId == NO_MORE_DOCS ? -1 : docId;
             }
-            return docNo < reader.maxDoc();
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        public int doc() {
+            if (docNo >= reader.maxDoc()) {
+                docNo = NO_MORE_DOCS;
+            }
             return docNo;
         }
 
-        /**
-         * {@inheritDoc}
-         */
+        @Override
+        public int docID() {
+            return docNo;
+        }
+
+        @Override
         public float score() throws IOException {
             return 1.0f;
         }
 
-        /**
-         * {@inheritDoc}
-         */
-        public boolean skipTo(int target) throws IOException {
+        @Override
+        public int advance(int target) throws IOException {
+            if (docNo == NO_MORE_DOCS) {
+                return docNo;
+            }
+
             if (contextNo != -1 && contextNo < target) {
-                if (contextScorer.skipTo(target)) {
-                    contextNo = contextScorer.doc();
-                } else {
-                    contextNo = -1;
-                }
+                int docId = contextScorer.advance(target);
+                contextNo = docId == NO_MORE_DOCS ? -1 : docId;
             }
             docNo = target - 1;
-            return next();
+            return nextDoc();
         }
 
-        /**
-         * @throws UnsupportedOperationException always
-         */
-        public Explanation explain(int doc) throws IOException {
-            throw new UnsupportedOperationException();
-        }
     }
 }

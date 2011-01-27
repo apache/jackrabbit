@@ -16,16 +16,6 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.PrintStream;
-import java.io.StringReader;
-import java.util.ArrayList;
-import java.util.BitSet;
-import java.util.Collections;
-import java.util.List;
-import java.util.concurrent.CountDownLatch;
-
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
@@ -39,6 +29,16 @@ import org.apache.lucene.store.Directory;
 import org.apache.tika.io.IOExceptionWithCause;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.PrintStream;
+import java.io.StringReader;
+import java.util.ArrayList;
+import java.util.BitSet;
+import java.util.Collections;
+import java.util.List;
+import java.util.concurrent.CountDownLatch;
 
 /**
  * Implements common functionality for a lucene index.
@@ -248,13 +248,7 @@ abstract class AbstractIndex {
         }
         if (indexReader == null) {
             IndexDeletionPolicy idp = getIndexDeletionPolicy();
-            IndexReader reader;
-            if (idp != null) {
-                reader = IndexReader.open(getDirectory(), idp);
-            } else {
-                reader = IndexReader.open(getDirectory());
-            }
-            reader.setTermInfosIndexDivisor(termInfosIndexDivisor);
+            IndexReader reader = IndexReader.open(getDirectory(), idp, false, termInfosIndexDivisor);
             indexReader = new CommittableIndexReader(reader);
         }
         return indexReader;
@@ -318,8 +312,7 @@ abstract class AbstractIndex {
         }
         if (sharedReader == null) {
             // create new shared reader
-            IndexReader reader = IndexReader.open(getDirectory(), true);
-            reader.setTermInfosIndexDivisor(termInfosIndexDivisor);
+            IndexReader reader = IndexReader.open(getDirectory(), null, true, termInfosIndexDivisor);
             CachingIndexReader cr = new CachingIndexReader(
                     reader, cache, initCache);
             sharedReader = new SharedIndexReader(cr);
@@ -496,10 +489,10 @@ abstract class AbstractIndex {
             // mark the document that reindexing is required
             copy.add(new Field(FieldNames.REINDEXING_REQUIRED, "",
                     Field.Store.NO, Field.Index.NOT_ANALYZED_NO_NORMS));
-            for (Fieldable f : (List<Fieldable>) doc.getFields()) {
+            for (Fieldable f : doc.getFields()) {
                 Fieldable field = null;
                 Field.TermVector tv = getTermVectorParameter(f);
-                Field.Store stored = getStoreParameter(f);
+                Field.Store stored = f.isStored() ? Field.Store.YES : Field.Store.NO;
                 Field.Index indexed = getIndexParameter(f);
                 if (f instanceof LazyTextExtractorField || f.readerValue() != null) {
                     // replace all readers with empty string reader
@@ -508,7 +501,7 @@ abstract class AbstractIndex {
                     field = new Field(f.name(), f.stringValue(),
                             stored, indexed, tv);
                 } else if (f.isBinary()) {
-                    field = new Field(f.name(), f.binaryValue(), stored);
+                    field = new Field(f.name(), f.getBinaryValue(), stored);
                 }
                 if (field != null) {
                     field.setOmitNorms(f.getOmitNorms());
@@ -581,22 +574,6 @@ abstract class AbstractIndex {
             return Field.Index.ANALYZED;
         } else {
             return Field.Index.NOT_ANALYZED;
-        }
-    }
-
-    /**
-     * Returns the store parameter set on <code>f</code>.
-     *
-     * @param f a lucene field.
-     * @return the store parameter on <code>f</code>.
-     */
-    private Field.Store getStoreParameter(Fieldable f) {
-        if (f.isCompressed()) {
-            return Field.Store.COMPRESS;
-        } else if (f.isStored()) {
-            return Field.Store.YES;
-        } else {
-            return Field.Store.NO;
         }
     }
 

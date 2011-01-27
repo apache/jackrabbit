@@ -37,7 +37,7 @@ public class IDField extends AbstractField {
         this.isStored = true;
         this.isTokenized = false;
         this.omitNorms = true;
-        this.omitTf = true;
+        this.omitTermFreqAndPositions = true;
     }
 
     public String stringValue() {

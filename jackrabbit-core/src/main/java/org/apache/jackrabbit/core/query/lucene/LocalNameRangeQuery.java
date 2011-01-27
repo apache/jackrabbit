@@ -22,6 +22,7 @@ import org.apache.lucene.index.Term;
  * <code>LocalNameRangeQuery</code> implements a range query on the local name
  * of nodes.
  */
+@SuppressWarnings("serial")
 public class LocalNameRangeQuery extends RangeQuery {
 
     /**

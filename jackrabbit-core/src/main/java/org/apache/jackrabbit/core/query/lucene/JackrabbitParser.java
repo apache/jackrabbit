@@ -51,6 +51,7 @@ import org.xml.sax.SAXException;
  *
  * @since Apache Jackrabbit 2.0
  */
+@SuppressWarnings("serial")
 class JackrabbitParser implements Parser {
 
     /**

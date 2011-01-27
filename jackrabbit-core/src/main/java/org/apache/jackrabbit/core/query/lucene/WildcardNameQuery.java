@@ -16,18 +16,9 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
-import java.io.IOException;
-
 import javax.jcr.NamespaceException;
 
-import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
-import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.index.Term;
-import org.apache.lucene.search.BooleanQuery;
-import org.apache.lucene.search.FilteredTermEnum;
-import org.apache.lucene.search.MultiTermQuery;
-import org.apache.lucene.search.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

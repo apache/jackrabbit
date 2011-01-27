@@ -16,28 +16,27 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.BitSet;
-import java.util.List;
-import java.util.Set;
-
+import org.apache.jackrabbit.core.query.lucene.hits.AbstractHitCollector;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermDocs;
 import org.apache.lucene.search.Explanation;
-import org.apache.lucene.search.HitCollector;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.Scorer;
 import org.apache.lucene.search.Searcher;
 import org.apache.lucene.search.Similarity;
 import org.apache.lucene.search.Weight;
 
+import java.io.IOException;
+import java.util.BitSet;
+import java.util.Set;
+
 /**
  * Implements a Lucene <code>Query</code> which returns the nodes which have a 
  * reference property which matches the nodes of the subquery.
  */
+@SuppressWarnings("serial")
 public class PredicateDerefQuery extends Query {
 
     /**
@@ -101,7 +100,7 @@ public class PredicateDerefQuery extends Query {
      * @param searcher the <code>Searcher</code> instance to use.
      * @return a <code>DerefWeight</code>.
      */
-    protected Weight createWeight(Searcher searcher) {
+    public Weight createWeight(Searcher searcher) {
         return new DerefWeight(searcher);
     }
 
@@ -148,7 +147,7 @@ public class PredicateDerefQuery extends Query {
     /**
      * The <code>Weight</code> implementation for this <code>DerefQuery</code>.
      */
-    private class DerefWeight implements Weight {
+    private class DerefWeight extends Weight {
 
         /**
          * The searcher in use
@@ -201,10 +200,11 @@ public class PredicateDerefQuery extends Query {
          * @return a <code>DerefScorer</code>.
          * @throws IOException if an error occurs while reading from the index.
          */
-        public Scorer scorer(IndexReader reader) throws IOException {
-            subQueryScorer = subQuery.weight(searcher).scorer(reader);
+        public Scorer scorer(IndexReader reader, boolean scoreDocsInOrder,
+                boolean topScorer) throws IOException {
+            subQueryScorer = subQuery.weight(searcher).scorer(reader, scoreDocsInOrder, topScorer);
             if (nameTest != null) {
-                nameTestScorer = new NameQuery(nameTest, version, nsMappings).weight(searcher).scorer(reader);
+                nameTestScorer = new NameQuery(nameTest, version, nsMappings).weight(searcher).scorer(reader, scoreDocsInOrder, topScorer);
             }
             return new DerefScorer(searcher.getSimilarity(), reader);
         }
@@ -233,18 +233,13 @@ public class PredicateDerefQuery extends Query {
          * BitSet storing the id's of selected documents
          */
         private final BitSet subQueryHits;
-        
+
         /**
          * BitSet storing the id's of selected documents
          */
         private final BitSet hits;
 
-        /**
-         * List of UUIDs of selected nodes
-         */
-        private List uuids = null;
 
-        
         /**
          * The next document id to return
          */
@@ -263,48 +258,43 @@ public class PredicateDerefQuery extends Query {
             this.subQueryHits = new BitSet(reader.maxDoc());
         }
 
-        /**
-         * {@inheritDoc}
-         */
-        public boolean next() throws IOException {
+        @Override
+        public int nextDoc() throws IOException {
+            if (nextDoc == NO_MORE_DOCS) {
+                return nextDoc;
+            }
+
             calculateChildren();
             nextDoc = hits.nextSetBit(nextDoc + 1);
-            return nextDoc > -1;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        public int doc() {
+            if (nextDoc < 0) {
+                nextDoc = NO_MORE_DOCS;
+            }
             return nextDoc;
         }
 
-        /**
-         * {@inheritDoc}
-         */
+        @Override
+        public int docID() {
+            return nextDoc;
+        }
+
+        @Override
         public float score() throws IOException {
             return 1.0f;
         }
 
-        /**
-         * {@inheritDoc}
-         */
-        public boolean skipTo(int target) throws IOException {
+        @Override
+        public int advance(int target) throws IOException {
+            if (nextDoc == NO_MORE_DOCS) {
+                return nextDoc;
+            }
+
             calculateChildren();
             nextDoc = hits.nextSetBit(target);
-            return nextDoc > -1;
+            if (nextDoc < 0) {
+                nextDoc = NO_MORE_DOCS;
+            }
+            return nextDoc;
         }
-
-        /**
-         * {@inheritDoc}
-         *
-         * @throws UnsupportedOperationException this implementation always
-         *                                       throws an <code>UnsupportedOperationException</code>.
-         */
-        public Explanation explain(int doc) throws IOException {
-            throw new UnsupportedOperationException();
-        }
-
 
         /**
          * Perform the sub query
@@ -315,59 +305,58 @@ public class PredicateDerefQuery extends Query {
          * @throws IOException
          */
         private void calculateChildren() throws IOException {
-            if (uuids == null) {
-                uuids = new ArrayList();
 //                subQueryHits.clear();
 //                hits.clear();
-                subQueryScorer.score(new HitCollector() {
-                    public void collect(int doc, float score) {
-                        subQueryHits.set(doc);
+            subQueryScorer.score(new AbstractHitCollector() {
+                @Override
+                protected void collect(int doc, float score) {
+                    subQueryHits.set(doc);
+                }
+            });
+
+            TermDocs termDocs = reader.termDocs(new Term(FieldNames.PROPERTIES_SET, refProperty));
+            String prefix = FieldNames.createNamedValue(refProperty, "");
+            while (termDocs.next()) {
+                int doc = termDocs.doc();
+
+                String[] values = reader.document(doc).getValues(FieldNames.PROPERTIES);
+                if (values == null) {
+                    // no reference properties at all on this node
+                    continue;
+                }
+                for (int v = 0; v < values.length; v++) {
+                    if (values[v].startsWith(prefix)) {
+                        String uuid = values[v].substring(prefix.length());
+
+                        TermDocs node = reader.termDocs(TermFactory.createUUIDTerm(uuid));
+                        try {
+                            while (node.next()) {
+                                if (subQueryHits.get(node.doc())) {
+                                    hits.set(doc);
+                                }
+                            }
+                        } finally {
+                            node.close();
+                        }
+                    }
+                }
+            }
+
+            // collect nameTest hits
+            final BitSet nameTestHits = new BitSet();
+            if (nameTestScorer != null) {
+                nameTestScorer.score(new AbstractHitCollector() {
+                    @Override
+                    protected void collect(int doc, float score) {
+                        nameTestHits.set(doc);
                     }
                 });
+            }
 
-                TermDocs termDocs = reader.termDocs(new Term(FieldNames.PROPERTIES_SET, refProperty));
-                String prefix = FieldNames.createNamedValue(refProperty, "");
-                while (termDocs.next()) {
-                    int doc = termDocs.doc();
-                     
-                    String[] values = reader.document(doc).getValues(FieldNames.PROPERTIES);
-                    if (values == null) {
-                        // no reference properties at all on this node
-                        continue;
-                    }
-                    for (int v = 0; v < values.length; v++) {
-                        if (values[v].startsWith(prefix)) {
-                            String uuid = values[v].substring(prefix.length());
-                            
-                            TermDocs node = reader.termDocs(TermFactory.createUUIDTerm(uuid));
-                            try {
-                                while (node.next()) {
-                                    if (subQueryHits.get(node.doc())) {
-                                        hits.set(doc);
-                                    }
-                                }
-                            } finally {
-                                node.close();
-                            }
-                        }
-                    }
-                }
-                
-                // collect nameTest hits
-                final BitSet nameTestHits = new BitSet();
-                if (nameTestScorer != null) {
-                    nameTestScorer.score(new HitCollector() {
-                        public void collect(int doc, float score) {
-                            nameTestHits.set(doc);
-                        }
-                    });
-                }
-
-                // filter out the target nodes that do not match the name test
-                // if there is any name test at all.
-                if (nameTestScorer != null) {
-                    hits.and(nameTestHits);
-                }
+            // filter out the target nodes that do not match the name test
+            // if there is any name test at all.
+            if (nameTestScorer != null) {
+                hits.and(nameTestHits);
             }
         }
     }

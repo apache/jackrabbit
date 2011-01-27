@@ -26,6 +26,7 @@ import java.util.Set;
  * Specialized query that returns / scores all pages in the search index.
  * <p>Use this Query to perform a match '*'.
  */
+@SuppressWarnings("serial")
 class MatchAllQuery extends Query {
 
     private final String field;
@@ -54,7 +55,7 @@ class MatchAllQuery extends Query {
      * @param searcher the current searcher.
      * @return the <code>Weight</code> for this Query.
      */
-    protected Weight createWeight(Searcher searcher) {
+    public Weight createWeight(Searcher searcher) {
         return new MatchAllWeight(this, searcher, field, cache);
     }
 

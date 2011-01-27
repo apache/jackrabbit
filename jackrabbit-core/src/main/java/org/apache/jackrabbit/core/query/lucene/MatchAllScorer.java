@@ -20,15 +20,14 @@ import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermDocs;
 import org.apache.lucene.index.TermEnum;
-import org.apache.lucene.search.Explanation;
-import org.apache.lucene.search.HitCollector;
+import org.apache.lucene.search.Collector;
 import org.apache.lucene.search.Scorer;
 import org.apache.lucene.search.Similarity;
 
 import java.io.IOException;
 import java.util.BitSet;
-import java.util.Map;
 import java.util.HashMap;
+import java.util.Map;
 
 /**
  * The MatchAllScorer implements a Scorer that scores / collects all
@@ -57,11 +56,6 @@ class MatchAllScorer extends Scorer {
     private BitSet docFilter;
 
     /**
-     * Explanation object. the same for all docs
-     */
-    private final Explanation matchExpl;
-
-    /**
      * Creates a new MatchAllScorer.
      *
      * @param reader the IndexReader
@@ -74,57 +68,49 @@ class MatchAllScorer extends Scorer {
         super(Similarity.getDefault());
         this.reader = reader;
         this.field = field;
-        matchExpl
-                = new Explanation(Similarity.getDefault().idf(reader.maxDoc(),
-                        reader.maxDoc()),
-                        "matchAll");
         calculateDocFilter(cache);
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    public void score(HitCollector hc) throws IOException {
-        while (next()) {
-            hc.collect(doc(), score());
+    @Override
+    public void score(Collector collector) throws IOException {
+        collector.setScorer(this);
+
+        while (nextDoc() != NO_MORE_DOCS) {
+            collector.collect(docID());
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    public boolean next() throws IOException {
-        nextDoc = docFilter.nextSetBit(nextDoc + 1);
-        return nextDoc > -1;
-    }
+    @Override
+    public int nextDoc() throws IOException {
+        if (nextDoc == NO_MORE_DOCS) {
+            return nextDoc;
+        }
 
-    /**
-     * {@inheritDoc}
-     */
-    public int doc() {
+        nextDoc = docFilter.nextSetBit(nextDoc + 1);
+        if (nextDoc < 0) {
+            nextDoc = NO_MORE_DOCS;
+        }
         return nextDoc;
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    @Override
+    public int docID() {
+        return nextDoc;
+    }
+
+    @Override
     public float score() throws IOException {
         return 1.0f;
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    public boolean skipTo(int target) throws IOException {
-        nextDoc = target - 1;
-        return next();
-    }
+    @Override
+    public int advance(int target) throws IOException {
+        if (nextDoc == NO_MORE_DOCS) {
+            return nextDoc;
+        }
 
-    /**
-     * {@inheritDoc}
-     */
-    public Explanation explain(int doc) {
-        return matchExpl;
+        nextDoc = target - 1;
+        return nextDoc();
     }
 
     /**

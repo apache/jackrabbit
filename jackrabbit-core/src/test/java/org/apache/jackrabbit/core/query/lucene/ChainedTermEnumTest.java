@@ -16,12 +16,7 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-
+import junit.framework.TestCase;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
@@ -31,8 +26,13 @@ import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermEnum;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.RAMDirectory;
+import org.apache.lucene.util.Version;
 
-import junit.framework.TestCase;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
 
 /**
  * <code>ChainedTermEnumTest</code> implements a test for JCR-2410.
@@ -61,7 +61,7 @@ public class ChainedTermEnumTest extends TestCase {
     protected TermEnum createTermEnum(String prefix, int numTerms)
             throws IOException {
         Directory dir = new RAMDirectory();
-        IndexWriter writer = new IndexWriter(dir, new StandardAnalyzer(),
+        IndexWriter writer = new IndexWriter(dir, new StandardAnalyzer(Version.LUCENE_24),
                 true, IndexWriter.MaxFieldLength.UNLIMITED);
         for (int i = 0; i < numTerms; i++) {
             Document doc = new Document();
@@ -70,7 +70,7 @@ public class ChainedTermEnumTest extends TestCase {
             writer.addDocument(doc);
         }
         writer.close();
-        IndexReader reader = IndexReader.open(dir);
+        IndexReader reader = IndexReader.open(dir, false);
         TermEnum terms = reader.terms();
         if (terms.term() == null) {
             // position at first term

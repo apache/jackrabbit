@@ -16,11 +16,12 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
-import java.io.IOException;
-
-import org.apache.lucene.analysis.Token;
 import org.apache.lucene.analysis.TokenStream;
+import org.apache.lucene.analysis.tokenattributes.PayloadAttribute;
+import org.apache.lucene.analysis.tokenattributes.TermAttribute;
 import org.apache.lucene.index.Payload;
+
+import java.io.IOException;
 
 /**
  * <code>SingletonTokenStream</code> implements a token stream that wraps a
@@ -40,6 +41,29 @@ public final class SingletonTokenStream extends TokenStream {
     private final Payload payload;
 
     /**
+     * The term attribute of the current token
+     */
+    private TermAttribute termAttribute;
+
+    /**
+     * The payload attribute of the current token
+     */
+    private PayloadAttribute payloadAttribute;
+
+    /**
+     * Creates a new SingleTokenStream with the given value and payload.
+     *
+     * @param value the string value that will be returned with the token.
+     * @param payload the payload that will be attached to this token
+     */
+    public SingletonTokenStream(String value, Payload payload) {
+        this.value = value;
+        this.payload = payload;
+        termAttribute = (TermAttribute) addAttribute(TermAttribute.class);
+        payloadAttribute = (PayloadAttribute) addAttribute(PayloadAttribute.class);
+    }
+
+    /**
      * Creates a new SingleTokenStream with the given value and a property
      * <code>type</code>.
      *
@@ -47,33 +71,20 @@ public final class SingletonTokenStream extends TokenStream {
      * @param type the JCR property type.
      */
     public SingletonTokenStream(String value, int type) {
-        this.value = value;
-        this.payload = new Payload(new PropertyMetaData(type).toByteArray());
+        this(value, new Payload(new PropertyMetaData(type).toByteArray()));
     }
 
-    /**
-     * Creates a new SingleTokenStream with the given token.
-     *
-     * @param t the token.
-     */
-    public SingletonTokenStream(Token t) {
-        this.value = t.term();
-        this.payload = t.getPayload();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public Token next(Token reusableToken) throws IOException {
+    @Override
+    public boolean incrementToken() throws IOException {
         if (value == null) {
-            return null;
+            return false;
         }
-        reusableToken.clear();
-        reusableToken.setTermBuffer(value);
-        reusableToken.setPayload(payload);
-        reusableToken.setStartOffset(0);
-        reusableToken.setEndOffset(value.length());
+
+        clearAttributes();
+        termAttribute.setTermBuffer(value);
+        payloadAttribute.setPayload(payload);
+
         value = null;
-        return reusableToken;
+        return true;
     }
 }

@@ -300,8 +300,8 @@ public class DefaultHighlighter {
                     new String(cbuf, skippedChars, cbuf.length - skippedChars)));
 
             // iterate terms
-            for (Iterator iter = fi.iterator(); iter.hasNext();) {
-                TermVectorOffsetInfo ti = (TermVectorOffsetInfo) iter.next();
+            for (Iterator<TermVectorOffsetInfo> iter = fi.iterator(); iter.hasNext();) {
+                TermVectorOffsetInfo ti = iter.next();
                 nextStart = ti.getStartOffset();
                 if (nextStart - pos > 0) {
                     cbuf = new char[nextStart - pos];
@@ -420,20 +420,15 @@ public class DefaultHighlighter {
             }
             offsetInfosList.add(offsetinfo);
             numTerms++;
-            endOffset = offsetinfo.getEndOffset();
             return true;
         }
 
-        public Iterator iterator() {
+        public Iterator<TermVectorOffsetInfo> iterator() {
             return offsetInfosList.iterator();
         }
 
         public int getStartOffset() {
             return startOffset;
-        }
-
-        public int getEndOffset() {
-            return endOffset;
         }
 
         public int numTerms() {

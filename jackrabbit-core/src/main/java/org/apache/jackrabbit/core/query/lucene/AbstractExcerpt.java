@@ -28,7 +28,8 @@ import org.apache.lucene.index.TermVectorOffsetInfo;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Fieldable;
 import org.apache.lucene.analysis.TokenStream;
-import org.apache.lucene.analysis.Token;
+import org.apache.lucene.analysis.tokenattributes.OffsetAttribute;
+import org.apache.lucene.analysis.tokenattributes.TermAttribute;
 import org.apache.jackrabbit.core.id.NodeId;
 
 import java.io.IOException;
@@ -231,10 +232,11 @@ public abstract class AbstractExcerpt implements HighlightingExcerptProvider {
             new TreeMap<String, TermVectorOffsetInfo[]>();
         Reader r = new StringReader(text);
         TokenStream ts = index.getTextAnalyzer().tokenStream("", r);
-        Token t = new Token();
         try {
-            while ((t = ts.next(t)) != null) {
-                String termText = t.term();
+            while (ts.incrementToken()) {
+                OffsetAttribute offset = ts.getAttribute(OffsetAttribute.class);
+                TermAttribute term = ts.getAttribute(TermAttribute.class);
+                String termText = term.term();
                 TermVectorOffsetInfo[] info = termMap.get(termText);
                 if (info == null) {
                     info = new TermVectorOffsetInfo[1];
@@ -244,9 +246,11 @@ public abstract class AbstractExcerpt implements HighlightingExcerptProvider {
                     System.arraycopy(tmp, 0, info, 0, tmp.length);
                 }
                 info[info.length - 1] = new TermVectorOffsetInfo(
-                        t.startOffset(), t.endOffset());
+                    offset.startOffset(), offset.endOffset());
                 termMap.put(termText, info);
             }
+            ts.end();
+            ts.close();
         } catch (IOException e) {
             // should never happen, we are reading from a string
         }

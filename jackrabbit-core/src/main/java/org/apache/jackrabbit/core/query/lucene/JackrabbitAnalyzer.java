@@ -18,10 +18,12 @@ package org.apache.jackrabbit.core.query.lucene;
 
 import java.io.IOException;
 import java.io.Reader;
+import java.util.Collections;
 
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
+import org.apache.lucene.util.Version;
 
 /**
  * This is the global jackrabbit lucene analyzer. By default, all
@@ -39,7 +41,7 @@ public class JackrabbitAnalyzer  extends Analyzer {
      * The default Jackrabbit analyzer if none is configured in <code><SearchIndex></code>
      * configuration.
      */
-    private Analyzer defaultAnalyzer =  new StandardAnalyzer(new String[]{});
+    private Analyzer defaultAnalyzer =  new StandardAnalyzer(Version.LUCENE_24, Collections.emptySet());
 
     /**
      * The indexing configuration.

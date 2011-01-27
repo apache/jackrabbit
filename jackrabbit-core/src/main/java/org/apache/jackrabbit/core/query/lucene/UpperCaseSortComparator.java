@@ -16,71 +16,43 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
+import org.apache.lucene.search.FieldComparator;
+import org.apache.lucene.search.FieldComparatorSource;
+
 import java.io.IOException;
 
-import org.apache.lucene.search.ScoreDocComparator;
-import org.apache.lucene.search.ScoreDoc;
-import org.apache.lucene.search.SortField;
-import org.apache.lucene.search.SortComparatorSource;
-import org.apache.lucene.index.IndexReader;
-
 /**
- * <code>UpperCaseSortComparator</code> implements a sort comparator that
+ * <code>UpperCaseSortComparator</code> implements a <code>FieldComparator</code> which
  * compares the upper-cased string values of a base sort comparator.
  */
-public class UpperCaseSortComparator implements SortComparatorSource {
-
-    private static final long serialVersionUID = 2562371983498948119L;
+public class UpperCaseSortComparator extends FieldComparatorSource {
     
     /**
      * The base sort comparator.
      */
-    private final SortComparatorSource base;
+    private final FieldComparatorSource base;
 
     /**
      * Creates a new upper case sort comparator.
      *
      * @param base the base sort comparator source.
      */
-    public UpperCaseSortComparator(SortComparatorSource base) {
+    public UpperCaseSortComparator(FieldComparatorSource base) {
         this.base = base;
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    public ScoreDocComparator newComparator(IndexReader reader,
-                                            String fieldname)
-            throws IOException {
-        return new Comparator(base.newComparator(reader, fieldname));
-    }
+    @Override
+    public FieldComparator newComparator(String fieldname, int numHits, int sortPos, boolean reversed) throws IOException {
+        FieldComparator comparator = base.newComparator(fieldname, numHits, sortPos, reversed);
+        assert comparator instanceof FieldComparatorBase;
 
-    private static final class Comparator implements ScoreDocComparator {
-
-        private ScoreDocComparator base;
-
-        private Comparator(ScoreDocComparator base) {
-            this.base = base;
-        }
-
-        /**
-         * @see Util#compare(Comparable, Comparable)
-         */
-        public int compare(ScoreDoc i, ScoreDoc j) {
-            return Util.compare(sortValue(i), sortValue(j));
-        }
-
-        public Comparable sortValue(ScoreDoc i) {
-            Comparable c = base.sortValue(i);
-            if (c != null) {
-                return c.toString().toUpperCase();
-            } else {
-                return null;
+        return new FieldComparatorDecorator((FieldComparatorBase) comparator) {
+            @Override
+            protected Comparable sortValue(int doc) {
+                Comparable c = super.sortValue(doc);
+                return c == null ? null : c.toString().toUpperCase();
             }
-        }
-
-        public int sortType() {
-            return SortField.CUSTOM;
-        }
+        };
     }
+
 }

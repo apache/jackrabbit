@@ -26,6 +26,7 @@ import java.io.IOException;
  * <code>MatchAllDocsQuery</code> extends the lucene <code>MatchAllDocsQuery</code>
  * and in addition implements {@link JackrabbitQuery}.
  */
+@SuppressWarnings("serial")
 public class MatchAllDocsQuery
         extends org.apache.lucene.search.MatchAllDocsQuery
         implements JackrabbitQuery {

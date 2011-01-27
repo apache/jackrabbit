@@ -16,6 +16,61 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
+import org.apache.jackrabbit.core.HierarchyManager;
+import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.fs.FileSystem;
+import org.apache.jackrabbit.core.fs.FileSystemException;
+import org.apache.jackrabbit.core.fs.FileSystemResource;
+import org.apache.jackrabbit.core.fs.local.LocalFileSystem;
+import org.apache.jackrabbit.core.id.NodeId;
+import org.apache.jackrabbit.core.query.AbstractQueryHandler;
+import org.apache.jackrabbit.core.query.ExecutableQuery;
+import org.apache.jackrabbit.core.query.QueryHandler;
+import org.apache.jackrabbit.core.query.QueryHandlerContext;
+import org.apache.jackrabbit.core.query.lucene.directory.DirectoryManager;
+import org.apache.jackrabbit.core.query.lucene.directory.FSDirectoryManager;
+import org.apache.jackrabbit.core.query.lucene.hits.AbstractHitCollector;
+import org.apache.jackrabbit.core.session.SessionContext;
+import org.apache.jackrabbit.core.state.ItemStateException;
+import org.apache.jackrabbit.core.state.ItemStateManager;
+import org.apache.jackrabbit.core.state.NodeState;
+import org.apache.jackrabbit.core.state.PropertyState;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.spi.PathFactory;
+import org.apache.jackrabbit.spi.commons.name.NameConstants;
+import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
+import org.apache.jackrabbit.spi.commons.query.DefaultQueryNodeFactory;
+import org.apache.jackrabbit.spi.commons.query.qom.OrderingImpl;
+import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.analysis.TokenStream;
+import org.apache.lucene.analysis.tokenattributes.PayloadAttribute;
+import org.apache.lucene.analysis.tokenattributes.TermAttribute;
+import org.apache.lucene.document.Document;
+import org.apache.lucene.document.Field;
+import org.apache.lucene.document.Fieldable;
+import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.index.MultiReader;
+import org.apache.lucene.index.Payload;
+import org.apache.lucene.index.Term;
+import org.apache.lucene.index.TermDocs;
+import org.apache.lucene.search.IndexSearcher;
+import org.apache.lucene.search.Query;
+import org.apache.lucene.search.Similarity;
+import org.apache.lucene.search.Sort;
+import org.apache.lucene.search.SortField;
+import org.apache.lucene.search.TermQuery;
+import org.apache.tika.parser.Parser;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.w3c.dom.Element;
+import org.xml.sax.SAXException;
+
+import javax.jcr.RepositoryException;
+import javax.jcr.query.InvalidQueryException;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -30,60 +85,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import javax.jcr.RepositoryException;
-import javax.jcr.query.InvalidQueryException;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-
-import org.apache.jackrabbit.core.HierarchyManager;
-import org.apache.jackrabbit.core.SessionImpl;
-import org.apache.jackrabbit.core.fs.FileSystem;
-import org.apache.jackrabbit.core.fs.FileSystemException;
-import org.apache.jackrabbit.core.fs.FileSystemResource;
-import org.apache.jackrabbit.core.fs.local.LocalFileSystem;
-import org.apache.jackrabbit.core.id.NodeId;
-import org.apache.jackrabbit.core.query.AbstractQueryHandler;
-import org.apache.jackrabbit.core.query.ExecutableQuery;
-import org.apache.jackrabbit.core.query.QueryHandler;
-import org.apache.jackrabbit.core.query.QueryHandlerContext;
-import org.apache.jackrabbit.core.query.lucene.directory.DirectoryManager;
-import org.apache.jackrabbit.core.query.lucene.directory.FSDirectoryManager;
-import org.apache.jackrabbit.core.session.SessionContext;
-import org.apache.jackrabbit.core.state.ItemStateException;
-import org.apache.jackrabbit.core.state.ItemStateManager;
-import org.apache.jackrabbit.core.state.NodeState;
-import org.apache.jackrabbit.core.state.PropertyState;
-import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.spi.Path;
-import org.apache.jackrabbit.spi.PathFactory;
-import org.apache.jackrabbit.spi.commons.name.NameConstants;
-import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
-import org.apache.jackrabbit.spi.commons.query.DefaultQueryNodeFactory;
-import org.apache.jackrabbit.spi.commons.query.qom.OrderingImpl;
-import org.apache.lucene.analysis.Analyzer;
-import org.apache.lucene.analysis.Token;
-import org.apache.lucene.document.Document;
-import org.apache.lucene.document.Field;
-import org.apache.lucene.document.Fieldable;
-import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.index.MultiReader;
-import org.apache.lucene.index.Term;
-import org.apache.lucene.index.TermDocs;
-import org.apache.lucene.search.HitCollector;
-import org.apache.lucene.search.IndexSearcher;
-import org.apache.lucene.search.Query;
-import org.apache.lucene.search.Similarity;
-import org.apache.lucene.search.Sort;
-import org.apache.lucene.search.SortComparatorSource;
-import org.apache.lucene.search.SortField;
-import org.apache.lucene.search.TermQuery;
-import org.apache.tika.parser.Parser;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.w3c.dom.Element;
-import org.xml.sax.SAXException;
 
 /**
  * Implements a {@link org.apache.jackrabbit.core.query.QueryHandler} using
@@ -440,9 +441,9 @@ public class SearchIndex extends AbstractQueryHandler {
     private int termInfosIndexDivisor = DEFAULT_TERM_INFOS_INDEX_DIVISOR;
 
     /**
-     * The sort comparator source for indexed properties.
+     * The field comparator source for indexed properties.
      */
-    private SortComparatorSource scs;
+    private SharedFieldComparatorSource scs;
 
     /**
      * Flag that indicates whether the hierarchy cache should be initialized
@@ -507,7 +508,7 @@ public class SearchIndex extends AbstractQueryHandler {
             }
         }
 
-        scs = new SharedFieldSortComparator(
+        scs = new SharedFieldComparatorSource(
                 FieldNames.PROPERTIES, context.getItemStateManager(),
                 context.getHierarchyManager(), nsMappings);
         indexingConfig = createIndexingConfiguration(nsMappings);
@@ -691,7 +692,8 @@ public class SearchIndex extends AbstractQueryHandler {
             try {
                 Query q = new TermQuery(new Term(
                         FieldNames.WEAK_REFS, id.toString()));
-                searcher.search(q, new HitCollector() {
+                searcher.search(q, new AbstractHitCollector() {
+                    @Override
                     public void collect(int doc, float score) {
                         docs.add(doc);
                     }
@@ -1096,9 +1098,9 @@ public class SearchIndex extends AbstractQueryHandler {
     }
 
     /**
-     * @return the sort comparator source for this index.
+     * @return the field comparator source for this index.
      */
-    protected SortComparatorSource getSortComparatorSource() {
+    protected SharedFieldComparatorSource getSortComparatorSource() {
         return scs;
     }
 
@@ -1376,11 +1378,17 @@ public class SearchIndex extends AbstractQueryHandler {
                             try {
                                 // find the right fields to transfer
                                 Fieldable[] fields = aDoc.getFieldables(FieldNames.PROPERTIES);
-                                Token t = new Token();
                                 for (Fieldable field : fields) {
+
                                     // assume properties fields use SingleTokenStream
-                                    t = field.tokenStreamValue().next(t);
-                                    String value = new String(t.termBuffer(), 0, t.termLength());
+                                    TokenStream tokenStream = field.tokenStreamValue();
+                                    TermAttribute termAttribute = tokenStream.addAttribute(TermAttribute.class);
+                                    PayloadAttribute payloadAttribute = tokenStream.addAttribute(PayloadAttribute.class);
+                                    tokenStream.incrementToken();
+                                    tokenStream.end();
+                                    tokenStream.close();
+
+                                    String value = new String(termAttribute.termBuffer(), 0, termAttribute.termLength());
                                     if (value.startsWith(namePrefix)) {
                                         // extract value
                                         value = value.substring(namePrefix.length());
@@ -1388,9 +1396,11 @@ public class SearchIndex extends AbstractQueryHandler {
                                         Path p = getRelativePath(state, propState);
                                         String path = getNamespaceMappings().translatePath(p);
                                         value = FieldNames.createNamedValue(path, value);
-                                        t.setTermBuffer(value);
-                                        doc.add(new Field(field.name(), new SingletonTokenStream(t)));
-                                        doc.add(new Field(FieldNames.AGGREGATED_NODE_UUID, parent.getNodeId().toString(), Field.Store.NO, Field.Index.NOT_ANALYZED_NO_NORMS));
+                                        termAttribute.setTermBuffer(value);
+                                        doc.add(new Field(field.name(),
+                                                new SingletonTokenStream(value, (Payload) payloadAttribute.getPayload().clone())));
+                                        doc.add(new Field(FieldNames.AGGREGATED_NODE_UUID,
+                                                parent.getNodeId().toString(), Field.Store.NO, Field.Index.NOT_ANALYZED_NO_NORMS));
                                     }
                                 }
                             } finally {

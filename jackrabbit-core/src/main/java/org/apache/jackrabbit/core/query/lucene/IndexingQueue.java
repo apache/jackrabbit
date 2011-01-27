@@ -124,9 +124,9 @@ class IndexingQueue {
             finished.addAll(pendingDocuments.values());
         }
 
-        Iterator it = finished.iterator();
+        Iterator<Document> it = finished.iterator();
         while (it.hasNext()) {
-            Document doc = (Document) it.next();
+            Document doc = it.next();
             if (!Util.isDocumentReady(doc)) {
                 it.remove();
             }

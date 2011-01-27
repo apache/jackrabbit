@@ -18,6 +18,7 @@ package org.apache.jackrabbit.core.query.lucene;
 
 import java.io.IOException;
 
+import org.apache.lucene.search.DocIdSetIterator;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Scorer;
@@ -46,17 +47,22 @@ public class LuceneQueryHits implements QueryHits {
                            Query query)
             throws IOException {
         this.reader = reader;
-        this.scorer = query.weight(searcher).scorer(reader);
+        // We rely on Scorer#nextDoc() and Scorer#advance(int) so enable
+        // scoreDocsInOrder
+        this.scorer = query.weight(searcher).scorer(reader, true, false);
     }
 
     /**
      * {@inheritDoc}
      */
     public ScoreNode nextScoreNode() throws IOException {
-        if (!scorer.next()) {
+        if (scorer == null) {
             return null;
         }
-        int doc = scorer.doc();
+        int doc = scorer.nextDoc();
+        if (doc == DocIdSetIterator.NO_MORE_DOCS) {
+            return null;
+        }
         NodeId id = new NodeId(reader.document(
                 doc, FieldSelectors.UUID).get(FieldNames.UUID));
         return new ScoreNode(id, scorer.score(), doc);
@@ -66,8 +72,10 @@ public class LuceneQueryHits implements QueryHits {
      * {@inheritDoc}
      */
     public void close() throws IOException {
-        // make sure scorer frees resources
-        scorer.skipTo(Integer.MAX_VALUE);
+        if (scorer != null) {
+            // make sure scorer frees resources
+            scorer.advance(Integer.MAX_VALUE);
+        }
     }
 
     /**

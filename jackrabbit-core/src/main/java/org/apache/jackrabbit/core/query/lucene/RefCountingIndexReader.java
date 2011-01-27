@@ -48,7 +48,7 @@ public class RefCountingIndexReader
     /**
      * @return the current reference count value.
      */
-    synchronized int getRefCount() {
+    public synchronized int getRefCount() {
         return refCount;
     }
 

@@ -16,14 +16,6 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.BitSet;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermDocs;
@@ -34,9 +26,18 @@ import org.apache.lucene.search.Query;
 import org.apache.lucene.search.Scorer;
 import org.apache.lucene.search.Searcher;
 import org.apache.lucene.search.Similarity;
+import org.apache.lucene.search.TermRangeQuery;
 import org.apache.lucene.search.Weight;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.BitSet;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Implements a variant of the lucene class {@link org.apache.lucene.search.RangeQuery}.
@@ -44,6 +45,7 @@ import org.slf4j.LoggerFactory;
  * but will calculate the matching documents itself. That way a
  * <code>TooManyClauses</code> can be avoided.
  */
+@SuppressWarnings("serial")
 public class RangeQuery extends Query implements Transformable {
 
     /**
@@ -147,7 +149,7 @@ public class RangeQuery extends Query implements Transformable {
     public Query rewrite(IndexReader reader) throws IOException {
         if (transform == TRANSFORM_NONE) {
             Query stdRangeQueryImpl
-                    = new org.apache.lucene.search.RangeQuery(lowerTerm, upperTerm, inclusive);
+                    = new TermRangeQuery(lowerTerm.field(), lowerTerm.text(), upperTerm.text(), inclusive, inclusive);
             try {
                 stdRangeQuery = stdRangeQueryImpl.rewrite(reader);
                 return stdRangeQuery;
@@ -169,7 +171,7 @@ public class RangeQuery extends Query implements Transformable {
      * @param searcher the searcher to use for the <code>Weight</code>.
      * @return the <code>Weigth</code> for this query.
      */
-    protected Weight createWeight(Searcher searcher) {
+    public Weight createWeight(Searcher searcher) {
         return new RangeQueryWeight(searcher, cache);
     }
 
@@ -238,7 +240,8 @@ public class RangeQuery extends Query implements Transformable {
          * @param reader index reader
          * @return a {@link RangeQueryScorer} instance
          */
-        protected Scorer createScorer(IndexReader reader) {
+        protected Scorer createScorer(IndexReader reader, boolean scoreDocsInOrder,
+                boolean topScorer) {
             return new RangeQueryScorer(searcher.getSimilarity(), reader, cache);
         }
 
@@ -355,44 +358,42 @@ public class RangeQuery extends Query implements Transformable {
             hits = result;
         }
 
-        /**
-         * {@inheritDoc}
-         */
-        public boolean next() throws IOException {
+        @Override
+        public int nextDoc() throws IOException {
+            if (nextDoc == NO_MORE_DOCS) {
+                return nextDoc;
+            }
+
             calculateHits();
             nextDoc = hits.nextSetBit(nextDoc + 1);
-            return nextDoc > -1;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        public int doc() {
+            if (nextDoc < 0) {
+                nextDoc = NO_MORE_DOCS;
+            }
             return nextDoc;
         }
 
-        /**
-         * {@inheritDoc}
-         */
+        @Override
+        public int docID() {
+            return nextDoc;
+        }
+
+        @Override
         public float score() {
             return 1.0f;
         }
 
-        /**
-         * {@inheritDoc}
-         */
-        public boolean skipTo(int target) throws IOException {
+        @Override
+        public int advance(int target) throws IOException {
+            if (nextDoc == NO_MORE_DOCS) {
+                return nextDoc;
+            }
+
             calculateHits();
             nextDoc = hits.nextSetBit(target);
-            return nextDoc > -1;
-        }
-
-        /**
-         * Returns an empty Explanation object.
-         * @return an empty Explanation object.
-         */
-        public Explanation explain(int doc) {
-            return new Explanation();
+            if (nextDoc < 0) {
+                nextDoc = NO_MORE_DOCS;
+            }
+            return nextDoc;
         }
 
         /**

@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.core.query.lucene;
 
 import org.apache.lucene.util.PriorityQueue;
+import org.apache.lucene.util.Version;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermFreqVector;
@@ -27,11 +28,12 @@ import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.analysis.Analyzer;
-import org.apache.lucene.analysis.Token;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
+import org.apache.lucene.analysis.tokenattributes.TermAttribute;
 import org.apache.lucene.document.Document;
 
+import java.util.List;
 import java.util.Set;
 import java.util.HashMap;
 import java.util.Map;
@@ -152,7 +154,7 @@ public final class MoreLikeThis {
      * Default analyzer to parse source doc with.
      * @see #getAnalyzer
      */
-    public static final Analyzer DEFAULT_ANALYZER = new StandardAnalyzer();
+    public static final Analyzer DEFAULT_ANALYZER = new StandardAnalyzer(Version.LUCENE_24);
 
     /**
      * Ignore terms with less than this frequency in the source doc.
@@ -202,12 +204,12 @@ public final class MoreLikeThis {
      * @see #setStopWords
      * @see #getStopWords
      */
-    public static final Set DEFAULT_STOP_WORDS = null;
+    public static final Set<String> DEFAULT_STOP_WORDS = null;
 
     /**
      * Current set of stop words.
      */
-    private Set stopWords = DEFAULT_STOP_WORDS;
+    private Set<String> stopWords = DEFAULT_STOP_WORDS;
 
     /**
      * Return a Query with no more than this many terms.
@@ -448,7 +450,7 @@ public final class MoreLikeThis {
      * @see org.apache.lucene.analysis.StopFilter#makeStopSet StopFilter.makeStopSet()
      * @see #getStopWords
      */
-    public void setStopWords(Set stopWords) {
+    public void setStopWords(Set<String> stopWords) {
         this.stopWords = stopWords;
     }
 
@@ -456,7 +458,7 @@ public final class MoreLikeThis {
      * Get the current stop words being used.
      * @see #setStopWords
      */
-    public Set getStopWords() {
+    public Set<String> getStopWords() {
         return stopWords;
     }
 
@@ -504,8 +506,9 @@ public final class MoreLikeThis {
     public Query like(int docNum) throws IOException {
         if (fieldNames == null) {
             // gather list of valid fields from lucene
-            Collection fields = ir.getFieldNames( IndexReader.FieldOption.INDEXED);
-            fieldNames = (String[]) fields.toArray(new String[fields.size()]);
+            @SuppressWarnings("unchecked")
+            Collection<String> fields = ir.getFieldNames(IndexReader.FieldOption.INDEXED);
+            fieldNames = fields.toArray(new String[fields.size()]);
         }
 
         return createQuery(retrieveTerms(docNum));
@@ -519,8 +522,9 @@ public final class MoreLikeThis {
     public Query like(File f) throws IOException {
         if (fieldNames == null) {
             // gather list of valid fields from lucene
-            Collection fields = ir.getFieldNames( IndexReader.FieldOption.INDEXED);
-            fieldNames = (String[]) fields.toArray(new String[fields.size()]);
+            @SuppressWarnings("unchecked")
+            Collection<String> fields = ir.getFieldNames(IndexReader.FieldOption.INDEXED);
+            fieldNames = fields.toArray(new String[fields.size()]);
         }
 
         return like(new FileReader(f));
@@ -596,14 +600,14 @@ public final class MoreLikeThis {
      *
      * @param words a map of words keyed on the word(String) with Int objects as the values.
      */
-    private PriorityQueue createQueue(Map words) throws IOException {
+    private PriorityQueue createQueue(Map<String, Int> words) throws IOException {
         // have collected all words in doc and their freqs
         int numDocs = ir.numDocs();
         FreqQ res = new FreqQ(words.size()); // will order words by score
 
-        Iterator it = words.keySet().iterator();
+        Iterator<String> it = words.keySet().iterator();
         while (it.hasNext()) { // for every word
-            String word = (String) it.next();
+            String word = it.next();
 
             int tf = ((Int) words.get(word)).x; // term freq in the source doc
             if (minTermFreq > 0 && tf < minTermFreq) {
@@ -631,7 +635,7 @@ public final class MoreLikeThis {
             float score = tf * idf;
 
             // only really need 1st 3 entries, other ones are for troubleshooting
-            res.insert(new Object[]{word,                   // the word
+            res.insertWithOverflow(new Object[]{word,                   // the word
                                     topField,               // the top field
                                     new Float(score),       // overall score
                                     new Float(idf),         // idf
@@ -670,7 +674,7 @@ public final class MoreLikeThis {
      * @param docNum the id of the lucene document from which to find terms
      */
     public PriorityQueue retrieveTerms(int docNum) throws IOException {
-        Map termFreqMap = new HashMap();
+        Map<String, Int> termFreqMap = new HashMap<String, Int>();
         for (int i = 0; i < fieldNames.length; i++) {
             String fieldName = fieldNames[i];
             TermFreqVector vector = ir.getTermFreqVector(docNum, fieldName);
@@ -699,7 +703,7 @@ public final class MoreLikeThis {
      * @param termFreqMap a Map of terms and their frequencies
      * @param vector List of terms and their frequencies for a doc/field
      */
-    private void addTermFrequencies(Map termFreqMap, TermFreqVector vector) {
+    private void addTermFrequencies(Map<String, Int> termFreqMap, TermFreqVector vector) {
         String[] terms = vector.getTerms();
         int[] freqs = vector.getTermFrequencies();
         for (int j = 0; j < terms.length; j++) {
@@ -727,14 +731,14 @@ public final class MoreLikeThis {
      * @param termFreqMap a Map of terms and their frequencies
      * @param fieldName Used by analyzer for any special per-field analysis
      */
-    private void addTermFrequencies(Reader r, Map termFreqMap, String fieldName)
+    private void addTermFrequencies(Reader r, Map<String, Int> termFreqMap, String fieldName)
             throws IOException {
         TokenStream ts = analyzer.tokenStream(fieldName, r);
         int tokenCount = 0;
         // for every token
-        final Token reusableToken = new Token();
-        for (Token nextToken = ts.next(reusableToken); nextToken != null; nextToken = ts.next(reusableToken)) {
-            String word = nextToken.term();
+        while (ts.incrementToken()) {
+            TermAttribute term = ts.getAttribute(TermAttribute.class);
+            String word =  term.term();
             tokenCount++;
             if (tokenCount > maxNumTokensParsed) {
                 break;
@@ -744,13 +748,15 @@ public final class MoreLikeThis {
             }
 
             // increment frequency
-            Int cnt = (Int) termFreqMap.get(word);
+            Int cnt = termFreqMap.get(word);
             if (cnt == null) {
                 termFreqMap.put(word, new Int());
             } else {
                 cnt.x++;
             }
         }
+        ts.end();
+        ts.close();
     }
 
     /** determines if the passed term is likely to be of interest in "more like" comparisons
@@ -796,7 +802,7 @@ public final class MoreLikeThis {
      * @see #retrieveInterestingTerms
      */
     public PriorityQueue retrieveTerms(Reader r) throws IOException {
-        Map words = new HashMap();
+        Map<String, Int> words = new HashMap<String, Int>();
         for (int i = 0; i < fieldNames.length; i++) {
             String fieldName = fieldNames[i];
             addTermFrequencies(r, words, fieldName);
@@ -808,17 +814,16 @@ public final class MoreLikeThis {
      * @see #retrieveInterestingTerms(java.io.Reader)
      */
     public String[] retrieveInterestingTerms(int docNum) throws IOException {
-        ArrayList al = new ArrayList(maxQueryTerms);
+        List<String> al = new ArrayList<String>(maxQueryTerms);
         PriorityQueue pq = retrieveTerms(docNum);
         Object cur;
         int lim = maxQueryTerms; // have to be careful, retrieveTerms returns all words but that's probably not useful to our caller...
         // we just want to return the top words
         while (((cur = pq.pop()) != null) && lim-- > 0) {
             Object[] ar = (Object[]) cur;
-            al.add(ar[0]); // the 1st entry is the interesting word
+            al.add((String) ar[0]); // the 1st entry is the interesting word
         }
-        String[] res = new String[al.size()];
-        return (String[]) al.toArray(res);
+        return al.toArray(new String[al.size()]);
     }
 
     /**
@@ -831,17 +836,16 @@ public final class MoreLikeThis {
      * @see #setMaxQueryTerms
      */
     public String[] retrieveInterestingTerms(Reader r) throws IOException {
-        ArrayList al = new ArrayList(maxQueryTerms);
+        List<String> al = new ArrayList<String>(maxQueryTerms);
         PriorityQueue pq = retrieveTerms(r);
         Object cur;
         int lim = maxQueryTerms; // have to be careful, retrieveTerms returns all words but that's probably not useful to our caller...
         // we just want to return the top words
         while (((cur = pq.pop()) != null) && lim-- > 0) {
             Object[] ar = (Object[]) cur;
-            al.add(ar[0]); // the 1st entry is the interesting word
+            al.add((String) ar[0]); // the 1st entry is the interesting word
         }
-        String[] res = new String[al.size()];
-        return (String[]) al.toArray(res);
+        return al.toArray(new String[al.size()]);
     }
 
     /**
