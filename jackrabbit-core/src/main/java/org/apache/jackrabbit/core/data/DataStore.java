@@ -127,7 +127,7 @@ public interface DataStore {
     /**
      * Close the data store
      *
-     * @throws DataStoreException if a problem occured
+     * @throws DataStoreException if a problem occurred
      */
     void close() throws DataStoreException;
 
