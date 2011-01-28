@@ -25,7 +25,7 @@ import java.io.IOException;
 public abstract class AbstractQueryHits implements QueryHits {
 
     /**
-     * This default implemetation does nothing.
+     * This default implementation does nothing.
      */
     public void close() throws IOException {
     }
