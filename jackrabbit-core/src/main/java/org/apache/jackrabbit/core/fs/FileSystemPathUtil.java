@@ -65,7 +65,7 @@ public final class FileSystemPathUtil {
         SAFE_NAMECHARS.set('_');
         SAFE_NAMECHARS.set('.');
 
-        // build list of valid path characters (inlcudes name characters)
+        // build list of valid path characters (includes name characters)
         SAFE_PATHCHARS = (BitSet) SAFE_NAMECHARS.clone();
         SAFE_PATHCHARS.set(FileSystem.SEPARATOR_CHAR);
     }
