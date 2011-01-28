@@ -32,7 +32,7 @@ public interface UpdateEventListener {
      *
      * @param changes external changes containing only node and property ids.
      * @param events events to deliver
-     * @param timestamp when the change occured.
+     * @param timestamp when the change occurred.
      * @param userData the user data associated with this update.
      * @throws RepositoryException if the update cannot be processed
      */
