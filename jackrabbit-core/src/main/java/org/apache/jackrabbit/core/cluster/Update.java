@@ -59,9 +59,9 @@ public interface Update {
     List<EventState> getEvents();
 
     /**
-     * Returns the timestamp whe this update occured.
+     * Returns the timestamp whe this update occurred.
      *
-     * @return the timestamp whe this update occured.
+     * @return the timestamp whe this update occurred.
      */
     long getTimestamp();
 
