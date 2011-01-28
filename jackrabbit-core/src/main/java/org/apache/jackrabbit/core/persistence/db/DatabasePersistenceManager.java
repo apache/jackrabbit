@@ -450,9 +450,10 @@ public abstract class DatabasePersistenceManager extends AbstractPersistenceMana
      * This method uses shared <code>PreparedStatement</code>s which must
      * be executed strictly sequentially. Because this method synchronizes on
      * the persistence manager instance there is no need to synchronize on the
-     * shared statement. If the method would not be sychronized the shared
+     * shared statement. If the method would not be synchronized the shared
      * statements would have to be synchronized.
      */
+    @Override
     public synchronized void store(NodeState state) throws ItemStateException {
         if (!initialized) {
             throw new IllegalStateException("not initialized");
@@ -488,9 +489,10 @@ public abstract class DatabasePersistenceManager extends AbstractPersistenceMana
      * This method uses shared <code>PreparedStatement</code>s which must
      * be executed strictly sequentially. Because this method synchronizes on
      * the persistence manager instance there is no need to synchronize on the
-     * shared statement. If the method would not be sychronized the shared
+     * shared statement. If the method would not be synchronized the shared
      * statements would have to be synchronized.
      */
+    @Override
     public synchronized void store(PropertyState state)
             throws ItemStateException {
         if (!initialized) {
@@ -626,9 +628,10 @@ public abstract class DatabasePersistenceManager extends AbstractPersistenceMana
      * This method uses shared <code>PreparedStatement</code>s which must
      * be executed strictly sequentially. Because this method synchronizes on
      * the persistence manager instance there is no need to synchronize on the
-     * shared statement. If the method would not be sychronized the shared
+     * shared statement. If the method would not be synchronized the shared
      * statements would have to be synchronized.
      */
+    @Override
     public synchronized void store(NodeReferences refs)
             throws ItemStateException {
         if (!initialized) {

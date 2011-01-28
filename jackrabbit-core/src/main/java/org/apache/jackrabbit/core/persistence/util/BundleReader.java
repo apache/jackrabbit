@@ -40,7 +40,7 @@ import java.math.BigDecimal;
 import javax.jcr.PropertyType;
 
 /**
- * Bundle deserializater. See the {@link BundleWriter} class for details of
+ * Bundle deserializer. See the {@link BundleWriter} class for details of
  * the serialization format.
  *
  * @see BundleWriter

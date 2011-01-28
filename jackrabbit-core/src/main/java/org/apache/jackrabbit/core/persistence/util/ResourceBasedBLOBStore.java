@@ -29,9 +29,9 @@ public interface ResourceBasedBLOBStore extends BLOBStore {
      * Retrieves the BLOB data with the specified id as a permanent resource.
      *
      * @param blobId identifier of the BLOB data as returned by
-     *               {@link #createId(PropertyId, int)}
+     *               {@link #createId(org.apache.jackrabbit.core.id.PropertyId , int)}
      * @return a resource representing the BLOB data
-     * @throws Exception if an error occured
+     * @throws Exception if an error occurred
      */
     FileSystemResource getResource(String blobId) throws Exception;
 }

@@ -190,8 +190,8 @@ public class BundleDbPersistenceManager
     /**
      * {@inheritDoc}
      */
-    public void setConnectionFactory(ConnectionFactory connnectionFactory) {
-        this.connectionFactory = connnectionFactory;
+    public void setConnectionFactory(ConnectionFactory connectionFactory) {
+        this.connectionFactory = connectionFactory;
     }
 
     /**

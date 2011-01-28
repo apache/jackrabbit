@@ -26,7 +26,7 @@ import org.apache.jackrabbit.spi.commons.name.NameConstants;
 
 // WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING //
 //                                                                         //
-// The contents and behavour of this class are tightly coupled with the    //
+// The contents and behaviour of this class are tightly coupled with the    //
 // bundle serialization format, so make sure that you know what you're     //
 // doing before modifying this class!                                      //
 //                                                                         //

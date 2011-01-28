@@ -24,7 +24,7 @@ import java.util.HashSet;
 public final class ErrorHandling {
 
     /**
-     * Controls if references to missing blob resources are treaded as errors
+     * Controls if references to missing blob resources are treated as errors
      * or not.
      */
     public static final String IGNORE_MISSING_BLOBS = "IGN_MISSING_BLOBS";
@@ -45,7 +45,7 @@ public final class ErrorHandling {
 
     /**
      * Creates a new error handling configuration based on the given string.
-     * The individual flags should be seperated with "|".
+     * The individual flags should be separated with "|".
      *
      * @param str flags
      */
@@ -66,7 +66,7 @@ public final class ErrorHandling {
     }
 
     /**
-     * Returns the string representation where the flags are seperated
+     * Returns the string representation where the flags are separated
      * with "|".
      * @return the string representation.
      */
