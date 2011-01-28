@@ -136,7 +136,7 @@ public abstract class AbstractLocatorFactory implements DavLocatorFactory {
 
     /**
      * Create a new <code>DavResourceLocator</code> from the specified prefix,
-     * workspace path and resource path, whithout modifying the specified Strings.
+     * workspace path and resource path, without modifying the specified Strings.
      * Note, that it is expected that the resource path starts with the
      * given workspace path unless both values are <code>null</code>.
      *

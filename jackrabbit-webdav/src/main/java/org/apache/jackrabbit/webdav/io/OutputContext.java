@@ -64,7 +64,7 @@ public interface OutputContext {
     public void setModificationTime(long modificationTime);
 
     /**
-     * Sets the ETag of the resource. A successfull export command
+     * Sets the ETag of the resource. A successful export command
      * may set this member.
      *
      * @param etag the ETag

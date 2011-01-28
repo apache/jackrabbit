@@ -27,8 +27,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * The <code>DavPropertyName</code> class reflects a Webdav property name. It
- * holds together the actualy name of the property and its namespace.
+ * The <code>DavPropertyName</code> class reflects a WebDAV property name. It
+ * holds together the local name of the property and its namespace.
  */
 public class DavPropertyName implements DavConstants, XmlSerializable, PropEntry {
 
@@ -154,7 +154,7 @@ public class DavPropertyName implements DavConstants, XmlSerializable, PropEntry
     }
 
     /**
-     * Computes the hash code using this propertys name and namespace.
+     * Computes the hash code using this properties name and namespace.
      *
      * @return the hash code
      */

@@ -54,7 +54,7 @@ import java.util.Set;
  *  be indicated by the xml:lang attribute.
  * </pre>
  *
- * Note that a DAV:principal-search-property XML element is requiered for each
+ * Note that a DAV:principal-search-property XML element is required for each
  * property that may be searched with the DAV:principal-property-search REPORT.
  */
 public class SearchablePropertyReport implements Report {

@@ -29,7 +29,7 @@ import org.apache.jackrabbit.webdav.lock.Type;
  * todo: removing all expired locks
  * todo: 'local' and 'global' are not accurate terms in the given context > replace
  * todo: the usage of the 'global' transaction is not according to the JTA specification,
- * which explicitely requires any transaction present on a servlet to be completed before
+ * which explicitly requires any transaction present on a servlet to be completed before
  * the service method returns. Starting/completing transactions on the session object,
  * which is possible with the jackrabbit implementation is a hack.
  * todo: review of this transaction part is therefore required. Is there a use-case

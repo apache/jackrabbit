@@ -168,7 +168,7 @@ public class SubscriptionInfo implements ObservationConstants, XmlSerializable {
     /**
      * Return array of filters with the specified name.
      *
-     * @param localName the filter elments must provide.
+     * @param localName the filter elements must provide.
      * @param namespace
      * @return array containing the text of the filter elements with the given
      * name.

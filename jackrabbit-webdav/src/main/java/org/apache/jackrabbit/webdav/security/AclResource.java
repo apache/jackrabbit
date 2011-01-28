@@ -50,7 +50,7 @@ public interface AclResource extends DavResource {
      * If these conditions are violated, this method must fail with
      * {@link DavServletResponse#SC_FORBIDDEN 403 (Forbidden)} or
      * {@link DavServletResponse#SC_CONFLICT 409 (Conflict)} and should provide
-     * a detailled error condition in the response body. See
+     * a detailed error condition in the response body. See
      * <a href="http://www.ietf.org/rfc/rfc3744.txt">RFC 3744 Section 8.1.1
      * (ACL Preconditions)</a> for further details.
      */
@@ -62,7 +62,7 @@ public interface AclResource extends DavResource {
      * @param reportInfo specifying the report details retrieved from the REPORT
      * request.
      * @return the requested report.
-     * @throws DavException in case an error occured or if the specified
+     * @throws DavException in case an error occurred or if the specified
      * <code>ReportInfo</code> is either not valid or cannot be run by this
      * resource.
      */

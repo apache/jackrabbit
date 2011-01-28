@@ -24,7 +24,7 @@ import org.apache.jackrabbit.webdav.bind.BindServletRequest;
 
 /**
  * The empty <code>WebdavRequest</code> interface collects the functionality
- * defined by {@link org.apache.jackrabbit.webdav.DavServletRequest} encapsulting
+ * defined by {@link org.apache.jackrabbit.webdav.DavServletRequest} encapsulating
  * the core Webdav specification (RFC 2518) as well as the various extensions
  * used for observation and transaction support, ordering of collections, search
  * and versioning.

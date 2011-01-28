@@ -29,17 +29,17 @@ public interface ObservationDavServletResponse extends DavServletResponse {
     /**
      * Send the response to a successful SUBSCRIBE request.
      *
-     * @param subsription that needs to be represented in the response body.
+     * @param subscription that needs to be represented in the response body.
      * @throws IOException
      */
-    public void sendSubscriptionResponse(Subscription subsription) throws IOException;
+    public void sendSubscriptionResponse(Subscription subscription) throws IOException;
 
     /**
-     * Send the response to a sucessful POLL request.
+     * Send the response to a successful POLL request.
      *
-     * @param eventdiscovery {@link EventDiscovery} object to be returned in
+     * @param eventDiscovery {@link EventDiscovery} object to be returned in
      * the response body.
      * @throws IOException
      */
-    public void sendPollResponse(EventDiscovery eventdiscovery) throws IOException;
+    public void sendPollResponse(EventDiscovery eventDiscovery) throws IOException;
 }

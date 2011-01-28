@@ -25,7 +25,7 @@ import java.util.NoSuchElementException;
  */
 public interface DavPropertyIterator extends Iterator<DavProperty<?>> {
     /**
-     * Returns the next <code>Property</code> in the interation.
+     * Returns the next <code>Property</code>.
      *
      * @return the next <code>Property</code> in the iteration.
      * @throws java.util.NoSuchElementException if iteration has no more elements.

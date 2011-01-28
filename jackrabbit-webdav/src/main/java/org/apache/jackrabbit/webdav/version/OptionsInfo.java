@@ -39,7 +39,7 @@ import java.util.Arrays;
  *
  * <pre>
  * &lt;!ELEMENT options ANY&gt;
- * ANY value: A sequence of elements each at most onces.
+ * ANY value: A sequence of elements each at most once.
  * </pre>
  *
  * Note, that this is a simplified implementation of the very generic

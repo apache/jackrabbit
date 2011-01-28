@@ -23,7 +23,7 @@ import org.apache.jackrabbit.webdav.version.report.Report;
 import org.apache.jackrabbit.webdav.version.report.ReportInfo;
 
 /**
- * The <code>DeltaVResource</code> encapsultes the functionality common to all
+ * The <code>DeltaVResource</code> encapsulates the functionality common to all
  * DeltaV compliant resources.
  * <p/>
  * RFC 3253 defines the following required properties:
@@ -48,7 +48,7 @@ import org.apache.jackrabbit.webdav.version.report.ReportInfo;
 public interface DeltaVResource extends DavResource {
 
     /**
-     * The generic deltaV complient resource defines one additional method REPORT.
+     * The generic deltaV compliant resource defines one additional method REPORT.
      *
      * @see org.apache.jackrabbit.webdav.DavResource#METHODS
      */
@@ -77,7 +77,7 @@ public interface DeltaVResource extends DavResource {
      *
      * @param reportInfo
      * @return the requested report.
-     * @throws DavException in case an error occured or if the specified <code>ReportInfo</code>
+     * @throws DavException in case an error occurred or if the specified <code>ReportInfo</code>
      * is either not valid or cannot be run by the given resource.
      */
     public Report getReport(ReportInfo reportInfo) throws DavException;

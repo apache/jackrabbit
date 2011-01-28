@@ -35,7 +35,7 @@ import org.w3c.dom.Document;
 import java.io.IOException;
 
 /**
- * <code>PollMethod</code> imple
+ * <code>PollMethod</code> implementation.
  */
 public class PollMethod extends DavMethodBase implements ObservationConstants {
 

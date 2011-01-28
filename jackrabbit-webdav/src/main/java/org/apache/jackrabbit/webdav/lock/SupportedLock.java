@@ -26,7 +26,7 @@ import java.util.Iterator;
 import java.util.List;
 
 /**
- * The <code>SupportedLock</code> class encapsulates the lock capabilties
+ * The <code>SupportedLock</code> class encapsulates the lock capabilities
  * of a resource. It is mainly responsible for generating the &lt;supportedlock>
  * property.
  */

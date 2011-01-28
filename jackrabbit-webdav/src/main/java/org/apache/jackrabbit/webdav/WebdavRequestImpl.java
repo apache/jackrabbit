@@ -263,7 +263,7 @@ public class WebdavRequestImpl implements WebdavRequest, DavConstants {
     }
 
     /**
-     * Retrive the lock token from the 'Lock-Token' header.
+     * Retrieve the lock token from the 'Lock-Token' header.
      *
      * @return String representing the lock token sent in the Lock-Token header.
      * @throws IllegalArgumentException If the value has not the correct format.
@@ -493,7 +493,7 @@ public class WebdavRequestImpl implements WebdavRequest, DavConstants {
      * then only provides timeout and isDeep property and returns true on
      * {@link org.apache.jackrabbit.webdav.lock.LockInfo#isRefreshLock()}
      *
-     * @return lock info object or <code>null</code> if an error occured while
+     * @return lock info object or <code>null</code> if an error occurred while
      *         parsing the request body.
      * @throws DavException throws a 400 (Bad Request) DavException if a request
      * body is present but does not start with a DAV:lockinfo element. Note however,

@@ -134,7 +134,7 @@ public class MultiStatusResponse implements XmlSerializable, DavConstants {
     }
 
     /**
-     * Constucts a WebDAV multistatus response and retrieves the resource
+     * Constructs a WebDAV multistatus response and retrieves the resource
      * properties according to the given <code>DavPropertyNameSet</code>.
      *
      * @param resource

@@ -41,7 +41,7 @@ public class DefaultEventType implements EventType {
     private final Namespace namespace;
 
     /**
-     * Avoid instanciation of <code>DefaultEventType</code>. Since the amount
+     * Avoid instantiation of <code>DefaultEventType</code>. Since the amount
      * of available (and registered) events is considered to be limited, the
      * static {@link #create(String, Namespace) method is defined.
      *

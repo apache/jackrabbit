@@ -65,7 +65,8 @@ public class SimpleLockManager implements LockManager {
     }
 
     /**
-     * Recursivly tries to find the lock
+     * Looks for a valid lock at the given path or a deep lock present with
+     * a parent path.
      *
      * @param path
      * @return

@@ -61,7 +61,7 @@ public interface DavServletResponse extends HttpServletResponse {
     int SC_LOCKED = 423;
 
     /**
-     * Status code (424) incidating that the method could not be
+     * Status code (424) indicating that the method could not be
      * performed on the resource, because the requested action depended
      * on another action which failed.
      */
@@ -76,7 +76,7 @@ public interface DavServletResponse extends HttpServletResponse {
 
     /**
      * Send a response body given more detailed information about the error
-     * occured.
+     * occurred.
      *
      * @param error
      * @throws IOException

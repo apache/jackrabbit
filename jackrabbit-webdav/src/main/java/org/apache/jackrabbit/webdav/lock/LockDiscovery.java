@@ -38,7 +38,7 @@ public class LockDiscovery extends AbstractDavProperty<List<ActiveLock>> {
      * Listing of existing locks applied to the resource this discovery was
      * requested for. Each entry reveals, who has a lock, what type of lock he has,
      * the timeout type and the time remaining on the timeout, and the lock-type.
-     * NOTE, that any of the information listed may be not availble for the
+     * NOTE, that any of the information listed may be not available for the
      * server is free to withhold any or all of this information.
      */
     private List<ActiveLock> activeLocks = new ArrayList<ActiveLock>();

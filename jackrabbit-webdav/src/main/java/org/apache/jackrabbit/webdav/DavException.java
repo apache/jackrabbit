@@ -28,7 +28,7 @@ import java.util.Properties;
 
 /**
  * <code>DavException</code> extends the {@link Exception} class in order
- * to simplify handling of exceptional situations occuring during processing
+ * to simplify handling of exceptional situations occurring during processing
  * of WebDAV requests and provides possibility to retrieve an Xml representation
  * of the error.
  */
@@ -91,7 +91,7 @@ public class DavException extends Exception implements XmlSerializable {
      * {@link DavServletResponse}.
      * @param message Human readable error message.
      * @param cause Cause of this <code>DavException</code>.
-     * @param errorCondition Xml element providing detailled information about
+     * @param errorCondition Xml element providing detailed information about
      * the error. If the condition is not <code>null</code>, {@link #toXml(Document)}
      */
     public DavException(int errorCode, String message, Throwable cause, Element errorCondition) {

@@ -77,7 +77,7 @@ public class MultiStatus implements DavConstants, XmlSerializable {
      * @param propNameSet The requested property names of the PROPFIND request
      * @param depth
      * @see #addResourceProperties(DavResource, DavPropertyNameSet, int, int) for
-     * the corresponding method that allows to specify the type explicitely.
+     * the corresponding method that allows to specify the type.
      */
     public void addResourceProperties(DavResource resource, DavPropertyNameSet propNameSet,
                                       int depth) {

@@ -128,7 +128,7 @@ public class SearchInfo implements SearchConstants, XmlSerializable {
     /**
      * Returns the namespace of the language specified with the search request element.
      *
-     * @return namespace of the requestes language.
+     * @return namespace of the requested language.
      */
     public Namespace getLanguageNameSpace() {
         return languageNamespace;

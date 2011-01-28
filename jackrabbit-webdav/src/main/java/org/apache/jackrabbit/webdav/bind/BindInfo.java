@@ -68,14 +68,14 @@ public class BindInfo implements XmlSerializable {
                 if (segment == null) {
                     segment = DomUtil.getText(elt);
                 } else {
-                    log.warn("unexpected multiple occurence of DAV:segment element");
+                    log.warn("unexpected multiple occurrence of DAV:segment element");
                     throw new DavException(DavServletResponse.SC_BAD_REQUEST);
                 }
             } else if (DomUtil.matches(elt, BindConstants.XML_HREF, BindConstants.NAMESPACE)) {
                 if (href == null) {
                     href = DomUtil.getText(elt);
                 } else {
-                    log.warn("unexpected multiple occurence of DAV:href element");
+                    log.warn("unexpected multiple occurrence of DAV:href element");
                     throw new DavException(DavServletResponse.SC_BAD_REQUEST);
                 }
             } else  {

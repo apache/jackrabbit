@@ -31,7 +31,7 @@ import org.w3c.dom.Element;
  * used to add, set or remove a label from the requested version resource or
  * from that version specified with the Label header in case the requested resource
  * is a version-controlled resource.<br><br>
- * The request body (thus the 'labelElement' passed to the constructore must be
+ * The request body (thus the 'labelElement' passed to the constructor must be
  * a DAV:label element:
  * <pre>
  * &lt;!ELEMENT label ANY&gt;

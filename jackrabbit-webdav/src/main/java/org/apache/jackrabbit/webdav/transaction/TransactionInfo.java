@@ -26,7 +26,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 /**
- * <code>TransactionInfo</code> class encapsultes the information present
+ * <code>TransactionInfo</code> class encapsulates the information present
  * in the {@link #XML_TRANSACTIONINFO} element that forms the request body of
  * the UNLOCk request for a transaction lock.
  *

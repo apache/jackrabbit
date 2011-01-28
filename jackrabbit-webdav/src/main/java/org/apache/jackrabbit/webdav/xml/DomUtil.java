@@ -91,8 +91,8 @@ public class DomUtil {
             throws ParserConfigurationException, SAXException, IOException {
         DocumentBuilder docBuilder = BUILDER_FACTORY.newDocumentBuilder();
 
-        // Set an error handler to prevent parsers like Xerces
-        // from printing error messages to standard output!
+        // Set an error handler to prevent parsers from printing error messages
+        // to standard output!
         docBuilder.setErrorHandler(new DefaultHandler());
 
         return docBuilder.parse(stream);

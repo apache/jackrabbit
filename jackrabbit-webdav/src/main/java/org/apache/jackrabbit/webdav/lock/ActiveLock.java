@@ -67,7 +67,7 @@ public interface ActiveLock extends XmlSerializable {
      * or -1 if the timeout is not available (or the client is not allowed
      * to retrieve it).
      *
-     * @return numer of milliseconds.
+     * @return number of milliseconds.
      */
     public long getTimeout();
 

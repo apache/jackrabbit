@@ -22,7 +22,7 @@ import org.apache.jackrabbit.webdav.xml.XmlSerializable;
  * <code>Subscription</code> represents public representation of the event
  * listener created (or modified) by a successful SUBSCRIBE request.<br>
  * Please note that this interface extends the <code>XmlSerializable</code>
- * interface. Tthe Xml representation of a <code>Subscription</code> is
+ * interface. The Xml representation of a <code>Subscription</code> is
  * returned in the response to a successful SUBSCRIBE request as well
  * as in a PROPFIND request. In both cases the subscription is packed into
  * a {@link SubscriptionDiscovery} property object.
@@ -30,7 +30,7 @@ import org.apache.jackrabbit.webdav.xml.XmlSerializable;
 public interface Subscription extends XmlSerializable {
 
     /**
-     * Returns the id of this subscription, that must be used for unsubscribing
+     * Returns the id of this subscription, that must be used for un-subscribing
      * as well as for event discovery later on.
      *
      * @return subscriptionId
