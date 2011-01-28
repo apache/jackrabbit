@@ -208,7 +208,7 @@ public class FileRecordLog {
     }
 
     /**
-     * Seek an entry. This is an operation that allows the unterlying input stream
+     * Seek an entry. This is an operation that allows the underlying input stream
      * to be sequentially scanned and must therefore not be called twice.
      *
      * @param revision revision to seek

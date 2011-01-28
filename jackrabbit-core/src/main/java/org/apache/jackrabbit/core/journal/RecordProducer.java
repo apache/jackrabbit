@@ -22,7 +22,7 @@ package org.apache.jackrabbit.core.journal;
 public interface RecordProducer {
 
     /**
-     * Append a record. This operation implicitely locks the journal revision
+     * Append a record. This operation implicitly locks the journal revision
      * and must be followed by either {@link Record#update} or {@link Record#cancelUpdate}.
      * on the record returned.
      *
