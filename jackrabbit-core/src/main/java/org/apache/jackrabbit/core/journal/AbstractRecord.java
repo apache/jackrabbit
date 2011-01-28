@@ -266,7 +266,8 @@ public abstract class AbstractRecord implements Record {
     }
 
     /**
-     * Get a <code>NodeId</code>'s existing cache index, creating a new entry if necesary.
+     * Get a <code>NodeId</code>'s existing cache index, creating a new entry
+     * if necessary.
      *
      * @param nodeId nodeId to lookup
      * @return cache index of existing entry or <code>-1</code> to indicate the entry was added
