@@ -107,7 +107,7 @@ public interface VersionControlledResource extends VersionableResource {
      * The DAV:auto-version property determines how it responds to a method that
      * attempts to modify its content or dead properties. Possible responses
      * include various combinations of automated checkout, write lock and checkin
-     * as well as failure until the resource is explicitely checked-out.<br>
+     * as well as failure until the resource is explicitly checked-out.<br>
      * See <a href="http://www.ietf.org/rfc/rfc3253.txt">RFC 3253</a> for a detailed
      * description.
      */

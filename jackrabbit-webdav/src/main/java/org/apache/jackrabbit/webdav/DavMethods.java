@@ -30,7 +30,7 @@ public class DavMethods {
     private static Logger log = LoggerFactory.getLogger(DavMethods.class);
 
     /**
-     * A hashmap of webdav METHODS
+     * A map of WebDAV METHODS
      */
     private static Map<String, Integer> methodMap = new HashMap<String, Integer>();
 
@@ -296,7 +296,7 @@ public class DavMethods {
     }
 
     /**
-     * Static intializer for methodTable hashmap
+     * Static initializer for methodTable map
      */
     private static void addMethodCode(String method, int code) {
         methodMap.put(method, code);

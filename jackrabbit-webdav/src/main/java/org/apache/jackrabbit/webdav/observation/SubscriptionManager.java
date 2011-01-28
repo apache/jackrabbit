@@ -56,9 +56,9 @@ public interface SubscriptionManager {
             throws DavException;
 
     /**
-     * Retrieve the list of events that occured since the last poll.
+     * Retrieve the list of events that occurred since the last poll.
      *
-     * @param subscriptionId indentifier for the subscription
+     * @param subscriptionId identifier for the subscription
      * @param timeout        the time in milliseconds to wait at most for events
      *                       if none is present currently.
      * @param resource

@@ -37,7 +37,7 @@ public interface LockManager {
 
     /**
      * Refresh the lock identified by the given lockToken and initially created
-     * on the specified resouce. The update information can be retrieved from
+     * on the specified resource. The update information can be retrieved from
      * the lockInfo object passes.
      *
      * @param lockInfo
@@ -51,7 +51,7 @@ public interface LockManager {
 
     /**
      * Release the lock identified by the given lockToken and initially created
-     * on the specified resouce.
+     * on the specified resource.
      *
      * @param lockToken
      * @param resource

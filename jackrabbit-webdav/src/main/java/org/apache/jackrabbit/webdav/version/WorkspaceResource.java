@@ -26,10 +26,10 @@ import org.apache.jackrabbit.webdav.property.DavPropertyName;
  * RFC 3253 defines the following required live properties for an Workspace
  * resource.
  * <ul>
+ * <li>all DeltaV-compliant resource properties</li>
  * <li>{@link #WORKSPACE_CHECKOUT_SET DAV:workspace-checkout-set}</li>
- * <li>all DeltaV-compliant resource properties}</li>
- * <li>DAV:baseline-controlled-collection-set (baseline)</li>
- * <li>DAV:current-activity-set (activity)</li>
+ * <li>{@link #BASELINE_CONTROLLED_COLLECTION_SET DAV:baseline-controlled-collection-set} (baseline)</li>
+ * <li>{@link #CURRENT_ACTIVITY_SET DAV:current-activity-set} (activity)</li>
  * </ul>
  * Note, that RFC 3253 doesn't define a separate resource type for a workspace.<p/>
  *
@@ -54,6 +54,11 @@ public interface WorkspaceResource extends DeltaVResource {
     public static final DavPropertyName WORKSPACE_CHECKOUT_SET = DavPropertyName.create("workspace-checkout-set", DeltaVConstants.NAMESPACE);
 
     /**
+     * @deprecated Use {@link #CURRENT_ACTIVITY_SET} instead.
+     */
+    public static final DavPropertyName CUURENT_ACTIVITY_SET = DavPropertyName.create("current-activity-set", DeltaVConstants.NAMESPACE);
+
+    /**
      * DAV:current-activity-set is a required property for a workspace resource,
      * if the server supports the activity feature.<br>
      * It identifies the activities that currently are being performed in this
@@ -70,7 +75,7 @@ public interface WorkspaceResource extends DeltaVResource {
      * Note that the DAV:current-activity-set represents a
      * {@link org.apache.jackrabbit.webdav.property.HrefProperty HrefProperty}
      */
-    public static final DavPropertyName CUURENT_ACTIVITY_SET = DavPropertyName.create("current-activity-set", DeltaVConstants.NAMESPACE);
+    public static final DavPropertyName CURRENT_ACTIVITY_SET = DavPropertyName.create("current-activity-set", DeltaVConstants.NAMESPACE);
 
     /**
      * The Baseline feature (section 12) defines the following computed property

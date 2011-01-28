@@ -59,7 +59,7 @@ public final class TxLockEntry extends AbstractLockEntry implements TransactionC
 
     /**
      * Returns either {@link #LOCAL local} or {@link #GLOBAL global} scope
-     * depending on the initial construtor value.
+     * depending on the initial constructor value.
      *
      * @return returns 'global' or 'local' scope.
      * @see org.apache.jackrabbit.webdav.lock.LockEntry#getScope()

@@ -22,7 +22,7 @@ import org.apache.jackrabbit.webdav.xml.Namespace;
 
 /**
  * <code>DeltaVConstants</code> defines the following headers and properties
- * required for any resource that is complient to
+ * required for any resource that is compliant to
  * <a href="http://www.ietf.org/rfc/rfc3253.txt">RFC 3253</a>:<br><br>
  *
  * Headers:
@@ -96,8 +96,8 @@ public interface DeltaVConstants {
     public static final DavPropertyName CREATOR_DISPLAYNAME = DavPropertyName.create("creator-displayname", NAMESPACE);
 
     /**
-     * Required protected live property for any resources being complient with
-     * RFC 3253. Clients should classify a resource by examing the values of the
+     * Required protected live property for any resources being compliant with
+     * RFC 3253. Clients should classify a resource by examine the values of the
      * DAV:supported-method-set and DAV:supported-live-property-set
      * properties of that resource.<br>
      * Property structure:
@@ -113,8 +113,8 @@ public interface DeltaVConstants {
     public static final DavPropertyName SUPPORTED_METHOD_SET = DavPropertyName.create("supported-method-set", NAMESPACE);
 
     /**
-     * Required protected live property for any resources being complient with
-     * RFC 3253. Clients should classify a resource by examing the values of the
+     * Required protected live property for any resources being compliant with
+     * RFC 3253. Clients should classify a resource by examine the values of the
      * DAV:supported-method-set and DAV:supported-live-property-set
      * properties of that resource.<br>
      * Property structure:

@@ -63,7 +63,7 @@ public class UnbindInfo implements XmlSerializable {
                 if (segment == null) {
                     segment = DomUtil.getText(elt);
                 } else {
-                    log.warn("unexpected multiple occurence of DAV:segment element");
+                    log.warn("unexpected multiple occurrence of DAV:segment element");
                     throw new DavException(DavServletResponse.SC_BAD_REQUEST);
                 }
             } else  {

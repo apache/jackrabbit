@@ -20,7 +20,7 @@ import org.apache.jackrabbit.webdav.observation.ObservationDavServletResponse;
 
 /**
  * The empty <code>WebdavResponse</code> interface collects the functionality
- * defined by {@link org.apache.jackrabbit.webdav.DavServletResponse} encapsulting
+ * defined by {@link org.apache.jackrabbit.webdav.DavServletResponse} encapsulating
  * for the core WebDAV specification (RFC 2518) as well as the various extensions
  * used for observation and transaction support, ordering of collections, search
  * and versioning.

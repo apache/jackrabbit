@@ -129,7 +129,7 @@ public class PrincipalSearchReport extends AbstractSecurityReport {
     }
 
     /**
-     * Retrive the search arguments used to run the search for principals.<br>
+     * Retrieve the search arguments used to run the search for principals.<br>
      * Note, that the search result must be converted to {@link MultiStatusResponse}s
      * that must be returned back to this report.
      *

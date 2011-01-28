@@ -52,7 +52,7 @@ public interface Report extends XmlSerializable {
      * and the <code>ReportInfo</code> as specified by the REPORT request body,
      * that defines the details for this report.<br>
      * Please note that this methods should perform basic validation checks
-     * in order to prevent execeptional situations during the xml serialization.
+     * in order to prevent exceptional situations during the xml serialization.
      *
      * @param resource
      * @param info

@@ -224,7 +224,7 @@ public class DavPropertySet extends PropContainer
      */
     private class PropIter implements DavPropertyIterator {
 
-        /** the namespace to match agains */
+        /** the namespace to match against */
         private final Namespace namespace;
 
         /** the internal iterator */

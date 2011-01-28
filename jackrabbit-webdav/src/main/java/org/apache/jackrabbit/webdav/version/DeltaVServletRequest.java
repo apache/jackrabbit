@@ -66,7 +66,7 @@ public interface DeltaVServletRequest extends DavServletRequest {
      * Returns the request body and the Depth header as <code>ReportInfo</code>
      * object. The default depth, if no {@link org.apache.jackrabbit.webdav.DavConstants#HEADER_DEPTH
      * Depth header}, is {@link org.apache.jackrabbit.webdav.DavConstants#DEPTH_0}.
-     * If the requuest body could not be parsed into an {@link org.w3c.dom.Element}
+     * If the request body could not be parsed into an {@link org.w3c.dom.Element}
      * <code>null</code> is returned.
      *
      * @return <code>ReportInfo</code> or <code>null</code>

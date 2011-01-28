@@ -68,20 +68,20 @@ public class OrderPatchMethod extends DavMethodBase {
     /**
      * Create a new <code>OrderPatchMethod</code> that reorders the members
      * of the resource identified by 'uri': the member identified by 'memberSegment'
-     * is reordered before or after the member identified by 'targetMemberSegmet'.<br>
+     * is reordered before or after the member identified by 'targetMemberSegment'.<br>
      * See the constructor taking an <code>OrderPatch</code> object for a ORDERPATCH call
      * that reorders multiple members at once.
      *
      * @param uri
      * @param orderingType href String identifying the ordering type
      * @param memberSegment
-     * @param targetMemberSegmet
+     * @param targetMemberSegment
      * @param before
      */
-    public OrderPatchMethod(String uri, String orderingType, String memberSegment, String targetMemberSegmet, boolean before) throws IOException {
+    public OrderPatchMethod(String uri, String orderingType, String memberSegment, String targetMemberSegment, boolean before) throws IOException {
         super(uri);
         String orderPosition = (before) ? OrderingConstants.XML_BEFORE : OrderingConstants.XML_AFTER;
-        Position p = new Position(orderPosition, targetMemberSegmet);
+        Position p = new Position(orderPosition, targetMemberSegment);
         OrderPatch op = new OrderPatch(orderingType, new OrderPatch.Member(memberSegment, p));
         setRequestBody(op);
     }

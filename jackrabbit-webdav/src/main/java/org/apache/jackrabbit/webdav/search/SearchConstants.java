@@ -45,7 +45,7 @@ public interface SearchConstants {
 
     //---< Headers >------------------------------------------------------------
     /**
-     * The DASL response header specifing the query languages supported by
+     * The DASL response header specifying the query languages supported by
      * the requested resource.
      */
     public static final String HEADER_DASL = "DASL";

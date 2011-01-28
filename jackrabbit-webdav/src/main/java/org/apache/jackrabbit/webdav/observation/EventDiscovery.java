@@ -28,8 +28,8 @@ import java.util.Iterator;
 import java.util.List;
 
 /**
- * <code>EventDiscovery</code> represents the request body of a successfull
- * POLL request. It reveals all events that occured since the last POLL. The
+ * <code>EventDiscovery</code> represents the request body of a successful
+ * POLL request. It reveals all events that occurred since the last POLL. The
  * definition what events that particular subscription is interested in was
  * specified with the initial SUBSCRIPTION that started the event listening.
  */
