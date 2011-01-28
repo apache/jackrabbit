@@ -24,7 +24,7 @@ package org.apache.jackrabbit.core.util.db;
 public interface DatabaseAware {
 
     /**
-     * @param connnectionFactory
+     * @param connectionFactory
      */
-    void setConnectionFactory(ConnectionFactory connnectionFactory);
+    void setConnectionFactory(ConnectionFactory connectionFactory);
 }

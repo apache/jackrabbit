@@ -26,7 +26,7 @@ public interface CachingPersistenceManager {
 
     /**
      * Notifies the persistence manager that an external (cluster) modification
-     * occured.
+     * occurred.
      *
      * @param changes the set of changes of the external modification.
      */

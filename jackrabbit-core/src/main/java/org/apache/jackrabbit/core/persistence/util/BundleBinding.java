@@ -132,7 +132,7 @@ public class BundleBinding {
     }
 
     /**
-     * Returns the blob store that is assosiated with this binding.
+     * Returns the blob store that is associated with this binding.
      * @return the blob store
      */
     public BLOBStore getBlobStore() {

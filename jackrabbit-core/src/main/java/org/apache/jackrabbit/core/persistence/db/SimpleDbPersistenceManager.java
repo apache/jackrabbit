@@ -48,8 +48,8 @@ import javax.jcr.RepositoryException;
  * The required schema objects are automatically created by executing the DDL
  * statements read from the [schema].ddl file. The .ddl file is read from the
  * resources by calling <code>getClass().getResourceAsStream(schema + ".ddl")</code>.
- * Every line in the specified .ddl file is executed separatly by calling
- * <code>java.sql.Statement.execute(String)</code> where every occurence of the
+ * Every line in the specified .ddl file is executed separately by calling
+ * <code>java.sql.Statement.execute(String)</code> where every occurrence of the
  * the string <code>"${schemaObjectPrefix}"</code> has been replaced with the
  * value of the property <code>schemaObjectPrefix</code>.
  * <p/>

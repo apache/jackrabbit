@@ -278,7 +278,7 @@ public abstract class AbstractVISProvider implements VirtualItemStateProvider, I
     }
 
     /**
-     * Retrieces the property state for the given id
+     * Retrieves the property state for the given id
      *
      * @param id
      * @return
@@ -402,7 +402,7 @@ public abstract class AbstractVISProvider implements VirtualItemStateProvider, I
     }
 
     /**
-     * retrieves the property definition for the given contraints
+     * retrieves the property definition for the given constraints
      *
      * @param parent The parent node state.
      * @param propertyName The name of the property.
@@ -418,7 +418,7 @@ public abstract class AbstractVISProvider implements VirtualItemStateProvider, I
     }
 
     /**
-     * Retrieves the node definition for the given contraints.
+     * Retrieves the node definition for the given constraints.
      *
      * @param parent The parent state.
      * @param nodeName

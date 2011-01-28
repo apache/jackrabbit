@@ -130,7 +130,7 @@ public class NodePropBundle {
     public void update(NodeState state) {
         if (!id.equals(state.getNodeId())) {
             // sanity check
-            throw new IllegalArgumentException("Not allowed to update forgein state.");
+            throw new IllegalArgumentException("Not allowed to update foreign state.");
         }
         parentId = state.getParentId();
         nodeTypeName = state.getNodeTypeName();
@@ -186,7 +186,7 @@ public class NodePropBundle {
     }
 
     /**
-     * Marks this bunlde as 'not new'.
+     * Marks this bundle as 'not new'.
      */
     public void markOld() {
         isNew = false;
@@ -266,8 +266,9 @@ public class NodePropBundle {
     }
 
     /**
-     * Retrusn the mod clount.
-     * @return the mod clount.
+     * Returns the mod count.
+     *
+     * @return the mod count.
      */
     public short getModCount() {
         return modCount;
@@ -275,6 +276,7 @@ public class NodePropBundle {
 
     /**
      * Sets the mod count
+     * 
      * @param modCount the mod count
      */
     public void setModCount(short modCount) {
