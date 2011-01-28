@@ -493,7 +493,7 @@ public class DefaultHandler implements IOHandler, PropertyHandler {
             }
         } catch (RepositoryException e) {
             // should never occur
-            log.error("Unexpected error {0} while exporting properties: {1}", e.getClass().getName(), e.getMessage());
+            log.error("Unexpected error {} while exporting properties: {}", e.getClass().getName(), e.getMessage());
             throw new IOException(e.getMessage());
         }
     }
