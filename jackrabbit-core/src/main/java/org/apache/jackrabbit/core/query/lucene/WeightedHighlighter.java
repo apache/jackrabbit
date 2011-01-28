@@ -65,7 +65,7 @@ public class WeightedHighlighter extends DefaultHighlighter {
      * @param excerptEnd    this string is appended to the excerpt
      * @param fragmentStart this string is prepended to every fragment
      * @param fragmentEnd   this string is appended to the end of every
-     *                      fragement.
+     *                      fragment.
      * @param hlStart       the string used to prepend a highlighted token, for
      *                      example <tt>&quot;&lt;b&gt;&quot;</tt>
      * @param hlEnd         the string used to append a highlighted token, for
@@ -112,6 +112,7 @@ public class WeightedHighlighter extends DefaultHighlighter {
                 START_HIGHLIGHT, END_HIGHLIGHT, maxFragments, surround);
     }
 
+    @Override
     protected String mergeFragments(TermVectorOffsetInfo[] offsets,
                                     String text,
                                     String excerptStart,
@@ -191,7 +192,7 @@ public class WeightedHighlighter extends DefaultHighlighter {
             TermVectorOffsetInfo lastOffsetInfo = null;
             Iterator<TermVectorOffsetInfo> fIt = fi.iterator();
             while (fIt.hasNext()) {
-                TermVectorOffsetInfo oi = (TermVectorOffsetInfo) fIt.next();
+                TermVectorOffsetInfo oi = fIt.next();
                 if (lastOffsetInfo != null) {
                     // fill in text between terms
                     sb.append(text.substring(lastOffsetInfo.getEndOffset(), oi.getStartOffset()));
@@ -345,6 +346,7 @@ public class WeightedHighlighter extends DefaultHighlighter {
          * is considered the lesser. This will result in a queue that keeps the
          * {@link FragmentInfo} with the best quality.
          */
+        @Override
         protected boolean lessThan(Object a, Object b) {
             FragmentInfo infoA = (FragmentInfo) a;
             FragmentInfo infoB = (FragmentInfo) b;

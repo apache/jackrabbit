@@ -89,7 +89,7 @@ public class NamePathResolverImpl extends DefaultNamePathResolver {
         /**
          * Returns the qualified JCR name for the given <code>Name</code>.
          * Note, that the JCR prefix is always retrieved from the NamespaceResolver
-         * even if the name is in the defaut namespace. This is a special treatement
+         * even if the name is in the default namespace. This is a special treatment
          * for query specific implementation, which defines a prefix for all namespace
          * URIs including the default namespace.
          *

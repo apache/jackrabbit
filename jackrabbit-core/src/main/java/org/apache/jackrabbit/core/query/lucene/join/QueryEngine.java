@@ -191,9 +191,9 @@ public class QueryEngine {
                         Constraints.or(qomFactory, rightConstraints.subList(
                                 i, Math.min(i + 500, rightConstraints.size()))),
                         splitter.getRightConstraint());
-                QueryResult rigthResult =
+                QueryResult rightResult =
                     execute(null, right, rightConstraint, null, 0, -1);
-                for (Row row : JcrUtils.getRows(rigthResult)) {
+                for (Row row : JcrUtils.getRows(rightResult)) {
                     list.add(row);
                 }
             }

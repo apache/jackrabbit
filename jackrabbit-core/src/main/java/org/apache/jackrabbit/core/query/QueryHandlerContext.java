@@ -188,7 +188,7 @@ public class QueryHandlerContext {
      * Returns the id of the node that should be excluded from indexing. Any
      * descendant of this node is also excluded from indexing.
      *
-     * @return the uuid of the exluded node.
+     * @return the uuid of the excluded node.
      */
     public NodeId getExcludedNodeId() {
         return excludedNodeId;

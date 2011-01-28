@@ -120,7 +120,7 @@ public class PropertyTypeRegistry implements NodeTypeRegistryListener {
     }
 
     public void nodeTypesUnregistered(Collection<Name> names) {
-        // remove all TypeMapping instances refering to this ntName
+        // remove all TypeMapping instances referring to this ntName
         synchronized (typeMapping) {
             Map<Name, TypeMapping[]> modified = new HashMap<Name, TypeMapping[]>();
             for (Iterator<Name> it = typeMapping.keySet().iterator(); it.hasNext();) {
