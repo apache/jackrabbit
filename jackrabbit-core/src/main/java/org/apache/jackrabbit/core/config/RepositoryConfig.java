@@ -350,6 +350,25 @@ public class RepositoryConfig
     }
 
     /**
+     * Creates a repository configuration object based on an existing configuration. The factories
+     * contained within the configuration will be newly initialized, but all other information
+     * will be the same.
+     *
+     * @param config repository configuration to create the new instance from
+     * @return repository configuration
+     * @throws ConfigurationException on configuration errors
+     */
+    public static RepositoryConfig create(RepositoryConfig config) throws ConfigurationException
+    {
+        RepositoryConfig copiedConfig = new RepositoryConfig(config.home, config.sec, config.fsf,
+                config.workspaceDirectory, config.workspaceConfigDirectory, config.defaultWorkspace,
+                config.workspaceMaxIdleTime, config.template, config.vc, config.qhf, config.cc,
+                config.dsf, config.rlf, config.dsc, new ConnectionFactory(), config.parser);
+        copiedConfig.init();
+        return copiedConfig;
+    }
+
+    /**
      * map of workspace names and workspace configurations
      */
     private Map<String, WorkspaceConfig> workspaces;
