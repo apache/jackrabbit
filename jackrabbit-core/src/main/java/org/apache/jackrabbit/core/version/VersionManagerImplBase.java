@@ -35,8 +35,6 @@ import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.session.SessionContext;
-import org.apache.jackrabbit.core.state.DefaultISMLocking;
-import org.apache.jackrabbit.core.state.ISMLocking;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.LocalItemStateManager;
 import org.apache.jackrabbit.core.state.UpdatableItemStateManager;
@@ -93,7 +91,7 @@ abstract public class VersionManagerImplBase {
     /**
      * the lock on this version manager
      */
-    private final DefaultISMLocking rwLock = new DefaultISMLocking();
+    private final VersioningLock rwLock = new VersioningLock();
 
     /**
      * the node id of the current activity
@@ -455,9 +453,9 @@ abstract public class VersionManagerImplBase {
          */
         private boolean success = false;
 
-        private final ISMLocking.WriteLock lock;
+        private final VersioningLock.WriteLock lock;
 
-        public WriteOperation(ISMLocking.WriteLock lock) {
+        public WriteOperation(VersioningLock.WriteLock lock) {
             this.lock = lock;
         }
 
@@ -493,10 +491,10 @@ abstract public class VersionManagerImplBase {
      * Acquires the write lock on this version manager.
      * @return returns the write lock
      */
-    protected ISMLocking.WriteLock acquireWriteLock() {
+    protected VersioningLock.WriteLock acquireWriteLock() {
         while (true) {
             try {
-                return rwLock.acquireWriteLock(null);
+                return rwLock.acquireWriteLock();
             } catch (InterruptedException e) {
                 // ignore
             }
@@ -507,10 +505,10 @@ abstract public class VersionManagerImplBase {
      * acquires the read lock on this version manager.
      * @return returns the read lock
      */
-    protected ISMLocking.ReadLock acquireReadLock() {
+    protected VersioningLock.ReadLock acquireReadLock() {
         while (true) {
             try {
-                return rwLock.acquireReadLock(null);
+                return rwLock.acquireReadLock();
             } catch (InterruptedException e) {
                 // ignore
             }
@@ -542,7 +540,7 @@ abstract public class VersionManagerImplBase {
      */
     public WriteOperation startWriteOperation() throws RepositoryException {
         boolean success = false;
-        ISMLocking.WriteLock lock = acquireWriteLock();
+        VersioningLock.WriteLock lock = acquireWriteLock();
         try {
             stateMgr.edit();
             success = true;
