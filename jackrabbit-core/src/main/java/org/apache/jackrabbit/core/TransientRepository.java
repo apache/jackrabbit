@@ -168,15 +168,16 @@ public class TransientRepository extends AbstractRepository
     }
 
     /**
-     * Creates a transient repository proxy that will use the given repository
-     * configuration to initialize the underlying repository instance.
+     * Creates a transient repository proxy that will use a copy of the given 
+     * repository configuration to initialize the underlying repository 
+     * instance.
      *
      * @param config repository configuration
      */
     public TransientRepository(final RepositoryConfig config) {
         this(new RepositoryFactory() {
             public RepositoryImpl getRepository() throws RepositoryException {
-                return RepositoryImpl.create(config);
+                return RepositoryImpl.create(RepositoryConfig.create(config));
             }
         }, config.getHomeDir());
     }
