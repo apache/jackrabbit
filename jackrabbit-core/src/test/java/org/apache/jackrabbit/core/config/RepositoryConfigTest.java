@@ -195,42 +195,7 @@ public class RepositoryConfigTest extends TestCase {
      * Test that the repository configuration file is correctly parsed.
      */
     public void testRepositoryConfig() throws Exception {
-        assertEquals(DIR.getPath(), config.getHomeDir());
-        assertEquals("default", config.getDefaultWorkspaceName());
-        assertEquals(
-                new File(DIR, "workspaces").getPath(),
-                new File(config.getWorkspacesConfigRootDir()).getPath());
-        assertEquals("Jackrabbit", config.getSecurityConfig().getAppName());
-
-        // SecurityManagerConfig
-        SecurityManagerConfig smc =
-            config.getSecurityConfig().getSecurityManagerConfig();
-        assertEquals(
-                "org.apache.jackrabbit.core.security.simple.SimpleSecurityManager",
-                smc.getClassName());
-        assertTrue(smc.getParameters().isEmpty());
-        assertNotNull(smc.getWorkspaceName());
-
-        BeanConfig bc = smc.getWorkspaceAccessConfig();
-        if (bc != null) {
-            WorkspaceAccessManager wac =
-                smc.getWorkspaceAccessConfig().newInstance(WorkspaceAccessManager.class);
-            assertEquals("org.apache.jackrabbit.core.security.simple.SimpleWorkspaceAccessManager", wac.getClass().getName());
-        }
-
-        // AccessManagerConfig
-        AccessManagerConfig amc =
-            config.getSecurityConfig().getAccessManagerConfig();
-        assertEquals(
-                "org.apache.jackrabbit.core.security.simple.SimpleAccessManager",
-                amc.getClassName());
-        assertTrue(amc.getParameters().isEmpty());
-
-        VersioningConfig vc = config.getVersioningConfig();
-        assertEquals(new File(DIR, "version"), vc.getHomeDir());
-        assertEquals(
-                "org.apache.jackrabbit.core.persistence.pool.DerbyPersistenceManager",
-                vc.getPersistenceManagerConfig().getClassName());
+        assertRepositoryConfiguration(config);
     }
 
     public void testInit() throws Exception {
@@ -311,6 +276,59 @@ public class RepositoryConfigTest extends TestCase {
         } finally {
             System.clearProperty("cluster.syncDelay");
         }
+    }
+
+    /**
+     * Test that a RepositoryConfig can be copied into a new instance.
+     *
+     * @throws Exception if an unexpected error occurs during the test
+     */
+    public void testCopyConfig() throws Exception
+    {
+        RepositoryConfig copyConfig = RepositoryConfig.create(config);
+
+        assertNotNull("Configuration not created properly", copyConfig);
+        assertRepositoryConfiguration(copyConfig);
+    }
+
+    private void assertRepositoryConfiguration(RepositoryConfig config)
+            throws ConfigurationException {
+        assertEquals(DIR.getPath(), config.getHomeDir());
+        assertEquals("default", config.getDefaultWorkspaceName());
+        assertEquals(
+                new File(DIR, "workspaces").getPath(),
+                new File(config.getWorkspacesConfigRootDir()).getPath());
+        assertEquals("Jackrabbit", config.getSecurityConfig().getAppName());
+
+        // SecurityManagerConfig
+        SecurityManagerConfig smc =
+            config.getSecurityConfig().getSecurityManagerConfig();
+        assertEquals(
+                "org.apache.jackrabbit.core.security.simple.SimpleSecurityManager",
+                smc.getClassName());
+        assertTrue(smc.getParameters().isEmpty());
+        assertNotNull(smc.getWorkspaceName());
+
+        BeanConfig bc = smc.getWorkspaceAccessConfig();
+        if (bc != null) {
+            WorkspaceAccessManager wac =
+                smc.getWorkspaceAccessConfig().newInstance(WorkspaceAccessManager.class);
+            assertEquals("org.apache.jackrabbit.core.security.simple.SimpleWorkspaceAccessManager", wac.getClass().getName());
+        }
+
+        // AccessManagerConfig
+        AccessManagerConfig amc =
+            config.getSecurityConfig().getAccessManagerConfig();
+        assertEquals(
+                "org.apache.jackrabbit.core.security.simple.SimpleAccessManager",
+                amc.getClassName());
+        assertTrue(amc.getParameters().isEmpty());
+
+        VersioningConfig vc = config.getVersioningConfig();
+        assertEquals(new File(DIR, "version"), vc.getHomeDir());
+        assertEquals(
+                "org.apache.jackrabbit.core.persistence.pool.DerbyPersistenceManager",
+                vc.getPersistenceManagerConfig().getClassName());
     }
 
 }
