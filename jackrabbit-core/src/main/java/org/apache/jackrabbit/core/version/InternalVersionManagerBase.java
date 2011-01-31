@@ -31,9 +31,6 @@ import javax.jcr.version.VersionException;
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.id.NodeIdFactory;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
-import org.apache.jackrabbit.core.state.DefaultISMLocking;
-import org.apache.jackrabbit.core.state.ISMLocking.ReadLock;
-import org.apache.jackrabbit.core.state.ISMLocking.WriteLock;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.LocalItemStateManager;
 import org.apache.jackrabbit.core.state.NodeReferences;
@@ -75,7 +72,7 @@ abstract class InternalVersionManagerBase implements InternalVersionManager {
     /**
      * the lock on this version manager
      */
-    private final DefaultISMLocking rwLock = new DefaultISMLocking();
+    private final VersioningLock rwLock = new VersioningLock();
 
     private final NodeIdFactory nodeIdFactory;
 
@@ -144,7 +141,7 @@ abstract class InternalVersionManagerBase implements InternalVersionManager {
      */
     public InternalVersionHistory getVersionHistoryOfNode(NodeId id)
             throws RepositoryException {
-        ReadLock lock = acquireReadLock();
+        VersioningLock.ReadLock lock = acquireReadLock();
         try {
             String uuid = id.toString();
             Name name = getName(uuid);
@@ -181,10 +178,10 @@ abstract class InternalVersionManagerBase implements InternalVersionManager {
      * Acquires the write lock on this version manager.
      * @return returns the write lock
      */
-    protected WriteLock acquireWriteLock() {
+    protected VersioningLock.WriteLock acquireWriteLock() {
         while (true) {
             try {
-                return rwLock.acquireWriteLock(null);
+                return rwLock.acquireWriteLock();
             } catch (InterruptedException e) {
                 // ignore
             }
@@ -195,10 +192,10 @@ abstract class InternalVersionManagerBase implements InternalVersionManager {
      * acquires the read lock on this version manager.
      * @return returns the read lock
      */
-    protected ReadLock acquireReadLock() {
+    protected VersioningLock.ReadLock acquireReadLock() {
         while (true) {
             try {
-                return rwLock.acquireReadLock(null);
+                return rwLock.acquireReadLock();
             } catch (InterruptedException e) {
                 // ignore
             }
@@ -230,9 +227,9 @@ abstract class InternalVersionManagerBase implements InternalVersionManager {
          */
         private boolean success = false;
 
-        private final WriteLock lock;
+        private final VersioningLock.WriteLock lock;
 
-        public WriteOperation(WriteLock lock) {
+        public WriteOperation(VersioningLock.WriteLock lock) {
             this.lock = lock;
         }
 
@@ -288,7 +285,7 @@ abstract class InternalVersionManagerBase implements InternalVersionManager {
      */
     private WriteOperation startWriteOperation() throws RepositoryException {
         boolean success = false;
-        WriteLock lock = acquireWriteLock();
+        VersioningLock.WriteLock lock = acquireWriteLock();
         try {
             stateMgr.edit();
             success = true;
@@ -310,7 +307,7 @@ abstract class InternalVersionManagerBase implements InternalVersionManager {
             throws RepositoryException {
         VersionHistoryInfo info = null;
 
-        ReadLock lock = acquireReadLock();
+        VersioningLock.ReadLock lock = acquireReadLock();
         try {
             String uuid = node.getNodeId().toString();
             Name name = getName(uuid);
