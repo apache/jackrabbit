@@ -60,5 +60,9 @@
       <directory>create21/target/repository</directory>
       <outputDirectory></outputDirectory>
     </fileSet>
+    <fileSet>
+      <directory>create22/target/repository</directory>
+      <outputDirectory></outputDirectory>
+    </fileSet>
   </fileSets>
 </assembly>
