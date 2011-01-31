@@ -50,6 +50,7 @@
     <module>create16</module>
     <module>create20</module>
     <module>create21</module>
+    <module>create22</module>
   </modules>
 
   <build>
