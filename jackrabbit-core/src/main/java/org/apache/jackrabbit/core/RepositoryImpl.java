@@ -400,6 +400,8 @@ public class RepositoryImpl extends AbstractRepository
                     // startup exception and only log it
                     log.error("In addition to startup fail, another unexpected problem " +
                             "occurred while shutting down the repository again.", t);
+                    // Clear the repository lock if it was left in place
+                    repLock.release();
                 }
             }
         }
