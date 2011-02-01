@@ -25,6 +25,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.jackrabbit.core.id.ItemId;
 import org.apache.jackrabbit.core.id.NodeId;
@@ -65,17 +66,23 @@ public class FineGrainedISMLocking implements ISMLocking {
     private final LockMap readLockMap = new LockMap();
 
     /**
+     * Number of current readers.
+     */
+    private final AtomicInteger readerCount = new AtomicInteger(0);
+
+    /**
      * List of waiting readers that are blocked because they conflict with
      * the current writer.
      */
-    private List waitingReaders = Collections.synchronizedList(new LinkedList());
+    private List<Sync> waitingReaders =
+        Collections.synchronizedList(new LinkedList<Sync>());
 
     /**
      * List of waiting writers that are blocked because there is already a
      * current writer or one of the current reads conflicts with the change log
      * of the blocked writer.
      */
-    private List waitingWriters = new LinkedList();
+    private List<Sync> waitingWriters = new LinkedList<Sync>();
 
     /**
      * {@inheritDoc}
@@ -84,6 +91,7 @@ public class FineGrainedISMLocking implements ISMLocking {
             throws InterruptedException {
         if (isSameThreadId(activeWriterId, getCurrentThreadId())) {
             // we hold the write lock
+            readerCount.incrementAndGet();
             readLockMap.addLock(id);
             return new ReadLockImpl(id);
         }
@@ -98,6 +106,7 @@ public class FineGrainedISMLocking implements ISMLocking {
             try {
                 if (activeWriter == null
                         || !hasDependency(activeWriter.changes, id)) {
+                    readerCount.incrementAndGet();
                     readLockMap.addLock(id);
                     return new ReadLockImpl(id);
                 } else {
@@ -176,6 +185,7 @@ public class FineGrainedISMLocking implements ISMLocking {
         }
 
         public ReadLock downgrade() {
+            readerCount.incrementAndGet();
             readLockMap.addLock(null);
             Sync exclusive = writerStateRWLock.writeLock();
             for (;;) {
@@ -226,6 +236,9 @@ public class FineGrainedISMLocking implements ISMLocking {
             }
             try {
                 readLockMap.removeLock(id);
+                if (readerCount.decrementAndGet() == 0 && activeWriter == null) {
+                    activeWriterId = null;
+                }
                 if (!isSameThreadId(activeWriterId, getCurrentThreadId())) {
                     // only notify waiting writers if we do *not* hold a write
                     // lock at the same time. that would be a waste of cpu time.
@@ -256,9 +269,9 @@ public class FineGrainedISMLocking implements ISMLocking {
      * only one thread calls this method at a time.
      */
     private void notifyWaitingReaders() {
-        Iterator it = waitingReaders.iterator();
+        Iterator<Sync> it = waitingReaders.iterator();
         while (it.hasNext()) {
-            ((Sync) it.next()).release();
+            it.next().release();
             it.remove();
         }
     }
@@ -271,9 +284,9 @@ public class FineGrainedISMLocking implements ISMLocking {
             if (waitingWriters.isEmpty()) {
                 return;
             }
-            Iterator it = waitingWriters.iterator();
+            Iterator<Sync> it = waitingWriters.iterator();
             while (it.hasNext()) {
-                ((Sync) it.next()).release();
+                it.next().release();
                 it.remove();
             }
         }
@@ -284,7 +297,8 @@ public class FineGrainedISMLocking implements ISMLocking {
         /**
          * 16 slots
          */
-        private final Map[] slots = new Map[0x10];
+        @SuppressWarnings("unchecked")
+        private final Map<ItemId, Integer>[] slots = new Map[0x10];
 
         /**
          * Flag that indicates if the entire map is locked.
@@ -293,7 +307,7 @@ public class FineGrainedISMLocking implements ISMLocking {
 
         public LockMap() {
             for (int i = 0; i < slots.length; i++) {
-                slots[i] = new HashMap();
+                slots[i] = new HashMap<ItemId, Integer>();
             }
         }
 
@@ -312,7 +326,7 @@ public class FineGrainedISMLocking implements ISMLocking {
                 global = true;
                 return;
             }
-            Map locks = slots[slotIndex(id)];
+            Map<ItemId, Integer> locks = slots[slotIndex(id)];
             synchronized (locks) {
                 Integer i = (Integer) locks.get(id);
                 if (i == null) {
@@ -339,7 +353,7 @@ public class FineGrainedISMLocking implements ISMLocking {
                 global = false;
                 return;
             }
-            Map locks = slots[slotIndex(id)];
+            Map<ItemId, Integer> locks = slots[slotIndex(id)];
             synchronized (locks) {
                 Integer i = (Integer) locks.get(id);
                 if (i != null) {
@@ -370,14 +384,10 @@ public class FineGrainedISMLocking implements ISMLocking {
                 return true;
             }
             for (int i = 0; i < slots.length; i++) {
-                Map locks = slots[i];
-                if (!locks.isEmpty()) {
-                    Iterator it = locks.keySet().iterator();
-                    while (it.hasNext()) {
-                        ItemId id = (ItemId) it.next();
-                        if (FineGrainedISMLocking.hasDependency(changes, id)) {
-                            return true;
-                        }
+                Map<ItemId, Integer> locks = slots[i];
+                for (ItemId id : locks.keySet()) {
+                    if (FineGrainedISMLocking.hasDependency(changes, id)) {
+                        return true;
                     }
                 }
             }
