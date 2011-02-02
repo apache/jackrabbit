@@ -246,11 +246,6 @@ org.apache.jackrabbit.test.api.ShareableNodeTest#testGetNodesByPattern
       </exclusions>
     </dependency>
     <dependency>
-      <groupId>edu.ucar</groupId>
-      <artifactId>netcdf</artifactId>
-      <version>4.2-min</version>
-    </dependency>
-    <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
     </dependency>
