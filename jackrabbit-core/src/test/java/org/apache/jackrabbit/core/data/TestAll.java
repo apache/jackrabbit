@@ -34,6 +34,7 @@ public class TestAll extends TestCase {
      */
     public static Test suite() {
         TestSuite suite = new ConcurrentTestSuite("Data tests");
+
         suite.addTestSuite(DataStoreAPITest.class);
         suite.addTestSuite(LazyFileInputStreamTest.class);
         suite.addTestSuite(OpenFilesTest.class);
@@ -47,6 +48,8 @@ public class TestAll extends TestCase {
         suite.addTestSuite(CopyValueTest.class);
         suite.addTestSuite(TestTwoGetStreams.class);
         suite.addTestSuite(TempFileInputStreamTest.class);
+        suite.addTestSuite(WriteWhileReadingTest.class);
+
         return suite;
     }
 

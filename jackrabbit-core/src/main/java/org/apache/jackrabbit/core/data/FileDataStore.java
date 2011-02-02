@@ -21,6 +21,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.RandomAccessFile;
 import java.lang.ref.WeakReference;
 import java.security.DigestOutputStream;
 import java.security.MessageDigest;
@@ -151,19 +152,8 @@ public class FileDataStore implements DataStore {
             }
             if (minModifiedDate != 0) {
                 // only check when running garbage collection
-                long lastModified = file.lastModified();
-                if (lastModified == 0) {
-                    throw new DataStoreException("Failed to read record modified date: " + identifier);
-                }
-                if (lastModified < minModifiedDate) {
-                    // in most cases we can write to the file system, that's why we
-                    // don't call File.canWrite earlier (to save a system call)
-                    if (file.canWrite()) {
-                	        // The current GC approach depends on this call succeeding
-                        if (!file.setLastModified(System.currentTimeMillis() + ACCESS_TIME_RESOLUTION)) {
-                            throw new DataStoreException("Failed to update record modified date: " + identifier);
-                        }
-                    }
+                if (getLastModified(file) < minModifiedDate) {
+                    setLastModified(file, System.currentTimeMillis() + ACCESS_TIME_RESOLUTION);
                 }
             }
             usesIdentifier(identifier);
@@ -238,18 +228,9 @@ public class FileDataStore implements DataStore {
                                 + " (media read only?)");
                     }
                 } else {
-                    long lastModified = file.lastModified();
-                    if (lastModified == 0) {
-                        throw new DataStoreException("Failed to read record modified date: " + identifier);
-                    }
                     long now = System.currentTimeMillis();
-                    if (lastModified < now + ACCESS_TIME_RESOLUTION) {
-                        // The current GC approach depends on this call succeeding (for writable files)
-                        if (!file.setLastModified(now + ACCESS_TIME_RESOLUTION)) {
-                            if (file.canWrite()) {
-                                throw new DataStoreException("Failed to update record modified date: " + identifier);
-                            }
-                        }
+                    if (getLastModified(file) < now + ACCESS_TIME_RESOLUTION) {
+                        setLastModified(file, now + ACCESS_TIME_RESOLUTION);
                     }
                 }
                 if (file.length() != length) {
@@ -319,11 +300,15 @@ public class FileDataStore implements DataStore {
         int count = 0;
         if (file.isFile() && file.exists() && file.canWrite()) {
             synchronized (this) {
-                long lastModified = file.lastModified();
-                if (lastModified == 0) {
-                    // Don't delete the file, since the lastModified date is uncertain!
-                    log.warn("Failed to read modification date for " + file.getAbsolutePath());
-                } else if (lastModified < min) {
+                long lastModified;
+                try {
+                    lastModified = getLastModified(file);
+                } catch (DataStoreException e) {
+                    log.warn("Failed to read modification date; file not deleted", e);
+                    // don't delete the file, since the lastModified date is uncertain
+                    lastModified = min;
+                }
+                if (lastModified < min) {
                     DataIdentifier id = new DataIdentifier(file.getName());
                     if (!inUse.containsKey(id)) {
                         if (log.isInfoEnabled()) {
@@ -418,6 +403,51 @@ public class FileDataStore implements DataStore {
 
     public void close() {
         // nothing to do
+    }
+
+    /**
+     * Get the last modified date of a file.
+     *
+     * @param file the file
+     * @return the last modified date
+     * @throws DataStoreException if reading fails
+     */
+    private static long getLastModified(File file) throws DataStoreException {
+        long lastModified = file.lastModified();
+        if (lastModified == 0) {
+            throw new DataStoreException("Failed to read record modified date: " + file.getAbsolutePath());
+        }
+        return lastModified;
+    }
+
+    /**
+     * Set the last modified date of a file, if the file is writable.
+     *
+     * @param file the file
+     * @param time the new last modified date
+     * @throws DataStoreException if the file is writable but modifying the date fails
+     */
+    private static void setLastModified(File file, long time) throws DataStoreException {
+        if (!file.setLastModified(time)) {
+            if (!file.canWrite()) {
+                // if we can't write to the file, so garbage collection will also not delete it
+                // (read only files or file systems)
+                return;
+            }
+            try {
+                // workaround for Windows: if the file is already open for reading
+                // (in this or another process), then setting the last modified date
+                // doesn't work - see also JCR-2872
+                RandomAccessFile r = new RandomAccessFile(file, "rw");
+                try {
+                    r.setLength(r.length());
+                } finally {
+                    r.close();
+                }
+            } catch (IOException e) {
+                throw new DataStoreException("An IO Exception occurred while trying to set the last modified date: " + file.getAbsolutePath(), e);
+            }
+        }
     }
 
 }
