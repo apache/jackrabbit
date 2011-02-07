@@ -192,7 +192,7 @@ abstract class InternalVersionManagerBase implements InternalVersionManager {
      * acquires the read lock on this version manager.
      * @return returns the read lock
      */
-    protected VersioningLock.ReadLock acquireReadLock() {
+    public VersioningLock.ReadLock acquireReadLock() {
         while (true) {
             try {
                 return rwLock.acquireReadLock();
