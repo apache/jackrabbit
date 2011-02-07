@@ -93,7 +93,7 @@ public class DatabaseJournal extends AbstractJournal implements DatabaseAware {
     /**
      * Logger.
      */
-    private static Logger log = LoggerFactory.getLogger(DatabaseJournal.class);
+    static Logger log = LoggerFactory.getLogger(DatabaseJournal.class);
 
     /**
      * Driver name, bean property.
@@ -128,7 +128,7 @@ public class DatabaseJournal extends AbstractJournal implements DatabaseAware {
     /**
      * The connection helper
      */
-    private ConnectionHelper conHelper;
+    ConnectionHelper conHelper;
 
     /**
      * Auto commit level.
@@ -148,13 +148,14 @@ public class DatabaseJournal extends AbstractJournal implements DatabaseAware {
     /**
      * The sleep time of the revision table janitor in seconds, 1 day default.
      */
-    private int janitorSleep = 60 * 60 * 24;
+    int janitorSleep = 60 * 60 * 24;
 
     /**
      * Indicates when the next run of the janitor is scheduled.
      * The first run is scheduled by default at 03:00 hours.
      */
-    private Calendar janitorNextRun = Calendar.getInstance();
+    Calendar janitorNextRun = Calendar.getInstance();
+
     {
         if (janitorNextRun.get(Calendar.HOUR_OF_DAY) >= 3) {
             janitorNextRun.add(Calendar.DAY_OF_MONTH, 1);
@@ -206,19 +207,19 @@ public class DatabaseJournal extends AbstractJournal implements DatabaseAware {
      * SQL statement removing a set of revisions with from the journal table.
      */
     protected String cleanRevisionStmtSQL;
-    
+
     /**
      * SQL statement returning the local revision of this cluster node.
      */
     protected String getLocalRevisionStmtSQL;
-    
+
     /**
-     * SQL statement for inserting the local revision of this cluster node. 
+     * SQL statement for inserting the local revision of this cluster node.
      */
     protected String insertLocalRevisionStmtSQL;
 
     /**
-     * SQL statement for updating the local revision of this cluster node. 
+     * SQL statement for updating the local revision of this cluster node.
      */
     protected String updateLocalRevisionStmtSQL;
 
@@ -291,7 +292,7 @@ public class DatabaseJournal extends AbstractJournal implements DatabaseAware {
      * This method is called from the {@link #init(String, NamespaceResolver)} method of this class and
      * returns a {@link ConnectionHelper} instance which is assigned to the {@code conHelper} field.
      * Subclasses may override it to return a specialized connection helper.
-     * 
+     *
      * @param dataSrc the {@link DataSource} of this persistence manager
      * @return a {@link ConnectionHelper}
      * @throws Exception on error
@@ -304,7 +305,7 @@ public class DatabaseJournal extends AbstractJournal implements DatabaseAware {
      * This method is called from {@link #init(String, NamespaceResolver)} after the
      * {@link #createConnectionHelper(DataSource)} method, and returns a default {@link CheckSchemaOperation}.
      * Subclasses can overrride this implementation to get a customized implementation.
-     * 
+     *
      * @return a new {@link CheckSchemaOperation} instance
      */
     protected CheckSchemaOperation createCheckSchemaOperation() {
@@ -446,11 +447,11 @@ public class DatabaseJournal extends AbstractJournal implements DatabaseAware {
     @Override
     protected void doSync(long startRevision) throws JournalException {
         try {
-            conHelper.startBatch();
+            startBatch();
             try {
                 super.doSync(startRevision);
             } finally {
-                conHelper.endBatch(true);
+                endBatch(true);
             }
         } catch (SQLException e) {
             throw new JournalException("Couldn't sync the cluster node", e);
@@ -470,9 +471,7 @@ public class DatabaseJournal extends AbstractJournal implements DatabaseAware {
         boolean succeeded = false;
 
         try {
-            if (lockLevel++ == 0) {
-                conHelper.startBatch();
-            }
+            startBatch();
         } catch (SQLException e) {
             throw new JournalException("Unable to set autocommit to false.", e);
         }
@@ -485,7 +484,6 @@ public class DatabaseJournal extends AbstractJournal implements DatabaseAware {
             }
             lockedRevision = rs.getLong(1);
             succeeded = true;
-
         } catch (SQLException e) {
             throw new JournalException("Unable to lock global revision table.", e);
         } finally {
@@ -500,6 +498,16 @@ public class DatabaseJournal extends AbstractJournal implements DatabaseAware {
      * {@inheritDoc}
      */
     protected void doUnlock(boolean successful) {
+        endBatch(successful);
+    }
+
+    private void startBatch() throws SQLException {
+        if (lockLevel++ == 0) {
+            conHelper.startBatch();
+        }
+    }
+
+    private void endBatch(boolean successful) {
         if (--lockLevel == 0) {
             try {
                 conHelper.endBatch(successful);;
@@ -622,7 +630,7 @@ public class DatabaseJournal extends AbstractJournal implements DatabaseAware {
 
     /**
      * Get the database type.
-     * 
+     *
      * @return the database type
      */
     public String getDatabaseType() {
@@ -633,7 +641,7 @@ public class DatabaseJournal extends AbstractJournal implements DatabaseAware {
      * Get the database type.
      * @deprecated
      * This method is deprecated; {@link #getDatabaseType} should be used instead.
-     * 
+     *
      * @return the database type
      */
     public String getSchema() {
@@ -677,7 +685,7 @@ public class DatabaseJournal extends AbstractJournal implements DatabaseAware {
 
     /**
      * Set the database type.
-     * 
+     *
      * @param databaseType the database type
      */
     public void setDatabaseType(String databaseType) {
@@ -688,7 +696,7 @@ public class DatabaseJournal extends AbstractJournal implements DatabaseAware {
      * Set the database type.
     * @deprecated
     * This method is deprecated; {@link #getDatabaseType} should be used instead.
-     * 
+     *
      * @param databaseType the database type
      */
     public void setSchema(String databaseType) {
@@ -761,7 +769,7 @@ public class DatabaseJournal extends AbstractJournal implements DatabaseAware {
         private long localRevision;
 
         /**
-         * Indicates whether the init method has been called. 
+         * Indicates whether the init method has been called.
          */
         private boolean initialized = false;
 
@@ -801,9 +809,6 @@ public class DatabaseJournal extends AbstractJournal implements DatabaseAware {
             }
         }
 
-        /**
-         * {@inheritDoc}
-         */
         public synchronized long get() {
             if (!initialized) {
                 throw new IllegalStateException("instance has not yet been initialized");
@@ -811,9 +816,6 @@ public class DatabaseJournal extends AbstractJournal implements DatabaseAware {
             return localRevision;
         }
 
-        /**
-         * {@inheritDoc}
-         */
         public synchronized void set(long localRevision) throws JournalException {
 
             if (!initialized) {
@@ -829,11 +831,9 @@ public class DatabaseJournal extends AbstractJournal implements DatabaseAware {
                 throw new JournalException("Failed to update local revision.", e);
             }
         }
-        
-        /**
-         * {@inheritDoc}
-         */
+
         public void close() {
+            // nothing to do
         }
     }
 
@@ -863,7 +863,7 @@ public class DatabaseJournal extends AbstractJournal implements DatabaseAware {
             }
             log.info("Interrupted: stopping clean-up task.");
         }
-        
+
         /**
          * Cleans old revisions from the clustering table.
          */
