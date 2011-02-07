@@ -27,6 +27,7 @@ import javax.jcr.RepositoryException;
 import org.apache.jackrabbit.core.cluster.WorkspaceRecord.CreateWorkspaceAction;
 import org.apache.jackrabbit.core.config.ClusterConfig;
 import org.apache.jackrabbit.core.id.NodeId;
+import org.apache.jackrabbit.core.journal.AbstractJournal;
 import org.apache.jackrabbit.core.journal.InstanceRevision;
 import org.apache.jackrabbit.core.journal.Journal;
 import org.apache.jackrabbit.core.journal.JournalException;
@@ -36,6 +37,7 @@ import org.apache.jackrabbit.core.journal.RecordProducer;
 import org.apache.jackrabbit.core.nodetype.InvalidNodeTypeDefException;
 import org.apache.jackrabbit.core.observation.EventState;
 import org.apache.jackrabbit.core.state.ChangeLog;
+import org.apache.jackrabbit.core.version.InternalVersionManagerImpl;
 import org.apache.jackrabbit.core.xml.ClonedInputSource;
 import org.apache.jackrabbit.spi.QNodeTypeDefinition;
 import org.slf4j.Logger;
@@ -636,6 +638,11 @@ public class ClusterNode implements Runnable,
         public void setListener(UpdateEventListener listener) {
             if (workspace == null) {
                 versionUpdateListener = listener;
+                if (journal instanceof AbstractJournal &&
+                        versionUpdateListener instanceof InternalVersionManagerImpl) {
+                    ((AbstractJournal) journal).setInternalVersionManager(
+                            (InternalVersionManagerImpl) versionUpdateListener);
+                }
             } else {
                 wspUpdateListeners.remove(workspace);
                 if (listener != null) {

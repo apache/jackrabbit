@@ -32,7 +32,7 @@ import EDU.oswego.cs.dl.util.concurrent.Sync;
  * to be re-entered not just by a thread that's already holding the lock but
  * by any thread within the same transaction.
  */
-class VersioningLock {
+public class VersioningLock {
 
     /**
      * The internal read-write lock.
@@ -127,7 +127,7 @@ class VersioningLock {
 
         /**
          * {@inheritDoc}
-         */  
+         */
         protected synchronized boolean startWrite() {
             Xid currentXid = TransactionContext.getCurrentXid();
             if (activeXid != null && isSameGlobalTx(currentXid)) { // already held; re-acquire
