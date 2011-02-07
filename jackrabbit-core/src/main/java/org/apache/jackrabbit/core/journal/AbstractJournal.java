@@ -21,6 +21,8 @@ import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.jackrabbit.core.version.InternalVersionManagerImpl;
+import org.apache.jackrabbit.core.version.VersioningLock;
 import org.apache.jackrabbit.spi.commons.conversion.DefaultNamePathResolver;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
@@ -84,6 +86,11 @@ public abstract class AbstractJournal implements Journal {
      * Repository home.
      */
     private File repHome;
+
+    /**
+     * Internal version manager.
+     */
+    private InternalVersionManagerImpl internalVersionManager;
 
     /**
      * {@inheritDoc}
@@ -176,6 +183,20 @@ public abstract class AbstractJournal implements Journal {
      * {@inheritDoc}
      */
     public void sync() throws JournalException {
+        if (internalVersionManager != null) {
+            VersioningLock.ReadLock lock =
+                internalVersionManager.acquireReadLock();
+            try {
+                internalSync();
+            } finally {
+                lock.release();
+            }
+        } else {
+            internalSync();
+        }
+    }
+
+    private void internalSync() throws JournalException {
         try {
             rwLock.readLock().acquire();
         } catch (InterruptedException e) {
@@ -237,6 +258,20 @@ public abstract class AbstractJournal implements Journal {
      * @throws JournalException if an error occurs
      */
     public void lockAndSync() throws JournalException {
+        if (internalVersionManager != null) {
+            VersioningLock.ReadLock lock =
+                internalVersionManager.acquireReadLock();
+            try {
+                internalLockAndSync();
+            } finally {
+                lock.release();
+            }
+        } else {
+            internalLockAndSync();
+        }
+    }
+
+    private void internalLockAndSync() throws JournalException {
         try {
             rwLock.writeLock().acquire();
         } catch (InterruptedException e) {
@@ -351,6 +386,13 @@ public abstract class AbstractJournal implements Journal {
      */
     public void setRepositoryHome(File repHome) {
         this.repHome = repHome;
+    }
+
+    /**
+     * Set the version manager.
+     */
+    public void setInternalVersionManager(InternalVersionManagerImpl internalVersionManager) {
+        this.internalVersionManager = internalVersionManager;
     }
 
     /**
