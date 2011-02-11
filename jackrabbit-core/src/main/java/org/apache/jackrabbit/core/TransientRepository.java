@@ -372,7 +372,7 @@ public class TransientRepository extends AbstractRepository
             Credentials credentials, String workspaceName)
             throws RepositoryException {
         // Start the repository if this is the first login
-        if (sessions.isEmpty()) {
+        if (repository == null) {
             startRepository();
         }
 
