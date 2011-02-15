@@ -96,6 +96,7 @@ import org.apache.jackrabbit.core.retention.RetentionRegistry;
 import org.apache.jackrabbit.core.retention.RetentionRegistryImpl;
 import org.apache.jackrabbit.core.security.JackrabbitSecurityManager;
 import org.apache.jackrabbit.core.security.authentication.AuthContext;
+import org.apache.jackrabbit.core.security.authentication.token.TokenBasedAuthentication;
 import org.apache.jackrabbit.core.security.simple.SimpleSecurityManager;
 import org.apache.jackrabbit.core.cache.CacheManager;
 import org.apache.jackrabbit.core.state.ChangeLog;
@@ -1496,8 +1497,11 @@ public class RepositoryImpl extends AbstractRepository
                 for (String name : sc.getAttributeNames()) {
                     session.setAttribute(name, sc.getAttribute(name));
                 }
-            } else if (credentials instanceof TokenCredentials) {
-                TokenCredentials tc = (TokenCredentials) credentials;
+            }
+            Set<TokenCredentials> tokenCreds = session.getSubject().getPublicCredentials(TokenCredentials.class);
+            if (!tokenCreds.isEmpty()) {
+                TokenCredentials tc = tokenCreds.iterator().next();
+                session.setAttribute(TokenBasedAuthentication.TOKEN_ATTRIBUTE, tc.getToken());
                 for (String name : tc.getAttributeNames()) {
                     session.setAttribute(name, tc.getAttribute(name));
                 }

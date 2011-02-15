@@ -21,6 +21,7 @@ import org.apache.jackrabbit.api.security.authentication.token.TokenCredentials;
 import org.apache.jackrabbit.api.security.principal.ItemBasedPrincipal;
 import org.apache.jackrabbit.api.security.user.User;
 import org.apache.jackrabbit.api.security.user.UserManager;
+import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.apache.jackrabbit.test.NotExecutableException;
 
@@ -35,6 +36,7 @@ import java.security.Principal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 
 /**
  * <code>TokenBasedLoginTest</code>...
@@ -42,7 +44,7 @@ import java.util.List;
 public class TokenBasedLoginTest extends AbstractJCRTest {
 
     private static final String TOKENS_NAME = ".tokens";
-    private static final String TOKEN_ATTRIBUTE = ".token";
+    private static final String TOKEN_ATTRIBUTE = TokenBasedAuthentication.TOKEN_ATTRIBUTE;
 
     private User testuser;
     private String testuserPath;
@@ -112,6 +114,16 @@ public class TokenBasedLoginTest extends AbstractJCRTest {
 
         s = repo.login(creds);
         try {
+            Set<TokenCredentials> tokenCreds = ((SessionImpl) s).getSubject().getPublicCredentials(TokenCredentials.class);
+            assertFalse(tokenCreds.isEmpty());
+            assertEquals(1, tokenCreds.size());
+            TokenCredentials tc = tokenCreds.iterator().next();
+            assertEquals(tc.getToken(), s.getAttribute(TOKEN_ATTRIBUTE));
+            for (String attrName : tc.getAttributeNames()) {
+                assertEquals(tc.getAttribute(attrName), s.getAttribute(attrName));
+            }
+            assertEquals(tc.getToken(), s.getAttribute(TOKEN_ATTRIBUTE));
+
             Node userNode = superuser.getNode(testuserPath);
 
             assertTrue(userNode.hasNode(TOKENS_NAME));
@@ -127,6 +139,7 @@ public class TokenBasedLoginTest extends AbstractJCRTest {
             assertEquals("any", ttNode.getProperty(TOKEN_ATTRIBUTE + ".any").getString());
 
             token = ttNode.getIdentifier();
+            assertEquals(token, tc.getToken());
 
         } finally {
             s.logout();
