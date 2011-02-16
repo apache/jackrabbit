@@ -67,9 +67,6 @@ public class TokenBasedLoginTest extends AbstractJCRTest {
             Principal p = testuser.getPrincipal();
             if (p instanceof ItemBasedPrincipal) {
                 testuserPath = ((ItemBasedPrincipal) p).getPath();
-                if (!superuser.nodeExists(testuserPath)) {
-                    throw new NotExecutableException();
-                }
             } else {
                 throw new NotExecutableException();
             }
@@ -117,29 +114,35 @@ public class TokenBasedLoginTest extends AbstractJCRTest {
             Set<TokenCredentials> tokenCreds = ((SessionImpl) s).getSubject().getPublicCredentials(TokenCredentials.class);
             assertFalse(tokenCreds.isEmpty());
             assertEquals(1, tokenCreds.size());
-            TokenCredentials tc = tokenCreds.iterator().next();
-            assertEquals(tc.getToken(), s.getAttribute(TOKEN_ATTRIBUTE));
+
+            TokenCredentials tc = tokenCreds.iterator().next();          
+            token = tc.getToken();
+
+            assertEquals(token, s.getAttribute(TOKEN_ATTRIBUTE));
             for (String attrName : tc.getAttributeNames()) {
                 assertEquals(tc.getAttribute(attrName), s.getAttribute(attrName));
             }
-            assertEquals(tc.getToken(), s.getAttribute(TOKEN_ATTRIBUTE));
 
-            Node userNode = superuser.getNode(testuserPath);
+            // only test node characteristics if user-node resided within the same
+            // workspace as 'superuser' has been created for.
+            if (superuser.nodeExists(testuserPath)) {
+                Node userNode = superuser.getNode(testuserPath);
 
-            assertTrue(userNode.hasNode(TOKENS_NAME));
+                assertTrue(userNode.hasNode(TOKENS_NAME));
 
-            Node tNode = userNode.getNode(TOKENS_NAME);
-            assertTrue(tNode.hasNodes());
+                Node tNode = userNode.getNode(TOKENS_NAME);
+                assertTrue(tNode.hasNodes());
 
-            Node ttNode = tNode.getNodes().nextNode();
-            assertTrue(ttNode.hasProperty("attr"));
-            assertEquals("attr", ttNode.getProperty("attr").getString());
+                Node ttNode = tNode.getNodes().nextNode();
+                assertTrue(ttNode.hasProperty("attr"));
+                assertEquals("attr", ttNode.getProperty("attr").getString());
 
-            assertTrue(ttNode.hasProperty(TOKEN_ATTRIBUTE + ".any"));
-            assertEquals("any", ttNode.getProperty(TOKEN_ATTRIBUTE + ".any").getString());
+                assertTrue(ttNode.hasProperty(TOKEN_ATTRIBUTE + ".any"));
+                assertEquals("any", ttNode.getProperty(TOKEN_ATTRIBUTE + ".any").getString());
 
-            token = ttNode.getIdentifier();
-            assertEquals(token, tc.getToken());
+                String id = ttNode.getIdentifier();
+                assertEquals(token, id);
+            }
 
         } finally {
             s.logout();
@@ -152,6 +155,19 @@ public class TokenBasedLoginTest extends AbstractJCRTest {
         s = repo.login(tokenOnly);
         try {
             assertEquals(creds.getUserID(), s.getUserID());
+
+            Set<TokenCredentials> tokenCreds = ((SessionImpl) s).getSubject().getPublicCredentials(TokenCredentials.class);
+            assertFalse(tokenCreds.isEmpty());
+            assertEquals(1, tokenCreds.size());
+
+            TokenCredentials tc = tokenCreds.iterator().next();
+            token = tc.getToken();
+
+            assertEquals(token, s.getAttribute(TOKEN_ATTRIBUTE));
+            for (String attrName : tc.getAttributeNames()) {
+                assertEquals(tc.getAttribute(attrName), s.getAttribute(attrName));
+            }
+
         } finally {
             s.logout();
         }

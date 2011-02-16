@@ -105,6 +105,7 @@ public class SessionImplTest extends AbstractJCRTest {
         } finally {
             s1.logout();
             assertFalse(subject.getPrincipals().isEmpty());
+            assertFalse(subject.getPublicCredentials().isEmpty());
         }
 
 
@@ -117,6 +118,7 @@ public class SessionImplTest extends AbstractJCRTest {
         } finally {
             s2.logout();
             assertFalse(subject.getPrincipals().isEmpty());
+            assertFalse(subject.getPublicCredentials().isEmpty());
         }
 
         Session s3 = sImpl.createSession(null);
@@ -128,6 +130,7 @@ public class SessionImplTest extends AbstractJCRTest {
         } finally {
             s3.logout();
             assertFalse(subject.getPrincipals().isEmpty());
+            assertFalse(subject.getPublicCredentials().isEmpty());
         }
     }
 }

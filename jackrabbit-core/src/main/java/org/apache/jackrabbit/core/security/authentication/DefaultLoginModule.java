@@ -79,10 +79,9 @@ public class DefaultLoginModule extends AbstractLoginModule {
     private UserManager userManager;
 
     /**
-     * The login token extracted from TokenCredentials or null in case of
-     * another credentials.
+     * The TokenCredentials or null in case of another credentials.
      */
-    private String loginToken;
+    private TokenCredentials tokenCredentials;
 
     //--------------------------------------------------------< LoginModule >---
     /**
@@ -91,27 +90,31 @@ public class DefaultLoginModule extends AbstractLoginModule {
     @Override
     public boolean commit() throws LoginException {
         boolean success = super.commit();
-        if (success && !disableTokenAuth && TokenBasedAuthentication.doCreateToken(credentials)) {
-            Session s = null;
-            try {
-                /*
-                use a different session instance to create the token
-                node in order to prevent concurrent modifications with
-                the shared system session.
-                */
-                s = session.createSession(session.getWorkspace().getName());
-                Credentials tc = TokenBasedAuthentication.createToken(user, credentials, tokenExpiration, s);
-                if (tc != null) {
-                    subject.getPublicCredentials().add(tc);
+        if (success && !disableTokenAuth) {
+            if (TokenBasedAuthentication.doCreateToken(credentials)) {
+                Session s = null;
+                try {
+                    /*
+                    use a different session instance to create the token
+                    node in order to prevent concurrent modifications with
+                    the shared system session.
+                    */
+                    s = session.createSession(session.getWorkspace().getName());
+                    Credentials tc = TokenBasedAuthentication.createToken(user, credentials, tokenExpiration, s);
+                    if (tc != null) {
+                        subject.getPublicCredentials().add(tc);
+                    }
+                } catch (RepositoryException e) {
+                    LoginException le = new LoginException("Failed to commit: " + e.getMessage());
+                    le.initCause(e);
+                    throw le;
+                } finally {
+                    if (s != null) {
+                        s.logout();
+                    }
                 }
-            } catch (RepositoryException e) {
-                LoginException le = new LoginException("Failed to commit: " + e.getMessage());
-                le.initCause(e);
-                throw le;
-            } finally {
-                if (s != null) {
-                    s.logout();
-                }
+            } else if (tokenCredentials != null) {
+                subject.getPublicCredentials().add(tokenCredentials);
             }
         }
         return success;
@@ -200,9 +203,9 @@ public class DefaultLoginModule extends AbstractLoginModule {
         // handle TokenCredentials
         if (!disableTokenAuth && TokenBasedAuthentication.isTokenBasedLogin(credentials)) {
             // special token based login
-            loginToken = ((TokenCredentials) credentials).getToken();
+            tokenCredentials = ((TokenCredentials) credentials);
             try {
-                Node n = session.getNodeByIdentifier(loginToken);
+                Node n = session.getNodeByIdentifier(tokenCredentials.getToken());
                 final NodeImpl userNode = (NodeImpl) n.getParent().getParent();
                 final String principalName = userNode.getProperty(UserImpl.P_PRINCIPAL_NAME).getString();
                 if (userNode.isNodeType(UserImpl.NT_REP_USER)) {
@@ -236,8 +239,8 @@ public class DefaultLoginModule extends AbstractLoginModule {
      */
     @Override
     protected Authentication getAuthentication(Principal principal, Credentials creds) throws RepositoryException {
-        if (!disableTokenAuth && loginToken != null) {
-            Authentication authentication = new TokenBasedAuthentication(loginToken, tokenExpiration, session);
+        if (!disableTokenAuth && tokenCredentials != null) {
+            Authentication authentication = new TokenBasedAuthentication(tokenCredentials.getToken(), tokenExpiration, session);
             if (authentication.canHandle(creds)) {
                 return authentication;
             }
