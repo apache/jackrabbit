@@ -415,14 +415,14 @@ public abstract class AbstractLoginModule implements LoginModule {
      * @see javax.security.auth.spi.LoginModule#logout()
      */
     public boolean logout() throws LoginException {
-        Set<Principal> thisPrincipals = subject.getPrincipals();
-        Set<SimpleCredentials> thisCredentials = subject.getPublicCredentials(SimpleCredentials.class);
-        if (thisPrincipals == null || thisCredentials == null
-                || thisPrincipals.isEmpty() || thisCredentials.isEmpty()) {
+        if (subject.getPrincipals().isEmpty() || subject.getPublicCredentials(Credentials.class).isEmpty()) {
             return false;
         } else {
-            thisPrincipals.clear();
-            thisCredentials.clear();
+            // clear subject if not readonly
+            if (!subject.isReadOnly()) {
+                subject.getPrincipals().clear();
+                subject.getPublicCredentials().clear();
+            }
             return true;
         }
     }

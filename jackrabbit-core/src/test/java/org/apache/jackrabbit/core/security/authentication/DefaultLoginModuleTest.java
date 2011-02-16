@@ -69,6 +69,9 @@ public class DefaultLoginModuleTest extends AbstractJCRTest {
             "   <param name=\"disableTokenAuth\" value=\"true\"/>\n" +
             "</LoginModule>" +
             "</Security>";
+    
+    private SimpleCredentials simpleCredentials = new SimpleCredentials("admin", "admin".toCharArray());
+    private Session securitySession;
 
     @Override
     protected void setUp() throws Exception {
@@ -90,16 +93,89 @@ public class DefaultLoginModuleTest extends AbstractJCRTest {
         super.cleanUp();
     }
 
-    private SimpleCredentials simpleCredentials = new SimpleCredentials("admin", "admin".toCharArray());
-    private Session securitySession;
-
     public void testSimpleCredentialsLogin() throws Exception {
         AuthContext ac = getAuthContext(simpleCredentials, DEFAULT_CONFIG);
         ac.login();
         ac.logout();
     }
 
-    public void testTokenCredentials() throws Exception {
+    public void testSimpleCredentialsLoginLogout() throws Exception {
+        AuthContext ac = getAuthContext(simpleCredentials, DEFAULT_CONFIG);
+        ac.login();
+
+        Subject subject = ac.getSubject();
+        assertFalse(subject.getPrincipals().isEmpty());
+        assertFalse(subject.getPublicCredentials().isEmpty());
+        assertFalse(subject.getPublicCredentials(SimpleCredentials.class).isEmpty());
+
+        ac.logout();
+        assertTrue(subject.getPrincipals().isEmpty());
+        assertTrue(subject.getPublicCredentials().isEmpty());
+        assertTrue(subject.getPublicCredentials(SimpleCredentials.class).isEmpty());
+    }
+
+    public void testTokenCredentialsLoginLogout() throws Exception {
+        simpleCredentials.setAttribute(TokenBasedAuthentication.TOKEN_ATTRIBUTE, "");
+        try {
+            // login with simple credentials forcing token creation.
+            AuthContext ac = getAuthContext(simpleCredentials, DEFAULT_CONFIG);
+            ac.login();
+
+            Subject subject = ac.getSubject();
+
+            assertFalse(subject.getPrincipals().isEmpty());
+            assertFalse(subject.getPublicCredentials().isEmpty());
+            assertFalse(subject.getPublicCredentials(SimpleCredentials.class).isEmpty());
+            assertFalse(subject.getPublicCredentials(TokenCredentials.class).isEmpty());
+            assertEquals(2, subject.getPublicCredentials(Credentials.class).size());
+
+            TokenCredentials tokenCredentials = subject.getPublicCredentials(TokenCredentials.class).iterator().next();
+
+            ac.logout();
+
+            // second login with token credentials
+            ac = getAuthContext(tokenCredentials, DEFAULT_CONFIG);
+            ac.login();
+
+            subject = ac.getSubject();
+
+            assertFalse(subject.getPrincipals().isEmpty());
+            assertFalse(subject.getPublicCredentials().isEmpty());
+            assertFalse(subject.getPublicCredentials(SimpleCredentials.class).isEmpty());
+            assertFalse(subject.getPublicCredentials(TokenCredentials.class).isEmpty());
+            assertEquals(2, subject.getPublicCredentials(Credentials.class).size());
+
+            ac.logout();
+            assertTrue(subject.getPrincipals().isEmpty());            
+            assertTrue(subject.getPublicCredentials().isEmpty());
+            assertTrue(subject.getPublicCredentials(SimpleCredentials.class).isEmpty());
+            assertTrue(subject.getPublicCredentials(TokenCredentials.class).isEmpty());
+        } finally {
+            simpleCredentials.removeAttribute(TokenBasedAuthentication.TOKEN_ATTRIBUTE);
+        }
+    }
+
+    public void testDisabledTokenCredentials() throws Exception {
+        simpleCredentials.setAttribute(TokenBasedAuthentication.TOKEN_ATTRIBUTE, "");
+        try {
+            AuthContext ac = getAuthContext(simpleCredentials, DISABLE_TOKEN_CONFIG);
+            ac.login();
+
+            Subject subject = ac.getSubject();
+
+            assertFalse(subject.getPrincipals().isEmpty());
+            assertFalse(subject.getPublicCredentials().isEmpty());
+            assertFalse(subject.getPublicCredentials(SimpleCredentials.class).isEmpty());
+            assertTrue(subject.getPublicCredentials(TokenCredentials.class).isEmpty());
+            assertEquals(1, subject.getPublicCredentials(Credentials.class).size());
+
+            ac.logout();
+        } finally {
+            simpleCredentials.removeAttribute(TokenBasedAuthentication.TOKEN_ATTRIBUTE);
+        }
+    }
+
+    public void testDisabledTokenCredentials2() throws Exception {
         simpleCredentials.setAttribute(TokenBasedAuthentication.TOKEN_ATTRIBUTE, "");
         try {
             AuthContext ac = getAuthContext(simpleCredentials, DEFAULT_CONFIG);
