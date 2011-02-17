@@ -1,4 +1,4 @@
-Release Notes -- Apache Jackrabbit -- Version 2.1.3
+Release Notes -- Apache Jackrabbit -- Version 2.1.4
 
 Introduction
 ------------
@@ -7,23 +7,20 @@ This is Apache Jackrabbit 2.1, a fully compliant and production-ready
 implementation of the Content Repository for Java Technology API, version 2.0
 (JCR 2.0, http://jcp.org/en/jsr/summary?id=283).
 
-Apache Jackrabbit 2.1.3 is a bug fix release that fixes issues reported
+Apache Jackrabbit 2.1.4 is a bug fix release that fixes issues reported
 against previous releases. This release is fully compatible with the
 earlier 2.1.x releases.
 
 Changes in this release
 -----------------------
 
-Improvements
-
-  [JCR-2812] Allow whitespaces in base64 encoded binary fields of XML ...
-
 Bug fixes
 
-  [JCR-2523] StaleItemStateException during distributed transaction
-  [JCR-2753] Deadlock in DefaultISMLocking
-  [JCR-2813] "overwriting cached entry" warnings
-  [JCR-2820] FineGrainedISMLocking problems
+  [JCR-2865] a dead lock in DefaultISMLocking
+  [JCR-2881] Deadlock on version operations in a clustered environment
+  [JCR-2888] Namespace comparison in Namespace.java doesn't work, if a ...
+  [JCR-2889] Occasional JCA test failures
+  [JCR-2891] VersionManagerImplRestore internalRestoreFrozen method has ...
 
 For more detailed information about all the changes in this and other
 Jackrabbit releases, please see the Jackrabbit issue tracker at
