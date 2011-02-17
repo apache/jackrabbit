@@ -554,7 +554,7 @@ abstract public class VersionManagerImplRestore extends VersionManagerImplBase {
                 NodeId nodeId = vh.getVersionableId();
                 if (stateMgr.hasItemState(nodeId)) {
                     restoredChild = state.getNode(nodeId);
-                    if (restoredChild.getParentId() == state.getNodeId()) {
+                    if (restoredChild.getParentId().equals(state.getNodeId())) {
                         // if same parent, ignore
                     } else if (removeExisting) {
                         NodeStateEx parent = restoredChild.getNode(restoredChild.getParentId());
