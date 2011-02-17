@@ -31,7 +31,7 @@
   </parent>
   <artifactId>jackrabbit-webdav</artifactId>
   <name>Jackrabbit WebDAV Library</name>
-  <description>WebDAV library used by the Jackrabbit WebDAV support</description>
+  <description>Generic WebDAV Library</description>
 
   <build>
     <plugins>
@@ -49,11 +49,6 @@
   </build>
 
   <dependencies>
-    <dependency>
-      <groupId>org.apache.jackrabbit</groupId>
-      <artifactId>jackrabbit-jcr-commons</artifactId>
-      <version>2.3-SNAPSHOT</version>
-    </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>

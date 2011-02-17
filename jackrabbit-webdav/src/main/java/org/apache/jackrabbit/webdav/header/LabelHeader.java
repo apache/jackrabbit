@@ -16,8 +16,8 @@
  */
 package org.apache.jackrabbit.webdav.header;
 
-import org.apache.jackrabbit.util.Text;
 import org.apache.jackrabbit.webdav.WebdavRequest;
+import org.apache.jackrabbit.webdav.util.EncodeUtil;
 import org.apache.jackrabbit.webdav.version.DeltaVConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,7 +47,7 @@ public class LabelHeader implements Header {
     }
 
     public String getHeaderValue() {
-        return Text.escape(label);
+        return EncodeUtil.escape(label);
     }
 
     public static LabelHeader parse(WebdavRequest request) {
@@ -55,7 +55,7 @@ public class LabelHeader implements Header {
         if (hv == null) {
             return null;
         } else {
-            return new LabelHeader(Text.unescape(hv));
+            return new LabelHeader(EncodeUtil.unescape(hv));
         }
     }
 }

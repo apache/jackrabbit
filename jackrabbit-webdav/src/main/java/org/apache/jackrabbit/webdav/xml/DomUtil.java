@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.webdav.xml;
 
-import org.apache.jackrabbit.commons.xml.SerializingContentHandler;
 import org.apache.jackrabbit.webdav.DavConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,7 +40,6 @@ import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.sax.SAXResult;
 import javax.xml.transform.stream.StreamResult;
 
 import java.io.IOException;
@@ -733,7 +731,7 @@ public class DomUtil {
      */
     public static void transformDocument(Document xmlDoc, Writer writer) throws TransformerException, SAXException {
         Transformer transformer = TRANSFORMER_FACTORY.newTransformer();
-        transformer.transform(new DOMSource(xmlDoc), new SAXResult(SerializingContentHandler.getSerializer(new StreamResult(writer))));
+        transformer.transform(new DOMSource(xmlDoc), ResultHelper.getResult(new StreamResult(writer)));
     }
 
     /**
@@ -748,7 +746,7 @@ public class DomUtil {
      */
     public static void transformDocument(Document xmlDoc, OutputStream out) throws TransformerException, SAXException {
         Transformer transformer = TRANSFORMER_FACTORY.newTransformer();
-        transformer.transform(new DOMSource(xmlDoc), new SAXResult(SerializingContentHandler.getSerializer(new StreamResult(out))));
+        transformer.transform(new DOMSource(xmlDoc), ResultHelper.getResult(new StreamResult(out)));
     }
 
     /**
