@@ -16,9 +16,9 @@
  */
 package org.apache.jackrabbit.webdav;
 
+import org.apache.jackrabbit.webdav.util.EncodeUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.jackrabbit.util.Text;
 
 /**
  * <code>AbstractLocatorFactory</code> is an implementation of the DavLocatorFactory
@@ -119,7 +119,7 @@ public abstract class AbstractLocatorFactory implements DavLocatorFactory {
             resourcePath = null;
             workspacePath = null;
         } else {
-            resourcePath = Text.unescape(href);
+            resourcePath = EncodeUtil.unescape(href);
             // retrieve wspPath: look for the first slash ignoring the leading one
             int pos = href.indexOf('/', 1);
             if (pos == -1) {
@@ -127,7 +127,7 @@ public abstract class AbstractLocatorFactory implements DavLocatorFactory {
                 workspacePath = resourcePath;
             } else {
                 // separate the workspace path from the resource path.
-                workspacePath = Text.unescape(href.substring(0, pos));
+                workspacePath = EncodeUtil.unescape(href.substring(0, pos));
             }
         }
 
@@ -228,7 +228,7 @@ public abstract class AbstractLocatorFactory implements DavLocatorFactory {
                 if (!resourcePath.startsWith(workspacePath)) {
                     throw new IllegalArgumentException("Resource path '" + resourcePath + "' does not start with workspace path '" + workspacePath + ".");
                 }
-                buf.append(Text.escapePath(resourcePath));
+                buf.append(EncodeUtil.escapePath(resourcePath));
             }
             int length = buf.length();
             if (length > 0 && buf.charAt(length - 1) != '/') {
@@ -315,7 +315,7 @@ public abstract class AbstractLocatorFactory implements DavLocatorFactory {
          * Returns an 'href' consisting of prefix and resource path (which starts
          * with the workspace path). It assures a trailing '/' in case the href
          * is used for collection. Note, that the resource path is
-         * {@link Text#escapePath(String) escaped}.
+         * {@link org.apache.jackrabbit.webdav.util.EncodeUtil#escapePath(String) escaped}.
          *
          * @param isCollection
          * @return href String representing the text of the href element

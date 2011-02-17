@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.webdav.lock;
 
-import org.apache.jackrabbit.util.Text;
 import org.apache.jackrabbit.webdav.DavException;
 import org.apache.jackrabbit.webdav.DavResource;
 import org.apache.jackrabbit.webdav.DavResourceIterator;
@@ -82,7 +81,7 @@ public class SimpleLockManager implements LockManager {
         if (lock == null) {
             // check, if child of deep locked parent
             if (!path.equals("/")) {
-                ActiveLock parentLock = getLock(Text.getRelativeParent(path, 1));
+                ActiveLock parentLock = getLock(getParentPath(path));
                 if (parentLock != null && parentLock.isDeep()) {
                     lock = parentLock;
                 }
@@ -118,12 +117,12 @@ public class SimpleLockManager implements LockManager {
         // collection or with a lock present on any member resource.
         for (String key : locks.keySet()) {
             // TODO: is check for lock on internal-member correct?
-            if (Text.isDescendant(key, resourcePath)) {
+            if (isDescendant(key, resourcePath)) {
                 ActiveLock l = locks.get(key);
-                if (l.isDeep() || (key.equals(Text.getRelativeParent(resourcePath, 1)) && !resource.isCollection())) {
+                if (l.isDeep() || (key.equals(getParentPath(resourcePath)) && !resource.isCollection())) {
                     throw new DavException(DavServletResponse.SC_LOCKED, "Resource '" + resource.getResourcePath() + "' already inherits a lock by its collection.");
                 }
-            } else if (Text.isDescendant(resourcePath, key)) {
+            } else if (isDescendant(resourcePath, key)) {
                 if (lockInfo.isDeep() || isInternalMember(resource, key)) {
                     throw new DavException(DavServletResponse.SC_CONFLICT, "Resource '" + resource.getResourcePath() + "' cannot be locked due to a lock present on the member resource '" + key + "'.");
                 }
@@ -185,7 +184,7 @@ public class SimpleLockManager implements LockManager {
      * @return
      */
     private static boolean isInternalMember(DavResource resource, String memberPath) {
-        if (resource.getResourcePath().equals(Text.getRelativeParent(memberPath, 1))) {
+        if (resource.getResourcePath().equals(getParentPath(memberPath))) {
             // find the member with the given path
             DavResourceIterator it = resource.getMembers();
             while (it.hasNext()) {
@@ -197,6 +196,38 @@ public class SimpleLockManager implements LockManager {
             }
         }
         return false;
+    }
+
+    /**
+     * @param path Path to retrieve the parent path for.
+     * @return empty string if the specified path contains no '/', "/" if the
+     * last index of '/' is zero. Otherwise the last segment is cut off the
+     * specified path.
+     */
+    private static String getParentPath(String path) {
+        int idx = path.lastIndexOf('/');
+        switch (idx) {
+            case -1:
+                return "";
+            case 0:
+                return "/";
+            default:
+                return path.substring(0, idx);
+        }
+    }
+
+    /**
+     * Determines if the <code>descendant</code> path is hierarchical a
+     * descendant of <code>path</code>.
+     *
+     * @param path     the current path
+     * @param descendant the potential descendant
+     * @return <code>true</code> if the <code>descendant</code> is a descendant;
+     *         <code>false</code> otherwise.
+     */
+    private static boolean isDescendant(String path, String descendant) {
+        String pattern = path.endsWith("/") ? path : path + "/";
+        return !pattern.equals(descendant) && descendant.startsWith(pattern);
     }
 }
 
