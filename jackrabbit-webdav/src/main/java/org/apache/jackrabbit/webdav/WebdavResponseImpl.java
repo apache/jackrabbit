@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.webdav;
 
-import org.apache.jackrabbit.commons.xml.SerializingContentHandler;
 import org.apache.jackrabbit.webdav.header.CodedUrlHeader;
 import org.apache.jackrabbit.webdav.header.Header;
 import org.apache.jackrabbit.webdav.lock.ActiveLock;
@@ -142,13 +141,12 @@ public class WebdavResponseImpl implements WebdavResponse {
                 // JCR-2636: Need to use an explicit OutputStreamWriter
                 // instead of relying on the built-in UTF-8 serialization
                 // to avoid problems with surrogate pairs on Sun JRE 1.5.
-                Writer writer = new OutputStreamWriter(out, SerializingContentHandler.ENCODING);
+                Writer writer = new OutputStreamWriter(out, "UTF-8");
                 DomUtil.transformDocument(doc, writer);
                 writer.flush();
 
                 // TODO: Should this be application/xml? See JCR-1621
-                httpResponse.setContentType(
-                        "text/xml; charset=" + SerializingContentHandler.ENCODING);
+                httpResponse.setContentType("text/xml; charset=UTF-8");
                 httpResponse.setContentLength(out.size());
                 out.writeTo(httpResponse.getOutputStream());
             } catch (ParserConfigurationException e) {

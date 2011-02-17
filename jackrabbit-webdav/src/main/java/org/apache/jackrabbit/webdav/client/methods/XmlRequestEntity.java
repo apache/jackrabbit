@@ -23,7 +23,6 @@ import java.io.OutputStream;
 import javax.xml.transform.TransformerException;
 
 import org.apache.commons.httpclient.methods.RequestEntity;
-import org.apache.jackrabbit.commons.xml.SerializingContentHandler;
 import org.apache.jackrabbit.webdav.xml.DomUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,7 +56,7 @@ public class XmlRequestEntity implements RequestEntity {
 
     public String getContentType() {
         // TODO: Shouldn't this be application/xml? See JCR-1621
-        return "text/xml; charset=" + SerializingContentHandler.ENCODING;
+        return "text/xml; charset=UTF-8";
     }
 
     public void writeRequest(OutputStream out) throws IOException {
