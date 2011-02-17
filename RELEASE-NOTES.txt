@@ -1,4 +1,4 @@
-Release Notes -- Apache Jackrabbit -- Version 2.2.4
+Release Notes -- Apache Jackrabbit -- Version 2.2.5
 
 Introduction
 ------------
@@ -7,7 +7,7 @@ This is Apache Jackrabbit(TM) 2.2, a fully compliant implementation of the
 Content Repository for Java(TM) Technology API, version 2.0 (JCR 2.0) as
 specified in the Java Specification Request 283 (JSR 283).
 
-Apache Jackrabbit 2.2.4 is patch release that contains fixes and
+Apache Jackrabbit 2.2.5 is patch release that contains fixes and
 improvements over previous 2.2.x releases. This release is fully
 compatible with earlier 2.x.x releases.
 
@@ -16,14 +16,10 @@ Changes in this release
 
 Bug fixes
 
-  [JCR-2855] Writers blocked forever when waiting on update operations
-  [JCR-2865] a dead lock in DefaultISMLocking
-  [JCR-2868] A failure to connect to a MySQL database when JackRabbit ...
-  [JCR-2869] AccessControlManager#setPolicy may fail for new ...
-  [JCR-2870] Transient Repository cannot be used more than once when ...
-  [JCR-2872] DataStore: changing the modified date fails if the file is ...
-  [JCR-2881] Deadlock on version operations in a clustered environment
-  [JCR-2882] DatabaseJournal: java.lang.IllegalStateException: already in ...
+  [JCR-2888] Namespace comparison in Namespace.java doesn't work, if a ...
+  [JCR-2889] Occasional JCA test failures
+  [JCR-2891] VersionManagerImplRestore internalRestoreFrozen method has ...
+  [JCR-2900] DbClusterTest failure due to network configuration
 
 For more detailed information about all the changes in this and other
 Jackrabbit releases, please see the Jackrabbit issue tracker at
