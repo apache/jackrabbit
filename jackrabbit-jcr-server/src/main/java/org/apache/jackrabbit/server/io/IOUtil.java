@@ -165,7 +165,7 @@ public class IOUtil {
             return null;
         }
         // we need a tmp file, since the import could fail
-        File tmpFile = File.createTempFile("__importcontext", "tmp");
+        File tmpFile = File.createTempFile("__importcontext", ".tmp");
         FileOutputStream out = new FileOutputStream(tmpFile);
         byte[] buffer = new byte[8192];
         int read;
