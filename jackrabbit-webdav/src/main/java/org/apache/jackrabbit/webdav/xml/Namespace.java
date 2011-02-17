@@ -26,9 +26,9 @@ public class Namespace {
 
     private static Logger log = LoggerFactory.getLogger(Namespace.class);
 
-    public static final Namespace EMPTY_NAMESPACE = Namespace.getNamespace("","");
-    public static final Namespace XML_NAMESPACE = Namespace.getNamespace("xml", "http://www.w3.org/XML/1998/namespace");
-    public static final Namespace XMLNS_NAMESPACE = Namespace.getNamespace("xmlns", "http://www.w3.org/2000/xmlns/");
+    public static final Namespace EMPTY_NAMESPACE = new Namespace("","");
+    public static final Namespace XML_NAMESPACE = new Namespace("xml", "http://www.w3.org/XML/1998/namespace");
+    public static final Namespace XMLNS_NAMESPACE = new Namespace("xmlns", "http://www.w3.org/2000/xmlns/");
 
     private final String prefix;
     private final String uri;
@@ -64,8 +64,18 @@ public class Namespace {
         return uri;
     }
 
+    /**
+     * Returns <code>true</code> if the a <code>Namespace</code> built from the
+     * specified <code>namespaceURI</code> is equal to this namespace object.
+     *
+     * @param namespaceURI A namespace URI to be compared to this namespace instance.
+     * @return true if the a <code>Namespace</code> built from the
+     * specified <code>namespaceURI</code> is equal to this namespace object;
+     * false otherwise.
+     */
     public boolean isSame(String namespaceURI) {
-        return uri.equals(namespaceURI);
+        Namespace other = getNamespace(namespaceURI);
+        return this.equals(other);
     }
 
     //-------------------------------------------------------------< Object >---
