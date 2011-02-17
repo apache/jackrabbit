@@ -20,18 +20,14 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 
-import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.sax.SAXResult;
 
 import org.apache.commons.httpclient.methods.RequestEntity;
 import org.apache.jackrabbit.commons.xml.SerializingContentHandler;
+import org.apache.jackrabbit.webdav.xml.DomUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
-import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
 
 /**
@@ -45,12 +41,7 @@ public class XmlRequestEntity implements RequestEntity {
 
     public XmlRequestEntity(Document xmlDocument) throws IOException {
         try {
-            ContentHandler handler =
-                SerializingContentHandler.getSerializer(xml);
-            TransformerFactory factory = TransformerFactory.newInstance();
-            Transformer transformer = factory.newTransformer();
-            transformer.transform(
-                    new DOMSource(xmlDocument), new SAXResult(handler));
+            DomUtil.transformDocument(xmlDocument, xml);
         } catch (TransformerException e) {
             log.error(e.getMessage());
             throw new IOException(e.getMessage());
