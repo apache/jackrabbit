@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.webdav.xml;
 
+import org.apache.jackrabbit.commons.xml.SerializingContentHandler;
 import org.apache.jackrabbit.webdav.DavConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,9 +35,19 @@ import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.Result;
+import javax.xml.transform.Source;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.sax.SAXResult;
+import javax.xml.transform.stream.StreamResult;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.Writer;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -66,6 +77,11 @@ public class DomUtil {
         }
         return factory;
     }
+
+    /**
+     * Transformer factory
+     */
+    private static TransformerFactory TRANSFORMER_FACTORY = TransformerFactory.newInstance();
 
     /**
      * Creates and returns a new empty DOM document.
@@ -703,5 +719,48 @@ public class DomUtil {
         buf.append(":");
         buf.append(localName);
         return buf.toString();
+    }
+
+    /**
+     * Uses a new Transformer instance to transform the specified xml document
+     * to the specified writer output target.
+     *
+     * @param xmlDoc XML document to create the transformation
+     * <code>Source</code> for.
+     * @param writer The writer used to create a new transformation
+     * <code>Result </code>for.
+     * @throws TransformerException
+     */
+    public static void transformDocument(Document xmlDoc, Writer writer) throws TransformerException, SAXException {
+        Transformer transformer = TRANSFORMER_FACTORY.newTransformer();
+        transformer.transform(new DOMSource(xmlDoc), new SAXResult(SerializingContentHandler.getSerializer(new StreamResult(writer))));
+    }
+
+    /**
+     * Uses a new Transformer instance to transform the specified xml document
+     * to the specified writer output target.
+     *
+     * @param xmlDoc XML document to create the transformation
+     * <code>Source</code> for.
+     * @param out The stream used to create a new transformation
+     * <code>Result </code>for.
+     * @throws TransformerException
+     */
+    public static void transformDocument(Document xmlDoc, OutputStream out) throws TransformerException, SAXException {
+        Transformer transformer = TRANSFORMER_FACTORY.newTransformer();
+        transformer.transform(new DOMSource(xmlDoc), new SAXResult(SerializingContentHandler.getSerializer(new StreamResult(out))));
+    }
+
+    /**
+     * Uses a new Transformer instance to transform the given source to the
+     * specified result.
+     *
+     * @param source the transformation source.
+     * @param result the transformation result.
+     * @throws TransformerException
+     */
+    private static void transformDocument(Source source, Result result) throws TransformerException {
+        Transformer transformer = TRANSFORMER_FACTORY.newTransformer();
+        transformer.transform(source, result);
     }
 }
