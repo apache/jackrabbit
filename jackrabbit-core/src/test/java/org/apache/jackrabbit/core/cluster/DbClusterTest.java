@@ -37,9 +37,9 @@ public class DbClusterTest extends JUnitTest {
     public void setUp() throws Exception {
         deleteAll();
         server1 = Server.createTcpServer("-tcpPort", "9001", "-baseDir",
-                "./target/dbClusterTest/db1").start();
+                "./target/dbClusterTest/db1", "-tcpAllowOthers").start();
         server2 = Server.createTcpServer("-tcpPort", "9002", "-baseDir",
-                "./target/dbClusterTest/db2").start();
+                "./target/dbClusterTest/db2", "-tcpAllowOthers").start();
         FileUtils.copyFile(
                 new File("./src/test/resources/org/apache/jackrabbit/core/cluster/repository-h2.xml"),
                 new File("./target/dbClusterTest/node1/repository.xml"));
