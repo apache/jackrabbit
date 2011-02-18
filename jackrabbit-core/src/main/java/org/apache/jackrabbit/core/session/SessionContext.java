@@ -35,7 +35,6 @@ import org.apache.jackrabbit.core.nodetype.NodeTypeManagerImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.observation.ObservationManagerImpl;
 import org.apache.jackrabbit.core.security.AccessManager;
-import org.apache.jackrabbit.core.security.JackrabbitSecurityManager;
 import org.apache.jackrabbit.core.state.SessionItemStateManager;
 import org.apache.jackrabbit.core.value.ValueFactoryImpl;
 import org.apache.jackrabbit.spi.Name;
@@ -174,15 +173,6 @@ public class SessionContext implements NamePathResolver {
      */
     public NodeTypeRegistry getNodeTypeRegistry() {
         return repositoryContext.getNodeTypeRegistry();
-    }
-
-    /**
-     * Returns the security manager of this repository.
-     *
-     * @return security manager
-     */
-    public JackrabbitSecurityManager getSecurityManager() {
-        return repositoryContext.getSecurityManager();
     }
 
     //----------------------------------------------< per-session components >
