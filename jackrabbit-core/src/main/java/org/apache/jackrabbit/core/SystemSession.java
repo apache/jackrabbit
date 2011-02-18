@@ -17,7 +17,6 @@
 package org.apache.jackrabbit.core;
 
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.Set;
 import java.security.Principal;
 
@@ -59,11 +58,8 @@ class SystemSession extends SessionImpl {
             RepositoryContext repositoryContext, WorkspaceConfig wspConfig)
             throws RepositoryException {
         // create subject with SystemPrincipal
-        Set<SystemPrincipal> principals = new HashSet<SystemPrincipal>();
-        principals.add(new SystemPrincipal());
-        Subject subject =
-                new Subject(true, principals, Collections.EMPTY_SET,
-                        Collections.EMPTY_SET);
+        Set<SystemPrincipal> principals = Collections.singleton(new SystemPrincipal());
+        Subject subject = new Subject(true, principals, Collections.emptySet(), Collections.emptySet());
         return new SystemSession(repositoryContext, subject, wspConfig);
     }
 
@@ -86,6 +82,7 @@ class SystemSession extends SessionImpl {
      *
      * @return the name of <code>SystemPrincipal</code>.
      */
+    @Override
     protected String retrieveUserId(Subject subject, String workspaceName) throws RepositoryException {
         return new SystemPrincipal().getName();
     }
@@ -103,6 +100,26 @@ class SystemSession extends SessionImpl {
         // configurable AccessManager to handle SystemPrincipal privileges
         // correctly
         return new SystemAccessManager();
+    }
+
+    /**
+     * Always returns <code>true</code>.
+     *
+     * @return <code>true</code> as this is an system session instance.
+     */
+    @Override
+    public boolean isSystem() {
+        return true;
+    }
+
+    /**
+     * Always returns <code>false</code>.
+     *
+     * @return <code>false</code> as this is an system session instance.
+     */
+    @Override
+    public boolean isAdmin() {
+        return false;
     }
 
     //--------------------------------------------------------< inner classes >
@@ -212,6 +229,7 @@ class SystemSession extends SessionImpl {
         /**
          * @see AbstractAccessControlManager#checkInitialized()
          */
+        @Override
         protected void checkInitialized() throws IllegalStateException {
             // nop
         }
@@ -219,6 +237,7 @@ class SystemSession extends SessionImpl {
         /**
          * @see AbstractAccessControlManager#checkPermission(String,int)
          */
+        @Override
         protected void checkPermission(String absPath, int permission) throws
                 AccessDeniedException, PathNotFoundException, RepositoryException {
             // allow everything
@@ -235,6 +254,7 @@ class SystemSession extends SessionImpl {
         /**
          * @see AbstractAccessControlManager#checkValidNodePath(String)
          */
+        @Override
         protected void checkValidNodePath(String absPath)
                 throws PathNotFoundException, RepositoryException {
             Path p = getQPath(absPath);
