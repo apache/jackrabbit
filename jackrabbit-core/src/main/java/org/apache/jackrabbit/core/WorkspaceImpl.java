@@ -53,6 +53,7 @@ import org.apache.jackrabbit.core.observation.EventStateCollectionFactory;
 import org.apache.jackrabbit.core.observation.ObservationManagerImpl;
 import org.apache.jackrabbit.core.query.QueryManagerImpl;
 import org.apache.jackrabbit.core.retention.RetentionRegistry;
+import org.apache.jackrabbit.core.security.authorization.PrivilegeManager;
 import org.apache.jackrabbit.core.session.SessionContext;
 import org.apache.jackrabbit.core.state.ItemStateCacheFactory;
 import org.apache.jackrabbit.core.state.LocalItemStateManager;
@@ -542,6 +543,17 @@ public class WorkspaceImpl extends AbstractWorkspace
                 context.getRepository().getRetentionRegistry(wspConfig.getName());
         }
         return retentionRegistry;
+    }
+
+    /**
+     * Return the <code>PrivilegeManager</code>.
+     * 
+     * @return
+     * @throws RepositoryException
+     */
+    public PrivilegeManager getPrivilegeManager() throws RepositoryException {
+        sanityCheck();
+        return context.getPrivilegeManager();
     }
 
     //------------------------------------------------------------< Workspace >

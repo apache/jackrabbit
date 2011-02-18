@@ -324,6 +324,18 @@ public class NamespaceRegistryImpl implements
         eventChannel.setListener(this);
     }
 
+    /**
+     * Returns <code>true</code> if the specified uri is one of the reserved
+     * URIs defined in this registry.
+     *
+     * @param uri The URI to test.
+     * @return <code>true</code> if the specified uri is reserved;
+     * <code>false</code> otherwise.
+     */
+    public boolean isReservedURI(String uri) {
+        return reservedURIs.contains(uri);
+    }
+    
     //-------------------------------------------------------< StringIndex >--
 
     /**
@@ -457,7 +469,6 @@ public class NamespaceRegistryImpl implements
         return uriToPrefix.keySet().toArray(new String[uriToPrefix.keySet().size()]);
     }
 
-    //---------------------------------------------------< NamespaceRegistry >
     /**
      * {@inheritDoc}
      */

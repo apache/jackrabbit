@@ -20,12 +20,13 @@ import org.apache.jackrabbit.api.security.JackrabbitAccessControlPolicy;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.ProtectedItemModifier;
 import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.WorkspaceImpl;
 import org.apache.jackrabbit.core.security.authorization.AccessControlConstants;
 import org.apache.jackrabbit.core.security.authorization.AccessControlEditor;
 import org.apache.jackrabbit.core.security.authorization.AccessControlEntryImpl;
 import org.apache.jackrabbit.core.security.authorization.AccessControlUtils;
 import org.apache.jackrabbit.core.security.authorization.Permission;
-import org.apache.jackrabbit.core.security.authorization.PrivilegeRegistry;
+import org.apache.jackrabbit.core.security.authorization.PrivilegeManager;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.commons.conversion.NameException;
 import org.apache.jackrabbit.spi.commons.conversion.NameParser;
@@ -66,15 +67,12 @@ public class ACLEditor extends ProtectedItemModifier implements AccessControlEdi
      * the editing session
      */
     private final SessionImpl session;
-    private final PrivilegeRegistry privilegeRegistry;
     private final AccessControlUtils utils;
 
     ACLEditor(Session editingSession, AccessControlUtils utils) {
         super(Permission.MODIFY_AC);
         if (editingSession instanceof SessionImpl) {
             session = ((SessionImpl) editingSession);
-            // TODO: review and find better solution
-            privilegeRegistry = new PrivilegeRegistry(session);
         } else {
             throw new IllegalArgumentException("org.apache.jackrabbit.core.SessionImpl expected. Found " + editingSession.getClass());
         }
@@ -88,7 +86,7 @@ public class ACLEditor extends ProtectedItemModifier implements AccessControlEdi
      * @throws RepositoryException if an error occurs
      */
     ACLTemplate getACL(NodeImpl aclNode) throws RepositoryException {
-        return new ACLTemplate(aclNode, privilegeRegistry);
+        return new ACLTemplate(aclNode);
     }
 
     //------------------------------------------------< AccessControlEditor >---
@@ -132,9 +130,10 @@ public class ACLEditor extends ProtectedItemModifier implements AccessControlEdi
             // create an empty acl unless the node is protected or cannot have
             // rep:AccessControllable mixin set (e.g. due to a lock)
             String mixin = session.getJCRName(NT_REP_ACCESS_CONTROLLABLE);
+            PrivilegeManager privMgr = ((WorkspaceImpl) session.getWorkspace()).getPrivilegeManager();
             if (controlledNode.isNodeType(mixin) || controlledNode.canAddMixin(mixin)) {
                 acl = new ACLTemplate(nodePath, session.getPrincipalManager(),
-                        privilegeRegistry, session.getValueFactory(), session);
+                        privMgr, session.getValueFactory(), session);
             }
         } // else: acl already present -> getPolicies must be used.
         return (acl != null) ? new AccessControlPolicy[] {acl} : new AccessControlPolicy[0];

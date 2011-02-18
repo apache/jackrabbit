@@ -20,7 +20,7 @@ import org.apache.jackrabbit.api.security.JackrabbitAccessControlManager;
 import org.apache.jackrabbit.api.security.JackrabbitAccessControlPolicy;
 import org.apache.jackrabbit.commons.iterator.AccessControlPolicyIteratorAdapter;
 import org.apache.jackrabbit.core.security.authorization.Permission;
-import org.apache.jackrabbit.core.security.authorization.PrivilegeRegistry;
+import org.apache.jackrabbit.core.security.authorization.PrivilegeManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,7 +53,7 @@ public abstract class AbstractAccessControlManager implements JackrabbitAccessCo
         checkValidNodePath(absPath);
 
         // return all known privileges everywhere.
-        return getPrivilegeRegistry().getRegisteredPrivileges();
+        return getPrivilegeManager().getRegisteredPrivileges();
     }
 
     /**
@@ -63,7 +63,7 @@ public abstract class AbstractAccessControlManager implements JackrabbitAccessCo
             throws AccessControlException, RepositoryException {
         checkInitialized();
 
-        return getPrivilegeRegistry().getPrivilege(privilegeName);
+        return getPrivilegeManager().getPrivilege(privilegeName);
     }
 
     /**
@@ -164,10 +164,10 @@ public abstract class AbstractAccessControlManager implements JackrabbitAccessCo
     protected abstract void checkPermission(String absPath, int permission) throws AccessDeniedException, PathNotFoundException, RepositoryException;
 
     /**
-     * @return the privilege registry
+     * @return the privilege manager
      * @throws RepositoryException If another error occurs.
      */
-    protected abstract PrivilegeRegistry getPrivilegeRegistry() throws RepositoryException;
+    protected abstract PrivilegeManager getPrivilegeManager() throws RepositoryException;
 
     /**
      * Tests if the given <code>absPath</code> is absolute and points to an existing node.

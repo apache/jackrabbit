@@ -22,7 +22,6 @@ import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.security.authorization.AccessControlConstants;
 import org.apache.jackrabbit.core.security.authorization.AccessControlModifications;
 import org.apache.jackrabbit.core.security.authorization.AccessControlObserver;
-import org.apache.jackrabbit.core.security.authorization.PrivilegeRegistry;
 import org.apache.jackrabbit.util.Text;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -62,8 +61,6 @@ public class EntryCollector extends AccessControlObserver implements AccessContr
      * The root id.
      */
     protected final NodeId rootID;
-
-    private final PrivilegeRegistry privilegeRegistry;
     
     /**
      * Standard JCR name form of the {@link #N_POLICY} constant.
@@ -80,7 +77,6 @@ public class EntryCollector extends AccessControlObserver implements AccessContr
         this.systemSession = systemSession;
         this.rootID = rootID;
 
-        privilegeRegistry = new PrivilegeRegistry(systemSession);
         repPolicyName = systemSession.getJCRName(N_POLICY);
 
         ObservationManager observationMgr = systemSession.getWorkspace().getObservationManager();
@@ -159,7 +155,7 @@ public class EntryCollector extends AccessControlObserver implements AccessContr
         if (ACLProvider.isAccessControlled(node)) {
             // collect the aces of that node.
             NodeImpl aclNode = node.getNode(N_POLICY);
-            entries = new ACLTemplate(aclNode, privilegeRegistry).getEntries();
+            entries = new ACLTemplate(aclNode).getEntries();
         } else {
             // not access controlled
             entries = Collections.emptyList();

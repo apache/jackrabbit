@@ -21,6 +21,8 @@ import org.apache.jackrabbit.api.security.JackrabbitAccessControlEntry;
 import org.apache.jackrabbit.api.security.JackrabbitAccessControlList;
 import org.apache.jackrabbit.api.security.principal.PrincipalIterator;
 import org.apache.jackrabbit.api.security.principal.PrincipalManager;
+import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.WorkspaceImpl;
 import org.apache.jackrabbit.test.NotExecutableException;
 import org.apache.jackrabbit.test.api.security.AbstractAccessControlTest;
 
@@ -43,6 +45,7 @@ import java.util.List;
 public class JackrabbitAccessControlListTest extends AbstractAccessControlTest {
 
     private JackrabbitAccessControlList templ;
+    private PrivilegeManager privilegeMgr;
 
     @Override
     protected void setUp() throws Exception {
@@ -62,6 +65,8 @@ public class JackrabbitAccessControlListTest extends AbstractAccessControlTest {
             superuser.logout();
             throw new NotExecutableException("No JackrabbitAccessControlList to test.");
         }
+
+        privilegeMgr = ((WorkspaceImpl) superuser.getWorkspace()).getPrivilegeManager();
     }
 
     @Override
@@ -117,7 +122,7 @@ public class JackrabbitAccessControlListTest extends AbstractAccessControlTest {
         Principal princ = getValidPrincipal();
         Privilege[] priv = privilegesFromName(Privilege.JCR_ALL);
 
-        List entriesBefore = Arrays.asList(templ.getAccessControlEntries());
+        List<AccessControlEntry> entriesBefore = Arrays.asList(templ.getAccessControlEntries());
         if (templ.addEntry(princ, priv, true, Collections.<String, Value>emptyMap())) {
             AccessControlEntry[] entries = templ.getAccessControlEntries();
             if (entries.length == 0) {
@@ -125,12 +130,12 @@ public class JackrabbitAccessControlListTest extends AbstractAccessControlTest {
             }
             int allows = 0;
             for (AccessControlEntry en : entries) {
-                int bits = PrivilegeRegistry.getBits(en.getPrivileges());
+                int bits = privilegeMgr.getBits(en.getPrivileges());
                 if (en instanceof JackrabbitAccessControlEntry && ((JackrabbitAccessControlEntry) en).isAllow()) {
                     allows |= bits;
                 }
             }
-            assertEquals(PrivilegeRegistry.getBits(priv), allows);
+            assertEquals(privilegeMgr.getBits(priv), allows);
         } else {
             AccessControlEntry[] entries = templ.getAccessControlEntries();
             assertEquals("Grant ALL not successful -> entries must not have changed.", entriesBefore, Arrays.asList(entries));
@@ -147,12 +152,12 @@ public class JackrabbitAccessControlListTest extends AbstractAccessControlTest {
         assertTrue("GrantPrivileges was successful -> at least 1 entry for principal.", entries.length > 0);
 
         for (AccessControlEntry en : entries) {
-            int bits = PrivilegeRegistry.getBits(en.getPrivileges());
+            int bits = privilegeMgr.getBits(en.getPrivileges());
             if (en instanceof JackrabbitAccessControlEntry && ((JackrabbitAccessControlEntry) en).isAllow()) {
                 allows |= bits;
             }
         }
-        assertTrue("After successfully granting WRITE, the entries must reflect this", allows >= PrivilegeRegistry.getBits(privs));
+        assertTrue("After successfully granting WRITE, the entries must reflect this", allows >= privilegeMgr.getBits(privs));
     }
 
     public void testAllowWriteDenyRemove() throws NotExecutableException, RepositoryException {
@@ -169,7 +174,7 @@ public class JackrabbitAccessControlListTest extends AbstractAccessControlTest {
         for (AccessControlEntry en : entries) {
             if (princ.equals(en.getPrincipal()) && en instanceof JackrabbitAccessControlEntry) {
                 JackrabbitAccessControlEntry ace = (JackrabbitAccessControlEntry) en;
-                int entryBits = PrivilegeRegistry.getBits(ace.getPrivileges());
+                int entryBits = privilegeMgr.getBits(ace.getPrivileges());
                 if (ace.isAllow()) {
                     allows |= Permission.diff(entryBits, denies);
                 } else {
@@ -178,9 +183,9 @@ public class JackrabbitAccessControlListTest extends AbstractAccessControlTest {
             }
         }
 
-        int expectedAllows = PrivilegeRegistry.getBits(grPriv) ^ PrivilegeRegistry.getBits(dePriv);
+        int expectedAllows = privilegeMgr.getBits(grPriv) ^ privilegeMgr.getBits(dePriv);
         assertEquals(expectedAllows, allows);
-        int expectedDenies = PrivilegeRegistry.getBits(dePriv);
+        int expectedDenies = privilegeMgr.getBits(dePriv);
         assertEquals(expectedDenies, denies);
     }
 

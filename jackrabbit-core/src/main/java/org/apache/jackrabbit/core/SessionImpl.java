@@ -349,6 +349,7 @@ public class SessionImpl extends AbstractSession
                 this,
                 subject,
                 context.getHierarchyManager(),
+                context.getPrivilegeManager(),
                 this,
                 wspName);
         return repositoryContext.getSecurityManager().getAccessManager(this, ctx);

@@ -19,9 +19,11 @@ package org.apache.jackrabbit.core.security.authorization.principalbased;
 import org.apache.jackrabbit.api.security.JackrabbitAccessControlList;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.WorkspaceImpl;
 import org.apache.jackrabbit.core.security.authorization.AccessControlEntryImpl;
 import org.apache.jackrabbit.core.security.authorization.AbstractACLTemplate;
 import org.apache.jackrabbit.core.security.authorization.GlobPattern;
+import org.apache.jackrabbit.core.security.authorization.PrivilegeManager;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.spi.commons.conversion.NameResolver;
@@ -34,6 +36,7 @@ import javax.jcr.NodeIterator;
 import javax.jcr.Property;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
+import javax.jcr.Session;
 import javax.jcr.Value;
 import javax.jcr.ValueFactory;
 import javax.jcr.security.AccessControlEntry;
@@ -73,6 +76,7 @@ class ACLTemplate extends AbstractACLTemplate {
     private final String jcrGlobName;
 
     private final NameResolver resolver;
+    private final PrivilegeManager privilegeMgr;
 
     ACLTemplate(Principal principal, String path, NamePathResolver resolver, ValueFactory vf)
             throws RepositoryException {
@@ -95,6 +99,8 @@ class ACLTemplate extends AbstractACLTemplate {
         jcrGlobName = resolver.getJCRName(P_GLOB);
 
         this.resolver = resolver;
+        Session session = (acNode != null) ? acNode.getSession() : (Session) resolver;
+        this.privilegeMgr = ((WorkspaceImpl) session.getWorkspace()).getPrivilegeManager();
 
         if (acNode != null && acNode.hasNode(N_POLICY)) {
             // build the list of policy entries;
@@ -326,10 +332,6 @@ class ACLTemplate extends AbstractACLTemplate {
             return pattern.matches(item);
         }
 
-        boolean matchesNodePath(String jcrPath) {
-            return nodePath.equals(jcrPath);
-        }
-
         @Override
         protected NameResolver getResolver() {
             return resolver;
@@ -338,6 +340,11 @@ class ACLTemplate extends AbstractACLTemplate {
         @Override
         protected ValueFactory getValueFactory() {
             return valueFactory;
+        }
+
+        @Override
+        protected PrivilegeManager getPrivilegeManager() {
+            return privilegeMgr;
         }
     }
 }

@@ -35,6 +35,7 @@ public abstract class AbstractNodeTypeManagementTest extends AbstractEvaluationT
     private Node childNode;
     private String mixinName;
 
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
 

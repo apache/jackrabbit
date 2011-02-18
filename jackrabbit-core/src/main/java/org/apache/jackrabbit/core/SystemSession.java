@@ -36,7 +36,7 @@ import org.apache.jackrabbit.core.security.AbstractAccessControlManager;
 import org.apache.jackrabbit.core.security.AccessManager;
 import org.apache.jackrabbit.core.security.SystemPrincipal;
 import org.apache.jackrabbit.core.security.authorization.AccessControlProvider;
-import org.apache.jackrabbit.core.security.authorization.PrivilegeRegistry;
+import org.apache.jackrabbit.core.security.authorization.PrivilegeManager;
 import org.apache.jackrabbit.core.security.authorization.WorkspaceAccessManager;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
@@ -128,10 +128,7 @@ class SystemSession extends SessionImpl {
      */
     private class SystemAccessManager extends AbstractAccessControlManager implements AccessManager {
 
-        private final PrivilegeRegistry privilegeRegistry;
-
         SystemAccessManager() {
-            privilegeRegistry = new PrivilegeRegistry(SystemSession.this);
         }
 
         //----------------------------------------------------< AccessManager >
@@ -244,11 +241,11 @@ class SystemSession extends SessionImpl {
         }
 
         /**
-         * @see AbstractAccessControlManager#getPrivilegeRegistry()
+         * @see AbstractAccessControlManager#getPrivilegeManager()
          */
-        protected PrivilegeRegistry getPrivilegeRegistry()
-                throws RepositoryException {
-            return privilegeRegistry;
+        @Override
+        protected PrivilegeManager getPrivilegeManager() throws RepositoryException {
+            return context.getPrivilegeManager();
         }
 
         /**
@@ -283,7 +280,7 @@ class SystemSession extends SessionImpl {
         public Privilege[] getPrivileges(String absPath)
                 throws PathNotFoundException, RepositoryException {
             checkValidNodePath(absPath);
-            return new Privilege[] {getPrivilegeRegistry().getPrivilege(Privilege.JCR_ALL)};
+            return new Privilege[] {getPrivilegeManager().getPrivilege(Privilege.JCR_ALL)};
         }
 
         /**
