@@ -31,13 +31,16 @@ import java.util.Map;
  * <code>NodeTypeTest</code>...
  */
 public class NodeTypeTest extends AbstractNodeTypeManagementTest {
+    @Override
     protected boolean isExecutable() {
         return EvaluationUtil.isExecutable(acMgr);
     }
+    @Override
     protected JackrabbitAccessControlList getPolicy(AccessControlManager acMgr, String path, Principal princ) throws
             RepositoryException, NotExecutableException {
         return EvaluationUtil.getPolicy(acMgr, path, princ);
     }
+    @Override
     protected Map<String, Value> getRestrictions(Session s, String path) throws RepositoryException, NotExecutableException {
         return EvaluationUtil.getRestrictions(s, path);
     }
