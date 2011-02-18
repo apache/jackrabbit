@@ -25,29 +25,31 @@ public final class Permission {
 
     public static final int READ = 1;   
 
-    public static final int SET_PROPERTY = 2;
+    public static final int SET_PROPERTY = READ << 1;
 
-    public static final int ADD_NODE = 4;
+    public static final int ADD_NODE = SET_PROPERTY << 1;
 
-    public static final int REMOVE_NODE = 8;
+    public static final int REMOVE_NODE = ADD_NODE << 1;
 
-    public static final int REMOVE_PROPERTY = 16;
+    public static final int REMOVE_PROPERTY = REMOVE_NODE << 1;
 
-    public static final int READ_AC = 32;
+    public static final int READ_AC = REMOVE_PROPERTY << 1;
     
-    public static final int MODIFY_AC = 64;
+    public static final int MODIFY_AC = READ_AC << 1;
 
-    public static final int NODE_TYPE_MNGMT = 128;
+    public static final int NODE_TYPE_MNGMT = MODIFY_AC << 1;
 
-    public static final int VERSION_MNGMT = 256;
+    public static final int VERSION_MNGMT = NODE_TYPE_MNGMT << 1;
 
-    public static final int LOCK_MNGMT = 512;
+    public static final int LOCK_MNGMT = VERSION_MNGMT << 1;
 
-    public static final int LIFECYCLE_MNGMT = 1024;
+    public static final int LIFECYCLE_MNGMT = LOCK_MNGMT << 1;
 
-    public static final int RETENTION_MNGMT = 2048;
+    public static final int RETENTION_MNGMT = LIFECYCLE_MNGMT << 1;
 
-    public static final int ALL = (READ | SET_PROPERTY | ADD_NODE | REMOVE_NODE | REMOVE_PROPERTY | READ_AC | MODIFY_AC | NODE_TYPE_MNGMT | VERSION_MNGMT | LOCK_MNGMT | LIFECYCLE_MNGMT | RETENTION_MNGMT);
+    public static final int MODIFY_CHILD_NODE_COLLECTION = RETENTION_MNGMT << 1;
+
+    public static final int ALL = (READ | SET_PROPERTY | ADD_NODE | REMOVE_NODE | REMOVE_PROPERTY | READ_AC | MODIFY_AC | NODE_TYPE_MNGMT | VERSION_MNGMT | LOCK_MNGMT | LIFECYCLE_MNGMT | RETENTION_MNGMT | MODIFY_CHILD_NODE_COLLECTION);
 
     /**
      * Returns those bits from <code>permissions</code> that are not present in
