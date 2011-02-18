@@ -126,7 +126,7 @@ public class Text {
 
     /**
      * returns an array of strings decomposed of the original string, split at
-     * every occurance of 'ch'.
+     * every occurrence of 'ch'.
      *
      * @param str          the string to decompose
      * @param ch           the character to use a split pattern
