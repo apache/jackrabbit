@@ -60,6 +60,8 @@ import org.apache.lucene.search.Similarity;
 import org.apache.lucene.search.Sort;
 import org.apache.lucene.search.SortField;
 import org.apache.lucene.search.TermQuery;
+import org.apache.tika.config.TikaConfig;
+import org.apache.tika.parser.AutoDetectParser;
 import org.apache.tika.parser.Parser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -74,6 +76,8 @@ import javax.xml.parsers.ParserConfigurationException;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -207,9 +211,15 @@ public class SearchIndex extends AbstractQueryHandler {
     private final JackrabbitAnalyzer analyzer = new JackrabbitAnalyzer();
 
     /**
-     * The parser for extracting text content from binary properties.
+     * Path of the Tika configuration file used for text extraction.
      */
-    private final JackrabbitParser parser = new JackrabbitParser();
+    private String tikaConfigPath = null;
+
+    /**
+     * The Tika parser for extracting text content from binary properties.
+     * Initialized by the {@link #getParser()} method during first access.
+     */
+    private Parser parser = null;
 
     /**
      * The namespace mappings used internally.
@@ -864,12 +874,66 @@ public class SearchIndex extends AbstractQueryHandler {
     }
 
     /**
+     * Returns the path of the Tika configuration used for text extraction.
+     *
+     * @return path of the Tika configuration file
+     */
+    public String getTikaConfigPath() {
+        return tikaConfigPath;
+    }
+
+    /**
+     * Sets the path of the Tika configuration used for text extraction.
+     * The path can be either a file system or a class resource path.
+     * The default setting is the tika-config.xml class resource relative
+     * to org.apache.core.query.lucene.
+     *
+     * @param tikaConfigPath path of the Tika configuration file
+     */
+    public void setTikaConfigPath(String tikaConfigPath) {
+        this.tikaConfigPath = tikaConfigPath;
+    }
+
+    /**
      * Returns the parser used for extracting text content
      * from binary properties for full text indexing.
      *
      * @return the configured parser
      */
-    public Parser getParser() {
+    public synchronized Parser getParser() {
+        if (parser == null) {
+            URL url = null;
+            if (tikaConfigPath != null) {
+                File file = new File(tikaConfigPath);
+                if (file.exists()) {
+                    try {
+                        url = file.toURI().toURL();
+                    } catch (MalformedURLException e) {
+                        log.warn("Invalid Tika configuration path: " + file, e);
+                    }
+                } else {
+                    ClassLoader loader = SearchIndex.class.getClassLoader();
+                    url = loader.getResource(tikaConfigPath);
+                }
+            }
+            if (url == null) {
+                url = SearchIndex.class.getResource("tika-config.xml");
+            }
+
+            TikaConfig config = null;
+            if (url != null) {
+                try {
+                    config = new TikaConfig(url);
+                } catch (Exception e) {
+                    log.warn("Tika configuration not available: " + url, e);
+                }
+            }
+            if (config == null) {
+                config = TikaConfig.getDefaultConfig();
+            }
+
+            parser = new AutoDetectParser(config);
+        }
         return parser;
     }
 
@@ -1078,7 +1142,7 @@ public class SearchIndex extends AbstractQueryHandler {
             throws RepositoryException {
         NodeIndexer indexer = new NodeIndexer(
                 node, getContext().getItemStateManager(), nsMappings,
-                getContext().getExecutor(), parser);
+                getContext().getExecutor(), getParser());
         indexer.setSupportHighlighting(supportHighlighting);
         indexer.setIndexingConfiguration(indexingConfig);
         indexer.setIndexFormatVersion(indexFormatVersion);
@@ -1906,7 +1970,9 @@ public class SearchIndex extends AbstractQueryHandler {
      * @deprecated 
      */
     public void setTextFilterClasses(String filterClasses) {
-        parser.setTextFilterClasses(filterClasses);
+        log.warn("The textFilterClasses configuration parameter has"
+                + " been deprecated, and the configured value will"
+                + " be ignored: {}", filterClasses);
     }
 
     /**
