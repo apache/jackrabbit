@@ -18,6 +18,7 @@ package org.apache.jackrabbit.core.integration;
 
 import java.security.AccessControlException;
 
+import javax.jcr.Credentials;
 import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
@@ -26,6 +27,7 @@ import javax.security.auth.Subject;
 
 import org.apache.jackrabbit.core.RepositoryImpl;
 import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.security.principal.PrincipalImpl;
 import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.apache.jackrabbit.test.NotExecutableException;
 
@@ -131,6 +133,33 @@ public class SessionImplTest extends AbstractJCRTest {
             s3.logout();
             assertFalse(subject.getPrincipals().isEmpty());
             assertFalse(subject.getPublicCredentials().isEmpty());
+        }
+    }
+
+    /**
+     * JCR-2895 : SessionImpl#getSubject() should return an unmodifiable subject
+     *
+     * @see <a href="https://issues.apache.org/jira/browse/JCR-2895">JCR-2895</a>
+     */
+    public void testGetSubject() {
+        Subject subject = ((SessionImpl) superuser).getSubject();
+
+        assertFalse(subject.getPublicCredentials().isEmpty());
+        assertFalse(subject.getPublicCredentials(Credentials.class).isEmpty());
+        assertFalse(subject.getPrincipals().isEmpty());
+
+        assertTrue(subject.isReadOnly());
+        try {
+            subject.getPublicCredentials().add(new SimpleCredentials("test", new char[0]));
+            fail("Subject expected to be readonly");
+        } catch (IllegalStateException e) {
+            // success
+        }
+        try {
+            subject.getPrincipals().add(new PrincipalImpl("test"));
+            fail("Subject expected to be readonly");
+        } catch (IllegalStateException e) {
+            // success
         }
     }
 }
