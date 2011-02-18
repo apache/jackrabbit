@@ -65,6 +65,8 @@ import org.apache.commons.collections.IteratorUtils;
 import org.apache.commons.collections.map.ReferenceMap;
 import org.apache.jackrabbit.api.JackrabbitSession;
 import org.apache.jackrabbit.api.security.principal.PrincipalManager;
+import org.apache.jackrabbit.api.security.user.Authorizable;
+import org.apache.jackrabbit.api.security.user.User;
 import org.apache.jackrabbit.api.security.user.UserManager;
 import org.apache.jackrabbit.commons.AbstractSession;
 import org.apache.jackrabbit.core.config.WorkspaceConfig;
@@ -77,8 +79,10 @@ import org.apache.jackrabbit.core.retention.RetentionRegistry;
 import org.apache.jackrabbit.core.security.AMContext;
 import org.apache.jackrabbit.core.security.AccessManager;
 import org.apache.jackrabbit.core.security.SecurityConstants;
+import org.apache.jackrabbit.core.security.SystemPrincipal;
 import org.apache.jackrabbit.core.security.authentication.AuthContext;
 import org.apache.jackrabbit.core.security.authorization.Permission;
+import org.apache.jackrabbit.core.security.principal.AdminPrincipal;
 import org.apache.jackrabbit.core.session.SessionContext;
 import org.apache.jackrabbit.core.session.SessionItemOperation;
 import org.apache.jackrabbit.core.session.SessionOperation;
@@ -375,6 +379,42 @@ public class SessionImpl extends AbstractSession
     public Subject getSubject() {
         Subject readOnly = new Subject(true, subject.getPrincipals(), subject.getPublicCredentials(), subject.getPrivateCredentials());
         return readOnly;
+    }
+
+    /**
+     * Returns <code>true</code> if the subject contains a
+     * <code>SystemPrincipal</code>; <code>false</code> otherwise.
+     *
+     * @return <code>true</code> if this is an system session.
+     */
+    public boolean isSystem() {
+        // NOTE: for backwards compatibility evaluate subject for containing SystemPrincipal
+        // TODO: Q: shouldn't 'isSystem' rather be covered by instances of SystemSession only?
+        return (subject != null && !subject.getPrincipals(SystemPrincipal.class).isEmpty());
+    }
+    
+    /**
+     * Returns <code>true</code> if this session has been created for the
+     * administrator. <code>False</code> otherwise.
+     *
+     * @return <code>true</code> if this is an admin session.
+     */
+    public boolean isAdmin() {
+        // NOTE: don't replace by getUserManager()
+        if (userManager != null) {
+            try {
+                Authorizable a = userManager.getAuthorizable(userId);
+                if (a != null && !a.isGroup()) {
+                    return ((User) a).isAdmin();
+                }
+            } catch (RepositoryException e) {
+                // no user management -> use fallback
+            }
+
+        }
+        // fallback: user manager not yet initialized or user mgt not supported
+        // -> check for AdminPrincipal being present in the subject.
+        return (subject != null && !subject.getPrincipals(AdminPrincipal.class).isEmpty());
     }
 
     /**

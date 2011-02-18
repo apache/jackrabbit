@@ -21,7 +21,6 @@ import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.cluster.ClusterNode;
 import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeManagerImpl;
-import org.apache.jackrabbit.core.security.principal.AdminPrincipal;
 import org.apache.jackrabbit.spi.commons.conversion.NameException;
 import org.apache.jackrabbit.spi.Path;
 import org.slf4j.Logger;
@@ -33,7 +32,6 @@ import javax.jcr.observation.EventJournal;
 import javax.jcr.observation.EventListener;
 import javax.jcr.observation.EventListenerIterator;
 import javax.jcr.observation.ObservationManager;
-import javax.security.auth.Subject;
 
 /**
  * Each <code>Session</code> instance has its own <code>ObservationManager</code>
@@ -79,10 +77,9 @@ public class ObservationManagerImpl implements ObservationManager, EventStateCol
      * @param dispatcher observation dispatcher
      * @param session the <code>Session</code> this ObservationManager
      *                belongs to.
-     * @param itemMgr {@link org.apache.jackrabbit.core.ItemManager} of the passed
-     *                <code>Session</code>.
+     * @param clusterNode
      * @throws NullPointerException if <code>dispatcher</code>, <code>session</code>
-     *                              or <code>itemMgr</code> is <code>null</code>.
+     *                              or <code>clusterNode</code> is <code>null</code>.
      */
     public ObservationManagerImpl(
             ObservationDispatcher dispatcher, SessionImpl session,
@@ -248,10 +245,8 @@ public class ObservationManagerImpl implements ObservationManager, EventStateCol
                     "Event journal is only available in cluster deployments");
         }
 
-        Subject subject = session.getSubject();
-        if (subject.getPrincipals(AdminPrincipal.class).isEmpty()) {
-            throw new RepositoryException("Only administrator session may " +
-                    "access EventJournal");
+        if (!session.isAdmin()) {
+            throw new RepositoryException("Only administrator session may access EventJournal");
         }
 
         EventFilter filter = createEventFilter(

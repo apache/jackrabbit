@@ -29,7 +29,6 @@ import org.apache.jackrabbit.core.ProtectedItemModifier;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.SessionListener;
 import org.apache.jackrabbit.core.id.NodeId;
-import org.apache.jackrabbit.core.security.SystemPrincipal;
 import org.apache.jackrabbit.core.security.principal.EveryonePrincipal;
 import org.apache.jackrabbit.core.security.principal.PrincipalImpl;
 import org.apache.jackrabbit.core.session.SessionOperation;
@@ -250,11 +249,6 @@ public class UserManagerImpl extends ProtectedItemModifier
     private final boolean compatibleJR16;
 
     /**
-     * boolean flag indicating whether the editing session is a system session.
-     */
-    private final boolean isSystemUserManager;
-
-    /**
      * Maximum number of properties on the group membership node structure under
      * {@link UserConstants#N_MEMBERS} until additional intermediate nodes are inserted.
      * If 0 (default), {@link UserConstants#P_MEMBERS} is used to record group
@@ -341,17 +335,6 @@ public class UserManagerImpl extends ProtectedItemModifier
         }
         authResolver = nr;
         authResolver.setSearchRoots(usersPath, groupsPath);
-
-        /**
-         * evaluate if the editing session is a system session. since the
-         * SystemSession class is package protected the session object cannot
-         * be checked for the property instance.
-         *
-         * workaround: compare the class name and check if the subject contains
-         * the system principal.
-         */
-        isSystemUserManager = "org.apache.jackrabbit.core.SystemSession".equals(session.getClass().getName()) &&
-                !session.getSubject().getPrincipals(SystemPrincipal.class).isEmpty();
     }
 
     /**
@@ -412,7 +395,7 @@ public class UserManagerImpl extends ProtectedItemModifier
          * node an explicit test for the current editing session being
          * a system session is performed.
          */
-        if (a == null && adminId.equals(id) && isSystemUserManager) {
+        if (a == null && adminId.equals(id) && session.isSystem()) {
             log.info("Admin user does not exist.");
             a = createAdmin();
         }

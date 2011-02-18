@@ -19,6 +19,7 @@ package org.apache.jackrabbit.core.security;
 import org.apache.jackrabbit.api.security.JackrabbitAccessControlPolicy;
 import org.apache.jackrabbit.commons.iterator.AccessControlPolicyIteratorAdapter;
 import org.apache.jackrabbit.core.HierarchyManager;
+import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.id.ItemId;
 import org.apache.jackrabbit.core.security.authorization.AccessControlEditor;
 import org.apache.jackrabbit.core.security.authorization.AccessControlProvider;
@@ -26,7 +27,6 @@ import org.apache.jackrabbit.core.security.authorization.CompiledPermissions;
 import org.apache.jackrabbit.core.security.authorization.Permission;
 import org.apache.jackrabbit.core.security.authorization.PrivilegeRegistry;
 import org.apache.jackrabbit.core.security.authorization.WorkspaceAccessManager;
-import org.apache.jackrabbit.core.security.principal.AdminPrincipal;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
@@ -38,6 +38,7 @@ import javax.jcr.AccessDeniedException;
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
+import javax.jcr.Session;
 import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.security.AccessControlException;
 import javax.jcr.security.AccessControlPolicy;
@@ -58,8 +59,8 @@ import java.util.Set;
  * Please note the following exceptional situations:<br>
  * This manager allows all privileges for a particular item if
  * <ul>
- * <li>the Session's Subject contains a {@link SystemPrincipal} <i>or</i>
- * an {@link AdminPrincipal}</li>
+ * <li>the Session's represents a system session or a session associated with
+ * the repository's administrator</li>
  * </ul>
  * <p/>
  * It allows to access all available workspaces if
@@ -137,7 +138,7 @@ public class DefaultAccessManager extends AbstractAccessControlManager implement
             principals = subject.getPrincipals();
         }
 
-        wspAccess = new WorkspaceAccess(wspAccessManager, isSystemOrAdmin(subject));
+        wspAccess = new WorkspaceAccess(wspAccessManager, isSystemOrAdmin(amContext.getSession()));
         privilegeRegistry = new PrivilegeRegistry(resolver);
 
         if (acProvider != null) {
@@ -491,15 +492,15 @@ public class DefaultAccessManager extends AbstractAccessControlManager implement
     }
 
     /**
-     * @param subject The subject associated with the session.
+     * @param s the session
      * @return if created with system-privileges
      */
-    private static boolean isSystemOrAdmin(Subject subject) {
-        if (subject == null) {
+    private static boolean isSystemOrAdmin(Session s) {
+        if (s == null || !(s instanceof SessionImpl)) {
             return false;
         } else {
-            return !(subject.getPrincipals(SystemPrincipal.class).isEmpty() &&
-                     subject.getPrincipals(AdminPrincipal.class).isEmpty());
+            SessionImpl sImpl = (SessionImpl) s;
+            return sImpl.isSystem() || sImpl.isAdmin();
         }
     }
 
@@ -513,16 +514,16 @@ public class DefaultAccessManager extends AbstractAccessControlManager implement
 
         private final WorkspaceAccessManager wspAccessManager;
 
-        private final boolean isAdmin;
+        private final boolean alwaysAllowed;
         // TODO: entries must be cleared if access permission to wsp changes.
         private final List <String>allowed;
         private final List<String> denied;
 
         private WorkspaceAccess(WorkspaceAccessManager wspAccessManager,
-                                boolean isAdmin) {
+                                boolean alwaysAllowed) {
             this.wspAccessManager = wspAccessManager;
-            this.isAdmin = isAdmin;
-            if (!isAdmin) {
+            this.alwaysAllowed = alwaysAllowed;
+            if (!alwaysAllowed) {
                 allowed = new ArrayList<String>(5);
                 denied = new ArrayList<String>(5);
             } else {
@@ -531,7 +532,7 @@ public class DefaultAccessManager extends AbstractAccessControlManager implement
         }
 
         private boolean canAccess(String workspaceName) throws RepositoryException {
-            if (isAdmin || wspAccessManager == null || allowed.contains(workspaceName)) {
+            if (alwaysAllowed || wspAccessManager == null || allowed.contains(workspaceName)) {
                 return true;
             } else if (denied.contains(workspaceName)) {
                 return false;

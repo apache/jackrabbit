@@ -24,7 +24,6 @@ import org.apache.jackrabbit.api.security.user.Group;
 import org.apache.jackrabbit.api.security.user.UserManager;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.observation.SynchronousEventListener;
-import org.apache.jackrabbit.core.security.SystemPrincipal;
 import org.apache.jackrabbit.core.security.user.UserManagerImpl;
 import org.apache.jackrabbit.spi.commons.conversion.NameResolver;
 import org.apache.jackrabbit.util.Text;
@@ -36,7 +35,6 @@ import javax.jcr.Session;
 import javax.jcr.observation.Event;
 import javax.jcr.observation.EventIterator;
 import javax.jcr.observation.EventListener;
-import javax.security.auth.Subject;
 import java.security.Principal;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
@@ -224,9 +222,7 @@ public class DefaultPrincipalProvider extends AbstractPrincipalProvider implemen
         // given principal
         if (session instanceof SessionImpl) {
             SessionImpl sImpl = (SessionImpl) session;
-            Subject subject = sImpl.getSubject();
-            if (!subject.getPrincipals(SystemPrincipal.class).isEmpty()
-                    || !subject.getPrincipals(AdminPrincipal.class).isEmpty()) {
+            if (sImpl.isAdmin() || sImpl.isSystem()) {
                 return true;
             }
             try {
