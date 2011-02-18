@@ -431,7 +431,7 @@ public abstract class AbstractLoginModule implements LoginModule {
      * @param principal Principal used to retrieve the <code>Authentication</code>
      * object.
      * @param credentials Credentials used for the authentication.
-     * @return <code>true</code> if Credentails authenticate,
+     * @return <code>true</code> if Credentials authenticate,
      *         <code>false</code> if no <code>Authentication</code> can handle
      *         the given <code>Credentials</code>
      * @throws javax.security.auth.login.FailedLoginException
