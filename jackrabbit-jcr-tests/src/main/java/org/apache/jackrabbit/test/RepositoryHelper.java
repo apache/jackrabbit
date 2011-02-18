@@ -190,7 +190,7 @@ public class RepositoryHelper {
     }
     
     /**
-     * Returns a {@link Principal} identifiying a known user.
+     * Returns a {@link Principal} identifying a known user.
      * @param session
      */
     public Principal getKnownPrincipal(Session session) throws RepositoryException {
