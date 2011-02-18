@@ -46,6 +46,7 @@ public class WriteTest extends org.apache.jackrabbit.core.security.authorization
 
     private static Logger log = LoggerFactory.getLogger(WriteTest.class);
 
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
 
@@ -58,6 +59,7 @@ public class WriteTest extends org.apache.jackrabbit.core.security.authorization
         }
     }
 
+    @Override
     protected boolean isExecutable() {
         try {
             AccessControlPolicy[] rootPolicies = acMgr.getPolicies("/");

@@ -51,7 +51,7 @@ public class ACLTemplateTest extends AbstractACLTemplateTest {
     }
 
     public void testGetRestrictionNames() throws RepositoryException {
-        List names = Arrays.asList(createEmptyTemplate(getTestPath()).getRestrictionNames());
+        List<String> names = Arrays.asList(createEmptyTemplate(getTestPath()).getRestrictionNames());
 
         assertEquals(2, names.size());
         NameResolver resolver = (NameResolver) superuser;
