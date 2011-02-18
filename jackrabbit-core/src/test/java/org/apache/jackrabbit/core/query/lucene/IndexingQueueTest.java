@@ -16,15 +16,14 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.Calendar;
 
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
+import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.query.Query;
 
@@ -40,26 +39,20 @@ import org.apache.jackrabbit.core.query.AbstractIndexingTest;
  */
 public class IndexingQueueTest extends AbstractIndexingTest {
 
-    private static final File TEMP_DIR = new File(System.getProperty("java.io.tmpdir")); 
-
-    private static final String CONTENT_TYPE = "text/plain";
-
-    private static final String ENCODING = "UTF-8";
+    private static final File TEMP_DIR =
+        new File(System.getProperty("java.io.tmpdir")); 
 
     public void testQueue() throws Exception {
         SearchIndex index = getSearchIndex();
         IndexingQueue queue = index.getIndex().getIndexingQueue();
 
-        JackrabbitParser.block();
+        BlockingParser.block();
         assertEquals(0, queue.getNumPendingDocuments());
 
-        String text = "the quick brown fox jumps over the lazy dog.";
-        InputStream in = new ByteArrayInputStream(text.getBytes(ENCODING));
         Node resource = testRootNode.addNode(nodeName1, "nt:resource");
-        resource.setProperty("jcr:data", in);
+        resource.setProperty("jcr:data", "", PropertyType.BINARY);
         resource.setProperty("jcr:lastModified", Calendar.getInstance());
-        resource.setProperty("jcr:mimeType", CONTENT_TYPE);
-        resource.setProperty("jcr:encoding", ENCODING);
+        resource.setProperty("jcr:mimeType", BlockingParser.TYPE.toString());
         session.save();
 
         assertEquals(1, queue.getNumPendingDocuments());
@@ -68,7 +61,7 @@ public class IndexingQueueTest extends AbstractIndexingTest {
         NodeIterator nodes = q.execute().getNodes();
         assertFalse(nodes.hasNext());
 
-        JackrabbitParser.unblock();
+        BlockingParser.unblock();
         index.flush();
         assertEquals(0, queue.getNumPendingDocuments());
 
@@ -78,13 +71,12 @@ public class IndexingQueueTest extends AbstractIndexingTest {
     }
 
     public void testInitialIndex() throws Exception {
-        JackrabbitParser.block();
+        BlockingParser.block();
         File indexDir = new File(getSearchIndex().getPath());
 
         // fill workspace
         Node testFolder = testRootNode.addNode("folder", "nt:folder");
-        String text = "the quick brown fox jumps over the lazy dog.";
-        int num = createFiles(testFolder, text.getBytes(ENCODING), 10, 2, 0);
+        int num = createFiles(testFolder, 10, 2, 0);
         session.save();
 
         // shutdown workspace
@@ -104,7 +96,7 @@ public class IndexingQueueTest extends AbstractIndexingTest {
 
         int initialNumExtractorFiles = getNumExtractorFiles();
 
-        JackrabbitParser.unblock();
+        BlockingParser.unblock();
         Thread t = new Thread(new Runnable() {
             public void run() {
                 try {
@@ -139,7 +131,7 @@ public class IndexingQueueTest extends AbstractIndexingTest {
      * Test case for JCR-2082
      */
     public void testReaderUpToDate() throws Exception {
-        JackrabbitParser.block();
+        BlockingParser.block();
         SearchIndex index = getSearchIndex();
         File indexDir = new File(index.getPath());
 
@@ -158,7 +150,7 @@ public class IndexingQueueTest extends AbstractIndexingTest {
             fail("Unable to delete index directory");
         }
 
-        JackrabbitParser.unblock();
+        BlockingParser.unblock();
         // start workspace again by getting a session
         session = getHelper().getSuperuserSession(WORKSPACE_NAME);
 
@@ -168,27 +160,24 @@ public class IndexingQueueTest extends AbstractIndexingTest {
         assertEquals(1, getSize(q.execute().getNodes()));
     }
 
-    private int createFiles(Node folder, byte[] data,
-                            int filesPerLevel, int levels, int count)
+    private int createFiles(
+            Node folder, int filesPerLevel, int levels, int count)
             throws RepositoryException {
         levels--;
         for (int i = 0; i < filesPerLevel; i++) {
             // create files
             Node file = folder.addNode("file" + i, "nt:file");
-            InputStream in = new ByteArrayInputStream(data);
             Node resource = file.addNode("jcr:content", "nt:resource");
-            resource.setProperty("jcr:data", in);
+            resource.setProperty("jcr:data", "", PropertyType.BINARY);
             resource.setProperty("jcr:lastModified", Calendar.getInstance());
-            resource.setProperty("jcr:mimeType", CONTENT_TYPE);
-            resource.setProperty("jcr:encoding", ENCODING);
+            resource.setProperty("jcr:mimeType", BlockingParser.TYPE.toString());
             count++;
         }
         if (levels > 0) {
             for (int i = 0; i < filesPerLevel; i++) {
                 // create files
                 Node subFolder = folder.addNode("folder" + i, "nt:folder");
-                count = createFiles(subFolder, data,
-                        filesPerLevel, levels, count);
+                count = createFiles(subFolder, filesPerLevel, levels, count);
             }
         }
         return count;
