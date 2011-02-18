@@ -103,7 +103,7 @@ public class NodeTypeRegistry implements NodeTypeEventListener {
     private final NamespaceRegistry nsReg;
 
     /**
-     * Listeners (soft references)
+     * Listeners (weak references)
      */
     @SuppressWarnings("unchecked")
     private final Map<NodeTypeRegistryListener, NodeTypeRegistryListener> listeners =
