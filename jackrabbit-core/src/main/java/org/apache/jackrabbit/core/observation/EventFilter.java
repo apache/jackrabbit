@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.core.observation;
 
-import java.util.Iterator;
 import java.util.Set;
 
 import org.apache.jackrabbit.core.SessionImpl;
