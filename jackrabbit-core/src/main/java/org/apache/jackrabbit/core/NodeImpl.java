@@ -1452,7 +1452,7 @@ public class NodeImpl extends ItemImpl implements Node, JackrabbitNode {
         PathBuilder pb = new PathBuilder(getPrimaryPath());
         pb.addLast(srcName.getName(), srcName.getIndex());
         Path childPath = pb.getPath();
-        if (!acMgr.isGranted(childPath, Permission.ADD_NODE | Permission.REMOVE_NODE)) {
+        if (!acMgr.isGranted(childPath, Permission.MODIFY_CHILD_NODE_COLLECTION)) {
             String msg = "Not allowed to reorder child node " + sessionContext.getJCRPath(childPath) + ".";
             log.debug(msg);
             throw new AccessDeniedException(msg);
@@ -3596,10 +3596,17 @@ public class NodeImpl extends ItemImpl implements Node, JackrabbitNode {
                     "Same name siblings not allowed: " + existing);
         }
 
-        // check permissions
+        // check permissions:
+        // 1. on the parent node the session must have permission to manipulate the child-entries
         AccessManager acMgr = sessionContext.getAccessManager();
-        if (!(acMgr.isGranted(getPrimaryPath(), Permission.REMOVE_NODE) &&
-                acMgr.isGranted(parent.getPrimaryPath(), qName, Permission.ADD_NODE | Permission.NODE_TYPE_MNGMT))) {
+        if (!acMgr.isGranted(parent.getPrimaryPath(), qName, Permission.MODIFY_CHILD_NODE_COLLECTION)) {
+            String msg = "Not allowed to rename node " + safeGetJCRPath() + " to " + newName;
+            log.debug(msg);
+            throw new AccessDeniedException(msg);
+        }
+        // 2. in case of nt-changes the session must have permission to change
+        //    the primary node type on this node itself.
+        if (!nt.getName().equals(newTargetDef.getName()) && !(acMgr.isGranted(getPrimaryPath(), Permission.NODE_TYPE_MNGMT))) {
             String msg = "Not allowed to rename node " + safeGetJCRPath() + " to " + newName;
             log.debug(msg);
             throw new AccessDeniedException(msg);
