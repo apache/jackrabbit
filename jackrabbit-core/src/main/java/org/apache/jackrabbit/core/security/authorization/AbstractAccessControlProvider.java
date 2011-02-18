@@ -28,6 +28,7 @@ import javax.jcr.security.Privilege;
 import org.apache.jackrabbit.core.ItemImpl;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.WorkspaceImpl;
 import org.apache.jackrabbit.core.id.ItemId;
 import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
 import org.apache.jackrabbit.core.security.SystemPrincipal;
@@ -60,9 +61,6 @@ public abstract class AbstractAccessControlProvider implements AccessControlProv
     protected SessionImpl session;
     protected ObservationManager observationMgr;
     protected NamePathResolver resolver;
-
-    protected int privAll;
-    protected int privRead;
 
     private boolean initialized;
 
@@ -97,8 +95,8 @@ public abstract class AbstractAccessControlProvider implements AccessControlProv
             public boolean grants(Path absPath, int permissions) {
                 return true;
             }
-            public int getPrivileges(Path absPath) {
-                return privAll;
+            public int getPrivileges(Path absPath) throws RepositoryException {
+                return ((WorkspaceImpl) session.getWorkspace()).getPrivilegeManager().getBits(new String[] {Privilege.JCR_ALL});
             }
             public boolean canReadAll() {
                 return true;
@@ -133,7 +131,7 @@ public abstract class AbstractAccessControlProvider implements AccessControlProv
                 if (isAcItem(absPath)) {
                     return PrivilegeRegistry.NO_PRIVILEGE;
                 } else {
-                    return privRead;
+                    return ((WorkspaceImpl) session.getWorkspace()).getPrivilegeManager().getBits(new String[] {Privilege.JCR_READ});
                 }
             }
             public boolean canReadAll() {
@@ -220,9 +218,6 @@ public abstract class AbstractAccessControlProvider implements AccessControlProv
         session = (SessionImpl) systemSession;
         observationMgr = systemSession.getWorkspace().getObservationManager();
         resolver = (NamePathResolver) systemSession;
-
-        privAll = PrivilegeRegistry.getBits(new Privilege[] {session.getAccessControlManager().privilegeFromName(Privilege.JCR_ALL)});
-        privRead = PrivilegeRegistry.getBits(new Privilege[] {session.getAccessControlManager().privilegeFromName(Privilege.JCR_READ)});
 
         initialized = true;
     }

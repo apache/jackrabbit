@@ -18,6 +18,7 @@ package org.apache.jackrabbit.core.security;
 
 import org.apache.jackrabbit.core.HierarchyManager;
 import org.apache.jackrabbit.core.fs.FileSystem;
+import org.apache.jackrabbit.core.security.authorization.PrivilegeManager;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 
 import javax.jcr.Session;
@@ -56,6 +57,11 @@ public class AMContext {
     private final HierarchyManager hierMgr;
 
     /**
+     * The privilege manager
+     */
+    private final PrivilegeManager privilegeMgr;
+
+    /**
      * name and path resolver for resolving JCR name/path strings to internal
      * Name/Path objects (and vice versa).
      */
@@ -74,6 +80,7 @@ public class AMContext {
      * @param session         the session.
      * @param subject         subject whose access rights should be reflected
      * @param hierMgr         hierarchy manager
+     * @param privilegeMgr    privilege manager
      * @param resolver        name and path resolver
      * @param workspaceName   workspace name
      */
@@ -82,6 +89,7 @@ public class AMContext {
                      Session session,
                      Subject subject,
                      HierarchyManager hierMgr,
+                     PrivilegeManager privilegeMgr,
                      NamePathResolver resolver,
                      String workspaceName) {
         this.physicalHomeDir = physicalHomeDir;
@@ -89,6 +97,7 @@ public class AMContext {
         this.session = session;
         this.subject = subject;
         this.hierMgr = hierMgr;
+        this.privilegeMgr = privilegeMgr;
         this.resolver = resolver;
         this.workspaceName = workspaceName;
     }
@@ -137,6 +146,15 @@ public class AMContext {
      */
     public HierarchyManager getHierarchyManager() {
         return hierMgr;
+    }
+
+    /**
+     * Returns the privilege manager
+     *
+     * @return the privilege manager
+     */
+    public PrivilegeManager getPrivilegeManager() {
+        return privilegeMgr;
     }
 
     /**

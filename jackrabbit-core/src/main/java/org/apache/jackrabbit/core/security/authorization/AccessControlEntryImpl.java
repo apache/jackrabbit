@@ -111,7 +111,7 @@ public abstract class AccessControlEntryImpl implements JackrabbitAccessControlE
         }
         this.principal = principal;
         this.privileges = privileges;
-        this.privilegeBits = PrivilegeRegistry.getBits(privileges);
+        this.privilegeBits = getPrivilegeManager().getBits(privileges);
         this.allow = isAllow;
 
         if (restrictions == null) {
@@ -143,7 +143,7 @@ public abstract class AccessControlEntryImpl implements JackrabbitAccessControlE
         }
         this.principal = base.principal;
         this.privileges = privileges;
-        this.privilegeBits = PrivilegeRegistry.getBits(privileges);
+        this.privilegeBits = getPrivilegeManager().getBits(privileges);
         this.allow = isAllow;
 
         if (base.restrictions == null) {
@@ -202,6 +202,11 @@ public abstract class AccessControlEntryImpl implements JackrabbitAccessControlE
      * @return The value factory to be used.
      */
     protected abstract ValueFactory getValueFactory();
+
+    /**
+     * @return The privilege manager in use.
+     */
+    protected abstract PrivilegeManager getPrivilegeManager();
 
     /**
      * Build the hash code.

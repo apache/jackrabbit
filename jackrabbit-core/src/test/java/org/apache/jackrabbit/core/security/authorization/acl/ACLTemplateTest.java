@@ -53,14 +53,12 @@ public class ACLTemplateTest extends AbstractACLTemplateTest {
     @Override
     protected JackrabbitAccessControlList createEmptyTemplate(String path) throws RepositoryException {
         SessionImpl sImpl = (SessionImpl) superuser;
-        PrincipalManager princicipalMgr = sImpl.getPrincipalManager();
-        PrivilegeRegistry privilegeRegistry = new PrivilegeRegistry(sImpl);
-        return new ACLTemplate(path, princicipalMgr, privilegeRegistry, sImpl.getValueFactory(), sImpl);
+        return new ACLTemplate(path, principalMgr, privilegeMgr, sImpl.getValueFactory(), sImpl);
     }
 
     @Override
     protected Principal getSecondPrincipal() throws Exception {
-        return pMgr.getEveryone();
+        return principalMgr.getEveryone();
     }
 
     public void testMultipleEntryEffect() throws RepositoryException, NotExecutableException {
@@ -124,10 +122,10 @@ public class ACLTemplateTest extends AbstractACLTemplateTest {
             ACLTemplate.Entry entry = (ACLTemplate.Entry) entry1;
             int privs = entry.getPrivilegeBits();
             if (entry.isAllow()) {
-                int bits = PrivilegeRegistry.getBits(privileges) ^ PrivilegeRegistry.getBits(privileges2);
+                int bits = privilegeMgr.getBits(privileges) ^ privilegeMgr.getBits(privileges2);
                 assertEquals(privs, bits);
             } else {
-                assertEquals(privs, PrivilegeRegistry.getBits(privileges2));
+                assertEquals(privs, privilegeMgr.getBits(privileges2));
             }
         }
     }
@@ -161,7 +159,7 @@ public class ACLTemplateTest extends AbstractACLTemplateTest {
     public void testSetEntryForGroupPrincipal() throws RepositoryException, NotExecutableException {
         JackrabbitAccessControlList pt = createEmptyTemplate(getTestPath());
         Privilege[] privs = privilegesFromName(Privilege.JCR_READ);
-        Group grPrincipal = (Group) pMgr.getEveryone();
+        Group grPrincipal = (Group) principalMgr.getEveryone();
 
         // adding allow-entry must succeed
         assertTrue(pt.addAccessControlEntry(grPrincipal, privs));
@@ -190,7 +188,7 @@ public class ACLTemplateTest extends AbstractACLTemplateTest {
         Privilege[] readPriv = privilegesFromName(Privilege.JCR_READ);
         Privilege[] writePriv = privilegesFromName(Privilege.JCR_WRITE);
 
-        Principal principal2 = pMgr.getEveryone();
+        Principal principal2 = principalMgr.getEveryone();
 
         pt.addEntry(testPrincipal, readPriv, true, emptyRestrictions);
         pt.addEntry(principal2, readPriv, true, emptyRestrictions);
@@ -212,7 +210,7 @@ public class ACLTemplateTest extends AbstractACLTemplateTest {
 
         Privilege[] readPriv = privilegesFromName(Privilege.JCR_READ);
         Privilege[] writePriv = privilegesFromName(Privilege.JCR_WRITE);
-        Principal principal2 = pMgr.getEveryone();
+        Principal principal2 = principalMgr.getEveryone();
 
         pt.addEntry(testPrincipal, readPriv, true, emptyRestrictions);
         pt.addEntry(principal2, readPriv, true, emptyRestrictions);
@@ -271,7 +269,7 @@ public class ACLTemplateTest extends AbstractACLTemplateTest {
         Privilege[] writePriv = privilegesFromName(Privilege.JCR_WRITE);
 
         pt.addEntry(testPrincipal, readPriv, true, emptyRestrictions);
-        pt.addEntry(pMgr.getEveryone(), readPriv, true, emptyRestrictions);
+        pt.addEntry(principalMgr.getEveryone(), readPriv, true, emptyRestrictions);
         pt.addEntry(testPrincipal, writePriv, false, emptyRestrictions);
 
         AccessControlEntry[] entries = pt.getAccessControlEntries();

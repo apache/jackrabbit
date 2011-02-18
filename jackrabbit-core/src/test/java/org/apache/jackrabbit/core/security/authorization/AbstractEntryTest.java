@@ -26,6 +26,8 @@ import javax.jcr.Value;
 import javax.jcr.security.AccessControlException;
 import javax.jcr.security.Privilege;
 
+import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.WorkspaceImpl;
 import org.apache.jackrabbit.test.NotExecutableException;
 import org.apache.jackrabbit.test.api.security.AbstractAccessControlTest;
 import org.apache.jackrabbit.api.security.JackrabbitAccessControlEntry;
@@ -74,7 +76,6 @@ public abstract class AbstractEntryTest extends AbstractAccessControlTest {
     public void testGetPrivilegeBits() throws RepositoryException, NotExecutableException {
         JackrabbitAccessControlEntry tmpl = createEntry(new String[] {Privilege.JCR_READ}, true);
 
-        int privs = PrivilegeRegistry.getBits(tmpl.getPrivileges());
         assertEquals(1, tmpl.getPrivileges().length);
         assertEquals(getAccessControlManager(superuser).privilegeFromName(Privilege.JCR_READ),
                 tmpl.getPrivileges()[0]);
@@ -85,20 +86,21 @@ public abstract class AbstractEntryTest extends AbstractAccessControlTest {
     }
 
     public void testGetPrivileges() throws RepositoryException, NotExecutableException {
+        PrivilegeManager privMgr = ((WorkspaceImpl) superuser.getWorkspace()).getPrivilegeManager();
         JackrabbitAccessControlEntry entry = createEntry(new String[] {Privilege.JCR_READ}, true);
 
         Privilege[] privs = entry.getPrivileges();
         assertNotNull(privs);
         assertEquals(1, privs.length);
         assertEquals(privs[0], acMgr.privilegeFromName(Privilege.JCR_READ));
-        assertTrue(PrivilegeRegistry.getBits(privs) == PrivilegeRegistry.getBits(entry.getPrivileges()));
+        assertTrue(privMgr.getBits(privs) == privMgr.getBits(entry.getPrivileges()));
 
         entry = createEntry(new String[] {PrivilegeRegistry.REP_WRITE}, true);
         privs = entry.getPrivileges();
         assertNotNull(privs);
         assertEquals(1, privs.length);
         assertEquals(privs[0], acMgr.privilegeFromName(PrivilegeRegistry.REP_WRITE));
-        assertTrue(PrivilegeRegistry.getBits(privs) == PrivilegeRegistry.getBits(entry.getPrivileges()));
+        assertTrue(privMgr.getBits(privs) == privMgr.getBits(entry.getPrivileges()));
 
         entry = createEntry(new String[] {Privilege.JCR_ADD_CHILD_NODES,
                 Privilege.JCR_REMOVE_CHILD_NODES}, true);
@@ -111,7 +113,7 @@ public abstract class AbstractEntryTest extends AbstractAccessControlTest {
                 Privilege.JCR_REMOVE_CHILD_NODES
         });
         assertEquals(Arrays.asList(param), Arrays.asList(privs));
-        assertEquals(PrivilegeRegistry.getBits(privs), PrivilegeRegistry.getBits(entry.getPrivileges()));
+        assertEquals(privMgr.getBits(privs), privMgr.getBits(entry.getPrivileges()));
     }
 
     public void testEquals() throws RepositoryException, NotExecutableException  {
@@ -169,12 +171,14 @@ public abstract class AbstractEntryTest extends AbstractAccessControlTest {
         final Privilege[] privs = new Privilege[] {
                 acMgr.privilegeFromName(Privilege.JCR_ALL)
         };
+
+        final PrivilegeManager privMgr = ((WorkspaceImpl) superuser.getWorkspace()).getPrivilegeManager();
         JackrabbitAccessControlEntry pe = new JackrabbitAccessControlEntry() {
             public boolean isAllow() {
                 return true;
             }
             public int getPrivilegeBits() throws AccessControlException {
-                return PrivilegeRegistry.getBits(privs);
+                return privMgr.getBits(privs);
             }
             public String[] getRestrictionNames() {
                 return new String[0];

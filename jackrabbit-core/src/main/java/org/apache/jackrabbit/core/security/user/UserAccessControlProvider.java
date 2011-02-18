@@ -22,6 +22,7 @@ import org.apache.jackrabbit.api.security.user.UserManager;
 import org.apache.jackrabbit.core.ItemImpl;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.WorkspaceImpl;
 import org.apache.jackrabbit.core.id.ItemId;
 import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
 import org.apache.jackrabbit.core.observation.SynchronousEventListener;
@@ -312,8 +313,7 @@ public class UserAccessControlProvider extends AbstractAccessControlProvider
     }
 
     private int getPrivilegeBits(String privName) throws RepositoryException {
-        Privilege[] privs = new Privilege[] {session.getAccessControlManager().privilegeFromName(privName)};
-        return PrivilegeRegistry.getBits(privs);
+        return ((WorkspaceImpl) session.getWorkspace()).getPrivilegeManager().getBits(new String[] {privName});
     }
 
     private static boolean containsGroup(Set<Principal> principals, Principal group) {

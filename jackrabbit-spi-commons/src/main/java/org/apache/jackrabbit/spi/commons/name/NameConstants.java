@@ -721,4 +721,12 @@ public class NameConstants {
     public static final Name JCR_RETENTION_MANAGEMENT =
         FACTORY.create(Privilege.JCR_RETENTION_MANAGEMENT);
 
+    /** jcr:write */
+    public static final Name JCR_WRITE =
+        FACTORY.create(Privilege.JCR_WRITE);
+
+    /** jcr:all */
+    public static final Name JCR_ALL =
+        FACTORY.create(Privilege.JCR_ALL);
+
 }

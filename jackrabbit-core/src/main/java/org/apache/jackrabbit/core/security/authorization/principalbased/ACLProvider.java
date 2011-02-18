@@ -20,6 +20,7 @@ import org.apache.commons.collections.map.LRUMap;
 import org.apache.jackrabbit.api.security.principal.PrincipalManager;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.WorkspaceImpl;
 import org.apache.jackrabbit.core.id.ItemId;
 import org.apache.jackrabbit.core.security.SecurityConstants;
 import org.apache.jackrabbit.core.security.authorization.AbstractAccessControlProvider;
@@ -99,7 +100,7 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
 
         editor = new ACLEditor(session, resolver.getQPath(acRoot.getPath()));
         entriesCache = new EntriesCache(session, editor, acRoot.getPath());
-        readBits = PrivilegeRegistry.getBits(new Privilege[] {session.getAccessControlManager().privilegeFromName(Privilege.JCR_READ)});
+        readBits = ((WorkspaceImpl) session.getWorkspace()).getPrivilegeManager().getBits(new String[] {Privilege.JCR_READ});
 
         // TODO: replace by configurable default policy (see JCR-2331)
         if (!configuration.containsKey(PARAM_OMIT_DEFAULT_PERMISSIONS)) {

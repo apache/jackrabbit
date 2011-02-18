@@ -16,23 +16,37 @@
  */
 package org.apache.jackrabbit.core.security.authorization;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import org.apache.commons.collections.map.ReferenceMap;
+import org.apache.jackrabbit.core.NamespaceRegistryImpl;
+import org.apache.jackrabbit.core.fs.FileSystem;
+import org.apache.jackrabbit.core.fs.FileSystemException;
+import org.apache.jackrabbit.core.fs.FileSystemResource;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.NameFactory;
+import org.apache.jackrabbit.spi.commons.conversion.DefaultNamePathResolver;
+import org.apache.jackrabbit.spi.commons.conversion.NameResolver;
+import org.apache.jackrabbit.spi.commons.name.NameConstants;
+import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
+import org.apache.jackrabbit.util.Text;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import javax.jcr.NamespaceException;
+import javax.jcr.NamespaceRegistry;
 import javax.jcr.RepositoryException;
 import javax.jcr.security.AccessControlException;
 import javax.jcr.security.Privilege;
-
-import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.spi.NameFactory;
-import org.apache.jackrabbit.spi.commons.conversion.NameResolver;
-import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * The <code>PrivilegeRegistry</code> defines the set of <code>Privilege</code>s
@@ -40,175 +54,194 @@ import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
  */
 public final class PrivilegeRegistry {
 
+    private static final Logger log = LoggerFactory.getLogger(PrivilegeRegistry.class);
+
+    private static final NameFactory NAME_FACTORY = NameFactoryImpl.getInstance();
+
     /**
      * Jackrabbit specific write privilege that combines {@link Privilege#JCR_WRITE}
      * and {@link Privilege#JCR_NODE_TYPE_MANAGEMENT}.
      */
     public static final String REP_WRITE = "{" + Name.NS_REP_URI + "}write";
+    public static final Name REP_WRITE_NAME = NAME_FACTORY.create(REP_WRITE);
 
-    private static final Set<InternalPrivilege> REGISTERED_PRIVILEGES = new HashSet<InternalPrivilege>(20);
-    private static final Map<Integer, InternalPrivilege[]> BITS_TO_PRIVILEGES = new HashMap<Integer, InternalPrivilege[]>();
-    private static final NameFactory NAME_FACTORY = NameFactoryImpl.getInstance();
-
-    private static final Privilege[] EMPTY_ARRAY = new Privilege[0];
-
+    /**
+     * No privileges 
+     */
     public static final int NO_PRIVILEGE = 0;
 
     private static final int READ = 1;
-    private static final int MODIFY_PROPERTIES = 2;
-    private static final int ADD_CHILD_NODES = 4;
-    private static final int REMOVE_CHILD_NODES = 8;
-    private static final int REMOVE_NODE = 16;
-    
-    private static final int READ_AC = 32;
-    private static final int MODIFY_AC = 64;
+    private static final int MODIFY_PROPERTIES = READ << 1;
+    private static final int ADD_CHILD_NODES = MODIFY_PROPERTIES << 1;
+    private static final int REMOVE_CHILD_NODES = ADD_CHILD_NODES << 1;
+    private static final int REMOVE_NODE = REMOVE_CHILD_NODES << 1;
+    private static final int READ_AC = REMOVE_NODE << 1;
+    private static final int MODIFY_AC = READ_AC << 1;
+    private static final int NODE_TYPE_MNGMT = MODIFY_AC << 1;
+    private static final int VERSION_MNGMT = NODE_TYPE_MNGMT << 1;
+    private static final int LOCK_MNGMT = VERSION_MNGMT << 1;
+    private static final int LIFECYCLE_MNGMT = LOCK_MNGMT << 1;
+    private static final int RETENTION_MNGMT = LIFECYCLE_MNGMT << 1;
 
-    private static final int NODE_TYPE_MNGMT = 128;
-    private static final int VERSION_MNGMT = 256;
-    private static final int LOCK_MNGMT = 512;
-    private static final int LIFECYCLE_MNGMT = 1024;
-    private static final int RETENTION_MNGMT = 2048;
-
-    private static final int WRITE = 30;
-    private static final int JACKRABBIT_WRITE = 158;
-    private static final int ALL = 4095;
-
-    private static final InternalPrivilege READ_PRIVILEGE = registerPrivilege(new InternalPrivilege(Privilege.JCR_READ, READ));
-    private static final InternalPrivilege MODIFY_PROPERTIES_PRIVILEGE = registerPrivilege(new InternalPrivilege(Privilege.JCR_MODIFY_PROPERTIES, MODIFY_PROPERTIES));
-    private static final InternalPrivilege ADD_CHILD_NODES_PRIVILEGE = registerPrivilege(new InternalPrivilege(Privilege.JCR_ADD_CHILD_NODES, ADD_CHILD_NODES));
-    private static final InternalPrivilege REMOVE_CHILD_NODES_PRIVILEGE = registerPrivilege(new InternalPrivilege(Privilege.JCR_REMOVE_CHILD_NODES, REMOVE_CHILD_NODES));
-    private static final InternalPrivilege REMOVE_NODE_PRIVILEGE = registerPrivilege(new InternalPrivilege(Privilege.JCR_REMOVE_NODE, REMOVE_NODE));
-
-    private static final InternalPrivilege READ_AC_PRIVILEGE = registerPrivilege(new InternalPrivilege(Privilege.JCR_READ_ACCESS_CONTROL, READ_AC));
-    private static final InternalPrivilege MODIFY_AC_PRIVILEGE = registerPrivilege(new InternalPrivilege(Privilege.JCR_MODIFY_ACCESS_CONTROL, MODIFY_AC));
-
-    private static final InternalPrivilege NODE_TYPE_MANAGEMENT_PRIVILEGE = registerPrivilege(new InternalPrivilege(Privilege.JCR_NODE_TYPE_MANAGEMENT, NODE_TYPE_MNGMT));
-    private static final InternalPrivilege VERSION_MANAGEMENT_PRIVILEGE = registerPrivilege(new InternalPrivilege(Privilege.JCR_VERSION_MANAGEMENT, VERSION_MNGMT));
-    private static final InternalPrivilege LOCK_MANAGEMENT_PRIVILEGE = registerPrivilege(new InternalPrivilege(Privilege.JCR_LOCK_MANAGEMENT, LOCK_MNGMT));
-    private static final InternalPrivilege LIFECYCLE_MANAGEMENT_PRIVILEGE = registerPrivilege(new InternalPrivilege(Privilege.JCR_LIFECYCLE_MANAGEMENT, LIFECYCLE_MNGMT));
-    private static final InternalPrivilege RETENTION_MANAGEMENT_PRIVILEGE = registerPrivilege(new InternalPrivilege(Privilege.JCR_RETENTION_MANAGEMENT, RETENTION_MNGMT));
-
-    private static final InternalPrivilege WRITE_PRIVILEGE = registerPrivilege(new InternalPrivilege(Privilege.JCR_WRITE, new InternalPrivilege[] {
-            MODIFY_PROPERTIES_PRIVILEGE,
-            ADD_CHILD_NODES_PRIVILEGE,
-            REMOVE_CHILD_NODES_PRIVILEGE,
-            REMOVE_NODE_PRIVILEGE,
-    }));
-
-    private static final InternalPrivilege JACKRABBIT_WRITE_PRIVILEGE = registerPrivilege(new InternalPrivilege(REP_WRITE, new InternalPrivilege[] {
-            WRITE_PRIVILEGE,
-            NODE_TYPE_MANAGEMENT_PRIVILEGE
-    }));
-
-    private static final InternalPrivilege ALL_PRIVILEGE = registerPrivilege(new InternalPrivilege(Privilege.JCR_ALL, new InternalPrivilege[] {
-            READ_PRIVILEGE,
-            WRITE_PRIVILEGE,
-            JACKRABBIT_WRITE_PRIVILEGE,
-            READ_AC_PRIVILEGE,
-            MODIFY_AC_PRIVILEGE,
-            VERSION_MANAGEMENT_PRIVILEGE,
-            LOCK_MANAGEMENT_PRIVILEGE,
-            LIFECYCLE_MANAGEMENT_PRIVILEGE,
-            RETENTION_MANAGEMENT_PRIVILEGE
-    }));
+    private static final Map<Name, Integer> PRIVILEGE_NAMES = new HashMap<Name, Integer>();
+    static {
+        PRIVILEGE_NAMES.put(NameConstants.JCR_READ, READ);
+        PRIVILEGE_NAMES.put(NameConstants.JCR_MODIFY_PROPERTIES, MODIFY_PROPERTIES);
+        PRIVILEGE_NAMES.put(NameConstants.JCR_ADD_CHILD_NODES, ADD_CHILD_NODES);
+        PRIVILEGE_NAMES.put(NameConstants.JCR_REMOVE_CHILD_NODES, REMOVE_CHILD_NODES);
+        PRIVILEGE_NAMES.put(NameConstants.JCR_REMOVE_NODE, REMOVE_NODE);
+        PRIVILEGE_NAMES.put(NameConstants.JCR_READ_ACCESS_CONTROL, READ_AC);
+        PRIVILEGE_NAMES.put(NameConstants.JCR_MODIFY_ACCESS_CONTROL, MODIFY_AC);
+        PRIVILEGE_NAMES.put(NameConstants.JCR_NODE_TYPE_MANAGEMENT, NODE_TYPE_MNGMT);
+        PRIVILEGE_NAMES.put(NameConstants.JCR_VERSION_MANAGEMENT, VERSION_MNGMT);
+        PRIVILEGE_NAMES.put(NameConstants.JCR_LOCK_MANAGEMENT, LOCK_MNGMT);
+        PRIVILEGE_NAMES.put(NameConstants.JCR_LIFECYCLE_MANAGEMENT, LIFECYCLE_MNGMT);
+        PRIVILEGE_NAMES.put(NameConstants.JCR_RETENTION_MANAGEMENT, RETENTION_MNGMT);
+    }
 
     /**
-     * The name resolver used to determine the correct privilege
-     * {@link Privilege#getName() name} depending on the sessions namespace
-     * mappings.
+     * Path to the file system resource used to persist custom privileges
+     * registered with this repository.
+     */
+    private static final String CUSTOM_PRIVILEGES_RESOURCE_NAME = "/privileges/custom_privileges.xml";
+
+    
+    private final Map<Name, PrivilegeDefinition> registeredPrivileges = new HashMap<Name, PrivilegeDefinition>();
+    private final Map<Integer, Set<Name>> bitsToNames = new HashMap<Integer, Set<Name>>();
+
+    @SuppressWarnings("unchecked")    
+    private final Map<Listener, Listener> listeners = Collections.synchronizedMap(new ReferenceMap(ReferenceMap.WEAK, ReferenceMap.WEAK));
+
+    private final NamespaceRegistry namespaceRegistry;
+    private final CustomPrivilegeStore customPrivilegesStore;
+
+    /**
+     * @deprecated For backwards compatibility only.
      */
     private final NameResolver resolver;
 
-    /**
-     * Per instance map containing the instance specific representation of
-     * the registered privileges.
-     */
-    private final Map<Name, Privilege> localCache;
+    private int nextBits = RETENTION_MNGMT << 1;
+
+    public PrivilegeRegistry(NamespaceRegistry namespaceRegistry, FileSystem fs)
+            throws RepositoryException {
+
+        this.namespaceRegistry = namespaceRegistry;
+        this.customPrivilegesStore = new CustomPrivilegeStore(new FileSystemResource(fs, CUSTOM_PRIVILEGES_RESOURCE_NAME));
+        registerDefinitions(createBuiltInPrivilegeDefinitions());
+
+        try {
+            Map<Name, DefinitionStub> customDefs = customPrivilegesStore.load();
+            Map<Name, PrivilegeDefinition> definitions = createPrivilegeDefinitions(customDefs);
+            registerDefinitions(definitions);
+        } catch (IOException e) {
+            throw new RepositoryException("Failed to load custom privileges", e);
+        } catch (FileSystemException e) {
+            throw new RepositoryException("Failed to load custom privileges", e);
+        }
+
+        this.resolver = new DefaultNamePathResolver(namespaceRegistry);
+    }
 
     /**
-     * Create a new <code>PrivilegeRegistry</code> instance.
+     * Create a new <code>PrivilegeRegistry</code> instance defining only
+     * built-in privileges.
      *
-     * @param resolver NameResolver used to calculate the JCR name of the
-     * privileges.
+     * @param resolver
+     * @deprecated Use {@link PrivilegeManager} instead.
      */
     public PrivilegeRegistry(NameResolver resolver) {
+        registerDefinitions(createBuiltInPrivilegeDefinitions());
+
+        namespaceRegistry = null;
+        customPrivilegesStore = null;
+
         this.resolver = resolver;
-        localCache = new HashMap<Name, Privilege>(REGISTERED_PRIVILEGES.size());
-        for (InternalPrivilege ip : REGISTERED_PRIVILEGES) {
-            Privilege priv = new PrivilegeImpl(ip, resolver);
-            localCache.put(ip.name, priv);
+    }
+
+    /**
+     * Throws <code>UnsupportedOperationException</code>.
+     *
+     * @return all registered privileges.
+     * @deprecated Use {@link org.apache.jackrabbit.core.security.authorization.PrivilegeManager#getRegisteredPrivileges()} instead.
+     */
+    public Privilege[] getRegisteredPrivileges() {
+        try {
+            return new PrivilegeManager(this, resolver).getRegisteredPrivileges();
+        } catch (RepositoryException e) {
+            throw new UnsupportedOperationException("No supported any more. Use PrivilegeManager#getRegisteredPrivileges() instead.");
         }
     }
 
     /**
-     * Returns all registered privileges.
+     * Creates a new <code>PrivilegeManager</code> from the specified resolver
+     * and calls {@link org.apache.jackrabbit.core.security.authorization.PrivilegeManager#getRegisteredPrivileges()}.
      *
-     * @return all registered privileges.
-     */
-    public Privilege[] getRegisteredPrivileges() {
-        return localCache.values().toArray(new Privilege[localCache.size()]);
-    }
-
-    /**
-     * Returns the privilege with the specified <code>privilegeName</code>.
-     *
-     * @param privilegeName Name of the principal.
+     * @param privilegeName Name of the privilege.
      * @return the privilege with the specified <code>privilegeName</code>.
      * @throws AccessControlException If no privilege with the given name exists.
      * @throws RepositoryException If another error occurs.
+     * @deprecated Use {@link PrivilegeManager#getPrivilege(String)} instead.
      */
     public Privilege getPrivilege(String privilegeName) throws AccessControlException, RepositoryException {
-        Name name = resolver.getQName(privilegeName);
-        if (localCache.containsKey(name)) {
-            return localCache.get(name);
-        } else {
-            throw new AccessControlException("Unknown privilege " + privilegeName);
-        }
+        return new PrivilegeManager(this, resolver).getPrivilege(privilegeName);
     }
 
     /**
-     * Returns an array of registered <code>Privilege</code>s. If the specified
-     * <code>bits</code> represent a registered privilege the returned array
-     * contains a single element. Otherwise the returned array contains the
-     * individual registered privileges that are combined in the given
-     * <code>bits</code>. If <code>bits</code> is {@link #NO_PRIVILEGE 0} or
-     * does not match to any registered privilege an empty array will be returned.
+     * Creates a new <code>PrivilegeManager</code> from the specified resolver
+     * and calls {@link org.apache.jackrabbit.core.security.authorization.PrivilegeManager#getPrivileges(int)}.
      *
      * @param bits Privilege bits as obtained from {@link #getBits(Privilege[])}.
      * @return Array of <code>Privilege</code>s that are presented by the given it
      * or an empty array if <code>bits</code> is lower than {@link #READ} or
      * cannot be resolved to registered <code>Privilege</code>s.
      * @see #getBits(Privilege[])
+     * @deprecated Use {@link PrivilegeManager#getPrivileges(int)} instead.
      */
     public Privilege[] getPrivileges(int bits) {
-        Privilege[] privs;
-        if (bits > NO_PRIVILEGE) {
-            InternalPrivilege[] internalPrivs = getInteralPrivileges(bits);
-            privs = new Privilege[internalPrivs.length];
-            for (int i = 0; i < internalPrivs.length; i++) {
-                privs[i] = localCache.get(internalPrivs[i].name);
-            }
-        } else {
-            privs = new Privilege[0];
-        }
-        return privs;
+        return new PrivilegeManager(this, resolver).getPrivileges(bits);
     }
 
     /**
+     * Best effort approach to calculate bits for built-in privileges. Throws
+     * <code>UnsupportedOperationException</code> if the workaround fails.
+     * Note, that the bits calculated for jcr:all does not include any
+     * registered custom privileges.
+     *
      * @param privileges An array of privileges.
      * @return The privilege bits.
      * @throws AccessControlException If the specified array is null
      * or if it contains an unregistered privilege.
      * @see #getPrivileges(int)
+     * @deprecated Use {@link PrivilegeManager#getBits(javax.jcr.security.Privilege[])} instead.
      */
     public static int getBits(Privilege[] privileges) throws AccessControlException {
         if (privileges == null || privileges.length == 0) {
             throw new AccessControlException("Privilege array is empty or null.");
         }
-        int bits = NO_PRIVILEGE;
+
+        Map<String, String> lookup = new HashMap<String,String>(2);
+        lookup.put(Name.NS_REP_PREFIX, Name.NS_REP_URI);
+        lookup.put(Name.NS_JCR_PREFIX, Name.NS_JCR_URI);
+
+        int bits = PrivilegeRegistry.NO_PRIVILEGE;
         for (Privilege priv : privileges) {
-            if (priv instanceof PrivilegeImpl) {
-                bits |= ((PrivilegeImpl) priv).internalPrivilege.getBits();
+            String prefix = Text.getNamespacePrefix(priv.getName());
+            if (lookup.containsKey(prefix)) {
+                Name n = NAME_FACTORY.create(lookup.get(prefix), Text.getLocalName(priv.getName()));
+                if (PRIVILEGE_NAMES.containsKey(n)) {
+                    bits |= PRIVILEGE_NAMES.get(n);
+                } else if (NameConstants.JCR_WRITE.equals(n)) {
+                    bits |= createJcrWriteDefinition().bits;
+                } else if (REP_WRITE_NAME.equals(n)) {
+                    PrivilegeDefinition jcrWrite = createJcrWriteDefinition();
+                    bits |= createRepWriteDefinition(jcrWrite.bits).bits;
+                } else if (NameConstants.JCR_ALL.equals(n)) {
+                    for (Name pn : PRIVILEGE_NAMES.keySet()) {
+                        bits |= PRIVILEGE_NAMES.get(pn);
+                    }
+                } else {
+                    throw new AccessControlException("Unknown privilege '" + priv.getName() + "'.");
+                }
             } else {
                 throw new AccessControlException("Unknown privilege '" + priv.getName() + "'.");
             }
@@ -309,233 +342,605 @@ public final class PrivilegeRegistry {
         }
         return perm;
     }
+
+    //-----------------------------------< methods used by PrivilegeManager >---
+    /**
+     * Validates and registers a new custom privilege definition with the
+     * specified characteristics. Upon successful registration the new custom
+     * definition is persisted in the corresponding file system resource.<p/>
+     *
+     * <p>The validation includes the following steps:</p>
+     *
+     * <ul>
+     * <li>assert uniqueness of the specified privilegeName</li>
+     * <li>make sure the name doesn't use a reserved namespace</li>
+     * <li>assert that all names referenced in the specified name set refer
+     * to existing privilege definitions.</li>
+     * </ul>
+     *
+     * @param privilegeName
+     * @param isAbstract
+     * @param declaredAggregateNames
+     * @throws RepositoryException If the privilege could not be registered due
+     * to constraint violations or if persisting the custom privilege fails.
+     */
+    void registerDefinition(Name privilegeName, boolean isAbstract, Set<Name> declaredAggregateNames) throws RepositoryException {
+        if (customPrivilegesStore == null) {
+            throw new UnsupportedOperationException("No privilege store defined.");
+        }
+        synchronized (registeredPrivileges) {
+            Map<Name, DefinitionStub> stubs = Collections.singletonMap(privilegeName, new DefinitionStub(privilegeName, isAbstract, declaredAggregateNames, true));
+            Map<Name, PrivilegeDefinition> definitions = createPrivilegeDefinitions(stubs);
+            try {
+                // write the new custom privilege to the store and upon successful
+                // update of the file system resource add finally it to the map of
+                // registered privileges.
+                customPrivilegesStore.append(definitions);
+                registerDefinitions(definitions);
+
+            } catch (IOException e) {
+                throw new RepositoryException("Failed to register custom privilege " + privilegeName.toString(), e);
+            } catch (FileSystemException e) {
+                throw new RepositoryException("Failed to register custom privilege " + privilegeName.toString(), e);
+            }
+        }
+
+        for (Listener l : listeners.keySet()) {
+            l.privilegeRegistered(privilegeName);
+        }
+    }
     
     /**
-     * @param bits The privilege bits.
-     * @return InternalPrivilege that corresponds to the given bits.
+     * Returns all registered internal privileges.
+     *
+     * @return all registered internal privileges
      */
-    private static InternalPrivilege[] getInteralPrivileges(int bits) {
-        if (BITS_TO_PRIVILEGES.containsKey(bits)) {
-            return BITS_TO_PRIVILEGES.get(bits);
+    PrivilegeDefinition[] getAll() {
+        return registeredPrivileges.values().toArray(new PrivilegeDefinition[registeredPrivileges.size()]);
+    }
+
+    /**
+     * Returns the internal privilege with the specified name or <code>null</code>.
+     *
+     * @param name Name of the internal privilege.
+     * @return the internal privilege with the specified name or <code>null</code>
+     */
+    PrivilegeDefinition get(Name name) {
+        return registeredPrivileges.get(name);
+    }
+
+    /**
+     * @param bits The privilege bits.
+     * @return Privilege names that corresponds to the given bits.
+     */
+    Name[] getNames(int bits) {
+        if (bitsToNames.containsKey(bits)) {
+            Set<Name> ips = bitsToNames.get(bits);
+            return ips.toArray(new Name[ips.size()]);
         } else {
-            List<InternalPrivilege> privileges = new ArrayList<InternalPrivilege>();
+            Set<Name> names = new HashSet<Name>();
             if ((bits & READ) == READ) {
-                privileges.add(READ_PRIVILEGE);
+                names.add(NameConstants.JCR_READ);
             }
-            if ((bits & JACKRABBIT_WRITE) == JACKRABBIT_WRITE) {
-                privileges.add(JACKRABBIT_WRITE_PRIVILEGE);
-            } else if ((bits & WRITE) == WRITE) {
-                privileges.add(WRITE_PRIVILEGE);
+            int repWrite = registeredPrivileges.get(REP_WRITE_NAME).bits;
+            int jcrWrite = registeredPrivileges.get(NameConstants.JCR_WRITE).bits;
+            if ((bits & repWrite) == repWrite) {
+                names.add(REP_WRITE_NAME);
+            } else if ((bits & jcrWrite) == jcrWrite) {
+                names.add(NameConstants.JCR_WRITE);
             } else {
                 if ((bits & MODIFY_PROPERTIES) == MODIFY_PROPERTIES) {
-                    privileges.add(MODIFY_PROPERTIES_PRIVILEGE);
+                    names.add(NameConstants.JCR_MODIFY_PROPERTIES);
                 }
                 if ((bits & ADD_CHILD_NODES) == ADD_CHILD_NODES) {
-                    privileges.add(ADD_CHILD_NODES_PRIVILEGE);
+                    names.add(NameConstants.JCR_ADD_CHILD_NODES);
                 }
                 if ((bits & REMOVE_CHILD_NODES) == REMOVE_CHILD_NODES) {
-                    privileges.add(REMOVE_CHILD_NODES_PRIVILEGE);
+                    names.add(NameConstants.JCR_REMOVE_CHILD_NODES);
                 }
                 if ((bits & REMOVE_NODE) == REMOVE_NODE) {
-                    privileges.add(REMOVE_NODE_PRIVILEGE);
+                    names.add(NameConstants.JCR_REMOVE_NODE);
                 }
                 if ((bits & NODE_TYPE_MNGMT) == NODE_TYPE_MNGMT) {
-                    privileges.add(NODE_TYPE_MANAGEMENT_PRIVILEGE);
+                    names.add(NameConstants.JCR_NODE_TYPE_MANAGEMENT);
                 }
             }
             if ((bits & READ_AC) == READ_AC) {
-                privileges.add(READ_AC_PRIVILEGE);
+                names.add(NameConstants.JCR_READ_ACCESS_CONTROL);
             }
             if ((bits & MODIFY_AC) == MODIFY_AC) {
-                privileges.add(MODIFY_AC_PRIVILEGE);
+                names.add(NameConstants.JCR_MODIFY_ACCESS_CONTROL);
             }
             if ((bits & VERSION_MNGMT) == VERSION_MNGMT) {
-                privileges.add(VERSION_MANAGEMENT_PRIVILEGE);
+                names.add(NameConstants.JCR_VERSION_MANAGEMENT);
             }
             if ((bits & LOCK_MNGMT) == LOCK_MNGMT) {
-                privileges.add(LOCK_MANAGEMENT_PRIVILEGE);
+                names.add(NameConstants.JCR_LOCK_MANAGEMENT);
             }
             if ((bits & LIFECYCLE_MNGMT) == LIFECYCLE_MNGMT) {
-                privileges.add(LIFECYCLE_MANAGEMENT_PRIVILEGE);
+                names.add(NameConstants.JCR_LIFECYCLE_MANAGEMENT);
             }
             if ((bits & RETENTION_MNGMT) == RETENTION_MNGMT) {
-                privileges.add(RETENTION_MANAGEMENT_PRIVILEGE);
+                names.add(NameConstants.JCR_RETENTION_MANAGEMENT);
             }
 
-            InternalPrivilege[] privs;
-            if (!privileges.isEmpty()) {
-                privs = privileges.toArray(new InternalPrivilege[privileges.size()]);
-                BITS_TO_PRIVILEGES.put(bits, privs);
-            } else {
-                privs = new InternalPrivilege[0];
+            // include matching custom privilege names 
+            for (PrivilegeDefinition def : registeredPrivileges.values()) {
+                if (def.isCustom && ((bits & def.bits) == def.bits)) {
+                    names.add(def.name);
+                }
             }
-            return privs;
+
+            if (!names.isEmpty()) {
+                bitsToNames.put(bits, names);
+            }
+            return names.toArray(new Name[names.size()]);
         }
     }
 
-    private static InternalPrivilege registerPrivilege(InternalPrivilege privilege) {
-        REGISTERED_PRIVILEGES.add(privilege);
-        BITS_TO_PRIVILEGES.put(privilege.getBits(), new InternalPrivilege[] {privilege});
-        return privilege;
+    void addListener(Listener listener) {
+        listeners.put(listener,listener);
+    }
+
+    //---------------------------------------------< privilege registration >---
+    /**
+     * Adds the specified privilege definitions to the internal map(s) and
+     * recalculates the jcr:all privilege definition.
+     * 
+     * @param definitions
+     */
+    private void registerDefinitions(Map<Name, PrivilegeDefinition> definitions) {
+        registeredPrivileges.putAll(definitions);
+        for (PrivilegeDefinition def : definitions.values()) {
+            bitsToNames.put(def.bits, Collections.singleton(def.name));
+        }
+
+        if (!definitions.containsKey(NameConstants.JCR_ALL)) {
+            // redefine the jcr:all privilege definition
+            PrivilegeDefinition all = registeredPrivileges.get(NameConstants.JCR_ALL);
+
+            Set<Name> allAggrNames = all.declaredAggregateNames;
+            allAggrNames.addAll(definitions.keySet());
+
+            int allBits = all.bits;
+            for (PrivilegeDefinition def : definitions.values()) {
+                allBits |= def.bits;
+            }
+
+            all = new PrivilegeDefinition(NameConstants.JCR_ALL, false, allAggrNames, allBits);
+            registeredPrivileges.put(NameConstants.JCR_ALL, all);
+            bitsToNames.put(all.bits, Collections.singleton(NameConstants.JCR_ALL));
+        }
+    }
+   
+    /**
+     * Creates <code>PrivilegeDefinition</code>s for all built-in privileges.
+     * 
+     * @return definitions for all built-in privileges.
+     */
+    private Map<Name,PrivilegeDefinition> createBuiltInPrivilegeDefinitions() {
+        Map<Name, PrivilegeDefinition> defs = new HashMap<Name, PrivilegeDefinition>();
+
+        // all non-aggregate privileges
+        int jcrAllBits = NO_PRIVILEGE;
+        for (Name privilegeName : PRIVILEGE_NAMES.keySet()) {
+            int bits = PRIVILEGE_NAMES.get(privilegeName);
+            PrivilegeDefinition def = new PrivilegeDefinition(privilegeName, false, bits);
+            defs.put(privilegeName, def);
+            jcrAllBits |= bits;
+        }
+
+        // jcr:write
+        PrivilegeDefinition jcrWrite = createJcrWriteDefinition();
+        defs.put(jcrWrite.name, jcrWrite);
+
+        // rep:write
+        PrivilegeDefinition repWrite = createRepWriteDefinition(jcrWrite.bits);
+        defs.put(repWrite.name, repWrite);
+
+        // jcr:all
+        Set<Name> jcrAllAggregates = new HashSet<Name>(10);
+        jcrAllAggregates.add(NameConstants.JCR_READ);
+        jcrAllAggregates.add(NameConstants.JCR_READ_ACCESS_CONTROL);
+        jcrAllAggregates.add(NameConstants.JCR_MODIFY_ACCESS_CONTROL);
+        jcrAllAggregates.add(NameConstants.JCR_LOCK_MANAGEMENT);
+        jcrAllAggregates.add(NameConstants.JCR_VERSION_MANAGEMENT);
+        jcrAllAggregates.add(NameConstants.JCR_NODE_TYPE_MANAGEMENT);
+        jcrAllAggregates.add(NameConstants.JCR_RETENTION_MANAGEMENT);
+        jcrAllAggregates.add(NameConstants.JCR_LIFECYCLE_MANAGEMENT);
+        jcrAllAggregates.add(NameConstants.JCR_WRITE);
+        jcrAllAggregates.add(REP_WRITE_NAME);
+
+        PrivilegeDefinition jcrAll = new PrivilegeDefinition(NameConstants.JCR_ALL, false, jcrAllAggregates, jcrAllBits);
+        defs.put(jcrAll.name, jcrAll);
+
+        return defs;
+    }
+
+    /**
+     * Validates the specified <code>DefinitionStub</code>s and creates
+     * new <code>PrivilegeDefinition</code>s. The validation includes name
+     * validation and resolution of declared aggregate names. The latter
+     * also includes checks to prevent cyclic aggregation.
+     *  
+     * @param toRegister
+     * @return new privilege definitions.
+     * @throws RepositoryException If any of the specified stubs is invalid.
+     */
+    private Map<Name, PrivilegeDefinition> createPrivilegeDefinitions(Map<Name, DefinitionStub> toRegister) throws RepositoryException {
+        Map<Name, PrivilegeDefinition> definitions = new HashMap<Name, PrivilegeDefinition>(toRegister.size());
+        Set<DefinitionStub> aggregates = new HashSet<DefinitionStub>();
+
+        for (DefinitionStub stub : toRegister.values()) {
+            Name name = stub.name;
+            if (name == null) {
+                throw new RepositoryException("Name of custom privilege may not be null.");
+            }
+            if (registeredPrivileges.containsKey(name)) {
+                throw new RepositoryException("Registered privilege with name " + name + " already exists.");
+            }
+
+            // namespace validation:
+            // - make sure the specified name defines a registered namespace
+            namespaceRegistry.getPrefix(stub.name.getNamespaceURI());
+            // - and isn't one of the reserved namespaces
+            if (((NamespaceRegistryImpl) namespaceRegistry).isReservedURI(name.getNamespaceURI())) {
+                throw new RepositoryException("Failed to register custom privilege: Reserved namespace URI: " + name.getNamespaceURI());
+            }
+
+            // validate aggregates
+            if (stub.declaredAggregateNames.isEmpty()) {
+                // not an aggregate priv definition.
+                definitions.put(name, new PrivilegeDefinition(stub, nextBits()));
+            } else {
+                for (Name declaredAggregateName : stub.declaredAggregateNames) {
+                    if (name.equals(declaredAggregateName)) {
+                        throw new RepositoryException("Declared aggregate name '"+ declaredAggregateName.toString() +"'refers to the same custom privilege.");
+                    }
+                    if (registeredPrivileges.containsKey(declaredAggregateName)) {
+                        log.debug("Declared aggregate name '"+ declaredAggregateName.toString() +"' referring to registered privilege.");
+                    } else if (toRegister.containsKey(declaredAggregateName)) {
+                        log.debug("Declared aggregate name '"+ declaredAggregateName.toString() +"' referring to un-registered privilege.");
+                        // need to check for circular aggregates
+                        if (isCircularAggregation(stub, declaredAggregateName, toRegister)) {
+                            throw new RepositoryException("Detected circular aggregation within custom privilege caused by " + declaredAggregateName.toString());
+                        }
+                    } else {
+                        throw new RepositoryException("Found unresolvable name of declared aggregate privilege " + declaredAggregateName.toString());
+                    }
+                }
+                // remember for further processing
+                aggregates.add(stub);
+            }
+        }
+
+        // process the aggregate stubs in order to calculate the 'bits'
+        while (aggregates.size() > 0) {
+            // monitor progress of resolution into proper definitions.
+            int cnt = aggregates.size();
+
+            // look for those definitions whose declared aggregates have all been processed.
+            for (Iterator<DefinitionStub> itr = aggregates.iterator(); itr.hasNext();) {
+                DefinitionStub stub = itr.next();
+                int bts = getAggregateBits(stub.declaredAggregateNames, definitions);
+                if (bitsToNames.containsKey(bts) && bitsToNames.get(bts).size() == 1) {
+                    Name existingName = bitsToNames.get(bts).iterator().next();
+                    throw new RepositoryException("Custom aggregate privilege '" + stub.name + "' is already covered by '" + existingName.toString() + "'");
+                }
+                if (bts != NO_PRIVILEGE) {
+                    PrivilegeDefinition def = new PrivilegeDefinition(stub, bts);
+                    definitions.put(def.name, def);
+                    itr.remove();
+                }
+            }
+
+            if (cnt == aggregates.size()) {
+                // none of the remaining aggregate-definitions could be processed
+                throw new RepositoryException("Invalid aggregate privilege definition. Failed to resolve aggregate names.");
+            }
+        }
+
+        return definitions;
+    }
+
+    /**
+     *
+     * @return
+     */
+    private int nextBits() {
+        int b = nextBits;
+        nextBits = nextBits << 1;
+        return b;
+    }
+
+    /**
+     *
+     * @param declaredAggregateNames
+     * @param toRegister
+     * @return
+     */
+    private int getAggregateBits(Set<Name> declaredAggregateNames, Map<Name, PrivilegeDefinition> toRegister) {
+        int bts = NO_PRIVILEGE;
+        for (Name n : declaredAggregateNames) {
+            if (registeredPrivileges.containsKey(n)) {
+                bts |= registeredPrivileges.get(n).bits;
+            } else if (toRegister.containsKey(n)) {
+                PrivilegeDefinition def = toRegister.get(n);
+                if (def.bits == NO_PRIVILEGE) {
+                    // not yet processed dependency -> wait for next iteration.
+                    return NO_PRIVILEGE;
+                } else {
+                    bts |= def.bits;
+                }
+            } else {
+                // unknown dependency (should not get here)
+                return NO_PRIVILEGE;
+            }
+        }
+        return bts;
+    }
+
+    /**
+     *
+     * @param def
+     * @param declaredAggregateName
+     * @param toRegister
+     * @return
+     */
+    private boolean isCircularAggregation(DefinitionStub def, Name declaredAggregateName, Map<Name, DefinitionStub> toRegister) {
+        DefinitionStub d = toRegister.get(declaredAggregateName);
+        if (d.declaredAggregateNames.isEmpty()) {
+            return false;
+        } else {
+            boolean isCircular = false;
+            for (Name n : d.declaredAggregateNames) {
+                if (def.name.equals(n)) {
+                    return true;
+                }
+                if (toRegister.containsKey(n)) {
+                    isCircular = isCircularAggregation(def, n, toRegister);
+                }
+            }
+            return isCircular;
+        }
+    }
+
+    /**
+     * @return PrivilegeDefinition for the jcr:write privilege
+     */
+    private static PrivilegeDefinition createJcrWriteDefinition() {
+        Set<Name> jcrWriteAggregates = new HashSet<Name>(4);
+        jcrWriteAggregates.add(NameConstants.JCR_MODIFY_PROPERTIES);
+        jcrWriteAggregates.add(NameConstants.JCR_ADD_CHILD_NODES);
+        jcrWriteAggregates.add(NameConstants.JCR_REMOVE_CHILD_NODES);
+        jcrWriteAggregates.add(NameConstants.JCR_REMOVE_NODE);
+
+        int jcrWriteBits = NO_PRIVILEGE;
+        for (Name privilegeName : jcrWriteAggregates) {
+            jcrWriteBits |= PRIVILEGE_NAMES.get(privilegeName);
+        }
+        return new PrivilegeDefinition(NameConstants.JCR_WRITE, false, jcrWriteAggregates, jcrWriteBits);
+    }
+
+    private static PrivilegeDefinition createRepWriteDefinition(int jcrWriteBits) {
+        Set<Name> repWriteAggregates = new HashSet<Name>(2);
+        repWriteAggregates.add(NameConstants.JCR_WRITE);
+        repWriteAggregates.add(NameConstants.JCR_NODE_TYPE_MANAGEMENT);
+
+        int repWriteBits = jcrWriteBits | PRIVILEGE_NAMES.get(NameConstants.JCR_NODE_TYPE_MANAGEMENT);
+        return new PrivilegeDefinition(REP_WRITE_NAME, false, repWriteAggregates, repWriteBits);
     }
 
     //--------------------------------------------------------------------------
     /**
-     * Internal representation of the registered privileges (without JCR
-     * name).
+     * Notification about new registered privileges
      */
-    private static class InternalPrivilege {
+    interface Listener {
+        /**
+         * @param privilegeName The name of the new privilege
+         */
+        void privilegeRegistered(Name privilegeName);
+    }
 
-        private final Name name;
-        private final boolean isAbstract;
-        private final boolean isAggregate;
-        private final InternalPrivilege[] declaredAggregates;
-        private final Set<InternalPrivilege> aggregates;
+
+    /**
+     * Raw, non-validated stub of a PrivilegeDefinition
+     */
+    private static class DefinitionStub {
+        
+        protected final Name name;
+        protected final boolean isAbstract;
+        protected final Set<Name> declaredAggregateNames;
+        protected final boolean isCustom;
+        
+        private int hashCode;
+
+        private DefinitionStub(Name name, boolean isAbstract, Set<Name> declaredAggregateNames, boolean isCustom) {
+            this.name = name;
+            this.isAbstract = isAbstract;
+            this.declaredAggregateNames = (declaredAggregateNames == null) ? Collections.<Name>emptySet() : declaredAggregateNames;
+            this.isCustom = isCustom;
+        }
+
+        //---------------------------------------------------------< Object >---
+        @Override
+        public String toString() {
+            return name.toString();
+        }
+
+        @Override
+        public int hashCode() {
+            if (hashCode == 0) {
+                int h = 17;
+                h = 37 * h + name.hashCode();
+                h = 37 * h + Boolean.valueOf(isAbstract).hashCode();
+                h = 37 * h + declaredAggregateNames.hashCode();
+                hashCode = h;
+            }
+            return hashCode;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (obj == this) {
+                return true;
+            }
+            if (obj instanceof DefinitionStub) {
+                DefinitionStub other = (DefinitionStub) obj;
+                return name.equals(other.name)
+                        && isAbstract==other.isAbstract
+                        && declaredAggregateNames.equals(other.declaredAggregateNames);
+            }
+            return false;
+        }
+    }
+
+    /**
+     * Internal definition of a jcr level privilege.
+     */
+    static class PrivilegeDefinition extends DefinitionStub {
 
         private final int bits;
 
-        /**
-         * Create a simple (non-aggregate) internal privilege.
-         * @param name The JCR name of the privilege in the extended form.
-         * @param bits The privilege bits.
-         */
-        private InternalPrivilege(String name, int bits) {
-            if (name == null) {
-                throw new IllegalArgumentException("A privilege must have a name.");
-            }
-            this.name = NAME_FACTORY.create(name);
-            this.bits = bits;
-
-            isAbstract = false;
-            declaredAggregates = null;
-            aggregates = null;
-            isAggregate = false;
+        private PrivilegeDefinition(DefinitionStub stub, int bits) {
+            this(stub.name, stub.isAbstract, stub.declaredAggregateNames, bits, stub.isCustom);
         }
 
-        /**
-         * Create an aggregate internal privilege
-         * @param name The JCR name of the privilege in its extended form.
-         * @param declaredAggregates The declared aggregated privileges.
-         */
-        private InternalPrivilege(String name, InternalPrivilege[] declaredAggregates) {
-            if (name == null) {
-                throw new IllegalArgumentException("A privilege must have a name.");
+        private PrivilegeDefinition(Name name, boolean isAbstract, int bits) {
+            this(name, isAbstract, Collections.<Name>emptySet(), bits, false);
+        }
+
+        private PrivilegeDefinition(Name name, boolean isAbstract, Set<Name> declaredAggregateNames, int bits) {
+            this(name, isAbstract, declaredAggregateNames, bits, false);
+        }
+
+        private PrivilegeDefinition(Name name, boolean isAbstract, Set<Name> declaredAggregateNames, int bits, boolean isCustom) {
+            super(name, isAbstract, declaredAggregateNames, isCustom);
+            if (bits == NO_PRIVILEGE) {
+                throw new IllegalArgumentException("Failed to build int representation of PrivilegeDefinition.");
+            } else {
+                this.bits = bits;
             }
-            this.name = NAME_FACTORY.create(name);
-            this.isAbstract = false;
-            this.declaredAggregates = declaredAggregates;
-            Set<InternalPrivilege> aggrgt = new HashSet<InternalPrivilege>();
-            int bts = 0;
-            for (InternalPrivilege priv : declaredAggregates) {
-                bts |= priv.getBits();
-                if (priv.isAggregate) {
-                    aggrgt.addAll(priv.aggregates);
-                } else {
-                    aggrgt.add(priv);
-                }
-            }
-            aggregates = Collections.unmodifiableSet(aggrgt);
-            bits = bts;
-            isAggregate = true;
         }
 
         int getBits() {
             return bits;
         }
 
-        //---------------------------------------------------------< Object >---
-        @Override
-        public int hashCode() {
-            return bits;
+        Name getName() {
+            return name;
         }
 
-        @Override
-        public boolean equals(Object obj) {
-            if (obj == this) {
-                return true;
+        boolean isAbstract() {
+            return isAbstract;
+        }
+
+        Name[] getDeclaredAggregateNames() {
+            if (declaredAggregateNames.isEmpty()) {
+                return Name.EMPTY_ARRAY;
+            } else {
+                return declaredAggregateNames.toArray(new Name[declaredAggregateNames.size()]);
             }
-            if (obj instanceof InternalPrivilege) {
-                return bits == ((InternalPrivilege) obj).bits;
-            }
-            return false;
         }
     }
 
     /**
-     * Simple wrapper used to provide an public representation of the
-     * registered internal privileges properly exposing the JCR name.
+     * CustomPrivilegeStore used to read and write custom privilege definitions
+     * from/to a file system resource.
      */
-    private class PrivilegeImpl implements Privilege {
+    private class CustomPrivilegeStore {
 
-        private final InternalPrivilege internalPrivilege;
-        private final NameResolver resolver;
+        /**
+         * File system resource used to persist custom privileges registered with
+         * the repository.
+         */
+        private final FileSystemResource customPrivilegesResource;
 
-        private PrivilegeImpl(InternalPrivilege internalPrivilege,
-                              NameResolver resolver) {
-            this.internalPrivilege = internalPrivilege;
-            this.resolver = resolver;
-        }
-
-        public String getName() {
+        private CustomPrivilegeStore(FileSystemResource customPrivilegesResource) throws RepositoryException {
+            this.customPrivilegesResource = customPrivilegesResource;
             try {
-                return resolver.getJCRName(internalPrivilege.name);
-            } catch (NamespaceException e) {
-                // should not occur -> return internal name representation.
-                return internalPrivilege.name.toString();
-            }
-        }
-
-        public boolean isAbstract() {
-            return internalPrivilege.isAbstract;
-        }
-
-        public boolean isAggregate() {
-            return internalPrivilege.isAggregate;
-        }
-
-        public Privilege[] getDeclaredAggregatePrivileges() {
-            if (internalPrivilege.isAggregate) {
-                int len = internalPrivilege.declaredAggregates.length;
-                Privilege[] privs = new Privilege[len];
-                for (int i = 0; i < len; i++) {
-                    InternalPrivilege ip = internalPrivilege.declaredAggregates[i];
-                    privs[i] = localCache.get(ip.name);
+                // make sure path to resource exists
+                if (!customPrivilegesResource.exists()) {
+                    customPrivilegesResource.makeParentDirs();
                 }
-                return privs;
-            } else {
-                return EMPTY_ARRAY;
+            } catch (FileSystemException e) {
+                String error = "Internal error: Failed to access/create file system resource for custom privileges at " + customPrivilegesResource.getPath();
+                log.debug(error);
+                throw new RepositoryException(error, e);
             }
         }
 
-        public Privilege[] getAggregatePrivileges() {
-            if (internalPrivilege.isAggregate) {
-                Privilege[] privs = new Privilege[internalPrivilege.aggregates.size()];
-                int i = 0;
-                for (InternalPrivilege ip : internalPrivilege.aggregates) {
-                    privs[i++] = localCache.get(ip.name);
+        private Map<Name, DefinitionStub> load() throws IOException, FileSystemException, RepositoryException {
+            Map<Name, DefinitionStub> stubs = new LinkedHashMap<Name, DefinitionStub>();
+
+            if (customPrivilegesResource.exists()) {
+                BufferedReader reader = new BufferedReader(new InputStreamReader(customPrivilegesResource.getInputStream(), "utf-8"));
+                try {
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        String[] params = Text.explode(line, ';', true);
+
+                        if (params.length < 1) {
+                            // empty line
+                            continue;
+                        }
+
+                        Name privName = NAME_FACTORY.create(params[0]);
+                        boolean isAbstract = false;
+                        Set<Name> declaredAggrNames = new HashSet<Name>();
+
+                        if (params.length >= 2) {
+                            isAbstract = "abstract".equals(params[1]);
+                        }
+                        if (params.length >= 3) {
+                            String[] declExpNames = Text.explode(params[2], ',');
+                            for (String declExpName : declExpNames) {
+                                declaredAggrNames.add(NAME_FACTORY.create(declExpName));
+                            }
+                        }
+
+                        if (stubs.containsKey(privName)) {
+                            throw new RepositoryException("Duplicate entry for custom privilege with name " + privName.toString());
+                        }
+                        stubs.put(privName, new DefinitionStub(privName, isAbstract, declaredAggrNames, true));
+
+                    }
+                } finally {
+                    reader.close();
                 }
-                return privs;
-            } else {
-                return EMPTY_ARRAY;
             }
+            return stubs;
         }
 
-        //---------------------------------------------------------< Object >---
-        @Override
-        public int hashCode() {
-            return internalPrivilege.hashCode();
-        }
+        private void append(Map<Name, PrivilegeDefinition> newPrivilegeDefinitions) throws IOException, FileSystemException, RepositoryException {
+            Map<Name, DefinitionStub> defs = load();
+            defs.putAll(newPrivilegeDefinitions);
 
-        @Override
-        public boolean equals(Object obj) {
-            if (obj == this) {
-                return true;
+            Writer writer = new OutputStreamWriter(customPrivilegesResource.getOutputStream(), "utf-8");
+            try {
+                for (DefinitionStub def : defs.values()) {
+                    StringBuilder sb = new StringBuilder();
+                    sb.append(def.name.toString()).append(';');
+                    if (def.isAbstract) {
+                        sb.append("abstract");
+                    }
+                    sb.append(";");
+                    if (!def.declaredAggregateNames.isEmpty()) {
+                        int cnt = 0;
+                        for (Name dan : def.declaredAggregateNames) {
+                            if (cnt > 0) {
+                                sb.append(",");
+                            }
+                            sb.append(dan.toString());
+                            cnt++;
+                        }
+                    }
+                    writer.write(sb.toString());
+                    writer.write("\n");
+                }
+            } finally {
+                writer.close();
             }
-            if (obj instanceof PrivilegeImpl) {
-                PrivilegeImpl other = (PrivilegeImpl) obj;
-                return internalPrivilege.equals(other.internalPrivilege);
-            }
-            return false;
         }
     }
 }

@@ -25,6 +25,7 @@ import org.apache.jackrabbit.core.security.authorization.AccessControlEditor;
 import org.apache.jackrabbit.core.security.authorization.AccessControlProvider;
 import org.apache.jackrabbit.core.security.authorization.CompiledPermissions;
 import org.apache.jackrabbit.core.security.authorization.Permission;
+import org.apache.jackrabbit.core.security.authorization.PrivilegeManager;
 import org.apache.jackrabbit.core.security.authorization.PrivilegeRegistry;
 import org.apache.jackrabbit.core.security.authorization.WorkspaceAccessManager;
 import org.apache.jackrabbit.spi.Name;
@@ -88,8 +89,6 @@ public class DefaultAccessManager extends AbstractAccessControlManager implement
 
     private AccessControlEditor editor;
 
-    private PrivilegeRegistry privilegeRegistry;
-
     /**
      * the workspace access
      */
@@ -99,6 +98,11 @@ public class DefaultAccessManager extends AbstractAccessControlManager implement
      * the hierarchy manager used to resolve path from itemId
      */
     private HierarchyManager hierMgr;
+
+    /**
+     * The privilege manager
+     */
+    private PrivilegeManager privilegeManager;
 
     /**
      * The permissions that apply for the principals, that are present with
@@ -139,7 +143,7 @@ public class DefaultAccessManager extends AbstractAccessControlManager implement
         }
 
         wspAccess = new WorkspaceAccess(wspAccessManager, isSystemOrAdmin(amContext.getSession()));
-        privilegeRegistry = new PrivilegeRegistry(resolver);
+        privilegeManager = amContext.getPrivilegeManager();
 
         if (acProvider != null) {
             editor = acProvider.getEditor(amContext.getSession());
@@ -273,7 +277,7 @@ public class DefaultAccessManager extends AbstractAccessControlManager implement
             log.debug("No privileges passed -> allowed.");
             return true;
         } else {
-            int privs = PrivilegeRegistry.getBits(privileges);
+            int privs = privilegeManager.getBits(privileges);
             Path p = resolver.getQPath(absPath);
             return (compiledPermissions.getPrivileges(p) | ~privs) == -1;
         }
@@ -288,7 +292,7 @@ public class DefaultAccessManager extends AbstractAccessControlManager implement
         int bits = compiledPermissions.getPrivileges(resolver.getQPath(absPath));
         return (bits == PrivilegeRegistry.NO_PRIVILEGE) ?
                 new Privilege[0] :
-                privilegeRegistry.getPrivileges(bits);
+                privilegeManager.getPrivileges(bits);
     }
 
     /**
@@ -410,7 +414,7 @@ public class DefaultAccessManager extends AbstractAccessControlManager implement
             log.debug("No privileges passed -> allowed.");
             return true;
         } else {
-            int privs = PrivilegeRegistry.getBits(privileges);
+            int privs = privilegeManager.getBits(privileges);
             Path p = resolver.getQPath(absPath);
             CompiledPermissions perms = acProvider.compilePermissions(principals);
             try {
@@ -434,7 +438,7 @@ public class DefaultAccessManager extends AbstractAccessControlManager implement
             int bits = perms.getPrivileges(resolver.getQPath(absPath));
             return (bits == PrivilegeRegistry.NO_PRIVILEGE) ?
                     new Privilege[0] :
-                    privilegeRegistry.getPrivileges(bits);
+                    privilegeManager.getPrivileges(bits);
         } finally {
             perms.close();
         }
@@ -478,12 +482,12 @@ public class DefaultAccessManager extends AbstractAccessControlManager implement
     }
 
     /**
-     * @see AbstractAccessControlManager#getPrivilegeRegistry()
+     * @see AbstractAccessControlManager#getPrivilegeManager()
      */
     @Override
-    protected PrivilegeRegistry getPrivilegeRegistry() throws RepositoryException {
+    protected PrivilegeManager getPrivilegeManager() throws RepositoryException {
         checkInitialized();
-        return privilegeRegistry;
+        return privilegeManager;
     }
 
     //------------------------------------------------------------< private >---

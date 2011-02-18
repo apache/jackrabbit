@@ -36,6 +36,7 @@ public class TestAll extends TestCase {
         TestSuite suite = new TestSuite("core.security.authorization tests");
 
         suite.addTestSuite(PrivilegeRegistryTest.class);
+        suite.addTestSuite(PrivilegeManagerTest.class);
         suite.addTestSuite(JackrabbitAccessControlListTest.class);
         suite.addTestSuite(GlobPatternTest.class);
         suite.addTestSuite(PermissionTest.class);

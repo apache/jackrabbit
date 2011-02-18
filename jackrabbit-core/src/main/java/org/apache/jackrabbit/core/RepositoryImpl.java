@@ -96,6 +96,7 @@ import org.apache.jackrabbit.core.retention.RetentionRegistry;
 import org.apache.jackrabbit.core.retention.RetentionRegistryImpl;
 import org.apache.jackrabbit.core.security.JackrabbitSecurityManager;
 import org.apache.jackrabbit.core.security.authentication.AuthContext;
+import org.apache.jackrabbit.core.security.authorization.PrivilegeRegistry;
 import org.apache.jackrabbit.core.security.authentication.token.TokenBasedAuthentication;
 import org.apache.jackrabbit.core.security.simple.SimpleSecurityManager;
 import org.apache.jackrabbit.core.cache.CacheManager;
@@ -298,6 +299,7 @@ public class RepositoryImpl extends AbstractRepository
             // create registries
             context.setNamespaceRegistry(createNamespaceRegistry());
             context.setNodeTypeRegistry(createNodeTypeRegistry());
+            context.setPrivilegeRegistry(new PrivilegeRegistry(context.getNamespaceRegistry(), context.getFileSystem()));
 
             // Create item state cache manager
             context.setItemStateCacheFactory(

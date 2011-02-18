@@ -23,6 +23,7 @@ import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.id.NodeIdFactory;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.security.JackrabbitSecurityManager;
+import org.apache.jackrabbit.core.security.authorization.PrivilegeRegistry;
 import org.apache.jackrabbit.core.state.ItemStateCacheFactory;
 import org.apache.jackrabbit.core.version.InternalVersionManagerImpl;
 import org.apache.jackrabbit.util.Timer;
@@ -50,6 +51,11 @@ public class RepositoryContext {
      * The node type registry of this repository.
      */
     private NodeTypeRegistry nodeTypeRegistry;
+
+    /**
+     * The privilege registry for this repository.
+     */
+    private PrivilegeRegistry privilegeRegistry;
 
     /**
      * The internal version manager of this repository.
@@ -164,6 +170,25 @@ public class RepositoryContext {
     void setNodeTypeRegistry(NodeTypeRegistry nodeTypeRegistry) {
         assert nodeTypeRegistry != null;
         this.nodeTypeRegistry = nodeTypeRegistry;
+    }
+
+    /**
+     * Returns the privilege registry of this repository.
+     * 
+     * @return the privilege registry of this repository.
+     */
+    public PrivilegeRegistry getPrivilegeRegistry() {
+        return privilegeRegistry;
+    }
+
+    /**
+     * Sets the privilege registry of this repository.
+     *
+     * @param privilegeRegistry
+     */
+    void setPrivilegeRegistry(PrivilegeRegistry privilegeRegistry) {
+        assert privilegeRegistry != null;
+        this.privilegeRegistry = privilegeRegistry;
     }
 
     /**
