@@ -343,7 +343,7 @@ public class SessionImpl extends AbstractSession
                 new File(context.getRepository().getConfig().getHomeDir()),
                 context.getRepositoryContext().getFileSystem(),
                 this,
-                getSubject(),
+                subject,
                 context.getHierarchyManager(),
                 this,
                 wspName);
@@ -367,12 +367,14 @@ public class SessionImpl extends AbstractSession
     }
 
     /**
-     * Returns the <code>Subject</code> associated with this session.
+     * Returns a read only copy of the <code>Subject</code> associated with this
+     * session.
      *
-     * @return the <code>Subject</code> associated with this session
+     * @return a read only copy of <code>Subject</code> associated with this session
      */
     public Subject getSubject() {
-        return subject;
+        Subject readOnly = new Subject(true, subject.getPrincipals(), subject.getPublicCredentials(), subject.getPrivateCredentials());
+        return readOnly;
     }
 
     /**
@@ -396,8 +398,7 @@ public class SessionImpl extends AbstractSession
             workspaceName =
                 repositoryContext.getWorkspaceManager().getDefaultWorkspaceName();
         }
-        Subject old = getSubject();
-        Subject newSubject = new Subject(old.isReadOnly(), old.getPrincipals(), old.getPublicCredentials(), old.getPrivateCredentials());
+        Subject newSubject = new Subject(subject.isReadOnly(), subject.getPrincipals(), subject.getPublicCredentials(), subject.getPrivateCredentials());
         return repositoryContext.getWorkspaceManager().createSession(
                 newSubject, workspaceName);
     }
