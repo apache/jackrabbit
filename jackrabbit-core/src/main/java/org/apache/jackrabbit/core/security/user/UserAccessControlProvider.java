@@ -71,7 +71,8 @@ import java.util.Set;
  * The default access control policy defined by this provider has the following
  * characteristics:
  * <ul>
- * <li>everybody has READ permission to all items,</li>
+ * <li>All authenticated users have READ permission to all items. If {link #PARAM_ANONYMOUS_ACCESS}
+ * is configured to be <code>true</code> this also applies to the anonymous user.</li>
  *
  * <li>every known user is allowed to modify it's own properties except for
  * her/his group membership,</li>
