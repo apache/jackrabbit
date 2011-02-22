@@ -49,7 +49,7 @@ public class TokenBasedAuthenticationTest extends AbstractJCRTest {
         super.setUp();
 
         tokenNode = testRootNode.addNode(nodeName1, "nt:unstructured");
-        tokenNode.setProperty(".token.exp", new Date().getTime()+TokenBasedAuthentication.TOKEN_EXPIRATION);
+        tokenNode.setProperty(TokenBasedAuthentication.TOKEN_ATTRIBUTE +".exp", new Date().getTime()+TokenBasedAuthentication.TOKEN_EXPIRATION);
         superuser.save();
 
         String token = tokenNode.getIdentifier();
@@ -120,16 +120,16 @@ public class TokenBasedAuthenticationTest extends AbstractJCRTest {
     }
 
     public void testAttributes() throws RepositoryException {
-        tokenNode.setProperty(".token.any", "correct");
+        tokenNode.setProperty(TokenBasedAuthentication.TOKEN_ATTRIBUTE +".any", "correct");
         superuser.save();
         TokenBasedAuthentication auth = new TokenBasedAuthentication(tokenNode.getIdentifier(), TokenBasedAuthentication.TOKEN_EXPIRATION, superuser);
 
         assertFalse(auth.authenticate(tokenCreds));
 
-        tokenCreds.setAttribute(".token.any", "wrong");
+        tokenCreds.setAttribute(TokenBasedAuthentication.TOKEN_ATTRIBUTE +".any", "wrong");
         assertFalse(auth.authenticate(tokenCreds));
 
-        tokenCreds.setAttribute(".token.any", "correct");
+        tokenCreds.setAttribute(TokenBasedAuthentication.TOKEN_ATTRIBUTE +".any", "correct");
         assertTrue(auth.authenticate(tokenCreds));
 
         // add informative property
@@ -138,5 +138,38 @@ public class TokenBasedAuthenticationTest extends AbstractJCRTest {
         auth = new TokenBasedAuthentication(tokenNode.getIdentifier(), TokenBasedAuthentication.TOKEN_EXPIRATION, superuser);
 
         assertTrue(auth.authenticate(tokenCreds));
+    }
+
+    public void testIsTokenBasedLogin() {
+        assertFalse(TokenBasedAuthentication.isTokenBasedLogin(simpleCreds));
+        assertFalse(TokenBasedAuthentication.isTokenBasedLogin(creds));
+
+        assertTrue(TokenBasedAuthentication.isTokenBasedLogin(tokenCreds));
+    }
+
+    public void testIsMandatoryAttribute() {
+        assertFalse(TokenBasedAuthentication.isMandatoryAttribute("noMatchRequired"));
+
+        assertTrue(TokenBasedAuthentication.isMandatoryAttribute(TokenBasedAuthentication.TOKEN_ATTRIBUTE + ".exp"));
+        assertTrue(TokenBasedAuthentication.isMandatoryAttribute(TokenBasedAuthentication.TOKEN_ATTRIBUTE + ".custom"));
+        assertTrue(TokenBasedAuthentication.isMandatoryAttribute(TokenBasedAuthentication.TOKEN_ATTRIBUTE + "_custom"));
+        assertTrue(TokenBasedAuthentication.isMandatoryAttribute(TokenBasedAuthentication.TOKEN_ATTRIBUTE + "custom"));
+    }
+
+    public void testDoCreateToken() {
+        assertFalse(TokenBasedAuthentication.doCreateToken(creds));
+        assertFalse(TokenBasedAuthentication.doCreateToken(simpleCreds));
+        assertFalse(TokenBasedAuthentication.doCreateToken(tokenCreds));
+
+        SimpleCredentials sc = new SimpleCredentials("uid", "pw".toCharArray());
+        sc.setAttribute(TokenBasedAuthentication.TOKEN_ATTRIBUTE, null);
+
+        assertFalse(TokenBasedAuthentication.doCreateToken(sc));
+
+        sc.setAttribute(TokenBasedAuthentication.TOKEN_ATTRIBUTE, "somevalue");
+        assertFalse(TokenBasedAuthentication.doCreateToken(sc));
+
+        sc.setAttribute(TokenBasedAuthentication.TOKEN_ATTRIBUTE, "");
+        assertTrue(TokenBasedAuthentication.doCreateToken(sc));
     }
 }

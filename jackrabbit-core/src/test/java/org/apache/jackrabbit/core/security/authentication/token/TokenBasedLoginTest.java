@@ -111,6 +111,7 @@ public class TokenBasedLoginTest extends AbstractJCRTest {
 
         s = repo.login(creds);
         try {
+            // token credentials must be created
             Set<TokenCredentials> tokenCreds = ((SessionImpl) s).getSubject().getPublicCredentials(TokenCredentials.class);
             assertFalse(tokenCreds.isEmpty());
             assertEquals(1, tokenCreds.size());
@@ -118,9 +119,26 @@ public class TokenBasedLoginTest extends AbstractJCRTest {
             TokenCredentials tc = tokenCreds.iterator().next();          
             token = tc.getToken();
 
-            assertEquals(token, s.getAttribute(TOKEN_ATTRIBUTE));
+            // original simple credentials: token attribute should be updated
+            assertNotNull(creds.getAttribute(TOKEN_ATTRIBUTE));
+            assertFalse("".equals(creds.getAttribute(TOKEN_ATTRIBUTE)));
+
+            // simple credentials must also be present on the subject
+            Set<SimpleCredentials> scs = ((SessionImpl) s).getSubject().getPublicCredentials(SimpleCredentials.class);
+            assertFalse(scs.isEmpty());
+            assertEquals(1, scs.size());
+            SimpleCredentials sc = scs.iterator().next();
+            assertNotNull(sc.getAttribute(TOKEN_ATTRIBUTE));
+            assertFalse("".equals(sc.getAttribute(TOKEN_ATTRIBUTE)));
+
+            // test if session attributes only exposed non-mandatory attributes
+            assertNull(s.getAttribute(TOKEN_ATTRIBUTE));
             for (String attrName : tc.getAttributeNames()) {
-                assertEquals(tc.getAttribute(attrName), s.getAttribute(attrName));
+                if (TokenBasedAuthentication.isMandatoryAttribute(attrName)) {
+                    assertNull(s.getAttribute(attrName));
+                } else {
+                    assertEquals(tc.getAttribute(attrName), s.getAttribute(attrName));
+                }
             }
 
             // only test node characteristics if user-node resided within the same
@@ -161,11 +179,16 @@ public class TokenBasedLoginTest extends AbstractJCRTest {
             assertEquals(1, tokenCreds.size());
 
             TokenCredentials tc = tokenCreds.iterator().next();
-            token = tc.getToken();
+            String tk = tc.getToken();
+            assertEquals(token, tk);
 
-            assertEquals(token, s.getAttribute(TOKEN_ATTRIBUTE));
+            assertNull(s.getAttribute(TOKEN_ATTRIBUTE));
             for (String attrName : tc.getAttributeNames()) {
-                assertEquals(tc.getAttribute(attrName), s.getAttribute(attrName));
+                if (TokenBasedAuthentication.isMandatoryAttribute(attrName)) {
+                    assertNull(s.getAttribute(attrName));
+                } else {
+                    assertEquals(tc.getAttribute(attrName), s.getAttribute(attrName));
+                }
             }
 
         } finally {
@@ -223,9 +246,12 @@ public class TokenBasedLoginTest extends AbstractJCRTest {
                     for (int i = 0; i < 100; i++) {
                         try {
                             Session s = getHelper().getRepository().login(creds);
-                            s.logout();
-
-                            assertNotNull(s.getAttribute(TokenBasedAuthentication.TOKEN_ATTRIBUTE).toString());
+                            try {
+                                Set<TokenCredentials> tcs = ((SessionImpl) s).getSubject().getPublicCredentials(TokenCredentials.class);
+                                assertFalse(tcs.isEmpty());
+                            } finally {
+                                s.logout();
+                            }
                         } catch (Exception e) {
                             exception[0] = e;
                             break;
@@ -292,9 +318,12 @@ public class TokenBasedLoginTest extends AbstractJCRTest {
                             int index = (int) Math.floor(rand);
                             Credentials c = credentials.get(index);
                             Session s = getHelper().getRepository().login(c);
-                            s.logout();
-
-                            assertNotNull(s.getAttribute(TokenBasedAuthentication.TOKEN_ATTRIBUTE).toString());
+                            try {
+                                Set<TokenCredentials> tcs = ((SessionImpl) s).getSubject().getPublicCredentials(TokenCredentials.class);
+                                assertFalse(tcs.isEmpty());
+                            } finally {
+                                s.logout();
+                            }
                         } catch (Exception e) {
                             exception[0] = e;
                             break;
@@ -352,9 +381,13 @@ public class TokenBasedLoginTest extends AbstractJCRTest {
                             String wspName = wspNames.get(index);
 
                             Session s = getHelper().getRepository().login(creds, wspName);
-                            s.logout();
+                            try {
+                                Set<TokenCredentials> tcs = ((SessionImpl) s).getSubject().getPublicCredentials(TokenCredentials.class);
+                                assertFalse(tcs.isEmpty());
+                            } finally {
+                                s.logout();
+                            }
 
-                            assertNotNull(s.getAttribute(TokenBasedAuthentication.TOKEN_ATTRIBUTE).toString());
                         } catch (Exception e) {
                             exception[0] = e;
                             break;
