@@ -1497,15 +1497,18 @@ public class RepositoryImpl extends AbstractRepository
             if (credentials instanceof SimpleCredentials) {
                 SimpleCredentials sc = (SimpleCredentials) credentials;
                 for (String name : sc.getAttributeNames()) {
-                    session.setAttribute(name, sc.getAttribute(name));
+                    if (!TokenBasedAuthentication.isMandatoryAttribute(name)) {
+                        session.setAttribute(name, sc.getAttribute(name));
+                    }
                 }
             }
             Set<TokenCredentials> tokenCreds = session.getSubject().getPublicCredentials(TokenCredentials.class);
             if (!tokenCreds.isEmpty()) {
                 TokenCredentials tc = tokenCreds.iterator().next();
-                session.setAttribute(TokenBasedAuthentication.TOKEN_ATTRIBUTE, tc.getToken());
                 for (String name : tc.getAttributeNames()) {
-                    session.setAttribute(name, tc.getAttribute(name));
+                    if (!TokenBasedAuthentication.isMandatoryAttribute(name)) {
+                        session.setAttribute(name, tc.getAttribute(name));
+                    }
                 }
             }
 

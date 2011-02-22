@@ -86,7 +86,7 @@ public class TokenBasedAuthentication implements Authentication {
             while (it.hasNext()) {
                 Property p = it.nextProperty();
                 String name = p.getName();
-                if (!name.startsWith(TOKEN_ATTRIBUTE)) {
+                if (!isMandatoryAttribute(name)) {
                     continue;
                 }
                 if (TOKEN_ATTRIBUTE_EXPIRY.equals(name)) {
@@ -202,18 +202,36 @@ public class TokenBasedAuthentication implements Authentication {
 
     //--------------------------------------------------------------------------
     /**
+     * Returns <code>true</code> if the given <code>credentials</code> object
+     * is an instance of <code>TokenCredentials</code>.
      *
      * @param credentials
-     * @return
+     * @return <code>true</code> if the given <code>credentials</code> object
+     * is an instance of <code>TokenCredentials</code>; <code>false</code> otherwise.
      */
     public static boolean isTokenBasedLogin(Credentials credentials) {
         return credentials instanceof TokenCredentials;
     }
 
     /**
+     * Returns <code>true</code> if the specified <code>attributeName</code>
+     * starts with or equals {@link #TOKEN_ATTRIBUTE}.
+     *  
+     * @param attributeName
+     * @return <code>true</code> if the specified <code>attributeName</code>
+     * starts with or equals {@link #TOKEN_ATTRIBUTE}.
+     */
+    public static boolean isMandatoryAttribute(String attributeName) {
+        return attributeName != null && attributeName.startsWith(TOKEN_ATTRIBUTE);
+    }
+
+    /**
+     * Returns <code>true</code> if the specified <code>credentials</code>
+     * should be used to create a new login token.
      *
      * @param credentials
-     * @return
+     * @return <code>true</code> if upon successful authentication a new
+     * login token should be created; <code>false</code> otherwise.
      */
     public static boolean doCreateToken(Credentials credentials) {
         if (credentials instanceof SimpleCredentials) {
@@ -267,7 +285,9 @@ public class TokenBasedAuthentication implements Authentication {
             String tokenName = Text.replace(ISO8601.format(cal), ":", ".");
             Node tokenNode = tokenParent.addNode(tokenName);
 
-            tokenCredentials = new TokenCredentials(tokenNode.getIdentifier());
+            String token = tokenNode.getIdentifier();
+            tokenCredentials = new TokenCredentials(token);
+            credentials.setAttribute(TOKEN_ATTRIBUTE, token);
 
             // add expiration time property
             cal.setTimeInMillis(expirationTime);
