@@ -22,13 +22,14 @@ import java.io.File;
 import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.sql.Blob;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Random;
 
 import javax.jcr.RepositoryException;
 import javax.sql.DataSource;
@@ -58,6 +59,7 @@ import org.apache.jackrabbit.core.util.db.ConnectionHelper;
 import org.apache.jackrabbit.core.util.db.DatabaseAware;
 import org.apache.jackrabbit.core.util.db.DbUtility;
 import org.apache.jackrabbit.core.util.db.StreamWrapper;
+import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -751,6 +753,26 @@ public class BundleDbPersistenceManager
                 if (loadBundle(parentId) == null) {
                     log.error("NodeState '" + id + "' references inexistent parent uuid '" + parentId + "'");
                 }
+            	NodePropBundle parentBundle = loadBundle(parentId);
+            	Iterator<NodePropBundle.ChildNodeEntry> childNodeIter = parentBundle.getChildNodeEntries().iterator();
+            	boolean found = false;
+            	while (childNodeIter.hasNext()) {
+                    NodePropBundle.ChildNodeEntry entry = childNodeIter.next();
+                    if (entry.getId().equals(id)){
+                    	found = true;
+                    	break;
+                    }
+            	}
+            	if (!found) {
+            		log.error("NodeState '" + id + "' is not referenced by its parent node '" + parentId + "'");
+            		int l = (int) System.currentTimeMillis();
+            		int r = new Random().nextInt();
+            		int n = l + r; 
+            		String nodeName = Integer.toHexString(n);
+            		parentBundle.addChildNodeEntry(NameFactoryImpl.getInstance().create("{}" + nodeName), id);
+            		log.info("NodeState '" + id + "' adds itself to its parent node '" + parentId + "' with a new name '" + nodeName+ "'");
+            		modifications.add(parentBundle);
+            	}
             }
         } catch (ItemStateException e) {
             log.error("Error reading node '" + parentId + "' (parent of '" + id + "'): " + e);
