@@ -21,20 +21,33 @@ import org.apache.jackrabbit.api.security.principal.ItemBasedPrincipal;
 import org.apache.jackrabbit.api.security.user.User;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.security.authentication.Authentication;
+import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.util.ISO8601;
 import org.apache.jackrabbit.util.Text;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.jcr.AccessDeniedException;
 import javax.jcr.Credentials;
+import javax.jcr.InvalidItemStateException;
+import javax.jcr.ItemExistsException;
+import javax.jcr.NamespaceRegistry;
+import javax.jcr.NoSuchWorkspaceException;
 import javax.jcr.Node;
 import javax.jcr.Property;
 import javax.jcr.PropertyIterator;
+import javax.jcr.ReferentialIntegrityException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.SimpleCredentials;
+import javax.jcr.lock.LockException;
+import javax.jcr.nodetype.ConstraintViolationException;
+import javax.jcr.nodetype.NoSuchNodeTypeException;
+import javax.jcr.version.VersionException;
 import java.security.Principal;
+import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.GregorianCalendar;
@@ -72,6 +85,7 @@ public class TokenBasedAuthentication implements Authentication {
     private final Session session;
 
     private final Map<String, String> attributes;
+    private final Map<String, String> info;
     private final long expiry;
 
     public TokenBasedAuthentication(String token, long tokenExpiration, Session session) throws RepositoryException {
@@ -81,22 +95,24 @@ public class TokenBasedAuthentication implements Authentication {
         long expTime = Long.MAX_VALUE;
         if (token != null) {
             attributes = new HashMap<String, String>();
+            info = new HashMap<String, String>();
+
             Node n = session.getNodeByIdentifier(token);
             PropertyIterator it = n.getProperties();
             while (it.hasNext()) {
                 Property p = it.nextProperty();
                 String name = p.getName();
-                if (!isMandatoryAttribute(name)) {
-                    continue;
-                }
                 if (TOKEN_ATTRIBUTE_EXPIRY.equals(name)) {
                     expTime = p.getLong();
-                } else {
-                    attributes.put(p.getName(), p.getString());
-                }
+                } else if (isMandatoryAttribute(name)) {
+                    attributes.put(name, p.getString());
+                } else if (isInfoAttribute(name)) {
+                    info.put(name, p.getString());
+                } // else: jcr property -> ignore
             }
         } else {
             attributes = Collections.emptyMap();
+            info = Collections.emptyMap();
         }
         expiry = expTime;
     }
@@ -116,64 +132,104 @@ public class TokenBasedAuthentication implements Authentication {
             throw new RepositoryException("TokenCredentials expected. Cannot handle " + credentials.getClass().getName());
         }
         TokenCredentials tokenCredentials = (TokenCredentials) credentials;
-            // credentials without userID -> check if attributes provide
-            // sufficient information for successful authentication.
-            if (token.equals(tokenCredentials.getToken())) {
-                long loginTime = new Date().getTime();
-                // test if the token has already expired
-                if (expiry < loginTime) {
-                    // already expired -> login fails.
-                    // ... remove the expired token node before aborting the login
-                    removeToken();
+
+        // credentials without userID -> check if attributes provide
+        // sufficient information for successful authentication.
+        if (token.equals(tokenCredentials.getToken())) {
+            long loginTime = new Date().getTime();
+            // test if the token has already expired
+            if (expiry < loginTime) {
+                // already expired -> login fails.
+                // ... remove the expired token node before aborting the login
+                removeToken();
+                return false;
+            }
+            // check if all other required attributes match
+            for (String name : attributes.keySet()) {
+                if (!attributes.get(name).equals(tokenCredentials.getAttribute(name))) {
+                    // no match -> login fails.
                     return false;
                 }
-                // check if all other required attributes match
-                for (String name : attributes.keySet()) {
-                    if (!attributes.get(name).equals(tokenCredentials.getAttribute(name))) {
-                        // no match -> login fails.
-                        return false;
-                    }
-                }
-
-                // token matches and none of the additional constraints was
-                // violated -> authentication succeeded.
-                resetExpiry(expiry, loginTime);
-                return true;
             }
+
+            // update set of informative attributes on the credentials
+            // based on the properties present on the token node.
+            Collection<String> attrNames = Arrays.asList(tokenCredentials.getAttributeNames());
+            for (String key : info.keySet()) {
+                if (!attrNames.contains(key)) {
+                    tokenCredentials.setAttribute(key, info.get(key));
+                }
+            }
+            // collect those attributes present on the credentials that
+            // are missing or different in the token node.
+            Map<String, String> newAttributes = new HashMap<String,String>(attrNames.size());
+            for (String attrName : tokenCredentials.getAttributeNames()) {
+                String attrValue = tokenCredentials.getAttribute(attrName);
+                if (!isMandatoryAttribute(attrName) &&
+                        (!info.containsKey(attrName) || !info.get(attrName).equals(attrValue))) {
+                    newAttributes.put(attrName, attrValue);
+                }
+            }
+
+            // update token node if required: optionally resetting the
+            // expiration and the set of informative properties
+            updateTokenNode(expiry, loginTime, newAttributes);
+
+            return true;
+        }
 
         // wrong credentials that cannot be compared by this authentication
         return false;
     }
 
     /**
-     * Reset the expiration if half of the expiration has passed in order to
-     * minimize write operations (avoid resetting upon each login).
+     * Performs the following checks/updates:
+     * <ol>
+     * <li>Reset the expiration if half of the expiration has passed in order to
+     * minimize write operations (avoid resetting upon each login).</li>
+     * <li>Update the token node to reflect the set of new/changed informative
+     * attributes provided by the credentials.</li>
+     * </ol>
      *
      * @param tokenExpiry
      * @param loginTime
+     * @param newAttributes
      */
-    private void resetExpiry(long tokenExpiry, long loginTime) {
-        if (tokenExpiry - loginTime <= tokenExpiration/2) {
+    private void updateTokenNode(long tokenExpiry, long loginTime, Map<String,String> newAttributes) {
+        Node tokenNode = null;
+        Session s = null;
+        try {
+            // a) expiry...
+            if (tokenExpiry - loginTime <= tokenExpiration/2) {
+                long expirationTime = loginTime + tokenExpiration;
+                Calendar cal = GregorianCalendar.getInstance();
+                cal.setTimeInMillis(expirationTime);
 
-            long expirationTime = loginTime + tokenExpiration;
-            Calendar cal = GregorianCalendar.getInstance();
-            cal.setTimeInMillis(expirationTime);
-
-            Session s = null;
-            try {
-                // use another session to reset the expiration time in order
-                // to avoid concurrent write operations with the shared systemsession.
-                s = ((SessionImpl) session).createSession(session.getWorkspace().getName());
-
-                Node tokenNode = s.getNodeByIdentifier(token);
+                tokenNode = getTokenNode();
+                s = tokenNode.getSession();
                 tokenNode.setProperty(TOKEN_ATTRIBUTE_EXPIRY, s.getValueFactory().createValue(cal));
-                s.save();
-            } catch (RepositoryException e) {
-                log.warn("Internal error while resetting expiry of the login token.", e);
-            } finally {
-                if (s != null) {
-                    s.logout();
+            }
+
+            // b) handle informative attributes...
+            if (!newAttributes.isEmpty()) {
+                if (tokenNode == null) {
+                    tokenNode = getTokenNode();
+                    s = tokenNode.getSession();
                 }
+                for (String attrName : newAttributes.keySet()) {
+                    tokenNode.setProperty(attrName, newAttributes.get(attrName));
+                    log.info("Updating token node with informative attribute '" + attrName + "'");
+                }
+            }
+
+            if (s != null) {
+                s.save();
+            }
+        } catch (RepositoryException e) {
+            log.warn("Failed to update expiry or informative attributes of token node.", e);
+        } finally {
+            if (s != null) {
+                s.logout();
             }
         }
     }
@@ -184,20 +240,31 @@ public class TokenBasedAuthentication implements Authentication {
     private void removeToken() {
         Session s = null;
         try {
-            // use another session to remove the token node
-            // to avoid concurrent write operations with the shared systemsession.
-            s = ((SessionImpl) session).createSession(session.getWorkspace().getName());
-
-            Node tokenNode = s.getNodeByIdentifier(token);
+            Node tokenNode = getTokenNode();
+            s = tokenNode.getSession();
+            
             tokenNode.remove();
             s.save();
         } catch (RepositoryException e) {
-            log.warn("Internal error while resetting expiry of the login token.", e);
+            log.warn("Internal error while removing token node.", e);
         } finally {
             if (s != null) {
                 s.logout();
             }
         }
+    }
+
+    /**
+     * Retrieve the token node using another session to avoid concurrent write
+     * operations with the shared system session.
+     *
+     * @return the token node
+     * @throws RepositoryException
+     * @throws AccessDeniedException
+     */
+    private Node getTokenNode() throws RepositoryException, AccessDeniedException {
+        Session s = ((SessionImpl) session).createSession(session.getWorkspace().getName());
+        return s.getNodeByIdentifier(token);
     }
 
     //--------------------------------------------------------------------------
@@ -223,6 +290,21 @@ public class TokenBasedAuthentication implements Authentication {
      */
     public static boolean isMandatoryAttribute(String attributeName) {
         return attributeName != null && attributeName.startsWith(TOKEN_ATTRIBUTE);
+    }
+
+    /**
+     * Returns <code>false</code> if the specified attribute name doesn't have
+     * a 'jcr' or 'rep' namespace prefix; <code>true</code> otherwise. This is
+     * a lazy evaluation in order to avoid testing the defining node type of
+     * the associated jcr property.
+     *
+     * @param propertyName
+     * @return <code>true</code> if the specified property name doesn't seem
+     * to represent repository internal information.
+     */
+    private static boolean isInfoAttribute(String propertyName) {
+        String prefix = Text.getNamespacePrefix(propertyName);
+        return !Name.NS_JCR_PREFIX.equals(prefix) && !Name.NS_REP_PREFIX.equals(prefix);
     }
 
     /**
