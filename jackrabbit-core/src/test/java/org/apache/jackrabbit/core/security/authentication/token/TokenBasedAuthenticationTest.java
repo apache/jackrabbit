@@ -140,6 +140,32 @@ public class TokenBasedAuthenticationTest extends AbstractJCRTest {
         assertTrue(auth.authenticate(tokenCreds));
     }
 
+    public void testUpdateAttributes() throws RepositoryException {
+        tokenNode.setProperty(TokenBasedAuthentication.TOKEN_ATTRIBUTE +".any", "correct");
+        tokenNode.setProperty("informative","value");
+        superuser.save();
+
+        // token credentials must be updated to contain the additional attribute
+        // present on the token node.
+        TokenBasedAuthentication auth = new TokenBasedAuthentication(tokenNode.getIdentifier(), TokenBasedAuthentication.TOKEN_EXPIRATION, superuser);
+        tokenCreds.setAttribute(TokenBasedAuthentication.TOKEN_ATTRIBUTE +".any", "correct");
+        assertTrue(auth.authenticate(tokenCreds));               
+        assertEquals("value", tokenCreds.getAttribute("informative"));
+
+        // additional informative property present on credentials
+        // -> the node must be updated
+        tokenCreds.setAttribute("informative2", "value2");
+        assertTrue(auth.authenticate(tokenCreds));
+        assertTrue(tokenNode.hasProperty("informative2"));
+        assertEquals("value2", tokenNode.getProperty("informative2").getString());
+
+        // additional mandatory property on the credentials
+        // -> must be ignored during authentication
+        tokenCreds.setAttribute(TokenBasedAuthentication.TOKEN_ATTRIBUTE +".toIgnore", "ignore");
+        assertTrue(auth.authenticate(tokenCreds));
+        assertFalse(tokenNode.hasProperty(TokenBasedAuthentication.TOKEN_ATTRIBUTE +".toIgnore"));
+    }
+
     public void testIsTokenBasedLogin() {
         assertFalse(TokenBasedAuthentication.isTokenBasedLogin(simpleCreds));
         assertFalse(TokenBasedAuthentication.isTokenBasedLogin(creds));
