@@ -24,6 +24,7 @@ import org.apache.jackrabbit.api.security.user.UserManager;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.apache.jackrabbit.test.NotExecutableException;
+import org.apache.jackrabbit.test.RepositoryStub;
 
 import javax.jcr.Credentials;
 import javax.jcr.LoginException;
@@ -231,13 +232,6 @@ public class TokenBasedLoginTest extends AbstractJCRTest {
      * Test copied and slightly adjusted from org.apache.jackrabbit.core.ConcurrentLoginTest
      */
     public void testConcurrentLogin() throws RepositoryException, NotExecutableException {
-        final Credentials creds = getHelper().getSuperuserCredentials();
-        if (creds instanceof SimpleCredentials) {
-            ((SimpleCredentials) creds).setAttribute(TokenBasedAuthentication.TOKEN_ATTRIBUTE, "");
-        } else {
-            throw new NotExecutableException();
-        }
-
         final Exception[] exception = new Exception[1];
         List<Thread> testRunner = new ArrayList<Thread>();
         for (int i = 0; i < 10; i++) {
@@ -245,7 +239,10 @@ public class TokenBasedLoginTest extends AbstractJCRTest {
                 public void run() {
                     for (int i = 0; i < 100; i++) {
                         try {
-                            Session s = getHelper().getRepository().login(creds);
+                            SimpleCredentials sc = new SimpleCredentials(testuser.getID(), testuser.getID().toCharArray());
+                            sc.setAttribute(TokenBasedAuthentication.TOKEN_ATTRIBUTE, "");
+
+                            Session s = getHelper().getRepository().login(sc);
                             try {
                                 Set<TokenCredentials> tcs = ((SessionImpl) s).getSubject().getPublicCredentials(TokenCredentials.class);
                                 assertFalse(tcs.isEmpty());
@@ -286,27 +283,6 @@ public class TokenBasedLoginTest extends AbstractJCRTest {
      * Test copied and slightly adjusted from org.apache.jackrabbit.core.ConcurrentLoginTest
      */
     public void testConcurrentLoginOfDifferentUsers() throws RepositoryException, NotExecutableException {
-        creds.setAttribute(TokenBasedAuthentication.TOKEN_ATTRIBUTE, "");
-
-        final Credentials adminCreds = getHelper().getSuperuserCredentials();
-        if (adminCreds instanceof SimpleCredentials) {
-            ((SimpleCredentials) adminCreds).setAttribute(TokenBasedAuthentication.TOKEN_ATTRIBUTE, "");
-        } else {
-            throw new NotExecutableException();
-        }
-
-        final Credentials readOnlyCreds = getHelper().getSuperuserCredentials();
-        if (readOnlyCreds instanceof SimpleCredentials) {
-            ((SimpleCredentials) readOnlyCreds).setAttribute(TokenBasedAuthentication.TOKEN_ATTRIBUTE, "");
-        } else {
-            throw new NotExecutableException();
-        }
-
-        final List<Credentials> credentials = new ArrayList<Credentials>(3);
-        credentials.add(creds);
-        credentials.add(adminCreds);
-        credentials.add(readOnlyCreds);
-
         final Exception[] exception = new Exception[1];
         List<Thread> testRunner = new ArrayList<Thread>();
         for (int i = 0; i < 10; i++) {
@@ -314,9 +290,21 @@ public class TokenBasedLoginTest extends AbstractJCRTest {
                 public void run() {
                     for (int i = 0; i < 100; i++) {
                         try {
-                            double rand = credentials.size() * Math.random();
+                            SimpleCredentials c;
+                            double rand = 3 * Math.random();
                             int index = (int) Math.floor(rand);
-                            Credentials c = credentials.get(index);
+                            switch (index) {
+                                case 0:
+                                    c = new SimpleCredentials(testuser.getID(), testuser.getID().toCharArray());
+                                    break;
+                                case 1:
+                                    c = new SimpleCredentials(getHelper().getProperty(RepositoryStub.PROP_PREFIX + "." + RepositoryStub.PROP_SUPERUSER_NAME), getHelper().getProperty(RepositoryStub.PROP_PREFIX + "." + RepositoryStub.PROP_SUPERUSER_PWD).toCharArray());
+                                    break;
+                                default:
+                                    c = new SimpleCredentials(getHelper().getProperty(RepositoryStub.PROP_PREFIX + "." + RepositoryStub.PROP_READONLY_NAME), getHelper().getProperty(RepositoryStub.PROP_PREFIX + "." + RepositoryStub.PROP_READONLY_PWD).toCharArray());
+                                    break;
+                            }
+                            c.setAttribute(TokenBasedAuthentication.TOKEN_ATTRIBUTE, "");
                             Session s = getHelper().getRepository().login(c);
                             try {
                                 Set<TokenCredentials> tcs = ((SessionImpl) s).getSubject().getPublicCredentials(TokenCredentials.class);
@@ -357,12 +345,6 @@ public class TokenBasedLoginTest extends AbstractJCRTest {
      * Test copied and slightly adjusted from org.apache.jackrabbit.core.ConcurrentLoginTest
      */
     public void testConcurrentLoginDifferentWorkspaces() throws RepositoryException, NotExecutableException {
-        final Credentials creds = getHelper().getSuperuserCredentials();
-        if (creds instanceof SimpleCredentials) {
-            ((SimpleCredentials) creds).setAttribute(TokenBasedAuthentication.TOKEN_ATTRIBUTE, "");
-        } else {
-            throw new NotExecutableException();
-        }
 
         final List<String> wspNames = Arrays.asList(superuser.getWorkspace().getAccessibleWorkspaceNames());
         if (wspNames.size() <= 1) {
@@ -380,7 +362,10 @@ public class TokenBasedLoginTest extends AbstractJCRTest {
                             int index = (int) Math.floor(rand);
                             String wspName = wspNames.get(index);
 
-                            Session s = getHelper().getRepository().login(creds, wspName);
+                            SimpleCredentials sc = new SimpleCredentials(testuser.getID(), testuser.getID().toCharArray());
+                            sc.setAttribute(TokenBasedAuthentication.TOKEN_ATTRIBUTE, "");
+
+                            Session s = getHelper().getRepository().login(sc, wspName);
                             try {
                                 Set<TokenCredentials> tcs = ((SessionImpl) s).getSubject().getPublicCredentials(TokenCredentials.class);
                                 assertFalse(tcs.isEmpty());
