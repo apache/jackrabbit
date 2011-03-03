@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.core.security.user;
 
 import java.security.Principal;
+import java.security.acl.Group;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -30,8 +31,6 @@ import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.jackrabbit.api.security.user.Impersonation;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.PropertyImpl;
-import org.apache.jackrabbit.core.security.SystemPrincipal;
-import org.apache.jackrabbit.core.security.principal.AdminPrincipal;
 import org.apache.jackrabbit.core.security.principal.PrincipalImpl;
 import org.apache.jackrabbit.core.security.principal.PrincipalIteratorAdapter;
 import org.apache.jackrabbit.value.StringValue;
@@ -82,16 +81,16 @@ class ImpersonationImpl implements Impersonation, UserConstants {
      * @see Impersonation#grantImpersonation(Principal)
      */
     public synchronized boolean grantImpersonation(Principal principal) throws RepositoryException {
-        if (principal instanceof AdminPrincipal || principal instanceof SystemPrincipal) {
-            log.warn("Admin and System principal are already granted impersonation.");
-            return false;
-        }
-
         // make sure the given principals belong to an existing authorizable
         Authorizable auth = user.userManager.getAuthorizable(principal);
         if (auth == null || auth.isGroup()) {
-            log.warn("Cannot grant impersonation to a principal that is a Group " +
-                      "or an unknown Authorizable.");
+            log.warn("Cannot grant impersonation to a principal that is a Group or an unknown Authorizable.");
+            return false;
+        }
+
+        // make sure the given principal doesn't refer to the admin user.
+        if (user.userManager.isAdminId(auth.getID())) {
+            log.warn("Admin principal is already granted impersonation.");
             return false;
         }
 
@@ -115,11 +114,6 @@ class ImpersonationImpl implements Impersonation, UserConstants {
      * @see Impersonation#revokeImpersonation(Principal)
      */
     public synchronized boolean revokeImpersonation(Principal principal) throws RepositoryException {
-        if (principal instanceof AdminPrincipal || principal instanceof SystemPrincipal) {
-            log.warn("Admin and System principal are always granted impersonation.");
-            return false;
-        }
-
         boolean revoked = false;
         String pName = principal.getName();
 
@@ -138,24 +132,31 @@ class ImpersonationImpl implements Impersonation, UserConstants {
         if (subject == null) {
             return false;
         }
-        //shortcut admin/system -> always allowed
-        if (!subject.getPrincipals(AdminPrincipal.class).isEmpty()
-                || !subject.getPrincipals(SystemPrincipal.class).isEmpty()) {
-            return true;
-        }
 
         Set<String> principalNames = new HashSet<String>();
         for (Principal p : subject.getPrincipals()) {
             principalNames.add(p.getName());
         }
 
-        boolean allows = false;
-        try {
-            Set<String> impersonators = getImpersonatorNames();
-            allows = impersonators.removeAll(principalNames);
-        } catch (RepositoryException e) {
-            // should never get here
-            log.debug(e.getMessage());
+        boolean allows;
+        Set<String> impersonators = getImpersonatorNames();
+        allows = impersonators.removeAll(principalNames);
+
+        if (!allows) {
+            // check if subject belongs to administrator user
+            for (Principal p : subject.getPrincipals()) {
+                if (p instanceof Group) {
+                    continue;
+                }
+                Authorizable a = userManager.getAuthorizable(p);
+                if (user.equals(a)) {
+                    allows = false;
+                    break;
+                } else if (a != null && userManager.isAdminId(a.getID())) {
+                    allows = true;
+                    break;
+                }
+            }
         }
         return allows;
     }
