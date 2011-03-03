@@ -19,7 +19,10 @@ package org.apache.jackrabbit.core.security.authentication.token;
 import org.apache.jackrabbit.api.security.authentication.token.TokenCredentials;
 import org.apache.jackrabbit.api.security.principal.ItemBasedPrincipal;
 import org.apache.jackrabbit.api.security.user.User;
+import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.id.NodeId;
+import org.apache.jackrabbit.core.id.NodeIdFactory;
 import org.apache.jackrabbit.core.security.authentication.Authentication;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.util.ISO8601;
@@ -29,21 +32,12 @@ import org.slf4j.LoggerFactory;
 
 import javax.jcr.AccessDeniedException;
 import javax.jcr.Credentials;
-import javax.jcr.InvalidItemStateException;
-import javax.jcr.ItemExistsException;
-import javax.jcr.NamespaceRegistry;
-import javax.jcr.NoSuchWorkspaceException;
 import javax.jcr.Node;
 import javax.jcr.Property;
 import javax.jcr.PropertyIterator;
-import javax.jcr.ReferentialIntegrityException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.SimpleCredentials;
-import javax.jcr.lock.LockException;
-import javax.jcr.nodetype.ConstraintViolationException;
-import javax.jcr.nodetype.NoSuchNodeTypeException;
-import javax.jcr.version.VersionException;
 import java.security.Principal;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -365,7 +359,13 @@ public class TokenBasedAuthentication implements Authentication {
             cal.setTimeInMillis(creationTime);
 
             String tokenName = Text.replace(ISO8601.format(cal), ":", ".");
-            Node tokenNode = tokenParent.addNode(tokenName);
+            Node tokenNode;
+            // avoid usage of sequential nodeIDs
+            if (System.getProperty(NodeIdFactory.SEQUENTIAL_NODE_ID) == null) {
+                tokenNode = tokenParent.addNode(tokenName);
+            } else {
+                tokenNode = ((NodeImpl) tokenParent).addNodeWithUuid(tokenName, NodeId.randomId().toString());
+            }
 
             String token = tokenNode.getIdentifier();
             tokenCredentials = new TokenCredentials(token);
