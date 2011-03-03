@@ -21,6 +21,8 @@ import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.jackrabbit.api.security.user.User;
 import org.apache.jackrabbit.api.security.user.UserManager;
 import org.apache.jackrabbit.api.security.user.Impersonation;
+import org.apache.jackrabbit.core.security.SystemPrincipal;
+import org.apache.jackrabbit.core.security.principal.AdminPrincipal;
 import org.apache.jackrabbit.test.NotExecutableException;
 
 import javax.jcr.AccessDeniedException;
@@ -41,6 +43,7 @@ public class ImpersonationImplTest extends AbstractUserTest {
 
     private String otherUID;
 
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
 
@@ -67,6 +70,7 @@ public class ImpersonationImplTest extends AbstractUserTest {
         otherUID = u2.getID();
     }
 
+    @Override
     protected void tearDown() throws Exception {
         try {
             uSession.logout();
@@ -119,5 +123,46 @@ public class ImpersonationImplTest extends AbstractUserTest {
             // fine as well -> access denied.
         }
         assertFalse("A simple user may not add itself as impersonator to another user.", other.getImpersonation().allows(buildSubject(p)));
+    }
+
+    public void testAdminPrincipalAsImpersonator() throws RepositoryException, NotExecutableException {
+        String adminId = superuser.getUserID();
+        Authorizable a = userMgr.getAuthorizable(adminId);
+        if (a == null || a.isGroup() || !((User) a).isAdmin()) {
+            throw new NotExecutableException(adminId + " is not administators ID");
+        }
+
+        Principal adminPrincipal = new AdminPrincipal(adminId);
+
+        // admin cannot be add/remove to set of impersonators of 'u' but is
+        // always allowed to impersonate that user.
+        User u = (User) userMgr.getAuthorizable(uID);
+        Impersonation impersonation = u.getImpersonation();
+
+        assertFalse(impersonation.grantImpersonation(adminPrincipal));
+        assertFalse(impersonation.revokeImpersonation(adminPrincipal));
+        assertTrue(impersonation.allows(buildSubject(adminPrincipal)));
+
+        // same if the impersonation object of the admin itself is used.
+        // however impersonation is not allowed....
+        Impersonation adminImpersonation = ((User) a).getImpersonation();
+
+        assertFalse(adminImpersonation.grantImpersonation(adminPrincipal));
+        assertFalse(adminImpersonation.revokeImpersonation(adminPrincipal));
+        assertFalse(adminImpersonation.allows(buildSubject(adminPrincipal)));
+    }
+
+    public void testSystemPrincipalAsImpersonator() throws RepositoryException {
+        Principal systemPrincipal = new SystemPrincipal();
+        assertNull(userMgr.getAuthorizable(systemPrincipal));
+
+        // system cannot be add/remove to set of impersonators of 'u' nor
+        // should it be allowed to impersonate a given user...
+        User u = (User) userMgr.getAuthorizable(uID);
+        Impersonation impersonation = u.getImpersonation();
+
+        assertFalse(impersonation.grantImpersonation(systemPrincipal));
+        assertFalse(impersonation.revokeImpersonation(systemPrincipal));
+        assertFalse(impersonation.allows(buildSubject(systemPrincipal)));
     }
 }
