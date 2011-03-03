@@ -229,29 +229,11 @@ org.apache.jackrabbit.test.api.ShareableNodeTest#testGetNodesByPattern
     </dependency>
     <dependency>
       <groupId>org.apache.tika</groupId>
-      <artifactId>tika-parsers</artifactId>
-      <exclusions>
-        <exclusion>
-          <groupId>edu.ucar</groupId>
-          <artifactId>netcdf</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>commons-logging</groupId>
-          <artifactId>commons-logging</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>xml-apis</groupId>
-          <artifactId>xml-apis</artifactId>
-        </exclusion>
-      </exclusions>
+      <artifactId>tika-core</artifactId>
     </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>jcl-over-slf4j</artifactId>
     </dependency>
     <dependency>
       <groupId>org.apache.lucene</groupId>
@@ -276,6 +258,21 @@ org.apache.jackrabbit.test.api.ShareableNodeTest#testGetNodesByPattern
       <groupId>org.apache.jackrabbit</groupId>
       <artifactId>jackrabbit-jcr-benchmark</artifactId>
       <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.tika</groupId>
+      <artifactId>tika-parsers</artifactId>
+      <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>commons-logging</groupId>
+          <artifactId>commons-logging</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>jcl-over-slf4j</artifactId>
     </dependency>
     <dependency>
       <groupId>ch.qos.logback</groupId>
