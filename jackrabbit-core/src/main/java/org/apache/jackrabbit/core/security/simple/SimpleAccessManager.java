@@ -20,8 +20,10 @@ import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.security.AccessControlException;
 import javax.jcr.security.AccessControlPolicy;
 import javax.jcr.security.Privilege;
+
+import org.apache.jackrabbit.api.JackrabbitWorkspace;
+import org.apache.jackrabbit.api.security.authorization.PrivilegeManager;
 import org.apache.jackrabbit.core.HierarchyManager;
-import org.apache.jackrabbit.core.WorkspaceImpl;
 import org.apache.jackrabbit.core.id.ItemId;
 import org.apache.jackrabbit.core.security.AMContext;
 import org.apache.jackrabbit.core.security.AbstractAccessControlManager;
@@ -31,7 +33,6 @@ import org.apache.jackrabbit.core.security.SystemPrincipal;
 import org.apache.jackrabbit.core.security.authorization.AccessControlProvider;
 import org.apache.jackrabbit.core.security.authorization.NamedAccessControlPolicyImpl;
 import org.apache.jackrabbit.core.security.authorization.Permission;
-import org.apache.jackrabbit.core.security.authorization.PrivilegeManager;
 import org.apache.jackrabbit.core.security.authorization.WorkspaceAccessManager;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
@@ -102,7 +103,7 @@ public class SimpleAccessManager extends AbstractAccessControlManager implements
         subject = context.getSubject();
         hierMgr = context.getHierarchyManager();
         resolver = context.getNamePathResolver();
-        privilegeManager = ((WorkspaceImpl) context.getSession().getWorkspace()).getPrivilegeManager();
+        privilegeManager = ((JackrabbitWorkspace) context.getSession().getWorkspace()).getPrivilegeManager();
         wspAccessMgr = wspAccessManager;
         anonymous = !subject.getPrincipals(AnonymousPrincipal.class).isEmpty();
         system = !subject.getPrincipals(SystemPrincipal.class).isEmpty();

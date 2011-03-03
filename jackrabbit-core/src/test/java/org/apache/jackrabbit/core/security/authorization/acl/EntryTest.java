@@ -16,13 +16,13 @@
  */
 package org.apache.jackrabbit.core.security.authorization.acl;
 
+import org.apache.jackrabbit.api.JackrabbitWorkspace;
 import org.apache.jackrabbit.api.security.JackrabbitAccessControlEntry;
+import org.apache.jackrabbit.api.security.authorization.PrivilegeManager;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.SessionImpl;
-import org.apache.jackrabbit.core.WorkspaceImpl;
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.security.authorization.AbstractEntryTest;
-import org.apache.jackrabbit.core.security.authorization.PrivilegeManager;
 import org.apache.jackrabbit.test.NotExecutableException;
 
 import javax.jcr.RepositoryException;
@@ -47,7 +47,7 @@ public class EntryTest extends AbstractEntryTest {
         super.setUp();
 
         SessionImpl s = (SessionImpl) superuser;
-        PrivilegeManager privMgr = ((WorkspaceImpl) superuser.getWorkspace()).getPrivilegeManager();
+        PrivilegeManager privMgr = ((JackrabbitWorkspace) superuser.getWorkspace()).getPrivilegeManager();
 
         acl = new ACLTemplate(testPath, s.getPrincipalManager(), privMgr, s.getValueFactory(), s);
     }

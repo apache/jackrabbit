@@ -16,9 +16,9 @@
  */
 package org.apache.jackrabbit.core.security;
 
+import org.apache.jackrabbit.api.security.authorization.PrivilegeManager;
 import org.apache.jackrabbit.core.HierarchyManager;
 import org.apache.jackrabbit.core.fs.FileSystem;
-import org.apache.jackrabbit.core.security.authorization.PrivilegeManager;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 
 import javax.jcr.Session;

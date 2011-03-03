@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.core.security;
 
 import org.apache.jackrabbit.api.security.JackrabbitAccessControlPolicy;
+import org.apache.jackrabbit.api.security.authorization.PrivilegeManager;
 import org.apache.jackrabbit.commons.iterator.AccessControlPolicyIteratorAdapter;
 import org.apache.jackrabbit.core.HierarchyManager;
 import org.apache.jackrabbit.core.SessionImpl;
@@ -25,7 +26,7 @@ import org.apache.jackrabbit.core.security.authorization.AccessControlEditor;
 import org.apache.jackrabbit.core.security.authorization.AccessControlProvider;
 import org.apache.jackrabbit.core.security.authorization.CompiledPermissions;
 import org.apache.jackrabbit.core.security.authorization.Permission;
-import org.apache.jackrabbit.core.security.authorization.PrivilegeManager;
+import org.apache.jackrabbit.core.security.authorization.PrivilegeManagerImpl;
 import org.apache.jackrabbit.core.security.authorization.PrivilegeRegistry;
 import org.apache.jackrabbit.core.security.authorization.WorkspaceAccessManager;
 import org.apache.jackrabbit.spi.Name;
@@ -277,7 +278,7 @@ public class DefaultAccessManager extends AbstractAccessControlManager implement
             log.debug("No privileges passed -> allowed.");
             return true;
         } else {
-            int privs = privilegeManager.getBits(privileges);
+            int privs = ((PrivilegeManagerImpl) privilegeManager).getBits(privileges);
             Path p = resolver.getQPath(absPath);
             return (compiledPermissions.getPrivileges(p) | ~privs) == -1;
         }
@@ -292,7 +293,7 @@ public class DefaultAccessManager extends AbstractAccessControlManager implement
         int bits = compiledPermissions.getPrivileges(resolver.getQPath(absPath));
         return (bits == PrivilegeRegistry.NO_PRIVILEGE) ?
                 new Privilege[0] :
-                privilegeManager.getPrivileges(bits);
+                ((PrivilegeManagerImpl) privilegeManager).getPrivileges(bits);
     }
 
     /**
@@ -414,7 +415,7 @@ public class DefaultAccessManager extends AbstractAccessControlManager implement
             log.debug("No privileges passed -> allowed.");
             return true;
         } else {
-            int privs = privilegeManager.getBits(privileges);
+            int privs = ((PrivilegeManagerImpl) privilegeManager).getBits(privileges);
             Path p = resolver.getQPath(absPath);
             CompiledPermissions perms = acProvider.compilePermissions(principals);
             try {
@@ -438,7 +439,7 @@ public class DefaultAccessManager extends AbstractAccessControlManager implement
             int bits = perms.getPrivileges(resolver.getQPath(absPath));
             return (bits == PrivilegeRegistry.NO_PRIVILEGE) ?
                     new Privilege[0] :
-                    privilegeManager.getPrivileges(bits);
+                    ((PrivilegeManagerImpl) privilegeManager).getPrivileges(bits);
         } finally {
             perms.close();
         }

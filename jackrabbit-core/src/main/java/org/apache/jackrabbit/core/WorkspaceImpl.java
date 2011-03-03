@@ -40,6 +40,7 @@ import javax.jcr.version.VersionException;
 import javax.jcr.version.VersionManager;
 
 import org.apache.jackrabbit.api.JackrabbitWorkspace;
+import org.apache.jackrabbit.api.security.authorization.PrivilegeManager;
 import org.apache.jackrabbit.commons.AbstractWorkspace;
 import org.apache.jackrabbit.core.config.WorkspaceConfig;
 import org.apache.jackrabbit.core.id.ItemId;
@@ -53,7 +54,6 @@ import org.apache.jackrabbit.core.observation.EventStateCollectionFactory;
 import org.apache.jackrabbit.core.observation.ObservationManagerImpl;
 import org.apache.jackrabbit.core.query.QueryManagerImpl;
 import org.apache.jackrabbit.core.retention.RetentionRegistry;
-import org.apache.jackrabbit.core.security.authorization.PrivilegeManager;
 import org.apache.jackrabbit.core.session.SessionContext;
 import org.apache.jackrabbit.core.state.ItemStateCacheFactory;
 import org.apache.jackrabbit.core.state.LocalItemStateManager;
@@ -344,6 +344,18 @@ public class WorkspaceImpl extends AbstractWorkspace
                 workspaceName, configTemplate);
     }
 
+    /**
+     * Return the <code>PrivilegeManager</code>.
+     *
+     * @return
+     * @throws RepositoryException
+     * @see org.apache.jackrabbit.api.JackrabbitWorkspace#getPrivilegeManager() 
+     */
+    public PrivilegeManager getPrivilegeManager() throws RepositoryException {
+        sanityCheck();
+        return context.getPrivilegeManager();
+    }
+
 
     /**
      * Returns the configuration of this workspace.
@@ -543,17 +555,6 @@ public class WorkspaceImpl extends AbstractWorkspace
                 context.getRepository().getRetentionRegistry(wspConfig.getName());
         }
         return retentionRegistry;
-    }
-
-    /**
-     * Return the <code>PrivilegeManager</code>.
-     * 
-     * @return
-     * @throws RepositoryException
-     */
-    public PrivilegeManager getPrivilegeManager() throws RepositoryException {
-        sanityCheck();
-        return context.getPrivilegeManager();
     }
 
     //------------------------------------------------------------< Workspace >

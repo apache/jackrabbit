@@ -26,8 +26,7 @@ import javax.jcr.Value;
 import javax.jcr.security.AccessControlException;
 import javax.jcr.security.Privilege;
 
-import org.apache.jackrabbit.core.SessionImpl;
-import org.apache.jackrabbit.core.WorkspaceImpl;
+import org.apache.jackrabbit.api.JackrabbitWorkspace;
 import org.apache.jackrabbit.test.NotExecutableException;
 import org.apache.jackrabbit.test.api.security.AbstractAccessControlTest;
 import org.apache.jackrabbit.api.security.JackrabbitAccessControlEntry;
@@ -86,7 +85,7 @@ public abstract class AbstractEntryTest extends AbstractAccessControlTest {
     }
 
     public void testGetPrivileges() throws RepositoryException, NotExecutableException {
-        PrivilegeManager privMgr = ((WorkspaceImpl) superuser.getWorkspace()).getPrivilegeManager();
+        PrivilegeManagerImpl privMgr = (PrivilegeManagerImpl) ((JackrabbitWorkspace) superuser.getWorkspace()).getPrivilegeManager();
         JackrabbitAccessControlEntry entry = createEntry(new String[] {Privilege.JCR_READ}, true);
 
         Privilege[] privs = entry.getPrivileges();
@@ -172,7 +171,7 @@ public abstract class AbstractEntryTest extends AbstractAccessControlTest {
                 acMgr.privilegeFromName(Privilege.JCR_ALL)
         };
 
-        final PrivilegeManager privMgr = ((WorkspaceImpl) superuser.getWorkspace()).getPrivilegeManager();
+        final PrivilegeManagerImpl privMgr = (PrivilegeManagerImpl) ((JackrabbitWorkspace) superuser.getWorkspace()).getPrivilegeManager();
         JackrabbitAccessControlEntry pe = new JackrabbitAccessControlEntry() {
             public boolean isAllow() {
                 return true;

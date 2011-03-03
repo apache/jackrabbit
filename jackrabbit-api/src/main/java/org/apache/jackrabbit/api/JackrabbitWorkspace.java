@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.api;
 
+import org.apache.jackrabbit.api.security.authorization.PrivilegeManager;
 import org.xml.sax.InputSource;
 
 import javax.jcr.AccessDeniedException;
@@ -55,4 +56,12 @@ public interface JackrabbitWorkspace extends Workspace {
      */
     void createWorkspace(String workspaceName, InputSource workspaceTemplate)
             throws AccessDeniedException, RepositoryException;
+
+    /**
+     * Returns the privilege manager.
+     *
+     * @return the privilege manager.
+     * @throws RepositoryException If an error occurs.
+     */
+    PrivilegeManager getPrivilegeManager() throws RepositoryException;
 }

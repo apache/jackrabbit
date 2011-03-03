@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.core.security.authorization;
 
+import org.apache.jackrabbit.api.security.authorization.PrivilegeManager;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.commons.conversion.IllegalNameException;
@@ -39,12 +40,12 @@ import java.util.Set;
 /**
  * <code>PrivilegeManager</code>...
  */
-public final class PrivilegeManager implements PrivilegeRegistry.Listener {
+public final class PrivilegeManagerImpl implements PrivilegeManager, PrivilegeRegistry.Listener {
 
     /**
      * logger instance
      */
-    private static final Logger log = LoggerFactory.getLogger(PrivilegeManager.class);
+    private static final Logger log = LoggerFactory.getLogger(PrivilegeManagerImpl.class);
 
     private static final Privilege[] EMPTY_ARRAY = new Privilege[0];
 
@@ -66,7 +67,7 @@ public final class PrivilegeManager implements PrivilegeRegistry.Listener {
      */
     private final Map<Name, Privilege> cache;
 
-    public PrivilegeManager(PrivilegeRegistry registry, NameResolver nameResolver) {
+    public PrivilegeManagerImpl(PrivilegeRegistry registry, NameResolver nameResolver) {
         this.registry = registry;
         this.resolver = nameResolver;
         this.cache = new HashMap<Name, Privilege>();
@@ -76,6 +77,7 @@ public final class PrivilegeManager implements PrivilegeRegistry.Listener {
         registry.addListener(this);
     }
 
+    //---------------------------------------------------< PrivilegeManager >---
     /**
      * Returns all registered privileges.
      *
@@ -165,6 +167,7 @@ public final class PrivilegeManager implements PrivilegeRegistry.Listener {
         return getPrivilege(privilegeName);
     }
 
+    //-----------------------------< implementation specific public methods >---
     /**
      * @param privileges An array of privileges.
      * @return The privilege bits.
