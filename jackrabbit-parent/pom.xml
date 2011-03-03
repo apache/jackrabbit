@@ -268,6 +268,58 @@
         <groupId>org.apache.tika</groupId>
         <artifactId>tika-parsers</artifactId>
         <version>${tika.version}</version>
+        <exclusions>
+          <!-- Exclude the NetCDF and the related commons-httpclient -->
+          <!-- libraries since the related NetCDF and HDF file       -->
+          <!-- formats are not widely used beyond scientific data.   -->
+          <exclusion>
+            <groupId>edu.ucar</groupId>
+            <artifactId>netcdf</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>commons-httpclient</groupId>
+            <artifactId>commons-httpclient</artifactId>
+          </exclusion>
+          <!-- Exclude the Apache MIME4J library as it's used for    -->
+          <!-- parsing raw email messages and mbox files, which are  -->
+          <!-- typically only needed by a file-based email system.   -->
+          <exclusion>
+            <groupId>org.apache.james</groupId>
+            <artifactId>apache-mime4j</artifactId>
+          </exclusion>
+          <!-- Exclude the Commons Compress library as we don't want -->
+          <!-- to parse compressed archives like zips by default.    -->
+          <exclusion>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-compress</artifactId>
+          </exclusion>
+          <!-- Exclude the ASM library as it's only used for parsing -->
+          <!-- Java class files, for which there's typically no need -->
+          <!-- in a content repository.                              -->
+          <exclusion>
+            <groupId>asm</groupId>
+            <artifactId>asm</artifactId>
+          </exclusion>
+          <!-- Exclude the extractor library for EXIF and other      -->
+          <!-- image metadata as we normally don't want to parse     -->
+          <!-- images for full text indexing.                        -->
+          <exclusion>
+            <groupId>com.drewnoakes</groupId>
+            <artifactId>metadata-extractor</artifactId>
+          </exclusion>
+          <!-- Exclude the Rome library as we normally don't want to -->
+          <!-- parse RSS and Atom feeds for full text indexing.      -->
+          <exclusion>
+            <groupId>rome</groupId>
+            <artifactId>rome</artifactId>
+          </exclusion>
+          <!-- Exclude the Boilerpipe library as we don't use the    -->
+          <!-- BoilerpipeContentHandler functionality from Tika.     -->
+          <exclusion>
+            <groupId>de.l3s.boilerpipe</groupId>
+            <artifactId>boilerpipe</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
       <dependency>
         <groupId>org.apache.derby</groupId>
