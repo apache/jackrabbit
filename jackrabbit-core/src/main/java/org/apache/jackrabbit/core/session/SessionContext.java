@@ -20,6 +20,7 @@ import javax.jcr.NamespaceException;
 import javax.jcr.RepositoryException;
 import javax.jcr.ValueFactory;
 
+import org.apache.jackrabbit.api.security.authorization.PrivilegeManager;
 import org.apache.jackrabbit.core.HierarchyManager;
 import org.apache.jackrabbit.core.ItemManager;
 import org.apache.jackrabbit.core.ItemValidator;
@@ -35,7 +36,7 @@ import org.apache.jackrabbit.core.nodetype.NodeTypeManagerImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.observation.ObservationManagerImpl;
 import org.apache.jackrabbit.core.security.AccessManager;
-import org.apache.jackrabbit.core.security.authorization.PrivilegeManager;
+import org.apache.jackrabbit.core.security.authorization.PrivilegeManagerImpl;
 import org.apache.jackrabbit.core.state.SessionItemStateManager;
 import org.apache.jackrabbit.core.value.ValueFactoryImpl;
 import org.apache.jackrabbit.spi.Name;
@@ -130,7 +131,7 @@ public class SessionContext implements NamePathResolver {
             new ValueFactoryImpl(session, repositoryContext.getDataStore());
         this.itemValidator = new ItemValidator(this);
         this.nodeTypeManager = new NodeTypeManagerImpl(this);
-        this.privilegeManager = new PrivilegeManager(repositoryContext.getPrivilegeRegistry(), session);
+        this.privilegeManager = new PrivilegeManagerImpl(repositoryContext.getPrivilegeRegistry(), session);
         this.workspace = new WorkspaceImpl(this, workspaceConfig);
     }
 

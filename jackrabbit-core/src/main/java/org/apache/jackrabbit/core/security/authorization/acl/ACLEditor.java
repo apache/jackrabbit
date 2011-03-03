@@ -16,17 +16,17 @@
  */
 package org.apache.jackrabbit.core.security.authorization.acl;
 
+import org.apache.jackrabbit.api.JackrabbitWorkspace;
 import org.apache.jackrabbit.api.security.JackrabbitAccessControlPolicy;
+import org.apache.jackrabbit.api.security.authorization.PrivilegeManager;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.ProtectedItemModifier;
 import org.apache.jackrabbit.core.SessionImpl;
-import org.apache.jackrabbit.core.WorkspaceImpl;
 import org.apache.jackrabbit.core.security.authorization.AccessControlConstants;
 import org.apache.jackrabbit.core.security.authorization.AccessControlEditor;
 import org.apache.jackrabbit.core.security.authorization.AccessControlEntryImpl;
 import org.apache.jackrabbit.core.security.authorization.AccessControlUtils;
 import org.apache.jackrabbit.core.security.authorization.Permission;
-import org.apache.jackrabbit.core.security.authorization.PrivilegeManager;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.commons.conversion.NameException;
 import org.apache.jackrabbit.spi.commons.conversion.NameParser;
@@ -130,7 +130,7 @@ public class ACLEditor extends ProtectedItemModifier implements AccessControlEdi
             // create an empty acl unless the node is protected or cannot have
             // rep:AccessControllable mixin set (e.g. due to a lock)
             String mixin = session.getJCRName(NT_REP_ACCESS_CONTROLLABLE);
-            PrivilegeManager privMgr = ((WorkspaceImpl) session.getWorkspace()).getPrivilegeManager();
+            PrivilegeManager privMgr = ((JackrabbitWorkspace) session.getWorkspace()).getPrivilegeManager();
             if (controlledNode.isNodeType(mixin) || controlledNode.canAddMixin(mixin)) {
                 acl = new ACLTemplate(nodePath, session.getPrincipalManager(),
                         privMgr, session.getValueFactory(), session);

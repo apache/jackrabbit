@@ -14,15 +14,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.core.security.authorization;
+package org.apache.jackrabbit.api.security.authorization;
 
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
+import org.apache.jackrabbit.api.security.principal.PrincipalManagerTest;
 
-/**
- * Test suite
- */
 public class TestAll extends TestCase {
 
     /**
@@ -33,13 +31,9 @@ public class TestAll extends TestCase {
      *         package.
      */
     public static Test suite() {
-        TestSuite suite = new TestSuite("core.security.authorization tests");
+        TestSuite suite = new TestSuite("api.security.principal tests");
 
-        suite.addTestSuite(PrivilegeRegistryTest.class);
-        suite.addTestSuite(PrivilegeManagerImplTest.class);
-        suite.addTestSuite(JackrabbitAccessControlListTest.class);
-        suite.addTestSuite(GlobPatternTest.class);
-        suite.addTestSuite(PermissionTest.class);
+        suite.addTestSuite(PrivilegeManagerTest.class);
 
         return suite;
     }

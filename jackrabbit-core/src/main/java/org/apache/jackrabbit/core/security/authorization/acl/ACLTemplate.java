@@ -33,17 +33,18 @@ import javax.jcr.security.AccessControlException;
 import javax.jcr.security.AccessControlManager;
 import javax.jcr.security.Privilege;
 
+import org.apache.jackrabbit.api.JackrabbitWorkspace;
 import org.apache.jackrabbit.api.security.JackrabbitAccessControlList;
+import org.apache.jackrabbit.api.security.authorization.PrivilegeManager;
 import org.apache.jackrabbit.api.security.principal.PrincipalManager;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.SessionImpl;
-import org.apache.jackrabbit.core.WorkspaceImpl;
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
 import org.apache.jackrabbit.core.security.authorization.AbstractACLTemplate;
 import org.apache.jackrabbit.core.security.authorization.AccessControlEntryImpl;
 import org.apache.jackrabbit.core.security.authorization.Permission;
-import org.apache.jackrabbit.core.security.authorization.PrivilegeManager;
+import org.apache.jackrabbit.core.security.authorization.PrivilegeManagerImpl;
 import org.apache.jackrabbit.core.security.authorization.PrivilegeRegistry;
 import org.apache.jackrabbit.core.security.authorization.GlobPattern;
 import org.apache.jackrabbit.core.security.principal.PrincipalImpl;
@@ -79,7 +80,7 @@ class ACLTemplate extends AbstractACLTemplate {
     /**
      * The privilege mgr
      */
-    private final PrivilegeManager privilegeMgr;
+    private final PrivilegeManagerImpl privilegeMgr;
 
     /**
      * The name resolver
@@ -114,7 +115,7 @@ class ACLTemplate extends AbstractACLTemplate {
                 NamePathResolver resolver) throws NamespaceException {
         super(path, valueFactory);
         this.principalMgr = principalMgr;
-        this.privilegeMgr = privilegeMgr;
+        this.privilegeMgr = (PrivilegeManagerImpl) privilegeMgr;
         this.resolver = resolver;
         this.id = null;
 
@@ -135,7 +136,7 @@ class ACLTemplate extends AbstractACLTemplate {
         }
         SessionImpl sImpl = (SessionImpl) aclNode.getSession();
         principalMgr = sImpl.getPrincipalManager();
-        privilegeMgr = ((WorkspaceImpl) sImpl.getWorkspace()).getPrivilegeManager();
+        privilegeMgr = (PrivilegeManagerImpl) ((JackrabbitWorkspace) sImpl.getWorkspace()).getPrivilegeManager();
 
         this.resolver = sImpl;
         this.id = aclNode.getParentId();
@@ -458,7 +459,7 @@ class ACLTemplate extends AbstractACLTemplate {
         }
 
         @Override
-        protected PrivilegeManager getPrivilegeManager() {
+        protected PrivilegeManagerImpl getPrivilegeManager() {
             return privilegeMgr;
         }
     }

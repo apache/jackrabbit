@@ -25,10 +25,10 @@ import javax.jcr.Session;
 import javax.jcr.observation.ObservationManager;
 import javax.jcr.security.Privilege;
 
+import org.apache.jackrabbit.api.JackrabbitWorkspace;
 import org.apache.jackrabbit.core.ItemImpl;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.SessionImpl;
-import org.apache.jackrabbit.core.WorkspaceImpl;
 import org.apache.jackrabbit.core.id.ItemId;
 import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
 import org.apache.jackrabbit.core.security.SystemPrincipal;
@@ -96,7 +96,7 @@ public abstract class AbstractAccessControlProvider implements AccessControlProv
                 return true;
             }
             public int getPrivileges(Path absPath) throws RepositoryException {
-                return ((WorkspaceImpl) session.getWorkspace()).getPrivilegeManager().getBits(new String[] {Privilege.JCR_ALL});
+                return getPrivilegeManagerImpl().getBits(new String[] {Privilege.JCR_ALL});
             }
             public boolean canReadAll() {
                 return true;
@@ -131,7 +131,7 @@ public abstract class AbstractAccessControlProvider implements AccessControlProv
                 if (isAcItem(absPath)) {
                     return PrivilegeRegistry.NO_PRIVILEGE;
                 } else {
-                    return ((WorkspaceImpl) session.getWorkspace()).getPrivilegeManager().getBits(new String[] {Privilege.JCR_READ});
+                    return getPrivilegeManagerImpl().getBits(new String[] {Privilege.JCR_READ});
                 }
             }
             public boolean canReadAll() {
@@ -147,6 +147,9 @@ public abstract class AbstractAccessControlProvider implements AccessControlProv
         };
     }
 
+    private PrivilegeManagerImpl getPrivilegeManagerImpl() throws RepositoryException {
+        return (PrivilegeManagerImpl) ((JackrabbitWorkspace) session.getWorkspace()).getPrivilegeManager();
+    }
     //-------------------------------------------------< AccessControlUtils >---
     /**
      * @see org.apache.jackrabbit.core.security.authorization.AccessControlUtils#isAcItem(Path)

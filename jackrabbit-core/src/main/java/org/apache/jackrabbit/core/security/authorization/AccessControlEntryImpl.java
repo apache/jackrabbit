@@ -206,7 +206,7 @@ public abstract class AccessControlEntryImpl implements JackrabbitAccessControlE
     /**
      * @return The privilege manager in use.
      */
-    protected abstract PrivilegeManager getPrivilegeManager();
+    protected abstract PrivilegeManagerImpl getPrivilegeManager();
 
     /**
      * Build the hash code.

@@ -26,12 +26,11 @@ import javax.jcr.security.AccessControlException;
 import javax.jcr.security.Privilege;
 
 import org.apache.jackrabbit.api.JackrabbitSession;
+import org.apache.jackrabbit.api.JackrabbitWorkspace;
 import org.apache.jackrabbit.api.security.JackrabbitAccessControlEntry;
 import org.apache.jackrabbit.api.security.JackrabbitAccessControlList;
 import org.apache.jackrabbit.api.security.principal.PrincipalIterator;
 import org.apache.jackrabbit.api.security.principal.PrincipalManager;
-import org.apache.jackrabbit.core.SessionImpl;
-import org.apache.jackrabbit.core.WorkspaceImpl;
 import org.apache.jackrabbit.core.security.TestPrincipal;
 import org.apache.jackrabbit.test.NotExecutableException;
 import org.apache.jackrabbit.test.api.security.AbstractAccessControlTest;
@@ -43,7 +42,7 @@ public abstract class AbstractACLTemplateTest extends AbstractAccessControlTest 
 
     protected Principal testPrincipal;
     protected PrincipalManager principalMgr;
-    protected PrivilegeManager privilegeMgr;
+    protected PrivilegeManagerImpl privilegeMgr;
 
     @Override
     protected void setUp() throws Exception {
@@ -60,7 +59,7 @@ public abstract class AbstractACLTemplateTest extends AbstractAccessControlTest 
         } else {
             throw new NotExecutableException();
         }
-        privilegeMgr = ((WorkspaceImpl) superuser.getWorkspace()).getPrivilegeManager();
+        privilegeMgr = (PrivilegeManagerImpl) ((JackrabbitWorkspace) superuser.getWorkspace()).getPrivilegeManager();
     }
 
     protected void assertSamePrivileges(Privilege[] privs1, Privilege[] privs2) throws AccessControlException {

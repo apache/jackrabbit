@@ -147,7 +147,8 @@ public final class PrivilegeRegistry {
      * built-in privileges.
      *
      * @param resolver
-     * @deprecated Use {@link PrivilegeManager} instead.
+     * @deprecated Use {@link org.apache.jackrabbit.api.security.authorization.PrivilegeManager} instead.
+     * @see org.apache.jackrabbit.api.JackrabbitWorkspace#getPrivilegeManager()
      */
     public PrivilegeRegistry(NameResolver resolver) {
         registerDefinitions(createBuiltInPrivilegeDefinitions());
@@ -162,11 +163,11 @@ public final class PrivilegeRegistry {
      * Throws <code>UnsupportedOperationException</code>.
      *
      * @return all registered privileges.
-     * @deprecated Use {@link org.apache.jackrabbit.core.security.authorization.PrivilegeManager#getRegisteredPrivileges()} instead.
+     * @deprecated Use {@link org.apache.jackrabbit.api.security.authorization.PrivilegeManager#getRegisteredPrivileges()} instead.
      */
     public Privilege[] getRegisteredPrivileges() {
         try {
-            return new PrivilegeManager(this, resolver).getRegisteredPrivileges();
+            return new PrivilegeManagerImpl(this, resolver).getRegisteredPrivileges();
         } catch (RepositoryException e) {
             throw new UnsupportedOperationException("No supported any more. Use PrivilegeManager#getRegisteredPrivileges() instead.");
         }
@@ -174,31 +175,31 @@ public final class PrivilegeRegistry {
 
     /**
      * Creates a new <code>PrivilegeManager</code> from the specified resolver
-     * and calls {@link org.apache.jackrabbit.core.security.authorization.PrivilegeManager#getRegisteredPrivileges()}.
+     * and calls {@link PrivilegeManagerImpl#getRegisteredPrivileges()}.
      *
      * @param privilegeName Name of the privilege.
      * @return the privilege with the specified <code>privilegeName</code>.
      * @throws AccessControlException If no privilege with the given name exists.
      * @throws RepositoryException If another error occurs.
-     * @deprecated Use {@link PrivilegeManager#getPrivilege(String)} instead.
+     * @deprecated Use {@link org.apache.jackrabbit.api.security.authorization.PrivilegeManager#getPrivilege(String)} instead.
      */
     public Privilege getPrivilege(String privilegeName) throws AccessControlException, RepositoryException {
-        return new PrivilegeManager(this, resolver).getPrivilege(privilegeName);
+        return new PrivilegeManagerImpl(this, resolver).getPrivilege(privilegeName);
     }
 
     /**
      * Creates a new <code>PrivilegeManager</code> from the specified resolver
-     * and calls {@link org.apache.jackrabbit.core.security.authorization.PrivilegeManager#getPrivileges(int)}.
+     * and calls {@link PrivilegeManagerImpl#getPrivileges(int)}.
      *
      * @param bits Privilege bits as obtained from {@link #getBits(Privilege[])}.
      * @return Array of <code>Privilege</code>s that are presented by the given it
      * or an empty array if <code>bits</code> is lower than {@link #READ} or
      * cannot be resolved to registered <code>Privilege</code>s.
      * @see #getBits(Privilege[])
-     * @deprecated Use {@link PrivilegeManager#getPrivileges(int)} instead.
+     * @deprecated Use {@link PrivilegeManagerImpl#getPrivileges(int)} instead.
      */
     public Privilege[] getPrivileges(int bits) {
-        return new PrivilegeManager(this, resolver).getPrivileges(bits);
+        return new PrivilegeManagerImpl(this, resolver).getPrivileges(bits);
     }
 
     /**
@@ -212,7 +213,7 @@ public final class PrivilegeRegistry {
      * @throws AccessControlException If the specified array is null
      * or if it contains an unregistered privilege.
      * @see #getPrivileges(int)
-     * @deprecated Use {@link PrivilegeManager#getBits(javax.jcr.security.Privilege[])} instead.
+     * @deprecated Use {@link PrivilegeManagerImpl#getBits(javax.jcr.security.Privilege[])} instead.
      */
     public static int getBits(Privilege[] privileges) throws AccessControlException {
         if (privileges == null || privileges.length == 0) {

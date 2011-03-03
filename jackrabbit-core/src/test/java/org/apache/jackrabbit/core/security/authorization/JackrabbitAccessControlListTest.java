@@ -17,12 +17,11 @@
 package org.apache.jackrabbit.core.security.authorization;
 
 import org.apache.jackrabbit.api.JackrabbitSession;
+import org.apache.jackrabbit.api.JackrabbitWorkspace;
 import org.apache.jackrabbit.api.security.JackrabbitAccessControlEntry;
 import org.apache.jackrabbit.api.security.JackrabbitAccessControlList;
 import org.apache.jackrabbit.api.security.principal.PrincipalIterator;
 import org.apache.jackrabbit.api.security.principal.PrincipalManager;
-import org.apache.jackrabbit.core.SessionImpl;
-import org.apache.jackrabbit.core.WorkspaceImpl;
 import org.apache.jackrabbit.test.NotExecutableException;
 import org.apache.jackrabbit.test.api.security.AbstractAccessControlTest;
 
@@ -45,7 +44,7 @@ import java.util.List;
 public class JackrabbitAccessControlListTest extends AbstractAccessControlTest {
 
     private JackrabbitAccessControlList templ;
-    private PrivilegeManager privilegeMgr;
+    private PrivilegeManagerImpl privilegeMgr;
 
     @Override
     protected void setUp() throws Exception {
@@ -66,7 +65,7 @@ public class JackrabbitAccessControlListTest extends AbstractAccessControlTest {
             throw new NotExecutableException("No JackrabbitAccessControlList to test.");
         }
 
-        privilegeMgr = ((WorkspaceImpl) superuser.getWorkspace()).getPrivilegeManager();
+        privilegeMgr = (PrivilegeManagerImpl) ((JackrabbitWorkspace) superuser.getWorkspace()).getPrivilegeManager();
     }
 
     @Override

@@ -17,9 +17,9 @@
 package org.apache.jackrabbit.core.security.authorization;
 
 import org.apache.jackrabbit.api.JackrabbitNode;
+import org.apache.jackrabbit.api.JackrabbitWorkspace;
 import org.apache.jackrabbit.api.security.JackrabbitAccessControlList;
 import org.apache.jackrabbit.api.security.user.Group;
-import org.apache.jackrabbit.core.WorkspaceImpl;
 import org.apache.jackrabbit.test.JUnitTest;
 import org.apache.jackrabbit.test.NotExecutableException;
 import org.apache.jackrabbit.test.api.observation.EventResult;
@@ -822,7 +822,7 @@ public abstract class AbstractWriteTest extends AbstractEvaluationTest {
         /* make sure the same privileges/permissions are granted as at path. */
         String childPath = n.getPath();
         Privilege[] privs = testAcMgr.getPrivileges(childPath);
-        PrivilegeManager privilegeMgr = ((WorkspaceImpl) getTestSession().getWorkspace()).getPrivilegeManager();
+        PrivilegeManagerImpl privilegeMgr = (PrivilegeManagerImpl) ((JackrabbitWorkspace) getTestSession().getWorkspace()).getPrivilegeManager();
         assertEquals(privilegeMgr.getBits(privilegesFromName(Privilege.JCR_READ)),
                 privilegeMgr.getBits(privs));
         getTestSession().checkPermission(childPath, javax.jcr.Session.ACTION_READ);

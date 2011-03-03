@@ -16,14 +16,14 @@
  */
 package org.apache.jackrabbit.core.security.authorization.principalbased;
 
+import org.apache.jackrabbit.api.JackrabbitWorkspace;
 import org.apache.jackrabbit.api.security.JackrabbitAccessControlList;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.SessionImpl;
-import org.apache.jackrabbit.core.WorkspaceImpl;
 import org.apache.jackrabbit.core.security.authorization.AccessControlEntryImpl;
 import org.apache.jackrabbit.core.security.authorization.AbstractACLTemplate;
 import org.apache.jackrabbit.core.security.authorization.GlobPattern;
-import org.apache.jackrabbit.core.security.authorization.PrivilegeManager;
+import org.apache.jackrabbit.core.security.authorization.PrivilegeManagerImpl;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.spi.commons.conversion.NameResolver;
@@ -76,7 +76,7 @@ class ACLTemplate extends AbstractACLTemplate {
     private final String jcrGlobName;
 
     private final NameResolver resolver;
-    private final PrivilegeManager privilegeMgr;
+    private final PrivilegeManagerImpl privilegeMgr;
 
     ACLTemplate(Principal principal, String path, NamePathResolver resolver, ValueFactory vf)
             throws RepositoryException {
@@ -100,7 +100,7 @@ class ACLTemplate extends AbstractACLTemplate {
 
         this.resolver = resolver;
         Session session = (acNode != null) ? acNode.getSession() : (Session) resolver;
-        this.privilegeMgr = ((WorkspaceImpl) session.getWorkspace()).getPrivilegeManager();
+        this.privilegeMgr = (PrivilegeManagerImpl) ((JackrabbitWorkspace) session.getWorkspace()).getPrivilegeManager();
 
         if (acNode != null && acNode.hasNode(N_POLICY)) {
             // build the list of policy entries;
@@ -343,7 +343,7 @@ class ACLTemplate extends AbstractACLTemplate {
         }
 
         @Override
-        protected PrivilegeManager getPrivilegeManager() {
+        protected PrivilegeManagerImpl getPrivilegeManager() {
             return privilegeMgr;
         }
     }
