@@ -40,6 +40,7 @@ import javax.jcr.security.Privilege;
 import java.security.Principal;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
@@ -214,7 +215,7 @@ public class EntryCollectorTest extends AbstractAccessControlTest {
             }
         }
         Privilege[] privs = privilegesFromNames(new String[] {Privilege.JCR_ADD_CHILD_NODES, Privilege.JCR_REMOVE_CHILD_NODES});
-        assertTrue(Arrays.equals(privs, acl.getAccessControlEntries()[0].getPrivileges()));
+        assertEquals(privs, acl.getAccessControlEntries()[0].getPrivileges());
 
         // --- test4: remove policy at childNPath ------------------------------
         acMgr.removePolicy(childNPath, acMgr.getPolicies(childNPath)[0]);
@@ -234,6 +235,21 @@ public class EntryCollectorTest extends AbstractAccessControlTest {
             }
         }
         verifyACEs(plcs, path, 2);
+    }
+
+    /**
+     * Asserts that the given privilege sets are equal, regardless of ordering.
+     */
+    private void assertEquals(Privilege[] expected, Privilege[] actual) {
+        assertEquals(getPrivilegeNames(expected), getPrivilegeNames(actual));
+    }
+
+    private Set<String> getPrivilegeNames(Privilege[] privileges) {
+        Set<String> names = new HashSet<String>();
+        for (Privilege privilege : privileges) {
+            names.add(privilege.getName());
+        }
+        return names;
     }
 
     public void testEntriesAreCached() throws Exception {
