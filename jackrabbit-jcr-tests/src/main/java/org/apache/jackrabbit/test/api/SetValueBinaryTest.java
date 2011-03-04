@@ -110,7 +110,7 @@ public class SetValueBinaryTest extends AbstractJCRTest {
         try {
             compareStream(data, in);
         } finally {
-            in.close();
+            try { in.close(); } catch (IOException ignore) {}
         }
     }
 
@@ -127,7 +127,7 @@ public class SetValueBinaryTest extends AbstractJCRTest {
             try {
                 compareStream(data, in);
             } finally {
-                in.close();
+                try { in.close(); } catch (IOException ignore) {}
             }
         } finally {
             bin.dispose();
@@ -144,13 +144,13 @@ public class SetValueBinaryTest extends AbstractJCRTest {
             property1.setValue(in);
             node.save();
         } finally {
-            in.close();
+            try { in.close(); } catch (IOException ignore) {}
         }
         in = property1.getValue().getStream();
         try {
             compareStream(data, in);
         } finally {
-            in.close();
+            try { in.close(); } catch (IOException ignore) {}
         }
     }
 
@@ -168,7 +168,7 @@ public class SetValueBinaryTest extends AbstractJCRTest {
             try {
                 compareStream(data, in);
             } finally {
-                in.close();
+                try { in.close(); } catch (IOException ignore) {}
             }
         } finally {
             bin.dispose();
