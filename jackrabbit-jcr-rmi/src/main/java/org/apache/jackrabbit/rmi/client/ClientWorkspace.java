@@ -231,6 +231,9 @@ public class ClientWorkspace extends ClientObject implements Workspace {
             remote.importXML(path, buffer.toByteArray(), uuidBehaviour);
         } catch (RemoteException ex) {
             throw new RemoteRepositoryException(ex);
+        } finally {
+            // JCR-2903
+            try { xml.close(); } catch (IOException ignore) {}
         }
     }
 

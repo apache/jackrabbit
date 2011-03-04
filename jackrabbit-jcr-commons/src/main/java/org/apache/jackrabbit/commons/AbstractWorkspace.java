@@ -61,6 +61,11 @@ public abstract class AbstractWorkspace implements Workspace {
             } else {
                 throw new InvalidSerializedDataException("XML parse error", e);
             }
+        } finally {
+            // JCR-2903
+            if (in != null) {
+                try { in.close(); } catch (IOException ignore) {}
+            }
         }
     }
 

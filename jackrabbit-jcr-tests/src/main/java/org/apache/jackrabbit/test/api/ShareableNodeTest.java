@@ -19,6 +19,7 @@ package org.apache.jackrabbit.test.api;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
@@ -675,7 +676,7 @@ public class ShareableNodeTest extends AbstractJCRTest {
             workspace.importXML(testRootNode.getPath(), in,
                     ImportUUIDBehavior.IMPORT_UUID_COLLISION_THROW);
         } finally {
-            in.close();
+            try { in.close(); } catch (IOException ignore) {}
         }
 
         // verify shared set consists of two nodes
@@ -728,7 +729,7 @@ public class ShareableNodeTest extends AbstractJCRTest {
         try {
             workspace.importXML(a3.getPath(), in, ImportUUIDBehavior.IMPORT_UUID_COLLISION_THROW);
         } finally {
-            in.close();
+            try { in.close(); } catch (IOException ignore) {}
         }
 
         // verify there's another element in the shared set
@@ -785,7 +786,7 @@ public class ShareableNodeTest extends AbstractJCRTest {
         try {
             workspace.importXML(a3.getPath(), in, ImportUUIDBehavior.IMPORT_UUID_COLLISION_THROW);
         } finally {
-            in.close();
+            try { in.close(); } catch (IOException ignore) {}
         }
 
         // verify there's another element in the shared set
@@ -843,7 +844,7 @@ public class ShareableNodeTest extends AbstractJCRTest {
             session.importXML(a3.getPath(), in, ImportUUIDBehavior.IMPORT_UUID_COLLISION_THROW);
             session.save();
         } finally {
-            in.close();
+            try { in.close(); } catch (IOException ignore) {}
         }
 
         // verify there's another element in the shared set
@@ -901,7 +902,7 @@ public class ShareableNodeTest extends AbstractJCRTest {
             session.importXML(a3.getPath(), in, ImportUUIDBehavior.IMPORT_UUID_COLLISION_THROW);
             session.save();
         } finally {
-            in.close();
+            try { in.close(); } catch (IOException ignore) {}
         }
 
         // verify there's another element in the shared set

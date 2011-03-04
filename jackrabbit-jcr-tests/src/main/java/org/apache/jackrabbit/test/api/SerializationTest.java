@@ -18,6 +18,7 @@ package org.apache.jackrabbit.test.api;
 
 import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.apache.jackrabbit.test.NotExecutableException;
+import org.apache.jackrabbit.test.api.util.InputStreamWrapper;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
@@ -145,7 +146,7 @@ public class SerializationTest extends AbstractJCRTest {
         } catch (VersionException e) {
             // success
         } finally {
-            in.close();
+            try { in.close(); } catch (IOException ignore) {}
         }
     }
 
@@ -160,7 +161,7 @@ public class SerializationTest extends AbstractJCRTest {
         } catch (VersionException e) {
             // success
         } finally {
-            in.close();
+            try { in.close(); } catch (IOException ignore) {}
         }
     }
 
@@ -216,7 +217,7 @@ public class SerializationTest extends AbstractJCRTest {
             } catch (LockException e) {
                 // success
             } finally {
-                in.close();
+                try { in.close(); } catch (IOException ignore) {}
             }
         } else {
             log.println("Locking not supported.");
@@ -353,7 +354,7 @@ public class SerializationTest extends AbstractJCRTest {
         } catch (PathNotFoundException e) {
             // success
         } finally {
-            in.close();
+            try { in.close(); } catch (IOException ignore) {}
         }
     }
 
@@ -372,7 +373,7 @@ public class SerializationTest extends AbstractJCRTest {
         } catch (PathNotFoundException e) {
             // success
         } finally {
-            in.close();
+            try { in.close(); } catch (IOException ignore) {}
         }
     }
 
@@ -416,7 +417,7 @@ public class SerializationTest extends AbstractJCRTest {
                 }
             }
         } finally {
-            in.close();
+            try { in.close(); } catch (IOException ignore) {}
         }
     }
 
@@ -477,7 +478,7 @@ public class SerializationTest extends AbstractJCRTest {
                 }
             }
         } finally {
-            in.close();
+            try { in.close(); } catch (IOException ignore) {}
         }
     }
 
@@ -510,7 +511,7 @@ public class SerializationTest extends AbstractJCRTest {
             session.importXML(treeComparator.targetFolder, in,
                     ImportUUIDBehavior.IMPORT_UUID_CREATE_NEW);
         } finally {
-            in.close();
+            try { in.close(); } catch (IOException ignore) {}
         }
 
         // after logout/login, no nodes are in the session
@@ -533,7 +534,7 @@ public class SerializationTest extends AbstractJCRTest {
             exportRepository(SAVEBINARY, RECURSE);
             doImportNoSave(treeComparator.targetFolder, in, CONTENTHANDLER);
         } finally {
-            in.close();
+            try { in.close(); } catch (IOException ignore) {}
         }
 
         // after logout/login, no nodes are in the session
@@ -545,11 +546,33 @@ public class SerializationTest extends AbstractJCRTest {
         treeComparator.compare(treeComparator.CHECK_EMPTY);
     }
 
+//----------------< tests input stream handling contract >----------------------
+
+    /**
+     * Tests whether <code>Session.importXML</code> and <code>Workspace.importXML</code>
+     * obey the stream handling contract.
+     */
+    public void testStreamHandling() throws RepositoryException, IOException {
+        exportRepository(SAVEBINARY, RECURSE);
+
+        InputStreamWrapper in = new InputStreamWrapper(new FileInputStream(file));
+        session.importXML(treeComparator.targetFolder, in,
+                ImportUUIDBehavior.IMPORT_UUID_CREATE_NEW);
+        assertTrue("Session.importXML(..., InputStream, ...) is expected to close the passed input stream", in.isClosed());
+        session.refresh(false);
+
+        in = new InputStreamWrapper(new FileInputStream(file));
+        workspace.importXML(treeComparator.targetFolder, in,
+                ImportUUIDBehavior.IMPORT_UUID_CREATE_NEW);
+        assertTrue("Workspace.importXML(..., InputStream, ...) is expected to close the passed input stream", in.isClosed());
+    }
+
+
 //----------------< import test helper >--------------------------------------------------------
     /**
      * Helper method which imports the given FileInputStream using Workspace or Session
-     * and via the methods importXML respective getImportContentHandler. Teh target node of the
-     * import is specified with its absolut path.
+     * and via the methods importXML respective getImportContentHandler. The target node of the
+     * import is specified with its absolute path.
      *
      * @param absPath
      * @param in
@@ -729,7 +752,7 @@ public class SerializationTest extends AbstractJCRTest {
         } catch (SAXException e) {
             fail("Error while parsing the imported repository: " + e);
         } finally {
-            in.close();
+            try { in.close(); } catch (IOException ignore) {}
         }
     }
 
