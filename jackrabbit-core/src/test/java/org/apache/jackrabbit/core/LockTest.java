@@ -29,7 +29,8 @@ import java.util.Iterator;
 import java.util.Random;
 
 /**
- * <code>LockTest</code> tests the utility {@link org.apache.jackrabbit.util.Locked}.
+ * <code>LockTest</code> tests the utility
+ * {@link org.apache.jackrabbit.util.Locked}.
  */
 public class LockTest extends AbstractJCRTest {
 
@@ -41,40 +42,43 @@ public class LockTest extends AbstractJCRTest {
 
     /**
      * Tests the utility {@link org.apache.jackrabbit.util.Locked} by
-     * implementing running multiple threads concurrently that apply changes
-     * to a lockable node.
+     * implementing running multiple threads concurrently that apply changes to
+     * a lockable node.
      */
     public void testLockUtility() throws RepositoryException {
         final Node lockable = testRootNode.addNode(nodeName1);
         lockable.addMixin(mixLockable);
-        testRootNode.save();
+        superuser.save();
 
-        final List worker = new ArrayList();
+        final List<Thread> worker = new ArrayList<Thread>();
         for (int i = 0; i < NUM_THREADS; i++) {
             worker.add(new Thread() {
 
                 private final int threadNumber = worker.size();
 
                 public void run() {
-                    Session s;
+                    final Session s;
                     try {
                         s = getHelper().getSuperuserSession();
                     } catch (RepositoryException e) {
+                        fail(e.getMessage());
                         return;
                     }
                     try {
                         for (int i = 0; i < NUM_CHANGES; i++) {
                             Node n = (Node) s.getItem(lockable.getPath());
                             new Locked() {
-                                protected Object run(Node n) throws RepositoryException {
+                                protected Object run(Node n)
+                                        throws RepositoryException {
                                     String nodeName = "node" + threadNumber;
                                     if (n.hasNode(nodeName)) {
                                         n.getNode(nodeName).remove();
                                     } else {
                                         n.addNode(nodeName);
                                     }
-                                    n.save();
-                                    log.println("Thread" + threadNumber + ": saved modification");
+                                    s.save();
+                                    log.println("Thread" + threadNumber
+                                            + ": saved modification");
 
                                     return null;
                                 }
@@ -83,9 +87,11 @@ public class LockTest extends AbstractJCRTest {
                             Thread.sleep(new Random().nextInt(100));
                         }
                     } catch (RepositoryException e) {
-                        log.println("exception while running code with lock:" + e.getMessage());
+                        log.println("exception while running code with lock:"
+                                + e.getMessage());
                     } catch (InterruptedException e) {
-                        log.println(Thread.currentThread() + " interrupted while waiting for lock");
+                        log.println(Thread.currentThread()
+                                + " interrupted while waiting for lock");
                     } finally {
                         s.logout();
                     }
@@ -93,13 +99,13 @@ public class LockTest extends AbstractJCRTest {
             });
         }
 
-        for (Iterator it = worker.iterator(); it.hasNext(); ) {
-            ((Thread) it.next()).start();
+        for (Iterator<Thread> it = worker.iterator(); it.hasNext();) {
+            it.next().start();
         }
 
-        for (Iterator it = worker.iterator(); it.hasNext(); ) {
+        for (Iterator<Thread> it = worker.iterator(); it.hasNext();) {
             try {
-                ((Thread) it.next()).join();
+                it.next().join();
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -114,41 +120,46 @@ public class LockTest extends AbstractJCRTest {
         final Node counter = testRootNode.addNode(nodeName1);
         counter.setProperty("value", 0);
         counter.addMixin(mixLockable);
-        testRootNode.save();
+        superuser.save();
 
-        final List worker = new ArrayList();
+        final List<Thread> worker = new ArrayList<Thread>();
         for (int i = 0; i < NUM_THREADS; i++) {
             worker.add(new Thread() {
 
                 private final int threadNumber = worker.size();
 
                 public void run() {
-                    Session s;
+                    final Session s;
                     try {
                         s = getHelper().getSuperuserSession();
                     } catch (RepositoryException e) {
+                        fail(e.getMessage());
                         return;
                     }
                     try {
                         for (int i = 0; i < NUM_VALUE_GETS; i++) {
                             Node n = (Node) s.getItem(counter.getPath());
                             long currentValue = ((Long) new Locked() {
-                                protected Object run(Node n) throws RepositoryException {
+                                protected Object run(Node n)
+                                        throws RepositoryException {
                                     Property seqProp = n.getProperty("value");
                                     long value = seqProp.getLong();
                                     seqProp.setValue(++value);
-                                    seqProp.save();
+                                    s.save();
                                     return new Long(value);
                                 }
                             }.with(n, false)).longValue();
-                            log.println("Thread" + threadNumber + ": got sequence number: " + currentValue);
+                            log.println("Thread" + threadNumber
+                                    + ": got sequence number: " + currentValue);
                             // do a random wait
                             Thread.sleep(new Random().nextInt(100));
                         }
                     } catch (RepositoryException e) {
-                        log.println("exception while running code with lock:" + e.getMessage());
+                        log.println("exception while running code with lock:"
+                                + e.getMessage());
                     } catch (InterruptedException e) {
-                        log.println(Thread.currentThread() + " interrupted while waiting for lock");
+                        log.println(Thread.currentThread()
+                                + " interrupted while waiting for lock");
                     } finally {
                         s.logout();
                     }
@@ -156,13 +167,13 @@ public class LockTest extends AbstractJCRTest {
             });
         }
 
-        for (Iterator it = worker.iterator(); it.hasNext(); ) {
-            ((Thread) it.next()).start();
+        for (Iterator<Thread> it = worker.iterator(); it.hasNext();) {
+            it.next().start();
         }
 
-        for (Iterator it = worker.iterator(); it.hasNext(); ) {
+        for (Iterator<Thread> it = worker.iterator(); it.hasNext();) {
             try {
-                ((Thread) it.next()).join();
+                it.next().join();
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -180,46 +191,55 @@ public class LockTest extends AbstractJCRTest {
         final Node counter = testRootNode.addNode(nodeName1);
         counter.setProperty("value", 0);
         counter.addMixin(mixLockable);
-        testRootNode.save();
+        superuser.save();
 
-        final List worker = new ArrayList();
+        final List<Thread> worker = new ArrayList<Thread>();
         for (int i = 0; i < NUM_THREADS; i++) {
             worker.add(new Thread() {
 
                 private final int threadNumber = worker.size();
 
                 public void run() {
-                    Session s;
+                    final Session s;
                     try {
                         s = getHelper().getSuperuserSession();
                     } catch (RepositoryException e) {
+                        fail(e.getMessage());
                         return;
                     }
                     try {
                         for (int i = 0; i < NUM_VALUE_GETS; i++) {
                             Node n = (Node) s.getItem(counter.getPath());
                             Object ret = new Locked() {
-                                protected Object run(Node n) throws RepositoryException {
+                                protected Object run(Node n)
+                                        throws RepositoryException {
                                     Property seqProp = n.getProperty("value");
                                     long value = seqProp.getLong();
                                     seqProp.setValue(++value);
-                                    seqProp.save();
+                                    s.save();
                                     return new Long(value);
                                 }
-                            }.with(n, false, 10 * 1000); // expect a value after ten seconds
+                            }.with(n, false, 10 * 1000); // expect a value after
+                                                         // ten seconds
                             if (ret == Locked.TIMED_OUT) {
-                                log.println("Thread" + threadNumber + ": could not get a sequence number within 10 seconds");
+                                log.println("Thread"
+                                        + threadNumber
+                                        + ": could not get a sequence number within 10 seconds");
                             } else {
                                 long currentValue = ((Long) ret).longValue();
-                                log.println("Thread" + threadNumber + ": got sequence number: " + currentValue);
+                                log.println("Thread" + threadNumber
+                                        + ": got sequence number: "
+                                        + currentValue);
                             }
                             // do a random wait
                             Thread.sleep(new Random().nextInt(100));
                         }
                     } catch (RepositoryException e) {
-                        log.println("exception while running code with lock:" + e.getMessage());
+                        log.println("exception while running code with lock:"
+                                + e.getMessage());
                     } catch (InterruptedException e) {
-                        log.println(Thread.currentThread() + " interrupted while waiting for lock");
+                        log.println(Thread.currentThread()
+                                + " interrupted while waiting for lock");
                     } finally {
                         s.logout();
                     }
@@ -227,13 +247,13 @@ public class LockTest extends AbstractJCRTest {
             });
         }
 
-        for (Iterator it = worker.iterator(); it.hasNext(); ) {
-            ((Thread) it.next()).start();
+        for (Iterator<Thread> it = worker.iterator(); it.hasNext();) {
+            it.next().start();
         }
 
-        for (Iterator it = worker.iterator(); it.hasNext(); ) {
+        for (Iterator<Thread> it = worker.iterator(); it.hasNext();) {
             try {
-                ((Thread) it.next()).join();
+                it.next().join();
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
