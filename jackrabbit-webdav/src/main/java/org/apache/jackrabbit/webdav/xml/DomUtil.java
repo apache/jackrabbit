@@ -61,7 +61,9 @@ public class DomUtil {
         factory.setCoalescing(true);
         try {
             factory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
-        } catch (Exception e) {
+        } catch (ParserConfigurationException e) {
+            log.warn("Secure XML processing is not supported", e);
+        } catch (AbstractMethodError e) {
             log.warn("Secure XML processing is not supported", e);
         }
         return factory;
