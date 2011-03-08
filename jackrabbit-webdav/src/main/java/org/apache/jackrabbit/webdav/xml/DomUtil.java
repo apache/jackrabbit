@@ -61,10 +61,24 @@ public class DomUtil {
         factory.setCoalescing(true);
         try {
             factory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
-        } catch (ParserConfigurationException e) {
+        } catch (Exception e) {
             log.warn("Secure XML processing is not supported", e);
         }
         return factory;
+    }
+
+    /**
+     * Support the replacement of {@link #BUILDER_FACTORY}. This is useful
+     * for injecting a customized BuilderFactory, for example with one that
+     * uses a local catalog resolver. This is one technique for addressing
+     * this issue:
+     * http://www.w3.org/blog/systeam/2008/02/08/w3c_s_excessive_dtd_traffic
+     *
+     * @param documentBuilderFactory
+     */
+    public static void setBuilderFactory(
+            DocumentBuilderFactory documentBuilderFactory) {
+        BUILDER_FACTORY = documentBuilderFactory;
     }
 
     /**
