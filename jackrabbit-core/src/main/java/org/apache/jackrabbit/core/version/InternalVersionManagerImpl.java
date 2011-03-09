@@ -246,6 +246,7 @@ public class InternalVersionManagerImpl extends InternalVersionManagerBase
      * This method must not be synchronized since it could cause deadlocks with
      * item-reading listeners in the observation thread.
      */
+    @Override
     protected VersionHistoryInfo createVersionHistory(Session session,
                   final NodeState node, final NodeId copiedFrom)
             throws RepositoryException {
@@ -301,6 +302,7 @@ public class InternalVersionManagerImpl extends InternalVersionManagerBase
     /**
      * {@inheritDoc}
      */
+    @Override
     public boolean hasItem(NodeId id) {
         VersioningLock.ReadLock lock = acquireReadLock();
         try {
@@ -313,6 +315,7 @@ public class InternalVersionManagerImpl extends InternalVersionManagerBase
     /**
      * {@inheritDoc}
      */
+    @Override
     protected InternalVersionItem getItem(NodeId id)
             throws RepositoryException {
 
@@ -501,6 +504,7 @@ public class InternalVersionManagerImpl extends InternalVersionManagerBase
     /**
      * {@inheritDoc}
      */
+    @Override
     protected void itemDiscarded(InternalVersionItem item) {
         // evict removed item from cache
         VersioningLock.ReadLock lock = acquireReadLock();
@@ -514,6 +518,7 @@ public class InternalVersionManagerImpl extends InternalVersionManagerBase
     /**
      * {@inheritDoc}
      */
+    @Override
     protected boolean hasItemReferences(NodeId id)
             throws RepositoryException {
         return stateMgr.hasNodeReferences(id);
@@ -522,6 +527,7 @@ public class InternalVersionManagerImpl extends InternalVersionManagerBase
     /**
      * {@inheritDoc}
      */
+    @Override
     protected NodeStateEx getNodeStateEx(NodeId parentNodeId)
             throws RepositoryException {
         try {
@@ -537,6 +543,7 @@ public class InternalVersionManagerImpl extends InternalVersionManagerBase
      *
      * @return the version history root node
      */
+    @Override
     protected NodeStateEx getHistoryRoot() {
         return historyRoot;
     }
@@ -546,6 +553,7 @@ public class InternalVersionManagerImpl extends InternalVersionManagerBase
      *
      * @return the activities root node
      */
+    @Override
     protected NodeStateEx getActivitiesRoot() {
         return activitiesRoot;
     }

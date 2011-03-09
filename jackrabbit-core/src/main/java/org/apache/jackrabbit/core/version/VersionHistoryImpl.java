@@ -271,6 +271,7 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
     /**
      * @see javax.jcr.Item#isSame(javax.jcr.Item)
      */
+    @Override
     public boolean isSame(Item otherItem) {
         if (otherItem instanceof VersionHistoryImpl) {
             // since all version histories live in the same workspace, we can compare the uuids
@@ -336,6 +337,7 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
      *
      * @throws javax.jcr.nodetype.ConstraintViolationException
      */
+    @Override
     public void update(String srcWorkspaceName) throws ConstraintViolationException {
         String msg = "update operation not allowed: " + this;
         log.debug(msg);
@@ -348,6 +350,7 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
      *
      * @throws javax.jcr.nodetype.ConstraintViolationException
      */
+    @Override
     public NodeIterator merge(String srcWorkspace, boolean bestEffort)
             throws ConstraintViolationException {
         String msg = "merge operation not allowed: " + this;

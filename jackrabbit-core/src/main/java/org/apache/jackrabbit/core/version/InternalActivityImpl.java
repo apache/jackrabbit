@@ -51,6 +51,7 @@ class InternalActivityImpl extends InternalVersionItemImpl implements InternalAc
     /**
      * {@inheritDoc}
      */
+    @Override
     public NodeId getId() {
         return node.getNodeId();
     }
@@ -58,6 +59,7 @@ class InternalActivityImpl extends InternalVersionItemImpl implements InternalAc
     /**
      * {@inheritDoc}
      */
+    @Override
     public InternalVersionItem getParent() {
         return null;
     }

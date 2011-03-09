@@ -136,6 +136,7 @@ class InternalFrozenNodeImpl extends InternalFreezeImpl
     /**
      * {@inheritDoc}
      */
+    @Override
     public NodeId getId() {
         return node.getNodeId();
     }
