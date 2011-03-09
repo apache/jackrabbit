@@ -157,6 +157,7 @@ public class VersionImpl extends NodeImpl implements Version {
     /**
      * {@inheritDoc}
      */
+    @Override
     public boolean isSame(Item otherItem) {
         if (otherItem instanceof VersionImpl) {
             // since all versions live in the same workspace, we can compare the uuids
@@ -204,6 +205,7 @@ public class VersionImpl extends NodeImpl implements Version {
      *
      * @throws javax.jcr.nodetype.ConstraintViolationException
      */
+    @Override
     public void update(String srcWorkspaceName) throws ConstraintViolationException {
         String msg = "update operation not allowed: " + this;
         log.debug(msg);
@@ -216,6 +218,7 @@ public class VersionImpl extends NodeImpl implements Version {
      *
      * @throws javax.jcr.nodetype.ConstraintViolationException
      */
+    @Override
     public NodeIterator merge(String srcWorkspace, boolean bestEffort)
             throws ConstraintViolationException {
         String msg = "merge operation not allowed: " + this;

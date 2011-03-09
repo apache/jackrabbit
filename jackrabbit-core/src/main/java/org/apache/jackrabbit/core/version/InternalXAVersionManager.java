@@ -156,6 +156,7 @@ public class InternalXAVersionManager extends InternalVersionManagerBase
     /**
      * {@inheritDoc}
      */
+    @Override
     protected VersionHistoryInfo createVersionHistory(Session session,
                                                       NodeState node,
                                                       NodeId copiedFrom)
@@ -208,6 +209,7 @@ public class InternalXAVersionManager extends InternalVersionManagerBase
      * <p/>
      * Before modifying activity, make a local copy of it.
      */
+    @Override
     protected void internalRemoveActivity(InternalActivityImpl activity)
             throws VersionException, RepositoryException {
         if (activity.getVersionManager() != this) {
@@ -404,6 +406,7 @@ public class InternalXAVersionManager extends InternalVersionManagerBase
     /**
      * {@inheritDoc}
      */
+    @Override
     protected NodeStateEx getHistoryRoot() {
         return historyRoot;
     }
@@ -411,6 +414,7 @@ public class InternalXAVersionManager extends InternalVersionManagerBase
     /**
      * {@inheritDoc}
      */
+    @Override
     protected NodeStateEx getActivitiesRoot() {
         return activitiesRoot;
     }
@@ -418,6 +422,7 @@ public class InternalXAVersionManager extends InternalVersionManagerBase
     /**
      * {@inheritDoc}
      */
+     @Override
      protected InternalVersionItem getItem(NodeId id) throws RepositoryException {
         InternalVersionItem item = null;
         if (xaItems != null) {
@@ -432,6 +437,7 @@ public class InternalXAVersionManager extends InternalVersionManagerBase
     /**
      * {@inheritDoc}
      */
+    @Override
     protected boolean hasItem(NodeId id) {
         if (xaItems != null && xaItems.containsKey(id)) {
             return true;
@@ -442,6 +448,7 @@ public class InternalXAVersionManager extends InternalVersionManagerBase
     /**
      * {@inheritDoc}
      */
+    @Override
     protected boolean hasItemReferences(NodeId id)
             throws RepositoryException {
         return session.getNodeById(id).getReferences().hasNext();
@@ -450,6 +457,7 @@ public class InternalXAVersionManager extends InternalVersionManagerBase
     /**
      * {@inheritDoc}
      */
+    @Override
     protected NodeStateEx getNodeStateEx(NodeId parentNodeId)
             throws RepositoryException {
         try {
@@ -490,6 +498,7 @@ public class InternalXAVersionManager extends InternalVersionManagerBase
      * <p/>
      * Before modifying version history given, make a local copy of it.
      */
+    @Override
     protected void internalRemoveVersion(InternalVersionHistoryImpl history, Name name)
             throws VersionException, RepositoryException {
 
@@ -513,6 +522,7 @@ public class InternalXAVersionManager extends InternalVersionManagerBase
      * <p/>
      * Before modifying version history given, make a local copy of it.
      */
+    @Override
     protected InternalVersion setVersionLabel(InternalVersionHistoryImpl history,
                                               Name version, Name label,
                                               boolean move)
@@ -530,6 +540,7 @@ public class InternalXAVersionManager extends InternalVersionManagerBase
      * <p/>
      * Put the version object into our cache.
      */
+    @Override
     protected void versionCreated(InternalVersion version) {
         xaItems.put(version.getId(), version);
     }
@@ -539,6 +550,7 @@ public class InternalXAVersionManager extends InternalVersionManagerBase
      * <p/>
      * Remove the version object from our cache.
      */
+    @Override
     protected void versionDestroyed(InternalVersion version) {
         xaItems.remove(version.getId());
     }

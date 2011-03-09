@@ -41,6 +41,7 @@ abstract class InternalFreezeImpl extends InternalVersionItemImpl
     /**
      * {@inheritDoc}
      */
+    @Override
     public InternalVersionItem getParent() {
         return parent;
     }

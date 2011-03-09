@@ -120,6 +120,7 @@ public class VersioningLock {
          * Allow reader when there is no active Xid, or current Xid owns
          * the write lock (reentrant).
          */
+        @Override
         protected boolean allowReader() {
             Xid currentXid = TransactionContext.getCurrentXid();
             return (activeXid == null && waitingWriters_ == 0) || isSameGlobalTx(currentXid);
@@ -128,6 +129,7 @@ public class VersioningLock {
         /**
          * {@inheritDoc}
          */
+        @Override
         protected synchronized boolean startWrite() {
             Xid currentXid = TransactionContext.getCurrentXid();
             if (activeXid != null && isSameGlobalTx(currentXid)) { // already held; re-acquire
@@ -149,6 +151,7 @@ public class VersioningLock {
         /**
          * {@inheritDoc}
          */
+        @Override
         protected synchronized Signaller endWrite() {
             --writeHolds_;
             if (writeHolds_ > 0) {  // still being held
@@ -168,12 +171,13 @@ public class VersioningLock {
         /**
          * {@inheritDoc}
          */
+        @Override
         @SuppressWarnings("unchecked")
         protected synchronized boolean startRead() {
             Xid currentXid = TransactionContext.getCurrentXid();
             Object c = readers_.get(currentXid);
             if (c != null) { // already held -- just increment hold count
-                readers_.put(currentXid, new Integer(((Integer)(c)).intValue()+1));
+                readers_.put(currentXid, (Integer) (c) + 1);
                 ++activeReaders_;
                 return true;
             } else if (allowReader()) {
@@ -188,6 +192,7 @@ public class VersioningLock {
         /**
          * {@inheritDoc}
          */
+        @Override
         @SuppressWarnings("unchecked")
         protected synchronized Signaller endRead() {
             Xid currentXid = TransactionContext.getCurrentXid();
@@ -197,7 +202,7 @@ public class VersioningLock {
             }
             --activeReaders_;
             if (c != IONE) { // more than one hold; decrement count
-                int h = ((Integer)(c)).intValue()-1;
+                int h = (Integer) (c) -1;
                 Integer ih = (h == 1)? IONE : new Integer(h);
                 readers_.put(currentXid, ih);
                 return null;
