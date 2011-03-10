@@ -23,8 +23,7 @@ import javax.jcr.query.Query;
 import javax.jcr.query.QueryResult;
 
 /**
- * Test case for
- * <a href="https://issues.apache.org/jira/browse/JCR-2718">JCR-2718</a>
+ * Test case for JOIN queries with JCR_SQL2
  */
 public class JoinTest extends AbstractQueryTest {
 
@@ -45,8 +44,7 @@ public class JoinTest extends AbstractQueryTest {
 
         Node n3 = node.addNode("node3");
         n3.addMixin(NodeType.MIX_REFERENCEABLE);
-        n3.setProperty(
-                "testref",
+        n3.setProperty("testref",
                 new String[] { n1.getIdentifier(), n2.getIdentifier() },
                 PropertyType.REFERENCE);
         testRootNode.getSession().save();
@@ -59,12 +57,72 @@ public class JoinTest extends AbstractQueryTest {
         super.tearDown();
     }
 
+    /**
+     * Test case for <a
+     * href="https://issues.apache.org/jira/browse/JCR-2718">JCR-2718</a>
+     */
     public void testMultiValuedReferenceJoin() throws Exception {
-        String join =
-            "SELECT a.*, b.*"
-            + " FROM [nt:base] AS a"
-            + " INNER JOIN [nt:base] AS b ON a.[jcr:uuid] = b.testref";
-        QueryResult result = qm.createQuery(join, Query.JCR_SQL2).execute();
+        String join = "SELECT a.*, b.*" + " FROM [nt:base] AS a"
+                + " INNER JOIN [nt:base] AS b ON a.[jcr:uuid] = b.testref";
+        checkResult(qm.createQuery(join, Query.JCR_SQL2).execute(), 2);
+    }
+
+    /**
+     * Test case for <a
+     * href="https://issues.apache.org/jira/browse/JCR-2852">JCR-2852</a>
+     */
+    public void testJoinWithOR() throws Exception {
+
+        String join = "SELECT a.*, b.*"
+                + " FROM [nt:base] AS a"
+                + " INNER JOIN [nt:base] AS b ON a.[jcr:uuid] = b.testref WHERE "
+                + "a.[jcr:primaryType] IS NOT NULL OR b.[jcr:primaryType] IS NOT NULL";
+
+        Query q = qm.createQuery(join, Query.JCR_SQL2);
+        QueryResult result = q.execute();
+        checkResult(result, 2);
+    }
+
+    /**
+     * Test case for <a
+     * href="https://issues.apache.org/jira/browse/JCR-2852">JCR-2852</a> <br>
+     * <p>
+     * Test inspired by <a
+     * href="http://markmail.org/message/gee5yyygozestsml">this discussion</a>
+     */
+    public void testMegaJoin() throws Exception {
+
+        // WHERE
+        // ( (ISSAMENODE(projects,
+        // '/repository/projects/U970f5509-54de-46d8-88bd-bc1a94ab85eb')))
+        // AND
+        // ( ( ISDESCENDANTNODE( projects, '/repository/projects') AND
+        // eventclassassociations.active = true )
+        // or
+        // ( ISDESCENDANTNODE( projects, '/repository/template') )
+        // )
+        // AND ((NAME(parentRelationshipStatus) = 'parentRelationshipStatus'))
+
+        StringBuilder join = new StringBuilder(
+                "SELECT a.*, b.* FROM [nt:base] AS a");
+        join.append("  INNER JOIN [nt:base] AS b ON a.[jcr:uuid] = b.testref ");
+        join.append("  WHERE  ");
+        join.append("  ISSAMENODE(b, '/testroot/jointest/node3') ");
+        join.append("  AND ");
+        join.append("  ( ");
+        join.append("    ( ");
+        join.append("    ISDESCENDANTNODE(b, '/testroot/jointest') ");
+        join.append("    AND ");
+        join.append("    b.testref IS NOT NULL ");
+        join.append("    ) ");
+        join.append("    OR ");
+        join.append("    ISDESCENDANTNODE(a, '/testroot/jointest') ");
+        join.append("  ) ");
+        join.append("  AND ");
+        join.append(" (NAME(b) = 'node3') ");
+
+        Query q = qm.createQuery(join.toString(), Query.JCR_SQL2);
+        QueryResult result = q.execute();
         checkResult(result, 2);
     }
 

@@ -24,9 +24,12 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
@@ -164,45 +167,98 @@ public class QueryEngine {
                 merger.getLeftSelectors(), merger.getRightSelectors());
 
         Source left = join.getLeft();
-        Constraint leftConstraint = splitter.getLeftConstraint();
-        QueryResult leftResult =
-            execute(null, left, leftConstraint, null, 0, -1);
-        List<Row> leftRows = new ArrayList<Row>();
+        Set<Row> leftRows = buildLeftRowsJoin(left, splitter.getConstraintSplitInfo());
+
+        Source right = join.getRight();
+        List<Constraint> rightConstraints = merger.getRightJoinConstraints(leftRows);
+        RowIterator rightRows = new RowIteratorAdapter(buildRightRowsJoin(right, splitter.getConstraintSplitInfo(), rightConstraints));
+
+        QueryResult result = merger.merge(new RowIteratorAdapter(leftRows), rightRows);
+        return sort(result, orderings, offset, limit);
+    }
+
+    private Comparator<Row> buildSimplePathRowComparator() {
+        return new Comparator<Row>() {
+
+            public int compare(Row o1, Row o2) {
+                try {
+                    return o1.getPath().compareTo(o2.getPath());
+                } catch (RepositoryException e) {
+                    throw new RuntimeException("Unable to compare rows " + o1
+                            + " and " + o2, e);
+                }
+            }
+        };
+    }
+
+    private Set<Row> buildLeftRowsJoin(Source left, ConstraintSplitInfo csi)
+            throws RepositoryException {
+
+        if (csi.isMultiple()) {
+            // this *needs* to merge automatically multiple sets of nodes
+            Set<Row> leftRows = new TreeSet<Row>(buildSimplePathRowComparator());
+            for (ConstraintSplitInfo child : csi.getInnerConstraints()) {
+                leftRows.addAll(buildLeftRowsJoin(left, child));
+            }
+            return leftRows;
+        }
+
+        Set<Row> leftRows = new HashSet<Row>();
+        Constraint leftConstraint = csi.getLeftConstraint();
+        QueryResult leftResult = execute(null, left, leftConstraint, null, 0,
+                -1);
         for (Row row : JcrUtils.getRows(leftResult)) {
             leftRows.add(row);
         }
+        return leftRows;
+    }
 
-        RowIterator rightRows;
-        Source right = join.getRight();
-        List<Constraint> rightConstraints =
-            merger.getRightJoinConstraints(leftRows);
-        if (rightConstraints.size() < 500) {
-            Constraint rightConstraint = Constraints.and(
-                    qomFactory,
-                    Constraints.or(qomFactory, rightConstraints),
-                    splitter.getRightConstraint());
-            rightRows =
-                execute(null, right, rightConstraint, null, 0, -1).getRows();
-        } else {
-            List<Row> list = new ArrayList<Row>();
-            for (int i = 0; i < rightConstraints.size(); i += 500) {
-                Constraint rightConstraint = Constraints.and(
-                        qomFactory,
-                        Constraints.or(qomFactory, rightConstraints.subList(
-                                i, Math.min(i + 500, rightConstraints.size()))),
-                        splitter.getRightConstraint());
-                QueryResult rightResult =
-                    execute(null, right, rightConstraint, null, 0, -1);
-                for (Row row : JcrUtils.getRows(rightResult)) {
-                    list.add(row);
-                }
+    private Set<Row> buildRightRowsJoin(Source right, ConstraintSplitInfo csi,
+            List<Constraint> rightConstraints) throws RepositoryException {
+
+        if (csi.isMultiple()) {
+            // this *needs* to merge automatically multiple sets of nodes
+            Set<Row> rightRows = new TreeSet<Row>(
+                    buildSimplePathRowComparator());
+            for (ConstraintSplitInfo child : csi.getInnerConstraints()) {
+                rightRows.addAll(buildRightRowsJoin(right, child,
+                        rightConstraints));
             }
-            rightRows = new RowIteratorAdapter(list);
+            return rightRows;
         }
 
-        QueryResult result =
-            merger.merge(new RowIteratorAdapter(leftRows), rightRows);
-        return sort(result, orderings, offset, limit);
+        // TODO refactor to page automatically at 500 *if needed*
+        if (rightConstraints.size() < 500) {
+            Set<Row> rightRows = new HashSet<Row>();
+            Constraint rightConstraint = Constraints.and(qomFactory,
+                    Constraints.or(qomFactory, rightConstraints),
+                    csi.getRightConstraint());
+            QueryResult rightResult = execute(null, right, rightConstraint,
+                    null, 0, -1);
+            for (Row row : JcrUtils.getRows(rightResult)) {
+                rightRows.add(row);
+            }
+            return rightRows;
+        }
+
+        Set<Row> rightRows = new HashSet<Row>();
+        for (int i = 0; i < rightConstraints.size(); i += 500) {
+            Constraint rightConstraint = Constraints
+                    .and(qomFactory,
+                            Constraints.or(
+                                    qomFactory,
+                                    rightConstraints.subList(
+                                            i,
+                                            Math.min(i + 500,
+                                                    rightConstraints.size()))),
+                            csi.getRightConstraint());
+            QueryResult rightResult = execute(null, right, rightConstraint,
+                    null, 0, -1);
+            for (Row row : JcrUtils.getRows(rightResult)) {
+                rightRows.add(row);
+            }
+        }
+        return rightRows;
     }
 
     protected QueryResult execute(

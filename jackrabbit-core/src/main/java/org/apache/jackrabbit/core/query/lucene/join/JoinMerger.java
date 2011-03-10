@@ -19,6 +19,7 @@ package org.apache.jackrabbit.core.query.lucene.join;
 import static javax.jcr.query.qom.QueryObjectModelConstants.JCR_JOIN_TYPE_LEFT_OUTER;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
@@ -224,7 +225,7 @@ abstract class JoinMerger {
     public abstract Set<String> getRightValues(Row row)
             throws RepositoryException;
 
-    public abstract List<Constraint> getRightJoinConstraints(List<Row> leftRows)
+    public abstract List<Constraint> getRightJoinConstraints(Collection<Row> leftRows)
             throws RepositoryException;
 
 }
