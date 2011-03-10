@@ -22,6 +22,8 @@ import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.query.qom.PropertyValue;
 
+import org.apache.jackrabbit.commons.query.qom.OperandEvaluator;
+
 /**
  * A row implementation for a query with just a single selector.
  */

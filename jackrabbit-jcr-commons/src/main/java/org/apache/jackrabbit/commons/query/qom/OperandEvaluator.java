@@ -14,11 +14,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.core.query.lucene.join;
+package org.apache.jackrabbit.commons.query.qom;
 
-import static java.util.Locale.ENGLISH;
-import static javax.jcr.PropertyType.NAME;
-
+import java.util.Locale;
 import java.util.Map;
 
 import javax.jcr.Node;
@@ -55,20 +53,53 @@ public class OperandEvaluator {
     /** Bind variables */
     private final Map<String, Value> variables;
 
+    /** The locale to use in upper- and lower-case conversion. */
+    private final Locale locale;
+
     /**
      * Creates an operand evaluator for the given value factory and set of
-     * bind variables.
+     * bind variables. Upper- and lower-case conversions are performed using
+     * the given locale.
      *
      * @param factory value factory
      * @param variables bind variables
+     * @param locale locale to use in upper- and lower-case conversions
+     */
+    public OperandEvaluator(
+            ValueFactory factory, Map<String, Value> variables, Locale locale) {
+        this.factory = factory;
+        this.variables = variables;
+        this.locale = locale;
+    }
+
+    /**
+     * Creates an operand evaluator for the given value factory and set of
+     * bind variables. Upper- and lower-case conversions are performed using
+     * the {@link Locale#ENGLISH}.
+     *
+     * @param factory value factory
+     * @param variables bind variables
+     * @param locale locale to use in upper- and lower-case conversions
      */
     public OperandEvaluator(
             ValueFactory factory, Map<String, Value> variables) {
-        this.factory = factory;
-        this.variables = variables;
+        this(factory, variables, Locale.ENGLISH);
     }
 
-    public Value getValue(StaticOperand operand, int type) throws RepositoryException {
+    /**
+     * Returns the value of the given static operand
+     * ({@link Literal literal} or {@link BindVariableValue bind variable})
+     * casted to the given type.
+     *
+     * @param operand static operand to be evaluated
+     * @param type expected value type
+     * @return evaluated value, casted to the given type
+     * @throws RepositoryException if a named bind variable is not found,
+     *                             if the operand type is unknown, or
+     *                             if the type conversion fails
+     */
+    public Value getValue(StaticOperand operand, int type)
+            throws RepositoryException {
         Value value = getValue(operand);
         if (type == PropertyType.UNDEFINED || type == value.getType()) {
             return value;
@@ -120,7 +151,7 @@ public class OperandEvaluator {
      * @param operand operand to be evaluated
      * @param row query result row
      * @return evaluated value
-     * @throws RepositoryException
+     * @throws RepositoryException if the operand can't be evaluated
      */
     public Value getValue(Operand operand, Row row) throws RepositoryException {
         Value[] values = getValues(operand, row);
@@ -157,8 +188,10 @@ public class OperandEvaluator {
             return new Value[] { factory.createValue(score) };
         } else if (operand instanceof NodeName) {
             NodeName nn = (NodeName) operand;
-            Node node = row.getNode(nn.getSelectorName());
-            return new Value[] { factory.createValue(node.getName(), NAME) };
+            Value value = factory.createValue(
+                    row.getNode(nn.getSelectorName()).getName(),
+                    PropertyType.NAME);
+            return new Value[] { value };
         } else if (operand instanceof Length) {
             return getLengthValues((Length) operand, row);
         } else if (operand instanceof LowerCase) {
@@ -215,7 +248,7 @@ public class OperandEvaluator {
         Value[] values = getValues(operand.getOperand(), row);
         for (int i = 0; i < values.length; i++) {
             String value = values[i].getString();
-            String lower = value.toLowerCase(ENGLISH);
+            String lower = value.toLowerCase(locale);
             if (!value.equals(lower)) {
                 values[i] = factory.createValue(lower);
             }
@@ -236,7 +269,7 @@ public class OperandEvaluator {
         Value[] values = getValues(operand.getOperand(), row);
         for (int i = 0; i < values.length; i++) {
             String value = values[i].getString();
-            String upper = value.toUpperCase(ENGLISH);
+            String upper = value.toUpperCase(locale);
             if (!value.equals(upper)) {
                 values[i] = factory.createValue(upper);
             }
@@ -259,7 +292,7 @@ public class OperandEvaluator {
         if (colon != -1) {
             name = name.substring(colon + 1);
         }
-        return new Value[] { factory.createValue(name, NAME) };
+        return new Value[] { factory.createValue(name, PropertyType.NAME) };
     }
 
     /**

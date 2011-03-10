@@ -46,6 +46,7 @@ import javax.jcr.query.qom.Source;
 
 import org.apache.jackrabbit.commons.iterator.RowIterable;
 import org.apache.jackrabbit.commons.iterator.RowIteratorAdapter;
+import org.apache.jackrabbit.commons.query.qom.OperandEvaluator;
 
 /**
  * A join merger is used by the {@link QueryEngine} class to efficiently

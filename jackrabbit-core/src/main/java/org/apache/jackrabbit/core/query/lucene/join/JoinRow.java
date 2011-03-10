@@ -24,6 +24,8 @@ import javax.jcr.RepositoryException;
 import javax.jcr.query.Row;
 import javax.jcr.query.qom.PropertyValue;
 
+import org.apache.jackrabbit.commons.query.qom.OperandEvaluator;
+
 public class JoinRow extends AbstractRow {
 
     private final Row leftRow;
