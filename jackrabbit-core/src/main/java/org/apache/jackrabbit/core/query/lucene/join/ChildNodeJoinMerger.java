@@ -33,6 +33,8 @@ import javax.jcr.query.qom.Join;
 import javax.jcr.query.qom.PropertyValue;
 import javax.jcr.query.qom.QueryObjectModelFactory;
 
+import org.apache.jackrabbit.commons.query.qom.OperandEvaluator;
+
 class ChildNodeJoinMerger extends JoinMerger {
 
     private final String childSelector;

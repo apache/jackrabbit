@@ -36,6 +36,8 @@ import javax.jcr.query.qom.Literal;
 import javax.jcr.query.qom.PropertyValue;
 import javax.jcr.query.qom.QueryObjectModelFactory;
 
+import org.apache.jackrabbit.commons.query.qom.OperandEvaluator;
+
 class EquiJoinMerger extends JoinMerger {
 
     private final PropertyValue leftProperty;

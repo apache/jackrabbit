@@ -57,6 +57,7 @@ import javax.jcr.query.qom.Source;
 
 import org.apache.jackrabbit.commons.JcrUtils;
 import org.apache.jackrabbit.commons.iterator.RowIteratorAdapter;
+import org.apache.jackrabbit.commons.query.qom.OperandEvaluator;
 import org.apache.jackrabbit.core.query.lucene.LuceneQueryFactory;
 
 public class QueryEngine {

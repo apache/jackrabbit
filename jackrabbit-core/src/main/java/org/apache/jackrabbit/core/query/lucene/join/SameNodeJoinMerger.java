@@ -34,6 +34,8 @@ import javax.jcr.query.qom.PropertyValue;
 import javax.jcr.query.qom.QueryObjectModelFactory;
 import javax.jcr.query.qom.SameNodeJoinCondition;
 
+import org.apache.jackrabbit.commons.query.qom.OperandEvaluator;
+
 class SameNodeJoinMerger extends JoinMerger {
 
     private final String selector1;
