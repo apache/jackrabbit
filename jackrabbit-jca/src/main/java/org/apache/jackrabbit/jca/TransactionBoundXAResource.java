@@ -34,6 +34,16 @@ public class TransactionBoundXAResource implements XAResource {
         this.xaResource = xaResource;
         this.connection = connection;
     }
+    
+    /**
+     * There is a one-to-one Relation between this TransactionBoundXAResource
+     * and the JCAManagedConnection so the used XAResource must be in sync when it is changed in the
+     * JCAManagedConnection.
+     * @param res
+     */
+    protected void rebind(XAResource res) {
+        this.xaResource = res;
+    }
 
     public void commit(Xid arg0, boolean arg1) throws XAException {
         xaResource.commit(arg0, arg1);
