@@ -120,9 +120,9 @@ public interface QueryBuilder<T> {
     /**
      * Create a condition which holds iff the name of the {@link Authorizable}
      * matches a <code>pattern</code>.
-     * The percent character Ô%Õ represents any string of zero or more characters and the
-     * underscore character Ô_Õ represents any single character. Any literal use of these characters
-     * and the backslash character Ô\Õ must be escaped with a backslash character.
+     * The percent character "%" represents any string of zero or more characters and the
+     * underscore character "_" represents any single character. Any literal use of these characters
+     * and the backslash character "\" must be escaped with a backslash character.
      * The pattern is matched against the {@link Authorizable#getID() id} and the
      * {@link Authorizable#getPrincipal() principal}.
      *
@@ -224,9 +224,9 @@ public interface QueryBuilder<T> {
     /**
      * Create a condition which holds iff the node of an {@link Authorizable} has a
      * property at <code>relPath</code> which matches the pattern in <code>pattern</code>.
-     * The percent character Ô%Õ represents any string of zero or more characters and the
-     * underscore character Ô_Õ represents any single character. Any literal use of these characters
-     * and the backslash character Ô\Õ must be escaped with a backslash character.
+     * The percent character "%" represents any string of zero or more characters and the
+     * underscore character "_" represents any single character. Any literal use of these characters
+     * and the backslash character "\" must be escaped with a backslash character.
      * The format of the <code>relPath</code> argument is the same as in XPath:
      * <code>@attributeName</code> for an attribute on this node and
      * <code>relative/path/@attributeName</code> for an attribute of a descendant node.
