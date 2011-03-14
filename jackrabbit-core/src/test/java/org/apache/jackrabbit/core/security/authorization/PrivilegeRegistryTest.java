@@ -27,7 +27,6 @@ import org.apache.jackrabbit.spi.commons.conversion.NameResolver;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.test.AbstractJCRTest;
 
-import javax.jcr.NamespaceException;
 import javax.jcr.RepositoryException;
 import javax.jcr.security.AccessControlException;
 import javax.jcr.security.Privilege;
@@ -60,9 +59,9 @@ public class PrivilegeRegistryTest extends AbstractJCRTest {
 
     public void testGetAll() throws RepositoryException {
 
-        PrivilegeRegistry.PrivilegeDefinition[] defs = privilegeRegistry.getAll();
+        PrivilegeRegistry.Definition[] defs = privilegeRegistry.getAll();
 
-        List<PrivilegeRegistry.PrivilegeDefinition> l = new ArrayList<PrivilegeRegistry.PrivilegeDefinition>(Arrays.asList(defs));
+        List<PrivilegeRegistry.Definition> l = new ArrayList<PrivilegeRegistry.Definition>(Arrays.asList(defs));
         assertTrue(l.remove(privilegeRegistry.get(NameConstants.JCR_READ)));
         assertTrue(l.remove(privilegeRegistry.get(NameConstants.JCR_ADD_CHILD_NODES)));
         assertTrue(l.remove(privilegeRegistry.get(NameConstants.JCR_REMOVE_CHILD_NODES)));
@@ -85,9 +84,9 @@ public class PrivilegeRegistryTest extends AbstractJCRTest {
 
     public void testGet() throws RepositoryException {
 
-        for (PrivilegeRegistry.PrivilegeDefinition def : privilegeRegistry.getAll()) {
+        for (PrivilegeRegistry.Definition def : privilegeRegistry.getAll()) {
 
-            PrivilegeRegistry.PrivilegeDefinition d = privilegeRegistry.get(def.name);
+            PrivilegeRegistry.Definition d = privilegeRegistry.get(def.name);
             assertEquals(def, d);
 
             assertNotNull(d.name);
@@ -107,14 +106,14 @@ public class PrivilegeRegistryTest extends AbstractJCRTest {
 
     public void testAggregates() throws RepositoryException {
 
-        for (PrivilegeRegistry.PrivilegeDefinition def : privilegeRegistry.getAll()) {
+        for (PrivilegeRegistry.Definition def : privilegeRegistry.getAll()) {
             if (def.declaredAggregateNames.isEmpty()) {
                 continue; // ignore non aggregate
             }
 
             List<Name> l = Arrays.asList(def.getDeclaredAggregateNames());
             for (Name n : l) {
-                PrivilegeRegistry.PrivilegeDefinition d = privilegeRegistry.get(n);
+                PrivilegeRegistry.Definition d = privilegeRegistry.get(n);
                 assertNotNull(d);
                 Name[] names = privilegeRegistry.getNames(d.getBits());
                 assertNotNull(names);
@@ -126,7 +125,7 @@ public class PrivilegeRegistryTest extends AbstractJCRTest {
 
     public void testPrivilegeDefinition() throws RepositoryException {
 
-        for (PrivilegeRegistry.PrivilegeDefinition def : privilegeRegistry.getAll()) {
+        for (PrivilegeRegistry.Definition def : privilegeRegistry.getAll()) {
 
             assertNotNull(def.name);
             assertEquals(def.name, def.getName());
@@ -144,7 +143,7 @@ public class PrivilegeRegistryTest extends AbstractJCRTest {
     }
 
     public void testJcrAll() throws RepositoryException {
-        PrivilegeRegistry.PrivilegeDefinition p = privilegeRegistry.get(NameConstants.JCR_ALL);
+        PrivilegeRegistry.Definition p = privilegeRegistry.get(NameConstants.JCR_ALL);
         assertEquals(p.getName(), NameConstants.JCR_ALL);
         assertFalse(p.declaredAggregateNames.isEmpty());
         assertFalse(p.isAbstract());
@@ -165,7 +164,7 @@ public class PrivilegeRegistryTest extends AbstractJCRTest {
 
     public void testJcrWrite() throws RepositoryException {
         Name rw = resolver.getQName(PrivilegeRegistry.REP_WRITE);
-        PrivilegeRegistry.PrivilegeDefinition p = privilegeRegistry.get(rw);
+        PrivilegeRegistry.Definition p = privilegeRegistry.get(rw);
 
         assertEquals(p.getName(), rw);
         assertFalse(p.declaredAggregateNames.isEmpty());
@@ -178,7 +177,7 @@ public class PrivilegeRegistryTest extends AbstractJCRTest {
     }
 
     public void testRepWrite() throws RepositoryException {
-        PrivilegeRegistry.PrivilegeDefinition p = privilegeRegistry.get(NameConstants.JCR_WRITE);
+        PrivilegeRegistry.Definition p = privilegeRegistry.get(NameConstants.JCR_WRITE);
         assertEquals(p.getName(), NameConstants.JCR_WRITE);
         assertFalse(p.declaredAggregateNames.isEmpty());
         assertFalse(p.isAbstract());
@@ -436,7 +435,7 @@ public class PrivilegeRegistryTest extends AbstractJCRTest {
             resource.makeParentDirs();
         }
         StringBuilder sb = new StringBuilder();
-        sb.append("test;;test2\n");
+        sb.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?><privileges><privilege isAbstract=\"false\" name=\"test\"><contains name=\"test2\"/></privilege></privileges>");
 
         Writer writer = new OutputStreamWriter(resource.getOutputStream(), "utf-8");
         writer.write(sb.toString());
@@ -446,7 +445,7 @@ public class PrivilegeRegistryTest extends AbstractJCRTest {
         try {
             new PrivilegeRegistry(superuser.getWorkspace().getNamespaceRegistry(), fs);
             fail("Invalid names must be detected upon registry startup.");
-        } catch (IllegalArgumentException e) {
+        } catch (RepositoryException e) {
             // success
         } finally {
             fs.deleteFolder("/privileges");
@@ -537,12 +536,13 @@ public class PrivilegeRegistryTest extends AbstractJCRTest {
 
             Map<Name, Set<Name>> newCustomPrivs = new HashMap<Name, Set<Name>>();
             newCustomPrivs.put(resolver.getQName("new"), Collections.<Name>emptySet());
+            newCustomPrivs.put(resolver.getQName("test:new"), Collections.<Name>emptySet());
 
             for (Name name : newCustomPrivs.keySet()) {
                 boolean isAbstract = true;
                 Set<Name> aggrNames = newCustomPrivs.get(name);
                 pr.registerDefinition(name, isAbstract, aggrNames);
-                PrivilegeRegistry.PrivilegeDefinition definition = pr.get(name);
+                PrivilegeRegistry.Definition definition = pr.get(name);
 
                 assertNotNull(definition);
                 assertEquals(name, definition.getName());
@@ -558,7 +558,7 @@ public class PrivilegeRegistryTest extends AbstractJCRTest {
 
                 // re-read the filesystem resource and check if definition is correct
                 PrivilegeRegistry registry = new PrivilegeRegistry(superuser.getWorkspace().getNamespaceRegistry(), fs);
-                PrivilegeRegistry.PrivilegeDefinition def = registry.get(name);
+                PrivilegeRegistry.Definition def = registry.get(name);
                 assertEquals(isAbstract, def.isAbstract);
                 assertEquals(aggrNames.size(), def.declaredAggregateNames.size());
                 for (Name n : aggrNames) {
@@ -571,12 +571,13 @@ public class PrivilegeRegistryTest extends AbstractJCRTest {
             newAggregates.put(resolver.getQName("newA1"), createNameSet(NameConstants.JCR_READ, NameConstants.JCR_RETENTION_MANAGEMENT));
             // a new aggregate of custom and built-in privilege
             newAggregates.put(resolver.getQName("newA2"), createNameSet(resolver.getQName("new"), NameConstants.JCR_READ));
+            newAggregates.put(resolver.getQName("newA3"), createNameSet(resolver.getQName("test:new"), resolver.getQName("new")));
 
             for (Name name : newAggregates.keySet()) {
                 boolean isAbstract = false;
                 Set<Name> aggrNames = newAggregates.get(name);
                 pr.registerDefinition(name, isAbstract, aggrNames);
-                PrivilegeRegistry.PrivilegeDefinition definition = pr.get(name);
+                PrivilegeRegistry.Definition definition = pr.get(name);
 
                 assertNotNull(definition);
                 assertEquals(name, definition.getName());
@@ -592,7 +593,7 @@ public class PrivilegeRegistryTest extends AbstractJCRTest {
 
                 // re-read the filesystem resource and check if definition is correct
                 PrivilegeRegistry registry = new PrivilegeRegistry(superuser.getWorkspace().getNamespaceRegistry(), fs);
-                PrivilegeRegistry.PrivilegeDefinition def = registry.get(name);
+                PrivilegeRegistry.Definition def = registry.get(name);
                 assertEquals(isAbstract, def.isAbstract);
                 assertEquals(isAbstract, def.isAbstract);
                 assertEquals(aggrNames.size(), def.declaredAggregateNames.size());
