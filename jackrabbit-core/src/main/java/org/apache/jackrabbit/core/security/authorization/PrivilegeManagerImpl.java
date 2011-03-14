@@ -84,10 +84,10 @@ public final class PrivilegeManagerImpl implements PrivilegeManager, PrivilegeRe
      * @return all registered privileges.
      */
     public Privilege[] getRegisteredPrivileges() throws RepositoryException {
-        PrivilegeRegistry.PrivilegeDefinition[] allDefs = registry.getAll();
+        PrivilegeRegistry.Definition[] allDefs = registry.getAll();
         if (allDefs.length != cache.size()) {
             synchronized (cache) {
-                for (PrivilegeRegistry.PrivilegeDefinition def : allDefs) {
+                for (PrivilegeRegistry.Definition def : allDefs) {
                     if (!cache.containsKey(def.getName())) {
                         cache.put(def.getName(), new PrivilegeImpl(def));
                     }
@@ -204,7 +204,7 @@ public final class PrivilegeManagerImpl implements PrivilegeManager, PrivilegeRe
         int bits = PrivilegeRegistry.NO_PRIVILEGE;
         for (String privName : privilegeNames) {
             try {
-                PrivilegeRegistry.PrivilegeDefinition def = registry.get(resolver.getQName(privName));
+                PrivilegeRegistry.Definition def = registry.get(resolver.getQName(privName));
                 if (def == null) {
                     throw new AccessControlException("Unknown privilege name '" + privName + "'.");
                 } else {
@@ -257,7 +257,7 @@ public final class PrivilegeManagerImpl implements PrivilegeManager, PrivilegeRe
             if (cache.containsKey(name)) {
                 privilege = cache.get(name);
             } else {
-                PrivilegeRegistry.PrivilegeDefinition def = registry.get(name);
+                PrivilegeRegistry.Definition def = registry.get(name);
                 if (def != null) {
                     privilege = new PrivilegeImpl(def);
                     cache.put(name, privilege);
@@ -288,12 +288,12 @@ public final class PrivilegeManagerImpl implements PrivilegeManager, PrivilegeRe
      */
     private class PrivilegeImpl implements Privilege {
 
-        private final PrivilegeRegistry.PrivilegeDefinition definition;
+        private final PrivilegeRegistry.Definition definition;
 
         private final Privilege[] declaredAggregates;
         private final Privilege[] aggregates;
 
-        private PrivilegeImpl(PrivilegeRegistry.PrivilegeDefinition definition) throws RepositoryException {
+        private PrivilegeImpl(PrivilegeRegistry.Definition definition) throws RepositoryException {
             this.definition = definition;
 
             Name[] aggrNames = definition.getDeclaredAggregateNames();
