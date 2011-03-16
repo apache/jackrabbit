@@ -23,6 +23,7 @@ import org.apache.jackrabbit.core.security.authorization.CompiledPermissions;
 import org.apache.jackrabbit.core.security.authorization.Permission;
 import org.apache.jackrabbit.core.security.authorization.AccessControlUtils;
 import org.apache.jackrabbit.core.security.authorization.AbstractCompiledPermissions;
+import org.apache.jackrabbit.core.security.authorization.PrivilegeManagerImpl;
 import org.apache.jackrabbit.core.security.authorization.principalbased.ACLProvider;
 import org.apache.jackrabbit.core.ItemImpl;
 import org.apache.jackrabbit.core.id.ItemId;
@@ -219,7 +220,16 @@ public class CombinedProvider extends AbstractAccessControlProvider {
             }
         }
 
-        //------------------------------------< AbstractCompiledPermissions >---
+        //------------------------------------< AbstractCompiledPermissions >---      
+        /**
+         * @see AbstractCompiledPermissions#getResult(Path)
+         */
+        @Override
+        public Result getResult(Path absPath) throws RepositoryException {
+            // TODO: missing caching
+            return buildResult(absPath);
+        }
+
         /**
          * @see AbstractCompiledPermissions#buildResult(Path)
          */
@@ -234,12 +244,11 @@ public class CombinedProvider extends AbstractAccessControlProvider {
         }
 
         /**
-         * @see AbstractCompiledPermissions#getResult(Path)
+         * @see AbstractCompiledPermissions#getPrivilegeManagerImpl()
          */
         @Override
-        public Result getResult(Path absPath) throws RepositoryException {
-            // TODO: missing caching
-            return buildResult(absPath);
+        protected PrivilegeManagerImpl getPrivilegeManagerImpl() throws RepositoryException {
+            return CombinedProvider.this.getPrivilegeManagerImpl();
         }
 
         //--------------------------------------------< CompiledPermissions >---

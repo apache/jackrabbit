@@ -19,10 +19,14 @@ package org.apache.jackrabbit.core.security.authorization;
 import java.security.Principal;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
+import javax.jcr.security.AccessControlEntry;
 import javax.jcr.security.AccessControlException;
 import javax.jcr.security.Privilege;
 
@@ -57,6 +61,13 @@ public abstract class AbstractEntryTest extends AbstractAccessControlTest {
     protected abstract JackrabbitAccessControlEntry createEntry(Principal principal, Privilege[] privileges, boolean isAllow)
             throws RepositoryException;
 
+    protected abstract JackrabbitAccessControlEntry createEntry(Principal principal, Privilege[] privileges, boolean isAllow, Map<String, Value> restrictions)
+            throws RepositoryException;
+    
+    protected abstract JackrabbitAccessControlEntry createEntryFromBase(JackrabbitAccessControlEntry base, Privilege[] privileges, boolean isAllow) throws RepositoryException, NotExecutableException;
+
+    protected abstract Map<String, Value> getTestRestrictions() throws RepositoryException;
+    
     public void testIsAllow() throws RepositoryException, NotExecutableException {
         JackrabbitAccessControlEntry tmpl = createEntry(new String[] {Privilege.JCR_READ}, true);
         assertTrue(tmpl.isAllow());
@@ -117,18 +128,32 @@ public abstract class AbstractEntryTest extends AbstractAccessControlTest {
 
     public void testEquals() throws RepositoryException, NotExecutableException  {
 
+        Map<AccessControlEntry, AccessControlEntry> equalAces = new HashMap<AccessControlEntry, AccessControlEntry>();
+
         JackrabbitAccessControlEntry ace = createEntry(new String[] {Privilege.JCR_ALL}, true);
-        List<JackrabbitAccessControlEntry> equalAces = new ArrayList<JackrabbitAccessControlEntry>();
-        equalAces.add(createEntry(new String[] {Privilege.JCR_ALL}, true));
+        // create same entry again
+        equalAces.put(ace, createEntry(new String[] {Privilege.JCR_ALL}, true));
 
-        Privilege[] privs = acMgr.privilegeFromName(Privilege.JCR_ALL).getDeclaredAggregatePrivileges();
-        equalAces.add(createEntry(testPrincipal, privs, true));
+        // create entry with declared aggregate privileges
+        Privilege[] declaredAllPrivs = acMgr.privilegeFromName(Privilege.JCR_ALL).getDeclaredAggregatePrivileges();
+        equalAces.put(ace, createEntry(testPrincipal, declaredAllPrivs, true));
 
-        privs = acMgr.privilegeFromName(Privilege.JCR_ALL).getAggregatePrivileges();
-        equalAces.add(createEntry(testPrincipal, privs, true));
+        // create entry with aggregate privileges
+        Privilege[] aggregateAllPrivs = acMgr.privilegeFromName(Privilege.JCR_ALL).getAggregatePrivileges();
+        equalAces.put(ace, createEntry(testPrincipal, aggregateAllPrivs, true));
 
-        for (JackrabbitAccessControlEntry equalAce : equalAces) {
-            assertEquals(ace, equalAce);
+        // create entry with different privilege order
+        List<Privilege> reordered = new ArrayList<Privilege>(Arrays.asList(aggregateAllPrivs));
+        reordered.add(reordered.remove(0));
+        equalAces.put(createEntry(testPrincipal, reordered.toArray(new Privilege[reordered.size()]), true),
+                      createEntry(testPrincipal, aggregateAllPrivs, true));
+
+        // even if entries are build with aggregated or declared aggregate privileges
+        equalAces.put(createEntry(testPrincipal, declaredAllPrivs, true),
+                      createEntry(testPrincipal, aggregateAllPrivs, true));
+
+        for (AccessControlEntry entry : equalAces.keySet()) {
+            assertEquals(entry, equalAces.get(entry));
         }
     }
 
@@ -237,5 +262,32 @@ public abstract class AbstractEntryTest extends AbstractAccessControlTest {
         } catch (AccessControlException e) {
             // success
         }
+    }
+
+    public void testCreateFromBase() throws RepositoryException, NotExecutableException {
+        Map<String, Value> testRestrictions = getTestRestrictions();
+        JackrabbitAccessControlEntry base = createEntry(testPrincipal, privilegesFromName(Privilege.JCR_READ), false, testRestrictions);
+        assertEquals(testPrincipal, base.getPrincipal());
+        assertTrue(Arrays.equals(privilegesFromName(Privilege.JCR_READ), base.getPrivileges()));
+        assertFalse(base.isAllow());
+
+        Map<String, Value> baseRestrictions = new HashMap<String, Value>();
+        for (String name : base.getRestrictionNames()) {
+            baseRestrictions.put(name, base.getRestriction(name));
+        }
+        assertEquals(testRestrictions, baseRestrictions);
+
+
+        JackrabbitAccessControlEntry entry = createEntryFromBase(base, privilegesFromName(Privilege.JCR_WRITE), true);
+        assertEquals(testPrincipal, entry.getPrincipal());
+        assertTrue(Arrays.equals(privilegesFromName(Privilege.JCR_WRITE), entry.getPrivileges()));
+        assertTrue(entry.isAllow());
+
+        Map<String, Value> entryRestrictions = new HashMap<String, Value>();
+        for (String name : entry.getRestrictionNames()) {
+            entryRestrictions.put(name, entry.getRestriction(name));
+        }
+        assertEquals(testRestrictions, entryRestrictions);
+
     }
 }

@@ -55,9 +55,9 @@ public final class Permission {
      * Returns those bits from <code>permissions</code> that are not present in
      * the <code>otherPermissions</code>, i.e. subtracts the other permissions
      * from permissions.<br>
-     * If the specified <code>otherBits</code> do not intersect with
-     * <code>bits</code>,  <code>bits</code> are returned.<br>
-     * If <code>bits</code> is included <code>otherBits</code>,
+     * If the specified <code>otherPermissions</code> do not intersect with
+     * <code>permissions</code>,  <code>permissions</code> are returned.<br>
+     * If <code>permissions</code> is included in <code>otherPermissions</code>,
      * {@link #NONE} is returned.
      *
      * @param permissions

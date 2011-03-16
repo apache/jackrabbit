@@ -20,6 +20,9 @@ import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.core.id.ItemId;
 
 import javax.jcr.RepositoryException;
+import javax.jcr.security.Privilege;
+import java.util.Collections;
+import java.util.Set;
 
 /**
  * <code>CompiledPermissions</code> represents the evaluation of an
@@ -52,15 +55,36 @@ public interface CompiledPermissions {
 
     /**
      * Returns the <code>Privilege</code> bits granted by the underlying policy
-     * if the given <code>absPath</code> denotes an existing <code>Node</code>,
-     * otherwise it returns zero.
+     * if the given <code>absPath</code>.
      *
      * @param absPath Absolute path to a <code>Node</code>.
-     * @return the granted privileges at <code>absPath</code> or zero if
-     * the path does not denote an existing <code>Node</code>.
+     * @return the granted privileges at <code>absPath</code>.
      * @throws RepositoryException if an error occurs
+     * @deprecated Use {@link #getPrivilegeSet(Path)} instead.
      */
     int getPrivileges(Path absPath) throws RepositoryException;
+
+    /**
+     * Returns <code>true</code> if the given privileges are granted at the
+     * specified <code>absPath</code>.
+     *
+     * @param absPath
+     * @param privileges
+     * @return <code>true</code> if the given privileges are granted at the
+     * specified <code>absPath</code>.
+     * @throws RepositoryException
+     */
+    boolean hasPrivileges(Path absPath, Privilege[] privileges) throws RepositoryException;
+
+    /**
+     * Returns the <code>Privilege</code>s granted by the underlying policy
+     * at the given <code>absPath</code>.
+     *
+     * @param absPath Absolute path to a <code>Node</code>.
+     * @return the granted privileges at <code>absPath</code>.
+     * @throws RepositoryException if an error occurs
+     */
+    Set<Privilege> getPrivilegeSet(Path absPath) throws RepositoryException;
 
     /**
      * Returns <code>true</code> if READ permission is granted everywhere.
@@ -110,6 +134,14 @@ public interface CompiledPermissions {
         public int getPrivileges(Path absPath) {
             return PrivilegeRegistry.NO_PRIVILEGE;
         }
+
+        public boolean hasPrivileges(Path absPath, Privilege[] privileges) throws RepositoryException {
+            return false;
+        }
+        public Set<Privilege> getPrivilegeSet(Path absPath) throws RepositoryException {
+            return Collections.emptySet();
+        }
+
         public boolean canReadAll() {
             return false;
         }

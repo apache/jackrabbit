@@ -58,6 +58,26 @@ public class EntryTest extends AbstractEntryTest {
         return acl.createEntry(principal, privileges, isAllow, Collections.<String, Value>emptyMap());
     }
 
+    @Override
+    protected JackrabbitAccessControlEntry createEntry(Principal principal, Privilege[] privileges, boolean isAllow, Map<String, Value> restrictions) throws RepositoryException {
+        return acl.createEntry(principal, privileges, isAllow, restrictions);
+    }
+
+    @Override
+    protected JackrabbitAccessControlEntry createEntryFromBase(JackrabbitAccessControlEntry base, Privilege[] privileges, boolean isAllow) throws RepositoryException, NotExecutableException {
+        if (base instanceof ACLTemplate.Entry) {
+            return acl.createEntry((ACLTemplate.Entry) base, privileges, isAllow);
+        } else {
+            throw new NotExecutableException();
+        }
+    }
+
+    @Override
+    protected Map<String, Value> getTestRestrictions() throws RepositoryException {
+        String restrName = ((SessionImpl) superuser).getJCRName(ACLTemplate.P_GLOB);
+        return Collections.singletonMap(restrName, superuser.getValueFactory().createValue("/.*"));        
+    }
+
     public void testIsLocal() throws NotExecutableException, RepositoryException {
         ACLTemplate.Entry entry = (ACLTemplate.Entry) createEntry(new String[] {Privilege.JCR_READ}, true);
 

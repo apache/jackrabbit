@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.core.security.authorization.acl;
 
 import org.apache.commons.collections.map.LRUMap;
+import org.apache.jackrabbit.api.JackrabbitWorkspace;
 import org.apache.jackrabbit.core.ItemImpl;
 import org.apache.jackrabbit.core.ItemManager;
 import org.apache.jackrabbit.core.NodeImpl;
@@ -29,6 +30,7 @@ import org.apache.jackrabbit.core.security.authorization.AccessControlListener;
 import org.apache.jackrabbit.core.security.authorization.AccessControlModifications;
 import org.apache.jackrabbit.core.security.authorization.AccessControlUtils;
 import org.apache.jackrabbit.core.security.authorization.Permission;
+import org.apache.jackrabbit.core.security.authorization.PrivilegeManagerImpl;
 import org.apache.jackrabbit.core.security.authorization.PrivilegeRegistry;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
@@ -37,8 +39,10 @@ import org.apache.jackrabbit.util.Text;
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.RepositoryException;
 import javax.jcr.security.AccessControlEntry;
+import javax.jcr.security.Privilege;
 import java.security.Principal;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -104,10 +108,13 @@ class CompiledPermissionsImpl extends AbstractCompiledPermissions implements Acc
         int allows = Permission.NONE;
         int denies = Permission.NONE;
 
-        int allowPrivileges = PrivilegeRegistry.NO_PRIVILEGE;
-        int denyPrivileges = PrivilegeRegistry.NO_PRIVILEGE;
-        int parentAllows = PrivilegeRegistry.NO_PRIVILEGE;
-        int parentDenies = PrivilegeRegistry.NO_PRIVILEGE;
+        int allowBits = PrivilegeRegistry.NO_PRIVILEGE;
+        int denyBits = PrivilegeRegistry.NO_PRIVILEGE;
+        int parentAllowBits = PrivilegeRegistry.NO_PRIVILEGE;
+        int parentDenyBits = PrivilegeRegistry.NO_PRIVILEGE;
+
+        Set<Privilege> customAllow = new HashSet<Privilege>();
+        Set<Privilege> customDeny = new HashSet<Privilege>();
 
         String parentPath = Text.getRelativeParent(filter.getPath(), 1);
 
@@ -126,22 +133,27 @@ class CompiledPermissionsImpl extends AbstractCompiledPermissions implements Acc
             boolean matchesParent = (!isLocal && ace.matches(parentPath));
             if (matchesParent) {
                 if (ace.isAllow()) {
-                    parentAllows |= Permission.diff(entryBits, parentDenies);
+                    parentAllowBits |= Permission.diff(entryBits, parentDenyBits);
                 } else {
-                    parentDenies |= Permission.diff(entryBits, parentAllows);
+                    parentDenyBits |= Permission.diff(entryBits, parentAllowBits);
                 }
             }
             if (ace.isAllow()) {
-                allowPrivileges |= Permission.diff(entryBits, denyPrivileges);
-                int permissions = PrivilegeRegistry.calculatePermissions(allowPrivileges, parentAllows, true, isAcItem);
+                allowBits |= Permission.diff(entryBits, denyBits);
+                int permissions = PrivilegeRegistry.calculatePermissions(allowBits, parentAllowBits, true, isAcItem);
                 allows |= Permission.diff(permissions, denies);
+
+                updatePrivileges(ace.getCustomPrivileges(), customAllow, customDeny);
             } else {
-                denyPrivileges |= Permission.diff(entryBits, allowPrivileges);
-                int permissions = PrivilegeRegistry.calculatePermissions(denyPrivileges, parentDenies, false, isAcItem);
+                denyBits |= Permission.diff(entryBits, allowBits);
+                int permissions = PrivilegeRegistry.calculatePermissions(denyBits, parentDenyBits, false, isAcItem);
                 denies |= Permission.diff(permissions, allows);
+
+                updatePrivileges(ace.getCustomPrivileges(), customDeny, customAllow);
             }
         }
-        return new Result(allows, denies, allowPrivileges, denyPrivileges);
+
+        return new Result(allows, denies, allowBits, denyBits, customAllow, customDeny);
     }
 
     //------------------------------------< AbstractCompiledPermissions >---
@@ -187,6 +199,14 @@ class CompiledPermissionsImpl extends AbstractCompiledPermissions implements Acc
 
         boolean isAcItem = util.isAcItem(absPath);
         return buildResult(node, existingNode, isAcItem, new EntryFilterImpl(principalNames, absPath, session));
+    }
+
+    /**
+     * @see AbstractCompiledPermissions#getPrivilegeManagerImpl()
+     */
+    @Override
+    protected PrivilegeManagerImpl getPrivilegeManagerImpl() throws RepositoryException {
+        return (PrivilegeManagerImpl) ((JackrabbitWorkspace) session.getWorkspace()).getPrivilegeManager();
     }
 
     /**

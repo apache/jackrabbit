@@ -53,6 +53,8 @@ import javax.jcr.security.Privilege;
 
 import java.security.Principal;
 import java.security.acl.Group;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
@@ -314,11 +316,6 @@ public class UserAccessControlProvider extends AbstractAccessControlProvider
         }
     }
 
-    private int getPrivilegeBits(String privName) throws RepositoryException {
-        PrivilegeManagerImpl impl = (PrivilegeManagerImpl) ((JackrabbitWorkspace) session.getWorkspace()).getPrivilegeManager();
-        return impl.getBits(new String[] {privName});
-    }
-
     private static boolean containsGroup(Set<Principal> principals, Principal group) {
         for (Iterator<Principal> it = principals.iterator(); it.hasNext() && group != null;) {
             Principal p = it.next();
@@ -378,6 +375,11 @@ public class UserAccessControlProvider extends AbstractAccessControlProvider
 
             int events = Event.PROPERTY_CHANGED | Event.PROPERTY_ADDED | Event.PROPERTY_REMOVED;
             observationMgr.addEventListener(this, events, groupsPath, true, null, null, false);
+        }
+
+        private int getPrivilegeBits(String privName) throws RepositoryException {
+            PrivilegeManagerImpl impl = getPrivilegeManagerImpl();
+            return impl.getBits(new Privilege[] {impl.getPrivilege(privName)});
         }
 
         //------------------------------------< AbstractCompiledPermissions >---
@@ -487,6 +489,11 @@ public class UserAccessControlProvider extends AbstractAccessControlProvider
                 }
             } // else outside of user/group tree -> read only.
             return new Result(allows, denies, privs, PrivilegeRegistry.NO_PRIVILEGE);
+        }
+
+        @Override
+        protected PrivilegeManagerImpl getPrivilegeManagerImpl() throws RepositoryException {
+            return (PrivilegeManagerImpl) ((JackrabbitWorkspace) session.getWorkspace()).getPrivilegeManager();
         }
 
         //--------------------------------------------< CompiledPermissions >---

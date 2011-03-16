@@ -71,9 +71,24 @@ public class EntryTest extends AbstractEntryTest {
         return (JackrabbitAccessControlEntry) acl.createEntry(principal, privileges, isAllow, restrictions);
     }
 
-    private JackrabbitAccessControlEntry createEntry(Principal principal, Privilege[] privileges, boolean isAllow, Map<String, Value> restrictions)
+    @Override
+    protected JackrabbitAccessControlEntry createEntry(Principal principal, Privilege[] privileges, boolean isAllow, Map<String, Value> restrictions)
             throws RepositoryException {
         return (JackrabbitAccessControlEntry) acl.createEntry(principal, privileges, isAllow, restrictions);
+    }
+
+    @Override
+    protected JackrabbitAccessControlEntry createEntryFromBase(JackrabbitAccessControlEntry base, Privilege[] privileges, boolean isAllow) throws RepositoryException, NotExecutableException {
+        Map<String, Value> restr = new HashMap<String, Value>();
+        for (String name : base.getRestrictionNames()) {
+            restr.put(name, base.getRestriction(name));
+        }
+        return (JackrabbitAccessControlEntry) acl.createEntry(base.getPrincipal(), privileges, isAllow, restr);
+    }
+
+    @Override
+    protected Map<String, Value> getTestRestrictions() throws RepositoryException {
+        return restrictions;
     }
 
     public void testNodePathMustNotBeNull() throws RepositoryException, NotExecutableException {

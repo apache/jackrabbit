@@ -19,7 +19,6 @@ package org.apache.jackrabbit.core.security.authorization;
 import org.apache.jackrabbit.api.security.authorization.PrivilegeManager;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.spi.commons.conversion.IllegalNameException;
 import org.apache.jackrabbit.spi.commons.conversion.NameResolver;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.slf4j.Logger;
@@ -50,7 +49,7 @@ public final class PrivilegeManagerImpl implements PrivilegeManager, PrivilegeRe
     private static final Privilege[] EMPTY_ARRAY = new Privilege[0];
 
     /**
-     * 
+     * The privilege registry
      */
     private final PrivilegeRegistry registry;
 
@@ -79,9 +78,7 @@ public final class PrivilegeManagerImpl implements PrivilegeManager, PrivilegeRe
 
     //---------------------------------------------------< PrivilegeManager >---
     /**
-     * Returns all registered privileges.
-     *
-     * @return all registered privileges.
+     * @see PrivilegeManager#getRegisteredPrivileges()
      */
     public Privilege[] getRegisteredPrivileges() throws RepositoryException {
         PrivilegeRegistry.Definition[] allDefs = registry.getAll();
@@ -98,12 +95,7 @@ public final class PrivilegeManagerImpl implements PrivilegeManager, PrivilegeRe
     }
 
     /**
-     * Returns the privilege with the specified <code>privilegeName</code>.
-     *
-     * @param privilegeName Name of the principal.
-     * @return the privilege with the specified <code>privilegeName</code>.
-     * @throws javax.jcr.security.AccessControlException If no privilege with the given name exists.
-     * @throws javax.jcr.RepositoryException If another error occurs.
+     * @see PrivilegeManager#getPrivilege(String)
      */
     public Privilege getPrivilege(String privilegeName) throws AccessControlException, RepositoryException {
         Name name = resolver.getQName(privilegeName);
@@ -120,14 +112,14 @@ public final class PrivilegeManagerImpl implements PrivilegeManager, PrivilegeRe
      * <li>the namespace URI must be a valid, registered namespace excluding
      * those namespaces marked as being reserved</li>
      * <li>an aggregate custom privilege is valid if all declared aggregate
-     * names can be resolved to registered privileges and if there exists no
-     * registered privilege with the same aggregated privileges.</li>
+     * names can be resolved to registered custom privileges and if there exists
+     * no registered privilege with the same aggregated privileges.</li>
      * </ul>
      *
      * <strong>Please note</strong><br>
      * Custom privilege(s) will not be enforced for any kind of repository
      * operations. Those are exclusively covered by the built-in privileges.
-     * This also implies that the {@link Permission}s are not effected by
+     * This also implies that the {@link Permission}s are not affected by
      * custom privileges.<p/>
      * Applications making use of the custom privilege(s) are in charge of
      * asserting whether the privileges are granted/denied according to their
@@ -143,6 +135,7 @@ public final class PrivilegeManagerImpl implements PrivilegeManager, PrivilegeRe
      * for isn't the administrator.
      * @throws RepositoryException If the privilege could not be registered due
      * to constraint violations or if persisting the custom privilege fails.
+     * @see PrivilegeManager#registerPrivilege(String, boolean, String[])
      */
     public Privilege registerPrivilege(String privilegeName, boolean isAbstract,
                                        String[] declaredAggregateNames)
@@ -167,58 +160,49 @@ public final class PrivilegeManagerImpl implements PrivilegeManager, PrivilegeRe
         return getPrivilege(privilegeName);
     }
 
-    //-----------------------------< implementation specific public methods >---
+    //-----------------------------< implementation specific public methods >---       
+    /**
+     * Returns <code>true</code> if the specified privilege is a custom
+     * privilege that has been
+     * {@link #registerPrivilege(String, boolean, String[]) registered} before.
+     *
+     * @param privilege
+     * @return <code>true</code> if the specified privilege is a custom
+     * privilege; <code>false</code> otherwise.
+     * @throws AccessControlException If the specified privilege is
+     * <code>null</code> or unknown to this manager.
+     */
+    public boolean isCustomPrivilege(Privilege privilege) throws AccessControlException {
+        if (privilege instanceof PrivilegeImpl) {
+            return ((PrivilegeImpl) privilege).definition.isCustom();
+        } else {
+            throw new AccessControlException("Invalid privilege instance.");
+        }
+    }
+
     /**
      * @param privileges An array of privileges.
-     * @return The privilege bits.
+     * @return The bits of the built-in privileges contained in the specified
+     * array.
      * @throws AccessControlException If the specified array is null, empty
      * or if it contains an unregistered privilege.
-     * @see #getPrivileges(int)
      */
     public int getBits(Privilege[] privileges) throws AccessControlException {
         if (privileges == null || privileges.length == 0) {
             throw new AccessControlException("Privilege array is empty or null.");
         }
-        int bits = PrivilegeRegistry.NO_PRIVILEGE;
-        for (Privilege priv : privileges) {
+        PrivilegeRegistry.Definition[] defs = new PrivilegeRegistry.Definition[privileges.length];
+        for (int i = 0; i < privileges.length; i++) {
+            Privilege priv = privileges[i];
             if (priv instanceof PrivilegeImpl) {
-                bits |= ((PrivilegeImpl) priv).definition.getBits();
+                defs[i] = ((PrivilegeImpl) priv).definition;
             } else {
                 throw new AccessControlException("Unknown privilege '" + priv.getName() + "'.");
             }
         }
-        return bits;
+        return registry.getBits(defs);
     }
 
-    /**
-     * 
-     * @param privilegeNames
-     * @return
-     * @throws AccessControlException
-     * @throws RepositoryException
-     */
-    public int getBits(String[] privilegeNames) throws AccessControlException {
-        if (privilegeNames == null || privilegeNames.length == 0) {
-            throw new AccessControlException("Privilege name array is null or empty.");
-        }
-        int bits = PrivilegeRegistry.NO_PRIVILEGE;
-        for (String privName : privilegeNames) {
-            try {
-                PrivilegeRegistry.Definition def = registry.get(resolver.getQName(privName));
-                if (def == null) {
-                    throw new AccessControlException("Unknown privilege name '" + privName + "'.");
-                } else {
-                    bits |= def.getBits();
-                }
-            } catch (NamespaceException e) {
-                throw new AccessControlException("Invalid privilege name '" + privName + "'.");
-            } catch (IllegalNameException e) {
-                throw new AccessControlException("Invalid privilege name '" + privName + "'.");
-            }
-        }
-        return bits;
-    }
-        
     /**
      * Returns an array of registered <code>Privilege</code>s. If the specified
      * <code>bits</code> represent a single registered privilege the returned array
@@ -232,25 +216,31 @@ public final class PrivilegeManagerImpl implements PrivilegeManager, PrivilegeRe
      * <code>bits</code> or an empty array if <code>bits</code> cannot be
      * resolved to registered <code>Privilege</code>s.
      * @see #getBits(Privilege[])
-     * @see #getBits(String[])
      */
-    public Privilege[] getPrivileges(int bits) {
+    public Set<Privilege> getPrivileges(int bits) {
         Name[] names = registry.getNames(bits);
         if (names.length == 0) {
-            return EMPTY_ARRAY;
+            return Collections.emptySet();
         } else {
-            Privilege[] privs = new Privilege[names.length];
-            for (int i = 0; i < names.length; i++) {
+            Set<Privilege> privs = new HashSet<Privilege>(names.length);
+            for (Name n : names) {
                 try {
-                    privs[i] = getPrivilege(names[i]);
+                    privs.add(getPrivilege(n));
                 } catch (RepositoryException e) {
-                    log.error("Internal error: invalid privilege name " + names[i].toString());
+                    log.error("Internal error: invalid privilege name " + n.toString());
                 }
             }
             return privs;
         }
     }
 
+    //------------------------------------------------------------< private >---
+    /**
+     * @param name
+     * @return The privilege with the specified name.
+     * @throws AccessControlException
+     * @throws RepositoryException
+     */
     private Privilege getPrivilege(Name name) throws AccessControlException, RepositoryException {
         Privilege privilege;
         synchronized (cache) {
@@ -270,7 +260,6 @@ public final class PrivilegeManagerImpl implements PrivilegeManager, PrivilegeRe
     }
 
     //-----------------------------------------< PrivilegeRegistry.Listener >---
-
     /**
      * @see PrivilegeRegistry.Listener#privilegeRegistered(org.apache.jackrabbit.spi.Name)
      */
@@ -296,14 +285,14 @@ public final class PrivilegeManagerImpl implements PrivilegeManager, PrivilegeRe
         private PrivilegeImpl(PrivilegeRegistry.Definition definition) throws RepositoryException {
             this.definition = definition;
 
-            Name[] aggrNames = definition.getDeclaredAggregateNames();
-            if (aggrNames.length == 0) {
+            Name[] declAggrNames = definition.getDeclaredAggregateNames();
+            if (declAggrNames.length == 0) {
                 declaredAggregates = EMPTY_ARRAY;
                 aggregates = EMPTY_ARRAY;
             } else {
-                declaredAggregates = new Privilege[aggrNames.length];
-                for (int i = 0; i < aggrNames.length; i++) {
-                    declaredAggregates[i] = getPrivilege(aggrNames[i]);
+                declaredAggregates = new Privilege[declAggrNames.length];
+                for (int i = 0; i < declAggrNames.length; i++) {
+                    declaredAggregates[i] = getPrivilege(declAggrNames[i]);
                 }
 
                 Set<Privilege> aggr = new HashSet<Privilege>();
