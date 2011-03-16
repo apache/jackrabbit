@@ -154,7 +154,7 @@ class SysViewImportHandler extends TargetImportHandler {
 
             // property name (value of sv:name attribute)
             String svName = getAttribute(atts, NameConstants.SV_NAME);
-            if (name == null) {
+            if (svName == null) {
                 throw new SAXException(new InvalidSerializedDataException(
                         "missing mandatory sv:name attribute of element sv:property"));
             }
