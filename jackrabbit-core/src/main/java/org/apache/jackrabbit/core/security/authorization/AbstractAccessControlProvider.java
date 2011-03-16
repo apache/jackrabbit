@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.core.security.authorization;
 
 import java.security.Principal;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 
@@ -78,6 +79,14 @@ public abstract class AbstractAccessControlProvider implements AccessControlProv
     }
 
     /**
+     * @return the PrivilegeManager
+     * @throws RepositoryException
+     */
+    protected PrivilegeManagerImpl getPrivilegeManagerImpl() throws RepositoryException {
+        return (PrivilegeManagerImpl) ((JackrabbitWorkspace) session.getWorkspace()).getPrivilegeManager();
+    }
+
+    /**
      * Returns compiled permissions for the administrator i.e. permissions
      * that grants everything and returns the int representation of {@link Privilege#JCR_ALL}
      * upon {@link CompiledPermissions#getPrivileges(Path)} for all
@@ -96,13 +105,23 @@ public abstract class AbstractAccessControlProvider implements AccessControlProv
                 return true;
             }
             public int getPrivileges(Path absPath) throws RepositoryException {
-                return getPrivilegeManagerImpl().getBits(new String[] {Privilege.JCR_ALL});
+                return getPrivilegeManagerImpl().getBits(new Privilege[] {getAllPrivilege()});
+            }
+            public boolean hasPrivileges(Path absPath, Privilege[] privileges) {
+                return true;
+            }
+            public Set<Privilege> getPrivilegeSet(Path absPath) throws RepositoryException {
+                return Collections.singleton(getAllPrivilege());
             }
             public boolean canReadAll() {
                 return true;
             }
-            public boolean canRead(Path itemPath, ItemId itemId) throws RepositoryException {
+            public boolean canRead(Path itemPath, ItemId itemId) {
                 return true;
+            }
+
+            private Privilege getAllPrivilege() throws RepositoryException {
+                return getPrivilegeManagerImpl().getPrivilege(Privilege.JCR_ALL);
             }
         };
     }
@@ -131,7 +150,21 @@ public abstract class AbstractAccessControlProvider implements AccessControlProv
                 if (isAcItem(absPath)) {
                     return PrivilegeRegistry.NO_PRIVILEGE;
                 } else {
-                    return getPrivilegeManagerImpl().getBits(new String[] {Privilege.JCR_READ});
+                    return getPrivilegeManagerImpl().getBits(new Privilege[] {getReadPrivilege()});
+                }
+            }
+            public boolean hasPrivileges(Path absPath, Privilege[] privileges) throws RepositoryException {
+                if (isAcItem(absPath)) {
+                    return false;
+                } else {
+                    return privileges != null && privileges.length == 1 && getReadPrivilege().equals(privileges[0]);
+                }
+            }
+            public Set<Privilege> getPrivilegeSet(Path absPath) throws RepositoryException {
+                if (isAcItem(absPath)) {
+                    return Collections.emptySet();
+                } else {
+                    return Collections.singleton(getReadPrivilege());
                 }
             }
             public boolean canReadAll() {
@@ -144,12 +177,13 @@ public abstract class AbstractAccessControlProvider implements AccessControlProv
                     return !isAcItem(session.getItemManager().getItem(itemId));
                 }
             }
+
+            private Privilege getReadPrivilege() throws RepositoryException {
+                return getPrivilegeManagerImpl().getPrivilege(Privilege.JCR_READ);
+            }
         };
     }
 
-    private PrivilegeManagerImpl getPrivilegeManagerImpl() throws RepositoryException {
-        return (PrivilegeManagerImpl) ((JackrabbitWorkspace) session.getWorkspace()).getPrivilegeManager();
-    }
     //-------------------------------------------------< AccessControlUtils >---
     /**
      * @see org.apache.jackrabbit.core.security.authorization.AccessControlUtils#isAcItem(Path)

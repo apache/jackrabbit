@@ -278,9 +278,8 @@ public class DefaultAccessManager extends AbstractAccessControlManager implement
             log.debug("No privileges passed -> allowed.");
             return true;
         } else {
-            int privs = ((PrivilegeManagerImpl) privilegeManager).getBits(privileges);
             Path p = resolver.getQPath(absPath);
-            return (compiledPermissions.getPrivileges(p) | ~privs) == -1;
+            return compiledPermissions.hasPrivileges(p, privileges);
         }
     }
 
@@ -290,10 +289,8 @@ public class DefaultAccessManager extends AbstractAccessControlManager implement
     public Privilege[] getPrivileges(String absPath) throws PathNotFoundException, RepositoryException {
         checkInitialized();
         checkValidNodePath(absPath);
-        int bits = compiledPermissions.getPrivileges(resolver.getQPath(absPath));
-        return (bits == PrivilegeRegistry.NO_PRIVILEGE) ?
-                new Privilege[0] :
-                ((PrivilegeManagerImpl) privilegeManager).getPrivileges(bits);
+        Set<Privilege> privs = compiledPermissions.getPrivilegeSet(resolver.getQPath(absPath));
+        return privs.toArray(new Privilege[privs.size()]);
     }
 
     /**
@@ -415,11 +412,10 @@ public class DefaultAccessManager extends AbstractAccessControlManager implement
             log.debug("No privileges passed -> allowed.");
             return true;
         } else {
-            int privs = ((PrivilegeManagerImpl) privilegeManager).getBits(privileges);
             Path p = resolver.getQPath(absPath);
             CompiledPermissions perms = acProvider.compilePermissions(principals);
             try {
-                return (perms.getPrivileges(p) | ~privs) == -1;
+                return perms.hasPrivileges(p, privileges);
             } finally {
                 perms.close();
             }
@@ -436,10 +432,8 @@ public class DefaultAccessManager extends AbstractAccessControlManager implement
 
         CompiledPermissions perms = acProvider.compilePermissions(principals);
         try {
-            int bits = perms.getPrivileges(resolver.getQPath(absPath));
-            return (bits == PrivilegeRegistry.NO_PRIVILEGE) ?
-                    new Privilege[0] :
-                    ((PrivilegeManagerImpl) privilegeManager).getPrivileges(bits);
+            Set<Privilege> privs = perms.getPrivilegeSet(resolver.getQPath(absPath));
+            return privs.toArray(new Privilege[privs.size()]);
         } finally {
             perms.close();
         }

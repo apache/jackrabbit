@@ -110,7 +110,7 @@ public class UserAccessControlProviderTest extends AbstractUserTest {
 
             assertFalse(cp.canReadAll());
             assertFalse(cp.grants(rootPath, Permission.READ));
-            assertEquals(PrivilegeRegistry.NO_PRIVILEGE, cp.getPrivileges(rootPath));
+            assertTrue(cp.getPrivilegeSet(rootPath).isEmpty());
             assertSame(CompiledPermissions.NO_PERMISSION, cp);
         }
     }
@@ -139,7 +139,7 @@ public class UserAccessControlProviderTest extends AbstractUserTest {
             if (cp != null) {
                 assertFalse(cp.canReadAll());
                 assertFalse(cp.grants(rootPath, Permission.READ));
-                assertEquals(PrivilegeRegistry.NO_PRIVILEGE, cp.getPrivileges(rootPath));
+                assertTrue(cp.getPrivilegeSet(rootPath).isEmpty());
             }
         }
     }

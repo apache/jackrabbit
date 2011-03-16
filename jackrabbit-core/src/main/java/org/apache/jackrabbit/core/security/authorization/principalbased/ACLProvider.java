@@ -101,8 +101,8 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
 
         editor = new ACLEditor(session, resolver.getQPath(acRoot.getPath()));
         entriesCache = new EntriesCache(session, editor, acRoot.getPath());
-        JackrabbitWorkspace wsp = (JackrabbitWorkspace) session.getWorkspace();
-        readBits = ((PrivilegeManagerImpl) wsp.getPrivilegeManager()).getBits(new String[] {Privilege.JCR_READ});
+        PrivilegeManagerImpl pm = getPrivilegeManagerImpl();
+        readBits = pm.getBits(new Privilege[] {pm.getPrivilege(Privilege.JCR_READ)});
 
         // TODO: replace by configurable default policy (see JCR-2331)
         if (!configuration.containsKey(PARAM_OMIT_DEFAULT_PERMISSIONS)) {
@@ -395,6 +395,13 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
             return buildResult(jcrPath, isAcItem);
         }
 
+        /**
+         * @see AbstractCompiledPermissions#getPrivilegeManagerImpl()
+         */
+        @Override
+        protected PrivilegeManagerImpl getPrivilegeManagerImpl() throws RepositoryException {
+            return ACLProvider.this.getPrivilegeManagerImpl();
+        }
 
         /**
          * Loop over all entries and evaluate allows/denies for those matching
@@ -402,7 +409,7 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
          * 
          * @param targetPath Path used for the evaluation; pointing to an
          * existing or non-existing item.
-         * @param isAcItem the item
+         * @param isAcItem the item.
          * @return the result
          * @throws RepositoryException if an error occurs
          */
@@ -410,10 +417,14 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
                                    boolean isAcItem) throws RepositoryException {
             int allows = Permission.NONE;
             int denies = Permission.NONE;
-            int allowPrivileges = PrivilegeRegistry.NO_PRIVILEGE;
-            int denyPrivileges = PrivilegeRegistry.NO_PRIVILEGE;
-            int parentAllows = PrivilegeRegistry.NO_PRIVILEGE;
-            int parentDenies = PrivilegeRegistry.NO_PRIVILEGE;
+
+            int allowBits = PrivilegeRegistry.NO_PRIVILEGE;
+            int denyBits = PrivilegeRegistry.NO_PRIVILEGE;
+            int parentAllowBits = PrivilegeRegistry.NO_PRIVILEGE;
+            int parentDenyBits = PrivilegeRegistry.NO_PRIVILEGE;
+
+            Set<Privilege> customAllow = new HashSet<Privilege>();
+            Set<Privilege> customDeny = new HashSet<Privilege>();
 
             String parentPath = Text.getRelativeParent(targetPath, 1);
             for (AccessControlEntry entry : entries) {
@@ -426,26 +437,31 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
 
                 if (!"".equals(parentPath) && entr.matches(parentPath)) {
                     if (entr.isAllow()) {
-                        parentAllows |= Permission.diff(privs, parentDenies);
+                        parentAllowBits |= Permission.diff(privs, parentDenyBits);
                     } else {
-                        parentDenies |= Permission.diff(privs, parentAllows);
+                        parentDenyBits |= Permission.diff(privs, parentAllowBits);
                     }
                 }
 
                 boolean matches = entr.matches(targetPath);
                 if (matches) {
                     if (entr.isAllow()) {
-                        allowPrivileges |= Permission.diff(privs, denyPrivileges);
-                        int permissions = PrivilegeRegistry.calculatePermissions(allowPrivileges, parentAllows, true, isAcItem);
+                        allowBits |= Permission.diff(privs, denyBits);
+                        int permissions = PrivilegeRegistry.calculatePermissions(allowBits, parentAllowBits, true, isAcItem);
                         allows |= Permission.diff(permissions, denies);
+
+                        updatePrivileges(entr.getCustomPrivileges(), customAllow, customDeny);
                     } else {
-                        denyPrivileges |= Permission.diff(privs, allowPrivileges);
-                        int permissions = PrivilegeRegistry.calculatePermissions(denyPrivileges, parentDenies, false, isAcItem);
+                        denyBits |= Permission.diff(privs, allowBits);
+                        int permissions = PrivilegeRegistry.calculatePermissions(denyBits, parentDenyBits, false, isAcItem);
                         denies |= Permission.diff(permissions, allows);
+
+                        updatePrivileges(entr.getCustomPrivileges(), customDeny, customAllow);
                     }
                 }
             }
-            return new Result(allows, denies, allowPrivileges, denyPrivileges);
+
+            return new Result(allows, denies, allowBits, denyBits, customAllow, customDeny);
         }
 
         //--------------------------------------------< CompiledPermissions >---

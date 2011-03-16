@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.jcr.NamespaceException;
 import javax.jcr.NodeIterator;
@@ -45,8 +46,8 @@ import org.apache.jackrabbit.core.security.authorization.AbstractACLTemplate;
 import org.apache.jackrabbit.core.security.authorization.AccessControlEntryImpl;
 import org.apache.jackrabbit.core.security.authorization.Permission;
 import org.apache.jackrabbit.core.security.authorization.PrivilegeManagerImpl;
-import org.apache.jackrabbit.core.security.authorization.PrivilegeRegistry;
 import org.apache.jackrabbit.core.security.authorization.GlobPattern;
+import org.apache.jackrabbit.core.security.authorization.PrivilegeRegistry;
 import org.apache.jackrabbit.core.security.principal.PrincipalImpl;
 import org.apache.jackrabbit.core.security.principal.UnknownPrincipal;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
@@ -171,8 +172,8 @@ class ACLTemplate extends AbstractACLTemplate {
                         privs,
                         NT_REP_GRANT_ACE.equals(((NodeTypeImpl) aceNode.getPrimaryNodeType()).getQName()),
                         restrictions);
-                // add the entry
-                internalAdd(ace);
+                // add the entry omitting any validation.
+                entries.add(ace);
             } catch (RepositoryException e) {
                 log.debug("Failed to build ACE from content.", e.getMessage());
             }
@@ -219,16 +220,20 @@ class ACLTemplate extends AbstractACLTemplate {
                 // the same entry is already contained -> no modification
                 return false;
             }
+
             // check if need to adjust existing entries
             int updateIndex = -1;
             Entry complementEntry = null;
 
+            Set<Privilege> otherCustom = entry.getCustomPrivileges();
             for (Entry e : entriesPerPrincipal) {
                 if (equalRestriction(entry, e)) {
                     if (entry.isAllow() == e.isAllow()) {
                         // need to update an existing entry
                         int existingPrivs = e.getPrivilegeBits();
-                        if ((existingPrivs | ~entry.getPrivilegeBits()) == -1) {
+                        Set<Privilege> existingCustom = e.getCustomPrivileges();
+                        if ((existingPrivs | ~entry.getPrivilegeBits()) == -1 &&
+                                existingCustom.containsAll(otherCustom)) {
                             // all privileges to be granted/denied are already present
                             // in the existing entry -> not modified
                             return false;
@@ -237,13 +242,16 @@ class ACLTemplate extends AbstractACLTemplate {
                         // remember the index of the existing entry to be updated later on.
                         updateIndex = entries.indexOf(e);
 
-                        // remove the existing entry and create a new that includes
-                        // both the new privileges and the existing ones.
+                        // remove the existing entry and create a new one that
+                        // includes both the new privileges and the existing ones.
                         entries.remove(e);
+
                         int mergedBits = e.getPrivilegeBits() | entry.getPrivilegeBits();
-                        Privilege[] mergedPrivs = privilegeMgr.getPrivileges(mergedBits);
+                        Set<Privilege> mergedPrivs = privilegeMgr.getPrivileges(mergedBits);
+                        mergedPrivs.addAll(existingCustom);
+                        mergedPrivs.addAll(otherCustom);
                         // omit validation check.
-                        entry = createEntry(entry, mergedPrivs, entry.isAllow());
+                        entry = createEntry(entry, mergedPrivs.toArray(new Privilege[mergedPrivs.size()]), entry.isAllow());
                     } else {
                         complementEntry = e;
                     }
@@ -256,20 +264,27 @@ class ACLTemplate extends AbstractACLTemplate {
             if (complementEntry != null) {
 
                 int complPrivs = complementEntry.getPrivilegeBits();
-                int resultPrivs = Permission.diff(complPrivs, entry.getPrivilegeBits());
+                int diff = Permission.diff(complPrivs, entry.getPrivilegeBits());
 
-                if (resultPrivs == PrivilegeRegistry.NO_PRIVILEGE) {
+                Set<Privilege> result = complementEntry.getCustomPrivileges();
+                boolean customMod = result.removeAll(otherCustom);
+                
+                if (diff == PrivilegeRegistry.NO_PRIVILEGE && result.isEmpty()) {
                     // remove the complement entry as the new entry covers
                     // all privileges granted by the existing entry.
                     entries.remove(complementEntry);
                     updateIndex--;
-                    
-                } else if (resultPrivs != complPrivs) {
+
+                } else if (diff != complPrivs || customMod) {
                     // replace the existing entry having the privileges adjusted
                     int index = entries.indexOf(complementEntry);
                     entries.remove(complementEntry);
+
+                    // combine set of new builtin and custom privileges
+                    result.addAll(privilegeMgr.getPrivileges(diff));
+                    // and create a new entry.
                     Entry tmpl = createEntry(entry,
-                            privilegeMgr.getPrivileges(resultPrivs),
+                            result.toArray(new Privilege[result.size()]),
                             !entry.isAllow());
                     entries.add(index, tmpl);
                 } /* else: does not need to be modified.*/

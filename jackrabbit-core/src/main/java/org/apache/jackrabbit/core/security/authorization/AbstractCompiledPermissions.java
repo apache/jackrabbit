@@ -20,7 +20,13 @@ import org.apache.commons.collections.map.LRUMap;
 import org.apache.jackrabbit.spi.Path;
 
 import javax.jcr.RepositoryException;
+import javax.jcr.security.AccessControlException;
+import javax.jcr.security.Privilege;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * <code>AbstractCompiledPermissions</code>...
@@ -63,11 +69,34 @@ public abstract class AbstractCompiledPermissions implements CompiledPermissions
     protected abstract Result buildResult(Path absPath) throws RepositoryException;
 
     /**
+     * 
+     * @return
+     */
+    protected abstract PrivilegeManagerImpl getPrivilegeManagerImpl() throws RepositoryException;
+
+    /**
      * Removes all entries from the cache.
      */
     protected void clearCache() {
         synchronized (monitor) {
             cache.clear();
+        }
+    }
+
+    /**
+     * Adds the given <code>privileges</code> to the specified
+     * <code>target</code> set if they are not present in the specified
+     * <code>complement</code> set.
+     * 
+     * @param privileges
+     * @param target
+     * @param complement
+     */
+    protected static void updatePrivileges(Collection<Privilege> privileges, Set<Privilege> target, Set<Privilege> complement) {
+        for (Privilege p : privileges) {
+            if (!complement.contains(p)) {
+                target.add(p);
+            }
         }
     }
 
@@ -94,6 +123,50 @@ public abstract class AbstractCompiledPermissions implements CompiledPermissions
     }
 
     /**
+     * @see CompiledPermissions#hasPrivileges(Path, Privilege[])
+     */
+    public boolean hasPrivileges(Path absPath, Privilege[] privileges) throws RepositoryException {
+        Result result = getResult(absPath);
+        int builtin = getPrivilegeManagerImpl().getBits(privileges);
+
+        if ((result.allowPrivileges | ~builtin) == -1) {
+            // in addition check all custom privileges
+            for (Privilege p : privileges) {
+                if (getPrivilegeManagerImpl().isCustomPrivilege(p)) {
+                    if (!result.customAllow.contains(p)) {
+                        if (p.isAggregate()) {
+                            // test if aggregated privs were granted individually.
+                            for (Privilege aggr : p.getAggregatePrivileges()) {
+                                if (!aggr.isAggregate() && !result.customAllow.contains(aggr)) {
+                                    // an aggregated custom priv is not allowed -> return false
+                                    return false;
+                                }
+                            }
+                        } else {
+                            // simple custom allow not allowed -> return false
+                            return false;
+                        }
+                    } // else: custom privilege allowed -> continue.
+                } // else: not a custom priv -> already covered.
+            }
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * @see CompiledPermissions#getPrivilegeSet(Path)
+     */
+    public Set<Privilege> getPrivilegeSet(Path absPath) throws RepositoryException {
+        Result result = getResult(absPath);
+        Set<Privilege> privileges = new HashSet<Privilege>();
+        privileges.addAll(getPrivilegeManagerImpl().getPrivileges(result.getPrivileges()));
+        privileges.addAll(result.customAllow);
+        return privileges;
+    }
+
+    /**
      * @see CompiledPermissions#canReadAll()
      */
     public boolean canReadAll() throws RepositoryException {
@@ -102,7 +175,7 @@ public abstract class AbstractCompiledPermissions implements CompiledPermissions
 
     //--------------------------------------------------------< inner class >---
     /**
-     *
+     * Result of permission (and optionally privilege) evaluation for a given path.
      */
     public static class Result {
 
@@ -113,13 +186,24 @@ public abstract class AbstractCompiledPermissions implements CompiledPermissions
         private final int allowPrivileges;
         private final int denyPrivileges;
 
+        private final Set<Privilege> customAllow;
+        private final Set<Privilege> customDeny;
+
         private int hashCode = -1;
 
         public Result(int allows, int denies, int allowPrivileges, int denyPrivileges) {
+            this(allows, denies, allowPrivileges, denyPrivileges, Collections.<Privilege>emptySet(), Collections.<Privilege>emptySet());
+        }
+
+        public Result(int allows, int denies, int allowPrivileges, int denyPrivileges,
+                      Set<Privilege> customAllow, Set<Privilege> customDeny) {
             this.allows = allows;
             this.denies = denies;
             this.allowPrivileges = allowPrivileges;
             this.denyPrivileges = denyPrivileges;
+
+            this.customAllow = customAllow;
+            this.customDeny = customDeny;
         }
 
         public boolean grants(int permissions) {
@@ -135,7 +219,15 @@ public abstract class AbstractCompiledPermissions implements CompiledPermissions
             int cDenies = denies | Permission.diff(other.denies, allows);
             int cAPrivs = allowPrivileges | Permission.diff(other.allowPrivileges, denyPrivileges);
             int cDPrivs = denyPrivileges | Permission.diff(other.denyPrivileges, allowPrivileges);
-            return new Result(cAllows, cDenies, cAPrivs, cDPrivs);
+
+            Set<Privilege> combinedAllow = new HashSet<Privilege>();
+            combinedAllow.addAll(customAllow);
+            updatePrivileges(other.customAllow, combinedAllow, customDeny);
+
+            Set<Privilege> combinedDeny = new HashSet<Privilege>();
+            combinedDeny.addAll(customDeny);
+            updatePrivileges(other.customDeny, combinedDeny, customAllow);
+            return new Result(cAllows, cDenies, cAPrivs, cDPrivs, customAllow, customDeny);
         }
 
         /**
@@ -149,6 +241,8 @@ public abstract class AbstractCompiledPermissions implements CompiledPermissions
                 h = 37 * h + denies;
                 h = 37 * h + allowPrivileges;
                 h = 37 * h + denyPrivileges;
+                h = 37 * h + customAllow.hashCode();
+                h = 37 * h + customDeny.hashCode();
                 hashCode = h;
             }
             return hashCode;
@@ -167,7 +261,9 @@ public abstract class AbstractCompiledPermissions implements CompiledPermissions
                 return allows == other.allows &&
                        denies == other.denies &&
                        allowPrivileges == other.allowPrivileges &&
-                       denyPrivileges == other.denyPrivileges;
+                       denyPrivileges == other.denyPrivileges &&
+                       customAllow.equals(other.customAllow) &&
+                       customDeny.equals(other.customDeny);
             }
             return false;
         }

@@ -280,7 +280,7 @@ class SystemSession extends SessionImpl {
         public Privilege[] getPrivileges(String absPath)
                 throws PathNotFoundException, RepositoryException {
             checkValidNodePath(absPath);
-            return new Privilege[] {getPrivilegeManager().getPrivilege(Privilege.JCR_ALL)};
+            return new Privilege[] {privilegeFromName(Privilege.JCR_ALL)};
         }
 
         /**

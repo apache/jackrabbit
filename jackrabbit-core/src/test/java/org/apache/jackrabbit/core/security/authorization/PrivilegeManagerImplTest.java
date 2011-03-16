@@ -18,13 +18,21 @@ package org.apache.jackrabbit.core.security.authorization;
 
 import org.apache.jackrabbit.api.JackrabbitWorkspace;
 import org.apache.jackrabbit.api.security.authorization.PrivilegeManagerTest;
+import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.spi.commons.conversion.IllegalNameException;
 import org.apache.jackrabbit.test.NotExecutableException;
 
 import javax.jcr.AccessDeniedException;
+import javax.jcr.NamespaceException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.security.AccessControlException;
 import javax.jcr.security.Privilege;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  * <code>PrivilegeManagerTest</code>...
@@ -51,6 +59,57 @@ public class PrivilegeManagerImplTest extends PrivilegeManagerTest {
             privs[i] = privilegeMgr.getPrivilege(privNames[i]);
         }
         return privs;
+    }
+    
+    private void assertPrivilege(Privilege priv, String name, boolean isAggregate, boolean isAbstract) throws NamespaceException, IllegalNameException {
+        assertNotNull(priv);
+        assertPrivilegeName(name, priv.getName());
+        assertEquals(isAggregate, priv.isAggregate());
+        assertEquals(isAbstract, priv.isAbstract());
+    }
+
+    private void assertPrivilegeName(String name, String name2) throws NamespaceException, IllegalNameException {
+        if (!((SessionImpl) superuser).getQName(name).equals(((SessionImpl) superuser).getQName(name2))) {
+            fail();
+        }
+    }
+
+    public void testGetRegisteredPrivileges() throws RepositoryException {
+        Privilege[] registered = privilegeMgr.getRegisteredPrivileges();
+        Set<Privilege> set = new HashSet<Privilege>();
+        Privilege all = privilegeMgr.getPrivilege(Privilege.JCR_ALL);
+        set.add(all);
+        set.addAll(Arrays.asList(all.getAggregatePrivileges()));
+
+        for (Privilege p : registered) {
+            assertTrue(set.remove(p));
+        }
+        assertTrue(set.isEmpty());
+    }
+    
+    public void testGetPrivilege() throws RepositoryException {
+        assertPrivilege(privilegeMgr.getPrivilege(Privilege.JCR_READ), Privilege.JCR_READ, false, false);
+        assertPrivilege(privilegeMgr.getPrivilege(Privilege.JCR_ADD_CHILD_NODES), Privilege.JCR_ADD_CHILD_NODES, false, false);
+        assertPrivilege(privilegeMgr.getPrivilege(Privilege.JCR_REMOVE_CHILD_NODES), Privilege.JCR_REMOVE_CHILD_NODES, false, false);
+        assertPrivilege(privilegeMgr.getPrivilege(Privilege.JCR_MODIFY_PROPERTIES), Privilege.JCR_MODIFY_PROPERTIES, false, false);
+        assertPrivilege(privilegeMgr.getPrivilege(Privilege.JCR_REMOVE_NODE), Privilege.JCR_REMOVE_NODE, false, false);
+        assertPrivilege(privilegeMgr.getPrivilege(Privilege.JCR_READ_ACCESS_CONTROL), Privilege.JCR_READ_ACCESS_CONTROL, false, false);
+        assertPrivilege(privilegeMgr.getPrivilege(Privilege.JCR_MODIFY_ACCESS_CONTROL), Privilege.JCR_MODIFY_ACCESS_CONTROL, false, false);
+        assertPrivilege(privilegeMgr.getPrivilege(Privilege.JCR_LIFECYCLE_MANAGEMENT), Privilege.JCR_LIFECYCLE_MANAGEMENT, false, false);
+        assertPrivilege(privilegeMgr.getPrivilege(Privilege.JCR_LOCK_MANAGEMENT), Privilege.JCR_LOCK_MANAGEMENT, false, false);
+        assertPrivilege(privilegeMgr.getPrivilege(Privilege.JCR_NODE_TYPE_MANAGEMENT), Privilege.JCR_NODE_TYPE_MANAGEMENT, false, false);
+        assertPrivilege(privilegeMgr.getPrivilege(Privilege.JCR_RETENTION_MANAGEMENT), Privilege.JCR_RETENTION_MANAGEMENT, false, false);
+        assertPrivilege(privilegeMgr.getPrivilege(Privilege.JCR_VERSION_MANAGEMENT), Privilege.JCR_VERSION_MANAGEMENT, false, false);
+
+        assertPrivilege(privilegeMgr.getPrivilege(Privilege.JCR_ALL), Privilege.JCR_ALL, true, false);
+        assertPrivilege(privilegeMgr.getPrivilege(Privilege.JCR_WRITE), Privilege.JCR_WRITE, true, false);
+        assertPrivilege(privilegeMgr.getPrivilege(PrivilegeRegistry.REP_WRITE), PrivilegeRegistry.REP_WRITE, true, false);
+    }
+
+    public void testIsCustom() throws RepositoryException {
+        for (Privilege builtin : privilegeMgr.getRegisteredPrivileges()) {
+            assertFalse(getPrivilegeManagerImpl().isCustomPrivilege(builtin));
+        }
     }
 
     public void testGetBits() throws RepositoryException {
@@ -86,16 +145,7 @@ public class PrivilegeManagerImplTest extends PrivilegeManagerTest {
 
     public void testGetBitsFromNull() {
         try {
-            getPrivilegeManagerImpl().getBits((Privilege[]) null);
-            fail("Should throw AccessControlException");
-        } catch (AccessControlException e) {
-            // ok
-        }
-    }
-
-    public void testGetBitsFromNullString() {
-        try {
-            getPrivilegeManagerImpl().getBits((String[]) null);
+            getPrivilegeManagerImpl().getBits(null);
             fail("Should throw AccessControlException");
         } catch (AccessControlException e) {
             // ok
@@ -105,15 +155,6 @@ public class PrivilegeManagerImplTest extends PrivilegeManagerTest {
     public void testGetBitsFromEmptyArray() throws AccessControlException {
         try {
             getPrivilegeManagerImpl().getBits(new Privilege[0]);
-            fail("Should throw AccessControlException");
-        } catch (AccessControlException e) {
-            // ok
-        }
-    }
-
-    public void testGetBitsFromEmptyStringArray() throws AccessControlException {
-        try {
-            getPrivilegeManagerImpl().getBits(new String[0]);
             fail("Should throw AccessControlException");
         } catch (AccessControlException e) {
             // ok
@@ -131,11 +172,11 @@ public class PrivilegeManagerImplTest extends PrivilegeManagerTest {
     }
 
     public void testGetPrivilegesFromBits() throws RepositoryException {
-        Privilege[] pvs = getPrivilegeManagerImpl().getPrivileges(getPrivilegeManagerImpl().getBits(privilegesFromNames(new String[] {Privilege.JCR_READ_ACCESS_CONTROL})));
+        Set<Privilege> pvs = getPrivilegeManagerImpl().getPrivileges(getPrivilegeManagerImpl().getBits(privilegesFromNames(new String[] {Privilege.JCR_READ_ACCESS_CONTROL})));
 
         assertTrue(pvs != null);
-        assertTrue(pvs.length == 1);
-        assertSamePrivilegeName(pvs[0].getName(), Privilege.JCR_READ_ACCESS_CONTROL);
+        assertTrue(pvs.size() == 1);
+        assertSamePrivilegeName(pvs.iterator().next().getName(), Privilege.JCR_READ_ACCESS_CONTROL);
     }
 
     public void testGetPrivilegesFromBits2() throws RepositoryException {
@@ -146,13 +187,14 @@ public class PrivilegeManagerImplTest extends PrivilegeManagerTest {
                 Privilege.JCR_MODIFY_PROPERTIES
         };
         int writeBits = getPrivilegeManagerImpl().getBits(privilegesFromNames(names));
-        Privilege[] pvs = getPrivilegeManagerImpl().getPrivileges(writeBits);
+        Set<Privilege> pvs = getPrivilegeManagerImpl().getPrivileges(writeBits);
 
         assertTrue(pvs != null);
-        assertTrue(pvs.length == 1);
-        assertSamePrivilegeName(pvs[0].getName(), Privilege.JCR_WRITE);
-        assertTrue(pvs[0].isAggregate());
-        assertTrue(pvs[0].getDeclaredAggregatePrivileges().length == names.length);
+        assertTrue(pvs.size() == 1);
+        Privilege p = pvs.iterator().next();
+        assertSamePrivilegeName(p.getName(), Privilege.JCR_WRITE);
+        assertTrue(p.isAggregate());
+        assertTrue(p.getDeclaredAggregatePrivileges().length == names.length);
     }
 
     public void testGetPrivilegesFromBits3() throws RepositoryException {
@@ -160,12 +202,13 @@ public class PrivilegeManagerImplTest extends PrivilegeManagerTest {
                 PrivilegeRegistry.REP_WRITE
         };
         int writeBits = getPrivilegeManagerImpl().getBits(privilegesFromNames(names));
-        Privilege[] pvs = getPrivilegeManagerImpl().getPrivileges(writeBits);
+        Set<Privilege> pvs = getPrivilegeManagerImpl().getPrivileges(writeBits);
 
         assertTrue(pvs != null);
-        assertTrue(pvs.length == 1);
-        assertSamePrivilegeName(pvs[0].getName(), PrivilegeRegistry.REP_WRITE);
-        assertTrue(pvs[0].isAggregate());
+        assertTrue(pvs.size() == 1);
+        Privilege p = pvs.iterator().next();
+        assertSamePrivilegeName(p.getName(), PrivilegeRegistry.REP_WRITE);
+        assertTrue(p.isAggregate());
 
         names = new String[] {
                 PrivilegeRegistry.REP_WRITE,
@@ -175,10 +218,11 @@ public class PrivilegeManagerImplTest extends PrivilegeManagerTest {
         pvs = getPrivilegeManagerImpl().getPrivileges(writeBits);
 
         assertTrue(pvs != null);
-        assertTrue(pvs.length == 1);
-        assertSamePrivilegeName(pvs[0].getName(), PrivilegeRegistry.REP_WRITE);
-        assertTrue(pvs[0].isAggregate());
-        assertTrue(pvs[0].getDeclaredAggregatePrivileges().length == names.length);
+        assertTrue(pvs.size() == 1);
+        p = pvs.iterator().next();
+        assertSamePrivilegeName(p.getName(), PrivilegeRegistry.REP_WRITE);
+        assertTrue(p.isAggregate());
+        assertTrue(p.getDeclaredAggregatePrivileges().length == names.length);
     }
 
     public void testGetPrivilegesFromBits4() throws RepositoryException {
@@ -187,10 +231,10 @@ public class PrivilegeManagerImplTest extends PrivilegeManagerTest {
                 Privilege.JCR_LIFECYCLE_MANAGEMENT
         };
         int writeBits = getPrivilegeManagerImpl().getBits(privilegesFromNames(names));
-        Privilege[] pvs = getPrivilegeManagerImpl().getPrivileges(writeBits);
+        Set<Privilege> pvs = getPrivilegeManagerImpl().getPrivileges(writeBits);
 
         assertTrue(pvs != null);
-        assertTrue(pvs.length == 2);
+        assertTrue(pvs.size() == 2);
     }
 
     public void testRegisterPrivilegeAsNonAdmin() throws RepositoryException {

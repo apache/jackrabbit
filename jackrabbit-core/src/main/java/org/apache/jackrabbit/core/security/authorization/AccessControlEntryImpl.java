@@ -30,7 +30,9 @@ import javax.jcr.security.Privilege;
 import java.security.Principal;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Simple, immutable implementation of the
@@ -40,12 +42,12 @@ import java.util.Map;
 public abstract class AccessControlEntryImpl implements JackrabbitAccessControlEntry {
 
     /**
-     * Privileges contained in this entry
+     * All privileges contained in this entry
      */
     private final Privilege[] privileges;
 
     /**
-     * PrivilegeBits calculated from the privileges
+     * PrivilegeBits calculated from built-in privileges
      */
     private final int privilegeBits;
 
@@ -70,6 +72,12 @@ public abstract class AccessControlEntryImpl implements JackrabbitAccessControlE
      * Hash code being calculated on demand.
      */
     private int hashCode = -1;
+
+    /**
+     * Calculated set of non-aggregate custom privileges (see also privilegeBits
+     * above for the built-in privileges) used upon ac evaluation.
+     */
+    private Set<Privilege> customPrivs;
 
     /**
      * Construct an access control entry for the given principal and privileges.
@@ -128,31 +136,20 @@ public abstract class AccessControlEntryImpl implements JackrabbitAccessControlE
     }
 
     /**
-     * 
+     *
      * @param base
      * @param privileges
      * @param isAllow
      * @throws AccessControlException
      */
-    protected AccessControlEntryImpl(AccessControlEntryImpl base, Privilege[] privileges, boolean isAllow) throws AccessControlException {
-        // make sure no abstract privileges are passed.
-        for (Privilege privilege : privileges) {
-            if (privilege.isAbstract()) {
-                throw new AccessControlException("Privilege " + privilege + " is abstract.");
-            }
-        }
-        this.principal = base.principal;
-        this.privileges = privileges;
-        this.privilegeBits = getPrivilegeManager().getBits(privileges);
-        this.allow = isAllow;
+    protected AccessControlEntryImpl(AccessControlEntryImpl base, Privilege[] privileges, boolean isAllow)
+            throws AccessControlException, RepositoryException {
+        this(base.principal, privileges, isAllow, (base.restrictions.isEmpty()) ? null : Collections.<String, Value>emptyMap());
 
-        if (base.restrictions == null) {
-            this.restrictions = Collections.emptyMap();
-        } else {
-            this.restrictions = new HashMap<Name, Value>(base.restrictions.size());
+        if (!base.restrictions.isEmpty()) {
             // validate the passed restrictions and fill the map
-            for (Name name : restrictions.keySet()) {
-                Value value = restrictions.get(name);
+            for (Name name : base.restrictions.keySet()) {
+                Value value = base.restrictions.get(name);
                 value = ValueHelper.copy(value, getValueFactory());
                 this.restrictions.put(name, value);
             }
@@ -160,10 +157,39 @@ public abstract class AccessControlEntryImpl implements JackrabbitAccessControlE
     }
     
     /**
-     * @return the int representation of the privileges defined for this entry.
+     * @return the permission bits that correspond to the privileges defined by this entry.
      */
     public int getPrivilegeBits() {
         return privilegeBits;
+    }
+
+    /**
+     * @return A collection of all non-aggregate custom privileges defined by
+     * this entry including those contained in the aggregated custom privileges.
+     */
+    public Set<Privilege> getCustomPrivileges() {
+        if (customPrivs == null) {
+            customPrivs = new HashSet<Privilege>();
+            for (Privilege p : privileges) {
+                try {
+                    if (getPrivilegeManager().isCustomPrivilege(p)) {
+                        if (p.isAggregate()) {
+                            for (Privilege aggr : p.getAggregatePrivileges()) {
+                                if (!aggr.isAggregate()) {
+                                    customPrivs.add(p);
+                                }
+                            }
+                        } else {
+                            customPrivs.add(p);
+
+                        }
+                    }
+                } catch (AccessControlException e) {
+                    // ignore.
+                }
+            }
+        }
+        return customPrivs;
     }
 
     /**
@@ -216,7 +242,9 @@ public abstract class AccessControlEntryImpl implements JackrabbitAccessControlE
     protected int buildHashCode() {
         int h = 17;
         h = 37 * h + principal.getName().hashCode();
-        h = 37 * h + privilegeBits;
+        for (Privilege p : privileges) {
+            h = 37 * h + p.hashCode();
+        }
         h = 37 * h + Boolean.valueOf(allow).hashCode();
         h = 37 * h + restrictions.hashCode();
         return h;
@@ -287,11 +315,19 @@ public abstract class AccessControlEntryImpl implements JackrabbitAccessControlE
             return true;
         }
         if (obj instanceof AccessControlEntryImpl) {
-            AccessControlEntryImpl tmpl = (AccessControlEntryImpl) obj;
-            return principal.getName().equals(tmpl.principal.getName()) &&
-                   privilegeBits == tmpl.privilegeBits && allow == tmpl.allow &&
-                   restrictions.equals(tmpl.restrictions);
+            AccessControlEntryImpl other = (AccessControlEntryImpl) obj;
+            return principal.getName().equals(other.principal.getName()) &&
+                   privilegeBits == other.privilegeBits &&
+                   allow == other.allow &&
+                   restrictions.equals(other.restrictions) &&
+                   equalCustomPrivileges(other);
         }
         return false;
+    }
+
+    private boolean equalCustomPrivileges(AccessControlEntryImpl other) {
+        Set<Privilege> a1 = getCustomPrivileges();
+        Set<Privilege> a2 = other.getCustomPrivileges();
+        return a1.size() == a2.size() && a1.containsAll(a2);
     }
 }
