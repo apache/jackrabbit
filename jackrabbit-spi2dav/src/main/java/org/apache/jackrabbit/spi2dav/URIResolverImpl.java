@@ -108,7 +108,7 @@ class URIResolverImpl implements URIResolver {
             // resolver uuid part
             if (uniqueID != null) {
                 ItemId uuidId = (path == null) ? itemId : service.getIdFactory().createNodeId(uniqueID);
-                if (path != null & cache.containsItemId(uuidId)) {
+                if (path != null && cache.containsItemId(uuidId)) {
                     // append uri of parent node, that is already cached
                     uriBuffer.append(cache.getUri(uuidId));
                 } else {
