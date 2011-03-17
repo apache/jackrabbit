@@ -20,7 +20,6 @@ import org.apache.commons.collections.map.LRUMap;
 import org.apache.jackrabbit.spi.Path;
 
 import javax.jcr.RepositoryException;
-import javax.jcr.security.AccessControlException;
 import javax.jcr.security.Privilege;
 import java.util.Collection;
 import java.util.Collections;
@@ -123,9 +122,9 @@ public abstract class AbstractCompiledPermissions implements CompiledPermissions
     }
 
     /**
-     * @see CompiledPermissions#hasPrivileges(Path, Privilege[])
+     * @see CompiledPermissions#hasPrivileges(org.apache.jackrabbit.spi.Path,javax.jcr.security.Privilege...)
      */
-    public boolean hasPrivileges(Path absPath, Privilege[] privileges) throws RepositoryException {
+    public boolean hasPrivileges(Path absPath, Privilege... privileges) throws RepositoryException {
         Result result = getResult(absPath);
         int builtin = getPrivilegeManagerImpl().getBits(privileges);
 

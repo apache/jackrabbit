@@ -220,7 +220,7 @@ public final class PrivilegeRegistry {
      * @throws AccessControlException If the specified array is null
      * or if it contains an unregistered privilege.
      * @see #getPrivileges(int)
-     * @deprecated Use {@link PrivilegeManagerImpl#getBits(javax.jcr.security.Privilege[])} instead.
+     * @deprecated Use {@link PrivilegeManagerImpl#getBits(javax.jcr.security.Privilege...)} instead.
      */
     public static int getBits(Privilege[] privileges) throws AccessControlException {
         if (privileges == null || privileges.length == 0) {

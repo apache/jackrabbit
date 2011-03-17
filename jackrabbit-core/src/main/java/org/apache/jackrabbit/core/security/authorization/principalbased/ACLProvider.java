@@ -102,7 +102,7 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
         editor = new ACLEditor(session, resolver.getQPath(acRoot.getPath()));
         entriesCache = new EntriesCache(session, editor, acRoot.getPath());
         PrivilegeManagerImpl pm = getPrivilegeManagerImpl();
-        readBits = pm.getBits(new Privilege[] {pm.getPrivilege(Privilege.JCR_READ)});
+        readBits = pm.getBits(pm.getPrivilege(Privilege.JCR_READ));
 
         // TODO: replace by configurable default policy (see JCR-2331)
         if (!configuration.containsKey(PARAM_OMIT_DEFAULT_PERMISSIONS)) {

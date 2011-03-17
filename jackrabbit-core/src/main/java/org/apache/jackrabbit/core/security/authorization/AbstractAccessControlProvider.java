@@ -105,9 +105,9 @@ public abstract class AbstractAccessControlProvider implements AccessControlProv
                 return true;
             }
             public int getPrivileges(Path absPath) throws RepositoryException {
-                return getPrivilegeManagerImpl().getBits(new Privilege[] {getAllPrivilege()});
+                return getPrivilegeManagerImpl().getBits(getAllPrivilege());
             }
-            public boolean hasPrivileges(Path absPath, Privilege[] privileges) {
+            public boolean hasPrivileges(Path absPath, Privilege... privileges) {
                 return true;
             }
             public Set<Privilege> getPrivilegeSet(Path absPath) throws RepositoryException {
@@ -150,10 +150,10 @@ public abstract class AbstractAccessControlProvider implements AccessControlProv
                 if (isAcItem(absPath)) {
                     return PrivilegeRegistry.NO_PRIVILEGE;
                 } else {
-                    return getPrivilegeManagerImpl().getBits(new Privilege[] {getReadPrivilege()});
+                    return getPrivilegeManagerImpl().getBits(getReadPrivilege());
                 }
             }
-            public boolean hasPrivileges(Path absPath, Privilege[] privileges) throws RepositoryException {
+            public boolean hasPrivileges(Path absPath, Privilege... privileges) throws RepositoryException {
                 if (isAcItem(absPath)) {
                     return false;
                 } else {

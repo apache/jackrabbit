@@ -379,7 +379,7 @@ public class UserAccessControlProvider extends AbstractAccessControlProvider
 
         private int getPrivilegeBits(String privName) throws RepositoryException {
             PrivilegeManagerImpl impl = getPrivilegeManagerImpl();
-            return impl.getBits(new Privilege[] {impl.getPrivilege(privName)});
+            return impl.getBits(impl.getPrivilege(privName));
         }
 
         //------------------------------------< AbstractCompiledPermissions >---
