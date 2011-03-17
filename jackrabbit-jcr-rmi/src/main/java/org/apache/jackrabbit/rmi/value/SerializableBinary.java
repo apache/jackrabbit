@@ -166,7 +166,7 @@ class SerializableBinary implements Binary, Serializable {
         }
     }
 
-    private synchronized void readObject(ObjectInputStream stream)
+    private void readObject(ObjectInputStream stream)
             throws IOException {
         length = stream.readLong();
         if (length <= BUFFER_SIZE) {
