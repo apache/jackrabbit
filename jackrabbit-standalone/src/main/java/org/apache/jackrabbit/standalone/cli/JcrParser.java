@@ -131,7 +131,7 @@ public class JcrParser {
             char c = input.charAt(i);
 
             // end of argument?
-            if ((!insideSingleQuote & !insideDoubleQuote & Character
+            if ((!insideSingleQuote && !insideDoubleQuote && Character
                 .isWhitespace(c))) {
                 if (arg.toString().trim().length() > 0) {
                     args.add(arg.toString().trim());
