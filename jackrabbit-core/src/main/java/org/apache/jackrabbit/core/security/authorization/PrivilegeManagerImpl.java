@@ -187,7 +187,7 @@ public final class PrivilegeManagerImpl implements PrivilegeManager, PrivilegeRe
      * @throws AccessControlException If the specified array is null, empty
      * or if it contains an unregistered privilege.
      */
-    public int getBits(Privilege[] privileges) throws AccessControlException {
+    public int getBits(Privilege... privileges) throws AccessControlException {
         if (privileges == null || privileges.length == 0) {
             throw new AccessControlException("Privilege array is empty or null.");
         }
@@ -197,7 +197,8 @@ public final class PrivilegeManagerImpl implements PrivilegeManager, PrivilegeRe
             if (priv instanceof PrivilegeImpl) {
                 defs[i] = ((PrivilegeImpl) priv).definition;
             } else {
-                throw new AccessControlException("Unknown privilege '" + priv.getName() + "'.");
+                String name = (priv == null) ? "null" : priv.getName();
+                throw new AccessControlException("Unknown privilege '" + name + "'.");
             }
         }
         return registry.getBits(defs);
@@ -211,11 +212,11 @@ public final class PrivilegeManagerImpl implements PrivilegeManager, PrivilegeRe
      * <code>bits</code>. If <code>bits</code> does not match to any registered
      * privilege an empty array will be returned.
      *
-     * @param bits Privilege bits as obtained from {@link #getBits(Privilege[])}.
+     * @param bits Privilege bits as obtained from {@link #getBits(Privilege...)}.
      * @return Array of <code>Privilege</code>s that are presented by the given
      * <code>bits</code> or an empty array if <code>bits</code> cannot be
      * resolved to registered <code>Privilege</code>s.
-     * @see #getBits(Privilege[])
+     * @see #getBits(Privilege...)
      */
     public Set<Privilege> getPrivileges(int bits) {
         Name[] names = registry.getNames(bits);

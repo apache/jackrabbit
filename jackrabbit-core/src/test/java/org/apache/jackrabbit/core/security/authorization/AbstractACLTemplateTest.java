@@ -120,7 +120,7 @@ public abstract class AbstractACLTemplateTest extends AbstractAccessControlTest 
                     return false;
                 }
                 public int getPrivilegeBits() throws RepositoryException {
-                    return privilegeMgr.getBits(new Privilege[] {privilegeMgr.getPrivilege(Privilege.JCR_READ)});
+                    return privilegeMgr.getBits(privilegeMgr.getPrivilege(Privilege.JCR_READ));
                 }
                 public String[] getRestrictionNames() {
                     return new String[0];

@@ -28,10 +28,8 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.security.AccessControlException;
 import javax.jcr.security.Privilege;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 /**
@@ -119,14 +117,14 @@ public class PrivilegeManagerImplTest extends PrivilegeManagerTest {
 
         int bits = getPrivilegeManagerImpl().getBits(privs);
         assertTrue(bits > PrivilegeRegistry.NO_PRIVILEGE);
-        assertTrue(bits == (getPrivilegeManagerImpl().getBits(new Privilege[] {p1}) |
-                getPrivilegeManagerImpl().getBits(new Privilege[] {p2})));
+        assertTrue(bits == (getPrivilegeManagerImpl().getBits(p1) |
+                getPrivilegeManagerImpl().getBits(p2)));
     }
 
     public void testGetBitsFromCustomPrivilege() throws AccessControlException {
         Privilege p = buildCustomPrivilege(Privilege.JCR_READ, null);
         try {
-            getPrivilegeManagerImpl().getBits(new Privilege[] {p});
+            getPrivilegeManagerImpl().getBits(p);
             fail("Retrieving bits from unknown privilege should fail.");
         } catch (AccessControlException e) {
             // ok
@@ -136,7 +134,7 @@ public class PrivilegeManagerImplTest extends PrivilegeManagerTest {
     public void testGetBitsFromCustomAggregatePrivilege() throws RepositoryException {
         Privilege p = buildCustomPrivilege("anyName", privilegeMgr.getPrivilege(Privilege.JCR_WRITE));
         try {
-            getPrivilegeManagerImpl().getBits(new Privilege[] {p});
+            getPrivilegeManagerImpl().getBits(p);
             fail("Retrieving bits from unknown privilege should fail.");
         } catch (AccessControlException e) {
             // ok
@@ -145,7 +143,14 @@ public class PrivilegeManagerImplTest extends PrivilegeManagerTest {
 
     public void testGetBitsFromNull() {
         try {
-            getPrivilegeManagerImpl().getBits(null);
+            getPrivilegeManagerImpl().getBits((Privilege) null);
+            fail("Should throw AccessControlException");
+        } catch (AccessControlException e) {
+            // ok
+        }
+
+        try {
+            getPrivilegeManagerImpl().getBits((Privilege[]) null);
             fail("Should throw AccessControlException");
         } catch (AccessControlException e) {
             // ok
@@ -161,10 +166,19 @@ public class PrivilegeManagerImplTest extends PrivilegeManagerTest {
         }
     }
 
+    public void testGetBitsFromArrayContainingNull() throws RepositoryException {
+        try {
+            getPrivilegeManagerImpl().getBits(privilegeMgr.getPrivilege(Privilege.JCR_READ), null);
+            fail("Should throw AccessControlException");
+        } catch (AccessControlException e) {
+            // ok
+        }
+    }
+
     public void testGetBitsWithInvalidPrivilege() {
         Privilege p = buildCustomPrivilege("anyName", null);
         try {
-            getPrivilegeManagerImpl().getBits(new Privilege[] {p});
+            getPrivilegeManagerImpl().getBits(p);
             fail();
         } catch (AccessControlException e) {
             // ok

@@ -74,7 +74,7 @@ public interface CompiledPermissions {
      * specified <code>absPath</code>.
      * @throws RepositoryException
      */
-    boolean hasPrivileges(Path absPath, Privilege[] privileges) throws RepositoryException;
+    boolean hasPrivileges(Path absPath, Privilege... privileges) throws RepositoryException;
 
     /**
      * Returns the <code>Privilege</code>s granted by the underlying policy
@@ -135,7 +135,7 @@ public interface CompiledPermissions {
             return PrivilegeRegistry.NO_PRIVILEGE;
         }
 
-        public boolean hasPrivileges(Path absPath, Privilege[] privileges) throws RepositoryException {
+        public boolean hasPrivileges(Path absPath, Privilege... privileges) throws RepositoryException {
             return false;
         }
         public Set<Privilege> getPrivilegeSet(Path absPath) throws RepositoryException {
