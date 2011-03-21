@@ -221,14 +221,16 @@ select x.*, x.id as i, y.*, y.name from test as x inner join test as y on x.id=y
 
 #errors
 select * from parent as p inner join child as c on issamenode(p, c, a/b)
-> exception
+> exception: Query: select * from parent as p inner join child as c on issamenode(p, c, a/(*)b); expected: )
 select * from parent as p inner join child as c on issamenode(p, c, d, e)
-> exception
+> exception: Query: select * from parent as p inner join child as c on issamenode(p, c, d,(*)e); expected: )
 select * from 
-> exception
+> exception: Query: select * fro(*)m; expected: a token
 select * from parent as p inner join child as c on ischildnode(p, c, a)
-> exception
+> exception: Query: select * from parent as p inner join child as c on ischildnode(p, c,(*)a); expected: )
 select * from parent as p inner join child as c on isdescendantnode(p)
-> exception
+> exception: Query: select * from parent as p inner join child as c on isdescendantnode(p(*)); expected: ,
 select * from parent as p inner join child as c on isdescendantnode(a, b, c)
-> exception
+> exception: Query: select * from parent as p inner join child as c on isdescendantnode(a, b,(*)c); expected: )
+select id from parent inner join child on parent.id=child.parentid
+> exception: Query: select id(*)from parent inner join child on parent.id=child.parentid; expected: Need to specify the selector name for "id" because the query contains more than one selector.
