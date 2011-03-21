@@ -41,6 +41,7 @@ import javax.jcr.query.qom.QueryObjectModel;
 import javax.jcr.query.qom.Source;
 import javax.jcr.version.VersionException;
 import junit.framework.TestCase;
+import org.apache.jackrabbit.commons.query.sql2.Parser;
 import org.apache.jackrabbit.commons.query.sql2.QOMFormatter;
 import org.apache.jackrabbit.spi.commons.conversion.DefaultNamePathResolver;
 import org.apache.jackrabbit.spi.commons.conversion.DummyNamespaceResolver;
@@ -55,7 +56,7 @@ import org.apache.jackrabbit.spi.commons.value.QValueFactoryImpl;
  */
 public class ParserTest extends TestCase {
 
-    protected Parser parser;
+    protected org.apache.jackrabbit.commons.query.sql2.Parser parser;
 
     protected Random random = new Random();
 
@@ -84,6 +85,7 @@ public class ParserTest extends TestCase {
         }
 
         public void bindValue(String varName, Value value) throws IllegalArgumentException, RepositoryException {
+            // ignore
         }
 
         public QueryResult execute() throws InvalidQueryException, RepositoryException {
@@ -107,9 +109,11 @@ public class ParserTest extends TestCase {
         }
 
         public void setLimit(long limit) {
+            // ignore
         }
 
         public void setOffset(long offset) {
+            // ignore
         }
 
         public Node storeAsNode(String absPath) throws ItemExistsException, PathNotFoundException, VersionException,
@@ -171,11 +175,14 @@ public class ParserTest extends TestCase {
                 fuzz(line);
             } catch (Exception e) {
                 line = reader.readLine();
+                String message = e.getMessage();
+                message = message.replace('\n', ' ');
                 if (line == null || !line.startsWith("> exception")) {
                     e.printStackTrace();
                     assertTrue("Unexpected exception for query " + query + ": "
                             + e, false);
                 }
+                assertEquals("Expected exception message: " + message, "> exception: " + message, line);
             }
         }
         reader.close();
