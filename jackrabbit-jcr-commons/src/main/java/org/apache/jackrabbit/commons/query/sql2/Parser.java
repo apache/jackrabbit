@@ -107,10 +107,11 @@ public class Parser {
         bindVariables = new HashMap<String, BindVariableValue>();
         read();
         read("SELECT");
+        int columnParseIndex = parseIndex;
         ArrayList<ColumnOrWildcard> list = parseColumns();
         read("FROM");
         Source source = parseSource();
-        Column[] columnArray = resolveColumns(list);
+        Column[] columnArray = resolveColumns(columnParseIndex, list);
         Constraint constraint = null;
         if (readIf("WHERE")) {
             constraint = parseConstraint();
@@ -202,7 +203,6 @@ public class Parser {
                 if (readIf(",")) {
                     c = factory.sameNodeJoinCondition(selector1, selector2, readPath());
                 } else {
-                    // TODO verify "." is correct
                     c = factory.sameNodeJoinCondition(selector1, selector2, ".");
                 }
             } else if ("ISCHILDNODE".equalsIgnoreCase(name)) {
@@ -263,14 +263,14 @@ public class Parser {
             } else if (readIf(".")) {
                 a = parseCondition(factory.propertyValue(identifier, readName()));
             } else {
-                a = parseCondition(factory.propertyValue(getOnlySelectorName(), identifier));
+                a = parseCondition(factory.propertyValue(getOnlySelectorName(identifier), identifier));
             }
         } else if ("[".equals(currentToken)) {
             String name = readName();
             if (readIf(".")) {
                 a = parseCondition(factory.propertyValue(name, readName()));
             } else {
-                a = parseCondition(factory.propertyValue(getOnlySelectorName(), name));
+                a = parseCondition(factory.propertyValue(getOnlySelectorName(name), name));
             }
         } else {
             throw getSyntaxError();
@@ -349,7 +349,7 @@ public class Parser {
             } else {
                 read(",");
                 c = factory.fullTextSearch(
-                        getOnlySelectorName(), name,
+                        getOnlySelectorName(name), name,
                         parseStaticOperand());
             }
         } else if ("ISSAMENODE".equalsIgnoreCase(functionName)) {
@@ -357,21 +357,21 @@ public class Parser {
             if (readIf(",")) {
                 c = factory.sameNode(name, readPath());
             } else {
-                c = factory.sameNode(getOnlySelectorName(), name);
+                c = factory.sameNode(getOnlySelectorName(name), name);
             }
         } else if ("ISCHILDNODE".equalsIgnoreCase(functionName)) {
             String name = readName();
             if (readIf(",")) {
                 c = factory.childNode(name, readPath());
             } else {
-                c = factory.childNode(getOnlySelectorName(), name);
+                c = factory.childNode(getOnlySelectorName(name), name);
             }
         } else if ("ISDESCENDANTNODE".equalsIgnoreCase(functionName)) {
             String name = readName();
             if (readIf(",")) {
                 c = factory.descendantNode(name, readPath());
             } else {
-                c = factory.descendantNode(getOnlySelectorName(), name);
+                c = factory.descendantNode(getOnlySelectorName(name), name);
             }
         } else {
             return null;
@@ -400,19 +400,19 @@ public class Parser {
             op = factory.length(parsePropertyValue(readName()));
         } else if ("NAME".equalsIgnoreCase(functionName)) {
             if (isToken(")")) {
-                op = factory.nodeName(getOnlySelectorName());
+                op = factory.nodeName(getOnlySelectorName("NAME()"));
             } else {
                 op = factory.nodeName(readName());
             }
         } else if ("LOCALNAME".equalsIgnoreCase(functionName)) {
             if (isToken(")")) {
-                op = factory.nodeLocalName(getOnlySelectorName());
+                op = factory.nodeLocalName(getOnlySelectorName("LOCALNAME()"));
             } else {
                 op = factory.nodeLocalName(readName());
             }
         } else if ("SCORE".equalsIgnoreCase(functionName)) {
             if (isToken(")")) {
-                op = factory.fullTextSearchScore(getOnlySelectorName());
+                op = factory.fullTextSearchScore(getOnlySelectorName("SCORE()"));
             } else {
                 op = factory.fullTextSearchScore(readName());
             }
@@ -431,7 +431,7 @@ public class Parser {
         if (readIf(".")) {
             return factory.propertyValue(name, readName());
         } else {
-            return factory.propertyValue(getOnlySelectorName(), name);
+            return factory.propertyValue(getOnlySelectorName(name), name);
         }
     }
 
@@ -589,34 +589,42 @@ public class Parser {
         return list;
     }
 
-    private Column[] resolveColumns(ArrayList<ColumnOrWildcard> list) throws RepositoryException {
-        ArrayList<Column> columns = new ArrayList<Column>();
-        for (ColumnOrWildcard c : list) {
-            if (c.propertyName == null) {
-                for (Selector selector : selectors) {
-                    if (c.selectorName == null
-                            || c.selectorName
-                                    .equals(selector.getSelectorName())) {
-                        Column column = factory.column(selector
-                                .getSelectorName(), null, null);
-                        columns.add(column);
+    private Column[] resolveColumns(int columnParseIndex, ArrayList<ColumnOrWildcard> list) throws RepositoryException {
+        int oldParseIndex = parseIndex;
+        // set the parse index to the column list, to get a more meaningful error message
+        // if something is wrong
+        this.parseIndex = columnParseIndex;
+        try {
+            ArrayList<Column> columns = new ArrayList<Column>();
+            for (ColumnOrWildcard c : list) {
+                if (c.propertyName == null) {
+                    for (Selector selector : selectors) {
+                        if (c.selectorName == null
+                                || c.selectorName
+                                        .equals(selector.getSelectorName())) {
+                            Column column = factory.column(selector
+                                    .getSelectorName(), null, null);
+                            columns.add(column);
+                        }
                     }
-                }
-            } else {
-                Column column;
-                if (c.selectorName != null) {
-                    column = factory.column(c.selectorName, c.propertyName, c.columnName);
-                } else if (c.columnName != null) {
-                    column = factory.column(getOnlySelectorName(), c.propertyName, c.columnName);
                 } else {
-                    column = factory.column(getOnlySelectorName(), c.propertyName, c.propertyName);
+                    Column column;
+                    if (c.selectorName != null) {
+                        column = factory.column(c.selectorName, c.propertyName, c.columnName);
+                    } else if (c.columnName != null) {
+                        column = factory.column(getOnlySelectorName(c.propertyName), c.propertyName, c.columnName);
+                    } else {
+                        column = factory.column(getOnlySelectorName(c.propertyName), c.propertyName, c.propertyName);
+                    }
+                    columns.add(column);
                 }
-                columns.add(column);
             }
+            Column[] array = new Column[columns.size()];
+            columns.toArray(array);
+            return array;
+        } finally {
+            this.parseIndex = oldParseIndex;
         }
-        Column[] array = new Column[columns.size()];
-        columns.toArray(array);
-        return array;
     }
 
     private boolean readIf(String token) throws RepositoryException {
@@ -972,21 +980,22 @@ public class Parser {
      * Represents a column or a wildcard in a SQL expression.
      * This class is temporarily used during parsing.
      */
-    private static class ColumnOrWildcard {
-        private String selectorName;
-        private String propertyName;
-        private String columnName;
+    static class ColumnOrWildcard {
+        String selectorName;
+        String propertyName;
+        String columnName;
     }
 
     /**
      * Get the selector name if only one selector exists in the query.
      * If more than one selector exists, an exception is thrown.
      *
+     * @param name the property name
      * @return the selector name
      */
-    private String getOnlySelectorName() throws RepositoryException {
+    private String getOnlySelectorName(String propertyName) throws RepositoryException {
         if (selectors.size() > 1) {
-            throw getSyntaxError("Need to specify the selector name because the query contains more than one selector.");
+            throw getSyntaxError("Need to specify the selector name for \"" + propertyName + "\" because the query contains more than one selector.");
         }
         return selectors.get(0).getSelectorName();
     }
