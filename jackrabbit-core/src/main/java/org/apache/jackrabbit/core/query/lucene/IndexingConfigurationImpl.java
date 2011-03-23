@@ -862,7 +862,7 @@ public class IndexingConfigurationImpl
     /**
      * Simple class that holds boost and nodeScopeIndex flag.
      */
-    private class PropertyConfig {
+    private static class PropertyConfig {
 
         /**
          * The boost value for a property.

@@ -1186,7 +1186,7 @@ public abstract class DatabasePersistenceManager extends AbstractPersistenceMana
 
     //--------------------------------------------------------< inner classes >
 
-    class SizedInputStream extends FilterInputStream {
+    static class SizedInputStream extends FilterInputStream {
         private final long size;
         private boolean consumed = false;
 

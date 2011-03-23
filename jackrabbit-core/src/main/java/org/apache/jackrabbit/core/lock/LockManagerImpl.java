@@ -1030,7 +1030,7 @@ public class LockManagerImpl
     /**
      * Internal event class that holds old and new paths for moved nodes
      */
-    private class HierarchyEvent {
+    private static class HierarchyEvent {
 
         /**
          * ID recorded in event

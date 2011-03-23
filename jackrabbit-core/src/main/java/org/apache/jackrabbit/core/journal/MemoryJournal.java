@@ -228,7 +228,7 @@ public class MemoryJournal extends AbstractJournal {
     /**
      * Memory record.
      */
-    public class MemoryRecord {
+    public static class MemoryRecord {
 
         /**
          * Journal id.

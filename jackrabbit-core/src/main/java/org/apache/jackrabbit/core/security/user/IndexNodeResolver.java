@@ -257,7 +257,7 @@ class IndexNodeResolver extends NodeResolver {
     /**
      * 
      */
-    private class ResultFilteringNodeIterator extends FilteringNodeIterator {
+    private static class ResultFilteringNodeIterator extends FilteringNodeIterator {
 
         private Set<String> authorizableIDs;
 

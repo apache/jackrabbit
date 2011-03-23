@@ -314,7 +314,7 @@ public class ZipHandler extends DefaultHandler {
      * Inner class used to create subcontexts for the export of the individual
      * zip file entries.
      */
-    private class ZipEntryExportContext extends AbstractExportContext {
+    private static class ZipEntryExportContext extends AbstractExportContext {
 
         private ZipEntry entry;
         private OutputStream out;

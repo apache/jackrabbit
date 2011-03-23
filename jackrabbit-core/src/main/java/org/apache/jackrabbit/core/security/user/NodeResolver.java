@@ -213,7 +213,7 @@ abstract class NodeResolver {
     /**
      *
      */
-    class AuthorizableTypePredicate implements Predicate {
+    static class AuthorizableTypePredicate implements Predicate {
 
         private final int authorizableType;
         private final boolean exact;
