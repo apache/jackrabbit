@@ -16,24 +16,14 @@
  */
 package org.apache.jackrabbit.core.xml;
 
-import org.apache.jackrabbit.api.JackrabbitSession;
-import org.apache.jackrabbit.core.util.ReferenceChangeTracker;
-import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
-
 /**
  * Default implementation that isn't able to handle any protected properties.
  */
 public class DefaultProtectedPropertyImporter extends DefaultProtectedItemImporter {
 
-    protected JackrabbitSession session;
-
-    protected NamePathResolver resolver;
-
     protected boolean isWorkspaceImport;
 
     protected int uuidBehavior;
-
-    protected ReferenceChangeTracker referenceTracker;
 
     public DefaultProtectedPropertyImporter() {
         super();
