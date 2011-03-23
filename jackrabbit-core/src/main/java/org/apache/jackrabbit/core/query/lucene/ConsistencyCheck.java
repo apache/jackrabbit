@@ -296,7 +296,7 @@ public class ConsistencyCheck {
     /**
      * The parent of a node is not available through the ItemStateManager.
      */
-    private class UnknownParent extends ConsistencyCheckError {
+    private static class UnknownParent extends ConsistencyCheckError {
 
         private UnknownParent(NodeId id, NodeId parentId) {
             super("Node " + id + " has unknown parent: " + parentId, id);

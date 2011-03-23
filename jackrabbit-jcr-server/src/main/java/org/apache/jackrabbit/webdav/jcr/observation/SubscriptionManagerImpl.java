@@ -271,7 +271,7 @@ public class SubscriptionManagerImpl implements SubscriptionManager, Transaction
      * present in the internal map. This allows to hide the subscription Id
      * from other sessions, that did create the subscription.
      */
-    private class WrappedSubscription implements Subscription {
+    private static class WrappedSubscription implements Subscription {
 
         private final Subscription delegatee;
 

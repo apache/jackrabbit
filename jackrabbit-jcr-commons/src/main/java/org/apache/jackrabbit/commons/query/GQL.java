@@ -889,7 +889,7 @@ public final class GQL {
     /**
      * A name expression.
      */
-    private class NameExpression implements Expression {
+    private static class NameExpression implements Expression {
 
         private final String value;
 

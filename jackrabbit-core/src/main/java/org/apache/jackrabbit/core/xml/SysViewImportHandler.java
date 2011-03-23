@@ -321,7 +321,7 @@ class SysViewImportHandler extends TargetImportHandler {
     /**
      * The state of parsing the XML stream.
      */
-    class ImportState {
+    static class ImportState {
         /**
          * name of current node
          */

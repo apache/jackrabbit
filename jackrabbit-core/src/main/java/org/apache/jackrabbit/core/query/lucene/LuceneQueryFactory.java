@@ -712,7 +712,7 @@ public class LuceneQueryFactory {
         }
     }
 
-    protected class QueryPair {
+    protected static class QueryPair {
         Query mainQuery;
         BooleanQuery subQuery;
 

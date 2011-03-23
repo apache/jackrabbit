@@ -217,7 +217,7 @@ public class TransientFileFactory {
     /**
      * Tracker object for a file pending deletion.
      */
-    private class MoribundFileReference extends PhantomReference<File> {
+    private static class MoribundFileReference extends PhantomReference<File> {
 
         /**
          * The full path to the file being tracked.

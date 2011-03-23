@@ -594,7 +594,7 @@ public class UserImporter implements ProtectedPropertyImporter, ProtectedNodeImp
      *
      * @see ImportBehavior For additional configuration options.
      */
-    private final class Membership {
+    private static final class Membership {
         private final String groupId;
         private final List<Member> members = new LinkedList<Member>();
 
@@ -630,7 +630,7 @@ public class UserImporter implements ProtectedPropertyImporter, ProtectedNodeImp
      *
      * @see ImportBehavior For additional configuration options.
      */
-    private final class Impersonators {
+    private static final class Impersonators {
 
         private final String userId;
         private final Value[] values;

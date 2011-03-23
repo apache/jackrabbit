@@ -228,7 +228,7 @@ class CachingEntryCollector extends EntryCollector {
     /**
      *
      */
-    private class CacheEntry {
+    private static class CacheEntry {
 
         private final List<AccessControlEntry> entries;
         private NodeId nextAcNodeId;

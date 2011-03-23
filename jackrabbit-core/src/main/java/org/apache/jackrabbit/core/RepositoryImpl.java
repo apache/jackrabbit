@@ -2447,7 +2447,7 @@ public class RepositoryImpl extends AbstractRepository
     /**
      * Represents a Repository Descriptor Value (either Value or Value[])
      */
-    protected final class DescriptorValue {
+    protected static final class DescriptorValue {
 
         private Value val;
         private Value[] vals;

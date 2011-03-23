@@ -1141,7 +1141,7 @@ public class ItemManager implements ItemStateListener {
      * Cache of shareable nodes. For performance reasons, methods are not
      * synchronized and thread-safety must be guaranteed by caller.
      */
-    class ShareableNodesCache {
+    static class ShareableNodesCache {
 
         /**
          * This cache is based on a reference map, that maps an item id to a map,

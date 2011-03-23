@@ -69,7 +69,7 @@ public class LocatorFactoryImpl implements DavLocatorFactory {
     }
 
     //--------------------------------------------------------------------------
-    private class Locator implements DavResourceLocator {
+    private static class Locator implements DavResourceLocator {
 
         private final String prefix;
         private final String resourcePath;
