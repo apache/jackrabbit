@@ -195,6 +195,15 @@ public class ImpersonationTest extends AbstractUserTest {
         assertFalse(impersonation.allows(subject));
     }
 
+    /**
+     * @see <a href="https://issues.apache.org/jira/browse/JCR-2931">JCR-2931</a>
+     */
+    public void testAdminImpersonatingOneself() throws RepositoryException, NotExecutableException {
+        User admin = getTestUser(superuser);
+        Subject subject = createSubject(admin);
+        assertTrue(admin.getImpersonation().allows(subject));
+    }
+
     public void testGrantImpersonatingForOneself() throws RepositoryException {
         Principal main = newUser.getPrincipal();
         try {
