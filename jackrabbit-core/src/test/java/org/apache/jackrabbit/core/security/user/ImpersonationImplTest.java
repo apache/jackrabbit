@@ -144,12 +144,11 @@ public class ImpersonationImplTest extends AbstractUserTest {
         assertTrue(impersonation.allows(buildSubject(adminPrincipal)));
 
         // same if the impersonation object of the admin itself is used.
-        // however impersonation is not allowed....
         Impersonation adminImpersonation = ((User) a).getImpersonation();
 
         assertFalse(adminImpersonation.grantImpersonation(adminPrincipal));
         assertFalse(adminImpersonation.revokeImpersonation(adminPrincipal));
-        assertFalse(adminImpersonation.allows(buildSubject(adminPrincipal)));
+        assertTrue(impersonation.allows(buildSubject(adminPrincipal)));
     }
 
     public void testSystemPrincipalAsImpersonator() throws RepositoryException {

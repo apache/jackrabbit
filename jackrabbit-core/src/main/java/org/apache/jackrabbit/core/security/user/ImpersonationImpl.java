@@ -149,10 +149,7 @@ class ImpersonationImpl implements Impersonation, UserConstants {
                     continue;
                 }
                 Authorizable a = userManager.getAuthorizable(p);
-                if (user.equals(a)) {
-                    allows = false;
-                    break;
-                } else if (a != null && userManager.isAdminId(a.getID())) {
+                if (a != null && userManager.isAdminId(a.getID())) {
                     allows = true;
                     break;
                 }
