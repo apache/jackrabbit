@@ -127,10 +127,9 @@ public abstract class AccessControlEntryImpl implements JackrabbitAccessControlE
         } else {
             this.restrictions = new HashMap<Name, Value>(restrictions.size());
             // validate the passed restrictions and fill the map
-            for (String key : restrictions.keySet()) {
-                Value value = restrictions.get(key);
-                value = ValueHelper.copy(value, getValueFactory());
-                this.restrictions.put(getResolver().getQName(key), value);
+            for (Map.Entry<String, Value> entry : restrictions.entrySet()) {
+                Value value = ValueHelper.copy(entry.getValue(), getValueFactory());
+                this.restrictions.put(getResolver().getQName(entry.getKey()), value);
             }
         }
     }

@@ -138,8 +138,8 @@ class PrivilegeXmlHandler implements PrivilegeHandler {
             Document doc = builder.newDocument();
             Element privileges = (Element) doc.appendChild(doc.createElement(XML_PRIVILEGES));
 
-            for (String prefix : namespaces.keySet()) {
-                privileges.setAttribute(ATTR_XMLNS + prefix, namespaces.get(prefix));
+            for (Map.Entry<String, String> entry : namespaces.entrySet()) {
+                privileges.setAttribute(ATTR_XMLNS + entry.getKey(), entry.getValue());
             }
 
             for (PrivilegeDefinition def : definitions) {
