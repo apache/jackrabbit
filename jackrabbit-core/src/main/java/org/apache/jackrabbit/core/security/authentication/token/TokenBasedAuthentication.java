@@ -210,9 +210,8 @@ public class TokenBasedAuthentication implements Authentication {
                     tokenNode = getTokenNode();
                     s = tokenNode.getSession();
                 }
-                for (Map.Entry<String, String> entry : newAttributes.entrySet()) {
-                	String attrName = entry.getKey();
-                    tokenNode.setProperty(attrName, entry.getValue());
+                for (String attrName : newAttributes.keySet()) {
+                    tokenNode.setProperty(attrName, newAttributes.get(attrName));
                     log.info("Updating token node with informative attribute '" + attrName + "'");
                 }
             }

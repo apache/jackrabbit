@@ -75,6 +75,7 @@ public class WorkspaceResourceImpl extends AbstractResource
      *
      * @param locator
      * @param session
+     * @param factory
      */
     WorkspaceResourceImpl(DavResourceLocator locator, JcrDavSession session, DavResourceFactory factory) {
         super(locator, session, factory);
@@ -267,8 +268,9 @@ public class WorkspaceResourceImpl extends AbstractResource
 
                 // try to register any prefix/uri pair that has a changed uri or
                 // it has not been present before.
-                for (Map.Entry<String, String> entry : changes.entrySet()) {
-                    nsReg.registerNamespace(entry.getKey(), entry.getValue());
+                for (String prefix : changes.keySet()) {
+                    String uri = changes.get(prefix);
+                    nsReg.registerNamespace(prefix, uri);
                 }
             } catch (RepositoryException e) {
                 throw new JcrDavException(e);
