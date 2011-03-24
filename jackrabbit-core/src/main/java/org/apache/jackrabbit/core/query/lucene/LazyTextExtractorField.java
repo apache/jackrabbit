@@ -178,7 +178,11 @@ public class LazyTextExtractorField extends AbstractField {
                 }
             } catch (Throwable t) {
                 if (t != STOP) {
-                    log.warn("Failed to extract text from a binary property", t);
+                    log.debug("Failed to extract text from a binary property."
+                            + " This is a fairly common case, and nothing to"
+                            + " worry about. The stack trace is included to"
+                            + " help improve the text extraction feature.", t);
+                    builder.replace(0, builder.length(), "TextExtractionError");
                 }
             } finally {
                 value.discard();
