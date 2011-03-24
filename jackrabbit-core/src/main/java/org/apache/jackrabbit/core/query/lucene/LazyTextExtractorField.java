@@ -176,7 +176,14 @@ public class LazyTextExtractorField extends AbstractField {
                 } finally {
                     stream.close();
                 }
+            } catch (LinkageError e) {
+                // Capture and ignore errors caused by extraction libraries
+                // not being present. This is equivalent to disabling
+                // selected media types in configuration, so we can simply
+                // ignore these errors.
             } catch (Throwable t) {
+                // Capture and report any other full text extraction problems.
+                // The special STOP exception is used for normal termination.
                 if (t != STOP) {
                     log.debug("Failed to extract text from a binary property."
                             + " This is a fairly common case, and nothing to"
