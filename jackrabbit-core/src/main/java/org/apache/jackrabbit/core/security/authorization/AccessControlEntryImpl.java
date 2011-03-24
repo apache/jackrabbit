@@ -127,9 +127,9 @@ public abstract class AccessControlEntryImpl implements JackrabbitAccessControlE
         } else {
             this.restrictions = new HashMap<Name, Value>(restrictions.size());
             // validate the passed restrictions and fill the map
-            for (Map.Entry<String, Value> entry : restrictions.entrySet()) {
-                Value value = ValueHelper.copy(entry.getValue(), getValueFactory());
-                this.restrictions.put(getResolver().getQName(entry.getKey()), value);
+            for (String name : restrictions.keySet()) {
+                Value value = ValueHelper.copy(restrictions.get(name), getValueFactory());
+                this.restrictions.put(getResolver().getQName(name), value);
             }
         }
     }
@@ -148,8 +148,7 @@ public abstract class AccessControlEntryImpl implements JackrabbitAccessControlE
         if (!base.restrictions.isEmpty()) {
             // validate the passed restrictions and fill the map
             for (Name name : base.restrictions.keySet()) {
-                Value value = base.restrictions.get(name);
-                value = ValueHelper.copy(value, getValueFactory());
+                Value value = ValueHelper.copy(base.restrictions.get(name), getValueFactory());
                 this.restrictions.put(name, value);
             }
         }
