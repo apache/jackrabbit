@@ -191,9 +191,10 @@ class RemoveMixinOperation implements SessionWriteOperation<Object> {
         // 2. remove item if 1. fails
         boolean success = false;
         try {
-            for (PropertyId id : affectedProps.keySet()) {
+        	for (Map.Entry<PropertyId, PropertyDefinition> entry : affectedProps.entrySet()) {
+        		PropertyId id = entry.getKey();
                 PropertyImpl prop = (PropertyImpl) itemMgr.getItem(id);
-                PropertyDefinition oldDef = affectedProps.get(id);
+                PropertyDefinition oldDef = entry.getValue();
 
                 if (oldDef.isProtected()) {
                     // remove 'orphaned' protected properties immediately
