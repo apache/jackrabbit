@@ -35,6 +35,8 @@ import javax.jcr.query.InvalidQueryException;
 import javax.jcr.query.QueryResult;
 import javax.jcr.version.VersionException;
 
+import org.apache.jackrabbit.core.jmx.JmxRegistryUtils;
+import org.apache.jackrabbit.core.jmx.query.QueryStatManager;
 import org.apache.jackrabbit.core.session.SessionContext;
 import org.apache.jackrabbit.core.session.SessionOperation;
 import org.apache.jackrabbit.spi.Path;
@@ -134,8 +136,13 @@ public class QueryImpl extends AbstractQueryImpl {
                         return "query.execute(" + statement + ")";
                     }
                 });
+        time = System.currentTimeMillis() - time;
+        QueryStatManager qsm = sessionContext.getRepository().getJmxRegistry()
+                .getQueryStatManager();
+        if (qsm != null) {
+            qsm.logQuery(JmxRegistryUtils.buildQueryStat(this, time));
+        }
         if (log.isDebugEnabled()) {
-            time = System.currentTimeMillis() - time;
             NumberFormat format = NumberFormat.getNumberInstance();
             format.setMinimumFractionDigits(2);
             format.setMaximumFractionDigits(2);
