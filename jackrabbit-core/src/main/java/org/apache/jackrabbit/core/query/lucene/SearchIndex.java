@@ -1415,7 +1415,12 @@ public class SearchIndex extends AbstractQueryHandler {
                                 for (Fieldable fulltextField : fulltextFields) {
                                     doc.add(fulltextField);
                                 }
-                                doc.add(new Field(FieldNames.AGGREGATED_NODE_UUID, aggregate.getNodeId().toString(), Field.Store.NO, Field.Index.NOT_ANALYZED_NO_NORMS));
+                                doc.add(new Field(
+                                        FieldNames.AGGREGATED_NODE_UUID, false,
+                                        aggregate.getNodeId().toString(),
+                                        Field.Store.NO,
+                                        Field.Index.NOT_ANALYZED_NO_NORMS,
+                                        Field.TermVector.NO));
                             }
                         }
                         // make sure that fulltext fields are aligned properly
@@ -1463,8 +1468,13 @@ public class SearchIndex extends AbstractQueryHandler {
                                         termAttribute.setTermBuffer(value);
                                         doc.add(new Field(field.name(),
                                                 new SingletonTokenStream(value, (Payload) payloadAttribute.getPayload().clone())));
-                                        doc.add(new Field(FieldNames.AGGREGATED_NODE_UUID,
-                                                parent.getNodeId().toString(), Field.Store.NO, Field.Index.NOT_ANALYZED_NO_NORMS));
+                                        doc.add(new Field(
+                                                FieldNames.AGGREGATED_NODE_UUID,
+                                                false,
+                                                parent.getNodeId().toString(),
+                                                Field.Store.NO,
+                                                Field.Index.NOT_ANALYZED_NO_NORMS,
+                                                Field.TermVector.NO));
                                     }
                                 }
                             } finally {

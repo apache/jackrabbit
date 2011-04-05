@@ -66,9 +66,14 @@ public class IndexMigrationTest extends TestCase {
 
     protected static Document createDocument(String name, String value) {
         Document doc = new Document();
-        doc.add(new Field(FieldNames.UUID, UUID.randomUUID().toString(), Field.Store.YES, Field.Index.NO));
-        doc.add(new Field(FieldNames.PROPERTIES, createNamedValue14(name, value), Field.Store.NO, Field.Index.NOT_ANALYZED));
-        doc.add(new Field(FieldNames.FULLTEXT_PREFIX + ":" + name, value, Field.Store.NO, Field.Index.ANALYZED, Field.TermVector.WITH_POSITIONS_OFFSETS));
+        doc.add(new Field(FieldNames.UUID, false, UUID.randomUUID().toString(),
+                Field.Store.YES, Field.Index.NO, Field.TermVector.NO));
+        doc.add(new Field(FieldNames.PROPERTIES, false, createNamedValue14(
+                name, value), Field.Store.NO, Field.Index.NOT_ANALYZED,
+                Field.TermVector.NO));
+        doc.add(new Field(FieldNames.FULLTEXT_PREFIX + ":" + name, true, value,
+                Field.Store.NO, Field.Index.ANALYZED,
+                Field.TermVector.WITH_POSITIONS_OFFSETS));
         return doc;
     }
 }
