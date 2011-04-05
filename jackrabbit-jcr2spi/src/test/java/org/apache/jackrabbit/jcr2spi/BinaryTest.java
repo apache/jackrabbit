@@ -23,7 +23,10 @@ import javax.jcr.Node;
 import javax.jcr.Session;
 import javax.jcr.Property;
 import javax.jcr.Binary;
+import javax.jcr.ValueFormatException;
 
+import org.apache.jackrabbit.jcr2spi.state.PropertyState;
+import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.test.AbstractJCRTest;
 
 /**
@@ -31,11 +34,29 @@ import org.apache.jackrabbit.test.AbstractJCRTest;
  */
 public class BinaryTest extends AbstractJCRTest {
 
-    public void testStreamBinary() throws Exception {
+    private static ByteArrayInputStream generateValue() {
         byte[] data = new byte[1024 * 1024];
         new Random().nextBytes(data);
+
+        return new ByteArrayInputStream(data);
+    }
+
+    private static QValue getQValue(Property p) throws ValueFormatException {
+        return ((PropertyState) ((PropertyImpl) p).getItemState()).getValue();
+    }
+
+    private static void assertDisposed(QValue v) {
+        try {
+            v.getStream();
+            fail("Value should have been disposed.");
+        } catch (Exception e) {
+            // success (interpret this as value was disposed)
+        }
+    }
+
+    public void testStreamBinary() throws Exception {
         Node test = testRootNode.addNode("test");
-        Property p = test.setProperty("prop", new ByteArrayInputStream(data));
+        Property p = test.setProperty("prop", generateValue());
         // check before save
         checkBinary(p);
         superuser.save();
@@ -50,6 +71,79 @@ public class BinaryTest extends AbstractJCRTest {
         } finally {
             s.logout();
         }
+    }
+
+    public void testBinaryTwiceNewProperty() throws Exception {
+        Node test = testRootNode.addNode("test");
+        Property p = test.setProperty("prop", generateValue());
+        QValue qv1 = getQValue(p);
+        test.setProperty("prop", generateValue());
+        QValue qv2 = getQValue(p);
+
+        assertFalse(qv1.equals(qv2));
+
+        superuser.save();
+
+        assertEquals(qv2, getQValue(p));
+        assertDisposed(qv1);
+    }
+
+    public void testBinaryTwiceModifiedProperty() throws Exception {
+        Node test = testRootNode.addNode("test");
+        Property p = test.setProperty("prop", generateValue());
+        superuser.save();
+
+        // modify twice
+        test.setProperty("prop", generateValue());
+        QValue qv1 = getQValue(p);
+        test.setProperty("prop", generateValue());
+        QValue qv2 = getQValue(p);
+
+        assertFalse(qv1.equals(qv2));
+
+        superuser.save();
+        
+        assertEquals(qv2, getQValue(p));
+        assertDisposed(qv1);
+    }
+
+    public void testBinaryTwiceIntermediateSave() throws Exception {
+        Node test = testRootNode.addNode("test");
+        Property p = test.setProperty("prop", generateValue());
+        QValue qv1 = getQValue(p);
+        superuser.save();
+
+        test.setProperty("prop", generateValue());
+        QValue qv2 = getQValue(p);
+
+        assertFalse(qv1.equals(qv2));
+        
+        superuser.save();
+
+        assertEquals(qv2, getQValue(p));
+        assertDisposed(qv1);
+    }
+
+    public void testRevertSettingExistingBinary() throws Exception {
+        Node test = testRootNode.addNode("test");
+
+        Binary b = superuser.getValueFactory().createBinary(generateValue());
+        Property p = test.setProperty("prop", b);
+        QValue qv1 = getQValue(p);
+        superuser.save();
+
+        Binary b2 = superuser.getValueFactory().createBinary(generateValue());
+        test.setProperty("prop", b2);
+        QValue qv2 = getQValue(p);
+
+        assertFalse(qv1.equals(qv2));
+
+        superuser.refresh(false);
+
+        assertEquals(qv1, getQValue(p));
+        assertSame(qv1, getQValue(p));
+
+        assertFalse(qv2.equals(getQValue(p)));
     }
 
     protected void checkBinary(Property p) throws Exception {
