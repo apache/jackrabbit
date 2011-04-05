@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.core.query;
 
+import java.text.NumberFormat;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -38,11 +39,18 @@ import org.apache.jackrabbit.core.session.SessionContext;
 import org.apache.jackrabbit.spi.commons.query.qom.BindVariableValueImpl;
 import org.apache.jackrabbit.spi.commons.query.qom.DefaultTraversingQOMTreeVisitor;
 import org.apache.jackrabbit.spi.commons.query.qom.QueryObjectModelTree;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <code>QueryObjectModelImpl</code> implements the query object model.
  */
 public class QueryObjectModelImpl extends QueryImpl implements QueryObjectModel {
+
+    /**
+     * The logger instance for this class
+     */
+    private static final Logger log = LoggerFactory.getLogger(QueryObjectModelImpl.class);
 
     /**
      * The query object model tree.
@@ -109,13 +117,21 @@ public class QueryObjectModelImpl extends QueryImpl implements QueryObjectModel 
     }
 
     public QueryResult execute() throws RepositoryException {
-        QueryEngine engine = new QueryEngine(
-                sessionContext.getSessionImpl(), lqf, variables);
-        return engine.execute(
-                getColumns(), getSource(), getConstraint(),
-                getOrderings(), offset, limit);
+        QueryEngine engine = new QueryEngine(sessionContext.getSessionImpl(),
+                lqf, variables);
+        long time = System.currentTimeMillis();
+        QueryResult qr = engine.execute(getColumns(), getSource(),
+                getConstraint(), getOrderings(), offset, limit);
+        time = System.currentTimeMillis() - time;
+        if (log.isDebugEnabled()) {
+            NumberFormat format = NumberFormat.getNumberInstance();
+            format.setMinimumFractionDigits(2);
+            format.setMaximumFractionDigits(2);
+            String seconds = format.format((double) time / 1000);
+            log.debug("executed in " + seconds + " s. (" + statement + ")");
+        }
+        return qr;
     }
-
 
     @Override
     public String[] getBindVariableNames() {
