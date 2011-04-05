@@ -16,6 +16,19 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
+import java.math.BigDecimal;
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.Executor;
+
+import javax.jcr.NamespaceException;
+import javax.jcr.PropertyType;
+import javax.jcr.RepositoryException;
+
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.id.PropertyId;
 import org.apache.jackrabbit.core.state.ChildNodeEntry;
@@ -36,18 +49,6 @@ import org.apache.tika.metadata.Metadata;
 import org.apache.tika.parser.Parser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.jcr.NamespaceException;
-import javax.jcr.PropertyType;
-import javax.jcr.RepositoryException;
-import java.math.BigDecimal;
-import java.net.URI;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.Executor;
 
 /**
  * Creates a lucene <code>Document</code> object from a {@link javax.jcr.Node}.
@@ -217,8 +218,9 @@ public class NodeIndexer {
             // parent UUID
             if (node.getParentId() == null) {
                 // root node
-                doc.add(new Field(FieldNames.PARENT, "", Field.Store.YES,
-                        Field.Index.NOT_ANALYZED_NO_NORMS));
+                doc.add(new Field(FieldNames.PARENT, false, "",
+                        Field.Store.YES, Field.Index.NOT_ANALYZED_NO_NORMS,
+                        Field.TermVector.NO));
                 addNodeName(doc, "", "");
             } else if (node.getSharedSet().isEmpty()) {
                 addParentChildRelation(doc, node.getParentId());
@@ -228,8 +230,9 @@ public class NodeIndexer {
                     addParentChildRelation(doc, id);
                 }
                 // mark shareable nodes
-                doc.add(new Field(FieldNames.SHAREABLE_NODE, "",
-                        Field.Store.NO, Field.Index.NOT_ANALYZED_NO_NORMS));
+                doc.add(new Field(FieldNames.SHAREABLE_NODE, false, "",
+                        Field.Store.NO, Field.Index.NOT_ANALYZED_NO_NORMS,
+                        Field.TermVector.NO));
             }
         } catch (NoSuchItemStateException e) {
             throwRepositoryException(e);
@@ -297,7 +300,8 @@ public class NodeIndexer {
     protected void addMVPName(Document doc, Name name) {
         try {
             String propName = resolver.getJCRName(name);
-            doc.add(new Field(FieldNames.MVP, propName, Field.Store.NO, Field.Index.NOT_ANALYZED_NO_NORMS, Field.TermVector.NO));
+            doc.add(new Field(FieldNames.MVP, false, propName, Field.Store.NO,
+                    Field.Index.NOT_ANALYZED_NO_NORMS, Field.TermVector.NO));
         } catch (NamespaceException e) {
             // will never happen, prefixes are created dynamically
         }
@@ -415,7 +419,9 @@ public class NodeIndexer {
         } catch (NamespaceException e) {
             // will never happen
         }
-        doc.add(new Field(FieldNames.PROPERTIES_SET, fieldName, Field.Store.NO, Field.Index.NOT_ANALYZED_NO_NORMS));
+        doc.add(new Field(FieldNames.PROPERTIES_SET, false, fieldName,
+                Field.Store.NO, Field.Index.NOT_ANALYZED_NO_NORMS,
+                Field.TermVector.NO));
     }
 
     /**
@@ -519,7 +525,7 @@ public class NodeIndexer {
             field.setOmitNorms(true);
             return field;
         } else {
-            return new Field(FieldNames.PROPERTIES,
+            return new Field(FieldNames.PROPERTIES, false,
                     FieldNames.createNamedValue(fieldName, internalValue),
                     Field.Store.NO, Field.Index.NOT_ANALYZED_NO_NORMS,
                     Field.TermVector.NO);
@@ -611,12 +617,13 @@ public class NodeIndexer {
         String uuid = internalValue.toString();
         doc.add(createFieldWithoutNorms(fieldName, uuid,
                 weak ? PropertyType.WEAKREFERENCE : PropertyType.REFERENCE));
-        doc.add(new Field(FieldNames.PROPERTIES,
-                FieldNames.createNamedValue(fieldName, uuid),
-                Field.Store.YES, Field.Index.NO, Field.TermVector.NO));
+        doc.add(new Field(FieldNames.PROPERTIES, false, FieldNames
+                .createNamedValue(fieldName, uuid), Field.Store.YES,
+                Field.Index.NO, Field.TermVector.NO));
         if (weak) {
-            doc.add(new Field(FieldNames.WEAK_REFS, uuid, Field.Store.NO,
-                    Field.Index.NOT_ANALYZED_NO_NORMS));
+            doc.add(new Field(FieldNames.WEAK_REFS, false, uuid,
+                    Field.Store.NO, Field.Index.NOT_ANALYZED_NO_NORMS,
+                    Field.TermVector.NO));
         }
     }
 
@@ -742,10 +749,8 @@ public class NodeIndexer {
             int idx = fieldName.indexOf(':');
             fieldName = fieldName.substring(0, idx + 1)
                     + FieldNames.FULLTEXT_PREFIX + fieldName.substring(idx + 1);
-            Field f = new Field(fieldName, stringValue,
-                    Field.Store.NO,
-                    Field.Index.ANALYZED,
-                    Field.TermVector.NO);
+            Field f = new Field(fieldName, true, stringValue, Field.Store.NO,
+                    Field.Index.ANALYZED, Field.TermVector.NO);
             f.setBoost(boost);
             doc.add(f);
 
@@ -816,10 +821,10 @@ public class NodeIndexer {
             // We would be able to store the field compressed or not depending
             // on a criterion but then we could not determine later is this field
             // has been compressed or not, so we choose to store it uncompressed
-            return new Field(FieldNames.FULLTEXT, value, Field.Store.YES,
+            return new Field(FieldNames.FULLTEXT, false, value, Field.Store.YES,
                     Field.Index.ANALYZED, tv);
         } else {
-            return new Field(FieldNames.FULLTEXT, value,
+            return new Field(FieldNames.FULLTEXT, false, value,
                     Field.Store.NO, Field.Index.ANALYZED, tv);
         }
     }
@@ -924,9 +929,9 @@ public class NodeIndexer {
                              InternalValue value) {
         long length = Util.getLength(value);
         if (length != -1) {
-            doc.add(new Field(FieldNames.PROPERTY_LENGTHS,
-                    FieldNames.createNamedLength(propertyName, length),
-                    Field.Store.NO, Field.Index.NOT_ANALYZED_NO_NORMS));
+            doc.add(new Field(FieldNames.PROPERTY_LENGTHS, false, FieldNames
+                    .createNamedLength(propertyName, length), Field.Store.NO,
+                    Field.Index.NOT_ANALYZED_NO_NORMS, Field.TermVector.NO));
         }
     }
 
@@ -942,11 +947,16 @@ public class NodeIndexer {
                                String namespaceURI,
                                String localName) throws NamespaceException {
         String name = mappings.getPrefix(namespaceURI) + ":" + localName;
-        doc.add(new Field(FieldNames.LABEL, name, Field.Store.NO, Field.Index.NOT_ANALYZED_NO_NORMS));
+        doc.add(new Field(FieldNames.LABEL, false, name, Field.Store.NO,
+                Field.Index.NOT_ANALYZED_NO_NORMS, Field.TermVector.NO));
         // as of version 3, also index combination of namespace URI and local name
         if (indexFormatVersion.getVersion() >= IndexFormatVersion.V3.getVersion()) {
-            doc.add(new Field(FieldNames.NAMESPACE_URI, namespaceURI, Field.Store.NO, Field.Index.NOT_ANALYZED_NO_NORMS));
-            doc.add(new Field(FieldNames.LOCAL_NAME, localName, Field.Store.NO, Field.Index.NOT_ANALYZED_NO_NORMS));
+            doc.add(new Field(FieldNames.NAMESPACE_URI, false, namespaceURI,
+                    Field.Store.NO, Field.Index.NOT_ANALYZED_NO_NORMS,
+                    Field.TermVector.NO));
+            doc.add(new Field(FieldNames.LOCAL_NAME, false, localName,
+                    Field.Store.NO, Field.Index.NOT_ANALYZED_NO_NORMS,
+                    Field.TermVector.NO));
         }
     }
 
@@ -962,9 +972,9 @@ public class NodeIndexer {
     protected void addParentChildRelation(Document doc,
                                           NodeId parentId)
             throws ItemStateException, RepositoryException {
-        doc.add(new Field(
-                FieldNames.PARENT, parentId.toString(),
-                Field.Store.YES, Field.Index.NOT_ANALYZED_NO_NORMS, Field.TermVector.NO));
+        doc.add(new Field(FieldNames.PARENT, false, parentId.toString(),
+                Field.Store.YES, Field.Index.NOT_ANALYZED_NO_NORMS,
+                Field.TermVector.NO));
         NodeState parent = (NodeState) stateProvider.getItemState(parentId);
         ChildNodeEntry child = parent.getChildNodeEntry(node.getNodeId());
         if (child == null) {

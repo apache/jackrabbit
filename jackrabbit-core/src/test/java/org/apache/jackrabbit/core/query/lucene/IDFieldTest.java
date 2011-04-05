@@ -16,10 +16,11 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
+import junit.framework.TestCase;
+
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.lucene.document.Field;
-
-import junit.framework.TestCase;
+import org.apache.lucene.document.Field.TermVector;
 
 /**
  * <code>IDFieldTest</code>...
@@ -35,12 +36,27 @@ public class IDFieldTest extends TestCase {
         time = System.currentTimeMillis() - time;
         System.out.println("IDField: " + time + " ms.");
 
-        time = System.currentTimeMillis();
+        for (int i = 0; i < 50; i++) {
+            createNodes(id.toString(), i % 2 == 0);
+        }
+    }
+
+    private void createNodes(String id, boolean useNewWay) {
+
+        long time = System.currentTimeMillis();
         for (int i = 0; i < 1000 * 1000; i++) {
-            new Field(FieldNames.UUID, id.toString(), Field.Store.YES,
-                    Field.Index.NOT_ANALYZED_NO_NORMS);
+            if (useNewWay) {
+                new Field(FieldNames.UUID, false, id, Field.Store.YES,
+                        Field.Index.NOT_ANALYZED_NO_NORMS, TermVector.NO);
+            } else {
+                new Field(FieldNames.UUID, id, Field.Store.YES,
+                        Field.Index.NOT_ANALYZED_NO_NORMS, TermVector.NO);
+            }
+
         }
         time = System.currentTimeMillis() - time;
-        System.out.println("Field: " + time + " ms.");
+        System.out.println(String.format("Field: %2s ms. new way? %b", time,
+                useNewWay));
+
     }
 }

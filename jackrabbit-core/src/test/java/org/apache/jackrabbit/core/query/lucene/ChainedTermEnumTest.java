@@ -65,8 +65,8 @@ public class ChainedTermEnumTest extends TestCase {
                 true, IndexWriter.MaxFieldLength.UNLIMITED);
         for (int i = 0; i < numTerms; i++) {
             Document doc = new Document();
-            doc.add(new Field("field", prefix + i,
-                    Field.Store.NO, Field.Index.NOT_ANALYZED_NO_NORMS));
+            doc.add(new Field("field", true, prefix + i, Field.Store.NO,
+                    Field.Index.NOT_ANALYZED_NO_NORMS, Field.TermVector.NO));
             writer.addDocument(doc);
         }
         writer.close();

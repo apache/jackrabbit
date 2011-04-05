@@ -482,13 +482,12 @@ abstract class AbstractIndex {
      * @throws IOException if the document cannot be added to the indexing
      *                     queue.
      */
-    @SuppressWarnings("unchecked")
     private Document getFinishedDocument(Document doc) throws IOException {
         if (!Util.isDocumentReady(doc)) {
             Document copy = new Document();
             // mark the document that reindexing is required
-            copy.add(new Field(FieldNames.REINDEXING_REQUIRED, "",
-                    Field.Store.NO, Field.Index.NOT_ANALYZED_NO_NORMS));
+            copy.add(new Field(FieldNames.REINDEXING_REQUIRED, false, "",
+                    Field.Store.NO, Field.Index.NOT_ANALYZED_NO_NORMS, Field.TermVector.NO));
             for (Fieldable f : doc.getFields()) {
                 Fieldable field = null;
                 Field.TermVector tv = getTermVectorParameter(f);
@@ -498,8 +497,8 @@ abstract class AbstractIndex {
                     // replace all readers with empty string reader
                     field = new Field(f.name(), new StringReader(""), tv);
                 } else if (f.stringValue() != null) {
-                    field = new Field(f.name(), f.stringValue(),
-                            stored, indexed, tv);
+                    field = new Field(f.name(), false, f.stringValue(), stored,
+                            indexed, tv);
                 } else if (f.isBinary()) {
                     field = new Field(f.name(), f.getBinaryValue(), stored);
                 }

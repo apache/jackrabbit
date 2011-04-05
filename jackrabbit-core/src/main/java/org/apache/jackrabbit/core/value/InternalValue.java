@@ -56,22 +56,24 @@ import org.apache.jackrabbit.util.ISO8601;
  * The following table specifies the internal format for every property type:
  * <pre>
  * <table>
- * <tr><b>PropertyType</b><td></td><td><b>Internal Format</b></td></tr>
- * <tr>STRING<td></td><td>String</td></tr>
- * <tr>LONG<td></td><td>Long</td></tr>
- * <tr>DOUBLE<td></td><td>Double</td></tr>
- * <tr>DATE<td></td><td>Calendar</td></tr>
- * <tr>BOOLEAN<td></td><td>Boolean</td></tr>
- * <tr>NAME<td></td><td>Name</td></tr>
- * <tr>PATH<td></td><td>Path</td></tr>
- * <tr>URI<td></td><td>URI</td></tr>
- * <tr>DECIMAL<td></td><td>BigDecimal</td></tr>
- * <tr>BINARY<td></td><td>BLOBFileValue</td></tr>
- * <tr>REFERENCE<td></td><td>{@link NodeId}</td></tr>
+ * <tr><td><b>PropertyType</b></td><td><b>Internal Format</b></td></tr>
+ * <tr><td>STRING</td><td>String</td></tr>
+ * <tr><td>LONG</td><td>Long</td></tr>
+ * <tr><td>DOUBLE</td><td>Double</td></tr>
+ * <tr><td>DATE</td><td>Calendar</td></tr>
+ * <tr><td>BOOLEAN</td><td>Boolean</td></tr>
+ * <tr><td>NAME</td><td>Name</td></tr>
+ * <tr><td>PATH</td><td>Path</td></tr>
+ * <tr><td>URI</td><td>URI</td></tr>
+ * <tr><td>DECIMAL</td><td>BigDecimal</td></tr>
+ * <tr><td>BINARY</td><td>BLOBFileValue</td></tr>
+ * <tr><td>REFERENCE</td><td>{@link NodeId}</td></tr>
  * </table>
  * </pre>
  */
 public class InternalValue extends AbstractQValue {
+
+    private static final long serialVersionUID = -7340744360527434409L;
 
     public static final InternalValue[] EMPTY_ARRAY = new InternalValue[0];
 
