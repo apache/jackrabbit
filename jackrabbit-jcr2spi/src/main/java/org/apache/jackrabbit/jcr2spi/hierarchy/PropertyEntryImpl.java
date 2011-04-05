@@ -123,9 +123,9 @@ public class PropertyEntryImpl extends HierarchyEntryImpl implements PropertyEnt
         }
         switch (operation.getStatus()) {
             case Operation.STATUS_PERSISTED:
-                // Property can only be the change log target if it was existing and has
-                // been modified. This includes the case where a property was changed and
-                // then removed by removing its parent. See JCR-2462.
+                // Property can only be the change log target if it was existing
+                // and has been modified. This includes the case where a property
+                // was changed and then removed by removing its parent. See JCR-2462.
                 // Removal, add and implicit modification of protected
                 // properties must be persisted by save on parent.
                 PropertyState state = op.getPropertyState();
