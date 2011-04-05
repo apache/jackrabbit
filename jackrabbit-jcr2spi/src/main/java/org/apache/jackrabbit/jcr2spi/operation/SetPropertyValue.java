@@ -42,6 +42,8 @@ public class SetPropertyValue extends AbstractOperation {
     private final QValue[] values;
     private final int valueType;
 
+    private final QValue[] oldValues;
+
     private SetPropertyValue(PropertyState propertyState, int valueType, QValue[] values)
             throws RepositoryException {
         this.propertyState = propertyState;
@@ -49,6 +51,9 @@ public class SetPropertyValue extends AbstractOperation {
         propertyId = (PropertyId) propertyState.getId();
         this.valueType = valueType;
         this.values = values;
+
+        // remember original values
+        oldValues = propertyState.getValues();
 
         addAffectedItemState(propertyState);
     }
@@ -70,7 +75,14 @@ public class SetPropertyValue extends AbstractOperation {
     public void persisted() throws RepositoryException {
         assert status == STATUS_PENDING;
         status = STATUS_PERSISTED;
-        propertyState.getHierarchyEntry().complete(this);
+        try {
+            propertyState.getHierarchyEntry().complete(this);
+        } finally {
+            // dispose the original values
+            for (QValue v : oldValues) {
+                v.discard();
+            }
+        }
     }
 
     /**
@@ -81,6 +93,9 @@ public class SetPropertyValue extends AbstractOperation {
         assert status == STATUS_PENDING;
         status = STATUS_UNDO;
         propertyState.getHierarchyEntry().complete(this);
+
+        // NOTE: new values don't need to be disposed as the transient change
+        //       has been reverted with implicit value disposal.
     }
 
     //----------------------------------------< Access Operation Parameters >---
