@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component name="jackrabbit-repository-factory">
+  <implementation class="org.apache.jackrabbit.core.RepositoryFactoryImpl"/>
+  <service>
+    <provide interface="javax.jcr.RepositoryFactory"/>
+  </service>
+</component>
