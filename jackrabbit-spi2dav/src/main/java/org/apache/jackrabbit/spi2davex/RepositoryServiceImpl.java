@@ -564,7 +564,7 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
         public void setValue(PropertyId propertyId, QValue value) throws RepositoryException {
             assertMethod();
             Path p = getPath(propertyId, sessionInfo);
-            setProperty(p, value, false);
+            setProperty(p, value, true);
         }
 
         /**
@@ -573,7 +573,7 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
         public void setValue(PropertyId propertyId, QValue[] values) throws RepositoryException {
             assertMethod();
             Path p = getPath(propertyId, sessionInfo);
-            setProperty(p, values, false);
+            setProperty(p, values, true);
         }
 
         /**

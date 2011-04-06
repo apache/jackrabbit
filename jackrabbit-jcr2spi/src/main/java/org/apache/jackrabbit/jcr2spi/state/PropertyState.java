@@ -206,6 +206,7 @@ public class PropertyState extends ItemState {
      * this <code>PropertyState</code>.
      *
      * @return definition of this state
+     * @throws RepositoryException If an error occurs.
      */
     public QPropertyDefinition getDefinition() throws RepositoryException {
         if (definition == null) {
@@ -237,7 +238,7 @@ public class PropertyState extends ItemState {
     /**
      * Convenience method for single valued property states.
      *
-     * @return
+     * @return the value of a single valued property.
      * @throws ValueFormatException if {@link #isMultiValued()} returns true.
      */
     public QValue getValue() throws ValueFormatException {
@@ -256,6 +257,8 @@ public class PropertyState extends ItemState {
      * Sets the value(s) of this property.
      *
      * @param values the new values
+     * @param type the value type
+     * @throws RepositoryException If an error occurs.
      */
     void setValues(QValue[] values, int type) throws RepositoryException {
         if (getStatus() == Status.NEW) {
@@ -363,8 +366,8 @@ public class PropertyState extends ItemState {
             // make sure the arguments are consistent and do not violate the
             // given property definition.
             validate(values, type, definition);
-            // free old values if existing
-            discardValues();
+            // note: discarding original values is deferred to operation completion
+            // -> see JCR-2880
 
             this.type = type;
             this.values = (values == null) ? QValue.EMPTY_ARRAY : values;
