@@ -107,6 +107,23 @@ class SystemSession extends SessionImpl {
         return new SystemAccessManager();
     }
 
+    /**
+     * Creates and returns a new <em>system</em> session for the
+     * given workspace.
+     *
+     * @param workspaceName workspace name,
+     *                      or <code>null</code> for the default workspace
+     */
+    @Override
+    public SessionImpl createSession(String workspaceName)
+            throws RepositoryException {
+        if (workspaceName == null) {
+            workspaceName = rep.getConfig().getDefaultWorkspaceName();
+        }
+
+        return create(rep, rep.getWorkspaceInfo(workspaceName).getConfig());
+    }
+
     //--------------------------------------------------------< inner classes >
     /**
      * An access manager that grants access to everything.
