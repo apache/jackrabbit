@@ -54,6 +54,14 @@ public class DefaultISMLocking implements ISMLocking {
     };
 
     /**
+     * Flag for determining whether this locking strategy should give
+     * preference to writers or not. If writers are preferred (which
+     * is the default setting), then all readers will get blocked whenever
+     * there's a writer waiting for the lock.
+     */
+    private boolean writerPreference = true;
+
+    /**
      * Number of writer threads waiting. While greater than zero, no new
      * (unrelated) readers are allowed to proceed.
      */
@@ -82,6 +90,24 @@ public class DefaultISMLocking implements ISMLocking {
     private int readerCount = 0;
 
     /**
+     * Returns the writer preference status of this locking strategy.
+     *
+     * @return writer preference
+     */
+    public boolean isWriterPreference() {
+        return writerPreference;
+    }
+
+    /**
+     * Sets the writer preference status of this locking strategy.
+     *
+     * @param preference writer preference
+     */
+    public void setWriterPreference(boolean preference) {
+        this.writerPreference = preference;
+    }
+
+    /**
      * Increments the reader count and returns the acquired read lock once
      * there are no more writers or the current writer shares the thread id
      * with this reader.
@@ -91,7 +117,7 @@ public class DefaultISMLocking implements ISMLocking {
         Object currentId = getCurrentThreadId();
         while (writerId != null
                 ? (writerCount > 0 && !isSameThreadId(writerId, currentId))
-                : writersWaiting > 0) {
+                : (writerPreference && writersWaiting > 0)) {
             wait();
         }
 
