@@ -61,11 +61,16 @@ import org.apache.lucene.search.Sort;
 import org.apache.lucene.search.SortField;
 import org.apache.lucene.search.TermQuery;
 import org.apache.tika.config.TikaConfig;
+import org.apache.tika.exception.TikaException;
+import org.apache.tika.fork.ForkParser;
+import org.apache.tika.metadata.Metadata;
 import org.apache.tika.parser.AutoDetectParser;
+import org.apache.tika.parser.ParseContext;
 import org.apache.tika.parser.Parser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Element;
+import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
 
 import javax.jcr.RepositoryException;
@@ -214,6 +219,12 @@ public class SearchIndex extends AbstractQueryHandler {
      * Path of the Tika configuration file used for text extraction.
      */
     private String tikaConfigPath = null;
+
+    /**
+     * Java command used to fork external parser processes,
+     * or <code>null</code> (the default) for in-process text extraction.
+     */
+    private String forkJavaCommand = null;
 
     /**
      * The Tika parser for extracting text content from binary properties.
@@ -895,6 +906,26 @@ public class SearchIndex extends AbstractQueryHandler {
     }
 
     /**
+     * Returns the java command used to fork external parser processes,
+     * or <code>null</code> (the default) for in-process text extraction.
+     *
+     * @return fork java command
+     */
+    public String getForkJavaCommand() {
+        return forkJavaCommand;
+    }
+
+    /**
+     * Sets the java command used to fork external parser processes.
+     *
+     * @param command fork java command,
+     *                or <code>null</code> for in-process extraction
+     */
+    public void setForkJavaCommand(String command) {
+        this.forkJavaCommand = command;
+    }
+
+    /**
      * Returns the parser used for extracting text content
      * from binary properties for full text indexing.
      *
@@ -932,7 +963,16 @@ public class SearchIndex extends AbstractQueryHandler {
                 config = TikaConfig.getDefaultConfig();
             }
 
-            parser = new AutoDetectParser(config);
+            if (forkJavaCommand == null) {
+                parser = new AutoDetectParser(config);
+            } else {
+                ForkParser forkParser = new ForkParser(
+                        SearchIndex.class.getClassLoader(),
+                        new AutoDetectParser(config));
+                forkParser.setJavaCommand(forkJavaCommand);
+                forkParser.setPoolSize(extractorPoolSize);
+                parser = forkParser;
+            }
         }
         return parser;
     }
