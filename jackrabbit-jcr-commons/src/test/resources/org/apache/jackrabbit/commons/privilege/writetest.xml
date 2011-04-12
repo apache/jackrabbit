@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<privileges xmlns:foo="http://www.foo.com/1.0">
+<privilege abstract="false" name="foo:testRead"/>
+<privilege abstract="false" name="foo:testWrite"/>
+<privilege abstract="true" name="foo:testAbstract"/>
+<privilege abstract="false" name="foo:testNonAbstract"/>
+<privilege abstract="false" name="foo:testAll">
+<contains name="foo:testRead"/>
+<contains name="foo:testWrite"/>
+</privilege>
+</privileges>

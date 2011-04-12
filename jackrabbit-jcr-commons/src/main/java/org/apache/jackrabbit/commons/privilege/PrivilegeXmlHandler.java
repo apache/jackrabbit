@@ -28,6 +28,7 @@ import org.xml.sax.helpers.DefaultHandler;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
@@ -39,8 +40,21 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import com.sun.org.apache.xml.internal.serialize.XMLSerializer;
+
 /**
- * <code>PrivilegeXmlHandler</code> 
+ * The <code>PrivilegeXmlHandler</code> loads and stores privilege definitions from a XML document using the
+ * following format:
+ * <xmp>
+ *  <!DOCTYPE privileges [
+ *  <!ELEMENT privileges (privilege)+>
+ *  <!ELEMENT privilege (contains)+>
+ *  <!ATTLIST privilege abstract (true|false) false>
+ *  <!ATTLIST privilege name NMTOKEN #REQUIRED>
+ *  <!ELEMENT contains EMPTY>
+ *  <!ATTLIST contains name NMTOKEN #REQUIRED>
+ * ]>
+ * </xmp>
  */
 class PrivilegeXmlHandler implements PrivilegeHandler {
 
@@ -154,6 +168,8 @@ class PrivilegeXmlHandler implements PrivilegeHandler {
             }
 
             Transformer transformer = TRANSFORMER_FACTORY.newTransformer();
+            transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+            transformer.setOutputProperty(OutputKeys.STANDALONE, "no");
             transformer.transform(new DOMSource(doc), new StreamResult(out));
 
         } catch (Exception e) {
