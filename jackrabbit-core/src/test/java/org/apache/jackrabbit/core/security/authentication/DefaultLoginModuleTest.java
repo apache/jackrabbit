@@ -207,11 +207,45 @@ public class DefaultLoginModuleTest extends AbstractJCRTest {
         }
     }
 
+    public void testTokenConfigurationWithJaas() throws Exception {
+        // define the location of the JAAS configuration
+        System.setProperty(
+                "java.security.auth.login.config",
+                "target/test-classes/jaas.config");
+
+        simpleCredentials.setAttribute(TokenBasedAuthentication.TOKEN_ATTRIBUTE, "");
+        try {
+            AuthContext ac = getJAASAuthContext(simpleCredentials, "defaultLoginModuleTest");
+            ac.login();
+
+            Subject subject = ac.getSubject();
+
+            assertFalse(subject.getPrincipals().isEmpty());
+            assertFalse(subject.getPublicCredentials().isEmpty());
+            assertFalse(subject.getPublicCredentials(SimpleCredentials.class).isEmpty());
+
+            assertTrue(subject.getPublicCredentials(TokenCredentials.class).isEmpty());
+
+            assertEquals(1, subject.getPublicCredentials(Credentials.class).size());
+
+            ac.logout();
+        } finally {
+            simpleCredentials.removeAttribute(TokenBasedAuthentication.TOKEN_ATTRIBUTE);
+        }
+    }
+
     private AuthContext getAuthContext(Credentials creds, String config) throws RepositoryException {
         CallbackHandler ch = new CallbackHandlerImpl(creds,
                 securitySession, new ProviderRegistryImpl(new FallbackPrincipalProvider()),
                 "admin", "anonymous");
         return new LocalAuthContext(getLoginModuleConfig(config), ch, null);
+    }
+
+    private AuthContext getJAASAuthContext(Credentials creds, String appName) {
+        CallbackHandler ch = new CallbackHandlerImpl(creds,
+                securitySession, new ProviderRegistryImpl(new FallbackPrincipalProvider()),
+                "admin", "anonymous");
+        return new JAASAuthContext(appName, ch, null);
     }
 
     private static LoginModuleConfig getLoginModuleConfig(String config) throws ConfigurationException {
