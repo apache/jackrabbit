@@ -16,51 +16,59 @@
  */
 package org.apache.jackrabbit.webdav.jcr;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.apache.jackrabbit.webdav.version.WorkspaceResource;
-import org.apache.jackrabbit.webdav.version.DeltaVResource;
-import org.apache.jackrabbit.webdav.version.UpdateInfo;
-import org.apache.jackrabbit.webdav.version.VersionControlledResource;
-import org.apache.jackrabbit.webdav.version.MergeInfo;
-import org.apache.jackrabbit.webdav.version.LabelInfo;
-import org.apache.jackrabbit.webdav.version.VersionHistoryResource;
-import org.apache.jackrabbit.webdav.DavResource;
+import org.apache.jackrabbit.commons.cnd.CompactNodeTypeDefReader;
+import org.apache.jackrabbit.commons.cnd.DefinitionBuilderFactory;
+import org.apache.jackrabbit.commons.cnd.ParseException;
+import org.apache.jackrabbit.commons.cnd.TemplateBuilderFactory;
 import org.apache.jackrabbit.webdav.DavException;
-import org.apache.jackrabbit.webdav.DavResourceIterator;
-import org.apache.jackrabbit.webdav.DavResourceLocator;
-import org.apache.jackrabbit.webdav.MultiStatusResponse;
-import org.apache.jackrabbit.webdav.DavServletResponse;
-import org.apache.jackrabbit.webdav.DavResourceIteratorImpl;
-import org.apache.jackrabbit.webdav.DavResourceFactory;
-import org.apache.jackrabbit.webdav.MultiStatus;
 import org.apache.jackrabbit.webdav.DavMethods;
-import org.apache.jackrabbit.webdav.xml.DomUtil;
-import org.apache.jackrabbit.webdav.search.SearchResource;
+import org.apache.jackrabbit.webdav.DavResource;
+import org.apache.jackrabbit.webdav.DavResourceFactory;
+import org.apache.jackrabbit.webdav.DavResourceIterator;
+import org.apache.jackrabbit.webdav.DavResourceIteratorImpl;
+import org.apache.jackrabbit.webdav.DavResourceLocator;
+import org.apache.jackrabbit.webdav.DavServletResponse;
+import org.apache.jackrabbit.webdav.MultiStatus;
+import org.apache.jackrabbit.webdav.MultiStatusResponse;
+import org.apache.jackrabbit.webdav.io.InputContext;
+import org.apache.jackrabbit.webdav.io.OutputContext;
 import org.apache.jackrabbit.webdav.jcr.property.NamespacesProperty;
 import org.apache.jackrabbit.webdav.jcr.version.report.JcrPrivilegeReport;
 import org.apache.jackrabbit.webdav.property.DavProperty;
 import org.apache.jackrabbit.webdav.property.PropEntry;
-import org.apache.jackrabbit.webdav.io.InputContext;
-import org.apache.jackrabbit.webdav.io.OutputContext;
+import org.apache.jackrabbit.webdav.search.SearchResource;
+import org.apache.jackrabbit.webdav.version.DeltaVResource;
+import org.apache.jackrabbit.webdav.version.LabelInfo;
+import org.apache.jackrabbit.webdav.version.MergeInfo;
+import org.apache.jackrabbit.webdav.version.UpdateInfo;
+import org.apache.jackrabbit.webdav.version.VersionControlledResource;
+import org.apache.jackrabbit.webdav.version.VersionHistoryResource;
+import org.apache.jackrabbit.webdav.version.WorkspaceResource;
+import org.apache.jackrabbit.webdav.xml.DomUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Element;
 
-import javax.jcr.NamespaceRegistry;
-import javax.jcr.RepositoryException;
-import javax.jcr.Workspace;
 import javax.jcr.Item;
-import javax.jcr.Session;
+import javax.jcr.NamespaceRegistry;
 import javax.jcr.Repository;
-import javax.jcr.version.Version;
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
+import javax.jcr.Workspace;
+import javax.jcr.nodetype.NodeTypeManager;
+import javax.jcr.nodetype.NodeTypeTemplate;
 import javax.jcr.observation.EventListener;
-import java.util.List;
-import java.util.Date;
-import java.util.Map;
-import java.util.HashMap;
-import java.util.Collections;
+import javax.jcr.version.Version;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
+import java.io.StringReader;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * <code>WorkspaceResourceImpl</code>...
@@ -240,8 +248,10 @@ public class WorkspaceResourceImpl extends AbstractResource
     }
 
     /**
-     * Allows to alter the registered namespaces ({@link ItemResourceConstants#JCR_NAMESPACES}) and
-     * forwards any other property to the super class.<p/>
+     * Allows to alter the registered namespaces ({@link ItemResourceConstants#JCR_NAMESPACES})
+     * or register node types ({@link ItemResourceConstants#JCR_NODETYPES_CND)
+     * where the passed value is a cnd string containing the definition
+     * and forwards any other property to the super class.<p/>
      * Note that again no property status is set. Any failure while setting
      * a property results in an exception (violating RFC 2518).
      *
@@ -275,8 +285,63 @@ public class WorkspaceResourceImpl extends AbstractResource
             } catch (RepositoryException e) {
                 throw new JcrDavException(e);
             }
+        } else if (ItemResourceConstants.JCR_NODETYPES_CND.equals(property.getName())) {
+            try {
+                Object value = property.getValue();
+                List<?> cmds;
+                if (value instanceof List) {
+                    cmds = (List) value;
+                } else  if (value instanceof Element) {
+                    cmds = Collections.singletonList(value);
+                } else {
+                    log.warn("Unexpected structure of dcr:nodetypes-cnd property.");
+                    throw new DavException(DavServletResponse.SC_INTERNAL_SERVER_ERROR);
+                }
+
+                String registerCnd = null;
+                boolean allowUpdate = false;
+                List<String> unregisterNames = new ArrayList<String>();
+
+                for (Object listEntry : cmds) {
+                    if (listEntry instanceof Element) {
+                        Element e = (Element) listEntry;
+                        String localName = e.getLocalName();
+                        if (ItemResourceConstants.XML_CND.equals(localName)) {
+                            registerCnd = DomUtil.getText(e);
+                        } else if (ItemResourceConstants.XML_ALLOWUPDATE.equals(localName)) {
+                            String allow = DomUtil.getTextTrim(e);
+                            allowUpdate = Boolean.parseBoolean(allow);
+                        } else if (ItemResourceConstants.XML_NODETYPENAME.equals(localName)) {
+                            unregisterNames.add(DomUtil.getTextTrim(e));
+                        }
+                    }
+                }
+
+                // TODO: for simplicity it's currently it's either registration or unregistration as nt-modifications are immediately persisted.
+                Session s = getRepositorySession();
+                NodeTypeManager ntMgr = s.getWorkspace().getNodeTypeManager();
+                if (registerCnd != null) {
+                    StringReader reader = new StringReader(registerCnd);
+                    DefinitionBuilderFactory<NodeTypeTemplate, NamespaceRegistry> factory =
+                            new TemplateBuilderFactory(ntMgr, s.getValueFactory(), s.getWorkspace().getNamespaceRegistry());
+
+                    CompactNodeTypeDefReader<NodeTypeTemplate, NamespaceRegistry> cndReader =
+                            new CompactNodeTypeDefReader<NodeTypeTemplate, NamespaceRegistry>(reader, "davex", factory);
+
+                    List<NodeTypeTemplate> ntts = cndReader.getNodeTypeDefinitions();
+                    ntMgr.registerNodeTypes(ntts.toArray(new NodeTypeTemplate[ntts.size()]), allowUpdate);
+                } else if (!unregisterNames.isEmpty()) {
+                    ntMgr.unregisterNodeTypes(unregisterNames.toArray(new String[unregisterNames.size()]));
+                }
+                
+            } catch (ParseException e) {
+                throw new DavException(DavServletResponse.SC_BAD_REQUEST, e);
+            }
+            catch (RepositoryException e) {
+                throw new JcrDavException(e);
+            }
         } else {
-            // only jcr:namespace can be modified
+            // only jcr:namespace or node types can be modified
             throw new DavException(DavServletResponse.SC_CONFLICT);
         }
     }
@@ -294,7 +359,8 @@ public class WorkspaceResourceImpl extends AbstractResource
            PropEntry propEntry = changeList.get(0);
             // only modification of prop is allowed. removal is not possible
             if (propEntry instanceof DavProperty
-                && ItemResourceConstants.JCR_NAMESPACES.equals(((DavProperty<?>)propEntry).getName())) {
+                    && (ItemResourceConstants.JCR_NAMESPACES.equals(((DavProperty<?>)propEntry).getName())
+                    || ItemResourceConstants.JCR_NODETYPES_CND.equals(((DavProperty<?>)propEntry).getName()))) {
                 DavProperty<?> namespaceProp = (DavProperty<?>) propEntry;
                 setProperty(namespaceProp);
             } else {
@@ -456,5 +522,6 @@ public class WorkspaceResourceImpl extends AbstractResource
         }
 
         // TODO: required property DAV:workspace-checkout-set (computed)
+        // TODO: create node type cnd property only if explicitly requested (see JCR-2946 and patch at JCR-2454) 
     }
 }

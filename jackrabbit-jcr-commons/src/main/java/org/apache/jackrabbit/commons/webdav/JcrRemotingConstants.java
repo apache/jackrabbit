@@ -73,6 +73,11 @@ public interface JcrRemotingConstants {
     public static final String XML_DESCRIPTORKEY = "descriptorkey";
     public static final String XML_DESCRIPTORVALUE = "descriptorvalue";
 
+    // xml elements used for node type registration
+    public static final String XML_CND = "cnd";
+    public static final String XML_ALLOWUPDATE = "allowupdate";
+    public static final String XML_NODETYPENAME = "nodetypename";
+
     /**
      * The 'removeexisting' element is not defined by RFC 3253. If it is present
      * in the UPDATE request body, uuid conflicts should be solved by removing
@@ -126,6 +131,7 @@ public interface JcrRemotingConstants {
     public static final String JCR_LENGTHS_LN = "lengths";
 
     public static final String JCR_NAMESPACES_LN = "namespaces";
+    public static final String JCR_NODETYPES_CND_LN = "nodetypes-cnd";
 
     // property local names used for resource representing a version history
     public static final String JCR_VERSIONABLEUUID_LN = "versionableuuid";

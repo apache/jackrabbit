@@ -61,9 +61,6 @@
                   org.apache.jackrabbit.test.api.lock.LockManagerTest#testAddInvalidLockToken
                   org.apache.jackrabbit.test.api.lock.LockManagerTest#testAddLockTokenToAnotherSession
                   org.apache.jackrabbit.test.api.lock.LockManagerTest#testLockTransfer2
-                  <!-- JCR-2454 : node type registration -->
-                  org.apache.jackrabbit.test.api.nodetype.NodeTypeCreationTest#testRegisterNodeType
-                  org.apache.jackrabbit.test.api.nodetype.NodeTypeCreationTest#testRegisterNodeTypes
                   <!-- JCR-2539 : user data (observation) -->
                   org.apache.jackrabbit.test.api.observation.GetUserDataTest
                   <!-- JCR-2540 : move/reorder (observation) -->

@@ -33,6 +33,7 @@ public class TestAll extends TestCase {
         suite.addTestSuite(MandatoryItemTest.class);
 
         suite.addTestSuite(NodeTypeImplTest.class);
+        suite.addTestSuite(NodeTypeManagerImplTest.class);
 
         return suite;
     }

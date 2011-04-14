@@ -20,8 +20,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -119,6 +121,7 @@ import org.apache.jackrabbit.spi.commons.conversion.PathResolver;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.spi.commons.namespace.AbstractNamespaceResolver;
 import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
+import org.apache.jackrabbit.spi.commons.nodetype.compact.CompactNodeTypeDefWriter;
 import org.apache.jackrabbit.spi.commons.value.QValueValue;
 import org.apache.jackrabbit.spi.commons.value.ValueFactoryQImpl;
 import org.apache.jackrabbit.spi.commons.value.ValueFormat;
@@ -2240,16 +2243,48 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
      * {@inheritDoc}
      */
     public void registerNodeTypes(SessionInfo sessionInfo, QNodeTypeDefinition[] nodeTypeDefinitions, boolean allowUpdate) throws InvalidNodeTypeDefinitionException, NodeTypeExistsException, UnsupportedRepositoryOperationException, RepositoryException {
-        // TODO
-        throw new UnsupportedOperationException("JCR-2003. Implementation missing");
+        PropPatchMethod method = null;
+     	try {
+             DavPropertySet setProperties = new DavPropertySet();
+             setProperties.add(createRegisterNodeTypesProperty(sessionInfo, nodeTypeDefinitions, allowUpdate));
+             String uri = uriResolver.getWorkspaceUri(sessionInfo.getWorkspaceName());
+             method = new PropPatchMethod(uri, setProperties, new DavPropertyNameSet());
+             initMethod(method, sessionInfo, true);
+             getClient(sessionInfo).executeMethod(method);
+             method.checkSuccess();
+         } catch (IOException e) {
+             throw new RepositoryException(e);
+         } catch (DavException e) {
+             throw ExceptionConverter.generate(e);
+         } finally {
+             if (method != null) {
+                 method.releaseConnection();
+             }
+         }
     }
 
     /**
      * {@inheritDoc}
      */
     public void unregisterNodeTypes(SessionInfo sessionInfo, Name[] nodeTypeNames) throws UnsupportedRepositoryOperationException, NoSuchNodeTypeException, RepositoryException {
-        // TODO
-        throw new UnsupportedOperationException("JCR-2003. Implementation missing");
+        PropPatchMethod method = null;
+     	try {
+             DavPropertySet setProperties = new DavPropertySet();
+             setProperties.add(createUnRegisterNodeTypesProperty(sessionInfo, nodeTypeNames));
+             String uri = uriResolver.getWorkspaceUri(sessionInfo.getWorkspaceName());
+             method = new PropPatchMethod(uri, setProperties, new DavPropertyNameSet());
+             initMethod(method, sessionInfo, true);
+             getClient(sessionInfo).executeMethod(method);
+             method.checkSuccess();
+         } catch (IOException e) {
+             throw new RepositoryException(e);
+         } catch (DavException e) {
+             throw ExceptionConverter.generate(e);
+         } finally {
+             if (method != null) {
+                 method.releaseConnection();
+             }
+         }
     }
 
     /**
@@ -2291,6 +2326,51 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
                 }
             }
             return ntDefs.iterator();
+    }
+
+    private DavProperty<List<XmlSerializable>> createRegisterNodeTypesProperty(SessionInfo sessionInfo, QNodeTypeDefinition[] nodeTypeDefinitions, final boolean allowUpdate) throws IOException {
+        // create xml elements for both cnd and allow update value.
+        List<XmlSerializable> val = new ArrayList<XmlSerializable>();
+
+        StringWriter sw = new StringWriter();
+        CompactNodeTypeDefWriter writer = new CompactNodeTypeDefWriter(sw, new NamespaceResolverImpl(sessionInfo), true);
+        writer.write(Arrays.asList(nodeTypeDefinitions));
+        writer.close();
+
+        final String cnd = sw.toString();
+        val.add(new XmlSerializable() {
+            public Element toXml(Document document) {
+                Element cndElem = document.createElementNS(JcrRemotingConstants.NS_URI, JcrRemotingConstants.NS_PREFIX +  ":" + JcrRemotingConstants.XML_CND);
+                DomUtil.setText(cndElem, cnd);
+                return cndElem;
+            }
+        });
+        val.add(new XmlSerializable() {
+            public Element toXml(Document document) {
+                Element allowElem = document.createElementNS(JcrRemotingConstants.NS_URI, JcrRemotingConstants.NS_PREFIX  + ":" + JcrRemotingConstants.XML_ALLOWUPDATE);
+                DomUtil.setText(allowElem, Boolean.toString(allowUpdate));
+                return allowElem;
+            }
+        });
+
+        return new DefaultDavProperty<List<XmlSerializable>>(JcrRemotingConstants.JCR_NODETYPES_CND_LN, val, ItemResourceConstants.NAMESPACE, false);
+    }
+
+    private DavProperty<List<XmlSerializable>> createUnRegisterNodeTypesProperty(SessionInfo sessionInfo, Name[] nodeTypeNames) throws IOException, RepositoryException {
+        NamePathResolver resolver = getNamePathResolver(sessionInfo);
+        List<XmlSerializable> val = new ArrayList<XmlSerializable>();
+        for (Name ntName : nodeTypeNames) {
+            final String jcrName = resolver.getJCRName(ntName);
+            val.add(new XmlSerializable() {
+                public Element toXml(Document document) {
+                    Element ntNameElem = document.createElementNS(JcrRemotingConstants.NS_URI, JcrRemotingConstants.NS_PREFIX + ":" + JcrRemotingConstants.XML_NODETYPENAME);
+                    org.w3c.dom.Text txt = document.createTextNode(jcrName);
+                    ntNameElem.appendChild(txt);
+                    return ntNameElem;
+                }
+            });
+        }
+        return new DefaultDavProperty<List<XmlSerializable>>(JcrRemotingConstants.JCR_NODETYPES_CND_LN, val, ItemResourceConstants.NAMESPACE, false);
     }
 
     private static DavProperty<List<XmlSerializable>> createValuesProperty(Value[] jcrValues) {
