@@ -70,7 +70,6 @@ public class MembershipCache implements UserConstants, SynchronousEventListener,
         this.useMembersNode = useMembersNode;
 
         pMembers = systemSession.getJCRName(UserManagerImpl.P_MEMBERS);
-        @SuppressWarnings("unchecked")
         cache = new GrowingLRUMap(1024, 5000);
 
         String[] ntNames = new String[] {
