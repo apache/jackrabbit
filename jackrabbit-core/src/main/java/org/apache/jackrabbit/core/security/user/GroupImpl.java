@@ -570,6 +570,10 @@ class GroupImpl extends AuthorizableImpl implements Group {
     /**
      * Returns an iterator of authorizables which includes all indirect members of the given iterator
      * of authorizables.
+     *
+     * @param authorizables
+     * @param type
+     * @return Iterator of Authorizable objects
      */
     private Iterator<Authorizable> includeIndirect(final Iterator<Authorizable> authorizables, final int type) {
         Iterator<Iterator<Authorizable>> indirectMembers = new Iterator<Iterator<Authorizable>>() {
@@ -587,7 +591,10 @@ class GroupImpl extends AuthorizableImpl implements Group {
             }
 
             /**
-             * Returns the transitive closure over the members of this authorizable
+             * Returns the transitive closure over the members of this authorizable.
+             * 
+             * @param authorizable
+             * @return Iterator of Authorizable objects
              */
             private Iterator<Authorizable> indirect(Authorizable authorizable) {
                 if (authorizable.isGroup()) {
@@ -608,6 +615,10 @@ class GroupImpl extends AuthorizableImpl implements Group {
 
     /**
      * Map an array of values to an iterator of authorizables.
+     *
+     * @param members
+     * @param type
+     * @return Iterator of Authorizable objects
      */
     private Iterator<Authorizable> toAuthorizables(final Value[] members, int type) {
         return new AuthorizableIterator(type) {
@@ -624,6 +635,9 @@ class GroupImpl extends AuthorizableImpl implements Group {
 
     /**
      * Map an iterator of properties to an iterator of authorizables.
+     * @param members
+     * @param type
+     * @return Iterator of Authorizable objects
      */
     private Iterator<Authorizable> toAuthorizables(final Iterator<Property> members, int type) {
         return new AuthorizableIterator(type) {
@@ -671,6 +685,10 @@ class GroupImpl extends AuthorizableImpl implements Group {
         /**
          * Returns the reference value of the next node representing the next authorizable or
          * <code>null</code> if there there are no more.
+         *
+         * @return reference value of the next node representing the next authorizable or
+         * <code>null</code> if there there are no more.
+         * @throws javax.jcr.RepositoryException If an error occurs.
          */
         protected abstract String getNextMemberRef() throws RepositoryException;
 
