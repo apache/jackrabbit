@@ -61,6 +61,16 @@ public class DefaultLoginModule extends AbstractLoginModule {
     private static final Logger log = LoggerFactory.getLogger(DefaultLoginModule.class);
 
     /**
+     * Optional configuration parameter to disable token based authentication.
+     */
+    private static final String PARAM_DISABLE_TOKEN_AUTH = "disableTokenAuth";
+
+    /**
+     * Optional configuration parameter to disable token based authentication.
+     */
+    private static final String PARAM_TOKEN_EXPIRATION = "tokenExpiration";
+
+    /**
      * Flag indicating if Token-based authentication is disabled by the
      * LoginModule configuration.
      */
@@ -138,6 +148,20 @@ public class DefaultLoginModule extends AbstractLoginModule {
             log.debug("- UserManager -> '" + userManager.getClass().getName() + "'");
         } catch (RepositoryException e) {
             throw new LoginException("Unable to initialize LoginModule: " + e.getMessage());
+        }
+
+        // configuration options related to token based authentication
+        if (options.containsKey(PARAM_DISABLE_TOKEN_AUTH)) {
+            disableTokenAuth = Boolean.parseBoolean(options.get(PARAM_DISABLE_TOKEN_AUTH).toString());
+            log.debug("- Token authentication disabled -> '" + disableTokenAuth + "'");
+        }
+        if (options.containsKey(PARAM_TOKEN_EXPIRATION)) {
+            try {
+                tokenExpiration = Long.parseLong(options.get(PARAM_TOKEN_EXPIRATION).toString());
+                log.debug("- Token expiration -> '" + tokenExpiration + "'");
+            } catch (NumberFormatException e) {
+                log.warn("Unabled to parse token expiration: ", e.getMessage());
+            }
         }
     }
 
