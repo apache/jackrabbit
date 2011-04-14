@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.core.security.user;
 
-import org.apache.commons.collections.map.LRUMap;
+import org.apache.jackrabbit.commons.collections.GrowingLRUMap;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.PropertyImpl;
 import org.apache.jackrabbit.core.SessionImpl;
@@ -70,8 +70,9 @@ public class MembershipCache implements UserConstants, SynchronousEventListener,
         this.useMembersNode = useMembersNode;
 
         pMembers = systemSession.getJCRName(UserManagerImpl.P_MEMBERS);
-        cache = new LRUMap();
-                
+        @SuppressWarnings("unchecked")
+        cache = new GrowingLRUMap(1024, 5000);
+
         String[] ntNames = new String[] {
                 systemSession.getJCRName(UserConstants.NT_REP_GROUP),
                 systemSession.getJCRName(UserConstants.NT_REP_MEMBERS)
@@ -384,6 +385,8 @@ public class MembershipCache implements UserConstants, SynchronousEventListener,
      * information. If both sets are non empty, the one configured in the
      * settings will take precedence and an warning is logged.
      *
+     * @param pIds
+     * @param nIds
      * @return
      */
     private Set<String> select(Set<String> pIds, Set<String> nIds) {
@@ -413,8 +416,6 @@ public class MembershipCache implements UserConstants, SynchronousEventListener,
 
     /**
      * @return a new Session that needs to be properly released after usage.
-     * @throws RepositoryException
-     * @throws AccessDeniedException
      */
     private SessionImpl getSession() {
         try {
