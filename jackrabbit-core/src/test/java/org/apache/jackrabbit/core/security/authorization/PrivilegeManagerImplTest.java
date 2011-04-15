@@ -104,21 +104,16 @@ public class PrivilegeManagerImplTest extends PrivilegeManagerTest {
         assertPrivilege(privilegeMgr.getPrivilege(PrivilegeRegistry.REP_WRITE), PrivilegeRegistry.REP_WRITE, true, false);
     }
 
-    public void testIsCustom() throws RepositoryException {
-        for (Privilege builtin : privilegeMgr.getRegisteredPrivileges()) {
-            assertFalse(getPrivilegeManagerImpl().isCustomPrivilege(builtin));
-        }
-    }
-
     public void testGetBits() throws RepositoryException {
         Privilege p1 = privilegeMgr.getPrivilege(Privilege.JCR_ADD_CHILD_NODES);
         Privilege p2 = privilegeMgr.getPrivilege(Privilege.JCR_REMOVE_CHILD_NODES);
         Privilege[] privs = new Privilege[] {p1, p2};
 
-        int bits = getPrivilegeManagerImpl().getBits(privs);
-        assertTrue(bits > PrivilegeRegistry.NO_PRIVILEGE);
-        assertTrue(bits == (getPrivilegeManagerImpl().getBits(p1) |
-                getPrivilegeManagerImpl().getBits(p2)));
+        PrivilegeBits bits = getPrivilegeManagerImpl().getBits(privs);
+        assertFalse(bits.isEmpty());
+        PrivilegeBits other = getPrivilegeManagerImpl().getBits(p1);
+        other.add(getPrivilegeManagerImpl().getBits(p2));
+        assertEquals(bits, other);
     }
 
     public void testGetBitsFromCustomPrivilege() throws AccessControlException {
@@ -200,7 +195,7 @@ public class PrivilegeManagerImplTest extends PrivilegeManagerTest {
                 Privilege.JCR_REMOVE_NODE,
                 Privilege.JCR_MODIFY_PROPERTIES
         };
-        int writeBits = getPrivilegeManagerImpl().getBits(privilegesFromNames(names));
+        PrivilegeBits writeBits = getPrivilegeManagerImpl().getBits(privilegesFromNames(names));
         Set<Privilege> pvs = getPrivilegeManagerImpl().getPrivileges(writeBits);
 
         assertTrue(pvs != null);
@@ -215,7 +210,7 @@ public class PrivilegeManagerImplTest extends PrivilegeManagerTest {
         String[] names = new String[] {
                 PrivilegeRegistry.REP_WRITE
         };
-        int writeBits = getPrivilegeManagerImpl().getBits(privilegesFromNames(names));
+        PrivilegeBits writeBits = getPrivilegeManagerImpl().getBits(privilegesFromNames(names));
         Set<Privilege> pvs = getPrivilegeManagerImpl().getPrivileges(writeBits);
 
         assertTrue(pvs != null);
@@ -244,7 +239,7 @@ public class PrivilegeManagerImplTest extends PrivilegeManagerTest {
                 PrivilegeRegistry.REP_WRITE,
                 Privilege.JCR_LIFECYCLE_MANAGEMENT
         };
-        int writeBits = getPrivilegeManagerImpl().getBits(privilegesFromNames(names));
+        PrivilegeBits writeBits = getPrivilegeManagerImpl().getBits(privilegesFromNames(names));
         Set<Privilege> pvs = getPrivilegeManagerImpl().getPrivileges(writeBits);
 
         assertTrue(pvs != null);

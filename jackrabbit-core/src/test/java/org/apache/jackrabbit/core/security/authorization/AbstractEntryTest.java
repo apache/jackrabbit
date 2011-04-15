@@ -103,14 +103,14 @@ public abstract class AbstractEntryTest extends AbstractAccessControlTest {
         assertNotNull(privs);
         assertEquals(1, privs.length);
         assertEquals(privs[0], acMgr.privilegeFromName(Privilege.JCR_READ));
-        assertTrue(privMgr.getBits(privs) == privMgr.getBits(entry.getPrivileges()));
+        assertEquals(privMgr.getBits(privs), privMgr.getBits(entry.getPrivileges()));
 
         entry = createEntry(new String[] {PrivilegeRegistry.REP_WRITE}, true);
         privs = entry.getPrivileges();
         assertNotNull(privs);
         assertEquals(1, privs.length);
         assertEquals(privs[0], acMgr.privilegeFromName(PrivilegeRegistry.REP_WRITE));
-        assertTrue(privMgr.getBits(privs) == privMgr.getBits(entry.getPrivileges()));
+        assertEquals(privMgr.getBits(privs), privMgr.getBits(entry.getPrivileges()));
 
         entry = createEntry(new String[] {Privilege.JCR_ADD_CHILD_NODES,
                 Privilege.JCR_REMOVE_CHILD_NODES}, true);
@@ -196,13 +196,9 @@ public abstract class AbstractEntryTest extends AbstractAccessControlTest {
                 acMgr.privilegeFromName(Privilege.JCR_ALL)
         };
 
-        final PrivilegeManagerImpl privMgr = (PrivilegeManagerImpl) ((JackrabbitWorkspace) superuser.getWorkspace()).getPrivilegeManager();
         JackrabbitAccessControlEntry pe = new JackrabbitAccessControlEntry() {
             public boolean isAllow() {
                 return true;
-            }
-            public int getPrivilegeBits() throws AccessControlException {
-                return privMgr.getBits(privs);
             }
             public String[] getRestrictionNames() {
                 return new String[0];

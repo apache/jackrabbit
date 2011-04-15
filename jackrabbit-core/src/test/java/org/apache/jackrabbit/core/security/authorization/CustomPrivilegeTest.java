@@ -87,15 +87,10 @@ public class CustomPrivilegeTest extends AbstractJCRTest {
 
         assertNotNull(p);
 
-        assertEquals(def.isCustom(), pmgr.isCustomPrivilege(p));
         assertEquals(def.isAbstract(), p.isAbstract());
         Name[] danames = def.getDeclaredAggregateNames();
         assertEquals(danames.length > 0, p.isAggregate());
         assertEquals(danames.length, p.getDeclaredAggregatePrivileges().length);
-    }
-
-    private static void assertBits(int expected, PrivilegeRegistry.Definition def, PrivilegeRegistry registry) {
-        assertEquals(expected, registry.getBits(new PrivilegeRegistry.Definition[] {def}));
     }
 
     private static Set<Name> createNameSet(Name... names) {
@@ -216,14 +211,12 @@ public class CustomPrivilegeTest extends AbstractJCRTest {
         newAggregates.put(resolver.getQName("jcr:newAggregate"), createNameSet(NameConstants.JCR_READ, resolver.getQName("unknownPrivilege")));
         // aggregate containing unknown privilege
         newAggregates.put(resolver.getQName("newAggregate"), createNameSet(resolver.getQName("unknownPrivilege")));
-        // aggregated combining built-in and custom
-        newAggregates.put(resolver.getQName("newAggregate"), createNameSet(NameConstants.JCR_READ, resolver.getQName("unknownPrivilege")));
         // custom aggregated contains itself
         newAggregates.put(resolver.getQName("newAggregate"), createNameSet(resolver.getQName("newAggregate")));
         // same as rep:write
         newAggregates.put(resolver.getQName("repWriteAggregate"), createNameSet(NameConstants.JCR_MODIFY_PROPERTIES, NameConstants.JCR_ADD_CHILD_NODES, NameConstants.JCR_NODE_TYPE_MANAGEMENT, NameConstants.JCR_REMOVE_CHILD_NODES,NameConstants.JCR_REMOVE_NODE));
-        // aggregating built-in -> currently not supported
-        newAggregates.put(resolver.getQName("aggrBuiltIn"), createNameSet(NameConstants.JCR_MODIFY_PROPERTIES, NameConstants.JCR_READ));
+        // aggregated combining built-in and unknown custom
+        newAggregates.put(resolver.getQName("newAggregate"), createNameSet(NameConstants.JCR_READ, resolver.getQName("unknownPrivilege")));
 
         for (Name name : newAggregates.keySet()) {
             try {
@@ -238,7 +231,11 @@ public class CustomPrivilegeTest extends AbstractJCRTest {
     public void testRegisterInvalidNewAggregate2() throws RepositoryException, FileSystemException {
         Map<Name, Set<Name>> newCustomPrivs = new LinkedHashMap<Name, Set<Name>>();
         newCustomPrivs.put(resolver.getQName("new"), Collections.<Name>emptySet());
-        newCustomPrivs.put(resolver.getQName("new2"), Collections.<Name>singleton(resolver.getQName("new")));
+        newCustomPrivs.put(resolver.getQName("new2"), Collections.<Name>emptySet());
+        Set<Name> decl = new HashSet<Name>();
+        decl.add(resolver.getQName("new"));
+        decl.add(resolver.getQName("new2"));
+        newCustomPrivs.put(resolver.getQName("new3"), decl);
 
         for (Name name : newCustomPrivs.keySet()) {
             boolean isAbstract = true;
@@ -247,9 +244,7 @@ public class CustomPrivilegeTest extends AbstractJCRTest {
         }
 
         Map<Name, Set<Name>> newAggregates = new HashMap<Name, Set<Name>>();
-        // a new aggregate of custom and built-in privilege
-        newAggregates.put(resolver.getQName("newA1"), createNameSet(resolver.getQName("new"), NameConstants.JCR_READ));
-        // other illegal aggregates already represented by registered definition.
+         // other illegal aggregates already represented by registered definition.
         newAggregates.put(resolver.getQName("newA2"), Collections.<Name>singleton(resolver.getQName("new")));
         newAggregates.put(resolver.getQName("newA3"), Collections.<Name>singleton(resolver.getQName("new2")));
 
@@ -280,7 +275,6 @@ public class CustomPrivilegeTest extends AbstractJCRTest {
             // validate definition
             PrivilegeRegistry.Definition definition = privilegeRegistry.get(name);
             assertNotNull(definition);
-            assertTrue(definition.isCustom());
             assertEquals(name, definition.getName());
             assertTrue(definition.isAbstract());
             assertTrue(definition.declaredAggregateNames.isEmpty());
@@ -288,7 +282,6 @@ public class CustomPrivilegeTest extends AbstractJCRTest {
             for (Name n : aggrNames) {
                 assertTrue(definition.declaredAggregateNames.contains(n));
             }
-            assertBits(PrivilegeRegistry.NO_PRIVILEGE, definition, privilegeRegistry);
 
             List<Name> allAgg = Arrays.asList(privilegeRegistry.get(NameConstants.JCR_ALL).getDeclaredAggregateNames());
             assertTrue(allAgg.contains(name));
@@ -308,6 +301,10 @@ public class CustomPrivilegeTest extends AbstractJCRTest {
         Map<Name, Set<Name>> newAggregates = new HashMap<Name, Set<Name>>();
         // a new aggregate of custom privileges
         newAggregates.put(resolver.getQName("newA2"), createNameSet(resolver.getQName("test:new"), resolver.getQName("new")));
+        // a new aggregate of custom and built-in privilege
+        newAggregates.put(resolver.getQName("newA1"), createNameSet(resolver.getQName("new"), NameConstants.JCR_READ));
+        // aggregating built-in privileges
+        newAggregates.put(resolver.getQName("aggrBuiltIn"), createNameSet(NameConstants.JCR_MODIFY_PROPERTIES, NameConstants.JCR_READ));
 
         for (Name name : newAggregates.keySet()) {
             boolean isAbstract = false;
@@ -316,7 +313,6 @@ public class CustomPrivilegeTest extends AbstractJCRTest {
             PrivilegeRegistry.Definition definition = privilegeRegistry.get(name);
 
             assertNotNull(definition);
-            assertTrue(definition.isCustom());
             assertEquals(name, definition.getName());
             assertFalse(definition.isAbstract());
             assertFalse(definition.declaredAggregateNames.isEmpty());
@@ -324,8 +320,6 @@ public class CustomPrivilegeTest extends AbstractJCRTest {
             for (Name n : aggrNames) {
                 assertTrue(definition.declaredAggregateNames.contains(n));
             }
-
-            assertBits(PrivilegeRegistry.NO_PRIVILEGE, definition, privilegeRegistry);
 
             List<Name> allAgg = Arrays.asList(privilegeRegistry.get(NameConstants.JCR_ALL).getDeclaredAggregateNames());
             assertTrue(allAgg.contains(name));
@@ -356,14 +350,14 @@ public class CustomPrivilegeTest extends AbstractJCRTest {
         assertEquals(privName, priv.getName());
         assertEquals(isAbstract, priv.isAbstract());
         assertFalse(priv.isAggregate());
-        assertEquals(PrivilegeRegistry.NO_PRIVILEGE, pm.getBits(priv));
+        assertFalse(pm.getBits(priv).isEmpty());
 
         Privilege jcrWrite = pm.getPrivilege(Privilege.JCR_WRITE);
-        assertEquals(pm.getBits(jcrWrite), pm.getBits(priv, jcrWrite));
-
+        assertFalse(pm.getBits(jcrWrite).equals(pm.getBits(priv, jcrWrite)));
     }
 
     public void testRegister100CustomPrivileges() throws RepositoryException, FileSystemException {
+        PrivilegeBits previous = privilegeRegistry.get(NameConstants.JCR_RETENTION_MANAGEMENT).getBits();
         for (int i = 0; i < 100; i++) {
             boolean isAbstract = true;
             Name name = ((SessionImpl) superuser).getQName("test"+i);
@@ -372,6 +366,19 @@ public class CustomPrivilegeTest extends AbstractJCRTest {
 
             assertNotNull(definition);
             assertEquals(name, definition.getName());
+
+            PrivilegeBits bits = definition.getBits();
+            assertNotNull(bits);
+            assertFalse(bits.isEmpty());
+
+            assertFalse(previous.equals(bits));
+            assertEquals(previous.nextBits(), bits);
+
+            PrivilegeRegistry.Definition all = privilegeRegistry.get(NameConstants.JCR_ALL);
+            assertTrue(Arrays.asList(all.getDeclaredAggregateNames()).contains(name));
+            assertTrue(all.getBits().includes(bits));
+
+            previous = bits;
         }
     }
 }

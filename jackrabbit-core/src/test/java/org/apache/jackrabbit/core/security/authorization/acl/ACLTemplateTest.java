@@ -23,6 +23,7 @@ import org.apache.jackrabbit.api.security.principal.PrincipalIterator;
 import org.apache.jackrabbit.api.security.principal.PrincipalManager;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.security.authorization.AbstractACLTemplateTest;
+import org.apache.jackrabbit.core.security.authorization.PrivilegeBits;
 import org.apache.jackrabbit.core.security.authorization.PrivilegeRegistry;
 import org.apache.jackrabbit.core.security.principal.PrincipalImpl;
 import org.apache.jackrabbit.test.NotExecutableException;
@@ -36,7 +37,9 @@ import java.security.Principal;
 import java.security.acl.Group;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * <code>ACLTemplateTest</code>...
@@ -107,25 +110,31 @@ public class ACLTemplateTest extends AbstractACLTemplateTest {
     }
 
     public void testMultipleEntryEffect2() throws RepositoryException, NotExecutableException {
-        Privilege[] privileges = privilegesFromName(PrivilegeRegistry.REP_WRITE);
+        Privilege repwrite = getAccessControlManager(superuser).privilegeFromName(PrivilegeRegistry.REP_WRITE);
+
         JackrabbitAccessControlList pt = createEmptyTemplate(getTestPath());
-        pt.addAccessControlEntry(testPrincipal, privileges);
+        pt.addAccessControlEntry(testPrincipal, new Privilege[] {repwrite});
 
         // add deny entry for mod_props
-        Privilege[] privileges2 = privilegesFromName(Privilege.JCR_MODIFY_PROPERTIES);
-        assertTrue(pt.addEntry(testPrincipal, privileges2, false, null));
+        Privilege modProperties = getAccessControlManager(superuser).privilegeFromName(Privilege.JCR_MODIFY_PROPERTIES);
+        assertTrue(pt.addEntry(testPrincipal, new Privilege[] {modProperties}, false, null));
 
         // net-effect: 2 entries with the allow entry being adjusted
         assertTrue(pt.size() == 2);
         AccessControlEntry[] entries = pt.getAccessControlEntries();
         for (AccessControlEntry entry1 : entries) {
             ACLTemplate.Entry entry = (ACLTemplate.Entry) entry1;
-            int privs = entry.getPrivilegeBits();
+            PrivilegeBits privs = entry.getPrivilegeBits();
             if (entry.isAllow()) {
-                int bits = privilegeMgr.getBits(privileges) ^ privilegeMgr.getBits(privileges2);
+                Privilege[] result = privilegesFromNames(new String[] {
+                        Privilege.JCR_ADD_CHILD_NODES,
+                        Privilege.JCR_NODE_TYPE_MANAGEMENT,
+                        Privilege.JCR_REMOVE_CHILD_NODES,
+                        Privilege.JCR_REMOVE_NODE});    
+                PrivilegeBits bits = privilegeMgr.getBits(result);
                 assertEquals(privs, bits);
             } else {
-                assertEquals(privs, privilegeMgr.getBits(privileges2));
+                assertEquals(privs, privilegeMgr.getBits(modProperties));
             }
         }
     }

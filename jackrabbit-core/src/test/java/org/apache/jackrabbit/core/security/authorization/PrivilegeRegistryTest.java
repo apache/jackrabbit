@@ -46,10 +46,6 @@ public class PrivilegeRegistryTest extends AbstractJCRTest {
         privilegeRegistry = new PrivilegeRegistry(resolver);
     }
 
-    private int getBits(PrivilegeRegistry.Definition def) {
-        return privilegeRegistry.getBits(new PrivilegeRegistry.Definition[] {def});
-    }
-
     public void testGetAll() throws RepositoryException {
 
         PrivilegeRegistry.Definition[] defs = privilegeRegistry.getAll();
@@ -93,7 +89,7 @@ public class PrivilegeRegistryTest extends AbstractJCRTest {
             assertTrue(d.declaredAggregateNames.containsAll(l));
             assertTrue(l.containsAll(d.declaredAggregateNames));
 
-            assertTrue(getBits(d) > PrivilegeRegistry.NO_PRIVILEGE);
+            assertFalse(d.getBits().isEmpty());
         }
     }
 
@@ -108,7 +104,7 @@ public class PrivilegeRegistryTest extends AbstractJCRTest {
             for (Name n : l) {
                 PrivilegeRegistry.Definition d = privilegeRegistry.get(n);
                 assertNotNull(d);
-                Name[] names = privilegeRegistry.getNames(getBits(d));
+                Name[] names = privilegeRegistry.getNames(d.getBits());
                 assertNotNull(names);
                 assertEquals(1, names.length);
                 assertEquals(d.name, names[0]);
@@ -131,7 +127,7 @@ public class PrivilegeRegistryTest extends AbstractJCRTest {
             assertTrue(def.declaredAggregateNames.containsAll(l));
             assertTrue(l.containsAll(def.declaredAggregateNames));
 
-            assertTrue(getBits(def) > PrivilegeRegistry.NO_PRIVILEGE);
+            assertFalse(def.getBits().isEmpty());
         }
     }
 
@@ -315,7 +311,8 @@ public class PrivilegeRegistryTest extends AbstractJCRTest {
     }
 
     public void testGetPrivilegesFromBits() throws RepositoryException {
-        Privilege[] pvs = privilegeRegistry.getPrivileges(PrivilegeRegistry.getBits(privilegesFromNames(new String[] {Privilege.JCR_READ_ACCESS_CONTROL})));
+        int bits = PrivilegeRegistry.getBits(privilegesFromNames(new String[] {Privilege.JCR_READ_ACCESS_CONTROL}));
+        Privilege[] pvs = privilegeRegistry.getPrivileges(bits);
 
         assertTrue(pvs != null);
         assertTrue(pvs.length == 1);

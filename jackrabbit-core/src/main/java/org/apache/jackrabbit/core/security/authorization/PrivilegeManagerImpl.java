@@ -112,7 +112,7 @@ public final class PrivilegeManagerImpl implements PrivilegeManager, PrivilegeRe
      * <li>the namespace URI must be a valid, registered namespace excluding
      * those namespaces marked as being reserved</li>
      * <li>an aggregate custom privilege is valid if all declared aggregate
-     * names can be resolved to registered custom privileges and if there exists
+     * names can be resolved to registered privileges and if there exists
      * no registered privilege with the same aggregated privileges.</li>
      * </ul>
      *
@@ -162,46 +162,26 @@ public final class PrivilegeManagerImpl implements PrivilegeManager, PrivilegeRe
 
     //-----------------------------< implementation specific public methods >---       
     /**
-     * Returns <code>true</code> if the specified privilege is a custom
-     * privilege that has been
-     * {@link #registerPrivilege(String, boolean, String[]) registered} before.
-     *
-     * @param privilege
-     * @return <code>true</code> if the specified privilege is a custom
-     * privilege; <code>false</code> otherwise.
-     * @throws AccessControlException If the specified privilege is
-     * <code>null</code> or unknown to this manager.
-     */
-    public boolean isCustomPrivilege(Privilege privilege) throws AccessControlException {
-        if (privilege instanceof PrivilegeImpl) {
-            return ((PrivilegeImpl) privilege).definition.isCustom();
-        } else {
-            throw new AccessControlException("Invalid privilege instance.");
-        }
-    }
-
-    /**
      * @param privileges An array of privileges.
-     * @return The bits of the built-in privileges contained in the specified
+     * @return The bits of the privileges contained in the specified
      * array.
      * @throws AccessControlException If the specified array is null, empty
      * or if it contains an unregistered privilege.
      */
-    public int getBits(Privilege... privileges) throws AccessControlException {
+    public PrivilegeBits getBits(Privilege... privileges) throws AccessControlException {
         if (privileges == null || privileges.length == 0) {
             throw new AccessControlException("Privilege array is empty or null.");
         }
-        PrivilegeRegistry.Definition[] defs = new PrivilegeRegistry.Definition[privileges.length];
-        for (int i = 0; i < privileges.length; i++) {
-            Privilege priv = privileges[i];
+        PrivilegeBits bits = PrivilegeBits.getInstance();
+        for (Privilege priv : privileges) {
             if (priv instanceof PrivilegeImpl) {
-                defs[i] = ((PrivilegeImpl) priv).definition;
+                bits.add(((PrivilegeImpl) priv).definition.getBits());
             } else {
                 String name = (priv == null) ? "null" : priv.getName();
                 throw new AccessControlException("Unknown privilege '" + name + "'.");
             }
         }
-        return registry.getBits(defs);
+        return bits;
     }
 
     /**
@@ -218,7 +198,7 @@ public final class PrivilegeManagerImpl implements PrivilegeManager, PrivilegeRe
      * resolved to registered <code>Privilege</code>s.
      * @see #getBits(Privilege...)
      */
-    public Set<Privilege> getPrivileges(int bits) {
+    public Set<Privilege> getPrivileges(PrivilegeBits bits) {
         Name[] names = registry.getNames(bits);
         if (names.length == 0) {
             return Collections.emptySet();
