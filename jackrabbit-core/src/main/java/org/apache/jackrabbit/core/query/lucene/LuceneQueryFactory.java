@@ -54,6 +54,7 @@ import java.util.List;
 import java.util.Map;
 
 import javax.jcr.ItemNotFoundException;
+import javax.jcr.Node;
 import javax.jcr.PathNotFoundException;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
@@ -91,9 +92,7 @@ import org.apache.jackrabbit.commons.predicate.Predicate;
 import org.apache.jackrabbit.commons.predicate.Predicates;
 import org.apache.jackrabbit.commons.predicate.RowPredicate;
 import org.apache.jackrabbit.commons.query.qom.OperandEvaluator;
-import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.SessionImpl;
-import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.query.lucene.join.SelectorRow;
 import org.apache.jackrabbit.core.query.lucene.join.ValueComparator;
 import org.apache.jackrabbit.spi.Name;
@@ -413,18 +412,18 @@ public class LuceneQueryFactory {
         BooleanQuery query = new BooleanQuery();
 
         try {
-            LinkedList<NodeId> ids = new LinkedList<NodeId>();
-            NodeImpl ancestor = (NodeImpl) session.getNode(dn.getAncestorPath());
-            ids.add(ancestor.getNodeId());
+            LinkedList<String> ids = new LinkedList<String>();
+            Node ancestor = session.getNode(dn.getAncestorPath());
+            ids.add(ancestor.getIdentifier());
             while (!ids.isEmpty()) {
-                String id = ids.removeFirst().toString();
+                String id = ids.removeFirst();
                 Query q = new JackrabbitTermQuery(new Term(FieldNames.PARENT, id));
                 QueryHits hits = searcher.evaluate(q);
                 ScoreNode sn = hits.nextScoreNode();
                 if (sn != null) {
                     query.add(q, SHOULD);
                     do {
-                        ids.add(sn.getNodeId());
+                        ids.add(sn.getNodeId().toString());
                         sn = hits.nextScoreNode();
                     } while (sn != null);
                 }
@@ -632,8 +631,7 @@ public class LuceneQueryFactory {
             throws RepositoryException {
         String value;
         try {
-            NodeImpl node = (NodeImpl) session.getNode(path);
-            value = node.getNodeId().toString();
+            value = session.getNode(path).getIdentifier();
         } catch (PathNotFoundException e) {
             value = "invalid-node-id"; // can never match a node
         }
