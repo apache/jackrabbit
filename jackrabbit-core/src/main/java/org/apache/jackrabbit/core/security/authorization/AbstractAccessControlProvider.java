@@ -36,7 +36,6 @@ import org.apache.jackrabbit.core.security.SystemPrincipal;
 import org.apache.jackrabbit.core.security.principal.AdminPrincipal;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
-import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 
 /**
  * <code>AbstractAccessControlProvider</code>...
@@ -61,7 +60,7 @@ public abstract class AbstractAccessControlProvider implements AccessControlProv
      */
     protected SessionImpl session;
     protected ObservationManager observationMgr;
-    protected NamePathResolver resolver;
+    protected PrivilegeManagerImpl privilegeManager;
 
     private boolean initialized;
 
@@ -83,7 +82,7 @@ public abstract class AbstractAccessControlProvider implements AccessControlProv
      * @throws RepositoryException
      */
     protected PrivilegeManagerImpl getPrivilegeManagerImpl() throws RepositoryException {
-        return (PrivilegeManagerImpl) ((JackrabbitWorkspace) session.getWorkspace()).getPrivilegeManager();
+        return privilegeManager;
     }
 
     /**
@@ -105,7 +104,7 @@ public abstract class AbstractAccessControlProvider implements AccessControlProv
                 return true;
             }
             public int getPrivileges(Path absPath) throws RepositoryException {
-                return getPrivilegeManagerImpl().getBits(getAllPrivilege());
+                return PrivilegeRegistry.getBits(new Privilege[] {getAllPrivilege()});
             }
             public boolean hasPrivileges(Path absPath, Privilege... privileges) {
                 return true;
@@ -150,7 +149,7 @@ public abstract class AbstractAccessControlProvider implements AccessControlProv
                 if (isAcItem(absPath)) {
                     return PrivilegeRegistry.NO_PRIVILEGE;
                 } else {
-                    return getPrivilegeManagerImpl().getBits(getReadPrivilege());
+                    return PrivilegeRegistry.getBits(new Privilege[] {getReadPrivilege()});
                 }
             }
             public boolean hasPrivileges(Path absPath, Privilege... privileges) throws RepositoryException {
@@ -254,7 +253,7 @@ public abstract class AbstractAccessControlProvider implements AccessControlProv
         }
         session = (SessionImpl) systemSession;
         observationMgr = systemSession.getWorkspace().getObservationManager();
-        resolver = (NamePathResolver) systemSession;
+        privilegeManager = (PrivilegeManagerImpl) ((JackrabbitWorkspace) session.getWorkspace()).getPrivilegeManager();
 
         initialized = true;
     }

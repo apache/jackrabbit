@@ -34,6 +34,7 @@ import org.apache.jackrabbit.core.security.authorization.AccessControlEditor;
 import org.apache.jackrabbit.core.security.authorization.CompiledPermissions;
 import org.apache.jackrabbit.core.security.authorization.NamedAccessControlPolicyImpl;
 import org.apache.jackrabbit.core.security.authorization.Permission;
+import org.apache.jackrabbit.core.security.authorization.PrivilegeBits;
 import org.apache.jackrabbit.core.security.authorization.PrivilegeManagerImpl;
 import org.apache.jackrabbit.core.security.authorization.PrivilegeRegistry;
 import org.apache.jackrabbit.core.security.principal.PrincipalImpl;
@@ -53,8 +54,6 @@ import javax.jcr.security.Privilege;
 
 import java.security.Principal;
 import java.security.acl.Group;
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
@@ -298,7 +297,7 @@ public class UserAccessControlProvider extends AbstractAccessControlProvider
     }
 
     private Node getExistingNode(Path path) throws RepositoryException {
-        String absPath = resolver.getJCRPath(path.getNormalizedPath());
+        String absPath = session.getJCRPath(path.getNormalizedPath());
         if (session.nodeExists(absPath)) {
             return session.getNode(absPath);
         } else if (session.propertyExists(absPath)) {
@@ -377,9 +376,13 @@ public class UserAccessControlProvider extends AbstractAccessControlProvider
             observationMgr.addEventListener(this, events, groupsPath, true, null, null, false);
         }
 
-        private int getPrivilegeBits(String privName) throws RepositoryException {
+        private PrivilegeBits getPrivilegeBits(String... privNames) throws RepositoryException {
             PrivilegeManagerImpl impl = getPrivilegeManagerImpl();
-            return impl.getBits(impl.getPrivilege(privName));
+            Privilege[] privs = new Privilege[privNames.length];
+            for (int i = 0; i < privNames.length; i++) {
+                privs[i] = impl.getPrivilege(privNames[i]);
+            }
+            return impl.getBits(privs);
         }
 
         //------------------------------------< AbstractCompiledPermissions >---
@@ -408,15 +411,15 @@ public class UserAccessControlProvider extends AbstractAccessControlProvider
             int denies = Permission.NONE;
             // default allow permission and default privileges
             int allows = Permission.READ;
-            int privs;
+            PrivilegeBits privs;
             // Determine if for path, the set of privileges must be calculated:
             // Generally, privileges can only be determined for existing nodes.
-            String jcrPath = resolver.getJCRPath(path.getNormalizedPath());
+            String jcrPath = session.getJCRPath(path.getNormalizedPath());
             boolean calcPrivs = session.nodeExists(jcrPath);
             if (calcPrivs) {
                 privs = getPrivilegeBits(Privilege.JCR_READ);
             } else {
-                privs = PrivilegeRegistry.NO_PRIVILEGE;
+                privs = PrivilegeBits.EMPTY;
             }
 
             if (Text.isDescendant(usersPath, jcrPath)) {
@@ -437,7 +440,7 @@ public class UserAccessControlProvider extends AbstractAccessControlProvider
                         if (calcPrivs) {
                             // grant WRITE privilege
                             // note: ac-read/modification is not included
-                            privs |= getPrivilegeBits(PrivilegeRegistry.REP_WRITE);
+                            privs.add(getPrivilegeBits(PrivilegeRegistry.REP_WRITE));
                         }
                     }
                 } else {
@@ -449,14 +452,14 @@ public class UserAccessControlProvider extends AbstractAccessControlProvider
                         // user can only read && write his own props
                         allows |= (Permission.SET_PROPERTY | Permission.REMOVE_PROPERTY);
                         if (calcPrivs) {
-                            privs |= getPrivilegeBits(Privilege.JCR_MODIFY_PROPERTIES);
+                            privs.add(getPrivilegeBits(Privilege.JCR_MODIFY_PROPERTIES));
                         }
                     } else if (isUserAdmin) {
                         allows |= (Permission.ADD_NODE | Permission.REMOVE_NODE | Permission.SET_PROPERTY | Permission.REMOVE_PROPERTY | Permission.NODE_TYPE_MNGMT);
                         if (calcPrivs) {
                             // grant WRITE privilege
                             // note: ac-read/modification is not included
-                            privs |= getPrivilegeBits(PrivilegeRegistry.REP_WRITE);
+                            privs.add(getPrivilegeBits(PrivilegeRegistry.REP_WRITE));
                         }
                     } // else: normal user that isn't allowed to modify another user.
                 }
@@ -475,20 +478,19 @@ public class UserAccessControlProvider extends AbstractAccessControlProvider
                             // no remove perm on group-admin node
                             allows |= (Permission.ADD_NODE | Permission.SET_PROPERTY | Permission.REMOVE_PROPERTY | Permission.NODE_TYPE_MNGMT);
                             if (calcPrivs) {
-                                privs |= getPrivilegeBits(PrivilegeRegistry.REP_WRITE);
-                                privs ^= getPrivilegeBits(Privilege.JCR_REMOVE_NODE);
+                                privs.add(getPrivilegeBits(Privilege.JCR_ADD_CHILD_NODES, Privilege.JCR_MODIFY_PROPERTIES, Privilege.JCR_NODE_TYPE_MANAGEMENT));
                             }
                         } else {
                             // complete write
                             allows |= (Permission.ADD_NODE | Permission.REMOVE_NODE | Permission.SET_PROPERTY | Permission.REMOVE_PROPERTY | Permission.NODE_TYPE_MNGMT);
                             if (calcPrivs) {
-                                privs |= getPrivilegeBits(PrivilegeRegistry.REP_WRITE);
+                                privs.add(getPrivilegeBits(PrivilegeRegistry.REP_WRITE));
                             }
                         }
                     }
                 }
             } // else outside of user/group tree -> read only.
-            return new Result(allows, denies, privs, PrivilegeRegistry.NO_PRIVILEGE);
+            return new Result(allows, denies, privs, PrivilegeBits.EMPTY);
         }
 
         @Override

@@ -36,7 +36,9 @@ import javax.jcr.security.Privilege;
 import java.security.Principal;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * <code>JackrabbitAccessControlListTest</code>...
@@ -127,11 +129,11 @@ public class JackrabbitAccessControlListTest extends AbstractAccessControlTest {
             if (entries.length == 0) {
                 fail("GrantPrivileges was successful -> at least 1 entry for principal.");
             }
-            int allows = 0;
+            PrivilegeBits allows = PrivilegeBits.getInstance();
             for (AccessControlEntry en : entries) {
-                int bits = privilegeMgr.getBits(en.getPrivileges());
+                PrivilegeBits bits = privilegeMgr.getBits(en.getPrivileges());
                 if (en instanceof JackrabbitAccessControlEntry && ((JackrabbitAccessControlEntry) en).isAllow()) {
-                    allows |= bits;
+                    allows.add(bits);
                 }
             }
             assertEquals(privilegeMgr.getBits(priv), allows);
@@ -145,18 +147,18 @@ public class JackrabbitAccessControlListTest extends AbstractAccessControlTest {
         Principal princ = getValidPrincipal();
         Privilege[] privs = privilegesFromName(PrivilegeRegistry.REP_WRITE);
 
-        int allows = 0;
         templ.addEntry(princ, privs, true, Collections.<String, Value>emptyMap());
         AccessControlEntry[] entries = templ.getAccessControlEntries();
         assertTrue("GrantPrivileges was successful -> at least 1 entry for principal.", entries.length > 0);
 
+        PrivilegeBits allows = PrivilegeBits.getInstance();        
         for (AccessControlEntry en : entries) {
-            int bits = privilegeMgr.getBits(en.getPrivileges());
+            PrivilegeBits bits = privilegeMgr.getBits(en.getPrivileges());
             if (en instanceof JackrabbitAccessControlEntry && ((JackrabbitAccessControlEntry) en).isAllow()) {
-                allows |= bits;
+                allows.add(bits);
             }
         }
-        assertTrue("After successfully granting WRITE, the entries must reflect this", allows >= privilegeMgr.getBits(privs));
+        assertTrue("After successfully granting WRITE, the entries must reflect this", allows.includes(privilegeMgr.getBits(privs)));
     }
 
     public void testAllowWriteDenyRemove() throws NotExecutableException, RepositoryException {
@@ -167,25 +169,29 @@ public class JackrabbitAccessControlListTest extends AbstractAccessControlTest {
         templ.addEntry(princ, grPriv, true, Collections.<String, Value>emptyMap());
         templ.addEntry(princ, dePriv, false, Collections.<String, Value>emptyMap());
 
-        int allows = PrivilegeRegistry.NO_PRIVILEGE;
-        int denies = PrivilegeRegistry.NO_PRIVILEGE;
+        Set<Privilege> allows = new HashSet<Privilege>();
+        Set<Privilege> denies = new HashSet<Privilege>();
         AccessControlEntry[] entries = templ.getAccessControlEntries();
         for (AccessControlEntry en : entries) {
             if (princ.equals(en.getPrincipal()) && en instanceof JackrabbitAccessControlEntry) {
                 JackrabbitAccessControlEntry ace = (JackrabbitAccessControlEntry) en;
-                int entryBits = privilegeMgr.getBits(ace.getPrivileges());
+                Privilege[] privs = ace.getPrivileges();
                 if (ace.isAllow()) {
-                    allows |= Permission.diff(entryBits, denies);
+                    allows.addAll(Arrays.asList(privs));
                 } else {
-                    denies |= Permission.diff(entryBits, allows);
+                    denies.addAll(Arrays.asList(privs));
                 }
             }
         }
 
-        int expectedAllows = privilegeMgr.getBits(grPriv) ^ privilegeMgr.getBits(dePriv);
-        assertEquals(expectedAllows, allows);
-        int expectedDenies = privilegeMgr.getBits(dePriv);
-        assertEquals(expectedDenies, denies);
+        String[] expected = new String[] {Privilege.JCR_ADD_CHILD_NODES, Privilege.JCR_REMOVE_NODE, Privilege.JCR_MODIFY_PROPERTIES, Privilege.JCR_NODE_TYPE_MANAGEMENT};
+        assertEquals(expected.length, allows.size());
+        for (String name : expected) {
+            assertTrue(allows.contains(acMgr.privilegeFromName(name)));
+        }
+
+        assertEquals(1, denies.size());
+        assertEquals(acMgr.privilegeFromName(Privilege.JCR_REMOVE_CHILD_NODES), denies.iterator().next());
     }
 
     public void testRemoveEntry() throws NotExecutableException, RepositoryException {

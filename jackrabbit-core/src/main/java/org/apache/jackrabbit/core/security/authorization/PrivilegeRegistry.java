@@ -29,7 +29,6 @@ import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.NameFactory;
 import org.apache.jackrabbit.spi.commons.conversion.DefaultNamePathResolver;
 import org.apache.jackrabbit.spi.commons.conversion.NameResolver;
-import org.apache.jackrabbit.spi.commons.iterator.Iterators;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
 import org.apache.jackrabbit.util.Text;
@@ -72,12 +71,7 @@ public final class PrivilegeRegistry {
     public static final Name REP_WRITE_NAME = NAME_FACTORY.create(REP_WRITE);
 
     /**
-     * A custom privilege for which bits were not calculated
-     */
-    private static final int UNDEFINED = -1;
-
-    /**
-     * No privileges 
+     * No privileges
      */
     public static final int NO_PRIVILEGE = 0;
 
@@ -118,7 +112,7 @@ public final class PrivilegeRegistry {
 
     
     private final Map<Name, Definition> registeredPrivileges = new HashMap<Name, Definition>();
-    private final Map<Integer, Set<Name>> bitsToNames = new HashMap<Integer, Set<Name>>();
+    private final Map<PrivilegeBits, Set<Name>> bitsToNames = new HashMap<PrivilegeBits, Set<Name>>();
 
     @SuppressWarnings("unchecked")    
     private final Map<Listener, Listener> listeners = Collections.synchronizedMap(new ReferenceMap(ReferenceMap.WEAK, ReferenceMap.WEAK));
@@ -127,6 +121,8 @@ public final class PrivilegeRegistry {
     private final CustomPrivilegeStore customPrivilegesStore;
 
     private final NameResolver resolver;
+
+    private PrivilegeBits nextBits = PrivilegeBits.getInstance(RETENTION_MNGMT).nextBits();
 
     public PrivilegeRegistry(NamespaceRegistry namespaceRegistry, FileSystem fs)
             throws RepositoryException {
@@ -197,17 +193,17 @@ public final class PrivilegeRegistry {
 
     /**
      * Creates a new <code>PrivilegeManager</code> from the specified resolver
-     * and calls {@link PrivilegeManagerImpl#getPrivileges(int)}.
+     * and calls {@link PrivilegeManagerImpl#getPrivileges(PrivilegeBits)}.
      *
      * @param bits Privilege bits as obtained from {@link #getBits(Privilege[])}.
      * @return Array of <code>Privilege</code>s that are presented by the given it
      * or an empty array if <code>bits</code> is lower than {@link #READ} or
      * cannot be resolved to registered <code>Privilege</code>s.
      * @see #getBits(Privilege[])
-     * @deprecated Use {@link PrivilegeManagerImpl#getPrivileges(int)} instead.
+     * @deprecated Use {@link PrivilegeManagerImpl#getPrivileges(PrivilegeBits)} instead.
      */
     public Privilege[] getPrivileges(int bits) {
-        Set<Privilege> prvs = new PrivilegeManagerImpl(this, resolver).getPrivileges(bits);
+        Set<Privilege> prvs = new PrivilegeManagerImpl(this, resolver).getPrivileges(PrivilegeBits.getInstance(bits));
         return prvs.toArray(new Privilege[prvs.size()]);
     }
 
@@ -239,10 +235,10 @@ public final class PrivilegeRegistry {
                 if (PRIVILEGE_NAMES.containsKey(n)) {
                     bits |= PRIVILEGE_NAMES.get(n);
                 } else if (NameConstants.JCR_WRITE.equals(n)) {
-                    bits |= createJcrWriteDefinition().bits;
+                    bits |= createJcrWriteDefinition().bits.longValue();
                 } else if (REP_WRITE_NAME.equals(n)) {
                     Definition jcrWrite = createJcrWriteDefinition();
-                    bits |= createRepWriteDefinition(jcrWrite.bits).bits;
+                    bits |= createRepWriteDefinition(jcrWrite).bits.longValue();
                 } else if (NameConstants.JCR_ALL.equals(n)) {
                     for (Name pn : PRIVILEGE_NAMES.keySet()) {
                         bits |= PRIVILEGE_NAMES.get(pn);
@@ -273,7 +269,32 @@ public final class PrivilegeRegistry {
      * defines access control related information.
      * @return the permissions granted evaluating the given privileges.
      */
+    public static int calculatePermissions(PrivilegeBits privs, PrivilegeBits parentPrivs, boolean isAllow, boolean protectsPolicy) {
+        return calculatePermissions(privs.longValue(), parentPrivs.longValue(), isAllow, protectsPolicy);
+    }
+
+    /**
+     * Build the permissions granted by evaluating the given privileges. Note,
+     * that only built-in privileges can be mapped to permissions. Any other
+     * privileges will be ignored.
+     *
+     * @param privs The privileges granted on the Node itself (for properties
+     * the ACL of the direct ancestor).
+     * @param parentPrivs The privileges granted on the parent of the Node. Not
+     * relevant for properties since it only is used to determine permissions
+     * on a Node (add_child_nodes, remove_child_nodes).
+     * @param isAllow <code>true</code> if the privileges are granted; <code>false</code>
+     * otherwise.
+     * @param protectsPolicy If <code>true</code> the affected item itself
+     * defines access control related information.
+     * @return the permissions granted evaluating the given privileges.
+     * @deprecated Use {@link #calculatePermissions(PrivilegeBits, PrivilegeBits, boolean, boolean)} instead.
+     */
     public static int calculatePermissions(int privs, int parentPrivs, boolean isAllow, boolean protectsPolicy) {
+        return calculatePermissions((long) privs, (long) parentPrivs, isAllow, protectsPolicy);
+    }
+
+    private static int calculatePermissions(long privs, long parentPrivs, boolean isAllow, boolean protectsPolicy) {
         int perm = Permission.NONE;
         if (protectsPolicy) {
             if ((parentPrivs & READ_AC) == READ_AC) {
@@ -420,44 +441,29 @@ public final class PrivilegeRegistry {
     }
 
     /**
-     * Calculates the bits of the specified definitions. Note, that custom
-     * privileges don't have a integer representation as they are not used
-     * for permission calculation.
-     *
-     * @param defs
-     * @return
-     */
-    int getBits(Definition[] defs) {
-        int bits = NO_PRIVILEGE;
-        for (Definition def : defs) {
-            bits |= def.bits;
-        }
-        return bits;
-    }
-
-    /**
      * Returns the names of the privileges identified by the specified bits.
      * Note, that custom privileges don't have a integer representation as they
      * are not used for permission calculation.
      * 
-     * @param bits The privilege bits.
+     * @param privilegeBits The privilege bits.
      * @return Privilege names that corresponds to the given bits.
      */
-    Name[] getNames(int bits) {
-        if (bits <= NO_PRIVILEGE) {
+    Name[] getNames(PrivilegeBits privilegeBits) {
+        if (privilegeBits == null || privilegeBits.isEmpty()) {
             return Name.EMPTY_ARRAY;
-        } else if (bitsToNames.containsKey(bits)) {
+        } else if (bitsToNames.containsKey(privilegeBits)) {
             // matches all built-in aggregates and single built-in privileges
-            Set<Name> ips = bitsToNames.get(bits);
+            Set<Name> ips = bitsToNames.get(privilegeBits);
             return ips.toArray(new Name[ips.size()]);
         } else {
             // bits are a combination of built-in privileges.
             Set<Name> names = new HashSet<Name>();
+            long bits = privilegeBits.longValue();
             if ((bits & READ) == READ) {
                 names.add(NameConstants.JCR_READ);
             }
-            int repWrite = registeredPrivileges.get(REP_WRITE_NAME).bits;
-            int jcrWrite = registeredPrivileges.get(NameConstants.JCR_WRITE).bits;
+            long repWrite = registeredPrivileges.get(REP_WRITE_NAME).bits.longValue();
+            long jcrWrite = registeredPrivileges.get(NameConstants.JCR_WRITE).bits.longValue();
             if ((bits & repWrite) == repWrite) {
                 names.add(REP_WRITE_NAME);
             } else if ((bits & jcrWrite) == jcrWrite) {
@@ -498,8 +504,26 @@ public final class PrivilegeRegistry {
                 names.add(NameConstants.JCR_RETENTION_MANAGEMENT);
             }
 
+            // include matching custom privilege names
+            Set<Name> customNames = new HashSet<Name>();
+            Set<Definition> aggr = new HashSet<Definition>();
+            for (Definition def : registeredPrivileges.values()) {
+                if (def.isCustom && privilegeBits.includes(def.bits)) {
+                    customNames.add(def.name);
+                    if (!def.declaredAggregateNames.isEmpty()) {
+                        aggr.add(def);
+                    }
+                }
+            }
+            // avoid redundant entries in case of aggregate privileges.
+            for (Definition aggregate : aggr) {
+                customNames.removeAll(aggregate.declaredAggregateNames);
+            }
+            names.addAll(customNames);
+
+            // remember this resolution.
             if (!names.isEmpty()) {
-                bitsToNames.put(bits, names);
+                bitsToNames.put(privilegeBits, names);
             }
             return names.toArray(new Name[names.size()]);
         }
@@ -519,21 +543,25 @@ public final class PrivilegeRegistry {
     private void registerDefinitions(Map<Name, Definition> definitions) {
         registeredPrivileges.putAll(definitions);
         for (Definition def : definitions.values()) {
-            if (def.bits > NO_PRIVILEGE) {
-                bitsToNames.put(def.bits, Collections.singleton(def.name));
-            }
+            bitsToNames.put(def.bits, Collections.singleton(def.name));
         }
 
         if (!definitions.containsKey(NameConstants.JCR_ALL)) {
             // redefine the jcr:all privilege definition
             Definition all = registeredPrivileges.get(NameConstants.JCR_ALL);
-
+            bitsToNames.remove(all.bits);
+            
             Set<Name> allAggrNames = all.declaredAggregateNames;
             allAggrNames.addAll(definitions.keySet());
 
-            all = new Definition(NameConstants.JCR_ALL, false, allAggrNames, all.bits);
-            registeredPrivileges.put(NameConstants.JCR_ALL, all);
-            bitsToNames.put(all.bits, Collections.singleton(NameConstants.JCR_ALL));
+            PrivilegeBits allbits = PrivilegeBits.getInstance(all.bits);
+            for (Definition d : definitions.values()) {
+                allbits.add(d.bits);
+            }
+
+            Definition newAll = new Definition(NameConstants.JCR_ALL, false, allAggrNames, allbits.unmodifiable(), false);
+            registeredPrivileges.put(NameConstants.JCR_ALL, newAll);
+            bitsToNames.put(newAll.bits, Collections.singleton(NameConstants.JCR_ALL));
         }
     }
    
@@ -559,7 +587,7 @@ public final class PrivilegeRegistry {
         defs.put(jcrWrite.name, jcrWrite);
 
         // rep:write
-        Definition repWrite = createRepWriteDefinition(jcrWrite.bits);
+        Definition repWrite = createRepWriteDefinition(jcrWrite);
         defs.put(repWrite.name, repWrite);
 
         // jcr:all
@@ -615,7 +643,7 @@ public final class PrivilegeRegistry {
             // validate aggregates
             if (stub.declaredAggregateNames.isEmpty()) {
                 // not an aggregate priv definition.
-                definitions.put(name, new Definition(stub, NO_PRIVILEGE));
+                definitions.put(name, new Definition(stub, nextBits()));
             } else {
                 for (Name declaredAggregateName : stub.declaredAggregateNames) {
                     if (name.equals(declaredAggregateName)) {
@@ -646,37 +674,24 @@ public final class PrivilegeRegistry {
             // look for those definitions whose declared aggregates have all been processed.
             for (Iterator<DefinitionStub> itr = aggregates.iterator(); itr.hasNext();) {
                 DefinitionStub stub = itr.next();
-
-                int bts = NO_PRIVILEGE;
-                for (Name n : stub.declaredAggregateNames) {
-                    Definition aggr = null;
-                    if (registeredPrivileges.containsKey(n)) {
-                        aggr = registeredPrivileges.get(n);
-                    } else if (definitions.containsKey(n)) {
-                        aggr = definitions.get(n);
+                PrivilegeBits bts = getAggregateBits(stub.declaredAggregateNames, definitions);
+                if (!bts.isEmpty()) {
+                    // make sure the same aggregation is not yet covered by an
+                    // already registered privilege
+                    if (bitsToNames.containsKey(bts) && bitsToNames.get(bts).size() == 1) {
+                        Name existingName = bitsToNames.get(bts).iterator().next();
+                        throw new RepositoryException("Custom aggregate privilege '" + stub.name + "' is already covered by '" + existingName.toString() + "'");
                     }
-
-                    if (aggr == null) {
-                        // unknown dependency
-                        bts = UNDEFINED;
-                        break;
-                    } else if (!aggr.isCustom()) {
-                        throw new RepositoryException("Custom privileges may only aggregate custom privileges.");
-                    } // else: a known custom privilege -> try next.
-                }
-
-                if (bts == NO_PRIVILEGE) {
-                    Definition def = new Definition(stub, bts);
-
-                    // final validation if a custom aggregated has not yet been defined.
-                    Iterator<Definition> it = Iterators.iteratorChain(registeredPrivileges.values().iterator(), definitions.values().iterator());
-                    while (it.hasNext()) {
-                        Definition d = it.next();
-                        if (isEquivalentAggregate(d, def, definitions)) {
-                            throw new RepositoryException("Custom aggregate privilege '" + def.name + "' is already defined by '"+ d.name+"'");
+                    // ... nor is present within the set of definitions that have
+                    // been created before for registration.
+                    for (Definition d : definitions.values()) {
+                        if (bts.equals(d.bits)) {
+                            throw new RepositoryException("Custom aggregate privilege '" + stub.name + "' is already defined by '"+ d.name+"'");
                         }
                     }
 
+                    // now its save to create the new definition
+                    Definition def = new Definition(stub, bts);
                     definitions.put(def.name, def);
                     itr.remove();
                 } // unresolvable bts -> postpone to next iterator.
@@ -691,33 +706,36 @@ public final class PrivilegeRegistry {
         return definitions;
     }
 
-    private boolean isEquivalentAggregate(Definition d, Definition otherDef,
-                                          Map<Name, Definition> unregistered) {
-        // either of the definitions isn't an aggregate.
-        if (d.declaredAggregateNames.isEmpty() || otherDef.declaredAggregateNames.isEmpty()) {
-            return false;
-        }
-        // two aggregates that defined the same declared aggregate names
-        if (d.declaredAggregateNames.equals(otherDef.declaredAggregateNames)) {
-            return true;
-        }
-        // two aggregates that defined the same aggregation of simple definitions.
-        Set<Name> aggrNames = getAggrNames(d, unregistered);
-        Set<Name> otherAggrNames = getAggrNames(otherDef, unregistered);
-        return aggrNames.size() == otherAggrNames.size() && aggrNames.containsAll(otherAggrNames);
+    /**
+     *
+     * @return
+     */
+    private PrivilegeBits nextBits() {
+        PrivilegeBits b = nextBits;
+        nextBits = nextBits.nextBits();
+        return b;
     }
 
-    private Set<Name> getAggrNames(Definition def, Map<Name, Definition> unregistered) {
-        Set<Name> names = new HashSet<Name>();
-        for (Name n : def.declaredAggregateNames) {
-            Definition a = (unregistered.containsKey(n)) ? unregistered.get(n) : registeredPrivileges.get(n);
-            if (a.declaredAggregateNames.isEmpty()) {
-                names.add(a.name);
+    /**
+     *
+     * @param declaredAggregateNames
+     * @param toRegister
+     * @return
+     */
+    private PrivilegeBits getAggregateBits(Set<Name> declaredAggregateNames, Map<Name, Definition> toRegister) {
+        PrivilegeBits bts = PrivilegeBits.getInstance();
+        for (Name n : declaredAggregateNames) {
+            if (registeredPrivileges.containsKey(n)) {
+                bts.add(registeredPrivileges.get(n).bits);
+            } else if (toRegister.containsKey(n)) {
+                Definition def = toRegister.get(n);
+                bts.add(def.bits);
             } else {
-                names.addAll(getAggrNames(a, unregistered));
+                // unknown dependency (should not get here) -> return the empty set.
+                return PrivilegeBits.EMPTY;
             }
         }
-        return names;
+        return bts.unmodifiable();
     }
 
     /**
@@ -762,12 +780,12 @@ public final class PrivilegeRegistry {
         return new Definition(NameConstants.JCR_WRITE, false, jcrWriteAggregates, jcrWriteBits);
     }
 
-    private static Definition createRepWriteDefinition(int jcrWriteBits) {
+    private static Definition createRepWriteDefinition(Definition jcrWrite) {
         Set<Name> repWriteAggregates = new HashSet<Name>(2);
         repWriteAggregates.add(NameConstants.JCR_WRITE);
         repWriteAggregates.add(NameConstants.JCR_NODE_TYPE_MANAGEMENT);
 
-        int repWriteBits = jcrWriteBits | PRIVILEGE_NAMES.get(NameConstants.JCR_NODE_TYPE_MANAGEMENT);
+        long repWriteBits = jcrWrite.bits.longValue() | PRIVILEGE_NAMES.get(NameConstants.JCR_NODE_TYPE_MANAGEMENT);
         return new Definition(REP_WRITE_NAME, false, repWriteAggregates, repWriteBits);
     }
 
@@ -842,27 +860,39 @@ public final class PrivilegeRegistry {
      */
     static class Definition extends DefinitionStub {
 
-        private final int bits;
+        private final PrivilegeBits bits;
+        private final boolean isCustom;
 
-        private Definition(DefinitionStub stub, int bits) {
-            this(stub.name, stub.isAbstract, stub.declaredAggregateNames, bits);
+        private int hashCode;
+
+        private Definition(DefinitionStub stub, PrivilegeBits bits) {
+            this(stub.name, stub.isAbstract, stub.declaredAggregateNames, bits, true);
         }
 
-        private Definition(Name name, boolean isAbstract, int bits) {
-            this(name, isAbstract, Collections.<Name>emptySet(), bits);
+        private Definition(Name name, boolean isAbstract, long bits) {
+            this(name, isAbstract, Collections.<Name>emptySet(), PrivilegeBits.getInstance(bits), false);
         }
 
-        private Definition(Name name, boolean isAbstract, Set<Name> declaredAggregateNames, int bits) {
+        private Definition(Name name, boolean isAbstract, Set<Name> declaredAggregateNames, long bits) {
+            this(name, isAbstract, declaredAggregateNames, PrivilegeBits.getInstance(bits), false);
+        }
+
+        private Definition(Name name, boolean isAbstract, Set<Name> declaredAggregateNames, PrivilegeBits bits, boolean isCustom) {
             super(name, isAbstract, declaredAggregateNames);
-            if (bits < NO_PRIVILEGE) {
-                throw new IllegalArgumentException("Failed to build int representation of PrivilegeDefinition.");
+            if (bits == null || bits.isEmpty()) {
+                throw new IllegalArgumentException("Failed to build bit representation of PrivilegeDefinition.");
             } else {
                 this.bits = bits;
             }
+            this.isCustom = isCustom;
         }
 
         Name getName() {
             return name;
+        }
+
+        PrivilegeBits getBits() {
+            return bits;
         }
 
         boolean isAbstract() {
@@ -877,8 +907,31 @@ public final class PrivilegeRegistry {
             }
         }
 
-        boolean isCustom() {
-            return bits == NO_PRIVILEGE;
+        //---------------------------------------------------------< Object >---
+        @Override
+        public int hashCode() {
+            if (hashCode == 0) {
+                int h = 17;
+                h = 37 * h + name.hashCode();
+                h = 37 * h + Boolean.valueOf(isAbstract).hashCode();
+                h = 37 * h + bits.hashCode();
+                hashCode = h;
+            }
+            return hashCode;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (obj == this) {
+                return true;
+            }
+            if (obj instanceof Definition) {
+                Definition other = (Definition) obj;
+                return name.equals(other.name)
+                        && isAbstract==other.isAbstract
+                        && bits.equals(other.bits);
+            }
+            return false;
         }
     }
 

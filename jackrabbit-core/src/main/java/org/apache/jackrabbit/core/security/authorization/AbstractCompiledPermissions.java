@@ -20,10 +20,9 @@ import org.apache.commons.collections.map.LRUMap;
 import org.apache.jackrabbit.spi.Path;
 
 import javax.jcr.RepositoryException;
+import javax.jcr.security.AccessControlException;
 import javax.jcr.security.Privilege;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -82,23 +81,6 @@ public abstract class AbstractCompiledPermissions implements CompiledPermissions
         }
     }
 
-    /**
-     * Adds the given <code>privileges</code> to the specified
-     * <code>target</code> set if they are not present in the specified
-     * <code>complement</code> set.
-     * 
-     * @param privileges
-     * @param target
-     * @param complement
-     */
-    protected static void updatePrivileges(Collection<Privilege> privileges, Set<Privilege> target, Set<Privilege> complement) {
-        for (Privilege p : privileges) {
-            if (!complement.contains(p)) {
-                target.add(p);
-            }
-        }
-    }
-
     //------------------------------------------------< CompiledPermissions >---
     /**
      * @see CompiledPermissions#close()
@@ -118,7 +100,8 @@ public abstract class AbstractCompiledPermissions implements CompiledPermissions
      * @see CompiledPermissions#getPrivileges(Path)
      */
     public int getPrivileges(Path absPath) throws RepositoryException {
-        return getResult(absPath).getPrivileges();
+        Set<Privilege> pvs = getPrivilegeSet(absPath);
+        return PrivilegeRegistry.getBits(pvs.toArray(new Privilege[pvs.size()]));
     }
 
     /**
@@ -126,32 +109,9 @@ public abstract class AbstractCompiledPermissions implements CompiledPermissions
      */
     public boolean hasPrivileges(Path absPath, Privilege... privileges) throws RepositoryException {
         Result result = getResult(absPath);
-        int builtin = getPrivilegeManagerImpl().getBits(privileges);
 
-        if ((result.allowPrivileges | ~builtin) == -1) {
-            // in addition check all custom privileges
-            for (Privilege p : privileges) {
-                if (getPrivilegeManagerImpl().isCustomPrivilege(p)) {
-                    if (!result.customAllow.contains(p)) {
-                        if (p.isAggregate()) {
-                            // test if aggregated privs were granted individually.
-                            for (Privilege aggr : p.getAggregatePrivileges()) {
-                                if (!aggr.isAggregate() && !result.customAllow.contains(aggr)) {
-                                    // an aggregated custom priv is not allowed -> return false
-                                    return false;
-                                }
-                            }
-                        } else {
-                            // simple custom allow not allowed -> return false
-                            return false;
-                        }
-                    } // else: custom privilege allowed -> continue.
-                } // else: not a custom priv -> already covered.
-            }
-            return true;
-        } else {
-            return false;
-        }
+        PrivilegeBits bits = getPrivilegeManagerImpl().getBits(privileges);
+        return result.allowPrivileges.includes(bits);
     }
 
     /**
@@ -159,10 +119,7 @@ public abstract class AbstractCompiledPermissions implements CompiledPermissions
      */
     public Set<Privilege> getPrivilegeSet(Path absPath) throws RepositoryException {
         Result result = getResult(absPath);
-        Set<Privilege> privileges = new HashSet<Privilege>();
-        privileges.addAll(getPrivilegeManagerImpl().getPrivileges(result.getPrivileges()));
-        privileges.addAll(result.customAllow);
-        return privileges;
+        return getPrivilegeManagerImpl().getPrivileges(result.allowPrivileges);
     }
 
     /**
@@ -178,55 +135,54 @@ public abstract class AbstractCompiledPermissions implements CompiledPermissions
      */
     public static class Result {
 
-        public static final Result EMPTY = new Result(Permission.NONE, Permission.NONE, PrivilegeRegistry.NO_PRIVILEGE, PrivilegeRegistry.NO_PRIVILEGE);
+        public static final Result EMPTY = new Result(Permission.NONE, Permission.NONE, PrivilegeBits.EMPTY, PrivilegeBits.EMPTY);
 
         private final int allows;
         private final int denies;
-        private final int allowPrivileges;
-        private final int denyPrivileges;
-
-        private final Set<Privilege> customAllow;
-        private final Set<Privilege> customDeny;
+        private final PrivilegeBits allowPrivileges;
+        private final PrivilegeBits denyPrivileges;
 
         private int hashCode = -1;
 
+        /**
+         * @deprecated
+         */
         public Result(int allows, int denies, int allowPrivileges, int denyPrivileges) {
-            this(allows, denies, allowPrivileges, denyPrivileges, Collections.<Privilege>emptySet(), Collections.<Privilege>emptySet());
+            this(allows, denies, PrivilegeBits.getInstance(allowPrivileges), PrivilegeBits.getInstance(denyPrivileges));
         }
 
-        public Result(int allows, int denies, int allowPrivileges, int denyPrivileges,
-                      Set<Privilege> customAllow, Set<Privilege> customDeny) {
+        public Result(int allows, int denies, PrivilegeBits allowPrivileges, PrivilegeBits denyPrivileges) {
             this.allows = allows;
             this.denies = denies;
             this.allowPrivileges = allowPrivileges;
             this.denyPrivileges = denyPrivileges;
-
-            this.customAllow = customAllow;
-            this.customDeny = customDeny;
         }
 
         public boolean grants(int permissions) {
             return (this.allows | ~permissions) == -1;
         }
 
+        /**
+         * @deprecated jackrabbit 2.3 (throws UnsupportedOperationException, use getPrivilegeBits instead)
+         */
         public int getPrivileges() {
+            throw new UnsupportedOperationException("use #getPrivilegeBits instead.");
+        }
+
+        public PrivilegeBits getPrivilegeBits() {
             return allowPrivileges;
         }
 
         public Result combine(Result other) {
             int cAllows =  allows | Permission.diff(other.allows, denies);
             int cDenies = denies | Permission.diff(other.denies, allows);
-            int cAPrivs = allowPrivileges | Permission.diff(other.allowPrivileges, denyPrivileges);
-            int cDPrivs = denyPrivileges | Permission.diff(other.denyPrivileges, allowPrivileges);
 
-            Set<Privilege> combinedAllow = new HashSet<Privilege>();
-            combinedAllow.addAll(customAllow);
-            updatePrivileges(other.customAllow, combinedAllow, customDeny);
+            PrivilegeBits cAPrivs = PrivilegeBits.getInstance(allowPrivileges);
+            cAPrivs.addDifference(other.allowPrivileges, denyPrivileges);
+            PrivilegeBits cdPrivs = PrivilegeBits.getInstance(denyPrivileges);
+            cdPrivs.addDifference(other.denyPrivileges, allowPrivileges);
 
-            Set<Privilege> combinedDeny = new HashSet<Privilege>();
-            combinedDeny.addAll(customDeny);
-            updatePrivileges(other.customDeny, combinedDeny, customAllow);
-            return new Result(cAllows, cDenies, cAPrivs, cDPrivs, customAllow, customDeny);
+            return new Result(cAllows, cDenies, allowPrivileges, denyPrivileges);
         }
 
         /**
@@ -238,10 +194,8 @@ public abstract class AbstractCompiledPermissions implements CompiledPermissions
                 int h = 17;
                 h = 37 * h + allows;
                 h = 37 * h + denies;
-                h = 37 * h + allowPrivileges;
-                h = 37 * h + denyPrivileges;
-                h = 37 * h + customAllow.hashCode();
-                h = 37 * h + customDeny.hashCode();
+                h = 37 * h + allowPrivileges.hashCode();
+                h = 37 * h + denyPrivileges.hashCode();
                 hashCode = h;
             }
             return hashCode;
@@ -259,10 +213,8 @@ public abstract class AbstractCompiledPermissions implements CompiledPermissions
                 Result other = (Result) object;
                 return allows == other.allows &&
                        denies == other.denies &&
-                       allowPrivileges == other.allowPrivileges &&
-                       denyPrivileges == other.denyPrivileges &&
-                       customAllow.equals(other.customAllow) &&
-                       customDeny.equals(other.customDeny);
+                       allowPrivileges.equals(other.allowPrivileges) &&
+                       denyPrivileges.equals(other.denyPrivileges);
             }
             return false;
         }

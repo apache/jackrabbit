@@ -119,9 +119,6 @@ public abstract class AbstractACLTemplateTest extends AbstractAccessControlTest 
                 public boolean isAllow() {
                     return false;
                 }
-                public int getPrivilegeBits() throws RepositoryException {
-                    return privilegeMgr.getBits(privilegeMgr.getPrivilege(Privilege.JCR_READ));
-                }
                 public String[] getRestrictionNames() {
                     return new String[0];
                 }
@@ -200,16 +197,16 @@ public abstract class AbstractACLTemplateTest extends AbstractAccessControlTest 
         assertTrue(pt.addEntry(testPrincipal, modProp, false, null));
 
         // test net-effect
-        int allows = PrivilegeRegistry.NO_PRIVILEGE;
-        int denies = PrivilegeRegistry.NO_PRIVILEGE;
+        PrivilegeBits allows = PrivilegeBits.getInstance();
+        PrivilegeBits denies = PrivilegeBits.getInstance();
         AccessControlEntry[] entries = pt.getAccessControlEntries();
         for (AccessControlEntry ace : entries) {
             if (testPrincipal.equals(ace.getPrincipal()) && ace instanceof JackrabbitAccessControlEntry) {
-                int entryBits = privilegeMgr.getBits(ace.getPrivileges());
+                PrivilegeBits entryBits = privilegeMgr.getBits(ace.getPrivileges());
                 if (((JackrabbitAccessControlEntry) ace).isAllow()) {
-                    allows |= Permission.diff(entryBits, denies);
+                    allows.addDifference(entryBits, denies);
                 } else {
-                    denies |= Permission.diff(entryBits, allows);
+                    denies.addDifference(entryBits, allows);
                 }
             }
         }
@@ -225,21 +222,21 @@ public abstract class AbstractACLTemplateTest extends AbstractAccessControlTest 
         assertTrue(pt.addEntry(testPrincipal, privilegesFromName(Privilege.JCR_READ), false, Collections.<String, Value>emptyMap()));
 
         // test net-effect
-        int allows = PrivilegeRegistry.NO_PRIVILEGE;
-        int denies = PrivilegeRegistry.NO_PRIVILEGE;
+        PrivilegeBits allows = PrivilegeBits.getInstance();
+        PrivilegeBits denies = PrivilegeBits.getInstance();
         AccessControlEntry[] entries = pt.getAccessControlEntries();
         for (AccessControlEntry ace : entries) {
             if (testPrincipal.equals(ace.getPrincipal()) && ace instanceof JackrabbitAccessControlEntry) {
-                int entryBits = privilegeMgr.getBits(ace.getPrivileges());
+                PrivilegeBits entryBits = privilegeMgr.getBits(ace.getPrivileges());
                 if (((JackrabbitAccessControlEntry) ace).isAllow()) {
-                    allows |= Permission.diff(entryBits, denies);
+                    allows.addDifference(entryBits, denies);
                 } else {
-                    denies |= Permission.diff(entryBits, allows);
+                    denies.addDifference(entryBits, allows);
                 }
             }
         }
 
-        assertEquals(PrivilegeRegistry.NO_PRIVILEGE, allows);
+        assertTrue(allows.isEmpty());
         assertEquals(privilegeMgr.getBits(privilegesFromName(Privilege.JCR_READ)), denies);
     }
 

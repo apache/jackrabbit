@@ -44,10 +44,9 @@ import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
 import org.apache.jackrabbit.core.security.authorization.AbstractACLTemplate;
 import org.apache.jackrabbit.core.security.authorization.AccessControlEntryImpl;
-import org.apache.jackrabbit.core.security.authorization.Permission;
+import org.apache.jackrabbit.core.security.authorization.PrivilegeBits;
 import org.apache.jackrabbit.core.security.authorization.PrivilegeManagerImpl;
 import org.apache.jackrabbit.core.security.authorization.GlobPattern;
-import org.apache.jackrabbit.core.security.authorization.PrivilegeRegistry;
 import org.apache.jackrabbit.core.security.principal.PrincipalImpl;
 import org.apache.jackrabbit.core.security.principal.UnknownPrincipal;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
@@ -225,15 +224,11 @@ class ACLTemplate extends AbstractACLTemplate {
             int updateIndex = -1;
             Entry complementEntry = null;
 
-            Set<Privilege> otherCustom = entry.getCustomPrivileges();
             for (Entry e : entriesPerPrincipal) {
                 if (equalRestriction(entry, e)) {
                     if (entry.isAllow() == e.isAllow()) {
                         // need to update an existing entry
-                        int existingPrivs = e.getPrivilegeBits();
-                        Set<Privilege> existingCustom = e.getCustomPrivileges();
-                        if ((existingPrivs | ~entry.getPrivilegeBits()) == -1 &&
-                                existingCustom.containsAll(otherCustom)) {
+                        if (e.getPrivilegeBits().includes(entry.getPrivilegeBits())) {
                             // all privileges to be granted/denied are already present
                             // in the existing entry -> not modified
                             return false;
@@ -246,10 +241,10 @@ class ACLTemplate extends AbstractACLTemplate {
                         // includes both the new privileges and the existing ones.
                         entries.remove(e);
 
-                        int mergedBits = e.getPrivilegeBits() | entry.getPrivilegeBits();
+                        PrivilegeBits mergedBits = PrivilegeBits.getInstance(e.getPrivilegeBits());
+                        mergedBits.add(entry.getPrivilegeBits());
+                        
                         Set<Privilege> mergedPrivs = privilegeMgr.getPrivileges(mergedBits);
-                        mergedPrivs.addAll(existingCustom);
-                        mergedPrivs.addAll(otherCustom);
                         // omit validation check.
                         entry = createEntry(entry, mergedPrivs.toArray(new Privilege[mergedPrivs.size()]), entry.isAllow());
                     } else {
@@ -263,25 +258,23 @@ class ACLTemplate extends AbstractACLTemplate {
             // denied/granted.
             if (complementEntry != null) {
 
-                int complPrivs = complementEntry.getPrivilegeBits();
-                int diff = Permission.diff(complPrivs, entry.getPrivilegeBits());
-
-                Set<Privilege> result = complementEntry.getCustomPrivileges();
-                boolean customMod = result.removeAll(otherCustom);
+                PrivilegeBits complPrivs = complementEntry.getPrivilegeBits();
+                PrivilegeBits diff = PrivilegeBits.getInstance(complPrivs);
+                diff.diff(entry.getPrivilegeBits());
                 
-                if (diff == PrivilegeRegistry.NO_PRIVILEGE && result.isEmpty()) {
+                if (diff.isEmpty()) {
                     // remove the complement entry as the new entry covers
                     // all privileges granted by the existing entry.
                     entries.remove(complementEntry);
                     updateIndex--;
 
-                } else if (diff != complPrivs || customMod) {
+                } else if (!diff.equals(complPrivs)) {
                     // replace the existing entry having the privileges adjusted
                     int index = entries.indexOf(complementEntry);
                     entries.remove(complementEntry);
 
                     // combine set of new builtin and custom privileges
-                    result.addAll(privilegeMgr.getPrivileges(diff));
+                    Set<Privilege> result = privilegeMgr.getPrivileges(diff);
                     // and create a new entry.
                     Entry tmpl = createEntry(entry,
                             result.toArray(new Privilege[result.size()]),

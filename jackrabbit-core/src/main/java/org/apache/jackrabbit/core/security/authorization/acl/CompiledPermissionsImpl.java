@@ -30,6 +30,7 @@ import org.apache.jackrabbit.core.security.authorization.AccessControlListener;
 import org.apache.jackrabbit.core.security.authorization.AccessControlModifications;
 import org.apache.jackrabbit.core.security.authorization.AccessControlUtils;
 import org.apache.jackrabbit.core.security.authorization.Permission;
+import org.apache.jackrabbit.core.security.authorization.PrivilegeBits;
 import org.apache.jackrabbit.core.security.authorization.PrivilegeManagerImpl;
 import org.apache.jackrabbit.core.security.authorization.PrivilegeRegistry;
 import org.apache.jackrabbit.spi.Name;
@@ -39,10 +40,8 @@ import org.apache.jackrabbit.util.Text;
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.RepositoryException;
 import javax.jcr.security.AccessControlEntry;
-import javax.jcr.security.Privilege;
 import java.security.Principal;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -103,13 +102,10 @@ class CompiledPermissionsImpl extends AbstractCompiledPermissions implements Acc
         int allows = Permission.NONE;
         int denies = Permission.NONE;
 
-        int allowBits = PrivilegeRegistry.NO_PRIVILEGE;
-        int denyBits = PrivilegeRegistry.NO_PRIVILEGE;
-        int parentAllowBits = PrivilegeRegistry.NO_PRIVILEGE;
-        int parentDenyBits = PrivilegeRegistry.NO_PRIVILEGE;
-
-        Set<Privilege> customAllow = new HashSet<Privilege>();
-        Set<Privilege> customDeny = new HashSet<Privilege>();
+        PrivilegeBits allowBits = PrivilegeBits.getInstance();
+        PrivilegeBits denyBits = PrivilegeBits.getInstance();
+        PrivilegeBits parentAllowBits = PrivilegeBits.getInstance();
+        PrivilegeBits parentDenyBits = PrivilegeBits.getInstance();
 
         String parentPath = Text.getRelativeParent(filter.getPath(), 1);
 
@@ -123,32 +119,28 @@ class CompiledPermissionsImpl extends AbstractCompiledPermissions implements Acc
             parent. For inherited ACEs determine if the ACE matches the
             parent path.
             */
-            int entryBits = ace.getPrivilegeBits();
+            PrivilegeBits entryBits = ace.getPrivilegeBits();
             boolean isLocal = isExistingNode && ace.isLocal(node.getNodeId());
             boolean matchesParent = (!isLocal && ace.matches(parentPath));
             if (matchesParent) {
                 if (ace.isAllow()) {
-                    parentAllowBits |= Permission.diff(entryBits, parentDenyBits);
+                    parentAllowBits.addDifference(entryBits, parentDenyBits);
                 } else {
-                    parentDenyBits |= Permission.diff(entryBits, parentAllowBits);
+                    parentDenyBits.addDifference(entryBits, parentAllowBits);
                 }
             }
             if (ace.isAllow()) {
-                allowBits |= Permission.diff(entryBits, denyBits);
+                allowBits.addDifference(entryBits, denyBits);
                 int permissions = PrivilegeRegistry.calculatePermissions(allowBits, parentAllowBits, true, isAcItem);
                 allows |= Permission.diff(permissions, denies);
-
-                updatePrivileges(ace.getCustomPrivileges(), customAllow, customDeny);
             } else {
-                denyBits |= Permission.diff(entryBits, allowBits);
+                denyBits.addDifference(entryBits, allowBits);
                 int permissions = PrivilegeRegistry.calculatePermissions(denyBits, parentDenyBits, false, isAcItem);
                 denies |= Permission.diff(permissions, allows);
-
-                updatePrivileges(ace.getCustomPrivileges(), customDeny, customAllow);
             }
         }
 
-        return new Result(allows, denies, allowBits, denyBits, customAllow, customDeny);
+        return new Result(allows, denies, allowBits, denyBits);
     }
 
     //------------------------------------< AbstractCompiledPermissions >---
@@ -264,8 +256,7 @@ class CompiledPermissionsImpl extends AbstractCompiledPermissions implements Acc
                      */
                     for (AccessControlEntry accessControlEntry : entryCollector.collectEntries(node, filter)) {
                         ACLTemplate.Entry ace = (ACLTemplate.Entry) accessControlEntry;
-                        int entryBits = ace.getPrivilegeBits();
-                        if ((entryBits & Permission.READ) == Permission.READ) {
+                        if (ace.getPrivilegeBits().includesRead()) {
                             canRead = ace.isAllow();
                             break;
                         }

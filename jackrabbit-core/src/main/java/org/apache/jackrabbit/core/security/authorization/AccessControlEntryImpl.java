@@ -49,7 +49,7 @@ public abstract class AccessControlEntryImpl implements JackrabbitAccessControlE
     /**
      * PrivilegeBits calculated from built-in privileges
      */
-    private final int privilegeBits;
+    private final PrivilegeBits privilegeBits;
 
     /**
      * the Principal of this entry
@@ -72,12 +72,6 @@ public abstract class AccessControlEntryImpl implements JackrabbitAccessControlE
      * Hash code being calculated on demand.
      */
     private int hashCode = -1;
-
-    /**
-     * Calculated set of non-aggregate custom privileges (see also privilegeBits
-     * above for the built-in privileges) used upon ac evaluation.
-     */
-    private Set<Privilege> customPrivs;
 
     /**
      * Construct an access control entry for the given principal and privileges.
@@ -157,37 +151,8 @@ public abstract class AccessControlEntryImpl implements JackrabbitAccessControlE
     /**
      * @return the permission bits that correspond to the privileges defined by this entry.
      */
-    public int getPrivilegeBits() {
+    public PrivilegeBits getPrivilegeBits() {
         return privilegeBits;
-    }
-
-    /**
-     * @return A collection of all non-aggregate custom privileges defined by
-     * this entry including those contained in the aggregated custom privileges.
-     */
-    public Set<Privilege> getCustomPrivileges() {
-        if (customPrivs == null) {
-            customPrivs = new HashSet<Privilege>();
-            for (Privilege p : privileges) {
-                try {
-                    if (getPrivilegeManager().isCustomPrivilege(p)) {
-                        if (p.isAggregate()) {
-                            for (Privilege aggr : p.getAggregatePrivileges()) {
-                                if (!aggr.isAggregate()) {
-                                    customPrivs.add(p);
-                                }
-                            }
-                        } else {
-                            customPrivs.add(p);
-
-                        }
-                    }
-                } catch (AccessControlException e) {
-                    // ignore.
-                }
-            }
-        }
-        return customPrivs;
     }
 
     /**
@@ -315,17 +280,10 @@ public abstract class AccessControlEntryImpl implements JackrabbitAccessControlE
         if (obj instanceof AccessControlEntryImpl) {
             AccessControlEntryImpl other = (AccessControlEntryImpl) obj;
             return principal.getName().equals(other.principal.getName()) &&
-                   privilegeBits == other.privilegeBits &&
+                   privilegeBits.equals(other.privilegeBits) &&
                    allow == other.allow &&
-                   restrictions.equals(other.restrictions) &&
-                   equalCustomPrivileges(other);
+                   restrictions.equals(other.restrictions);
         }
         return false;
-    }
-
-    private boolean equalCustomPrivileges(AccessControlEntryImpl other) {
-        Set<Privilege> a1 = getCustomPrivileges();
-        Set<Privilege> a2 = other.getCustomPrivileges();
-        return a1.size() == a2.size() && a1.containsAll(a2);
     }
 }
