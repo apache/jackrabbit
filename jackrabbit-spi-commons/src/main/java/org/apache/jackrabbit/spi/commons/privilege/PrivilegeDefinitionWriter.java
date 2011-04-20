@@ -14,10 +14,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.commons.privilege;
+package org.apache.jackrabbit.spi.commons.privilege;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.Writer;
 import java.util.Map;
 
 /**
@@ -56,5 +57,19 @@ public class PrivilegeDefinitionWriter {
      */
     public void writeDefinitions(OutputStream out, PrivilegeDefinition[] privilegeDefinitions, Map<String, String> namespaces) throws IOException {
         ph.writeDefinitions(out, privilegeDefinitions, namespaces);
+    }
+
+    /**
+     * Writes the privilege definitions to the specified output stream.
+     *
+     * @param writer The writer.
+     * @param privilegeDefinitions The privilege definitions to write to the
+     * given output stream.
+     * @param namespaces The namespace mapping (prefix to uri) used by the
+     * specified definitions.
+     * @throws IOException If an error occurs.
+     */
+    public void writeDefinitions(Writer writer, PrivilegeDefinition[] privilegeDefinitions, Map<String, String> namespaces) throws IOException {
+        ph.writeDefinitions(writer, privilegeDefinitions, namespaces);
     }
 }

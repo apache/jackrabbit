@@ -60,15 +60,22 @@ public class ClusterRecordDeserializer {
             clusterRecord = new WorkspaceRecord(record);
             clusterRecord.read();
             break;
+        case PrivilegeRecord.IDENTIFIER:
+            clusterRecord = new PrivilegeRecord(record);
+            clusterRecord.read();
+            break;
         case ClusterRecord.END_MARKER:
             // JCR-1813: Invalid journal records during XATransactions
             // Some journal records may be empty due to JCR-1813 and other
             // issues. We handle such cases with this dummy sentinel record.
             clusterRecord = new ClusterRecord(record) {
+                @Override
                 protected void doRead() {
                 }
+                @Override
                 protected void doWrite() {
                 }
+                @Override
                 public void process(ClusterRecordProcessor processor) {
                 }
             };

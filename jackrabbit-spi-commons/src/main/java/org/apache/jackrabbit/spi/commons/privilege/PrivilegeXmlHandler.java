@@ -14,14 +14,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.commons.privilege;
+package org.apache.jackrabbit.spi.commons.privilege;
 
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.NameFactory;
+import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
+import org.apache.jackrabbit.util.Text;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
@@ -29,6 +34,7 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Result;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
@@ -36,11 +42,14 @@ import javax.xml.transform.stream.StreamResult;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.Reader;
+import java.io.Writer;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-
-import com.sun.org.apache.xml.internal.serialize.XMLSerializer;
+import java.util.Set;
 
 /**
  * The <code>PrivilegeXmlHandler</code> loads and stores privilege definitions from a XML document using the
@@ -71,6 +80,8 @@ class PrivilegeXmlHandler implements PrivilegeHandler {
     private static final String ATTR_XMLNS = "xmlns:";
 
     private static final String LICENSE_HEADER = createLicenseHeader();
+
+    private static final NameFactory NAME_FACTORY = NameFactoryImpl.getInstance();
 
     private static String createLicenseHeader() {
         return "\n" +                
@@ -131,11 +142,23 @@ class PrivilegeXmlHandler implements PrivilegeHandler {
      * @see PrivilegeHandler#readDefinitions(java.io.InputStream, java.util.Map)
      */
     public PrivilegeDefinition[] readDefinitions(InputStream in, Map<String, String> namespaces) throws ParseException {
+        return readDefinitions(new InputSource(in), namespaces);
+
+    }
+
+    /**
+     * @see PrivilegeHandler#readDefinitions(java.io.Reader, java.util.Map)
+     */
+    public PrivilegeDefinition[] readDefinitions(Reader reader, Map<String, String> namespaces) throws ParseException {
+        return readDefinitions(new InputSource(reader), namespaces);
+    }
+
+    private PrivilegeDefinition[] readDefinitions(InputSource input, Map<String, String> namespaces) throws ParseException {
         try {
             List<PrivilegeDefinition> defs = new ArrayList<PrivilegeDefinition>();
 
             DocumentBuilder builder = createDocumentBuilder();
-            Document doc = builder.parse(in);
+            Document doc = builder.parse(input);
             Element root = doc.getDocumentElement();
             if (!XML_PRIVILEGES.equals(root.getNodeName())) {
                 throw new IllegalArgumentException("root element must be named 'privileges'");
@@ -160,38 +183,51 @@ class PrivilegeXmlHandler implements PrivilegeHandler {
         } catch (ParserConfigurationException e) {
             throw new ParseException(e);
         }
-
     }
 
     /**
-     * @see PrivilegeHandler#writeDefinitions(java.io.OutputStream, PrivilegeDefinition[], java.util.Map) 
+     * @see PrivilegeHandler#writeDefinitions(java.io.OutputStream, PrivilegeDefinition[], java.util.Map)
      */
     public void writeDefinitions(OutputStream out, PrivilegeDefinition[] definitions, Map<String, String> namespaces) throws IOException {
+        writeDefinitions(new StreamResult(out), definitions, namespaces);
+    }
+
+    /**
+     * @see PrivilegeHandler#writeDefinitions(java.io.Writer, PrivilegeDefinition[], java.util.Map)
+     */
+    public void writeDefinitions(Writer writer, PrivilegeDefinition[] definitions, Map<String, String> namespaces) throws IOException {
+        writeDefinitions(new StreamResult(writer), definitions, namespaces);
+    }
+
+    private void writeDefinitions(Result result, PrivilegeDefinition[] definitions, Map<String, String> namespaces) throws IOException {
         try {
+            Map<String, String> uriToPrefix = new HashMap<String, String>(namespaces.size());
             DocumentBuilder builder = createDocumentBuilder();
             Document doc = builder.newDocument();
             doc.appendChild(doc.createComment(LICENSE_HEADER));
             Element privileges = (Element) doc.appendChild(doc.createElement(XML_PRIVILEGES));
 
             for (String prefix : namespaces.keySet()) {
-                privileges.setAttribute(ATTR_XMLNS + prefix, namespaces.get(prefix));
+                String uri = namespaces.get(prefix);
+                privileges.setAttribute(ATTR_XMLNS + prefix, uri);
+                uriToPrefix.put(uri, prefix);
             }
 
             for (PrivilegeDefinition def : definitions) {
                 Element priv = (Element) privileges.appendChild(doc.createElement(XML_PRIVILEGE));
-                priv.setAttribute(ATTR_NAME, def.getName());
+                priv.setAttribute(ATTR_NAME, getQualifiedName(def.getName(), uriToPrefix));
                 priv.setAttribute(ATTR_ABSTRACT, Boolean.valueOf(def.isAbstract()).toString());
 
-                for (String aggrName : def.getDeclaredAggregateNames()) {
+                for (Name aggrName : def.getDeclaredAggregateNames()) {
                     Element contains = (Element) priv.appendChild(doc.createElement(XML_CONTAINS));
-                    contains.setAttribute(ATTR_NAME, aggrName);
+                    contains.setAttribute(ATTR_NAME, getQualifiedName(aggrName, uriToPrefix));
                 }
             }
 
             Transformer transformer = TRANSFORMER_FACTORY.newTransformer();
             transformer.setOutputProperty(OutputKeys.INDENT, "yes");
             transformer.setOutputProperty(OutputKeys.STANDALONE, "no");
-            transformer.transform(new DOMSource(doc), new StreamResult(out));
+            transformer.transform(new DOMSource(doc), result);
 
         } catch (Exception e) {
             IOException io = new IOException(e.getMessage());
@@ -213,21 +249,21 @@ class PrivilegeXmlHandler implements PrivilegeHandler {
 
             updateNamespaceMapping(elem, namespaces);
 
-            String name = elem.getAttribute(ATTR_NAME);
+            Name name = getName(elem.getAttribute(ATTR_NAME), namespaces);
             boolean isAbstract = Boolean.parseBoolean(elem.getAttribute(ATTR_ABSTRACT));
 
-            List<String> aggrNames = new ArrayList<String>();
+            Set<Name> aggrNames = new HashSet<Name>();
             NodeList nodeList = elem.getChildNodes();
             for (int i = 0; i < nodeList.getLength(); i++) {
                 Node contains = nodeList.item(i);
                 if (isElement(n) && XML_CONTAINS.equals(contains.getNodeName())) {
                     String aggrName = ((Element) contains).getAttribute(ATTR_NAME);
                     if (aggrName != null) {
-                        aggrNames.add(aggrName);
+                        aggrNames.add(getName(aggrName, namespaces));
                     }
                 }
             }
-            return new PrivilegeDefinition(name, isAbstract, aggrNames.toArray(new String[aggrNames.size()]));
+            return new PrivilegeDefinition(name, isAbstract, aggrNames);
         }
 
         // could not parse into privilege definition
@@ -273,5 +309,17 @@ class PrivilegeXmlHandler implements PrivilegeHandler {
      */
     private static boolean isElement(Node n) {
         return n.getNodeType() == Node.ELEMENT_NODE;
+    }
+
+    private Name getName(String jcrName, Map<String,String> namespaces) {
+       String prefix = Text.getNamespacePrefix(jcrName);
+        String uri = (Name.NS_EMPTY_PREFIX.equals(prefix)) ? Name.NS_DEFAULT_URI : namespaces.get(prefix);
+        return NAME_FACTORY.create(uri, Text.getLocalName(jcrName));
+    }
+
+    private String getQualifiedName(Name name, Map<String,String> uriToPrefix) {
+        String uri = name.getNamespaceURI();
+        String prefix = (Name.NS_DEFAULT_URI.equals(uri)) ? Name.NS_EMPTY_PREFIX : uriToPrefix.get(uri);
+        return prefix + ":" + name.getLocalName();
     }
 }

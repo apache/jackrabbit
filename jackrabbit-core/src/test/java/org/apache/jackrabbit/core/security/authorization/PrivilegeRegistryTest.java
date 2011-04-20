@@ -20,6 +20,7 @@ import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.commons.conversion.NameResolver;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
+import org.apache.jackrabbit.spi.commons.privilege.PrivilegeDefinition;
 import org.apache.jackrabbit.test.AbstractJCRTest;
 
 import javax.jcr.RepositoryException;
@@ -48,9 +49,9 @@ public class PrivilegeRegistryTest extends AbstractJCRTest {
 
     public void testGetAll() throws RepositoryException {
 
-        PrivilegeRegistry.Definition[] defs = privilegeRegistry.getAll();
+        PrivilegeDefinition[] defs = privilegeRegistry.getAll();
 
-        List<PrivilegeRegistry.Definition> l = new ArrayList<PrivilegeRegistry.Definition>(Arrays.asList(defs));
+        List<PrivilegeDefinition> l = new ArrayList<PrivilegeDefinition>(Arrays.asList(defs));
         assertTrue(l.remove(privilegeRegistry.get(NameConstants.JCR_READ)));
         assertTrue(l.remove(privilegeRegistry.get(NameConstants.JCR_ADD_CHILD_NODES)));
         assertTrue(l.remove(privilegeRegistry.get(NameConstants.JCR_REMOVE_CHILD_NODES)));
@@ -73,71 +74,60 @@ public class PrivilegeRegistryTest extends AbstractJCRTest {
 
     public void testGet() throws RepositoryException {
 
-        for (PrivilegeRegistry.Definition def : privilegeRegistry.getAll()) {
+        for (PrivilegeDefinition def : privilegeRegistry.getAll()) {
 
-            PrivilegeRegistry.Definition d = privilegeRegistry.get(def.name);
+            PrivilegeDefinition d = privilegeRegistry.get(def.getName());
             assertEquals(def, d);
 
-            assertNotNull(d.name);
-            assertEquals(d.name, d.getName());
+            assertNotNull(d.getName());
+            assertEquals(def.getName(), d.getName());
 
-            assertFalse(d.isAbstract);
-            assertEquals(d.isAbstract, d.isAbstract());
+            assertFalse(d.isAbstract());
+            assertEquals(def.isAbstract(), d.isAbstract());
 
-            assertNotNull(d.declaredAggregateNames);
-            List<Name> l = Arrays.asList(d.getDeclaredAggregateNames());
-            assertTrue(d.declaredAggregateNames.containsAll(l));
-            assertTrue(l.containsAll(d.declaredAggregateNames));
+            assertNotNull(d.getDeclaredAggregateNames());
+            assertTrue(def.getDeclaredAggregateNames().containsAll(d.getDeclaredAggregateNames()));
+            assertTrue(d.getDeclaredAggregateNames().containsAll(def.getDeclaredAggregateNames()));
 
-            assertFalse(d.getBits().isEmpty());
+            assertFalse(privilegeRegistry.getBits(d).isEmpty());
         }
     }
 
     public void testAggregates() throws RepositoryException {
 
-        for (PrivilegeRegistry.Definition def : privilegeRegistry.getAll()) {
-            if (def.declaredAggregateNames.isEmpty()) {
+        for (PrivilegeDefinition def : privilegeRegistry.getAll()) {
+            if (def.getDeclaredAggregateNames().isEmpty()) {
                 continue; // ignore non aggregate
             }
 
-            List<Name> l = Arrays.asList(def.getDeclaredAggregateNames());
-            for (Name n : l) {
-                PrivilegeRegistry.Definition d = privilegeRegistry.get(n);
+            for (Name n : def.getDeclaredAggregateNames()) {
+                PrivilegeDefinition d = privilegeRegistry.get(n);
                 assertNotNull(d);
-                Name[] names = privilegeRegistry.getNames(d.getBits());
+                Name[] names = privilegeRegistry.getNames(privilegeRegistry.getBits(d));
                 assertNotNull(names);
                 assertEquals(1, names.length);
-                assertEquals(d.name, names[0]);
+                assertEquals(d.getName(), names[0]);
             }
         }
     }
 
     public void testPrivilegeDefinition() throws RepositoryException {
 
-        for (PrivilegeRegistry.Definition def : privilegeRegistry.getAll()) {
-
-            assertNotNull(def.name);
-            assertEquals(def.name, def.getName());
-
-            assertFalse(def.isAbstract);
-            assertEquals(def.isAbstract, def.isAbstract());
-
-            assertNotNull(def.declaredAggregateNames);
-            List<Name> l = Arrays.asList(def.getDeclaredAggregateNames());
-            assertTrue(def.declaredAggregateNames.containsAll(l));
-            assertTrue(l.containsAll(def.declaredAggregateNames));
-
-            assertFalse(def.getBits().isEmpty());
+        for (PrivilegeDefinition def : privilegeRegistry.getAll()) {
+            assertNotNull(def.getName());
+            assertFalse(def.isAbstract());
+            assertNotNull(def.getDeclaredAggregateNames());
+            assertFalse(privilegeRegistry.getBits(def).isEmpty());
         }
     }
 
     public void testJcrAll() throws RepositoryException {
-        PrivilegeRegistry.Definition p = privilegeRegistry.get(NameConstants.JCR_ALL);
+        PrivilegeDefinition p = privilegeRegistry.get(NameConstants.JCR_ALL);
         assertEquals(p.getName(), NameConstants.JCR_ALL);
-        assertFalse(p.declaredAggregateNames.isEmpty());
+        assertFalse(p.getDeclaredAggregateNames().isEmpty());
         assertFalse(p.isAbstract());
 
-        Set<Name> l = new HashSet<Name>(p.declaredAggregateNames);
+        Set<Name> l = new HashSet<Name>(p.getDeclaredAggregateNames());
         assertTrue(l.remove(NameConstants.JCR_READ));
         assertTrue(l.remove(NameConstants.JCR_WRITE));
         assertTrue(l.remove(resolver.getQName(PrivilegeRegistry.REP_WRITE)));
@@ -153,25 +143,25 @@ public class PrivilegeRegistryTest extends AbstractJCRTest {
 
     public void testJcrWrite() throws RepositoryException {
         Name rw = resolver.getQName(PrivilegeRegistry.REP_WRITE);
-        PrivilegeRegistry.Definition p = privilegeRegistry.get(rw);
+        PrivilegeDefinition p = privilegeRegistry.get(rw);
 
         assertEquals(p.getName(), rw);
-        assertFalse(p.declaredAggregateNames.isEmpty());
+        assertFalse(p.getDeclaredAggregateNames().isEmpty());
         assertFalse(p.isAbstract());
 
-        Set<Name> l = new HashSet<Name>(p.declaredAggregateNames);
+        Set<Name> l = new HashSet<Name>(p.getDeclaredAggregateNames());
         assertTrue(l.remove(NameConstants.JCR_WRITE));
         assertTrue(l.remove(NameConstants.JCR_NODE_TYPE_MANAGEMENT));
         assertTrue(l.isEmpty());
     }
 
     public void testRepWrite() throws RepositoryException {
-        PrivilegeRegistry.Definition p = privilegeRegistry.get(NameConstants.JCR_WRITE);
+        PrivilegeDefinition p = privilegeRegistry.get(NameConstants.JCR_WRITE);
         assertEquals(p.getName(), NameConstants.JCR_WRITE);
-        assertFalse(p.declaredAggregateNames.isEmpty());
+        assertFalse(p.getDeclaredAggregateNames().isEmpty());
         assertFalse(p.isAbstract());
 
-        Set<Name> l = new HashSet<Name>(p.declaredAggregateNames);
+        Set<Name> l = new HashSet<Name>(p.getDeclaredAggregateNames());
         assertTrue(l.remove(NameConstants.JCR_MODIFY_PROPERTIES));
         assertTrue(l.remove(NameConstants.JCR_ADD_CHILD_NODES));
         assertTrue(l.remove(NameConstants.JCR_REMOVE_CHILD_NODES));

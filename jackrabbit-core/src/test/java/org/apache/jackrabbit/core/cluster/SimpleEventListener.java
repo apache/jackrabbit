@@ -32,13 +32,14 @@ import org.apache.jackrabbit.core.nodetype.InvalidNodeTypeDefException;
 import org.apache.jackrabbit.core.state.ChangeLog;
 import org.apache.jackrabbit.core.state.ItemState;
 import org.apache.jackrabbit.spi.QNodeTypeDefinition;
+import org.apache.jackrabbit.spi.commons.privilege.PrivilegeDefinition;
 
 /**
  * Simple event listener that can be registered for all cluster event listener
  * types and records external events in an array list.
  */
 public class SimpleEventListener implements LockEventListener,
-        NodeTypeEventListener, NamespaceEventListener, UpdateEventListener {
+        NodeTypeEventListener, NamespaceEventListener, PrivilegeEventListener, UpdateEventListener {
 
     /**
      * List of cluster events received.
@@ -402,6 +403,61 @@ public class SimpleEventListener implements LockEventListener,
                 return SimpleEventListener.equals(oldPrefix, other.oldPrefix) &&
                     SimpleEventListener.equals(newPrefix, other.newPrefix) &&
                     SimpleEventListener.equals(uri, other.uri);
+            }
+            return false;
+        }
+    }
+
+    //---------------------------------------------< PrivilegeEventListener >---
+    /**
+     * {@inheritDoc}
+     */
+    public void externalRegisteredPrivileges(Collection<PrivilegeDefinition> definitions) throws RepositoryException {
+        clusterEvents.add(new PrivilegeEvent(definitions));
+    }
+
+    /**
+     * privilege event auxiliary class.
+     */
+    public static class PrivilegeEvent {
+
+        /**
+         * Collection of node type definitions or node type names.
+         */
+        private Collection<PrivilegeDefinition> definitions;
+
+        /**
+         * Create a new instance of this class.
+         *
+         * @param definitions
+         */
+        public PrivilegeEvent(Collection<PrivilegeDefinition> definitions) {
+            this.definitions = definitions;
+        }
+
+        /**
+         * Return the definitions.
+         *
+         * @return definitions
+         */
+        public Collection<PrivilegeDefinition> getDefinitions() {
+            return definitions;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        public int hashCode() {
+            return definitions.hashCode();
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        public boolean equals(Object obj) {
+            if (obj instanceof PrivilegeEvent) {
+                PrivilegeEvent other = (PrivilegeEvent) obj;
+                return SimpleEventListener.equals(definitions, other.definitions);
             }
             return false;
         }

@@ -14,20 +14,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.commons.privilege;
+package org.apache.jackrabbit.spi.commons.privilege;
 
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Set;
 
 import junit.framework.TestCase;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.NameFactory;
+import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
 
 /**
  * <code>PrivilegeReadTest</code>...
  */
 public class PrivilegeHandlerTest extends TestCase {
 
+    private static final NameFactory NF = NameFactoryImpl.getInstance();
     /*
     <privilege name="foo:testRead"/>
     <privilege name="foo:testWrite"/>
@@ -39,12 +46,20 @@ public class PrivilegeHandlerTest extends TestCase {
     </privilege>
 
      */
-    public static PrivilegeDefinition DEF_READ = new PrivilegeDefinition("foo:testRead", false, null);
-    public static PrivilegeDefinition DEF_WRITE = new PrivilegeDefinition("foo:testWrite", false, null);
-    public static PrivilegeDefinition DEF_ABSTRACT = new PrivilegeDefinition("foo:testAbstract", true, null);
-    public static PrivilegeDefinition DEF_NON_ABSTRACT = new PrivilegeDefinition("foo:testNonAbstract", false, null);
-    public static PrivilegeDefinition DEF_ALL = new PrivilegeDefinition("foo:testAll", false, new String[]{"foo:testRead", "foo:testWrite"});
-    public static PrivilegeDefinition[] DEF_EXPECTED = new PrivilegeDefinition[]{
+    private static final String TEST_PREFIX = "foo";
+    private static final String TEST_URI = "http://www.foo.com/1.0";
+
+    private static PrivilegeDefinition DEF_READ = new PrivilegeDefinition(NF.create(TEST_URI,"testRead"), false, null);
+    private static PrivilegeDefinition DEF_WRITE = new PrivilegeDefinition(NF.create(TEST_URI,"testWrite"), false, null);
+    private static PrivilegeDefinition DEF_ABSTRACT = new PrivilegeDefinition(NF.create(TEST_URI,"testAbstract"), true, null);
+    private static PrivilegeDefinition DEF_NON_ABSTRACT = new PrivilegeDefinition(NF.create(TEST_URI,"testNonAbstract"), false, null);
+    private static Set<Name> aggr = new LinkedHashSet<Name>();
+    static {
+        aggr.add(DEF_READ.getName());
+        aggr.add(DEF_WRITE.getName());
+    }
+    private static PrivilegeDefinition DEF_ALL = new PrivilegeDefinition(NF.create(TEST_URI,"testAll"), false, aggr);
+    private static PrivilegeDefinition[] DEF_EXPECTED = new PrivilegeDefinition[]{
             DEF_READ,
             DEF_WRITE,
             DEF_ABSTRACT,
@@ -57,7 +72,7 @@ public class PrivilegeHandlerTest extends TestCase {
 
         PrivilegeDefinitionReader reader = new PrivilegeDefinitionReader(in, "text/xml");
 
-        Map<String, PrivilegeDefinition> defs = new HashMap<String, PrivilegeDefinition>();
+        Map<Name, PrivilegeDefinition> defs = new HashMap<Name, PrivilegeDefinition>();
         for (PrivilegeDefinition def: reader.getPrivilegeDefinitions()) {
             defs.put(def.getName(), def);
         }
@@ -69,15 +84,15 @@ public class PrivilegeHandlerTest extends TestCase {
         assertTrue("Not all definitions present", defs.isEmpty());
 
         // check for namespace
-        String fooUri = reader.getNamespaces().get("foo");
-        assertEquals("Namespace included", "http://www.foo.com/1.0", fooUri);
+        String fooUri = reader.getNamespaces().get(TEST_PREFIX);
+        assertEquals("Namespace included", TEST_URI, fooUri);
     }
 
     public void testWrite() throws Exception {
 
         PrivilegeDefinitionWriter writer = new PrivilegeDefinitionWriter("text/xml");
         Map<String, String> namespaces = new HashMap<String, String>();
-        namespaces.put("foo", "http://www.foo.com/1.0");
+        namespaces.put(TEST_PREFIX, TEST_URI);
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         writer.writeDefinitions(out, DEF_EXPECTED, namespaces);
 

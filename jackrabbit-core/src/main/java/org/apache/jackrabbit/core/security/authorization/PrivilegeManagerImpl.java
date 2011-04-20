@@ -21,6 +21,7 @@ import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.commons.conversion.NameResolver;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
+import org.apache.jackrabbit.spi.commons.privilege.PrivilegeDefinition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -81,10 +82,10 @@ public final class PrivilegeManagerImpl implements PrivilegeManager, PrivilegeRe
      * @see PrivilegeManager#getRegisteredPrivileges()
      */
     public Privilege[] getRegisteredPrivileges() throws RepositoryException {
-        PrivilegeRegistry.Definition[] allDefs = registry.getAll();
+        PrivilegeDefinition[] allDefs = registry.getAll();
         if (allDefs.length != cache.size()) {
             synchronized (cache) {
-                for (PrivilegeRegistry.Definition def : allDefs) {
+                for (PrivilegeDefinition def : allDefs) {
                     if (!cache.containsKey(def.getName())) {
                         cache.put(def.getName(), new PrivilegeImpl(def));
                     }
@@ -172,16 +173,18 @@ public final class PrivilegeManagerImpl implements PrivilegeManager, PrivilegeRe
         if (privileges == null || privileges.length == 0) {
             throw new AccessControlException("Privilege array is empty or null.");
         }
-        PrivilegeBits bits = PrivilegeBits.getInstance();
-        for (Privilege priv : privileges) {
-            if (priv instanceof PrivilegeImpl) {
-                bits.add(((PrivilegeImpl) priv).definition.getBits());
+
+        PrivilegeDefinition[] defs = new PrivilegeDefinition[privileges.length];
+        for (int i = 0; i < privileges.length; i++) {
+            Privilege p = privileges[i];
+            if (p instanceof PrivilegeImpl) {
+                defs[i] = ((PrivilegeImpl) p).definition;
             } else {
-                String name = (priv == null) ? "null" : priv.getName();
+                String name = (p == null) ? "null" : p.getName();
                 throw new AccessControlException("Unknown privilege '" + name + "'.");
             }
         }
-        return bits;
+        return registry.getBits(defs);
     }
 
     /**
@@ -228,7 +231,7 @@ public final class PrivilegeManagerImpl implements PrivilegeManager, PrivilegeRe
             if (cache.containsKey(name)) {
                 privilege = cache.get(name);
             } else {
-                PrivilegeRegistry.Definition def = registry.get(name);
+                PrivilegeDefinition def = registry.get(name);
                 if (def != null) {
                     privilege = new PrivilegeImpl(def);
                     cache.put(name, privilege);
@@ -242,9 +245,10 @@ public final class PrivilegeManagerImpl implements PrivilegeManager, PrivilegeRe
 
     //-----------------------------------------< PrivilegeRegistry.Listener >---
     /**
-     * @see PrivilegeRegistry.Listener#privilegeRegistered(org.apache.jackrabbit.spi.Name)
+     * @see PrivilegeRegistry.Listener#privilegesRegistered(java.util.Set
+     * @param privilegeNames
      */
-    public void privilegeRegistered(Name privilegeName) {
+    public void privilegesRegistered(Set<Name> privilegeNames) {
         // force recalculation of jcr:all privilege
         synchronized (cache) {
             cache.remove(NameConstants.JCR_ALL);
@@ -258,15 +262,16 @@ public final class PrivilegeManagerImpl implements PrivilegeManager, PrivilegeRe
      */
     private class PrivilegeImpl implements Privilege {
 
-        private final PrivilegeRegistry.Definition definition;
+        private final PrivilegeDefinition definition;
 
         private final Privilege[] declaredAggregates;
         private final Privilege[] aggregates;
 
-        private PrivilegeImpl(PrivilegeRegistry.Definition definition) throws RepositoryException {
+        private PrivilegeImpl(PrivilegeDefinition definition) throws RepositoryException {
             this.definition = definition;
 
-            Name[] declAggrNames = definition.getDeclaredAggregateNames();
+            Set<Name> set = definition.getDeclaredAggregateNames();
+            Name[] declAggrNames = set.toArray(new Name[set.size()]);
             if (declAggrNames.length == 0) {
                 declaredAggregates = EMPTY_ARRAY;
                 aggregates = EMPTY_ARRAY;

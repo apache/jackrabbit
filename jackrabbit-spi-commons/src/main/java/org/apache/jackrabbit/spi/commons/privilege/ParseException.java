@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.commons.privilege;
+package org.apache.jackrabbit.spi.commons.privilege;
 
 /**
  * <code>ParseException</code>...

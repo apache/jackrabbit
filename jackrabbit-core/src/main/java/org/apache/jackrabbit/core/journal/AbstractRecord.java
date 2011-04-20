@@ -16,10 +16,19 @@
  */
 package org.apache.jackrabbit.core.journal;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 import javax.jcr.NamespaceException;
 
@@ -40,6 +49,10 @@ import org.apache.jackrabbit.spi.commons.namespace.NamespaceMapping;
 import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
 import org.apache.jackrabbit.spi.commons.nodetype.QDefinitionBuilderFactory;
 import org.apache.jackrabbit.spi.commons.nodetype.compact.CompactNodeTypeDefWriter;
+import org.apache.jackrabbit.spi.commons.privilege.PrivilegeDefinition;
+import org.apache.jackrabbit.spi.commons.privilege.PrivilegeDefinitionReader;
+import org.apache.jackrabbit.spi.commons.privilege.PrivilegeDefinitionWriter;
+import org.apache.jackrabbit.spi.commons.privilege.PrivilegeHandler;
 
 /**
  * Base implementation for a record.
@@ -160,6 +173,34 @@ public abstract class AbstractRecord implements Record {
     /**
      * {@inheritDoc}
      */
+    public void writePrivilegeDef(PrivilegeDefinition privilegeDefinition) throws JournalException {
+        try {
+            Map<String, String> nsMapping = new HashMap<String, String>();
+            String uri = privilegeDefinition.getName().getNamespaceURI();
+            nsMapping.put(nsResolver.getPrefix(uri), uri);
+            for (Name n : privilegeDefinition.getDeclaredAggregateNames()) {
+                nsMapping.put(nsResolver.getPrefix(n.getNamespaceURI()), n.getNamespaceURI());
+            }
+
+            StringWriter sw = new StringWriter();
+            PrivilegeDefinitionWriter writer = new PrivilegeDefinitionWriter("text/xml");
+            writer.writeDefinitions(sw, new PrivilegeDefinition[] {privilegeDefinition}, nsMapping);
+            sw.close();
+
+            writeString(sw.toString());
+
+        } catch (IOException e) {
+            String msg = "I/O error while writing privilege definition.";
+            throw new JournalException(msg, e);
+        } catch (NamespaceException e) {
+            String msg = "NamespaceException error while writing privilege definition.";
+            throw new JournalException(msg, e);
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     public Name readQName() throws JournalException {
         try {
             return resolver.getQName(readString());
@@ -261,6 +302,26 @@ public abstract class AbstractRecord implements Record {
             return ntds.iterator().next();
         } catch (ParseException e) {
             String msg = "Parse error while reading node type definition.";
+            throw new JournalException(msg, e);
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public PrivilegeDefinition readPrivilegeDef() throws JournalException {
+        try {
+            StringReader sr = new StringReader(readString());
+            PrivilegeDefinitionReader reader = new PrivilegeDefinitionReader(sr, "text/xml");
+            PrivilegeDefinition[] defs = reader.getPrivilegeDefinitions();
+
+            if (defs.length != 1) {
+                throw new JournalException("Expected one privilege definition: got " + defs.length);
+            }
+            return defs[0];
+
+        } catch (org.apache.jackrabbit.spi.commons.privilege.ParseException e) {
+            String msg = "Parse error while reading privilege definition.";
             throw new JournalException(msg, e);
         }
     }
