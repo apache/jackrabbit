@@ -33,6 +33,7 @@ import javax.jcr.observation.EventIterator;
 import javax.jcr.observation.EventJournal;
 
 import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.cluster.PrivilegeRecord;
 import org.apache.jackrabbit.core.journal.Journal;
 import org.apache.jackrabbit.core.journal.RecordIterator;
 import org.apache.jackrabbit.core.journal.JournalException;
@@ -292,6 +293,10 @@ public class EventJournalImpl implements EventJournal {
         }
 
         public void process(NodeTypeRecord record) {
+            // ignore
+        }
+
+        public void process(PrivilegeRecord record) {
             // ignore
         }
 

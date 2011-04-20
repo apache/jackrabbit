@@ -40,6 +40,7 @@ import org.apache.jackrabbit.core.state.ChangeLog;
 import org.apache.jackrabbit.core.version.InternalVersionManagerImpl;
 import org.apache.jackrabbit.core.xml.ClonedInputSource;
 import org.apache.jackrabbit.spi.QNodeTypeDefinition;
+import org.apache.jackrabbit.spi.commons.privilege.PrivilegeDefinition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,7 +52,7 @@ import EDU.oswego.cs.dl.util.concurrent.Mutex;
  */
 public class ClusterNode implements Runnable,
         NamespaceEventChannel, NodeTypeEventChannel, RecordConsumer,
-        ClusterRecordProcessor, WorkspaceEventChannel  {
+        ClusterRecordProcessor, WorkspaceEventChannel, PrivilegeEventChannel  {
 
     /**
      * System property specifying a node id to use.
@@ -166,6 +167,11 @@ public class ClusterNode implements Runnable,
      * Node type listener.
      */
     private NodeTypeEventListener nodeTypeListener;
+
+    /**
+     * Privilege listener.
+     */
+    private PrivilegeEventListener privilegeListener;
 
     /**
      * Instance revision manager.
@@ -505,6 +511,43 @@ public class ClusterNode implements Runnable,
         nodeTypeListener = listener;
     }
 
+    //----------------------------------------------< PrivilegeEventChannel >---
+    /**
+     * {@inheritDoc}
+     * @see PrivilegeEventChannel#registeredPrivileges(java.util.Collection)
+     */
+    public void registeredPrivileges(Collection<PrivilegeDefinition> definitions) {
+        if (status != STARTED) {
+            log.info("not started: nodetype operation ignored.");
+            return;
+        }
+        ClusterRecord record = null;
+        boolean succeeded = false;
+
+        try {
+            record = new PrivilegeRecord(definitions, producer.append());
+            record.write();
+            record.update();
+            setRevision(record.getRevision());
+            succeeded = true;
+        } catch (JournalException e) {
+            String msg = "Unable to create log entry: " + e.getMessage();
+            log.error(msg);
+        } catch (Throwable e) {
+            String msg = "Unexpected error while creating log entry.";
+            log.error(msg, e);
+        } finally {
+            if (!succeeded && record != null) {
+                record.cancelUpdate();
+            }
+        }
+    }
+
+    public void setListener(PrivilegeEventListener listener) {
+        privilegeListener = listener;
+    }
+
+    //--------------------------------------------------------------------------
     /**
      * Workspace update channel.
      */
@@ -905,6 +948,20 @@ public class ClusterNode implements Runnable,
             log.error(msg);
         } catch (RepositoryException e) {
             String msg = "Unable to deliver node type operation: " + e.getMessage();
+            log.error(msg);
+        }
+    }
+
+    public void process(PrivilegeRecord record) {
+        if (privilegeListener == null) {
+            String msg = "Privilege listener unavailable.";
+            log.error(msg);
+            return;
+        }
+        try {
+            privilegeListener.externalRegisteredPrivileges(record.getDefinitions());
+        } catch (RepositoryException e) {
+            String msg = "Unable to deliver privilege registration operation: " + e.getMessage();
             log.error(msg);
         }
     }

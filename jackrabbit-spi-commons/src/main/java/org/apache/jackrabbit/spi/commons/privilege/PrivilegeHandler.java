@@ -14,11 +14,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.commons.privilege;
+package org.apache.jackrabbit.spi.commons.privilege;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.Reader;
+import java.io.Writer;
 import java.util.Map;
 
 /**
@@ -37,6 +39,16 @@ public interface PrivilegeHandler {
     PrivilegeDefinition[] readDefinitions(InputStream in, Map<String, String> namespaces) throws ParseException;
 
     /**
+     * Read the privilege definitions and update the specified namespace mapping.
+     *
+     * @param reader
+     * @param namespaces
+     * @return the privilege definitions contained in the specified stream.
+     * @throws ParseException
+     */
+    PrivilegeDefinition[] readDefinitions(Reader reader, Map<String, String> namespaces) throws ParseException;
+
+    /**
      * Write the specified privilege definitions to the given output stream.
      * 
      * @param out
@@ -45,4 +57,14 @@ public interface PrivilegeHandler {
      * @throws IOException
      */
     void writeDefinitions(OutputStream out, PrivilegeDefinition[] definitions, Map<String, String> namespaces) throws IOException;
+
+    /**
+     * Write the specified privilege definitions to the given writer.
+     *
+     * @param writer
+     * @param definitions
+     * @param namespaces
+     * @throws IOException
+     */
+    void writeDefinitions(Writer writer, PrivilegeDefinition[] definitions, Map<String, String> namespaces) throws IOException;
 }

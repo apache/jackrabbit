@@ -21,6 +21,7 @@ import org.apache.jackrabbit.core.id.PropertyId;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.QNodeTypeDefinition;
+import org.apache.jackrabbit.spi.commons.privilege.PrivilegeDefinition;
 
 /**
  * Record interface.
@@ -153,6 +154,14 @@ public interface Record {
     QNodeTypeDefinition readNodeTypeDef() throws JournalException;
 
     /**
+     * Read a <code>PrivilegeDefinition</code> from the underlying stream.
+     *
+     * @return privilege definition
+     * @throws JournalException if an error occurs
+     */
+    PrivilegeDefinition readPrivilegeDef() throws JournalException;
+
+    /**
      * Write a byte to the underlying stream.
      *
      * @param n byte
@@ -255,6 +264,14 @@ public interface Record {
      * @throws JournalException if an error occurs
      */
     void writeNodeTypeDef(QNodeTypeDefinition ntd) throws JournalException;
+
+    /**
+     * Write a <code>PrivilegeDefinition</code> to the underlying stream.
+     *
+     * @param privilegeDefinition privilege definition
+     * @throws JournalException if an error occurs
+     */
+    void writePrivilegeDef(PrivilegeDefinition privilegeDefinition) throws JournalException;
 
     /**
      * Update the changes made to an appended record. This will also update

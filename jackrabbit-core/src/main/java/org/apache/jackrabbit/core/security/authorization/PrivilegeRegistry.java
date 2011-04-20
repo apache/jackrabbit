@@ -17,10 +17,12 @@
 package org.apache.jackrabbit.core.security.authorization;
 
 import org.apache.commons.collections.map.ReferenceMap;
-import org.apache.jackrabbit.commons.privilege.ParseException;
-import org.apache.jackrabbit.commons.privilege.PrivilegeDefinition;
-import org.apache.jackrabbit.commons.privilege.PrivilegeDefinitionReader;
-import org.apache.jackrabbit.commons.privilege.PrivilegeDefinitionWriter;
+import org.apache.jackrabbit.core.cluster.PrivilegeEventChannel;
+import org.apache.jackrabbit.core.cluster.PrivilegeEventListener;
+import org.apache.jackrabbit.spi.commons.privilege.ParseException;
+import org.apache.jackrabbit.spi.commons.privilege.PrivilegeDefinition;
+import org.apache.jackrabbit.spi.commons.privilege.PrivilegeDefinitionReader;
+import org.apache.jackrabbit.spi.commons.privilege.PrivilegeDefinitionWriter;
 import org.apache.jackrabbit.core.NamespaceRegistryImpl;
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.fs.FileSystemException;
@@ -44,6 +46,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -57,7 +60,7 @@ import java.util.Set;
  * The <code>PrivilegeRegistry</code> defines the set of <code>Privilege</code>s
  * known to the repository.
  */
-public final class PrivilegeRegistry {
+public final class PrivilegeRegistry implements PrivilegeEventListener {
 
     private static final Logger log = LoggerFactory.getLogger(PrivilegeRegistry.class);
 
@@ -124,17 +127,29 @@ public final class PrivilegeRegistry {
 
     private PrivilegeBits nextBits = PrivilegeBits.getInstance(RETENTION_MNGMT).nextBits();
 
+    /**
+     * Privilege event channel for clustering support.
+     */
+    private PrivilegeEventChannel eventChannel;
+
+    /**
+     * Create a new <code>PrivilegeRegistry</code> instance.
+     *
+     * @param namespaceRegistry
+     * @param fs
+     * @throws RepositoryException
+     */
     public PrivilegeRegistry(NamespaceRegistry namespaceRegistry, FileSystem fs)
             throws RepositoryException {
 
         this.namespaceRegistry = namespaceRegistry;
         this.customPrivilegesStore = new CustomPrivilegeStore(new FileSystemResource(fs, CUSTOM_PRIVILEGES_RESOURCE_NAME));
-        registerDefinitions(createBuiltInPrivilegeDefinitions());
+        cacheDefinitions(createBuiltInPrivilegeDefinitions());
 
         try {
-            Map<Name, DefinitionStub> customDefs = customPrivilegesStore.load();
+            Map<Name, PrivilegeDefinition> customDefs = customPrivilegesStore.load();
             Map<Name, Definition> definitions = createCustomDefinitions(customDefs);
-            registerDefinitions(definitions);
+            cacheDefinitions(definitions);
         } catch (IOException e) {
             throw new RepositoryException("Failed to load custom privileges", e);
         } catch (FileSystemException e) {
@@ -155,7 +170,7 @@ public final class PrivilegeRegistry {
      * @see org.apache.jackrabbit.api.JackrabbitWorkspace#getPrivilegeManager()
      */
     public PrivilegeRegistry(NameResolver resolver) {
-        registerDefinitions(createBuiltInPrivilegeDefinitions());
+        cacheDefinitions(createBuiltInPrivilegeDefinitions());
 
         namespaceRegistry = null;
         customPrivilegesStore = null;
@@ -163,6 +178,33 @@ public final class PrivilegeRegistry {
         this.resolver = resolver;
     }
 
+
+    //---------------------------------------------< PrivilegeEventListener >---
+    /**
+     * @inheritDoc
+     * @see PrivilegeEventListener#externalRegisteredPrivileges(java.util.Collection)
+     */
+    public void externalRegisteredPrivileges(Collection<PrivilegeDefinition> definitions) throws RepositoryException {
+        Map<Name, PrivilegeDefinition> defs = new HashMap<Name, PrivilegeDefinition>(definitions.size());
+        for (PrivilegeDefinition d : definitions) {
+            defs.put(d.getName(), d);
+        }
+        registerCustomDefinitions(defs);
+    }
+
+    //----------------------------------------< public methods : clustering >---
+
+    /**
+     * Set a clustering event channel to inform about changes.
+     *
+     * @param eventChannel event channel
+     */
+    public void setEventChannel(PrivilegeEventChannel eventChannel) {
+        this.eventChannel = eventChannel;
+        eventChannel.setListener(this);
+    }
+
+    //--------------------------------< public methods : privilege registry >---
     /**
      * Throws <code>UnsupportedOperationException</code>.
      *
@@ -394,30 +436,12 @@ public final class PrivilegeRegistry {
      * to constraint violations or if persisting the custom privilege fails.
      */
     void registerDefinition(Name privilegeName, boolean isAbstract, Set<Name> declaredAggregateNames) throws RepositoryException {
-        if (customPrivilegesStore == null) {
-            throw new UnsupportedOperationException("No privilege store defined.");
-        }
-        synchronized (registeredPrivileges) {
-            Map<Name, DefinitionStub> stubs = Collections.singletonMap(privilegeName, new DefinitionStub(privilegeName, isAbstract, declaredAggregateNames));
-            Map<Name, Definition> definitions = createCustomDefinitions(stubs);
-            try {
-                // write the new custom privilege to the store and upon successful
-                // update of the file system resource add finally it to the map of
-                // registered privileges.
-                customPrivilegesStore.append(definitions);
-                registerDefinitions(definitions);
+        Map<Name, PrivilegeDefinition> stubs = Collections.singletonMap(privilegeName, new PrivilegeDefinition(privilegeName, isAbstract, declaredAggregateNames));
+        registerCustomDefinitions(stubs);
 
-            } catch (IOException e) {
-                throw new RepositoryException("Failed to register custom privilege " + privilegeName.toString(), e);
-            } catch (FileSystemException e) {
-                throw new RepositoryException("Failed to register custom privilege " + privilegeName.toString(), e);
-            } catch (ParseException e) {
-                throw new RepositoryException("Failed to register custom privilege " + privilegeName.toString(), e);
-            }
-        }
-
-        for (Listener l : listeners.keySet()) {
-            l.privilegeRegistered(privilegeName);
+        // inform clustering about the new privilege.
+        if (eventChannel != null) {
+            eventChannel.registeredPrivileges(stubs.values());
         }
     }
     
@@ -426,7 +450,7 @@ public final class PrivilegeRegistry {
      *
      * @return all registered internal privileges
      */
-    Definition[] getAll() {
+    PrivilegeDefinition[] getAll() {
         return registeredPrivileges.values().toArray(new Definition[registeredPrivileges.size()]);
     }
 
@@ -436,7 +460,7 @@ public final class PrivilegeRegistry {
      * @param name Name of the internal privilege.
      * @return the internal privilege with the specified name or <code>null</code>
      */
-    Definition get(Name name) {
+    PrivilegeDefinition get(Name name) {
         return registeredPrivileges.get(name);
     }
 
@@ -509,15 +533,15 @@ public final class PrivilegeRegistry {
             Set<Definition> aggr = new HashSet<Definition>();
             for (Definition def : registeredPrivileges.values()) {
                 if (def.isCustom && privilegeBits.includes(def.bits)) {
-                    customNames.add(def.name);
-                    if (!def.declaredAggregateNames.isEmpty()) {
+                    customNames.add(def.getName());
+                    if (!def.getDeclaredAggregateNames().isEmpty()) {
                         aggr.add(def);
                     }
                 }
             }
             // avoid redundant entries in case of aggregate privileges.
             for (Definition aggregate : aggr) {
-                customNames.removeAll(aggregate.declaredAggregateNames);
+                customNames.removeAll(aggregate.getDeclaredAggregateNames());
             }
             names.addAll(customNames);
 
@@ -529,21 +553,75 @@ public final class PrivilegeRegistry {
         }
     }
 
+    /**
+     * Return the privilege bits for the specified privilege definitions.
+     *
+     * @param definitions
+     * @return privilege bits.
+     */
+    PrivilegeBits getBits(PrivilegeDefinition... definitions) {
+        PrivilegeBits bts = PrivilegeBits.getInstance();
+        for (PrivilegeDefinition d : definitions) {
+            if (d instanceof Definition) {
+                bts.add(((Definition) d).bits);
+            }
+        }
+        return bts;
+    }
+
+    /**
+     * Add a privilege registration listener.
+     * 
+     * @param listener
+     */
     void addListener(Listener listener) {
         listeners.put(listener,listener);
     }
 
     //---------------------------------------------< privilege registration >---
     /**
+     * Register the specified custom privilege definitions.
+     * 
+     * @param stubs
+     * @throws RepositoryException If an error occurs.
+     */
+    private void registerCustomDefinitions(Map<Name, PrivilegeDefinition> stubs) throws RepositoryException {
+        if (customPrivilegesStore == null) {
+            throw new UnsupportedOperationException("No privilege store defined.");
+        }
+        synchronized (registeredPrivileges) {
+            Map<Name, Definition> definitions = createCustomDefinitions(stubs);
+            try {
+                // write the new custom privilege to the store and upon successful
+                // update of the file system resource add finally it to the map of
+                // registered privileges.
+                customPrivilegesStore.append(definitions);
+                cacheDefinitions(definitions);
+
+            } catch (IOException e) {
+                throw new RepositoryException("Failed to register custom privilegess.", e);
+            } catch (FileSystemException e) {
+                throw new RepositoryException("Failed to register custom privileges.", e);
+            } catch (ParseException e) {
+                throw new RepositoryException("Failed to register custom privileges.", e);
+            }
+        }
+
+        for (Listener l : listeners.keySet()) {
+            l.privilegesRegistered(stubs.keySet());
+        }
+    }
+
+    /**
      * Adds the specified privilege definitions to the internal map(s) and
      * recalculates the jcr:all privilege definition.
      * 
      * @param definitions
      */
-    private void registerDefinitions(Map<Name, Definition> definitions) {
+    private void cacheDefinitions(Map<Name, Definition> definitions) {
         registeredPrivileges.putAll(definitions);
         for (Definition def : definitions.values()) {
-            bitsToNames.put(def.bits, Collections.singleton(def.name));
+            bitsToNames.put(def.bits, Collections.singleton(def.getName()));
         }
 
         if (!definitions.containsKey(NameConstants.JCR_ALL)) {
@@ -551,7 +629,7 @@ public final class PrivilegeRegistry {
             Definition all = registeredPrivileges.get(NameConstants.JCR_ALL);
             bitsToNames.remove(all.bits);
             
-            Set<Name> allAggrNames = all.declaredAggregateNames;
+            Set<Name> allAggrNames = new HashSet<Name>(all.getDeclaredAggregateNames());
             allAggrNames.addAll(definitions.keySet());
 
             PrivilegeBits allbits = PrivilegeBits.getInstance(all.bits);
@@ -584,11 +662,11 @@ public final class PrivilegeRegistry {
 
         // jcr:write
         Definition jcrWrite = createJcrWriteDefinition();
-        defs.put(jcrWrite.name, jcrWrite);
+        defs.put(jcrWrite.getName(), jcrWrite);
 
         // rep:write
         Definition repWrite = createRepWriteDefinition(jcrWrite);
-        defs.put(repWrite.name, repWrite);
+        defs.put(repWrite.getName(), repWrite);
 
         // jcr:all
         Set<Name> jcrAllAggregates = new HashSet<Name>(10);
@@ -604,7 +682,7 @@ public final class PrivilegeRegistry {
         jcrAllAggregates.add(REP_WRITE_NAME);
 
         Definition jcrAll = new Definition(NameConstants.JCR_ALL, false, jcrAllAggregates, jcrAllBits);
-        defs.put(jcrAll.name, jcrAll);
+        defs.put(jcrAll.getName(), jcrAll);
 
         return defs;
     }
@@ -619,12 +697,12 @@ public final class PrivilegeRegistry {
      * @return new privilege definitions.
      * @throws RepositoryException If any of the specified stubs is invalid.
      */
-    private Map<Name, Definition> createCustomDefinitions(Map<Name, DefinitionStub> toRegister) throws RepositoryException {
+    private Map<Name, Definition> createCustomDefinitions(Map<Name, PrivilegeDefinition> toRegister) throws RepositoryException {
         Map<Name, Definition> definitions = new HashMap<Name, Definition>(toRegister.size());
-        Set<DefinitionStub> aggregates = new HashSet<DefinitionStub>();
+        Set<PrivilegeDefinition> aggregates = new HashSet<PrivilegeDefinition>();
 
-        for (DefinitionStub stub : toRegister.values()) {
-            Name name = stub.name;
+        for (PrivilegeDefinition stub : toRegister.values()) {
+            Name name = stub.getName();
             if (name == null) {
                 throw new RepositoryException("Name of custom privilege may not be null.");
             }
@@ -634,18 +712,19 @@ public final class PrivilegeRegistry {
 
             // namespace validation:
             // - make sure the specified name defines a registered namespace
-            namespaceRegistry.getPrefix(stub.name.getNamespaceURI());
+            namespaceRegistry.getPrefix(name.getNamespaceURI());
             // - and isn't one of the reserved namespaces
             if (((NamespaceRegistryImpl) namespaceRegistry).isReservedURI(name.getNamespaceURI())) {
                 throw new RepositoryException("Failed to register custom privilege: Reserved namespace URI: " + name.getNamespaceURI());
             }
 
             // validate aggregates
-            if (stub.declaredAggregateNames.isEmpty()) {
+            Set<Name> dagn = stub.getDeclaredAggregateNames();
+            if (dagn.isEmpty()) {
                 // not an aggregate priv definition.
                 definitions.put(name, new Definition(stub, nextBits()));
             } else {
-                for (Name declaredAggregateName : stub.declaredAggregateNames) {
+                for (Name declaredAggregateName : dagn) {
                     if (name.equals(declaredAggregateName)) {
                         throw new RepositoryException("Declared aggregate name '"+ declaredAggregateName.toString() +"'refers to the same custom privilege.");
                     }
@@ -672,27 +751,27 @@ public final class PrivilegeRegistry {
             int cnt = aggregates.size();
 
             // look for those definitions whose declared aggregates have all been processed.
-            for (Iterator<DefinitionStub> itr = aggregates.iterator(); itr.hasNext();) {
-                DefinitionStub stub = itr.next();
-                PrivilegeBits bts = getAggregateBits(stub.declaredAggregateNames, definitions);
+            for (Iterator<PrivilegeDefinition> itr = aggregates.iterator(); itr.hasNext();) {
+                PrivilegeDefinition stub = itr.next();
+                PrivilegeBits bts = getAggregateBits(stub.getDeclaredAggregateNames(), definitions);
                 if (!bts.isEmpty()) {
                     // make sure the same aggregation is not yet covered by an
                     // already registered privilege
                     if (bitsToNames.containsKey(bts) && bitsToNames.get(bts).size() == 1) {
                         Name existingName = bitsToNames.get(bts).iterator().next();
-                        throw new RepositoryException("Custom aggregate privilege '" + stub.name + "' is already covered by '" + existingName.toString() + "'");
+                        throw new RepositoryException("Custom aggregate privilege '" + stub.getName() + "' is already covered by '" + existingName.toString() + "'");
                     }
                     // ... nor is present within the set of definitions that have
                     // been created before for registration.
                     for (Definition d : definitions.values()) {
                         if (bts.equals(d.bits)) {
-                            throw new RepositoryException("Custom aggregate privilege '" + stub.name + "' is already defined by '"+ d.name+"'");
+                            throw new RepositoryException("Custom aggregate privilege '" + stub.getName() + "' is already defined by '"+ d.getName()+"'");
                         }
                     }
 
                     // now its save to create the new definition
                     Definition def = new Definition(stub, bts);
-                    definitions.put(def.name, def);
+                    definitions.put(def.getName(), def);
                     itr.remove();
                 } // unresolvable bts -> postpone to next iterator.
             }
@@ -745,14 +824,14 @@ public final class PrivilegeRegistry {
      * @param toRegister
      * @return
      */
-    private boolean isCircularAggregation(DefinitionStub def, Name declaredAggregateName, Map<Name, DefinitionStub> toRegister) {
-        DefinitionStub d = toRegister.get(declaredAggregateName);
-        if (d.declaredAggregateNames.isEmpty()) {
+    private boolean isCircularAggregation(PrivilegeDefinition def, Name declaredAggregateName, Map<Name, PrivilegeDefinition> toRegister) {
+        PrivilegeDefinition d = toRegister.get(declaredAggregateName);
+        if (d.getDeclaredAggregateNames().isEmpty()) {
             return false;
         } else {
             boolean isCircular = false;
-            for (Name n : d.declaredAggregateNames) {
-                if (def.name.equals(n)) {
+            for (Name n : d.getDeclaredAggregateNames()) {
+                if (def.getName().equals(n)) {
                     return true;
                 }
                 if (toRegister.containsKey(n)) {
@@ -795,78 +874,25 @@ public final class PrivilegeRegistry {
      */
     interface Listener {
         /**
-         * @param privilegeName The name of the new privilege
+         * @param privilegeNames
          */
-        void privilegeRegistered(Name privilegeName);
-    }
-
-
-    /**
-     * Raw, non-validated stub of a PrivilegeDefinition
-     */
-    private static class DefinitionStub {
-        
-        protected final Name name;
-        protected final boolean isAbstract;
-        protected final Set<Name> declaredAggregateNames;
-
-        private int hashCode;
-
-        private DefinitionStub(Name name, boolean isAbstract, Set<Name> declaredAggregateNames) {
-            this.name = name;
-            this.isAbstract = isAbstract;
-            this.declaredAggregateNames = (declaredAggregateNames == null) ? Collections.<Name>emptySet() : declaredAggregateNames;
-        }
-
-        //---------------------------------------------------------< Object >---
-        @Override
-        public String toString() {
-            return name.toString();
-        }
-
-        @Override
-        public int hashCode() {
-            if (hashCode == 0) {
-                int h = 17;
-                h = 37 * h + name.hashCode();
-                h = 37 * h + Boolean.valueOf(isAbstract).hashCode();
-                /* NOTE: evaluation of decl-aggr-names is sufficient as
-                   uniqueness is asserted upon registration */
-                h = 37 * h + declaredAggregateNames.hashCode();
-                hashCode = h;
-            }
-            return hashCode;
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-            if (obj == this) {
-                return true;
-            }
-            if (obj instanceof DefinitionStub) {
-                DefinitionStub other = (DefinitionStub) obj;
-                return name.equals(other.name)
-                        && isAbstract==other.isAbstract
-                        /* NOTE: comparison of decl-aggr-names is sufficient as
-                           uniqueness is asserted upon registration */
-                        && declaredAggregateNames.equals(other.declaredAggregateNames);
-            }
-            return false;
-        }
+        void privilegesRegistered(Set<Name> privilegeNames);
     }
 
     /**
-     * Internal definition of a jcr level privilege.
+     * Internal definition of a JCR privilege extending from the general
+     * privilege definition. It defines addition information that ease
+     * the evaluation of privileges.
      */
-    static class Definition extends DefinitionStub {
+    private static class Definition extends PrivilegeDefinition {
 
         private final PrivilegeBits bits;
         private final boolean isCustom;
 
         private int hashCode;
 
-        private Definition(DefinitionStub stub, PrivilegeBits bits) {
-            this(stub.name, stub.isAbstract, stub.declaredAggregateNames, bits, true);
+        private Definition(PrivilegeDefinition stub, PrivilegeBits bits) {
+            this(stub.getName(), stub.isAbstract(), stub.getDeclaredAggregateNames(), bits, true);
         }
 
         private Definition(Name name, boolean isAbstract, long bits) {
@@ -887,33 +913,11 @@ public final class PrivilegeRegistry {
             this.isCustom = isCustom;
         }
 
-        Name getName() {
-            return name;
-        }
-
-        PrivilegeBits getBits() {
-            return bits;
-        }
-
-        boolean isAbstract() {
-            return isAbstract;
-        }
-
-        Name[] getDeclaredAggregateNames() {
-            if (declaredAggregateNames.isEmpty()) {
-                return Name.EMPTY_ARRAY;
-            } else {
-                return declaredAggregateNames.toArray(new Name[declaredAggregateNames.size()]);
-            }
-        }
-
         //---------------------------------------------------------< Object >---
         @Override
         public int hashCode() {
             if (hashCode == 0) {
-                int h = 17;
-                h = 37 * h + name.hashCode();
-                h = 37 * h + Boolean.valueOf(isAbstract).hashCode();
+                int h = super.hashCode();
                 h = 37 * h + bits.hashCode();
                 hashCode = h;
             }
@@ -927,9 +931,7 @@ public final class PrivilegeRegistry {
             }
             if (obj instanceof Definition) {
                 Definition other = (Definition) obj;
-                return name.equals(other.name)
-                        && isAbstract==other.isAbstract
-                        && bits.equals(other.bits);
+                return bits.equals(other.bits) && super.equals(other);
             }
             return false;
         }
@@ -961,37 +963,25 @@ public final class PrivilegeRegistry {
             }
         }
 
-        private Map<Name, DefinitionStub> load() throws FileSystemException, RepositoryException, ParseException, IOException {
-            Map<Name, DefinitionStub> stubs = new LinkedHashMap<Name, DefinitionStub>();
+        private Map<Name, PrivilegeDefinition> load() throws FileSystemException, RepositoryException, ParseException, IOException {
+            Map<Name, PrivilegeDefinition> stubs = new LinkedHashMap<Name, PrivilegeDefinition>();
 
             if (customPrivilegesResource.exists()) {
                 InputStream in = customPrivilegesResource.getInputStream();
                 try {
                     PrivilegeDefinitionReader pr = new PrivilegeDefinitionReader(in, "text/xml");
                     for (PrivilegeDefinition def : pr.getPrivilegeDefinitions()) {
-
-                        Name privName = getName(def.getName());
-                        boolean isAbstract = def.isAbstract();
-                        Set<Name> declaredAggrNames = new HashSet<Name>();
-                        for (String dan : def.getDeclaredAggregateNames()) {
-                            declaredAggrNames.add(getName(dan));
-                        }
-
+                        Name privName = def.getName();
                         if (stubs.containsKey(privName)) {
                             throw new RepositoryException("Duplicate entry for custom privilege with name " + privName.toString());
                         }
-                        stubs.put(privName, new DefinitionStub(privName, isAbstract, declaredAggrNames));
+                        stubs.put(privName, def);
                     }
                 } finally {
                     in.close();
                 }
             }
             return stubs;
-        }
-
-        private Name getName(String jcrName) throws RepositoryException {
-            String uri = namespaceRegistry.getURI(Text.getNamespacePrefix(jcrName));
-            return NAME_FACTORY.create(uri, Text.getLocalName(jcrName));
         }
 
         private void append(Map<Name, Definition> newPrivilegeDefinitions) throws IOException, FileSystemException, RepositoryException, ParseException {
@@ -1013,19 +1003,14 @@ public final class PrivilegeRegistry {
             }
 
             for (Definition d : newPrivilegeDefinitions.values()) {
-                String name = resolver.getJCRName(d.name);
-                String uri = d.name.getNamespaceURI();
+                String uri = d.getName().getNamespaceURI();
                 nsMapping.put(namespaceRegistry.getPrefix(uri), uri);
 
-                String[] aggrNames = new String[d.declaredAggregateNames.size()];
-                int i = 0;
-                for (Name dan : d.declaredAggregateNames) {
-                    aggrNames[i++] = resolver.getJCRName(dan);
-                    uri = d.name.getNamespaceURI();
+                for (Name dan : d.getDeclaredAggregateNames()) {
+                    uri = dan.getNamespaceURI();
                     nsMapping.put(namespaceRegistry.getPrefix(uri), uri);
                 }
-                PrivilegeDefinition pd = new PrivilegeDefinition(name, d.isAbstract, aggrNames);
-                jcrDefs.add(pd);
+                jcrDefs.add(d);
             }
 
             OutputStream out = customPrivilegesResource.getOutputStream();

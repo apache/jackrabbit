@@ -326,15 +326,15 @@ public class RepositoryImpl extends AbstractRepository
                 wspInfos.put(config.getName(), info);
             }
 
-            // initialize optional clustering
-            // put here before setting up any other external event source that a cluster node
-            // will be interested in
+            // initialize optional clustering before setting up any other
+            // external event source that a cluster node will be interested in
             ClusterNode clusterNode = null;
             if (repConfig.getClusterConfig() != null) {
                 clusterNode = createClusterNode();
                 context.setClusterNode(clusterNode);
                 context.getNamespaceRegistry().setEventChannel(clusterNode);
                 context.getNodeTypeRegistry().setEventChannel(clusterNode);
+                context.getPrivilegeRegistry().setEventChannel(clusterNode);
 
                 createWorkspaceEventChannel = clusterNode;
                 clusterNode.setListener(this);

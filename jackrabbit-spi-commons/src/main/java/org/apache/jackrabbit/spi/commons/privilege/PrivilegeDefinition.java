@@ -14,26 +14,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.commons.privilege;
+package org.apache.jackrabbit.spi.commons.privilege;
 
-import java.util.Arrays;
+import org.apache.jackrabbit.spi.Name;
+
+import java.util.Collections;
+import java.util.Set;
 
 /**
  * <code>PrivilegeDefinition</code>
  */
 public class PrivilegeDefinition {
 
-    private final String name;
+    private final Name name;
     private final boolean isAbstract;
-    private final String[] declaredAggregateNames;
+    private final Set<Name> declaredAggregateNames;
 
-    public PrivilegeDefinition(String name, boolean isAbstract, String[] declaredAggregateNames) {
+    public PrivilegeDefinition(Name name, boolean isAbstract, Set<Name> declaredAggregateNames) {
         this.name = name;
         this.isAbstract = isAbstract;
-        this.declaredAggregateNames = declaredAggregateNames == null ? new String[0] : declaredAggregateNames;
+        this.declaredAggregateNames = declaredAggregateNames == null ? Collections.<Name>emptySet() : Collections.unmodifiableSet(declaredAggregateNames);
     }
 
-    public String getName() {
+    public Name getName() {
         return name;
     }
 
@@ -41,7 +44,7 @@ public class PrivilegeDefinition {
         return isAbstract;
     }
 
-    public String[] getDeclaredAggregateNames() {
+    public Set<Name> getDeclaredAggregateNames() {
         return declaredAggregateNames;
     }
 
@@ -53,17 +56,16 @@ public class PrivilegeDefinition {
         PrivilegeDefinition that = (PrivilegeDefinition) o;
 
         if (isAbstract != that.isAbstract) return false;
-        if (!Arrays.equals(declaredAggregateNames, that.declaredAggregateNames)) return false;
         if (name != null ? !name.equals(that.name) : that.name != null) return false;
+        return declaredAggregateNames.equals(that.declaredAggregateNames);
 
-        return true;
     }
 
     @Override
     public int hashCode() {
         int result = name != null ? name.hashCode() : 0;
         result = 31 * result + (isAbstract ? 1 : 0);
-        result = 31 * result + (declaredAggregateNames != null ? Arrays.hashCode(declaredAggregateNames) : 0);
+        result = 31 * result + (declaredAggregateNames != null ? declaredAggregateNames.hashCode() : 0);
         return result;
     }
 }

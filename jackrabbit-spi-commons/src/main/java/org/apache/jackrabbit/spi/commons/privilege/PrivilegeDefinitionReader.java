@@ -14,9 +14,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.commons.privilege;
+package org.apache.jackrabbit.spi.commons.privilege;
 
 import java.io.InputStream;
+import java.io.Reader;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -45,6 +46,28 @@ public class PrivilegeDefinitionReader {
         if (PrivilegeXmlHandler.isSupportedContentType(contentType)) {
             PrivilegeHandler pxh = new PrivilegeXmlHandler();
             privilegeDefinitions = pxh.readDefinitions(in, namespaces);
+        } else {
+            // not yet supported
+            throw new IllegalArgumentException("Unsupported content type " + contentType);
+        }
+    }
+
+    /**
+     * Creates a new <code>PrivilegeDefinitionReader</code> for the given
+     * input stream. The specified content type is used in order to determine
+     * the type of privilege serialization.
+     *
+     * @param reader The reader to read the privilege definitions from.
+     * @param contentType Currently only types supported by
+     * {@link PrivilegeXmlHandler#isSupportedContentType(String)PrivilegeXmlHandler}
+     * are allowed.
+     * @throws ParseException If an error occurs.
+     * @throws IllegalArgumentException if the specified content type is not supported.
+     */
+    public PrivilegeDefinitionReader(Reader reader, String contentType) throws ParseException {
+        if (PrivilegeXmlHandler.isSupportedContentType(contentType)) {
+            PrivilegeHandler pxh = new PrivilegeXmlHandler();
+            privilegeDefinitions = pxh.readDefinitions(reader, namespaces);
         } else {
             // not yet supported
             throw new IllegalArgumentException("Unsupported content type " + contentType);

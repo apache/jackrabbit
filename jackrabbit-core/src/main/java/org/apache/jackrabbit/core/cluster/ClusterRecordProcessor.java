@@ -54,6 +54,13 @@ public interface ClusterRecordProcessor {
     void process(NodeTypeRecord record);
 
     /**
+     * Process a privilege record
+     *
+     * @param record privilege record
+     */
+    void process(PrivilegeRecord record);
+
+    /**
      * Process a workspace record
      * @param record workspace record
      */
