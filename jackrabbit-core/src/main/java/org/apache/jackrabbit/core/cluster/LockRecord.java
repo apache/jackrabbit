@@ -99,6 +99,7 @@ public class LockRecord extends ClusterRecord {
     /**
      * {@inheritDoc}
      */
+    @Override
     protected void doRead() throws JournalException {
         nodeId = record.readNodeId();
         isLock = record.readBoolean();
@@ -111,6 +112,7 @@ public class LockRecord extends ClusterRecord {
     /**
      * {@inheritDoc}
      */
+    @Override
     protected void doWrite() throws JournalException {
         record.writeChar(IDENTIFIER);
         record.writeNodeId(nodeId);
@@ -124,6 +126,7 @@ public class LockRecord extends ClusterRecord {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void process(ClusterRecordProcessor processor) {
         processor.process(this);
     }

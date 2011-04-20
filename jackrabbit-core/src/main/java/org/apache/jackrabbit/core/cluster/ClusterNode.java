@@ -648,7 +648,7 @@ public class ClusterNode implements Runnable,
             try {
                 record.update();
                 setRevision(record.getRevision());
-                log.debug("revision {} {}", new Long(record.getRevision()), path);
+                log.debug("revision {} {}", record.getRevision(), path);
             } catch (JournalException e) {
                 String msg = "Unable to commit log entry.";
                 log.error(msg, e);

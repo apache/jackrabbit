@@ -60,6 +60,7 @@ public class WorkspaceRecord extends ClusterRecord {
         private char[] charArray;
         private byte[] byteArray;
 
+        @Override
         int getType() {
             return CREATE_WORKSPACE_ACTION_TYPE;
         }
@@ -74,6 +75,7 @@ public class WorkspaceRecord extends ClusterRecord {
             this.byteArray = inputSource.getByteArray();
         }
 
+        @Override
         void write(Record record) throws JournalException {
             // store the input source
             record.writeString(inputSource.getEncoding());
@@ -98,6 +100,7 @@ public class WorkspaceRecord extends ClusterRecord {
             }
         }
 
+        @Override
         void read(Record record) throws JournalException {
             // restore the input source
             inputSource = new InputSource();
@@ -151,6 +154,7 @@ public class WorkspaceRecord extends ClusterRecord {
         super(record);
     }
 
+    @Override
     protected void doRead() throws JournalException {
 
         workspace = record.readString();
@@ -169,6 +173,7 @@ public class WorkspaceRecord extends ClusterRecord {
         }
     }
 
+    @Override
     protected void doWrite() throws JournalException {
 
         record.writeChar(IDENTIFIER);
@@ -193,6 +198,7 @@ public class WorkspaceRecord extends ClusterRecord {
         return (CreateWorkspaceAction) action;
     }
 
+    @Override
     public void process(ClusterRecordProcessor processor) {
         processor.process(this);
     }

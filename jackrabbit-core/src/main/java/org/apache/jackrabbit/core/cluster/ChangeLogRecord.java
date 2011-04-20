@@ -155,6 +155,7 @@ public class ChangeLogRecord extends ClusterRecord {
     /**
      * {@inheritDoc}
      */
+    @Override
     protected void doRead() throws JournalException {
         int identifier = this.identifier;
 
@@ -186,6 +187,7 @@ public class ChangeLogRecord extends ClusterRecord {
     /**
      * {@inheritDoc}
      */
+    @Override
     protected void readEndMarker() throws JournalException {
         // This record type uses the end marker itself to indicate that
         // no more node/property/event records are available, so
@@ -367,6 +369,7 @@ public class ChangeLogRecord extends ClusterRecord {
     /**
      * {@inheritDoc}
      */
+    @Override
     protected void doWrite() throws JournalException {
         writeTimestampRecord();
         writeUserDataRecord();
@@ -466,9 +469,8 @@ public class ChangeLogRecord extends ClusterRecord {
 
         Set<Name> mixins = event.getMixinNames();
         record.writeInt(mixins.size());
-        Iterator<Name> iter = mixins.iterator();
-        while (iter.hasNext()) {
-            record.writeQName(iter.next());
+        for (Name mixin : mixins) {
+            record.writeQName(mixin);
         }
         record.writeString(event.getUserId());
 
@@ -494,6 +496,7 @@ public class ChangeLogRecord extends ClusterRecord {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void process(ClusterRecordProcessor processor) {
         processor.process(this);
     }

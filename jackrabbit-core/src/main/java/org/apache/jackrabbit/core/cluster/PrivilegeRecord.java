@@ -19,8 +19,6 @@ package org.apache.jackrabbit.core.cluster;
 import org.apache.jackrabbit.core.journal.JournalException;
 import org.apache.jackrabbit.core.journal.Record;
 import org.apache.jackrabbit.spi.commons.privilege.PrivilegeDefinition;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -30,11 +28,6 @@ import java.util.HashSet;
  * <code>PrivilegeRecord</code>...
  */
 public class PrivilegeRecord extends ClusterRecord {
-
-    /**
-     * logger instance
-     */
-    private static final Logger log = LoggerFactory.getLogger(PrivilegeRecord.class);
 
     /**
      * Identifier: PRIVILEGES.
@@ -59,7 +52,7 @@ public class PrivilegeRecord extends ClusterRecord {
     @Override
     protected void doRead() throws JournalException {
         int size = record.readInt();
-        definitions = new HashSet();
+        definitions = new HashSet<PrivilegeDefinition>();
         for (int i = 0; i < size; i++) {
             definitions.add(record.readPrivilegeDef());
         }
