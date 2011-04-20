@@ -79,7 +79,7 @@ public class NodeTypeRecord extends ClusterRecord {
     private int operation;
 
     /**
-     * Collection of node type defintions or node type names.
+     * Collection of node type definitions or node type names.
      */
     private Collection collection;
 
@@ -127,6 +127,7 @@ public class NodeTypeRecord extends ClusterRecord {
     /**
      * {@inheritDoc}
      */
+    @Override
     protected void doRead() throws JournalException {
         int size = record.readInt();
         int opcode = size & NTREG_MASK;
@@ -161,6 +162,7 @@ public class NodeTypeRecord extends ClusterRecord {
     /**
      * {@inheritDoc}
      */
+    @Override
     protected void doWrite() throws JournalException {
         record.writeChar(IDENTIFIER);
 
@@ -198,6 +200,7 @@ public class NodeTypeRecord extends ClusterRecord {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void process(ClusterRecordProcessor processor) {
         processor.process(this);
     }
