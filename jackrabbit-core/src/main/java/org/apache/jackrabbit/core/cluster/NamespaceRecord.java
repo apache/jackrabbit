@@ -75,6 +75,7 @@ public class NamespaceRecord extends ClusterRecord {
     /**
      * {@inheritDoc}
      */
+    @Override
     protected void doRead() throws JournalException {
         oldPrefix = record.readString();
         newPrefix = record.readString();
@@ -84,6 +85,7 @@ public class NamespaceRecord extends ClusterRecord {
     /**
      * {@inheritDoc}
      */
+    @Override
     protected void doWrite() throws JournalException {
         record.writeChar(IDENTIFIER);
         record.writeString(oldPrefix);
@@ -94,6 +96,7 @@ public class NamespaceRecord extends ClusterRecord {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void process(ClusterRecordProcessor processor) {
         processor.process(this);
     }
