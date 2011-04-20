@@ -18,7 +18,6 @@ package org.apache.jackrabbit.core.cluster;
 
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.Map;
 
 import javax.jcr.Credentials;
 import javax.jcr.Item;
