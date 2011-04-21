@@ -171,6 +171,7 @@ public class LuceneQueryFactory {
             Map<String, PropertyValue> columns, Selector selector,
             Constraint constraint) throws RepositoryException, IOException {
         final IndexReader reader = index.getIndexReader(true);
+        QueryHits hits = null;
         try {
             JackrabbitIndexSearcher searcher = new JackrabbitIndexSearcher(
                     session, reader, index.getContext().getItemStateManager());
@@ -192,7 +193,7 @@ public class LuceneQueryFactory {
             }
 
             List<Row> rows = new ArrayList<Row>();
-            QueryHits hits = searcher.evaluate(qp.mainQuery);
+            hits = searcher.evaluate(qp.mainQuery);
             ScoreNode node = hits.nextScoreNode();
             while (node != null) {
                 try {
@@ -210,6 +211,9 @@ public class LuceneQueryFactory {
             }
             return rows;
         } finally {
+            if(hits != null){
+                hits.close();
+            }
             Util.closeOrRelease(reader);
         }
     }
