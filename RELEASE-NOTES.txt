@@ -18,6 +18,7 @@ Bug fixes
 
   [JCR-2880] Save fails after setting a binary property twice
   [JCR-2890] Deadlock in acl.EntryCollector / ItemManager
+  [JCR-2917] Indexing configuration ignored when indexing length
 
 For more detailed information about all the changes in this and other
 Jackrabbit releases, please see the Jackrabbit issue tracker at
