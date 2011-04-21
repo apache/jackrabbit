@@ -1,4 +1,4 @@
-Release Notes -- Apache Jackrabbit -- Version 2.2.5
+Release Notes -- Apache Jackrabbit -- Version 2.2.6
 
 Introduction
 ------------
@@ -7,21 +7,17 @@ This is Apache Jackrabbit(TM) 2.2, a fully compliant implementation of the
 Content Repository for Java(TM) Technology API, version 2.0 (JCR 2.0) as
 specified in the Java Specification Request 283 (JSR 283).
 
-Apache Jackrabbit 2.2.5 is patch release that contains fixes and
-improvements over previous 2.2.x releases. This release is fully
-compatible with earlier 2.x.x releases.
+Apache Jackrabbit 2.2.6 is patch release that contains fixes and
+improvements over previous 2.2.x releases. This release is fully compatible
+with other 2.2.x releases and backwards compatible with earlier 2.x releases.
 
 Changes in this release
 -----------------------
 
 Bug fixes
 
-  [JCR-2888] Namespace comparison in Namespace.java doesn't work, if a ...
-  [JCR-2889] Occasional JCA test failures
-  [JCR-2891] VersionManagerImplRestore internalRestoreFrozen method has ...
-  [JCR-2900] DbClusterTest failure due to network configuration
-  [JCR-2901] JCR-2523 break the transaction handling in container ...
-  [JCR-2904] Uncaught AbstractMethodError exception in in DomUtil....
+  [JCR-2880] Save fails after setting a binary property twice
+  [JCR-2890] Deadlock in acl.EntryCollector / ItemManager
 
 For more detailed information about all the changes in this and other
 Jackrabbit releases, please see the Jackrabbit issue tracker at
