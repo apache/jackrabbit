@@ -22,7 +22,7 @@ import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.security.authorization.AccessControlConstants;
 import org.apache.jackrabbit.core.security.authorization.AccessControlModifications;
 import org.apache.jackrabbit.core.security.authorization.AccessControlObserver;
-import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.commons.conversion.NameResolver;
 import org.apache.jackrabbit.util.Text;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -197,7 +197,6 @@ public class EntryCollector extends AccessControlObserver implements AccessContr
     }
 
     //------------------------------------------------------< EventListener >---
-
     /**
      * Collects access controlled nodes that are effected by access control
      * changes together with the corresponding modification types, and
@@ -214,12 +213,11 @@ public class EntryCollector extends AccessControlObserver implements AccessContr
             Session session = systemSession.createSession(workspaceName);
             try {
                 // Sift through the events to find access control modifications
-                ACLEventSieve sieve = new ACLEventSieve(session);
+                ACLEventSieve sieve = new ACLEventSieve(session, (NameResolver) session);
                 sieve.siftEvents(events);
 
                 // Notify listeners and eventually clean up internal caches
-                AccessControlModifications<NodeId> mods =
-                    sieve.getModifications();
+                AccessControlModifications<NodeId> mods = sieve.getModifications();
                 if (!mods.getNodeIdentifiers().isEmpty()) {
                     notifyListeners(mods);
                 }
@@ -231,6 +229,7 @@ public class EntryCollector extends AccessControlObserver implements AccessContr
         }
     }
 
+    //--------------------------------------------------------< inner class >---
     /**
      * Private utility class for sifting through observation events on
      * ACL, ACE and Policy nodes to find out the nodes whose access controls
@@ -251,15 +250,11 @@ public class EntryCollector extends AccessControlObserver implements AccessContr
         /**
          * Map of access-controlled nodeId to type of access control modification.
          */
-        private final Map<NodeId, Integer> modMap =
-            new HashMap<NodeId,Integer>();
+        private final Map<NodeId, Integer> modMap = new HashMap<NodeId,Integer>();
 
-        public ACLEventSieve(Session session) throws RepositoryException {
+        private ACLEventSieve(Session session, NameResolver resolver) throws RepositoryException {
             this.session = session;
-            Name repPolicy = AccessControlConstants.N_POLICY;
-            this.repPolicyName =
-                session.getNamespacePrefix(repPolicy.getNamespaceURI())
-                + ":" + repPolicy.getLocalName();
+            this.repPolicyName = resolver.getJCRName(AccessControlConstants.N_POLICY);
         }
 
         /**
@@ -269,7 +264,7 @@ public class EntryCollector extends AccessControlObserver implements AccessContr
          *
          * @param events access control modification events
          */
-        public void siftEvents(EventIterator events) {
+        private void siftEvents(EventIterator events) {
             while (events.hasNext()) {
                 Event event = events.nextEvent();
                 try {
@@ -299,12 +294,11 @@ public class EntryCollector extends AccessControlObserver implements AccessContr
          *
          * @return access control modifications
          */
-        public AccessControlModifications<NodeId> getModifications() {
+        private AccessControlModifications<NodeId> getModifications() {
             return new AccessControlModifications<NodeId>(modMap);
         }
 
-        private void siftNodeAdded(String identifier)
-                throws RepositoryException {
+        private void siftNodeAdded(String identifier) throws RepositoryException {
             NodeImpl n = (NodeImpl) session.getNodeByIdentifier(identifier);
             if (n.isNodeType(EntryCollector.NT_REP_ACL)) {
                 // a new ACL was added -> use the added node to update
@@ -344,14 +338,11 @@ public class EntryCollector extends AccessControlObserver implements AccessContr
                             implementation -> ignore
                  */
             } else {
-                log.debug("Cannot process NODE_REMOVED event."
-                        + " Parent {} doesn't exist (anymore).",
-                        parentPath);
+                log.debug("Cannot process NODE_REMOVED event. Parent {} doesn't exist (anymore).", parentPath);
             }
         }
 
-        private void siftPropertyChanged(String identifier)
-                throws RepositoryException {
+        private void siftPropertyChanged(String identifier) throws RepositoryException {
             // test if the changed prop belongs to an ACE
             NodeImpl parent = (NodeImpl) session.getNodeByIdentifier(identifier);
             if (parent.isNodeType(EntryCollector.NT_REP_ACE)) {
@@ -363,13 +354,11 @@ public class EntryCollector extends AccessControlObserver implements AccessContr
                  define any properties. */
         }
 
-        private NodeId accessControlledIdFromAclNode(Node aclNode)
-                throws RepositoryException {
+        private NodeId accessControlledIdFromAclNode(Node aclNode) throws RepositoryException {
             return ((NodeImpl) aclNode.getParent()).getNodeId();
         }
 
-        private NodeId accessControlledIdFromAceNode(Node aceNode)
-                throws RepositoryException {
+        private NodeId accessControlledIdFromAceNode(Node aceNode) throws RepositoryException {
             return accessControlledIdFromAclNode(aceNode.getParent());
         }
 
@@ -380,7 +369,5 @@ public class EntryCollector extends AccessControlObserver implements AccessContr
             }
             modMap.put(accessControllNodeId, modType);
         }
-
     }
-
 }
