@@ -50,6 +50,7 @@ public class UserAdministratorTest extends AbstractUserTest {
     // the user-admin group
     private Group uAdministrators;
 
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
 
@@ -82,6 +83,7 @@ public class UserAdministratorTest extends AbstractUserTest {
         otherSession = getHelper().getRepository().login(otherCreds);
     }
 
+    @Override
     protected void tearDown() throws Exception {
         try {
             if (otherSession != null) {
