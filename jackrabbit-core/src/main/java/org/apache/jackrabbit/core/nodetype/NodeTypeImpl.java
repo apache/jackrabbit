@@ -90,6 +90,7 @@ public class NodeTypeImpl extends AbstractNodeType implements NodeType, NodeType
     /**
      * {@inheritDoc}
      */
+    @Override
     public boolean isNodeType(Name nodeTypeName) {
         return ent.includesNodeType(nodeTypeName);
     }

@@ -53,6 +53,7 @@ class XALockImpl extends LockImpl {
      * <p/>
      * Refresh lock information if XA environment has changed.
      */
+    @Override
     public boolean isLive() throws RepositoryException {
         if (info.mayChange()) {
             if (lockMgr.differentXAEnv(info)) {

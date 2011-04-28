@@ -219,7 +219,7 @@ public class XASessionImpl extends SessionImpl
             log.error("Resource already associated with a transaction.");
             throw new XAException(XAException.XAER_PROTO);
         }
-        TransactionContext tx = (TransactionContext) txGlobal.get(xid);
+        TransactionContext tx = txGlobal.get(xid);
         if (flags == TMNOFLAGS) {
             if (tx != null) {
                 throw new XAException(XAException.XAER_DUPID);
@@ -275,7 +275,7 @@ public class XASessionImpl extends SessionImpl
      * without having been resumed again.
      */
     public void end(Xid xid, int flags) throws XAException {
-        TransactionContext tx = (TransactionContext) txGlobal.get(xid);
+        TransactionContext tx = txGlobal.get(xid);
         if (tx == null) {
             throw new XAException(XAException.XAER_NOTA);
         }
@@ -305,7 +305,7 @@ public class XASessionImpl extends SessionImpl
      * {@inheritDoc}
      */
     public int prepare(Xid xid) throws XAException {
-        TransactionContext tx = (TransactionContext) txGlobal.get(xid);
+        TransactionContext tx = txGlobal.get(xid);
         if (tx == null) {
             throw new XAException(XAException.XAER_NOTA);
         }
@@ -317,7 +317,7 @@ public class XASessionImpl extends SessionImpl
      * {@inheritDoc}
      */
     public void commit(Xid xid, boolean onePhase) throws XAException {
-        TransactionContext tx = (TransactionContext) txGlobal.get(xid);
+        TransactionContext tx = txGlobal.get(xid);
         if (tx == null) {
             throw new XAException(XAException.XAER_NOTA);
         }
@@ -333,7 +333,7 @@ public class XASessionImpl extends SessionImpl
      * {@inheritDoc}
      */
     public void rollback(Xid xid) throws XAException {
-        TransactionContext tx = (TransactionContext) txGlobal.get(xid);
+        TransactionContext tx = txGlobal.get(xid);
         if (tx == null) {
             throw new XAException(XAException.XAER_NOTA);
         }
@@ -385,6 +385,7 @@ public class XASessionImpl extends SessionImpl
     /**
      * {@inheritDoc}
      */
+    @Override
     public synchronized void logout() {
         super.logout();
         // dispose the caches

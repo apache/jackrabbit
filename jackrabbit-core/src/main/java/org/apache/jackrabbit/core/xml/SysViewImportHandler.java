@@ -111,6 +111,7 @@ class SysViewImportHandler extends TargetImportHandler {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void startElement(String namespaceURI, String localName,
                              String qName, Attributes atts)
             throws SAXException {
@@ -198,6 +199,7 @@ class SysViewImportHandler extends TargetImportHandler {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void characters(char[] ch, int start, int length)
             throws SAXException {
         if (currentPropValue != null) {
@@ -214,6 +216,7 @@ class SysViewImportHandler extends TargetImportHandler {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void ignorableWhitespace(char[] ch, int start, int length)
             throws SAXException {
         if (currentPropValue != null) {
@@ -233,6 +236,7 @@ class SysViewImportHandler extends TargetImportHandler {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void endElement(String namespaceURI, String localName, String qName)
             throws SAXException {
         Name name = NameFactoryImpl.getInstance().create(namespaceURI, localName);

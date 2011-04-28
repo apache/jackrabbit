@@ -60,6 +60,7 @@ abstract class TargetImportHandler extends DefaultHandler {
      * @throws SAXException if the importer can not be initialized
      * @see DefaultHandler#startDocument()
      */
+    @Override
     public void startDocument() throws SAXException {
         try {
             importer.start();
@@ -76,6 +77,7 @@ abstract class TargetImportHandler extends DefaultHandler {
      * @throws SAXException if the importer can not be closed
      * @see DefaultHandler#endDocument()
      */
+    @Override
     public void endDocument() throws SAXException {
         try {
             importer.end();
@@ -93,7 +95,7 @@ abstract class TargetImportHandler extends DefaultHandler {
      *
      * @param mappings local namespace mappings
      */
-    public final void startNamespaceContext(Map mappings) {
+    public final void startNamespaceContext(Map<String, String> mappings) {
         nsContext = new NamespaceContext(nsContext, mappings);
         resolver = new DefaultNamePathResolver(nsContext);
     }

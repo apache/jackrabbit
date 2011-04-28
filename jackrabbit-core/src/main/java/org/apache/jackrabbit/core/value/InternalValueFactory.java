@@ -51,34 +51,42 @@ public final class InternalValueFactory extends AbstractQValueFactory {
         return INSTANCE;
     }
 
+    @Override
     public QValue create(Calendar value) throws RepositoryException {
         return InternalValue.create(value);
     }
 
+    @Override
     public QValue create(double value) throws RepositoryException {
         return InternalValue.create(value);
     }
 
+    @Override
     public QValue create(long value) throws RepositoryException {
         return InternalValue.create(value);
     }
 
+    @Override
     public QValue create(boolean value) throws RepositoryException {
         return InternalValue.create(value);
     }
 
+    @Override
     public QValue create(Name value) throws RepositoryException {
         return InternalValue.create(value);
     }
 
+    @Override
     public QValue create(Path value) throws RepositoryException {
         return InternalValue.create(value);
     }
 
+    @Override
     public QValue create(URI value) throws RepositoryException {
         return InternalValue.create(value);
     }
 
+    @Override
     public QValue create(BigDecimal value) throws RepositoryException {
         return InternalValue.create(value);
     }
@@ -100,10 +108,12 @@ public final class InternalValueFactory extends AbstractQValueFactory {
         return InternalValue.createTemporary(in);
     }
 
+    @Override
     protected QValue createReference(String ref, boolean weak) {
         return InternalValue.create(new NodeId(ref), weak);
     }
 
+    @Override
     protected QValue createString(String value) {
         return InternalValue.create(value);
     }
