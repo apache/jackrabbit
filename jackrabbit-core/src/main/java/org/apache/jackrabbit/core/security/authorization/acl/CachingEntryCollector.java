@@ -45,7 +45,6 @@ class CachingEntryCollector extends EntryCollector {
      * nodeID (key). The map only contains an entry if the corresponding Node
      * is access controlled.
      */
-    //private final Map<NodeId, List<AccessControlEntry>> cache;
     private final Map<NodeId, CacheEntry> cache;
     private final Object monitor = new Object();
 
