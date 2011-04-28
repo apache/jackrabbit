@@ -103,6 +103,7 @@ public class QueryImpl extends AbstractQueryImpl {
     /**
      * @inheritDoc
      */
+    @Override
     public void init(
             SessionContext sessionContext, QueryHandler handler,
             String statement, String language, Node node)
