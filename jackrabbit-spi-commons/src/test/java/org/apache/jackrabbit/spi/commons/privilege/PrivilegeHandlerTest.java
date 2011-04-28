@@ -18,8 +18,12 @@ package org.apache.jackrabbit.spi.commons.privilege;
 
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.StringReader;
+import java.io.StringWriter;
+import java.io.Writer;
+import java.util.Arrays;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
@@ -48,6 +52,7 @@ public class PrivilegeHandlerTest extends TestCase {
      */
     private static final String TEST_PREFIX = "foo";
     private static final String TEST_URI = "http://www.foo.com/1.0";
+    private static final String CONTENT_TYPE = "text/xml";
 
     private static PrivilegeDefinition DEF_READ = new PrivilegeDefinition(NF.create(TEST_URI,"testRead"), false, null);
     private static PrivilegeDefinition DEF_WRITE = new PrivilegeDefinition(NF.create(TEST_URI,"testWrite"), false, null);
@@ -67,10 +72,10 @@ public class PrivilegeHandlerTest extends TestCase {
             DEF_ALL
     };
 
-    public void testRead() throws Exception {
+    public void testReadInputStream() throws Exception {
         InputStream in = getClass().getResourceAsStream("readtest.xml");
 
-        PrivilegeDefinitionReader reader = new PrivilegeDefinitionReader(in, "text/xml");
+        PrivilegeDefinitionReader reader = new PrivilegeDefinitionReader(in, CONTENT_TYPE);
 
         Map<Name, PrivilegeDefinition> defs = new HashMap<Name, PrivilegeDefinition>();
         for (PrivilegeDefinition def: reader.getPrivilegeDefinitions()) {
@@ -88,9 +93,30 @@ public class PrivilegeHandlerTest extends TestCase {
         assertEquals("Namespace included", TEST_URI, fooUri);
     }
 
-    public void testWrite() throws Exception {
+    public void testReadReader() throws Exception {
+        InputStream in = getClass().getResourceAsStream("readtest.xml");
 
-        PrivilegeDefinitionWriter writer = new PrivilegeDefinitionWriter("text/xml");
+        PrivilegeDefinitionReader reader = new PrivilegeDefinitionReader(new InputStreamReader(in), CONTENT_TYPE);
+
+        Map<Name, PrivilegeDefinition> defs = new HashMap<Name, PrivilegeDefinition>();
+        for (PrivilegeDefinition def: reader.getPrivilegeDefinitions()) {
+            defs.put(def.getName(), def);
+        }
+        for (PrivilegeDefinition def: DEF_EXPECTED) {
+            PrivilegeDefinition e = defs.remove(def.getName());
+            assertNotNull("Definition " + def.getName() + " missing");
+            assertEquals("Definition mismatch.", def,  e);
+        }
+        assertTrue("Not all definitions present", defs.isEmpty());
+
+        // check for namespace
+        String fooUri = reader.getNamespaces().get(TEST_PREFIX);
+        assertEquals("Namespace included", TEST_URI, fooUri);
+    }
+
+    public void testWriteOutputStream() throws Exception {
+
+        PrivilegeDefinitionWriter writer = new PrivilegeDefinitionWriter(CONTENT_TYPE);
         Map<String, String> namespaces = new HashMap<String, String>();
         namespaces.put(TEST_PREFIX, TEST_URI);
         ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -98,10 +124,24 @@ public class PrivilegeHandlerTest extends TestCase {
 
         String result = out.toString("utf-8").trim();
 
-        byte[] buffer = new byte[0x10000];
-        int read = getClass().getResourceAsStream("writetest.xml").read(buffer);
-        String expected = new String(buffer, 0, read, "utf-8").trim();
-        assertEquals("Write", expected, result);
+        PrivilegeDefinitionReader pdr = new PrivilegeDefinitionReader(new StringReader(result), CONTENT_TYPE);
+        PrivilegeDefinition[] definitions = pdr.getPrivilegeDefinitions();
+        assertTrue("Write", Arrays.equals(DEF_EXPECTED, definitions));
+    }
+
+    public void testWriteWriter() throws Exception {
+
+        PrivilegeDefinitionWriter writer = new PrivilegeDefinitionWriter(CONTENT_TYPE);
+        Map<String, String> namespaces = new HashMap<String, String>();
+        namespaces.put(TEST_PREFIX, TEST_URI);
+        Writer w = new StringWriter();
+        writer.writeDefinitions(w, DEF_EXPECTED, namespaces);
+
+        String result = w.toString();
+
+        PrivilegeDefinitionReader pdr = new PrivilegeDefinitionReader(new StringReader(result), CONTENT_TYPE);
+        PrivilegeDefinition[] definitions = pdr.getPrivilegeDefinitions();
+        assertTrue("Write", Arrays.equals(DEF_EXPECTED, definitions));
     }
 
 }
