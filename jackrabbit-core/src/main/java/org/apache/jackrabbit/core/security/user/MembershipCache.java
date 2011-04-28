@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.core.security.user;
 
-import org.apache.jackrabbit.commons.collections.GrowingLRUMap;
+import org.apache.jackrabbit.spi.commons.collections.GrowingLRUMap;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.PropertyImpl;
 import org.apache.jackrabbit.core.SessionImpl;
