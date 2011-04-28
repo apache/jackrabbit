@@ -118,6 +118,7 @@ public class LockManagerImpl
         /**
          * {@inheritDoc}
          */
+        @Override
         public void acquire() throws InterruptedException {
         	if (Thread.interrupted()) throw new InterruptedException();
         	Xid currentXid = TransactionContext.getCurrentXid();
@@ -141,6 +142,7 @@ public class LockManagerImpl
         /**
          * {@inheritDoc}
          */
+        @Override
         public synchronized void release()  {
         	Xid currentXid = TransactionContext.getCurrentXid();
             if (activeXid != null && !isSameGlobalTx(currentXid))

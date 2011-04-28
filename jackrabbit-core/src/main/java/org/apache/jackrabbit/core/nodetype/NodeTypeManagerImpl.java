@@ -103,9 +103,7 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager
     /**
      * Creates a new <code>NodeTypeManagerImpl</code> instance.
      *
-     * @param ntReg      node type registry
-     * @param session    current session
-     * @param store      the data store
+     * @param context the session context
      */
     @SuppressWarnings("unchecked")
     public NodeTypeManagerImpl(SessionContext context) {
@@ -137,6 +135,7 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager
      * @param def the QNodeDefinition
      * @return the node definition
      */
+    @Override
     public NodeDefinitionImpl getNodeDefinition(QNodeDefinition def) {
         synchronized (ndCache) {
             NodeDefinitionImpl ndi = ndCache.get(def);
@@ -152,6 +151,7 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager
      * @param def prop def
      * @return the property definition
      */
+    @Override
     public PropertyDefinitionImpl getPropertyDefinition(QPropertyDefinition def) {
         synchronized (pdCache) {
             PropertyDefinitionImpl pdi = pdCache.get(def);
@@ -169,6 +169,7 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager
      * @return node type
      * @throws NoSuchNodeTypeException if the nodetype does not exit
      */
+    @Override
     public NodeTypeImpl getNodeType(Name name) throws NoSuchNodeTypeException {
         synchronized (ntCache) {
             NodeTypeImpl nt = ntCache.get(name);
@@ -188,6 +189,7 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager
     /**
      * @see org.apache.jackrabbit.spi.commons.nodetype.AbstractNodeTypeManager#getNamePathResolver()
      */
+    @Override
     public NamePathResolver getNamePathResolver() {
         return context;
     }

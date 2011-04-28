@@ -658,6 +658,7 @@ public class InternalValue extends AbstractQValue {
     /**
      * @see org.apache.jackrabbit.spi.QValue#getLength()
      */
+    @Override
     public long getLength() throws RepositoryException {
         if (PropertyType.BINARY == type) {
             return ((Binary) val).getSize();
@@ -685,6 +686,7 @@ public class InternalValue extends AbstractQValue {
     /**
      * @see org.apache.jackrabbit.spi.QValue#getBinary()
      */
+    @Override
     public Binary getBinary() throws RepositoryException {
         if (type == PropertyType.BINARY) {
             // return an independent copy that can be disposed without
@@ -704,6 +706,7 @@ public class InternalValue extends AbstractQValue {
     /**
      * @see org.apache.jackrabbit.spi.QValue#discard()
      */
+    @Override
     public void discard() {
         if (type == PropertyType.BINARY) {
             BLOBFileValue bfv = (BLOBFileValue) val;
