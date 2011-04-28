@@ -49,9 +49,10 @@ class CachingEntryCollector extends EntryCollector {
     private final Object monitor = new Object();
 
     /**
-     * 
-     * @param systemSession
-     * @param rootID
+     * Create a new instance.
+     *
+     * @param systemSession A system session.
+     * @param rootID The id of the root node.
      * @throws RepositoryException
      */
     @SuppressWarnings("unchecked")    
@@ -109,10 +110,12 @@ class CachingEntryCollector extends EntryCollector {
     }
 
     /**
+     * Read the entries defined for the specified node and update the cache
+     * accordingly.
      *
-     * @param node
-     * @return
-     * @throws RepositoryException
+     * @param node The target node
+     * @return The list of entries present on the specified node or an empty list.
+     * @throws RepositoryException If an error occurs.
      */
     private List<AccessControlEntry> updateCache(NodeImpl node) throws RepositoryException {
         List<AccessControlEntry> entries = super.getEntries(node);
