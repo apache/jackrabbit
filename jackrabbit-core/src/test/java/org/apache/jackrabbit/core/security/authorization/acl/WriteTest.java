@@ -422,4 +422,86 @@ public class WriteTest extends AbstractWriteTest {
         n.addNode("someChild");
         n.save();
     }
+
+    public void testRemoveNodeWithPolicy() throws Exception {
+        Privilege[] privileges = privilegesFromNames(new String[] {Privilege.JCR_READ, Privilege.JCR_WRITE});
+
+        /* allow READ/WRITE privilege for testUser at 'path' */
+        givePrivileges(path, testUser.getPrincipal(), privileges, getRestrictions(superuser, path));
+        /* allow READ/WRITE privilege for testUser at 'childPath' */
+        givePrivileges(childNPath, testUser.getPrincipal(), privileges, getRestrictions(superuser, path));
+
+        Session testSession = getTestSession();
+
+        assertTrue(testSession.nodeExists(childNPath));
+        assertTrue(testSession.hasPermission(childNPath, Session.ACTION_REMOVE));
+
+        Node n = testSession.getNode(childNPath);
+
+        // removing the child node must succeed as both remove-node and
+        // remove-child-nodes are granted to testsession.
+        // the policy node underneath childNPath should silently be removed
+        // as the editing session has no knowledge about it's existence.
+        n.remove();
+        testSession.save();
+    }
+
+    public void testRemoveNodeWithInvisibleChild() throws Exception {
+        Privilege[] privileges = privilegesFromNames(new String[] {Privilege.JCR_READ, Privilege.JCR_WRITE});
+
+        Node invisible = superuser.getNode(childNPath).addNode(nodeName3);
+        superuser.save();
+
+        /* allow READ/WRITE privilege for testUser at 'path' */
+        givePrivileges(path, testUser.getPrincipal(), privileges, getRestrictions(superuser, path));
+        /* deny READ privilege at invisible node. (removal is still granted) */
+        withdrawPrivileges(invisible.getPath(), testUser.getPrincipal(),
+                privilegesFromNames(new String[] {Privilege.JCR_READ}),
+                getRestrictions(superuser, path));
+
+        Session testSession = getTestSession();
+
+        assertTrue(testSession.nodeExists(childNPath));
+        assertTrue(testSession.hasPermission(childNPath, Session.ACTION_REMOVE));
+
+        Node n = testSession.getNode(childNPath);
+
+        // removing the child node must succeed as both remove-node and
+        // remove-child-nodes are granted to testsession.
+        // the policy node underneath childNPath should silently be removed
+        // as the editing session has no knowledge about it's existence.
+        n.remove();
+        testSession.save();
+    }
+
+    public void testRemoveNodeWithInvisibleNonRemovableChild() throws Exception {
+        Privilege[] privileges = privilegesFromNames(new String[] {Privilege.JCR_READ, Privilege.JCR_WRITE});
+
+        Node invisible = superuser.getNode(childNPath).addNode(nodeName3);
+        superuser.save();
+
+        /* allow READ/WRITE privilege for testUser at 'path' */
+        givePrivileges(path, testUser.getPrincipal(), privileges, getRestrictions(superuser, path));
+        /* deny READ privilege at invisible node. (removal is still granted) */
+        withdrawPrivileges(invisible.getPath(), testUser.getPrincipal(),
+                privileges,
+                getRestrictions(superuser, path));
+
+        Session testSession = getTestSession();
+
+        assertTrue(testSession.nodeExists(childNPath));
+        assertTrue(testSession.hasPermission(childNPath, Session.ACTION_REMOVE));
+
+        Node n = testSession.getNode(childNPath);
+
+        // removing the child node must fail as a hidden child node cannot
+        // be removed.
+        try {
+            n.remove();
+            testSession.save();
+            fail();
+        } catch (AccessDeniedException e) {
+            // success
+        }
+    }
 }
