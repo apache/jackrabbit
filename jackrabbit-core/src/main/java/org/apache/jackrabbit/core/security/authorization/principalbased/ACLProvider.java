@@ -17,7 +17,7 @@
 package org.apache.jackrabbit.core.security.authorization.principalbased;
 
 import org.apache.jackrabbit.api.security.principal.PrincipalManager;
-import org.apache.jackrabbit.commons.collections.GrowingLRUMap;
+import org.apache.jackrabbit.spi.commons.collections.GrowingLRUMap;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.id.ItemId;
