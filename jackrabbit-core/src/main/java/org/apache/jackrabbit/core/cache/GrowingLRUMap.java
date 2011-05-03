@@ -14,28 +14,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.spi.commons.collections;
+package org.apache.jackrabbit.core.cache;
 
-import junit.framework.TestCase;
+import org.apache.commons.collections.map.LRUMap;
 
 /**
- * <code>GrowingLRUMapTest</code>...
+ * <code>GrowingLRUMap</code> extends the LRUMap such that it can grow from
+ * the specified <code>initialSize</code> to the specified <code>maxSize</code>;
  */
-public class GrowingLRUMapTest extends TestCase {
+public class GrowingLRUMap extends LRUMap {
 
-    public void testMaxSize() {
-        int initialSize = 2;
-        int maxSize = 10;
-        GrowingLRUMap m = new GrowingLRUMap(initialSize, maxSize);
+    private final int maxSize;
 
-        for (int i = 0; i < 50; i++) {
-            m.put("key" + i, "value" + i);
+    public GrowingLRUMap(int initialSize, int maxSize) {
+        super(initialSize);
+        this.maxSize = maxSize;
+    }
 
-            if (i <= maxSize) {
-                assertSame("i = " + i, i+1, m.size());
-            } else {
-                assertNotSame("i = " + i, i+1, m.size());
-            }
-        }
+    @Override
+    protected boolean removeLRU(LinkEntry entry) {
+        return size() > maxSize;
     }
 }
