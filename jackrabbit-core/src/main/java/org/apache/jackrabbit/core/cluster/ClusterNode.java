@@ -191,6 +191,7 @@ public class ClusterNode implements Runnable,
     /**
      * Initialize this cluster node.
      *
+     * @param clusterContext The cluster context.
      * @throws ClusterException if an error occurs
      */
     public void init(ClusterContext clusterContext) throws ClusterException {
