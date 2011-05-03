@@ -14,26 +14,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.spi.commons.collections;
+package org.apache.jackrabbit.core.cache;
 
-import junit.framework.Test;
 import junit.framework.TestCase;
-import junit.framework.TestSuite;
 
 /**
- * Test suite that includes all testcases for package org.apache.jackrabbit.spi.commons.collections.
+ * <code>GrowingLRUMapTest</code>...
  */
-public class TestAll extends TestCase {
+public class GrowingLRUMapTest extends TestCase {
 
-    /**
-     * Returns a <code>Test</code> suite that executes all tests inside this
-     * package.
-     */
-    public static Test suite() {
-        TestSuite suite = new TestSuite("org.apache.jackrabbit.spi.commons.collections tests");
+    public void testMaxSize() {
+        int initialSize = 2;
+        int maxSize = 10;
+        GrowingLRUMap m = new GrowingLRUMap(initialSize, maxSize);
 
-        suite.addTestSuite(GrowingLRUMapTest.class);
+        for (int i = 0; i < 50; i++) {
+            m.put("key" + i, "value" + i);
 
-        return suite;
+            if (i <= maxSize) {
+                assertSame("i = " + i, i+1, m.size());
+            } else {
+                assertNotSame("i = " + i, i+1, m.size());
+            }
+        }
     }
 }
