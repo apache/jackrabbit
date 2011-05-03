@@ -53,7 +53,7 @@ class CachingEntryCollector extends EntryCollector {
      *
      * @param systemSession A system session.
      * @param rootID The id of the root node.
-     * @throws RepositoryException
+     * @throws RepositoryException If an error occurs.
      */
     @SuppressWarnings("unchecked")    
     CachingEntryCollector(SessionImpl systemSession, NodeId rootID) throws RepositoryException {
@@ -150,9 +150,10 @@ class CachingEntryCollector extends EntryCollector {
      * Evaluates if the given node is access controlled and holds a non-empty
      * rep:policy child node.
      * 
-     * @param n
-     * @return
-     * @throws RepositoryException
+     * @param n The node to test.
+     * @return true if the specified node is access controlled and holds a
+     * non-empty policy child node.
+     * @throws RepositoryException If an error occurs.
      */
     private static boolean hasEntries(NodeImpl n) throws RepositoryException {
         if (ACLProvider.isAccessControlled(n)) {
@@ -168,8 +169,9 @@ class CachingEntryCollector extends EntryCollector {
      * Returns the id of the next access-controlled ancestor if the specified
      * is contained in the cache. Otherwise the method of the super-class is called.
      *
-     * @param nodeId
-     * @return
+     * @param nodeId The id of the node.
+     * @return the id of the next access-controlled ancestor if the specified
+     * is contained in the cache; otherwise the id of the parent.
      * @throws RepositoryException
      * @see EntryCollector#getParentId(org.apache.jackrabbit.core.id.NodeId)
      */
