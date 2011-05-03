@@ -16,8 +16,8 @@
  */
 package org.apache.jackrabbit.core.security.authorization.principalbased;
 
-import org.apache.commons.collections.map.LRUMap;
 import org.apache.jackrabbit.api.security.principal.PrincipalManager;
+import org.apache.jackrabbit.core.cache.GrowingLRUMap;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.id.ItemId;
@@ -307,12 +307,7 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
         private boolean canReadAll;
 
         @SuppressWarnings("unchecked")
-        private final Map<ItemId, Boolean> readCache = new LRUMap(1024) {
-            @Override
-            protected boolean removeLRU(LinkEntry entry) {
-                return size() > 5000;
-            }
-        };
+        private final Map<ItemId, Boolean> readCache = new GrowingLRUMap(1024, 5000);
 
         private final Object monitor = new Object();
 
