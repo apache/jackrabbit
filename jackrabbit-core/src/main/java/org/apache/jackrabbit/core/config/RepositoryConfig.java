@@ -99,10 +99,11 @@ public class RepositoryConfig
      * configuration file does not exist, then it is created using the
      * default Jackrabbit configuration settings.
      *
-     * @since Apache Jackrabbit 1.6
      * @param dir repository home directory
      * @return repository configuration
      * @throws ConfigurationException on configuration errors
+     * @throws java.io.IOException If an error occurs.
+     * @since Apache Jackrabbit 1.6
      */
     public static RepositoryConfig install(File dir)
             throws IOException, ConfigurationException {
@@ -118,10 +119,11 @@ public class RepositoryConfig
      * configuration file does not exist, then it is created using the
      * default Jackrabbit configuration settings.
      *
-     * @since Apache Jackrabbit 2.1
      * @param variables parser variables
      * @return repository configuration
      * @throws ConfigurationException on configuration errors
+     * @throws java.io.IOException If an error occurs.
+     * @since Apache Jackrabbit 2.1
      */
     public static RepositoryConfig install(Properties variables)
             throws IOException, ConfigurationException {
@@ -174,10 +176,12 @@ public class RepositoryConfig
      * configuration file does not exist, then it is created using the
      * default Jackrabbit configuration settings.
      *
-     * @since Apache Jackrabbit 1.6
+     * @param xml the configuration file.
      * @param dir repository home directory
      * @return repository configuration
      * @throws ConfigurationException on configuration errors
+     * @throws java.io.IOException If another error occurs.
+     * @since Apache Jackrabbit 1.6
      */
     public static RepositoryConfig install(File xml, File dir)
             throws IOException, ConfigurationException {
@@ -235,10 +239,11 @@ public class RepositoryConfig
      * An exception is thrown if the directory does not exist or if
      * the repository configuration file can not be read. 
      *
-     * @since Apache Jackrabbit 1.6
+     * @param xml The configuration file.
      * @param dir repository home directory
      * @return repository configuration
      * @throws ConfigurationException on configuration errors
+     * @since Apache Jackrabbit 1.6
      */
     public static RepositoryConfig create(File xml, File dir)
             throws ConfigurationException {
@@ -1038,6 +1043,9 @@ public class RepositoryConfig
     /**
      * Returns the cluster configuration. Returns <code>null</code> if clustering
      * has not been configured.
+     *
+     * @return the cluster configuration or <code>null</code> if clustering
+     * has not been configured.
      */
     public ClusterConfig getClusterConfig() {
         return cc;
@@ -1046,6 +1054,8 @@ public class RepositoryConfig
     /**
      * Returns the {@link ConnectionFactory} for this repository.
      * Please note that it must be closed explicitly.
+     *
+     * @return The connection factory configured for this repository.
      */
     public ConnectionFactory getConnectionFactory() {
         return cf;
