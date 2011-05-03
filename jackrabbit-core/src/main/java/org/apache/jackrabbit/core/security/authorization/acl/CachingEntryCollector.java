@@ -16,9 +16,9 @@
  */
 package org.apache.jackrabbit.core.security.authorization.acl;
 
-import org.apache.commons.collections.map.LRUMap;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.cache.GrowingLRUMap;
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.security.authorization.AccessControlModifications;
 import org.slf4j.Logger;
@@ -58,8 +58,8 @@ class CachingEntryCollector extends EntryCollector {
     @SuppressWarnings("unchecked")    
     CachingEntryCollector(SessionImpl systemSession, NodeId rootID) throws RepositoryException {
         super(systemSession, rootID);
-        
-        cache = new LRUMap(1000);
+
+        cache = new GrowingLRUMap(1024, 5000);
     }
 
     @Override

@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.core.security.authorization.acl;
 
-import org.apache.commons.collections.map.LRUMap;
+import org.apache.jackrabbit.core.cache.GrowingLRUMap;
 import org.apache.jackrabbit.core.ItemImpl;
 import org.apache.jackrabbit.core.ItemManager;
 import org.apache.jackrabbit.core.NodeImpl;
@@ -59,12 +59,7 @@ class CompiledPermissionsImpl extends AbstractCompiledPermissions implements Acc
      * removing LRU items.
      */
     @SuppressWarnings("unchecked")
-    private final Map<ItemId, Boolean> readCache = new LRUMap(1024) {
-        @Override
-        protected boolean removeLRU(LinkEntry entry) {
-            return size() > 5000;
-        }
-    };
+    private final Map<ItemId, Boolean> readCache = new GrowingLRUMap(1024, 5000);
 
     private final Object monitor = new Object();
 
