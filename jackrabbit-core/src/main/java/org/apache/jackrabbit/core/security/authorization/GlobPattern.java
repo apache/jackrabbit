@@ -218,8 +218,9 @@ public final class GlobPattern {
                 // shortcut: verify if end of pattern matches end of toMatch
                 return false;
             }
+            char[] tm = (toMatch.endsWith("/")) ? toMatch.substring(0, toMatch.length()-1).toCharArray() : toMatch.toCharArray();
             // shortcut didn't reveal mismatch -> need to process the internal match method.
-            return matches(patternChars, 0, toMatch.toCharArray(), 0);
+            return matches(patternChars, 0, tm, 0);
         }
 
         /**
