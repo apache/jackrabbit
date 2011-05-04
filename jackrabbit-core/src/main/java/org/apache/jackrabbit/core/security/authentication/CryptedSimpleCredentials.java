@@ -26,6 +26,7 @@ import javax.jcr.SimpleCredentials;
 import java.io.UnsupportedEncodingException;
 import java.security.NoSuchAlgorithmException;
 import java.security.MessageDigest;
+import java.security.SecureRandom;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -38,7 +39,9 @@ public class CryptedSimpleCredentials implements Credentials {
     private static final Logger log = LoggerFactory.getLogger(CryptedSimpleCredentials.class);
 
     private final String algorithm;
-    private final String cryptedPassword;
+    private final String salt;
+
+    private final String hashedPassword;
     private final String userId;
     private final Map<String, Object> attributes;
 
@@ -51,6 +54,7 @@ public class CryptedSimpleCredentials implements Credentials {
      * @param credentials
      * @throws NoSuchAlgorithmException
      * @throws UnsupportedEncodingException
+     * @deprecated
      */
     public CryptedSimpleCredentials(SimpleCredentials credentials)
             throws NoSuchAlgorithmException, UnsupportedEncodingException {
@@ -64,7 +68,8 @@ public class CryptedSimpleCredentials implements Credentials {
         }
         String password = new String(pwd);
         algorithm = SecurityConstants.DEFAULT_DIGEST;
-        cryptedPassword = crypt(password, algorithm);
+        salt = null; // backwards compatibility.
+        hashedPassword = generateHash(password, algorithm, salt);
 
         String[] attNames = credentials.getAttributeNames();
         attributes = new HashMap<String, Object>(attNames.length);
@@ -75,37 +80,39 @@ public class CryptedSimpleCredentials implements Credentials {
 
     /**
      * Create a new instanceof <code>CryptedSimpleCredentials</code> from the
-     * given <code>userId</code> and <code>cryptedPassword</code> strings.
+     * given <code>userId</code> and <code>hashedPassword</code> strings.
      * In contrast to {@link CryptedSimpleCredentials(SimpleCredentials)} that
      * expects the password to be plain text this constructor expects the
      * password to be already crypted. However, it performs a simple validation
-     * and calls {@link Text#digest(String, byte[])} using the
+     * and calls {@link Text#digest} using the
      * {@link SecurityConstants#DEFAULT_DIGEST default digest} in case the
      * given password is found to be plain text.
      *
      * @param userId
-     * @param cryptedPassword
+     * @param hashedPassword
      * @throws NoSuchAlgorithmException
      * @throws UnsupportedEncodingException
      */
-    public CryptedSimpleCredentials(String userId, String cryptedPassword) throws NoSuchAlgorithmException, UnsupportedEncodingException {
+    public CryptedSimpleCredentials(String userId, String hashedPassword) throws NoSuchAlgorithmException, UnsupportedEncodingException {
         if (userId == null || userId.length() == 0) {
             throw new IllegalArgumentException("Invalid userID: The userID must have a length > 0.");
         }
-        if (cryptedPassword == null) {
+        if (hashedPassword == null) {
             throw new IllegalArgumentException("Password may not be null.");
         }
         this.userId = userId;
-        String algo =  extractAlgorithm(cryptedPassword);
+        String algo =  extractAlgorithm(hashedPassword);
         if (algo == null) {
-            // password is plain text including those starting with {invalidAlgorithm}
+            // password is plain text (including those starting with {invalidAlgorithm})
             log.debug("Plain text password -> Using " + SecurityConstants.DEFAULT_DIGEST + " to create digest.");
             algorithm = SecurityConstants.DEFAULT_DIGEST;
-            this.cryptedPassword = crypt(cryptedPassword, algorithm);
+            salt = generateSalt();
+            this.hashedPassword = generateHash(hashedPassword, algorithm, salt);
         } else {
-            // password is already encrypted and started with {validAlgorithm}
+            // password is already hashed and started with {validAlgorithm}
             algorithm = algo;
-            this.cryptedPassword = cryptedPassword;
+            salt = extractSalt(hashedPassword, algorithm);
+            this.hashedPassword = hashedPassword;
         }
         attributes = Collections.emptyMap();
     }
@@ -127,7 +134,7 @@ public class CryptedSimpleCredentials implements Credentials {
     }
 
     public String getPassword() {
-        return cryptedPassword;
+        return hashedPassword;
     }
 
     /**
@@ -155,7 +162,7 @@ public class CryptedSimpleCredentials implements Credentials {
         if (getUserID().equalsIgnoreCase(credentials.getUserID())) {
             // crypt the password retrieved from the given simple credentials
             // and test if it is equal to the cryptedPassword field.
-            return cryptedPassword.equals(crypt(String.valueOf(credentials.getPassword()), algorithm));
+            return hashedPassword.equals(generateHash(String.valueOf(credentials.getPassword()), algorithm, salt));
         }
         return false;
     }
@@ -163,34 +170,43 @@ public class CryptedSimpleCredentials implements Credentials {
     /**
      * @param pwd Plain text password
      * @param algorithm The algorithm to be used for the digest.
-     * @return Digest of the given password with leading algorithm information.
+     * @param salt The salt to be used for the digest.
+     * @return Digest of the given password with leading algorithm and optionally
+     * salt information.
      * @throws NoSuchAlgorithmException
      * @throws UnsupportedEncodingException
      */
-    private static String crypt(String pwd, String algorithm)
+    private static String generateHash(String pwd, String algorithm, String salt)
             throws NoSuchAlgorithmException, UnsupportedEncodingException {
 
         StringBuilder password = new StringBuilder();
         password.append("{").append(algorithm).append("}");
-        password.append(Text.digest(algorithm, pwd.getBytes("UTF-8")));
+        if (salt != null && salt.length() > 0) {
+            password.append(salt).append("-");
+            StringBuilder data = new StringBuilder();
+            data.append(salt).append(pwd);
+            password.append(Text.digest(algorithm, data.toString().getBytes("UTF-8")));
+        } else {
+            password.append(Text.digest(algorithm, pwd.getBytes("UTF-8")));            
+        }
         return password.toString();
     }
 
     /**
      * Extract the algorithm from the given crypted password string. Returns the
      * algorithm or <code>null</code> if the given string doesn't have a
-     * leading <code>{algorith}</code> such as created by {@link #crypt(String, String)
+     * leading <code>{algorithm}</code> such as created by {@link #generateHash(String, String, String)
      * or if the extracted string doesn't represent an available algorithm.
      *
-     * @param cryptedPwd
+     * @param hashedPwd
      * @return The algorithm or <code>null</code> if the given string doesn't have a
      * leading <code>{algorith}</code> such as created by {@link #crypt(String, String)
      * or if the extracted string isn't an available algorithm. 
      */
-    private static String extractAlgorithm(String cryptedPwd) {
-        int end = cryptedPwd.indexOf("}");
-        if (cryptedPwd.startsWith("{") && end > 0) {
-            String algorithm = cryptedPwd.substring(1, end);
+    private static String extractAlgorithm(String hashedPwd) {
+        int end = hashedPwd.indexOf("}");
+        if (hashedPwd.startsWith("{") && end > 0) {
+            String algorithm = hashedPwd.substring(1, end);
             try {
                 MessageDigest.getInstance(algorithm);
                 return algorithm;
@@ -201,5 +217,41 @@ public class CryptedSimpleCredentials implements Credentials {
 
         // not starting with {} or invalid algorithm
         return null;
+    }
+
+    /**
+     * Extract the salt from the password hash.
+     *
+     * @param hashedPwd
+     * @param algorithm
+     * @return salt or <code>null</code>
+     */
+    private static String extractSalt(String hashedPwd, String algorithm) {
+        int start = algorithm.length()+2;
+        int end = hashedPwd.indexOf("-", start);
+        if (end > -1) {
+            return hashedPwd.substring(start, end);
+        }
+
+        // no salt 
+        return null;
+    }
+
+    /**
+     * Generate a new random salt for password digest.
+     *
+     * @return a new random salt.
+     */
+    private static String generateSalt() {
+        SecureRandom random = new SecureRandom();
+        byte salt[] = new byte[8];
+        random.nextBytes(salt);
+
+        StringBuffer res = new StringBuffer(salt.length * 2);
+        for (byte b : salt) {
+            res.append(Text.hexTable[(b >> 4) & 15]);
+            res.append(Text.hexTable[b & 15]);
+        }
+        return res.toString();
     }
 }
