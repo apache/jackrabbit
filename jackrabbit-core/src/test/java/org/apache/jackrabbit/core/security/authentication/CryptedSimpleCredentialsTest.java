@@ -75,15 +75,23 @@ public class CryptedSimpleCredentialsTest extends TestCase {
     }
 
     public void testGetPassword() throws NoSuchAlgorithmException, UnsupportedEncodingException {
-        CryptedSimpleCredentials prev = null;
-        for (CryptedSimpleCredentials cc : cCreds) {
-            assertFalse(pw.equals(cc.getPassword()));
-            if (prev != null) {
-                assertEquals(prev.getPassword(), cc.getPassword());
-            }
-            prev = cc;
-        }
+        // build crypted credentials from the simple credentials
+        CryptedSimpleCredentials cc = new CryptedSimpleCredentials(userID, pw);
+        assertFalse(pw.equals(cc.getPassword()));
 
+        // build from uid and crypted pw
+        CryptedSimpleCredentials cc2 = new CryptedSimpleCredentials(userID, cc.getPassword());
+        assertFalse(pw.equals(cc2.getPassword()));
+
+        assertEquals(cc.getPassword(), cc2.getPassword());
+
+        CryptedSimpleCredentials cc3 = new CryptedSimpleCredentials(sCreds);
+        assertFalse(pw.equals(cc3.getPassword()));
+        assertFalse(cc.getPassword().equals(cc3.getPassword()));
+    }
+
+    public void testGetPassword2() throws NoSuchAlgorithmException, UnsupportedEncodingException {
+        CryptedSimpleCredentials prev = cCreds.get(0);
         // build crypted credentials from the uid and the crypted pw contained
         // in simple credentials -> simple-c-password must be treated plain-text
         SimpleCredentials sc = new SimpleCredentials(userID, prev.getPassword().toCharArray());
