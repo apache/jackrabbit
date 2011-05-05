@@ -19,12 +19,18 @@ package org.apache.jackrabbit.core.session;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
+import org.apache.jackrabbit.core.ItemImpl;
 import org.apache.jackrabbit.core.id.NodeId;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Operation to persist transient changes in a session.
  */
 public class SessionSaveOperation implements SessionWriteOperation<Object> {
+
+    private static final Logger LOG = LoggerFactory.getLogger(SessionSaveOperation.class);
+    private static final boolean LOG_WITH_STACKTRACE = Boolean.getBoolean("org.jackrabbit.logWithStackTrace");
 
     /**
      * Persists transient changes by delegating to the save() method of the
@@ -38,6 +44,15 @@ public class SessionSaveOperation implements SessionWriteOperation<Object> {
             id = context.getRootNodeId();
         } else {
             id = context.getItemStateManager().getIdOfRootTransientNodeState();
+        }
+        if (LOG.isDebugEnabled()) {
+            NodeId transientRoot = context.getItemStateManager().getIdOfRootTransientNodeState();
+            ItemImpl item = context.getItemManager().getItem(transientRoot);
+            if (LOG_WITH_STACKTRACE) {
+                LOG.debug("Saving changes under " + item.getPath(), new Exception());
+            } else {
+                LOG.debug("Saving changes under " + item.getPath());
+            }
         }
         context.getItemManager().getItem(id).save();
         return this;
