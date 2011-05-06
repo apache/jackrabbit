@@ -46,12 +46,19 @@ public class SessionSaveOperation implements SessionWriteOperation<Object> {
             id = context.getItemStateManager().getIdOfRootTransientNodeState();
         }
         if (LOG.isDebugEnabled()) {
-            NodeId transientRoot = context.getItemStateManager().getIdOfRootTransientNodeState();
-            ItemImpl item = context.getItemManager().getItem(transientRoot);
+            String path;
+            try {
+                NodeId transientRoot = context.getItemStateManager().getIdOfRootTransientNodeState();
+                ItemImpl item = context.getItemManager().getItem(transientRoot);
+                path = item.getPath();
+            } catch (Exception e) {
+                LOG.warn("Could not get the path", e);
+                path = "?";
+            }
             if (LOG_WITH_STACKTRACE) {
-                LOG.debug("Saving changes under " + item.getPath(), new Exception());
+                LOG.debug("Saving changes under " + path, new Exception());
             } else {
-                LOG.debug("Saving changes under " + item.getPath());
+                LOG.debug("Saving changes under " + path);
             }
         }
         context.getItemManager().getItem(id).save();
