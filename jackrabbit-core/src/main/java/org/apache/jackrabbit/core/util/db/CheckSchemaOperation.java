@@ -76,9 +76,9 @@ public class CheckSchemaOperation {
      * @throws IOException if an error occurs
      */
     public void run() throws SQLException, IOException {
-        if (!conHelper.tableExists(table)) {
-            BufferedReader reader = new BufferedReader(new InputStreamReader(ddl));
-            try {
+        try {
+            if (!conHelper.tableExists(table)) {
+                BufferedReader reader = new BufferedReader(new InputStreamReader(ddl));
                 String sql = reader.readLine();
                 while (sql != null) {
                     // Skip comments and empty lines
@@ -91,9 +91,9 @@ public class CheckSchemaOperation {
                     // read next sql stmt
                     sql = reader.readLine();
                 }
-            } finally {
-                IOUtils.closeQuietly(ddl);
             }
+        } finally {
+            IOUtils.closeQuietly(ddl);
         }
     }
 
