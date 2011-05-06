@@ -549,8 +549,13 @@ class BundleReader {
         long b;
         do {
             b = in.readUnsignedByte();
-            value = (b & 0x7f) << 57 | value >>> 7;
-            bits += 7;
+            if (bits < 57) {
+                value = (b & 0x7f) << 57 | value >>> 7;
+                bits += 7;
+            } else {
+                value = (b & 0x01) << 63 | value >>> 1;
+                bits = 64;
+            }
         } while ((b & 0x80) != 0);
         value = value >>> (64 - bits);
         if ((value & 1) != 0) {
