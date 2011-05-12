@@ -258,9 +258,6 @@ public class GarbageCollectorTest extends AbstractJCRTest implements ScanEventLi
         }
     }
 
-    public void done() {
-    }
-
     private void deleteMyNodes() throws RepositoryException {
         Node root = testRootNode;
         while (root.hasNode("testroot")) {

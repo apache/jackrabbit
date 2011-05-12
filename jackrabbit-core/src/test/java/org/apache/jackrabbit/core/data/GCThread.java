@@ -96,13 +96,8 @@ public class GCThread implements Runnable, MarkEventListener {
         }
     }
 
-    public void afterScanning(Node n) throws RepositoryException {
-    }
-
     public void beforeScanning(Node n) throws RepositoryException {
-    }
-
-    public void done() {
+        // nothing to do
     }
 
 }
