@@ -256,8 +256,7 @@ public class AclProperty extends AbstractDavProperty<List<AclProperty.Ace>> {
                 inheritedHref = DomUtil.getChildText(inhE, DavConstants.XML_HREF, DavConstants.NAMESPACE);
             }
 
-            Ace ace = new Ace(principal, invert, privileges, grant,  isProtected, inheritedHref);
-            return ace;
+            return new Ace(principal, invert, privileges, grant,  isProtected, inheritedHref);
         }
     }
 }
