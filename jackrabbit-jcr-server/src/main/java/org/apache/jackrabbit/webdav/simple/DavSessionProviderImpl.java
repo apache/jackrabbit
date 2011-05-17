@@ -96,10 +96,10 @@ public class DavSessionProviderImpl implements DavSessionProvider {
             // which seems not appropriate here
             throw new JcrDavException(e, DavServletResponse.SC_NOT_FOUND);
         } catch (RepositoryException e) {
-	    throw new JcrDavException(e);
-	} catch (ServletException e) {
-	    throw new DavException(DavServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
-	}
+            throw new JcrDavException(e);
+        } catch (ServletException e) {
+            throw new DavException(DavServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
+        }
     }
 
     /**
@@ -121,9 +121,7 @@ public class DavSessionProviderImpl implements DavSessionProvider {
             }
             sesProvider.releaseSession(repSession);
             log.debug("Releasing session '"+ ds + "' from request '" + request + "'");
-        } else {
-            // session is null. nothing to be done.
-        }
+        } // else : session is null. nothing to be done.
         request.setDavSession(null);
     }
 }

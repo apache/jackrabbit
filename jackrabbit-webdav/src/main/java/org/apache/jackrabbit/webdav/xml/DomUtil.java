@@ -34,8 +34,6 @@ import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.Result;
-import javax.xml.transform.Source;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
@@ -627,8 +625,7 @@ public class DomUtil {
      */
     public static Element timeoutToXml(long timeout, Document factory) {
         String expString = "Second-"+ timeout/1000;
-        Element exp = createElement(factory, DavConstants.XML_TIMEOUT, DavConstants.NAMESPACE, expString);
-        return exp;
+        return createElement(factory, DavConstants.XML_TIMEOUT, DavConstants.NAMESPACE, expString);
     }
 
     /**
@@ -650,8 +647,7 @@ public class DomUtil {
      * @return 'deep' XML element
      */
     public static Element depthToXml(String depth, Document factory) {
-        Element dElem = createElement(factory, DavConstants.XML_DEPTH, DavConstants.NAMESPACE, depth);
-        return dElem;
+        return createElement(factory, DavConstants.XML_DEPTH, DavConstants.NAMESPACE, depth);
     }
 
     /**
@@ -763,18 +759,5 @@ public class DomUtil {
     public static void transformDocument(Document xmlDoc, OutputStream out) throws TransformerException, SAXException {
         Transformer transformer = TRANSFORMER_FACTORY.newTransformer();
         transformer.transform(new DOMSource(xmlDoc), ResultHelper.getResult(new StreamResult(out)));
-    }
-
-    /**
-     * Uses a new Transformer instance to transform the given source to the
-     * specified result.
-     *
-     * @param source the transformation source.
-     * @param result the transformation result.
-     * @throws TransformerException
-     */
-    private static void transformDocument(Source source, Result result) throws TransformerException {
-        Transformer transformer = TRANSFORMER_FACTORY.newTransformer();
-        transformer.transform(source, result);
     }
 }
