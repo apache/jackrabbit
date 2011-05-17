@@ -45,7 +45,7 @@ public class Spi2davexRepositoryServiceFactory implements RepositoryServiceFacto
      * Default URI for the {@link #PARAM_REPOSITORY_URI} configuration
      * parameter.
      */
-    public static String DEFAULT_REPOSITORY_URI = "http://localhost:8080/jackrabbit/server";
+    public static final String DEFAULT_REPOSITORY_URI = "http://localhost:8080/jackrabbit/server";
 
     /**
      * Optional batch read configuration parameter: If present it's value is
