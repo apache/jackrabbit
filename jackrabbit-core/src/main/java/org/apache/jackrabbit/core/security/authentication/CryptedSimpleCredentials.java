@@ -204,7 +204,7 @@ public class CryptedSimpleCredentials implements Credentials {
      * or if the extracted string isn't an available algorithm. 
      */
     private static String extractAlgorithm(String hashedPwd) {
-        int end = hashedPwd.indexOf("}");
+        int end = hashedPwd.indexOf('}');
         if (hashedPwd.startsWith("{") && end > 0) {
             String algorithm = hashedPwd.substring(1, end);
             try {
@@ -228,7 +228,7 @@ public class CryptedSimpleCredentials implements Credentials {
      */
     private static String extractSalt(String hashedPwd, String algorithm) {
         int start = algorithm.length()+2;
-        int end = hashedPwd.indexOf("-", start);
+        int end = hashedPwd.indexOf('-', start);
         if (end > -1) {
             return hashedPwd.substring(start, end);
         }

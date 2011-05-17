@@ -884,7 +884,7 @@ public final class PrivilegeRegistry implements PrivilegeEventListener {
      * privilege definition. It defines addition information that ease
      * the evaluation of privileges.
      */
-    private static class Definition extends PrivilegeDefinition {
+    private final static class Definition extends PrivilegeDefinition {
 
         private final PrivilegeBits bits;
         private final boolean isCustom;
@@ -941,7 +941,7 @@ public final class PrivilegeRegistry implements PrivilegeEventListener {
      * CustomPrivilegeStore used to read and write custom privilege definitions
      * from/to a file system resource.
      */
-    private class CustomPrivilegeStore {
+    private final class CustomPrivilegeStore {
 
         /**
          * File system resource used to persist custom privileges registered with
