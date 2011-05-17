@@ -189,8 +189,7 @@ public final class ItemInfoBuilder {
          * @return  <code>this</code>
          */
         public PropertyInfoBuilder createPropertyInfo(String name) {
-            PropertyInfoBuilder pBuilder = new PropertyInfoBuilder(this, name, listener);
-            return  pBuilder;
+            return new PropertyInfoBuilder(this, name, listener);
         }
 
         /**
