@@ -594,7 +594,7 @@ public abstract class JcrRemotingServlet extends JCRWebdavServerServlet {
         private void extract() {
             String rp = loc.getRepositoryPath();
             rp = rp.substring(0, rp.lastIndexOf('.'));
-            int pos = rp.lastIndexOf(".");
+            int pos = rp.lastIndexOf('.');
             if (pos > -1) {
                 String depthStr = rp.substring(pos + 1);
                 try {
