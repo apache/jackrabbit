@@ -29,7 +29,12 @@ import javax.jcr.RepositoryException;
 /**
  * <code>StateUtility</code>...
  */
-public class StateUtility {
+public final class StateUtility {
+
+    /**
+     * Avoid instantiation
+     */
+    private StateUtility() {}
 
     /**
      *

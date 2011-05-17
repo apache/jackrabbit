@@ -21,6 +21,11 @@ package org.apache.jackrabbit.jcr2spi.state;
  */
 public final class Status {
 
+    /**
+     * Avoid instantiation
+     */
+    private Status() {}
+
     public static final int _UNDEFINED_ = -1;
 
     /**
