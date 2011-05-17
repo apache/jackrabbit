@@ -457,7 +457,7 @@ class JsonDiffHandler implements DiffHandler {
     /**
      * Inner class used to parse a single value
      */
-    private class ValueHandler implements JsonHandler {
+    private final class ValueHandler implements JsonHandler {
         private Value v;
 
         public void object() throws IOException {
@@ -497,7 +497,7 @@ class JsonDiffHandler implements DiffHandler {
     /**
      * Inner class used to parse the values from a simple json array
      */
-    private class ValuesHandler implements JsonHandler {
+    private final class ValuesHandler implements JsonHandler {
         private List<Value> values = new ArrayList<Value>();
 
         public void object() throws IOException {
@@ -542,7 +542,7 @@ class JsonDiffHandler implements DiffHandler {
      * Inner class for parsing a simple json object defining a node and its
      * child nodes and/or child properties
      */
-    private class NodeHandler implements JsonHandler {
+    private final class NodeHandler implements JsonHandler {
         private Node parent;
         private String key;
 
@@ -648,7 +648,7 @@ class JsonDiffHandler implements DiffHandler {
         abstract void createItem(Node parent) throws RepositoryException;
     }
     
-    private class ImportNode extends ImportItem {
+    private final class ImportNode extends ImportItem {
         private String ntName;
         private String uuid;
 
@@ -707,7 +707,7 @@ class JsonDiffHandler implements DiffHandler {
         }
     }
 
-    private class ImportProp extends ImportItem  {
+    private final class ImportProp extends ImportItem  {
         private final Value value;
 
         private ImportProp(String name, Value v) throws IOException {
@@ -721,7 +721,7 @@ class JsonDiffHandler implements DiffHandler {
         }
     }
 
-    private class ImportMvProp extends ImportItem  {
+    private final class ImportMvProp extends ImportItem  {
         private List<Value> values = new ArrayList<Value>();
 
         private ImportMvProp(String name) throws IOException {

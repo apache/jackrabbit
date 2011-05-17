@@ -30,10 +30,15 @@ import java.io.OutputStream;
 import java.util.Date;
 
 /**
- * <code>IOUtil</code> provides utitily methods used for import and export
+ * <code>IOUtil</code> provides utility methods used for import and export
  * operations.
  */
-public class IOUtil {
+public final class IOUtil {
+
+    /**
+     * Avoid instantiation
+     */
+    private IOUtil() {}
 
     /**
      * Constant for undefined modification/creation time
@@ -124,7 +129,7 @@ public class IOUtil {
             return mimeType;
         }
         // strip any parameters
-        int semi = mimeType.indexOf(";");
+        int semi = mimeType.indexOf(';');
         return (semi > 0) ? mimeType.substring(0, semi) : mimeType;
     }
 
@@ -144,7 +149,7 @@ public class IOUtil {
         }
         String encoding = contentType.substring(equal + 8);
         // get rid of any other parameters that might be specified after the charset
-        int semi = encoding.indexOf(";");
+        int semi = encoding.indexOf(';');
         if (semi != -1) {
             encoding = encoding.substring(0, semi);
         }
