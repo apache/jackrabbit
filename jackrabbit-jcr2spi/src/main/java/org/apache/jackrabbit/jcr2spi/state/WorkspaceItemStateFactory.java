@@ -59,7 +59,7 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory {
     private final SessionInfo sessionInfo;
     private final ItemDefinitionProvider definitionProvider;
 
-    public final ItemInfoCache cache;
+    private final ItemInfoCache cache;
 
     public WorkspaceItemStateFactory(RepositoryService service, SessionInfo sessionInfo,
                                      ItemDefinitionProvider definitionProvider, ItemInfoCache cache) {
