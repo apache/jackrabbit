@@ -77,7 +77,7 @@ public class SearchablePropertyReport implements Report {
     /**
      * Set collecting the DAV:principal-search-property entries.
      */
-    public final Set<PrincipalSearchProperty> searchPropertySet = new HashSet<PrincipalSearchProperty>();
+    private final Set<PrincipalSearchProperty> searchPropertySet = new HashSet<PrincipalSearchProperty>();
 
     /**
      * @see Report#getType()

@@ -86,7 +86,7 @@ public class Status implements DavConstants, XmlSerializable{
                 log.warn("Status-Line '" + statusLine + "' does not start with HTTP");
             }
             //handle the HTTP-Version
-            at = statusLine.indexOf(" ", at);
+            at = statusLine.indexOf(' ', at);
             if (at <= 0) {
                 log.warn("Unable to parse HTTP-Version from the status line: '" + statusLine + "'");
             }
@@ -97,7 +97,7 @@ public class Status implements DavConstants, XmlSerializable{
             }
             //handle the Status-Code
             int code;
-            int to = statusLine.indexOf(" ", at);
+            int to = statusLine.indexOf(' ', at);
             if (to < 0) {
                 to = length;
             }

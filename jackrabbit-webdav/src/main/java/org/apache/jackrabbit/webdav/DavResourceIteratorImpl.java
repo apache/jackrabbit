@@ -32,7 +32,7 @@ public class DavResourceIteratorImpl implements DavResourceIterator {
 
     private static Logger log = LoggerFactory.getLogger(DavResourceIteratorImpl.class);
 
-    public static DavResourceIterator EMPTY = new DavResourceIteratorImpl(Collections.<DavResource>emptyList());
+    public static final DavResourceIterator EMPTY = new DavResourceIteratorImpl(Collections.<DavResource>emptyList());
 
     private Iterator<DavResource> it;
     private int size;
