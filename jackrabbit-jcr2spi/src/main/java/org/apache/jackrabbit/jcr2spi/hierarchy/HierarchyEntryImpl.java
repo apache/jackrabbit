@@ -45,11 +45,12 @@ abstract class HierarchyEntryImpl implements HierarchyEntry {
     private static Logger log = LoggerFactory.getLogger(HierarchyEntryImpl.class);
 
     /**
-     * The required generation of this entry. This is used by the {@link ItemInfoCache} to determine
-     * wheter an item info in the cache is up to date or not. That is whether the generation of the
-     * item info in the cache is the same or more recent as the required generation of this entry.
+     * The required generation of this entry. This is used by the
+     * {@link ItemInfoCache} to determine whether an item info in the cache is
+     * up to date or not. That is whether the generation of the item info in the
+     * cache is the same or more recent as the required generation of this entry.
      */
-    public long generation;
+    private long generation;
 
     /**
      * Cached soft reference to the target ItemState.
