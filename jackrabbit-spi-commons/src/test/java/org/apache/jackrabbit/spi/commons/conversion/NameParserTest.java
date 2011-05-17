@@ -42,10 +42,9 @@ public class NameParserTest extends TestCase {
 
 
     public void testParse() throws Exception {
-        for (int i=0; i<tests.length; i++) {
-            JcrName t = tests[i];
+        for (JcrName t : tests) {
             long t1 = System.currentTimeMillis();
-            for (int j=0; j<NUM_TESTS; j++) {
+            for (int j = 0; j < NUM_TESTS; j++) {
                 try {
                     Name n = NameParser.parse(t.jcrName, resolver, factory);
                     if (!t.isValid()) {
@@ -64,17 +63,16 @@ public class NameParserTest extends TestCase {
                 }
             }
             long t2 = System.currentTimeMillis();
-            if (NUM_TESTS>1) {
-                System.out.println("testCreate():\t" + t + "\t" + (t2-t1) + "\tms");
+            if (NUM_TESTS > 1) {
+                System.out.println("testCreate():\t" + t + "\t" + (t2 - t1) + "\tms");
             }
         }
     }
 
     public void testCheckFormat() throws Exception {
-        for (int i=0; i<tests.length; i++) {
-            JcrName t = tests[i];
+        for (JcrName t : tests) {
             long t1 = System.currentTimeMillis();
-            for (int j=0; j<NUM_TESTS; j++) {
+            for (int j = 0; j < NUM_TESTS; j++) {
                 // check just creation
                 boolean isValid = true;
                 try {
@@ -82,11 +80,11 @@ public class NameParserTest extends TestCase {
                 } catch (IllegalNameException e) {
                     isValid = false;
                 }
-                assertEquals("\"" + t.jcrName + "\".checkFormat()", t.isValid(),  isValid);
+                assertEquals("\"" + t.jcrName + "\".checkFormat()", t.isValid(), isValid);
             }
             long t2 = System.currentTimeMillis();
-            if (NUM_TESTS>1) {
-                System.out.println("testCheckFormat():\t" + t + "\t" + (t2-t1) + "\tms");
+            if (NUM_TESTS > 1) {
+                System.out.println("testCheckFormat():\t" + t + "\t" + (t2 - t1) + "\tms");
             }
         }
     }
@@ -94,7 +92,7 @@ public class NameParserTest extends TestCase {
     public void testExpandedJcrNames() throws NamespaceException, IllegalNameException {
         NamespaceResolver resolver = new TestNamespaceResolver();
 
-        List valid = new ArrayList();
+        List<String[]> valid = new ArrayList<String[]>();
         // valid qualified jcr-names:
         // String-array consisting of { jcrName , uri , localName }
         valid.add(new String[] {"abc:{c}", "abc", "{c}"});
@@ -116,6 +114,7 @@ public class NameParserTest extends TestCase {
         // unknown uri -> but valid non-prefixed jcr-name
         valid.add(new String[] {"{test}abc", "", "{test}abc"});
         valid.add(new String[] {"{ab}", "", "{ab}"});
+        valid.add(new String[] {".{.}", "", ".{.}"});
 
         // valid expanded jcr-names:
         // String-array consisting of { jcrName , uri , localName }
@@ -126,8 +125,8 @@ public class NameParserTest extends TestCase {
         valid.add(new String[] {"{abc:}def", "abc:", "def"});
         valid.add(new String[] {"{}abc", "", "abc"});
 
-        for (Iterator it = valid.iterator(); it.hasNext();) {
-            String[] strs = (String[]) it.next();
+        for (Object aValid : valid) {
+            String[] strs = (String[]) aValid;
             try {
                 Name n = NameParser.parse(strs[0], resolver, factory);
                 assertEquals("URI mismatch", strs[1], n.getNamespaceURI());
@@ -138,7 +137,7 @@ public class NameParserTest extends TestCase {
         }
 
         // invalid jcr-names (neither expanded nor qualified form)
-        List invalid = new ArrayList();
+        List<String> invalid = new ArrayList<String>();
         // invalid prefix
         invalid.add("{a:b");
         invalid.add("}a:b");
@@ -159,8 +158,8 @@ public class NameParserTest extends TestCase {
         invalid.add("{http://jackrabbit.apache.org}");
         invalid.add("{}");
 
-        for (Iterator it = invalid.iterator(); it.hasNext();) {
-            String jcrName = (String) it.next();
+        for (Object anInvalid : invalid) {
+            String jcrName = (String) anInvalid;
             try {
                 NameParser.parse(jcrName, resolver, factory);
                 fail("Parsing '" + jcrName + "' should fail. Not a valid jcr name.");
@@ -171,9 +170,7 @@ public class NameParserTest extends TestCase {
     }
 
     public void testCheckFormatOfExpandedNames() throws NamespaceException, IllegalNameException {
-        NamespaceResolver resolver = new TestNamespaceResolver();
-
-        List valid = new ArrayList();
+        List<String[]> valid = new ArrayList<String[]>();
         // valid qualified jcr-names:
         // String-array consisting of { jcrName , uri , localName }
         valid.add(new String[] {"abc:{c}", "abc", "{c}"});
@@ -203,8 +200,8 @@ public class NameParserTest extends TestCase {
         valid.add(new String[] {"{abc}def", "abc", "def"});
         valid.add(new String[] {"{}abc", "", "abc"});
 
-        for (Iterator it = valid.iterator(); it.hasNext();) {
-            String[] strs = (String[]) it.next();
+        for (Object aValid : valid) {
+            String[] strs = (String[]) aValid;
             try {
                 NameParser.checkFormat(strs[0]);
             } catch (Exception e) {
@@ -213,7 +210,7 @@ public class NameParserTest extends TestCase {
         }
 
         // invalid jcr-names (neither expanded nor qualified form)
-        List invalid = new ArrayList();
+        List<String> invalid = new ArrayList<String>();
         // invalid prefix
         invalid.add("{a:b");
         invalid.add("}a:b");
@@ -234,8 +231,8 @@ public class NameParserTest extends TestCase {
         invalid.add("{/jackrabbit/a/b/c}abc");
 
 
-        for (Iterator it = invalid.iterator(); it.hasNext();) {
-            String jcrName = (String) it.next();
+        for (Object anInvalid : invalid) {
+            String jcrName = (String) anInvalid;
             try {
                 NameParser.checkFormat(jcrName);
                 fail("Checking format of '" + jcrName + "' should fail. Not a valid jcr name.");
