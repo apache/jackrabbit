@@ -154,20 +154,9 @@ public class TokenBasedAuthentication implements Authentication {
                     tokenCredentials.setAttribute(key, info.get(key));
                 }
             }
-            // collect those attributes present on the credentials that
-            // are missing or different in the token node.
-            Map<String, String> newAttributes = new HashMap<String,String>(attrNames.size());
-            for (String attrName : tokenCredentials.getAttributeNames()) {
-                String attrValue = tokenCredentials.getAttribute(attrName);
-                if (!isMandatoryAttribute(attrName) &&
-                        (!info.containsKey(attrName) || !info.get(attrName).equals(attrValue))) {
-                    newAttributes.put(attrName, attrValue);
-                }
-            }
 
-            // update token node if required: optionally resetting the
-            // expiration and the set of informative properties
-            updateTokenNode(expiry, loginTime, newAttributes);
+            // update token node if required: optionally resetting the expiration
+            updateTokenNode(expiry, loginTime);
 
             return true;
         }
@@ -181,19 +170,16 @@ public class TokenBasedAuthentication implements Authentication {
      * <ol>
      * <li>Reset the expiration if half of the expiration has passed in order to
      * minimize write operations (avoid resetting upon each login).</li>
-     * <li>Update the token node to reflect the set of new/changed informative
-     * attributes provided by the credentials.</li>
      * </ol>
      *
      * @param tokenExpiry
      * @param loginTime
-     * @param newAttributes
      */
-    private void updateTokenNode(long tokenExpiry, long loginTime, Map<String,String> newAttributes) {
-        Node tokenNode = null;
+    private void updateTokenNode(long tokenExpiry, long loginTime) {
+        Node tokenNode;
         Session s = null;
         try {
-            // a) expiry...
+            // expiry...
             if (tokenExpiry - loginTime <= tokenExpiration/2) {
                 long expirationTime = loginTime + tokenExpiration;
                 Calendar cal = GregorianCalendar.getInstance();
@@ -202,18 +188,6 @@ public class TokenBasedAuthentication implements Authentication {
                 tokenNode = getTokenNode();
                 s = tokenNode.getSession();
                 tokenNode.setProperty(TOKEN_ATTRIBUTE_EXPIRY, s.getValueFactory().createValue(cal));
-            }
-
-            // b) handle informative attributes...
-            if (!newAttributes.isEmpty()) {
-                if (tokenNode == null) {
-                    tokenNode = getTokenNode();
-                    s = tokenNode.getSession();
-                }
-                for (String attrName : newAttributes.keySet()) {
-                    tokenNode.setProperty(attrName, newAttributes.get(attrName));
-                    log.info("Updating token node with informative attribute '" + attrName + "'");
-                }
             }
 
             if (s != null) {

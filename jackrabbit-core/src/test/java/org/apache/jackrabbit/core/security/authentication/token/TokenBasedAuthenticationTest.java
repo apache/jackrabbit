@@ -152,15 +152,24 @@ public class TokenBasedAuthenticationTest extends AbstractJCRTest {
         assertTrue(auth.authenticate(tokenCreds));               
         assertEquals("value", tokenCreds.getAttribute("informative"));
 
-        // additional informative property present on credentials
-        // -> the node must be updated
+        // additional informative property present on credentials upon subsequent
+        // authentication -> the node must not be updated
+        auth = new TokenBasedAuthentication(tokenNode.getIdentifier(), TokenBasedAuthentication.TOKEN_EXPIRATION, superuser);
         tokenCreds.setAttribute("informative2", "value2");
         assertTrue(auth.authenticate(tokenCreds));
-        assertTrue(tokenNode.hasProperty("informative2"));
-        assertEquals("value2", tokenNode.getProperty("informative2").getString());
+        assertFalse(tokenNode.hasProperty("informative2"));
 
-        // additional mandatory property on the credentials
-        // -> must be ignored during authentication
+        // modified informative property present on credentials upon subsequent
+        // authentication -> the node must not be updated
+        auth = new TokenBasedAuthentication(tokenNode.getIdentifier(), TokenBasedAuthentication.TOKEN_EXPIRATION, superuser);
+        tokenCreds.setAttribute("informative", "otherValue");
+        assertTrue(auth.authenticate(tokenCreds));
+        assertTrue(tokenNode.hasProperty("informative"));
+        assertEquals("value", tokenNode.getProperty("informative").getString());
+
+        // additional mandatory property on the credentials upon subsequent
+        // authentication -> must be ignored
+        auth = new TokenBasedAuthentication(tokenNode.getIdentifier(), TokenBasedAuthentication.TOKEN_EXPIRATION, superuser);        
         tokenCreds.setAttribute(TokenBasedAuthentication.TOKEN_ATTRIBUTE +".toIgnore", "ignore");
         assertTrue(auth.authenticate(tokenCreds));
         assertFalse(tokenNode.hasProperty(TokenBasedAuthentication.TOKEN_ATTRIBUTE +".toIgnore"));
