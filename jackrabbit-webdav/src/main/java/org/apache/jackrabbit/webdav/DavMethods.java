@@ -16,18 +16,18 @@
  */
 package org.apache.jackrabbit.webdav;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.util.HashMap;
 import java.util.Map;
 
 /**
  * <code>DavMethods</code> defines constants for the WebDAV METHODS.
  */
-public class DavMethods {
+public final class DavMethods {
 
-    private static Logger log = LoggerFactory.getLogger(DavMethods.class);
+    /**
+     * Avoid instantiation
+     */
+    private DavMethods() {}
 
     /**
      * A map of WebDAV METHODS
