@@ -31,9 +31,14 @@ import javax.jcr.NamespaceException;
 /**
  * <code>LogUtil</code>...
  */
-public class LogUtil {
+public final class LogUtil {
 
     private static Logger log = LoggerFactory.getLogger(LogUtil.class);
+
+    /**
+     * Avoid instantiation
+     */
+    private LogUtil() {}
 
     /**
      * Failsafe conversion of internal <code>Path</code> to JCR path for use in
