@@ -102,7 +102,7 @@ public class DefaultItemFilter implements ItemFilter {
         if (prefixFilter.isEmpty() && uriFilter.isEmpty()) {
             return false;
         }
-        int pos = name.indexOf(":");
+        int pos = name.indexOf(':');
         if (pos < 0) {
             // no namespace info present
             return false;
