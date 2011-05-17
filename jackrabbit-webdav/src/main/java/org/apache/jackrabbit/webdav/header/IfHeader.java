@@ -774,7 +774,7 @@ public class IfHeader implements Header {
             for (int i=0; i < size(); i++) {
                 IfListEntry ile = get(i);
                 if (!ile.match(token, etag)) {
-                    log.debug("match: Entry "+String.valueOf(i)+"-"+ile+" does not match");
+                    log.debug("match: Entry "+i+"-"+ile+" does not match");
                     return false;
                 }
             }
