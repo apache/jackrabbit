@@ -61,11 +61,10 @@ public class PathTest extends TestCase {
     }
 
     public void testGetAncestor() throws RepositoryException {
-        Path root = factory.getRootPath();
         JcrPath[] tests = JcrPath.getTests();
-        for (int i = 0; i < tests.length; i++) {
-            if (tests[i].isValid() && tests[i].isAbsolute()) {
-                Path p = resolver.getQPath(tests[i].path);
+        for (JcrPath test : tests) {
+            if (test.isValid() && test.isAbsolute()) {
+                Path p = resolver.getQPath(test.path);
                 if (p.getNormalizedPath().denotesRoot()) {
                     continue;
                 }
@@ -78,11 +77,8 @@ public class PathTest extends TestCase {
     }
 
     public void testGetAncestorOfRelativePath() throws RepositoryException {
-        Path root = factory.getRootPath();
         JcrPath[] tests = JcrPath.getTests();
-        int degree = 5;
-        for (int i = 0; i < tests.length; i++) {
-            JcrPath test = tests[i];
+        for (JcrPath test : tests) {
             if (test.isValid() && !test.isAbsolute()) {
                 Path p = resolver.getQPath(test.path);
 
@@ -97,10 +93,8 @@ public class PathTest extends TestCase {
     }
 
     public void testGetAncestorAtDegreeDepth() throws RepositoryException {
-        Path root = factory.getRootPath();
         JcrPath[] tests = JcrPath.getTests();
-        for (int i = 0; i < tests.length; i++) {
-            JcrPath test = tests[i];
+        for (JcrPath test : tests) {
             if (test.isValid() && test.isAbsolute()) {
                 Path p = resolver.getQPath(test.path);
 
@@ -113,11 +107,10 @@ public class PathTest extends TestCase {
     }
 
     public void testGetAncestorIsAncestor() throws RepositoryException {
-        Path root = factory.getRootPath();
         JcrPath[] tests = JcrPath.getTests();
-        for (int i = 0; i < tests.length; i++) {
-            if (tests[i].isValid() && tests[i].isAbsolute()) {
-                Path p = resolver.getQPath(tests[i].path);
+        for (JcrPath test : tests) {
+            if (test.isValid() && test.isAbsolute()) {
+                Path p = resolver.getQPath(test.path);
                 while (!p.getNormalizedPath().denotesRoot()) {
                     Path ancestor = p.getAncestor(1);
                     assertTrue(ancestor.isAncestorOf(p));
@@ -128,8 +121,8 @@ public class PathTest extends TestCase {
     }
 
     public void testGetAncestorOfRelativePath2() throws RepositoryException {
-        for (Iterator it = JcrPathAndAncestor.list.iterator(); it.hasNext();) {
-            JcrPathAndAncestor tp = (JcrPathAndAncestor) it.next();
+        for (Object aList : JcrPathAndAncestor.list) {
+            JcrPathAndAncestor tp = (JcrPathAndAncestor) aList;
 
             Path ancestor = resolver.getQPath(tp.ancestor).getNormalizedPath();
             Path p = resolver.getQPath(tp.path);
@@ -139,19 +132,15 @@ public class PathTest extends TestCase {
     }
 
     public void testGetAncestorReturnsNormalized() throws RepositoryException {
-        List tests = JcrPathAndAncestor.list;
-        for (Iterator it = tests.iterator(); it.hasNext();) {
-            JcrPathAndAncestor test = (JcrPathAndAncestor) it.next();
-
+        List<JcrPathAndAncestor> tests = JcrPathAndAncestor.list;
+        for (JcrPathAndAncestor test : tests) {
             Path p = resolver.getQPath(test.path);
             assertTrue(p.getAncestor(test.degree).isNormalized());
         }
     }
 
     public void testIsAncestorOfRelativePath() throws RepositoryException {
-        for (Iterator it = JcrPathAndAncestor.list.iterator(); it.hasNext();) {
-            JcrPathAndAncestor tp = (JcrPathAndAncestor) it.next();
-
+        for (JcrPathAndAncestor tp : JcrPathAndAncestor.list) {
             Path ancestor = resolver.getQPath(tp.ancestor);
             Path p = resolver.getQPath(tp.path);
 
@@ -168,11 +157,11 @@ public class PathTest extends TestCase {
     public void testAbsolutePathIsDescendantOfRoot() throws RepositoryException {
         Path root = factory.getRootPath();
         JcrPath[] tests = JcrPath.getTests();
-        for (int i = 0; i < tests.length; i++) {
-            if (tests[i].isValid() && tests[i].isAbsolute()) {
-                Path p = resolver.getQPath(tests[i].path).getNormalizedPath();
+        for (JcrPath test : tests) {
+            if (test.isValid() && test.isAbsolute()) {
+                Path p = resolver.getQPath(test.path).getNormalizedPath();
                 if (!p.equals(root)) {
-                    assertTrue(tests[i].path + " must be decendant of the root path.",p.isDescendantOf(root));
+                    assertTrue(test.path + " must be decendant of the root path.", p.isDescendantOf(root));
                 }
             }
         }
@@ -181,9 +170,9 @@ public class PathTest extends TestCase {
     public void testRootIsAncestorOfAbsolutePath() throws RepositoryException {
         Path root = factory.getRootPath();
         JcrPath[] tests = JcrPath.getTests();
-        for (int i = 0; i < tests.length; i++) {
-            if (tests[i].isValid() && tests[i].isAbsolute()) {
-                Path p = resolver.getQPath(tests[i].path).getNormalizedPath();
+        for (JcrPath test : tests) {
+            if (test.isValid() && test.isAbsolute()) {
+                Path p = resolver.getQPath(test.path).getNormalizedPath();
                 if (!p.equals(root)) {
                     assertFalse(p.isAncestorOf(root));
                 }
@@ -193,17 +182,16 @@ public class PathTest extends TestCase {
 
     public void testIsEquivalentToSelf() throws RepositoryException {
         JcrPath[] tests = JcrPath.getTests();
-        for (int i = 0; i < tests.length; i++) {
-            if (tests[i].isValid()) {
-                Path p = resolver.getQPath(tests[i].path);
+        for (JcrPath test : tests) {
+            if (test.isValid()) {
+                Path p = resolver.getQPath(test.path);
                 assertTrue(p.isEquivalentTo(p));
             }
         }
     }
 
     public void testIsEquivalentTo() throws IllegalArgumentException, RepositoryException {
-        for (Iterator it = Equivalent.list.iterator(); it.hasNext();) {
-            Equivalent tp = (Equivalent) it.next();
+        for (Equivalent tp : Equivalent.list) {
 
             Path path = resolver.getQPath(tp.path);
             Path other = resolver.getQPath(tp.other);
@@ -222,10 +210,10 @@ public class PathTest extends TestCase {
         Path absPath = factory.getRootPath();
         Path relPath = factory.create(NameConstants.JCR_DATA);
         JcrPath[] tests = JcrPath.getTests();
-        for (int i = 0; i < tests.length; i++) {
-            if (tests[i].isValid()) {
-                Path p = resolver.getQPath(tests[i].path).getNormalizedPath();
-                if (tests[i].isAbsolute()) {
+        for (JcrPath test : tests) {
+            if (test.isValid()) {
+                Path p = resolver.getQPath(test.path).getNormalizedPath();
+                if (test.isAbsolute()) {
                     if (absPath.isAncestorOf(p)) {
                         assertTrue(p.isDescendantOf(absPath));
                     } else {
@@ -265,9 +253,9 @@ public class PathTest extends TestCase {
         Path rel = factory.create(NameConstants.JCR_DATA);
 
         JcrPath[] tests = JcrPath.getTests();
-        for (int i = 0; i < tests.length; i++) {
-            if (tests[i].isValid() && tests[i].isAbsolute()) {
-                Path p = resolver.getQPath(tests[i].path).getNormalizedPath();
+        for (JcrPath test : tests) {
+            if (test.isValid() && test.isAbsolute()) {
+                Path p = resolver.getQPath(test.path).getNormalizedPath();
                 try {
                     if (p.isAbsolute()) {
                         p.isDescendantOf(rel);
@@ -303,9 +291,9 @@ public class PathTest extends TestCase {
         Path rel = factory.create(NameConstants.JCR_DATA);
 
         JcrPath[] tests = JcrPath.getTests();
-        for (int i = 0; i < tests.length; i++) {
-            if (tests[i].isValid() && tests[i].isAbsolute()) {
-                Path p = resolver.getQPath(tests[i].path).getNormalizedPath();
+        for (JcrPath test : tests) {
+            if (test.isValid() && test.isAbsolute()) {
+                Path p = resolver.getQPath(test.path).getNormalizedPath();
                 try {
                     if (p.isAbsolute()) {
                         p.isAncestorOf(rel);
@@ -321,55 +309,50 @@ public class PathTest extends TestCase {
     }
 
     public void testAbsolutePaths() throws RepositoryException {
-        Path root = factory.getRootPath();
         JcrPath[] tests = JcrPath.getTests();
-        for (int i = 0; i < tests.length; i++) {
-            if (tests[i].isValid() && tests[i].isAbsolute()) {
-                Path p = resolver.getQPath(tests[i].path);
-                assertTrue("Path must be absolute " + tests[i].path, p.isAbsolute());
+        for (JcrPath test : tests) {
+            if (test.isValid() && test.isAbsolute()) {
+                Path p = resolver.getQPath(test.path);
+                assertTrue("Path must be absolute " + test.path, p.isAbsolute());
             }
         }
     }
 
     public void testNotAbsolutePaths() throws RepositoryException {
-        Path root = factory.getRootPath();
         JcrPath[] tests = JcrPath.getTests();
-        for (int i = 0; i < tests.length; i++) {
-            if (tests[i].isValid() && !tests[i].isAbsolute()) {
-                Path p = resolver.getQPath(tests[i].path);
-                assertFalse("Path must not be absolute " + tests[i].path, p.isAbsolute());
+        for (JcrPath test : tests) {
+            if (test.isValid() && !test.isAbsolute()) {
+                Path p = resolver.getQPath(test.path);
+                assertFalse("Path must not be absolute " + test.path, p.isAbsolute());
             }
         }
     }
 
     public void testCanonicalPaths() throws Exception {
-        Path root = factory.getRootPath();
         JcrPath[] tests = JcrPath.getTests();
-        for (int i = 0; i < tests.length; i++) {
-            if (tests[i].isValid() && tests[i].isAbsolute()) {
-                Path p = resolver.getQPath(tests[i].path);;
-                if (!tests[i].isNormalized()) {
+        for (JcrPath test : tests) {
+            if (test.isValid() && test.isAbsolute()) {
+                Path p = resolver.getQPath(test.path);
+                if (!test.isNormalized()) {
                     p = p.getNormalizedPath();
                 }
-                assertTrue("Path must be canonical " + tests[i].path, p.isCanonical());
+                assertTrue("Path must be canonical " + test.path, p.isCanonical());
             }
         }
     }
 
     public void testNotCanonicalPaths() throws Exception {
-        Path root = factory.getRootPath();
         JcrPath[] tests = JcrPath.getTests();
-        for (int i = 0; i < tests.length; i++) {
-            if (tests[i].isValid() && (!tests[i].isNormalized() || !tests[i].isAbsolute())) {
-                Path p = resolver.getQPath(tests[i].path);
-                assertFalse("Path must not be canonical " + tests[i].path, p.isCanonical());
+        for (JcrPath test : tests) {
+            if (test.isValid() && (!test.isNormalized() || !test.isAbsolute())) {
+                Path p = resolver.getQPath(test.path);
+                assertFalse("Path must not be canonical " + test.path, p.isCanonical());
             }
         }
     }
 
     public void testIsNotAncestor() throws RepositoryException {
-        for (Iterator it = NotAncestor.list.iterator(); it.hasNext();) {
-            NotAncestor test = (NotAncestor) it.next();
+        for (NotAncestor test : NotAncestor.list) {
             Path p = resolver.getQPath(test.path);
             Path ancestor = resolver.getQPath(test.notAncestor);
             assertFalse(test.notAncestor + " isn't an ancestor of " + test.path,
@@ -378,35 +361,33 @@ public class PathTest extends TestCase {
     }
 
     public void testDepth() throws RepositoryException {
-        Path root = factory.getRootPath();
         JcrPath[] tests = JcrPath.getTests();
-        for (int i = 0; i < tests.length; i++) {
-            if (tests[i].isValid() && tests[i].isAbsolute()) {
-                Path p = resolver.getQPath(tests[i].path);
-                String normJcrPath = (tests[i].normalizedPath == null) ? tests[i].path : tests[i].normalizedPath;
+        for (JcrPath test : tests) {
+            if (test.isValid() && test.isAbsolute()) {
+                Path p = resolver.getQPath(test.path);
+                String normJcrPath = (test.normalizedPath == null) ? test.path : test.normalizedPath;
                 int depth = Text.explode(normJcrPath, '/').length;
-                assertTrue("Depth of " + tests[i].path + " must be " + depth, depth == p.getDepth());
+                assertTrue("Depth of " + test.path + " must be " + depth, depth == p.getDepth());
             }
         }
     }
 
     public void testDepthOfRelativePath() throws RepositoryException {
-        Path root = factory.getRootPath();
         JcrPath[] tests = JcrPath.getTests();
-        for (int i = 0; i < tests.length; i++) {
-            if (tests[i].isValid() && !tests[i].isAbsolute()) {
-                Path p = resolver.getQPath(tests[i].path);
+        for (JcrPath test : tests) {
+            if (test.isValid() && !test.isAbsolute()) {
+                Path p = resolver.getQPath(test.path);
                 int depth = Path.ROOT_DEPTH;
                 Path.Element[] elements = p.getNormalizedPath().getElements();
-                for (int j = 0; j < elements.length; j++) {
-                    if (elements[j].denotesParent()) {
+                for (Path.Element element : elements) {
+                    if (element.denotesParent()) {
                         depth--;
-                    } else if (elements[j].denotesName()) {
+                    } else if (element.denotesName()) {
                         depth++;
                     }
                 }
                 //System.out.println("Depth of " + tests[i].path + " = " + depth);
-                assertTrue("Depth of " + tests[i].path + " must be " + depth, depth == p.getDepth());
+                assertTrue("Depth of " + test.path + " must be " + depth, depth == p.getDepth());
             }
         }
     }
@@ -430,22 +411,20 @@ public class PathTest extends TestCase {
     }
 
     public void testAncestorCount() throws RepositoryException {
-        Path root = factory.getRootPath();
         JcrPath[] tests = JcrPath.getTests();
-        for (int i = 0; i < tests.length; i++) {
-            if (tests[i].isValid() && tests[i].isAbsolute()) {
-                Path p = resolver.getQPath(tests[i].path);
+        for (JcrPath test : tests) {
+            if (test.isValid() && test.isAbsolute()) {
+                Path p = resolver.getQPath(test.path);
                 assertTrue("Ancestor count must be same a depth", p.getDepth() == p.getAncestorCount());
             }
         }
     }
 
     public void testAncestorCountOfRelativePath() throws RepositoryException {
-        Path root = factory.getRootPath();
         JcrPath[] tests = JcrPath.getTests();
-        for (int i = 0; i < tests.length; i++) {
-            if (tests[i].isValid() && !tests[i].isAbsolute()) {
-                Path p = resolver.getQPath(tests[i].path);
+        for (JcrPath test : tests) {
+            if (test.isValid() && !test.isAbsolute()) {
+                Path p = resolver.getQPath(test.path);
                 assertTrue("Ancestor count or a relative path must be -1", -1 == p.getAncestorCount());
             }
         }
@@ -469,69 +448,65 @@ public class PathTest extends TestCase {
     }
 
     public void testLength() throws RepositoryException {
-        Path root = factory.getRootPath();
         JcrPath[] tests = JcrPath.getTests();
-        for (int i = 0; i < tests.length; i++) {
-            if (tests[i].isValid()) {
-                int length = Text.explode(tests[i].path, '/').length;
-                if (tests[i].isAbsolute()) {
+        for (JcrPath test : tests) {
+            if (test.isValid()) {
+                int length = Text.explode(test.path, '/').length;
+                if (test.isAbsolute()) {
                     length++;
                 }
-                Path p = resolver.getQPath(tests[i].path);
+                Path p = resolver.getQPath(test.path);
                 //System.out.println("Length of " + tests[i].path + " = " + length);
-                assertEquals("Length of " + tests[i].path + " must reflect " +
+                assertEquals("Length of " + test.path + " must reflect " +
                         "number of elements.", new Integer(length), new Integer(p.getLength()));
             }
         }
     }
 
     public void testIsNormalized() throws RepositoryException {
-        Path root = factory.getRootPath();
         JcrPath[] tests = JcrPath.getTests();
-        for (int i = 0; i < tests.length; i++) {
-            if (tests[i].isValid()) {
-                Path p = resolver.getQPath(tests[i].path);
-                if (tests[i].isNormalized()) {
-                    assertTrue("Path " + tests[i].path + " must be normalized.", p.isNormalized());
+        for (JcrPath test : tests) {
+            if (test.isValid()) {
+                Path p = resolver.getQPath(test.path);
+                if (test.isNormalized()) {
+                    assertTrue("Path " + test.path + " must be normalized.", p.isNormalized());
                 } else {
-                    assertFalse("Path " + tests[i].path + " must not be normalized.", p.isNormalized());
+                    assertFalse("Path " + test.path + " must not be normalized.", p.isNormalized());
                 }
             }
         }
     }
 
     public void testGetNameElement() throws RepositoryException {
-        Path root = factory.getRootPath();
         JcrPath[] tests = JcrPath.getTests();
-        for (int i = 0; i < tests.length; i++) {
-            if (tests[i].isValid()) {
-                Path p = resolver.getQPath(tests[i].path);
+        for (JcrPath test : tests) {
+            if (test.isValid()) {
+                Path p = resolver.getQPath(test.path);
                 Path.Element nameEl = p.getNameElement();
                 Path.Element[] all = p.getElements();
-                assertEquals(all[all.length-1], nameEl);
+                assertEquals(all[all.length - 1], nameEl);
             }
         }
     }
 
     public void testSubPath() throws RepositoryException {
-        Path root = factory.getRootPath();
         JcrPath[] tests = JcrPath.getTests();
-        for (int i = 0; i < tests.length; i++) {
-            if (tests[i].isValid() && tests[i].isNormalized()) {
-                Path p = resolver.getQPath(tests[i].path);
+        for (JcrPath test : tests) {
+            if (test.isValid() && test.isNormalized()) {
+                Path p = resolver.getQPath(test.path);
 
                 // subpath between 0 and length -> equal path
                 assertEquals(p, p.subPath(0, p.getLength()));
 
                 // subpath a single element
                 if (p.getLength() > 2) {
-                    Path expected = factory.create(new Path.Element[] {p.getElements()[1]});
-                    assertEquals(expected, p.subPath(1,2));
+                    Path expected = factory.create(new Path.Element[]{p.getElements()[1]});
+                    assertEquals(expected, p.subPath(1, 2));
                 }
                 // subpath name element
                 if (p.getLength() > 2) {
                     Path expected = p.getLastElement();
-                    assertEquals(expected, p.subPath(p.getLength()-1, p.getLength()));
+                    assertEquals(expected, p.subPath(p.getLength() - 1, p.getLength()));
                 }
             }
         }
@@ -579,7 +554,7 @@ public class PathTest extends TestCase {
             this.degree = degree;
         }
 
-        private static List list = new ArrayList();
+        private static List<JcrPathAndAncestor> list = new ArrayList<JcrPathAndAncestor>();
         static {
             // normalized
             list.add(new JcrPathAndAncestor("abc/def", "abc", 1));
@@ -632,7 +607,7 @@ public class PathTest extends TestCase {
             this.notAncestor = notAncestor;
         }
 
-        private static List list = new ArrayList();
+        private static List<NotAncestor> list = new ArrayList<NotAncestor>();
         static {
             // false if same path
             list.add(new NotAncestor("/", "/"));
@@ -704,7 +679,7 @@ public class PathTest extends TestCase {
             this.isEquivalent = isEquivalent;
         }
 
-        private static List list = new ArrayList();
+        private static List<Equivalent> list = new ArrayList<Equivalent>();
         static {
             list.add(new Equivalent(".", "a/b", false));
             list.add(new Equivalent(".", "a/..", true));
