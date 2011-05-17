@@ -16,16 +16,16 @@
  */
 package org.apache.jackrabbit.webdav;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 /**
  * <code>DavCompliance</code> defines constants for the various compliance
  * classes defined RFC 2518, RFC 4918 and it's extensions.
  */
 public final class DavCompliance {
 
-    private static Logger log = LoggerFactory.getLogger(DavCompliance.class);
+    /**
+     * Avoid instantiation
+     */
+    private DavCompliance() {}
 
     // RFC 2518
     public static final String _1_ = "1";
