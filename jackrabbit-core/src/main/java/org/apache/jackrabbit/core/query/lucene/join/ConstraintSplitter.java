@@ -16,10 +16,8 @@
  */
 package org.apache.jackrabbit.core.query.lucene.join;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import javax.jcr.RepositoryException;
@@ -45,15 +43,17 @@ import javax.jcr.query.qom.SameNode;
 import javax.jcr.query.qom.UpperCase;
 
 /**
- * Returns a mapped constraint that only refers to the given set of
- * selectors. The returned constraint is guaranteed to match an as small
- * as possible superset of the node tuples matched by the given original
- * constraints.
+ * Returns a mapped constraint that only refers to the given set of selectors.
+ * The returned constraint is guaranteed to match an as small as possible
+ * superset of the node tuples matched by the given original constraints.
  *
- * @param constraint original constraint
- * @param selectors target selectors
+ * @param constraint
+ *            original constraint
+ * @param selectors
+ *            target selectors
  * @return mapped constraint
- * @throws RepositoryException if the constraint mapping fails
+ * @throws RepositoryException
+ *             if the constraint mapping fails
  */
 class ConstraintSplitter {
 
@@ -63,37 +63,19 @@ class ConstraintSplitter {
 
     private final Set<String> rightSelectors;
 
-    private final List<Constraint> leftConstraints =
-        new ArrayList<Constraint>();
+    private final ConstraintSplitInfo constraintSplitInfo;
 
-    private final List<Constraint> rightConstraints =
-        new ArrayList<Constraint>();
-
-    public ConstraintSplitter(
-            Constraint constraint, QueryObjectModelFactory factory,
-            Set<String> leftSelectors, Set<String> rightSelectors)
-            throws RepositoryException {
+    public ConstraintSplitter(Constraint constraint,
+            QueryObjectModelFactory factory, Set<String> leftSelectors,
+            Set<String> rightSelectors) throws RepositoryException {
         this.factory = factory;
         this.leftSelectors = leftSelectors;
         this.rightSelectors = rightSelectors;
+        constraintSplitInfo = new ConstraintSplitInfo(this.factory);
 
         if (constraint != null) {
             split(constraint);
         }
-    }
-
-    /**
-     * @return the left constraint
-     */
-    public Constraint getLeftConstraint() throws RepositoryException {
-        return Constraints.and(factory, leftConstraints);
-    }
-
-    /**
-     * @return the right constraint
-     */
-    public Constraint getRightConstraint() throws RepositoryException {
-        return Constraints.and(factory, rightConstraints);
     }
 
     private void split(Constraint constraint) throws RepositoryException {
@@ -103,9 +85,20 @@ class ConstraintSplitter {
             And and = (And) constraint;
             split(and.getConstraint1());
             split(and.getConstraint2());
+        } else if (constraint instanceof Or) {
+            if (isReferencingBothSides(getSelectorNames(constraint))) {
+                constraintSplitInfo.split((Or) constraint);
+            } else {
+                splitBySelectors(constraint, getSelectorNames(constraint));
+            }
         } else {
             splitBySelectors(constraint, getSelectorNames(constraint));
         }
+    }
+
+    private boolean isReferencingBothSides(Set<String> selectors) {
+        return !leftSelectors.containsAll(selectors)
+                && !rightSelectors.containsAll(selectors);
     }
 
     private void splitNot(Not not) throws RepositoryException {
@@ -114,13 +107,11 @@ class ConstraintSplitter {
             split(((Not) constraint).getConstraint());
         } else if (constraint instanceof And) {
             And and = (And) constraint;
-            split(factory.or(
-                    factory.not(and.getConstraint1()),
+            split(factory.or(factory.not(and.getConstraint1()),
                     factory.not(and.getConstraint2())));
         } else if (constraint instanceof Or) {
             Or or = (Or) constraint;
-            split(factory.and(
-                    factory.not(or.getConstraint1()),
+            split(factory.and(factory.not(or.getConstraint1()),
                     factory.not(or.getConstraint2())));
         } else {
             splitBySelectors(not, getSelectorNames(constraint));
@@ -130,23 +121,24 @@ class ConstraintSplitter {
     private void splitBySelectors(Constraint constraint, Set<String> selectors)
             throws UnsupportedRepositoryOperationException {
         if (leftSelectors.containsAll(selectors)) {
-            leftConstraints.add(constraint);
+            constraintSplitInfo.addLeftConstraint(constraint);
         } else if (rightSelectors.containsAll(selectors)) {
-            rightConstraints.add(constraint);
+            constraintSplitInfo.addRightConstraint(constraint);
         } else {
             throw new UnsupportedRepositoryOperationException(
                     "Unable to split a constraint that references"
-                    + " both sides of a join: " + constraint);
+                            + " both sides of a join: " + constraint);
         }
     }
 
     /**
      * Returns the names of the selectors referenced by the given constraint.
      *
-     * @param constraint constraint
+     * @param constraint
+     *            constraint
      * @return referenced selector names
      * @throws UnsupportedRepositoryOperationException
-     *         if the constraint type is unknown
+     *             if the constraint type is unknown
      */
     private Set<String> getSelectorNames(Constraint constraint)
             throws UnsupportedRepositoryOperationException {
@@ -184,14 +176,16 @@ class ConstraintSplitter {
     }
 
     /**
-     * Returns the combined set of selector names referenced by the given
-     * two constraint.
+     * Returns the combined set of selector names referenced by the given two
+     * constraint.
      *
-     * @param a first constraint
-     * @param b second constraint
+     * @param a
+     *            first constraint
+     * @param b
+     *            second constraint
      * @return selector names
      * @throws UnsupportedRepositoryOperationException
-     *         if the constraint types are unknown
+     *             if the constraint types are unknown
      */
     private Set<String> getSelectorNames(Constraint a, Constraint b)
             throws UnsupportedRepositoryOperationException {
@@ -204,10 +198,11 @@ class ConstraintSplitter {
     /**
      * Returns the selector name referenced by the given dynamic operand.
      *
-     * @param operand dynamic operand
+     * @param operand
+     *            dynamic operand
      * @return selector name
      * @throws UnsupportedRepositoryOperationException
-     *         if the operand type is unknown
+     *             if the operand type is unknown
      */
     private String getSelectorName(DynamicOperand operand)
             throws UnsupportedRepositoryOperationException {
@@ -236,6 +231,10 @@ class ConstraintSplitter {
             throw new UnsupportedRepositoryOperationException(
                     "Unknown dynamic operand type: " + operand);
         }
+    }
+
+    public ConstraintSplitInfo getConstraintSplitInfo() {
+        return constraintSplitInfo;
     }
 
 }

@@ -74,7 +74,7 @@ import org.slf4j.LoggerFactory;
  * This class is thread-safe.
  * <p/>
  * Note on implementation: Multiple modifying threads are synchronized on a
- * <code>MultiIndex</code> instance itself. Sychronization between a modifying
+ * <code>MultiIndex</code> instance itself. Synchronization between a modifying
  * thread and reader threads is done using {@link #updateMonitor} and
  * {@link #updateInProgress}.
  */

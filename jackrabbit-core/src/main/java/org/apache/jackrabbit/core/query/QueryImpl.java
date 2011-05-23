@@ -231,7 +231,7 @@ public class QueryImpl extends AbstractQueryImpl {
      */
     public void setLimit(long limit) {
         if (limit < 0) {
-            throw new IllegalArgumentException("limit must not be negativ");
+            throw new IllegalArgumentException("limit must not be negative");
         }
         this.limit = limit;
     }
@@ -243,7 +243,7 @@ public class QueryImpl extends AbstractQueryImpl {
      */
     public void setOffset(long offset) {
         if (offset < 0) {
-            throw new IllegalArgumentException("offset must not be negativ");
+            throw new IllegalArgumentException("offset must not be negative");
         }
         this.offset = offset;
     }

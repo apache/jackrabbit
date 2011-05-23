@@ -130,7 +130,7 @@ public class PropertiesSynonymProvider implements SynonymProvider {
         } catch (Exception e) {
             log.error("Exception while reading synonyms", e);
         }
-        // update lastCheck timestamp, even if error occured (retry later)
+        // update lastCheck timestamp, even if error occurred (retry later)
         lastCheck = System.currentTimeMillis();
     }
 

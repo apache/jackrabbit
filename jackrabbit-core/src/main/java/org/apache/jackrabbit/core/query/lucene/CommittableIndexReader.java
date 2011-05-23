@@ -29,7 +29,7 @@ import java.io.IOException;
 class CommittableIndexReader extends FilterIndexReader {
 
     /**
-     * A modification count on this index reader. Initialied with
+     * A modification count on this index reader. Initialized with
      * {@link IndexReader#getVersion()} and incremented with every call to
      * {@link #doDelete(int)}.
      */

@@ -100,10 +100,14 @@ public class JoinRow extends AbstractRow {
         for (String selector : rightSelectors) {
             builder.append(selector);
             builder.append("=");
-            try {
-                builder.append(rightRow.getNode(selector));
-            } catch (RepositoryException e) {
-                builder.append(e.getMessage());
+            if(rightRow != null){
+                try {
+                    builder.append(rightRow.getNode(selector));
+                } catch (RepositoryException e) {
+                    builder.append(e.getMessage());
+                }
+            }else{
+                builder.append("null");
             }
             builder.append(" ");
         }

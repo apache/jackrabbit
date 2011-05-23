@@ -92,8 +92,8 @@ class IndexMerger implements IndexListener {
 
     /**
      * Read/write lock for index segment replacement. A shared read lock is
-     * aquired for an index replacement. An exclusive write lock is acquired
-     * when this index merger is shuting down, to prevent further index
+     * acquired for an index replacement. An exclusive write lock is acquired
+     * when this index merger is shutting down, to prevent further index
      * replacements.
      */
     private final ReadWriteLock indexReplacement = new ReentrantReadWriteLock();
