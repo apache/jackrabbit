@@ -30,6 +30,7 @@ import javax.jcr.query.qom.DescendantNode;
 import javax.jcr.query.qom.DynamicOperand;
 import javax.jcr.query.qom.FullTextSearch;
 import javax.jcr.query.qom.FullTextSearchScore;
+import javax.jcr.query.qom.Join;
 import javax.jcr.query.qom.Length;
 import javax.jcr.query.qom.LowerCase;
 import javax.jcr.query.qom.NodeLocalName;
@@ -67,32 +68,36 @@ class ConstraintSplitter {
 
     public ConstraintSplitter(Constraint constraint,
             QueryObjectModelFactory factory, Set<String> leftSelectors,
-            Set<String> rightSelectors) throws RepositoryException {
+            Set<String> rightSelectors, Join join) throws RepositoryException {
         this.factory = factory;
         this.leftSelectors = leftSelectors;
         this.rightSelectors = rightSelectors;
-        constraintSplitInfo = new ConstraintSplitInfo(this.factory);
-
+        constraintSplitInfo = new ConstraintSplitInfo(this.factory, join);
         if (constraint != null) {
-            split(constraint);
+            split(constraintSplitInfo, constraint);
         }
     }
 
-    private void split(Constraint constraint) throws RepositoryException {
+    private void split(ConstraintSplitInfo constraintSplitInfo, Constraint constraint) throws RepositoryException {
         if (constraint instanceof Not) {
-            splitNot((Not) constraint);
+            splitNot(constraintSplitInfo, (Not) constraint);
         } else if (constraint instanceof And) {
             And and = (And) constraint;
-            split(and.getConstraint1());
-            split(and.getConstraint2());
+            split(constraintSplitInfo, and.getConstraint1());
+            split(constraintSplitInfo, and.getConstraint2());
         } else if (constraint instanceof Or) {
             if (isReferencingBothSides(getSelectorNames(constraint))) {
-                constraintSplitInfo.split((Or) constraint);
+                Or or = (Or) constraint;
+                //the problem here is when you split an OR that has both condition sides referencing both join sides. 
+                // it should split into 2 joins
+                constraintSplitInfo.splitOr();
+                split(constraintSplitInfo.getLeftInnerConstraints(), or.getConstraint1());
+                split(constraintSplitInfo.getRightInnerConstraints(),or.getConstraint2());
             } else {
-                splitBySelectors(constraint, getSelectorNames(constraint));
+                splitBySelectors(constraintSplitInfo, constraint, getSelectorNames(constraint));
             }
         } else {
-            splitBySelectors(constraint, getSelectorNames(constraint));
+            splitBySelectors(constraintSplitInfo, constraint, getSelectorNames(constraint));
         }
     }
 
@@ -101,24 +106,24 @@ class ConstraintSplitter {
                 && !rightSelectors.containsAll(selectors);
     }
 
-    private void splitNot(Not not) throws RepositoryException {
+    private void splitNot(ConstraintSplitInfo constraintSplitInfo, Not not) throws RepositoryException {
         Constraint constraint = not.getConstraint();
         if (constraint instanceof Not) {
-            split(((Not) constraint).getConstraint());
+            split(constraintSplitInfo, ((Not) constraint).getConstraint());
         } else if (constraint instanceof And) {
             And and = (And) constraint;
-            split(factory.or(factory.not(and.getConstraint1()),
+            split(constraintSplitInfo, factory.or(factory.not(and.getConstraint1()),
                     factory.not(and.getConstraint2())));
         } else if (constraint instanceof Or) {
             Or or = (Or) constraint;
-            split(factory.and(factory.not(or.getConstraint1()),
+            split(constraintSplitInfo, factory.and(factory.not(or.getConstraint1()),
                     factory.not(or.getConstraint2())));
         } else {
-            splitBySelectors(not, getSelectorNames(constraint));
+            splitBySelectors(constraintSplitInfo, not, getSelectorNames(constraint));
         }
     }
 
-    private void splitBySelectors(Constraint constraint, Set<String> selectors)
+    private void splitBySelectors(ConstraintSplitInfo constraintSplitInfo, Constraint constraint, Set<String> selectors)
             throws UnsupportedRepositoryOperationException {
         if (leftSelectors.containsAll(selectors)) {
             constraintSplitInfo.addLeftConstraint(constraint);
