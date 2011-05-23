@@ -508,8 +508,15 @@ public class QOMFormatter implements QueryObjectModelConstants {
         if (isSimpleName(path)) {
             append(path);
         } else {
+            boolean needQuotes = path.contains(" ");
             append("[");
+            if (needQuotes) {
+                append("'");
+            }
             append(path);
+            if (needQuotes) {
+                append("'");
+            }
             append("]");
         }
     }

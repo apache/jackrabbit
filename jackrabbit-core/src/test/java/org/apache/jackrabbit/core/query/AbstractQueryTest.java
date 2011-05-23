@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.core.query;
 
+import static javax.jcr.query.Query.JCR_SQL2;
+
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -124,11 +126,11 @@ public class AbstractQueryTest extends AbstractJCRTest {
      * @return the elements of the iterator as an array of Nodes.
      */
     protected Node[] toArray(NodeIterator it) {
-        List nodes = new ArrayList();
+        List<Node> nodes = new ArrayList<Node>();
         while (it.hasNext()) {
             nodes.add(it.nextNode());
         }
-        return (Node[]) nodes.toArray(new Node[nodes.size()]);
+        return nodes.toArray(new Node[nodes.size()]);
     }
 
     /**
@@ -201,22 +203,22 @@ public class AbstractQueryTest extends AbstractJCRTest {
     protected void checkResult(NodeIterator result, Node[] nodes)
             throws RepositoryException {
         // collect paths
-        Set expectedPaths = new HashSet();
-        for (int i = 0; i < nodes.length; i++) {
-            expectedPaths.add(nodes[i].getPath());
+        Set<String> expectedPaths = new HashSet<String>();
+        for (Node n : nodes) {
+            expectedPaths.add(n.getPath());
         }
-        Set resultPaths = new HashSet();
+        Set<String> resultPaths = new HashSet<String>();
         while (result.hasNext()) {
             resultPaths.add(result.nextNode().getPath());
         }
         // check if all expected are in result
-        for (Iterator it = expectedPaths.iterator(); it.hasNext();) {
-            String path = (String) it.next();
+        for (Iterator<String> it = expectedPaths.iterator(); it.hasNext();) {
+            String path = it.next();
             assertTrue(path + " is not part of the result set", resultPaths.contains(path));
         }
         // check result does not contain more than expected
-        for (Iterator it = resultPaths.iterator(); it.hasNext();) {
-            String path = (String) it.next();
+        for (Iterator<String> it = resultPaths.iterator(); it.hasNext();) {
+            String path = it.next();
             assertTrue(path + " is not expected to be part of the result set", expectedPaths.contains(path));
         }
     }
@@ -254,6 +256,11 @@ public class AbstractQueryTest extends AbstractJCRTest {
         } else {
             return qm.createQuery(statement, Query.XPATH).execute();
         }
+    }
+
+    protected QueryResult executeSQL2Query(String statement)
+            throws RepositoryException {
+        return qm.createQuery(statement, JCR_SQL2).execute();
     }
 
     /**
