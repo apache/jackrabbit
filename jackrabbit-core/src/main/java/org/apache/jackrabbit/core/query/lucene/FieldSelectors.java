@@ -25,7 +25,7 @@ import org.apache.lucene.document.FieldSelectorResult;
 public class FieldSelectors {
 
     /**
-     * Do not instanciate.
+     * Do not instantiate.
      */
     private FieldSelectors() {
     }

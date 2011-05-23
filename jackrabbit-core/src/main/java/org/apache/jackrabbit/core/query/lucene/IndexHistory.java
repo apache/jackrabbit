@@ -104,7 +104,7 @@ class IndexHistory {
      * <li>{@link Long#MIN_VALUE}: indicates that there is no index segment with the given name.</li>
      * </ul>
      *
-     * @param indexName name of an index segement.
+     * @param indexName name of an index segment.
      * @return the time when the index segment with the given name was in use
      *          the last time.
      */
