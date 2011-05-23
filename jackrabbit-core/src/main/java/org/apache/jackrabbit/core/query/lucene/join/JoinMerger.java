@@ -17,10 +17,12 @@
 package org.apache.jackrabbit.core.query.lucene.join;
 
 import static javax.jcr.query.qom.QueryObjectModelConstants.JCR_JOIN_TYPE_LEFT_OUTER;
+import static javax.jcr.query.qom.QueryObjectModelConstants.JCR_JOIN_TYPE_INNER;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -160,10 +162,113 @@ abstract class JoinMerger {
         }
     }
 
-    public QueryResult merge(RowIterator leftRows, RowIterator rightRows)
+    /**
+     * Merges the left and right dataset of a join query. Take special
+     * precaution for outer joins, as extra checks are needed to distinguish
+     * 'null' nodes vs 'not to be included' nodes
+     * 
+     * 
+     * @param leftRows
+     *            the left dataset of the join
+     * @param rightRows
+     *            the right dataset of the join
+     * @param excludingOuterJoinRowsSet
+     *            if not <code>null</code> must be taken into consideration when
+     *            merging OUTER JOINs
+     * @param rowComparator
+     *            a comparator implementation that has to handle the 'is row
+     *            equal to' problem, in the case of outer joins with
+     *            excludingOuterJoinRowsSet
+     * @return a QueryResult that has the final JOIN resultset
+     * @throws RepositoryException
+     */
+    public QueryResult merge(RowIterator leftRows, RowIterator rightRows,
+            Set<Row> excludingOuterJoinRowsSet, Comparator<Row> rowComparator)
             throws RepositoryException {
-        RowIterator joinRows;
+        Map<String, List<Row>> map = buildRightRowValues(rightRows);
 
+        if (JCR_JOIN_TYPE_INNER.equals(type) && !map.isEmpty()) {
+            List<Row> rows = new ArrayList<Row>();
+            for (Row leftRow : new RowIterable(leftRows)) {
+                for (String value : getLeftValues(leftRow)) {
+                    List<Row> matchingRows = map.get(value);
+                    if (matchingRows != null) {
+                        for (Row rightRow : matchingRows) {
+                            rows.add(mergeRow(leftRow, rightRow));
+                        }
+                    }
+                }
+            }
+            return asQueryResult(new RowIteratorAdapter(rows));
+        }
+
+        if (JCR_JOIN_TYPE_LEFT_OUTER.equals(type)) {
+            // there are no RIGHT dataset values
+            if (map.isEmpty()) {
+                // if there are no WHERE conditions, just return everything
+                // else return an empty set
+                if (excludingOuterJoinRowsSet == null) {
+                    return asQueryResult(new RowIteratorAdapter(leftRows) {
+                        @Override
+                        public Object next() {
+                            return mergeRow((Row) super.next(), null);
+                        }
+                    });
+                }
+                return asQueryResult(new RowIteratorAdapter(
+                        Collections.emptySet()));
+            }
+
+            List<Row> rows = new ArrayList<Row>();
+            for (Row leftRow : new RowIterable(leftRows)) {
+                for (String value : getLeftValues(leftRow)) {
+                    List<Row> matchingRows = map.get(value);
+                    if (matchingRows != null) {
+                        for (Row rightRow : matchingRows) {
+                            // I have possible WHERE clauses on the join that I
+                            // need to look at for each rightRow
+                            if (excludingOuterJoinRowsSet == null) {
+                                rows.add(mergeRow(leftRow, rightRow));
+                            } else {
+                                boolean isIncluded = false;
+                                // apparently
+                                // 'excludingOuterJoinRowsSet.contains' fails to
+                                // match rows
+
+                                // TODO can 'rightRow.getNode()' break because
+                                // of joins that are bigger than 2 way?
+                                // how does this perform for 3 way joins ?
+                                for (Row r : excludingOuterJoinRowsSet) {
+                                    if(rowComparator.compare(rightRow, r) == 0){
+                                        isIncluded = true;
+                                        break;
+                                    }
+                                }
+                                if (isIncluded) {
+                                    rows.add(mergeRow(leftRow, rightRow));
+                                }
+                            }
+                        }
+                    } else {
+                        // No matches in an outer join -> add a null row, if
+                        // there are no 'WHERE' conditions
+                        if (excludingOuterJoinRowsSet == null) {
+                            rows.add(mergeRow(leftRow, null));
+                        }
+                    }
+                }
+            }
+            return asQueryResult(new RowIteratorAdapter(rows));
+        }
+        return asQueryResult(new RowIteratorAdapter(Collections.emptySet()));
+    }
+
+    private QueryResult asQueryResult(RowIterator rowIterator) {
+        return new SimpleQueryResult(columnNames, selectorNames, rowIterator);
+    }
+
+    private Map<String, List<Row>> buildRightRowValues(RowIterator rightRows)
+            throws RepositoryException {
         Map<String, List<Row>> map = new HashMap<String, List<Row>>();
         for (Row row : new RowIterable(rightRows)) {
             for (String value : getRightValues(row)) {
@@ -175,35 +280,7 @@ abstract class JoinMerger {
                 rows.add(row);
             }
         }
-
-        if (!map.isEmpty()) {
-            List<Row> rows = new ArrayList<Row>();
-            for (Row leftRow : new RowIterable(leftRows)) {
-                for (String value : getLeftValues(leftRow)) {
-                    List<Row> matchingRows = map.get(value);
-                    if (matchingRows != null) {
-                        for (Row rightRow : matchingRows) {
-                            rows.add(mergeRow(leftRow, rightRow));
-                        }
-                    } else if (JCR_JOIN_TYPE_LEFT_OUTER.equals(type)) {
-                        // No matches in an outer join -> add a null row
-                        rows.add(mergeRow(leftRow, null));
-                    }
-                }
-            }
-            joinRows = new RowIteratorAdapter(rows);
-        } else if (JCR_JOIN_TYPE_LEFT_OUTER.equals(type)) {
-            joinRows = new RowIteratorAdapter(leftRows) {
-                @Override
-                public Object next() {
-                    return mergeRow((Row) super.next(), null);
-                }
-            };
-        } else {
-            joinRows = new RowIteratorAdapter(Collections.emptySet());
-        }
-
-        return new SimpleQueryResult(columnNames, selectorNames, joinRows);
+        return map;
     }
 
     /**

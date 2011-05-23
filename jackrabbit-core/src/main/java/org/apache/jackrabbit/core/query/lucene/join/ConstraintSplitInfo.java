@@ -21,39 +21,43 @@ import java.util.List;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.query.qom.Constraint;
-import javax.jcr.query.qom.Or;
+import javax.jcr.query.qom.Join;
 import javax.jcr.query.qom.QueryObjectModelFactory;
 
 class ConstraintSplitInfo {
 
     private final QueryObjectModelFactory factory;
 
-    private final List<Constraint> leftConstraints = new ArrayList<Constraint>();
+    private final Join source;
 
-    private final List<Constraint> rightConstraints = new ArrayList<Constraint>();
+    private final List<Constraint> leftConstraints;
+
+    private final List<Constraint> rightConstraints;
 
     private boolean isMultiple;
 
-    private final List<ConstraintSplitInfo> innerConstraints = new ArrayList<ConstraintSplitInfo>();
+    private ConstraintSplitInfo leftInnerConstraints = null;
 
-    public ConstraintSplitInfo(QueryObjectModelFactory factory) {
-        this.factory = factory;
-        this.isMultiple = false;
+    private ConstraintSplitInfo rightInnerConstraints = null;
+
+    public ConstraintSplitInfo(QueryObjectModelFactory factory, Join source) {
+        this(factory, source, new ArrayList<Constraint>(),
+                new ArrayList<Constraint>());
     }
 
-    private ConstraintSplitInfo(QueryObjectModelFactory factory,
+    private ConstraintSplitInfo(QueryObjectModelFactory factory, Join source,
             List<Constraint> leftConstraints, List<Constraint> rightConstraints) {
         this.factory = factory;
+        this.source = source;
         this.isMultiple = false;
-        this.leftConstraints.addAll(leftConstraints);
-        this.rightConstraints.addAll(rightConstraints);
+        this.leftConstraints = leftConstraints;
+        this.rightConstraints = rightConstraints;
     }
 
     public void addLeftConstraint(Constraint c) {
         if (isMultiple) {
-            for (ConstraintSplitInfo csi : innerConstraints) {
-                csi.addLeftConstraint(c);
-            }
+            leftInnerConstraints.addLeftConstraint(c);
+            leftInnerConstraints.addRightConstraint(c);
             return;
         }
         leftConstraints.add(c);
@@ -61,35 +65,31 @@ class ConstraintSplitInfo {
 
     public void addRightConstraint(Constraint c) {
         if (isMultiple) {
-            for (ConstraintSplitInfo csi : innerConstraints) {
-                csi.addRightConstraint(c);
-            }
+            rightInnerConstraints.addLeftConstraint(c);
+            rightInnerConstraints.addRightConstraint(c);
             return;
         }
         rightConstraints.add(c);
     }
 
-    public void split(Or or) {
+    public void splitOr() {
+
         if (isMultiple) {
-            for (ConstraintSplitInfo csi : innerConstraints) {
-                csi.split(or);
-            }
+            // this should never happen
             return;
         }
 
         this.isMultiple = true;
+        ConstraintSplitInfo csi1 = new ConstraintSplitInfo(factory, source,
+                new ArrayList<Constraint>(leftConstraints),
+                new ArrayList<Constraint>(rightConstraints));
+        this.leftInnerConstraints = csi1;
 
-        ConstraintSplitInfo csi1 = new ConstraintSplitInfo(factory,
-                leftConstraints, rightConstraints);
-        csi1.addLeftConstraint(or.getConstraint1());
-        this.innerConstraints.add(csi1);
+        ConstraintSplitInfo csi2 = new ConstraintSplitInfo(factory, source,
+                new ArrayList<Constraint>(leftConstraints),
+                new ArrayList<Constraint>(rightConstraints));
+        this.rightInnerConstraints = csi2;
 
-        ConstraintSplitInfo csi2 = new ConstraintSplitInfo(factory,
-                leftConstraints, rightConstraints);
-        csi2.addLeftConstraint(or.getConstraint2());
-        this.innerConstraints.add(csi2);
-
-        // would null be better?
         this.leftConstraints.clear();
         this.rightConstraints.clear();
     }
@@ -98,8 +98,16 @@ class ConstraintSplitInfo {
         return isMultiple;
     }
 
-    public List<ConstraintSplitInfo> getInnerConstraints() {
-        return innerConstraints;
+    public ConstraintSplitInfo getLeftInnerConstraints() {
+        return leftInnerConstraints;
+    }
+
+    public ConstraintSplitInfo getRightInnerConstraints() {
+        return rightInnerConstraints;
+    }
+
+    public Join getSource() {
+        return source;
     }
 
     /**
@@ -115,4 +123,17 @@ class ConstraintSplitInfo {
     public Constraint getRightConstraint() throws RepositoryException {
         return Constraints.and(factory, rightConstraints);
     }
+
+    @Override
+    public String toString() {
+        if (isMultiple) {
+            return "ConstraintSplitInfo [multiple=" + ", leftInnerConstraints="
+                    + leftInnerConstraints + ", rightInnerConstraints="
+                    + rightInnerConstraints + "]";
+        }
+        return "ConstraintSplitInfo [single" + ", leftConstraints="
+                + leftConstraints + ", rightConstraints=" + rightConstraints
+                + "]";
+    }
+
 }
