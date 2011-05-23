@@ -257,7 +257,7 @@ public class AbstractQueryTest extends AbstractJCRTest {
             return qm.createQuery(statement, Query.XPATH).execute();
         }
     }
-    
+
     protected QueryResult executeSQL2Query(String statement)
             throws RepositoryException {
         return qm.createQuery(statement, JCR_SQL2).execute();
