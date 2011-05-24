@@ -367,7 +367,12 @@ public final class ItemInfoBuilder {
         }
 
         private Iterator<ChildInfo> getChildInfos() {
-            return transformIterator(itemInfos.iterator(),
+            return transformIterator(filterIterator(itemInfos.iterator(),
+                    new Predicate<ItemInfo>(){
+                        public boolean evaluate(ItemInfo info) {
+                            return info.denotesNode();
+                        }
+                    }),
                     new Transformer<ItemInfo, ChildInfo>(){
                         public ChildInfo transform(ItemInfo info) {
                             return new ChildInfoImpl(
