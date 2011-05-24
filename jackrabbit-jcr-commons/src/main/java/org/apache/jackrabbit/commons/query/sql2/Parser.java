@@ -576,6 +576,9 @@ public class Parser {
                         column.propertyName = readName();
                         if (readIf("AS")) {
                             column.columnName = readName();
+                        } else {
+                            column.columnName = column.selectorName + "."
+                                    + column.propertyName;
                         }
                     }
                 } else {
