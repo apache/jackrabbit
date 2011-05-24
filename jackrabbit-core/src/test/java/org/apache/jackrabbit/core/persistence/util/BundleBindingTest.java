@@ -311,6 +311,37 @@ public class BundleBindingTest extends TestCase {
         assertBundleRoundtrip(bundle);
     }
 
+    public void testBooleanSerialization() throws Exception {
+        assertValueSerialization(InternalValue.create(true));
+        assertValueSerialization(InternalValue.create(false));
+    }
+
+    /**
+     * Tests serialization of long values.
+     */
+    public void testLongSerialization() throws Exception {
+        assertValueSerialization(InternalValue.create(0));
+        assertValueSerialization(InternalValue.create(1));
+        assertValueSerialization(InternalValue.create(-1));
+        assertValueSerialization(InternalValue.create(1234567890));
+        assertValueSerialization(InternalValue.create(-1234567890));
+        assertValueSerialization(InternalValue.create(Long.MAX_VALUE));
+        assertValueSerialization(InternalValue.create(Long.MIN_VALUE));
+    }
+
+    public void testDoubleSerialization() throws Exception {
+        assertValueSerialization(InternalValue.create(0.0));
+        assertValueSerialization(InternalValue.create(1.0));
+        assertValueSerialization(InternalValue.create(-1.0));
+        assertValueSerialization(InternalValue.create(12345.6789));
+        assertValueSerialization(InternalValue.create(-12345.6789));
+        assertValueSerialization(InternalValue.create(Double.MAX_VALUE));
+        assertValueSerialization(InternalValue.create(Double.MIN_VALUE));
+        assertValueSerialization(InternalValue.create(Double.POSITIVE_INFINITY));
+        assertValueSerialization(InternalValue.create(Double.NEGATIVE_INFINITY));
+        assertValueSerialization(InternalValue.create(Double.NaN));
+    }
+
     /**
      * Tests serialization of date values.
      */
