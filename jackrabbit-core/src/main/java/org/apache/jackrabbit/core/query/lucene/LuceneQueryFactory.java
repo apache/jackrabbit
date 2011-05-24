@@ -330,10 +330,8 @@ public class LuceneQueryFactory {
             StaticOperand right = c.getOperand2();
             if (left instanceof Length
                     || left instanceof FullTextSearchScore
-                    || ((!JCR_OPERATOR_EQUAL_TO.equals(operator)
-                            || transform.transform != TRANSFORM_NONE)
-                            && (left instanceof NodeName
-                                    || left instanceof NodeLocalName))) {
+                    || (((!JCR_OPERATOR_EQUAL_TO.equals(operator) && !JCR_OPERATOR_LIKE
+                            .equals(operator)) || transform.transform != TRANSFORM_NONE) && (left instanceof NodeName || left instanceof NodeLocalName))) {
                 try {
                     int type = PropertyType.UNDEFINED;
                     if (left instanceof Length) {
@@ -615,15 +613,18 @@ public class LuceneQueryFactory {
         }
     }
 
-    protected Query getNodeLocalNameQuery(
-            int transform, String operator, StaticOperand right)
-            throws RepositoryException {
+    protected Query getNodeLocalNameQuery(int transform, String operator,
+            StaticOperand right) throws RepositoryException {
         if (transform != TRANSFORM_NONE
-                || !JCR_OPERATOR_EQUAL_TO.equals(operator)) {
+                || (!JCR_OPERATOR_EQUAL_TO.equals(operator) && !JCR_OPERATOR_LIKE
+                        .equals(operator))) {
             throw new UnsupportedRepositoryOperationException();
         }
-
         String name = evaluator.getValue(right).getString();
+
+        if (JCR_OPERATOR_LIKE.equals(operator)) {
+            return new WildcardQuery(LOCAL_NAME, null, name, transform, cache);
+        }
         return new JackrabbitTermQuery(new Term(LOCAL_NAME, name));
     }
 
