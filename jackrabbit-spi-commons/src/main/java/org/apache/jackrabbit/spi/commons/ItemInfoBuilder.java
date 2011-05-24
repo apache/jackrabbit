@@ -147,9 +147,9 @@ public final class ItemInfoBuilder {
      */
     public static class NodeInfoBuilder {
         private final NodeInfoBuilder parent;
-        private final String name;
         private final Listener listener;
 
+        private String name;
         private int index = Path.INDEX_DEFAULT;
         private Name primaryTypeName = NameConstants.NT_UNSTRUCTURED;
         private final List<Name> mixins = new ArrayList<Name>();
@@ -193,6 +193,15 @@ public final class ItemInfoBuilder {
         }
 
         /**
+         * Create a new child {@link PropertyInfo} on this {@link NodeInfo}.
+         *
+         * @return  <code>this</code>
+         */
+        public PropertyInfoBuilder createPropertyInfo() {
+            return new PropertyInfoBuilder(this, null, listener);
+        }
+
+        /**
          * Create a new child {@link NodeInfo} on this NodeInfo with a given <code>name</code>.
          * @param name
          * @return  <code>this</code>
@@ -201,6 +210,25 @@ public final class ItemInfoBuilder {
             return new NodeInfoBuilder(this, name, listener);
         }
 
+        /**
+         * Create a new child {@link NodeInfo} on this NodeInfo.
+
+         * @return  <code>this</code>
+         */
+        public NodeInfoBuilder createNodeInfo() {
+            return new NodeInfoBuilder(this, null, listener);
+        }
+
+        /**
+         * Set the name of the node
+
+         * @param name
+         * @return
+         */
+        public NodeInfoBuilder setName(String name) {
+            this.name = name;
+            return this;
+        }
         /**
          * Set the index.
          * @see NodeInfo#getIndex()
@@ -325,6 +353,10 @@ public final class ItemInfoBuilder {
         }
 
         private Path getPath() throws RepositoryException {
+            if (this.name == null) {
+                throw new IllegalStateException("Name not set");
+            }
+            
             if (parent == null) {
                 return PathFactoryImpl.getInstance().getRootPath();
             }
@@ -367,9 +399,9 @@ public final class ItemInfoBuilder {
      */
     public static class PropertyInfoBuilder {
         private final NodeInfoBuilder parent;
-        private final String name;
         private final Listener listener;
 
+        private String name;
         private final List<QValue> values = new ArrayList<QValue>();
         private int type = PropertyType.UNDEFINED;
         private boolean isMultivalued = true;
@@ -382,6 +414,17 @@ public final class ItemInfoBuilder {
             parent = nodeInfoBuilder;
             this.name = name;
             this.listener = listener;
+        }
+
+        /**
+         * Set the name of this property
+         *
+         * @param name
+         * @return
+         */
+        public PropertyInfoBuilder setName(String name) {
+            this.name = name;
+            return this;
         }
 
         /**
@@ -600,6 +643,9 @@ public final class ItemInfoBuilder {
             }
             else if (type == PropertyType.UNDEFINED) {
                 throw new IllegalStateException("Type not set");
+            }
+            else if (this.name == null) {
+                throw new IllegalStateException("Name not set");
             }
             else {
                 stale = true;
