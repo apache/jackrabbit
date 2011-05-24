@@ -174,7 +174,7 @@ public class PathParser {
     /**
      * Parses the given <code>jcrPath</code> and returns a <code>Path</code>. If
      * <code>parent</code> is not <code>null</code>, it is prepended to the
-     * built path before it is returned. If the specifed <code>jcrPath</code>
+     * built path before it is returned. If the specified <code>jcrPath</code>
      * is an identifier based absolute path beginning with an identifier segment
      * the given <code>identifierResolver</code> will be used to resolve it to an
      * absolute path.<p/>
@@ -406,8 +406,14 @@ public class PathParser {
                         throw new MalformedPathException("'" + jcrPath + "' is not a valid path. '" + c + "' not a valid name character.");
                     }
                 case '{':
-                    if (state == STATE_PREFIX_START) {
+                    if (state == STATE_PREFIX_START && lastPos == pos-1) {
+                        // '{' marks the start of a uri enclosed in an expanded name
+                        // instead of the usual namespace prefix, if it is
+                        // located at the beginning of a new segment.
                         state = STATE_URI;
+                    } else if (state == STATE_NAME_START || state == STATE_DOT || state == STATE_DOTDOT) {
+                        // otherwise it's part of the local name
+                        state = STATE_NAME;
                     }
                     break;
 
