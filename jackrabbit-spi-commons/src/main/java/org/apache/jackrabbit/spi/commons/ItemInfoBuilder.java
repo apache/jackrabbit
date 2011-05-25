@@ -151,6 +151,7 @@ public final class ItemInfoBuilder {
 
         private String name;
         private int index = Path.INDEX_DEFAULT;
+        private String namespace;
         private Name primaryTypeName = NameConstants.NT_UNSTRUCTURED;
         private final List<Name> mixins = new ArrayList<Name>();
         private boolean includeChildInfos = true;
@@ -238,6 +239,17 @@ public final class ItemInfoBuilder {
          */
         public NodeInfoBuilder setIndex(int index) {
             this.index = index;
+            return this;
+        }
+
+        /**
+         * Set the namespace
+         *
+         * @param namespace
+         * @return
+         */
+        public NodeInfoBuilder setNamespace(String namespace) {
+            this.namespace = namespace;
             return this;
         }
 
@@ -361,7 +373,8 @@ public final class ItemInfoBuilder {
                 return PathFactoryImpl.getInstance().getRootPath();
             }
             else {
-                Name name = NameFactoryImpl.getInstance().create(Name.NS_DEFAULT_URI, this.name);
+                String namespace = this.namespace == null ? Name.NS_DEFAULT_URI : this.namespace;
+                Name name = NameFactoryImpl.getInstance().create(namespace, this.name);
                 return PathFactoryImpl.getInstance().create(parent.getPath(), name, true);
             }
         }
@@ -407,6 +420,7 @@ public final class ItemInfoBuilder {
         private final Listener listener;
 
         private String name;
+        private String namespace;
         private final List<QValue> values = new ArrayList<QValue>();
         private int type = PropertyType.UNDEFINED;
         private boolean isMultivalued = true;
@@ -429,6 +443,17 @@ public final class ItemInfoBuilder {
          */
         public PropertyInfoBuilder setName(String name) {
             this.name = name;
+            return this;
+        }
+
+        /**
+         * Set the namespace
+         *
+         * @param namespace
+         * @return
+         */
+        public PropertyInfoBuilder setNamespace(String namespace) {
+            this.namespace = namespace;
             return this;
         }
 
@@ -656,7 +681,8 @@ public final class ItemInfoBuilder {
                 stale = true;
 
                 NodeId parentId = parent.getId();
-                Name propertyName = NameFactoryImpl.getInstance().create(Name.NS_DEFAULT_URI, this.name);
+                String namespace = this.namespace == null ? Name.NS_DEFAULT_URI : this.namespace;
+                Name propertyName = NameFactoryImpl.getInstance().create(namespace, this.name);
                 Path path = PathFactoryImpl.getInstance().create(parentId.getPath(), propertyName, true);
                 PropertyId id = IdFactoryImpl.getInstance().createPropertyId(parentId, propertyName);
 
