@@ -149,6 +149,7 @@ public final class ItemInfoBuilder {
         private final NodeInfoBuilder parent;
         private final Listener listener;
 
+        private Path parentPath;
         private String name;
         private int index = Path.INDEX_DEFAULT;
         private String namespace;
@@ -250,6 +251,17 @@ public final class ItemInfoBuilder {
          */
         public NodeInfoBuilder setNamespace(String namespace) {
             this.namespace = namespace;
+            return this;
+        }
+
+        /**
+         * Set the parent's path of the node
+         * 
+         * @param parentPath
+         * @return
+         */
+        public NodeInfoBuilder setParentPath(Path parentPath) {
+            this.parentPath = parentPath;
             return this;
         }
 
@@ -369,13 +381,14 @@ public final class ItemInfoBuilder {
                 throw new IllegalStateException("Name not set");
             }
             
-            if (parent == null) {
+            if (parent == null && parentPath == null) {
                 return PathFactoryImpl.getInstance().getRootPath();
             }
             else {
+                Path path = parentPath == null ? parent.getPath() : parentPath;
                 String namespace = this.namespace == null ? Name.NS_DEFAULT_URI : this.namespace;
                 Name name = NameFactoryImpl.getInstance().create(namespace, this.name);
-                return PathFactoryImpl.getInstance().create(parent.getPath(), name, true);
+                return PathFactoryImpl.getInstance().create(path, name, true);
             }
         }
 
