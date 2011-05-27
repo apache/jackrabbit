@@ -16,7 +16,18 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.PrintStream;
+import java.io.StringReader;
+import java.util.ArrayList;
+import java.util.BitSet;
+import java.util.Collections;
+import java.util.List;
+import java.util.concurrent.CountDownLatch;
+
 import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.Fieldable;
@@ -29,16 +40,6 @@ import org.apache.lucene.store.Directory;
 import org.apache.tika.io.IOExceptionWithCause;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.PrintStream;
-import java.io.StringReader;
-import java.util.ArrayList;
-import java.util.BitSet;
-import java.util.Collections;
-import java.util.List;
-import java.util.concurrent.CountDownLatch;
 
 /**
  * Implements common functionality for a lucene index.
@@ -501,6 +502,9 @@ abstract class AbstractIndex {
                             indexed, tv);
                 } else if (f.isBinary()) {
                     field = new Field(f.name(), f.getBinaryValue(), stored);
+                } else if (f.tokenStreamValue() != null) {
+                    TokenStream ts = f.tokenStreamValue();
+                    field = new Field(f.name(), ts);
                 }
                 if (field != null) {
                     field.setOmitNorms(f.getOmitNorms());
