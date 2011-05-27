@@ -367,6 +367,13 @@ public final class ItemInfoBuilder {
         }
 
         /**
+         * @return  the parent builder of this builder
+         */
+        public NodeInfoBuilder getParent() {
+            return parent;
+        }
+
+        /**
          * Returns the {@link NodeInfo} which has been built by this builder.
          *
          * @return
@@ -752,6 +759,13 @@ public final class ItemInfoBuilder {
                 }
                 return parent.addPropertyInfo(propertyInfo);
             }
+        }
+
+        /**
+         * @return  the parent builder of this builder
+         */
+        public NodeInfoBuilder getParent() {
+            return parent;
         }
 
         /**
