@@ -86,19 +86,24 @@ public class ConcurrentGcTest extends TestCase {
     }
 
     private void doTestDatabase(String driver, String url, String user, String password) throws Exception {
-        DbDataStore store = new DbDataStore();
-        store.setConnectionFactory(new ConnectionFactory());
+        ConnectionFactory pool = new ConnectionFactory();
+        try {
+            DbDataStore store = new DbDataStore();
+            store.setConnectionFactory(pool);
 
-        ids.clear();
+            ids.clear();
 
-        store.setDriver(driver);
-        store.setUrl(url);
-        store.setUser(user);
-        store.setPassword(password);
+            store.setDriver(driver);
+            store.setUrl(url);
+            store.setUser(user);
+            store.setPassword(password);
 
-        store.init("target/test-db-datastore");
-        store.setMinRecordLength(0);
-        doTest(store);
+            store.init("target/test-db-datastore");
+            store.setMinRecordLength(0);
+            doTest(store);
+        } finally {
+            pool.close();
+        }
     }
 
     public void testFile() throws Exception {
