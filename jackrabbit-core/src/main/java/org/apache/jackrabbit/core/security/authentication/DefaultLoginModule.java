@@ -229,7 +229,7 @@ public class DefaultLoginModule extends AbstractLoginModule {
             // special token based login
             tokenCredentials = ((TokenCredentials) credentials);
             try {
-                Node n = session.getNodeByIdentifier(tokenCredentials.getToken());
+                Node n = TokenBasedAuthentication.getTokenNode(tokenCredentials, session);
                 final NodeImpl userNode = (NodeImpl) n.getParent().getParent();
                 final String principalName = userNode.getProperty(UserImpl.P_PRINCIPAL_NAME).getString();
                 if (userNode.isNodeType(UserImpl.NT_REP_USER)) {
