@@ -39,7 +39,6 @@ Bug fixes
   [JCR-2939] QueryObjectModel does not generate the corresponding SQL2 ...
   [JCR-2953] PathParser accepts illegal pahts containing curly brackets
   [JCR-2960] Long values not properly stored
-  [JCR-2980] Nodes that have properties marked for async extraction should ...
 
 For more detailed information about all the changes in this and other
 Jackrabbit releases, please see the Jackrabbit issue tracker at

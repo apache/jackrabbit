@@ -263,13 +263,6 @@ public class AbstractQueryTest extends AbstractJCRTest {
         return qm.createQuery(statement, JCR_SQL2).execute();
     }
 
-    protected void executeSQL2Query(String statement, Node[] nodes)
-            throws RepositoryException {
-        getSearchIndex().flush();
-        QueryResult res = qm.createQuery(statement, JCR_SQL2).execute();
-        checkResult(res, nodes);
-    }
-
     /**
      * Returns a reference to the underlying search index.
      *
