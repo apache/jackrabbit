@@ -26,6 +26,7 @@ Improvements
   [JCR-2852] Support multi-selector OR constraints in join queries
   [JCR-2955] Use GrowingLRUMap in CachingEntryCollector
   [JCR-2956] SQL2: Implement LIKE support for node names
+  [JCR-2965] Show referencing nodes in debug log when trying to delete ...
   [JCR-2977] AccessControlManager#getApplicablePolicy should check for ...
 
 Bug fixes
