@@ -1053,9 +1053,10 @@ public class SharedItemStateManager
                         // may actually be deleted and then again added with the
                         // same UUID, i.e. the node is still referenceable.
                         if (refs.hasReferences() && !local.has(targetId)) {
-                            String msg = node.getNodeId()
-                                    + ": the node cannot be removed because it is still being referenced.";
-                            log.debug(msg);
+                            String msg =
+                                node.getNodeId() + " cannot be removed"
+                                + " because it is still being referenced";
+                            log.debug("{} from {}", msg, refs.getReferences());
                             throw new ReferentialIntegrityException(msg);
                         }
                     }
