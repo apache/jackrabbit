@@ -26,6 +26,7 @@ Improvements
   [JCR-2852] Support multi-selector OR constraints in join queries
   [JCR-2955] Use GrowingLRUMap in CachingEntryCollector
   [JCR-2956] SQL2: Implement LIKE support for node names
+  [JCR-2965] Show referencing nodes in debug log when trying to delete ...
   [JCR-2977] AccessControlManager#getApplicablePolicy should check for ...
 
 Bug fixes
@@ -39,6 +40,7 @@ Bug fixes
   [JCR-2939] QueryObjectModel does not generate the corresponding SQL2 ...
   [JCR-2953] PathParser accepts illegal pahts containing curly brackets
   [JCR-2960] Long values not properly stored
+  [JCR-2964] ItemSaveOperation should not swallow stacktrace
 
 For more detailed information about all the changes in this and other
 Jackrabbit releases, please see the Jackrabbit issue tracker at
