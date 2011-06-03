@@ -267,6 +267,7 @@ public interface RepositoryService {
      * @see javax.jcr.Node#getBaseVersion()
      * @see javax.jcr.Node#getVersionHistory()
      * @see javax.jcr.version.Version#getContainingHistory()
+     * @deprecated Use {@link #getItemInfos(SessionInfo, NodeId)} 
      */
     public NodeInfo getNodeInfo(SessionInfo sessionInfo, NodeId nodeId) throws ItemNotFoundException, RepositoryException;
 
