@@ -37,14 +37,18 @@ public final class SingletonTokenStream extends TokenStream {
     /**
      * The payload of the token.
      */
-    private final Payload payload;
+    private Payload payload;
+
+    private boolean consumed = false;
 
     /**
      * Creates a new SingleTokenStream with the given value and a property
      * <code>type</code>.
-     *
-     * @param value the string value that will be returned with the token.
-     * @param type the JCR property type.
+     * 
+     * @param value
+     *            the string value that will be returned with the token.
+     * @param type
+     *            the JCR property type.
      */
     public SingletonTokenStream(String value, int type) {
         this.value = value;
@@ -64,8 +68,9 @@ public final class SingletonTokenStream extends TokenStream {
     /**
      * {@inheritDoc}
      */
+    @Override
     public Token next(Token reusableToken) throws IOException {
-        if (value == null) {
+        if (consumed) {
             return null;
         }
         reusableToken.clear();
@@ -73,7 +78,25 @@ public final class SingletonTokenStream extends TokenStream {
         reusableToken.setPayload(payload);
         reusableToken.setStartOffset(0);
         reusableToken.setEndOffset(value.length());
-        value = null;
+        consumed = true;
         return reusableToken;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void reset() throws IOException {
+        consumed = false;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void close() throws IOException {
+        consumed = true;
+        value = null;
+        payload = null;
     }
 }
