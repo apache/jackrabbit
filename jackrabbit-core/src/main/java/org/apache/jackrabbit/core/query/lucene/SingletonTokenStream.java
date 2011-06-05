@@ -16,12 +16,12 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
+import java.io.IOException;
+
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.tokenattributes.PayloadAttribute;
 import org.apache.lucene.analysis.tokenattributes.TermAttribute;
 import org.apache.lucene.index.Payload;
-
-import java.io.IOException;
 
 /**
  * <code>SingletonTokenStream</code> implements a token stream that wraps a
@@ -38,7 +38,7 @@ public final class SingletonTokenStream extends TokenStream {
     /**
      * The payload of the token.
      */
-    private final Payload payload;
+    private Payload payload;
 
     /**
      * The term attribute of the current token
@@ -50,11 +50,15 @@ public final class SingletonTokenStream extends TokenStream {
      */
     private PayloadAttribute payloadAttribute;
 
+    private boolean consumed = false;
+
     /**
      * Creates a new SingleTokenStream with the given value and payload.
-     *
-     * @param value the string value that will be returned with the token.
-     * @param payload the payload that will be attached to this token
+     * 
+     * @param value
+     *            the string value that will be returned with the token.
+     * @param payload
+     *            the payload that will be attached to this token
      */
     public SingletonTokenStream(String value, Payload payload) {
         this.value = value;
@@ -66,9 +70,11 @@ public final class SingletonTokenStream extends TokenStream {
     /**
      * Creates a new SingleTokenStream with the given value and a property
      * <code>type</code>.
-     *
-     * @param value the string value that will be returned with the token.
-     * @param type the JCR property type.
+     * 
+     * @param value
+     *            the string value that will be returned with the token.
+     * @param type
+     *            the JCR property type.
      */
     public SingletonTokenStream(String value, int type) {
         this(value, new Payload(new PropertyMetaData(type).toByteArray()));
@@ -76,15 +82,33 @@ public final class SingletonTokenStream extends TokenStream {
 
     @Override
     public boolean incrementToken() throws IOException {
-        if (value == null) {
+        if (consumed) {
             return false;
         }
-
         clearAttributes();
         termAttribute.setTermBuffer(value);
         payloadAttribute.setPayload(payload);
-
-        value = null;
+        consumed = true;
         return true;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void reset() throws IOException {
+        consumed = false;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void close() throws IOException {
+        consumed = true;
+        value = null;
+        payload = null;
+        payloadAttribute = null;
+        termAttribute = null;
     }
 }

@@ -28,12 +28,15 @@ import java.util.concurrent.CountDownLatch;
 
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.TokenStream;
+import org.apache.lucene.analysis.tokenattributes.PayloadAttribute;
+import org.apache.lucene.analysis.tokenattributes.TermAttribute;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.Fieldable;
 import org.apache.lucene.index.IndexDeletionPolicy;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
+import org.apache.lucene.index.Payload;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.Similarity;
 import org.apache.lucene.store.Directory;
@@ -502,9 +505,14 @@ abstract class AbstractIndex {
                             indexed, tv);
                 } else if (f.isBinary()) {
                     field = new Field(f.name(), f.getBinaryValue(), stored);
-                } else if (f.tokenStreamValue() != null) {
-                    TokenStream ts = f.tokenStreamValue();
-                    field = new Field(f.name(), ts);
+                } else if (f.tokenStreamValue() != null && f.tokenStreamValue() instanceof SingletonTokenStream) {
+                    TokenStream tokenStream = f.tokenStreamValue();
+                    TermAttribute termAttribute = tokenStream.addAttribute(TermAttribute.class);
+                    PayloadAttribute payloadAttribute = tokenStream.addAttribute(PayloadAttribute.class);
+                    tokenStream.incrementToken();
+                    String value = new String(termAttribute.termBuffer(), 0, termAttribute.termLength());
+                    tokenStream.reset();
+                    field = new Field(f.name(), new SingletonTokenStream(value, (Payload) payloadAttribute.getPayload().clone()));
                 }
                 if (field != null) {
                     field.setOmitNorms(f.getOmitNorms());
