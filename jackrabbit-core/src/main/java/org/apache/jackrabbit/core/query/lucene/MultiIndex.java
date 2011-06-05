@@ -925,7 +925,7 @@ public class MultiIndex {
      *
      * @throws IOException if the flush fails.
      */
-    void flush() throws IOException {
+    private void flush() throws IOException {
         synchronized (this) {
 
             // only start transaction when there is something to commit
@@ -1276,21 +1276,25 @@ public class MultiIndex {
                 if (redoLog.hasEntries()) {
                     log.debug("Flushing index after being idle for "
                             + idleTime + " ms.");
-                    synchronized (updateMonitor) {
-                        updateInProgress = true;
-                    }
-                    try {
-                        flush();
-                    } finally {
-                        synchronized (updateMonitor) {
-                            updateInProgress = false;
-                            updateMonitor.notifyAll();
-                            releaseMultiReader();
-                        }
-                    }
+                    safeFlush();
                 }
             } catch (IOException e) {
                 log.error("Unable to commit volatile index", e);
+            }
+        }
+    }
+    
+    void safeFlush() throws IOException{
+        synchronized (updateMonitor) {
+            updateInProgress = true;
+        }
+        try {
+            flush();
+        } finally {
+            synchronized (updateMonitor) {
+                updateInProgress = false;
+                updateMonitor.notifyAll();
+                releaseMultiReader();
             }
         }
     }
