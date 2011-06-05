@@ -27,6 +27,8 @@ import java.util.List;
 import java.util.concurrent.CountDownLatch;
 
 import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.analysis.Token;
+import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.Fieldable;
@@ -509,6 +511,11 @@ abstract class AbstractIndex {
                             stored, indexed, tv);
                 } else if (f.isBinary()) {
                     field = new Field(f.name(), f.binaryValue(), stored);
+                } else if (f.tokenStreamValue() != null && f.tokenStreamValue() instanceof SingletonTokenStream) {
+                    TokenStream tokenStream = f.tokenStreamValue();
+                    Token t = tokenStream.next(new Token());
+                    tokenStream.reset();
+                    field = new Field(f.name(), new SingletonTokenStream(t));
                 }
                 if (field != null) {
                     field.setOmitNorms(f.getOmitNorms());
