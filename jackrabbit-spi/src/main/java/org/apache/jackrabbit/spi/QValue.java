@@ -40,6 +40,7 @@ public interface QValue {
      * Returns the <code>PropertyType</code> of this <code>QValue</code> object.
      * It may be either of the value property types defined by the JSR 283:
      * <ul>
+     * <li>{@link PropertyType#STRING}</li>
      * <li>{@link PropertyType#BINARY}</li>
      * <li>{@link PropertyType#BOOLEAN}</li>
      * <li>{@link PropertyType#DATE}</li>
