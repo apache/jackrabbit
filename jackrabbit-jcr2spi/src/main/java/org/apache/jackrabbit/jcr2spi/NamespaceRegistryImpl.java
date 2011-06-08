@@ -58,7 +58,7 @@ public class NamespaceRegistryImpl implements NamespaceRegistry {
      * @see NamespaceRegistry#unregisterNamespace(String)
      */
     public void unregisterNamespace(String prefix) throws NamespaceException, UnsupportedRepositoryOperationException, RepositoryException {
-        storage.unregisterNamespace(prefix);
+        storage.unregisterNamespace(getURI(prefix));
     }
 
     /**
