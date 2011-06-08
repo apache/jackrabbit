@@ -293,7 +293,7 @@ public class EntryCollector extends AccessControlObserver implements AccessContr
                     }
                 } catch (RepositoryException e) {
                     // should not get here
-                    log.error("Failed to process ACL event: " + event, e);
+                    log.warn("Failed to process ACL event: " + event, e);
                 }
             }
         }
@@ -308,23 +308,26 @@ public class EntryCollector extends AccessControlObserver implements AccessContr
             return new AccessControlModifications<NodeId>(modMap);
         }
 
-        private void siftNodeAdded(String identifier)
-                throws RepositoryException {
-            NodeImpl n = (NodeImpl) session.getNodeByIdentifier(identifier);
-            if (n.isNodeType(EntryCollector.NT_REP_ACL)) {
-                // a new ACL was added -> use the added node to update
-                // the cache.
-                addModification(
-                        accessControlledIdFromAclNode(n),
-                        AccessControlObserver.POLICY_ADDED);
-            } else if (n.isNodeType(EntryCollector.NT_REP_ACE)) {
-                // a new ACE was added -> use the parent node (acl)
-                // to update the cache.
-                addModification(
-                        accessControlledIdFromAceNode(n),
-                        AccessControlObserver.POLICY_MODIFIED);
-            } /* else: some other node added below an access controlled
-               parent node -> not interested. */
+        private void siftNodeAdded(String identifier) throws RepositoryException {
+            if (session.nodeExists(getIdentifierPath(identifier))) {
+                NodeImpl n = (NodeImpl) session.getNodeByIdentifier(identifier);
+                if (n.isNodeType(EntryCollector.NT_REP_ACL)) {
+                    // a new ACL was added -> use the added node to update
+                    // the cache.
+                    addModification(
+                            accessControlledIdFromAclNode(n),
+                            AccessControlObserver.POLICY_ADDED);
+                } else if (n.isNodeType(EntryCollector.NT_REP_ACE)) {
+                    // a new ACE was added -> use the parent node (acl)
+                    // to update the cache.
+                    addModification(
+                            accessControlledIdFromAceNode(n),
+                            AccessControlObserver.POLICY_MODIFIED);
+                } /* else: some other node added below an access controlled
+                     parent node -> not interested. */
+            } else {
+                log.debug("Cannot process NODE_ADDED event. Node {} doesn't exist (anymore).", identifier);
+            }
         }
 
         private void siftNodeRemoved(String path) throws RepositoryException {
@@ -349,23 +352,24 @@ public class EntryCollector extends AccessControlObserver implements AccessContr
                             implementation -> ignore
                  */
             } else {
-                log.debug("Cannot process NODE_REMOVED event."
-                        + " Parent {} doesn't exist (anymore).",
-                        parentPath);
+                log.debug("Cannot process NODE_REMOVED event. Parent {} doesn't exist (anymore).", parentPath);
             }
         }
 
-        private void siftPropertyChanged(String identifier)
-                throws RepositoryException {
-            // test if the changed prop belongs to an ACE
-            NodeImpl parent = (NodeImpl) session.getNodeByIdentifier(identifier);
-            if (parent.isNodeType(EntryCollector.NT_REP_ACE)) {
-                addModification(
-                        accessControlledIdFromAceNode(parent),
-                        AccessControlObserver.POLICY_MODIFIED);
-            } /* some other property below an access controlled node
+        private void siftPropertyChanged(String identifier) throws RepositoryException {
+            if (session.nodeExists(getIdentifierPath(identifier))) {
+                // test if the changed prop belongs to an ACE
+                NodeImpl parent = (NodeImpl) session.getNodeByIdentifier(identifier);
+                if (parent.isNodeType(EntryCollector.NT_REP_ACE)) {
+                    addModification(
+                            accessControlledIdFromAceNode(parent),
+                            AccessControlObserver.POLICY_MODIFIED);
+                } /* some other property below an access controlled node
                  changed -> not interested. (NOTE: rep:ACL doesn't
                  define any properties. */
+            } else {
+                log.debug("Cannot process PROPERTY_CHANGED event. Node {} doesn't exist (anymore).", identifier);
+            }
         }
 
         private NodeId accessControlledIdFromAclNode(Node aclNode)
@@ -386,6 +390,11 @@ public class EntryCollector extends AccessControlObserver implements AccessContr
             modMap.put(accessControllNodeId, modType);
         }
 
+        private static String getIdentifierPath(String identifier) {
+            StringBuilder sb = new StringBuilder();
+            sb.append('[').append(identifier).append(']');
+            return sb.toString();
+        }
     }
 
 }
