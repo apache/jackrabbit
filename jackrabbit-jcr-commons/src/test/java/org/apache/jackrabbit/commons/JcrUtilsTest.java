@@ -20,6 +20,7 @@ import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Map;
 
+import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.naming.InitialContext;
 
@@ -67,4 +68,12 @@ public class JcrUtilsTest extends MockCase {
         }
     }
 
+    public void testGetPropertyType() {
+        assertEquals(PropertyType.BINARY, JcrUtils.getPropertyType(
+                PropertyType.TYPENAME_BINARY));
+        assertEquals(PropertyType.BOOLEAN, JcrUtils.getPropertyType(
+                PropertyType.TYPENAME_BOOLEAN.toLowerCase()));
+        assertEquals(PropertyType.DATE, JcrUtils.getPropertyType(
+                PropertyType.TYPENAME_DATE.toUpperCase()));
+    }
 }
