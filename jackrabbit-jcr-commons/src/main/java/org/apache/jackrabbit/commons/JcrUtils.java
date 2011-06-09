@@ -18,7 +18,10 @@ package org.apache.jackrabbit.commons;
 
 import static java.net.URLDecoder.decode;
 
+import java.io.FilterInputStream;
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -69,6 +72,13 @@ public class JcrUtils {
      */
     public static final String REPOSITORY_URI =
         "org.apache.jackrabbit.repository.uri";
+
+    /**
+     * A pre-allocated empty array of values.
+     *
+     * @since Apache Jackrabbit 2.3
+     */
+    public static final Value[] NO_VALUES = new Value[0];
 
     /**
      * Private constructor to prevent instantiation of this class.
@@ -641,6 +651,106 @@ public class JcrUtils {
     }
 
     /**
+     * Returns a stream for reading the contents of the file stored at the
+     * given node. This method works with both on nt:file and nt:resource and
+     * on any other similar node types, as it only looks for the jcr:data
+     * property or a jcr:content child node.
+     * <p>
+     * The returned stream contains a reference to the underlying
+     * {@link Binary} value instance that will be disposed when the stream
+     * is closed. It is the responsibility of the caller to close the stream
+     * once it is no longer needed.
+     *
+     * @since Apache Jackrabbit 2.3
+     * @param node node to be read
+     * @return stream for reading the file contents
+     * @throws RepositoryException if the file can not be accessed
+     */
+    public InputStream readFile(Node node) throws RepositoryException {
+        if (node.hasProperty(Property.JCR_DATA)) {
+            Property data = node.getProperty(Property.JCR_DATA);
+            final Binary binary = data.getBinary();
+            return new FilterInputStream(binary.getStream()) {
+                @Override
+                public void close() throws IOException {
+                    super.close();
+                    binary.dispose();
+                }
+            };
+        } else if (node.hasNode(Node.JCR_CONTENT)) {
+            return readFile(node.getNode(Node.JCR_CONTENT));
+        } else {
+            throw new RepositoryException(
+                    "Unable to read file node: " + node.getPath());
+        }
+    }
+
+    /**
+     * Writes the contents of file stored at the given node to the given
+     * stream. Similar file handling logic is used as in the
+     * {@link #readFile(Node)} method.
+     *
+     * @since Apache Jackrabbit 2.3
+     * @param node node to be read
+     * @param stream to which the file contents are written
+     * @throws RepositoryException if the file can not be accessed
+     * @throws IOException if the file can not be read or written
+     */
+    public void readFile(Node node, OutputStream output)
+            throws RepositoryException, IOException {
+        InputStream input = readFile(node);
+        try {
+            byte[] buffer = new byte[16 * 1024];
+            int n = input.read(buffer);
+            while (n != -1) {
+                output.write(buffer, 0, n);
+                n = input.read(buffer);
+            }
+        } finally {
+            input.close();
+        }
+    }
+
+    /**
+     * Returns the last modified date of the given file node. The value is
+     * read from the jcr:lastModified property of this node or alternatively
+     * from a jcr:content child node.
+     *
+     * @since Apache Jackrabbit 2.3
+     * @param node file node
+     * @return last modified date, or <code>null</code> if not available
+     * @throws RepositoryException if the last modified date can not be accessed
+     */
+    public Calendar getLastModified(Node node) throws RepositoryException {
+        if (node.hasProperty(Property.JCR_LAST_MODIFIED)) {
+            return node.getProperty(Property.JCR_LAST_MODIFIED).getDate();
+        } else if (node.hasNode(Node.JCR_CONTENT)) {
+            return getLastModified(node.getNode(Node.JCR_CONTENT));
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Sets the last modified date of the given file node. The value is
+     * written to the jcr:lastModified property of a jcr:content child node
+     * or this node if such a child does not exist.
+     *
+     * @since Apache Jackrabbit 2.3
+     * @param node file node
+     * @param last modified date
+     * @throws RepositoryException if the last modified date can not be set
+     */
+    public void setLastModified(Node node, Calendar date)
+            throws RepositoryException {
+        if (node.hasNode(Node.JCR_CONTENT)) {
+            setLastModified(node.getNode(Node.JCR_CONTENT), date);
+        } else {
+            node.setProperty(Property.JCR_LAST_MODIFIED, date);
+        }
+    }
+
+    /**
      * Returns a string representation of the given item. The returned string
      * is designed to be easily readable while providing maximum amount of
      * information for logging and debugging purposes.
@@ -719,6 +829,38 @@ public class JcrUtils {
             } else {
                 builder.append(string);
             }
+        }
+    }
+
+    private static final Map<String, Integer> PROPERTY_TYPES =
+        new HashMap<String, Integer>();
+
+    static {
+        for (int i = 0; i < 13; i++) {
+            PROPERTY_TYPES.put(PropertyType.nameFromValue(i).toLowerCase(), i);
+        }
+    }
+
+    /**
+     * Returns the numeric constant value of the property type with
+     * the specified name. This method is like
+     * {@link PropertyType#valueFromName(String)}, but the name lookup
+     * is case insensitive.
+     *
+     * @since Apache Jackrabbit 2.3
+     * @param name name of the property type (case insensitive)
+     * @return property type constant
+     * @throws IllegalArgumentException if the given name is not a valid
+     *                                  property type name
+     */
+    public static int getPropertyType(String name)
+            throws IllegalArgumentException {
+        Integer type = PROPERTY_TYPES.get(name.toLowerCase());
+        if (type != null) {
+            return type;
+        } else {
+            throw new IllegalArgumentException(
+                    "Unknown property type: " + name);
         }
     }
 
