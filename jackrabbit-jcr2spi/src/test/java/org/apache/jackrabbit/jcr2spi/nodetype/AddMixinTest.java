@@ -21,8 +21,11 @@ import java.util.List;
 
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
+import javax.jcr.nodetype.ConstraintViolationException;
+import javax.jcr.nodetype.NodeDefinitionTemplate;
 import javax.jcr.nodetype.NodeType;
 import javax.jcr.nodetype.NodeTypeManager;
+import javax.jcr.nodetype.NodeTypeTemplate;
 
 import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.apache.jackrabbit.test.NotExecutableException;
@@ -167,5 +170,85 @@ public class AddMixinTest extends AbstractJCRTest {
         assertTrue("Adding 2 mixins at once -> both must be present.", node.isNodeType(mixReferenceable) && node.isNodeType(mixLockable));
         List<NodeType> mixins = Arrays.asList(node.getMixinNodeTypes());
         assertTrue("Adding 2 mixins at once -> both must be present.", mixins.contains(ntMgr.getNodeType(mixReferenceable)) && mixins.contains(ntMgr.getNodeType(mixLockable)));
+    }
+
+    public void testAddItemsDefinedByMixin() throws NotExecutableException, RepositoryException {
+        // register mixin
+        NodeTypeManager ntm = superuser.getWorkspace().getNodeTypeManager();
+        NodeTypeTemplate ntd = ntm.createNodeTypeTemplate();
+        ntd.setName("testMixin");
+        ntd.setMixin(true);
+        NodeDefinitionTemplate nodeDef = ntm.createNodeDefinitionTemplate();
+        nodeDef.setName("child");
+        nodeDef.setRequiredPrimaryTypeNames(new String[] {"nt:folder"});
+        ntd.getNodeDefinitionTemplates().add(nodeDef);
+        ntm.registerNodeType(ntd, true);
+
+        // create node and add mixin
+        Node node = testRootNode.addNode(nodeName1, "nt:resource");
+        node.setProperty("jcr:data", "abc");
+        node.addMixin("testMixin");
+        superuser.save();
+
+        // create a child node defined by the mixin
+        node.addNode("child", "nt:folder");
+        node.save();
+    }
+
+
+    public void testAddItemsDefinedByMixin2() throws NotExecutableException, RepositoryException {
+        // register mixin
+        NodeTypeManager ntm = superuser.getWorkspace().getNodeTypeManager();
+        NodeTypeTemplate ntd = ntm.createNodeTypeTemplate();
+        ntd.setName("testMixin");
+        ntd.setMixin(true);
+        NodeDefinitionTemplate nodeDef = ntm.createNodeDefinitionTemplate();
+        nodeDef.setName("child");
+        nodeDef.setRequiredPrimaryTypeNames(new String[] {"nt:folder"});
+        ntd.getNodeDefinitionTemplates().add(nodeDef);
+        ntm.registerNodeType(ntd, true);
+
+        // create node and add mixin
+        Node node = testRootNode.addNode(nodeName1, "nt:resource");
+        node.setProperty("jcr:data", "abc");
+        node.addMixin("testMixin");
+        superuser.save();
+
+        // create a child node defined by the mixin without specifying the
+        // node type
+        try {
+            node.addNode("child");
+            fail();
+        } catch (ConstraintViolationException e) {
+            // success as ChildNode Definition doesn't specify a default primary
+            // type -> see comment in ItemDefinitionProvider#getQNodeDefinition
+        }
+    }
+
+    public void testAddItemsDefinedByMixin3() throws NotExecutableException, RepositoryException {
+        // register mixin
+        NodeTypeManager ntm = superuser.getWorkspace().getNodeTypeManager();
+        NodeTypeTemplate ntd = ntm.createNodeTypeTemplate();
+        ntd.setName("testMixin");
+        ntd.setMixin(true);
+        NodeDefinitionTemplate nodeDef = ntm.createNodeDefinitionTemplate();
+        nodeDef.setName("child");
+        nodeDef.setRequiredPrimaryTypeNames(new String[] {"nt:folder"});
+        nodeDef.setDefaultPrimaryTypeName("nt:folder");
+        ntd.getNodeDefinitionTemplates().add(nodeDef);
+        ntm.registerNodeType(ntd, true);
+
+        // create node and add mixin
+        Node node = testRootNode.addNode(nodeName1, "nt:resource");
+        node.setProperty("jcr:data", "abc");
+        node.addMixin("testMixin");
+        superuser.save();
+
+        // create a child node defined by the mixin without specifying the
+        // node type -> must succeed since default primary type is specified
+        // in the child node def
+        Node c = node.addNode("child");
+        assertEquals("nt:folder", c.getPrimaryNodeType().getName());
+        superuser.save();
     }
 }
