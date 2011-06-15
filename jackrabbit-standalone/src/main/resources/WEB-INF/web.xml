@@ -77,7 +77,7 @@
             <description>
                 Defines how a missing authorization header should be handled.
                 1) If this init-param is missing, a 401 response is generated.
-                   This is suiteable for clients (eg. webdav clients) for which
+                   This is suitable for clients (eg. WebDAV clients) for which
                    sending a proper authorization header is not possible if the
                    server never sent a 401.
                 2) If this init-param is present with an empty value,
