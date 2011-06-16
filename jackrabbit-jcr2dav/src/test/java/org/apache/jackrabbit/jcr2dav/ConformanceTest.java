@@ -52,7 +52,5 @@ public class ConformanceTest extends TestCase {
                 result.addError(this, e);
             }
         }
-
     }
-
 }
