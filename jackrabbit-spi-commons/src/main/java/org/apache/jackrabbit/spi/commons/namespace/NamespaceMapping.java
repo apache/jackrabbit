@@ -114,6 +114,21 @@ public class NamespaceMapping implements NamespaceResolver {
     }
 
     /**
+     * Clear the mapping for an URI
+     *
+     * @param uri  URI to clear the mapping for
+     * @return  The prefix the URI was mapped to or <code>null</code> if it was not mapped.
+     */
+    public String removeMapping(String uri) {
+        String prefix = URIToPrefix.remove(uri);
+        if (prefix != null) {
+            prefixToURI.remove(prefix);
+        }
+
+        return prefix;
+    }
+
+    /**
      * Return a Map of prefix to URI mappings currently registered.
      * The returned Map is a copy of the internal Map.
      * @return Map
