@@ -551,7 +551,11 @@ public class WorkspaceImpl implements Workspace, ManagerProvider {
      * Create the workspace state manager. May be overridden by subclasses.
      *
      * @param service the RepositoryService
+     * @param sessionInfo the SessionInfo used to create this instance.
+     * @param cacheBehaviour the desired cache behavior
+     * @param pollTimeout the desired pollTimeout.
      * @return state manager
+     * @throws javax.jcr.RepositoryException If an error occurs
      */
     protected WorkspaceManager createManager(RepositoryService service,
                                              SessionInfo sessionInfo,
@@ -564,8 +568,8 @@ public class WorkspaceImpl implements Workspace, ManagerProvider {
     /**
      * Create the <code>LockManager</code>. May be overridden by subclasses.
      *
-     * @param wspManager
-     * @param itemManager
+     * @param wspManager the workspace manager.
+     * @param itemManager the item manager.
      * @return a new <code>LockStateManager</code> instance.
      */
     protected LockStateManager createLockManager(WorkspaceManager wspManager, ItemManager itemManager) {
@@ -577,7 +581,7 @@ public class WorkspaceImpl implements Workspace, ManagerProvider {
     /**
      * Create the <code>VersionManager</code>. May be overridden by subclasses.
      *
-     * @param wspManager
+     * @param wspManager the workspace manager.
      * @return a new <code>VersionManager</code> instance.
      */
     protected VersionManager createVersionManager(WorkspaceManager wspManager) {
@@ -587,8 +591,10 @@ public class WorkspaceImpl implements Workspace, ManagerProvider {
     /**
      * Create the <code>ObservationManager</code>. May be overridden by subclasses.
      *
+     * @param resolver the namespace resolver.
+     * @param ntRegistry the node type registry.
      * @return a new <code>ObservationManager</code> instance
-     * @throws RepositoryException
+     * @throws RepositoryException If an error occurs.
      */
     protected ObservationManager createObservationManager(NamePathResolver resolver, NodeTypeRegistry ntRegistry) throws RepositoryException {
         return new ObservationManagerImpl(wspManager, resolver, ntRegistry);
