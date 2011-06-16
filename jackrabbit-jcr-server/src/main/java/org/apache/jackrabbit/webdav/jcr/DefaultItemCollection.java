@@ -702,6 +702,7 @@ public class DefaultItemCollection extends AbstractItemResource
         if (lock != null && lockToken.equals(lock.getToken())) {
             try {
                 ((Node) item).unlock();
+                getSession().removeReference(lock.getToken());                
             } catch (RepositoryException e) {
                 throw new JcrDavException(e);
             }
