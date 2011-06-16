@@ -254,8 +254,8 @@ public class WorkspaceManager
      * Returns the lock tokens present with the <code>SessionInfo</code>.
      *
      * @return lock tokens present with the <code>SessionInfo</code>.
-     * @throws UnsupportedRepositoryOperationException
-     * @throws RepositoryException
+     * @throws UnsupportedRepositoryOperationException If not supported.
+     * @throws RepositoryException If another error occurs.
      * @see org.apache.jackrabbit.spi.SessionInfo#getLockTokens()
      */
     public String[] getLockTokens() throws UnsupportedRepositoryOperationException, RepositoryException {
@@ -266,10 +266,10 @@ public class WorkspaceManager
      * This method succeeds if the lock tokens could be added to the
      * <code>SessionInfo</code>.
      *
-     * @param lt
-     * @throws UnsupportedRepositoryOperationException
-     * @throws LockException
-     * @throws RepositoryException
+     * @param lt The lock token to be added.
+     * @throws UnsupportedRepositoryOperationException If not supported.
+     * @throws LockException If a lock related exception occurs.
+     * @throws RepositoryException If another exception occurs.
      * @see SessionInfo#addLockToken(String)
      */
     public void addLockToken(String lt) throws UnsupportedRepositoryOperationException, LockException, RepositoryException {
@@ -279,10 +279,11 @@ public class WorkspaceManager
     /**
      * Tries to remove the given token from the <code>SessionInfo</code>.
      *
-     * @param lt
-     * @throws UnsupportedRepositoryOperationException
-     * @throws LockException
-     * @throws RepositoryException
+     * @param lt The lock token to be removed.
+     * @throws UnsupportedRepositoryOperationException If not supported.
+     * @throws LockException If a lock related exception occurs, e.g if the
+     * session info does not contain the specified lock token.
+     * @throws RepositoryException If another exception occurs.
      * @see SessionInfo#removeLockToken(String)
      */
     public void removeLockToken(String lt) throws UnsupportedRepositoryOperationException, LockException, RepositoryException {
@@ -299,8 +300,8 @@ public class WorkspaceManager
 
     /**
      *
-     * @return
-     * @throws RepositoryException
+     * @return The names of the supported query languages.
+     * @throws RepositoryException If an error occurs.
      */
     public String[] getSupportedQueryLanguages() throws RepositoryException {
         return service.getSupportedQueryLanguages(sessionInfo);
@@ -330,11 +331,11 @@ public class WorkspaceManager
      * @param language   the query language.
      * @param namespaces the locally remapped namespaces which might be used in
      *                   the query statement.
-     * @param limit
-     * @param offset
-     * @param boundValues
-     * @return
-     * @throws RepositoryException
+     * @param limit The result size limit as specified by {@link javax.jcr.query.Query#setLimit(long)}.
+     * @param offset The result offset as specified by {@link javax.jcr.query.Query#setOffset(long)}
+     * @param boundValues The bound values as specified by {@link javax.jcr.query.Query#bindValue(String, javax.jcr.Value)}
+     * @return the QueryInfo created by {@link RepositoryService#executeQuery(org.apache.jackrabbit.spi.SessionInfo, String, String, java.util.Map, long, long, java.util.Map)}.
+     * @throws RepositoryException If an error occurs.
      */
     public QueryInfo executeQuery(String statement, String language, Map<String, String> namespaces,
                                   long limit, long offset, Map<String, QValue> boundValues) throws RepositoryException {
@@ -366,7 +367,7 @@ public class WorkspaceManager
      * Updates the event filters on the subscription. The filters are retrieved
      * from the current list of internal event listeners.
      *
-     * @throws RepositoryException
+     * @throws RepositoryException If an error occurs.
      */
     public void updateEventFilters() throws RepositoryException {
         synchronized (listeners) {
@@ -376,7 +377,8 @@ public class WorkspaceManager
 
     /**
      *
-     * @param listener
+     * @param listener The listener to be removed.
+     * @throws RepositoryException If an error occurs.
      */
     public void removeEventListener(InternalEventListener listener)
             throws RepositoryException {
@@ -431,8 +433,8 @@ public class WorkspaceManager
 
     /**
      *
-     * @param userData
-     * @throws RepositoryException
+     * @param userData The user data used for the event processing.
+     * @throws RepositoryException If an error occurs.
      */
     public void setUserData(String userData) throws RepositoryException {
         sessionInfo.setUserData(userData);
@@ -443,6 +445,7 @@ public class WorkspaceManager
      * Gets the event filters from the passed listener list.
      *
      * @param listeners the internal event listeners.
+     * @return Array of EventFilter
      */
     private static EventFilter[] getEventFilters(Collection<InternalEventListener> listeners) {
         List<EventFilter> filters = new ArrayList<EventFilter>();
@@ -454,6 +457,7 @@ public class WorkspaceManager
 
     /**
      * @return a new instance of <code>TransientItemStateFactory</code>.
+     * @throws RepositoryException If an error occurs.
      */
     private TransientItemStateFactory createItemStateFactory() throws RepositoryException {
         cache = service.getItemInfoCache(sessionInfo);
@@ -465,13 +469,17 @@ public class WorkspaceManager
     }
 
     /**
+     * @param tisf The transient item state factory.
+     * @param idFactory The id factory.
      * @return a new instance of <code>HierarchyManager</code>.
+     * @throws javax.jcr.RepositoryException If an error occurs.
      */
     private HierarchyManager createHierarchyManager(TransientItemStateFactory tisf, IdFactory idFactory) throws RepositoryException {
         return new HierarchyManagerImpl(tisf, idFactory, getPathFactory());
     }
 
     /**
+     * @param hierarchyMgr The hierarchy manager.
      * @return a new InternalEventListener
      */
     private InternalEventListener createHierarchyListener(HierarchyManager hierarchyMgr) {
@@ -480,7 +488,7 @@ public class WorkspaceManager
     }
 
     /**
-     * @param nsRegistry
+     * @param nsRegistry The namespace registry.
      * @return an instance of <code>NodeTypeRegistryImpl</code>.
      */
     private NodeTypeRegistryImpl createNodeTypeRegistry(NamespaceRegistry nsRegistry) {
@@ -504,7 +512,7 @@ public class WorkspaceManager
     }
 
     /**
-     * @param entProvider
+     * @param entProvider The effective node type provider.
      * @return  a new instance of <code>ItemDefinitionProvider</code>.
      */
     private ItemDefinitionProvider createDefinitionProvider(EffectiveNodeTypeProvider entProvider) {
@@ -550,8 +558,8 @@ public class WorkspaceManager
     /**
      * Deletes the workspace with the specified <code>name</code>.
      *
-     * @param name
-     * @throws RepositoryException
+     * @param name The name of the workspace to be deleted.
+     * @throws RepositoryException If the operation fails.
      */
     void deleteWorkspace(String name) throws RepositoryException {
         service.deleteWorkspace(sessionInfo, name);
@@ -588,7 +596,7 @@ public class WorkspaceManager
     /**
      * Creates a new batch from the given <code>ChangeLog</code> and executes it.
      *
-     * @param changes
+     * @param changes The set of transient changes to be executed.
      * @throws RepositoryException
      */
     public void execute(ChangeLog changes) throws RepositoryException {
@@ -729,6 +737,7 @@ public class WorkspaceManager
      *
      * @param eventBundles the event bundles generated by the repository service
      *                     as the effect of an local or external change.
+     * @param lstnrs Array of internal event listeners
      * @throws InterruptedException if this thread is interrupted while waiting
      *                              for the {@link #updateSync}.
      */
@@ -805,6 +814,14 @@ public class WorkspaceManager
 
         /**
          * Executes the operations on the repository service.
+         *
+         * @param changeLog The changelog to be executed
+         * @throws javax.jcr.AccessDeniedException
+         * @throws javax.jcr.ItemExistsException
+         * @throws javax.jcr.UnsupportedRepositoryOperationException
+         * @throws javax.jcr.nodetype.ConstraintViolationException
+         * @throws javax.jcr.nodetype.NoSuchNodeTypeException
+         * @throws javax.jcr.version.VersionException
          */
         private void execute(ChangeLog changeLog) throws RepositoryException, ConstraintViolationException, AccessDeniedException, ItemExistsException, NoSuchNodeTypeException, UnsupportedRepositoryOperationException, VersionException {
             RepositoryException ex = null;
@@ -842,6 +859,14 @@ public class WorkspaceManager
 
         /**
          * Executes the operations on the repository service.
+         *
+         * @param workspaceOperation The workspace operation to be executed.
+         * @throws javax.jcr.AccessDeniedException
+         * @throws javax.jcr.ItemExistsException
+         * @throws javax.jcr.UnsupportedRepositoryOperationException
+         * @throws javax.jcr.nodetype.ConstraintViolationException
+         * @throws javax.jcr.nodetype.NoSuchNodeTypeException
+         * @throws javax.jcr.version.VersionException
          */
         private void execute(Operation workspaceOperation) throws RepositoryException, ConstraintViolationException, AccessDeniedException, ItemExistsException, NoSuchNodeTypeException, UnsupportedRepositoryOperationException, VersionException {
             log.debug("executing " + workspaceOperation.getName());
