@@ -164,6 +164,7 @@ public final class ItemInfoBuilder {
         private String namespace;
         private Name name;
         private int index = Path.INDEX_DEFAULT;
+        private String uuid;
         private Name primaryTypeName = NameConstants.NT_UNSTRUCTURED;
         private final List<Name> mixins = new ArrayList<Name>();
         private boolean includeChildInfos = true;
@@ -284,6 +285,17 @@ public final class ItemInfoBuilder {
         }
 
         /**
+         * Set the uuid
+         *
+         * @param uuid
+         * @return
+         */
+        public NodeInfoBuilder setUUID(String uuid) {
+            this.uuid = uuid;
+            return this;
+        }
+
+        /**
          * Set the parent's path of the node
          * 
          * @param parentPath
@@ -347,7 +359,7 @@ public final class ItemInfoBuilder {
                 stale = true;
                 NodeId id = getId();
 
-                nodeInfo = new NodeInfoImpl(id.getPath(), id, index, primaryTypeName,
+                nodeInfo = new NodeInfoImpl(getPath(), id, index, primaryTypeName,
                         mixins.toArray(new Name[mixins.size()]), Iterators.<PropertyId>empty(),
                         getPropertyIds(), includeChildInfos ? getChildInfos() : null);
 
@@ -409,7 +421,12 @@ public final class ItemInfoBuilder {
         }
 
         private NodeId getId() throws RepositoryException {
-            return IdFactoryImpl.getInstance().createNodeId((String) null, getPath());
+            if (uuid == null) {
+                return IdFactoryImpl.getInstance().createNodeId((String) null, getPath());
+            }
+            else {
+                return IdFactoryImpl.getInstance().createNodeId(uuid);
+            }
         }
 
         private Path getPath() throws RepositoryException {
