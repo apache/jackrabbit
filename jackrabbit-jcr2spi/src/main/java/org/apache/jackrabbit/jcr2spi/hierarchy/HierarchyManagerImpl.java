@@ -89,7 +89,7 @@ public class HierarchyManagerImpl implements HierarchyManager {
             if (path == null) {
                 return nEntry;
             } else {
-                return nEntry.lookupDeepEntry(path);
+                return nEntry != null ? nEntry.lookupDeepEntry(path) : null;
             }
         }
     }
