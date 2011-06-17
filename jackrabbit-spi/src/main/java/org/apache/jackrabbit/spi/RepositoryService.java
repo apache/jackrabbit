@@ -1005,8 +1005,7 @@ public interface RepositoryService {
      * @throws RepositoryException if an error occurs while creating the
      *                             Subscription.
      */
-    public Subscription createSubscription(SessionInfo sessionInfo,
-                                           EventFilter[] filters)
+    public Subscription createSubscription(SessionInfo sessionInfo, EventFilter[] filters)
             throws UnsupportedRepositoryOperationException, RepositoryException;
 
     /**
@@ -1040,8 +1039,7 @@ public interface RepositoryService {
      * @throws RepositoryException  if an error occurs while updating the event
      *                              filters.
      */
-    public void updateEventFilters(Subscription subscription,
-                                   EventFilter[] filters)
+    public void updateEventFilters(Subscription subscription, EventFilter[] filters)
             throws RepositoryException;
 
     /**
@@ -1067,8 +1065,7 @@ public interface RepositoryService {
      *                              waiting for events within the specified
      *                              <code>timeout</code>.
      */
-    public EventBundle[] getEvents(Subscription subscription,
-                                   long timeout)
+    public EventBundle[] getEvents(Subscription subscription, long timeout)
             throws RepositoryException, InterruptedException;
 
     /**
@@ -1089,9 +1086,7 @@ public interface RepositoryService {
      *                             if the underlying implementation does not
      *                             support event journaling.
      */
-    public EventBundle getEvents(SessionInfo sessionInfo,
-                                 EventFilter filter,
-                                 long after)
+    public EventBundle getEvents(SessionInfo sessionInfo, EventFilter filter, long after)
             throws RepositoryException, UnsupportedRepositoryOperationException;
 
     /**

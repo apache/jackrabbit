@@ -1859,8 +1859,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         checkSubscription(subscription);
 
         EventSubscriptionImpl subscr = (EventSubscriptionImpl) subscription;
-        String rootUri = uriResolver.getRootItemUri(
-                subscr.getSessionInfo().getWorkspaceName());
+        String rootUri = uriResolver.getRootItemUri(subscr.getSessionInfo().getWorkspaceName());
 
         return poll(rootUri, subscr.getId(), timeout, subscr.getSessionInfo());
     }
