@@ -131,7 +131,10 @@ public class WorkspaceManager
 
     private final ItemStateFactory isf;
     private final HierarchyManager hierarchyManager;
+
     private final CacheBehaviour cacheBehaviour;
+    private final boolean observationSupported;
+    private final int pollTimeout;
 
     private final IdFactory idFactory;
     private final NamespaceRegistryImpl nsRegistry;
@@ -148,8 +151,10 @@ public class WorkspaceManager
     /**
      * This is the event polling for changes. If <code>null</code>
      * then the underlying repository service does not support observation.
+     * It is also <code>null</code> if {@link CacheBehaviour#INVALIDATE} is
+     * configured and no event listeners have been registered.
      */
-    private final Thread changeFeed;
+    private Thread changeFeed;
 
     /**
      * Flag that indicates that the changeFeed thread should be disposed.
@@ -174,19 +179,21 @@ public class WorkspaceManager
 
     public WorkspaceManager(RepositoryService service, SessionInfo sessionInfo,
                             CacheBehaviour cacheBehaviour, int pollTimeout,
-                            boolean enableObservation)
+                            boolean observationSupported)
         throws RepositoryException {
 
         this.service = service;
         this.sessionInfo = sessionInfo;
         this.cacheBehaviour = cacheBehaviour;
+        this.observationSupported = observationSupported;
+        this.pollTimeout = pollTimeout;
+
         this.nameFactory = service.getNameFactory();
         this.pathFactory = service.getPathFactory();
 
         idFactory = service.getIdFactory();
         nsRegistry = new NamespaceRegistryImpl(this);
         ntRegistry = createNodeTypeRegistry(nsRegistry);
-        changeFeed = createChangeFeed(pollTimeout, enableObservation);
         definitionProvider = createDefinitionProvider(getEffectiveNodeTypeProvider());
 
         TransientItemStateFactory stateFactory = createItemStateFactory();
@@ -349,8 +356,11 @@ public class WorkspaceManager
      * @param listener the new listener.
      * @throws RepositoryException if the listener cannot be registered.
      */
-    public void addEventListener(InternalEventListener listener)
-            throws RepositoryException {
+    public void addEventListener(InternalEventListener listener) throws RepositoryException {
+        if (changeFeed == null) {
+            changeFeed = createChangeFeed(pollTimeout, observationSupported);
+        }
+
         synchronized (listeners) {
             listeners.add(listener);
             EventFilter[] filters = getEventFilters(listeners);
