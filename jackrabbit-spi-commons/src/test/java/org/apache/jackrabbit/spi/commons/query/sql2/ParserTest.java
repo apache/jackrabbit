@@ -153,6 +153,58 @@ public class ParserTest extends TestCase {
         }
     }
 
+    public void testFormatLiterals() throws Exception {
+        formatLiteral("true", "true");
+        formatLiteral("false", "false");
+
+        formatLiteral("CAST('2000-01-01T12:00:00.000Z' AS DATE)",
+                "CAST('2000-01-01T12:00:00.000Z' AS DATE)");
+        formatLiteral("CAST(0 AS DATE)",
+                "CAST('1970-01-01T00:00:00.000Z' AS DATE)");
+
+        formatLiteral("1", "CAST('1' AS LONG)");
+        formatLiteral("-1", "CAST('-1' AS LONG)");
+        formatLiteral("CAST(" + Long.MAX_VALUE + " AS LONG)",
+                "CAST('" + Long.MAX_VALUE + "' AS LONG)");
+        formatLiteral("CAST(" + Long.MIN_VALUE + " AS LONG)",
+                "CAST('" + Long.MIN_VALUE + "' AS LONG)");
+
+        formatLiteral("1.0", "CAST('1.0' AS DECIMAL)");
+        formatLiteral("-1.0", "CAST('-1.0' AS DECIMAL)");
+        formatLiteral("100000000000000000000",
+            "CAST('100000000000000000000' AS DECIMAL)");
+        formatLiteral("-100000000000000000000",
+            "CAST('-100000000000000000000' AS DECIMAL)");
+
+        formatLiteral("CAST(1.0 AS DOUBLE)", "CAST('1.0' AS DOUBLE)");
+        formatLiteral("CAST(-1.0 AS DOUBLE)", "CAST('-1.0' AS DOUBLE)");
+
+        formatLiteral("CAST('X' AS NAME)", "CAST('X' AS NAME)");
+        formatLiteral("CAST('X' AS PATH)", "CAST('X' AS PATH)");
+        formatLiteral("CAST('X' AS REFERENCE)", "CAST('X' AS REFERENCE)");
+        formatLiteral("CAST('X' AS WEAKREFERENCE)", "CAST('X' AS WEAKREFERENCE)");
+        formatLiteral("CAST('X' AS URI)", "CAST('X' AS URI)");
+
+        formatLiteral("''", "''");
+        formatLiteral("' '", "' '");
+        formatLiteral("CAST(0 AS STRING)", "'0'");
+        formatLiteral("CAST(-1000000000000 AS STRING)", "'-1000000000000'");
+        formatLiteral("CAST(false AS STRING)", "'false'");
+        formatLiteral("CAST(true AS STRING)", "'true'");
+    }
+
+    private void formatLiteral(String literal, String cast) throws Exception {
+        String s = "SELECT TEST.* FROM TEST WHERE ID=" + literal;
+        QueryObjectModel qom = parser.createQueryObjectModel(s);
+        String s2 = QOMFormatter.format(qom);
+        String cast2 = s2.substring(s2.indexOf('=') + 1).trim();
+        assertEquals(cast, cast2);
+        qom = parser.createQueryObjectModel(s);
+        s2 = QOMFormatter.format(qom);
+        cast2 = s2.substring(s2.indexOf('=') + 1).trim();
+        assertEquals(cast, cast2);
+    }
+
     public void testParseScript() throws Exception {
         LineNumberReader reader = openScript("test.sql2.txt");
         while (true) {
