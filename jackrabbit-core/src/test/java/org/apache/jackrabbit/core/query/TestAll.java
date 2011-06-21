@@ -65,6 +65,9 @@ public class TestAll extends TestCase {
         suite.addTestSuite(SimilarQueryTest.class);
         suite.addTestSuite(FulltextSQL2QueryTest.class);
         suite.addTestSuite(LimitAndOffsetTest.class);
+        suite.addTestSuite(SQL2NodeLocalNameTest.class);
+        suite.addTestSuite(SQL2OuterJoinTest.class);
+        suite.addTestSuite(SQL2PathEscapingTest.class);
 
         return suite;
     }

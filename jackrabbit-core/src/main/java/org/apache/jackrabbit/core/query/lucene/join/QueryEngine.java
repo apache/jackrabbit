@@ -244,7 +244,7 @@ public class QueryEngine {
             timeJoinRightSide = System.currentTimeMillis() - timeJoinRightSide;
             log.debug(genString(printIndentation)
                     + "SQL2 JOIN RIGHT SIDE took " + timeJoinRightSide
-                    + " ms. fetched" + rightRows.size() + " rows.");
+                    + " ms. fetched " + rightRows.size() + " rows.");
         }
 
         long timeMergeAndSort = System.currentTimeMillis();
@@ -274,12 +274,19 @@ public class QueryEngine {
                         + "SQL2 JOIN LEFT SIDE there are multiple inner splits.");
             }
             Set<Row> leftRows = new TreeSet<Row>(comparator);
-            leftRows.addAll(buildLeftRowsJoin(csi.getLeftInnerConstraints(),
-                    comparator, printIndentation + printIndentStep));
-            leftRows.addAll(buildLeftRowsJoin(csi.getRightInnerConstraints(),
-                    comparator, printIndentation + printIndentStep));
+            if (csi.getLeftInnerConstraints().isHasLeftConstraints()) {
+                leftRows.addAll(buildLeftRowsJoin(
+                        csi.getLeftInnerConstraints(), comparator,
+                        printIndentation + printIndentStep));
+            }
+            if (csi.getRightInnerConstraints().isHasLeftConstraints()) {
+                leftRows.addAll(buildLeftRowsJoin(
+                        csi.getRightInnerConstraints(), comparator,
+                        printIndentation + printIndentStep));
+            }
             return leftRows;
         }
+        
         Set<Row> leftRows = new TreeSet<Row>(comparator);
         QueryResult leftResult = execute(null, csi.getSource().getLeft(),
                 csi.getLeftConstraint(), null, 0, -1, printIndentation);
@@ -313,12 +320,14 @@ public class QueryEngine {
                         + "SQL2 JOIN RIGHT SIDE there are multiple inner splits.");
             }
             Set<Row> rightRows = new TreeSet<Row>(comparator);
-            rightRows.addAll(buildRightRowsJoin(csi.getLeftInnerConstraints(),
-                    rightConstraints, ignoreWhereConstraints, comparator,
-                    printIndentation + printIndentStep));
-            rightRows.addAll(buildRightRowsJoin(csi.getRightInnerConstraints(),
-                    rightConstraints, ignoreWhereConstraints, comparator,
-                    printIndentation + printIndentStep));
+                rightRows.addAll(buildRightRowsJoin(
+                        csi.getLeftInnerConstraints(), rightConstraints,
+                        ignoreWhereConstraints, comparator, printIndentation
+                                + printIndentStep));
+                rightRows.addAll(buildRightRowsJoin(
+                        csi.getRightInnerConstraints(), rightConstraints,
+                        ignoreWhereConstraints, comparator, printIndentation
+                                + printIndentStep));
             return rightRows;
         }
 
@@ -417,7 +426,7 @@ public class QueryEngine {
         sb.append(csi.getSource());
         sb.append(IOUtils.LINE_SEPARATOR);
         sb.append(genString(printIndentation));
-        sb.append("SQL2 JOIN left constraint: ");
+        sb.append("SQL2 JOIN left constraint:  ");
         sb.append(csi.getLeftConstraint());
         sb.append(IOUtils.LINE_SEPARATOR);
         sb.append(genString(printIndentation));
