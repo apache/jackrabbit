@@ -29,24 +29,36 @@ public class JoinTest extends AbstractQueryTest {
 
     private Node node;
 
+    private Node n1;
+
+    private Node n2;
+
     @Override
     protected void setUp() throws Exception {
         super.setUp();
-        node = testRootNode.addNode("jointest");
+        node = testRootNode.addNode("jointest", "nt:unstructured");
 
-        Node n1 = node.addNode("node1");
+        n1 = node.addNode("node1", "nt:unstructured");
         n1.addMixin(NodeType.MIX_REFERENCEABLE);
-        testRootNode.getSession().save();
 
-        Node n2 = node.addNode("node2");
+        n2 = node.addNode("node2", "nt:unstructured");
         n2.addMixin(NodeType.MIX_REFERENCEABLE);
-        testRootNode.getSession().save();
 
-        Node n3 = node.addNode("node3");
+        Node n3 = node.addNode("node3", "nt:unstructured");
         n3.addMixin(NodeType.MIX_REFERENCEABLE);
         n3.setProperty("testref",
                 new String[] { n1.getIdentifier(), n2.getIdentifier() },
                 PropertyType.REFERENCE);
+
+        Node parent2 = testRootNode
+                .addNode("jointest_other", "nt:unstructured");
+        parent2.setProperty("p", "abc");
+
+        Node p2n1 = parent2.addNode("node4", "nt:unstructured");
+        p2n1.setProperty("p", "abc");
+
+        parent2.addNode("node5", "nt:unstructured");
+
         testRootNode.getSession().save();
     }
 
@@ -62,8 +74,9 @@ public class JoinTest extends AbstractQueryTest {
      * href="https://issues.apache.org/jira/browse/JCR-2718">JCR-2718</a>
      */
     public void testMultiValuedReferenceJoin() throws Exception {
-        String join = "SELECT a.*, b.*" + " FROM [nt:base] AS a"
-                + " INNER JOIN [nt:base] AS b ON a.[jcr:uuid] = b.testref";
+        String join = "SELECT a.*, b.*"
+                + " FROM [nt:unstructured] AS a"
+                + " INNER JOIN [nt:unstructured] AS b ON a.[jcr:uuid] = b.testref";
         checkResult(qm.createQuery(join, Query.JCR_SQL2).execute(), 2);
     }
 
@@ -74,13 +87,39 @@ public class JoinTest extends AbstractQueryTest {
     public void testJoinWithOR() throws Exception {
 
         String join = "SELECT a.*, b.*"
-                + " FROM [nt:base] AS a"
-                + " INNER JOIN [nt:base] AS b ON a.[jcr:uuid] = b.testref WHERE "
+                + " FROM [nt:unstructured] AS a"
+                + " INNER JOIN [nt:unstructured] AS b ON a.[jcr:uuid] = b.testref WHERE "
                 + "a.[jcr:primaryType] IS NOT NULL OR b.[jcr:primaryType] IS NOT NULL";
 
         Query q = qm.createQuery(join, Query.JCR_SQL2);
         QueryResult result = q.execute();
         checkResult(result, 2);
+    }
+
+    public void testJoinWithOR2() throws Exception {
+
+        String join = "SELECT a.*, b.*"
+                + " FROM [nt:unstructured] AS a"
+                + " INNER JOIN [nt:unstructured] AS b ON ISCHILDNODE(b, a) WHERE "
+                + "a.[p] = 'abc' or b.[p] = 'abc' ";
+
+        Query q = qm.createQuery(join, Query.JCR_SQL2);
+        QueryResult result = q.execute();
+        checkResult(result, 2);
+    }
+
+    public void testJoinWithOR3() throws Exception {
+        StringBuilder join = new StringBuilder(
+                "SELECT a.* FROM [nt:unstructured] AS a");
+        join.append("  INNER JOIN [nt:unstructured] AS b ON ISCHILDNODE(b, a) ");
+        join.append("  WHERE  ");
+        join.append("  ( CONTAINS(b.*, 'abc' ) OR CONTAINS(a.*, 'abc') )  ");
+        join.append("  AND ");
+        join.append("  NAME(b) = 'node4' ");
+
+        Query q = qm.createQuery(join.toString(), Query.JCR_SQL2);
+        QueryResult result = q.execute();
+        checkResult(result, 1);
     }
 
     /**
@@ -104,8 +143,8 @@ public class JoinTest extends AbstractQueryTest {
         // AND ((NAME(parentRelationshipStatus) = 'parentRelationshipStatus'))
 
         StringBuilder join = new StringBuilder(
-                "SELECT a.*, b.* FROM [nt:base] AS a");
-        join.append("  INNER JOIN [nt:base] AS b ON a.[jcr:uuid] = b.testref ");
+                "SELECT a.*, b.* FROM [nt:unstructured] AS a");
+        join.append("  INNER JOIN [nt:unstructured] AS b ON a.[jcr:uuid] = b.testref ");
         join.append("  WHERE  ");
         join.append("  ISSAMENODE(b, '/testroot/jointest/node3') ");
         join.append("  AND ");
@@ -125,5 +164,4 @@ public class JoinTest extends AbstractQueryTest {
         QueryResult result = q.execute();
         checkResult(result, 2);
     }
-
 }
