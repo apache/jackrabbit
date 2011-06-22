@@ -681,7 +681,14 @@ public class NodeImpl extends ItemImpl implements Node, JackrabbitNode {
                 NodeId childId = entry.getId();
                 //NodeImpl childNode = (NodeImpl) itemMgr.getItem(childId);
                 try {
-                    NodeImpl childNode = itemMgr.getNode(childId, getNodeId());
+                    /* omit the read-permission check upon retrieving the
+                       child item as this is an internal call to remove the
+                       subtree which may contain (protected) child items which
+                       are not visible to the caller of the removal. the actual
+                       validation of the remove permission however is only
+                       executed during Item.save(). 
+                     */
+                    NodeImpl childNode = itemMgr.getNode(childId, getNodeId(), false);
                     childNode.onRemove(thisState.getNodeId());
                     // remove the child node entry
                 } catch (ItemNotFoundException e) {
@@ -714,7 +721,14 @@ public class NodeImpl extends ItemImpl implements Node, JackrabbitNode {
             thisState.removePropertyName(propName);
             // remove property
             PropertyId propId = new PropertyId(thisState.getNodeId(), propName);
-            itemMgr.getItem(propId).setRemoved();
+            /* omit the read-permission check upon retrieving the
+               child item as this is an internal call to remove the
+               subtree which may contain (protected) child items which
+               are not visible to the caller of the removal. the actual
+               validation of the remove permission however is only
+               executed during Item.save().
+             */
+            itemMgr.getItem(propId, false).setRemoved();
         }
 
         // finally remove this node
