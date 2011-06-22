@@ -18,8 +18,7 @@ package org.apache.jackrabbit.core.security.authorization;
 
 import org.apache.jackrabbit.api.security.JackrabbitAccessControlList;
 import org.apache.jackrabbit.api.security.user.Group;
-import org.apache.jackrabbit.api.security.user.UserManager;
-import org.apache.jackrabbit.core.security.TestPrincipal;
+import org.apache.jackrabbit.core.UserTransactionImpl;
 import org.apache.jackrabbit.test.JUnitTest;
 import org.apache.jackrabbit.test.NotExecutableException;
 import org.apache.jackrabbit.test.api.observation.EventResult;
@@ -40,13 +39,12 @@ import javax.jcr.observation.ObservationManager;
 import javax.jcr.security.AccessControlManager;
 import javax.jcr.security.AccessControlPolicy;
 import javax.jcr.security.Privilege;
-import java.security.Principal;
+import javax.transaction.UserTransaction;
 import java.util.HashMap;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Map;
-import java.util.UUID;
 
 /**
  * <code>AbstractEvaluationTest</code>...
@@ -1010,7 +1008,7 @@ public abstract class AbstractWriteTest extends AbstractEvaluationTest {
         n.orderBefore(Text.getName(childNPath), Text.getName(childNPath2));
         testSession.save();
     }
-    
+
     /**
      * Test case for JCR-2420
      *
@@ -1237,6 +1235,51 @@ public abstract class AbstractWriteTest extends AbstractEvaluationTest {
 
         assertFalse(testAcMgr.hasPrivileges(childNPath2, write));
         assertFalse(testSession.hasPermission(childNPath2, Session.ACTION_SET_PROPERTY));
+    }
+
+    /**
+     * Tests if it is possible to create/read nodes with a non-admin session
+     * within a transaction.
+     *
+     * @throws Exception
+     * @see <a href="https://issues.apache.org/jira/browse/JCR-2999">JCR-2999</a>
+     */
+    public void testTransaction() throws Exception {
+
+        // make sure testUser has all privileges
+        Privilege[] privileges = privilegesFromName(Privilege.JCR_ALL);
+        givePrivileges(path, privileges, getRestrictions(superuser, path));
+
+        // create new node and lock it
+        Session s = getTestSession();
+        UserTransaction utx = new UserTransactionImpl(s);
+        utx.begin();
+
+        // add node and save it
+        Node n = s.getNode(childNPath);
+        if (n.hasNode(nodeName1)) {
+            Node c = n.getNode(nodeName1);
+            c.remove();
+            s.save();
+        }
+
+        // create node and save
+        Node n2 = n.addNode(nodeName1);
+        s.save(); // -> node is NEW -> no failure
+
+        // create child node
+        Node n3 = n2.addNode(nodeName2);
+        s.save();  // -> used to fail because n2 was saved (EXISTING) but not committed.
+
+        n3.remove();
+        n2.remove();
+
+        // recreate n2 // -> another area where ItemManager#getItem is called in the ItemSaveOperation
+        n2 = n.addNode(nodeName1);
+        s.save();
+
+        // commit
+        utx.commit();
     }
 
     private static Node findPolicyNode(Node start) throws RepositoryException {
