@@ -776,7 +776,7 @@ class ItemSaveOperation implements SessionWriteOperation<Object> {
                         nodeState);
                 if (nt.includesNodeType(NameConstants.MIX_VERSIONABLE)) {
                     if (!nodeState.hasPropertyName(NameConstants.JCR_VERSIONHISTORY)) {
-                        NodeImpl node = (NodeImpl) itemMgr.getItem(itemState.getId());
+                        NodeImpl node = (NodeImpl) itemMgr.getItem(itemState.getId(), false);
                         InternalVersionManager vMgr = session.getInternalVersionManager();
                         /**
                          * check if there's already a version history for that
@@ -812,7 +812,7 @@ class ItemSaveOperation implements SessionWriteOperation<Object> {
                     vMgr.getVersionHistory(session, nodeState, null);
 
                     // create isCheckedOutProperty if not already exists
-                    NodeImpl node = (NodeImpl) itemMgr.getItem(itemState.getId());
+                    NodeImpl node = (NodeImpl) itemMgr.getItem(itemState.getId(), false);
                     if (!nodeState.hasPropertyName(NameConstants.JCR_ISCHECKEDOUT)) {
                         node.internalSetProperty(
                                 NameConstants.JCR_ISCHECKEDOUT,
@@ -833,7 +833,7 @@ class ItemSaveOperation implements SessionWriteOperation<Object> {
             throws RepositoryException {
         for (ItemState state : states) {
             // persist state of transient item
-            itemMgr.getItem(state.getId()).makePersistent();
+            itemMgr.getItem(state.getId(), false).makePersistent();
         }
     }
 
@@ -860,7 +860,7 @@ class ItemSaveOperation implements SessionWriteOperation<Object> {
                     itemState.setStatus(ItemState.STATUS_NEW);
                 } else {
                     try {
-                        item = itemMgr.getItem(id);
+                        item = itemMgr.getItem(id, false);
                     } catch (ItemNotFoundException infe) {
                         // itemState probably represents a 'new' item and the
                         // ItemImpl instance wrapping it has already been gc'ed;
