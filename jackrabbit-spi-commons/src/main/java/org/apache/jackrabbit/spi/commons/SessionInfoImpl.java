@@ -118,4 +118,13 @@ public class SessionInfoImpl implements SessionInfo, Serializable {
     public void setUserData(String userData) throws RepositoryException {
         this.userData = userData;
     }
+
+    /**
+     * Return the user data set via {@link #setUserData(String)}
+     * 
+     * @return  userData
+     */
+    public String getUserData() {
+        return userData;
+    }
 }
