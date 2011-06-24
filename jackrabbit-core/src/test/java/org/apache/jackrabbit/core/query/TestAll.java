@@ -68,6 +68,7 @@ public class TestAll extends TestCase {
         suite.addTestSuite(SQL2NodeLocalNameTest.class);
         suite.addTestSuite(SQL2OuterJoinTest.class);
         suite.addTestSuite(SQL2PathEscapingTest.class);
+        suite.addTestSuite(LimitedAccessQueryTest.class);
 
         return suite;
     }
