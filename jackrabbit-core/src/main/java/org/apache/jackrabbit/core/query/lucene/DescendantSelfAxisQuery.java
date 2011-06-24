@@ -17,8 +17,10 @@
 package org.apache.jackrabbit.core.query.lucene;
 
 import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.query.lucene.hits.AbstractHitCollector;
 import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.index.Term;
 import org.apache.lucene.search.Explanation;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.Scorer;
@@ -29,6 +31,7 @@ import org.apache.lucene.search.Weight;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.jcr.ItemNotFoundException;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import java.io.IOException;
@@ -194,7 +197,7 @@ class DescendantSelfAxisQuery extends Query implements JackrabbitQuery {
     /**
      * {@inheritDoc}
      */
-    public void extractTerms(Set terms) {
+    public void extractTerms(Set<Term> terms) {
         contextQuery.extractTerms(terms);
         subQuery.extractTerms(terms);
     }
@@ -240,13 +243,17 @@ class DescendantSelfAxisQuery extends Query implements JackrabbitQuery {
                 }
 
                 ScoreNode sn;
-                try {
-                    while ((sn = result.nextScoreNode()) != null) {
-                        Node node = session.getNodeById(sn.getNodeId());
+                while ((sn = result.nextScoreNode()) != null) {
+                    NodeId id = sn.getNodeId();
+                    try {
+                        Node node = session.getNodeById(id);
                         startingPoints.put(node.getPath(), sn);
+                    } catch (ItemNotFoundException e) {
+                        // JCR-3001 access denied to score node, will just skip it
+                        log.warn("Access denied to node id {}.", id);
+                    } catch (RepositoryException e) {
+                        throw Util.createIOException(e);
                     }
-                } catch (RepositoryException e) {
-                    throw Util.createIOException(e);
                 }
             } finally {
                 result.close();
@@ -297,17 +304,23 @@ class DescendantSelfAxisQuery extends Query implements JackrabbitQuery {
                     if (currentTraversal != null) {
                         currentTraversal.close();
                     }
-                    if (scoreNodes.hasNext()) {
+                    currentTraversal = null;
+                    // We only need one node, but because of the acls, we'll
+                    // iterate until we find a good one
+                    while (scoreNodes.hasNext()) {
                         ScoreNode sn = scoreNodes.next();
+                        NodeId id = sn.getNodeId();
                         try {
-                            Node node = session.getNodeById(sn.getNodeId());
-                            currentTraversal = new NodeTraversingQueryHits(node,
-                                    getMinLevels() == 0);
+                            Node node = session.getNodeById(id);
+                            currentTraversal = new NodeTraversingQueryHits(
+                                    node, getMinLevels() == 0);
+                            break;
+                        } catch (ItemNotFoundException e) {
+                            // JCR-3001 node access denied, will just skip it
+                            log.warn("Access denied to node id {}.", id);
                         } catch (RepositoryException e) {
                             throw Util.createIOException(e);
                         }
-                    } else {
-                        currentTraversal = null;
                     }
                 }
             };
