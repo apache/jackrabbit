@@ -37,6 +37,7 @@ import org.apache.jackrabbit.api.security.JackrabbitAccessControlList;
 import org.apache.jackrabbit.commons.JcrUtils;
 import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.apache.jackrabbit.test.NotExecutableException;
+import org.apache.jackrabbit.test.RepositoryHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,7 +53,7 @@ public class NodeImplTest extends AbstractJCRTest {
         }
     }
 
-    private static void changeReadPermission(Principal principal, Node n, boolean allowRead) throws RepositoryException, NotExecutableException {
+    public static void changeReadPermission(Principal principal, Node n, boolean allowRead) throws RepositoryException, NotExecutableException {
         SessionImpl s = (SessionImpl) n.getSession();
         JackrabbitAccessControlList acl = null;
         AccessControlManager acMgr = s.getAccessControlManager();
@@ -84,8 +85,8 @@ public class NodeImplTest extends AbstractJCRTest {
         }
     }
 
-    private Principal getReadOnlyPrincipal() throws RepositoryException, NotExecutableException {
-        SessionImpl s = (SessionImpl) getHelper().getReadOnlySession();
+    public static Principal getReadOnlyPrincipal(RepositoryHelper helper) throws RepositoryException, NotExecutableException {
+        SessionImpl s = (SessionImpl) helper.getReadOnlySession();
         try {
             for (Principal p : s.getSubject().getPrincipals()) {
                 if (!(p instanceof Group)) {
@@ -110,7 +111,7 @@ public class NodeImplTest extends AbstractJCRTest {
         NodeImpl testNode = (NodeImpl) n.addNode(nodeName2);
         testRootNode.save();
 
-        Principal principal = getReadOnlyPrincipal();
+        Principal principal = getReadOnlyPrincipal(getHelper());
         changeReadPermission(principal, n, false);
         changeReadPermission(principal, testNode, true);
 

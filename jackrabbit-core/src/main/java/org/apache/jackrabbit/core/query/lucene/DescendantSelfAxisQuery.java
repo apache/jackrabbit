@@ -16,6 +16,19 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
+import java.io.IOException;
+import java.util.BitSet;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
+
+import javax.jcr.ItemNotFoundException;
+import javax.jcr.Node;
+import javax.jcr.RepositoryException;
+
+import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.search.Explanation;
 import org.apache.lucene.search.HitCollector;
@@ -23,26 +36,17 @@ import org.apache.lucene.search.Query;
 import org.apache.lucene.search.Scorer;
 import org.apache.lucene.search.Searcher;
 import org.apache.lucene.search.Similarity;
-import org.apache.lucene.search.Weight;
 import org.apache.lucene.search.Sort;
-import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.lucene.search.Weight;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.jcr.Node;
-import javax.jcr.RepositoryException;
-import java.io.IOException;
-import java.util.BitSet;
-import java.util.Set;
-import java.util.Map;
-import java.util.TreeMap;
-import java.util.Iterator;
 
 /**
  * Implements a lucene <code>Query</code> which filters a sub query by checking
  * whether the nodes selected by that sub query are descendants or self of
  * nodes selected by a context query.
  */
+@SuppressWarnings("serial")
 class DescendantSelfAxisQuery extends Query implements JackrabbitQuery {
 
     /**
@@ -239,13 +243,17 @@ class DescendantSelfAxisQuery extends Query implements JackrabbitQuery {
                 }
 
                 ScoreNode sn;
-                try {
-                    while ((sn = result.nextScoreNode()) != null) {
-                        Node node = session.getNodeById(sn.getNodeId());
+                while ((sn = result.nextScoreNode()) != null) {
+                    NodeId id = sn.getNodeId();
+                    try {
+                        Node node = session.getNodeById(id);
                         startingPoints.put(node.getPath(), sn);
+                    } catch (ItemNotFoundException e) {
+                        // JCR-3001 node access denied, will just skip it
+                        log.warn("Access denied to node id {}.", id);
+                    } catch (RepositoryException e) {
+                        throw Util.createIOException(e);
                     }
-                } catch (RepositoryException e) {
-                    throw Util.createIOException(e);
                 }
             } finally {
                 result.close();
@@ -296,17 +304,23 @@ class DescendantSelfAxisQuery extends Query implements JackrabbitQuery {
                     if (currentTraversal != null) {
                         currentTraversal.close();
                     }
-                    if (scoreNodes.hasNext()) {
+                    currentTraversal = null;
+                    // We only need one node, but because of the acls, we'll
+                    // iterate until we find a good one
+                    while (scoreNodes.hasNext()) {
                         ScoreNode sn = scoreNodes.next();
+                        NodeId id = sn.getNodeId();
                         try {
-                            Node node = session.getNodeById(sn.getNodeId());
-                            currentTraversal = new NodeTraversingQueryHits(node,
-                                    getMinLevels() == 0);
+                            Node node = session.getNodeById(id);
+                            currentTraversal = new NodeTraversingQueryHits(
+                                    node, getMinLevels() == 0);
+                            break;
+                        } catch (ItemNotFoundException e) {
+                            // JCR-3001 node access denied, will just skip it
+                            log.warn("Access denied to node id {}.", id);
                         } catch (RepositoryException e) {
                             throw Util.createIOException(e);
                         }
-                    } else {
-                        currentTraversal = null;
                     }
                 }
             };
