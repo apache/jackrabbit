@@ -1298,6 +1298,11 @@ public abstract class AbstractWriteTest extends AbstractEvaluationTest {
         n2 = n.addNode(nodeName1);
         s.save();
 
+        // set a property on a child node of an uncommited parent
+        n2.setProperty(propertyName1, "testSetProperty");
+        s.save();  // -> used to fail because PropertyImpl#getParent called from PropertyImpl#checkSetValue
+                   //    was checking read permission on the not yet commited parent
+
         // commit
         utx.commit();
     }
