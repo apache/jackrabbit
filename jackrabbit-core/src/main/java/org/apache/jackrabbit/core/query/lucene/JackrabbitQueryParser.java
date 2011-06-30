@@ -16,10 +16,19 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
+import java.io.IOException;
+import java.io.StringReader;
 import java.util.List;
 import java.util.ArrayList;
 
+import javax.xml.stream.events.EndDocument;
+
 import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.analysis.Token;
+import org.apache.lucene.analysis.TokenStream;
+import org.apache.lucene.analysis.Tokenizer;
+import org.apache.lucene.analysis.standard.StandardTokenizer;
+import org.apache.lucene.analysis.tokenattributes.TypeAttribute;
 import org.apache.lucene.queryParser.QueryParser;
 import org.apache.lucene.queryParser.ParseException;
 import org.apache.lucene.search.Query;
@@ -149,7 +158,33 @@ public class JackrabbitQueryParser extends QueryParser {
      */
     protected Query getPrefixQuery(String field, String termStr)
             throws ParseException {
-        return getWildcardQuery(field, termStr + "*");
+        // only create a prefix query when the term is a single word / token
+        Analyzer a = getAnalyzer();
+        TokenStream ts = a.tokenStream(field, new StringReader(termStr));
+        int count = 0;
+        boolean isCJ = false;
+        try {
+            TypeAttribute t = ts.addAttribute(TypeAttribute.class);
+            ts.reset();
+            while (ts.incrementToken()) {
+                count++;
+                isCJ = StandardTokenizer.TOKEN_TYPES[StandardTokenizer.CJ].equals(t.type());
+            }
+            ts.end();
+        } catch (IOException e) {
+            throw new ParseException(e.getMessage());
+        } finally {
+            try {
+                ts.close();
+            } catch (IOException e) {
+                // ignore
+            }
+        }
+        if (count > 1 && isCJ) {
+            return getFieldQuery(field, termStr);
+        } else {
+            return getWildcardQuery(field, termStr + "*");
+        }
     }
 
     /**
