@@ -263,6 +263,12 @@ public class FulltextQueryTest extends AbstractQueryTest {
 
     }
 
+    public void testMultiByte() throws RepositoryException {
+        String content = "some text with multi byte \u7530\u4e2d characters.";
+
+        executeContainsQuery("\u7530\u4e2d*", content, true);
+    }
+
     public void testPredefinedEntityReference() throws RepositoryException {
         String content = "Max&Moritz";
 
