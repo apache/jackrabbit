@@ -40,15 +40,20 @@ public class JoinTest extends AbstractQueryTest {
 
         n1 = node.addNode("node1", "nt:unstructured");
         n1.addMixin(NodeType.MIX_REFERENCEABLE);
+        n1.setProperty("type", "child");
+        n1.setProperty("testJoinWithOR4", "testJoinWithOR4");
 
         n2 = node.addNode("node2", "nt:unstructured");
         n2.addMixin(NodeType.MIX_REFERENCEABLE);
+        n2.setProperty("type", "child");
 
         Node n3 = node.addNode("node3", "nt:unstructured");
         n3.addMixin(NodeType.MIX_REFERENCEABLE);
         n3.setProperty("testref",
                 new String[] { n1.getIdentifier(), n2.getIdentifier() },
                 PropertyType.REFERENCE);
+        n3.setProperty("type", "parent");
+        n3.setProperty("testJoinWithOR4", "testJoinWithOR4");
 
         Node parent2 = testRootNode
                 .addNode("jointest_other", "nt:unstructured");
@@ -98,12 +103,13 @@ public class JoinTest extends AbstractQueryTest {
 
     public void testJoinWithOR2() throws Exception {
 
-        String join = "SELECT a.*, b.*"
-                + " FROM [nt:unstructured] AS a"
-                + " INNER JOIN [nt:unstructured] AS b ON ISCHILDNODE(b, a) WHERE "
-                + "a.[p] = 'abc' or b.[p] = 'abc' ";
+        StringBuilder join = new StringBuilder(
+                "SELECT a.* FROM [nt:unstructured] AS a");
+        join.append("  INNER JOIN [nt:unstructured] AS b ON ISCHILDNODE(b, a) ");
+        join.append("  WHERE  ");
+        join.append("  a.[p] = 'abc' OR b.[p] = 'abc'  ");
 
-        Query q = qm.createQuery(join, Query.JCR_SQL2);
+        Query q = qm.createQuery(join.toString(), Query.JCR_SQL2);
         QueryResult result = q.execute();
         checkResult(result, 2);
     }
@@ -120,6 +126,27 @@ public class JoinTest extends AbstractQueryTest {
         Query q = qm.createQuery(join.toString(), Query.JCR_SQL2);
         QueryResult result = q.execute();
         checkResult(result, 1);
+    }
+
+    public void testJoinWithOR4() throws Exception {
+
+        StringBuilder join = new StringBuilder(
+                "SELECT a.*, b.* FROM [nt:unstructured] AS a");
+        join.append("  INNER JOIN [nt:unstructured] AS b ON a.[jcr:uuid] = b.testref ");
+        join.append("  WHERE  ");
+        join.append("  a.type = 'child' ");
+        join.append("  AND (");
+        join.append("    CONTAINS(a.*, 'testJoinWithOR4')  ");
+        join.append("    OR ");
+        join.append("    b.type = 'parent' ");
+        join.append("    AND ");
+        join.append("    CONTAINS(b.*, 'testJoinWithOR4') ");
+        join.append("  )");
+
+        Query q = qm.createQuery(join.toString(), Query.JCR_SQL2);
+        QueryResult result = q.execute();
+        checkResult(result, 2);
+
     }
 
     /**
