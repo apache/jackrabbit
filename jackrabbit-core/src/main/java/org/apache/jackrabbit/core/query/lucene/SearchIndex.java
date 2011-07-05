@@ -1491,46 +1491,45 @@ public class SearchIndex extends AbstractQueryHandler {
      */
     protected void retrieveAggregateRoot(
             Set<NodeId> removedIds, Map<NodeId, NodeState> map) {
-        if(removedIds.isEmpty() || indexingConfig == null){
-            return;
-        }
-        AggregateRule[] aggregateRules = indexingConfig.getAggregateRules();
-        if (aggregateRules == null) {
-            return;
-        }
-        int found = 0;
-        long time = System.currentTimeMillis();
-        try {
-            CachingMultiIndexReader reader = index.getIndexReader();
+        if (indexingConfig != null) {
+            AggregateRule[] aggregateRules = indexingConfig.getAggregateRules();
+            if (aggregateRules == null) {
+                return;
+            }
+            int found = 0;
+            long time = System.currentTimeMillis();
             try {
-                Term aggregateIds =
-                    new Term(FieldNames.AGGREGATED_NODE_UUID, "");
-                TermDocs tDocs = reader.termDocs();
+                CachingMultiIndexReader reader = index.getIndexReader();
                 try {
-                    ItemStateManager ism = getContext().getItemStateManager();
-                    for (NodeId id : removedIds) {
-                        aggregateIds =
-                            aggregateIds.createTerm(id.toString());
-                        tDocs.seek(aggregateIds);
-                        while (tDocs.next()) {
-                            Document doc = reader.document(
-                                    tDocs.doc(), FieldSelectors.UUID);
-                            NodeId nId = new NodeId(doc.get(FieldNames.UUID));
-                            map.put(nId, (NodeState) ism.getItemState(nId));
-                            found++;
+                    Term aggregateIds =
+                        new Term(FieldNames.AGGREGATED_NODE_UUID, "");
+                    TermDocs tDocs = reader.termDocs();
+                    try {
+                        ItemStateManager ism = getContext().getItemStateManager();
+                        for (NodeId id : removedIds) {
+                            aggregateIds =
+                                aggregateIds.createTerm(id.toString());
+                            tDocs.seek(aggregateIds);
+                            while (tDocs.next()) {
+                                Document doc = reader.document(
+                                        tDocs.doc(), FieldSelectors.UUID);
+                                NodeId nId = new NodeId(doc.get(FieldNames.UUID));
+                                map.put(nId, (NodeState) ism.getItemState(nId));
+                                found++;
+                            }
                         }
+                    } finally {
+                        tDocs.close();
                     }
                 } finally {
-                    tDocs.close();
+                    reader.release();
                 }
-            } finally {
-                reader.release();
+            } catch (Exception e) {
+                log.warn("Exception while retrieving aggregate roots", e);
             }
-        } catch (Exception e) {
-            log.warn("Exception while retrieving aggregate roots", e);
+            time = System.currentTimeMillis() - time;
+            log.debug("Retrieved {} aggregate roots in {} ms.", found, time);
         }
-        time = System.currentTimeMillis() - time;
-        log.debug("Retrieved {} aggregate roots in {} ms.", found, time);
     }
 
     //----------------------------< internal >----------------------------------
