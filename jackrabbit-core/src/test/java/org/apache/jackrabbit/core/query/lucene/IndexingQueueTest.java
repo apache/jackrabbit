@@ -55,6 +55,7 @@ public class IndexingQueueTest extends AbstractIndexingTest {
         resource.setProperty("jcr:mimeType", BlockingParser.TYPE.toString());
         session.save();
 
+        index.getIndex().getVolatileIndex().commit();
         assertEquals(1, queue.getNumPendingDocuments());
 
         Query q = qm.createQuery(testPath + "/*[jcr:contains(., 'fox')]", Query.XPATH);
