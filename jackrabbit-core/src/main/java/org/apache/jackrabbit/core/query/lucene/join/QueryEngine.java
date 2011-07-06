@@ -63,11 +63,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class QueryEngine {
-    
+
     /**
      * The logger instance for this class
      */
-    private static final Logger log = LoggerFactory.getLogger(QueryEngine.class);
+    private static final Logger log = LoggerFactory
+            .getLogger(QueryEngine.class);
 
     private static final int printIndentStep = 4;
 
@@ -79,7 +80,7 @@ public class QueryEngine {
         private final ValueComparator comparator = new ValueComparator();
 
         private final Ordering[] orderings;
-        
+
         private final OperandEvaluator evaluator;
 
         private RowComparator(Ordering[] orderings, OperandEvaluator evaluator) {
@@ -104,8 +105,8 @@ public class QueryEngine {
                 }
                 return 0;
             } catch (RepositoryException e) {
-                throw new RuntimeException(
-                        "Unable to compare rows " + a + " and " + b, e);
+                throw new RuntimeException("Unable to compare rows " + a
+                        + " and " + b, e);
             }
         }
 
@@ -149,10 +150,8 @@ public class QueryEngine {
         long time = System.currentTimeMillis();
         QueryResult qr = execute(columns, source, constraint, orderings,
                 offset, limit, 2);
-        if (log.isDebugEnabled()) {
-            time = System.currentTimeMillis() - time;
-            log.debug("SQL2 QUERY execute took " + time + " ms.");
-        }
+        log.debug("SQL2 QUERY execute took {} ms.", System.currentTimeMillis()
+                - time);
         return qr;
     }
 
@@ -176,10 +175,9 @@ public class QueryEngine {
             long limit, int printIndentation) throws RepositoryException {
         // Swap the join sources to normalize all outer joins to left
         if (JCR_JOIN_TYPE_RIGHT_OUTER.equalsIgnoreCase(join.getJoinType())) {
-            if (log.isDebugEnabled()) {
-                log.debug(genString(printIndentation)
-                        + "SQL2 RIGHT OUTER JOIN transformed to LEFT OUTER JOIN.");
-            }
+            log.debug(
+                    "{} SQL2 RIGHT OUTER JOIN transformed to LEFT OUTER JOIN.",
+                    genString(printIndentation));
             Join betterJoin = qomFactory.join(join.getRight(), join.getLeft(),
                     JCR_JOIN_TYPE_LEFT_OUTER, join.getJoinCondition());
             return execute(columns, betterJoin, constraint, orderings, offset,
@@ -195,9 +193,64 @@ public class QueryEngine {
 
         logQueryAnalysis(csInfo, printIndentation);
 
-        long timeJoinLeftSide = System.currentTimeMillis();
+        boolean isOuterJoin = JCR_JOIN_TYPE_LEFT_OUTER.equalsIgnoreCase(join
+                .getJoinType());
+        QueryResult result = execute(merger, csInfo, isOuterJoin,
+                printIndentation);
+
+        long sort = System.currentTimeMillis();
+        QueryResult sortedResult = sort(result, orderings, evaluator, offset,
+                limit);
+        log.debug(" {} SQL2 SORT took {} ms.", genString(printIndentation),
+                System.currentTimeMillis() - sort);
+        return sortedResult;
+    }
+
+    protected QueryResult execute(JoinMerger merger,
+            ConstraintSplitInfo csInfo, boolean isOuterJoin,
+            int printIndentation) throws RepositoryException {
+
         Comparator<Row> leftCo = new RowPathComparator(
                 merger.getLeftSelectors());
+        long timeJoinLeftSide = System.currentTimeMillis();
+
+        if (csInfo.isMultiple()) {
+            log.debug("{} SQL2 JOIN execute: there are multiple inner splits.",
+                    genString(printIndentation));
+
+            // first branch
+            long bTime = System.currentTimeMillis();
+            QueryResult branch1 = execute(merger,
+                    csInfo.getLeftInnerConstraints(), isOuterJoin,
+                    printIndentation + printIndentStep);
+            Set<Row> allRows = new TreeSet<Row>(new RowPathComparator(
+                    Arrays.asList(merger.getSelectorNames())));
+            RowIterator ri1 = branch1.getRows();
+            while (ri1.hasNext()) {
+                Row r = ri1.nextRow();
+                allRows.add(r);
+            }
+            log.debug("{} SQL2 JOIN executed first branch, took {} ms.",
+                    genString(printIndentation), System.currentTimeMillis()
+                            - bTime);
+
+            // second branch
+            bTime = System.currentTimeMillis();
+            QueryResult branch2 = execute(merger,
+                    csInfo.getRightInnerConstraints(), isOuterJoin,
+                    printIndentation + printIndentStep);
+            RowIterator ri2 = branch2.getRows();
+            while (ri2.hasNext()) {
+                Row r = ri2.nextRow();
+                allRows.add(r);
+            }
+            log.debug("{} SQL2 JOIN executed second branch, took {} ms.",
+                    genString(printIndentation), System.currentTimeMillis()
+                            - bTime);
+            return new SimpleQueryResult(merger.getColumnNames(),
+                    merger.getSelectorNames(), new RowIteratorAdapter(allRows));
+        }
+        
         Set<Row> leftRows = buildLeftRowsJoin(csInfo, leftCo, printIndentation
                 + printIndentStep);
         if (log.isDebugEnabled()) {
@@ -211,13 +264,15 @@ public class QueryEngine {
         // - rightConstraints selects just the 'ON' constraints
         // - csInfo has the 'WHERE' constraints
         //
-        // So, in the case of an OUTER JOIN we'll run 2 queries, one with 'ON'
+        // So, in the case of an OUTER JOIN we'll run 2 queries, one with
+        // 'ON'
         // and one with 'ON' + 'WHERE' conditions
         // this way, at merge time in case of an outer join we can tell if
         // it's a 'null' row, or a bad row -> one that must not be returned.
         // This way at the end we'll have:
         // - rightRowsSet containing the 'ON' dataset
-        // - excludingOuterJoinRowsSet: the 'ON' + 'WHERE' condition dataset, or
+        // - excludingOuterJoinRowsSet: the 'ON' + 'WHERE' condition
+        // dataset, or
         // NULL if there is no 'WHERE' condition
 
         long timeJoinRightSide = System.currentTimeMillis();
@@ -226,11 +281,8 @@ public class QueryEngine {
         Comparator<Row> rightCo = new RowPathComparator(
                 merger.getRightSelectors());
 
-        boolean isOuterJoin = JCR_JOIN_TYPE_LEFT_OUTER.equalsIgnoreCase(join
-                .getJoinType());
-
-        Set<Row> rightRows = buildRightRowsJoin(csInfo, rightConstraints, isOuterJoin,
-                rightCo, printIndentation + printIndentStep);
+        Set<Row> rightRows = buildRightRowsJoin(csInfo, rightConstraints,
+                isOuterJoin, rightCo, printIndentation + printIndentStep);
 
         // this has to be initialized as null
         Set<Row> excludingOuterJoinRowsSet = null;
@@ -246,22 +298,11 @@ public class QueryEngine {
                     + "SQL2 JOIN RIGHT SIDE took " + timeJoinRightSide
                     + " ms. fetched " + rightRows.size() + " rows.");
         }
-
-        long timeMergeAndSort = System.currentTimeMillis();
-
         // merge left with right datasets
-        QueryResult result = merger.merge(new RowIteratorAdapter(leftRows),
+        return merger.merge(new RowIteratorAdapter(leftRows),
                 new RowIteratorAdapter(rightRows), excludingOuterJoinRowsSet,
                 rightCo);
-        QueryResult sortedResult = sort(result, orderings, evaluator, offset,
-                limit);
-        if (log.isDebugEnabled()) {
-            timeMergeAndSort = System.currentTimeMillis() - timeMergeAndSort;
-            log.debug(genString(printIndentation)
-                    + "SQL2 JOIN MERGE and SORT took " + timeMergeAndSort
-                    + " ms.");
-        }
-        return sortedResult;
+
     }
 
     private Set<Row> buildLeftRowsJoin(ConstraintSplitInfo csi,
@@ -274,19 +315,13 @@ public class QueryEngine {
                         + "SQL2 JOIN LEFT SIDE there are multiple inner splits.");
             }
             Set<Row> leftRows = new TreeSet<Row>(comparator);
-            if (csi.getLeftInnerConstraints().isHasLeftConstraints()) {
-                leftRows.addAll(buildLeftRowsJoin(
-                        csi.getLeftInnerConstraints(), comparator,
-                        printIndentation + printIndentStep));
-            }
-            if (csi.getRightInnerConstraints().isHasLeftConstraints()) {
-                leftRows.addAll(buildLeftRowsJoin(
-                        csi.getRightInnerConstraints(), comparator,
-                        printIndentation + printIndentStep));
-            }
+            leftRows.addAll(buildLeftRowsJoin(csi.getLeftInnerConstraints(),
+                    comparator, printIndentation + printIndentStep));
+            leftRows.addAll(buildLeftRowsJoin(csi.getRightInnerConstraints(),
+                    comparator, printIndentation + printIndentStep));
             return leftRows;
         }
-        
+
         Set<Row> leftRows = new TreeSet<Row>(comparator);
         QueryResult leftResult = execute(null, csi.getSource().getLeft(),
                 csi.getLeftConstraint(), null, 0, -1, printIndentation);
@@ -320,14 +355,12 @@ public class QueryEngine {
                         + "SQL2 JOIN RIGHT SIDE there are multiple inner splits.");
             }
             Set<Row> rightRows = new TreeSet<Row>(comparator);
-                rightRows.addAll(buildRightRowsJoin(
-                        csi.getLeftInnerConstraints(), rightConstraints,
-                        ignoreWhereConstraints, comparator, printIndentation
-                                + printIndentStep));
-                rightRows.addAll(buildRightRowsJoin(
-                        csi.getRightInnerConstraints(), rightConstraints,
-                        ignoreWhereConstraints, comparator, printIndentation
-                                + printIndentStep));
+            rightRows.addAll(buildRightRowsJoin(csi.getLeftInnerConstraints(),
+                    rightConstraints, ignoreWhereConstraints, comparator,
+                    printIndentation + printIndentStep));
+            rightRows.addAll(buildRightRowsJoin(csi.getRightInnerConstraints(),
+                    rightConstraints, ignoreWhereConstraints, comparator,
+                    printIndentation + printIndentStep));
             return rightRows;
         }
 
@@ -461,25 +494,24 @@ public class QueryEngine {
             if (log.isDebugEnabled()) {
                 time = System.currentTimeMillis() - time;
                 log.debug(genString(printIndentation) + "SQL2 SELECT took "
-                        + time + " ms. selector: " + selector
-                        + ", columns: " + Arrays.toString(columnNames)
-                        + ", constraint: " + constraint);
+                        + time + " ms. selector: " + selector + ", columns: "
+                        + Arrays.toString(columnNames) + ", constraint: "
+                        + constraint);
             }
         }
     }
 
-    private Map<String, PropertyValue> getColumnMap(
-            Column[] columns, Map<String, NodeType> selectors)
-            throws RepositoryException {
-        Map<String, PropertyValue> map =
-            new LinkedHashMap<String, PropertyValue>();
+    private Map<String, PropertyValue> getColumnMap(Column[] columns,
+            Map<String, NodeType> selectors) throws RepositoryException {
+        Map<String, PropertyValue> map = new LinkedHashMap<String, PropertyValue>();
         if (columns != null && columns.length > 0) {
             for (int i = 0; i < columns.length; i++) {
                 String name = columns[i].getColumnName();
                 if (name != null) {
-                    map.put(name, qomFactory.propertyValue(
-                            columns[i].getSelectorName(),
-                            columns[i].getPropertyName()));
+                    map.put(name,
+                            qomFactory.propertyValue(
+                                    columns[i].getSelectorName(),
+                                    columns[i].getPropertyName()));
                 } else {
                     String selector = columns[i].getSelectorName();
                     map.putAll(getColumnMap(selector, selectors.get(selector)));
@@ -487,17 +519,15 @@ public class QueryEngine {
             }
         } else {
             for (Map.Entry<String, NodeType> selector : selectors.entrySet()) {
-                map.putAll(getColumnMap(
-                        selector.getKey(), selector.getValue()));
+                map.putAll(getColumnMap(selector.getKey(), selector.getValue()));
             }
         }
         return map;
     }
 
-    private Map<String, PropertyValue> getColumnMap(
-            String selector, NodeType type) throws RepositoryException {
-        Map<String, PropertyValue> map =
-            new LinkedHashMap<String, PropertyValue>();
+    private Map<String, PropertyValue> getColumnMap(String selector,
+            NodeType type) throws RepositoryException {
+        Map<String, PropertyValue> map = new LinkedHashMap<String, PropertyValue>();
         for (PropertyDefinition definition : type.getPropertyDefinitions()) {
             String name = definition.getName();
             if (!definition.isMultiple() && !"*".equals(name)) {
@@ -513,8 +543,8 @@ public class QueryEngine {
             throws RepositoryException {
         if (source instanceof Selector) {
             Selector selector = (Selector) source;
-            return Collections.singletonMap(
-                    selector.getSelectorName(), getNodeType(selector));
+            return Collections.singletonMap(selector.getSelectorName(),
+                    getNodeType(selector));
         } else if (source instanceof Join) {
             Join join = (Join) source;
             Map<String, NodeType> map = new LinkedHashMap<String, NodeType>();
@@ -537,23 +567,28 @@ public class QueryEngine {
     }
 
     /**
-     * Sorts the given query results according to the given QOM orderings.
-     * If one or more orderings have been specified, this method will iterate
+     * Sorts the given query results according to the given QOM orderings. If
+     * one or more orderings have been specified, this method will iterate
      * through the entire original result set, order the collected rows, and
      * return a new result set based on the sorted collection of rows.
-     *
-     * @param result original query results
-     * @param orderings QOM orderings
-     * @param offset result offset
-     * @param limit result limit
+     * 
+     * @param result
+     *            original query results
+     * @param orderings
+     *            QOM orderings
+     * @param offset
+     *            result offset
+     * @param limit
+     *            result limit
      * @return sorted query results
-     * @throws RepositoryException if the results can not be sorted
+     * @throws RepositoryException
+     *             if the results can not be sorted
      */
     protected static QueryResult sort(QueryResult result,
             final Ordering[] orderings, OperandEvaluator evaluator,
             long offset, long limit) throws RepositoryException {
-        if ((orderings != null && orderings.length > 0)
-                || offset != 0 || limit >= 0) {
+        if ((orderings != null && orderings.length > 0) || offset != 0
+                || limit >= 0) {
             List<Row> rows = new ArrayList<Row>();
 
             RowIterator iterator = result.getRows();
@@ -574,9 +609,8 @@ public class QueryEngine {
                 rows = rows.subList(0, (int) Math.min(limit, size));
             }
 
-            return new SimpleQueryResult(
-                    result.getColumnNames(), result.getSelectorNames(),
-                    new RowIteratorAdapter(rows));
+            return new SimpleQueryResult(result.getColumnNames(),
+                    result.getSelectorNames(), new RowIteratorAdapter(rows));
         } else {
             return result;
         }

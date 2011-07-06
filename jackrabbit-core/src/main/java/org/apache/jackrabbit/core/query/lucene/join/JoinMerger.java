@@ -16,8 +16,8 @@
  */
 package org.apache.jackrabbit.core.query.lucene.join;
 
-import static javax.jcr.query.qom.QueryObjectModelConstants.JCR_JOIN_TYPE_LEFT_OUTER;
 import static javax.jcr.query.qom.QueryObjectModelConstants.JCR_JOIN_TYPE_INNER;
+import static javax.jcr.query.qom.QueryObjectModelConstants.JCR_JOIN_TYPE_LEFT_OUTER;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -135,6 +135,14 @@ abstract class JoinMerger {
 
         this.evaluator = evaluator;
         this.factory = factory;
+    }
+
+    public String[] getColumnNames(){
+        return columnNames;
+    }
+
+    public String[] getSelectorNames(){
+        return selectorNames;
     }
 
     public Set<String> getLeftSelectors() {
