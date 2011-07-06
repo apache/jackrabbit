@@ -137,6 +137,14 @@ abstract class JoinMerger {
         this.evaluator = evaluator;
         this.factory = factory;
     }
+    
+    public String[] getColumnNames(){
+        return columnNames;
+    }
+    
+    public String[] getSelectorNames(){
+        return selectorNames;
+    }
 
     public Set<String> getLeftSelectors() {
         return leftSelectors;

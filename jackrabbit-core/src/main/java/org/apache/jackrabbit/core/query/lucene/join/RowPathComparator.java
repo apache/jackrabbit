@@ -16,8 +16,8 @@
  */
 package org.apache.jackrabbit.core.query.lucene.join;
 
+import java.util.Collection;
 import java.util.Comparator;
-import java.util.Set;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.query.Row;
@@ -33,9 +33,9 @@ public class RowPathComparator implements Comparator<Row> {
      * a superset of selectors, in cases where there are joins and such, the
      * possibility that a selector node does not exist in a row can happen
      */
-    private Set<String> selectors = null;
+    private Collection<String> selectors = null;
 
-    public RowPathComparator(Set<String> selectors) {
+    public RowPathComparator(Collection<String> selectors) {
         this.selectors = selectors;
     }
 
