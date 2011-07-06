@@ -95,6 +95,11 @@ public abstract class AbstractCache implements Cache {
      */
     protected void recordCacheAccess() {
         int count = accessCount.incrementAndGet();
+        // guard against integer overflow
+        if (count < 0) {
+            accessCount.set(0);
+            count = accessCount.incrementAndGet();
+        }
         if (count % ACCESS_INTERVAL == 0) {
             CacheAccessListener listener = accessListener.get();
             if (listener != null) {
