@@ -27,6 +27,7 @@ import org.apache.jackrabbit.util.Text;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.jcr.ItemNotFoundException;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
@@ -299,7 +300,7 @@ public class EntryCollector extends AccessControlObserver implements AccessContr
         }
 
         private void siftNodeAdded(String identifier) throws RepositoryException {
-            if (session.nodeExists(getIdentifierPath(identifier))) {
+            try {
                 NodeImpl n = (NodeImpl) session.getNodeByIdentifier(identifier);
                 if (n.isNodeType(EntryCollector.NT_REP_ACL)) {
                     // a new ACL was added -> use the added node to update
@@ -315,7 +316,7 @@ public class EntryCollector extends AccessControlObserver implements AccessContr
                             AccessControlObserver.POLICY_MODIFIED);
                 } /* else: some other node added below an access controlled
                      parent node -> not interested. */
-            } else {
+            } catch (ItemNotFoundException e) {
                 log.debug("Cannot process NODE_ADDED event. Node {} doesn't exist (anymore).", identifier);
             }
         }
@@ -347,7 +348,7 @@ public class EntryCollector extends AccessControlObserver implements AccessContr
         }
 
         private void siftPropertyChanged(String identifier) throws RepositoryException {
-            if (session.nodeExists(getIdentifierPath(identifier))) {
+            try {
                 // test if the changed prop belongs to an ACE
                 NodeImpl parent = (NodeImpl) session.getNodeByIdentifier(identifier);
                 if (parent.isNodeType(EntryCollector.NT_REP_ACE)) {
@@ -357,7 +358,7 @@ public class EntryCollector extends AccessControlObserver implements AccessContr
                 } /* some other property below an access controlled node
                  changed -> not interested. (NOTE: rep:ACL doesn't
                  define any properties. */
-            } else {
+            } catch (ItemNotFoundException e) {
                 log.debug("Cannot process PROPERTY_CHANGED event. Node {} doesn't exist (anymore).", identifier);
             }
         }
@@ -376,12 +377,6 @@ public class EntryCollector extends AccessControlObserver implements AccessContr
                 modType |= modMap.get(accessControllNodeId);
             }
             modMap.put(accessControllNodeId, modType);
-        }
-
-        private static String getIdentifierPath(String identifier) {
-            StringBuilder sb = new StringBuilder();
-            sb.append('[').append(identifier).append(']');
-            return sb.toString();
         }
     }
 }
