@@ -77,12 +77,13 @@ public class OverlappingNodeAddTest extends AbstractJCRTest {
             }
         }
 
-        // we don't have changes in s1, so the keepChanges flag should be irrelevant
+        // we don't have changes in s1, so the keepChanges flag should be
+        // irrelevant
         s1.refresh(false);
-        
+
         // be nice and get a new Node instance
         Node newf1 = s1.getNode(testpath + "/folder");
-        
+
         // if bWasSaved it should now be visible to Session 1
         assertEquals("'b' was saved, so session 1 should see it", bWasSaved,
                 newf1.hasNode("b"));
@@ -110,7 +111,6 @@ public class OverlappingNodeAddTest extends AbstractJCRTest {
                 try {
                     oldf1.getPath();
                 } catch (Exception ex) {
-                    ex.printStackTrace();
                     message += "; node with id "
                             + s1FolderId
                             + " can be retrieved using getNodeByIdentifier, but getPath() fails with: "
