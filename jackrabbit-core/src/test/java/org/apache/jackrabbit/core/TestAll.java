@@ -78,6 +78,8 @@ public class TestAll extends TestCase {
 
         suite.addTestSuite(PersistenceManagerTest.class);
 
+        suite.addTestSuite(OverlappingNodeAddTest.class);
+
         return suite;
     }
 }
