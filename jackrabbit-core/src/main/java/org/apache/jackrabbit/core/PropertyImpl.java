@@ -201,6 +201,7 @@ public class PropertyImpl extends ItemImpl implements Property {
         thisState.setType(transientState.getType());
         thisState.setMultiValued(transientState.isMultiValued());
         thisState.setValues(transientState.getValues());
+        thisState.setModCount(transientState.getModCount());
     }
 
     protected void onRedefine(QPropertyDefinition def) throws RepositoryException {

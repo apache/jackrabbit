@@ -918,6 +918,7 @@ public class NodeImpl extends ItemImpl implements Node, JackrabbitNode {
         thisState.setChildNodeEntries(transientState.getChildNodeEntries());
         thisState.setPropertyNames(transientState.getPropertyNames());
         thisState.setSharedSet(transientState.getSharedSet());
+        thisState.setModCount(transientState.getModCount());
     }
 
     /**
