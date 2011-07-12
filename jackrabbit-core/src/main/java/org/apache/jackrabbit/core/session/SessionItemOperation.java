@@ -72,14 +72,6 @@ public abstract class SessionItemOperation<T> implements SessionOperation<T> {
             protected Boolean perform(ItemManager manager, Path path) {
                 return manager.propertyExists(path);
             }
-            @Override
-            public Boolean perform(SessionContext context) {
-                try {
-                    return super.perform(context);
-                } catch (RepositoryException e) {
-                    return false;
-                }
-            }
         };
     }
 
