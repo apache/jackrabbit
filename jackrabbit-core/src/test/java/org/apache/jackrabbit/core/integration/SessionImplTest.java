@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.core.integration;
 
 import java.security.AccessControlException;
+import java.util.UUID;
 
 import javax.jcr.Credentials;
 import javax.jcr.PathNotFoundException;
@@ -161,5 +162,18 @@ public class SessionImplTest extends AbstractJCRTest {
         } catch (IllegalStateException e) {
             // success
         }
+    }
+
+    /**
+     * JCR-3014 Identifier paths for inexistent items throw exception
+     * 
+     * @see <a
+     *      href="https://issues.apache.org/jira/browse/JCR-3014">JCR-3014</a>
+     */
+    public void testCheckNonExistingItem() throws Exception {
+        String dummyPath = "[" + UUID.randomUUID() + "]";
+        assertFalse(superuser.itemExists(dummyPath));
+        assertFalse(superuser.nodeExists(dummyPath));
+        assertFalse(superuser.propertyExists(dummyPath));
     }
 }
