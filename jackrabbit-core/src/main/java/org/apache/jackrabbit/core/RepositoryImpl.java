@@ -206,7 +206,7 @@ public class RepositoryImpl extends AbstractRepository
     /**
      * active sessions (weak references)
      */
-    private final Map<SessionImpl, SessionImpl> activeSessions =
+    private final Map<Session, Session> activeSessions =
             new ReferenceMap(ReferenceMap.WEAK, ReferenceMap.WEAK);
 
     // flag indicating if repository has been shut down
@@ -1113,14 +1113,14 @@ public class RepositoryImpl extends AbstractRepository
         // (copy sessions to array to avoid ConcurrentModificationException;
         // manually copy entries rather than calling ReferenceMap#toArray() in
         // order to work around  http://issues.apache.org/bugzilla/show_bug.cgi?id=25551)
-        List<SessionImpl> sa;
+        List<Session> sa;
         synchronized (activeSessions) {
-            sa = new ArrayList<SessionImpl>(activeSessions.size());
-            for (SessionImpl session : activeSessions.values()) {
+            sa = new ArrayList<Session>(activeSessions.size());
+            for (Session session : activeSessions.values()) {
                 sa.add(session);
             }
         }
-        for (SessionImpl session : sa) {
+        for (Session session : sa) {
             if (session != null) {
                 session.logout();
             }
@@ -2398,7 +2398,7 @@ public class RepositoryImpl extends AbstractRepository
 
                 synchronized (activeSessions) {
                     // remove workspaces with active sessions
-                    for (SessionImpl ses : activeSessions.values()) {
+                    for (Session ses : activeSessions.values()) {
                         wspNames.remove(ses.getWorkspace().getName());
                     }
                 }
