@@ -25,6 +25,7 @@ import java.util.Map;
 
 import javax.jcr.AccessDeniedException;
 import javax.jcr.Credentials;
+import javax.jcr.GuestCredentials;
 import javax.jcr.InvalidItemStateException;
 import javax.jcr.ItemExistsException;
 import javax.jcr.ItemNotFoundException;
@@ -275,6 +276,9 @@ public abstract class AbstractRepositoryService implements RepositoryService {
         String userId = null;
         if (credentials instanceof SimpleCredentials) {
             userId = ((SimpleCredentials) credentials).getUserID();
+        }
+        else if (credentials instanceof GuestCredentials) {
+            userId = "anonymous";
         }
 
         SessionInfoImpl s = new SessionInfoImpl();
