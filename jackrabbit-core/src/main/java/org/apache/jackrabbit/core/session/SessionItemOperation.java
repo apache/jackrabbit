@@ -48,14 +48,6 @@ public abstract class SessionItemOperation<T> implements SessionOperation<T> {
             protected Boolean perform(ItemManager manager, Path path) {
                 return manager.itemExists(path);
             }
-            @Override
-            public Boolean perform(SessionContext context) {
-                try {
-                    return super.perform(context);
-                } catch (RepositoryException e) {
-                    return false;
-                }
-            }
         };
     }
 
@@ -87,14 +79,6 @@ public abstract class SessionItemOperation<T> implements SessionOperation<T> {
             @Override
             protected Boolean perform(ItemManager manager, Path path) {
                 return manager.nodeExists(path);
-            }
-            @Override
-            public Boolean perform(SessionContext context) {
-                try {
-                    return super.perform(context);
-                } catch (RepositoryException e) {
-                    return false;
-                }
             }
         };
     }
