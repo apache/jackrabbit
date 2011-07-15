@@ -548,7 +548,7 @@ public final class ItemInfoBuilder {
             if (values.size() > 0 && type != values.get(0).getType()) {
                 throw new IllegalStateException("Type mismatch. " +
                         "Required " + PropertyType.nameFromValue(values.get(0).getType()) +
-                        "found " + PropertyType.nameFromValue(type));
+                        " found " + PropertyType.nameFromValue(type));
             }
 
             this.type = type;
