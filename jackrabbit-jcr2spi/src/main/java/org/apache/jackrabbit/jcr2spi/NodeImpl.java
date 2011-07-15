@@ -16,43 +16,7 @@
  */
 package org.apache.jackrabbit.jcr2spi;
 
-import java.io.InputStream;
-import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Iterator;
-import java.util.List;
-
-import javax.jcr.AccessDeniedException;
-import javax.jcr.Binary;
-import javax.jcr.InvalidItemStateException;
-import javax.jcr.Item;
-import javax.jcr.ItemExistsException;
-import javax.jcr.ItemNotFoundException;
-import javax.jcr.ItemVisitor;
-import javax.jcr.NoSuchWorkspaceException;
-import javax.jcr.Node;
-import javax.jcr.NodeIterator;
-import javax.jcr.PathNotFoundException;
-import javax.jcr.Property;
-import javax.jcr.PropertyIterator;
-import javax.jcr.PropertyType;
-import javax.jcr.Repository;
-import javax.jcr.RepositoryException;
-import javax.jcr.UnsupportedRepositoryOperationException;
-import javax.jcr.Value;
-import javax.jcr.ValueFormatException;
-import javax.jcr.lock.Lock;
-import javax.jcr.lock.LockException;
-import javax.jcr.nodetype.ConstraintViolationException;
-import javax.jcr.nodetype.NoSuchNodeTypeException;
-import javax.jcr.nodetype.NodeDefinition;
-import javax.jcr.nodetype.NodeType;
-import javax.jcr.version.Version;
-import javax.jcr.version.VersionException;
-import javax.jcr.version.VersionHistory;
-
+import org.apache.jackrabbit.commons.AbstractProperty;
 import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
 import org.apache.jackrabbit.jcr2spi.hierarchy.PropertyEntry;
 import org.apache.jackrabbit.jcr2spi.lock.LockStateManager;
@@ -86,6 +50,45 @@ import org.apache.jackrabbit.util.ChildrenCollectorFilter;
 import org.apache.jackrabbit.value.ValueHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.jcr.AccessDeniedException;
+import javax.jcr.Binary;
+import javax.jcr.InvalidItemStateException;
+import javax.jcr.Item;
+import javax.jcr.ItemExistsException;
+import javax.jcr.ItemNotFoundException;
+import javax.jcr.ItemVisitor;
+import javax.jcr.NoSuchWorkspaceException;
+import javax.jcr.Node;
+import javax.jcr.NodeIterator;
+import javax.jcr.PathNotFoundException;
+import javax.jcr.Property;
+import javax.jcr.PropertyIterator;
+import javax.jcr.PropertyType;
+import javax.jcr.ReferentialIntegrityException;
+import javax.jcr.Repository;
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
+import javax.jcr.UnsupportedRepositoryOperationException;
+import javax.jcr.Value;
+import javax.jcr.ValueFormatException;
+import javax.jcr.lock.Lock;
+import javax.jcr.lock.LockException;
+import javax.jcr.nodetype.ConstraintViolationException;
+import javax.jcr.nodetype.NoSuchNodeTypeException;
+import javax.jcr.nodetype.NodeDefinition;
+import javax.jcr.nodetype.NodeType;
+import javax.jcr.nodetype.PropertyDefinition;
+import javax.jcr.version.Version;
+import javax.jcr.version.VersionException;
+import javax.jcr.version.VersionHistory;
+import java.io.InputStream;
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Iterator;
+import java.util.List;
 
 /**
  * <code>NodeImpl</code>...
@@ -247,8 +250,7 @@ public class NodeImpl extends ItemImpl implements Node {
             prop.setValue(v);
         } else {
             if (value == null) {
-                // create and remove property is not valid // TODO: correct?
-                throw new ItemNotFoundException("Cannot remove a non-existing property.");
+                return new StaleProperty();
             } else {
                 // new property to be added
                 prop = createProperty(propName, value, type);
