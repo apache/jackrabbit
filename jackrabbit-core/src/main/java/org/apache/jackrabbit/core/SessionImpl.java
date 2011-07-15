@@ -790,6 +790,15 @@ public class SessionImpl extends AbstractSession
      */
     @Override
     public boolean itemExists(String absPath) throws RepositoryException {
+        if (absPath != null && absPath.startsWith("[") && absPath.endsWith("]")) {
+            // an identifier segment has been specified (JCR-3014)
+            try {
+                NodeId id = NodeId.valueOf(absPath.substring(1, absPath.length() - 1));
+                return getItemManager().itemExists(id);
+            } catch (IllegalArgumentException e) {
+                throw new MalformedPathException(absPath);
+            }
+        }
         return perform(SessionItemOperation.itemExists(absPath));
     }
 
@@ -1111,6 +1120,15 @@ public class SessionImpl extends AbstractSession
      */
     @Override
     public boolean nodeExists(String absPath) throws RepositoryException {
+        if (absPath != null && absPath.startsWith("[") && absPath.endsWith("]")) {
+            // an identifier segment has been specified (JCR-3014)
+            try {
+                NodeId id = NodeId.valueOf(absPath.substring(1, absPath.length() - 1));
+                return getItemManager().itemExists(id);
+            } catch (IllegalArgumentException e) {
+                throw new MalformedPathException(absPath);
+            }
+        }
         return perform(SessionItemOperation.nodeExists(absPath));
     }
 
