@@ -27,6 +27,7 @@ import javax.security.auth.Subject;
 
 import org.apache.jackrabbit.core.RepositoryImpl;
 import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.security.principal.PrincipalImpl;
 import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.apache.jackrabbit.test.NotExecutableException;
@@ -161,5 +162,16 @@ public class SessionImplTest extends AbstractJCRTest {
         } catch (IllegalStateException e) {
             // success
         }
+    }
+
+    /**
+     * JCR-3014 Identifier paths for inexistent items throw exception
+     *
+     * @see <a href="https://issues.apache.org/jira/browse/JCR-3014">JCR-3014</a>
+     */
+    public void testCheckNonExistingItem() throws Exception {
+        String dummyPath = "[" + NodeId.randomId() + "]";
+        assertFalse(superuser.itemExists(dummyPath));
+        assertFalse(superuser.nodeExists(dummyPath));
     }
 }
