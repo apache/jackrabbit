@@ -19,7 +19,7 @@ package org.apache.jackrabbit.spi.commons.conversion;
 /**
  * Thrown when a malformed JCR path string is encountered. This exception is
  * thrown when attempting to parse a JCR path string that does not match the
- * JCR patch syntax, contains an invalid path elements, or is otherwise not
+ * JCR path syntax, contains an invalid path element, or is otherwise not
  * well formed.
  * <p>
  * See the section 4.6 of the JCR 1.0 specification for details of the
