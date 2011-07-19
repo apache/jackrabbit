@@ -277,7 +277,7 @@ public abstract class AbstractRepositoryService implements RepositoryService {
         if (credentials instanceof SimpleCredentials) {
             userId = ((SimpleCredentials) credentials).getUserID();
         }
-        else if (credentials instanceof GuestCredentials || credentials == null) {
+        else if (credentials instanceof GuestCredentials) {
             userId = "anonymous";
         }
 
