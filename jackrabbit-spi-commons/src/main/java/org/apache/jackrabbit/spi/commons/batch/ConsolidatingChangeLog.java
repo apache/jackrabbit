@@ -524,7 +524,7 @@ public class ConsolidatingChangeLog extends AbstractChangeLog<ConsolidatingChang
             }
 
             private boolean hasSNS(NodeId nodeId) {
-                return ConsolidatingChangeLog.getPath(nodeId).getIndex() > 1;
+                return nodeId != null && ConsolidatingChangeLog.getPath(nodeId).getIndex() > 1;
             }
         }
 
