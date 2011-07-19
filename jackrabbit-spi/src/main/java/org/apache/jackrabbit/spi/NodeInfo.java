@@ -79,7 +79,7 @@ public interface NodeInfo extends ItemInfo {
     public Iterator<PropertyId> getPropertyIds();
 
     /**
-     * Return the all <code>ChildInfo</code>s of the node represent by
+     * Return all <code>ChildInfo</code>s of the node represent by
      * this info, an empty iterator if that node doesn't have any child nodes
      * or <code>null</code> if the implementation is not able or for some
      * internal reasons not willing to compute the <code>ChildInfo</code>
