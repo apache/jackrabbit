@@ -105,9 +105,9 @@ public class DavResourceFactoryImpl implements DavResourceFactory {
                 /* if the created resource is version-controlled and the request
                 contains a Label header, the corresponding Version must be used
                 instead.*/
-                if (request instanceof DeltaVServletRequest && versionable && isVersionControlled(resource)) {
+                if (request instanceof DeltaVServletRequest && versionable) {
                     String labelHeader = ((DeltaVServletRequest)request).getLabel();
-                    if (labelHeader != null && DavMethods.isMethodAffectedByLabel(request)) {
+                    if (labelHeader != null && DavMethods.isMethodAffectedByLabel(request) && isVersionControlled(resource)) {
                         Version v = ((Node)item).getVersionHistory().getVersionByLabel(labelHeader);
                         DavResourceLocator vloc = locator.getFactory().createResourceLocator(locator.getPrefix(), locator.getWorkspacePath(), v.getPath(), false);
                         resource =  new VersionItemCollection(vloc, session, this, v);
