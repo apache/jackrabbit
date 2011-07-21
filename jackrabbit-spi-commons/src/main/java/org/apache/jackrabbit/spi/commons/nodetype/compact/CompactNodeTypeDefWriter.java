@@ -225,6 +225,25 @@ public class CompactNodeTypeDefWriter {
     }
 
     /**
+     * Write a namespace declaration to this writer. This method has no effect if the
+     * writer does not include namespaces.
+     *
+     * @param prefix  namespace prefix
+     * @throws NamespaceException  if no namespace is registered for the given prefix
+     * @throws IOException  if an I/O error occurs
+     */
+    public void writeNamespaceDelclaration(String prefix) throws NamespaceException, IOException {
+        if (!usedNamespaces.contains(prefix)) {
+            usedNamespaces.add(prefix);
+            nsWriter.write("<'");
+            nsWriter.write(prefix);
+            nsWriter.write("'='");
+            nsWriter.write(escape(resolver.getURI(prefix)));
+            nsWriter.write("'>\n");
+        }
+    }
+
+    /**
      * Flushes all pending write operations and Closes this writer. please note,
      * that the underlying writer remains open.
      *
@@ -550,14 +569,7 @@ public class CompactNodeTypeDefWriter {
             if (prefix != null && !prefix.equals(Name.NS_EMPTY_PREFIX)) {
                 // check for writing namespaces
                 if (nsWriter != null) {
-                    if (!usedNamespaces.contains(prefix)) {
-                        usedNamespaces.add(prefix);
-                        nsWriter.write("<'");
-                        nsWriter.write(prefix);
-                        nsWriter.write("'='");
-                        nsWriter.write(escape(name.getNamespaceURI()));
-                        nsWriter.write("'>\n");
-                    }
+                    writeNamespaceDelclaration(prefix);
                 }
                 prefix += ":";
             }
