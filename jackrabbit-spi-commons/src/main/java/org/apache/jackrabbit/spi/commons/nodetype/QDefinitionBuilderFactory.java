@@ -120,6 +120,10 @@ public class QDefinitionBuilderFactory extends DefinitionBuilderFactory<QNodeTyp
 
         @Override
         public QNodeTypeDefinition build() {
+            if (supertypes.size() == 0 && !NameConstants.NT_BASE.equals(name)) {
+                supertypes.add(NameConstants.NT_BASE);    
+            }
+
             return new QNodeTypeDefinitionImpl(
                     name,
                     supertypes.toArray(new Name[supertypes.size()]),
