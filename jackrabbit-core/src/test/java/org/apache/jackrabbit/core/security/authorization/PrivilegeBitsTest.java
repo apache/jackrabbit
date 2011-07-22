@@ -140,7 +140,7 @@ public class PrivilegeBitsTest extends JUnitTest {
             assertTrue(mod.includesRead());
 
             pb = pb.nextBits();
-            assertFalse(pb.includesRead());
+            assertFalse(pb.toString(), pb.includesRead());
             assertFalse(PrivilegeBits.getInstance(pb).includesRead());
 
             PrivilegeBits modifiable = PrivilegeBits.getInstance(pb);
@@ -192,6 +192,10 @@ public class PrivilegeBitsTest extends JUnitTest {
             pb = pb.nextBits();
             mod.add(pb);
             assertFalse(mod.isEmpty());
+            
+            PrivilegeBits tmp = PrivilegeBits.getInstance(pb);
+            tmp.diff(pb);
+            assertTrue(tmp.toString(), tmp.isEmpty());
         }
     }
 
@@ -256,7 +260,7 @@ public class PrivilegeBitsTest extends JUnitTest {
                 assertTrue(tmp.includesRead());
                 assertTrue(tmp.includes(READ_PRIVILEGE_BITS));
             } else {
-                assertFalse(tmp.includesRead());
+                assertFalse(tmp.toString(), tmp.includesRead());
                 assertFalse(tmp.includes(READ_PRIVILEGE_BITS));
             }
             tmp.add(READ_PRIVILEGE_BITS);
@@ -384,7 +388,7 @@ public class PrivilegeBitsTest extends JUnitTest {
             PrivilegeBits tmp = PrivilegeBits.getInstance(mod);
             tmp.addDifference(nxt, READ_PRIVILEGE_BITS);
             mod.add(nxt);
-            assertEquals(mod, tmp); // since there is diff(nxt, read) results in nxt
+            assertEquals(mod, tmp); // since there is diff(nxt, read) which results in nxt
 
             if (!pb.equals(READ_PRIVILEGE_BITS)) {
                 tmp = PrivilegeBits.getInstance(nxt);

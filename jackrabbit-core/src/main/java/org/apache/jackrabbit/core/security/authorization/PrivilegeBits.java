@@ -16,14 +16,14 @@
  */
 package org.apache.jackrabbit.core.security.authorization;
 
-import java.math.BigInteger;
+import java.util.Arrays;
 
 /**
  * <code>PrivilegeBits</code> 
  */
 public class PrivilegeBits {
 
-    public static final PrivilegeBits EMPTY = new PrivilegeBits(SimpleData.EMPTY);
+    public static final PrivilegeBits EMPTY = new PrivilegeBits(UnmodifiableData.EMPTY);
 
     private static final long READ = 1; // PrivilegeRegistry.READ
 
@@ -71,7 +71,7 @@ public class PrivilegeBits {
      */
     PrivilegeBits unmodifiable() {
         if (d instanceof ModifiableData) {
-            return (d.isSimple()) ? getInstance(d.longValue()) : new PrivilegeBits(new BigIntegerData(d.getBigInteger()));
+            return (d.isSimple()) ? getInstance(d.longValue()) : getInstance(d.longValues());
         } else {
             return this;
         }
@@ -90,8 +90,20 @@ public class PrivilegeBits {
         } else if (bits < PrivilegeRegistry.NO_PRIVILEGE) {
             throw new IllegalArgumentException();
         } else {
-            return new PrivilegeBits(new SimpleData(bits));
+            return new PrivilegeBits(new UnmodifiableData(bits));
         }
+    }
+
+    /**
+     * Internal method to create a new instance of <code>PrivilegeBits</code>.
+     * 
+     * @param bits
+     * @return an instance of <code>PrivilegeBits</code>
+     */
+    private static PrivilegeBits getInstance(long[] bits) {
+        long[] bts = new long[bits.length];
+        System.arraycopy(bits, 0, bts, 0, bits.length);
+        return new PrivilegeBits(new UnmodifiableData(bts));
     }
 
     /**
@@ -139,7 +151,7 @@ public class PrivilegeBits {
         } else if (d.isSimple()) {
             return (d.longValue() & READ) == READ;
         } else {
-            return d.getBigInteger().testBit(0);
+            return (d.longValues()[0] & READ) == READ;
         }
     }
 
@@ -226,7 +238,7 @@ public class PrivilegeBits {
         if (d.isSimple()) {
             sb.append(d.longValue());
         } else {
-            sb.append(d.getBigInteger().toString());
+            sb.append(Arrays.toString(d.longValues()));
         }
         return sb.toString();
     }
@@ -237,16 +249,11 @@ public class PrivilegeBits {
      */
     private static abstract class Data {
 
-        private static final BigInteger MINUS_ONE = BigInteger.valueOf(-1);
-
         abstract boolean isEmpty();
         
         abstract long longValue();
 
-        /**
-         * TODO: FIXME (see also BigIntegerData)
-         */
-        abstract BigInteger getBigInteger();
+        abstract long[] longValues();
 
         abstract boolean isSimple();
 
@@ -258,27 +265,65 @@ public class PrivilegeBits {
             return (bits | ~otherBits) == -1;
         }
 
-        static boolean includes(BigInteger bits, BigInteger otherBits) {
-            if (bits.equals(otherBits)) {
+        static boolean includes(long[] bits, long[] otherBits) {
+            if (otherBits.length <= bits.length) {
+                // test for each long if is included
+                for (int i = 0; i < otherBits.length; i++) {
+                    if ((bits[i] | ~otherBits[i]) != -1) {
+                        return false;
+                    }
+                }
                 return true;
             } else {
-                return MINUS_ONE.equals(bits.or(otherBits.not()));
+                // otherbits array is longer > cannot be included in bits
+                return false;
+            }
+        }
+
+        //---------------------------------------------------------< Object >---
+        @Override
+        public boolean equals(Object o) {
+            if (o == this) {
+                return true;
+            } else if (o instanceof Data) {
+                Data d = (Data) o;
+                if (isSimple() != d.isSimple()) {
+                    return false;
+                }
+                if (isSimple()) {
+                    return longValue() == d.longValue();
+                } else {
+                    return Arrays.equals(longValues(), d.longValues());
+                }
+            } else {
+                return false;
             }
         }
     }
 
     /**
-     * Unmodifiable instance of the Data base class.
+     * Immutable Data object
      */
-    private static class SimpleData extends Data {
+    private static class UnmodifiableData extends Data {
 
         private static final long MAX = Long.MAX_VALUE / 2;
-        private static final SimpleData EMPTY = new SimpleData(PrivilegeRegistry.NO_PRIVILEGE);
+
+        private static final UnmodifiableData EMPTY = new UnmodifiableData(PrivilegeRegistry.NO_PRIVILEGE);
 
         private final long bits;
+        private final long[] bitsArr;
+        private final boolean isSimple;
 
-        private SimpleData(long bits) {
+        private UnmodifiableData(long bits) {
             this.bits = bits;
+            bitsArr = new long[] {bits};
+            isSimple = true;
+        }
+
+        private UnmodifiableData(long[] bitsArr) {
+            bits = PrivilegeRegistry.NO_PRIVILEGE;            
+            this.bitsArr = bitsArr;
+            isSimple = false;
         }
 
         @Override
@@ -292,114 +337,54 @@ public class PrivilegeBits {
         }
 
         @Override
-        BigInteger getBigInteger() {
-            return (isEmpty()) ? BigInteger.ZERO : BigInteger.valueOf(bits);
+        long[] longValues() {
+            return bitsArr;
         }
 
         @Override
         boolean isSimple() {
-            return true;
+            return isSimple;
         }
 
         @Override
         Data next() {
             if (this == EMPTY) {
                 return EMPTY;
-            } else if (bits < MAX) {
-                long b = bits << 1;
-                return new SimpleData(b);
+            } else if (isSimple) {
+                if (bits < MAX) {
+                    long b = bits << 1;
+                    return new UnmodifiableData(b);
+                } else {
+                    return new UnmodifiableData(new long[] {bits}).next();
+                }
             } else {
-                return new BigIntegerData(BigInteger.valueOf(bits)).next();
+                long[] bts;
+                long last = bitsArr[bitsArr.length-1];
+                if (last < MAX) {
+                    bts = new long[bitsArr.length];
+                    System.arraycopy(bitsArr, 0, bts, 0, bitsArr.length);
+                    bts[bts.length-1] = last << 1;
+                } else {
+                    bts = new long[bitsArr.length + 1];
+                    bts[bts.length-1] = 1;
+                }
+                return new UnmodifiableData(bts);
             }
         }
 
         @Override
         boolean includes(Data other) {
-            if (other.isSimple()) {
-                return includes(bits, other.longValue());
+            if (isSimple) {
+                return (other.isSimple()) ? includes(bits, other.longValue()) : false;
             } else {
-                return false;
+                return includes(bitsArr, other.longValues());
             }
         }
 
         //---------------------------------------------------------< Object >---
         @Override
         public int hashCode() {
-            return new Long(bits).hashCode();
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (o == this) {
-                return true;
-            } else if (o instanceof Data) {
-                Data d = (Data) o;
-                return d.isSimple() && bits == d.longValue(); 
-            } else {
-                return false;
-            }
-        }
-    }
-
-    /**
-     * Unmodifiable instance of the Data base class.
-     * TODO: FIXME replace with performing impl without biginteger
-     */
-    private static class BigIntegerData extends Data {
-
-        private static final long ZERO = 0;
-        private final BigInteger bits;
-
-        private BigIntegerData(BigInteger bits) {
-            this.bits = bits;
-        }
-
-        @Override
-        boolean isEmpty() {
-            return false;
-        }
-
-        @Override
-        long longValue() {
-            return ZERO;
-        }
-
-        @Override
-        BigInteger getBigInteger() {
-            return bits;
-        }
-
-        @Override
-        Data next() {
-            return new BigIntegerData(bits.shiftLeft(1));
-        }
-
-        @Override
-        boolean includes(Data other) {
-            return includes(bits, other.getBigInteger());
-        }
-
-        @Override
-        boolean isSimple() {
-            return false;
-        }
-
-        //---------------------------------------------------------< Object >---
-        @Override
-        public int hashCode() {
-            return bits.hashCode();
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (o == this) {
-                return true;
-            } else if (o instanceof Data) {
-                Data d = (Data) o;
-                return !d.isSimple() && bits.equals(d.getBigInteger());
-            } else {
-                return false;
-            }
+            return (isSimple) ? new Long(bits).hashCode() : bitsArr.hashCode();
         }
     }
 
@@ -408,62 +393,48 @@ public class PrivilegeBits {
      */
     private static class ModifiableData extends Data {
 
-        private long l;
-        private BigInteger bi;
+        private long[] bits;
 
         private ModifiableData() {
-            l = PrivilegeRegistry.NO_PRIVILEGE;
+            bits = new long[] {PrivilegeRegistry.NO_PRIVILEGE};
         }
-        
+
         private ModifiableData(Data base) {
-            if (base instanceof SimpleData) {
-                l = ((SimpleData) base).bits;
-            } else if (base instanceof BigIntegerData) {
-                bi = ((BigIntegerData) base).bits;
-            } else {
-                ModifiableData b = (ModifiableData) base;
-                l = b.l;
-                bi = b.bi;
-            }
-        }
-
-        private void reset() {
-            l = PrivilegeRegistry.NO_PRIVILEGE;
-            bi = null;
-        }
-
-        private void writeBackResult(BigInteger result) {
-            if (BigInteger.ZERO.equals(result)) {
-                reset();
-            } else {
-                long dl = result.longValue();
-                if (dl > 0) {
-                    l = dl;
-                    bi = null;
-                } else {
-                    bi = result;
-                }
+            long[] b = base.longValues();
+            switch (b.length) {
+                case 0:
+                    // empty
+                    bits = new long[] {PrivilegeRegistry.NO_PRIVILEGE};
+                    break;
+                case 1:
+                    // single long
+                    bits = new long[] {b[0]};
+                    break;
+                default:
+                    // copy
+                    bits = new long[b.length];                    
+                    System.arraycopy(b, 0, bits, 0, b.length);
             }
         }
 
         @Override
         boolean isEmpty() {
-            return l == PrivilegeRegistry.NO_PRIVILEGE && bi == null;
+            return bits.length == 1 && bits[0] == PrivilegeRegistry.NO_PRIVILEGE;
         }
 
         @Override
         long longValue() {
-            return (bi == null) ? l : BigIntegerData.ZERO;
+            return (bits.length == 1) ? bits[0] : PrivilegeRegistry.NO_PRIVILEGE;
         }
 
         @Override
-        BigInteger getBigInteger() {
-            return (bi == null) ? BigInteger.valueOf(l) : bi;
+        long[] longValues() {
+            return bits;
         }
 
         @Override
         boolean isSimple() {
-            return bi == null;
+            return bits.length == 1;
         }
 
         @Override
@@ -473,83 +444,104 @@ public class PrivilegeBits {
 
         @Override
         boolean includes(Data other) {
-            if (bi == null) {
-                return (other.isSimple()) ? includes(l, other.longValue()) : false;
+            if (bits.length == 1) {
+                return other.isSimple() && includes(bits[0], other.longValue());
             } else {
-                return this.equals(other) ? true : includes(bi, other.getBigInteger());
+                return includes(bits, other.longValues());
             }
         }
-               
-        public void add(Data other) {
+
+        /**
+         * Add the other Data to this instance.
+         *
+         * @param other
+         */
+        private void add(Data other) {
             if (other != this) {
-                if (bi == null && other.isSimple()) {
-                    l |= other.longValue();
+                if (bits.length == 1 && other.isSimple()) {
+                    bits[0] |= other.longValue();
                 } else {
-                    if (!this.equals(other)) {
-                        bi = getBigInteger().or(other.getBigInteger());
-                    } // else: equals -> nothing to do.
+                    or(other.longValues());
                 }
             }
         }
 
+        /**
+         * Subtract the other Data from this instance.
+         * 
+         * @param other
+         */
         private void diff(Data other) {
-            if (bi == null && other.isSimple()) {
-                l = l & ~other.longValue();
+            if (bits.length == 1 && other.isSimple()) {
+                bits[0] = bits[0] & ~other.longValue();
             } else {
-                if (this.equals(other)) {
-                    reset();
-                } else {
-                    BigInteger big = getBigInteger();
-                    BigInteger diff = big.andNot(other.getBigInteger());
-                    if (!big.equals(diff)) {
-                        writeBackResult(diff);
-                    } // else: no change
-                }
+                bits = diff(bits, other.longValues());
             }
         }
 
+        /**
+         * Add the diff between the specified Data a and b.
+         * 
+         * @param a
+         * @param b
+         */
         private void addDifference(Data a, Data b) {
-            BigInteger diff = null;
-            long diffL = 0;
-            
             if (a.isSimple() && b.isSimple()) {
-                diffL = a.longValue() & ~b.longValue();
-                if (bi != null) {
-                    diff = BigInteger.valueOf(diffL);
-                }
+                bits[0] |= a.longValue() & ~b.longValue();
             } else {
-                diff = a.getBigInteger().andNot(b.getBigInteger());
-            }
-
-            if (diff != null) {
-                BigInteger big = getBigInteger();
-                BigInteger res = big.or(diff);
-                if (!big.equals(res)) {
-                    writeBackResult(res);
-                } // else: no change
-            } else {
-                l |= diffL;
+                long[] diff = diff(a.longValues(), b.longValues());
+                or(diff);
             }
         }
 
-        //---------------------------------------------------------< Object >---       
+        private void or(long[] b) {
+            if (b.length > bits.length) {
+                // enlarge the array
+                long[] res = new long[b.length];
+                System.arraycopy(bits, 0, res, 0, bits.length);
+                bits = res;
+            }
+            for (int i = 0; i < b.length; i++) {
+                bits[i] |= b[i];
+            }
+        }
+
+        private static long[] diff(long[] a, long[] b) {
+            int index = -1;
+            long[] res = new long[((a.length > b.length) ? a.length : b.length)];
+            for (int i = 0; i < res.length; i++) {
+                if (i < a.length && i < b.length) {
+                    res[i] = a[i] & ~b[i];
+                } else {
+                    res[i] = (i < a.length) ? a[i] : 0;
+                }
+                // remember start of trailing 0 array entries
+                if (res[i] != 0) {
+                    index = -1;
+                } else if (index == -1) {
+                    index = i;
+                }
+            }
+            switch (index) {
+                case -1:
+                    // no need to remove trailing 0-long from the array                    
+                    return res;
+                case 0 :
+                    // array consisting of one or multiple 0
+                    return new long[] {PrivilegeRegistry.NO_PRIVILEGE};
+                default:
+                    // remove trailing 0-long entries from the array
+                    long[] r2 = new long[index];
+                    System.arraycopy(res, 0, r2, 0, index);
+                    return r2;
+            }
+        }
+
+        //---------------------------------------------------------< Object >---
         @Override
         public int hashCode() {
-            // NOTE: mutable object. hashcode not implemented.
+            // NOTE: mutable object. hashCode not implemented.
             return 0;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (o == this) {
-                return true;
-            } else if (o instanceof Data) {
-                Data other = (Data) o;
-                if (isSimple() == other.isSimple()) {
-                    return (isSimple()) ? l == other.longValue() : bi.equals(other.getBigInteger());
-                }
-            }
-            return false;
         }
     }
 }

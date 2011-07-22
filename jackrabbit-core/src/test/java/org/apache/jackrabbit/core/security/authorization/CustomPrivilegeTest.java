@@ -384,9 +384,11 @@ public class CustomPrivilegeTest extends AbstractJCRTest {
             assertNotNull(definition);
             assertEquals(name, definition.getName());
 
-            PrivilegeBits bits = privilegeRegistry.getBits(definition).unmodifiable();
+            PrivilegeBits modifiable = privilegeRegistry.getBits(definition);
+            PrivilegeBits bits = modifiable.unmodifiable();
             assertNotNull(bits);
             assertFalse(bits.isEmpty());
+            assertEquals(modifiable, bits);
 
             assertFalse(previous.equals(bits));
             assertEquals(previous.nextBits(), bits);
