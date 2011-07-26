@@ -308,7 +308,7 @@ public class JcrUtils {
      *
      * @see NodeIterable
      * @param node parent node
-     * @param pattern node name pattern
+     * @param globs node name pattern
      * @return matching child nodes
      * @throws RepositoryException
      *         if the {@link Node#getNodes(String[])} call fails
@@ -353,14 +353,14 @@ public class JcrUtils {
     }
 
     /**
-     * Calls {@link Node#getProperty(String[])} on the given node with the
+     * Calls {@link Node#getProperties(String[])} on the given node with the
      * given name globs and returns the resulting {@link PropertyIterator}
      * as an {@link Iterable<Property>} instance for use in a Java 5
      * for-each loop.
      *
      * @see PropertyIterable
      * @param node node
-     * @param pattern property name globs
+     * @param globs property name globs
      * @return matching properties of the node
      * @throws RepositoryException
      *         if the {@link Node#getProperties(String[])} call fails
@@ -692,7 +692,7 @@ public class JcrUtils {
      *
      * @since Apache Jackrabbit 2.3
      * @param node node to be read
-     * @param stream to which the file contents are written
+     * @param output to which the file contents are written
      * @throws RepositoryException if the file can not be accessed
      * @throws IOException if the file can not be read or written
      */
@@ -738,7 +738,7 @@ public class JcrUtils {
      *
      * @since Apache Jackrabbit 2.3
      * @param node file node
-     * @param last modified date
+     * @param date modified date
      * @throws RepositoryException if the last modified date can not be set
      */
     public void setLastModified(Node node, Calendar date)
