@@ -111,15 +111,54 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
 
     private final Map<SessionInfo, QValueFactoryImpl> qvFactories = new HashMap<SessionInfo, QValueFactoryImpl>();
 
+    /**
+     * Same as {@link #RepositoryServiceImpl(String, String, BatchReadConfig, int, int))}
+     * using <code>null</code> workspace name, {@link ItemInfoCacheImpl#DEFAULT_CACHE_SIZE)}
+     * as size for the item cache and {@link #MAX_CONNECTIONS_DEFAULT} for the
+     * maximum number of connections on the client.
+     *
+     * @param jcrServerURI The server uri.
+     * @param batchReadConfig The batch read configuration.
+     * @throws RepositoryException If an exception occurs.
+     */
     public RepositoryServiceImpl(String jcrServerURI, BatchReadConfig batchReadConfig) throws RepositoryException {
         this(jcrServerURI, null, batchReadConfig, ItemInfoCacheImpl.DEFAULT_CACHE_SIZE);
     }
 
+    /**
+     * Same as {@link #RepositoryServiceImpl(String, String, BatchReadConfig, int, int))}
+     * using {@link #MAX_CONNECTIONS_DEFAULT} for the maximum number of
+     * connections on the client.
+     *
+     * @param jcrServerURI The server uri.
+     * @param defaultWorkspaceName The default workspace name.
+     * @param batchReadConfig The batch read configuration.
+     * @param itemInfoCacheSize The size of the item info cache.
+     * @throws RepositoryException If an exception occurs.
+     */
     public RepositoryServiceImpl(String jcrServerURI, String defaultWorkspaceName,
-            BatchReadConfig batchReadConfig, int itemInfoCacheSize) throws RepositoryException {
+                                 BatchReadConfig batchReadConfig, int itemInfoCacheSize) throws RepositoryException {
+        this(jcrServerURI, defaultWorkspaceName, batchReadConfig, itemInfoCacheSize, MAX_CONNECTIONS_DEFAULT);
+    }
 
-        super(jcrServerURI, IdFactoryImpl.getInstance(), NameFactoryImpl.getInstance(), PathFactoryImpl
-                .getInstance(), new QValueFactoryImpl(), itemInfoCacheSize);
+    /**
+     * Creates a new instance of this repository service.
+     *
+     * @param jcrServerURI The server uri.
+     * @param defaultWorkspaceName The default workspace name.
+     * @param batchReadConfig The batch read configuration.
+     * @param itemInfoCacheSize The size of the item info cache.
+     * @param maximumHttpConnections maximumHttpConnections A int &gt;0 defining
+     * the maximum number of connections per host to be configured on
+     * {@link org.apache.commons.httpclient.params.HttpConnectionManagerParams#setDefaultMaxConnectionsPerHost(int)}.
+     * @throws RepositoryException If an exception occurs.
+     */
+    public RepositoryServiceImpl(String jcrServerURI, String defaultWorkspaceName,
+                                 BatchReadConfig batchReadConfig, int itemInfoCacheSize,
+                                 int maximumHttpConnections) throws RepositoryException {
+
+        super(jcrServerURI, IdFactoryImpl.getInstance(), NameFactoryImpl.getInstance(),
+                PathFactoryImpl.getInstance(), new QValueFactoryImpl(), itemInfoCacheSize, maximumHttpConnections);
 
         this.jcrServerURI = jcrServerURI.endsWith("/") ? jcrServerURI : jcrServerURI + "/";
         this.defaultWorkspaceName = defaultWorkspaceName;
@@ -198,20 +237,20 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
         return sb.toString();
     }
 
-     /**
+    /**
      * @see RepositoryService#getQValueFactory()
      */
     public QValueFactoryImpl getQValueFactory(SessionInfo sessionInfo) throws RepositoryException {
-         QValueFactoryImpl qv;
-         if (qvFactories.containsKey(sessionInfo)) {
-             qv = qvFactories.get(sessionInfo);
-         } else {
-             ValueLoader loader = new ValueLoader(getClient(sessionInfo));
-             qv = new QValueFactoryImpl(getNamePathResolver(sessionInfo), loader);
-             qvFactories.put(sessionInfo, qv);
-         }
-         return qv;
-     }
+        QValueFactoryImpl qv;
+        if (qvFactories.containsKey(sessionInfo)) {
+            qv = qvFactories.get(sessionInfo);
+        } else {
+            ValueLoader loader = new ValueLoader(getClient(sessionInfo));
+            qv = new QValueFactoryImpl(getNamePathResolver(sessionInfo), loader);
+            qvFactories.put(sessionInfo, qv);
+        }
+        return qv;
+    }
 
     //--------------------------------------------------< RepositoryService >---
 

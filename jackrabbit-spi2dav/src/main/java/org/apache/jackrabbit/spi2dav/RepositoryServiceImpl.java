@@ -33,6 +33,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import javax.jcr.AccessDeniedException;
 import javax.jcr.Credentials;
@@ -71,6 +73,7 @@ import org.apache.commons.httpclient.methods.HeadMethod;
 import org.apache.commons.httpclient.methods.InputStreamRequestEntity;
 import org.apache.commons.httpclient.methods.RequestEntity;
 import org.apache.commons.httpclient.methods.StringRequestEntity;
+import org.apache.commons.httpclient.params.HttpConnectionManagerParams;
 import org.apache.jackrabbit.commons.webdav.EventUtil;
 import org.apache.jackrabbit.commons.webdav.JcrRemotingConstants;
 import org.apache.jackrabbit.commons.webdav.JcrValueType;
@@ -207,6 +210,17 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
 
     private static final SubscriptionInfo S_INFO = new SubscriptionInfo(DefaultEventType.create(EventUtil.EVENT_ALL, ItemResourceConstants.NAMESPACE), true, INFINITE_TIMEOUT);
 
+    /**
+     * Key for the client map during repo creation (no sessionInfo present)
+     */
+    private static final String CLIENT_KEY = "repoCreation";
+
+    /**
+     * Default value for the maximum number of connections per host such as
+     * configured with {@link HttpConnectionManagerParams#setDefaultMaxConnectionsPerHost(int)}.
+     */
+    public static final int MAX_CONNECTIONS_DEFAULT = 20;
+
     private final IdFactory idFactory;
     private final NameFactory nameFactory;
     private final PathFactory pathFactory;
@@ -220,26 +234,69 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     private final URIResolverImpl uriResolver;
 
     private final HostConfiguration hostConfig;
-    private final Map<SessionInfo, HttpClient> clients = new HashMap<SessionInfo, HttpClient>();
+    private final ConcurrentMap<Object, HttpClient> clients;
     private final HttpConnectionManager connectionManager;
 
     private final Map<Name, QNodeTypeDefinition> nodeTypeDefinitions = new HashMap<Name, QNodeTypeDefinition>();
 
     private Map<String, QValue[]> descriptors;
 
+    /**
+     * Same as {@link #RepositoryServiceImpl(String, IdFactory, NameFactory, PathFactory, QValueFactory, int, int)}
+     * using {@link ItemInfoCacheImpl#DEFAULT_CACHE_SIZE)} as size for the item
+     * cache and {@link #MAX_CONNECTIONS_DEFAULT} for the maximum number of
+     * connections on the client.
+     *
+     * @param uri The server uri.
+     * @param idFactory The id factory.
+     * @param nameFactory The name factory.
+     * @param pathFactory The path factory.
+     * @param qValueFactory The value factory.
+     * @throws RepositoryException If an error occurs.
+     */
     public RepositoryServiceImpl(String uri, IdFactory idFactory,
-            NameFactory nameFactory,
-            PathFactory pathFactory,
-            QValueFactory qValueFactory) throws RepositoryException {
-
+                                 NameFactory nameFactory, PathFactory pathFactory,
+                                 QValueFactory qValueFactory) throws RepositoryException {
         this(uri, idFactory, nameFactory, pathFactory, qValueFactory, ItemInfoCacheImpl.DEFAULT_CACHE_SIZE);
     }
 
+    /**
+     * Same as {@link #RepositoryServiceImpl(String, IdFactory, NameFactory, PathFactory, QValueFactory, int, int)}
+     * using {@link #MAX_CONNECTIONS_DEFAULT} for the maximum number of
+     * connections on the client.
+     * 
+     * @param uri The server uri.
+     * @param idFactory The id factory.
+     * @param nameFactory The name factory.
+     * @param pathFactory The path factory.
+     * @param qValueFactory The value factory.
+     * @param itemInfoCacheSize The size of the item info cache.
+     * @throws RepositoryException If an error occurs.
+     */
     public RepositoryServiceImpl(String uri, IdFactory idFactory,
-                                 NameFactory nameFactory,
-                                 PathFactory pathFactory,
-                                 QValueFactory qValueFactory,
-                                 int itemInfoCacheSize) throws RepositoryException {
+                                 NameFactory nameFactory, PathFactory pathFactory,
+                                 QValueFactory qValueFactory, int itemInfoCacheSize) throws RepositoryException {
+        this(uri, idFactory, nameFactory, pathFactory, qValueFactory, itemInfoCacheSize, MAX_CONNECTIONS_DEFAULT);
+    }
+
+    /**
+     * Creates a new instance of this repository service.
+     *
+     * @param uri The server uri.
+     * @param idFactory The id factory.
+     * @param nameFactory The name factory.
+     * @param pathFactory The path factory.
+     * @param qValueFactory The value factory.
+     * @param itemInfoCacheSize The size of the item info cache.
+     * @param maximumHttpConnections A int &gt;0 defining the maximum number of
+     * connections per host to be configured on
+     * {@link HttpConnectionManagerParams#setDefaultMaxConnectionsPerHost(int)}.
+     * @throws RepositoryException If an error occurs.
+     */
+    public RepositoryServiceImpl(String uri, IdFactory idFactory,
+                                 NameFactory nameFactory, PathFactory pathFactory,
+                                 QValueFactory qValueFactory, int itemInfoCacheSize,
+                                 int maximumHttpConnections ) throws RepositoryException {
         if (uri == null || "".equals(uri)) {
             throw new RepositoryException("Invalid repository uri '" + uri + "'.");
         }
@@ -272,7 +329,24 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         } catch (URIException e) {
             throw new RepositoryException(e);
         }
+
         connectionManager = new MultiThreadedHttpConnectionManager();
+        if (maximumHttpConnections > 0) {
+            HttpConnectionManagerParams connectionParams = connectionManager.getParams();
+            connectionParams.setDefaultMaxConnectionsPerHost(maximumHttpConnections);
+        }
+
+        // This configuration of the clients cache assumes that the level of
+        // concurrency on this map will be equal to the default number of maximum
+        // connections allowed on the httpClient level.
+        // TODO: review again
+        int concurrencyLevel = MAX_CONNECTIONS_DEFAULT;
+        int initialCapacity = MAX_CONNECTIONS_DEFAULT;
+        if (maximumHttpConnections > 0) {
+            concurrencyLevel = maximumHttpConnections;
+            initialCapacity = maximumHttpConnections;
+        }
+        clients = new ConcurrentHashMap<Object, HttpClient>(concurrencyLevel, .75f, initialCapacity);
     }
 
     private static void checkSessionInfo(SessionInfo sessionInfo) throws RepositoryException {
@@ -365,8 +439,21 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         return resolver;
     }
 
+    /**
+     * Returns a key for the httpClient hash. The key is either the specified
+     * SessionInfo or a marker if the session info is null (used during
+     * repository instantiation).
+     *
+     * @param sessionInfo
+     * @return Key for the client map.
+     */
+    private static Object getClientKey(SessionInfo sessionInfo) {
+        return (sessionInfo == null) ? CLIENT_KEY : sessionInfo;
+    }
+
     protected HttpClient getClient(SessionInfo sessionInfo) throws RepositoryException {
-        HttpClient client = clients.get(sessionInfo);
+        Object clientKey = getClientKey(sessionInfo);
+        HttpClient client = clients.get(clientKey);
         if (client == null) {
             client = new HttpClient(connectionManager);
             client.setHostConfiguration(hostConfig);
@@ -380,14 +467,14 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
                 client.getParams().setAuthenticationPreemptive(true);
             }
             client.getState().setCredentials(AuthScope.ANY, creds);
-            clients.put(sessionInfo, client);
+            clients.put(clientKey, client);
             log.debug("Created Client " + client + " for SessionInfo " + sessionInfo);
         }
         return client;
     }
 
     private void removeClient(SessionInfo sessionInfo) {
-        HttpClient cl = clients.remove(sessionInfo);
+        HttpClient cl = clients.remove(getClientKey(sessionInfo));
         log.debug("Removed Client " + cl + " for SessionInfo " + sessionInfo);
     }
 
