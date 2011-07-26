@@ -59,41 +59,64 @@ public class Spi2davexRepositoryServiceFactory implements RepositoryServiceFacto
      */
     public static final String PARAM_ITEMINFO_CACHE_SIZE = "org.apache.jackrabbit.spi2davex.ItemInfoCacheSize";
 
-    public RepositoryService createRepositoryService(Map<?, ?> parameters) throws RepositoryException {
-        String uri;
+    /**
+     * Optional configuration parameter: It's value defines the
+     * maximumConnectionsPerHost value on the HttpClient configuration and 
+     * must be an int greater than zero.
+     */
+    public static final String PARAM_MAX_CONNECTIONS = "org.apache.jackrabbit.spi2davex.MaxConnections";
 
+    public RepositoryService createRepositoryService(Map<?, ?> parameters) throws RepositoryException {
+        // retrieve the repository uri
+        String uri;
         if (parameters == null) {
             uri = System.getProperty(PARAM_REPOSITORY_URI);
-        }
-        else {
-            uri = parameters.get(PARAM_REPOSITORY_URI) == null
-                    ? null
-                    : parameters.get(PARAM_REPOSITORY_URI).toString();
+        } else {
+            Object repoUri = parameters.get(PARAM_REPOSITORY_URI);
+            uri = (repoUri == null) ? null : repoUri.toString();
         }
         if (uri == null) {
             uri = DEFAULT_REPOSITORY_URI;
         }
 
+        // load other optional configuration parameters
         BatchReadConfig brc = null;
+        int itemInfoCacheSize = ItemInfoCacheImpl.DEFAULT_CACHE_SIZE;
+        int maximumHttpConnections = 0;
+
         if (parameters != null) {
+            // batchRead config
             Object param = parameters.get(PARAM_BATCHREAD_CONFIG);
             if (param != null && param instanceof BatchReadConfig) {
                 brc = (BatchReadConfig) param;
             }
+
+            // itemCache size config
+            param = parameters.get(PARAM_ITEMINFO_CACHE_SIZE);
+            if (param != null) {
+                try {
+                    itemInfoCacheSize = Integer.parseInt(param.toString());
+                } catch (NumberFormatException e) {
+                    // ignore, use default
+                }
+            }
+
+            // max connections config
+            param = parameters.get(PARAM_MAX_CONNECTIONS);
+            if (param != null) {
+                try {
+                    maximumHttpConnections = Integer.parseInt(param.toString());
+                } catch ( NumberFormatException e ) {
+                    // using default
+                }
+            }
         }
 
-        int itemInfoCacheSize = ItemInfoCacheImpl.DEFAULT_CACHE_SIZE;
-        Object param = parameters.get(PARAM_ITEMINFO_CACHE_SIZE);
-        if (param != null) {
-            try {
-                itemInfoCacheSize = Integer.parseInt(param.toString());
-            }
-            catch (NumberFormatException e) {
-                // ignore, use default
-            }
+        if (maximumHttpConnections > 0) {
+            return new RepositoryServiceImpl(uri, null, brc, itemInfoCacheSize, maximumHttpConnections);
+        } else {
+            return new RepositoryServiceImpl(uri, null, brc, itemInfoCacheSize);
         }
-
-        return new RepositoryServiceImpl(uri, null, brc, itemInfoCacheSize);
     }
 
 }

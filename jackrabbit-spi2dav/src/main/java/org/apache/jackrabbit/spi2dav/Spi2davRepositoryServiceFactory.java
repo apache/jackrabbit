@@ -77,6 +77,13 @@ public class Spi2davRepositoryServiceFactory implements RepositoryServiceFactory
      */
     public static final String PARAM_ITEMINFO_CACHE_SIZE = "org.apache.jackrabbit.spi2dav.ItemInfoCacheSize";
 
+    /**
+     * Optional configuration parameter: It's value defines the
+     * maximumConnectionsPerHost value on the HttpClient configuration and
+     * must be an int greater than zero.
+     */
+    public static final String PARAM_MAX_CONNECTIONS = "org.apache.jackrabbit.spi2dav.MaxConnections";
+
     public RepositoryService createRepositoryService(Map<?, ?> parameters) throws RepositoryException {
         if (parameters == null) {
             throw new RepositoryException("Parameter " + PARAM_REPOSITORY_URI + " missing");
@@ -127,12 +134,26 @@ public class Spi2davRepositoryServiceFactory implements RepositoryServiceFactory
         if (param != null) {
             try {
                 itemInfoCacheSize = Integer.parseInt(param.toString());
-            }
-            catch (NumberFormatException e) {
+            } catch (NumberFormatException e) {
                 // ignore, use default
             }
         }
-        return new RepositoryServiceImpl(uri, idFactory, nameFactory, pathFactory, vFactory, itemInfoCacheSize);
-    }
 
+        // max connections config
+        int maximumHttpConnections = 0;
+        param = parameters.get(PARAM_MAX_CONNECTIONS);
+        if (param != null) {
+            try {
+                maximumHttpConnections = Integer.parseInt(param.toString());
+            } catch ( NumberFormatException e ) {
+                // using default
+            }
+        }
+        
+        if (maximumHttpConnections > 0) {
+            return new RepositoryServiceImpl(uri, idFactory, nameFactory, pathFactory, vFactory, itemInfoCacheSize, maximumHttpConnections);
+        } else {
+            return new RepositoryServiceImpl(uri, idFactory, nameFactory, pathFactory, vFactory, itemInfoCacheSize);
+        }
+    }
 }
