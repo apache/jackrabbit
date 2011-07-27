@@ -74,6 +74,13 @@ public abstract class JCRWebdavServerServlet extends AbstractWebdavServlet {
     public final static String INIT_PARAM_MISSING_AUTH_MAPPING = "missing-auth-mapping";
 
     /**
+     * Optional 'concurrency-level' parameter defining the concurrency level
+     * within the jcr-server. If the parameter is omitted the internal default
+     * value (50) is used.
+     */
+    public final static String INIT_PARAM_CONCURRENCY_LEVEL = "concurrency-level";
+
+    /**
      * Servlet context attribute used to store the path prefix instead of
      * having a static field with this servlet. The latter causes problems
      * when running multiple
@@ -170,7 +177,17 @@ public abstract class JCRWebdavServerServlet extends AbstractWebdavServlet {
     public DavSessionProvider getDavSessionProvider() {
         if (server == null) {
             Repository repository = getRepository();
-            server = new JCRWebdavServer(repository, getSessionProvider());
+            String cl = getInitParameter(INIT_PARAM_CONCURRENCY_LEVEL);
+            if (cl != null) {
+                try {
+                    server = new JCRWebdavServer(repository, getSessionProvider(), Integer.parseInt(cl));
+                } catch (NumberFormatException e) {
+                    log.debug("Invalid value '" + cl+ "' for init-param 'concurrency-level'. Using default instead.");
+                    server = new JCRWebdavServer(repository, getSessionProvider());
+                }
+            } else {
+                server = new JCRWebdavServer(repository, getSessionProvider());
+            }
         }
         return server;
     }
@@ -250,7 +267,7 @@ public abstract class JCRWebdavServerServlet extends AbstractWebdavServlet {
      * the node type characteristics of the parent (SNSiblings allowed or not).
      *
      * @param destResource destination resource to be validated.
-     * @param request
+     * @param request The webdav request
      * @param checkHeader flag indicating if the destination header must be present.
      * @return status code indicating whether the destination is valid.
      */
@@ -299,6 +316,7 @@ public abstract class JCRWebdavServerServlet extends AbstractWebdavServlet {
     /**
      * Returns the configured path prefix
      *
+     * @param ctx The servlet context.
      * @return resourcePathPrefix
      * @see #INIT_PARAM_RESOURCE_PATH_PREFIX
      */
@@ -308,6 +326,8 @@ public abstract class JCRWebdavServerServlet extends AbstractWebdavServlet {
 
     /**
      * Returns the repository to be used by this servlet.
+     *
+     * @return the JCR repository to be used by this servlet
      */
     protected abstract Repository getRepository();
 
