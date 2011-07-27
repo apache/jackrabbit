@@ -33,11 +33,11 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletResponse;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 /**
  * <code>JCRWebdavServer</code>...
@@ -48,7 +48,7 @@ public class JCRWebdavServer implements DavSessionProvider {
     private static Logger log = LoggerFactory.getLogger(JCRWebdavServer.class);
 
     /** the session cache */
-    private final SessionCache cache = new SessionCache();
+    private final SessionCache cache;
 
     /** the jcr repository */
     private final Repository repository;
@@ -64,6 +64,19 @@ public class JCRWebdavServer implements DavSessionProvider {
     public JCRWebdavServer(Repository repository, SessionProvider sessionProvider) {
         this.repository = repository;
         this.sessionProvider = sessionProvider;
+        cache = new SessionCache();
+    }
+
+    /**
+     * Creates a new JCRWebdavServer that operates on the given repository.
+     *
+     * @param repository
+     * @param concurrencyLevel 
+     */
+    public JCRWebdavServer(Repository repository, SessionProvider sessionProvider, int concurrencyLevel) {
+        this.repository = repository;
+        this.sessionProvider = sessionProvider;
+        cache = new SessionCache(concurrencyLevel);
     }
 
     //---------------------------------------< DavSessionProvider interface >---
@@ -142,9 +155,32 @@ public class JCRWebdavServer implements DavSessionProvider {
      */
     private class SessionCache {
 
-        private Map<DavSession, Set<Object>> sessionMap = new HashMap<DavSession, Set<Object>>();
-        private Map<Object, DavSession> referenceToSessionMap = new HashMap<Object, DavSession>();
+        private static final int CONCURRENCY_LEVEL_DEFAULT = 50;
+        private static final int INITIAL_CAPACITY = 50;
+    	private static final int INITIAL_CAPACITY_REF_TO_SESSION = 3 * INITIAL_CAPACITY;
+    	
+        private ConcurrentMap<DavSession, Set<Object>> sessionMap;
+        private ConcurrentMap<Object, DavSession> referenceToSessionMap;
 
+        /**
+         * Create a new session cache with the {@link #CONCURRENCY_LEVEL_DEFAULT default concurrency level}.
+         */
+        private SessionCache() {
+            this(CONCURRENCY_LEVEL_DEFAULT);
+        }
+
+        /**
+         * Create a new session cache with the specified the level of concurrency
+         * for this server.
+         * 
+         * @param cacheConcurrencyLevel A positive int value specifying the
+         * concurrency level of the server.
+         */
+        private SessionCache(int cacheConcurrencyLevel) {
+        	sessionMap = new ConcurrentHashMap<DavSession, Set<Object>>(INITIAL_CAPACITY, .75f, cacheConcurrencyLevel);
+        	referenceToSessionMap = new ConcurrentHashMap<Object, DavSession>(INITIAL_CAPACITY_REF_TO_SESSION, .75f, cacheConcurrencyLevel);
+        }
+        
         /**
          * Try to retrieve <code>DavSession</code> if a TransactionId or
          * SubscriptionId is present in the request header. If no cached session
@@ -186,6 +222,8 @@ public class JCRWebdavServer implements DavSessionProvider {
             if (session == null) {
                 Session repSession = getRepositorySession(request);
                 session = new DavSessionImpl(repSession);
+                
+                // TODO: review again if using ConcurrentMap#putIfAbsent() was more appropriate.
                 sessionMap.put(session, new HashSet<Object>());
                 log.debug("login: User '" + repSession.getUserID() + "' logged in.");
             } else {
