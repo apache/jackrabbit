@@ -57,7 +57,7 @@ public class RFC4918PropfindTest extends TestCase {
     private URI uri;
     private String username, password;
     private HttpClient client;
-    
+
     @Override
     protected void setUp() throws Exception {
         this.uri = URI.create(System.getProperty("webdav.test.url"));
@@ -73,12 +73,12 @@ public class RFC4918PropfindTest extends TestCase {
                 new UsernamePasswordCredentials(this.username, this.password));
         super.setUp();
     }
-  
+
     @Override
     protected void tearDown() throws Exception {
         super.tearDown();
     }
-    
+
     public void testOptions() throws HttpException, IOException, DavException, URISyntaxException {
         OptionsMethod options = new OptionsMethod(this.root);
         this.client.executeMethod(options);
@@ -86,16 +86,16 @@ public class RFC4918PropfindTest extends TestCase {
     }
 
     public void testPropfindInclude() throws HttpException, IOException, DavException, URISyntaxException {
-  
+
         String testuri = this.root + "iftest";
-    
+
         int status;
         try {
             PutMethod put = new PutMethod(testuri);
             put.setRequestEntity(new StringRequestEntity("1"));
             status = this.client.executeMethod(put);
             assertEquals("status: " + status, 201, status);
-            
+
             DavPropertyNameSet names = new DavPropertyNameSet();
             names.add(DeltaVConstants.COMMENT);
             PropFindMethod propfind = new PropFindMethod(testuri, DavConstants.PROPFIND_ALL_PROP_INCLUDE, names, 0);
@@ -109,7 +109,7 @@ public class RFC4918PropfindTest extends TestCase {
             MultiStatusResponse response = responses[0];
             DavPropertySet found = response.getProperties(200);
             DavPropertySet notfound = response.getProperties(404);
-            
+
             assertTrue(found.contains(DeltaVConstants.COMMENT) || notfound.contains(DeltaVConstants.COMMENT));
         }
         finally {
