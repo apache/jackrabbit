@@ -53,7 +53,7 @@ public class RFC4918IfHeaderTest extends TestCase {
     private URI uri;
     private String username, password;
     private HttpClient client;
-    
+
     @Override
     protected void setUp() throws Exception {
         this.uri = URI.create(System.getProperty("webdav.test.url"));
@@ -69,16 +69,16 @@ public class RFC4918IfHeaderTest extends TestCase {
                 new UsernamePasswordCredentials(this.username, this.password));
         super.setUp();
     }
-  
+
     @Override
     protected void tearDown() throws Exception {
         super.tearDown();
     }
-    
+
     public void testPutIfEtag() throws HttpException, IOException, DavException, URISyntaxException {
-  
+
         String testuri = this.root + "iftest";
-    
+
         int status;
         try {
             PutMethod put = new PutMethod(testuri);
@@ -96,76 +96,74 @@ public class RFC4918IfHeaderTest extends TestCase {
     }
 
     public void testPutIfLockToken() throws HttpException, IOException, DavException, URISyntaxException {
-      
-      String testuri = this.root + "iflocktest";
-      String locktoken = null;
-      
-      int status;
-      try {
-          PutMethod put = new PutMethod(testuri);
-          put.setRequestEntity(new StringRequestEntity("1"));
-          status = this.client.executeMethod(put);
-          assertTrue("status: " + status, status == 200 || status == 201 || status == 204);
 
-          LockMethod lock = new LockMethod(testuri, new LockInfo(
-                  Scope.EXCLUSIVE, Type.WRITE, "testcase", 10000, true));
-          status = this.client.executeMethod(lock);
-          assertEquals("status", 200, status);
-          locktoken = lock.getLockToken();
-          assertNotNull(locktoken);
-          
-          // try to overwrite without lock token
-          put = new PutMethod(testuri);
-          put.setRequestEntity(new StringRequestEntity("2"));
-          status = this.client.executeMethod(put);
-          assertEquals("status: " + status, 423, status);
-          
-          // try to overwrite using bad lock token
-          put = new PutMethod(testuri);
-          put.setRequestEntity(new StringRequestEntity("2"));
-          put.setRequestHeader("If", "(<" + "DAV:foobar" + ">)");
-          status = this.client.executeMethod(put);
-          assertEquals("status: " + status, 412, status);
-          
-          // try to overwrite using correct lock token, using  No-Tag-list format
-          put = new PutMethod(testuri);
-          put.setRequestEntity(new StringRequestEntity("2"));
-          put.setRequestHeader("If", "(<" + locktoken + ">)");
-          status = this.client.executeMethod(put);
-          assertTrue("status: " + status, status == 200 || status == 204);
+        String testuri = this.root + "iflocktest";
+        String locktoken = null;
 
-          // try to overwrite using correct lock token, using Tagged-list format
-          // and full URI
-          put = new PutMethod(testuri);
-          put.setRequestEntity(new StringRequestEntity("3"));
-          put.setRequestHeader("If", "<" + testuri + ">" + "(<" + locktoken + ">)");
-          status = this.client.executeMethod(put);
-          assertTrue("status: " + status, status == 200 || status == 204);
+        int status;
+        try {
+            PutMethod put = new PutMethod(testuri);
+            put.setRequestEntity(new StringRequestEntity("1"));
+            status = this.client.executeMethod(put);
+            assertTrue("status: " + status, status == 200 || status == 201 || status == 204);
 
-          // try to overwrite using correct lock token, using Tagged-list format
-          // and absolute path only
-          put = new PutMethod(testuri);
-          put.setRequestEntity(new StringRequestEntity("4"));
-          put.setRequestHeader("If", "<" + new URI(testuri).getRawPath() + ">" + "(<" + locktoken + ">)");
-          status = this.client.executeMethod(put);
-          assertTrue("status: " + status, status == 200 || status == 204);
+            LockMethod lock = new LockMethod(testuri, new LockInfo(
+                    Scope.EXCLUSIVE, Type.WRITE, "testcase", 10000, true));
+            status = this.client.executeMethod(lock);
+            assertEquals("status", 200, status);
+            locktoken = lock.getLockToken();
+            assertNotNull(locktoken);
 
-          // try to overwrite using correct lock token, using Tagged-list format
-          // and bad path
-          put = new PutMethod(testuri);
-          put.setRequestEntity(new StringRequestEntity("5"));
-          put.setRequestHeader("If", "</foobar>" + "(<" + locktoken + ">)");
-          status = this.client.executeMethod(put);
-          assertTrue("status: " + status, status == 404 || status == 412);
-      }
-      finally {
-          DeleteMethod delete = new DeleteMethod(testuri);
-          if (locktoken != null) {
-              delete.setRequestHeader("If", "(<" + locktoken + ">)");
-          }
-          status = this.client.executeMethod(delete);
-          assertTrue("status: " + status, status == 200 || status == 204 || status == 404);
-      }
-  }
-  
+            // try to overwrite without lock token
+            put = new PutMethod(testuri);
+            put.setRequestEntity(new StringRequestEntity("2"));
+            status = this.client.executeMethod(put);
+            assertEquals("status: " + status, 423, status);
+
+            // try to overwrite using bad lock token
+            put = new PutMethod(testuri);
+            put.setRequestEntity(new StringRequestEntity("2"));
+            put.setRequestHeader("If", "(<" + "DAV:foobar" + ">)");
+            status = this.client.executeMethod(put);
+            assertEquals("status: " + status, 412, status);
+
+            // try to overwrite using correct lock token, using  No-Tag-list format
+            put = new PutMethod(testuri);
+            put.setRequestEntity(new StringRequestEntity("2"));
+            put.setRequestHeader("If", "(<" + locktoken + ">)");
+            status = this.client.executeMethod(put);
+            assertTrue("status: " + status, status == 200 || status == 204);
+
+            // try to overwrite using correct lock token, using Tagged-list format
+            // and full URI
+            put = new PutMethod(testuri);
+            put.setRequestEntity(new StringRequestEntity("3"));
+            put.setRequestHeader("If", "<" + testuri + ">" + "(<" + locktoken + ">)");
+            status = this.client.executeMethod(put);
+            assertTrue("status: " + status, status == 200 || status == 204);
+
+            // try to overwrite using correct lock token, using Tagged-list format
+            // and absolute path only
+            put = new PutMethod(testuri);
+            put.setRequestEntity(new StringRequestEntity("4"));
+            put.setRequestHeader("If", "<" + new URI(testuri).getRawPath() + ">" + "(<" + locktoken + ">)");
+            status = this.client.executeMethod(put);
+            assertTrue("status: " + status, status == 200 || status == 204);
+
+            // try to overwrite using correct lock token, using Tagged-list format
+            // and bad path
+            put = new PutMethod(testuri);
+            put.setRequestEntity(new StringRequestEntity("5"));
+            put.setRequestHeader("If", "</foobar>" + "(<" + locktoken + ">)");
+            status = this.client.executeMethod(put);
+            assertTrue("status: " + status, status == 404 || status == 412);
+        } finally {
+            DeleteMethod delete = new DeleteMethod(testuri);
+            if (locktoken != null) {
+                delete.setRequestHeader("If", "(<" + locktoken + ">)");
+            }
+            status = this.client.executeMethod(delete);
+            assertTrue("status: " + status, status == 200 || status == 204 || status == 404);
+        }
+    }
 }
