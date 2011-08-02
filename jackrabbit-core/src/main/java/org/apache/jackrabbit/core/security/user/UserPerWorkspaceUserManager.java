@@ -18,6 +18,7 @@ package org.apache.jackrabbit.core.security.user;
 
 import org.apache.jackrabbit.core.SessionImpl;
 
+import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.UnsupportedRepositoryOperationException;
@@ -90,5 +91,17 @@ public class UserPerWorkspaceUserManager extends UserManagerImpl {
     @Override
     public void autoSave(boolean enable) throws UnsupportedRepositoryOperationException, RepositoryException {
         autoSave = enable;
+    }
+
+    //--------------------------------------------------------------------------
+    /**
+     * Returns the path of the specified authorizableNode.
+     *
+     * @param authorizableNode Node associated with an authorizable.
+     * @return The path of the node.
+     * @throws RepositoryException If an error occurs while retrieving the path.
+     */
+    String getPath(Node authorizableNode) throws RepositoryException {
+        return authorizableNode.getPath();
     }
 }
