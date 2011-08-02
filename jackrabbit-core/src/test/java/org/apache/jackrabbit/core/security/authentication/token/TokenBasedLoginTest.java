@@ -26,7 +26,6 @@ import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.apache.jackrabbit.test.NotExecutableException;
 import org.apache.jackrabbit.test.RepositoryStub;
 
-import javax.jcr.Credentials;
 import javax.jcr.LoginException;
 import javax.jcr.Node;
 import javax.jcr.Repository;
@@ -160,7 +159,7 @@ public class TokenBasedLoginTest extends AbstractJCRTest {
                 assertEquals("any", ttNode.getProperty(TOKEN_ATTRIBUTE + ".any").getString());
 
                 String id = ttNode.getIdentifier();
-                assertEquals(token, id);
+                assertTrue(token.startsWith(id));
             }
 
         } finally {
@@ -340,15 +339,32 @@ public class TokenBasedLoginTest extends AbstractJCRTest {
         }
     }
 
-        /**
+    /**
      * Tests concurrent login on the Repository including token creation.
      * Test copied and slightly adjusted from org.apache.jackrabbit.core.ConcurrentLoginTest
      */
     public void testConcurrentLoginDifferentWorkspaces() throws RepositoryException, NotExecutableException {
+        final String testID = testuser.getID();
 
+        // check if test is executable
+        // - multiple workspaces must be present
         final List<String> wspNames = Arrays.asList(superuser.getWorkspace().getAccessibleWorkspaceNames());
         if (wspNames.size() <= 1) {
             throw new NotExecutableException();
+        }
+        // - testuser must be present for all workspaces
+        for (String wspName : wspNames) {
+            JackrabbitSession s = null;
+            try {
+                s = (JackrabbitSession) getHelper().getSuperuserSession(wspName);
+                if (s.getUserManager().getAuthorizable(testID) == null) {
+                    throw new NotExecutableException();
+                }
+            } finally {
+                if (s != null) {
+                    s.logout();
+                }
+            }
         }
 
         final Exception[] exception = new Exception[1];
@@ -362,7 +378,7 @@ public class TokenBasedLoginTest extends AbstractJCRTest {
                             int index = (int) Math.floor(rand);
                             String wspName = wspNames.get(index);
 
-                            SimpleCredentials sc = new SimpleCredentials(testuser.getID(), testuser.getID().toCharArray());
+                            SimpleCredentials sc = new SimpleCredentials(testID, testID.toCharArray());
                             sc.setAttribute(TokenBasedAuthentication.TOKEN_ATTRIBUTE, "");
 
                             Session s = getHelper().getRepository().login(sc, wspName);
