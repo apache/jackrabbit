@@ -193,6 +193,10 @@ public class SimpleCredentialsAuthenticationTest extends AbstractJCRTest {
         public boolean removeProperty(String name) throws RepositoryException {
             return false;
         }
+
+        public String getPath() {
+            return null;
+        }
     }
 }
 

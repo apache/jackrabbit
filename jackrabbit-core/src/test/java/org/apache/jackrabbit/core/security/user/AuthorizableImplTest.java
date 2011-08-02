@@ -31,6 +31,7 @@ import org.apache.jackrabbit.value.StringValue;
 import javax.jcr.Property;
 import javax.jcr.PropertyIterator;
 import javax.jcr.RepositoryException;
+import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.Value;
 import javax.jcr.PropertyType;
 import javax.jcr.nodetype.ConstraintViolationException;
@@ -374,9 +375,23 @@ public class AuthorizableImplTest extends AbstractUserTest {
             public boolean removeProperty(String name) throws RepositoryException {
                 return user.removeProperty(name);
             }
+
+            public String getPath() throws UnsupportedRepositoryOperationException, RepositoryException {
+                return user.getPath();
+            }
         };
 
         assertFalse(user.equals(user3));
         assertTrue(s.add(user3));
+    }
+
+    public void testGetPath() throws Exception {
+        AuthorizableImpl user = (AuthorizableImpl) getTestUser(superuser);
+        try {
+            assertEquals(user.getNode().getPath(), user.getPath());
+        } catch (UnsupportedRepositoryOperationException e) {
+            // ok.
+        }
+
     }
 }

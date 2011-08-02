@@ -159,7 +159,7 @@ public class UserManagerImpl extends ProtectedItemModifier
     public static final String PARAM_GROUPS_PATH = "groupsPath";
 
     /**
-     * @deprecate Use {@link #PARAM_COMPATIBLE_JR16} instead.
+     * @deprecated Use {@link #PARAM_COMPATIBLE_JR16} instead.
      */
     public static final String PARAM_COMPATIBILE_JR16 = "compatibleJR16";
 
@@ -263,6 +263,7 @@ public class UserManagerImpl extends ProtectedItemModifier
      *
      * @param session The editing/reading session.
      * @param adminId The user ID of the administrator.
+     * @throws javax.jcr.RepositoryException If an error occurs.
      */
     public UserManagerImpl(SessionImpl session, String adminId) throws RepositoryException {
         this(session, adminId, null, null);
@@ -274,6 +275,7 @@ public class UserManagerImpl extends ProtectedItemModifier
      * @param session The editing/reading session.
      * @param adminId The user ID of the administrator.
      * @param config The configuration parameters.
+     * @throws javax.jcr.RepositoryException If an error occurs.
      */
     public UserManagerImpl(SessionImpl session, String adminId, Properties config) throws RepositoryException {
         this(session, adminId, config, null);
@@ -299,7 +301,7 @@ public class UserManagerImpl extends ProtectedItemModifier
      * @param adminId The user ID of the administrator.
      * @param config The configuration parameters.
      * @param mCache Shared membership cache.
-     * @throws javax.jcr.RepositoryException
+     * @throws javax.jcr.RepositoryException If an error occurs.
      */
     public UserManagerImpl(SessionImpl session, String adminId, Properties config,
                            MembershipCache mCache) throws RepositoryException {
@@ -372,7 +374,7 @@ public class UserManagerImpl extends ProtectedItemModifier
      * If 0 (default), {@link UserConstants#P_MEMBERS} is used to record group
      * memberships.
      *
-     * @return
+     * @return The maximum number of group members before splitting up the structure.
      */
     public int getGroupMembershipSplitSize() {
         return groupMembershipSplitSize;
@@ -737,6 +739,14 @@ public class UserManagerImpl extends ProtectedItemModifier
     }
 
     /**
+     * Always throws <code>UnsupportedRepositoryOperationException</code> since
+     * the node may reside in a different workspace than the editing <code>Session</code>.
+     */
+    String getPath(Node authorizableNode) throws UnsupportedRepositoryOperationException, RepositoryException {
+        throw new UnsupportedRepositoryOperationException();
+    }
+
+    /**
      * Test if a user or group exists that has the given principals name as ID,
      * which might happen if userID != principal-name.
      * In this case: generate another ID for the group to be created.
@@ -941,8 +951,8 @@ public class UserManagerImpl extends ProtectedItemModifier
     /**
      * Throws <code>IllegalArgumentException</code> if the specified principal
      * is <code>null</code> or if it's name is <code>null</code> or empty string.
-     * @param principal
-     * @param isGroup
+     * @param principal The principal to be validated.
+     * @param isGroup Flag indicating if the principal represents a group.
      */
     private static void checkValidPrincipal(Principal principal, boolean isGroup) {
         if (principal == null || principal.getName() == null || "".equals(principal.getName())) {

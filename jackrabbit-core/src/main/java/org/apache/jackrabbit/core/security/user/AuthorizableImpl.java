@@ -36,6 +36,7 @@ import javax.jcr.Property;
 import javax.jcr.PropertyIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.Value;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.PropertyDefinition;
@@ -63,7 +64,6 @@ abstract class AuthorizableImpl implements Authorizable, UserConstants {
      * @param userManager UserManager that created this Authorizable.
      * @throws IllegalArgumentException if the given node isn't of node type
      * {@link #NT_REP_AUTHORIZABLE}.
-     * @throws RepositoryException If an error occurs.
      */
     protected AuthorizableImpl(NodeImpl node, UserManagerImpl userManager) {
         this.node = node;
@@ -271,6 +271,13 @@ abstract class AuthorizableImpl implements Authorizable, UserConstants {
             s.save();
         }
     }
+       
+    /**
+     * @see Authorizable#getPath()
+     */
+    public String getPath() throws UnsupportedRepositoryOperationException, RepositoryException {
+        return userManager.getPath(node);
+    }
 
     //-------------------------------------------------------------< Object >---
     @Override
@@ -441,9 +448,9 @@ abstract class AuthorizableImpl implements Authorizable, UserConstants {
 
     /**
      * 
-     * @param relPath
-     * @return
-     * @throws RepositoryException
+     * @param relPath A relative path.
+     * @return The corresponding node.
+     * @throws RepositoryException If an error occurs.
      */
     private Node getOrCreateTargetNode(String relPath) throws RepositoryException {
         Node n;

@@ -20,6 +20,7 @@ import java.security.Principal;
 import java.util.Iterator;
 
 import javax.jcr.RepositoryException;
+import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.Value;
 
 /**
@@ -121,6 +122,7 @@ public interface Authorizable {
      * Returns the names of properties present with <code>this</code>
      * Authorizable at the specified relative path.
      *
+     * @param relPath A relative path.
      * @return names of properties.
      * @throws RepositoryException If an error occurs.
      * @see #getProperty(String)
@@ -176,4 +178,23 @@ public interface Authorizable {
      * @throws RepositoryException If an error occurs.
      */
     boolean removeProperty(String relPath) throws RepositoryException;
+
+    /**
+     * Returns a JCR path if this authorizable instance is associated with an
+     * item that can be accessed by the editing <code>Session</code>.<p/>
+     * Throws <code>UnsupportedRepositoryOperationException</code> if this
+     * method is not supported or if there is no item associated with this
+     * authorizable that is accessible by the editing <code>Session</code>.<p/>
+     * Throws <code>RepositoryException</code> if another error occurs while
+     * retrieving the path.
+     *
+     * @return the path of the {@link javax.jcr.Item} that corresponds to this
+     * <code>Authorizable</code>.
+     * @throws UnsupportedRepositoryOperationException If this method is not
+     * supported or if there exists no accessible item associated with this
+     * <code>Authorizable</code> instance.
+     * @throws RepositoryException If an error occurs while retrieving the
+     * <code>Item</code> path.
+     */
+    String getPath() throws UnsupportedRepositoryOperationException, RepositoryException;
 }
