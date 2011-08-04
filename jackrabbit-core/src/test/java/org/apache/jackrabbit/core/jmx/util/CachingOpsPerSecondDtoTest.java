@@ -116,8 +116,6 @@ public class CachingOpsPerSecondDtoTest extends JUnitTest {
                         new MathContext(2, RoundingMode.DOWN)).doubleValue();
         assertEquals(expectedAvg, BigDecimal.valueOf(test.getOpAvgTime())
                 .round(new MathContext(2, RoundingMode.DOWN)).doubleValue());
-
-        System.out.println(ops + " / " + test.getOpAvgTime());
     }
 
     private Callable<Void> newCallable(final CachingOpsPerSecondDto test,
