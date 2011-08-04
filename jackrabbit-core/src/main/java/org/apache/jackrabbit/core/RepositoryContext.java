@@ -21,7 +21,6 @@ import org.apache.jackrabbit.core.data.DataStore;
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.id.NodeIdFactory;
-import org.apache.jackrabbit.core.jmx.JmxRegistry;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.security.JackrabbitSecurityManager;
 import org.apache.jackrabbit.core.security.authorization.PrivilegeRegistry;
@@ -104,8 +103,6 @@ public class RepositoryContext {
      * Repository-wide timer instance.
      */
     private final Timer timer = new Timer(false);
-    
-    private JmxRegistry jmxRegistry;
 
     /**
      * Creates a component context for the given repository.
@@ -362,13 +359,4 @@ public class RepositoryContext {
         return nodeIdFactory;
     }
 
-    public JmxRegistry getJmxRegistry() {
-        assert jmxRegistry != null;
-        return jmxRegistry;
-    }
-
-    public void setJmxRegistry(JmxRegistry jmxRegistry) {
-        assert jmxRegistry != null;
-        this.jmxRegistry = jmxRegistry;
-    }
 }

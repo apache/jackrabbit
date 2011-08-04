@@ -131,16 +131,13 @@ public class QueryImpl extends AbstractQueryImpl {
                             throws RepositoryException {
                         return query.execute(offset, limit);
                     }
-
                     public String toString() {
                         return "query.execute(" + statement + ")";
                     }
                 });
-        time = System.currentTimeMillis() - time;
-        sessionContext.getRepositoryContext().getJmxRegistry().getQueryStat()
-                .logQuery(language, statement, time);
-
+        
         if (log.isDebugEnabled()) {
+            time = System.currentTimeMillis() - time;
             NumberFormat format = NumberFormat.getNumberInstance();
             format.setMinimumFractionDigits(2);
             format.setMaximumFractionDigits(2);

@@ -82,8 +82,6 @@ import org.apache.jackrabbit.core.fs.FileSystemException;
 import org.apache.jackrabbit.core.fs.FileSystemResource;
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.id.NodeIdFactory;
-import org.apache.jackrabbit.core.jmx.JmxRegistry;
-import org.apache.jackrabbit.core.jmx.JmxRegistryImpl;
 import org.apache.jackrabbit.core.lock.LockManager;
 import org.apache.jackrabbit.core.lock.LockManagerImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
@@ -233,8 +231,6 @@ public class RepositoryImpl extends AbstractRepository
      */
     private final CacheManager cacheMgr = new CacheManager();
 
-    private final JmxRegistry jmxRegistry = new JmxRegistryImpl();
-
     /**
      * Chanel for posting create workspace messages.
      */
@@ -359,9 +355,6 @@ public class RepositoryImpl extends AbstractRepository
             // initialize system search manager
             getSystemSearchManager(repConfig.getDefaultWorkspaceName());
 
-            //this has to be live before initSecurityManager(), to be able to track all the queries
-            initJmxRegistry();
-
             // Initialise the security manager;
             initSecurityManager();
 
@@ -466,10 +459,6 @@ public class RepositoryImpl extends AbstractRepository
      */
     public CacheManager getCacheManager() {
         return cacheMgr;
-    }
-
-    public JmxRegistry getJmxRegistry() {
-        return jmxRegistry;
     }
 
     /**
@@ -1013,7 +1002,6 @@ public class RepositoryImpl extends AbstractRepository
         synchronized (activeSessions) {
             session.addListener(this);
             activeSessions.put(session, session);
-            jmxRegistry.getCoreStat().sessionCreated();
         }
     }
 
@@ -1203,8 +1191,6 @@ public class RepositoryImpl extends AbstractRepository
         }
 
         context.getTimer().cancel();
-
-        jmxRegistry.stop();
 
         log.info("Repository has been shutdown");
     }
@@ -1466,11 +1452,6 @@ public class RepositoryImpl extends AbstractRepository
         return new GarbageCollector(context.getDataStore(), ipmList, sessions);
     }
 
-    protected void initJmxRegistry(){
-        this.jmxRegistry.start();
-        this.context.setJmxRegistry(jmxRegistry);
-    }
-
     //-----------------------------------------------------------< Repository >
     /**
      * {@inheritDoc}
@@ -1605,7 +1586,6 @@ public class RepositoryImpl extends AbstractRepository
         synchronized (activeSessions) {
             // remove session from active sessions
             activeSessions.remove(session);
-            jmxRegistry.getCoreStat().sessionLoggedOut();
         }
     }
 

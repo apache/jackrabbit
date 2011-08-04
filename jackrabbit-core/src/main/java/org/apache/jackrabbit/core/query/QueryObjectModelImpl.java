@@ -122,12 +122,8 @@ public class QueryObjectModelImpl extends QueryImpl implements QueryObjectModel 
         long time = System.currentTimeMillis();
         QueryResult qr = engine.execute(getColumns(), getSource(),
                 getConstraint(), getOrderings(), offset, limit);
-        time = System.currentTimeMillis() - time;
-
-        sessionContext.getRepositoryContext().getJmxRegistry().getQueryStat()
-                .logQuery(language, statement, time);
-        
         if (log.isDebugEnabled()) {
+            time = System.currentTimeMillis() - time;
             NumberFormat format = NumberFormat.getNumberInstance();
             format.setMinimumFractionDigits(2);
             format.setMaximumFractionDigits(2);
