@@ -23,7 +23,6 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
 import org.apache.jackrabbit.core.WorkspaceManager;
-import org.apache.jackrabbit.core.jmx.core.CoreStat;
 import org.apache.jackrabbit.core.observation.ObservationDispatcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -181,22 +180,20 @@ public class SessionState {
             }
 
             try {
-                final CoreStat coreStat = context.getRepositoryContext().getJmxRegistry().getCoreStat();
                 // Perform the actual operation, optionally with debug logs
-                if (log.isDebugEnabled() || coreStat.isEnabled()) {
-                    long start = System.nanoTime();
+                if (log.isDebugEnabled()) {
                     log.debug("Performing {}", operation);
+                    long start = System.nanoTime();
                     try {
                         return operation.perform(context);
                     } finally {
                         long time = System.nanoTime() - start;
-                        coreStat.onSessionOperation(isWriteOperation, time);
                         if (time > NS_PER_MS) {
-                            log.debug("Performed {} in {}ms", operation, time
-                                    / NS_PER_MS);
+                            log.debug("Performed {} in {}ms",
+                                    operation, time / NS_PER_MS);
                         } else {
-                            log.debug("Performed {} in {}us", operation, time
-                                    / NS_PER_US);
+                            log.debug("Performed {} in {}us",
+                                    operation, time / NS_PER_US);
                         }
                     }
                 } else {
