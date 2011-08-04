@@ -16,45 +16,10 @@
  */
 package org.apache.jackrabbit.core.jmx.query;
 
-/**
- * 
- * Service that tracks statistics for queries. <br>
- * 
- * It acts as a <b>Top X</b> longest running queries.
- * 
- */
-public interface QueryStatManagerBase {
+import java.util.Comparator;
 
-    /**
-     * @return how big the <b>Top X</b> queue is
-     */
-    int getQueueSize();
-
-    /**
-     * Change the <b>Top X</b> queue size
-     * 
-     * @param size
-     *            the new size
-     */
-    void setQueueSize(int size);
-
-    /**
-     * clears the queue
-     */
-    void clearQueue();
-
-    /**
-     * If this service is currently registering stats
-     * 
-     * @return <code>true</code> if the service is enabled
-     */
-    boolean isEnabled();
-
-    /**
-     * Enables/Disables the service
-     * 
-     * @param enabled
-     */
-    void setEnabled(boolean enabled);
-
+public class QueryStatDtoComparator implements Comparator<QueryStatDto> {
+    public int compare(QueryStatDto o1, QueryStatDto o2) {
+        return new Long(o1.getDuration()).compareTo(o2.getDuration());
+    }
 }

@@ -16,82 +16,55 @@
  */
 package org.apache.jackrabbit.core.jmx.query;
 
-import java.io.Serializable;
-import java.util.Calendar;
-import java.util.Date;
+public interface QueryStat {
 
-/**
- * Object that holds statistical info about a query.
- * 
- */
-public class QueryStat implements Serializable {
+    void logQuery(final String language, final String statement, long duration);
 
-    private static final long serialVersionUID = 1L;
+    /** Slowest Queries */
+
+    QueryStatDto[] getSlowQueries();
 
     /**
-     * lazy, computed at call time
+     * @return how big the <b>Top X</b> queue is
      */
-    private long position;
+    int getSlowQueriesQueueSize();
 
     /**
-     * the time that the query was created
+     * Change the <b>Top X</b> queue size
+     * 
+     * @param size
+     *            the new size
      */
-    private final Date creationTime;
+    void setSlowQueriesQueueSize(int size);
 
     /**
-     * run duration
+     * clears the queue
      */
-    private final long duration;
+    void clearSlowQueriesQueue();
+
+    double getQueriesPerSecond();
+
+    double getAvgQueryTime();
+
+    /** Generic Stats Stuff */
 
     /**
-     * query language
+     * If this service is currently registering stats
+     * 
+     * @return <code>true</code> if the service is enabled
      */
-    private final String language;
+    boolean isEnabled();
 
     /**
-     * query statement
+     * Enables/Disables the service
+     * 
+     * @param enabled
      */
-    private final String statement;
+    void setEnabled(boolean enabled);
 
-    public QueryStat(final String language, final String statement,
-            long duration) {
-        this.duration = duration;
-        this.language = language;
-        this.statement = statement;
+    /**
+     * clears all data
+     */
+    void reset();
 
-        Calendar c = Calendar.getInstance();
-        c.setTimeInMillis(System.currentTimeMillis() - duration);
-        this.creationTime = c.getTime();
-    }
-
-    public long getDuration() {
-        return duration;
-    }
-
-    public String getLanguage() {
-        return language;
-    }
-
-    public String getStatement() {
-        return statement;
-    }
-
-    public String getCreationTime() {
-        return creationTime.toString();
-    }
-
-    public long getPosition() {
-        return position;
-    }
-
-    public void setPosition(long position) {
-        this.position = position;
-    }
-
-    @Override
-    public String toString() {
-        return "QueryStat [creationTime=" + creationTime + ", duration="
-                + duration + ", language=" + language + ", statement="
-                + statement + "]";
-    }
 }

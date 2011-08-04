@@ -16,20 +16,106 @@
  */
 package org.apache.jackrabbit.core.jmx.query;
 
-/**
- * 
- * Extends QueryStatManagerBase with write access to the query log. <br>
- * 
- */
-public interface QueryStatManager extends QueryStatManagerBase {
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 
-    /**
-     * log a {@link QueryStat} to the service if it is enabled
-     * 
-     * @param query
-     */
-    void logQuery(QueryStat query);
+import javax.management.openmbean.CompositeDataSupport;
+import javax.management.openmbean.CompositeType;
+import javax.management.openmbean.OpenDataException;
+import javax.management.openmbean.OpenType;
+import javax.management.openmbean.SimpleType;
+import javax.management.openmbean.TabularData;
+import javax.management.openmbean.TabularDataSupport;
+import javax.management.openmbean.TabularType;
 
-    QueryStat[] getTopQueries();
+public class QueryStatManager implements QueryStatManagerMBean {
 
+    private final QueryStat queryStat;
+
+    private final static Comparator<QueryStatDto> comparatorRev = Collections
+            .reverseOrder(new QueryStatDtoComparator());
+
+    public QueryStatManager(final QueryStat queryStat) {
+        this.queryStat = queryStat;
+    }
+
+    public boolean isEnabled() {
+        return queryStat.isEnabled();
+    }
+
+    public void setEnabled(boolean enabled) {
+        queryStat.setEnabled(enabled);
+    }
+
+    public void reset() {
+        queryStat.reset();
+    }
+
+    public int getQueueSize() {
+        return queryStat.getSlowQueriesQueueSize();
+    }
+
+    public void setQueueSize(int size) {
+        queryStat.setSlowQueriesQueueSize(size);
+    }
+
+    public void clearQueue() {
+        queryStat.clearSlowQueriesQueue();
+    }
+
+    public QueryStatDto[] getTopQueries() {
+        QueryStatDto[] top = queryStat.getSlowQueries();
+        Arrays.sort(top, comparatorRev);
+        for (int i = 0; i < top.length; i++) {
+            top[i].setPosition(i + 1);
+        }
+        return top;
+    }
+
+    public TabularData getQueries() {
+        TabularDataSupport tds = null;
+        try {
+            CompositeType ct = QueryStatCompositeTypeFactory.getCompositeType();
+
+            TabularType tt = new TabularType(QueryStatDto.class.getName(),
+                    "Query History", ct, QueryStatCompositeTypeFactory.index);
+            tds = new TabularDataSupport(tt);
+
+            for (QueryStatDto q : getTopQueries()) {
+                tds.put(new CompositeDataSupport(ct,
+                        QueryStatCompositeTypeFactory.names,
+                        QueryStatCompositeTypeFactory.getValues(q)));
+            }
+            return tds;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    private static class QueryStatCompositeTypeFactory {
+
+        private final static String[] index = { "position" };
+
+        private final static String[] names = { "position", "duration",
+                "language", "statement", "creationTime" };
+
+        private final static String[] descriptions = { "position", "duration",
+                "language", "statement", "creationTime" };
+
+        private final static OpenType<?>[] types = { SimpleType.LONG,
+                SimpleType.LONG, SimpleType.STRING, SimpleType.STRING,
+                SimpleType.STRING };
+
+        public static CompositeType getCompositeType() throws OpenDataException {
+            return new CompositeType(QueryStat.class.getName(),
+                    QueryStat.class.getName(), names, descriptions, types);
+        }
+
+        public static Object[] getValues(QueryStatDto q) {
+            return new Object[] { q.getPosition(), q.getDuration(),
+                    q.getLanguage(), q.getStatement(), q.getCreationTime() };
+        }
+    }
 }

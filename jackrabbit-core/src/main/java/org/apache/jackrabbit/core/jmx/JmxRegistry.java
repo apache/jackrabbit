@@ -18,7 +18,8 @@ package org.apache.jackrabbit.core.jmx;
 
 import javax.management.ObjectName;
 
-import org.apache.jackrabbit.core.jmx.query.QueryStatManager;
+import org.apache.jackrabbit.core.jmx.core.CoreStat;
+import org.apache.jackrabbit.core.jmx.query.QueryStat;
 
 /**
  * JMX Mbean registration service
@@ -54,5 +55,8 @@ public interface JmxRegistry {
      */
     void unregister(ObjectName name) throws Exception;
 
-    QueryStatManager getQueryStatManager();
+    CoreStat getCoreStat();
+
+    QueryStat getQueryStat();
+
 }

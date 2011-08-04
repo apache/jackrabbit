@@ -27,8 +27,23 @@ public interface JackrabbitBaseMBean {
 
     String BASE_NAME = "org.apache.jackrabbit";
 
+    /**
+     * If this service is currently registering stats
+     * 
+     * @return <code>true</code> if the service is enabled
+     */
     boolean isEnabled();
 
+    /**
+     * Enables/Disables the service
+     * 
+     * @param enabled
+     */
     void setEnabled(boolean enabled);
+
+    /**
+     * clears all data
+     */
+    void reset();
 
 }

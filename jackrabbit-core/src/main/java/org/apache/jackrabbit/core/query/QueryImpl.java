@@ -35,8 +35,6 @@ import javax.jcr.query.InvalidQueryException;
 import javax.jcr.query.QueryResult;
 import javax.jcr.version.VersionException;
 
-import org.apache.jackrabbit.core.jmx.JmxRegistryUtils;
-import org.apache.jackrabbit.core.jmx.query.QueryStatManager;
 import org.apache.jackrabbit.core.session.SessionContext;
 import org.apache.jackrabbit.core.session.SessionOperation;
 import org.apache.jackrabbit.spi.Path;
@@ -133,16 +131,15 @@ public class QueryImpl extends AbstractQueryImpl {
                             throws RepositoryException {
                         return query.execute(offset, limit);
                     }
+
                     public String toString() {
                         return "query.execute(" + statement + ")";
                     }
                 });
         time = System.currentTimeMillis() - time;
-        QueryStatManager qsm = sessionContext.getRepository().getJmxRegistry()
-                .getQueryStatManager();
-        if (qsm != null) {
-            qsm.logQuery(JmxRegistryUtils.buildQueryStat(this, time));
-        }
+        sessionContext.getRepositoryContext().getJmxRegistry().getQueryStat()
+                .logQuery(language, statement, time);
+
         if (log.isDebugEnabled()) {
             NumberFormat format = NumberFormat.getNumberInstance();
             format.setMinimumFractionDigits(2);
