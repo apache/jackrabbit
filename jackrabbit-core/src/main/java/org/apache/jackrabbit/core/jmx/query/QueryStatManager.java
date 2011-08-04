@@ -104,7 +104,7 @@ public class QueryStatManager implements QueryStatManagerMBean {
         private final static String[] descriptions = { "position", "duration",
                 "language", "statement", "creationTime" };
 
-        private final static OpenType<?>[] types = { SimpleType.LONG,
+        private final static OpenType[] types = { SimpleType.LONG,
                 SimpleType.LONG, SimpleType.STRING, SimpleType.STRING,
                 SimpleType.STRING };
 
