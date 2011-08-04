@@ -24,10 +24,27 @@ import org.apache.jackrabbit.core.jmx.JackrabbitBaseMBean;
  * JMX Binding for the {@link QueryStatManagerImpl}. <br>
  * 
  */
-public interface QueryStatManagerImplMBean extends JackrabbitBaseMBean,
-        QueryStatManagerBase {
+public interface QueryStatManagerMBean extends JackrabbitBaseMBean {
 
     String NAME = BASE_NAME + ":type=QueryStats";
 
     TabularData getQueries();
+
+    /**
+     * @return how big the <b>Top X</b> queue is
+     */
+    int getQueueSize();
+
+    /**
+     * Change the <b>Top X</b> queue size
+     * 
+     * @param size
+     *            the new size
+     */
+    void setQueueSize(int size);
+
+    /**
+     * clears the queue
+     */
+    void clearQueue();
 }

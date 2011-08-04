@@ -23,9 +23,14 @@ import java.util.List;
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
 
+import org.apache.jackrabbit.core.jmx.core.CoreStat;
+import org.apache.jackrabbit.core.jmx.core.CoreStatImpl;
+import org.apache.jackrabbit.core.jmx.core.CoreStatManager;
+import org.apache.jackrabbit.core.jmx.core.CoreStatManagerMBean;
+import org.apache.jackrabbit.core.jmx.query.QueryStat;
+import org.apache.jackrabbit.core.jmx.query.QueryStatImpl;
 import org.apache.jackrabbit.core.jmx.query.QueryStatManager;
-import org.apache.jackrabbit.core.jmx.query.QueryStatManagerImpl;
-import org.apache.jackrabbit.core.jmx.query.QueryStatManagerImplMBean;
+import org.apache.jackrabbit.core.jmx.query.QueryStatManagerMBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,7 +46,9 @@ public class JmxRegistryImpl implements JmxRegistry {
 
     private List<ObjectName> registry = new ArrayList<ObjectName>();
 
-    private QueryStatManagerImpl queryStatManager;
+    private QueryStat queryStat;
+
+    private CoreStat coreStat;
 
     public JmxRegistryImpl() {
     }
@@ -53,14 +60,26 @@ public class JmxRegistryImpl implements JmxRegistry {
      */
     public void start() {
         server = ManagementFactory.getPlatformMBeanServer();
+        log.debug("Started JMX Registry.");
         try {
-            queryStatManager = new QueryStatManagerImpl();
-            register(queryStatManager, new ObjectName(
-                    QueryStatManagerImplMBean.NAME));
-            log.info("Started JMX Registry");
+            coreStat = new CoreStatImpl();
+            register(new CoreStatManager(coreStat), new ObjectName(
+                    CoreStatManagerMBean.NAME));
+            log.debug("JMX Registry - registered CoreStats.");
         } catch (Exception e) {
-            queryStatManager = null;
-            log.error("Unable to start JMX Registry", e);
+            log.error("JMX Registry - Unable to register CoreStats.", e);
+            coreStat.setEnabled(false);
+        }
+
+        try {
+            queryStat = new QueryStatImpl();
+            register(new QueryStatManager(queryStat), new ObjectName(
+                    QueryStatManagerMBean.NAME));
+            log.debug("JMX Registry - registered QueryStats.");
+
+        } catch (Exception e) {
+            log.error("JMX Registry - Unable to register QueryStats.", e);
+            queryStat.setEnabled(false);
         }
     }
 
@@ -74,9 +93,10 @@ public class JmxRegistryImpl implements JmxRegistry {
             return;
         }
 
-        for (ObjectName o : registry) {
+        List<ObjectName> registryCopy = new ArrayList<ObjectName>(registry);
+        for (ObjectName o : registryCopy) {
             try {
-                server.unregisterMBean(o);
+                unregister(o);
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -94,6 +114,9 @@ public class JmxRegistryImpl implements JmxRegistry {
      */
     public void register(JackrabbitBaseMBean bean, ObjectName name)
             throws Exception {
+        if (server == null || server.isRegistered(name)) {
+            return;
+        }
         this.server.registerMBean(bean, name);
         this.registry.add(name);
     }
@@ -113,7 +136,22 @@ public class JmxRegistryImpl implements JmxRegistry {
         server.unregisterMBean(name);
     }
 
-    public QueryStatManager getQueryStatManager() {
-        return queryStatManager;
+    /*
+     * (non-Javadoc)
+     * 
+     * @see org.apache.jackrabbit.core.jmx.JmxRegistry#getCoreStat()
+     */
+    public CoreStat getCoreStat() {
+        return coreStat;
     }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see org.apache.jackrabbit.core.jmx.JmxRegistry#getQueryStatManager()
+     */
+    public QueryStat getQueryStat() {
+        return queryStat;
+    }
+
 }

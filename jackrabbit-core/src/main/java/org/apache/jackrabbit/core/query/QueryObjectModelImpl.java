@@ -32,8 +32,6 @@ import javax.jcr.query.qom.QueryObjectModel;
 import javax.jcr.query.qom.Source;
 
 import org.apache.jackrabbit.commons.query.QueryObjectModelBuilderRegistry;
-import org.apache.jackrabbit.core.jmx.JmxRegistryUtils;
-import org.apache.jackrabbit.core.jmx.query.QueryStatManager;
 import org.apache.jackrabbit.core.query.lucene.LuceneQueryFactory;
 import org.apache.jackrabbit.core.query.lucene.SearchIndex;
 import org.apache.jackrabbit.core.query.lucene.join.QueryEngine;
@@ -126,11 +124,9 @@ public class QueryObjectModelImpl extends QueryImpl implements QueryObjectModel 
                 getConstraint(), getOrderings(), offset, limit);
         time = System.currentTimeMillis() - time;
 
-        QueryStatManager qsm = sessionContext.getRepository().getJmxRegistry()
-        .getQueryStatManager();
-        if (qsm != null) {
-            qsm.logQuery(JmxRegistryUtils.buildQueryStat(this, time));
-        }
+        sessionContext.getRepositoryContext().getJmxRegistry().getQueryStat()
+                .logQuery(language, statement, time);
+        
         if (log.isDebugEnabled()) {
             NumberFormat format = NumberFormat.getNumberInstance();
             format.setMinimumFractionDigits(2);

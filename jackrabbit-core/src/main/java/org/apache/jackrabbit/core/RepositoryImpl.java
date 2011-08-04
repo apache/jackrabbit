@@ -59,6 +59,7 @@ import org.apache.jackrabbit.api.JackrabbitRepository;
 import org.apache.jackrabbit.api.management.RepositoryManager;
 import org.apache.jackrabbit.api.security.authentication.token.TokenCredentials;
 import org.apache.jackrabbit.commons.AbstractRepository;
+import org.apache.jackrabbit.core.cache.CacheManager;
 import org.apache.jackrabbit.core.cluster.ClusterContext;
 import org.apache.jackrabbit.core.cluster.ClusterException;
 import org.apache.jackrabbit.core.cluster.ClusterNode;
@@ -98,10 +99,9 @@ import org.apache.jackrabbit.core.retention.RetentionRegistry;
 import org.apache.jackrabbit.core.retention.RetentionRegistryImpl;
 import org.apache.jackrabbit.core.security.JackrabbitSecurityManager;
 import org.apache.jackrabbit.core.security.authentication.AuthContext;
-import org.apache.jackrabbit.core.security.authorization.PrivilegeRegistry;
 import org.apache.jackrabbit.core.security.authentication.token.TokenBasedAuthentication;
+import org.apache.jackrabbit.core.security.authorization.PrivilegeRegistry;
 import org.apache.jackrabbit.core.security.simple.SimpleSecurityManager;
-import org.apache.jackrabbit.core.cache.CacheManager;
 import org.apache.jackrabbit.core.state.ChangeLog;
 import org.apache.jackrabbit.core.state.ISMLocking;
 import org.apache.jackrabbit.core.state.ItemStateException;
@@ -468,7 +468,7 @@ public class RepositoryImpl extends AbstractRepository
         return cacheMgr;
     }
 
-    public JmxRegistry getJmxRegistry(){
+    public JmxRegistry getJmxRegistry() {
         return jmxRegistry;
     }
 
@@ -1013,6 +1013,7 @@ public class RepositoryImpl extends AbstractRepository
         synchronized (activeSessions) {
             session.addListener(this);
             activeSessions.put(session, session);
+            jmxRegistry.getCoreStat().sessionCreated();
         }
     }
 
@@ -1467,6 +1468,7 @@ public class RepositoryImpl extends AbstractRepository
 
     protected void initJmxRegistry(){
         this.jmxRegistry.start();
+        this.context.setJmxRegistry(jmxRegistry);
     }
 
     //-----------------------------------------------------------< Repository >
@@ -1603,6 +1605,7 @@ public class RepositoryImpl extends AbstractRepository
         synchronized (activeSessions) {
             // remove session from active sessions
             activeSessions.remove(session);
+            jmxRegistry.getCoreStat().sessionLoggedOut();
         }
     }
 

@@ -16,33 +16,20 @@
  */
 package org.apache.jackrabbit.core.jmx;
 
-import org.apache.jackrabbit.core.jmx.query.QueryStat;
-import org.apache.jackrabbit.core.query.QueryImpl;
+import org.apache.jackrabbit.core.RepositoryImpl;
+import org.apache.jackrabbit.test.AbstractJCRTest;
 
 /**
- * Utilities related to JMX
- * 
+ * Performs various JMX test cases.
  */
-public class JmxRegistryUtils {
+public abstract class AbstractJmxTest extends AbstractJCRTest {
 
-    /**
-     * private constructor
-     */
-    private JmxRegistryUtils() {
-        //
+    protected JmxRegistry jmxRegistry;
+
+    protected void setUp() throws Exception {
+        super.setUp();
+
+        RepositoryImpl r = (RepositoryImpl) superuser.getRepository();
+        jmxRegistry = r.getJmxRegistry();
     }
-
-    /**
-     * Transforms a Query into a QueryStat
-     * 
-     * @param q
-     *            the query
-     * @param duration
-     *            duration of the query
-     * @return the stat object
-     */
-    public static QueryStat buildQueryStat(QueryImpl q, long duration) {
-        return new QueryStat(q.getLanguage(), q.getStatement(), duration);
-    }
-
 }
