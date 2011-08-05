@@ -66,20 +66,6 @@ public abstract class SimpleWebdavServlet extends AbstractWebdavServlet {
     public static final String INIT_PARAM_RESOURCE_PATH_PREFIX = "resource-path-prefix";
 
     /**
-     * Name of the optional init parameter that defines the value of the
-     * 'WWW-Authenticate' header.<p/>
-     * If the parameter is omitted the default value
-     * {@link #DEFAULT_AUTHENTICATE_HEADER "Basic Realm=Jackrabbit Webdav Server"}
-     * is used.
-     *
-     * @see #getAuthenticateHeaderValue()
-     */
-    public static final String INIT_PARAM_AUTHENTICATE_HEADER = "authenticate-header";
-
-    /** the 'missing-auth-mapping' init parameter */
-    public final static String INIT_PARAM_MISSING_AUTH_MAPPING = "missing-auth-mapping";
-
-    /**
      * Name of the init parameter that specify a separate configuration used
      * for filtering the resources displayed.
      */
@@ -103,11 +89,6 @@ public abstract class SimpleWebdavServlet extends AbstractWebdavServlet {
      * the resource path prefix
      */
     private String resourcePathPrefix;
-
-    /**
-     * Header value as specified in the {@link #INIT_PARAM_AUTHENTICATE_HEADER} parameter.
-     */
-    private String authenticate_header;
 
     /**
      * Map used to remember any webdav lock created without being reflected
@@ -161,12 +142,6 @@ public abstract class SimpleWebdavServlet extends AbstractWebdavServlet {
         }
         getServletContext().setAttribute(CTX_ATTR_RESOURCE_PATH_PREFIX, resourcePathPrefix);
         log.info(INIT_PARAM_RESOURCE_PATH_PREFIX + " = '" + resourcePathPrefix + "'");
-
-        authenticate_header = getInitParameter(INIT_PARAM_AUTHENTICATE_HEADER);
-        if (authenticate_header == null) {
-            authenticate_header = DEFAULT_AUTHENTICATE_HEADER;
-        }
-        log.info("WWW-Authenticate header = '" + authenticate_header + "'");
 
         config = new ResourceConfig(getDetector());
         String configParam = getInitParameter(INIT_PARAM_RESOURCE_CONFIG);
@@ -384,20 +359,6 @@ public abstract class SimpleWebdavServlet extends AbstractWebdavServlet {
     @Override
     public synchronized void setDavSessionProvider(DavSessionProvider sessionProvider) {
         this.davSessionProvider = sessionProvider;
-    }
-
-    /**
-     * Returns the header value retrieved from the {@link #INIT_PARAM_AUTHENTICATE_HEADER}
-     * init parameter. If the parameter is missing, the value defaults to
-     * {@link #DEFAULT_AUTHENTICATE_HEADER}.
-     *
-     * @return the header value retrieved from the corresponding init parameter
-     * or {@link #DEFAULT_AUTHENTICATE_HEADER}.
-     * @see AbstractWebdavServlet#getAuthenticateHeaderValue()
-     */
-    @Override
-    public String getAuthenticateHeaderValue() {
-        return authenticate_header;
     }
 
     /**

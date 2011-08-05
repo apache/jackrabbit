@@ -62,6 +62,7 @@ import org.apache.jackrabbit.webdav.security.AclProperty;
 import org.apache.jackrabbit.webdav.security.AclResource;
 import org.apache.jackrabbit.webdav.transaction.TransactionInfo;
 import org.apache.jackrabbit.webdav.transaction.TransactionResource;
+import org.apache.jackrabbit.webdav.util.CSRFUtil;
 import org.apache.jackrabbit.webdav.version.ActivityResource;
 import org.apache.jackrabbit.webdav.version.DeltaVConstants;
 import org.apache.jackrabbit.webdav.version.DeltaVResource;
@@ -101,6 +102,20 @@ abstract public class AbstractWebdavServlet extends HttpServlet implements DavCo
      */
     private static Logger log = LoggerFactory.getLogger(AbstractWebdavServlet.class);
 
+    /** the 'missing-auth-mapping' init parameter */
+    public final static String INIT_PARAM_MISSING_AUTH_MAPPING = "missing-auth-mapping";
+
+    /**
+     * Name of the optional init parameter that defines the value of the
+     * 'WWW-Authenticate' header.<p/>
+     * If the parameter is omitted the default value
+     * {@link #DEFAULT_AUTHENTICATE_HEADER "Basic Realm=Jackrabbit Webdav Server"}
+     * is used.
+     *
+     * @see #getAuthenticateHeaderValue()
+     */
+    public static final String INIT_PARAM_AUTHENTICATE_HEADER = "authenticate-header";
+
     /**
      * Default value for the 'WWW-Authenticate' header, that is set, if request
      * results in a {@link DavServletResponse#SC_UNAUTHORIZED 401 (Unauthorized)}
@@ -109,6 +124,43 @@ abstract public class AbstractWebdavServlet extends HttpServlet implements DavCo
      * @see #getAuthenticateHeaderValue()
      */
     public static final String DEFAULT_AUTHENTICATE_HEADER = "Basic realm=\"Jackrabbit Webdav Server\"";
+
+    /**
+     * Name of the parameter that specifies the configuration of the CSRF protection.
+     * May contain a comma-separated list of allowed referrer hosts.
+     * If the parameter is omitted or left empty the behaviour is to only allow requests which have an empty referrer
+     * or a referrer host equal to the server host.
+     * If the parameter is set to 'disabled' no referrer checks will be performed at all.
+     */
+    public static final String INIT_PARAM_CSRF_PROTECTION = "csrf-protection";
+
+
+    /**
+     * Header value as specified in the {@link #INIT_PARAM_AUTHENTICATE_HEADER} parameter.
+     */
+    private String authenticate_header;
+
+    /**
+     * CSRF protection utility
+     */
+    private CSRFUtil csrfUtil;
+
+    @Override
+    public void init() throws ServletException {
+        super.init();
+
+        // authenticate header
+        authenticate_header = getInitParameter(INIT_PARAM_AUTHENTICATE_HEADER);
+        if (authenticate_header == null) {
+            authenticate_header = DEFAULT_AUTHENTICATE_HEADER;
+        }
+        log.info(INIT_PARAM_AUTHENTICATE_HEADER + " = " + authenticate_header);
+        
+        // read csrf protection params
+        String csrfParam = getInitParameter(INIT_PARAM_CSRF_PROTECTION);
+        csrfUtil = new CSRFUtil(csrfParam);
+        log.info(INIT_PARAM_CSRF_PROTECTION + " = " + csrfParam);
+    }
 
     /**
      * Checks if the precondition for this request and resource is valid.
@@ -163,11 +215,15 @@ abstract public class AbstractWebdavServlet extends HttpServlet implements DavCo
 
     /**
      * Returns the value of the 'WWW-Authenticate' header, that is returned in
-     * case of 401 error.
+     * case of 401 error: the value is retrireved from the corresponding init
+     * param or defaults to {@link #DEFAULT_AUTHENTICATE_HEADER}.
      *
-     * @return value of the 'WWW-Authenticate' header
+     * @return corresponding init parameter or {@link #DEFAULT_AUTHENTICATE_HEADER}.
+     * @see #INIT_PARAM_AUTHENTICATE_HEADER
      */
-    abstract public String getAuthenticateHeaderValue();
+    public String getAuthenticateHeaderValue() {
+        return authenticate_header;
+    }
 
     /**
      * Service the given request.
@@ -192,10 +248,16 @@ abstract public class AbstractWebdavServlet extends HttpServlet implements DavCo
                 return;
             }
 
+            // perform referrer host checks if CSRF protection is enabled
+            if (!csrfUtil.isValidRequest(webdavRequest)) {
+                webdavResponse.sendError(HttpServletResponse.SC_FORBIDDEN);
+                return;
+            }
+
             // check matching if=header for lock-token relevant operations
             DavResource resource = getResourceFactory().createResource(webdavRequest.getRequestLocator(), webdavRequest, webdavResponse);
             if (!isPreconditionValid(webdavRequest, resource)) {
-                webdavResponse.sendError(DavServletResponse.SC_PRECONDITION_FAILED);
+                webdavResponse.sendError(HttpServletResponse.SC_PRECONDITION_FAILED);
                 return;
             }
             if (!execute(webdavRequest, webdavResponse, methodCode, resource)) {

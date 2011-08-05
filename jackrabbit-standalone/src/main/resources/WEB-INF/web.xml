@@ -44,7 +44,6 @@
             The webdav servlet that connects HTTP request to the repository.
         </description>
         <servlet-class>org.apache.jackrabbit.j2ee.SimpleWebdavServlet</servlet-class>
-
         <init-param>
             <param-name>resource-path-prefix</param-name>
             <param-value>/repository</param-value>
@@ -59,6 +58,22 @@
                 Defines various dav-resource configuration parameters.
             </description>
         </init-param>
+        <!--
+            Optional parameter to define the behaviour of the referrer-based CSRF protection
+        -->
+        <!--
+        <init-param>
+            <param-name>csrf-protection</param-name>
+            <param-value>host1.domain.com,host2.domain.org</param-value>
+            <description>
+                Defines the behaviour of the referrer based CSRF protection
+                1) If omitted or left empty the (default) behaviour is to allow only requests with
+                   an empty referrer header or a referrer host equal to the server host
+                2) May also contain a comma separated list of additional allowed referrer hosts
+                3) If set to 'disabled' no referrer checking will be performed at all
+            </description>
+        </init-param>
+        -->
         <load-on-startup>3</load-on-startup>
     </servlet>
 
@@ -126,6 +141,22 @@
             <param-name>batchread-config</param-name>
             <param-value>/WEB-INF/batchread.properties</param-value>
             <description>JcrRemotingServlet: Optional mapping from node type names to default depth.</description>
+        </init-param>
+        -->
+        <!--
+            Optional parameter to define the behaviour of the referrer-based CSRF protection
+        -->
+        <!--
+        <init-param>
+            <param-name>csrf-protection</param-name>
+            <param-value>host1.domain.com,host2.domain.org</param-value>
+            <description>
+                Defines the behaviour of the referrer based CSRF protection
+                1) If omitted or left empty the (default) behaviour is to allow only requests with
+                   an empty referrer header or a referrer host equal to the server host
+                2) May also contain a comma separated list of additional allowed referrer hosts
+                3) If set to 'disabled' no referrer checking will be performed at all
+            </description>
         </init-param>
         -->
         <load-on-startup>5</load-on-startup>
