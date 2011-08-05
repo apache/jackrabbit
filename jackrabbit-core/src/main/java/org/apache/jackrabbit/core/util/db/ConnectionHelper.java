@@ -117,7 +117,7 @@ public class ConnectionHelper {
         String legalChars = "ABCDEFGHIJKLMNOPQRSTUVWXZY0123456789_";
         legalChars += getExtraNameCharacters();
         String id = identifier.toUpperCase();
-        StringBuffer escaped = new StringBuffer();
+        StringBuilder escaped = new StringBuilder();
         for (int i = 0; i < id.length(); i++) {
             char c = id.charAt(i);
             if (legalChars.indexOf(c) == -1) {
@@ -136,7 +136,7 @@ public class ConnectionHelper {
      * @param escaped the escaped db identifier
      * @param c the character to replace
      */
-    protected void replaceCharacter(StringBuffer escaped, char c) {
+    protected void replaceCharacter(StringBuilder escaped, char c) {
         escaped.append("_x");
         String hex = Integer.toHexString(c);
         escaped.append("0000".toCharArray(), 0, 4 - hex.length());

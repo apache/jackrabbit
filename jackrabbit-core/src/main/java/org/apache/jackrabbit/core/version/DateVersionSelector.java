@@ -164,7 +164,7 @@ public class DateVersionSelector implements VersionSelector {
      * @return debug information
      */
     public String toString() {
-        StringBuffer ret = new StringBuffer();
+        StringBuilder ret = new StringBuilder();
         ret.append("DateVersionSelector(");
         ret.append("date=");
         ret.append(date);

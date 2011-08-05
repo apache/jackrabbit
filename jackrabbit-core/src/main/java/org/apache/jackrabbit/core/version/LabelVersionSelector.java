@@ -96,7 +96,7 @@ public class LabelVersionSelector implements VersionSelector {
      * @return debug information
      */
     public String toString() {
-        StringBuffer ret = new StringBuffer();
+        StringBuilder ret = new StringBuilder();
         ret.append("LabelVersionSelector(");
         ret.append("label=");
         ret.append(label);

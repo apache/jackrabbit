@@ -473,7 +473,7 @@ public class BitSetENTCacheImpl implements EffectiveNodeTypeCache {
          * {@inheritDoc}
          */
         public String toString() {
-            StringBuffer buf = new StringBuffer("w=");
+            StringBuilder buf = new StringBuilder("w=");
             buf.append(names.length);
             int i = nextSetBit(0);
             while (i >= 0) {

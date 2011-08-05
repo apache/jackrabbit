@@ -86,7 +86,7 @@ public final class FileSystemPathUtil {
      */
     private static String escape(String s, BitSet safeChars) {
         byte[] bytes = s.getBytes();
-        StringBuffer out = new StringBuffer(bytes.length);
+        StringBuilder out = new StringBuilder(bytes.length);
         for (int i = 0; i < bytes.length; i++) {
             int c = bytes[i] & 0xff;
             if (safeChars.get(c) && c != ESCAPE_CHAR) {

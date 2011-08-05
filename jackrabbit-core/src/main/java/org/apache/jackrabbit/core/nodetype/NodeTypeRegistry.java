@@ -293,7 +293,7 @@ public class NodeTypeRegistry implements NodeTypeEventListener {
                 Set<Name> dependents = getDependentNodeTypes(ntName);
                 dependents.removeAll(ntNames);
                 if (dependents.size() > 0) {
-                    StringBuffer msg = new StringBuffer();
+                    StringBuilder msg = new StringBuilder();
                     msg.append(ntName).append(" can not be removed because the following node types depend on it: ");
                     for (Name dependent : dependents) {
                         msg.append(dependent);
@@ -633,7 +633,7 @@ public class NodeTypeRegistry implements NodeTypeEventListener {
                 String type = aPd.getRequiredType() == 0 ? "null" : PropertyType.nameFromValue(aPd.getRequiredType());
                 builder.append("\t\tRequiredType\t" + type + "\n");
                 QValueConstraint[] vca = aPd.getValueConstraints();
-                StringBuffer constraints = new StringBuffer();
+                StringBuilder constraints = new StringBuilder();
                 if (vca == null) {
                     constraints.append("<null>");
                 } else {
@@ -646,7 +646,7 @@ public class NodeTypeRegistry implements NodeTypeEventListener {
                 }
                 builder.append("\t\tValueConstraints\t" + constraints + "\n");
                 QValue[] defVals = aPd.getDefaultValues();
-                StringBuffer defaultValues = new StringBuffer();
+                StringBuilder defaultValues = new StringBuilder();
                 if (defVals == null) {
                     defaultValues.append("<null>");
                 } else {
@@ -1131,7 +1131,7 @@ public class NodeTypeRegistry implements NodeTypeEventListener {
         for (Name nt : supertypes) {
             int pos = inheritanceChain.lastIndexOf(nt);
             if (pos >= 0) {
-                StringBuffer buf = new StringBuffer();
+                StringBuilder buf = new StringBuilder();
                 for (int j = 0; j < inheritanceChain.size(); j++) {
                     if (j == pos) {
                         buf.append("--> ");
@@ -1172,7 +1172,7 @@ public class NodeTypeRegistry implements NodeTypeEventListener {
         for (Name nt : childNodeNTs) {
             int pos = definingParentNTs.lastIndexOf(nt);
             if (pos >= 0) {
-                StringBuffer buf = new StringBuffer();
+                StringBuilder buf = new StringBuilder();
                 for (int j = 0; j < definingParentNTs.size(); j++) {
                     if (j == pos) {
                         buf.append("--> ");

@@ -53,7 +53,7 @@ public class FileSystemBLOBStore implements ResourceBasedBLOBStore {
      */
     public String createId(PropertyId id, int index) {
         // the blobId is an absolute file system path
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         sb.append(FileSystem.SEPARATOR_CHAR);
         char[] chars = id.getParentId().toString().toCharArray();
         int cnt = 0;

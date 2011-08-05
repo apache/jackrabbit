@@ -990,7 +990,7 @@ public abstract class DatabasePersistenceManager extends AbstractPersistenceMana
         legalChars += "ABCDEFGHIJKLMNOPQRSTUVWXZY0123456789_";
 
         String prefix = schemaObjectPrefix.toUpperCase();
-        StringBuffer escaped = new StringBuffer();
+        StringBuilder escaped = new StringBuilder();
         for (int i = 0; i < prefix.length(); i++) {
             char c = prefix.charAt(i);
             if (legalChars.indexOf(c) == -1) {
@@ -1230,7 +1230,7 @@ public abstract class DatabasePersistenceManager extends AbstractPersistenceMana
          */
         public String createId(PropertyId id, int index) {
             // the blobId is a simple string concatenation of id plus index
-            StringBuffer sb = new StringBuffer();
+            StringBuilder sb = new StringBuilder();
             sb.append(id.toString());
             sb.append('[');
             sb.append(index);

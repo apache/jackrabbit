@@ -277,7 +277,7 @@ public abstract class LockInfo {
      * {@inheritDoc}
      */
     public String toString() {
-        StringBuffer buffer = new StringBuffer();
+        StringBuilder buffer = new StringBuilder();
         buffer.append('(');
         if (deep) {
             buffer.append("deep ");

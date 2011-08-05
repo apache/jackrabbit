@@ -1348,7 +1348,7 @@ public class BundleDbPersistenceManager
          * {@inheritDoc}
          */
         public String createId(PropertyId id, int index) {
-            StringBuffer buf = new StringBuffer();
+            StringBuilder buf = new StringBuilder();
             buf.append(id.getParentId().toString());
             buf.append('.');
             buf.append(getNsIndex().stringToIndex(id.getName().getNamespaceURI()));

@@ -142,7 +142,7 @@ class BufferedStringValue implements TextValue {
             if (tmpFile.length() > Integer.MAX_VALUE) {
                 throw new IOException("size of value is too big, use reader()");
             }
-            StringBuffer sb = new StringBuffer((int) length);
+            StringBuilder sb = new StringBuilder((int) length);
             char[] chunk = new char[0x2000];
             Reader reader = openReader();
             try {

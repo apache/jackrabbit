@@ -71,7 +71,7 @@ public final class ErrorHandling {
      * @return the string representation.
      */
     public String toString() {
-        StringBuffer ret = new StringBuffer("|");
+        StringBuilder ret = new StringBuilder("|");
         for (String flag : flags) {
             ret.append(flag);
         }

@@ -602,7 +602,7 @@ abstract public class VersionManagerImplRestore extends VersionManagerImplBase {
                         log.error("Error while restoring node: " + e);
                         log.error("  child path: " + restoredChild);
                         log.error("  selected version: " + v.getName());
-                        StringBuffer avail = new StringBuffer();
+                        StringBuilder avail = new StringBuilder();
                         for (Name name: vh.getVersionNames()) {
                             avail.append(name);
                             avail.append(", ");
