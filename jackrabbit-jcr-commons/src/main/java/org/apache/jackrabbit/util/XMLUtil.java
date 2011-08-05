@@ -45,7 +45,7 @@ public class XMLUtil {
      * @see #isText(org.w3c.dom.Node)
      */
     public static String getText(Element element) {
-        StringBuffer content = new StringBuffer();
+        StringBuilder content = new StringBuilder();
         if (element != null) {
             NodeList nodes = element.getChildNodes();
             for (int i = 0; i < nodes.getLength(); i++) {

@@ -76,7 +76,7 @@ public class OracleConnectionHelper extends ConnectionHelper {
      * {@inheritDoc}
      */
     @Override
-    protected final void replaceCharacter(StringBuffer escaped, char c) {
+    protected final void replaceCharacter(StringBuilder escaped, char c) {
         escaped.append("_");
     }
 }

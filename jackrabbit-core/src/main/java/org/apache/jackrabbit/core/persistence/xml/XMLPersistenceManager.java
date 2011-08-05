@@ -167,7 +167,7 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
      * @return node folder path
      */
     private String buildNodeFolderPath(NodeId id) {
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         char[] chars = id.toString().toCharArray();
         int cnt = 0;
         for (int i = 0; i < nodePathTemplate.length(); i++) {

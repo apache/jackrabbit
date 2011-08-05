@@ -227,7 +227,7 @@ public final class EventImpl implements JackrabbitEvent, Event {
      */
     public String toString() {
         if (stringValue == null) {
-            StringBuffer sb = new StringBuffer();
+            StringBuilder sb = new StringBuilder();
             sb.append("Event: Path: ");
             try {
                 sb.append(getPath());

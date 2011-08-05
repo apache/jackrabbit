@@ -217,7 +217,7 @@ public final class NodeTypeWriter {
             List ops = Arrays.asList(qops);
             List defaultOps = Arrays.asList(Operator.getAllQueryOperators());
             if (!ops.containsAll(defaultOps)) {
-                StringBuffer sb = new StringBuffer();
+                StringBuilder sb = new StringBuilder();
                 for (int i = 0; i < qops.length; i++) {
                     if (i > 0) {
                         sb.append(' ');

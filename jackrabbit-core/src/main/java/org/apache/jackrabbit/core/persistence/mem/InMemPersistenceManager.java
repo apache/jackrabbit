@@ -149,7 +149,7 @@ public class InMemPersistenceManager extends AbstractPersistenceManager {
     }
 
     protected static String buildBlobFilePath(String parentUUID, Name propName, int index) {
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         char[] chars = parentUUID.toCharArray();
         int cnt = 0;
         for (char ch : chars) {

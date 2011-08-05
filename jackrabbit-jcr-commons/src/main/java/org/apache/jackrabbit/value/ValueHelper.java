@@ -806,7 +806,7 @@ public class ValueHelper {
         } else {
             char[] chunk = new char[8192];
             int read;
-            StringBuffer buf = new StringBuffer();
+            StringBuilder buf = new StringBuilder();
             while ((read = reader.read(chunk)) > -1) {
                 buf.append(chunk, 0, read);
             }

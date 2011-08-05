@@ -84,7 +84,7 @@ public class ObjectPersistenceManager extends AbstractPersistenceManager {
     }
 
     private static String buildNodeFolderPath(NodeId id) {
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         char[] chars = id.toString().toCharArray();
         int cnt = 0;
         for (int i = 0; i < chars.length; i++) {

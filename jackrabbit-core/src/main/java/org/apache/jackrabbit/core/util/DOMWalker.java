@@ -117,7 +117,7 @@ public final class DOMWalker {
      * @return text content
      */
     public String getContent() {
-        StringBuffer content = new StringBuffer();
+        StringBuilder content = new StringBuilder();
 
         NodeList nodes = current.getChildNodes();
         for (int i = 0; i < nodes.getLength(); i++) {

@@ -222,7 +222,7 @@ public final class ISO8601 {
          * note that we cannot use java.text.SimpleDateFormat for
          * formatting because it can't handle years <= 0 and TZD's
          */
-        StringBuffer buf = new StringBuffer();
+        StringBuilder buf = new StringBuilder();
         // year ([-]YYYY)
         appendZeroPaddedInt(buf, getYear(cal), 4);
         buf.append('-');
@@ -298,7 +298,7 @@ public final class ISO8601 {
      * @param n number to append
      * @param precision number of digits to append
      */
-    private static void appendZeroPaddedInt(StringBuffer buf, int n, int precision) {
+    private static void appendZeroPaddedInt(StringBuilder buf, int n, int precision) {
         if (n < 0) {
             buf.append('-');
             n = -n;

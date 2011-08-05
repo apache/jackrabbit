@@ -761,7 +761,7 @@ public class EventState {
      */
     public String toString() {
         if (stringValue == null) {
-            StringBuffer sb = new StringBuffer();
+            StringBuilder sb = new StringBuilder();
             sb.append("EventState: ").append(valueOf(type));
             sb.append(", Parent: ").append(parentId);
             sb.append(", Child: ").append(childRelPath);

@@ -374,7 +374,7 @@ public class ChangeLog {
      * @return a string representation of this change log
      */
     public String toString() {
-        StringBuffer buf = new StringBuffer();
+        StringBuilder buf = new StringBuilder();
         buf.append("{");
         buf.append("#addedStates=").append(addedStates.size());
         buf.append(", #modifiedStates=").append(modifiedStates.size());
