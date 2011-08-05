@@ -147,7 +147,7 @@
           <description>
             If this is set, the RepositoryAccessServlet expects a Repository in the ServletContext 
             attribute having this name. This allows servlets of this module to be used with repositories
-            intialized by the jackrabbit-jcr-servlet module utilities.
+            initialized by the jackrabbit-jcr-servlet module utilities.
           </description>
         </init-param>
          -->
@@ -210,7 +210,7 @@
              <description>
                  Defines how a missing authorization header should be handled.
                  1) If this init-param is missing, a 401 response is generated.
-                    This is suiteable for clients (eg. webdav clients) for which
+                    This is suitable for clients (eg. webdav clients) for which
                     sending a proper authorization header is not possible if the
                     server never sent a 401.
                  2) If this init-param is present with an empty value,
@@ -237,7 +237,7 @@
         -->
         <!--
             Parameter used to configure behaviour of webdav resources such as:
-            - destinction between collections and non-collections
+            - distinction between collections and non-collections
             - resource filtering
         -->
         <init-param>
@@ -247,6 +247,22 @@
                 Defines various dav-resource configuration parameters.
             </description>
         </init-param>
+       <!--
+            Optional parameter to define the behaviour of the referrer-based CSRF protection
+        -->
+        <!--
+        <init-param>
+            <param-name>csrf-protection</param-name>
+            <param-value>host1.domain.com,host2.domain.org</param-value>
+            <description>
+                Defines the behaviour of the referrer based CSRF protection
+                1) If omitted or left empty the (default) behaviour is to allow only requests with
+                   an empty referrer header or a referrer host equal to the server host
+                2) May also contain a comma separated list of additional allowed referrer hosts
+                3) If set to 'disabled' no referrer checking will be performed at all
+            </description>
+        </init-param>
+        -->
         <load-on-startup>4</load-on-startup>
     </servlet>
 
@@ -265,7 +281,7 @@
             <description>
                 Defines how a missing authorization header should be handled.
                  1) If this init-param is missing, a 401 response is generated.
-                    This is suiteable for clients (eg. webdav clients) for which
+                    This is suitable for clients (eg. webdav clients) for which
                     sending a proper authorization header is not possible if the
                     server never sent a 401.
                  2) If this init-param is present with an empty value,
@@ -316,7 +332,22 @@
             <param-value>/WEB-INF/batchread.properties</param-value>
             <description>JcrRemotingServlet: Optional mapping from node type names to default depth.</description>
         </init-param>        
-        <load-on-startup>5</load-on-startup>
+        <!--
+            Optional parameter to define the behaviour of the referrer-based CSRF protection
+        -->
+        <!--
+        <init-param>
+            <param-name>csrf-protection</param-name>
+            <param-value>host1.domain.com,host2.domain.org</param-value>
+            <description>
+                Defines the behaviour of the referrer based CSRF protection
+                1) If omitted or left empty the (default) behaviour is to allow only requests with
+                   an empty referrer header or a referrer host equal to the server host
+                2) May also contain a comma separated list of additional allowed referrer hosts
+                3) If set to 'disabled' no referrer checking will be performed at all
+            </description>
+        </init-param>
+        -->       <load-on-startup>5</load-on-startup>
     </servlet>
 
     <!-- ====================================================================== -->

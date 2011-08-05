@@ -60,20 +60,6 @@ public abstract class JCRWebdavServerServlet extends AbstractWebdavServlet {
     public static final String INIT_PARAM_RESOURCE_PATH_PREFIX = "resource-path-prefix";
 
     /**
-     * Name of the optional init parameter that defines the value of the
-     * 'WWW-Authenticate' header.<p/>
-     * If the parameter is omitted the default value
-     * {@link #DEFAULT_AUTHENTICATE_HEADER "Basic Realm=Jackrabbit Webdav Server"}
-     * is used.
-     *
-     * @see #getAuthenticateHeaderValue()
-     */
-    public static final String INIT_PARAM_AUTHENTICATE_HEADER = "authenticate-header";
-
-    /** the 'missing-auth-mapping' init parameter */
-    public final static String INIT_PARAM_MISSING_AUTH_MAPPING = "missing-auth-mapping";
-
-    /**
      * Servlet context attribute used to store the path prefix instead of
      * having a static field with this servlet. The latter causes problems
      * when running multiple
@@ -81,7 +67,6 @@ public abstract class JCRWebdavServerServlet extends AbstractWebdavServlet {
     public static final String CTX_ATTR_RESOURCE_PATH_PREFIX = "jackrabbit.webdav.jcr.resourcepath";
 
     private String pathPrefix;
-    private String authenticate_header;
 
     private JCRWebdavServer server;
     private DavResourceFactory resourceFactory;
@@ -106,12 +91,6 @@ public abstract class JCRWebdavServerServlet extends AbstractWebdavServlet {
         pathPrefix = getInitParameter(INIT_PARAM_RESOURCE_PATH_PREFIX);
         getServletContext().setAttribute(CTX_ATTR_RESOURCE_PATH_PREFIX, pathPrefix);
         log.debug(INIT_PARAM_RESOURCE_PATH_PREFIX + " = " + pathPrefix);
-
-        authenticate_header = getInitParameter(INIT_PARAM_AUTHENTICATE_HEADER);
-        if (authenticate_header == null) {
-            authenticate_header = DEFAULT_AUTHENTICATE_HEADER;
-        }
-        log.debug(INIT_PARAM_AUTHENTICATE_HEADER + " = " + authenticate_header);
 
         txMgr = new TxLockManagerImpl();
         subscriptionMgr = new SubscriptionManagerImpl();
@@ -229,18 +208,6 @@ public abstract class JCRWebdavServerServlet extends AbstractWebdavServlet {
     @Override
     public void setResourceFactory(DavResourceFactory resourceFactory) {
         this.resourceFactory = resourceFactory;
-    }
-
-    /**
-     * Returns the init param of the servlet configuration or
-     * {@link #DEFAULT_AUTHENTICATE_HEADER} as default value.
-     *
-     * @return corresponding init parameter or {@link #DEFAULT_AUTHENTICATE_HEADER}.
-     * @see #INIT_PARAM_AUTHENTICATE_HEADER
-     */
-    @Override
-    public String getAuthenticateHeaderValue() {
-        return authenticate_header;
     }
 
     /**
