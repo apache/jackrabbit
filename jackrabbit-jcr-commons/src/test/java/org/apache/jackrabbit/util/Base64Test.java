@@ -18,6 +18,7 @@ package org.apache.jackrabbit.util;
 
 import junit.framework.TestCase;
 
+import java.io.IOException;
 import java.io.StringWriter;
 import java.io.ByteArrayOutputStream;
 import java.io.ByteArrayInputStream;
@@ -96,4 +97,27 @@ public class Base64Test extends TestCase {
             assertEquals(ba[i], ba2[i]);
         }
     }
+
+    public void testDecodeOrEncode() throws IOException {
+        assertEquals("", Base64.decodeOrEncode(Base64.decodeOrEncode("")));
+        assertEquals("test", Base64.decodeOrEncode(Base64.decodeOrEncode("test")));
+        assertEquals("{base64}dGVzdA==", Base64.decodeOrEncode("test"));
+        assertEquals("test", Base64.decodeOrEncode("{base64}dGVzdA=="));
+    }
+
+    public void testDecodeIfEncoded() throws IOException {
+        assertEquals(null, Base64.decodeIfEncoded(null));
+        assertEquals("", Base64.decodeIfEncoded(""));
+        assertEquals("", Base64.decodeIfEncoded("{base64}"));
+        assertEquals("test", Base64.decodeIfEncoded("test"));
+        assertEquals("test", Base64.decodeIfEncoded("{base64}dGVzdA=="));
+    }
+
+    public void testStringEncodeDecode() throws IOException {
+        assertEquals("", Base64.decode(Base64.encode("")));
+        assertEquals("test", Base64.decode(Base64.encode("test")));
+        assertEquals("dGVzdA==", Base64.encode("test"));
+        assertEquals("test", Base64.decode("dGVzdA=="));
+    }
+
 }

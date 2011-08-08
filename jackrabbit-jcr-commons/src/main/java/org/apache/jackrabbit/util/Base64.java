@@ -16,12 +16,14 @@
  */
 package org.apache.jackrabbit.util;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Reader;
+import java.io.StringWriter;
 import java.io.Writer;
 import java.io.BufferedWriter;
 
@@ -29,6 +31,7 @@ import java.io.BufferedWriter;
  * <code>Base64</code> provides Base64 encoding/decoding of strings and streams.
  */
 public class Base64 {
+
     // charset used for base64 encoded data (7-bit ASCII)
     private static final String CHARSET = "US-ASCII";
 
@@ -58,6 +61,55 @@ public class Base64 {
      * empty private constructor
      */
     private Base64() {
+    }
+
+    /**
+     * Base64-decodes or -encodes (see {@link #decodeOrEncode(String)}
+     * all the given arguments and prints the results on separate lines
+     * in standard output.
+     *
+     * @since Apache Jackrabbit 2.3
+     * @param args command line arguments to be decoded or encoded
+     */
+    public static void main(String[] args) {
+        for (String arg : args) {
+            System.out.println(decodeOrEncode(arg));
+        }
+    }
+
+    /**
+     * Base64-decodes or -encodes the given string, depending on whether
+     * or not it contains a "{base64}" prefix. If the string gets encoded,
+     * the "{base64}" prefix is added to it.
+     *
+     * @since Apache Jackrabbit 2.3
+     * @param data string to be decoded or encoded
+     * @return decoded or encoded string
+     */
+    public static String decodeOrEncode(String data) {
+        if (data.startsWith("{base64}")) {
+            return decode(data.substring("{base64}".length()));
+        } else {
+            return "{base64}" + encode(data);
+        }
+    }
+
+    /**
+     * Decodes a base64-encoded string marked by a "{base64}" prefix.
+     * If the prefix is not found, then the string is returned as-is.
+     * If the given string is <code>null</code>, then <code>null</code>
+     * is returned.
+     *
+     * @since Apache Jackrabbit 2.3
+     * @param data string to be decoded, can be <code>null</code>
+     * @return the given string, possibly decoded
+     */
+    public static String decodeIfEncoded(String data) {
+        if (data != null && data.startsWith("{base64}")) {
+            return decode(data.substring("{base64}".length()));
+        } else {
+            return data;
+        }
     }
 
     /**
@@ -174,6 +226,47 @@ public class Base64 {
             enc[2] = BASE64CHARS[(i << 2) & 0x3f];
             enc[3] = BASE64PAD;
             writer.write(enc, 0, 4);
+        }
+    }
+
+    /**
+     * Returns the base64 representation of UTF-8 encoded string.
+     *
+     * @since Apache Jackrabbit 2.3
+     * @param data the string to be encoded
+     * @param base64-encoding of the string
+     */
+    public static String encode(String data) {
+        try {
+            StringWriter buffer = new StringWriter();
+            byte[] b = data.getBytes("UTF-8");
+            encode(b, 0, b.length, buffer);
+            return buffer.toString();
+        } catch (IOException e) { // should never happen
+            throw new RuntimeException(
+                    "Unable to encode base64 data: " + data, e);
+        }
+    }
+
+    /**
+     * Decodes a base64-encoded string using the UTF-8 character encoding.
+     * The given string is returned as-is if it doesn't contain a valid
+     * base64 encoding.
+     *
+     * @since Apache Jackrabbit 2.3
+     * @param data the base64-encoded data to be decoded
+     * @return decoded string
+     */
+    public static String decode(String data) {
+        try {
+            ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+            decode(data, buffer);
+            return new String(buffer.toByteArray(), "UTF-8");
+        } catch (IllegalArgumentException e) {
+            return data;
+        } catch (IOException e) { // should never happen
+            throw new RuntimeException(
+                    "Unable to decode base64 data: " + data, e);
         }
     }
 

@@ -32,6 +32,7 @@ import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.commons.dbcp.DelegatingConnection;
 import org.apache.jackrabbit.core.config.DataSourceConfig;
 import org.apache.jackrabbit.core.config.DataSourceConfig.DataSourceDefinition;
+import org.apache.jackrabbit.util.Base64;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -163,7 +164,8 @@ public final class ConnectionFactory {
             sanityCheck();
             DataSource ds = keyToDataSource.get(key);
             if (ds == null) {
-                ds = createDataSource(driver, url, user, password);
+                ds = createDataSource(
+                        driver, url, user, Base64.decodeIfEncoded(password));
                 keyToDataSource.put(key, ds);
             }
             return ds;
