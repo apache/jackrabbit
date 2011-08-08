@@ -42,6 +42,9 @@
         <extensions>true</extensions>
         <configuration>
           <instructions>
+            <Main-Class>
+              org.apache.jackrabbit.util.Base64
+            </Main-Class>
             <Export-Package>
               org.apache.jackrabbit.*;version=${project.version}
             </Export-Package>
