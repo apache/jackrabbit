@@ -47,8 +47,6 @@ public class ImportContextImpl implements ImportContext {
     private InputContext inputCtx;
     private boolean completed;
 
-    private final Detector detector;
-
     private final MediaType type;
 
     /**
@@ -86,7 +84,6 @@ public class ImportContextImpl implements ImportContext {
         if (stream != null && !stream.markSupported()) {
             stream = new BufferedInputStream(stream);
         }
-        this.detector = detector;
         this.type = detector.detect(stream, metadata);
         this.inputFile = IOUtil.getTempFile(stream);
     }
@@ -103,13 +100,6 @@ public class ImportContextImpl implements ImportContext {
      */
     public Item getImportRoot() {
         return importRoot;
-    }
-
-    /**
-     * @see ImportContext#getDetector()
-     */
-    public Detector getDetector() {
-        return detector;
     }
 
     /**
