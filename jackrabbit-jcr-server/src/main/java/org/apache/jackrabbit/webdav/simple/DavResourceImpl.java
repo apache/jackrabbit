@@ -918,7 +918,7 @@ public class DavResourceImpl implements DavResource, BindableResource, JcrConsta
      * @return a new <code>PropertyImportContext</code>.
      */
     protected PropertyImportContext getPropertyImportContext(List<? extends PropEntry> changeList) {
-        return new ProperyImportCtx(changeList);
+        return new PropertyImportCtx(changeList);
     }
 
     /**
@@ -1076,13 +1076,13 @@ public class DavResourceImpl implements DavResource, BindableResource, JcrConsta
         }
     }
 
-    private class ProperyImportCtx implements PropertyImportContext {
+    private class PropertyImportCtx implements PropertyImportContext {
 
         private final IOListener ioListener = new DefaultIOListener(log);
         private final List<? extends PropEntry> changeList;
         private boolean completed;
 
-        private ProperyImportCtx(List<? extends PropEntry> changeList) {
+        private PropertyImportCtx(List<? extends PropEntry> changeList) {
             this.changeList = changeList;
         }
 

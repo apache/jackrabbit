@@ -22,8 +22,6 @@ import javax.jcr.Item;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Property;
-import javax.jcr.PathNotFoundException;
-import javax.jcr.ValueFormatException;
 
 import org.apache.jackrabbit.JcrConstants;
 import org.apache.jackrabbit.webdav.DavCompliance;
@@ -123,7 +121,7 @@ public class DeltaVResourceImpl extends DavResourceImpl implements DeltaVResourc
             Report report = ReportType.getType(reportInfo).createReport(this, reportInfo);
             return report;
         } else {
-            throw new DavException(DavServletResponse.SC_UNPROCESSABLE_ENTITY, "Unkown report "+ reportInfo.getReportName() +"requested.");
+            throw new DavException(DavServletResponse.SC_UNPROCESSABLE_ENTITY, "Unknown report "+ reportInfo.getReportName() +"requested.");
         }
     }
 
