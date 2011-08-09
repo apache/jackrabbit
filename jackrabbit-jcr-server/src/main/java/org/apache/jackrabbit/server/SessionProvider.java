@@ -36,13 +36,13 @@ public interface SessionProvider {
      * @param workspace the workspace name
      * @return the session or null
      * @throws LoginException if the credentials are invalid
-     * @throws ServletException if an error occurrs
+     * @throws ServletException if an error occurs
      */
     public Session getSession(HttpServletRequest request, Repository rep, String workspace)
             throws LoginException, ServletException, RepositoryException;
 
     /**
-     * Informs this provider that the session aquired by a previous
+     * Informs this provider that the session acquired by a previous
      * {@link SessionProvider#getSession} call is no longer needed.
      *
      * @param session

@@ -58,7 +58,7 @@ public class BasicCredentialsProvider implements CredentialsProvider {
      * {@link #defaultHeaderValue} field:<br>
      * <ul>
      * <li> if this field is <code>null</code>, a LoginException is thrown.
-     *      This is suiteable for clients (eg. webdav clients) for with
+     *      This is suitable for clients (eg. webdav clients) for with
      *      sending a proper authorization header is not possible, if the
      *      server never send a 401.
      * <li> if this an empty string, null-credentials are returned, thus

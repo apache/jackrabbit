@@ -32,7 +32,7 @@ public interface CredentialsProvider {
      * @param request
      * @return the credentials or null
      * @throws LoginException if the credentials are invalid
-     * @throws ServletException if an error occurrs
+     * @throws ServletException if an error occurs
      */
     public Credentials getCredentials(HttpServletRequest request)
             throws LoginException, ServletException;
