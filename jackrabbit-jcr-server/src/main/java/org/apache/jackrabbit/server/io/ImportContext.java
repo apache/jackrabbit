@@ -34,7 +34,7 @@ public interface ImportContext extends IOContext {
 
     /**
      * Returns the system id of the resource to be imported. This id depends on
-     * the system the resource is comming from. it can be a filename, a
+     * the system the resource is coming from. it can be a filename, a
      * display name of a webdav resource, an URI, etc.
      *
      * @return the system id of the resource to import
@@ -76,7 +76,7 @@ public interface ImportContext extends IOContext {
     /**
      * Returns the main media type. It should be retrieved from a content type
      * (as present in a http request) or from the systemId. If either value
-     * is indefined <code>null</code> should be returned.
+     * is undefined <code>null</code> should be returned.
      *
      * @return the mimetype of the resource to be imported
      */

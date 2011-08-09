@@ -40,7 +40,7 @@ public interface IOListener {
     public void onEnd(IOHandler handler, IOContext context, boolean success);
 
     /**
-     * An expection occured during import/export within the specified
+     * An exception occurred during import/export within the specified
      * <code>IOHandler</code>.
      *
      * @param ioHandler
