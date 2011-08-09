@@ -28,6 +28,7 @@ import org.apache.jackrabbit.webdav.DavServletResponse;
 import org.apache.jackrabbit.webdav.MultiStatusResponse;
 import org.apache.jackrabbit.webdav.io.InputContext;
 import org.apache.jackrabbit.webdav.io.OutputContext;
+import org.apache.jackrabbit.webdav.jcr.property.JcrDavPropertyNameSet;
 import org.apache.jackrabbit.webdav.jcr.property.LengthsProperty;
 import org.apache.jackrabbit.webdav.jcr.property.ValuesProperty;
 import org.apache.jackrabbit.webdav.lock.ActiveLock;
@@ -35,6 +36,7 @@ import org.apache.jackrabbit.webdav.lock.Scope;
 import org.apache.jackrabbit.webdav.lock.Type;
 import org.apache.jackrabbit.webdav.property.DavProperty;
 import org.apache.jackrabbit.webdav.property.DavPropertyName;
+import org.apache.jackrabbit.webdav.property.DavPropertyNameSet;
 import org.apache.jackrabbit.webdav.property.DefaultDavProperty;
 import org.apache.jackrabbit.webdav.property.PropEntry;
 import org.apache.jackrabbit.webdav.xml.DomUtil;
@@ -109,7 +111,7 @@ public class DefaultItemResource extends AbstractItemResource {
 
     /**
      * In case an underlying repository {@link Property property} exists the following
-     * logic is applyed to spool the property content:
+     * logic is applied to spool the property content:
      * <ul>
      * <li>Property is not multi valued: Return the {@link javax.jcr.Value#getStream()
      * stream representation} of the property value.</li>
@@ -173,6 +175,27 @@ public class DefaultItemResource extends AbstractItemResource {
         } catch (RepositoryException e) {
             log.error("Cannot obtain stream from " + item, e);
         }
+    }
+
+    @Override
+    public DavProperty<?> getProperty(DavPropertyName name) {
+        DavProperty prop = super.getProperty(name);
+
+        if (prop == null && exists()) {
+            try {
+                Property p = (Property) item;
+                if (JCR_LENGTH.equals(name) && !isMultiple()) {
+                    long length = p.getLength();
+                    prop = new DefaultDavProperty<String>(JCR_LENGTH, String.valueOf(length), true);
+                } else if (JCR_LENGTHS.equals(name) && isMultiple()) {
+                    prop = new LengthsProperty(p.getLengths());
+                }
+            } catch (RepositoryException e) {
+                log.error("Failed to retrieve resource properties: "+e.getMessage());
+            }
+        }
+
+        return prop;
     }
 
     /**
@@ -319,6 +342,17 @@ public class DefaultItemResource extends AbstractItemResource {
     }
 
     //--------------------------------------------------------------------------
+    @Override
+    protected void initPropertyNames() {
+        super.initPropertyNames();
+        if (exists()) {
+            DavPropertyNameSet propNames = (isMultiple() ?
+                    JcrDavPropertyNameSet.PROPERTY_MV_SET :
+                    JcrDavPropertyNameSet.PROPERTY_SET);
+            names.addAll(propNames);
+        }
+    }
+
     /**
      * Add resource specific properties.
      */
@@ -344,11 +378,8 @@ public class DefaultItemResource extends AbstractItemResource {
                 properties.add(new DefaultDavProperty<String>(JCR_TYPE, PropertyType.nameFromValue(type)));
                 if (isMultiple()) {
                     properties.add(new ValuesProperty(prop.getValues()));
-                    properties.add(new LengthsProperty(prop.getLengths()));
                 } else {
                     properties.add(new ValuesProperty(prop.getValue()));
-                    long length = prop.getLength();
-                    properties.add(new DefaultDavProperty<String>(JCR_LENGTH, String.valueOf(length), true));
                 }
             } catch (RepositoryException e) {
                 log.error("Failed to retrieve resource properties: "+e.getMessage());

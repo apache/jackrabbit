@@ -118,8 +118,8 @@ public interface DavResource {
      * (e.g. to respond to a 'GET' or 'HEAD' request). The context could e.g.
      * wrap the servlet response.
      *
-     * @param outputContext
-     * @throws IOException
+     * @param outputContext The output context.
+     * @throws IOException If an error occurs.
      */
     public void spool(OutputContext outputContext) throws IOException;
 
@@ -141,10 +141,14 @@ public interface DavResource {
     public DavProperty<?> getProperty(DavPropertyName name);
 
     /**
-     * Returns all webdav properties present on this resource.
+     * Returns all webdav properties present on this resource that will be
+     * return upon a {@link DavConstants#PROPFIND_ALL_PROP} request. The
+     * implementation may in addition expose other (protected or calculated)
+     * properties which should be marked accordingly (see also
+     * {@link org.apache.jackrabbit.webdav.property.DavProperty#isInvisibleInAllprop()}.
      *
-     * @return a {@link DavPropertySet} containing all webdav property
-     * of this resource.
+     * @return a {@link DavPropertySet} containing at least all properties
+     * of this resource that are exposed in 'allprop' PROPFIND request.
      */
     public DavPropertySet getProperties();
 

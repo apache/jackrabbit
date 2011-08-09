@@ -165,26 +165,23 @@ public class MultiStatusResponse implements XmlSerializable, DavConstants {
             int propFindType) {
         this(resource.getHref(), null, TYPE_PROPSTAT);
 
-        // only property names requested
         if (propFindType == PROPFIND_PROPERTY_NAMES) {
-            PropContainer status200 =
-                getPropContainer(DavServletResponse.SC_OK, true);
+            // only property names requested
+            PropContainer status200 = getPropContainer(DavServletResponse.SC_OK, true);
             for (DavPropertyName propName : resource.getPropertyNames()) {
                 status200.addContent(propName);
             }
-        // all or a specified set of property and their values requested.
         } else {
-            PropContainer status200 =
-                getPropContainer(DavServletResponse.SC_OK, false);
+            // all or a specified set of property and their values requested.
+            PropContainer status200 = getPropContainer(DavServletResponse.SC_OK, false);
 
             // Collection of missing property names for 404 responses
-            Set<DavPropertyName> missing =
-                new HashSet<DavPropertyName>(propNameSet.getContent());
+            Set<DavPropertyName> missing = new HashSet<DavPropertyName>(propNameSet.getContent());
 
             // Add requested properties or all non-protected properties,
-            // or non-protected properties plus requested properties
-            // (allprop/include) 
+            // or non-protected properties plus requested properties (allprop/include) 
             if (propFindType == PROPFIND_BY_PROPERTY) {
+                // add explicitly requested properties (proptected or non-protected)
                 for (DavPropertyName propName : propNameSet) {
                     DavProperty<?> prop = resource.getProperty(propName);
                     if (prop != null) {
@@ -193,6 +190,7 @@ public class MultiStatusResponse implements XmlSerializable, DavConstants {
                     }
                 }
             } else {
+                // add all non-protected properties
                 for (DavProperty<?> property : resource.getProperties()) {
                     boolean allDeadPlusRfc4918LiveProperties =
                         propFindType == PROPFIND_ALL_PROP
@@ -205,11 +203,22 @@ public class MultiStatusResponse implements XmlSerializable, DavConstants {
                         status200.addContent(property);
                     }
                 }
+
+                // try if missing properties specified in the include section
+                // can be obtained using resource.getProperty
+                if (propFindType == PROPFIND_ALL_PROP_INCLUDE && !missing.isEmpty()) {
+                    for (DavPropertyName propName : new HashSet<DavPropertyName>(missing)) {
+                        DavProperty<?> prop = resource.getProperty(propName);
+                        if (prop != null) {
+                            status200.addContent(prop);
+                            missing.remove(propName);
+                        }
+                    }
+                }
             }
 
             if (!missing.isEmpty() && propFindType != PROPFIND_ALL_PROP) {
-                PropContainer status404 =
-                    getPropContainer(DavServletResponse.SC_NOT_FOUND, true);
+                PropContainer status404 = getPropContainer(DavServletResponse.SC_NOT_FOUND, true);
                 for (DavPropertyName propName : missing) {
                     status404.addContent(propName);
                 }

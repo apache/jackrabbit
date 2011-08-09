@@ -21,6 +21,8 @@ import org.apache.jackrabbit.webdav.DavException;
 import org.apache.jackrabbit.webdav.DavResourceFactory;
 import org.apache.jackrabbit.webdav.DavResourceLocator;
 import org.apache.jackrabbit.webdav.DavServletResponse;
+import org.apache.jackrabbit.webdav.jcr.property.JcrDavPropertyNameSet;
+import org.apache.jackrabbit.webdav.property.DavProperty;
 import org.apache.jackrabbit.webdav.util.HttpDateFormat;
 import org.apache.jackrabbit.webdav.jcr.DefaultItemCollection;
 import org.apache.jackrabbit.webdav.jcr.ItemResourceConstants;
@@ -71,6 +73,52 @@ public class VersionItemCollection extends DefaultItemCollection
         if (item == null || !(item instanceof Version)) {
             throw new IllegalArgumentException("Version item expected.");
         }
+    }
+
+    @Override
+    public DavProperty<?> getProperty(DavPropertyName name) {
+        DavProperty prop = super.getProperty(name);
+        if (prop == null && exists()) {
+            Version v = (Version) item;
+            try {
+                if (VERSION_NAME.equals(name)) {
+                    // required, protected DAV:version-name property
+                    prop = new DefaultDavProperty<String>(VERSION_NAME, v.getName(), true);
+                } else if (VERSION_HISTORY.equals(name)) {
+                    // required DAV:version-history (computed) property
+                    String vhHref = getLocatorFromItem(getVersionHistoryItem()).getHref(true);
+                    prop = new HrefProperty(VERSION_HISTORY, vhHref, true);
+                } else if (PREDECESSOR_SET.equals(name)) {
+                    // required DAV:predecessor-set (protected) property
+                    prop = getHrefProperty(VersionResource.PREDECESSOR_SET, v.getPredecessors(), true);
+                } else if (SUCCESSOR_SET.equals(name)) {
+                    // required DAV:successor-set (computed) property
+                    prop = getHrefProperty(SUCCESSOR_SET, v.getSuccessors(), true);
+                } else if (LABEL_NAME_SET.equals(name)) {
+                    // required, protected DAV:label-name-set property
+                    String[] labels = getVersionHistoryItem().getVersionLabels(v);
+                    prop = new LabelSetProperty(labels);
+                } else if (CHECKOUT_SET.equals(name)) {
+                    // required DAV:checkout-set (computed) property
+                    PropertyIterator it = v.getReferences();
+                    List<Node> nodeList = new ArrayList<Node>();
+                    while (it.hasNext()) {
+                        Property p = it.nextProperty();
+                        if (JcrConstants.JCR_BASEVERSION.equals(p.getName())) {
+                            Node n = p.getParent();
+                            if (n.isCheckedOut()) {
+                                nodeList.add(n);
+                            }
+                        }
+                    }
+                    prop = getHrefProperty(CHECKOUT_SET, nodeList.toArray(new Node[nodeList.size()]), true);
+                }
+            } catch (RepositoryException e) {
+                log.error(e.getMessage());
+            }
+        }
+        
+        return prop;
     }
 
     //----------------------------------------------< DavResource interface >---
@@ -166,53 +214,27 @@ public class VersionItemCollection extends DefaultItemCollection
         }
     }
 
-    /**
-     * Fill the property set for this resource.
-     */
     @Override
-    protected void initProperties() {
-        super.initProperties();
+    protected void initPropertyNames() {
+        super.initPropertyNames();
 
         if (exists()) {
-            Version v = (Version)item;
-            // created and creationDate properties
+            names.addAll(JcrDavPropertyNameSet.VERSION_SET);
+        }
+    }
+
+    @Override
+    protected String getCreationDate() {
+        if (exists()) {
+            Version v = (Version) item;
             try {
-                String creationDate = HttpDateFormat.creationDateFormat().format(v.getCreated().getTime());
-                // replace dummy creation date from default collection
-                properties.add(new DefaultDavProperty<String>(DavPropertyName.CREATIONDATE, creationDate));
-
-                // required, protected DAV:version-name property
-                properties.add(new DefaultDavProperty<String>(VERSION_NAME, v.getName(), true));
-
-                // required, protected DAV:label-name-set property
-                String[] labels = getVersionHistoryItem().getVersionLabels(v);
-                properties.add(new LabelSetProperty(labels));
-
-                // required DAV:predecessor-set (protected) and DAV:successor-set (computed) properties
-                addHrefProperty(VersionResource.PREDECESSOR_SET, v.getPredecessors(), true);
-                addHrefProperty(SUCCESSOR_SET, v.getSuccessors(), true);
-
-                // required DAV:version-history (computed) property
-                String vhHref = getLocatorFromItem(getVersionHistoryItem()).getHref(true);
-                properties.add(new HrefProperty(VersionResource.VERSION_HISTORY, vhHref, true));
-
-                // required DAV:checkout-set (computed) property
-                PropertyIterator it = v.getReferences();
-                List<Node> nodeList = new ArrayList<Node>();
-                while (it.hasNext()) {
-                    Property p = it.nextProperty();
-                    if (JcrConstants.JCR_BASEVERSION.equals(p.getName())) {
-                        Node n = p.getParent();
-                        if (n.isCheckedOut()) {
-                           nodeList.add(n);
-                        }
-                    }
-                }
-                addHrefProperty(CHECKOUT_SET, nodeList.toArray(new Node[nodeList.size()]), true);
-
+                return HttpDateFormat.creationDateFormat().format(v.getCreated().getTime());
             } catch (RepositoryException e) {
                 log.error(e.getMessage());
             }
         }
+
+        // fallback
+        return super.getCreationDate();
     }
 }

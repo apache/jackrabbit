@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.webdav.jcr;
 
 import org.apache.jackrabbit.commons.cnd.CompactNodeTypeDefReader;
+import org.apache.jackrabbit.commons.cnd.CompactNodeTypeDefWriter;
 import org.apache.jackrabbit.commons.cnd.DefinitionBuilderFactory;
 import org.apache.jackrabbit.commons.cnd.ParseException;
 import org.apache.jackrabbit.commons.cnd.TemplateBuilderFactory;
@@ -32,9 +33,12 @@ import org.apache.jackrabbit.webdav.MultiStatus;
 import org.apache.jackrabbit.webdav.MultiStatusResponse;
 import org.apache.jackrabbit.webdav.io.InputContext;
 import org.apache.jackrabbit.webdav.io.OutputContext;
+import org.apache.jackrabbit.webdav.jcr.property.JcrDavPropertyNameSet;
 import org.apache.jackrabbit.webdav.jcr.property.NamespacesProperty;
 import org.apache.jackrabbit.webdav.jcr.version.report.JcrPrivilegeReport;
 import org.apache.jackrabbit.webdav.property.DavProperty;
+import org.apache.jackrabbit.webdav.property.DavPropertyName;
+import org.apache.jackrabbit.webdav.property.DefaultDavProperty;
 import org.apache.jackrabbit.webdav.property.PropEntry;
 import org.apache.jackrabbit.webdav.search.SearchResource;
 import org.apache.jackrabbit.webdav.version.DeltaVResource;
@@ -55,6 +59,7 @@ import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.Workspace;
+import javax.jcr.nodetype.NodeTypeIterator;
 import javax.jcr.nodetype.NodeTypeManager;
 import javax.jcr.nodetype.NodeTypeTemplate;
 import javax.jcr.observation.EventListener;
@@ -63,6 +68,7 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.io.StringReader;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -91,6 +97,47 @@ public class WorkspaceResourceImpl extends AbstractResource
         // initialize the supported locks and reports
         initLockSupport();
         initSupportedReports();
+    }
+
+    @Override
+    public DavProperty<?> getProperty(DavPropertyName name) {
+        DavProperty prop = super.getProperty(name);
+        if (prop == null && ItemResourceConstants.JCR_NODETYPES_CND.equals(name)) {
+            StringWriter writer = new StringWriter();
+            try {
+                Session s = getRepositorySession();
+
+                CompactNodeTypeDefWriter cndWriter = new CompactNodeTypeDefWriter(writer, s, true);
+                NodeTypeIterator ntIterator = s.getWorkspace().getNodeTypeManager().getAllNodeTypes();
+                while (ntIterator.hasNext()) {
+                    cndWriter.write(ntIterator.nextNodeType());
+                }
+                cndWriter.close();
+                /*
+                NOTE: avoid having JCR_NODETYPES_CND exposed upon allprop
+                      PROPFIND request since it needs to be calculated.
+                      nevertheless, this property can be altered using
+                      PROPPATCH, which is not consistent with the specification
+                 */
+                return new DefaultDavProperty<String>(ItemResourceConstants.JCR_NODETYPES_CND, writer.toString(), true);
+            } catch (RepositoryException e) {
+                log.error("Failed to access NodeTypeManager: " + e.getMessage());
+                return null;
+            } catch (IOException e) {
+                log.error("Failed to write compact node definition: " + e.getMessage());
+                return null;
+            } finally {
+                try {
+                    writer.close();
+                } catch (IOException e) {
+                    log.error(e.getMessage());
+                }
+            }
+        }
+
+        // TODO: required property DAV:workspace-checkout-set (computed)
+
+        return prop;
     }
 
     //--------------------------------------------------------< DavResource >---
@@ -317,7 +364,7 @@ public class WorkspaceResourceImpl extends AbstractResource
                     }
                 }
 
-                // TODO: for simplicity it's currently it's either registration or unregistration as nt-modifications are immediately persisted.
+                // TODO: for simplicity it's currently either registration or unregistration as nt-modifications are immediately persisted.
                 Session s = getRepositorySession();
                 NodeTypeManager ntMgr = s.getWorkspace().getNodeTypeManager();
                 if (registerCnd != null) {
@@ -361,8 +408,7 @@ public class WorkspaceResourceImpl extends AbstractResource
             if (propEntry instanceof DavProperty
                     && (ItemResourceConstants.JCR_NAMESPACES.equals(((DavProperty<?>)propEntry).getName())
                     || ItemResourceConstants.JCR_NODETYPES_CND.equals(((DavProperty<?>)propEntry).getName()))) {
-                DavProperty<?> namespaceProp = (DavProperty<?>) propEntry;
-                setProperty(namespaceProp);
+                setProperty((DavProperty<?>) propEntry);
             } else {
                 // attempt to remove the namespace property
                 throw new DavException(DavServletResponse.SC_CONFLICT);
@@ -510,6 +556,12 @@ public class WorkspaceResourceImpl extends AbstractResource
     }
 
     @Override
+    protected void initPropertyNames() {
+        super.initPropertyNames();
+        names.addAll(JcrDavPropertyNameSet.WORKSPACE_SET);
+    }
+
+    @Override
     protected void initProperties() {
         super.initProperties();
         try {
@@ -520,8 +572,5 @@ public class WorkspaceResourceImpl extends AbstractResource
         } catch (RepositoryException e) {
             log.error("Failed to access NamespaceRegistry: " + e.getMessage());
         }
-
-        // TODO: required property DAV:workspace-checkout-set (computed)
-        // TODO: create node type cnd property only if explicitly requested (see JCR-2946 and patch at JCR-2454) 
     }
 }

@@ -24,12 +24,13 @@ import org.apache.jackrabbit.webdav.DavResourceLocator;
 import org.apache.jackrabbit.webdav.DavServletResponse;
 import org.apache.jackrabbit.webdav.DavCompliance;
 import org.apache.jackrabbit.webdav.io.OutputContext;
+import org.apache.jackrabbit.webdav.jcr.property.JcrDavPropertyNameSet;
+import org.apache.jackrabbit.webdav.observation.ObservationConstants;
 import org.apache.jackrabbit.webdav.observation.ObservationResource;
 import org.apache.jackrabbit.webdav.observation.SubscriptionManager;
 import org.apache.jackrabbit.webdav.observation.Subscription;
 import org.apache.jackrabbit.webdav.observation.SubscriptionInfo;
 import org.apache.jackrabbit.webdav.observation.EventDiscovery;
-import org.apache.jackrabbit.webdav.observation.SubscriptionDiscovery;
 import org.apache.jackrabbit.webdav.jcr.nodetype.ItemDefinitionImpl;
 import org.apache.jackrabbit.webdav.jcr.nodetype.NodeDefinitionImpl;
 import org.apache.jackrabbit.webdav.jcr.nodetype.PropertyDefinitionImpl;
@@ -39,6 +40,7 @@ import org.apache.jackrabbit.webdav.property.DavProperty;
 import org.apache.jackrabbit.webdav.property.DavPropertyName;
 import org.apache.jackrabbit.webdav.security.CurrentUserPrivilegeSetProperty;
 import org.apache.jackrabbit.webdav.security.Privilege;
+import org.apache.jackrabbit.webdav.security.SecurityConstants;
 import org.apache.jackrabbit.webdav.transaction.TxLockEntry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -71,6 +73,8 @@ abstract class AbstractItemResource extends AbstractResource implements
      *
      * @param locator
      * @param session
+     * @param factory
+     * @param item
      */
     AbstractItemResource(DavResourceLocator locator, JcrDavSession session,
                          DavResourceFactory factory, Item item) {
@@ -96,6 +100,67 @@ abstract class AbstractItemResource extends AbstractResource implements
         );
     }
 
+    @Override
+    public DavProperty<?> getProperty(DavPropertyName name) {
+        DavProperty prop = super.getProperty(name);
+        if (prop == null) {
+            if (JCR_DEFINITION.equals(name)) {
+                if (exists()) {
+                    try {
+
+                        // protected 'definition' property revealing the item definition
+                        ItemDefinitionImpl val;
+                        if (item.isNode()) {
+                            val = NodeDefinitionImpl.create(((Node)item).getDefinition());
+                        } else {
+                            val = PropertyDefinitionImpl.create(((Property)item).getDefinition());
+                        }
+                        prop = new DefaultDavProperty<ItemDefinitionImpl>(JCR_DEFINITION, val, true);
+                    } catch (RepositoryException e) {
+                        // should not get here
+                        log.error("Error while accessing item definition: " + e.getMessage());
+                    }
+                }
+            } else if (JCR_ISNEW.equals(name)) {
+                // transaction resource additional protected properties
+                if (exists() && item.isNew()) {
+                    prop = new DefaultDavProperty<String>(JCR_ISNEW, null, true);
+                }
+            } else if (JCR_ISMODIFIED.equals(name)) {
+                // transaction resource additional protected properties
+                if (exists() && item.isModified()) {
+                    prop = new DefaultDavProperty<String>(JCR_ISMODIFIED, null, true);
+                }
+            } else if (ObservationConstants.SUBSCRIPTIONDISCOVERY.equals(name)) {
+                // observation resource
+                prop = subsMgr.getSubscriptionDiscovery(this);
+            } else if (SecurityConstants.CURRENT_USER_PRIVILEGE_SET.equals(name)) {
+                // TODO complete set of properties defined by RFC 3744
+                Privilege[] allPrivs = new Privilege[] {PRIVILEGE_JCR_READ,
+                        PRIVILEGE_JCR_ADD_NODE,
+                        PRIVILEGE_JCR_SET_PROPERTY,
+                        PRIVILEGE_JCR_REMOVE};
+                List<Privilege> currentPrivs = new ArrayList<Privilege>();
+                for (Privilege priv : allPrivs) {
+                    try {
+                        String path = getLocator().getRepositoryPath();
+                        getRepositorySession().checkPermission(path, priv.getName());
+                        currentPrivs.add(priv);
+                    } catch (AccessControlException e) {
+                        // ignore
+                        log.debug(e.toString());
+                    } catch (RepositoryException e) {
+                        // ignore
+                        log.debug(e.toString());
+                    }
+                }
+                prop =  new CurrentUserPrivilegeSetProperty(currentPrivs.toArray(new Privilege[currentPrivs.size()]));
+            }
+        }
+
+        return prop;
+    }
+
     /**
      * @see org.apache.jackrabbit.webdav.DavResource#getSupportedMethods()
      */
@@ -117,7 +182,7 @@ abstract class AbstractItemResource extends AbstractResource implements
      * Retrieves the last segment of the item path (or the resource path if
      * this resource does not exist). An item path is in addition first translated
      * to the corresponding resource path.<br>
-     * NOTE: the displayname is not equivalent to {@link Item#getName() item name}
+     * NOTE: the display name is not equivalent to {@link Item#getName() item name}
      * which is exposed with the {@link ItemResourceConstants#JCR_NAME
      * &#123;http://www.day.com/jcr/webdav/1.0&#125;name} property.
      *
@@ -322,6 +387,28 @@ abstract class AbstractItemResource extends AbstractResource implements
         }
     }
 
+    @Override
+    protected void initPropertyNames() {
+        super.initPropertyNames();
+        if (exists()) {
+            names.addAll(JcrDavPropertyNameSet.EXISTING_ITEM_BASE_SET);
+            try {
+                if (item.getDepth() > 0) {
+                    names.add(JCR_PARENT);
+                }
+            } catch (RepositoryException e) {
+                log.warn("Error while accessing node depth: " + e.getMessage());
+            }
+            if (item.isNew()) {
+                names.add(JCR_ISNEW);
+            } else if (item.isModified()) {
+                names.add(JCR_ISMODIFIED);
+            }
+        } else {
+            names.addAll(JcrDavPropertyNameSet.ITEM_BASE_SET);
+        }
+    }
+
     /**
      * Fill the property set for this resource.
      */
@@ -332,57 +419,18 @@ abstract class AbstractItemResource extends AbstractResource implements
             try {
                 properties.add(new DefaultDavProperty<String>(JCR_NAME, item.getName()));
                 properties.add(new DefaultDavProperty<String>(JCR_PATH, item.getPath()));
-                properties.add(new DefaultDavProperty<String>(JCR_DEPTH, String.valueOf(item.getDepth())));
+                int depth = item.getDepth();
+                properties.add(new DefaultDavProperty<String>(JCR_DEPTH, String.valueOf(depth)));
                 // add href-property for the items parent unless its the root item
-                if (item.getDepth() > 0) {
+                if (depth > 0) {
                     String parentHref = getLocatorFromItem(item.getParent()).getHref(true);
                     properties.add(new HrefProperty(JCR_PARENT, parentHref, false));
                 }
-                // protected 'definition' property revealing the item definition
-                ItemDefinitionImpl val;
-                if (item.isNode()) {
-                    val = NodeDefinitionImpl.create(((Node)item).getDefinition());
-                } else {
-                    val = PropertyDefinitionImpl.create(((Property)item).getDefinition());
-                }
-                properties.add(new DefaultDavProperty<ItemDefinitionImpl>(JCR_DEFINITION, val, true));
             } catch (RepositoryException e) {
                 // should not get here
                 log.error("Error while accessing jcr properties: " + e.getMessage());
             }
-
-            // transaction resource additional protected properties
-            if (item.isNew()) {
-                properties.add(new DefaultDavProperty<String>(JCR_ISNEW, null, true));
-            } else if (item.isModified()) {
-                properties.add(new DefaultDavProperty<String>(JCR_ISMODIFIED, null, true));
-            }
         }
-
-        // observation resource
-        SubscriptionDiscovery subsDiscovery = subsMgr.getSubscriptionDiscovery(this);
-        properties.add(subsDiscovery);
-
-        // TODO complete set of properties defined by RFC 3744
-        Privilege[] allPrivs = new Privilege[] {PRIVILEGE_JCR_READ,
-                                                PRIVILEGE_JCR_ADD_NODE,
-                                                PRIVILEGE_JCR_SET_PROPERTY,
-                                                PRIVILEGE_JCR_REMOVE};
-        List<Privilege> currentPrivs = new ArrayList<Privilege>();
-        for (Privilege priv : allPrivs) {
-            try {
-                String path = getLocator().getRepositoryPath();
-                getRepositorySession().checkPermission(path, priv.getName());
-                currentPrivs.add(priv);
-            } catch (AccessControlException e) {
-                // ignore
-                log.debug(e.toString());
-            } catch (RepositoryException e) {
-                // ignore
-                log.debug(e.toString());
-            }
-        }
-        properties.add(new CurrentUserPrivilegeSetProperty(currentPrivs.toArray(new Privilege[currentPrivs.size()])));
     }
 
     /**
