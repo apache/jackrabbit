@@ -54,7 +54,7 @@ public class SearchResultProperty extends AbstractDavProperty<Value[]> implement
      *
      * @param columnNames   the column names of the search row represented by
      *                      this dav property.
-     * @param selectorNames the selecotr names of the row represented by this
+     * @param selectorNames the selector names of the row represented by this
      *                      dav property.
      * @param values        the values present in the columns
      */
