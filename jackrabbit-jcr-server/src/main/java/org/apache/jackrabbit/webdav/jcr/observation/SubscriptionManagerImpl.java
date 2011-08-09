@@ -206,7 +206,7 @@ public class SubscriptionManagerImpl implements SubscriptionManager, Transaction
      * @param subscriptionId
      * @param resource
      * @return <code>Subscription</code> with the given id.
-     * @throws DavException if an error occured while retrieving the <code>Subscription</code>
+     * @throws DavException if an error occurred while retrieving the <code>Subscription</code>
      */
     private SubscriptionImpl validate(String subscriptionId, ObservationResource resource)
             throws DavException {

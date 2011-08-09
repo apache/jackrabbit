@@ -113,7 +113,7 @@ public abstract class JCRWebdavServerServlet extends AbstractWebdavServlet {
      * {@link WebdavRequest#matchesIfHeader(DavResource) If header} and validation
      * of {@link org.apache.jackrabbit.webdav.transaction.TransactionConstants#HEADER_TRANSACTIONID
      * TransactionId header}. This method will also return false if the requested
-     * resource resides within a differenct workspace as is assigned to the repository
+     * resource resides within a different workspace as is assigned to the repository
      * session attached to the given request.
      *
      * @see AbstractWebdavServlet#isPreconditionValid(WebdavRequest, DavResource)

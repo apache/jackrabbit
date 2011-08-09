@@ -94,7 +94,7 @@ public class ValuesProperty extends AbstractDavProperty<Value[]> implements Item
 
     private void checkPropertyName(DavPropertyName reqName) throws ValueFormatException {
         if (!reqName.equals(getName())) {
-            throw new ValueFormatException("Attempt to retrieve mulitple values from single property '" + getName() + "'.");
+            throw new ValueFormatException("Attempt to retrieve multiple values from single property '" + getName() + "'.");
         }
     }
 

@@ -107,7 +107,7 @@ public class SubscriptionImpl implements Subscription, ObservationConstants, Eve
     /**
      * Return the Xml representation of this <code>Subscription</code> as required
      * for the {@link org.apache.jackrabbit.webdav.observation.SubscriptionDiscovery}
-     * webdav property that in included in the response body of a sucessful SUBSCRIBE
+     * webdav property that in included in the response body of a successful SUBSCRIBE
      * request or as part of a PROPFIND response.
      *
      * @return Xml representation
@@ -404,7 +404,7 @@ public class SubscriptionImpl implements Subscription, ObservationConstants, Eve
     }
 
     /**
-     * Inner class <code>EventBundle</code> encapsulats an event bundle as
+     * Inner class <code>EventBundle</code> encapsulates an event bundle as
      * recorded {@link SubscriptionImpl#onEvent(EventIterator) on event} and
      * provides the possibility to retrieve the Xml representation of the
      * bundle and the events included in order to respond to a POLL request.
@@ -493,7 +493,7 @@ public class SubscriptionImpl implements Subscription, ObservationConstants, Eve
     //----------------------------< TransactionEvent >------------------------
 
     /**
-     * Implements a transaction event which listenes for events during a save
+     * Implements a transaction event which listeners for events during a save
      * call on the repository.
      */
     private class TransactionEvent implements EventListener, TransactionListener {

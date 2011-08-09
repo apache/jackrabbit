@@ -136,7 +136,7 @@ public class TxLockManagerImpl implements TxLockManager {
     }
 
     /**
-     * Refresh the lock indentified by the given lock token.
+     * Refresh the lock identified by the given lock token.
      *
      * @param lockInfo
      * @param lockToken
@@ -162,7 +162,7 @@ public class TxLockManagerImpl implements TxLockManager {
      * @param lockToken
      * @param resource
      * @return
-     * @throws DavException if the lockdid not exist or is expired.
+     * @throws DavException if the lock did not exist or is expired.
      */
     private synchronized ActiveLock refreshLock(LockInfo lockInfo, String lockToken,
                                                 TransactionResource resource) throws DavException {

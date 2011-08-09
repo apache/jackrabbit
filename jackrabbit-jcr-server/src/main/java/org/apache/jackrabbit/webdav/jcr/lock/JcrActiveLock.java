@@ -169,7 +169,7 @@ public class JcrActiveLock extends AbstractActiveLock implements ActiveLock, Dav
 
     /**
      * @return The scope of this lock, which may either by an {@link Scope#EXCLUSIVE exclusive}
-     * or {@link ItemResourceConstants#EXCLUSIVE_SESSION exlusive session scoped}
+     * or {@link ItemResourceConstants#EXCLUSIVE_SESSION exclusive session scoped}
      * lock.
      * @see ActiveLock#getScope()
      */
