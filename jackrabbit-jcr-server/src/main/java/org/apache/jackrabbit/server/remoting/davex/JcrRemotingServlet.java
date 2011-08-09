@@ -72,7 +72,7 @@ import java.util.Iterator;
  * specified or configuration determined depth.
  * <p/>
  * Batch read is triggered by adding a '.json' extension to the resource href.
- * Optionally the client may explicitely specify the desired batch read depth
+ * Optionally the client may explicitly specify the desired batch read depth
  * by appending '.depth.json' extension. If no json extension is present the
  * GET request is processed by the base servlet.
  * <p/>
@@ -109,7 +109,7 @@ import java.util.Iterator;
  *   The JCR value must be retrieved separately.
  *
  * - Name, Path, Reference and Date Property
- *   The JSON member representing the Property (name, value) is preceeded by a
+ *   The JSON member representing the Property (name, value) is preceded by a
  *   special member consisting of
  *   JSON key = ":" + Property.getName()
  *   JSON value = PropertyType.nameFromValue(Property.getType())
@@ -447,7 +447,7 @@ public abstract class JcrRemotingServlet extends JCRWebdavServerServlet {
     }
 
     /**
-     * TODO: doesn't work properly with intermedite SNS-nodes
+     * TODO: doesn't work properly with intermediate SNS-nodes
      * TODO: doesn't respect jcr:uuid properties.
      *
      * @param session

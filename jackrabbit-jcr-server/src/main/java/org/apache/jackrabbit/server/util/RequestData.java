@@ -58,7 +58,7 @@ public class RequestData {
 
     /**
      * Returns the first value of the parameter with the given <code>name</code>.
-     * The byte to string converstion is done using either the contenttype of
+     * The byte to string conversion is done using either the content type of
      * the parameter or the <code>formEncoding</code>.
      * <p/>
      * Please note that if the addressed parameter is a file parameter, the
