@@ -236,7 +236,7 @@ public class ConcurrentCache<K, V> extends AbstractCache {
      */
     private void shrinkIfNeeded() {
         // Semi-random start index to prevent bias against the first segments
-        int start = (int) getAccessCount() % segments.length;
+        int start = (int) Math.abs(getAccessCount() % segments.length);
         for (int i = start; isTooBig(); i = (i + 1) % segments.length) {
             synchronized (segments[i]) {
                 Iterator<Map.Entry<K, E<V>>> iterator =
