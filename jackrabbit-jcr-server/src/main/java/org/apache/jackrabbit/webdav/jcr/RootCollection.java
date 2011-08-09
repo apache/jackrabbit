@@ -44,7 +44,7 @@ import java.io.OutputStreamWriter;
  * <code>RootCollection</code> represent the WebDAV root resource that does not
  * represent any repository item. A call to getMembers() returns a
  * <code>DavResourceIterator</code> containing only workspace resources
- * resources, thus revealing the names of the accessable JCR workspaces.
+ * resources, thus revealing the names of the accessible JCR workspaces.
  */
 public class RootCollection extends AbstractResource {
 
@@ -55,6 +55,7 @@ public class RootCollection extends AbstractResource {
      *
      * @param locator
      * @param session
+     * @param factory
      */
     protected RootCollection(DavResourceLocator locator, JcrDavSession session,
                              DavResourceFactory factory) {
