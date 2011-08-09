@@ -16,45 +16,21 @@
  */
 package org.apache.jackrabbit.spi.commons.nodetype.compact;
 
-import java.io.IOException;
-import java.io.StringWriter;
-import java.io.Writer;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
-import java.util.TreeSet;
-
-import javax.jcr.NamespaceException;
-import javax.jcr.PropertyType;
-import javax.jcr.RepositoryException;
-import javax.jcr.Session;
-import javax.jcr.nodetype.NodeTypeDefinition;
-import javax.jcr.query.qom.QueryObjectModelConstants;
-import javax.jcr.version.OnParentVersionAction;
-
-import org.apache.jackrabbit.commons.cnd.Lexer;
-import org.apache.jackrabbit.commons.query.qom.Operator;
-import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.QNodeTypeDefinition;
-import org.apache.jackrabbit.spi.QPropertyDefinition;
-import org.apache.jackrabbit.spi.QValue;
-import org.apache.jackrabbit.spi.QValueConstraint;
-import org.apache.jackrabbit.spi.commons.QNodeTypeDefinitionImpl;
 import org.apache.jackrabbit.spi.commons.conversion.DefaultNamePathResolver;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
-import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
 import org.apache.jackrabbit.spi.commons.namespace.SessionNamespaceResolver;
-import org.apache.jackrabbit.spi.commons.nodetype.InvalidConstraintException;
-import org.apache.jackrabbit.spi.commons.nodetype.constraint.ValueConstraint;
+import org.apache.jackrabbit.spi.commons.nodetype.NodeTypeDefinitionImpl;
 import org.apache.jackrabbit.spi.commons.value.QValueFactoryImpl;
-import org.apache.jackrabbit.spi.commons.value.ValueFormat;
-import org.apache.jackrabbit.util.ISO9075;
+import org.apache.jackrabbit.spi.commons.value.ValueFactoryQImpl;
+
+import javax.jcr.NamespaceException;
+import javax.jcr.Session;
+import javax.jcr.nodetype.NodeTypeDefinition;
+import java.io.IOException;
+import java.io.Writer;
+import java.util.Collection;
 
 /**
  * Prints node type defs in a compact notation
@@ -68,37 +44,12 @@ import org.apache.jackrabbit.util.ISO9075;
  *   + ex:node (ex:reqType1, ex:reqType2) = ex:defaultType
  *     mandatory autocreated protected multiple VERSION
  */
-public class CompactNodeTypeDefWriter {
-
-    /**
-     * the indention string
-     */
-    private static final String INDENT = "  ";
-
-    /**
-     * the current namespace resolver
-     */
-    private final NamespaceResolver resolver;
+public class CompactNodeTypeDefWriter extends org.apache.jackrabbit.commons.cnd.CompactNodeTypeDefWriter {
 
     /**
      * the current name/path resolver
      */
     private final NamePathResolver npResolver;
-
-    /**
-     * the underlying writer
-     */
-    private Writer out;
-
-    /**
-     * special writer used for namespaces
-     */
-    private Writer nsWriter;
-
-    /**
-     * namespaces(prefixes) that are used
-     */
-    private final Set<String> usedNamespaces = new HashSet<String>();
 
     /**
      * Creates a new nodetype writer based on a session
@@ -147,18 +98,11 @@ public class CompactNodeTypeDefWriter {
      *                  written to the writer
      */
     public CompactNodeTypeDefWriter(Writer out,
-                                    NamespaceResolver r,
+                                    final NamespaceResolver r,
                                     NamePathResolver npResolver,
                                     boolean includeNS) {
-        this.resolver = r;
+        super(out, createNsMapping(r), includeNS);
         this.npResolver = npResolver;
-        if (includeNS) {
-            this.out = new StringWriter();
-            this.nsWriter = out;
-        } else {
-            this.out = out;
-            this.nsWriter = null;
-        }
     }
 
     /**
@@ -190,12 +134,8 @@ public class CompactNodeTypeDefWriter {
      * @throws IOException if an I/O error occurs
      */
     public void write(QNodeTypeDefinition ntd) throws IOException {
-        writeName(ntd);
-        writeSupertypes(ntd);
-        writeOptions(ntd);
-        writePropDefs(ntd);
-        writeNodeDefs(ntd);
-        out.write("\n\n");
+        NodeTypeDefinition def = new NodeTypeDefinitionImpl(ntd, npResolver, new ValueFactoryQImpl(QValueFactoryImpl.getInstance(), npResolver));
+        super.write(def);
     }
 
     /**
@@ -210,401 +150,15 @@ public class CompactNodeTypeDefWriter {
         }
     }
 
-    /**
-     * Write one NodeTypeDefinition to this writer
-     *
-     * @param nt node type definition
-     * @throws IOException if an I/O error occurs
-     */
-    public void write(NodeTypeDefinition nt) throws IOException {
-        try {
-            write(new QNodeTypeDefinitionImpl(nt, npResolver, QValueFactoryImpl.getInstance()));
-        } catch (RepositoryException e) {
-            throw new IOException("Error during internal conversion of nodetype definition:" + e.toString());
-        }
-    }
-
-    /**
-     * Write a namespace declaration to this writer. This method has no effect if the
-     * writer does not include namespaces.
-     *
-     * @param prefix  namespace prefix
-     * @throws NamespaceException  if no namespace is registered for the given prefix
-     * @throws IOException  if an I/O error occurs
-     */
-    public void writeNamespaceDelclaration(String prefix) throws NamespaceException, IOException {
-        if (!usedNamespaces.contains(prefix)) {
-            usedNamespaces.add(prefix);
-            nsWriter.write("<'");
-            nsWriter.write(prefix);
-            nsWriter.write("'='");
-            nsWriter.write(escape(resolver.getURI(prefix)));
-            nsWriter.write("'>\n");
-        }
-    }
-
-    /**
-     * Flushes all pending write operations and Closes this writer. please note,
-     * that the underlying writer remains open.
-     *
-     * @throws IOException if an I/O error occurs
-     */
-    public void close() throws IOException {
-        if (nsWriter != null) {
-            nsWriter.write("\n");
-            out.close();
-            nsWriter.write(((StringWriter) out).getBuffer().toString());
-            out = nsWriter;
-            nsWriter = null;
-        }
-        out.flush();
-        out = null;
-    }
-
-    /**
-     * write name
-     * @param ntd node type definition
-     * @throws IOException if an I/O error occurs
-     */
-    private void writeName(QNodeTypeDefinition ntd) throws IOException {
-        out.write("[");
-        out.write(resolve(ntd.getName()));
-        out.write("]");
-    }
-
-    /**
-     * write supertypes
-     * @param ntd node type definition
-     * @throws IOException if an I/O error occurs
-     */
-    private void writeSupertypes(QNodeTypeDefinition ntd) throws IOException {
-        // get ordered list of supertypes, omitting nt:Base
-        TreeSet<Name> supertypes = new TreeSet<Name>();
-        for (Name name : ntd.getSupertypes()) {
-            if (!name.equals(NameConstants.NT_BASE)) {
-                supertypes.add(name);
-            }
-        }
-        if (!supertypes.isEmpty()) {
-            String delim = " > ";
-            for (Name name : supertypes) {
-                out.write(delim);
-                out.write(resolve(name));
-                delim = ", ";
-            }
-        }
-    }
-
-    /**
-     * write options
-     * @param ntd node type definition
-     * @throws IOException if an I/O error occurs
-     */
-    private void writeOptions(QNodeTypeDefinition ntd) throws IOException {
-        List<String> options = new LinkedList<String>();
-        if (ntd.isAbstract()) {
-            options.add(Lexer.ABSTRACT[0]);
-        }
-        if (ntd.hasOrderableChildNodes()) {
-            options.add(Lexer.ORDERABLE[0]);
-        }
-        if (ntd.isMixin()) {
-            options.add(Lexer.MIXIN[0]);
-        }
-        if (!ntd.isQueryable()) {
-            options.add(Lexer.NOQUERY[0]);
-        }
-        if (ntd.getPrimaryItemName() != null) {
-            options.add(Lexer.PRIMARYITEM[0]);
-            options.add(resolve(ntd.getPrimaryItemName()));
-        }
-        for (int i = 0; i < options.size(); i++) {
-            if (i == 0) {
-                out.write("\n" + INDENT);
-            } else {
-                out.write(" ");
-            }
-            out.write(options.get(i));
-        }
-    }
-
-    /**
-     * write prop defs
-     * @param ntd node type definition
-     * @throws IOException if an I/O error occurs
-     */
-    private void writePropDefs(QNodeTypeDefinition ntd) throws IOException {
-        for (QPropertyDefinition pd : ntd.getPropertyDefs()) {
-            writePropDef(pd);
-        }
-    }
-
-    /**
-     * write node defs
-     * @param ntd node type definition
-     * @throws IOException if an I/O error occurs
-     */
-    private void writeNodeDefs(QNodeTypeDefinition ntd) throws IOException {
-        for (QNodeDefinition nd : ntd.getChildNodeDefs()) {
-            writeNodeDef(nd);
-        }
-    }
-
-    /**
-     * write prop def
-     * @param pd property definition
-     * @throws IOException if an I/O error occurs
-     */
-    private void writePropDef(QPropertyDefinition pd) throws IOException {
-        out.write("\n" + INDENT + "- ");
-
-        Name name = pd.getName();
-        if (name.equals(NameConstants.ANY_NAME)) {
-            out.write('*');
-        } else {
-            writeItemDefName(name);
-        }
-
-        out.write(" (");
-        out.write(PropertyType.nameFromValue(pd.getRequiredType()).toLowerCase());
-        out.write(")");
-        writeDefaultValues(pd.getDefaultValues());
-        if (pd.isMandatory()) {
-            out.write(" mandatory");
-        }
-        if (pd.isAutoCreated()) {
-            out.write(" autocreated");
-        }
-        if (pd.isProtected()) {
-            out.write(" protected");
-        }
-        if (pd.isMultiple()) {
-            out.write(" multiple");
-        }
-        if (pd.getOnParentVersion() != OnParentVersionAction.COPY) {
-            out.write(" ");
-            out.write(OnParentVersionAction.nameFromValue(pd.getOnParentVersion()).toLowerCase());
-        }
-        if (!pd.isFullTextSearchable()) {
-            out.write(" nofulltext");
-        }
-        if (!pd.isQueryOrderable()) {
-            out.write(" noqueryorder");
-        }
-        String[] qops = pd.getAvailableQueryOperators();
-        if (qops != null && qops.length > 0) {
-            List<String> opts = new ArrayList<String>(Arrays.asList(qops));
-            List<String> defaultOps = Arrays.asList(Operator.getAllQueryOperators());
-            if (!opts.containsAll(defaultOps)) {
-                out.write(" queryops '");
-                String delim = "";
-                for (String opt: opts) {
-                    out.write(delim);
-                    delim= ", ";
-                    if (opt.equals(QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO)) {
-                        out.write(Lexer.QUEROPS_EQUAL);
-                    } else if (opt.equals(QueryObjectModelConstants.JCR_OPERATOR_NOT_EQUAL_TO)) {
-                        out.write(Lexer.QUEROPS_NOTEQUAL);
-                    } else if (opt.equals(QueryObjectModelConstants.JCR_OPERATOR_GREATER_THAN)) {
-                        out.write(Lexer.QUEROPS_GREATERTHAN);
-                    } else if (opt.equals(QueryObjectModelConstants.JCR_OPERATOR_GREATER_THAN_OR_EQUAL_TO)) {
-                        out.write(Lexer.QUEROPS_GREATERTHANOREQUAL);
-                    } else if (opt.equals(QueryObjectModelConstants.JCR_OPERATOR_LESS_THAN)) {
-                        out.write(Lexer.QUEROPS_LESSTHAN);
-                    } else if (opt.equals(QueryObjectModelConstants.JCR_OPERATOR_LESS_THAN_OR_EQUAL_TO)) {
-                        out.write(Lexer.QUEROPS_LESSTHANOREQUAL);
-                    } else if (opt.equals(QueryObjectModelConstants.JCR_OPERATOR_LIKE)) {
-                        out.write(Lexer.QUEROPS_LIKE);
-                    }
-                }
-                out.write("'");
-            }
-        }
-        writeValueConstraints(pd.getValueConstraints(), pd.getRequiredType());
-    }
-
-    /**
-     * write default values
-     * @param dva default value
-     * @throws IOException if an I/O error occurs
-     */
-    private void writeDefaultValues(QValue[] dva) throws IOException {
-        if (dva != null && dva.length > 0) {
-            String delim = " = '";
-            for (QValue value : dva) {
-                out.write(delim);
+    private static NamespaceMapping createNsMapping(final NamespaceResolver namespaceResolver) {
+        return new org.apache.jackrabbit.commons.cnd.CompactNodeTypeDefWriter.NamespaceMapping() {
+            public String getNamespaceURI(String prefix) {
                 try {
-                    String str = ValueFormat.getJCRString(value, npResolver);
-                    out.write(escape(str));
-                } catch (RepositoryException e) {
-                    out.write(escape(value.toString()));
+                    return namespaceResolver.getURI(prefix);
+                } catch (NamespaceException e) {
+                    throw new RuntimeException(e);
                 }
-                out.write("'");
-                delim = ", '";
             }
-        }
-    }
-
-    /**
-     * write value constraints
-     * @param vca value constraint
-     * @param type value type
-     * @throws IOException if an I/O error occurs
-     */
-    private void writeValueConstraints(QValueConstraint[] vca, int type) throws IOException {
-        if (vca != null && vca.length > 0) {
-            String vc = convertConstraint(vca[0], type);
-            out.write(" < '");
-            out.write(escape(vc));
-            out.write("'");
-            for (int i = 1; i < vca.length; i++) {
-                vc = convertConstraint(vca[i], type);
-                out.write(", '");
-                out.write(escape(vc));
-                out.write("'");
-            }
-        }
-    }
-
-    /**
-     * Converts the constraint to a jcr value
-     * @param vc value constraint string
-     * @param type value type
-     * @return converted value
-     */
-    private String convertConstraint(QValueConstraint vc, int type) {
-        try {
-            ValueConstraint c = ValueConstraint.create(type, vc.getString());
-            return c.getDefinition(npResolver);
-        } catch (InvalidConstraintException e) {
-            // ignore -> return unconverted constraint
-            return vc.getString();
-        }
-    }
-
-    /**
-     * write node def
-     *
-     * @param nd node definition
-     * @throws IOException if an I/O error occurs
-     */
-    private void writeNodeDef(QNodeDefinition nd) throws IOException {
-        out.write("\n" + INDENT + "+ ");
-
-        Name name = nd.getName();
-        if (name.equals(NameConstants.ANY_NAME)) {
-            out.write('*');
-        } else {
-            writeItemDefName(name);
-        }
-        writeRequiredTypes(nd.getRequiredPrimaryTypes());
-        writeDefaultType(nd.getDefaultPrimaryType());
-        if (nd.isMandatory()) {
-            out.write(" mandatory");
-        }
-        if (nd.isAutoCreated()) {
-            out.write(" autocreated");
-        }
-        if (nd.isProtected()) {
-            out.write(" protected");
-        }
-        if (nd.allowsSameNameSiblings()) {
-            out.write(" multiple");
-        }
-        if (nd.getOnParentVersion() != OnParentVersionAction.COPY) {
-            out.write(" ");
-            out.write(OnParentVersionAction.nameFromValue(nd.getOnParentVersion()).toLowerCase());
-        }
-    }
-
-    /**
-     * Write item def name
-     * @param name name
-     * @throws IOException if an I/O error occurs
-     */
-    private void writeItemDefName(Name name) throws IOException {
-        out.write(resolve(name));
-    }
-    /**
-     * write required types
-     * @param reqTypes required type names
-     * @throws IOException if an I/O error occurs
-     */
-    private void writeRequiredTypes(Name[] reqTypes) throws IOException {
-        if (reqTypes != null && reqTypes.length > 0) {
-            String delim = " (";
-            for (Name reqType : reqTypes) {
-                out.write(delim);
-                out.write(resolve(reqType));
-                delim = ", ";
-            }
-            out.write(")");
-        }
-    }
-
-    /**
-     * write default types
-     * @param defType default type name
-     * @throws IOException if an I/O error occurs
-     */
-    private void writeDefaultType(Name defType) throws IOException {
-        if (defType != null && !defType.getLocalName().equals("*")) {
-            out.write(" = ");
-            out.write(resolve(defType));
-        }
-    }
-
-    /**
-     * resolve
-     * @param name name to resolve
-     * @return the resolved name
-     * @throws IOException if an I/O error occurs
-     */
-    private String resolve(Name name) throws IOException {
-        if (name == null) {
-            return "";
-        }
-        try {
-            String prefix = resolver.getPrefix(name.getNamespaceURI());
-            if (prefix != null && !prefix.equals(Name.NS_EMPTY_PREFIX)) {
-                // check for writing namespaces
-                if (nsWriter != null) {
-                    writeNamespaceDelclaration(prefix);
-                }
-                prefix += ":";
-            }
-
-            String encLocalName = ISO9075.encode(name.getLocalName());
-            String resolvedName = prefix + encLocalName;
-
-            // check for '-' and '+'
-            if (resolvedName.indexOf('-') >= 0 || resolvedName.indexOf('+') >= 0) {
-                return "'" + resolvedName + "'";
-            } else {
-                return resolvedName;
-            }
-
-        } catch (NamespaceException e) {
-            return name.toString();
-        }
-    }
-
-    /**
-     * escape
-     * @param s string
-     * @return the escaped string
-     */
-    private String escape(String s) {
-        StringBuffer sb = new StringBuffer(s);
-        for (int i = 0; i < sb.length(); i++) {
-            if (sb.charAt(i) == '\\') {
-                sb.insert(i, '\\');
-                i++;
-            } else if (sb.charAt(i) == '\'') {
-                sb.insert(i, '\'');
-                i++;
-            }
-        }
-        return sb.toString();
+        };
     }
 }
