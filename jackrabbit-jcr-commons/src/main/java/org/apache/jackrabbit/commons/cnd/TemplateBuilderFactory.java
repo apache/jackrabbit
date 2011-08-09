@@ -21,6 +21,7 @@ import java.util.List;
 
 import javax.jcr.NamespaceRegistry;
 import javax.jcr.RepositoryException;
+import javax.jcr.Session;
 import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.Value;
 import javax.jcr.ValueFactory;
@@ -52,6 +53,20 @@ public class TemplateBuilderFactory extends DefinitionBuilderFactory<NodeTypeTem
         this.nodeTypeManager = nodeTypeManager;
         this.valueFactory = valueFactory;
         this.namespaceRegistry = namespaceRegistry;
+    }
+
+    /**
+     * Creates a new <code>TemplateBuilderFactory</code> for the specified
+     * <code>Session</code>. This is equivalent to
+     * {@link #TemplateBuilderFactory(NodeTypeManager, ValueFactory, NamespaceRegistry)}
+     * where all parameters are obtained from the given session object and
+     * the workspace associated with it.
+     *
+     * @param session The repository session.
+     * @throws RepositoryException If an error occurs.
+     */
+    public TemplateBuilderFactory(Session session) throws RepositoryException {
+        this(session.getWorkspace().getNodeTypeManager(), session.getValueFactory(), session.getWorkspace().getNamespaceRegistry());
     }
 
     @Override
@@ -238,7 +253,5 @@ public class TemplateBuilderFactory extends DefinitionBuilderFactory<NodeTypeTem
             List<NodeDefinitionTemplate> templates = ntd.template.getNodeDefinitionTemplates();
             templates.add(template);
         }
-
     }
-
 }
