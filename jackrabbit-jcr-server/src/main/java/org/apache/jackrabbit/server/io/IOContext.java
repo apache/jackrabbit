@@ -35,7 +35,7 @@ public interface IOContext {
     public boolean hasStream();
 
     /**
-     * Informs this context that it will not be used for futher exports any
+     * Informs this context that it will not be used for further exports any
      * more. A boolean flag indicates about the success of the export
      *
      * @param success

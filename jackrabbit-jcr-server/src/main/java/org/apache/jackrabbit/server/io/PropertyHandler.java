@@ -78,7 +78,7 @@ public interface PropertyHandler {
      * @throws RepositoryException If
      * {@link PropertyHandler#canImport(PropertyImportContext, boolean)}
      * returns false for the given parameters or if some other unrecoverable
-     * error occured. Note, that normal failure of a property update must be
+     * error occurred. Note, that normal failure of a property update must be
      * reported with the return value and should not result in an exception.
      */
     public Map<? extends PropEntry, ?> importProperties(PropertyImportContext importContext, boolean isCollection) throws RepositoryException;

@@ -121,7 +121,7 @@ public class ImportContextImpl implements ImportContext {
 
     /**
      * Returns a new <code>InputStream</code> to the temporary file created
-     * during instanciation or <code>null</code>, if this context does not
+     * during instantiation or <code>null</code>, if this context does not
      * provide a stream.
      *
      * @see ImportContext#getInputStream()

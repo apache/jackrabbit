@@ -58,7 +58,7 @@ public interface IOManager {
     /**
      * Passes the specified context and boolean value to the IOHandlers present
      * on this manager.
-     * As soon as the first handler incidates success the import should be
+     * As soon as the first handler indicates success the import should be
      * considered completed. If none of the handlers can deal with the given
      * information this method must return false.
      *
@@ -73,7 +73,7 @@ public interface IOManager {
 
     /**
      * Passes the specified information to the IOHandlers present on this manager.
-     * As soon as the first handler incidates success the import should be
+     * As soon as the first handler indicates success the import should be
      * considered completed. If none of the handlers can deal with the given
      * information this method must return false.
      *
@@ -88,7 +88,7 @@ public interface IOManager {
 
     /**
      * Passes the specified information to the IOHandlers present on this manager.
-     * As soon as the first handler incidates success the export should be
+     * As soon as the first handler indicates success the export should be
      * considered completed. If none of the handlers can deal with the given
      * information this method must return false.
      *
@@ -103,7 +103,7 @@ public interface IOManager {
 
     /**
      * Passes the specified information to the IOHandlers present on this manager.
-     * As soon as the first handler incidates success the export should be
+     * As soon as the first handler indicates success the export should be
      * considered completed. If none of the handlers can deal with the given
      * information this method must return false.
      *
