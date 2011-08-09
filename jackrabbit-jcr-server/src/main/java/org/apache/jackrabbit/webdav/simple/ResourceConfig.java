@@ -18,9 +18,13 @@ package org.apache.jackrabbit.webdav.simple;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.jcr.Item;
 import javax.jcr.Node;
@@ -35,6 +39,7 @@ import org.apache.jackrabbit.server.io.PropertyManager;
 import org.apache.jackrabbit.server.io.PropertyManagerImpl;
 import org.apache.jackrabbit.webdav.xml.DomUtil;
 import org.apache.jackrabbit.webdav.xml.ElementIterator;
+import org.apache.jackrabbit.webdav.xml.Namespace;
 import org.apache.tika.detect.Detector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,6 +52,18 @@ import org.xml.sax.SAXException;
 public class ResourceConfig {
 
     private static Logger log = LoggerFactory.getLogger(ResourceConfig.class);
+
+    private static final String ELEMENT_IOMANAGER = "iomanager";
+    private static final String ELEMENT_IOHANDLER = "iohandler";
+
+    private static final String ELEMENT_PROPERTYMANAGER = "propertymanager";
+    private static final String ELEMENT_PROPERTYHANDLER = "propertyhandler";
+
+    private static final String ELEMENT_CLASS = "class";
+
+    private static final String ELEMENT_PARAM = "param";
+    private static final String ATTR_NAME = "name";
+    private static final String ATTR_VALUE = "value";
 
     /**
      * Content type detector.
@@ -102,16 +119,59 @@ public class ResourceConfig {
      */
     public void parse(URL configURL) {
         try {
-            InputStream in = configURL.openStream();
-            Element config = DomUtil.parseDocument(in).getDocumentElement();
+            parse(configURL.openStream());
+        } catch (IOException e) {
+            log.debug("Invalid resource configuration: " + e.getMessage());
+        }
+    }
 
+    /**
+     * Parses the given input stream into the xml configuration file.
+     * The xml must match the following structure:<br>
+     * <pre>
+     * &lt;!ELEMENT config (iomanager, propertymanager, (collection | noncollection)?, filter?, mimetypeproperties?) &gt;
+     * &lt;!ELEMENT iomanager (class, iohandler*) &gt;
+     * &lt;!ELEMENT iohandler (class) &gt;
+     * &lt;!ELEMENT propertymanager (class, propertyhandler*) &gt;
+     * &lt;!ELEMENT propertyhandler (class) &gt;
+     * &lt;!ELEMENT collection (nodetypes) &gt;
+     * &lt;!ELEMENT noncollection (nodetypes) &gt;
+     * &lt;!ELEMENT filter (class, namespaces?, nodetypes?) &gt;
+     * &lt;!ELEMENT class &gt;
+     *    &lt;!ATTLIST class
+     *      name  CDATA #REQUIRED
+     *    &gt;
+     * &lt;!ELEMENT namespaces (prefix|uri)* &gt;
+     * &lt;!ELEMENT prefix (CDATA) &gt;
+     * &lt;!ELEMENT uri (CDATA) &gt;
+     * &lt;!ELEMENT nodetypes (nodetype)* &gt;
+     * &lt;!ELEMENT nodetype (CDATA) &gt;
+     * &lt;!ELEMENT mimetypeproperties (mimemapping*, defaultmimetype) &gt;
+     * &lt;!ELEMENT mimemapping &gt;
+     *    &lt;!ATTLIST mimemapping
+     *      extension  CDATA #REQUIRED
+     *      mimetype  CDATA #REQUIRED
+     *    &gt;
+     * &lt;!ELEMENT defaultmimetype (CDATA) &gt;
+     * </pre>
+     * <p>
+     * The &lt;mimetypeproperties/&gt; settings have been deprecated and will
+     * be ignored with a warning. Instead you can use the
+     * {@link SimpleWebdavServlet#INIT_PARAM_MIME_INFO mime-info}
+     * servlet initialization parameter to customize the media type settings.
+     *
+     * @param stream
+     */
+    public void parse(InputStream stream) {
+        try {
+            Element config = DomUtil.parseDocument(stream).getDocumentElement();
             if (config == null) {
                 log.warn("Resource configuration: mandatory 'config' element is missing.");
                 return;
             }
 
             // iomanager config entry
-            Element el = DomUtil.getChildElement(config, "iomanager", null);
+            Element el = DomUtil.getChildElement(config, ELEMENT_IOMANAGER, null);
             if (el != null) {
                 Object inst = buildClassFromConfig(el);
                 if (inst != null && inst instanceof IOManager) {
@@ -119,12 +179,14 @@ public class ResourceConfig {
                     ioManager.setDetector(detector);
                     // get optional 'iohandler' child elements and populate the
                     // ioManager with the instances
-                    ElementIterator iohElements = DomUtil.getChildren(el, "iohandler", null);
+                    ElementIterator iohElements = DomUtil.getChildren(el, ELEMENT_IOHANDLER, null);
                     while (iohElements.hasNext()) {
                         Element iohEl = iohElements.nextElement();
                         inst = buildClassFromConfig(iohEl);
                         if (inst != null && inst instanceof IOHandler) {
-                            ioManager.addIOHandler((IOHandler) inst);
+                            IOHandler handler = (IOHandler) inst;
+                            setParameters(handler, iohEl);
+                            ioManager.addIOHandler(handler);
                         } else {
                             log.warn("Resource configuration: the handler is not a valid IOHandler.");
                         }
@@ -137,19 +199,21 @@ public class ResourceConfig {
             }
 
             // propertymanager config entry
-            el = DomUtil.getChildElement(config, "propertymanager", null);
+            el = DomUtil.getChildElement(config, ELEMENT_PROPERTYMANAGER, null);
             if (el != null) {
                 Object inst = buildClassFromConfig(el);
                 if (inst != null && inst instanceof PropertyManager) {
                     propManager = (PropertyManager)inst;
                     // get optional 'iohandler' child elements and populate the
                     // ioManager with the instances
-                    ElementIterator iohElements = DomUtil.getChildren(el, "propertyhandler", null);
+                    ElementIterator iohElements = DomUtil.getChildren(el, ELEMENT_PROPERTYHANDLER, null);
                     while (iohElements.hasNext()) {
                         Element iohEl = iohElements.nextElement();
                         inst = buildClassFromConfig(iohEl);
                         if (inst != null && inst instanceof PropertyHandler) {
-                            propManager.addPropertyHandler((PropertyHandler) inst);
+                            PropertyHandler handler = (PropertyHandler) inst;
+                            setParameters(handler, iohEl);
+                            propManager.addPropertyHandler(handler);
                         } else {
                             log.warn("Resource configuration: the handler is not a valid PropertyHandler.");
                         }
@@ -189,8 +253,7 @@ public class ResourceConfig {
 
             el = DomUtil.getChildElement(config, "mimetypeproperties", null);
             if (el != null) {
-                log.warn("Ignoring deprecated mimetypeproperties settings: {}",
-                        configURL);
+                log.warn("Ignoring deprecated mimetypeproperties settings");
             }
         } catch (IOException e) {
             log.debug("Invalid resource configuration: " + e.getMessage());
@@ -260,6 +323,73 @@ public class ResourceConfig {
             ntNames = new String[0];
         }
         return ntNames;
+    }
+
+    /**
+     * Retrieve 'param' elements for the specified <code>xmlElement</code> and
+     * use the public setter methods of the given <code>instance</code> to set
+     * the corresponding instance fields.
+     *
+     * @param instance
+     * @param xmlElement
+     */
+    private static void setParameters(Object instance, Element xmlElement) {
+        ElementIterator paramElems = DomUtil.getChildren(xmlElement, ELEMENT_PARAM, Namespace.EMPTY_NAMESPACE);
+        if (paramElems.hasNext()) {
+            Map<String, Method> setters = getSetters(instance.getClass());
+            if (!setters.isEmpty()) {
+                while (paramElems.hasNext()) {
+                    Element parameter = paramElems.next();
+                    String name = DomUtil.getAttribute(parameter, ATTR_NAME, null);
+                    String value = DomUtil.getAttribute(parameter, ATTR_VALUE, null);
+                    if (name == null || value == null) {
+                        log.error("Parameter name or value missing -> ignore.");
+                        continue;
+                    }
+                    Method setter = setters.get(name);
+                    if (setter != null) {
+                        Class<?> type = setter.getParameterTypes()[0];
+                        try {
+                            if (type.isAssignableFrom(String.class)
+                                    || type.isAssignableFrom(Object.class)) {
+                                setter.invoke(instance, value);
+                            } else if (type.isAssignableFrom(Boolean.TYPE)
+                                    || type.isAssignableFrom(Boolean.class)) {
+                                setter.invoke(instance, Boolean.valueOf(value));
+                            } else if (type.isAssignableFrom(Integer.TYPE)
+                                    || type.isAssignableFrom(Integer.class)) {
+                                setter.invoke(instance, Integer.valueOf(value));
+                            } else if (type.isAssignableFrom(Long.TYPE)
+                                    || type.isAssignableFrom(Long.class)) {
+                                setter.invoke(instance, Long.valueOf(value));
+                            } else if (type.isAssignableFrom(Double.TYPE)
+                                    || type.isAssignableFrom(Double.class)) {
+                                setter.invoke(instance, Double.valueOf(value));
+                            } else {
+                                log.error("Cannot set configuration property " + name);
+                            }
+                        } catch (Exception e) {
+                            log.error("Invalid format (" + value + ") for property " + name + " of class " + instance.getClass().getName(), e);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private static Map<String, Method> getSetters(Class<?> cl) {
+        Map<String, Method> methods = new HashMap<String, Method>();
+        for (Method method : cl.getMethods()) {
+            String name = method.getName();
+            if (name.startsWith("set") && name.length() > 3
+                    && Modifier.isPublic(method.getModifiers())
+                    && !Modifier.isStatic(method.getModifiers())
+                    && Void.TYPE.equals(method.getReturnType())
+                    && method.getParameterTypes().length == 1) {
+                methods.put(name.substring(3, 4).toLowerCase() + name.substring(4), method);
+            }
+        }
+        return methods;
     }
 
     /**
