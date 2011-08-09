@@ -46,6 +46,7 @@ import javax.jcr.Workspace;
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.NodeIterator;
 import javax.jcr.PathNotFoundException;
+import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletResponse;
@@ -238,29 +239,37 @@ public abstract class JcrRemotingServlet extends JCRWebdavServerServlet {
             }
         }
 
-        // setup home directory
-        String paramHome = getServletConfig().getInitParameter(INIT_PARAM_HOME);
-        if (paramHome == null) {
-            log.debug("missing init-param " + INIT_PARAM_HOME + ". using default: 'jackrabbit'");
-            paramHome = "jackrabbit";
-        }
-        File home;
-        try {
-            home = new File(paramHome).getCanonicalFile();
-        } catch (IOException e) {
-            throw new ServletException(INIT_PARAM_HOME + " invalid." + e.toString());
-        }
-        home.mkdirs();
+        // Determine the configured location for temporary files used when
+        // processing file uploads. Since JCR-3029 the default is the
+        // standard java.io.tmpdir location, but the presence of explicit
+        // configuration parameters restores the original behavior.
+        File tmp = null;
+        ServletConfig config = getServletConfig();
+        String paramHome = config.getInitParameter(INIT_PARAM_HOME);
+        String paramTemp = config.getInitParameter(INIT_PARAM_TMP_DIRECTORY);
+        if (paramHome != null || paramTemp != null) {
+            if (paramHome == null) {
+                log.debug("Missing init-param " + INIT_PARAM_HOME
+                        + ". Using default: 'jackrabbit'");
+                paramHome = "jackrabbit";
+            } else if (paramTemp == null) {
+                log.debug("Missing init-param " + INIT_PARAM_TMP_DIRECTORY
+                        + ". Using default: 'tmp'");
+                paramTemp = "tmp";
+            }
 
-        String tmp = getServletConfig().getInitParameter(INIT_PARAM_TMP_DIRECTORY);
-        if (tmp == null) {
-            log.debug("No " + INIT_PARAM_TMP_DIRECTORY + " specified. using 'tmp'");
-            tmp = "tmp";
+            tmp = new File(paramHome, paramTemp);
+            try {
+                tmp = tmp.getCanonicalFile();
+                tmp.mkdirs();
+                log.debug("  temp-directory = " + tmp.getPath());
+            } catch (IOException e) {
+                log.warn("Invalid temporary directory " + tmp.getPath()
+                        + ", using system default instead", e);
+                tmp = null;
+            }
         }
-        File tmpDirectory = new File(home, tmp);
-        tmpDirectory.mkdirs();
-        log.debug("  temp-directory = " + tmpDirectory.getPath());
-        getServletContext().setAttribute(ATTR_TMP_DIRECTORY, tmpDirectory);
+        getServletContext().setAttribute(ATTR_TMP_DIRECTORY, tmp);
 
         // force usage of custom locator factory.
         super.setLocatorFactory(new DavLocatorFactoryImpl(getInitParameter(INIT_PARAM_RESOURCE_PATH_PREFIX)));
