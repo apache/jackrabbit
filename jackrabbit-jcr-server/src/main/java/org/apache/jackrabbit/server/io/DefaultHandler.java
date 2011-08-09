@@ -449,6 +449,7 @@ public class DefaultHandler implements IOHandler, PropertyHandler {
      * @param context the export context
      * @param isCollection <code>true</code> if collection
      * @param contentNode the content node
+     * @throws java.io.IOException If an error occurs.
      */
     protected void exportProperties(ExportContext context, boolean isCollection, Node contentNode) throws IOException {
         try {
@@ -522,7 +523,7 @@ public class DefaultHandler implements IOHandler, PropertyHandler {
      *
      * @return nodetype name
      */
-    protected String getCollectionNodeType() {
+    public String getCollectionNodeType() {
         return collectionNodetype;
     }
 
@@ -531,7 +532,7 @@ public class DefaultHandler implements IOHandler, PropertyHandler {
      *
      * @return nodetype name
      */
-    protected String getNodeType() {
+    public String getNodeType() {
         return defaultNodetype;
     }
 
@@ -542,7 +543,7 @@ public class DefaultHandler implements IOHandler, PropertyHandler {
      *
      * @return nodetype name
      */
-    protected String getContentNodeType() {
+    public String getContentNodeType() {
         return contentNodetype;
     }
 
@@ -786,5 +787,19 @@ public class DefaultHandler implements IOHandler, PropertyHandler {
                || ntName.equals(JcrConstants.MIX_REFERENCEABLE)
                || ntName.equals(JcrConstants.MIX_VERSIONABLE)
                || ntName.equals(JcrConstants.MIX_LOCKABLE);
+    }
+
+    //-------------------------------------------< setter for configuration >---
+
+    public void setCollectionNodetype(String collectionNodetype) {
+        this.collectionNodetype = collectionNodetype;
+    }
+
+    public void setDefaultNodetype(String defaultNodetype) {
+        this.defaultNodetype = defaultNodetype;
+    }
+
+    public void setContentNodetype(String contentNodetype) {
+        this.contentNodetype = contentNodetype;
     }
 }
