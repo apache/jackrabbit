@@ -18,7 +18,6 @@ package org.apache.jackrabbit.core.cache;
 
 import static org.apache.jackrabbit.core.cache.CacheAccessListener.ACCESS_INTERVAL;
 
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -57,8 +56,13 @@ public abstract class AbstractCache implements Cache {
      * {@link CacheAccessListener#cacheAccessed()} events once every
      * {@link CacheAccessListener#ACCESS_INTERVAL} calls to the protected
      * {@link #recordCacheAccess()} method.
+     * <p>
+     * A long counter is used to prevent integer overflow. Even if the cache
+     * was accessed once every nanosecond, an overflow would only occur in
+     * about 300 years. See
+     * <a href="https://issues.apache.org/jira/browse/JCR-3013">JCR-3013</a>.
      */
-    private final AtomicInteger accessCount = new AtomicInteger();
+    private final AtomicLong accessCount = new AtomicLong();
 
     /**
      * Cache access listener. Set in the
@@ -94,7 +98,7 @@ public abstract class AbstractCache implements Cache {
      * interval has passed since the previous listener call.
      */
     protected void recordCacheAccess() {
-        int count = accessCount.incrementAndGet();
+        long count = accessCount.incrementAndGet();
         if (count % ACCESS_INTERVAL == 0) {
             CacheAccessListener listener = accessListener.get();
             if (listener != null) {
