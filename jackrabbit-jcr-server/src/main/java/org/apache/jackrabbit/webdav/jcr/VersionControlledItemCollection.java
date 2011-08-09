@@ -26,6 +26,7 @@ import org.apache.jackrabbit.webdav.DavResourceLocator;
 import org.apache.jackrabbit.webdav.DavServletResponse;
 import org.apache.jackrabbit.webdav.MultiStatus;
 import org.apache.jackrabbit.webdav.MultiStatusResponse;
+import org.apache.jackrabbit.webdav.jcr.property.JcrDavPropertyNameSet;
 import org.apache.jackrabbit.webdav.property.DavPropertyName;
 import org.apache.jackrabbit.webdav.property.DefaultDavProperty;
 import org.apache.jackrabbit.webdav.property.HrefProperty;
@@ -75,6 +76,8 @@ public class VersionControlledItemCollection extends DefaultItemCollection
      *
      * @param locator
      * @param session
+     * @param factory
+     * @param item
      */
     public VersionControlledItemCollection(DavResourceLocator locator,
                                            JcrDavSession session,
@@ -98,7 +101,7 @@ public class VersionControlledItemCollection extends DefaultItemCollection
         StringBuffer sb = new StringBuffer(super.getSupportedMethods());
         // Versioning support
         sb.append(", ").append(VersionableResource.METHODS);
-        if (this.isVersionControlled()) {
+        if (isVersionControlled()) {
             try {
                 if (((Node)item).isCheckedOut()) {
                     sb.append(", ").append(VersionControlledResource.methods_checkedOut);
@@ -111,6 +114,35 @@ public class VersionControlledItemCollection extends DefaultItemCollection
             }
         }
         return sb.toString();
+    }
+
+    @Override
+    public DavProperty<?> getProperty(DavPropertyName name) {
+        DavProperty prop = super.getProperty(name);
+        if (prop == null && isVersionControlled()) {
+            Node n = (Node) item;
+            // properties defined by RFC 3253 for version-controlled resources
+            // workspace property already set in AbstractResource.initProperties()
+            try {
+                if (VERSION_HISTORY.equals(name)) {
+                    // DAV:version-history (computed)
+                    String vhHref = getLocatorFromItem(n.getVersionHistory()).getHref(true);
+                    prop  = new HrefProperty(VERSION_HISTORY, vhHref, true);
+                } else if (CHECKED_OUT.equals(name) && n.isCheckedOut()) {
+                    // DAV:checked-out property (protected)
+                    String baseVHref = getLocatorFromItem(n.getBaseVersion()).getHref(true);
+                    prop = new HrefProperty(CHECKED_OUT, baseVHref, true);
+                } else if (CHECKED_IN.equals(name) && !n.isCheckedOut()) {
+                    // DAV:checked-in property (protected)
+                    String baseVHref = getLocatorFromItem(n.getBaseVersion()).getHref(true);
+                    prop = new HrefProperty(CHECKED_IN, baseVHref, true);
+                }
+            } catch (RepositoryException e) {
+                log.error(e.getMessage());
+            }
+        }
+                
+        return prop;
     }
 
     /**
@@ -523,50 +555,69 @@ public class VersionControlledItemCollection extends DefaultItemCollection
         }
     }
 
+    @Override
+    protected void initPropertyNames() {
+        super.initPropertyNames();
+
+        if (isVersionControlled()) {
+            names.addAll(JcrDavPropertyNameSet.VERSIONABLE_SET);
+
+            Node n = (Node) item;
+            try {
+                if (n.isCheckedOut()) {
+                    names.add(CHECKED_OUT);
+                    if (n.hasProperty(JcrConstants.JCR_PREDECESSORS)) {
+                        names.add(PREDECESSOR_SET);
+                    }
+                    if (n.hasProperty(JcrConstants.JCR_MERGEFAILED)) {
+                        names.add(AUTO_MERGE_SET);
+                    }
+                    // todo: checkout-fork, checkin-fork
+                } else {
+                    names.add(CHECKED_IN);
+                }
+            } catch (RepositoryException e) {
+                log.warn(e.getMessage());
+            }
+        }
+    }
+
     /**
      * Fill the property set for this resource.
      */
     @Override
     protected void initProperties() {
         super.initProperties();
-        if (exists()) {
+        if (isVersionControlled()) {
             Node n = (Node)item;
             // properties defined by RFC 3253 for version-controlled resources
-            if (isVersionControlled()) {
-                // workspace property already set in AbstractResource.initProperties()
-                try {
-                    // DAV:version-history (computed)
-                    String vhHref = getLocatorFromItem(n.getVersionHistory()).getHref(true);
-                    properties.add(new HrefProperty(VERSION_HISTORY, vhHref, true));
+            // workspace property already set in AbstractResource.initProperties()
+            try {
+                // DAV:version-history (computed)
+                String vhHref = getLocatorFromItem(n.getVersionHistory()).getHref(true);
+                properties.add(new HrefProperty(VERSION_HISTORY, vhHref, true));
 
-                    // DAV:auto-version property: there is no auto version, explicit CHECKOUT is required.
-                    properties.add(new DefaultDavProperty<String>(AUTO_VERSION, null, false));
+                // DAV:auto-version property: there is no auto version, explicit CHECKOUT is required.
+                properties.add(new DefaultDavProperty<String>(AUTO_VERSION, null, false));
 
-                    String baseVHref = getLocatorFromItem(n.getBaseVersion()).getHref(true);
-                    if (n.isCheckedOut()) {
-                        // DAV:checked-out property (protected)
-                        properties.add(new HrefProperty(CHECKED_OUT, baseVHref, true));
-
-                        // DAV:predecessors property
-                        if (n.hasProperty(JcrConstants.JCR_PREDECESSORS)) {
-                            Value[] predec = n.getProperty(JcrConstants.JCR_PREDECESSORS).getValues();
-                            addHrefProperty(PREDECESSOR_SET, predec, false);
-                        }
-                        // DAV:auto-merge-set property. NOTE: the DAV:merge-set
-                        // never occurs, because merging without bestEffort flag
-                        // being set results in an exception on failure.
-                        if (n.hasProperty(JcrConstants.JCR_MERGEFAILED)) {
-                            Value[] mergeFailed = n.getProperty(JcrConstants.JCR_MERGEFAILED).getValues();
-                            addHrefProperty(AUTO_MERGE_SET, mergeFailed, false);
-                        }
-                        // todo: checkout-fork, checkin-fork
-                    } else {
-                        // DAV:checked-in property (protected)
-                        properties.add(new HrefProperty(CHECKED_IN, baseVHref, true));
+                String baseVHref = getLocatorFromItem(n.getBaseVersion()).getHref(true);
+                if (n.isCheckedOut()) {
+                    // DAV:predecessors property
+                    if (n.hasProperty(JcrConstants.JCR_PREDECESSORS)) {
+                        Value[] predec = n.getProperty(JcrConstants.JCR_PREDECESSORS).getValues();
+                        addHrefProperty(PREDECESSOR_SET, predec, false);
                     }
-                } catch (RepositoryException e) {
-                    log.error(e.getMessage());
+                    // DAV:auto-merge-set property. NOTE: the DAV:merge-set
+                    // never occurs, because merging without bestEffort flag
+                    // being set results in an exception on failure.
+                    if (n.hasProperty(JcrConstants.JCR_MERGEFAILED)) {
+                        Value[] mergeFailed = n.getProperty(JcrConstants.JCR_MERGEFAILED).getValues();
+                        addHrefProperty(AUTO_MERGE_SET, mergeFailed, false);
+                    }
+                    // todo: checkout-fork, checkin-fork
                 }
+            } catch (RepositoryException e) {
+                log.error(e.getMessage());
             }
         }
     }

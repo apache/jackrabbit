@@ -27,6 +27,7 @@ import org.apache.jackrabbit.webdav.DavSession;
 import org.apache.jackrabbit.webdav.MultiStatus;
 import org.apache.jackrabbit.webdav.MultiStatusResponse;
 import org.apache.jackrabbit.webdav.DavCompliance;
+import org.apache.jackrabbit.webdav.jcr.property.JcrDavPropertyNameSet;
 import org.apache.jackrabbit.webdav.util.HttpDateFormat;
 import org.apache.jackrabbit.webdav.jcr.search.SearchResourceImpl;
 import org.apache.jackrabbit.webdav.jcr.transaction.TxLockManagerImpl;
@@ -111,6 +112,7 @@ abstract class AbstractResource implements DavResource, TransactionResource,
 
     protected boolean initedProps;
     protected DavPropertySet properties = new DavPropertySet();
+    protected DavPropertyNameSet names;
     protected SupportedLock supportedLock = new SupportedLock();
     protected SupportedReportSetProperty supportedReports = new SupportedReportSetProperty();
 
@@ -119,6 +121,7 @@ abstract class AbstractResource implements DavResource, TransactionResource,
      *
      * @param locator
      * @param session
+     * @param factory
      */
     AbstractResource(DavResourceLocator locator, JcrDavSession session,
                      DavResourceFactory factory) {
@@ -179,14 +182,37 @@ abstract class AbstractResource implements DavResource, TransactionResource,
      * @see org.apache.jackrabbit.webdav.DavResource#getPropertyNames()
      */
     public DavPropertyName[] getPropertyNames() {
-        return getProperties().getPropertyNames();
+        initPropertyNames();
+        return names.getContent().toArray(new DavPropertyName[names.getContentSize()]);
     }
 
     /**
      * @see org.apache.jackrabbit.webdav.DavResource#getProperty(org.apache.jackrabbit.webdav.property.DavPropertyName)
      */
     public DavProperty<?> getProperty(DavPropertyName name) {
-        return getProperties().get(name);
+        DavProperty prop = getProperties().get(name);
+        if (prop == null) {
+            if (DeltaVConstants.SUPPORTED_METHOD_SET.equals(name)) {
+                prop = new SupportedMethodSetProperty(getSupportedMethods().split(",\\s"));
+            } else if (DeltaVConstants.SUPPORTED_REPORT_SET.equals(name)) {
+                prop = supportedReports;
+            } else if (DeltaVConstants.CREATOR_DISPLAYNAME.equals(name)) {
+                // DAV:creator-displayname default value : not available
+                prop = new DefaultDavProperty<String>(DeltaVConstants.CREATOR_DISPLAYNAME, getCreatorDisplayName(), true);
+            } else if (DeltaVConstants.COMMENT.equals(name)) {
+                // DAV:comment not value available from jcr
+                prop = new DefaultDavProperty<String>(DeltaVConstants.COMMENT, null, true);
+            } else if (DeltaVConstants.WORKSPACE.equals(name)) {
+                // 'workspace' property as defined by RFC 3253
+                String workspaceHref = getWorkspaceHref();
+                if (workspaceHref != null) {
+                    prop = new HrefProperty(DeltaVConstants.WORKSPACE, workspaceHref, true);
+                }
+            }
+        }
+
+        // TODO: required supported-live-property-set  
+        return prop;
     }
 
     /**
@@ -446,7 +472,7 @@ abstract class AbstractResource implements DavResource, TransactionResource,
             Report report = ReportType.getType(reportInfo).createReport(this, reportInfo);
             return report;
         } else {
-            throw new DavException(DavServletResponse.SC_UNPROCESSABLE_ENTITY, "Unkown report "+ reportInfo.getReportName() +"requested.");
+            throw new DavException(DavServletResponse.SC_UNPROCESSABLE_ENTITY, "Unknown report "+ reportInfo.getReportName() +"requested.");
         }
     }
 
@@ -536,6 +562,13 @@ abstract class AbstractResource implements DavResource, TransactionResource,
 
     //--------------------------------------------------------------------------
     /**
+     * Property names common to all resources.
+     */
+    protected void initPropertyNames() {
+        names = new DavPropertyNameSet(JcrDavPropertyNameSet.BASE_SET);
+    }
+
+    /**
      * Fill the set of default properties
      */
     protected void initProperties() {
@@ -558,7 +591,7 @@ abstract class AbstractResource implements DavResource, TransactionResource,
         properties.add(new DefaultDavProperty<String>(DavPropertyName.GETLASTMODIFIED, lastModified));
 
         // default creation time
-        properties.add(new DefaultDavProperty<String>(DavPropertyName.CREATIONDATE, HttpDateFormat.creationDateFormat().format(new Date(0))));
+        properties.add(new DefaultDavProperty<String>(DavPropertyName.CREATIONDATE, getCreationDate()));
 
         // supported lock property
         properties.add(supportedLock);
@@ -567,31 +600,16 @@ abstract class AbstractResource implements DavResource, TransactionResource,
         // an empty xlockdiscovery will be returned in the response.
         properties.add(new LockDiscovery(getLocks()));
 
-        properties.add(new SupportedMethodSetProperty(getSupportedMethods().split(",\\s")));
-
-        // DeltaV properties
-        properties.add(supportedReports);
-        // DAV:creator-displayname default value : not available
-        properties.add(new DefaultDavProperty<String>(DeltaVConstants.CREATOR_DISPLAYNAME, null, true));
-        // DAV:comment not value available from jcr
-        properties.add(new DefaultDavProperty<String>(DeltaVConstants.COMMENT, null, true));
-
-        // 'workspace' property as defined by RFC 3253
-        String workspaceHref = getWorkspaceHref();
-        if (workspaceHref != null) {
-            properties.add(new HrefProperty(DeltaVConstants.WORKSPACE, workspaceHref, true));
-        }
         // name of the jcr workspace
         properties.add(new DefaultDavProperty<String>(ItemResourceConstants.JCR_WORKSPACE_NAME,
                 getRepositorySession().getWorkspace().getName()));
-
-        // TODO: required supported-live-property-set
     }
 
     /**
      * Create a new <code>DavResource</code> from the given locator.
      * @param loc
      * @return new <code>DavResource</code>
+     * @throws org.apache.jackrabbit.webdav.DavException
      */
     protected DavResource createResourceFromLocator(DavResourceLocator loc)
             throws DavException {
@@ -679,6 +697,26 @@ abstract class AbstractResource implements DavResource, TransactionResource,
      * @return href of the workspace
      */
     abstract protected String getWorkspaceHref();
+
+    /**
+     * Returns the display name of the creator which is used for the protected
+     * {@link DeltaVConstants#CREATOR_DISPLAYNAME} property.
+     *
+     * @return always <code>null</code>; subclasses may provide a regular value.
+     */
+    protected String getCreatorDisplayName() {
+        return null;
+    }
+
+    /**
+     * Returns the creation date which is used for the
+     * {@link DavPropertyName#CREATIONDATE} property.
+     *
+     * @return a dummy date; subclasses may provide a reasonable value.
+     */
+    protected String getCreationDate() {
+        return HttpDateFormat.creationDateFormat().format(new Date(0));
+    }
 
     //--------------------------------------------------------------------------
     /**

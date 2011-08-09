@@ -61,7 +61,7 @@ import org.apache.jackrabbit.webdav.DavResourceIteratorImpl;
 import org.apache.jackrabbit.webdav.DavResourceLocator;
 import org.apache.jackrabbit.webdav.DavServletResponse;
 import org.apache.jackrabbit.webdav.MultiStatusResponse;
-import org.apache.jackrabbit.webdav.version.DeltaVConstants;
+import org.apache.jackrabbit.webdav.jcr.property.JcrDavPropertyNameSet;
 import org.apache.jackrabbit.webdav.util.HttpDateFormat;
 import org.apache.jackrabbit.webdav.io.InputContext;
 import org.apache.jackrabbit.webdav.io.OutputContext;
@@ -105,6 +105,8 @@ public class DefaultItemCollection extends AbstractItemResource
      *
      * @param locator
      * @param session
+     * @param factory
+     * @param item
      */
     protected DefaultItemCollection(DavResourceLocator locator,
                                     JcrDavSession session,
@@ -197,6 +199,42 @@ public class DefaultItemCollection extends AbstractItemResource
         } catch (RepositoryException e) {
             log.error("Error while spooling resource content: " + e.getMessage());
         }
+    }
+
+    @Override
+    public DavProperty<?> getProperty(DavPropertyName name) {
+        DavProperty prop = super.getProperty(name);
+
+        if (prop == null && exists()) {
+            Node n = (Node) item;
+
+            // add node-specific resource properties
+            try {
+                if (JCR_INDEX.equals(name)) {
+                    prop = new DefaultDavProperty<Integer>(JCR_INDEX, n.getIndex(), true);
+                } else if (JCR_REFERENCES.equals(name)) {
+                    prop = getHrefProperty(JCR_REFERENCES, n.getReferences(), true);
+                } else if (JCR_WEAK_REFERENCES.equals(name)) {
+                    prop = getHrefProperty(JCR_WEAK_REFERENCES, n.getWeakReferences(), true);
+                } else if (JCR_UUID.equals(name)) {
+                    if (isReferenceable()) {
+                        prop = new DefaultDavProperty<String>(JCR_UUID, n.getUUID(), true);
+                    }
+                } else if (JCR_PRIMARYITEM.equals(name)) {
+                    if (hasPrimaryItem()) {
+                        Item primaryItem = n.getPrimaryItem();
+                        prop = getHrefProperty(JCR_PRIMARYITEM, new Item[] {primaryItem}, true);
+                    }
+                } else if (OrderingConstants.ORDERING_TYPE.equals(name) && isOrderable()) {
+                    // property defined by RFC 3648: this resource always has custom ordering!                    
+                    prop = new OrderingType(OrderingConstants.ORDERING_TYPE_CUSTOM);
+                }
+            } catch (RepositoryException e) {
+                log.error("Failed to retrieve node-specific property: " + e);
+            }          
+        }
+
+        return prop;
     }
 
     /**
@@ -878,6 +916,25 @@ public class DefaultItemCollection extends AbstractItemResource
         }
     }
 
+    @Override
+    protected void initPropertyNames() {
+        super.initPropertyNames();
+
+        if (exists()) {
+            names.addAll(JcrDavPropertyNameSet.NODE_SET);
+            
+            if (isReferenceable()) {
+                names.add(JCR_UUID);
+            }
+            if (hasPrimaryItem()) {
+                names.add(JCR_PRIMARYITEM);
+            }
+            if (isOrderable()) {
+                names.add(OrderingConstants.ORDERING_TYPE);
+            }
+        }
+    }
+                                              
     /**
      * Fill the property set for this resource.
      */
@@ -888,49 +945,64 @@ public class DefaultItemCollection extends AbstractItemResource
             // resource is serialized as system-view (xml)
             properties.add(new DefaultDavProperty<String>(DavPropertyName.GETCONTENTTYPE, "text/xml"));
             Node n = (Node)item;
-            // overwrite the default creation date and creator-displayname if possible
-            try {
-                if (n.hasProperty(JcrConstants.JCR_CREATED)) {
-                    long creationTime = n.getProperty(JcrConstants.JCR_CREATED).getValue().getLong();
-                    properties.add(new DefaultDavProperty<String>(DavPropertyName.CREATIONDATE,
-                        HttpDateFormat.creationDateFormat().format(new Date(creationTime))));
-                }
-                // DAV:creator-displayname -> use jcr:createBy if present.
-                if (n.hasProperty(Property.JCR_CREATED_BY)) {
-                    String createdBy = n.getProperty(Property.JCR_CREATED_BY).getString();
-                    properties.add(new DefaultDavProperty<String>(DeltaVConstants.CREATOR_DISPLAYNAME, createdBy, true));
-                }
-            } catch (RepositoryException e) {
-                log.warn("Error while accessing jcr:created or jcr:createdBy property");
-            }
 
             // add node-specific resource properties
             try {
                 properties.add(new NodeTypeProperty(JCR_PRIMARYNODETYPE, n.getPrimaryNodeType(), false));
                 properties.add(new NodeTypeProperty(JCR_MIXINNODETYPES, n.getMixinNodeTypes(), false));
-                properties.add(new DefaultDavProperty<Integer>(JCR_INDEX, n.getIndex(), true));
-                addHrefProperty(JCR_REFERENCES, n.getReferences(), true);
-                addHrefProperty(JCR_WEAK_REFERENCES, n.getWeakReferences(), true);
-                if (n.isNodeType(JcrConstants.MIX_REFERENCEABLE)) {
-                    properties.add(new DefaultDavProperty<String>(JCR_UUID, n.getUUID(), true));
-                }
             } catch (RepositoryException e) {
                 log.error("Failed to retrieve node-specific property: " + e);
             }
-            try {
-                Item primaryItem = n.getPrimaryItem();
-                addHrefProperty(JCR_PRIMARYITEM, new Item[] {primaryItem}, true);
-            } catch (ItemNotFoundException e) {
-                log.debug("No primary item present on this node '" + getResourcePath() + "'");
-            } catch (RepositoryException e) {
-                log.error("Error while retrieving primary item: " + e.getMessage());
-            }
-
-            // property defined by RFC 3648: this resource always has custom ordering!
-            if (isOrderable()) {
-                properties.add(new OrderingType(OrderingConstants.ORDERING_TYPE_CUSTOM));
-            }
         }
+    }  
+
+    @Override
+    protected String getCreatorDisplayName() {
+        // overwrite the default creation date and creator-displayname if possible
+        try {
+            // DAV:creator-displayname -> use jcr:createBy if present.
+            if (exists() && ((Node) item).hasProperty(Property.JCR_CREATED_BY)) {
+                return ((Node) item).getProperty(Property.JCR_CREATED_BY).getString();
+            }
+        } catch (RepositoryException e) {
+            log.warn("Error while accessing jcr:createdBy property");
+        }
+
+        // fallback
+        return super.getCreatorDisplayName();
+    }
+
+    @Override
+    protected String getCreationDate() {
+        // overwrite the default creation date and creator-displayname if possible
+        try {
+            if (exists() && ((Node) item).hasProperty(JcrConstants.JCR_CREATED)) {
+                long creationTime = ((Node) item).getProperty(JcrConstants.JCR_CREATED).getValue().getLong();
+                return HttpDateFormat.creationDateFormat().format(new Date(creationTime));
+            }
+        } catch (RepositoryException e) {
+            log.warn("Error while accessing jcr:created property");
+        }
+
+        // fallback
+        return super.getCreationDate();
+    }
+
+    /**
+     * Creates a new HrefProperty with the specified name using the given
+     * array of items as value.
+     * 
+     * @param name
+     * @param values
+     * @param isProtected
+     * @return
+     */
+    protected HrefProperty getHrefProperty(DavPropertyName name, Item[] values, boolean isProtected) {
+        String[] pHref = new String[values.length];
+        for (int i = 0; i < values.length; i++) {
+            pHref[i] = getLocatorFromItem(values[i]).getHref(true);
+        }
+        return new HrefProperty(name, pHref, isProtected);
     }
 
     /**
@@ -943,19 +1015,31 @@ public class DefaultItemCollection extends AbstractItemResource
      * @param isProtected
      */
     protected void addHrefProperty(DavPropertyName name, Item[] values, boolean isProtected) {
-        if (values == null) {
-            return;
+        properties.add(getHrefProperty(name, values, isProtected));
+    }
+
+    /**
+     * Creates a new {@link HrefProperty href property} to the property set, where
+     * all properties present in the specified iterator are referenced in the
+     * resulting property.
+     * 
+     * @param name
+     * @param itemIterator
+     * @param isProtected
+     * @return
+     */
+    protected HrefProperty getHrefProperty(DavPropertyName name, PropertyIterator itemIterator,
+                                           boolean isProtected) {
+        ArrayList<Property> l = new ArrayList<Property>();
+        while (itemIterator.hasNext()) {
+            l.add(itemIterator.nextProperty());
         }
-        String[] pHref = new String[values.length];
-        for (int i = 0; i < values.length; i++) {
-            pHref[i] = getLocatorFromItem(values[i]).getHref(true);
-        }
-        properties.add(new HrefProperty(name, pHref, isProtected));
+        return getHrefProperty(name, l.toArray(new Property[l.size()]), isProtected);
     }
 
     /**
      * Add a new {@link HrefProperty href property} to the property set, where
-     * all properties present in the specifed iterator are referenced in the
+     * all properties present in the specified iterator are referenced in the
      * resulting property.
      *
      * @param name
@@ -965,16 +1049,30 @@ public class DefaultItemCollection extends AbstractItemResource
      */
     protected void addHrefProperty(DavPropertyName name, PropertyIterator itemIterator,
                                    boolean isProtected) {
-        ArrayList<Property> l = new ArrayList<Property>();
-        while (itemIterator.hasNext()) {
-            l.add(itemIterator.nextProperty());
-        }
-        addHrefProperty(name, l.toArray(new Property[l.size()]), isProtected);
+        properties.add(getHrefProperty(name, itemIterator, isProtected));
     }
 
     /**
      * Add a new {@link HrefProperty href property} to the property set, where
-     * all versions present in the specifed iterator are referenced in the
+     * all versions present in the specified iterator are referenced in the
+     * resulting property.
+     *
+     * @param name
+     * @param itemIterator
+     * @param isProtected
+     */
+    protected HrefProperty getHrefProperty(DavPropertyName name, VersionIterator itemIterator,
+                                   boolean isProtected) {
+        ArrayList<Version> l = new ArrayList<Version>();
+        while (itemIterator.hasNext()) {
+            l.add(itemIterator.nextVersion());
+        }
+        return getHrefProperty(name, l.toArray(new Version[l.size()]), isProtected);
+    }
+
+    /**
+     * Add a new {@link HrefProperty href property} to the property set, where
+     * all versions present in the specified iterator are referenced in the
      * resulting property.
      *
      * @param name
@@ -983,11 +1081,7 @@ public class DefaultItemCollection extends AbstractItemResource
      */
     protected void addHrefProperty(DavPropertyName name, VersionIterator itemIterator,
                                    boolean isProtected) {
-        ArrayList<Version> l = new ArrayList<Version>();
-        while (itemIterator.hasNext()) {
-            l.add(itemIterator.nextVersion());
-        }
-        addHrefProperty(name, l.toArray(new Version[l.size()]), isProtected);
+        properties.add(getHrefProperty(name, itemIterator, isProtected));
     }
 
     /**
@@ -1018,5 +1112,23 @@ public class DefaultItemCollection extends AbstractItemResource
         }
         // cannot parse request body into a 'values' property
         return null;
+    }
+
+    private boolean hasPrimaryItem() {
+        try {
+            return exists() && ((Node) item).getPrimaryNodeType().getPrimaryItemName() != null;
+        } catch (RepositoryException e) {
+            log.warn(e.getMessage());
+        }
+        return false;
+    }
+    
+    private boolean isReferenceable() {
+        try {
+            return exists() && ((Node) item).isNodeType(JcrConstants.MIX_REFERENCEABLE);
+        } catch (RepositoryException e) {
+            log.warn(e.getMessage());
+        }
+        return false;
     }
 }

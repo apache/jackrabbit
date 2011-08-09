@@ -25,6 +25,9 @@ import org.apache.jackrabbit.webdav.jcr.DefaultItemCollection;
 import org.apache.jackrabbit.webdav.jcr.ItemResourceConstants;
 import org.apache.jackrabbit.webdav.jcr.JcrDavException;
 import org.apache.jackrabbit.webdav.jcr.JcrDavSession;
+import org.apache.jackrabbit.webdav.jcr.property.JcrDavPropertyNameSet;
+import org.apache.jackrabbit.webdav.property.DavProperty;
+import org.apache.jackrabbit.webdav.property.DavPropertyName;
 import org.apache.jackrabbit.webdav.property.DefaultDavProperty;
 import org.apache.jackrabbit.webdav.property.HrefProperty;
 import org.apache.jackrabbit.webdav.property.ResourceType;
@@ -77,6 +80,28 @@ public class VersionHistoryItemCollection extends DefaultItemCollection
         return sb.toString();
     }
 
+    @Override
+    public DavProperty<?> getProperty(DavPropertyName name) {
+        DavProperty prop = super.getProperty(name);
+        if (prop == null) {
+            // required, protected version-set property for version-history resource
+            try {
+                if (ROOT_VERSION.equals(name)) {
+                    // required root-version property for version-history resource
+                    String rootVersionHref = getLocatorFromItem(((VersionHistory)item).getRootVersion()).getHref(true);
+                    prop = new HrefProperty(ROOT_VERSION, rootVersionHref, true);
+                } else if (VERSION_SET.equals(name)) {
+                    VersionIterator vIter = ((VersionHistory) item).getAllVersions();
+                    prop = getHrefProperty(VERSION_SET, vIter, true);
+                }
+            } catch (RepositoryException e) {
+                log.error(e.getMessage());
+            }
+        }
+        
+        return prop;
+    }
+
     /**
      * Removing a version resource is achieved by calling <code>removeVersion</code>
      * on the versionhistory item this version belongs to.
@@ -124,6 +149,15 @@ public class VersionHistoryItemCollection extends DefaultItemCollection
     }
 
     //--------------------------------------------------------------------------
+    @Override
+    protected void initPropertyNames() {
+        super.initPropertyNames();
+
+        if (exists()) {
+            names.addAll(JcrDavPropertyNameSet.VERSIONHISTORY_SET);
+        }
+    }
+
     /**
      * Fill the property set for this resource.
      */
@@ -137,22 +171,6 @@ public class VersionHistoryItemCollection extends DefaultItemCollection
         // jcr specific property pointing to the node this history belongs to
         try {
             properties.add(new DefaultDavProperty<String>(JCR_VERSIONABLEUUID, ((VersionHistory)item).getVersionableIdentifier()));
-        } catch (RepositoryException e) {
-            log.error(e.getMessage());
-        }
-
-        // required root-version property for version-history resource
-        try {
-            String rootVersionHref = getLocatorFromItem(((VersionHistory)item).getRootVersion()).getHref(true);
-            properties.add(new HrefProperty(VersionHistoryResource.ROOT_VERSION, rootVersionHref, true));
-        } catch (RepositoryException e) {
-            log.error(e.getMessage());
-        }
-
-        // required, protected version-set property for version-history resource
-        try {
-            VersionIterator vIter = ((VersionHistory) item).getAllVersions();
-            addHrefProperty(VersionHistoryResource.VERSION_SET, vIter, true);
         } catch (RepositoryException e) {
             log.error(e.getMessage());
         }
