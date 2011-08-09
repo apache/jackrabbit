@@ -111,8 +111,7 @@ public class RFC4918PropfindTest extends TestCase {
             DavPropertySet notfound = response.getProperties(404);
 
             assertTrue(found.contains(DeltaVConstants.COMMENT) || notfound.contains(DeltaVConstants.COMMENT));
-        }
-        finally {
+        } finally {
             DeleteMethod delete = new DeleteMethod(testuri);
             status = this.client.executeMethod(delete);
             assertTrue("status: " + status, status == 200 || status == 204 || status == 404);
