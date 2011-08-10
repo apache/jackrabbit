@@ -797,7 +797,12 @@ public class WorkspaceManager
             // notify listener
             for (EventBundle eventBundle : eventBundles) {
                 for (InternalEventListener lstnr : lstnrs) {
-                    lstnr.onEvent(eventBundle);
+                    try {
+                        lstnr.onEvent(eventBundle);
+                    } catch (Exception e) {
+                        log.warn("Exception in event polling thread: " + e);
+                        log.debug("Dump:", e);
+                    }
                 }
             }
         } finally {
@@ -1203,9 +1208,6 @@ public class WorkspaceManager
                 } catch (InterruptedException e) {
                     // terminate
                     break;
-                } catch (Exception e) {
-                    log.warn("Exception in event polling thread: " + e);
-                    log.debug("Dump:", e);
                 }
             }
         }
