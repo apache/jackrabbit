@@ -166,7 +166,7 @@ public class ResourceConfig {
         try {
             Element config = DomUtil.parseDocument(stream).getDocumentElement();
             if (config == null) {
-                log.warn("Resource configuration: mandatory 'config' element is missing.");
+                log.warn("Mandatory 'config' element is missing.");
                 return;
             }
 
@@ -188,14 +188,14 @@ public class ResourceConfig {
                             setParameters(handler, iohEl);
                             ioManager.addIOHandler(handler);
                         } else {
-                            log.warn("Resource configuration: the handler is not a valid IOHandler.");
+                            log.warn("Not a valid IOHandler : " + getClassName(iohEl));
                         }
                     }
                 } else {
-                    log.warn("Resource configuration: 'iomanager' does not define a valid IOManager.");
+                    log.warn("'iomanager' element does not define a valid IOManager.");
                 }
             } else {
-                log.warn("Resource configuration: 'iomanager' element is missing.");
+                log.warn("'iomanager' element is missing.");
             }
 
             // propertymanager config entry
@@ -215,14 +215,14 @@ public class ResourceConfig {
                             setParameters(handler, iohEl);
                             propManager.addPropertyHandler(handler);
                         } else {
-                            log.warn("Resource configuration: the handler is not a valid PropertyHandler.");
+                            log.warn("Not a valid PropertyHandler : " + getClassName(iohEl));
                         }
                     }
                 } else {
-                    log.warn("Resource configuration: 'propertymanager' does not define a valid PropertyManager.");
+                    log.warn("'propertymanager' element does not define a valid PropertyManager.");
                 }
             } else {
-                log.debug("Resource configuration: 'propertymanager' element is missing.");
+                log.debug("'propertymanager' element is missing.");
             }
 
             // collection/non-collection config entry
@@ -248,7 +248,7 @@ public class ResourceConfig {
                     parseNamespacesEntry(el);
                 }
             } else {
-                log.debug("Resource configuration: no 'filter' element specified.");
+                log.debug("No 'filter' element specified.");
             }
 
             el = DomUtil.getChildElement(config, "mimetypeproperties", null);
@@ -262,26 +262,6 @@ public class ResourceConfig {
         } catch (SAXException e) {
             log.warn("Failed to parse resource configuration: " + e.getMessage());
         }
-    }
-
-    private Object buildClassFromConfig(Element parent) {
-        Object instance = null;
-        Element classElem = DomUtil.getChildElement(parent, "class", null);
-        if (classElem != null) {
-            // contains a 'class' child node
-            try {
-                String className = DomUtil.getAttribute(classElem, "name", null);
-                if (className != null) {
-                    Class<?> c = Class.forName(className);
-                    instance = c.newInstance();
-                } else {
-                    log.error("Invalid configuration: missing 'class' element");
-                }
-            } catch (Exception e) {
-                log.error("Error while create class instance: " + e.getMessage());
-            }
-        }
-        return instance;
     }
 
     private void parseNamespacesEntry(Element parent) {
@@ -308,7 +288,7 @@ public class ResourceConfig {
         }
     }
 
-    private String[] parseNodeTypesEntry(Element parent) {
+    private static String[] parseNodeTypesEntry(Element parent) {
         String[] ntNames;
         Element nodetypes = DomUtil.getChildElement(parent, "nodetypes", null);
         if (nodetypes != null) {
@@ -323,6 +303,35 @@ public class ResourceConfig {
             ntNames = new String[0];
         }
         return ntNames;
+    }
+    
+    private static Object buildClassFromConfig(Element parent) {
+        Object instance = null;
+        Element classElem = DomUtil.getChildElement(parent, "class", null);
+        if (classElem != null) {
+            // contains a 'class' child node
+            try {
+                String className = DomUtil.getAttribute(classElem, "name", null);
+                if (className != null) {
+                    Class<?> c = Class.forName(className);
+                    instance = c.newInstance();
+                } else {
+                    log.error("Invalid configuration: missing 'class' element");
+                }
+            } catch (Exception e) {
+                log.error("Error while create class instance: " + e.getMessage());
+            }
+        }
+        return instance;
+    }
+
+    private static String getClassName(Element parent) {
+        String className = null;
+        Element classElem = DomUtil.getChildElement(parent, "class", null);
+        if (classElem != null) {
+            className = DomUtil.getAttribute(classElem, "name", null);
+        }
+        return (className == null) ? "" : className;
     }
 
     /**
@@ -398,7 +407,7 @@ public class ResourceConfig {
      */
     public IOManager getIOManager() {
         if (ioManager == null) {
-            log.debug("ResourceConfig: missing io-manager > building DefaultIOManager ");
+            log.debug("Missing io-manager > building DefaultIOManager ");
             ioManager = new DefaultIOManager();
             ioManager.setDetector(detector);
         }
@@ -411,7 +420,7 @@ public class ResourceConfig {
      */
     public PropertyManager getPropertyManager() {
         if (propManager == null) {
-            log.debug("ResourceConfig: missing property-manager > building default.");
+            log.debug("Missing property-manager > building default.");
             propManager = PropertyManagerImpl.getDefaultManager();
         }
         return propManager;
@@ -455,7 +464,7 @@ public class ResourceConfig {
      */
     public ItemFilter getItemFilter() {
         if (itemFilter == null) {
-            log.debug("ResourceConfig: missing resource filter > building DefaultItemFilter ");
+            log.debug("Missing resource filter > building DefaultItemFilter ");
             itemFilter = new DefaultItemFilter();
         }
         return itemFilter;
