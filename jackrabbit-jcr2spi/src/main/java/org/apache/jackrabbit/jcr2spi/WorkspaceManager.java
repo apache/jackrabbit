@@ -1171,6 +1171,7 @@ public class WorkspaceManager
         }
 
         public void run() {
+            String wspName = sessionInfo.getWorkspaceName();            
             while (!Thread.interrupted() && !disposeChangeFeed) {
                 try {
                     InternalEventListener[] iel;
@@ -1179,15 +1180,13 @@ public class WorkspaceManager
                         while (subscription == null) {
                             listeners.wait();
                         }
-                        iel = listeners.toArray(new InternalEventListener[0]);
+                        iel = listeners.toArray(new InternalEventListener[listeners.size()]);
                         subscr = subscription;
                     }
 
-                    log.debug("calling getEvents() (Workspace={})",
-                            sessionInfo.getWorkspaceName());
+                    log.debug("calling getEvents() (Workspace={})", wspName);
                     EventBundle[] bundles = service.getEvents(subscr, pollTimeout);
-                    log.debug("returned from getEvents() (Workspace={})",
-                            sessionInfo.getWorkspaceName());
+                    log.debug("returned from getEvents() (Workspace={})", wspName);
                     // check if thread had been interrupted while
                     // getting events
                     if (Thread.interrupted() || disposeChangeFeed) {
@@ -1202,8 +1201,7 @@ public class WorkspaceManager
                     // terminate
                     break;
                 } catch (RepositoryException e) {
-                    log.info("Workspace=" + sessionInfo.getWorkspaceName() +
-                            ": Exception while retrieving event bundles: " + e);
+                    log.info("Workspace=" + wspName + ": Exception while retrieving event bundles: " + e);
                     log.debug("Dump:", e);
                 } catch (InterruptedException e) {
                     // terminate
@@ -1212,5 +1210,4 @@ public class WorkspaceManager
             }
         }
     }
-
 }
