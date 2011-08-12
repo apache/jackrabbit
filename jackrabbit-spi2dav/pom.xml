@@ -48,6 +48,18 @@
             <property>
               <name>known.issues</name>
               <value>
+                  <!--
+
+                  This is the list of failing TCK and jcr2spi tests in a jcr2spi - spi2davex setup.
+
+                  A comprehensive list of missing JCR 2.0 features can be found at
+                  https://issues.apache.org/jira/browse/JCR-2003
+
+                  Known issues of jcr2spi and spi2dav(ex) are listed at
+                  https://issues.apache.org/jira/secure/IssueNavigator.jspa?reset=true&jqlQuery=project+%3D+JCR+AND+component+%3D+jackrabbit-jcr2spi+AND+status+%3D+Open+ORDER+BY+priority+DESC&mode=hide
+                  https://issues.apache.org/jira/secure/IssueNavigator.jspa?reset=true&jqlQuery=project+%3D+JCR+AND+component+%3D+jackrabbit-spi2dav+AND+status+%3D+Open+ORDER+BY+priority+DESC&mode=hide
+
+                  -->
                   <!-- ***** PLEASE update jcr2dav/pom.xml as well ********* -->
                   <!-- wrong exception: ConstraintViolationEx. instead SAXException/InvalidSerializedDataEx.-->
                   org.apache.jackrabbit.test.api.SerializationTest#testNodeTypeConstraintViolationWorkspace
