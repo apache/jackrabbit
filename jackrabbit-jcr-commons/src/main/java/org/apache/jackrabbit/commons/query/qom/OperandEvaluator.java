@@ -251,43 +251,6 @@ public class OperandEvaluator {
     }
 
     /**
-     * Evaluates the operand and extracts the node property that is supposed to
-     * be used for evaluation.
-     * 
-     * Can be <code>null</code> if there is no possible value
-     * 
-     * @param operand
-     * @return the node's property name
-     */
-    public String getAffectedPropertyName(Operand operand) {
-        if (operand instanceof StaticOperand) {
-            return null;
-        }
-        if (operand instanceof FullTextSearchScore) {
-            return null;
-        }
-        if (operand instanceof NodeName) {
-            return null;
-        }
-        if (operand instanceof Length) {
-            return ((Length) operand).getPropertyValue().getPropertyName();
-        }
-        if (operand instanceof LowerCase) {
-            return getAffectedPropertyName(((LowerCase) operand).getOperand());
-        }
-        if (operand instanceof UpperCase) {
-            return getAffectedPropertyName(((UpperCase) operand).getOperand());
-        }
-        if (operand instanceof NodeLocalName) {
-            return null;
-        }
-        if (operand instanceof PropertyValue) {
-            return ((PropertyValue) operand).getPropertyName();
-        }
-        return null;
-    }
-
-    /**
      * Returns the values of the given value length operand at the given row.
      *
      * @see #getProperty(PropertyValue, Row)
