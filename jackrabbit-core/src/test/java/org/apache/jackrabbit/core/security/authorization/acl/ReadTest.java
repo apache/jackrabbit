@@ -338,4 +338,21 @@ public class ReadTest extends AbstractEvaluationTest {
         assertFalse(testSession.hasPermission(propPath, javax.jcr.Session.ACTION_READ));
         assertFalse(testSession.propertyExists(propPath));
     }
+
+    public void testRemoveMixin() throws Exception {
+        Node n = superuser.getNode(path);
+        
+        Privilege[] privileges = privilegesFromName(Privilege.JCR_READ);
+
+        withdrawPrivileges(path, privileges, getRestrictions(superuser, path));
+
+        assertTrue(n.hasNode("rep:policy"));
+        assertTrue(n.isNodeType("rep:AccessControllable"));
+
+        n.removeMixin("rep:AccessControllable");
+
+        superuser.save();
+        assertFalse(n.hasNode("rep:policy"));
+        assertFalse(n.isNodeType("rep:AccessControllable"));
+    }
 }
