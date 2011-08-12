@@ -31,6 +31,7 @@
     <relativePath />
   </parent>
 
+  <groupId>org.apache.jackrabbit</groupId>
   <artifactId>jackrabbit-parent</artifactId>
   <name>Jackrabbit Parent POM</name>
   <version>2.3-SNAPSHOT</version>
