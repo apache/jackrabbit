@@ -73,7 +73,7 @@ public class ConsolidatingChangeLog extends AbstractChangeLog<ConsolidatingChang
      */
     protected static Path getPath(ItemId itemId) {
         Path path = itemId.getPath();
-        if (!path.isAbsolute()) {
+        if (path != null && !path.isAbsolute()) {
             throw new IllegalArgumentException("Path not absoulte: " + path);
         }
         return path;
@@ -298,6 +298,9 @@ public class ConsolidatingChangeLog extends AbstractChangeLog<ConsolidatingChang
                 if (other instanceof Remove) {
                     Path thisPath = ConsolidatingChangeLog.getPath(parentId, nodeName);
                     Path otherPath = ConsolidatingChangeLog.getPath(((Remove) other).itemId);
+                    if (thisPath == null || otherPath == null) {
+                        return CANCEL_NONE;
+                    }
                     if (thisPath.equals(otherPath)) {
                         return CANCEL_BOTH;
                     }
@@ -509,6 +512,9 @@ public class ConsolidatingChangeLog extends AbstractChangeLog<ConsolidatingChang
                 if (other instanceof Remove) {
                     Path thisPath = ConsolidatingChangeLog.getPath(srcNodeId);
                     Path otherPath = ConsolidatingChangeLog.getPath(((Remove) other).itemId);
+                    if (thisPath == null || otherPath == null) {
+                        return CANCEL_NONE;
+                    }
                     return thisPath.isDescendantOf(otherPath) || thisPath.equals(otherPath)
                         ? CANCEL_THIS
                         : CANCEL_NONE;
@@ -516,6 +522,9 @@ public class ConsolidatingChangeLog extends AbstractChangeLog<ConsolidatingChang
                 if (other instanceof ReorderNodes) {
                     Path thisPath = ConsolidatingChangeLog.getPath(parentId);
                     Path otherPath = ConsolidatingChangeLog.getPath(((ReorderNodes) other).parentId);
+                    if (thisPath == null || otherPath == null) {
+                        return CANCEL_NONE;
+                    }
                     return thisPath.equals(otherPath) && !hasSNS(srcNodeId) && !hasSNS(beforeNodeId)
                         ? CANCEL_THIS
                         : CANCEL_NONE;
@@ -524,7 +533,12 @@ public class ConsolidatingChangeLog extends AbstractChangeLog<ConsolidatingChang
             }
 
             private boolean hasSNS(NodeId nodeId) {
-                return nodeId != null && ConsolidatingChangeLog.getPath(nodeId).getIndex() > 1;
+                if (nodeId != null) {
+                    Path path = ConsolidatingChangeLog.getPath(nodeId);
+                    return path != null && path.getIndex() > 1;
+                }
+
+                return false;
             }
         }
 
@@ -569,6 +583,9 @@ public class ConsolidatingChangeLog extends AbstractChangeLog<ConsolidatingChang
                 if (other instanceof Remove) {
                     Path thisPath = ConsolidatingChangeLog.getPath(nodeId);
                     Path otherPath = ConsolidatingChangeLog.getPath(((Remove) other).itemId);
+                    if (thisPath == null || otherPath == null) {
+                        return CANCEL_NONE;
+                    }
                     return thisPath.isDescendantOf(otherPath) || thisPath.equals(otherPath)
                         ? CANCEL_THIS
                         : CANCEL_NONE;
@@ -578,6 +595,9 @@ public class ConsolidatingChangeLog extends AbstractChangeLog<ConsolidatingChang
                     if (mixinNodeTypeNames.length == setMixin.mixinNodeTypeNames.length) {
                         Path thisPath = ConsolidatingChangeLog.getPath(nodeId);
                         Path otherPath = ConsolidatingChangeLog.getPath(setMixin.nodeId);
+                        if (thisPath == null || otherPath == null) {
+                            return CANCEL_NONE;
+                        }
                         if (thisPath.equals(otherPath)) {
                             for (int k = 0; k < mixinNodeTypeNames.length; k++) {
                                 if (!mixinNodeTypeNames[k].equals(setMixin.mixinNodeTypeNames[k])) {
@@ -632,6 +652,9 @@ public class ConsolidatingChangeLog extends AbstractChangeLog<ConsolidatingChang
                 if (other instanceof Remove) {
                     Path thisPath = ConsolidatingChangeLog.getPath(nodeId);
                     Path otherPath = ConsolidatingChangeLog.getPath(((Remove) other).itemId);
+                    if (thisPath == null || otherPath == null) {
+                        return CANCEL_NONE;
+                    }
                     return thisPath.isDescendantOf(otherPath) || thisPath.equals(otherPath)
                         ? CANCEL_THIS
                         : CANCEL_NONE;
@@ -641,6 +664,9 @@ public class ConsolidatingChangeLog extends AbstractChangeLog<ConsolidatingChang
                     if (primaryTypeName.equals(setPrimaryType.primaryTypeName)) {
                         Path thisPath = ConsolidatingChangeLog.getPath(nodeId);
                         Path otherPath = ConsolidatingChangeLog.getPath(setPrimaryType.nodeId);
+                        if (thisPath == null || otherPath == null) {
+                            return CANCEL_NONE;
+                        }
                         if (thisPath.equals(otherPath)) {
                             return CANCEL_THIS;
                         }
@@ -693,6 +719,9 @@ public class ConsolidatingChangeLog extends AbstractChangeLog<ConsolidatingChang
                 if (other instanceof Remove) {
                     Path thisPath = ConsolidatingChangeLog.getPath(propertyId);
                     Path otherPath = ConsolidatingChangeLog.getPath(((Remove) other).itemId);
+                    if (thisPath == null || otherPath == null) {
+                        return CANCEL_NONE;
+                    }
                     return thisPath.isDescendantOf(otherPath) || thisPath.equals(otherPath)
                         ? CANCEL_THIS
                         : CANCEL_NONE;
@@ -700,6 +729,9 @@ public class ConsolidatingChangeLog extends AbstractChangeLog<ConsolidatingChang
                 if (other instanceof SetValue) {
                     Path thisPath = ConsolidatingChangeLog.getPath(propertyId);
                     Path otherPath = ConsolidatingChangeLog.getPath(((SetValue) other).propertyId);
+                    if (thisPath == null || otherPath == null) {
+                        return CANCEL_NONE;
+                    }
                     if (thisPath.equals(otherPath)) {
                         return CANCEL_THIS;
                     }
