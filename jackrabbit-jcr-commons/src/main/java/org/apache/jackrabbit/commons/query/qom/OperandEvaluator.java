@@ -209,6 +209,85 @@ public class OperandEvaluator {
     }
 
     /**
+     * Evaluates the given operand in the context of the given node.
+     *
+     * @param operand operand to be evaluated
+     * @param node node
+     * @return values of the operand at the given node
+     * @throws RepositoryException if the operand can't be evaluated
+     */
+    public Value[] getValues(Operand operand, Node node)
+            throws RepositoryException {
+        if (operand instanceof StaticOperand) {
+            StaticOperand so = (StaticOperand) operand;
+            return new Value[] { getValue(so) };
+        }
+        if (operand instanceof FullTextSearchScore) {
+            final double defaultScore = 0.0;
+            return new Value[] { factory.createValue(defaultScore) };
+        }
+        if (operand instanceof NodeName) {
+            Value value = factory
+                    .createValue(node.getName(), PropertyType.NAME);
+            return new Value[] { value };
+        }
+        if (operand instanceof Length) {
+            return getLengthValues((Length) operand, node);
+        }
+        if (operand instanceof LowerCase) {
+            return getLowerCaseValues((LowerCase) operand, node);
+        }
+        if (operand instanceof UpperCase) {
+            return getUpperCaseValues((UpperCase) operand, node);
+        }
+        if (operand instanceof NodeLocalName) {
+            return getNodeLocalNameValues((NodeLocalName) operand, node);
+        }
+        if (operand instanceof PropertyValue) {
+            return getPropertyValues((PropertyValue) operand, node);
+        }
+        throw new UnsupportedRepositoryOperationException(
+                "Unknown operand type: " + operand);
+    }
+
+    /**
+     * Evaluates the operand and extracts the node property that is supposed to
+     * be used for evaluation.
+     * 
+     * Can be <code>null</code> if there is no possible value
+     * 
+     * @param operand
+     * @return the node's property name
+     */
+    public String getAffectedPropertyName(Operand operand) {
+        if (operand instanceof StaticOperand) {
+            return null;
+        }
+        if (operand instanceof FullTextSearchScore) {
+            return null;
+        }
+        if (operand instanceof NodeName) {
+            return null;
+        }
+        if (operand instanceof Length) {
+            return ((Length) operand).getPropertyValue().getPropertyName();
+        }
+        if (operand instanceof LowerCase) {
+            return getAffectedPropertyName(((LowerCase) operand).getOperand());
+        }
+        if (operand instanceof UpperCase) {
+            return getAffectedPropertyName(((UpperCase) operand).getOperand());
+        }
+        if (operand instanceof NodeLocalName) {
+            return null;
+        }
+        if (operand instanceof PropertyValue) {
+            return ((PropertyValue) operand).getPropertyName();
+        }
+        return null;
+    }
+
+    /**
      * Returns the values of the given value length operand at the given row.
      *
      * @see #getProperty(PropertyValue, Row)
@@ -236,6 +315,33 @@ public class OperandEvaluator {
     }
 
     /**
+     * Returns the values of the given value length operand for the given node.
+     *
+     * @see #getProperty(PropertyValue, Node)
+     * @param operand value length operand
+     * @param node node
+     * @return values of the operand for the given node
+     * @throws RepositoryException if the operand can't be evaluated
+     */
+    private Value[] getLengthValues(Length operand, Node n)
+            throws RepositoryException {
+        Property property = getProperty(operand.getPropertyValue(), n);
+        if (property == null) {
+            return new Value[0];
+        }
+        if (property.isMultiple()) {
+            long[] lengths = property.getLengths();
+            Value[] values = new Value[lengths.length];
+            for (int i = 0; i < lengths.length; i++) {
+                values[i] = factory.createValue(lengths[i]);
+            }
+            return values;
+        }
+        long length = property.getLength();
+        return new Value[] { factory.createValue(length) };
+    }
+
+    /**
      * Returns the values of the given lower case operand at the given row.
      *
      * @param operand lower case operand
@@ -246,6 +352,27 @@ public class OperandEvaluator {
     private Value[] getLowerCaseValues(LowerCase operand, Row row)
             throws RepositoryException {
         Value[] values = getValues(operand.getOperand(), row);
+        for (int i = 0; i < values.length; i++) {
+            String value = values[i].getString();
+            String lower = value.toLowerCase(locale);
+            if (!value.equals(lower)) {
+                values[i] = factory.createValue(lower);
+            }
+        }
+        return values;
+    }
+
+    /**
+     * Returns the values of the given lower case operand for the given node.
+     *
+     * @param operand lower case operand
+     * @param node node
+     * @return values of the operand for the given node
+     * @throws RepositoryException if the operand can't be evaluated
+     */
+    private Value[] getLowerCaseValues(LowerCase operand, Node node)
+            throws RepositoryException {
+        Value[] values = getValues(operand.getOperand(), node);
         for (int i = 0; i < values.length; i++) {
             String value = values[i].getString();
             String lower = value.toLowerCase(locale);
@@ -278,6 +405,27 @@ public class OperandEvaluator {
     }
 
     /**
+     * Returns the values of the given upper case operand for the given node.
+     *
+     * @param operand upper case operand
+     * @param node node
+     * @return values of the operand for the given node
+     * @throws RepositoryException if the operand can't be evaluated
+     */
+    private Value[] getUpperCaseValues(UpperCase operand, Node node)
+            throws RepositoryException {
+        Value[] values = getValues(operand.getOperand(), node);
+        for (int i = 0; i < values.length; i++) {
+            String value = values[i].getString();
+            String upper = value.toUpperCase(locale);
+            if (!value.equals(upper)) {
+                values[i] = factory.createValue(upper);
+            }
+        }
+        return values;
+    }
+
+    /**
      * Returns the value of the given local name operand at the given row.
      *
      * @param operand local name operand
@@ -287,7 +435,23 @@ public class OperandEvaluator {
      */
     private Value[] getNodeLocalNameValues(NodeLocalName operand, Row row)
             throws RepositoryException {
-        String name = row.getNode(operand.getSelectorName()).getName();
+        return getNodeLocalNameValues(operand,
+                row.getNode(operand.getSelectorName()));
+    }
+
+    /**
+     * Returns the value of the given local name operand for the given node.
+     * 
+     * @param operand
+     *            local name operand
+     * @param node
+     *            node
+     * @return value of the operand for the given node
+     * @throws RepositoryException
+     */
+    private Value[] getNodeLocalNameValues(NodeLocalName operand, Node node)
+            throws RepositoryException {
+        String name = node.getName();
         int colon = name.indexOf(':');
         if (colon != -1) {
             name = name.substring(colon + 1);
@@ -316,6 +480,18 @@ public class OperandEvaluator {
         }
     }
 
+    private Value[] getPropertyValues(PropertyValue operand, Node node)
+            throws RepositoryException {
+        Property property = getProperty(operand, node);
+        if (property == null) {
+            return new Value[0];
+        } else if (property.isMultiple()) {
+            return property.getValues();
+        } else {
+            return new Value[] { property.getValue() };
+        }
+    }
+
     /**
      * Returns the identified property from the given row. This method
      * is used by both the {@link #getValue(Length, Row)} and the
@@ -329,16 +505,29 @@ public class OperandEvaluator {
      */
     private Property getProperty(PropertyValue operand, Row row)
             throws RepositoryException {
-        Node node = row.getNode(operand.getSelectorName());
-        if (node != null) {
-            try {
-                return node.getProperty(operand.getPropertyName());
-            } catch (PathNotFoundException e) {
-                return null;
-            }
-        } else {
+        return getProperty(operand, row.getNode(operand.getSelectorName()));
+    }
+
+    /**
+     * Returns the identified property from the given node.
+     * 
+     * Can return <code>null</code> is the property doesn't exist or it is not
+     * accessible.
+     * 
+     * @param operand
+     * @param node
+     * @return identified property
+     * @throws RepositoryException
+     */
+    private Property getProperty(PropertyValue operand, Node node)
+            throws RepositoryException {
+        if (node == null) {
+            return null;
+        }
+        try {
+            return node.getProperty(operand.getPropertyName());
+        } catch (PathNotFoundException e) {
             return null;
         }
     }
-
 }
