@@ -270,7 +270,7 @@ public abstract class AbstractLockTest extends AbstractJCRTest {
         long remaining = lock.getSecondsRemaining();
         if (remaining <= hint) {
             try {
-                wait(remaining * 2000); // wait twice as long to be safe
+                wait(remaining * 4000); // wait four time as long to be safe
             } catch (InterruptedException ignore) {
             }
             long secs = lock.getSecondsRemaining();
