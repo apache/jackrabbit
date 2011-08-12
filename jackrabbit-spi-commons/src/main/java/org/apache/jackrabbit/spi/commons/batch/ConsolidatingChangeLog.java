@@ -74,7 +74,7 @@ public class ConsolidatingChangeLog extends AbstractChangeLog<ConsolidatingChang
     protected static Path getPath(ItemId itemId) {
         Path path = itemId.getPath();
         if (path != null && !path.isAbsolute()) {
-            throw new IllegalArgumentException("Path not absoulte: " + path);
+            return null;
         }
         return path;
     }
