@@ -25,6 +25,7 @@ import java.util.UUID;
 
 import javax.jcr.ImportUUIDBehavior;
 import javax.jcr.Item;
+import javax.jcr.Node;
 import javax.jcr.Property;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
@@ -202,6 +203,55 @@ public class SessionImportTest extends AbstractJCRTest {
 
         InputStream in = new ByteArrayInputStream(xml.getBytes());
         superuser.importXML(testRootNode.getPath(), in, ImportUUIDBehavior.IMPORT_UUID_COLLISION_THROW);
+    }
+
+    /**
+     *
+     * @throws IOException
+     * @throws RepositoryException
+     */
+    public void testMixVersionable() throws IOException, RepositoryException {
+        String xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" +
+                "<sv:node sv:name=\"test\" xmlns:mix=\"http://www.jcp.org/jcr/mix/1.0\" " +
+                "xmlns:nt=\"http://www.jcp.org/jcr/nt/1.0\" " +
+                "xmlns:fn_old=\"http://www.w3.org/2004/10/xpath-functions\" " +
+                "xmlns:fn=\"http://www.w3.org/2005/xpath-functions\" " +
+                "xmlns:xs=\"http://www.w3.org/2001/XMLSchema\" " +
+                "xmlns:sv=\"http://www.jcp.org/jcr/sv/1.0\" " +
+                "xmlns:rep=\"internal\" " +
+                "xmlns:jcr=\"http://www.jcp.org/jcr/1.0\">" +
+                "<sv:property sv:name=\"jcr:primaryType\" sv:type=\"Name\">" +
+                "   <sv:value>nt:unstructured</sv:value>" +
+                "</sv:property>" +
+                "<sv:property sv:name=\"jcr:mixinTypes\" sv:type=\"Name\" sv:multiple=\"true\">" +
+                "   <sv:value>mix:versionable</sv:value>" +
+                "</sv:property>" +
+                "<sv:property sv:name=\"jcr:uuid\" sv:type=\"String\">" +
+                "   <sv:value>75806b92-317f-4cb3-bc3d-ee87a95cf21f</sv:value>" +
+                "</sv:property>" +
+                "<sv:property sv:name=\"jcr:baseVersion\" sv:type=\"Reference\">" +
+                "   <sv:value>6b91c6e5-1b83-4921-94a1-5d92ca389b3f</sv:value>" +
+                "</sv:property>" +
+                "<sv:property sv:name=\"jcr:isCheckedOut\" sv:type=\"Boolean\">" +
+                "   <sv:value>true</sv:value>" +
+                "</sv:property>" +
+                "<sv:property sv:name=\"jcr:predecessors\" sv:type=\"Reference\" sv:multiple=\"true\">" +
+                "   <sv:value>6b91c6e5-1b83-4921-94a1-5d92ca389b3f</sv:value>" +
+                "</sv:property>" +
+                "<sv:property sv:name=\"jcr:versionHistory\" sv:type=\"Reference\">" +
+                "   <sv:value>99b5ec0f-49cb-4ccf-b9fd-9fba82349420</sv:value>" +
+                "</sv:property>" +
+                "</sv:node>";
+
+        InputStream in = new ByteArrayInputStream(xml.getBytes());
+        superuser.importXML(testRootNode.getPath(), in, ImportUUIDBehavior.IMPORT_UUID_COLLISION_THROW);
+        superuser.save();
+        
+        assertTrue("test node must be present", testRootNode.hasNode("test"));
+        Node n = testRootNode.getNode("test");
+        assertTrue("node must be mix:versionable", n.isNodeType(mixVersionable));
+        assertTrue("node must be mix:referenceable", n.isNodeType(mixReferenceable));
+        assertEquals("75806b92-317f-4cb3-bc3d-ee87a95cf21f", n.getUUID());
     }
 
     private static String getUnknownURI(Session session, String uriHint) throws RepositoryException {
