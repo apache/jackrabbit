@@ -30,7 +30,7 @@ import org.apache.jackrabbit.spi.Path;
 /**
  * <code>ReorderNodes</code>...
  */
-public class ReorderNodes extends AbstractOperation {
+public class ReorderNodes extends TransientOperation {
 
     private final NodeId parentId;
     private final NodeId insertId;
@@ -42,6 +42,7 @@ public class ReorderNodes extends AbstractOperation {
 
     private ReorderNodes(NodeState parentState, NodeState insert, NodeState before)
             throws RepositoryException {
+        super(NO_OPTIONS);
         this.parentState = parentState;
         this.insert = insert;
         this.before = before;

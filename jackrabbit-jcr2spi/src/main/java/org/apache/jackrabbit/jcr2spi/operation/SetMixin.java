@@ -22,6 +22,7 @@ import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
 import javax.jcr.version.VersionException;
 
+import org.apache.jackrabbit.jcr2spi.state.ItemStateValidator;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.NodeId;
@@ -30,13 +31,22 @@ import org.apache.jackrabbit.spi.commons.name.NameConstants;
 /**
  * <code>SetMixin</code>...
  */
-public class SetMixin extends AbstractOperation {
+public class SetMixin extends TransientOperation {
+
+    private static final int SET_MIXIN_OPTIONS =
+            ItemStateValidator.CHECK_LOCK
+            | ItemStateValidator.CHECK_VERSIONING;
 
     private final NodeId nodeId;
     private final NodeState nodeState;
     private final Name[] mixinNames;
 
     private SetMixin(NodeState nodeState, Name[] mixinNames) throws RepositoryException {
+        this(nodeState, mixinNames, SET_MIXIN_OPTIONS);
+    }
+
+    private SetMixin(NodeState nodeState, Name[] mixinNames, int options) throws RepositoryException {
+        super(options);
         this.nodeState = nodeState;
         this.nodeId = nodeState.getNodeId();
         this.mixinNames = mixinNames;

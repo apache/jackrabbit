@@ -28,6 +28,7 @@ import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.version.VersionException;
 
+import org.apache.jackrabbit.jcr2spi.state.ItemStateValidator;
 import org.apache.jackrabbit.jcr2spi.state.PropertyState;
 import org.apache.jackrabbit.spi.PropertyId;
 import org.apache.jackrabbit.spi.QValue;
@@ -35,8 +36,13 @@ import org.apache.jackrabbit.spi.QValue;
 /**
  * <code>SetPropertyValue</code>...
  */
-public class SetPropertyValue extends AbstractOperation {
+public class SetPropertyValue extends TransientOperation {
 
+    private static final int SET_PROPERTY_OPTIONS =
+            ItemStateValidator.CHECK_LOCK
+            | ItemStateValidator.CHECK_VERSIONING
+            | ItemStateValidator.CHECK_CONSTRAINTS;
+    
     private final PropertyId propertyId;
     private final PropertyState propertyState;
     private final QValue[] values;
@@ -46,6 +52,13 @@ public class SetPropertyValue extends AbstractOperation {
 
     private SetPropertyValue(PropertyState propertyState, int valueType, QValue[] values)
             throws RepositoryException {
+        this(propertyState, valueType, values, SET_PROPERTY_OPTIONS);
+
+    }
+
+    private SetPropertyValue(PropertyState propertyState, int valueType,
+                             QValue[] values, int options) throws RepositoryException {
+        super(options);
         this.propertyState = propertyState;
 
         propertyId = (PropertyId) propertyState.getId();
@@ -124,9 +137,9 @@ public class SetPropertyValue extends AbstractOperation {
                                    int valueType) throws RepositoryException {
         // compact array (purge null entries)
         List<QValue> list = new ArrayList<QValue>();
-        for (int i = 0; i < qValues.length; i++) {
-            if (qValues[i] != null) {
-                list.add(qValues[i]);
+        for (QValue qValue : qValues) {
+            if (qValue != null) {
+                list.add(qValue);
             }
         }
         QValue[] cleanValues = list.toArray(new QValue[list.size()]);

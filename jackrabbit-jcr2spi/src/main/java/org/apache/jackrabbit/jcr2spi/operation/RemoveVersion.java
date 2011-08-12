@@ -28,14 +28,13 @@ import org.apache.jackrabbit.jcr2spi.hierarchy.PropertyEntry;
 import org.apache.jackrabbit.jcr2spi.state.ItemState;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
 import org.apache.jackrabbit.jcr2spi.version.VersionManager;
-import org.apache.jackrabbit.spi.ItemId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * <code>RemoveVersion</code>...
  */
-public class RemoveVersion extends Remove {
+public class RemoveVersion extends AbstractRemove {
 
     private static Logger log = LoggerFactory.getLogger(RemoveVersion.class);
 
@@ -55,7 +54,6 @@ public class RemoveVersion extends Remove {
     /**
      * @see Operation#accept(OperationVisitor)
      */
-    @Override
     public void accept(OperationVisitor visitor) throws AccessDeniedException, UnsupportedRepositoryOperationException, VersionException, RepositoryException {
         assert status == STATUS_PENDING;
         visitor.visit(this);
@@ -67,7 +65,6 @@ public class RemoveVersion extends Remove {
      *
      * @see Operation#persisted()
      */
-    @Override
     public void persisted() {
         assert status == STATUS_PENDING;
         status = STATUS_PERSISTED;
@@ -84,12 +81,6 @@ public class RemoveVersion extends Remove {
         // invalidate the versionhistory entry and all its children
         // in order to have the v-graph recalculated
         parent.getNodeEntry().invalidate(true);
-    }
-
-    //----------------------------------------< Access Operation Parameters >---
-    @Override
-    public ItemId getRemoveId() throws RepositoryException {
-        return removeState.getWorkspaceId();
     }
 
     //------------------------------------------------------------< Factory >---

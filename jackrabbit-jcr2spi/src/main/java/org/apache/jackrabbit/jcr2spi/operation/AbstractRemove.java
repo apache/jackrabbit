@@ -16,11 +16,6 @@
  */
 package org.apache.jackrabbit.jcr2spi.operation;
 
-import javax.jcr.AccessDeniedException;
-import javax.jcr.RepositoryException;
-import javax.jcr.UnsupportedRepositoryOperationException;
-import javax.jcr.version.VersionException;
-
 import org.apache.jackrabbit.jcr2spi.state.ItemState;
 import org.apache.jackrabbit.jcr2spi.state.ItemStateValidator;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
@@ -28,29 +23,23 @@ import org.apache.jackrabbit.spi.ItemId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.jcr.AccessDeniedException;
+import javax.jcr.RepositoryException;
+import javax.jcr.UnsupportedRepositoryOperationException;
+import javax.jcr.version.VersionException;
+
 /**
- * <code>Remove</code>...
+ * <code>AbstractRemove</code> is the base class for non-transient remove
+ * operations executed on the workspace such as removing versions or activites.
  */
-public class Remove extends TransientOperation {
+public abstract class AbstractRemove extends AbstractOperation {
 
     private static Logger log = LoggerFactory.getLogger(Remove.class);
 
-    private static final int REMOVE_OPTIONS =
-            ItemStateValidator.CHECK_LOCK
-            | ItemStateValidator.CHECK_VERSIONING
-            | ItemStateValidator.CHECK_CONSTRAINTS;
-
-    private final ItemId removeId;
     protected ItemState removeState;
     protected NodeState parent;
 
-    private Remove(ItemState removeState, NodeState parent) throws RepositoryException {
-        this(removeState, parent, REMOVE_OPTIONS);
-    }
-
-    private Remove(ItemState removeState, NodeState parent, int options) throws RepositoryException {
-        super(options);
-        this.removeId = removeState.getId();
+    protected AbstractRemove(ItemState removeState, NodeState parent) throws RepositoryException {
         this.removeState = removeState;
         this.parent = parent;
 
@@ -59,23 +48,6 @@ public class Remove extends TransientOperation {
     }
 
     //----------------------------------------------------------< Operation >---
-    /**
-     * @see Operation#accept(OperationVisitor)
-     */
-    public void accept(OperationVisitor visitor) throws AccessDeniedException, UnsupportedRepositoryOperationException, VersionException, RepositoryException {
-        assert status == STATUS_PENDING;
-        visitor.visit(this);
-    }
-
-    /**
-     * @see Operation#persisted()
-     */
-    public void persisted() throws RepositoryException {
-        assert status == STATUS_PENDING;
-        status = STATUS_PERSISTED;
-        parent.getHierarchyEntry().complete(this);
-    }
-
     /**
      * @see Operation#undo()
      */
@@ -88,24 +60,10 @@ public class Remove extends TransientOperation {
 
     //----------------------------------------< Access Operation Parameters >---
     public ItemId getRemoveId() throws RepositoryException {
-        return removeId;
-    }
-
-    public ItemState getRemoveState() {
-        return removeState;
+        return removeState.getWorkspaceId();
     }
 
     public NodeState getParentState() {
         return parent;
-    }
-
-    //------------------------------------------------------------< Factory >---
-    public static Operation create(ItemState state) throws RepositoryException {
-        if (state.isNode() && ((NodeState) state).getDefinition().allowsSameNameSiblings()) {
-            // in case of SNS-siblings make sure the parent hierarchy entry has
-            // its child entries loaded.
-            assertChildNodeEntries(state.getParent());
-        }
-        return new Remove(state, state.getParent());
     }
 }
