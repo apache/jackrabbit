@@ -20,14 +20,14 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd ">
   <modelVersion>4.0.0</modelVersion>
 
-  <!-- ====================================================================== -->
-  <!-- P R O J E C T  D E S C R I P T I O N                                   -->
-  <!-- ====================================================================== -->
+  <!-- =================================================================== -->
+  <!-- P R O J E C T   D E S C R I P T I O N                               -->
+  <!-- =================================================================== -->
 
   <parent>
-    <groupId>org.apache.jackrabbit</groupId>
-    <artifactId>parent</artifactId>
-    <version>5</version>
+    <groupId>org.apache</groupId>
+    <artifactId>apache</artifactId>
+    <version>9</version>
     <relativePath />
   </parent>
 
@@ -35,6 +35,7 @@
   <name>Jackrabbit Parent POM</name>
   <version>2.3-SNAPSHOT</version>
   <packaging>pom</packaging>
+
   <issueManagement>
     <system>Jira</system>
     <url>http://issues.apache.org/jira/browse/JCR</url>
@@ -46,6 +47,71 @@
     <jetty.version>6.1.22</jetty.version>
     <tika.version>0.9</tika.version>
   </properties>
+
+  <url>http://jackrabbit.apache.org/</url>
+  <inceptionYear>2004</inceptionYear>
+  <description>
+    The Apache Jackrabbit™ content repository is a fully conforming
+    implementation of the Content Repository for Java Technology API
+    (JCR, specified in JSR 170 and 283). A content repository is a
+    hierarchical content store with support for structured and unstructured
+    content, full text search, versioning, transactions, observation, and more.
+    Apache Jackrabbit is a project of the Apache Software Foundation.
+  </description>
+
+  <!-- =================================================================== -->
+  <!-- B U I L D   S E T T I N G S                                         -->
+  <!-- =================================================================== -->
+  <prerequisites>
+    <maven>2.0.9</maven>
+  </prerequisites>
+
+  <profiles>
+    <profile>
+      <id>pedantic</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.rat</groupId>
+            <artifactId>apache-rat-plugin</artifactId>
+            <executions>
+              <execution>
+                <phase>verify</phase>
+                <goals>
+                  <goal>check</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <!-- JCR-661: The antrun tools.jar dependency is not needed on macs -->
+    <profile>
+      <id>non-mac</id>
+      <activation>
+        <os>
+          <family>!mac</family>
+        </os>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <artifactId>maven-antrun-plugin</artifactId>
+            <dependencies>
+              <dependency>
+                <groupId>sun</groupId>
+                <artifactId>tools</artifactId>
+                <version>1.0</version>
+                <scope>system</scope>
+                <systemPath>${java.home}/../lib/tools.jar</systemPath>
+              </dependency>
+            </dependencies>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
 
   <build>
     <plugins>
@@ -91,10 +157,61 @@
           <autoVersionSubmodules>true</autoVersionSubmodules>
         </configuration>
       </plugin>
+      <plugin>
+        <groupId>org.apache.rat</groupId>
+        <artifactId>apache-rat-plugin</artifactId>
+        <configuration>
+          <excludes>
+            <exclude>release.properties</exclude>
+          </excludes>
+        </configuration>
+      </plugin>
     </plugins>
-
     <pluginManagement>
+      <!-- JCRSITE-9: Fix versions of key Maven plugins      -->
+      <!-- Note that many plugin versions are set already in -->
+      <!-- the Apache parent POM.                            -->
       <plugins>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-release-plugin</artifactId>
+          <version>2.0-beta-9</version>
+          <configuration>
+            <useReleaseProfile>false</useReleaseProfile>
+            <goals>deploy</goals>
+            <arguments>-Papache-release,pedantic</arguments>
+          </configuration>
+        </plugin>
+        <plugin>
+          <artifactId>maven-war-plugin</artifactId>
+          <version>2.0.2</version>
+        </plugin>
+        <plugin>
+          <artifactId>maven-rar-plugin</artifactId>
+          <version>2.2</version>
+        </plugin>
+        <plugin>
+          <artifactId>maven-dependency-plugin</artifactId>
+          <version>2.1</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.felix</groupId>
+          <artifactId>maven-bundle-plugin</artifactId>
+          <version>2.0.0</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.rat</groupId>
+          <artifactId>apache-rat-plugin</artifactId>
+          <version>0.6</version>
+        </plugin>
+        <plugin>
+          <artifactId>maven-idea-plugin</artifactId>
+          <version>2.2</version>
+        </plugin>
+        <plugin>
+          <artifactId>maven-eclipse-plugin</artifactId>
+          <version>2.6</version>
+        </plugin>
         <!--  Default configuration of OSGi bundling (JCR-1342) -->
         <plugin>
           <groupId>org.apache.felix</groupId>
@@ -123,34 +240,6 @@
       </plugins>
     </pluginManagement>
   </build>
-
-  <profiles>
-    <!-- JCR-661: The antrun tools.jar dependency is not needed on macs -->
-    <profile>
-      <id>non-mac</id>
-      <activation>
-        <os>
-          <family>!mac</family>
-        </os>
-      </activation>
-      <build>
-        <plugins>
-          <plugin>
-            <artifactId>maven-antrun-plugin</artifactId>
-            <dependencies>
-              <dependency>
-                <groupId>sun</groupId>
-                <artifactId>tools</artifactId>
-                <version>1.0</version>
-                <scope>system</scope>
-                <systemPath>${java.home}/../lib/tools.jar</systemPath>
-              </dependency>
-            </dependencies>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
-  </profiles>
 
   <reporting>
     <plugins>
@@ -379,4 +468,401 @@
       </dependency>
     </dependencies>
   </dependencyManagement>
+
+  <!-- =================================================================== -->
+  <!-- M A I L I N G   L I S T S                                           -->
+  <!-- =================================================================== -->
+  <mailingLists>
+    <mailingList>
+      <name>Jackrabbit Announce List</name>
+      <subscribe>announce-subscribe@jackrabbit.apache.org</subscribe>
+      <unsubscribe>announce-unsubscribe@jackrabbit.apache.org</unsubscribe>
+      <archive>
+        http://mail-archives.apache.org/mod_mbox/jackrabbit-announce/
+      </archive>
+      <otherArchives>
+        <otherArchive>
+          http://jackrabbit.markmail.org/
+        </otherArchive>
+      </otherArchives>
+    </mailingList>
+    <mailingList>
+      <name>Jackrabbit Users List</name>
+      <subscribe>users-subscribe@jackrabbit.apache.org</subscribe>
+      <unsubscribe>users-unsubscribe@jackrabbit.apache.org</unsubscribe>
+      <post>users at jackrabbit.apache.org</post>
+      <archive>
+        http://mail-archives.apache.org/mod_mbox/jackrabbit-users/
+      </archive>
+      <otherArchives>
+        <otherArchive>
+          http://jackrabbit.markmail.org/
+        </otherArchive>
+        <otherArchive>
+          http://dir.gmane.org/gmane.comp.apache.jackrabbit.user
+        </otherArchive>
+        <otherArchive>
+          http://www.mail-archive.com/users@jackrabbit.apache.org/
+        </otherArchive>
+        <otherArchive>
+          http://www.nabble.com/Jackrabbit---Users-f14897.html
+        </otherArchive>
+      </otherArchives>
+    </mailingList>
+    <mailingList>
+      <name>Jackrabbit Development List</name>
+      <subscribe>dev-subscribe@jackrabbit.apache.org</subscribe>
+      <unsubscribe>dev-unsubscribe@jackrabbit.apache.org</unsubscribe>
+      <post>dev at jackrabbit.apache.org</post>
+      <archive>
+        http://mail-archives.apache.org/mod_mbox/jackrabbit-dev/
+      </archive>
+      <otherArchives>
+        <otherArchive>
+          http://jackrabbit.markmail.org/
+        </otherArchive>
+        <otherArchive>
+          http://dir.gmane.org/gmane.comp.apache.jackrabbit.devel
+        </otherArchive>
+        <otherArchive>
+          http://www.mail-archive.com/dev@jackrabbit.apache.org/
+        </otherArchive>
+        <otherArchive>
+          http://www.mail-archive.com/jackrabbit-dev@incubator.apache.org/
+        </otherArchive>
+        <otherArchive>
+          http://www.nabble.com/Jackrabbit---Dev-f371.html
+        </otherArchive>
+      </otherArchives>
+    </mailingList>
+    <mailingList>
+      <name>Jackrabbit Source Control List</name>
+      <subscribe>commits-subscribe@jackrabbit.apache.org</subscribe>
+      <unsubscribe>commits-unsubscribe@jackrabbit.apache.org</unsubscribe>
+      <archive>
+        http://mail-archives.apache.org/mod_mbox/jackrabbit-commits/
+      </archive>
+      <otherArchives>
+        <otherArchive>
+          http://jackrabbit.markmail.org/
+        </otherArchive>
+      </otherArchives>
+    </mailingList>
+  </mailingLists>
+
+  <!-- =================================================================== -->
+  <!-- C O M M I T T E R S                                                 -->
+  <!-- =================================================================== -->
+  <developers>
+    <developer>
+      <name>Alexander Klimetschek</name>
+      <id>alexkli</id>
+      <organization>Day Software</organization>
+      <organizationUrl>http://www.day.com/</organizationUrl>
+      <roles>
+        <role>committer</role>
+        <role>PMC member</role>
+      </roles>
+      <timezone>+1</timezone>
+    </developer>
+    <developer>
+      <name>Angela Schreiber</name>
+      <id>angela</id>
+      <organization>Day Software</organization>
+      <organizationUrl>http://www.day.com/</organizationUrl>
+      <roles>
+        <role>committer</role>
+        <role>PMC member</role>
+      </roles>
+      <timezone>+1</timezone>
+    </developer>
+    <developer>
+      <name>Ard Schrijvers</name>
+      <id>ard</id>
+      <organization>Hippo</organization>
+      <organizationUrl>http://www.hippo.nl/</organizationUrl>
+      <roles>
+        <role>committer</role>
+        <role>PMC member</role>
+      </roles>
+      <timezone>+1</timezone>
+    </developer>
+    <developer>
+      <name>Christoph Kiehl</name>
+      <id>ckiehl</id>
+      <roles>
+        <role>committer</role>
+        <role>PMC member</role>
+      </roles>
+      <timezone>+1</timezone>
+    </developer>
+    <developer>
+      <name>Christophe Lombart</name>
+      <id>clombart</id>
+      <roles>
+        <role>committer</role>
+        <role>PMC member</role>
+      </roles>
+    </developer>
+    <developer>
+      <name>Claus Köll</name>
+      <id>ckoell</id>
+      <roles>
+        <role>committer</role>
+        <role>PMC member</role>
+      </roles>
+    </developer>
+    <developer>
+      <name>David Nuescheler</name>
+      <id>uncled</id>
+      <organization>Day Software</organization>
+      <organizationUrl>http://www.day.com/</organizationUrl>
+      <roles>
+        <role>committer</role>
+        <role>PMC member</role>
+      </roles>
+      <timezone>+1</timezone>
+    </developer>
+    <developer>
+      <name>Dominique Pfister</name>
+      <id>dpfister</id>
+      <organization>Day Software</organization>
+      <organizationUrl>http://www.day.com/</organizationUrl>
+      <roles>
+        <role>committer</role>
+        <role>PMC member</role>
+      </roles>
+      <timezone>+1</timezone>
+    </developer>
+    <developer>
+      <name>Edgar Poce</name>
+      <id>edgarpoce</id>
+      <roles>
+        <role>committer</role>
+        <role>PMC member</role>
+      </roles>
+    </developer>
+    <developer>
+      <name>Esteban Franqueiro</name>
+      <id>eaf</id>
+      <roles>
+        <role>committer</role>
+        <role>PMC member</role>
+      </roles>
+    </developer>
+    <developer>
+      <name>Felix Meschberger</name>
+      <id>fmeschbe</id>
+      <organization>Day Software</organization>
+      <organizationUrl>http://www.day.com/</organizationUrl>
+      <roles>
+        <role>committer</role>
+        <role>PMC member</role>
+      </roles>
+      <timezone>+1</timezone>
+    </developer>
+    <developer>
+      <name>Jukka Zitting</name>
+      <id>jukka</id>
+      <organization>Day Software</organization>
+      <organizationUrl>http://www.day.com/</organizationUrl>
+      <roles>
+        <role>committer</role>
+        <role>PMC chair</role>
+      </roles>
+      <timezone>+1</timezone>
+    </developer>
+    <developer>
+      <name>Julian Reschke</name>
+      <id>reschke</id>
+      <organization>greenbytes GmbH</organization>
+      <organizationUrl>http://www.greenbytes.de/</organizationUrl>
+      <roles>
+        <role>committer</role>
+        <role>PMC member</role>
+      </roles>
+      <timezone>+1</timezone>
+    </developer>
+    <developer>
+      <name>Marcel Reutegger</name>
+      <id>mreutegg</id>
+      <organization>Day Software</organization>
+      <organizationUrl>http://www.day.com/</organizationUrl>
+      <roles>
+        <role>committer</role>
+        <role>PMC member</role>
+      </roles>
+      <timezone>+1</timezone>
+    </developer>
+    <developer>
+      <name>Martijn Hendriks</name>
+      <id>martijnh</id>
+      <organization>GX</organization>
+      <organizationUrl>http://www.gx.nl/</organizationUrl>
+      <roles>
+        <role>committer</role>
+        <role>PMC member</role>
+      </roles>
+      <timezone>+1</timezone>
+    </developer>
+    <developer>
+      <name>Michael Dürig</name>
+      <id>mduerig</id>
+      <organization>Day Software</organization>
+      <organizationUrl>http://www.day.com/</organizationUrl>
+      <roles>
+        <role>committer</role>
+        <role>PMC member</role>
+      </roles>
+      <timezone>+1</timezone>
+    </developer>
+    <developer>
+      <name>Peeter Piegaze</name>
+      <id>ppiegaze</id>
+      <organization>Day Software</organization>
+      <organizationUrl>http://www.day.com/</organizationUrl>
+      <roles>
+        <role>committer</role>
+        <role>PMC member</role>
+      </roles>
+      <timezone>+1</timezone>
+    </developer>
+    <developer>
+      <name>Przemo Pakulski</name>
+      <id>ppakulski</id>
+      <organization>Cognifide</organization>
+      <organizationUrl>http://www.cognifide.com/</organizationUrl>
+      <roles>
+        <role>committer</role>
+        <role>PMC member</role>
+      </roles>
+      <timezone>+1</timezone>
+    </developer>
+    <developer>
+      <name>Roy T. Fielding</name>
+      <id>fielding</id>
+      <organization>Day Software</organization>
+      <organizationUrl>http://www.day.com/</organizationUrl>
+      <roles>
+        <role>committer</role>
+        <role>PMC member</role>
+      </roles>
+      <timezone>-8</timezone>
+    </developer>
+    <developer>
+      <name>Sébastien Launay</name>
+      <id>sebastien</id>
+      <organization>Anyware Technologies</organization>
+      <organizationUrl>http://www.anyware-tech.com/</organizationUrl>
+      <roles>
+        <role>committer</role>
+        <role>PMC member</role>
+      </roles>
+      <timezone>+1</timezone>
+    </developer>
+    <developer>
+      <name>Serge Huber</name>
+      <id>shuber</id>
+      <roles>
+        <role>committer</role>
+        <role>PMC member</role>
+      </roles>
+      <timezone>+1</timezone>
+    </developer>
+    <developer>
+      <name>Stefan Guggisberg</name>
+      <id>stefan</id>
+      <organization>Day Software</organization>
+      <organizationUrl>http://www.day.com/</organizationUrl>
+      <roles>
+        <role>committer</role>
+        <role>PMC member</role>
+      </roles>
+      <timezone>+1</timezone>
+    </developer>
+    <developer>
+      <name>Sylvain Wallez</name>
+      <id>sylvain</id>
+      <roles>
+        <role>committer</role>
+        <role>PMC member</role>
+      </roles>
+      <timezone>+1</timezone>
+    </developer>
+    <developer>
+      <name>Thomas Müller</name>
+      <id>thomasm</id>
+      <organization>Day Software</organization>
+      <organizationUrl>http://www.day.com/</organizationUrl>
+      <roles>
+        <role>committer</role>
+        <role>PMC member</role>
+      </roles>
+      <timezone>+1</timezone>
+    </developer>
+    <developer>
+      <name>Tobias Bocanegra</name>
+      <id>tripod</id>
+      <organization>Day Software</organization>
+      <organizationUrl>http://www.day.com/</organizationUrl>
+      <roles>
+        <role>committer</role>
+        <role>PMC member</role>
+      </roles>
+      <timezone>+1</timezone>
+    </developer>
+
+    <!-- EMERITUS MEMBERS -->
+    <developer>
+      <name>Andrew Savory</name>
+      <id>asavory</id>
+      <roles>
+        <role>emeritus</role>
+      </roles>
+      <timezone>+0</timezone>
+    </developer>
+    <developer>
+      <name>Brian Moseley</name>
+      <id>moseley</id>
+      <organization>Open Source Applications Foundation (OSAF)</organization>
+      <organizationUrl>http://www.osafoundation.org/</organizationUrl>
+      <roles>
+        <role>emeritus</role>
+      </roles>
+      <timezone>-8</timezone>
+    </developer>
+    <developer>
+      <name>Gianugo Rabellino</name>
+      <id>gianugo</id>
+      <roles>
+        <role>emeritus</role>
+      </roles>
+      <timezone>+1</timezone>
+    </developer>
+    <developer>
+      <name>Paul Russell</name>
+      <id>prussell</id>
+      <roles>
+        <role>emeritus</role>
+      </roles>
+      <timezone>+0</timezone>
+    </developer>
+    <developer>
+      <name>Stefano Mazzocchi</name>
+      <id>stefano</id>
+      <roles>
+        <role>emeritus</role>
+      </roles>
+      <timezone>-5</timezone>
+    </developer>
+    <developer>
+      <name>Tim Reilly</name>
+      <id>treilly</id>
+      <roles>
+        <role>emeritus</role>
+      </roles>
+      <timezone>-5</timezone>
+    </developer>
+  </developers>
+
 </project>
