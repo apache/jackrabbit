@@ -557,7 +557,18 @@
     <developer>
       <name>Alexander Klimetschek</name>
       <id>alexkli</id>
-      <organization>Day Software</organization>
+      <organization>Adobe</organization>
+      <organizationUrl>http://www.day.com/</organizationUrl>
+      <roles>
+        <role>committer</role>
+        <role>PMC member</role>
+      </roles>
+      <timezone>+1</timezone>
+    </developer>
+    <developer>
+      <name>Alex Parvulescu</name>
+      <id>alexparvulescu</id>
+      <organization>Adobe</organization>
       <organizationUrl>http://www.day.com/</organizationUrl>
       <roles>
         <role>committer</role>
@@ -568,7 +579,7 @@
     <developer>
       <name>Angela Schreiber</name>
       <id>angela</id>
-      <organization>Day Software</organization>
+      <organization>Adobe</organization>
       <organizationUrl>http://www.day.com/</organizationUrl>
       <roles>
         <role>committer</role>
@@ -615,7 +626,7 @@
     <developer>
       <name>David Nuescheler</name>
       <id>uncled</id>
-      <organization>Day Software</organization>
+      <organization>Adobe</organization>
       <organizationUrl>http://www.day.com/</organizationUrl>
       <roles>
         <role>committer</role>
@@ -626,7 +637,7 @@
     <developer>
       <name>Dominique Pfister</name>
       <id>dpfister</id>
-      <organization>Day Software</organization>
+      <organization>Adobe</organization>
       <organizationUrl>http://www.day.com/</organizationUrl>
       <roles>
         <role>committer</role>
@@ -653,7 +664,7 @@
     <developer>
       <name>Felix Meschberger</name>
       <id>fmeschbe</id>
-      <organization>Day Software</organization>
+      <organization>Adobe</organization>
       <organizationUrl>http://www.day.com/</organizationUrl>
       <roles>
         <role>committer</role>
@@ -664,7 +675,7 @@
     <developer>
       <name>Jukka Zitting</name>
       <id>jukka</id>
-      <organization>Day Software</organization>
+      <organization>Adobe</organization>
       <organizationUrl>http://www.day.com/</organizationUrl>
       <roles>
         <role>committer</role>
@@ -686,7 +697,7 @@
     <developer>
       <name>Marcel Reutegger</name>
       <id>mreutegg</id>
-      <organization>Day Software</organization>
+      <organization>Adobe</organization>
       <organizationUrl>http://www.day.com/</organizationUrl>
       <roles>
         <role>committer</role>
@@ -708,24 +719,24 @@
     <developer>
       <name>Michael Dürig</name>
       <id>mduerig</id>
-      <organization>Day Software</organization>
+      <organization>Adobe</organization>
       <organizationUrl>http://www.day.com/</organizationUrl>
       <roles>
         <role>committer</role>
         <role>PMC member</role>
       </roles>
-      <timezone>+1</timezone>
+      <timezone>+0</timezone>
     </developer>
     <developer>
       <name>Peeter Piegaze</name>
       <id>ppiegaze</id>
-      <organization>Day Software</organization>
+      <organization>Adobe</organization>
       <organizationUrl>http://www.day.com/</organizationUrl>
       <roles>
         <role>committer</role>
         <role>PMC member</role>
       </roles>
-      <timezone>+1</timezone>
+      <timezone>-5</timezone>
     </developer>
     <developer>
       <name>Przemo Pakulski</name>
@@ -741,7 +752,7 @@
     <developer>
       <name>Roy T. Fielding</name>
       <id>fielding</id>
-      <organization>Day Software</organization>
+      <organization>Adobe</organization>
       <organizationUrl>http://www.day.com/</organizationUrl>
       <roles>
         <role>committer</role>
@@ -772,7 +783,7 @@
     <developer>
       <name>Stefan Guggisberg</name>
       <id>stefan</id>
-      <organization>Day Software</organization>
+      <organization>Adobe</organization>
       <organizationUrl>http://www.day.com/</organizationUrl>
       <roles>
         <role>committer</role>
@@ -792,7 +803,7 @@
     <developer>
       <name>Thomas Müller</name>
       <id>thomasm</id>
-      <organization>Day Software</organization>
+      <organization>Adobe</organization>
       <organizationUrl>http://www.day.com/</organizationUrl>
       <roles>
         <role>committer</role>
@@ -803,7 +814,7 @@
     <developer>
       <name>Tobias Bocanegra</name>
       <id>tripod</id>
-      <organization>Day Software</organization>
+      <organization>Adobe</organization>
       <organizationUrl>http://www.day.com/</organizationUrl>
       <roles>
         <role>committer</role>
