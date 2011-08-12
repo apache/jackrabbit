@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.jcr2spi;
 
-import org.apache.jackrabbit.commons.AbstractProperty;
 import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
 import org.apache.jackrabbit.jcr2spi.hierarchy.PropertyEntry;
 import org.apache.jackrabbit.jcr2spi.lock.LockStateManager;
@@ -65,10 +64,8 @@ import javax.jcr.PathNotFoundException;
 import javax.jcr.Property;
 import javax.jcr.PropertyIterator;
 import javax.jcr.PropertyType;
-import javax.jcr.ReferentialIntegrityException;
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
-import javax.jcr.Session;
 import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.Value;
 import javax.jcr.ValueFormatException;
@@ -78,7 +75,6 @@ import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
 import javax.jcr.nodetype.NodeDefinition;
 import javax.jcr.nodetype.NodeType;
-import javax.jcr.nodetype.PropertyDefinition;
 import javax.jcr.version.Version;
 import javax.jcr.version.VersionException;
 import javax.jcr.version.VersionHistory;
@@ -1268,6 +1264,8 @@ public class NodeImpl extends ItemImpl implements Node {
      * @see javax.jcr.Node#followLifecycleTransition(String)
      */
     public void followLifecycleTransition(String transition) throws RepositoryException {
+        session.checkSupportedOption(Repository.OPTION_LIFECYCLE_SUPPORTED);
+
         // TODO: implementation missing
         throw new UnsupportedRepositoryOperationException("JCR-1104");
     }
@@ -1276,6 +1274,8 @@ public class NodeImpl extends ItemImpl implements Node {
      * @see javax.jcr.Node#getAllowedLifecycleTransistions()
      */
     public String[] getAllowedLifecycleTransistions() throws RepositoryException {
+        session.checkSupportedOption(Repository.OPTION_LIFECYCLE_SUPPORTED);
+        
         // TODO: implementation missing
         throw new UnsupportedRepositoryOperationException("JCR-1104");
     }
