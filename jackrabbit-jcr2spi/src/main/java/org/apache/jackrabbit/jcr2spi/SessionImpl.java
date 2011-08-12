@@ -675,9 +675,9 @@ public class SessionImpl extends AbstractSession
     private void notifyLoggingOut() {
         // copy listeners to array to avoid ConcurrentModificationException
         SessionListener[] la = listeners.values().toArray(new SessionListener[listeners.size()]);
-        for (int i = 0; i < la.length; i++) {
-            if (la[i] != null) {
-                la[i].loggingOut(this);
+        for (SessionListener sl : la) {
+            if (sl != null) {
+                sl.loggingOut(this);
             }
         }
     }
@@ -688,9 +688,9 @@ public class SessionImpl extends AbstractSession
     private void notifyLoggedOut() {
         // copy listeners to array to avoid ConcurrentModificationException
         SessionListener[] la = listeners.values().toArray(new SessionListener[listeners.size()]);
-        for (int i = 0; i < la.length; i++) {
-            if (la[i] != null) {
-                la[i].loggedOut(this);
+        for (SessionListener sl : la) {
+            if (sl != null) {
+                sl.loggedOut(this);
             }
         }
     }
@@ -1042,7 +1042,7 @@ public class SessionImpl extends AbstractSession
          */
         public void checkFormat(String identifier) throws MalformedPathException {
             try {
-                NodeId id = getIdFactory().fromJcrIdentifier(identifier);
+                getIdFactory().fromJcrIdentifier(identifier);
             } catch (Exception e) {
                 throw new MalformedPathException("Invalid identifier '" + identifier + "'.");
             }
