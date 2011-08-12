@@ -28,6 +28,7 @@ import javax.jcr.version.VersionException;
 
 import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyManager;
 import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
+import org.apache.jackrabbit.jcr2spi.state.ItemStateValidator;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
 import org.apache.jackrabbit.jcr2spi.util.LogUtil;
 import org.apache.jackrabbit.spi.Name;
@@ -40,9 +41,14 @@ import org.slf4j.LoggerFactory;
 /**
  * <code>Move</code>...
  */
-public class Move extends AbstractOperation {
+public class Move extends TransientOperation {
 
     private static Logger log = LoggerFactory.getLogger(Move.class);
+
+    private static final int MOVE_OPTIONS = ItemStateValidator.CHECK_ACCESS
+            | ItemStateValidator.CHECK_LOCK
+            | ItemStateValidator.CHECK_VERSIONING
+            | ItemStateValidator.CHECK_CONSTRAINTS;
 
     private final NodeId srcId;
     private final NodeId destParentId;
@@ -56,6 +62,7 @@ public class Move extends AbstractOperation {
 
     private Move(NodeState srcNodeState, NodeState srcParentState, NodeState destParentState, Name destName, boolean sessionMove)
             throws RepositoryException {
+        super(sessionMove ? MOVE_OPTIONS : ItemStateValidator.CHECK_NONE);
 
         this.srcId = (NodeId) srcNodeState.getId();
         this.destParentId = destParentState.getNodeId();

@@ -29,6 +29,7 @@ import javax.jcr.nodetype.NoSuchNodeTypeException;
 import javax.jcr.version.VersionException;
 
 import org.apache.jackrabbit.jcr2spi.state.ItemState;
+import org.apache.jackrabbit.jcr2spi.state.ItemStateValidator;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.NodeId;
@@ -38,7 +39,7 @@ import org.slf4j.LoggerFactory;
 /**
  * <code>AddNode</code>...
  */
-public class AddNode extends AbstractOperation {
+public class AddNode extends TransientOperation {
 
     private static Logger log = LoggerFactory.getLogger(AddNode.class);
 
@@ -52,6 +53,13 @@ public class AddNode extends AbstractOperation {
 
     private AddNode(NodeState parentState, Name nodeName, Name nodeTypeName, String uuid)
             throws RepositoryException {
+        this(parentState, nodeName, nodeTypeName, uuid, DEFAULT_OPTIONS);
+    }
+
+    private AddNode(NodeState parentState, Name nodeName, Name nodeTypeName,
+                    String uuid, int options)
+            throws RepositoryException {
+        super(options);
         this.parentId = parentState.getNodeId();
         this.parentState = parentState;
         this.nodeName = nodeName;

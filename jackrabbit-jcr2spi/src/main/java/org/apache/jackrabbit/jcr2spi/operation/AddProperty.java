@@ -34,7 +34,7 @@ import org.apache.jackrabbit.spi.QValue;
 /**
  * <code>AddProperty</code>...
  */
-public class AddProperty extends AbstractOperation {
+public class AddProperty extends TransientOperation {
 
     private final NodeId parentId;
     private final NodeState parentState;
@@ -47,6 +47,13 @@ public class AddProperty extends AbstractOperation {
     private AddProperty(NodeState parentState, Name propName,
                         int propertyType, QValue[] values,
                         QPropertyDefinition definition) throws RepositoryException {
+        this(parentState, propName, propertyType, values, definition, DEFAULT_OPTIONS);
+    }
+    
+    private AddProperty(NodeState parentState, Name propName,
+                        int propertyType, QValue[] values,
+                        QPropertyDefinition definition, int options) throws RepositoryException {
+        super(options);
         this.parentId = parentState.getNodeId();
         this.parentState = parentState;
         this.propertyName = propName;

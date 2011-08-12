@@ -22,6 +22,7 @@ import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
 import javax.jcr.version.VersionException;
 
+import org.apache.jackrabbit.jcr2spi.state.ItemStateValidator;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.NodeId;
@@ -29,13 +30,21 @@ import org.apache.jackrabbit.spi.NodeId;
 /**
  * <code>SetPrimaryNodeType</code>...
  */
-public class SetPrimaryType extends AbstractOperation {
+public class SetPrimaryType extends TransientOperation {
+
+    private final static int SET_PRIMARY_TYPE_OPTIONS =
+            ItemStateValidator.CHECK_VERSIONING
+            | ItemStateValidator.CHECK_LOCK;
 
     private final NodeId nodeId;
     private final NodeState nodeState;
     private final Name primaryTypeName;
 
     private SetPrimaryType(NodeState nodeState, Name primaryTypeName) throws RepositoryException {
+        this(nodeState, primaryTypeName, SET_PRIMARY_TYPE_OPTIONS);
+    }
+    private SetPrimaryType(NodeState nodeState, Name primaryTypeName, int options) throws RepositoryException {
+        super(options);
         this.nodeState = nodeState;
         this.nodeId = nodeState.getNodeId();
         this.primaryTypeName = primaryTypeName;

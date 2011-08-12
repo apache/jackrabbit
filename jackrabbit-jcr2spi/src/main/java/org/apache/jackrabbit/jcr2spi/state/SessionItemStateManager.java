@@ -239,13 +239,10 @@ public class SessionItemStateManager extends TransientOperationVisitor implement
      * @see OperationVisitor#visit(AddNode)
      */
     public void visit(AddNode operation) throws LockException, ConstraintViolationException, AccessDeniedException, ItemExistsException, NoSuchNodeTypeException, UnsupportedRepositoryOperationException, VersionException, RepositoryException {
-        int options = ItemStateValidator.CHECK_LOCK | ItemStateValidator.CHECK_COLLISION
-            | ItemStateValidator.CHECK_VERSIONING | ItemStateValidator.CHECK_CONSTRAINTS;
-
         NodeState parent = operation.getParentState();
         ItemDefinitionProvider defProvider = mgrProvider.getItemDefinitionProvider();
         QNodeDefinition def = defProvider.getQNodeDefinition(parent.getAllNodeTypeNames(), operation.getNodeName(), operation.getNodeTypeName());
-        List<ItemState> newStates = addNodeState(parent, operation.getNodeName(), operation.getNodeTypeName(), operation.getUuid(), def, options);
+        List<ItemState> newStates = addNodeState(parent, operation.getNodeName(), operation.getNodeTypeName(), operation.getUuid(), def, operation.getOptions());
         operation.addedState(newStates);
 
         transientStateMgr.addOperation(operation);
@@ -265,11 +262,8 @@ public class SessionItemStateManager extends TransientOperationVisitor implement
                 targetType = PropertyType.STRING;
             }
         }
-        int options = ItemStateValidator.CHECK_LOCK
-            | ItemStateValidator.CHECK_COLLISION
-            | ItemStateValidator.CHECK_VERSIONING
-            | ItemStateValidator.CHECK_CONSTRAINTS;
-        addPropertyState(parent, propertyName, targetType, operation.getValues(), pDef, options);
+
+        addPropertyState(parent, propertyName, targetType, operation.getValues(), pDef, operation.getOptions());
 
         transientStateMgr.addOperation(operation);
     }
@@ -285,17 +279,9 @@ public class SessionItemStateManager extends TransientOperationVisitor implement
         NodeState destParent = operation.getDestinationParentState();
 
         // state validation: move-Source can be removed from old/added to new parent
-        validator.checkRemoveItem(srcState,
-            ItemStateValidator.CHECK_ACCESS
-            | ItemStateValidator.CHECK_LOCK
-            | ItemStateValidator.CHECK_VERSIONING
-            | ItemStateValidator.CHECK_CONSTRAINTS);
+        validator.checkRemoveItem(srcState, operation.getOptions());
         validator.checkAddNode(destParent, operation.getDestinationName(),
-            srcState.getNodeTypeName(),
-            ItemStateValidator.CHECK_ACCESS
-            | ItemStateValidator.CHECK_LOCK
-            | ItemStateValidator.CHECK_VERSIONING
-            | ItemStateValidator.CHECK_CONSTRAINTS);
+            srcState.getNodeTypeName(), operation.getOptions());
 
         // retrieve applicable definition at the new place
         ItemDefinitionProvider defProvider = mgrProvider.getItemDefinitionProvider();
@@ -313,10 +299,7 @@ public class SessionItemStateManager extends TransientOperationVisitor implement
      */
     public void visit(Remove operation) throws ConstraintViolationException, AccessDeniedException, UnsupportedRepositoryOperationException, VersionException, RepositoryException {
         ItemState state = operation.getRemoveState();
-        int options = ItemStateValidator.CHECK_LOCK
-            | ItemStateValidator.CHECK_VERSIONING
-            | ItemStateValidator.CHECK_CONSTRAINTS;
-        removeItemState(state, options);
+        removeItemState(state, operation.getOptions());
 
         transientStateMgr.addOperation(operation);
         operation.getParentState().markModified();
@@ -339,23 +322,20 @@ public class SessionItemStateManager extends TransientOperationVisitor implement
             if (mixinEntry != null) {
                 // execute value of existing property
                 PropertyState pState = mixinEntry.getPropertyState();
-                int options = ItemStateValidator.CHECK_LOCK | ItemStateValidator.CHECK_VERSIONING;
-                setPropertyStateValue(pState, getQValues(mixinNames, qValueFactory), PropertyType.NAME, options);
+                setPropertyStateValue(pState, getQValues(mixinNames, qValueFactory), PropertyType.NAME, operation.getOptions());
             } else {
                 // create new jcr:mixinTypes property
                 ItemDefinitionProvider defProvider = mgrProvider.getItemDefinitionProvider();
                 QPropertyDefinition pd = defProvider.getQPropertyDefinition(nState.getAllNodeTypeNames(), NameConstants.JCR_MIXINTYPES, PropertyType.NAME, true);
                 QValue[] mixinValue = getQValues(mixinNames, qValueFactory);
-                int options = ItemStateValidator.CHECK_LOCK | ItemStateValidator.CHECK_VERSIONING;
-                addPropertyState(nState, pd.getName(), pd.getRequiredType(), mixinValue, pd, options);
+                addPropertyState(nState, pd.getName(), pd.getRequiredType(), mixinValue, pd, operation.getOptions());
             }
             nState.markModified();
             transientStateMgr.addOperation(operation);
         } else if (mixinEntry != null) {
             // remove the jcr:mixinTypes property state if already present
             PropertyState pState = mixinEntry.getPropertyState();
-            int options = ItemStateValidator.CHECK_LOCK | ItemStateValidator.CHECK_VERSIONING;
-            removeItemState(pState, options);
+            removeItemState(pState, operation.getOptions());
 
             nState.markModified();
             transientStateMgr.addOperation(operation);
@@ -386,8 +366,7 @@ public class SessionItemStateManager extends TransientOperationVisitor implement
         // changing the node state itself
         PropertyEntry pEntry = nEntry.getPropertyEntry(NameConstants.JCR_PRIMARYTYPE);
         PropertyState pState = pEntry.getPropertyState();
-        int options = ItemStateValidator.CHECK_VERSIONING | ItemStateValidator.CHECK_LOCK;
-        setPropertyStateValue(pState, getQValues(new Name[] {primaryName}, qValueFactory), PropertyType.NAME, options);
+        setPropertyStateValue(pState, getQValues(new Name[] {primaryName}, qValueFactory), PropertyType.NAME, operation.getOptions());
 
         // mark the affected node state modified and remember the operation
         nState.markModified();
@@ -399,10 +378,7 @@ public class SessionItemStateManager extends TransientOperationVisitor implement
      */
     public void visit(SetPropertyValue operation) throws ValueFormatException, LockException, ConstraintViolationException, AccessDeniedException, ItemExistsException, UnsupportedRepositoryOperationException, VersionException, RepositoryException {
         PropertyState pState = operation.getPropertyState();
-        int options = ItemStateValidator.CHECK_LOCK
-            | ItemStateValidator.CHECK_VERSIONING
-            | ItemStateValidator.CHECK_CONSTRAINTS;
-        setPropertyStateValue(pState, operation.getValues(), operation.getValueType(), options);
+        setPropertyStateValue(pState, operation.getValues(), operation.getValueType(), operation.getOptions());
         transientStateMgr.addOperation(operation);
     }
 
