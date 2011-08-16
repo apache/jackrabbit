@@ -214,6 +214,7 @@ public interface RepositoryService {
      * the specified rights for the given item.
      * @throws javax.jcr.RepositoryException
      * @see javax.jcr.Session#checkPermission(String, String)
+     * @see javax.jcr.Session#hasPermission(String, String) 
      */
     public boolean isGranted(SessionInfo sessionInfo, ItemId itemId, String[] actions) throws RepositoryException;
 
