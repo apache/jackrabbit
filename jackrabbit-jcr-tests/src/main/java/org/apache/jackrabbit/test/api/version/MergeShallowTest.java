@@ -68,8 +68,8 @@ public class MergeShallowTest extends AbstractMergeTest {
 
         String p1 = nodeToMerge.getProperty(propertyName1).getString();
         String p2 = nodeToMerge.getProperty(nodeName2 + "/" + propertyName1).getString();
-        assertEquals("Recurisve merge did not restore property on level 1.", newValue, p1);
-        assertEquals("Recurisve merge did not restore property on level 2.", newValue, p2);
+        assertEquals("Recursive merge did not restore property on level 1.", newValue, p1);
+        assertEquals("Recursive merge did not restore property on level 2.", newValue, p2);
 
     }
 
