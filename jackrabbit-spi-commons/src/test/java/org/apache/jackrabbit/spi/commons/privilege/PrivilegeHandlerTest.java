@@ -31,6 +31,7 @@ import java.util.Set;
 import junit.framework.TestCase;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.NameFactory;
+import org.apache.jackrabbit.spi.PrivilegeDefinition;
 import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
 
 /**
@@ -54,16 +55,16 @@ public class PrivilegeHandlerTest extends TestCase {
     private static final String TEST_URI = "http://www.foo.com/1.0";
     private static final String CONTENT_TYPE = "text/xml";
 
-    private static PrivilegeDefinition DEF_READ = new PrivilegeDefinition(NF.create(TEST_URI,"testRead"), false, null);
-    private static PrivilegeDefinition DEF_WRITE = new PrivilegeDefinition(NF.create(TEST_URI,"testWrite"), false, null);
-    private static PrivilegeDefinition DEF_ABSTRACT = new PrivilegeDefinition(NF.create(TEST_URI,"testAbstract"), true, null);
-    private static PrivilegeDefinition DEF_NON_ABSTRACT = new PrivilegeDefinition(NF.create(TEST_URI,"testNonAbstract"), false, null);
+    private static PrivilegeDefinition DEF_READ = new PrivilegeDefinitionImpl(NF.create(TEST_URI,"testRead"), false, null);
+    private static PrivilegeDefinition DEF_WRITE = new PrivilegeDefinitionImpl(NF.create(TEST_URI,"testWrite"), false, null);
+    private static PrivilegeDefinition DEF_ABSTRACT = new PrivilegeDefinitionImpl(NF.create(TEST_URI,"testAbstract"), true, null);
+    private static PrivilegeDefinition DEF_NON_ABSTRACT = new PrivilegeDefinitionImpl(NF.create(TEST_URI,"testNonAbstract"), false, null);
     private static Set<Name> aggr = new LinkedHashSet<Name>();
     static {
         aggr.add(DEF_READ.getName());
         aggr.add(DEF_WRITE.getName());
     }
-    private static PrivilegeDefinition DEF_ALL = new PrivilegeDefinition(NF.create(TEST_URI,"testAll"), false, aggr);
+    private static PrivilegeDefinition DEF_ALL = new PrivilegeDefinitionImpl(NF.create(TEST_URI,"testAll"), false, aggr);
     private static PrivilegeDefinition[] DEF_EXPECTED = new PrivilegeDefinition[]{
             DEF_READ,
             DEF_WRITE,

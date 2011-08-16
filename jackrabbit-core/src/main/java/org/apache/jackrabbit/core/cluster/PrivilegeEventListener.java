@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.core.cluster;
 
-import org.apache.jackrabbit.spi.commons.privilege.PrivilegeDefinition;
+import org.apache.jackrabbit.spi.PrivilegeDefinition;
 
 import javax.jcr.RepositoryException;
 import java.util.Collection;

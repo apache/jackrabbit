@@ -39,8 +39,8 @@ import org.apache.jackrabbit.core.observation.EventState;
 import org.apache.jackrabbit.core.state.ChangeLog;
 import org.apache.jackrabbit.core.version.InternalVersionManagerImpl;
 import org.apache.jackrabbit.core.xml.ClonedInputSource;
+import org.apache.jackrabbit.spi.PrivilegeDefinition;
 import org.apache.jackrabbit.spi.QNodeTypeDefinition;
-import org.apache.jackrabbit.spi.commons.privilege.PrivilegeDefinition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

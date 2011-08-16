@@ -18,6 +18,7 @@ package org.apache.jackrabbit.spi.commons.privilege;
 
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.NameFactory;
+import org.apache.jackrabbit.spi.PrivilegeDefinition;
 import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
 import org.apache.jackrabbit.util.Text;
 import org.w3c.dom.Attr;
@@ -263,7 +264,7 @@ class PrivilegeXmlHandler implements PrivilegeHandler {
                     }
                 }
             }
-            return new PrivilegeDefinition(name, isAbstract, aggrNames);
+            return new PrivilegeDefinitionImpl(name, isAbstract, aggrNames);
         }
 
         // could not parse into privilege definition

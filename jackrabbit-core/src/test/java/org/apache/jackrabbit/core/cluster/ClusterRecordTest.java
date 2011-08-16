@@ -34,12 +34,13 @@ import org.apache.jackrabbit.core.journal.JournalFactory;
 import org.apache.jackrabbit.core.journal.MemoryJournal;
 import org.apache.jackrabbit.core.journal.MemoryJournal.MemoryRecord;
 import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.PrivilegeDefinition;
 import org.apache.jackrabbit.spi.QNodeTypeDefinition;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
 import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
 import org.apache.jackrabbit.spi.commons.nodetype.QNodeTypeDefinitionBuilder;
-import org.apache.jackrabbit.spi.commons.privilege.PrivilegeDefinition;
+import org.apache.jackrabbit.spi.commons.privilege.PrivilegeDefinitionImpl;
 import org.apache.jackrabbit.test.JUnitTest;
 
 /**
@@ -285,7 +286,7 @@ public class ClusterRecordTest extends JUnitTest {
      * @throws Exception
      */
     public void testPrivilegeRegistration() throws Exception {
-        PrivilegeDefinition pdf = new PrivilegeDefinition(NameFactoryImpl.getInstance().create("", "test"), false, null);
+        PrivilegeDefinition pdf = new PrivilegeDefinitionImpl(NameFactoryImpl.getInstance().create("", "test"), false, null);
 
         PrivilegeEvent event = new PrivilegeEvent(Collections.singletonList(pdf));
         master.registeredPrivileges(event.getDefinitions());

@@ -19,8 +19,9 @@ package org.apache.jackrabbit.core.security.authorization;
 import org.apache.commons.collections.map.ReferenceMap;
 import org.apache.jackrabbit.core.cluster.PrivilegeEventChannel;
 import org.apache.jackrabbit.core.cluster.PrivilegeEventListener;
+import org.apache.jackrabbit.spi.PrivilegeDefinition;
 import org.apache.jackrabbit.spi.commons.privilege.ParseException;
-import org.apache.jackrabbit.spi.commons.privilege.PrivilegeDefinition;
+import org.apache.jackrabbit.spi.commons.privilege.PrivilegeDefinitionImpl;
 import org.apache.jackrabbit.spi.commons.privilege.PrivilegeDefinitionReader;
 import org.apache.jackrabbit.spi.commons.privilege.PrivilegeDefinitionWriter;
 import org.apache.jackrabbit.core.NamespaceRegistryImpl;
@@ -436,7 +437,8 @@ public final class PrivilegeRegistry implements PrivilegeEventListener {
      * to constraint violations or if persisting the custom privilege fails.
      */
     void registerDefinition(Name privilegeName, boolean isAbstract, Set<Name> declaredAggregateNames) throws RepositoryException {
-        Map<Name, PrivilegeDefinition> stubs = Collections.singletonMap(privilegeName, new PrivilegeDefinition(privilegeName, isAbstract, declaredAggregateNames));
+        PrivilegeDefinition def = new PrivilegeDefinitionImpl(privilegeName, isAbstract, declaredAggregateNames);
+        Map<Name, PrivilegeDefinition> stubs = Collections.singletonMap(privilegeName, def);
         registerCustomDefinitions(stubs);
 
         // inform clustering about the new privilege.
@@ -884,7 +886,7 @@ public final class PrivilegeRegistry implements PrivilegeEventListener {
      * privilege definition. It defines addition information that ease
      * the evaluation of privileges.
      */
-    private final static class Definition extends PrivilegeDefinition {
+    private final static class Definition extends PrivilegeDefinitionImpl {
 
         private final PrivilegeBits bits;
         private final boolean isCustom;

@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.spi.commons.privilege;
 
+import org.apache.jackrabbit.spi.PrivilegeDefinition;
+
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.Writer;

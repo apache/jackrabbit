@@ -16,19 +16,12 @@
  */
 package org.apache.jackrabbit.core.journal;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 
 import javax.jcr.NamespaceException;
 
@@ -40,6 +33,7 @@ import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.id.PropertyId;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.spi.PrivilegeDefinition;
 import org.apache.jackrabbit.spi.QNodeTypeDefinition;
 import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
 import org.apache.jackrabbit.spi.commons.conversion.NameException;
@@ -49,10 +43,8 @@ import org.apache.jackrabbit.spi.commons.namespace.NamespaceMapping;
 import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
 import org.apache.jackrabbit.spi.commons.nodetype.QDefinitionBuilderFactory;
 import org.apache.jackrabbit.spi.commons.nodetype.compact.CompactNodeTypeDefWriter;
-import org.apache.jackrabbit.spi.commons.privilege.PrivilegeDefinition;
 import org.apache.jackrabbit.spi.commons.privilege.PrivilegeDefinitionReader;
 import org.apache.jackrabbit.spi.commons.privilege.PrivilegeDefinitionWriter;
-import org.apache.jackrabbit.spi.commons.privilege.PrivilegeHandler;
 
 /**
  * Base implementation for a record.

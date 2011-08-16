@@ -14,18 +14,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.core.cluster;
+package org.apache.jackrabbit.spi;
 
-import org.apache.jackrabbit.spi.PrivilegeDefinition;
-
-import java.util.Collection;
+import java.util.Set;
 
 /**
- * <code>PrivilegeEventChannel</code>...
+ * <code>PrivilegeDefinition</code>...
  */
-public interface PrivilegeEventChannel {
+public interface PrivilegeDefinition {
 
-    void registeredPrivileges(Collection<PrivilegeDefinition> definitions);
+    Name getName();
 
-    void setListener(PrivilegeEventListener listener);
+    public boolean isAbstract();
+
+    public Set<Name> getDeclaredAggregateNames();
 }

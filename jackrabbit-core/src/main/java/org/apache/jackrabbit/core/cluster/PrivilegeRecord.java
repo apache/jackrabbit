@@ -18,7 +18,7 @@ package org.apache.jackrabbit.core.cluster;
 
 import org.apache.jackrabbit.core.journal.JournalException;
 import org.apache.jackrabbit.core.journal.Record;
-import org.apache.jackrabbit.spi.commons.privilege.PrivilegeDefinition;
+import org.apache.jackrabbit.spi.PrivilegeDefinition;
 
 import java.util.Collection;
 import java.util.Collections;
