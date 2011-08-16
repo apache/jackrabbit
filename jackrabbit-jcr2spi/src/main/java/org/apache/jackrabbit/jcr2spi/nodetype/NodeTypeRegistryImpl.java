@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.jcr2spi.nodetype;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -60,13 +61,7 @@ public class NodeTypeRegistryImpl implements NodeTypeRegistry, EffectiveNodeType
     private final EffectiveNodeTypeCache entCache;
 
     // map of node type names and node type definitions
-    //private final ConcurrentReaderHashMap registeredNTDefs;
     private final NodeTypeDefinitionMap registeredNTDefs;
-
-    // set of property definitions
-    private final Set<QPropertyDefinition> propDefs;
-    // set of node definitions
-    private final Set<QNodeDefinition> nodeDefs;
 
     /**
      * Object used to persist new nodetypes and modified nodetype definitions.
@@ -102,8 +97,6 @@ public class NodeTypeRegistryImpl implements NodeTypeRegistry, EffectiveNodeType
     public synchronized void dispose() {
         entCache.clear();
         registeredNTDefs.clear();
-        propDefs.clear();
-        nodeDefs.clear();
         listeners.clear();
     }
 
@@ -118,11 +111,7 @@ public class NodeTypeRegistryImpl implements NodeTypeRegistry, EffectiveNodeType
         this.validator = new DefinitionValidator(this, nsRegistry);
 
         entCache = new BitsetENTCacheImpl();
-        //registeredNTDefs = new ConcurrentReaderHashMap();
         registeredNTDefs = new NodeTypeDefinitionMap();
-
-        propDefs = new HashSet<QPropertyDefinition>();
-        nodeDefs = new HashSet<QNodeDefinition>();
     }
 
     //---------------------------------------------------< NodeTypeRegistry >---
@@ -285,9 +274,7 @@ public class NodeTypeRegistryImpl implements NodeTypeRegistry, EffectiveNodeType
 
         if (smixins != null) {
             supportedMixins = new HashSet<Name>();
-            for (int i = 0; i < smixins.length; i++) {
-                supportedMixins.add(smixins[i]);
-            }
+            supportedMixins.addAll(Arrays.asList(smixins));
         }
 
         // map of all item definitions (maps id to definition)
@@ -295,30 +282,29 @@ public class NodeTypeRegistryImpl implements NodeTypeRegistry, EffectiveNodeType
         // ambiguity is defined in terms of definition identity
         Set<QItemDefinition> itemDefIds = new HashSet<QItemDefinition>();
 
-        QNodeDefinition[] cnda = ntd.getChildNodeDefs();
-        for (int i = 0; i < cnda.length; i++) {
+        for (QNodeDefinition nd : ntd.getChildNodeDefs()) {
             // check if child node definition would be ambiguous within
             // this node type definition
-            if (itemDefIds.contains(cnda[i])) {
+            if (itemDefIds.contains(nd)) {
                 // conflict
                 String msg;
-                if (cnda[i].definesResidual()) {
+                if (nd.definesResidual()) {
                     msg = ntName + " contains ambiguous residual child node definitions";
                 } else {
                     msg = ntName + " contains ambiguous definitions for child node named "
-                            + cnda[i].getName();
+                            + nd.getName();
                 }
                 log.debug(msg);
                 throw new ConstraintViolationException(msg);
             } else {
-                itemDefIds.add(cnda[i]);
+                itemDefIds.add(nd);
             }
-            if (cnda[i].definesResidual()) {
+            if (nd.definesResidual()) {
                 // residual node definition
-                unnamedItemDefs.add(cnda[i]);
+                unnamedItemDefs.add(nd);
             } else {
                 // named node definition
-                Name name = cnda[i].getName();
+                Name name = nd.getName();
                 List<QItemDefinition> defs = namedItemDefs.get(name);
                 if (defs == null) {
                     defs = new ArrayList<QItemDefinition>();
@@ -329,9 +315,8 @@ public class NodeTypeRegistryImpl implements NodeTypeRegistry, EffectiveNodeType
                      * there already exists at least one definition with that
                      * name; make sure none of them is auto-create
                      */
-                    for (int j = 0; j < defs.size(); j++) {
-                        QItemDefinition qDef = defs.get(j);
-                        if (cnda[i].isAutoCreated() || qDef.isAutoCreated()) {
+                    for (QItemDefinition qDef : defs) {
+                        if (nd.isAutoCreated() || qDef.isAutoCreated()) {
                             // conflict
                             String msg = "There are more than one 'auto-create' item definitions for '"
                                     + name + "' in node type '" + ntName + "'";
@@ -340,33 +325,32 @@ public class NodeTypeRegistryImpl implements NodeTypeRegistry, EffectiveNodeType
                         }
                     }
                 }
-                defs.add(cnda[i]);
+                defs.add(nd);
             }
         }
-        QPropertyDefinition[] pda = ntd.getPropertyDefs();
-        for (int i = 0; i < pda.length; i++) {
+        for (QPropertyDefinition pd : ntd.getPropertyDefs()) {
             // check if property definition would be ambiguous within
             // this node type definition
-            if (itemDefIds.contains(pda[i])) {
+            if (itemDefIds.contains(pd)) {
                 // conflict
                 String msg;
-                if (pda[i].definesResidual()) {
+                if (pd.definesResidual()) {
                     msg = ntName + " contains ambiguous residual property definitions";
                 } else {
                     msg = ntName + " contains ambiguous definitions for property named "
-                            + pda[i].getName();
+                            + pd.getName();
                 }
                 log.debug(msg);
                 throw new ConstraintViolationException(msg);
             } else {
-                itemDefIds.add(pda[i]);
+                itemDefIds.add(pd);
             }
-            if (pda[i].definesResidual()) {
+            if (pd.definesResidual()) {
                 // residual property definition
-                unnamedItemDefs.add(pda[i]);
+                unnamedItemDefs.add(pd);
             } else {
                 // named property definition
-                Name name = pda[i].getName();
+                Name name = pd.getName();
                 List<QItemDefinition> defs = namedItemDefs.get(name);
                 if (defs == null) {
                     defs = new ArrayList<QItemDefinition>();
@@ -377,9 +361,8 @@ public class NodeTypeRegistryImpl implements NodeTypeRegistry, EffectiveNodeType
                      * there already exists at least one definition with that
                      * name; make sure none of them is auto-create
                      */
-                    for (int j = 0; j < defs.size(); j++) {
-                        QItemDefinition qDef = defs.get(j);
-                        if (pda[i].isAutoCreated() || qDef.isAutoCreated()) {
+                    for (QItemDefinition qDef : defs) {
+                        if (pd.isAutoCreated() || qDef.isAutoCreated()) {
                             // conflict
                             String msg = "There are more than one 'auto-create' item definitions for '"
                                     + name + "' in node type '" + ntName + "'";
@@ -388,7 +371,7 @@ public class NodeTypeRegistryImpl implements NodeTypeRegistry, EffectiveNodeType
                         }
                     }
                 }
-                defs.add(pda[i]);
+                defs.add(pd);
             }
         }
 
@@ -467,9 +450,9 @@ public class NodeTypeRegistryImpl implements NodeTypeRegistry, EffectiveNodeType
         }
 
         // 2. make sure we've got the definitions of the specified node types
-        for (int i = 0; i < ntNames.length; i++) {
-            if (!ntdCache.containsKey(ntNames[i])) {
-                throw new NoSuchNodeTypeException(ntNames[i].toString());
+        for (Name ntName : ntNames) {
+            if (!ntdCache.containsKey(ntName)) {
+                throw new NoSuchNodeTypeException(ntName.toString());
             }
         }
 
@@ -497,9 +480,8 @@ public class NodeTypeRegistryImpl implements NodeTypeRegistry, EffectiveNodeType
                      * no matching sub-aggregates found:
                      * build aggregate of remaining node types through iteration
                      */
-                    Name[] remainder = key.getNames();
-                    for (int i = 0; i < remainder.length; i++) {
-                        QNodeTypeDefinition ntd = ntdCache.get(remainder[i]);
+                    for (Name remainder : key.getNames()) {
+                        QNodeTypeDefinition ntd = ntdCache.get(remainder);
                         EffectiveNodeType ent = getEffectiveNodeType(ntd, ntdCache);
                         // store new effective node type
                         entCache.put(ent);
@@ -529,16 +511,9 @@ public class NodeTypeRegistryImpl implements NodeTypeRegistry, EffectiveNodeType
      * Notify the listeners that a node type <code>ntName</code> has been registered.
      */
     private void notifyRegistered(Name ntName) {
-        // copy listeners to array to avoid ConcurrentModificationException
-        NodeTypeRegistryListener[] la =
-                new NodeTypeRegistryListener[listeners.size()];
-        int cnt = 0;
-        for (NodeTypeRegistryListener ntrl : listeners.values()) {
-            la[cnt++] = ntrl;
-        }
-        for (int i = 0; i < la.length; i++) {
-            if (la[i] != null) {
-                la[i].nodeTypeRegistered(ntName);
+        for (NodeTypeRegistryListener ntrl : copyListeners()) {
+            if (ntrl != null) {
+                ntrl.nodeTypeRegistered(ntName);
             }
         }
     }
@@ -547,15 +522,9 @@ public class NodeTypeRegistryImpl implements NodeTypeRegistry, EffectiveNodeType
      * Notify the listeners that a node type <code>ntName</code> has been re-registered.
      */
     private void notifyReRegistered(Name ntName) {
-        // copy listeners to array to avoid ConcurrentModificationException
-        NodeTypeRegistryListener[] la = new NodeTypeRegistryListener[listeners.size()];
-        int cnt = 0;
-        for (NodeTypeRegistryListener ntrl : listeners.values()) {
-            la[cnt++] = ntrl;
-        }
-        for (int i = 0; i < la.length; i++) {
-            if (la[i] != null) {
-                la[i].nodeTypeReRegistered(ntName);
+        for (NodeTypeRegistryListener ntrl : copyListeners()) {
+            if (ntrl != null) {
+                ntrl.nodeTypeReRegistered(ntName);
             }
         }
     }
@@ -564,17 +533,21 @@ public class NodeTypeRegistryImpl implements NodeTypeRegistry, EffectiveNodeType
      * Notify the listeners that a node type <code>ntName</code> has been unregistered.
      */
     private void notifyUnregistered(Name ntName) {
-        // copy listeners to array to avoid ConcurrentModificationException
-        NodeTypeRegistryListener[] la = new NodeTypeRegistryListener[listeners.size()];
-        int cnt = 0;
-        for (NodeTypeRegistryListener ntrl : listeners.values()) {
-            la[cnt++] = ntrl;
-        }
-        for (int i = 0; i < la.length; i++) {
-            if (la[i] != null) {
-                la[i].nodeTypeUnregistered(ntName);
+        for (NodeTypeRegistryListener ntrl : copyListeners()) {
+            if (ntrl != null) {
+                ntrl.nodeTypeUnregistered(ntName);
             }
         }
+    }
+
+    private NodeTypeRegistryListener[] copyListeners() {
+        // copy listeners to array to avoid ConcurrentModificationException
+        NodeTypeRegistryListener[] lstnrs = new NodeTypeRegistryListener[listeners.size()];
+        int cnt = 0;
+        for (NodeTypeRegistryListener ntrl : listeners.values()) {
+            lstnrs[cnt++] = ntrl;
+        }
+        return lstnrs;
     }
 
     private void internalRegister(Map<QNodeTypeDefinition, EffectiveNodeType> defMap) {
@@ -594,41 +567,11 @@ public class NodeTypeRegistryImpl implements NodeTypeRegistry, EffectiveNodeType
         }
         // register nt-definition
         registeredNTDefs.put(ntd.getName(), ntd);
-
-        // store property & child node definitions of new node type by id
-        QPropertyDefinition[] pda = ntd.getPropertyDefs();
-        synchronized (propDefs) {
-            for (int i = 0; i < pda.length; i++) {
-                propDefs.add(pda[i]);
-            }
-        }
-        QNodeDefinition[] nda = ntd.getChildNodeDefs();
-        synchronized (nodeDefs) {
-            for (int i = 0; i < nda.length; i++) {
-                nodeDefs.add(nda[i]);
-            }
-        }
     }
 
     private void internalUnregister(Name name) {
         QNodeTypeDefinition ntd = registeredNTDefs.remove(name);
         entCache.invalidate(name);
-
-        if (ntd != null) {
-            // remove property & child node definitions
-            QPropertyDefinition[] pda = ntd.getPropertyDefs();
-            synchronized (propDefs) {
-                for (int i = 0; i < pda.length; i++) {
-                    propDefs.remove(pda[i]);
-                }
-            }
-            synchronized (nodeDefs) {
-                QNodeDefinition[] nda = ntd.getChildNodeDefs();
-                for (int i = 0; i < nda.length; i++) {
-                    nodeDefs.remove(nda[i]);
-                }
-            }
-        }
     }
 
     private void internalUnregister(Collection<Name> ntNames) {
@@ -644,7 +587,7 @@ public class NodeTypeRegistryImpl implements NodeTypeRegistry, EffectiveNodeType
      */
     public String toString() {
         StringBuilder builder = new StringBuilder();
-        builder.append("NodeTypeRegistry (" + this + ")\n");
+        builder.append("NodeTypeRegistry (").append(this).append(")\n");
         builder.append("Known NodeTypes:\n");
         builder.append(registeredNTDefs);
         builder.append("\n");
@@ -800,21 +743,21 @@ public class NodeTypeRegistryImpl implements NodeTypeRegistry, EffectiveNodeType
                 builder.append(ntd.getName());
                 Name[] supertypes = ntd.getSupertypes();
                 builder.append("\n\tSupertypes");
-                for (int i = 0; i < supertypes.length; i++) {
-                    builder.append("\n\t\t" + supertypes[i]);
+                for (Name supertype : ntd.getSupertypes()) {
+                    builder.append("\n\t\t").append(supertype);
                 }
-                builder.append("\n\tMixin\t" + ntd.isMixin());
-                builder.append("\n\tOrderableChildNodes\t" + ntd.hasOrderableChildNodes());
-                builder.append("\n\tPrimaryItemName\t" + (ntd.getPrimaryItemName() == null ? "<null>" : ntd.getPrimaryItemName().toString()));
+                builder.append("\n\tMixin\t").append(ntd.isMixin());
+                builder.append("\n\tOrderableChildNodes\t").append(ntd.hasOrderableChildNodes());
+                builder.append("\n\tPrimaryItemName\t").append(ntd.getPrimaryItemName() == null ? "<null>" : ntd.getPrimaryItemName().toString());
                 for (QPropertyDefinition pd : ntd.getPropertyDefs()) {
                     builder.append("\n\tPropertyDefinition");
-                    builder.append(" (declared in " + pd.getDeclaringNodeType() + ") ");
-                    builder.append("\n\t\tName\t\t" + (pd.definesResidual() ? "*" : pd.getName().toString()));
+                    builder.append(" (declared in ").append(pd.getDeclaringNodeType()).append(") ");
+                    builder.append("\n\t\tName\t\t").append(pd.definesResidual() ? "*" : pd.getName().toString());
                     String type = "null";
                         if (pd.getRequiredType() != 0) {
                             type = PropertyType.nameFromValue(pd.getRequiredType());
                         }
-                    builder.append("\n\t\tRequiredType\t" + type);
+                    builder.append("\n\t\tRequiredType\t").append(type);
                     builder.append("\n\t\tValueConstraints\t");
                     QValueConstraint[] vca = pd.getValueConstraints();
                     if (vca == null) {
@@ -843,33 +786,33 @@ public class NodeTypeRegistryImpl implements NodeTypeRegistry, EffectiveNodeType
                             }
                         }
                     }
-                    builder.append("\n\t\tDefaultValue\t" + defaultValues.toString());
-                    builder.append("\n\t\tAutoCreated\t" + pd.isAutoCreated());
-                    builder.append("\n\t\tMandatory\t" + pd.isMandatory());
-                    builder.append("\n\t\tOnVersion\t" + OnParentVersionAction.nameFromValue(pd.getOnParentVersion()));
-                    builder.append("\n\t\tProtected\t" + pd.isProtected());
-                    builder.append("\n\t\tMultiple\t" + pd.isMultiple());
+                    builder.append("\n\t\tDefaultValue\t").append(defaultValues.toString());
+                    builder.append("\n\t\tAutoCreated\t").append(pd.isAutoCreated());
+                    builder.append("\n\t\tMandatory\t").append(pd.isMandatory());
+                    builder.append("\n\t\tOnVersion\t").append(OnParentVersionAction.nameFromValue(pd.getOnParentVersion()));
+                    builder.append("\n\t\tProtected\t").append(pd.isProtected());
+                    builder.append("\n\t\tMultiple\t").append(pd.isMultiple());
                 }
                 QNodeDefinition[] nd = ntd.getChildNodeDefs();
                 for (QNodeDefinition aNd : nd) {
                     builder.append("\n\tNodeDefinition");
-                    builder.append(" (declared in " + aNd.getDeclaringNodeType() + ") ");
-                    builder.append("\n\t\tName\t\t" + (aNd.definesResidual() ? "*" : aNd.getName().toString()));
+                    builder.append(" (declared in ").append(aNd.getDeclaringNodeType()).append(") ");
+                    builder.append("\n\t\tName\t\t").append(aNd.definesResidual() ? "*" : aNd.getName().toString());
                     Name[] reqPrimaryTypes = aNd.getRequiredPrimaryTypes();
                     if (reqPrimaryTypes != null && reqPrimaryTypes.length > 0) {
-                        for (int n = 0; n < reqPrimaryTypes.length; n++) {
-                            builder.append("\n\t\tRequiredPrimaryType\t" + reqPrimaryTypes[n]);
+                        for (Name reqPrimaryType : reqPrimaryTypes) {
+                            builder.append("\n\t\tRequiredPrimaryType\t").append(reqPrimaryType);
                         }
                     }
                     Name defPrimaryType = aNd.getDefaultPrimaryType();
                     if (defPrimaryType != null) {
-                        builder.append("\n\t\tDefaultPrimaryType\t" + defPrimaryType);
+                        builder.append("\n\t\tDefaultPrimaryType\t").append(defPrimaryType);
                     }
-                    builder.append("\n\t\tAutoCreated\t" + aNd.isAutoCreated());
-                    builder.append("\n\t\tMandatory\t" + aNd.isMandatory());
-                    builder.append("\n\t\tOnVersion\t" + OnParentVersionAction.nameFromValue(aNd.getOnParentVersion()));
-                    builder.append("\n\t\tProtected\t" + aNd.isProtected());
-                    builder.append("\n\t\tAllowsSameNameSiblings\t" + aNd.allowsSameNameSiblings());
+                    builder.append("\n\t\tAutoCreated\t").append(aNd.isAutoCreated());
+                    builder.append("\n\t\tMandatory\t").append(aNd.isMandatory());
+                    builder.append("\n\t\tOnVersion\t").append(OnParentVersionAction.nameFromValue(aNd.getOnParentVersion()));
+                    builder.append("\n\t\tProtected\t").append(aNd.isProtected());
+                    builder.append("\n\t\tAllowsSameNameSiblings\t").append(aNd.allowsSameNameSiblings());
                 }
             }
             return builder.toString();
