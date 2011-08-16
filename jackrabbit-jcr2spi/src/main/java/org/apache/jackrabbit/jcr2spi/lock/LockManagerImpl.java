@@ -249,8 +249,7 @@ public class LockManagerImpl implements LockStateManager, SessionListener {
     public void loggingOut(Session session) {
         // remove any session scoped locks:
         NodeState[] lhStates = lockMap.keySet().toArray(new NodeState[lockMap.size()]);
-        for (int i = 0; i < lhStates.length; i++) {
-            NodeState nState = lhStates[i];
+        for (NodeState nState : lhStates) {
             LockImpl l = lockMap.get(nState);
             if (l.isSessionScoped() && l.isLockOwningSession()) {
                 try {
@@ -270,8 +269,8 @@ public class LockManagerImpl implements LockStateManager, SessionListener {
     public void loggedOut(Session session) {
         // release all remaining locks without modifying their lock status
         LockImpl[] locks = lockMap.values().toArray(new LockImpl[lockMap.size()]);
-        for (int i = 0; i < locks.length; i++) {
-            locks[i].lockState.release();
+        for (LockImpl lock : locks) {
+            lock.lockState.release();
         }
     }
 
@@ -317,7 +316,7 @@ public class LockManagerImpl implements LockStateManager, SessionListener {
 
     private LockState buildLockState(NodeState nodeState) throws RepositoryException {
         NodeId nId = nodeState.getNodeId();
-        NodeState lockHoldingState = null;
+        NodeState lockHoldingState;
         LockInfo lockInfo = wspManager.getLockInfo(nId);
         if (lockInfo == null) {
             // no lock present
@@ -438,8 +437,8 @@ public class LockManagerImpl implements LockStateManager, SessionListener {
      */
     private void notifyTokenAdded(String lt) throws RepositoryException {
         LockTokenListener[] listeners = lockMap.values().toArray(new LockTokenListener[lockMap.size()]);
-        for (int i = 0; i < listeners.length; i++) {
-            listeners[i].lockTokenAdded(lt);
+        for (LockTokenListener listener : listeners) {
+            listener.lockTokenAdded(lt);
         }
     }
 
@@ -452,8 +451,8 @@ public class LockManagerImpl implements LockStateManager, SessionListener {
      */
     private void notifyTokenRemoved(String lt) throws RepositoryException {
         LockTokenListener[] listeners = lockMap.values().toArray(new LockTokenListener[lockMap.size()]);
-        for (int i = 0; i < listeners.length; i++) {
-            listeners[i].lockTokenRemoved(lt);
+        for (LockTokenListener listener : listeners) {
+            listener.lockTokenRemoved(lt);
         }
     }
 
