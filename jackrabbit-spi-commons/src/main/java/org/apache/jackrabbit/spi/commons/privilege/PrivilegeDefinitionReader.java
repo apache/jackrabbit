@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.spi.commons.privilege;
 
+import org.apache.jackrabbit.spi.PrivilegeDefinition;
+
 import java.io.InputStream;
 import java.io.Reader;
 import java.util.HashMap;

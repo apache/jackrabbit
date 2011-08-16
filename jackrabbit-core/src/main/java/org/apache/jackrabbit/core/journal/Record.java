@@ -21,7 +21,7 @@ import org.apache.jackrabbit.core.id.PropertyId;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.QNodeTypeDefinition;
-import org.apache.jackrabbit.spi.commons.privilege.PrivilegeDefinition;
+import org.apache.jackrabbit.spi.PrivilegeDefinition;
 
 /**
  * Record interface.

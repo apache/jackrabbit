@@ -31,8 +31,8 @@ import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.nodetype.InvalidNodeTypeDefException;
 import org.apache.jackrabbit.core.state.ChangeLog;
 import org.apache.jackrabbit.core.state.ItemState;
+import org.apache.jackrabbit.spi.PrivilegeDefinition;
 import org.apache.jackrabbit.spi.QNodeTypeDefinition;
-import org.apache.jackrabbit.spi.commons.privilege.PrivilegeDefinition;
 
 /**
  * Simple event listener that can be registered for all cluster event listener

@@ -18,9 +18,9 @@ package org.apache.jackrabbit.core.security.authorization;
 
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.PrivilegeDefinition;
 import org.apache.jackrabbit.spi.commons.conversion.NameResolver;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
-import org.apache.jackrabbit.spi.commons.privilege.PrivilegeDefinition;
 import org.apache.jackrabbit.test.AbstractJCRTest;
 
 import javax.jcr.RepositoryException;

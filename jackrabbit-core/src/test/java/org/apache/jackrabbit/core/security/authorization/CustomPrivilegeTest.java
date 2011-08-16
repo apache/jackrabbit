@@ -17,8 +17,9 @@
 package org.apache.jackrabbit.core.security.authorization;
 
 import org.apache.jackrabbit.spi.NameFactory;
+import org.apache.jackrabbit.spi.PrivilegeDefinition;
 import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
-import org.apache.jackrabbit.spi.commons.privilege.PrivilegeDefinition;
+import org.apache.jackrabbit.spi.commons.privilege.PrivilegeDefinitionImpl;
 import org.apache.jackrabbit.spi.commons.privilege.PrivilegeDefinitionWriter;
 import org.apache.jackrabbit.core.RepositoryImpl;
 import org.apache.jackrabbit.core.SessionImpl;
@@ -144,11 +145,11 @@ public class CustomPrivilegeTest extends AbstractJCRTest {
         OutputStream out = resource.getOutputStream();
         try {
             List<PrivilegeDefinition> defs = new ArrayList<PrivilegeDefinition>();
-            defs.add(new PrivilegeDefinition(test, false, Collections.singleton(test2)));
-            defs.add(new PrivilegeDefinition(test4, true, Collections.singleton(test5)));
-            defs.add(new PrivilegeDefinition(test5, false, Collections.singleton(test3)));
-            defs.add(new PrivilegeDefinition(test3, false, Collections.singleton(test)));
-            defs.add(new PrivilegeDefinition(test2, false, Collections.singleton(test4)));
+            defs.add(new PrivilegeDefinitionImpl(test, false, Collections.singleton(test2)));
+            defs.add(new PrivilegeDefinitionImpl(test4, true, Collections.singleton(test5)));
+            defs.add(new PrivilegeDefinitionImpl(test5, false, Collections.singleton(test3)));
+            defs.add(new PrivilegeDefinitionImpl(test3, false, Collections.singleton(test)));
+            defs.add(new PrivilegeDefinitionImpl(test2, false, Collections.singleton(test4)));
             PrivilegeDefinitionWriter pdw = new PrivilegeDefinitionWriter("text/xml");
             pdw.writeDefinitions(out, defs.toArray(new PrivilegeDefinition[defs.size()]), Collections.<String, String>emptyMap());
 
@@ -181,14 +182,14 @@ public class CustomPrivilegeTest extends AbstractJCRTest {
         OutputStream out = resource.getOutputStream();
         try {
             List<PrivilegeDefinition> defs = new ArrayList<PrivilegeDefinition>();
-            defs.add(new PrivilegeDefinition(test, false, createNameSet(test2, test3)));
-            defs.add(new PrivilegeDefinition(test2, true, Collections.singleton(test4)));
-            defs.add(new PrivilegeDefinition(test3, true, Collections.singleton(test5)));
-            defs.add(new PrivilegeDefinition(test4, true, Collections.<Name>emptySet()));
-            defs.add(new PrivilegeDefinition(test5, true, Collections.<Name>emptySet()));
+            defs.add(new PrivilegeDefinitionImpl(test, false, createNameSet(test2, test3)));
+            defs.add(new PrivilegeDefinitionImpl(test2, true, Collections.singleton(test4)));
+            defs.add(new PrivilegeDefinitionImpl(test3, true, Collections.singleton(test5)));
+            defs.add(new PrivilegeDefinitionImpl(test4, true, Collections.<Name>emptySet()));
+            defs.add(new PrivilegeDefinitionImpl(test5, true, Collections.<Name>emptySet()));
 
             // the equivalent definition to 'test'
-            defs.add(new PrivilegeDefinition(test6, false, createNameSet(test2, test5)));
+            defs.add(new PrivilegeDefinitionImpl(test6, false, createNameSet(test2, test5)));
 
             PrivilegeDefinitionWriter pdw = new PrivilegeDefinitionWriter("text/xml");
             pdw.writeDefinitions(out, defs.toArray(new PrivilegeDefinition[defs.size()]), Collections.<String, String>emptyMap());

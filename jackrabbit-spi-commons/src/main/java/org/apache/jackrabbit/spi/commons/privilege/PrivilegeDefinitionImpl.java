@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.spi.commons.privilege;
 
 import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.PrivilegeDefinition;
 
 import java.util.Collections;
 import java.util.Set;
@@ -24,36 +25,47 @@ import java.util.Set;
 /**
  * <code>PrivilegeDefinition</code>
  */
-public class PrivilegeDefinition {
+public class PrivilegeDefinitionImpl implements PrivilegeDefinition {
 
     private final Name name;
     private final boolean isAbstract;
     private final Set<Name> declaredAggregateNames;
 
-    public PrivilegeDefinition(Name name, boolean isAbstract, Set<Name> declaredAggregateNames) {
+    public PrivilegeDefinitionImpl(Name name, boolean isAbstract, Set<Name> declaredAggregateNames) {
         this.name = name;
         this.isAbstract = isAbstract;
         this.declaredAggregateNames = declaredAggregateNames == null ? Collections.<Name>emptySet() : Collections.unmodifiableSet(declaredAggregateNames);
     }
 
+    //------------------------------------------------< PrivilegeDefinition >---
+    /**
+     * @see PrivilegeDefinition#getName()
+     */
     public Name getName() {
         return name;
     }
 
+    /**
+     * @see PrivilegeDefinition#isAbstract()
+     */
     public boolean isAbstract() {
         return isAbstract;
     }
 
+    /**
+     * @see PrivilegeDefinition#getDeclaredAggregateNames()
+     */
     public Set<Name> getDeclaredAggregateNames() {
         return declaredAggregateNames;
     }
 
+    //-------------------------------------------------------------< Object >---
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        PrivilegeDefinition that = (PrivilegeDefinition) o;
+        PrivilegeDefinitionImpl that = (PrivilegeDefinitionImpl) o;
 
         if (isAbstract != that.isAbstract) return false;
         if (name != null ? !name.equals(that.name) : that.name != null) return false;
