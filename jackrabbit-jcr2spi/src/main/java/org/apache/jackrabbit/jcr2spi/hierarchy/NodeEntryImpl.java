@@ -901,7 +901,7 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
         ItemId eventId = childEvent.getItemId();
         Path eventPath = childEvent.getPath();
         Name eventName = eventPath.getName();
-        HierarchyEntry child = lookupEntry(eventId, eventPath);
+        HierarchyEntry child = eventId == null ? null : lookupEntry(eventId, eventPath);
 
         switch (childEvent.getType()) {
             case Event.NODE_ADDED:
