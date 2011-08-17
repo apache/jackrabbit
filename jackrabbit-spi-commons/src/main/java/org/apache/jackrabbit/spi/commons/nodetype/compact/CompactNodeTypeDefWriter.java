@@ -54,10 +54,10 @@ public class CompactNodeTypeDefWriter extends org.apache.jackrabbit.commons.cnd.
     /**
      * Creates a new nodetype writer based on a session
      *
-     * @param out the underlaying writer
+     * @param out the underlying writer
      * @param s repository session
-     * @param includeNS if <code>true</code> all used namespace decl. are also
-     *                  written to the writer
+     * @param includeNS if <code>true</code> all used namespace declarations
+     *                  are also written to the writer
      */
     public CompactNodeTypeDefWriter(Writer out, Session s, boolean includeNS) {
         this(out, new SessionNamespaceResolver(s), new DefaultNamePathResolver(s), includeNS);
@@ -66,8 +66,8 @@ public class CompactNodeTypeDefWriter extends org.apache.jackrabbit.commons.cnd.
     /**
      * Creates a new nodetype writer based on a namespace resolver
      *
-     * @param out the underlaying writer
-     * @param r the naespace resolver
+     * @param out the underlying writer
+     * @param r the namespace resolver
      * @param includeNS if <code>true</code> all used namespace decl. are also
      *                  written to the writer
      */
@@ -76,10 +76,10 @@ public class CompactNodeTypeDefWriter extends org.apache.jackrabbit.commons.cnd.
     }
 
     /**
-     * Creates a new nodetype writer that does not include namepsaces.
+     * Creates a new nodetype writer that does not include namespaces.
      *
-     * @param out the underlaying writer
-     * @param r the naespace resolver
+     * @param out the underlying writer
+     * @param r the namespace resolver
      * @param npResolver name-path resolver
      */
     public CompactNodeTypeDefWriter(Writer out,
