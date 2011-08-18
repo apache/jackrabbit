@@ -16,12 +16,9 @@
  */
 package org.apache.jackrabbit.jcr2spi.benchmark;
 
-import static org.apache.jackrabbit.spi.commons.iterator.Iterators.filterIterator;
-import static org.apache.jackrabbit.spi.commons.iterator.Iterators.iteratorChain;
-import static org.apache.jackrabbit.spi.commons.iterator.Iterators.singleton;
-
 import org.apache.jackrabbit.jcr2spi.AbstractJCR2SPITest;
 import org.apache.jackrabbit.spi.ChildInfo;
+import org.apache.jackrabbit.spi.ItemId;
 import org.apache.jackrabbit.spi.ItemInfo;
 import org.apache.jackrabbit.spi.ItemInfoCache;
 import org.apache.jackrabbit.spi.NodeId;
@@ -42,7 +39,6 @@ import javax.jcr.Node;
 import javax.jcr.Property;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -50,6 +46,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.Callable;
+
+import static org.apache.jackrabbit.spi.commons.iterator.Iterators.filterIterator;
+import static org.apache.jackrabbit.spi.commons.iterator.Iterators.iteratorChain;
+import static org.apache.jackrabbit.spi.commons.iterator.Iterators.singleton;
 
 /**
  * Utility for testing jcr2spi read performance
@@ -320,12 +320,12 @@ public class ReadPerformanceTest extends AbstractJCR2SPITest {
     }
 
     @Override
-    public Iterator<? extends ItemInfo> getItemInfos(SessionInfo sessionInfo, NodeId nodeId)
+    public Iterator<? extends ItemInfo> getItemInfos(SessionInfo sessionInfo, ItemId itemId)
             throws ItemNotFoundException, RepositoryException {
 
         roundTripCount++;
-        NodeInfo nodeInfo = itemInfoStore.getNodeInfo(nodeId);
-        return iteratorChain(singleton(nodeInfo), getBatch());
+        ItemInfo itemInfo = itemInfoStore.getItemInfo(itemId);
+        return iteratorChain(singleton(itemInfo), getBatch());
     }
 
     @Override

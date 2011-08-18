@@ -49,6 +49,7 @@ import org.apache.jackrabbit.spi.commons.ItemInfoCacheImpl;
 import org.apache.jackrabbit.spi.commons.QPropertyDefinitionImpl;
 import org.apache.jackrabbit.spi.commons.QNodeDefinitionImpl;
 import org.apache.jackrabbit.spi.commons.QNodeTypeDefinitionImpl;
+import org.apache.jackrabbit.spi.commons.iterator.Iterators;
 import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
 import org.apache.jackrabbit.spi.commons.nodetype.NodeTypeDefinitionImpl;
 import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
@@ -383,55 +384,64 @@ public class RepositoryServiceImpl implements RepositoryService {
     /**
      * {@inheritDoc}
      */
-    public Iterator<? extends ItemInfo> getItemInfos(SessionInfo sessionInfo, NodeId nodeId)
+    public Iterator<? extends ItemInfo> getItemInfos(SessionInfo sessionInfo, ItemId itemId)
             throws ItemNotFoundException, RepositoryException {
-        final SessionInfoImpl sInfo = getSessionInfoImpl(sessionInfo);
-        Node node = getNode(nodeId, sInfo);
-        Name ntName = null;
-        try {
-            ntName = sInfo.getNamePathResolver().getQName(node.getProperty(JcrConstants.JCR_PRIMARYTYPE).getString());
-        } catch (NameException e) {
-            // ignore. should never occur
+
+        if (!itemId.denotesNode()) {
+            PropertyId propertyId = (PropertyId) itemId;
+            PropertyInfo propertyInfo = getPropertyInfo(sessionInfo, propertyId);
+            return Iterators.singleton(propertyInfo);
         }
-        int depth = batchReadConfig.getDepth(ntName);
-        if (depth == BatchReadConfig.DEPTH_DEFAULT) {
-            NodeInfo info;
+        else {
+            NodeId nodeId = (NodeId) itemId;
+            final SessionInfoImpl sInfo = getSessionInfoImpl(sessionInfo);
+            Node node = getNode(nodeId, sInfo);
+            Name ntName = null;
             try {
-                info = new NodeInfoImpl(node, idFactory, sInfo.getNamePathResolver());
+                ntName = sInfo.getNamePathResolver().getQName(node.getProperty(JcrConstants.JCR_PRIMARYTYPE).getString());
             } catch (NameException e) {
-                throw new RepositoryException(e);
+                // ignore. should never occur
             }
-            return Collections.singletonList(info).iterator();
-        } else {
-            final List<ItemInfo> itemInfos = new ArrayList<ItemInfo>();
-            ItemVisitor visitor = new TraversingItemVisitor(false, depth) {
-                @Override
-                protected void entering(Property property, int i) throws RepositoryException {
-                    try {
-                        itemInfos.add(new PropertyInfoImpl(property, idFactory, sInfo.getNamePathResolver(), getQValueFactory()));
-                    } catch (NameException e) {
-                        throw new RepositoryException(e);
+            int depth = batchReadConfig.getDepth(ntName);
+            if (depth == BatchReadConfig.DEPTH_DEFAULT) {
+                NodeInfo info;
+                try {
+                    info = new NodeInfoImpl(node, idFactory, sInfo.getNamePathResolver());
+                } catch (NameException e) {
+                    throw new RepositoryException(e);
+                }
+                return Collections.singletonList(info).iterator();
+            } else {
+                final List<ItemInfo> itemInfos = new ArrayList<ItemInfo>();
+                ItemVisitor visitor = new TraversingItemVisitor(false, depth) {
+                    @Override
+                    protected void entering(Property property, int i) throws RepositoryException {
+                        try {
+                            itemInfos.add(new PropertyInfoImpl(property, idFactory, sInfo.getNamePathResolver(), getQValueFactory()));
+                        } catch (NameException e) {
+                            throw new RepositoryException(e);
+                        }
                     }
-                }
-                @Override
-                protected void entering(Node node, int i) throws RepositoryException {
-                    try {
-                        itemInfos.add(new NodeInfoImpl(node, idFactory, sInfo.getNamePathResolver()));
-                    } catch (NameException e) {
-                        throw new RepositoryException(e);
+                    @Override
+                    protected void entering(Node node, int i) throws RepositoryException {
+                        try {
+                            itemInfos.add(new NodeInfoImpl(node, idFactory, sInfo.getNamePathResolver()));
+                        } catch (NameException e) {
+                            throw new RepositoryException(e);
+                        }
                     }
-                }
-                @Override
-                protected void leaving(Property property, int i) {
-                    // nothing to do
-                }
-                @Override
-                protected void leaving(Node node, int i) {
-                    // nothing to do
-                }
-            };
-            visitor.visit(node);
-            return itemInfos.iterator();
+                    @Override
+                    protected void leaving(Property property, int i) {
+                        // nothing to do
+                    }
+                    @Override
+                    protected void leaving(Node node, int i) {
+                        // nothing to do
+                    }
+                };
+                visitor.visit(node);
+                return itemInfos.iterator();
+            }
         }
     }
 

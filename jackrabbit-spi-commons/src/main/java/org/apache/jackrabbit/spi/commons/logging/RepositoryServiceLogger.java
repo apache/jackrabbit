@@ -213,14 +213,14 @@ public class RepositoryServiceLogger extends AbstractLogger implements Repositor
         }, "getNodeInfo(SessionInfo, NodeId)", new Object[]{unwrap(sessionInfo), nodeId});
     }
 
-    public Iterator<? extends ItemInfo> getItemInfos(final SessionInfo sessionInfo, final NodeId nodeId)
+    public Iterator<? extends ItemInfo> getItemInfos(final SessionInfo sessionInfo, final ItemId itemId)
             throws RepositoryException {
 
         return (Iterator<? extends ItemInfo>) execute(new Callable() {
             public Object call() throws RepositoryException {
-                return service.getItemInfos(unwrap(sessionInfo), nodeId);
+                return service.getItemInfos(unwrap(sessionInfo), itemId);
             }
-        }, "getItemInfos(SessionInfo, NodeId)", new Object[]{unwrap(sessionInfo), nodeId});
+        }, "getItemInfos(SessionInfo, NodeId)", new Object[]{unwrap(sessionInfo), itemId});
     }
 
     public Iterator<ChildInfo> getChildInfos(final SessionInfo sessionInfo, final NodeId parentId)

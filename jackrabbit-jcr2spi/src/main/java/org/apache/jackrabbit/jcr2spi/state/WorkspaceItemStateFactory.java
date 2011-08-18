@@ -85,20 +85,20 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory {
 
         try {
             Entry<NodeInfo> cached = cache.getNodeInfo(nodeId);
-            NodeInfo info;
+            ItemInfo info;
             if (isUpToDate(cached, entry)) {
                 info = cached.info;
             } else {
                 // otherwise retreive item info from service and cache the whole batch
                 Iterator<? extends ItemInfo> infos = service.getItemInfos(sessionInfo, nodeId);
                 info = first(infos, cache, entry.getGeneration());
-                if (info == null) {
+                if (info == null || !info.denotesNode()) {
                     throw new ItemNotFoundException("NodeId: " + nodeId);
                 }
             }
 
             assertMatchingPath(info, entry);
-            return createNodeState(info, entry);
+            return createNodeState((NodeInfo) info, entry);
         }
         catch (PathNotFoundException e) {
             throw new ItemNotFoundException(e);
@@ -116,12 +116,12 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory {
             // Get item info from cache
             Iterator<? extends ItemInfo> infos = null;
             Entry<NodeInfo> cached = cache.getNodeInfo(nodeId);
-            NodeInfo info;
+            ItemInfo info;
             if (cached == null) {
                 // or from service if not in cache
                 infos = service.getItemInfos(sessionInfo, nodeId);
                 info = first(infos, null, 0);
-                if (info == null) {
+                if (info == null || !info.denotesNode()) {
                     throw new ItemNotFoundException("NodeId: " + nodeId);
                 }
             } else {
@@ -147,7 +147,7 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory {
                 }
 
                 assertMatchingPath(info, entry);
-                return createNodeState(info, (NodeEntry) entry);
+                return createNodeState((NodeInfo) info, (NodeEntry) entry);
             }
         }
         catch (PathNotFoundException e) {
@@ -164,17 +164,20 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory {
         try {
             // Get item info from cache and use it if up to date
             Entry<PropertyInfo> cached = cache.getPropertyInfo(propertyId);
-            PropertyInfo info;
+            ItemInfo info;
             if (isUpToDate(cached, entry)) {
                 info = cached.info;
             } else {
                 // otherwise retreive item info from service and cache the whole batch
-                info = service.getPropertyInfo(sessionInfo, propertyId);
-                cache.put(info, entry.getGeneration());
+                Iterator<? extends ItemInfo> infos = service.getItemInfos(sessionInfo, propertyId);
+                info = first(infos, cache, entry.getGeneration());
+                if (info == null || info.denotesNode()) {
+                    throw new ItemNotFoundException("PropertyId: " + propertyId);
+                }
             }
 
             assertMatchingPath(info, entry);
-            return createPropertyState(info, entry);
+            return createPropertyState((PropertyInfo) info, entry);
         }
         catch (PathNotFoundException e) {
             throw new ItemNotFoundException(e);
@@ -190,30 +193,39 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory {
 
         try {
             // Get item info from cache
+            Iterator<? extends ItemInfo> infos = null;
             Entry<PropertyInfo> cached = cache.getPropertyInfo(propertyId);
-            PropertyInfo info;
+            ItemInfo info;
             if (cached == null) {
                 // or from service if not in cache
-                info = service.getPropertyInfo(sessionInfo, propertyId);
+                infos = service.getItemInfos(sessionInfo, propertyId);
+                info = first(infos, null, 0);
+                if (info == null || info.denotesNode()) {
+                    throw new ItemNotFoundException("PropertyId: " + propertyId);
+                }
             } else {
                 info = cached.info;
             }
 
             // Build the hierarchy entry for the item info
             HierarchyEntry entry = createHierarchyEntries(info, anyParent);
-
             if (entry == null || entry.denotesNode()) {
                 throw new ItemNotFoundException(
                         "HierarchyEntry does not belong to any existing ItemInfo. No ItemState was created.");
             } else {
+                long generation = entry.getGeneration();
                 if (isOutdated(cached, entry)) {
                     // if not, retreive the item info from the service and put the whole batch into the cache
-                    info = service.getPropertyInfo(sessionInfo, propertyId);
-                    cache.put(info, entry.getGeneration());
+                    infos = service.getItemInfos(sessionInfo, propertyId);
+                    info = first(infos, cache, generation);
+                } else if (infos != null) {
+                    // Otherwise put the whole batch retrieved from the service earlier into the cache
+                    cache.put(info, generation);
+                    first(infos, cache, generation);
                 }
 
                 assertMatchingPath(info, entry);
-                return createPropertyState(info, (PropertyEntry) entry);
+                return createPropertyState((PropertyInfo) info, (PropertyEntry) entry);
             }
 
         } catch (PathNotFoundException e) {
@@ -250,21 +262,16 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory {
     //------------------------------------------------------------< private >---
 
     /**
-     * Returns the first item in the iterator if it exists and denotes a node.
-     * Otherwise returns <code>null</code>. If <code>cache</code> is not
-     * <code>null</code>, caches all items by the given <code>generation</code>.
-     * @param generation
+     * Returns the first item in the iterator if it exists. Otherwise returns <code>null</code>.
+     * If <code>cache</code> is not <code>null</code>, caches all items by the given
+     * <code>generation</code>.
      */
-    private static NodeInfo first(Iterator<? extends ItemInfo> infos, ItemInfoCache cache, long generation) {
+    private static ItemInfo first(Iterator<? extends ItemInfo> infos, ItemInfoCache cache, long generation) {
         ItemInfo first = null;
         if (infos.hasNext()) {
             first = infos.next();
             if (cache != null) {
                 cache.put(first, generation);
-            }
-
-            if (!first.denotesNode()) {
-                first = null;
             }
         }
 
@@ -274,7 +281,7 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory {
             }
         }
 
-        return (NodeInfo) first;
+        return first;
     }
 
     /**

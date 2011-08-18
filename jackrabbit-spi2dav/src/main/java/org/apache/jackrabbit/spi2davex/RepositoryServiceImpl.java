@@ -48,6 +48,7 @@ import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.PropertyId;
+import org.apache.jackrabbit.spi.PropertyInfo;
 import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.spi.RepositoryService;
 import org.apache.jackrabbit.spi.SessionInfo;
@@ -55,6 +56,7 @@ import org.apache.jackrabbit.spi.commons.ItemInfoCacheImpl;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.spi.commons.conversion.PathResolver;
 import org.apache.jackrabbit.spi.commons.identifier.IdFactoryImpl;
+import org.apache.jackrabbit.spi.commons.iterator.Iterators;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
 import org.apache.jackrabbit.spi.commons.name.PathBuilder;
@@ -300,42 +302,49 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
      * @see RepositoryService#getItemInfos(SessionInfo, NodeId)
      */
     @Override
-    public Iterator<? extends ItemInfo> getItemInfos(SessionInfo sessionInfo, NodeId nodeId) throws ItemNotFoundException, RepositoryException {
-        Path path = getPath(nodeId, sessionInfo);
-        String uri = getURI(path, sessionInfo);
-        int depth = batchReadConfig.getDepth(path, this.getNamePathResolver(sessionInfo));
+    public Iterator<? extends ItemInfo> getItemInfos(SessionInfo sessionInfo, ItemId itemId) throws ItemNotFoundException, RepositoryException {
+        if (!itemId.denotesNode()) {
+            PropertyInfo propertyInfo = super.getPropertyInfo(sessionInfo, (PropertyId) itemId);
+            return Iterators.singleton(propertyInfo);
+        }
+        else {
+            NodeId nodeId = (NodeId) itemId;
+            Path path = getPath(itemId, sessionInfo);
+            String uri = getURI(path, sessionInfo);
+            int depth = batchReadConfig.getDepth(path, this.getNamePathResolver(sessionInfo));
 
-        GetMethod method = new GetMethod(uri + "." + depth + ".json");
-        try {
-            int statusCode = getClient(sessionInfo).executeMethod(method);
-            if (statusCode == DavServletResponse.SC_OK) {
-                if (method.getResponseContentLength() == 0) {
-                    // no JSON response -> no such node on the server
-                    throw new ItemNotFoundException("No such node " + nodeId);
+            GetMethod method = new GetMethod(uri + "." + depth + ".json");
+            try {
+                int statusCode = getClient(sessionInfo).executeMethod(method);
+                if (statusCode == DavServletResponse.SC_OK) {
+                    if (method.getResponseContentLength() == 0) {
+                        // no JSON response -> no such node on the server
+                        throw new ItemNotFoundException("No such item " + nodeId);
+                    }
+
+                    NamePathResolver resolver = getNamePathResolver(sessionInfo);
+                    NodeInfoImpl nInfo = new NodeInfoImpl(nodeId, path);
+
+                    ItemInfoJsonHandler handler = new ItemInfoJsonHandler(resolver, nInfo, getRootURI(sessionInfo), getQValueFactory(sessionInfo), getPathFactory(), getIdFactory());
+                    JsonParser ps = new JsonParser(handler);
+                    ps.parse(method.getResponseBodyAsStream(), method.getResponseCharSet());
+
+                    Iterator<? extends ItemInfo> it = handler.getItemInfos();
+                    if (!it.hasNext()) {
+                        throw new ItemNotFoundException("No such node " + uri);
+                    }
+                    return handler.getItemInfos();
+                } else {
+                    throw ExceptionConverter.generate(new DavException(statusCode, "Unable to retrieve NodeInfo for " + uri), method);
                 }
-
-                NamePathResolver resolver = getNamePathResolver(sessionInfo);
-                NodeInfoImpl nInfo = new NodeInfoImpl(nodeId, path);
-
-                ItemInfoJsonHandler handler = new ItemInfoJsonHandler(resolver, nInfo, getRootURI(sessionInfo), getQValueFactory(sessionInfo), getPathFactory(), getIdFactory());
-                JsonParser ps = new JsonParser(handler);
-                ps.parse(method.getResponseBodyAsStream(), method.getResponseCharSet());
-
-                Iterator<? extends ItemInfo> it = handler.getItemInfos();
-                if (!it.hasNext()) {
-                    throw new ItemNotFoundException("No such node " + uri);
-                }
-                return handler.getItemInfos();
-            } else {
-                throw ExceptionConverter.generate(new DavException(statusCode, "Unable to retrieve NodeInfo for " + uri), method);
+            } catch (HttpException e) {
+                throw ExceptionConverter.generate(new DavException(method.getStatusCode(), "Unable to retrieve NodeInfo for " + uri));
+            } catch (IOException e) {
+                log.error("Internal error while retrieving NodeInfo.",e);
+                throw new RepositoryException(e.getMessage());
+            } finally {
+                method.releaseConnection();
             }
-        } catch (HttpException e) {
-            throw ExceptionConverter.generate(new DavException(method.getStatusCode(), "Unable to retrieve NodeInfo for " + uri));
-        } catch (IOException e) {
-            log.error("Internal error while retrieving NodeInfo.",e);
-            throw new RepositoryException(e.getMessage());
-        } finally {
-            method.releaseConnection();
         }
     }
 

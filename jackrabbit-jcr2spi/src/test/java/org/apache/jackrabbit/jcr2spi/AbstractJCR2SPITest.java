@@ -154,10 +154,10 @@ public abstract class AbstractJCR2SPITest extends TestCase implements Repository
                 return AbstractJCR2SPITest.this.createRootNodeDefinition();
             }
 
-            public Iterator<? extends ItemInfo> getItemInfos(SessionInfo sessionInfo, NodeId nodeId)
+            public Iterator<? extends ItemInfo> getItemInfos(SessionInfo sessionInfo, ItemId itemId)
                     throws ItemNotFoundException, RepositoryException {
 
-                return AbstractJCR2SPITest.this.getItemInfos(sessionInfo, nodeId);
+                return AbstractJCR2SPITest.this.getItemInfos(sessionInfo, itemId);
             }
 
             public Iterator<ChildInfo> getChildInfos(SessionInfo sessionInfo, NodeId parentId)
@@ -316,7 +316,7 @@ public abstract class AbstractJCR2SPITest extends TestCase implements Repository
 
     public abstract NodeInfo getNodeInfo(SessionInfo sessionInfo, NodeId nodeId) throws RepositoryException;
 
-    public abstract Iterator<? extends ItemInfo> getItemInfos(SessionInfo sessionInfo, NodeId nodeId) throws ItemNotFoundException, RepositoryException;
+    public abstract Iterator<? extends ItemInfo> getItemInfos(SessionInfo sessionInfo, ItemId itemId) throws ItemNotFoundException, RepositoryException;
 
     public abstract Iterator<ChildInfo> getChildInfos(SessionInfo sessionInfo, NodeId parentId) throws ItemNotFoundException, RepositoryException;
 

@@ -301,7 +301,7 @@ public class RepositoryFactoryImplTest extends TestCase {
             return null;
         }
 
-        public Iterator<? extends ItemInfo> getItemInfos(SessionInfo sessionInfo, NodeId nodeId) throws ItemNotFoundException, RepositoryException {
+        public Iterator<? extends ItemInfo> getItemInfos(SessionInfo sessionInfo, ItemId itemId) throws ItemNotFoundException, RepositoryException {
             return null;
         }
 
