@@ -18,7 +18,7 @@ package org.apache.jackrabbit.spi;
 
 /**
  * <code>Subscription</code> defines a marker interface for an event
- * subscription. An implemementation will likely keep information in this object
+ * subscription. An implementation will likely keep information in this object
  * about the last consumed events and other implementation specific data. A
  * client will usually first create an event filter and then a subscription
  * based on the filter. Events can then be retrieved by calling {@link

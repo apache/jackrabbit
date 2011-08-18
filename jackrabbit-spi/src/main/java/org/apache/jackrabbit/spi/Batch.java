@@ -45,7 +45,7 @@ import javax.jcr.version.VersionException;
  * <li>setMixins,</li>
  * <li>move</li>
  * </ul>
- * The operations collected in a Batch are persisted upon a sucessful call to
+ * The operations collected in a Batch are persisted upon a successful call to
  * {@link RepositoryService#submit(Batch)}. The operations queued in the batch
  * must be validated as a single unit and (if validation succeeds) applied to
  * the persistent layer. If validation fails submitting the <code>Batch</code>
