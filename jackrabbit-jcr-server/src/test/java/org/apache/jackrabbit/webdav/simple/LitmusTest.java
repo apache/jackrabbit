@@ -26,6 +26,7 @@ import junit.framework.TestCase;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.commons.JcrUtils;
+import org.apache.jackrabbit.util.Text;
 import org.mortbay.jetty.Server;
 import org.mortbay.jetty.bio.SocketConnector;
 import org.mortbay.jetty.servlet.Context;
@@ -47,7 +48,7 @@ public class LitmusTest extends TestCase {
         if (Boolean.getBoolean("jackrabbit.test.integration")
                 && isLitmusAvailable(litmus)) {
             final Repository repository = JcrUtils.getRepository(
-                    "jcr-jackrabbit://" + dir.getCanonicalPath());
+                    "jcr-jackrabbit://" + Text.escapePath(dir.getCanonicalPath()));
             Session session = repository.login(); // for the TransientRepository
             try {
                 SocketConnector connector = new SocketConnector();
