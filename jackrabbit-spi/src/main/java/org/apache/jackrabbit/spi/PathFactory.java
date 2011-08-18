@@ -83,7 +83,7 @@ public interface PathFactory {
 
     /**
      * Creates a relative path based on a {@link Name} and a normalized index.
-     * Same as {@link #create(Name)} but allows to explicitely specify an
+     * Same as {@link #create(Name)} but allows to explicitly specify an
      * index.
      *
      * @param name  single {@link Name} for this relative path.

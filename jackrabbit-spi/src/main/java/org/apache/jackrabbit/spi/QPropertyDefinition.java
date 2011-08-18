@@ -63,9 +63,9 @@ public interface QPropertyDefinition extends QItemDefinition {
     public boolean isMultiple();
 
     /**
-     * Returns the availabe query operators.
+     * Returns the available query operators.
      *
-     * @return the availabe query operators.
+     * @return the available query operators.
      * @since JCR 2.0
      */
     public String[] getAvailableQueryOperators();

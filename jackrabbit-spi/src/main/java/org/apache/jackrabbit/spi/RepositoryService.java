@@ -328,7 +328,7 @@ public interface RepositoryService {
      * {@link javax.jcr.PropertyType#REFERENCE}.
      * @return An Iterator of {@link PropertyId Id}s of the properties that are
      * referencing the node identified by the given <code>nodeId</code> or an
-     * empty iterator if the node is not eferenceable or no references exist.
+     * empty iterator if the node is not referenceable or no references exist.
      * @throws ItemNotFoundException
      * @throws RepositoryException
      * @see PropertyInfo#getId()
@@ -395,7 +395,7 @@ public interface RepositoryService {
     //-------------------------------------------------------------< Import >---
     /**
      * Imports the data present in the given <code>InputStream</code> into the
-     * persistent layer. Note, that the implemenation is responsible for
+     * persistent layer. Note, that the implementation is responsible for
      * validating the data presented and for the integrity of the repository
      * upon completion.
      *
@@ -571,7 +571,7 @@ public interface RepositoryService {
 
     /**
      * Explicit refresh of an existing lock. Existing locks should be refreshed
-     * implicitely with all read and write methods listed here.
+     * implicitly with all read and write methods listed here.
      *
      * @param sessionInfo
      * @param nodeId
@@ -683,7 +683,7 @@ public interface RepositoryService {
      */
     public NodeId checkpoint(SessionInfo sessionInfo, NodeId nodeId, NodeId activityId)  throws UnsupportedRepositoryOperationException, RepositoryException;
     /**
-     * Remove the version inditified by the specified <code>versionId</code>.
+     * Remove the version identified by the specified <code>versionId</code>.
      *
      * @param sessionInfo
      * @param versionHistoryId <code>NodeId</code> identifying the version
@@ -710,7 +710,7 @@ public interface RepositoryService {
      * to be restored with the same identified as a node that would be
      * introduces by the restore. If the <code>removeExisting</code> is
      * <code>true</code> the restored node takes precedence and the
-     * existing node is removed. Otherwise the restore failes.
+     * existing node is removed. Otherwise the restore fails.
      * @throws javax.jcr.version.VersionException
      * @throws javax.jcr.PathNotFoundException
      * @throws javax.jcr.ItemExistsException
@@ -736,7 +736,7 @@ public interface RepositoryService {
      * to be restored with the same identified as any node that would be
      * introduces by the restore. If the <code>removeExisting</code> is
      * <code>true</code> the node to be restored takes precedence and the
-     * existing node is removed. Otherwise the restore failes.
+     * existing node is removed. Otherwise the restore fails.
      * @throws javax.jcr.ItemExistsException
      * @throws javax.jcr.UnsupportedRepositoryOperationException
      * @throws javax.jcr.version.VersionException
