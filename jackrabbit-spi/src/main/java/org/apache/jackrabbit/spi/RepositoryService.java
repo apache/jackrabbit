@@ -274,17 +274,17 @@ public interface RepositoryService {
 
     /**
      * Method used to 'batch-read' from the persistent storage. It returns the
-     * <code>NodeInfo</code> for the given <code>NodeId</code> as the first
+     * <code>ItemInfo</code> for the given <code>ItemId</code> as the first
      * element in the <code>Iterator</code>. In addition the iterator may contain
      * arbitrary <code>ItemInfo</code>s.
      *
      * @param sessionInfo
-     * @param nodeId
+     * @param itemId
      * @return An <code>Iterator</code> of <code>ItemInfo</code>s containing
-     * at least a single element: the <code>NodeInfo</code> that represents
-     * the Node identified by the given <code>NodeId</code>. If the Iterator
-     * contains multiple elements, the first is expected to represent the Node
-     * identified by the given <code>NodeId</code>.
+     * at least a single element: the <code>ItemInfo</code> that represents
+     * the Item identified by the given <code>ItemId</code>. If the Iterator
+     * contains multiple elements, the first is expected to represent the Item
+     * identified by the given <code>ItemId</code>.
      * @throws javax.jcr.ItemNotFoundException
      * @throws javax.jcr.RepositoryException
      * @see javax.jcr.Session#getItem(String)
@@ -297,7 +297,7 @@ public interface RepositoryService {
      * @see javax.jcr.Node#getVersionHistory()
      * @see javax.jcr.version.Version#getContainingHistory()
      */
-    public Iterator<? extends ItemInfo> getItemInfos(SessionInfo sessionInfo, NodeId nodeId) throws ItemNotFoundException, RepositoryException;
+    public Iterator<? extends ItemInfo> getItemInfos(SessionInfo sessionInfo, ItemId itemId) throws ItemNotFoundException, RepositoryException;
 
     /**
      * Returns an Iterator of <code>ChildInfo</code>s present on the
@@ -348,6 +348,7 @@ public interface RepositoryService {
      * @throws javax.jcr.RepositoryException
      * @see javax.jcr.Session#getItem(String)
      * @see javax.jcr.Node#getProperty(String)
+     * @deprecated Use {@link #getItemInfos(SessionInfo, NodeId)}
      */
     public PropertyInfo getPropertyInfo(SessionInfo sessionInfo, PropertyId propertyId) throws ItemNotFoundException, RepositoryException;
 

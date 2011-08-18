@@ -121,6 +121,7 @@ import org.apache.jackrabbit.spi.commons.conversion.NameResolver;
 import org.apache.jackrabbit.spi.commons.conversion.ParsingNameResolver;
 import org.apache.jackrabbit.spi.commons.conversion.ParsingPathResolver;
 import org.apache.jackrabbit.spi.commons.conversion.PathResolver;
+import org.apache.jackrabbit.spi.commons.iterator.Iterators;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.spi.commons.namespace.AbstractNamespaceResolver;
 import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
@@ -988,17 +989,23 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     /**
      * @see RepositoryService#getItemInfos(SessionInfo, NodeId)
      */
-    public Iterator<? extends ItemInfo> getItemInfos(SessionInfo sessionInfo, NodeId nodeId) throws RepositoryException {
+    public Iterator<? extends ItemInfo> getItemInfos(SessionInfo sessionInfo, ItemId itemId) throws RepositoryException {
         // TODO: implement batch read properly:
         // currently: missing 'value/values' property PropertyInfo cannot be built
         // currently: missing prop-names with child-NodeInfo
-        List<ItemInfo> l = new ArrayList<ItemInfo>();
-        NodeInfo nInfo = getNodeInfo(sessionInfo, nodeId);
-        l.add(nInfo);
-        // at least add propertyInfos for the meta-props already known from the
-        // nodeInfo.
-        l.addAll(buildPropertyInfos(nInfo));
-        return l.iterator();
+        if (itemId.denotesNode()) {
+            List<ItemInfo> l = new ArrayList<ItemInfo>();
+            NodeInfo nInfo = getNodeInfo(sessionInfo, (NodeId) itemId);
+            l.add(nInfo);
+            // at least add propertyInfos for the meta-props already known from the
+            // nodeInfo.
+            l.addAll(buildPropertyInfos(nInfo));
+            return l.iterator();
+        }
+        else {
+            PropertyInfo pInfo = getPropertyInfo(sessionInfo, (PropertyId) itemId);
+            return Iterators.singleton(pInfo);
+        }
     }
 
     private NodeInfoImpl buildNodeInfo(MultiStatusResponse nodeResponse,

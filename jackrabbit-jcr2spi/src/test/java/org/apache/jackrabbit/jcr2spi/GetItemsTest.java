@@ -16,11 +16,8 @@
  */
 package org.apache.jackrabbit.jcr2spi;
 
-import static org.apache.jackrabbit.spi.commons.iterator.Iterators.filterIterator;
-import static org.apache.jackrabbit.spi.commons.iterator.Iterators.iteratorChain;
-import static org.apache.jackrabbit.spi.commons.iterator.Iterators.singleton;
-
 import org.apache.jackrabbit.spi.ChildInfo;
+import org.apache.jackrabbit.spi.ItemId;
 import org.apache.jackrabbit.spi.ItemInfo;
 import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.NodeInfo;
@@ -39,8 +36,11 @@ import javax.jcr.Node;
 import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-
 import java.util.Iterator;
+
+import static org.apache.jackrabbit.spi.commons.iterator.Iterators.filterIterator;
+import static org.apache.jackrabbit.spi.commons.iterator.Iterators.iteratorChain;
+import static org.apache.jackrabbit.spi.commons.iterator.Iterators.singleton;
 
 /**
  * Test cases for {@link RepositoryService#getItemInfos(SessionInfo, NodeId)}. Specifically
@@ -150,14 +150,14 @@ public class GetItemsTest extends AbstractJCR2SPITest {
     }
 
     @Override
-    public Iterator<ItemInfo> getItemInfos(SessionInfo sessionInfo, final NodeId nodeId)
+    public Iterator<ItemInfo> getItemInfos(SessionInfo sessionInfo, final ItemId itemId)
             throws RepositoryException {
-
+        
         return iteratorChain(
-                singleton(itemInfoStore.getNodeInfo(nodeId)),
+                singleton(itemInfoStore.getItemInfo(itemId)),
                 filterIterator(itemInfoStore.getItemInfos(), new Predicate<ItemInfo>() {
                     public boolean evaluate(ItemInfo info) {
-                        return !nodeId.equals(info.getId());
+                        return !itemId.equals(info.getId());
                     }
                 }));
     }
