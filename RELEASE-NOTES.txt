@@ -1,4 +1,4 @@
-Release Notes -- Apache Jackrabbit -- Version 2.2.7
+Release Notes -- Apache Jackrabbit -- Version 2.2.8
 
 Introduction
 ------------
@@ -7,40 +7,32 @@ This is Apache Jackrabbit(TM) 2.2, a fully compliant implementation of the
 Content Repository for Java(TM) Technology API, version 2.0 (JCR 2.0) as
 specified in the Java Specification Request 283 (JSR 283).
 
-Apache Jackrabbit 2.2.7 is patch release that contains fixes and
+Apache Jackrabbit 2.2.8 is patch release that contains fixes and
 improvements over previous 2.2.x releases. This release is backwards
 compatible with all earlier 2.x releases.
 
-Note that earlier 2.2.x releases had a problem where very large positive
-or negative long property values (more than 62 bits) could not be correctly
-read from the reepository. The values are still correctly stored in the
-reporistory, and can be properly read after upgrading to this release, but
-any previous computations or other information derived from such properties
-should be checked for correctness.
+Note that earlier 2.2.x releases (< 2.2.7) had a problem where very large
+positive or negative long property values (more than 62 bits) could not be
+correctly read from the reepository. The values are still correctly stored
+in the reporistory, and can be properly read after upgrading to this release,
+but any previous computations or other information derived from such
+properties should be checked for correctness.
 
 Changes in this release
 -----------------------
 
-Improvements
-
-  [JCR-2852] Support multi-selector OR constraints in join queries
-  [JCR-2955] Use GrowingLRUMap in CachingEntryCollector
-  [JCR-2956] SQL2: Implement LIKE support for node names
-  [JCR-2965] Show referencing nodes in debug log when trying to delete ...
-  [JCR-2977] AccessControlManager#getApplicablePolicy should check for ...
-
 Bug fixes
 
-  [JCR-2880] Save fails after setting a binary property twice
-  [JCR-2890] Deadlock in acl.EntryCollector / ItemManager
-  [JCR-2917] Indexing configuration ignored when indexing length
-  [JCR-2928] LuceneQueryFactory should call QueryHits.close() after running a query
-  [JCR-2933] SQL2 Left Outer Join
-  [JCR-2937] ACL with glob restrictions does not work on '/'
-  [JCR-2939] QueryObjectModel does not generate the corresponding SQL2 ...
-  [JCR-2953] PathParser accepts illegal pahts containing curly brackets
-  [JCR-2960] Long values not properly stored
-  [JCR-2964] ItemSaveOperation should not swallow stacktrace
+  [JCR-2951] Item.remove fails if a child-item is not visible to the ...
+  [JCR-2980] Nodes that have properties marked for async extraction ...
+  [JCR-2996] QOM to SQL2 doesn't cast numeric literals
+  [JCR-2999] Access control evaluation does not properly cope with XA ...
+  [JCR-3000] SQL2 Join with OR clause still has some issues
+  [JCR-3001] DescendantSelfAxisQuery may fail with IOException when ...
+  [JCR-3007] setProperty access control evaluation does not properly cope ...
+  [JCR-3009] Prefix fulltext queries with Japanese or Chinese characters ...
+  [JCR-3013] ArrayIndexOutOfBoundsException: ConcurrentCache
+  [JCR-3015] EntryCollector may log warning for inexistent item
 
 For more detailed information about all the changes in this and other
 Jackrabbit releases, please see the Jackrabbit issue tracker at
