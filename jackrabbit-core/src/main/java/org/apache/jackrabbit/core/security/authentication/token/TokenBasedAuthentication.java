@@ -31,7 +31,6 @@ import org.apache.jackrabbit.util.Text;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.jcr.AccessDeniedException;
 import javax.jcr.Credentials;
 import javax.jcr.Node;
 import javax.jcr.Property;
@@ -202,12 +201,9 @@ public class TokenBasedAuthentication implements Authentication {
                 Calendar cal = GregorianCalendar.getInstance();
                 cal.setTimeInMillis(expirationTime);
 
-                tokenNode = getTokenNode();
-                s = tokenNode.getSession();
+                s = ((SessionImpl) session).createSession(session.getWorkspace().getName());
+                tokenNode = getTokenNode(token, s);
                 tokenNode.setProperty(TOKEN_ATTRIBUTE_EXPIRY, s.getValueFactory().createValue(cal));
-            }
-
-            if (s != null) {
                 s.save();
             }
         } catch (RepositoryException e) {
@@ -225,8 +221,8 @@ public class TokenBasedAuthentication implements Authentication {
     private void removeToken() {
         Session s = null;
         try {
-            Node tokenNode = getTokenNode();
-            s = tokenNode.getSession();
+            s = ((SessionImpl) session).createSession(session.getWorkspace().getName());
+            Node tokenNode = getTokenNode(token, s);
             
             tokenNode.remove();
             s.save();
@@ -237,19 +233,6 @@ public class TokenBasedAuthentication implements Authentication {
                 s.logout();
             }
         }
-    }
-
-    /**
-     * Retrieve the token node using another session to avoid concurrent write
-     * operations with the shared system session.
-     *
-     * @return the token node
-     * @throws RepositoryException
-     * @throws AccessDeniedException
-     */
-    private Node getTokenNode() throws RepositoryException, AccessDeniedException {
-        Session s = ((SessionImpl) session).createSession(session.getWorkspace().getName());
-        return s.getNodeByIdentifier(token);
     }
 
     //--------------------------------------------------------------------------
@@ -322,7 +305,7 @@ public class TokenBasedAuthentication implements Authentication {
      * creating the token node.
      */
     public synchronized static Credentials createToken(User user, SimpleCredentials credentials,
-                                                long tokenExpiration, Session session) throws RepositoryException {
+                                                       long tokenExpiration, Session session) throws RepositoryException {
         String workspaceName = session.getWorkspace().getName();
         if (user == null) {
             throw new RepositoryException("Cannot create login token: No corresponding node for 'null' user in workspace '" + workspaceName + "'.");
