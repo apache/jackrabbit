@@ -765,7 +765,7 @@ public final class ItemInfoBuilder {
                     String ns = namespace == null ? Name.NS_DEFAULT_URI : namespace;
                     name = NameFactoryImpl.getInstance().create(ns, localName);
                 }
-                Path path = PathFactoryImpl.getInstance().create(parentId.getPath(), name, true);
+                Path path = PathFactoryImpl.getInstance().create(parent.getPath(), name, true);
                 PropertyId id = IdFactoryImpl.getInstance().createPropertyId(parentId, name);
 
                 propertyInfo = new PropertyInfoImpl(path, id, type, isMultivalued,
