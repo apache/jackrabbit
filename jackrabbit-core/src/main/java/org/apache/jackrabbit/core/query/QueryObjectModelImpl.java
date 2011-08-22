@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.core.query;
 
-import java.text.NumberFormat;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -31,6 +30,7 @@ import javax.jcr.query.qom.Ordering;
 import javax.jcr.query.qom.QueryObjectModel;
 import javax.jcr.query.qom.Source;
 
+import org.apache.jackrabbit.api.stats.QueryStat;
 import org.apache.jackrabbit.commons.query.QueryObjectModelBuilderRegistry;
 import org.apache.jackrabbit.core.query.lucene.LuceneQueryFactory;
 import org.apache.jackrabbit.core.query.lucene.SearchIndex;
@@ -122,13 +122,12 @@ public class QueryObjectModelImpl extends QueryImpl implements QueryObjectModel 
         long time = System.currentTimeMillis();
         QueryResult qr = engine.execute(getColumns(), getSource(),
                 getConstraint(), getOrderings(), offset, limit);
-        if (log.isDebugEnabled()) {
+        final QueryStat queryStat = sessionContext.getRepositoryContext()
+                .getStatManager().getQueryStat();
+        if (queryStat.isEnabled() || log.isDebugEnabled()) {
             time = System.currentTimeMillis() - time;
-            NumberFormat format = NumberFormat.getNumberInstance();
-            format.setMinimumFractionDigits(2);
-            format.setMaximumFractionDigits(2);
-            String seconds = format.format((double) time / 1000);
-            log.debug("executed in " + seconds + " s. (" + statement + ")");
+            queryStat.logQuery(language, statement, time);
+            log.debug("executed in {} ms. ({})", time, statement);
         }
         return qr;
     }

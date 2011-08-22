@@ -20,8 +20,6 @@ import static org.apache.jackrabbit.spi.commons.name.NameConstants.JCR_LANGUAGE;
 import static org.apache.jackrabbit.spi.commons.name.NameConstants.JCR_STATEMENT;
 import static org.apache.jackrabbit.spi.commons.name.NameConstants.NT_QUERY;
 
-import java.text.NumberFormat;
-
 import javax.jcr.ItemExistsException;
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.Node;
@@ -35,6 +33,7 @@ import javax.jcr.query.InvalidQueryException;
 import javax.jcr.query.QueryResult;
 import javax.jcr.version.VersionException;
 
+import org.apache.jackrabbit.api.stats.QueryStat;
 import org.apache.jackrabbit.core.session.SessionContext;
 import org.apache.jackrabbit.core.session.SessionOperation;
 import org.apache.jackrabbit.spi.Path;
@@ -135,14 +134,13 @@ public class QueryImpl extends AbstractQueryImpl {
                         return "query.execute(" + statement + ")";
                     }
                 });
-        
-        if (log.isDebugEnabled()) {
+        final QueryStat queryStat = sessionContext.getRepositoryContext()
+                .getStatManager().getQueryStat();
+        if (queryStat.isEnabled() || log.isDebugEnabled()) {
             time = System.currentTimeMillis() - time;
-            NumberFormat format = NumberFormat.getNumberInstance();
-            format.setMinimumFractionDigits(2);
-            format.setMaximumFractionDigits(2);
-            String seconds = format.format((double) time / 1000);
-            log.debug("executed in " + seconds + " s. (" + statement + ")");
+            sessionContext.getRepositoryContext().getStatManager()
+                    .getQueryStat().logQuery(language, statement, time);
+            log.debug("executed in {} ms. ({})", time, statement);
         }
         return result;
     }
