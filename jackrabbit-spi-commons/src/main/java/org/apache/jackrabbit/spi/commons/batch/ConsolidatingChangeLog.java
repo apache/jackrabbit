@@ -60,7 +60,7 @@ public class ConsolidatingChangeLog extends AbstractChangeLog<ConsolidatingChang
     protected static Path getPath(NodeId parentId, Name name) throws RepositoryException {
         Path parent = parentId.getPath();
         if (!parent.isAbsolute()) {
-            throw new IllegalArgumentException("Path not absoulte: " + parent);
+            throw new IllegalArgumentException("Path not absolute: " + parent);
         }
 
         return PATH_FACTORY.create(parent, name, true);
