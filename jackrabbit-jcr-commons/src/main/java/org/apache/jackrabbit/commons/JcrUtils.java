@@ -29,6 +29,7 @@ import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.StringTokenizer;
 
 import javax.imageio.spi.ServiceRegistry;
 import javax.jcr.Binary;
@@ -41,6 +42,7 @@ import javax.jcr.PropertyType;
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.RepositoryFactory;
+import javax.jcr.Session;
 import javax.jcr.Value;
 import javax.jcr.nodetype.NodeType;
 import javax.jcr.query.QueryResult;
@@ -864,4 +866,266 @@ public class JcrUtils {
         }
     }
 
+    /**
+     * Creates or gets the {@link javax.jcr.Node Node} at the given Path.
+     * In case it has to create the Node all non-existent intermediate path-elements
+     * will be created with the given NodeType.
+     *
+     * <p>
+     * Changes made are not saved by this method, so <code>session.save()</code>
+     * has to be called to persist them.
+     *
+     * @param absolutePath     absolute path to create
+     * @param nodeType to use for creation of nodes
+     * @param session  to use
+     * @return the Node at path
+     * @throws RepositoryException in case of exception accessing the Repository
+     */
+    public static Node getOrCreateByPath(String absolutePath, String nodeType, Session session)
+            throws RepositoryException {
+        return getOrCreateByPath(absolutePath, false, nodeType, nodeType, session, false);
+    }
+
+    /**
+     * Creates or gets the {@link javax.jcr.Node Node} at the given Path.
+     * In case it has to create the Node all non-existent intermediate path-elements
+     * will be created with the given intermediate node type and the returned node
+     * will be created with the given nodeType.
+     *
+     * @param absolutePath         absolute path to create
+     * @param intermediateNodeType to use for creation of intermediate nodes
+     * @param nodeType             to use for creation of the final node
+     * @param session              to use
+     * @param autoSave             Should save be called when a new node is created?
+     * @return the Node at absolutePath
+     * @throws RepositoryException in case of exception accessing the Repository
+     */
+    public static Node getOrCreateByPath(String absolutePath,
+                                  String intermediateNodeType,
+                                  String nodeType,
+                                  Session session,
+                                  boolean autoSave)
+            throws RepositoryException {
+        return getOrCreateByPath(absolutePath, false, intermediateNodeType, nodeType, session, autoSave);
+    }
+
+    /**
+     * Creates a {@link javax.jcr.Node Node} at the given Path. In case it has
+     * to create the Node all non-existent intermediate path-elements will be
+     * created with the given intermediate node type and the returned node will
+     * be created with the given nodeType.
+     *
+     * <p>
+     * If the path points to an existing node, the leaf node name will be
+     * regarded as a name hint and a unique node name will be created by
+     * appending a number to the given name (eg. <code>/some/path/foobar2</code>).
+     * Please note that <b>the uniqueness check is not an atomic JCR operation</b>,
+     * so it is possible that you get a {@link RepositoryException} (path
+     * already exists) if another concurrent session created the same node in
+     * the meantime.
+     *
+     * <p>
+     * Changes made are not saved by this method, so <code>session.save()</code>
+     * has to be called to persist them.
+     *
+     * @param pathHint
+     *            path to create
+     * @param nodeType
+     *            to use for creation of nodes
+     * @param session
+     *            to use
+     * @return the newly created Node
+     * @throws RepositoryException
+     *             in case of exception accessing the Repository
+     */
+    public static Node getOrCreateUniqueByPath(String pathHint, String nodeType, Session session)
+           throws RepositoryException {
+        return getOrCreateByPath(pathHint, true, nodeType, nodeType, session, false);
+    }
+
+    /**
+     * Creates or gets the {@link javax.jcr.Node Node} at the given Path. In
+     * case it has to create the Node all non-existent intermediate
+     * path-elements will be created with the given intermediate node type and
+     * the returned node will be created with the given nodeType.
+     *
+     * <p>
+     * If the parameter <code>createUniqueLeaf</code> is set, it will not get
+     * an existing node but rather try to create a unique node by appending a
+     * number to the last path element (leaf node). Please note that <b>the
+     * uniqueness check is not an atomic JCR operation</b>, so it is possible
+     * that you get a {@link RepositoryException} (path already exists) if
+     * another concurrent session created the same node in the meantime.
+     *
+     * @param absolutePath
+     *            absolute path to create
+     * @param createUniqueLeaf
+     *            whether the leaf of the path should be regarded as a name hint
+     *            and a unique node name should be created by appending a number
+     *            to the given name (eg. <code>/some/path/foobar2</code>)
+     * @param intermediateNodeType
+     *            to use for creation of intermediate nodes
+     * @param nodeType
+     *            to use for creation of the final node
+     * @param session
+     *            to use
+     * @param autoSave
+     *            Should save be called when a new node is created?
+     * @return the Node at absolutePath
+     * @throws RepositoryException
+     *             in case of exception accessing the Repository
+     */
+    public static Node getOrCreateByPath(String absolutePath,
+                                  boolean createUniqueLeaf,
+                                  String intermediateNodeType,
+                                  String nodeType,
+                                  Session session,
+                                  boolean autoSave)
+            throws RepositoryException {
+        if (absolutePath == null || absolutePath.length() == 0 || "/".equals(absolutePath)) {
+            // path denotes root node
+            return session.getRootNode();
+        }
+        // create path relative to the root node
+        return getOrCreateByPath(session.getRootNode(), absolutePath.substring(1),
+                createUniqueLeaf, intermediateNodeType, nodeType, autoSave);
+    }
+
+    /**
+     * Creates or gets the {@link javax.jcr.Node Node} at the given Path. In
+     * case it has to create the Node all non-existent intermediate
+     * path-elements will be created with the given intermediate node type and
+     * the returned node will be created with the given nodeType.
+     *
+     * <p>
+     * If the node name points to an existing node, the node name will be
+     * regarded as a name hint and a unique node name will be created by
+     * appending a number to the given name (eg. <code>/some/path/foobar2</code>).
+     * Please note that <b>the uniqueness check is not an atomic JCR operation</b>,
+     * so it is possible that you get a {@link RepositoryException} (path
+     * already exists) if another concurrent session created the same node in
+     * the meantime.
+     *
+     * <p>
+     * Changes made are not saved by this method, so <code>session.save()</code>
+     * has to be called to persist them.
+     *
+     * @param parent
+     *            existing parent node for the new node
+     * @param nodeNameHint
+     *            name hint for the new node
+     * @param nodeType
+     *            to use for creation of the node
+     * @return the newly created Node
+     * @throws RepositoryException
+     *             in case of exception accessing the Repository
+     */
+    public static Node getOrCreateUniqueByPath(Node parent,
+                                        String nodeNameHint,
+                                        String nodeType)
+            throws RepositoryException {
+        return getOrCreateByPath(parent, nodeNameHint, true, nodeType, nodeType, false);
+    }
+
+    /**
+     * Creates or gets the {@link javax.jcr.Node Node} at the given path
+     * relative to the baseNode. In case it has to create the Node all
+     * non-existent intermediate path-elements will be created with the given
+     * intermediate node type and the returned node will be created with the
+     * given nodeType.
+     *
+     * <p>
+     * If the parameter <code>createUniqueLeaf</code> is set, it will not get
+     * an existing node but rather try to create a unique node by appending a
+     * number to the last path element (leaf node). Please note that <b>the
+     * uniqueness check is not an atomic JCR operation</b>, so it is possible
+     * that you get a {@link RepositoryException} (path already exists) if
+     * another concurrent session created the same node in the meantime.
+     *
+     * @param baseNode
+     *            existing node that should be the base for the relative path
+     * @param path
+     *            relative path to create
+     * @param createUniqueLeaf
+     *            whether the leaf of the path should be regarded as a name hint
+     *            and a unique node name should be created by appending a number
+     *            to the given name (eg. <code>/some/path/foobar2</code>)
+     * @param intermediateNodeType
+     *            to use for creation of intermediate nodes
+     * @param nodeType
+     *            to use for creation of the final node
+     * @param autoSave
+     *            Should save be called when a new node is created?
+     * @return the Node at path
+     * @throws RepositoryException
+     *             in case of exception accessing the Repository
+     */
+    public static Node getOrCreateByPath(Node baseNode,
+                                  String path,
+                                  boolean createUniqueLeaf,
+                                  String intermediateNodeType,
+                                  String nodeType,
+                                  boolean autoSave)
+            throws RepositoryException {
+
+        if (!createUniqueLeaf && baseNode.hasNode(path)) {
+            // node at path already exists, quicker way
+            return baseNode.getNode(path);
+        }
+
+        Node node = baseNode;
+        int pos = path.lastIndexOf('/');
+
+        // intermediate path elements
+        if (pos != -1) {
+            final StringTokenizer st = new StringTokenizer(path.substring(0, pos), "/");
+            while (st.hasMoreTokens()) {
+                final String token = st.nextToken();
+                if (!node.hasNode(token)) {
+                    try {
+                        if ( intermediateNodeType != null ) {
+                            node.addNode(token, intermediateNodeType);
+                        } else {
+                            node.addNode(token);
+                        }
+                        if (autoSave) node.getSession().save();
+                    } catch (RepositoryException e) {
+                        // we ignore this as this folder might be created from a different task
+                        node.refresh(false);
+                    }
+                }
+                node = node.getNode(token);
+            }
+            path = path.substring(pos + 1);
+        }
+
+        // last path element (path = leaf node name)
+        if (!node.hasNode(path)) {
+            if ( nodeType != null ) {
+                node.addNode(path, nodeType);
+            } else {
+                node.addNode(path);
+            }
+            if (autoSave) node.getSession().save();
+        } else if (createUniqueLeaf) {
+            // leaf node already exists, create new unique name
+            String leafNodeName;
+            int i = 0;
+            do {
+                leafNodeName = path + String.valueOf(i);
+                i++;
+            } while (node.hasNode(leafNodeName));
+
+            Node leaf;
+            if ( nodeType != null ) {
+                leaf = node.addNode(leafNodeName, nodeType);
+            } else {
+                leaf = node.addNode(leafNodeName);
+            }
+            if (autoSave) node.getSession().save();
+            return leaf;
+        }
+
+        return node.getNode(path);
+    }
 }
