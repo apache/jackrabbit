@@ -876,7 +876,8 @@ public class JcrUtils {
      * has to be called to persist them.
      *
      * @param absolutePath     absolute path to create
-     * @param nodeType to use for creation of nodes
+     * @param nodeType to use for creation of nodes If <code>null</code> the node type
+     *            is determined by the child node definitions of the parent node.
      * @param session  to use
      * @return the Node at path
      * @throws RepositoryException in case of exception accessing the Repository
@@ -893,8 +894,10 @@ public class JcrUtils {
      * will be created with the given nodeType.
      *
      * @param absolutePath         absolute path to create
-     * @param intermediateNodeType to use for creation of intermediate nodes
-     * @param nodeType             to use for creation of the final node
+     * @param intermediateNodeType to use for creation of intermediate nodes. If <code>null</code> the node type
+     *            is determined by the child node definitions of the parent node.
+     * @param nodeType             to use for creation of the final node. If <code>null</code> the node type
+     *            is determined by the child node definitions of the parent node.
      * @param session              to use
      * @param autoSave             Should save be called when a new node is created?
      * @return the Node at absolutePath
@@ -931,7 +934,8 @@ public class JcrUtils {
      * @param pathHint
      *            path to create
      * @param nodeType
-     *            to use for creation of nodes
+     *            to use for creation of nodes. . If <code>null</code> the node type
+     *            is determined by the child node definitions of the parent node.
      * @param session
      *            to use
      * @return the newly created Node
@@ -964,9 +968,11 @@ public class JcrUtils {
      *            and a unique node name should be created by appending a number
      *            to the given name (eg. <code>/some/path/foobar2</code>)
      * @param intermediateNodeType
-     *            to use for creation of intermediate nodes
+     *            to use for creation of intermediate nodes. If <code>null</code> the node type
+     *            is determined by the child node definitions of the parent node.
      * @param nodeType
-     *            to use for creation of the final node
+     *            to use for creation of the final node. If <code>null</code> the node type
+     *            is determined by the child node definitions of the parent node.
      * @param session
      *            to use
      * @param autoSave
@@ -1015,7 +1021,8 @@ public class JcrUtils {
      * @param nodeNameHint
      *            name hint for the new node
      * @param nodeType
-     *            to use for creation of the node
+     *            to use for creation of the node. If <code>null</code> the node type
+     *            is determined by the child node definitions of the parent node.
      * @return the newly created Node
      * @throws RepositoryException
      *             in case of exception accessing the Repository
@@ -1051,9 +1058,11 @@ public class JcrUtils {
      *            and a unique node name should be created by appending a number
      *            to the given name (eg. <code>/some/path/foobar2</code>)
      * @param intermediateNodeType
-     *            to use for creation of intermediate nodes
+     *            to use for creation of intermediate nodes. If <code>null</code> the node type
+     *            is determined by the child node definitions of the parent node.
      * @param nodeType
-     *            to use for creation of the final node
+     *            to use for creation of the final node. If <code>null</code> the node type
+     *            is determined by the child node definitions of the parent node.
      * @param autoSave
      *            Should save be called when a new node is created?
      * @return the Node at path
