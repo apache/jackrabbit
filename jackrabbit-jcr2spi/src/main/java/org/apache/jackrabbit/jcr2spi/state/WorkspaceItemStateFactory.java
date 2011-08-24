@@ -89,7 +89,7 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory {
             if (isUpToDate(cached, entry)) {
                 info = cached.info;
             } else {
-                // otherwise retreive item info from service and cache the whole batch
+                // otherwise retrieve item info from service and cache the whole batch
                 Iterator<? extends ItemInfo> infos = service.getItemInfos(sessionInfo, nodeId);
                 info = first(infos, cache, entry.getGeneration());
                 if (info == null || !info.denotesNode()) {
@@ -168,7 +168,7 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory {
             if (isUpToDate(cached, entry)) {
                 info = cached.info;
             } else {
-                // otherwise retreive item info from service and cache the whole batch
+                // otherwise retrieve item info from service and cache the whole batch
                 Iterator<? extends ItemInfo> infos = service.getItemInfos(sessionInfo, propertyId);
                 info = first(infos, cache, entry.getGeneration());
                 if (info == null || info.denotesNode()) {
@@ -215,7 +215,7 @@ public class WorkspaceItemStateFactory extends AbstractItemStateFactory {
             } else {
                 long generation = entry.getGeneration();
                 if (isOutdated(cached, entry)) {
-                    // if not, retreive the item info from the service and put the whole batch into the cache
+                    // if not, retrieve the item info from the service and put the whole batch into the cache
                     infos = service.getItemInfos(sessionInfo, propertyId);
                     info = first(infos, cache, generation);
                 } else if (infos != null) {
