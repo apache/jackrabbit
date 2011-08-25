@@ -79,7 +79,7 @@ public abstract class AbstractPerformanceTest {
         }
     }
 
-    private void testPerformance(String name, InputStream xml)
+    protected void testPerformance(String name, InputStream xml)
             throws Exception {
         ByteArrayOutputStream buffer = new ByteArrayOutputStream();
         try {
