@@ -107,6 +107,7 @@ import org.apache.lucene.queryParser.QueryParser;
 import org.apache.lucene.search.BooleanClause.Occur;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.Query;
+import org.apache.lucene.search.Sort;
 
 /**
  * Factory that creates Lucene queries from QOM elements.
@@ -166,10 +167,30 @@ public class LuceneQueryFactory {
         this.primaryTypeField = nsMappings.translateName(JCR_PRIMARYTYPE);
     }
 
-    public List<Row> execute(
-            Map<String, PropertyValue> columns, Selector selector,
-            Constraint constraint) throws RepositoryException, IOException {
+    /**
+     * @param columns
+     * @param selector
+     * @param constraint
+     * @param externalSort
+     *            if <code>true</code> it means that the lqf should just let the
+     *            QueryEngine take care of sorting and applying applying offset
+     *            and limit constraints
+     * @param offsetIn
+     *            used in pagination
+     * @param limitIn
+     *            used in pagination
+     * @return a list of rows
+     * @throws RepositoryException
+     * @throws IOException
+     */
+    public List<Row> execute(Map<String, PropertyValue> columns,
+            Selector selector, Constraint constraint, Sort sort,
+            boolean externalSort, long offsetIn, long limitIn)
+            throws RepositoryException, IOException {
         final IndexReader reader = index.getIndexReader(true);
+        final int offset = offsetIn < 0 ? 0 : (int) offsetIn;
+        final int limit = limitIn < 0 ? Integer.MAX_VALUE : (int) limitIn;
+
         QueryHits hits = null;
         try {
             JackrabbitIndexSearcher searcher = new JackrabbitIndexSearcher(
@@ -192,25 +213,47 @@ public class LuceneQueryFactory {
             }
 
             List<Row> rows = new ArrayList<Row>();
-            hits = searcher.evaluate(qp.mainQuery);
+
+            // TODO depending on the filters, we could push the offset info
+            // into the searcher
+            hits = searcher.evaluate(qp.mainQuery, sort, offset + limit);
+            int currentNode = 0;
+            int addedNodes = 0;
+
             ScoreNode node = hits.nextScoreNode();
             while (node != null) {
+                Row row = null;
                 try {
-                    Row row = new SelectorRow(
-                            columns, evaluator, selector.getSelectorName(),
+                    row = new SelectorRow(columns, evaluator,
+                            selector.getSelectorName(),
                             session.getNodeById(node.getNodeId()),
                             node.getScore());
-                    if (filter.evaluate(row)) {
-                        rows.add(row);
-                    }
                 } catch (ItemNotFoundException e) {
                     // skip the node
+                }
+                if (row != null && filter.evaluate(row)) {
+                    if (externalSort) {
+                        // return everything and not worry about sort
+                        rows.add(row);
+                    } else {
+                        // apply limit and offset rules locally
+                        if (currentNode >= offset
+                                && currentNode - offset < limit) {
+                            rows.add(row);
+                            addedNodes++;
+                        }
+                        currentNode++;
+                        // end the loop when going over the limit
+                        if (addedNodes == limit) {
+                            break;
+                        }
+                    }
                 }
                 node = hits.nextScoreNode();
             }
             return rows;
         } finally {
-            if(hits != null){
+            if (hits != null) {
                 hits.close();
             }
             Util.closeOrRelease(reader);

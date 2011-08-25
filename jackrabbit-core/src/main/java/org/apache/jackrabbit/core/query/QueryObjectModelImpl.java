@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.core.query;
 
-import java.text.NumberFormat;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -124,11 +123,7 @@ public class QueryObjectModelImpl extends QueryImpl implements QueryObjectModel 
                 getConstraint(), getOrderings(), offset, limit);
         if (log.isDebugEnabled()) {
             time = System.currentTimeMillis() - time;
-            NumberFormat format = NumberFormat.getNumberInstance();
-            format.setMinimumFractionDigits(2);
-            format.setMaximumFractionDigits(2);
-            String seconds = format.format((double) time / 1000);
-            log.debug("executed in " + seconds + " s. (" + statement + ")");
+            log.debug("executed in {} ms. ({})", time, statement);
         }
         return qr;
     }

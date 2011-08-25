@@ -16,19 +16,16 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
+import java.io.IOException;
+
 import org.apache.jackrabbit.core.id.NodeId;
-import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.Sort;
 import org.apache.lucene.search.TopFieldCollector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
 /**
  * Wraps a lucene query result and adds a close method that allows to release
@@ -53,14 +50,9 @@ public final class SortedLuceneQueryHits extends AbstractQueryHits {
     private static final int MIN_FETCH_SIZE = 32;
 
     /**
-     * The IndexReader in use by the lucene hits.
-     */
-    private final IndexReader reader;
-
-    /**
      * The index searcher.
      */
-    private final JackrabbitIndexSearcher searcher;
+    private final IndexSearcher searcher;
 
     /**
      * The query to execute.
@@ -80,7 +72,7 @@ public final class SortedLuceneQueryHits extends AbstractQueryHits {
     /**
      * The score docs.
      */
-    private final List<ScoreDoc> scoreDocs = new ArrayList<ScoreDoc>();
+    private ScoreDoc[] scoreDocs = new ScoreDoc[0];
 
     /**
      * The total number of hits.
@@ -88,26 +80,30 @@ public final class SortedLuceneQueryHits extends AbstractQueryHits {
     private int size;
 
     /**
-     * Number of hits to retrieve.
+     * Number of hits to be pre-fetched from the lucene index (will be around 2x
+     * resultFetchHint).
      */
     private int numHits;
 
+    private int offset = 0;
+
     /**
      * Creates a new <code>QueryHits</code> instance wrapping <code>hits</code>.
-     *
-     * @param reader          the IndexReader in use.
-     * @param searcher        the index searcher.
-     * @param query           the query to execute.
-     * @param sort            the sort criteria.
-     * @param resultFetchHint a hint on how many results should be fetched.
-     * @throws IOException if an error occurs while reading from the index.
+     * 
+     * @param searcher
+     *            the index searcher.
+     * @param query
+     *            the query to execute.
+     * @param sort
+     *            the sort criteria.
+     * @param resultFetchHint
+     *            a hint on how many results should be pre-fetched from the
+     *            lucene index.
+     * @throws IOException
+     *             if an error occurs while reading from the index.
      */
-    public SortedLuceneQueryHits(IndexReader reader,
-                                 JackrabbitIndexSearcher searcher,
-                                 Query query,
-                                 Sort sort,
-                                 long resultFetchHint) throws IOException {
-        this.reader = reader;
+    public SortedLuceneQueryHits(IndexSearcher searcher, Query query,
+            Sort sort, long resultFetchHint) throws IOException {
         this.searcher = searcher;
         this.query = query;
         this.sort = sort;
@@ -131,13 +127,13 @@ public final class SortedLuceneQueryHits extends AbstractQueryHits {
         if (++hitIndex >= size) {
             // no more score nodes
             return null;
-        } else if (hitIndex >= scoreDocs.size()) {
+        } else if (hitIndex - offset >= scoreDocs.length) {
             // refill at least numHits or twice hitIndex
             this.numHits = Math.max(this.numHits, hitIndex * 2);
             getHits();
         }
-        ScoreDoc doc = scoreDocs.get(hitIndex);
-        String uuid = reader.document(doc.doc,
+        ScoreDoc doc = scoreDocs[hitIndex - offset];
+        String uuid = searcher.doc(doc.doc,
                 FieldSelectors.UUID).get(FieldNames.UUID);
         NodeId id = new NodeId(uuid);
         return new ScoreNode(id, doc.score, doc.doc);
@@ -159,11 +155,10 @@ public final class SortedLuceneQueryHits extends AbstractQueryHits {
         TopFieldCollector collector = TopFieldCollector.create(sort, numHits, false, true, false, false);
         searcher.search(query, collector);
         size = collector.getTotalHits();
-        ScoreDoc[] docs = collector.topDocs().scoreDocs;
-        scoreDocs.addAll(Arrays.asList(docs).subList(scoreDocs.size(), docs.length));
-        log.debug("getHits() {}/{}", scoreDocs.size(), numHits);
+        offset += scoreDocs.length;
+        scoreDocs = collector.topDocs(offset, numHits).scoreDocs;
+        log.debug("getHits() {}/{}", scoreDocs.length, numHits);
         // double hits for next round
         numHits *= 2;
     }
-
 }
