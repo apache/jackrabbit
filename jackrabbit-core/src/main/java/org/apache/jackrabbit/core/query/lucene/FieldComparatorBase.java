@@ -25,7 +25,7 @@ import java.io.IOException;
  * Abstract base class for <code>FieldComparator</code> implementations
  * which are based on values in the form of <code>Comparables</code>.
  */
-abstract class FieldComparatorBase extends FieldComparator {
+abstract public class FieldComparatorBase extends FieldComparator {
 
     /**
      * The bottom value.

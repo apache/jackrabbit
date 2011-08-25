@@ -20,8 +20,6 @@ import static org.apache.jackrabbit.spi.commons.name.NameConstants.JCR_LANGUAGE;
 import static org.apache.jackrabbit.spi.commons.name.NameConstants.JCR_STATEMENT;
 import static org.apache.jackrabbit.spi.commons.name.NameConstants.NT_QUERY;
 
-import java.text.NumberFormat;
-
 import javax.jcr.ItemExistsException;
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.Node;
@@ -135,14 +133,10 @@ public class QueryImpl extends AbstractQueryImpl {
                         return "query.execute(" + statement + ")";
                     }
                 });
-        
+
         if (log.isDebugEnabled()) {
             time = System.currentTimeMillis() - time;
-            NumberFormat format = NumberFormat.getNumberInstance();
-            format.setMinimumFractionDigits(2);
-            format.setMaximumFractionDigits(2);
-            String seconds = format.format((double) time / 1000);
-            log.debug("executed in " + seconds + " s. (" + statement + ")");
+            log.debug("executed in {} ms. ({})", time, statement);
         }
         return result;
     }
