@@ -105,7 +105,7 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
 
     /**
      * @param childEntry
-     * @return The node entry that directly preceeds the given <code>childEntry</code>
+     * @return The node entry that directly precedes the given <code>childEntry</code>
      * or <code>null</code> if the given <code>childEntry</code> is the first
      * or was not found in this <code>ChildNodeEntries</code>.
      */
