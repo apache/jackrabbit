@@ -714,7 +714,7 @@ public class NodeImpl extends ItemImpl implements Node {
         checkIsWritable();
         Name mixinQName = getQName(mixinName);
 
-        // get mixin types present in the jcr:mixintypes property without
+        // get mixin types present in the jcr:mixinTypes property without
         // modifying the NodeState.
         List<Name> mixinValue = getMixinTypes();
         if (!mixinValue.contains(mixinQName) && !isNodeType(mixinQName)) {
