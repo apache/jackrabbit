@@ -30,7 +30,7 @@ import javax.jcr.version.VersionException;
 
 /**
  * <code>AbstractRemove</code> is the base class for non-transient remove
- * operations executed on the workspace such as removing versions or activites.
+ * operations executed on the workspace such as removing versions or activities.
  */
 public abstract class AbstractRemove extends AbstractOperation {
 

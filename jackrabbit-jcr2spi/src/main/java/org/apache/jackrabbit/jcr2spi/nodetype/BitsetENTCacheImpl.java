@@ -269,7 +269,7 @@ class BitsetENTCacheImpl implements EffectiveNodeTypeCache {
         /**
          * Creates a ew bitset key.
          * @param names the node type names
-         * @param maxBit the approximative number of the geatest bit
+         * @param maxBit the approximate number of the greatest bit
          */
         public BitsetKey(Name[] names, int maxBit) {
             this.names = names;
