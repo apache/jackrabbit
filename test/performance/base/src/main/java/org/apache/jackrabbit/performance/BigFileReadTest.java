@@ -39,7 +39,9 @@ public class BigFileReadTest extends AbstractTest {
     private int i = 0;
 
     public void beforeSuite() throws RepositoryException {
-        session = getRepository().login(getCredentials());
+        failOnRepositoryVersions("1.4", "1.5", "1.6");
+
+        session = loginWriter();
 
         root = session.getRootNode().addNode(
                 "BigFileReadTest", "nt:folder");
@@ -68,7 +70,6 @@ public class BigFileReadTest extends AbstractTest {
     public void afterSuite() throws RepositoryException {
         root.remove();
         session.save();
-        session.logout();
     }
 
 }
