@@ -120,7 +120,7 @@ public interface ChildNodeEntries {
     void add(NodeEntry entry, int index, NodeEntry beforeEntry);
 
     /**
-     * Removes the child node entry refering to the node state.
+     * Removes the child node entry referring to the node state.
      *
      * @param childEntry the entry to be removed.
      * @return the removed entry or <code>null</code> if there is no such entry.

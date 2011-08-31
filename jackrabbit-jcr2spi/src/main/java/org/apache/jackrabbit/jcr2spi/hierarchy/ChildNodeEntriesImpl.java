@@ -318,7 +318,7 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
     }
 
     /**
-     * Removes the child node entry refering to the node state.
+     * Removes the child node entry referring to the node state.
      *
      * @param childEntry the entry to be removed.
      * @return the removed entry or <code>null</code> if there is no such entry.
@@ -728,10 +728,10 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
         private final Map<Name, LinkedEntries.LinkNode> nameMap = new HashMap<Name, LinkedEntries.LinkNode>();
 
         /**
-         * Return true if more than one NodeEnty with the given name exists.
+         * Return true if more than one NodeEntry with the given name exists.
          *
          * @param qName
-         * @return true if more than one NodeEnty with the given name exists.
+         * @return true if more than one NodeEntry with the given name exists.
          */
         public boolean containsSiblings(Name qName) {
             return snsMap.containsKey(qName);
