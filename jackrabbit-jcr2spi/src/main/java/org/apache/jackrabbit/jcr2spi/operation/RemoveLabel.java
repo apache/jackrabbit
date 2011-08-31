@@ -69,7 +69,7 @@ public class RemoveLabel extends AbstractOperation {
     }
 
     /**
-     * Invalidates the jcr:versionlabel nodestate present with the given
+     * Invalidates the jcr:versionLabel nodestate present with the given
      * version history and all decendant states (property states).
      *
      * @see Operation#persisted()

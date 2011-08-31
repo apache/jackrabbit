@@ -46,7 +46,7 @@ public class Jcr2spiRepositoryFactory implements RepositoryFactory {
     /**
      * This parameter determines the {@link RepositoryServiceFactory} to create the
      * {@link RepositoryService}. This is either an instance of <code>RepositoryServiceFactory
-     * </code> or a fully quallyfied class name of a <code>RepositoryServiceFactory</code>
+     * </code> or a fully qualified class name of a <code>RepositoryServiceFactory</code>
      * having a no argument constructor.
      */
     public static final String PARAM_REPOSITORY_SERVICE_FACTORY = "org.apache.jackrabbit.spi.RepositoryServiceFactory";
