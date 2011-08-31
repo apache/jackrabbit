@@ -60,7 +60,7 @@ public class HierarchyEventListener implements InternalEventListener {
                 filter = wspManager.createEventFilter(Event.ALL_TYPES, root, true, null, null, true);
             } catch (RepositoryException e) {
                 // SPI does not support observation, or another error occurred.
-                log.debug("Creating event filter for cache behavoir observation failed", e);
+                log.debug("Creating event filter for cache behavior observation failed", e);
             }
             if (filter == null) {
                 this.eventFilter = Collections.emptyList();
