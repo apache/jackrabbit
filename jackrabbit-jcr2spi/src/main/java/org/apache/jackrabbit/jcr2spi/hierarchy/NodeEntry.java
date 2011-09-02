@@ -70,7 +70,7 @@ public interface NodeEntry extends HierarchyEntry {
     public void setUniqueID(String uniqueID);
 
     /**
-     * @return the index of this child node entry to suppport same-name siblings.
+     * @return the index of this child node entry to support same-name siblings.
      * If the index of this entry cannot be determined
      * {@link org.apache.jackrabbit.spi.Path#INDEX_UNDEFINED} is returned.
      * @throws InvalidItemStateException

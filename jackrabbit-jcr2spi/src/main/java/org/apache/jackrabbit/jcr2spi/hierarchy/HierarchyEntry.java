@@ -176,7 +176,7 @@ public interface HierarchyEntry {
 
     /**
      * The required generation of this <code>HierarchyEntry</code> . This is used by the
-     * {@link ItemInfoCache} to determine wheter an item info in the cache is up to date or not.
+     * {@link ItemInfoCache} to determine whether an item info in the cache is up to date or not.
      * That is whether the generation of the item info in the cache is the same or more recent
      * as the required generation of this entry.
      */
