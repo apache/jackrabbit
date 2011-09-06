@@ -414,7 +414,7 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
                         break;
                     } else if (ln != insertLN && insertName.equals(ln.qName)) {
                         position++;
-                    } // else: ln == inserLN OR no SNS -> not relevant for position count
+                    } // else: ln == insertLN OR no SNS -> not relevant for position count
                 }
             }
             entriesByName.reorder(insertName, insertLN, position);

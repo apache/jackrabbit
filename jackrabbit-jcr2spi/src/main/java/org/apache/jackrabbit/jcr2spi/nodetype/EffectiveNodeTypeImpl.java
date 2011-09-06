@@ -353,7 +353,7 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
         try {
             definitionProvider.getQNodeDefinition(this, name, null);
         } catch (NoSuchNodeTypeException e) {
-            String msg = "internal eror: inconsistent node type";
+            String msg = "internal error: inconsistent node type";
             log.debug(msg);
             throw new ConstraintViolationException(msg, e);
         }
