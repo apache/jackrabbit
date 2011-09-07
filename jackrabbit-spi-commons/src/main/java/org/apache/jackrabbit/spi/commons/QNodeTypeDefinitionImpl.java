@@ -174,7 +174,7 @@ public class QNodeTypeDefinitionImpl implements QNodeTypeDefinition, Serializabl
     }
 
     /**
-     * Createa a new <code>QNodeTypeDefinitionImpl</code> from a JCR
+     * Create a a new <code>QNodeTypeDefinitionImpl</code> from a JCR
      * NodeType definition.
      *
      * @param def node type definition

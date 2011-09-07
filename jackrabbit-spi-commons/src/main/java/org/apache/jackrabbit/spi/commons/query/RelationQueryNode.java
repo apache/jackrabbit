@@ -30,8 +30,8 @@ import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
 public class RelationQueryNode extends NAryQueryNode<QueryNode> implements QueryConstants {
 
     /**
-     * Acts as an syntetic placeholder for a location step that matches any
-     * name. This is required becase a JCR path does not allow a Name with
+     * Acts as an synthetic placeholder for a location step that matches any
+     * name. This is required because a JCR path does not allow a Name with
      * a single '*' (star) character.
      */
     public static final Name STAR_NAME_TEST = NameFactoryImpl.getInstance().create(Name.NS_REP_URI, "__star__");

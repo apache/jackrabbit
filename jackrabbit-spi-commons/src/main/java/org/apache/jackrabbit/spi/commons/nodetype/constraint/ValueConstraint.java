@@ -116,7 +116,7 @@ public abstract class ValueConstraint implements QValueConstraint {
     //-----------------------------------< static factory and check methods >---
     /**
      * Create a new <code>ValueConstraint</code> from the String representation.
-     * Note, that the definition must be independant of session specific namespace
+     * Note, that the definition must be independent of session specific namespace
      * mappings in case of the following constraint types:
      * <ul><li>{@link PropertyType#NAME},</li>
      * <li>{@link PropertyType#PATH} or</li>
@@ -276,7 +276,7 @@ public abstract class ValueConstraint implements QValueConstraint {
      * type conversions are attempted if the type of the given values does not
      * match the required type as specified in the given definition.
      *
-     * @param pd propert definition
+     * @param pd property definition
      * @param values values to check
      * @throws ConstraintViolationException if the constraints are violated
      */

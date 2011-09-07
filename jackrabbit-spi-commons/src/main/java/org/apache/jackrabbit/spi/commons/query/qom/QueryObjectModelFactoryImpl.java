@@ -230,7 +230,7 @@ public abstract class QueryObjectModelFactoryImpl implements QueryObjectModelFac
             throw new RepositoryException("Unknown Source implementation");
         }
         if (!(joinCondition instanceof JoinConditionImpl)) {
-            throw new RepositoryException("Unknwon JoinCondition implementation");
+            throw new RepositoryException("Unknown JoinCondition implementation");
         }
         return new JoinImpl(
                 resolver,
