@@ -32,7 +32,7 @@ import java.util.List;
 public class OrderQueryNode extends QueryNode {
 
     /**
-     * The order spects
+     * The order specs
      */
     private final List<OrderSpec> specs = new ArrayList<OrderSpec>();
 
@@ -168,7 +168,7 @@ public class OrderQueryNode extends QueryNode {
     }
 
     /**
-     * Returns <code>true</code> if the property <code>i</code> should be orderd
+     * Returns <code>true</code> if the property <code>i</code> should be ordered
      * ascending. If <code>false</code> the property is ordered descending.
      *
      * @param i index of the property

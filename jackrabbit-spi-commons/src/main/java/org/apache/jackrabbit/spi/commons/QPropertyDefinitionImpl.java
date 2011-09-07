@@ -97,7 +97,7 @@ public class QPropertyDefinitionImpl extends QItemDefinitionImpl
      * Creates a new serializable property definition.
      *
      * @param name              the name of the child item.
-     * @param declaringNodeType the delaring node type
+     * @param declaringNodeType the declaring node type
      * @param isAutoCreated     if this item is auto created.
      * @param isMandatory       if this is a mandatory item.
      * @param onParentVersion   the on parent version behaviour.
