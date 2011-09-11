@@ -532,6 +532,9 @@ public class SearchIndex extends AbstractQueryHandler {
         indexingConfig = createIndexingConfiguration(nsMappings);
         analyzer.setIndexingConfig(indexingConfig);
 
+        // initialize the Tika parser
+        parser = createParser();
+
         index = new MultiIndex(this, excludedIDs);
         if (index.numDocs() == 0) {
             Path rootPath;
@@ -565,9 +568,8 @@ public class SearchIndex extends AbstractQueryHandler {
             }
         }
 
-        // initialize spell checker and Tika parser
+        // initialize spell checker
         spellChecker = createSpellChecker();
-        parser = createParser();
 
         log.info("Index initialized: {} Version: {}",
                 new Object[]{path, index.getIndexFormatVersion()});
