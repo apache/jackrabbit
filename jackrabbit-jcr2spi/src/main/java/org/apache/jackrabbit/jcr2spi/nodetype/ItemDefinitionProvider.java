@@ -97,7 +97,7 @@ public interface ItemDefinitionProvider {
      *
      * @param parentNodeTypeNames
      * @param propertyName
-     * @param propertType
+     * @param propertyType
      * @param isMultiValued
      * @param propertyId Used to retrieve the definition from the persistent
      * layer if it cannot be determined from the information present.
@@ -106,7 +106,7 @@ public interface ItemDefinitionProvider {
      */
     public QPropertyDefinition getQPropertyDefinition(Name[] parentNodeTypeNames,
                                                       Name propertyName,
-                                                      int propertType,
+                                                      int propertyType,
                                                       boolean isMultiValued,
                                                       PropertyId propertyId) throws RepositoryException;
 

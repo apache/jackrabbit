@@ -73,7 +73,7 @@ public class ImportHandler extends DefaultHandler {
     /**
      * this flag is used to determine whether a namespace context needs to be
      * started in the startElement event or if the namespace context has already
-     * been started in a preceeding startPrefixMapping event;
+     * been started in a preceding startPrefixMapping event;
      * the flag is set per element in the first startPrefixMapping event and is
      * cleared again in the following startElement event;
      */

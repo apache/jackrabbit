@@ -145,7 +145,7 @@ public final class ItemInfoBuilder {
         void createChildInfos(NodeId id, Iterator<ChildInfo> childInfos);
 
         /**
-         * Notification that a new {@link PropertyInfo} has been bult.
+         * Notification that a new {@link PropertyInfo} has been built.
          * @param propertyInfo
          */
         void createPropertyInfo(PropertyInfo propertyInfo);

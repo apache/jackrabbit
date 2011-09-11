@@ -55,7 +55,7 @@ public class NodeTypeDefinitionFactory {
 
     /**
      * Creates a new node type definition factory that operates on the given
-     * sesion to create the templates.
+     * session to create the templates.
      *
      * @param session repository session.
      * @throws RepositoryException if an error occurs.

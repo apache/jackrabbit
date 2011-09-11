@@ -17,6 +17,8 @@
 package org.apache.jackrabbit.commons.flat;
 
 import org.apache.jackrabbit.JcrConstants;
+import org.apache.jackrabbit.commons.iterator.FilterIterator;
+import org.apache.jackrabbit.commons.iterator.SizedIterator;
 import org.apache.jackrabbit.commons.predicate.Predicate;
 
 import javax.jcr.Item;

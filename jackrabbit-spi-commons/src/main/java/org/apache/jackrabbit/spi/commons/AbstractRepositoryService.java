@@ -477,7 +477,7 @@ public abstract class AbstractRepositoryService implements RepositoryService {
 
     /**
      * This default implementation first calls {@link #checkSessionInfo(SessionInfo)}
-     * with the <code>sessionInfo</code>, then returns the namepsace URI for the
+     * with the <code>sessionInfo</code>, then returns the namespace URI for the
      * given <code>prefix</code>.
      */
     public String getNamespaceURI(SessionInfo sessionInfo, String prefix)

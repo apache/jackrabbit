@@ -20,6 +20,7 @@ package org.apache.jackrabbit.core.query.lucene;
 import org.apache.jackrabbit.core.HierarchyManager;
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.id.PropertyId;
+import org.apache.jackrabbit.core.query.lucene.sort.AbstractFieldComparator;
 import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.core.value.InternalValue;
@@ -34,8 +35,6 @@ import org.apache.lucene.search.FieldComparator;
 import org.apache.lucene.search.FieldComparatorSource;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Implements a <code>FieldComparatorSource</code> for <code>FieldComparator</code>s which
@@ -106,122 +105,6 @@ public class SharedFieldComparatorSource extends FieldComparatorSource {
         }
         catch (IllegalNameException e) {
             throw Util.createIOException(e);
-        }
-    }
-
-    /**
-     * Abstract base class for <code>FieldComparator</code>s which keep their values
-     * (<code>Comparable</code>s) in an array.
-     */
-    private abstract static class AbstractFieldComparator extends FieldComparatorBase {
-
-        /**
-         * The values for comparing.
-         */
-        private final Comparable[] values;
-
-        /**
-         * The index readers.
-         */
-
-        protected final List<IndexReader> readers = new ArrayList<IndexReader>();
-        /**
-         * The document number starts for the {@link #readers}.
-         */
-        protected int[] starts;
-
-        /**
-         * Create a new instance with the given number of values.
-         *
-         * @param numHits  the number of values
-         */
-        protected AbstractFieldComparator(int numHits) {
-            values = new Comparable[numHits];
-        }
-
-        /**
-         * Returns the reader index for document <code>n</code>.
-         *
-         * @param n document number.
-         * @return the reader index.
-         */
-        protected final int readerIndex(int n) {
-            int lo = 0;
-            int hi = readers.size() - 1;
-
-            while (hi >= lo) {
-                int mid = (lo + hi) >> 1;
-                int midValue = starts[mid];
-                if (n < midValue) {
-                    hi = mid - 1;
-                }
-                else if (n > midValue) {
-                    lo = mid + 1;
-                }
-                else {
-                    while (mid + 1 < readers.size() && starts[mid + 1] == midValue) {
-                        mid++;
-                    }
-                    return mid;
-                }
-            }
-            return hi;
-        }
-
-        /**
-         * Add the given value to the values array
-         *
-         * @param slot   index into values
-         * @param value  value for adding
-         */
-        @Override
-        public void setValue(int slot, Comparable value) {
-            values[slot] = value;
-        }
-
-        /**
-         * Return a value from the values array
-         *
-         * @param slot  index to retrieve
-         * @return  the retrieved value
-         */
-        @Override
-        public Comparable getValue(int slot) {
-            return values[slot];
-        }
-
-        @Override
-        public void setNextReader(IndexReader reader, int docBase) throws IOException {
-            getIndexReaders(readers, reader);
-
-            int maxDoc = 0;
-            starts = new int[readers.size() + 1];
-
-            for (int i = 0; i < readers.size(); i++) {
-                IndexReader r = readers.get(i);
-                starts[i] = maxDoc;
-                maxDoc += r.maxDoc();
-            }
-            starts[readers.size()] = maxDoc;
-        }
-
-        /**
-         * Checks if <code>reader</code> is of type {@link MultiIndexReader} and if
-         * so calls itself recursively for each reader within the
-         * <code>MultiIndexReader</code> or otherwise adds the reader to the list.
-         *
-         * @param readers  list of index readers.
-         * @param reader   reader to decompose
-         */
-        private static void getIndexReaders(List<IndexReader> readers, IndexReader reader) {
-            if (reader instanceof MultiIndexReader) {
-                for (IndexReader r : ((MultiIndexReader) reader).getIndexReaders()) {
-                    getIndexReaders(readers, r);
-                }
-            }
-            else {
-                readers.add(reader);
-            }
         }
     }
 

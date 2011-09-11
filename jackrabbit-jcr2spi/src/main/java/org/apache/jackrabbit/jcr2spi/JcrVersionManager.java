@@ -334,7 +334,7 @@ public class JcrVersionManager implements javax.jcr.version.VersionManager {
      * after successful completion of the operation must reside within scope
      * defined by this session.
      * <br>
-     * In addition this method varifies that the passed node is of type nt:activity.
+     * In addition this method verifies that the passed node is of type nt:activity.
      *
      * @param activityNode
      * @param methodName

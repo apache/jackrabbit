@@ -46,8 +46,13 @@
               org.apache.jackrabbit.util.Base64
             </Main-Class>
             <Export-Package>
+              !org.apache.jackrabbit.api.*,
               org.apache.jackrabbit.*;version=${project.version}
             </Export-Package>
+            <Import-Package>
+              *,
+              org.apache.jackrabbit.api.security.user;version="[2.2,3)";resolution:=optional
+            </Import-Package>
           </instructions>
         </configuration>
       </plugin>

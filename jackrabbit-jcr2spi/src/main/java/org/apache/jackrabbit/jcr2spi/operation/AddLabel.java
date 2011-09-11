@@ -71,8 +71,8 @@ public class AddLabel extends AbstractOperation {
     }
 
     /**
-     * Invalidates the jcr:versionlabel nodestate present with the given
-     * version history. If '<code>moveLabel</code>' is true, all decendant states
+     * Invalidates the jcr:versionLabel nodestate present with the given
+     * version history. If '<code>moveLabel</code>' is true, all descendant states
      * (property states) are invalidated as well.
      *
      * @see Operation#persisted()

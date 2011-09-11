@@ -134,6 +134,7 @@ public class QueryImpl extends AbstractQueryImpl {
                         return "query.execute(" + statement + ")";
                     }
                 });
+
         final QueryStat queryStat = sessionContext.getRepositoryContext()
                 .getStatManager().getQueryStat();
         if (queryStat.isEnabled() || log.isDebugEnabled()) {

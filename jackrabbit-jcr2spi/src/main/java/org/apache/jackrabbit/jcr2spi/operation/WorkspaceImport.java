@@ -61,7 +61,7 @@ public class WorkspaceImport extends AbstractOperation {
 
     /**
      * Invalidates the <code>NodeState</code> that has been updated and all
-     * its decendants.
+     * its descendants.
      *
      * @see Operation#persisted()
      */

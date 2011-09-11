@@ -58,7 +58,7 @@ public class RemoveActivity extends AbstractRemove {
 
     /**
      * Invalidates the <code>NodeState</code> that has been updated and all
-     * its decendants. Second, the parent state gets invalidated.
+     * its descendants. Second, the parent state gets invalidated.
      *
      * @see org.apache.jackrabbit.jcr2spi.operation.Operation#persisted()
      */

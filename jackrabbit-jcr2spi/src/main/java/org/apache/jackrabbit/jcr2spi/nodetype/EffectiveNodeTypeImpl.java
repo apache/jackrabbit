@@ -353,7 +353,7 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
         try {
             definitionProvider.getQNodeDefinition(this, name, null);
         } catch (NoSuchNodeTypeException e) {
-            String msg = "internal eror: inconsistent node type";
+            String msg = "internal error: inconsistent node type";
             log.debug(msg);
             throw new ConstraintViolationException(msg, e);
         }
@@ -388,7 +388,7 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
          * don't know which one is applicable, we check all of them
          */
         QItemDefinition[] defs = getNamedItemDefs(name);
-        if (hasRemoveConstaint(defs)) {
+        if (hasRemoveConstraint(defs)) {
             throw new ConstraintViolationException("can't remove mandatory or protected item");
         }
     }
@@ -398,7 +398,7 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
      */
     public boolean hasRemoveNodeConstraint(Name nodeName) {
         QNodeDefinition[] defs = getNamedQNodeDefinitions(nodeName);
-        return hasRemoveConstaint(defs);
+        return hasRemoveConstraint(defs);
     }
 
     /**
@@ -406,7 +406,7 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
      */
     public boolean hasRemovePropertyConstraint(Name propertyName) {
         QPropertyDefinition[] defs = getNamedQPropertyDefinitions(propertyName);
-        return hasRemoveConstaint(defs);
+        return hasRemoveConstraint(defs);
     }
 
     //---------------------------------------------< impl. specific methods >---
@@ -417,7 +417,7 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
      * @param defs
      * @return <code>true</code> if a mandatory or protected definition is present.
      */
-    private static boolean hasRemoveConstaint(QItemDefinition[] defs) {
+    private static boolean hasRemoveConstraint(QItemDefinition[] defs) {
         /**
          * as there might be multiple definitions with the same name that may be
          * applicable, return true as soon as the first mandatory or protected

@@ -133,6 +133,19 @@ public abstract class AbstractTest {
     protected void afterSuite() throws Exception {
     }
 
+    protected void failOnRepositoryVersions(String... versions)
+            throws RepositoryException {
+        String repositoryVersion =
+                repository.getDescriptor(Repository.REP_VERSION_DESC);
+        for (String version : versions) {
+            if (repositoryVersion.startsWith(version)) {
+                throw new RepositoryException(
+                        "Unable to run " + getClass().getName()
+                        + " on repository version " + version);
+            }
+        }
+    }
+
     protected Repository getRepository() {
         return repository;
     }

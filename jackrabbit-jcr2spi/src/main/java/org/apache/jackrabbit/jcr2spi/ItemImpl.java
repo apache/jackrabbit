@@ -322,7 +322,7 @@ public abstract class ItemImpl implements Item, ItemStateLifeCycleListener {
             /**
              * Nothing to do for
              * - Status#EXISTING : modifications reverted or saved
-             *   inform listeneres about an update (status was MODIFIED before)
+             *   inform listeners about an update (status was MODIFIED before)
              *   or a simple refresh without modification (status was INVALIDATED).
              */
             case Status.EXISTING:
@@ -335,7 +335,7 @@ public abstract class ItemImpl implements Item, ItemStateLifeCycleListener {
              * - Status#EXISTING_MODIFIED : transient modification
              * - Status#STALE_MODIFIED : external modifications while transient changes pending
              * - Status#STALE_DESTROYED : external modifications while transient changes pending
-             * - Status#MODIFIED : externaly modified -> marker for sessionISM states only
+             * - Status#MODIFIED : externally modified -> marker for sessionISM states only
              * - Status#EXISTING_REMOVED : transient removal
              */
             case Status.EXISTING_MODIFIED:

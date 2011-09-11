@@ -200,7 +200,7 @@ public class NameFactoryImpl implements NameFactory {
         //------------------------------------------------------< Cloneable >---
         /**
          * Creates a clone of this <code>Name</code>.
-         * Overriden in order to make <code>clone()</code> public.
+         * Overridden in order to make <code>clone()</code> public.
          *
          * @return a clone of this instance
          * @throws CloneNotSupportedException never thrown

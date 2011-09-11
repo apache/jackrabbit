@@ -106,8 +106,8 @@ public class JackrabbitIndexSearcher
             if (sort.getSort().length == 0) {
                 hits = new LuceneQueryHits(reader, this, query);
             } else {
-                hits = new SortedLuceneQueryHits(
-                        reader, this, query, sort, resultFetchHint);
+                hits = new SortedLuceneQueryHits(this, query, sort,
+                        resultFetchHint);
             }
         }
         return hits;

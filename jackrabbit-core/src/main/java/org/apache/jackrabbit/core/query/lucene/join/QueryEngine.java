@@ -18,13 +18,13 @@ package org.apache.jackrabbit.core.query.lucene.join;
 
 import static javax.jcr.query.qom.QueryObjectModelConstants.JCR_JOIN_TYPE_LEFT_OUTER;
 import static javax.jcr.query.qom.QueryObjectModelConstants.JCR_JOIN_TYPE_RIGHT_OUTER;
-import static javax.jcr.query.qom.QueryObjectModelConstants.JCR_ORDER_DESCENDING;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -48,18 +48,23 @@ import javax.jcr.query.RowIterator;
 import javax.jcr.query.qom.Column;
 import javax.jcr.query.qom.Constraint;
 import javax.jcr.query.qom.Join;
-import javax.jcr.query.qom.Operand;
 import javax.jcr.query.qom.Ordering;
 import javax.jcr.query.qom.PropertyValue;
+import javax.jcr.query.qom.QueryObjectModelConstants;
 import javax.jcr.query.qom.QueryObjectModelFactory;
 import javax.jcr.query.qom.Selector;
 import javax.jcr.query.qom.Source;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.jackrabbit.JcrConstants;
 import org.apache.jackrabbit.commons.JcrUtils;
 import org.apache.jackrabbit.commons.iterator.RowIteratorAdapter;
 import org.apache.jackrabbit.commons.query.qom.OperandEvaluator;
 import org.apache.jackrabbit.core.query.lucene.LuceneQueryFactory;
+import org.apache.jackrabbit.core.query.lucene.sort.DynamicOperandFieldComparatorSource;
+import org.apache.jackrabbit.core.query.lucene.sort.RowComparator;
+import org.apache.lucene.search.Sort;
+import org.apache.lucene.search.SortField;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -70,58 +75,16 @@ public class QueryEngine {
      */
     private static final Logger log = LoggerFactory
             .getLogger(QueryEngine.class);
+    
+    //TODO remove this when the implementation is stable
+    public static final String NATIVE_SORT_SYSTEM_PROPERTY = "useNativeSort";
+
+    private static final boolean NATIVE_SORT = Boolean.valueOf(System
+            .getProperty(NATIVE_SORT_SYSTEM_PROPERTY, "false"));
 
     private static final int printIndentStep = 4;
-
-    /**
-     * Row comparator.
-     */
-    private static class RowComparator implements Comparator<Row> {
-
-        private final ValueComparator comparator = new ValueComparator();
-
-        private final Ordering[] orderings;
-
-        private final OperandEvaluator evaluator;
-
-        private RowComparator(Ordering[] orderings, OperandEvaluator evaluator) {
-            this.orderings = orderings;
-            this.evaluator = evaluator;
-        }
-
-        public int compare(Row a, Row b) {
-            try {
-                for (Ordering ordering : orderings) {
-                    Operand operand = ordering.getOperand();
-                    Value[] va = evaluator.getValues(operand, a);
-                    Value[] vb = evaluator.getValues(operand, b);
-                    int d = compare(va, vb);
-                    if (d != 0) {
-                        if (JCR_ORDER_DESCENDING.equals(ordering.getOrder())) {
-                            return -d;
-                        } else {
-                            return d;
-                        }
-                    }
-                }
-                return 0;
-            } catch (RepositoryException e) {
-                throw new RuntimeException("Unable to compare rows " + a
-                        + " and " + b, e);
-            }
-        }
-
-        private int compare(Value[] a, Value[] b) {
-            for (int i = 0; i < a.length && i < b.length; i++) {
-                int d = comparator.compare(a[i], b[i]);
-                if (d != 0) {
-                    return d;
-                }
-            }
-            return a.length - b.length;
-        }
-
-    }
+    
+    private final Session session;
 
     private final LuceneQueryFactory lqf;
 
@@ -135,8 +98,8 @@ public class QueryEngine {
 
     public QueryEngine(Session session, LuceneQueryFactory lqf,
             Map<String, Value> variables) throws RepositoryException {
+        this.session = session;
         this.lqf = lqf;
-
         Workspace workspace = session.getWorkspace();
         this.ntManager = workspace.getNodeTypeManager();
         this.qomFactory = workspace.getQueryManager().getQOMFactory();
@@ -151,8 +114,8 @@ public class QueryEngine {
         long time = System.currentTimeMillis();
         QueryResult qr = execute(columns, source, constraint, orderings,
                 offset, limit, 2);
-        log.debug("SQL2 QUERY execute took {} ms.", System.currentTimeMillis()
-                - time);
+        log.debug("SQL2 QUERY execute took {} ms. native sort is {}.",
+                System.currentTimeMillis() - time, NATIVE_SORT);
         return qr;
     }
 
@@ -251,7 +214,7 @@ public class QueryEngine {
             return new SimpleQueryResult(merger.getColumnNames(),
                     merger.getSelectorNames(), new RowIteratorAdapter(allRows));
         }
-        
+
         Set<Row> leftRows = buildLeftRowsJoin(csInfo, leftCo, printIndentation
                 + printIndentStep);
         if (log.isDebugEnabled()) {
@@ -483,23 +446,79 @@ public class QueryEngine {
         String[] columnNames = columnMap.keySet().toArray(
                 new String[columnMap.size()]);
 
+        Sort sort = new Sort();
+        if (NATIVE_SORT) {
+            sort = new Sort(createSortFields(orderings, session));
+        }
+
+        // if true it means that the LuceneQueryFactory should just let the
+        // QueryEngine take care of sorting and applying offset and limit
+        // constraints
+        boolean externalSort = !NATIVE_SORT;
+        RowIterator rows = null;
         try {
-            RowIterator rows = new RowIteratorAdapter(lqf.execute(columnMap,
-                    selector, constraint));
-            QueryResult result = new SimpleQueryResult(columnNames,
-                    selectorNames, rows);
-            return sort(result, orderings, evaluator, offset, limit);
+            rows = new RowIteratorAdapter(lqf.execute(columnMap, selector,
+                    constraint, sort, externalSort, offset, limit));
         } catch (IOException e) {
             throw new RepositoryException("Failed to access the query index", e);
         } finally {
-            if (log.isDebugEnabled()) {
-                time = System.currentTimeMillis() - time;
-                log.debug(genString(printIndentation) + "SQL2 SELECT took "
-                        + time + " ms. selector: " + selector + ", columns: "
-                        + Arrays.toString(columnNames) + ", constraint: "
-                        + constraint);
+            log.debug(
+                    "{}SQL2 SELECT took {} ms. selector: {}, columns: {}, constraint: {}, offset {}, limit {}",
+                    new Object[] { genString(printIndentation),
+                            System.currentTimeMillis() - time, selector,
+                            Arrays.toString(columnNames), constraint, offset,
+                            limit });
+        }
+        QueryResult result = new SimpleQueryResult(columnNames, selectorNames,
+                rows);
+        if (NATIVE_SORT) {
+            return result;
+        }
+
+        long timeSort = System.currentTimeMillis();
+        QueryResult sorted = sort(result, orderings, evaluator, offset, limit);
+        log.debug("{}SQL2 SORT took {} ms.", genString(printIndentation),
+                System.currentTimeMillis() - timeSort);
+        return sorted;
+    }
+
+    public SortField[] createSortFields(Ordering[] orderings, Session session)
+            throws RepositoryException {
+
+        if (orderings == null || orderings.length == 0) {
+            return new SortField[] { SortField.FIELD_SCORE };
+        }
+        // orderings[] -> (property, ordering)
+        Map<String, Ordering> orderByProperties = new HashMap<String, Ordering>();
+        for (Ordering o : orderings) {
+            final String p = o.toString();
+            if (!orderByProperties.containsKey(p)) {
+                orderByProperties.put(p, o);
             }
         }
+        final DynamicOperandFieldComparatorSource dofcs = new DynamicOperandFieldComparatorSource(
+                session, evaluator, orderByProperties);
+
+        List<SortField> sortFields = new ArrayList<SortField>();
+
+        // as it turn out, orderByProperties.keySet() doesn't keep the original
+        // insertion order
+        for (Ordering o : orderings) {
+            final String p = o.toString();
+            // order on jcr:score does not use the natural order as
+            // implemented in lucene. score ascending in lucene means that
+            // higher scores are first. JCR specs that lower score values
+            // are first.
+            boolean isAsc = QueryObjectModelConstants.JCR_ORDER_ASCENDING
+                    .equals(o.getOrder());
+            if (JcrConstants.JCR_SCORE.equals(p)) {
+                sortFields.add(new SortField(null, SortField.SCORE, !isAsc));
+            } else {
+                // TODO use native sort if available
+                sortFields.add(new SortField(p, dofcs, isAsc));
+            }
+        }
+        return sortFields.toArray(new SortField[sortFields.size()]);
     }
 
     private Map<String, PropertyValue> getColumnMap(Column[] columns,

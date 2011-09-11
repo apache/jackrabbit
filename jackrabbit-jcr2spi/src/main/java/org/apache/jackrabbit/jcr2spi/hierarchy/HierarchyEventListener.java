@@ -60,7 +60,7 @@ public class HierarchyEventListener implements InternalEventListener {
                 filter = wspManager.createEventFilter(Event.ALL_TYPES, root, true, null, null, true);
             } catch (RepositoryException e) {
                 // SPI does not support observation, or another error occurred.
-                log.debug("Creating event filter for cache behavoir observation failed", e);
+                log.debug("Creating event filter for cache behavior observation failed", e);
             }
             if (filter == null) {
                 this.eventFilter = Collections.emptyList();
@@ -189,7 +189,7 @@ public class HierarchyEventListener implements InternalEventListener {
                     }
                     break;
                 case Event.PROPERTY_CHANGED:
-                    // notify parent in case jcr:mixintypes or jcr:uuid was changed.
+                    // notify parent in case jcr:mixinTypes or jcr:uuid was changed.
                     // if parent is 'null' (i.e. not yet loaded) the prop-entry does
                     // not exist either -> no need to inform propEntry
                     if (parent != null) {
