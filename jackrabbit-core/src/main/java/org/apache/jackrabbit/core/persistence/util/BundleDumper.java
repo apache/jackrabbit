@@ -16,44 +16,40 @@
  */
 package org.apache.jackrabbit.core.persistence.util;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.apache.commons.io.input.CountingInputStream;
-import org.apache.jackrabbit.core.id.NodeId;
-import org.apache.jackrabbit.core.id.PropertyId;
-import org.apache.jackrabbit.core.value.InternalValue;
-import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
-import org.apache.jackrabbit.spi.commons.name.NameConstants;
-
+import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.util.Calendar;
-import java.util.Collections;
-import java.util.GregorianCalendar;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.TimeZone;
+import java.io.RandomAccessFile;
 import java.math.BigDecimal;
-
-import javax.jcr.PropertyType;
+import java.util.Calendar;
+import java.util.GregorianCalendar;
+import java.util.TimeZone;
+import java.util.UUID;
 
 /**
- * Bundle deserializer. See the {@link BundleWriter} class for details of
- * the serialization format.
- *
- * @see BundleWriter
+ * This utility class can dump the contents of a node bundle. This class is
+ * based on BundleReader, but is able to dump even if the data is corrupt
+ * (unlike the BundleReader). The class does not have any dependencies so it can
+ * be run from the command line without problems (without having to add any jar
+ * files to the classpath).
  */
-class BundleReader {
+public class BundleDumper {
 
-    /*
-     * Implementation note: if you change this class, also change BundleDumper
-     * accordingly.
-     */
+    private static final int VERSION_1 = 1;
+    private static final int VERSION_2 = 2;
+    private static final int VERSION_3 = 3;
 
-    /** Logger instance */
-    private static Logger log = LoggerFactory.getLogger(BundleReader.class);
+    private static final int BINARY_IN_BLOB_STORE = -1;
+    private static final int BINARY_IN_DATA_STORE = -2;
+    private static final char[] HEX = "0123456789abcdef".toCharArray();
+
+    public static final int UNDEFINED = 0, STRING = 1, BINARY = 2, LONG = 3, DOUBLE = 4, DATE = 5, BOOLEAN = 6,
+        NAME = 7, PATH = 8, REFERENCE = 9, WEAKREFERENCE = 10, URI = 11, DECIMAL = 12;
+
+    private static final String[] NAMES = { "undefined", "String", "Binary", "Long", "Double", "Date", "Boolean",
+        "Name", "Path", "Reference", "WeakReference", "URI", "Decimal" };
+
+    private StringBuilder buffer = new StringBuilder();
 
     /**
      * Pre-calculated {@link TimeZone} objects for common timezone offsets.
@@ -93,198 +89,183 @@ class BundleReader {
         TimeZone.getTimeZone("GMT-01:00"), // 0b11111
     };
 
-    private final BundleBinding binding;
-
-    /**
-     * Counter for the number of bytes read from the input stream.
-     */
-    private final CountingInputStream cin;
-
     /**
      * Wrapper for reading structured data from the input stream.
      */
-    private final DataInputStream in;
+    private DataInputStream in;
 
-    private final int version;
+    private int version;
 
-    /**
-     * The default namespace and the first six other namespaces used in this
-     * bundle. Used by the {@link #readName()} method to keep track of
-     * already seen namespaces.
-     */
     private final String[] namespaces =
         // NOTE: The length of this array must be seven
-        { Name.NS_DEFAULT_URI, null, null, null, null, null, null };
+        { "", null, null, null, null, null, null };
 
-    /**
-     * Creates a new bundle deserializer.
-     *
-     * @param binding bundle binding
-     * @param stream stream from which the bundle is read
-     * @throws IOException if an I/O error occurs.
-     */
-    public BundleReader(BundleBinding binding, InputStream stream)
-            throws IOException {
-        this.binding = binding;
-        this.cin = new CountingInputStream(stream);
-        this.in = new DataInputStream(cin);
-        this.version = in.readUnsignedByte();
+
+    static final UUID NULL_PARENT_ID =
+        UUID.fromString("bb4e9d10-d857-11df-937b-0800200c9a66");
+
+
+    public static void main(String... args) throws IOException {
+        new BundleDumper().run(args);
     }
 
-    /**
-     * Deserializes a <code>NodePropBundle</code> from a data input stream.
-     *
-     * @param id the node id for the new bundle
-     * @return the bundle
-     * @throws IOException if an I/O error occurs.
-     */
-    public NodePropBundle readBundle(NodeId id) throws IOException {
-        long start = cin.getByteCount();
-        NodePropBundle bundle = new NodePropBundle(id);
-        if (version >= BundleBinding.VERSION_3) {
-            readBundleNew(bundle);
-        } else {
-            readBundleOld(bundle);
+    void run(String... args) throws IOException {
+        if (args.length < 1) {
+            System.out.println("Usage: java " + getClass().getName() + " <fileName>");
+            System.out.println("where the file name points to a node bundle.");
+            return;
         }
-        bundle.setSize(cin.getByteCount() - start);
-        return bundle;
+        RandomAccessFile f = new RandomAccessFile(args[0], "r");
+        byte[] bundle = new byte[(int) f.length()];
+        f.readFully(bundle);
+        f.close();
+        System.out.println(dump(bundle));
     }
 
-    private void readBundleNew(NodePropBundle bundle) throws IOException {
+    public String dump(byte[] bundle) throws IOException {
+        try {
+            ByteArrayInputStream bin = new ByteArrayInputStream(bundle);
+            this.in = new DataInputStream(bin);
+            version = in.readUnsignedByte();
+            buffer.append("version: ").append(version).append("\n");
+            if (version >= VERSION_3) {
+                readBundleNew();
+            } else {
+                readBundleOld();
+            }
+        } catch (Exception e) {
+            buffer.append("\n");
+            buffer.append("error: ").append(e.toString());
+        }
+        return buffer.toString();
+    }
+
+    private void readBundleNew() throws IOException {
         // node type
-        bundle.setNodeTypeName(readName());
+        buffer.append("nodeTypeName: ").append(readName()).append("\n");
 
         // parentUUID
-        NodeId parentId = readNodeId();
-        if (BundleBinding.NULL_PARENT_ID.equals(parentId)) {
+        UUID parentId = readNodeId();
+        buffer.append("parentId: ").append(parentId).append("\n");
+        if (NULL_PARENT_ID.equals(parentId)) {
             parentId = null;
+            buffer.append("parentId is null\n");
         }
-        bundle.setParentId(parentId);
 
         // read modcount
-        bundle.setModCount((short) readVarInt());
+        buffer.append("modCount: ").append((short) readVarInt()).append("\n");
 
         int b = in.readUnsignedByte();
-        bundle.setReferenceable((b & 1) != 0);
+        buffer.append("referenceable: ").append((b & 1) != 0).append("\n");
 
         // mixin types
         int mn = readVarInt((b >> 7) & 1, 1);
         if (mn == 0) {
-            bundle.setMixinTypeNames(Collections.<Name>emptySet());
+            // 0
         } else if (mn == 1) {
-            bundle.setMixinTypeNames(Collections.singleton(readName()));
+            buffer.append("mixing type:").append(readName()).append("\n");
         } else {
-            Set<Name> mixins = new HashSet<Name>(mn * 2);
+            buffer.append("mixing type count:").append(mn).append("\n");
             for (int i = 0; i < mn; i++) {
-                mixins.add(readName());
+                buffer.append("mixing type:").append(readName()).append("\n");
             }
-            bundle.setMixinTypeNames(mixins);
         }
 
         // properties
         int pn = readVarInt((b >> 4) & 7, 7);
         for (int i = 0; i < pn; i++) {
-            PropertyId id = new PropertyId(bundle.getId(), readName());
-            bundle.addProperty(readPropertyEntry(id));
+            buffer.append("property: ").append(readName()).append("\n");
+            readPropertyEntry();
         }
 
         // child nodes (list of name/uuid pairs)
         int nn = readVarInt((b >> 2) & 3, 3);
         for (int i = 0; i < nn; i++) {
-            Name name = readQName();
-            NodeId id = readNodeId();
-            bundle.addChildNodeEntry(name, id);
+            buffer.append("child node: ").append(readQName()).
+                    append(" id: ").append(readNodeId()).append("\n");
         }
 
         // read shared set
         int sn = readVarInt((b >> 1) & 1, 1);
         if (sn == 0) {
-            bundle.setSharedSet(Collections.<NodeId>emptySet());
+            // 0
         } else if (sn == 1) {
-            bundle.setSharedSet(Collections.singleton(readNodeId()));
+            buffer.append("shared set:").append(readNodeId()).append("\n");
         } else {
-            Set<NodeId> shared = new HashSet<NodeId>();
+            buffer.append("shared set count:").append(sn).append("\n");
             for (int i = 0; i < sn; i++) {
-                shared.add(readNodeId());
+                buffer.append("shared set:").append(readNodeId()).append("\n");
             }
-            bundle.setSharedSet(shared);
         }
     }
 
-    private void readBundleOld(NodePropBundle bundle) throws IOException {
+    private void readBundleOld() throws IOException {
         // read primary type...special handling
         int a = in.readUnsignedByte();
         int b = in.readUnsignedByte();
         int c = in.readUnsignedByte();
-        String uri = binding.nsIndex.indexToString(a << 16 | b << 8 | c);
-        String local = binding.nameIndex.indexToString(in.readInt());
-        bundle.setNodeTypeName(
-                NameFactoryImpl.getInstance().create(uri, local));
+        String uri = "#" + (a << 16 | b << 8 | c);
+        String local = "#" + in.readInt();
+        buffer.append("nodeTypeName: ").append(uri).append(":").append(local).append("\n");
 
         // parentUUID
-        bundle.setParentId(readNodeId());
+        buffer.append("parentUUID: ").append(readNodeId()).append("\n");
 
         // definitionId
-        in.readUTF();
+        buffer.append("definitionId: ").append(in.readUTF()).append("\n");
 
         // mixin types
-        Name name = readIndexedQName();
+        String name = readIndexedQName();
         if (name != null) {
-            Set<Name> mixinTypeNames = new HashSet<Name>();
             do {
-                mixinTypeNames.add(name);
+                buffer.append("mixin: ").append(name).append("\n");
                 name = readIndexedQName();
             } while (name != null);
-            bundle.setMixinTypeNames(mixinTypeNames);
         } else {
-            bundle.setMixinTypeNames(Collections.<Name>emptySet());
+            buffer.append("mixins: -\n");
         }
 
         // properties
         name = readIndexedQName();
         while (name != null) {
-            PropertyId pId = new PropertyId(bundle.getId(), name);
-            NodePropBundle.PropertyEntry pState = readPropertyEntry(pId);
-            // skip redundant primaryType, mixinTypes and uuid properties
-            if (!name.equals(NameConstants.JCR_PRIMARYTYPE)
-                    && !name.equals(NameConstants.JCR_MIXINTYPES)
-                    && !name.equals(NameConstants.JCR_UUID)) {
-                bundle.addProperty(pState);
-            }
+            buffer.append("property: ").append(name).append("\n");
+            readPropertyEntry();
             name = readIndexedQName();
         }
 
         // set referenceable flag
-        bundle.setReferenceable(in.readBoolean());
+        buffer.append("referenceable: ").append(in.readBoolean()).append("\n");
 
         // child nodes (list of uuid/name pairs)
-        NodeId childId = readNodeId();
+        UUID childId = readNodeId();
         while (childId != null) {
-            bundle.addChildNodeEntry(readQName(), childId);
+            buffer.append("childId: ").append(childId).append(" ").append(readQName()).append("\n");
             childId = readNodeId();
         }
 
         // read modcount, since version 1.0
-        if (version >= BundleBinding.VERSION_1) {
-            bundle.setModCount(in.readShort());
+        if (version >= VERSION_1) {
+            buffer.append("modCount: ").append(in.readShort()).append("\n");
         }
 
         // read shared set, since version 2.0
-        if (version >= BundleBinding.VERSION_2) {
+        if (version >= VERSION_2) {
             // shared set (list of parent uuids)
-            NodeId parentId = readNodeId();
+            UUID parentId = readNodeId();
             if (parentId != null) {
-                Set<NodeId> shared = new HashSet<NodeId>();
                 do {
-                    shared.add(parentId);
+                    buffer.append("shared set parentId: ").append(parentId).append("\n");
                     parentId = readNodeId();
                 } while (parentId != null);
-                bundle.setSharedSet(shared);
-            } else {
-                bundle.setSharedSet(Collections.<NodeId>emptySet());
             }
-        } else {
-            bundle.setSharedSet(Collections.<NodeId>emptySet());
+        }
+    }
+
+    private static String getType(int type) {
+        try {
+            return NAMES[type];
+        } catch (Exception e) {
+            return "unknown type " + type;
         }
     }
 
@@ -295,130 +276,106 @@ class BundleReader {
      * @return the property entry
      * @throws IOException if an I/O error occurs.
      */
-    private NodePropBundle.PropertyEntry readPropertyEntry(PropertyId id)
+    private void readPropertyEntry()
             throws IOException {
-        NodePropBundle.PropertyEntry entry = new NodePropBundle.PropertyEntry(id);
-
         int count = 1;
-        if (version >= BundleBinding.VERSION_3) {
+        int type;
+        if (version >= VERSION_3) {
             int b = in.readUnsignedByte();
-
-            entry.setType(b & 0x0f);
-
+            type = b & 0x0f;
+            buffer.append("  type: ").append(getType(type)).append("\n");
             int len = b >>> 4;
             if (len != 0) {
-                entry.setMultiValued(true);
+                buffer.append("  multivalued\n");
                 if (len == 0x0f) {
                     count = readVarInt() + 0x0f - 1;
                 } else {
                     count = len - 1;
                 }
             }
-
-            entry.setModCount((short) readVarInt());
+            buffer.append("  modcount: ").append((short) readVarInt()).append("\n");
         } else {
             // type and modcount
-            int type = in.readInt();
-            entry.setModCount((short) ((type >> 16) & 0x0ffff));
+            type = in.readInt();
+            buffer.append("  modcount: ").append((short) ((type >> 16) & 0x0ffff)).append("\n");
             type &= 0x0ffff;
-            entry.setType(type);
+            buffer.append("  type: ").append(getType(type)).append("\n");
 
             // multiValued
-            entry.setMultiValued(in.readBoolean());
+            boolean mv = in.readBoolean();
+            if (mv) {
+                buffer.append("  multivalued\n");
+            }
 
             // definitionId
-            in.readUTF();
+            buffer.append("  definitionId: ").append(in.readUTF()).append("\n");
 
             // count
             count = in.readInt();
+            if (count != 1) {
+                buffer.append("  count: ").append(count).append("\n");
+            }
         }
 
         // values
-        InternalValue[] values = new InternalValue[count];
-        String[] blobIds = new String[count];
         for (int i = 0; i < count; i++) {
-            InternalValue val;
-            switch (entry.getType()) {
-                case PropertyType.BINARY:
+            switch (type) {
+                case BINARY:
                     int size = in.readInt();
-                    if (size == BundleBinding.BINARY_IN_DATA_STORE) {
-                        val = InternalValue.create(binding.dataStore, readString());
-                    } else if (size == BundleBinding.BINARY_IN_BLOB_STORE) {
-                        blobIds[i] = readString();
-                        try {
-                            BLOBStore blobStore = binding.getBlobStore();
-                            if (blobStore instanceof ResourceBasedBLOBStore) {
-                                val = InternalValue.create(((ResourceBasedBLOBStore) blobStore).getResource(blobIds[i]));
-                            } else {
-                                val = InternalValue.create(blobStore.get(blobIds[i]));
-                            }
-                        } catch (IOException e) {
-                            if (binding.errorHandling.ignoreMissingBlobs()) {
-                                log.warn("Ignoring error while reading blob-resource: " + e);
-                                val = InternalValue.create(new byte[0]);
-                            } else {
-                                throw e;
-                            }
-                        } catch (Exception e) {
-                            throw new IOException("Unable to create property value: " + e.toString());
-                        }
+                    if (size == BINARY_IN_DATA_STORE) {
+                        buffer.append("  value: binary in datastore: ").append(readString()).append("\n");
+                    } else if (size == BINARY_IN_BLOB_STORE) {
+                        buffer.append("  value: binary in blobstore: ").append(readString()).append("\n");
                     } else {
                         // short values into memory
                         byte[] data = new byte[size];
                         in.readFully(data);
-                        val = InternalValue.create(data);
+                        buffer.append("  value: binary: ").append(convertBytesToHex(data)).append("\n");
                     }
                     break;
-                case PropertyType.DOUBLE:
-                    val = InternalValue.create(in.readDouble());
+                case DOUBLE:
+                    buffer.append("  value: double: ").append(in.readDouble()).append("\n");
                     break;
-                case PropertyType.DECIMAL:
-                    val = InternalValue.create(readDecimal());
+                case DECIMAL:
+                    buffer.append("  value: double: ").append(readDecimal()).append("\n");
                     break;
-                case PropertyType.LONG:
-                    if (version >= BundleBinding.VERSION_3) {
-                        val = InternalValue.create(readVarLong());
+                case LONG:
+                    if (version >= VERSION_3) {
+                        buffer.append("  value: varLong: ").append(readVarLong()).append("\n");
                     } else {
-                        val = InternalValue.create(in.readLong());
+                        buffer.append("  value: long: ").append(in.readLong()).append("\n");
                     }
                     break;
-                case PropertyType.BOOLEAN:
-                    val = InternalValue.create(in.readBoolean());
+                case BOOLEAN:
+                    buffer.append("  value: boolean: ").append(in.readBoolean()).append("\n");
                     break;
-                case PropertyType.NAME:
-                    val = InternalValue.create(readQName());
+                case NAME:
+                    buffer.append("  value: name: ").append(readQName()).append("\n");
                     break;
-                case PropertyType.WEAKREFERENCE:
-                    val = InternalValue.create(readNodeId(), true);
+                case WEAKREFERENCE:
+                    buffer.append("  value: weakreference: ").append(readNodeId()).append("\n");
                     break;
-                case PropertyType.REFERENCE:
-                    val = InternalValue.create(readNodeId(), false);
+                case REFERENCE:
+                    buffer.append("  value: reference: ").append(readNodeId()).append("\n");
                     break;
-                case PropertyType.DATE:
-                    if (version >= BundleBinding.VERSION_3) {
-                        val = InternalValue.create(readDate());
+                case DATE:
+                    if (version >= VERSION_3) {
+                        buffer.append("  value: date: ").append(readDate()).append("\n");
                         break;
                     } // else fall through
                 default:
-                    if (version >= BundleBinding.VERSION_3) {
-                        val = InternalValue.valueOf(
-                                readString(), entry.getType());
+                    if (version >= VERSION_3) {
+                        buffer.append("  value: string: ").append(readString()).append("\n");
                     } else {
                         // because writeUTF(String) has a size limit of 64k,
                         // Strings are serialized as <length><byte[]>
                         int len = in.readInt();
                         byte[] bytes = new byte[len];
                         in.readFully(bytes);
-                        val = InternalValue.valueOf(
-                                new String(bytes, "UTF-8"), entry.getType());
+                        buffer.append("  value: string: ").append(new String(bytes, "UTF-8")).append("\n");
                     }
             }
-            values[i] = val;
         }
-        entry.setValues(values);
-        entry.setBlobIds(blobIds);
-
-        return entry;
     }
 
     /**
@@ -427,11 +384,11 @@ class BundleReader {
      * @return the node id
      * @throws IOException in an I/O error occurs.
      */
-    private NodeId readNodeId() throws IOException {
-        if (version >= BundleBinding.VERSION_3 || in.readBoolean()) {
+    private UUID readNodeId() throws IOException {
+        if (version >= VERSION_3 || in.readBoolean()) {
             long msb = in.readLong();
             long lsb = in.readLong();
-            return new NodeId(msb, lsb);
+            return new UUID(msb, lsb);
         } else {
             return null;
         }
@@ -458,14 +415,14 @@ class BundleReader {
      * @return the qname
      * @throws IOException in an I/O error occurs.
      */
-    private Name readQName() throws IOException {
-        if (version >= BundleBinding.VERSION_3) {
+    private String readQName() throws IOException {
+        if (version >= VERSION_3) {
             return readName();
         }
 
-        String uri = binding.nsIndex.indexToString(in.readInt());
+        String uri = "#" + in.readInt();
         String local = in.readUTF();
-        return NameFactoryImpl.getInstance().create(uri, local);
+        return uri + ":" + local;
     }
 
     /**
@@ -474,8 +431,8 @@ class BundleReader {
      * @return the qname
      * @throws IOException in an I/O error occurs.
      */
-    private Name readIndexedQName() throws IOException {
-        if (version >= BundleBinding.VERSION_3) {
+    private String readIndexedQName() throws IOException {
+        if (version >= VERSION_3) {
             return readName();
         }
 
@@ -483,9 +440,9 @@ class BundleReader {
         if (index < 0) {
             return null;
         } else {
-            String uri = binding.nsIndex.indexToString(index);
-            String local = binding.nameIndex.indexToString(in.readInt());
-            return NameFactoryImpl.getInstance().create(uri, local);
+            String uri = "#" + index;
+            String local = "#" + in.readInt();
+            return uri + ":" + local;
         }
     }
 
@@ -495,10 +452,10 @@ class BundleReader {
      * @return deserialized name
      * @throws IOException if an I/O error occurs
      */
-    private Name readName() throws IOException {
+    private String readName() throws IOException {
         int b = in.readUnsignedByte();
         if ((b & 0x80) == 0) {
-            return BundleNames.indexToName(b);
+            return "indexToName #" + b;
         } else {
             String uri;
             int ns = (b >> 4) & 0x07;
@@ -510,10 +467,8 @@ class BundleReader {
                     namespaces[ns] = uri;
                 }
             }
-
             String local = new String(readBytes((b & 0x0f) + 1, 0x10), "UTF-8");
-
-            return NameFactoryImpl.getInstance().create(uri, local);
+            return uri + ":" + local;
         }
     }
 
@@ -651,7 +606,7 @@ class BundleReader {
     }
 
     private String readString() throws IOException {
-        if (version >= BundleBinding.VERSION_3) {
+        if (version >= VERSION_3) {
             return new String(readBytes(0, 0), "UTF-8");
         } else {
             return in.readUTF();
@@ -662,6 +617,18 @@ class BundleReader {
         byte[] bytes = new byte[readVarInt(len, base)];
         in.readFully(bytes);
         return bytes;
+    }
+
+    public static String convertBytesToHex(byte[] value) {
+        int len = value.length;
+        char[] buff = new char[len + len];
+        char[] hex = HEX;
+        for (int i = 0; i < len; i++) {
+            int c = value[i] & 0xff;
+            buff[i + i] = hex[c >> 4];
+            buff[i + i + 1] = hex[c & 0xf];
+        }
+        return new String(buff);
     }
 
 }

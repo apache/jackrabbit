@@ -55,9 +55,7 @@ public abstract class AbstractPerformanceTest {
         testPattern = Pattern.compile(System.getProperty("only", ".*"));
 
         // Create a repository using the Jackrabbit default configuration
-        if (repoPattern.matcher(name).matches()) {
-            testPerformance(name, getDefaultConfig());
-        }
+        testPerformance(name, getDefaultConfig());
 
         // Create repositories for any special configurations included
         File directory = new File(new File("src", "test"), "resources");
@@ -69,17 +67,14 @@ public abstract class AbstractPerformanceTest {
                 if (file.isFile() && xml.endsWith(".xml")) {
                     String repositoryName =
                         name + "-" + xml.substring(0, xml.length() - 4);
-                    if (repoPattern.matcher(repositoryName).matches()) {
-                        testPerformance(
-                                repositoryName,
-                                FileUtils.openInputStream(file));
-                    }
+                    testPerformance(
+                            repositoryName, FileUtils.openInputStream(file));
                 }
             }
         }
     }
 
-    private void testPerformance(String name, InputStream xml)
+    protected void testPerformance(String name, InputStream xml)
             throws Exception {
         ByteArrayOutputStream buffer = new ByteArrayOutputStream();
         try {
@@ -121,7 +116,8 @@ public abstract class AbstractPerformanceTest {
     }
 
     private void runTest(AbstractTest test, String name, byte[] conf) {
-        if (testPattern.matcher(test.toString()).matches()) {
+        if (repoPattern.matcher(name).matches()
+                &&  testPattern.matcher(test.toString()).matches()) {
             // Create the repository directory
             File dir = new File(
                     new File("target", "repository"),

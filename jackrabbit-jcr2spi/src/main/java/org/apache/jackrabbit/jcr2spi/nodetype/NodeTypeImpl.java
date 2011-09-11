@@ -114,7 +114,7 @@ public class NodeTypeImpl extends AbstractNodeType implements NodeTypeDefinition
      * type conversions are attempted if the type of the given values does not
      * match the required type as specified in the given definition.
      *
-     * @param def    The definiton of the property
+     * @param def    The definition of the property
      * @param values An array of <code>QValue</code> objects.
      * @throws ConstraintViolationException If a constraint is violated.
      * @throws RepositoryException If another error occurs.

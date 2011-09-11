@@ -830,7 +830,7 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
 
         /**
          * Creates a new <code>MergingPathQueryNode</code> with the operation
-         * tpye of a parent node. <code>operation</code> must be one of:
+         * type of a parent node. <code>operation</code> must be one of:
          * {@link org.apache.jackrabbit.spi.commons.query.QueryNode#TYPE_OR},
          * {@link org.apache.jackrabbit.spi.commons.query.QueryNode#TYPE_AND} or
          * {@link org.apache.jackrabbit.spi.commons.query.QueryNode#TYPE_NOT}.

@@ -146,7 +146,7 @@ public class PathParser {
     /**
      * Parses the given <code>jcrPath</code> and returns a <code>Path</code>. If
      * <code>parent</code> is not <code>null</code>, it is prepended to the
-     * built path before it is returned. If the specifed <code>jcrPath</code>
+     * built path before it is returned. If the specified <code>jcrPath</code>
      * is an identifier based absolute path beginning with an identifier segment
      * the given <code>identifierResolver</code> will be used to resolve it to an
      * absolute path.<p/>

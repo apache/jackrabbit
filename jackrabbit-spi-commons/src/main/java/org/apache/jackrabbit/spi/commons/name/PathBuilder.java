@@ -96,7 +96,7 @@ public final class PathBuilder {
     }
 
     /**
-     * Adds the given elemenets
+     * Adds the given elements
      *
      * @param elements
      */

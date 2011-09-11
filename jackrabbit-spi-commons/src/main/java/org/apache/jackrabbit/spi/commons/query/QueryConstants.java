@@ -169,7 +169,7 @@ public interface QueryConstants {
 
     /**
      * greater than operation: >
-     * general comparision
+     * general comparison
      */
     int OPERATION_GT_GENERAL = OPERATION_GT_VALUE + 1;
 

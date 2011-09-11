@@ -97,15 +97,15 @@ public class ItemDefinitionProviderImpl implements ItemDefinitionProvider {
 
     public QPropertyDefinition getQPropertyDefinition(Name[] parentNodeTypeNames,
                                                       Name propertyName,
-                                                      int propertType,
+                                                      int propertyType,
                                                       boolean isMultiValued,
                                                       PropertyId propertyId) throws RepositoryException {
         QPropertyDefinition definition;
         try {
             EffectiveNodeType ent = entProvider.getEffectiveNodeType(parentNodeTypeNames);
-            definition = getQPropertyDefinition(ent, propertyName, propertType, isMultiValued, true);
+            definition = getQPropertyDefinition(ent, propertyName, propertyType, isMultiValued, true);
         } catch (RepositoryException e) {
-            log.debug("Cannot determine property defintion of {}: {}", propertyId, e);
+            log.debug("Cannot determine property definition of {}: {}", propertyId, e);
             definition = getPropertyDefinition(service, sessionInfo, propertyId);
         }
         return definition;

@@ -40,7 +40,7 @@ import java.util.Set;
  * <p/>
  * The result of the comparison can be categorized as one of the following types:
  * <p/>
- * <b><code>NONE</code></b> inidcates that there is no modification at all.
+ * <b><code>NONE</code></b> indicates that there is no modification at all.
  * <p/>
  * A <b><code>TRIVIAL</code></b> modification has no impact on the consistency
  * of existing content. The following modifications are considered
@@ -357,9 +357,9 @@ public class NodeTypeDefDiff {
         return result;
     }
 
-    private String modificationTypeToString(int modifcationType) {
+    private String modificationTypeToString(int modificationType) {
         String typeString = "unknown";
-        switch (modifcationType) {
+        switch (modificationType) {
             case NONE:
                 typeString = "NONE";
                 break;

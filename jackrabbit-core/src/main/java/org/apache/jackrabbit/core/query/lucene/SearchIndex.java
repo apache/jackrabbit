@@ -532,6 +532,9 @@ public class SearchIndex extends AbstractQueryHandler {
         indexingConfig = createIndexingConfiguration(nsMappings);
         analyzer.setIndexingConfig(indexingConfig);
 
+        // initialize the Tika parser
+        parser = createParser();
+
         index = new MultiIndex(this, excludedIDs);
         if (index.numDocs() == 0) {
             Path rootPath;
@@ -928,50 +931,51 @@ public class SearchIndex extends AbstractQueryHandler {
      *
      * @return the configured parser
      */
-    public synchronized Parser getParser() {
-        if (parser == null) {
-            URL url = null;
-            if (tikaConfigPath != null) {
-                File file = new File(tikaConfigPath);
-                if (file.exists()) {
-                    try {
-                        url = file.toURI().toURL();
-                    } catch (MalformedURLException e) {
-                        log.warn("Invalid Tika configuration path: " + file, e);
-                    }
-                } else {
-                    ClassLoader loader = SearchIndex.class.getClassLoader();
-                    url = loader.getResource(tikaConfigPath);
-                }
-            }
-            if (url == null) {
-                url = SearchIndex.class.getResource("tika-config.xml");
-            }
+    public Parser getParser() {
+        return parser;
+    }
 
-            TikaConfig config = null;
-            if (url != null) {
+    private Parser createParser() {
+        URL url = null;
+        if (tikaConfigPath != null) {
+            File file = new File(tikaConfigPath);
+            if (file.exists()) {
                 try {
-                    config = new TikaConfig(url);
-                } catch (Exception e) {
-                    log.warn("Tika configuration not available: " + url, e);
+                    url = file.toURI().toURL();
+                } catch (MalformedURLException e) {
+                    log.warn("Invalid Tika configuration path: " + file, e);
                 }
-            }
-            if (config == null) {
-                config = TikaConfig.getDefaultConfig();
-            }
-
-            if (forkJavaCommand == null) {
-                parser = new AutoDetectParser(config);
             } else {
-                ForkParser forkParser = new ForkParser(
-                        SearchIndex.class.getClassLoader(),
-                        new AutoDetectParser(config));
-                forkParser.setJavaCommand(forkJavaCommand);
-                forkParser.setPoolSize(extractorPoolSize);
-                parser = forkParser;
+                ClassLoader loader = SearchIndex.class.getClassLoader();
+                url = loader.getResource(tikaConfigPath);
             }
         }
-        return parser;
+        if (url == null) {
+            url = SearchIndex.class.getResource("tika-config.xml");
+        }
+
+        TikaConfig config = null;
+        if (url != null) {
+            try {
+                config = new TikaConfig(url);
+            } catch (Exception e) {
+                log.warn("Tika configuration not available: " + url, e);
+            }
+        }
+        if (config == null) {
+            config = TikaConfig.getDefaultConfig();
+        }
+
+        if (forkJavaCommand != null) {
+            ForkParser forkParser = new ForkParser(
+                    SearchIndex.class.getClassLoader(),
+                    new AutoDetectParser(config));
+            forkParser.setJavaCommand(forkJavaCommand);
+            forkParser.setPoolSize(extractorPoolSize);
+            return forkParser;
+        } else {
+            return new AutoDetectParser(config);
+        }
     }
 
     /**
@@ -1179,7 +1183,7 @@ public class SearchIndex extends AbstractQueryHandler {
             throws RepositoryException {
         NodeIndexer indexer = new NodeIndexer(
                 node, getContext().getItemStateManager(), nsMappings,
-                getContext().getExecutor(), getParser());
+                getContext().getExecutor(), parser);
         indexer.setSupportHighlighting(supportHighlighting);
         indexer.setIndexingConfiguration(indexingConfig);
         indexer.setIndexFormatVersion(indexFormatVersion);

@@ -31,6 +31,8 @@ public class BigFileWriteTest extends AbstractTest {
     private Node file;
 
     public void beforeSuite() throws RepositoryException {
+        failOnRepositoryVersions("1.4", "1.5", "1.6");
+
         session = loginWriter();
     }
 

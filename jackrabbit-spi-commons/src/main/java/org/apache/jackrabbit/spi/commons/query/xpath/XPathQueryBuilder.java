@@ -635,7 +635,7 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
     }
 
     /**
-     * Assigns a Name to one of the follwing QueryNodes:
+     * Assigns a Name to one of the following QueryNodes:
      * {@link RelationQueryNode}, {@link DerefQueryNode}, {@link RelationQueryNode},
      * {@link PathQueryNode}, {@link OrderQueryNode}, {@link TextsearchQueryNode}.
      *
@@ -761,7 +761,7 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
      * Creates the primary path query node.
      *
      * @param node xpath node representing the root of the parsed tree.
-     * @return the path qurey node
+     * @return the path query node
      */
     private PathQueryNode createPathQueryNode(SimpleNode node) {
         root.setLocationNode(factory.createPathQueryNode(root));
@@ -918,7 +918,7 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
                     RelationQueryNode rel = (RelationQueryNode) queryNode;
                     if (rel.getOperation() == RelationQueryNode.OPERATION_EQ_GENERAL) {
                         // set dummy value to set type of relation query node
-                        // will be overwritten when the tree is furhter parsed.
+                        // will be overwritten when the tree is further parsed.
                         rel.setPositionValue(1);
                         rel.addPathElement(PATH_FACTORY.createElement(FN_POSITION_FULL));
                     } else {

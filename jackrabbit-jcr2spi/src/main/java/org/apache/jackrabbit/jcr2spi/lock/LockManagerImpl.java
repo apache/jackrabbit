@@ -138,7 +138,7 @@ public class LockManagerImpl implements LockStateManager, SessionListener {
 
     /**
      * If the session created a lock on the node with the given state, we already
-     * know the lock. Otherwise, the node state and its ancestores are searched
+     * know the lock. Otherwise, the node state and its ancestors are searched
      * for properties indicating a lock.<br>
      * Note, that the flag indicating session-scoped lock cannot be retrieved
      * unless the current session is the lock holder.
@@ -288,7 +288,7 @@ public class LockManagerImpl implements LockStateManager, SessionListener {
      * verification regarding nodetypes present.
      *
      * @param nodeState <code>NodeState</code> from which searching starts.
-     * Note, that the given state must not have an overlayed state.
+     * Note, that the given state must not have an overlaid state.
      * @return a state holding a lock or <code>null</code> if neither the
      * given state nor any of its ancestors is locked.
      */
@@ -657,7 +657,7 @@ public class LockManagerImpl implements LockStateManager, SessionListener {
         /**
          *
          * @param lockState
-         * Note, that the given state must not have an overlayed state.
+         * Note, that the given state must not have an overlaid state.
          * @param lockHoldingNode the lock holding <code>Node</code> itself.
          */
         public LockImpl(LockState lockState, Node lockHoldingNode) {
