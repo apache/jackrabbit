@@ -199,11 +199,11 @@ public class TransactionContext extends Timer.Task {
      */
     public synchronized void commit(boolean onePhase) throws XAException {
         if (status == STATUS_ROLLED_BACK) {
-        	if (onePhase && timedOut) {
-        		throw new XAException(XAException.XA_RBTIMEOUT);
-        	} else {
-        		throw new XAException(XAException.XA_HEURRB);
-        	}
+            if (onePhase && timedOut) {
+                throw new XAException(XAException.XA_RBTIMEOUT);
+            } else {
+                throw new XAException(XAException.XA_HEURRB);
+            }
         }
         boolean heuristicCommit = false;
         bindCurrentXid();
@@ -232,20 +232,20 @@ public class TransactionContext extends Timer.Task {
         status = STATUS_COMMITTED;
 
         if (onePhase) {
-        	// cancel the rollback task only in onePhase Transactions
-        	cancel();
+            // cancel the rollback task only in onePhase Transactions
+            cancel();
         }
         cleanCurrentXid();
 
         if (txe != null) {
-        	XAException e = null;
-        	if (heuristicCommit) {
-        		e = new XAException(XAException.XA_HEURMIX);
-        	} else {
-        		e = new XAException(XAException.XA_HEURRB);
-        	}
-    		e.initCause(txe);
-    		throw e;
+            XAException e = null;
+            if (heuristicCommit) {
+                e = new XAException(XAException.XA_HEURMIX);
+            } else {
+                e = new XAException(XAException.XA_HEURRB);
+            }
+            e.initCause(txe);
+            throw e;
         }
     }
 
