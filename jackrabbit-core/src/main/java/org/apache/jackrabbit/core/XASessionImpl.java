@@ -251,9 +251,7 @@ public class XASessionImpl extends SessionImpl
      * @return transaction context
      */
     private TransactionContext createTransaction(Xid xid) {
-        TransactionContext tx = new TransactionContext(
-                xid, txResources,
-                getTransactionTimeout(), repositoryContext.getTimer());
+        TransactionContext tx = new TransactionContext(xid, txResources);
         txGlobal.put(xid, tx);
         return tx;
     }
@@ -309,7 +307,7 @@ public class XASessionImpl extends SessionImpl
         if (tx == null) {
             throw new XAException(XAException.XAER_NOTA);
         }
-        tx.prepare(false);
+        tx.prepare();
         return XA_OK;
     }
 
@@ -322,9 +320,9 @@ public class XASessionImpl extends SessionImpl
             throw new XAException(XAException.XAER_NOTA);
         }
         if (onePhase) {
-            tx.prepare(onePhase);
+            tx.prepare();
         }
-        tx.commit(onePhase);
+        tx.commit();
 
         txGlobal.remove(xid);
     }

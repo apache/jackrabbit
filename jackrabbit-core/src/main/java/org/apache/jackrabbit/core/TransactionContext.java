@@ -16,16 +16,15 @@
  */
 package org.apache.jackrabbit.core;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.apache.jackrabbit.util.Timer;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.transaction.xa.XAException;
 import javax.transaction.xa.Xid;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Represents the transaction on behalf of the component that wants to
@@ -35,7 +34,7 @@ import java.util.Map;
  * of the resources' {@link InternalXAResource#prepare} method, are eventually
  * unlocked.
  */
-public class TransactionContext extends Timer.Task {
+public class TransactionContext {
 
     /**
      * Logger instance.
@@ -55,24 +54,9 @@ public class TransactionContext extends Timer.Task {
     private static final ThreadLocal<Xid> CURRENT_XID = new ThreadLocal<Xid>();
 
     /**
-     * Timer for all transaction contexts.
-     */
-    private final Timer timer;
-
-    /**
      * Transactional resources.
      */
     private final InternalXAResource[] resources;
-
-    /**
-     * Timeout, in seconds.
-     */
-    private final int timeout;
-
-    /**
-     * Indicates if this {@link TransactionContext} has timed out internally
-     */
-    private boolean timedOut = false;
 
     /**
     * The Xid
@@ -96,17 +80,13 @@ public class TransactionContext extends Timer.Task {
 
     /**
      * Create a new instance of this class.
+     *
      * @param xid associated xid
      * @param resources transactional resources
-     * @param timeout timeout, in seconds
      */
-    public TransactionContext(
-            Xid xid, InternalXAResource[] resources,
-            int timeout, Timer timer) {
+    public TransactionContext(Xid xid, InternalXAResource[] resources) {
         this.xid = xid;
         this.resources = resources;
-        this.timeout = timeout;
-        this.timer = timer;
     }
 
     /**
@@ -149,11 +129,10 @@ public class TransactionContext extends Timer.Task {
      * all resources. If some resource reports an error on prepare,
      * automatically rollback changes on all other resources. Throw exception
      * at the end if errors were found.
-     * @param onePhaseOptimized if true this prepare comes from a onePhase optimized Transaction.
-     * 			Internal Timeout-Task will be started.
+     *
      * @throws XAException if an error occurs
      */
-    public synchronized void prepare(boolean onePhaseOptimized) throws XAException {
+    public synchronized void prepare() throws XAException {
         bindCurrentXid();
         status = STATUS_PREPARING;
         beforeOperation();
@@ -182,11 +161,6 @@ public class TransactionContext extends Timer.Task {
             e.initCause(txe);
             throw e;
         }
-
-        if (onePhaseOptimized) {
-            // start rollback task in case the commit is never issued
-            timer.schedule(this, timeout * 1000, Integer.MAX_VALUE);
-        }
     }
 
     /**
@@ -194,17 +168,14 @@ public class TransactionContext extends Timer.Task {
      * all resources. If some resource reports an error on commit,
      * automatically rollback changes on all other resources. Throw
      * exception at the end if some commit failed.
-     * @param true if the commit comes from a onePhase optimized Transaction.
+     *
      * @throws XAException if an error occurs
      */
-    public synchronized void commit(boolean onePhase) throws XAException {
+    public synchronized void commit() throws XAException {
         if (status == STATUS_ROLLED_BACK) {
-        	if (onePhase && timedOut) {
-        		throw new XAException(XAException.XA_RBTIMEOUT);
-        	} else {
-        		throw new XAException(XAException.XA_HEURRB);
-        	}
+            throw new XAException(XAException.XA_HEURRB);
         }
+
         boolean heuristicCommit = false;
         bindCurrentXid();
         status = STATUS_COMMITTING;
@@ -231,21 +202,17 @@ public class TransactionContext extends Timer.Task {
         afterOperation();
         status = STATUS_COMMITTED;
 
-        if (onePhase) {
-        	// cancel the rollback task only in onePhase Transactions
-        	cancel();
-        }
         cleanCurrentXid();
 
         if (txe != null) {
-        	XAException e = null;
-        	if (heuristicCommit) {
-        		e = new XAException(XAException.XA_HEURMIX);
-        	} else {
-        		e = new XAException(XAException.XA_HEURRB);
-        	}
-    		e.initCause(txe);
-    		throw e;
+            XAException e = null;
+            if (heuristicCommit) {
+                e = new XAException(XAException.XA_HEURMIX);
+            } else {
+                e = new XAException(XAException.XA_HEURRB);
+            }
+            e.initCause(txe);
+            throw e;
         }
     }
 
@@ -275,32 +242,10 @@ public class TransactionContext extends Timer.Task {
         afterOperation();
         status = STATUS_ROLLED_BACK;
 
-        // cancel the rollback task
-        cancel();
         cleanCurrentXid();
 
         if (errors != 0) {
             throw new XAException(XAException.XA_RBOTHER);
-        }
-    }
-
-    /**
-     * Rolls back the transaction if still prepared and marks the transaction
-     * rolled back.
-     */
-    public void run() {
-        synchronized (this) {
-            if (status == STATUS_PREPARED) {
-                try {
-                    rollback();
-                } catch (XAException e) {
-                    /* ignore */
-                }
-                timedOut = true;
-                log.warn("Transaction rolled back because timeout expired.");
-            }
-            // cancel the rollback task
-            cancel();
         }
     }
 
