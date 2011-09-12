@@ -32,11 +32,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.jcr.AccessDeniedException;
 import javax.jcr.Credentials;
@@ -243,11 +239,6 @@ public class RepositoryImpl extends AbstractRepository
     private WorkspaceEventChannel createWorkspaceEventChannel;
 
     /**
-     * Scheduled executor service.
-     */
-    protected final ScheduledExecutorService executor;
-
-    /**
      * Protected constructor.
      *
      * @param repConfig the repository configuration.
@@ -256,32 +247,6 @@ public class RepositoryImpl extends AbstractRepository
      *                             or another error occurs.
      */
     protected RepositoryImpl(RepositoryConfig repConfig) throws RepositoryException {
-        // we should use the jackrabbit classloader for all background threads
-        // from the pool
-        final ClassLoader poolClassLoader = this.getClass().getClassLoader();
-        ScheduledThreadPoolExecutor executor = new ScheduledThreadPoolExecutor(
-                Runtime.getRuntime().availableProcessors() * 2,
-                new ThreadFactory() {
-
-                    final AtomicInteger threadNumber = new AtomicInteger(1);
-
-                    /**
-                     * @see java.util.concurrent.ThreadFactory#newThread(java.lang.Runnable)
-                     */
-                    public Thread newThread(Runnable r) {
-                        final Thread t = new Thread(null, r,
-                                              "jackrabbit-pool-" + threadNumber.getAndIncrement(),
-                                              0);
-                        t.setDaemon(true);
-                        if (t.getPriority() != Thread.NORM_PRIORITY)
-                            t.setPriority(Thread.NORM_PRIORITY);
-                        t.setContextClassLoader(poolClassLoader);
-                        return t;
-                    }
-                },
-                new ThreadPoolExecutor.CallerRunsPolicy());
-        this.executor = executor;
-
         // Acquire a lock on the repository home
         repLock = repConfig.getRepositoryLockMechanism();
         repLock.init(repConfig.getHomeDir());
@@ -657,8 +622,7 @@ public class RepositoryImpl extends AbstractRepository
                         repConfig,
                         getWorkspaceInfo(wspName).itemStateMgr,
                         context.getInternalVersionManager().getPersistenceManager(),
-                        SYSTEM_ROOT_NODE_ID,
-                        null, null, executor);
+                        SYSTEM_ROOT_NODE_ID, null, null);
 
                 SystemSession defSysSession = getSystemSession(wspName);
                 ObservationManager obsMgr = defSysSession.getWorkspace().getObservationManager();
@@ -1182,6 +1146,7 @@ public class RepositoryImpl extends AbstractRepository
         notifyAll();
 
         // Shut down the executor service
+        ScheduledExecutorService executor = context.getExecutor();
         executor.shutdown();
         try {
             // Wait for all remaining background threads to terminate
@@ -1203,8 +1168,6 @@ public class RepositoryImpl extends AbstractRepository
                 log.error("failed to release the repository lock", e);
             }
         }
-
-        context.getTimer().cancel();
 
         statManager.stop();
 
@@ -1914,7 +1877,7 @@ public class RepositoryImpl extends AbstractRepository
                             itemStateMgr, persistMgr,
                             context.getRootNodeId(),
                             getSystemSearchManager(getName()),
-                            SYSTEM_ROOT_NODE_ID, executor);
+                            SYSTEM_ROOT_NODE_ID);
                 }
                 return searchMgr;
             }
@@ -1954,7 +1917,8 @@ public class RepositoryImpl extends AbstractRepository
          * @return the lock manager
          */
         protected LockManagerImpl createLockManager() throws RepositoryException {
-            return new LockManagerImpl(getSystemSession(), fs, executor);
+            return new LockManagerImpl(
+                    getSystemSession(), fs, context.getExecutor());
         }
 
         /**

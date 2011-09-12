@@ -29,6 +29,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 import javax.jcr.RepositoryException;
 
@@ -44,7 +47,6 @@ import org.apache.jackrabbit.spi.PathFactory;
 import org.apache.jackrabbit.spi.commons.conversion.DefaultNamePathResolver;
 import org.apache.jackrabbit.spi.commons.conversion.PathResolver;
 import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
-import org.apache.jackrabbit.util.Timer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.Term;
@@ -175,7 +177,7 @@ public class MultiIndex {
     /**
      * The time this index was last flushed or a transaction was committed.
      */
-    private long lastFlushTime;
+    private long lastFlushTime = 0;
 
     /**
      * The <code>IndexMerger</code> for this <code>MultiIndex</code>.
@@ -186,7 +188,7 @@ public class MultiIndex {
      * Task that is periodically called by the repository timer for checking
      * if index should be flushed.
      */
-    private final Timer.Task flushTask;
+    private ScheduledFuture<?> flushTask = null;
 
     /**
      * The RedoLog of this <code>MultiIndex</code>.
@@ -328,15 +330,6 @@ public class MultiIndex {
             }
             flush();
         }
-
-        flushTask = new Timer.Task() {
-            public void run() {
-                // check if there are any indexing jobs finished
-                checkIndexingQueue(false);
-                // check if volatile index should be flushed
-                checkFlush();
-            }
-        };
 
         if (indexNames.size() > 0) {
             scheduleFlushTask();
@@ -798,7 +791,7 @@ public class MultiIndex {
 
         synchronized (this) {
             // stop timer
-            flushTask.cancel();
+            unscheduleFlushTask();
 
             // commit / close indexes
             try {
@@ -1074,9 +1067,29 @@ public class MultiIndex {
         indexHistory.pruneOutdated();
     }
 
+    /**
+     * Schedules a background task for flushing the index once per second.
+     */
     private void scheduleFlushTask() {
-        lastFlushTime = System.currentTimeMillis();
-        handler.getContext().getTimer().schedule(flushTask, 0, 1000);
+        ScheduledExecutorService executor = handler.getContext().getExecutor();
+        flushTask = executor.scheduleWithFixedDelay(new Runnable() {
+            public void run() {
+                // check if there are any indexing jobs finished
+                checkIndexingQueue(false);
+                // check if volatile index should be flushed
+                checkFlush();
+            }
+        }, 1, 1, TimeUnit.SECONDS);
+    }
+
+    /**
+     * Cancels the scheduled background index flush task.
+     */
+    private void unscheduleFlushTask() {
+        if (flushTask != null) {
+            flushTask.cancel(false);
+            flushTask = null;
+        }
     }
 
     /**

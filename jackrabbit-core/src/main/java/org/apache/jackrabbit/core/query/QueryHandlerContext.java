@@ -16,7 +16,7 @@
  */
 package org.apache.jackrabbit.core.query;
 
-import java.util.concurrent.Executor;
+import java.util.concurrent.ScheduledExecutorService;
 
 import org.apache.jackrabbit.core.CachingHierarchyManager;
 import org.apache.jackrabbit.core.HierarchyManager;
@@ -27,7 +27,6 @@ import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.persistence.PersistenceManager;
 import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.apache.jackrabbit.core.state.SharedItemStateManager;
-import org.apache.jackrabbit.util.Timer;
 
 /**
  * Acts as an argument for the {@link QueryHandler} to keep the interface
@@ -77,11 +76,6 @@ public class QueryHandlerContext {
     private final NodeId excludedNodeId;
 
     /**
-     * Background task executor.
-     */
-    private final Executor executor;
-
-    /**
      * Creates a new context instance.
      *
      * @param stateMgr         provides persistent item states.
@@ -92,7 +86,6 @@ public class QueryHandlerContext {
      * @param excludedNodeId   id of the node that should be excluded from
      *                         indexing. Any descendant of that node is also
      *                         excluded from indexing.
-     * @param executor         background task executor
      */
     public QueryHandlerContext(
             RepositoryContext repositoryContext,
@@ -100,8 +93,7 @@ public class QueryHandlerContext {
             PersistenceManager pm,
             NodeId rootId,
             QueryHandler parentHandler,
-            NodeId excludedNodeId,
-            Executor executor) {
+            NodeId excludedNodeId) {
         this.repositoryContext = repositoryContext;
         this.stateMgr = stateMgr;
         this.hmgr = new CachingHierarchyManager(rootId, stateMgr);
@@ -112,7 +104,6 @@ public class QueryHandlerContext {
         propRegistry = new PropertyTypeRegistry(ntRegistry);
         this.parentHandler = parentHandler;
         this.excludedNodeId = excludedNodeId;
-        this.executor =  executor;
         ntRegistry.addListener(propRegistry);
     }
 
@@ -206,17 +197,8 @@ public class QueryHandlerContext {
      *
      * @return background task executor
      */
-    public Executor getExecutor() {
-        return executor;
-    }
-
-    /**
-     * Returns the repository timer.
-     *
-     * @return repository timer
-     */
-    public Timer getTimer() {
-        return repositoryContext.getTimer();
+    public ScheduledExecutorService getExecutor() {
+        return repositoryContext.getExecutor();
     }
 
 }
