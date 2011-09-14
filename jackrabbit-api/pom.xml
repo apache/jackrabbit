@@ -60,14 +60,12 @@
               <goal>check</goal>
             </goals>
             <configuration>
-<!-- INSTRUCTIONS:
-     * When the clirr check fails, check the flagged API change for
-       backwards compatibility. If it's OK, add the class to the
-       exclude list below, and update the relevant package version
-       number.
-     * After a new minor (or major) release is made, clear the
-       exclude list and update the comparisonArtifact settings to
-       refer to the newly released version.
+<!-- NOTE: Clirr considers adding new methods to an interface a
+     potential backwards-compatibility issue, as it will break
+     source compatibility with code that implements the interface.
+     In our case that's acceptable, so such cases can simply be
+     excluded in the list below. Just remember to clear the exclude
+     list when updating the baseline version to a new minor release.
 -->
               <excludes>
 <exclude>org/apache/jackrabbit/api/JackrabbitWorkspace</exclude>
@@ -79,7 +77,7 @@
                 <comparisonArtifact>
                   <groupId>${project.groupId}</groupId>
                   <artifactId>${project.artifactId}</artifactId>
-                  <version>2.2.0</version>
+                  <version>${clirr.baseline.version}</version>
                 </comparisonArtifact>
               </comparisonArtifacts>
             </configuration>
@@ -97,7 +95,6 @@
     <dependency>
       <groupId>biz.aQute</groupId>
       <artifactId>bndlib</artifactId>
-      <version>1.43.0</version>
       <scope>provided</scope>
     </dependency>
   </dependencies>

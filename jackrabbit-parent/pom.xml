@@ -47,6 +47,7 @@
     <logback.version>0.9.27</logback.version>
     <jetty.version>6.1.22</jetty.version>
     <tika.version>0.9</tika.version>
+    <clirr.baseline.version>2.2.0</clirr.baseline.version>
   </properties>
 
   <url>http://jackrabbit.apache.org/</url>
@@ -437,6 +438,11 @@
         <groupId>org.mortbay.jetty</groupId>
         <artifactId>jetty-util</artifactId>
         <version>${jetty.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>biz.aQute</groupId>
+        <artifactId>bndlib</artifactId>
+        <version>1.43.0</version>
       </dependency>
       <dependency>
         <groupId>cglib</groupId>
