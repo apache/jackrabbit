@@ -62,6 +62,11 @@
               <goal>check</goal>
             </goals>
             <configuration>
+              <excludes>
+<exclude>org/apache/jackrabbit/commons/query/qom/JoinType</exclude>
+<exclude>org/apache/jackrabbit/commons/query/qom/Operator</exclude>
+<exclude>org/apache/jackrabbit/commons/query/qom/Order</exclude>
+              </excludes>
               <comparisonArtifacts>
                 <comparisonArtifact>
                   <groupId>${project.groupId}</groupId>
