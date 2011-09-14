@@ -40,13 +40,6 @@
         <groupId>org.apache.felix</groupId>
         <artifactId>maven-bundle-plugin</artifactId>
         <extensions>true</extensions>
-        <configuration>
-          <instructions>
-            <Export-Package>
-              org.apache.jackrabbit.api.*;version=${project.version}
-            </Export-Package>
-          </instructions>
-        </configuration>
       </plugin>
       <plugin>
         <groupId>org.apache.rat</groupId>
@@ -57,6 +50,42 @@
           </excludes>
         </configuration>
       </plugin>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>clirr-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <phase>verify</phase>
+            <goals>
+              <goal>check</goal>
+            </goals>
+            <configuration>
+<!-- INSTRUCTIONS:
+     * When the clirr check fails, check the flagged API change for
+       backwards compatibility. If it's OK, add the class to the
+       exclude list below, and update the relevant package version
+       number.
+     * After a new minor (or major) release is made, clear the
+       exclude list and update the comparisonArtifact settings to
+       refer to the newly released version.
+-->
+              <excludes>
+<exclude>org/apache/jackrabbit/api/JackrabbitWorkspace</exclude>
+<exclude>org/apache/jackrabbit/api/security/user/Authorizable</exclude>
+<exclude>org/apache/jackrabbit/api/security/user/QueryBuilder</exclude>
+<exclude>org/apache/jackrabbit/api/security/user/QueryBuilder$Direction</exclude>
+              </excludes>
+              <comparisonArtifacts>
+                <comparisonArtifact>
+                  <groupId>${project.groupId}</groupId>
+                  <artifactId>${project.artifactId}</artifactId>
+                  <version>2.2.0</version>
+                </comparisonArtifact>
+              </comparisonArtifacts>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
     </plugins>
   </build>
 
@@ -64,6 +93,12 @@
     <dependency>
       <groupId>javax.jcr</groupId>
       <artifactId>jcr</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>biz.aQute</groupId>
+      <artifactId>bndlib</artifactId>
+      <version>1.43.0</version>
+      <scope>provided</scope>
     </dependency>
   </dependencies>
 
