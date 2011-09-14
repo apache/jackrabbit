@@ -31,6 +31,7 @@ import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.jackrabbit.api.security.user.Impersonation;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.PropertyImpl;
+import org.apache.jackrabbit.core.security.SystemPrincipal;
 import org.apache.jackrabbit.core.security.principal.PrincipalImpl;
 import org.apache.jackrabbit.core.security.principal.PrincipalIteratorAdapter;
 import org.apache.jackrabbit.value.StringValue;
@@ -138,24 +139,23 @@ class ImpersonationImpl implements Impersonation, UserConstants {
             principalNames.add(p.getName());
         }
 
-        boolean allows;
         Set<String> impersonators = getImpersonatorNames();
-        allows = impersonators.removeAll(principalNames);
-
-        if (!allows) {
-            // check if subject belongs to administrator user
+        if (impersonators.removeAll(principalNames)) {
+            return true;
+        } else {
+            // check if subject belongs to an administrator or the system
             for (Principal p : subject.getPrincipals()) {
-                if (p instanceof Group) {
-                    continue;
-                }
-                Authorizable a = userManager.getAuthorizable(p);
-                if (a != null && userManager.isAdminId(a.getID())) {
-                    allows = true;
-                    break;
+                if (p instanceof SystemPrincipal) { 
+                    return true;
+                } else if (!(p instanceof Group)) {
+                    Authorizable a = userManager.getAuthorizable(p);
+                    if (a != null && userManager.isAdminId(a.getID())) {
+                        return true;
+                    }
                 }
             }
         }
-        return allows;
+        return false;
     }
 
     //------------------------------------------------------------< private >---
