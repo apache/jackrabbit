@@ -16,8 +16,6 @@
  */
 package org.apache.jackrabbit.commons.flat;
 
-import java.util.Iterator;
-
 /**
  * <code>SizedIterator</code> extends {@link java.util.Iterator} with a
  * <code>getSize</code> method.
