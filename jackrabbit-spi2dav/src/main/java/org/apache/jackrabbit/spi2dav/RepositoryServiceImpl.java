@@ -64,6 +64,7 @@ import org.apache.commons.httpclient.HostConfiguration;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpConnectionManager;
 import org.apache.commons.httpclient.HttpMethod;
+import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.httpclient.MultiThreadedHttpConnectionManager;
 import org.apache.commons.httpclient.URI;
 import org.apache.commons.httpclient.URIException;
@@ -239,7 +240,9 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
 
     private final Map<Name, QNodeTypeDefinition> nodeTypeDefinitions = new HashMap<Name, QNodeTypeDefinition>();
 
-    private Map<String, QValue[]> descriptors;
+    /** Repository descriptors. */
+    private final Map<String, QValue[]> descriptors =
+            new HashMap<String, QValue[]>();
 
     /**
      * Same as {@link #RepositoryServiceImpl(String, IdFactory, NameFactory, PathFactory, QValueFactory, int, int)}
@@ -611,16 +614,25 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
      * @see RepositoryService#getRepositoryDescriptors()
      */
     public Map<String, QValue[]> getRepositoryDescriptors() throws RepositoryException {
-        if (descriptors == null) {
+        if (descriptors.isEmpty()) {
             ReportInfo info = new ReportInfo(JcrRemotingConstants.REPORT_REPOSITORY_DESCRIPTORS, ItemResourceConstants.NAMESPACE);
             ReportMethod method = null;
             try {
                 method = new ReportMethod(uriResolver.getRepositoryUri(), info);
-                getClient(null).executeMethod(method);
+                int sc = getClient(null).executeMethod(method);
+                if (sc == HttpStatus.SC_UNAUTHORIZED
+                        || sc == HttpStatus.SC_PROXY_AUTHENTICATION_REQUIRED) {
+                    // JCR-3076: Mandatory authentication prevents us from
+                    // accessing the descriptors on the server, so instead
+                    // of failing with an exception we simply return an empty
+                    // set of descriptors
+                    log.warn("Authentication required to access repository descriptors");
+                    return descriptors;
+                }
+
                 method.checkSuccess();
                 Document doc = method.getResponseBodyAsDocument();
 
-                descriptors = new HashMap<String, QValue[]>();
                 if (doc != null) {
                     Element rootElement = doc.getDocumentElement();
                     ElementIterator nsElems = DomUtil.getChildren(rootElement, JcrRemotingConstants.XML_DESCRIPTOR, ItemResourceConstants.NAMESPACE);
