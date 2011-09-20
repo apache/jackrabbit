@@ -67,6 +67,7 @@ public class PrivilegeRegistryTest extends AbstractJCRTest {
         assertTrue(l.remove(privilegeRegistry.get(NameConstants.JCR_RETENTION_MANAGEMENT)));
         assertTrue(l.remove(privilegeRegistry.get(NameConstants.JCR_VERSION_MANAGEMENT)));
         assertTrue(l.remove(privilegeRegistry.get(resolver.getQName(PrivilegeRegistry.REP_WRITE))));
+        assertTrue(l.remove(privilegeRegistry.get(resolver.getQName(PrivilegeRegistry.REP_PRIVILEGE_MANAGEMENT))));
 
         assertTrue(l.isEmpty());
     }
@@ -131,6 +132,7 @@ public class PrivilegeRegistryTest extends AbstractJCRTest {
         assertTrue(l.remove(NameConstants.JCR_READ));
         assertTrue(l.remove(NameConstants.JCR_WRITE));
         assertTrue(l.remove(resolver.getQName(PrivilegeRegistry.REP_WRITE)));
+        assertTrue(l.remove(resolver.getQName(PrivilegeRegistry.REP_PRIVILEGE_MANAGEMENT)));
         assertTrue(l.remove(NameConstants.JCR_READ_ACCESS_CONTROL));
         assertTrue(l.remove(NameConstants.JCR_MODIFY_ACCESS_CONTROL));
         assertTrue(l.remove(NameConstants.JCR_LIFECYCLE_MANAGEMENT));
@@ -201,6 +203,7 @@ public class PrivilegeRegistryTest extends AbstractJCRTest {
         assertTrue(l.remove(privilegeRegistry.getPrivilege(Privilege.JCR_RETENTION_MANAGEMENT)));
         assertTrue(l.remove(privilegeRegistry.getPrivilege(Privilege.JCR_VERSION_MANAGEMENT)));
         assertTrue(l.remove(privilegeRegistry.getPrivilege(PrivilegeRegistry.REP_WRITE)));
+        assertTrue(l.remove(privilegeRegistry.getPrivilege(PrivilegeRegistry.REP_PRIVILEGE_MANAGEMENT)));
         assertTrue(l.isEmpty());
     }
 
@@ -225,12 +228,14 @@ public class PrivilegeRegistryTest extends AbstractJCRTest {
         assertTrue(l.remove(privilegeRegistry.getPrivilege(Privilege.JCR_VERSION_MANAGEMENT)));
         assertTrue(l.remove(privilegeRegistry.getPrivilege(Privilege.JCR_WRITE)));
         assertTrue(l.remove(privilegeRegistry.getPrivilege(PrivilegeRegistry.REP_WRITE)));
+        assertTrue(l.remove(privilegeRegistry.getPrivilege(PrivilegeRegistry.REP_PRIVILEGE_MANAGEMENT)));
         assertTrue(l.isEmpty());
 
         l = new ArrayList<Privilege>(Arrays.asList(p.getDeclaredAggregatePrivileges()));
         assertTrue(l.remove(privilegeRegistry.getPrivilege(Privilege.JCR_READ)));
         assertTrue(l.remove(privilegeRegistry.getPrivilege(Privilege.JCR_WRITE)));
         assertTrue(l.remove(privilegeRegistry.getPrivilege(PrivilegeRegistry.REP_WRITE)));
+        assertTrue(l.remove(privilegeRegistry.getPrivilege(PrivilegeRegistry.REP_PRIVILEGE_MANAGEMENT)));
         assertTrue(l.remove(privilegeRegistry.getPrivilege(Privilege.JCR_READ_ACCESS_CONTROL)));
         assertTrue(l.remove(privilegeRegistry.getPrivilege(Privilege.JCR_MODIFY_ACCESS_CONTROL)));
         assertTrue(l.remove(privilegeRegistry.getPrivilege(Privilege.JCR_LIFECYCLE_MANAGEMENT)));
