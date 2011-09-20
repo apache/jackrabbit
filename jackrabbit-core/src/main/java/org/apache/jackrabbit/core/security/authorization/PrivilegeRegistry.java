@@ -75,6 +75,12 @@ public final class PrivilegeRegistry implements PrivilegeEventListener {
     public static final Name REP_WRITE_NAME = NAME_FACTORY.create(REP_WRITE);
 
     /**
+     * Jackrabbit specific privilege for privilege management.
+     */
+    public static final String REP_PRIVILEGE_MANAGEMENT = "{" + Name.NS_REP_URI + "}privilegeManagement";
+    public static final Name REP_PRIVILEGE_MANAGEMENT_NAME = NAME_FACTORY.create(REP_PRIVILEGE_MANAGEMENT);
+
+    /**
      * No privileges
      */
     public static final int NO_PRIVILEGE = 0;
@@ -91,6 +97,7 @@ public final class PrivilegeRegistry implements PrivilegeEventListener {
     private static final int LOCK_MNGMT = VERSION_MNGMT << 1;
     private static final int LIFECYCLE_MNGMT = LOCK_MNGMT << 1;
     private static final int RETENTION_MNGMT = LIFECYCLE_MNGMT << 1;
+    private static final int PRIVILEGE_MNGMT = RETENTION_MNGMT << 1;
 
     private static final Map<Name, Integer> PRIVILEGE_NAMES = new HashMap<Name, Integer>();
     static {
@@ -106,6 +113,7 @@ public final class PrivilegeRegistry implements PrivilegeEventListener {
         PRIVILEGE_NAMES.put(NameConstants.JCR_LOCK_MANAGEMENT, LOCK_MNGMT);
         PRIVILEGE_NAMES.put(NameConstants.JCR_LIFECYCLE_MANAGEMENT, LIFECYCLE_MNGMT);
         PRIVILEGE_NAMES.put(NameConstants.JCR_RETENTION_MANAGEMENT, RETENTION_MNGMT);
+        PRIVILEGE_NAMES.put(REP_PRIVILEGE_MANAGEMENT_NAME, PRIVILEGE_MNGMT);
     }
 
     /**
@@ -412,6 +420,9 @@ public final class PrivilegeRegistry implements PrivilegeEventListener {
         if ((privs & VERSION_MNGMT) == VERSION_MNGMT) {
             perm |= Permission.VERSION_MNGMT;
         }
+        if ((privs & PRIVILEGE_MNGMT) == PRIVILEGE_MNGMT) {
+            perm |= Permission.PRIVILEGE_MNGMT;
+        }
         return perm;
     }
 
@@ -528,6 +539,9 @@ public final class PrivilegeRegistry implements PrivilegeEventListener {
             }
             if ((bits & RETENTION_MNGMT) == RETENTION_MNGMT) {
                 names.add(NameConstants.JCR_RETENTION_MANAGEMENT);
+            }
+            if ((bits & PRIVILEGE_MNGMT) == PRIVILEGE_MNGMT) {
+                names.add(REP_PRIVILEGE_MANAGEMENT_NAME);
             }
 
             // include matching custom privilege names
@@ -682,6 +696,8 @@ public final class PrivilegeRegistry implements PrivilegeEventListener {
         jcrAllAggregates.add(NameConstants.JCR_LIFECYCLE_MANAGEMENT);
         jcrAllAggregates.add(NameConstants.JCR_WRITE);
         jcrAllAggregates.add(REP_WRITE_NAME);
+        jcrAllAggregates.add(REP_PRIVILEGE_MANAGEMENT_NAME);
+
 
         Definition jcrAll = new Definition(NameConstants.JCR_ALL, false, jcrAllAggregates, jcrAllBits);
         defs.put(jcrAll.getName(), jcrAll);

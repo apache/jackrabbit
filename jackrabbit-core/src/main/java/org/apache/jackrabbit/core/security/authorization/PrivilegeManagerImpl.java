@@ -133,7 +133,7 @@ public final class PrivilegeManagerImpl implements PrivilegeManager, PrivilegeRe
      * In case of a non aggregate privilege an empty array should be passed.
      * @return the new privilege.
      * @throws AccessDeniedException If the session this manager has been created
-     * for isn't the administrator.
+     * lacks rep:privilegeManagement privilege.
      * @throws RepositoryException If the privilege could not be registered due
      * to constraint violations or if persisting the custom privilege fails.
      * @see PrivilegeManager#registerPrivilege(String, boolean, String[])
@@ -141,9 +141,15 @@ public final class PrivilegeManagerImpl implements PrivilegeManager, PrivilegeRe
     public Privilege registerPrivilege(String privilegeName, boolean isAbstract,
                                        String[] declaredAggregateNames)
             throws AccessDeniedException, RepositoryException {
-        boolean isAdmin = (resolver instanceof SessionImpl) ? ((SessionImpl) resolver).isAdmin() : false;
-        if (!isAdmin) {
-            throw new AccessDeniedException("Registering privileges is only allowed to administrator.");
+        boolean allowed = false;
+        if (resolver instanceof SessionImpl) {
+            // TODO: FIXME should be 'null' path as privilegeManagement is a
+            // TODO: repo-level privilege such as namespace or node type mgt.
+            SessionImpl sImpl = (SessionImpl) resolver;
+            allowed = sImpl.getAccessManager().isGranted(sImpl.getQPath("/"), Permission.PRIVILEGE_MNGMT);
+        }
+        if (!allowed) {
+            throw new AccessDeniedException("Registering privileges is not allowed for the editing session.");
         }
 
         Name name = resolver.getQName(privilegeName);
