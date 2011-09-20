@@ -248,8 +248,8 @@ public class DefaultHighlighter {
                     if (skippedChars > surround) {
                         skippedChars = surround;
                     }
-                    sb.append(Text.encodeIllegalXMLCharacters(
-                            new String(cbuf, 0, surround - skippedChars)));
+                    sb.append(escape(new String(cbuf, 0, surround
+                            - skippedChars)));
                     sb.append(fragmentEnd);
                 }
             }
@@ -296,8 +296,8 @@ public class DefaultHighlighter {
             if (!sentenceStart) {
                 sb.append("... ");
             }
-            sb.append(Text.encodeIllegalXMLCharacters(
-                    new String(cbuf, skippedChars, cbuf.length - skippedChars)));
+            sb.append(escape(new String(cbuf, skippedChars, cbuf.length
+                    - skippedChars)));
 
             // iterate terms
             for (Iterator<TermVectorOffsetInfo> iter = fi.iterator(); iter.hasNext();) {
@@ -307,8 +307,7 @@ public class DefaultHighlighter {
                     cbuf = new char[nextStart - pos];
                     int charsRead = reader.read(cbuf, 0, nextStart - pos);
                     pos += (nextStart - pos);
-                    sb.append(Text.encodeIllegalXMLCharacters(
-                            new String(cbuf, 0, charsRead)));
+                    sb.append(escape(new String(cbuf, 0, charsRead)));
                 }
                 sb.append(hlStart);
                 nextStart = ti.getEndOffset();
@@ -316,8 +315,7 @@ public class DefaultHighlighter {
                 cbuf = new char[nextStart - pos];
                 reader.read(cbuf, 0, nextStart - pos);
                 pos += (nextStart - pos);
-                sb.append(Text.encodeIllegalXMLCharacters(
-                        new String(cbuf)));
+                sb.append(escape(new String(cbuf)));
                 sb.append(hlEnd);
             }
         }
@@ -343,8 +341,8 @@ public class DefaultHighlighter {
                 } else {
                     skippedChars = 0;
                 }
-                sb.append(Text.encodeIllegalXMLCharacters(
-                        new String(cbuf, 0, EOF ? skip : (surround - skippedChars))));
+                sb.append(escape(new String(cbuf, 0, EOF ? skip
+                        : (surround - skippedChars))));
                 if (!EOF) {
                     char lastChar = sb.charAt(sb.length() - 1);
                     if (lastChar != '.' && lastChar != '!' && lastChar != '?') {
@@ -364,7 +362,7 @@ public class DefaultHighlighter {
      * @param text the text.
      * @param excerptStart the excerpt start.
      * @param excerptEnd the excerpt end.
-     * @param fragmentStart the fragement start.
+     * @param fragmentStart the fragment start.
      * @param fragmentEnd the fragment end.
      * @param maxLength the maximum length of the fragment.
      * @return a default excerpt.
@@ -393,9 +391,23 @@ public class DefaultHighlighter {
                 }
             }
         }
-        excerpt.append(Text.encodeIllegalXMLCharacters(tmp.toString()));
+        excerpt.append(escape(tmp.toString()));
         excerpt.append(fragmentEnd).append(excerptEnd);
         return excerpt.toString();
+    }
+    
+    
+    /**
+     * Escapes input text suitable for the output format.
+     * <p>
+     * By default does XML-escaping. Can be overridden for
+     * other formats.
+     * 
+     * @param input raw text.
+     * @return text suitably escaped.
+     */
+    protected String escape(String input) {
+        return Text.encodeIllegalXMLCharacters(input);
     }
 
     private static class FragmentInfo {

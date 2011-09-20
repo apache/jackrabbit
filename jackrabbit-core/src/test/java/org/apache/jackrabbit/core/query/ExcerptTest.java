@@ -119,6 +119,20 @@ public class ExcerptTest extends AbstractQueryTest {
         assertEquals(excerpt, rows.nextRow().getValue("rep:excerpt(text)").getString());
     }
 
+    public void testEncodeIllegalCharsHighlights() throws RepositoryException {
+        String text = "bla <strong>bla</strong> foo";
+        String excerpt = createExcerpt("bla &lt;strong&gt;bla&lt;/strong&gt; <strong>foo</strong>");
+        Node n = testRootNode.addNode(nodeName1);
+        n.setProperty("text", text);
+        superuser.save();
+
+        String stmt = getStatement("foo");
+        QueryResult result = executeQuery(stmt);
+        RowIterator rows = result.getRows();
+        assertEquals(1, rows.getSize());
+        assertEquals(excerpt, rows.nextRow().getValue("rep:excerpt(text)").getString());
+    }
+
     private void checkExcerpt(String text, String fragmentText, String terms)
             throws RepositoryException {
         String excerpt = createExcerpt(fragmentText);
