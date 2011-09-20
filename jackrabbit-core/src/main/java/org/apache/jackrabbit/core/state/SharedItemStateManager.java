@@ -683,6 +683,16 @@ public class SharedItemStateManager
                     shared.deleted(state.getOverlayedState());
                 }
                 for (ItemState state : local.addedStates()) {
+                    if (state.isNode() && state.getStatus() != ItemState.STATUS_NEW) {
+                        // another node with same id had been created
+                        // in the meantime, probably caused by mid-air collision
+                        // of concurrent versioning operations (JCR-2272)
+                        String msg = state.getId()
+                                + " has been created externally  (status "
+                                + state.getStatus() + ")";
+                        log.debug(msg);
+                        throw new StaleItemStateException(msg);
+                    }
                     state.connect(createInstance(state));
                     shared.added(state.getOverlayedState());
                 }

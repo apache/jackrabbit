@@ -20,18 +20,17 @@ import java.util.UUID;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import javax.jcr.ImportUUIDBehavior;
+import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-import javax.jcr.Node;
-import javax.jcr.ImportUUIDBehavior;
-import javax.jcr.InvalidItemStateException;
 
+import org.apache.jackrabbit.JcrConstants;
+import org.apache.jackrabbit.spi.Name;
+import org.xml.sax.Attributes;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
-import org.xml.sax.Attributes;
 import org.xml.sax.helpers.AttributesImpl;
-import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.JcrConstants;
 
 /**
  * <code>ConcurrentVersioningTest</code> contains test cases that run version
@@ -87,12 +86,17 @@ public class ConcurrentImportTest extends AbstractConcurrencyTest {
                         }
                         try {
                             session.refresh(false);
-                            addNode(test, uuid, JcrConstants.NT_UNSTRUCTURED, uuid, mixins);
                             try {
+                                addNode(test, uuid,
+                                        JcrConstants.NT_UNSTRUCTURED, uuid,
+                                        mixins);
                                 session.save();
-                                log.println("Added " + test.getPath() + "/" + uuid);
+                                log.println("Added " + test.getPath() + "/"
+                                        + uuid);
                                 log.flush();
-                            } catch (InvalidItemStateException e) {
+                            } catch (RepositoryException e) {
+                                // we allow all kinds of REs here; this is temporary
+                                // in theory, we shouldn't get exceptions at all; see JCR-3068
                                 log.println("Ignoring expected error: " + e.toString());
                                 log.flush();
                                 session.refresh(false);

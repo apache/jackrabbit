@@ -1093,7 +1093,6 @@ public class ItemManager implements ItemStateListener {
             itemDestroyed(destroyed.getId(), data);
 
             data.setStatus(ItemImpl.STATUS_DESTROYED);
-            data.setState(null);
         }
     }
 

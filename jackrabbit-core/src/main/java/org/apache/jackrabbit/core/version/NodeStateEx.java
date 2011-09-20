@@ -427,7 +427,9 @@ public class NodeStateEx {
                 ItemState state = stateMgr.getItemState(propId);
                 stateMgr.destroy(state);
                 nodeState.removePropertyName(name);
-                nodeState.setStatus(ItemState.STATUS_EXISTING_MODIFIED);
+                if (nodeState.getStatus() != ItemState.STATUS_NEW) {
+                    nodeState.setStatus(ItemState.STATUS_EXISTING_MODIFIED);
+                }
                 return true;
             }
         } catch (ItemStateException e) {
