@@ -408,10 +408,20 @@ public class LocalItemStateManager
             try {
                 local = changeLog.get(created.getId());
                 if (local != null) {
-                    // underlying state has been permanently created
-                    local.pull();
-                    local.setStatus(ItemState.STATUS_EXISTING);
-                    cache.cache(local);
+                    if (local.isNode() && local.getOverlayedState() != created) {
+                        // mid-air collision of concurrent node state creation
+                        // with same id (JCR-2272)
+                        if (local.getStatus() == ItemState.STATUS_NEW) {
+                            local.setStatus(ItemState.STATUS_UNDEFINED); // we need a state that is != NEW
+                        }
+                    } else {
+                        if (local.getOverlayedState() == created) {
+                            // underlying state has been permanently created
+                            local.pull();
+                            local.setStatus(ItemState.STATUS_EXISTING);
+                            cache.cache(local);
+                        }
+                    }
                 }
             } catch (NoSuchItemStateException e) {
                 /* ignore */
