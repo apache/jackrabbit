@@ -497,6 +497,8 @@ public class SessionImpl extends AbstractSession
      * @see Session#getAccessControlManager()
      */
     public AccessControlManager getAccessControlManager() throws RepositoryException {
+        checkSupportedOption(Repository.OPTION_ACCESS_CONTROL_SUPPORTED);
+
         // TODO: implementation missing
         throw new UnsupportedRepositoryOperationException("JCR-1104");
     }
@@ -543,6 +545,8 @@ public class SessionImpl extends AbstractSession
      */
     public RetentionManager getRetentionManager()
             throws UnsupportedRepositoryOperationException, RepositoryException {
+        checkSupportedOption(Repository.OPTION_RETENTION_SUPPORTED);
+        
         // TODO: implementation missing
         throw new UnsupportedRepositoryOperationException("JCR-1104");
     }
