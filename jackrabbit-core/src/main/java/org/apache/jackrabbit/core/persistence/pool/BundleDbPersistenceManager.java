@@ -24,7 +24,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.SQLIntegrityConstraintViolationException;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -495,9 +494,9 @@ public class BundleDbPersistenceManager
                     DbUtility.logException("rollback failed", e2);
                 }
 
-                // if we got here due to a constraint violation and we are running in
-                // test mode, we really want to stop
-                assert !(e.getCause() instanceof SQLIntegrityConstraintViolationException);
+                // if we got here due to a constraint violation and we
+                // are running in test mode, we really want to stop
+                assert !isIntegrityConstraintViolation(e.getCause());
             }
             failures++;
             log.error("Failed to persist ChangeLog (stacktrace on DEBUG log level), blockOnConnectionLoss = "
@@ -514,6 +513,15 @@ public class BundleDbPersistenceManager
             }
         }
         throw lastException;
+    }
+
+    private boolean isIntegrityConstraintViolation(Throwable t) {
+        if (t instanceof SQLException) {
+            String state = ((SQLException) t).getSQLState();
+            return state != null && state.startsWith("23");
+        } else {
+            return false;
+        }
     }
 
     /**
@@ -1110,7 +1118,7 @@ public class BundleDbPersistenceManager
         } catch (Exception e) {
             String msg;
 
-            if (e instanceof SQLIntegrityConstraintViolationException) {
+            if (isIntegrityConstraintViolation(e)) {
                 // we should never get an integrity constraint violation here
                 // other PMs may not be able to detect this and end up with
                 // corrupted data
