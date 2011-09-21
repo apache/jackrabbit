@@ -799,11 +799,15 @@ public class SharedItemStateManager
 
                 /* dispatch the events */
                 events.dispatch();
-
-                // let listener know about finished operation
-                String path = events.getSession().getUserID() + "@" + events.getCommonPath();
-                eventChannel.updateCommitted(this, path);
             } finally {
+                // Let listener know about finished operation. This needs
+                // to happen in the finally block so that the cluster lock
+                // always gets released, even if a post-store() exception
+                // is thrown from the code above. See also JCR-2272.
+                String path = events.getSession().getUserID()
+                        + "@" + events.getCommonPath();
+                eventChannel.updateCommitted(this, path);
+
                 if (writeLock != null) {
                     // exception occurred before downgrading lock
                     writeLock.release();
