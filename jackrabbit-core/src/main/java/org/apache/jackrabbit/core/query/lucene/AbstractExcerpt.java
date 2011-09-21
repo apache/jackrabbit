@@ -21,7 +21,6 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.SortedMap;
@@ -190,9 +189,7 @@ public abstract class AbstractExcerpt implements HighlightingExcerptProvider {
     private static void getQueryTerms(Query q, Set<Term[]> relevantTerms) {
         if (q instanceof BooleanQuery) {
             final BooleanQuery bq = (BooleanQuery) q;
-            Iterator<BooleanClause> clIterator = bq.iterator();
-            while (clIterator.hasNext()) {
-                BooleanClause clause = clIterator.next();
+            for (BooleanClause clause : bq.getClauses()) {
                 getQueryTerms(clause.getQuery(), relevantTerms);
             }
             return;
