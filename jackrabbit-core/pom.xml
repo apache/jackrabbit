@@ -108,6 +108,7 @@ org.apache.jackrabbit.test.api.ShareableNodeTest#testGetNode
 org.apache.jackrabbit.test.api.ShareableNodeTest#testGetNodes
 org.apache.jackrabbit.test.api.ShareableNodeTest#testGetNodesByPattern
 org.apache.jackrabbit.test.api.ShareableNodeTest#testGetNodesByPattern
+org.apache.jackrabbit.core.data.ConcurrentGcTest#testDatabases
               </value>
             </property>
             <property>
