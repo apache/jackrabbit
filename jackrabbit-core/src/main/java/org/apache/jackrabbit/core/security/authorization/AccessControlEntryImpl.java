@@ -30,9 +30,7 @@ import javax.jcr.security.Privilege;
 import java.security.Principal;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * Simple, immutable implementation of the

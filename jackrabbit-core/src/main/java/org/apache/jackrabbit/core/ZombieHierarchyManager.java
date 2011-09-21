@@ -16,8 +16,6 @@
  */
 package org.apache.jackrabbit.core;
 
-import java.util.Iterator;
-
 import org.apache.jackrabbit.core.id.ItemId;
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.state.ChildNodeEntry;
