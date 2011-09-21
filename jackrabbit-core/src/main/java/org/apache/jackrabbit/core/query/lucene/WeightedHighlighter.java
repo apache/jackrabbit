@@ -77,7 +77,7 @@ public class WeightedHighlighter extends DefaultHighlighter {
      *         highlighted
      */
     public static String highlight(TermPositionVector tvec,
-                                   Set<Term> queryTerms,
+                                   Set<Term[]> queryTerms,
                                    String text,
                                    String excerptStart,
                                    String excerptEnd,
@@ -103,7 +103,7 @@ public class WeightedHighlighter extends DefaultHighlighter {
      *         highlighted
      */
     public static String highlight(TermPositionVector tvec,
-                                   Set<Term> queryTerms,
+                                   Set<Term[]> queryTerms,
                                    String text,
                                    int maxFragments,
                                    int surround) throws IOException {
@@ -129,7 +129,7 @@ public class WeightedHighlighter extends DefaultHighlighter {
                     fragmentStart, fragmentEnd, surround * 2);
         }
 
-        PriorityQueue bestFragments = new FragmentInfoPriorityQueue(maxFragments);
+        PriorityQueue<FragmentInfo> bestFragments = new FragmentInfoPriorityQueue(maxFragments);
         for (int i = 0; i < offsets.length; i++) {
             if (offsets[i].getEndOffset() <= text.length()) {
                 FragmentInfo fi = new FragmentInfo(offsets[i], surround * 2);
@@ -336,7 +336,7 @@ public class WeightedHighlighter extends DefaultHighlighter {
 
     }
 
-    private static class FragmentInfoPriorityQueue extends PriorityQueue {
+    private static class FragmentInfoPriorityQueue extends PriorityQueue<FragmentInfo> {
 
         public FragmentInfoPriorityQueue(int size) {
             initialize(size);
@@ -350,9 +350,7 @@ public class WeightedHighlighter extends DefaultHighlighter {
          * {@link FragmentInfo} with the best quality.
          */
         @Override
-        protected boolean lessThan(Object a, Object b) {
-            FragmentInfo infoA = (FragmentInfo) a;
-            FragmentInfo infoB = (FragmentInfo) b;
+        protected boolean lessThan(FragmentInfo infoA, FragmentInfo infoB) {
             if (infoA.getQuality() == infoB.getQuality()) {
                 return infoA.getStartOffset() > infoB.getStartOffset();
             }
