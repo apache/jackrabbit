@@ -178,9 +178,13 @@ public class SharedItemStateManager
     private ISMLocking ismLocking;
 
     /**
-     * Update event channel.
+     * Update event channel. By default this is a dummy channel that simply
+     * ignores all events (so we don't need to check for null all the time),
+     * but in clustered environments the
+     * {@link #setEventChannel(UpdateEventChannel)} method should be called
+     * during initialization to connect this SISM instance with the cluster.
      */
-    private UpdateEventChannel eventChannel;
+    private UpdateEventChannel eventChannel = new DummyUpdateEventChannel();
 
     private final NodeIdFactory nodeIdFactory;
 
@@ -557,15 +561,13 @@ public class SharedItemStateManager
 
             virtualNodeReferences = new ChangeLog[virtualProviders.length];
 
-            /* let listener know about change */
-            if (eventChannel != null) {
-                eventChannel.updateCreated(this);
-            }
+            // let listener know about change
+            eventChannel.updateCreated(this);
 
             try {
                 writeLock = acquireWriteLock(local);
             } finally {
-                if (writeLock == null && eventChannel != null) {
+                if (writeLock == null) {
                     eventChannel.updateCancelled(this);
                 }
             }
@@ -726,10 +728,8 @@ public class SharedItemStateManager
                 /* create event states */
                 events.createEventStates(rootNodeId, local, SharedItemStateManager.this);
 
-                /* let listener know about change */
-                if (eventChannel != null) {
-                    eventChannel.updatePrepared(this);
-                }
+                // let listener know about change
+                eventChannel.updatePrepared(this);
 
                 if (VALIDATE_HIERARCHY) {
                     log.info("Validating change-set hierarchy");
@@ -800,11 +800,9 @@ public class SharedItemStateManager
                 /* dispatch the events */
                 events.dispatch();
 
-                /* let listener know about finished operation */
-                if (eventChannel != null) {
-                    String path = events.getSession().getUserID() + "@" + events.getCommonPath();
-                    eventChannel.updateCommitted(this, path);
-                }
+                // let listener know about finished operation
+                String path = events.getSession().getUserID() + "@" + events.getCommonPath();
+                eventChannel.updateCommitted(this, path);
             } finally {
                 if (writeLock != null) {
                     // exception occurred before downgrading lock
@@ -822,10 +820,8 @@ public class SharedItemStateManager
          */
         public void cancel() {
             try {
-                /* let listener know about canceled operation */
-                if (eventChannel != null) {
-                    eventChannel.updateCancelled(this);
-                }
+                // let listener know about canceled operation
+                eventChannel.updateCancelled(this);
 
                 local.disconnect();
 
