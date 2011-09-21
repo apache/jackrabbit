@@ -31,6 +31,9 @@ import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.xml.parsers.ParserConfigurationException;
 
+import org.apache.jackrabbit.server.io.CopyMoveHandler;
+import org.apache.jackrabbit.server.io.CopyMoveManager;
+import org.apache.jackrabbit.server.io.CopyMoveManagerImpl;
 import org.apache.jackrabbit.server.io.DefaultIOManager;
 import org.apache.jackrabbit.server.io.IOHandler;
 import org.apache.jackrabbit.server.io.IOManager;
@@ -59,6 +62,9 @@ public class ResourceConfig {
     private static final String ELEMENT_PROPERTYMANAGER = "propertymanager";
     private static final String ELEMENT_PROPERTYHANDLER = "propertyhandler";
 
+    private static final String ELEMENT_COPYMOVEMANAGER = "copymovemanager";
+    private static final String ELEMENT_COPYMOVEHANDLER = "copymovehandler";
+
     private static final String ELEMENT_CLASS = "class";
 
     private static final String ELEMENT_PARAM = "param";
@@ -72,6 +78,7 @@ public class ResourceConfig {
 
     private ItemFilter itemFilter;
     private IOManager ioManager;
+    private CopyMoveManager cmManager;
     private PropertyManager propManager;
     private String[] nodetypeNames = new String[0];
     private boolean collectionNames = false;
@@ -223,6 +230,33 @@ public class ResourceConfig {
                 }
             } else {
                 log.debug("'propertymanager' element is missing.");
+            }
+
+            // copymovemanager config entry
+            el = DomUtil.getChildElement(config, ELEMENT_COPYMOVEMANAGER, null);
+            if (el != null) {
+                Object inst = buildClassFromConfig(el);
+                if (inst != null && inst instanceof CopyMoveManager) {
+                    cmManager = (CopyMoveManager) inst;
+                    // get optional 'copymovehandler' child elements and populate
+                    // the copy move manager with the instances
+                    ElementIterator iohElements = DomUtil.getChildren(el, ELEMENT_COPYMOVEHANDLER, null);
+                    while (iohElements.hasNext()) {
+                        Element iohEl = iohElements.nextElement();
+                        inst = buildClassFromConfig(iohEl);
+                        if (inst != null && inst instanceof CopyMoveHandler) {
+                            CopyMoveHandler handler = (CopyMoveHandler) inst;
+                            setParameters(handler, iohEl);
+                            cmManager.addCopyMoveHandler(handler);
+                        } else {
+                            log.warn("Not a valid CopyMoveHandler : " + getClassName(iohEl));
+                        }
+                    }
+                } else {
+                    log.warn("'copymovemanager' element does not define a valid CopyMoveManager.");
+                }
+            } else {
+                log.debug("'copymovemanager' element is missing.");
             }
 
             // collection/non-collection config entry
@@ -424,6 +458,18 @@ public class ResourceConfig {
             propManager = PropertyManagerImpl.getDefaultManager();
         }
         return propManager;
+    }
+
+    /**
+     *
+     * @return
+     */
+    public CopyMoveManager getCopyMoveManager() {
+        if (cmManager == null) {
+            log.debug("Missing copymove-manager > building default.");
+            cmManager = CopyMoveManagerImpl.getDefaultManager();
+        }
+        return cmManager;
     }
 
     /**
