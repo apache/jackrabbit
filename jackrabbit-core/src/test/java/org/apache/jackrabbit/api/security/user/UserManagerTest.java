@@ -19,6 +19,7 @@ package org.apache.jackrabbit.api.security.user;
 import org.apache.jackrabbit.test.NotExecutableException;
 
 import javax.jcr.RepositoryException;
+import javax.jcr.UnsupportedRepositoryOperationException;
 import java.security.Principal;
 import java.util.Iterator;
 import java.util.Set;
@@ -51,6 +52,22 @@ public class UserManagerTest extends AbstractUserTest {
                 Authorizable authByID = userMgr.getAuthorizable(auth.getID());
                 assertEquals("Equal ID expected", auth.getID(), authByID.getID());
             }
+        }
+    }
+
+    public void testGetAuthorizableByPath() throws RepositoryException, NotExecutableException {
+        String uid = superuser.getUserID();
+        Authorizable a = userMgr.getAuthorizable(uid);
+        if (a == null) {
+            throw new NotExecutableException();
+        }
+        try {
+            String path = a.getPath();
+            Authorizable a2 = userMgr.getAuthorizableByPath(path);
+            assertNotNull(a2);
+            assertEquals(a.getID(), a2.getID());
+        } catch (UnsupportedRepositoryOperationException e) {
+            throw new NotExecutableException();
         }
     }
 }
