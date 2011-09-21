@@ -155,13 +155,13 @@ public class ImpersonationImplTest extends AbstractUserTest {
         Principal systemPrincipal = new SystemPrincipal();
         assertNull(userMgr.getAuthorizable(systemPrincipal));
 
-        // system cannot be add/remove to set of impersonators of 'u' but
-        // it should be allowed to impersonate a given user...
+        // system cannot be add/remove to set of impersonators of 'u' nor
+        // should it be allowed to impersonate a given user...
         User u = (User) userMgr.getAuthorizable(uID);
         Impersonation impersonation = u.getImpersonation();
 
         assertFalse(impersonation.grantImpersonation(systemPrincipal));
         assertFalse(impersonation.revokeImpersonation(systemPrincipal));
-        assertTrue(impersonation.allows(buildSubject(systemPrincipal)));
+        assertFalse(impersonation.allows(buildSubject(systemPrincipal)));
     }
 }
