@@ -104,6 +104,58 @@ public class UserTest extends AbstractUserTest {
         }
     }
 
+    public void testChangePasswordWithOldPassword() throws RepositoryException, NotExecutableException {
+        String oldPw = getHelper().getProperty("javax.jcr.tck.superuser.pwd");
+        if (oldPw == null) {
+            // missing property
+            throw new NotExecutableException();
+        }
+
+        User user = getTestUser(superuser);
+        try {
+            try {
+                user.changePassword("pw", "wrongOldPw");
+                save(superuser);
+                fail("old password didn't match -> changePassword(String,String) should fail.");
+            } catch (RepositoryException e) {
+                // success.
+            }
+
+            user.changePassword("pw", oldPw);
+            save(superuser);
+
+            // make sure the user can login with the new pw
+            Session s = getHelper().getRepository().login(new SimpleCredentials(user.getID(), "pw".toCharArray()));
+            s.logout();
+        } finally {
+            user.changePassword(oldPw);
+            save(superuser);
+        }
+    }
+
+    public void testChangePasswordWithOldPassword2() throws RepositoryException, NotExecutableException {
+        String oldPw = getHelper().getProperty("javax.jcr.tck.superuser.pwd");
+        if (oldPw == null) {
+            // missing property
+            throw new NotExecutableException();
+        }
+
+        User user = getTestUser(superuser);
+        try {
+            user.changePassword("pw", oldPw);
+            save(superuser);
+
+            Session s = getHelper().getRepository().login(new SimpleCredentials(user.getID(), oldPw.toCharArray()));
+            s.logout();
+            fail("superuser pw has changed. login must fail.");
+        } catch (LoginException e) {
+            // success
+        } finally {
+            user.changePassword(oldPw);
+            save(superuser);
+        }
+    }
+
     public void testDisable() throws Exception {
         boolean remove = false;
         Session s = getHelper().getReadOnlySession();

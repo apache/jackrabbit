@@ -59,6 +59,16 @@ public interface User extends Authorizable {
     void changePassword(String password) throws RepositoryException;
 
     /**
+     * Change the password of this user.
+     *
+     * @param password The new password.
+     * @param oldPassword The old password.
+     * @throws RepositoryException If the old password doesn't match or if
+     * an error occurs.
+     */
+    void changePassword(String password, String oldPassword) throws RepositoryException;
+
+    /**
      * Disable this user thus preventing future login if the <code>reason</code>
      * is a non-null String.<br>
      * Note however, that this user will still be accessible by

@@ -26,6 +26,7 @@ import org.apache.jackrabbit.core.security.principal.AdminPrincipal;
 
 import javax.jcr.Credentials;
 import javax.jcr.RepositoryException;
+import javax.jcr.SimpleCredentials;
 import javax.jcr.Value;
 import java.io.UnsupportedEncodingException;
 import java.security.NoSuchAlgorithmException;
@@ -127,6 +128,26 @@ public class UserImpl extends AuthorizableImpl implements User {
     public void changePassword(String password) throws RepositoryException {
         Value v = getSession().getValueFactory().createValue(buildPasswordValue(password));
         userManager.setProtectedProperty(getNode(), P_PASSWORD, v);
+    }
+
+    /**
+     * @see User#changePassword(String, String)
+     */
+    public void changePassword(String password, String oldPassword) throws RepositoryException {
+        // make sure the old password matches.
+        try {
+            CryptedSimpleCredentials csc = (CryptedSimpleCredentials) getCredentials();
+            SimpleCredentials creds = new SimpleCredentials(getID(), oldPassword.toCharArray());
+            if (!csc.matches(creds)) {
+                throw new RepositoryException("Failed to change password: Old password does not match.");
+            }
+        } catch (NoSuchAlgorithmException e) {
+            throw new RepositoryException("Cannot change password: failed to validate old password.");
+        } catch (UnsupportedEncodingException e) {
+            throw new RepositoryException("Cannot change password: failed to validate old password.");
+        }
+
+        changePassword(password);
     }
 
     /**
