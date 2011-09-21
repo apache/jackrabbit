@@ -506,7 +506,6 @@ public final class MoreLikeThis {
     public Query like(int docNum) throws IOException {
         if (fieldNames == null) {
             // gather list of valid fields from lucene
-            @SuppressWarnings("unchecked")
             Collection<String> fields = ir.getFieldNames(IndexReader.FieldOption.INDEXED);
             fieldNames = fields.toArray(new String[fields.size()]);
         }
@@ -522,7 +521,6 @@ public final class MoreLikeThis {
     public Query like(File f) throws IOException {
         if (fieldNames == null) {
             // gather list of valid fields from lucene
-            @SuppressWarnings("unchecked")
             Collection<String> fields = ir.getFieldNames(IndexReader.FieldOption.INDEXED);
             fieldNames = fields.toArray(new String[fields.size()]);
         }
