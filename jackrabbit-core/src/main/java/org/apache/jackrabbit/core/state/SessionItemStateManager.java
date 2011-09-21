@@ -229,8 +229,7 @@ public class SessionItemStateManager
      * connects the newly created persistent state with the transient state.
      */
     public NodeState createNew(NodeState transientState)
-            throws IllegalStateException {
-
+            throws ItemStateException {
         NodeState persistentState = createNew(transientState.getNodeId(),
                 transientState.getNodeTypeName(),
                 transientState.getParentId());
@@ -251,8 +250,7 @@ public class SessionItemStateManager
      * connects the newly created persistent state with the transient state.
      */
     public PropertyState createNew(PropertyState transientState)
-            throws IllegalStateException {
-
+            throws ItemStateException {
         PropertyState persistentState = createNew(transientState.getName(),
                 transientState.getParentId());
         transientState.connect(persistentState);

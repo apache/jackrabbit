@@ -863,7 +863,11 @@ public class NodeImpl extends ItemImpl implements Node, JackrabbitNode {
         NodeState localState = (NodeState) transientState.getOverlayedState();
         if (localState == null) {
             // this node is 'new'
-            localState = stateMgr.createNew(transientState);
+            try {
+                localState = stateMgr.createNew(transientState);
+            } catch (ItemStateException e) {
+                throw new InvalidItemStateException(e);
+            }
         }
 
         synchronized (localState) {
