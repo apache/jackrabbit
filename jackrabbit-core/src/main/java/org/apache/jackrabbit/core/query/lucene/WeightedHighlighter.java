@@ -77,7 +77,7 @@ public class WeightedHighlighter extends DefaultHighlighter {
      *         highlighted
      */
     public static String highlight(TermPositionVector tvec,
-                                   Set<Term> queryTerms,
+                                   Set<Term[]> queryTerms,
                                    String text,
                                    String excerptStart,
                                    String excerptEnd,
@@ -103,7 +103,7 @@ public class WeightedHighlighter extends DefaultHighlighter {
      *         highlighted
      */
     public static String highlight(TermPositionVector tvec,
-                                   Set<Term> queryTerms,
+                                   Set<Term[]> queryTerms,
                                    String text,
                                    int maxFragments,
                                    int surround) throws IOException {
