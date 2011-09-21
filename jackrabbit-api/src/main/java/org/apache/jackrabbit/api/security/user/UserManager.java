@@ -67,6 +67,19 @@ public interface UserManager {
     Authorizable getAuthorizable(Principal principal) throws RepositoryException;
 
     /**
+     * In accordance to {@link org.apache.jackrabbit.api.security.user.Authorizable#getPath()}
+     * this method allows to retrieve an given authorizable by it's path.
+     *
+     * @param path The path to an authorizable.
+     * @return Authorizable or <code>null</code>, if not present.
+     * @throws UnsupportedRepositoryOperationException If this implementation does
+     * support to retrieve authorizables by path.
+     * @throws RepositoryException If another error occurs.
+     * @see org.apache.jackrabbit.api.security.user.Authorizable#getPath()
+     */
+    Authorizable getAuthorizableByPath(String path) throws UnsupportedRepositoryOperationException, RepositoryException;
+
+    /**
      * Returns all <code>Authorizable</code>s that have a
      * {@link Authorizable#getProperty(String) property} with the given relative
      * path (or name) that matches the specified value.

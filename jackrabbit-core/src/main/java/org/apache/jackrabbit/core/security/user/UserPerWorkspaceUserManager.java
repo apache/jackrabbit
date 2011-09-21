@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.core.security.user;
 
+import org.apache.jackrabbit.api.security.user.Authorizable;
+import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.SessionImpl;
 
 import javax.jcr.Node;
@@ -77,6 +79,20 @@ public class UserPerWorkspaceUserManager extends UserManagerImpl {
     }
 
     //--------------------------------------------------------< UserManager >---
+    /**
+     * @see org.apache.jackrabbit.api.security.user.UserManager#getAuthorizableByPath(String)
+     */
+    @Override
+    public Authorizable getAuthorizableByPath(String path) throws UnsupportedRepositoryOperationException, RepositoryException {
+        SessionImpl session = getSession();
+        if (session.nodeExists(path)) {
+            NodeImpl n = (NodeImpl) session.getNode(path);
+            return getAuthorizable(n);
+        } else {
+            return null;
+        }
+    }
+
     /**
      * @see org.apache.jackrabbit.api.security.user.UserManager#isAutoSave()
      */
