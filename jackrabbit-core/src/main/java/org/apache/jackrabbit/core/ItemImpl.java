@@ -124,7 +124,7 @@ public abstract class ItemImpl implements Item {
 
     protected abstract ItemState getOrCreateTransientItemState() throws RepositoryException;
 
-    protected abstract void makePersistent() throws InvalidItemStateException;
+    protected abstract void makePersistent() throws RepositoryException;
 
     /**
      * Marks this instance as 'removed' and notifies its listeners.

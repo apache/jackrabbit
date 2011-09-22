@@ -558,9 +558,6 @@ public class NodeStateEx {
             throws RepositoryException {
         NodeId parentId = nodeState.getNodeId();
         // create a new node state
-        if (id == null) {
-            id = stateMgr.getNodeIdFactory().newNodeId();
-        }
         NodeState state = stateMgr.createNew(id, nodeTypeName, parentId);
 
         // create Node instance wrapping new node state
@@ -568,7 +565,7 @@ public class NodeStateEx {
         node.setPropertyValue(NameConstants.JCR_PRIMARYTYPE, InternalValue.create(nodeTypeName));
 
         // add new child node entry
-        nodeState.addChildNodeEntry(name, id);
+        nodeState.addChildNodeEntry(name, state.getNodeId());
         if (nodeState.getStatus() == ItemState.STATUS_EXISTING) {
             nodeState.setStatus(ItemState.STATUS_EXISTING_MODIFIED);
         }
