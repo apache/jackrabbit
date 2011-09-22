@@ -272,12 +272,45 @@ public class LocalItemStateManager
         changeLog.added(state);
         state.setContainer(this);
 
-        if (nonRandomId && sharedStateMgr.hasItemState(id)) {
+        if (nonRandomId && !changeLog.deleted(id)
+                && sharedStateMgr.hasItemState(id)) {
             throw new InvalidItemStateException(
                     "Node " + id + " already exists");
         }
 
         return state;
+    }
+
+    /**
+     * Returns the local node state below the given transient one. If given
+     * a fresh new node state, then a new local state is created and added
+     * to the change log.
+     *
+     * @param transientState transient state
+     * @return local node state
+     * @throws RepositoryException if the local state could not be created
+     */
+    public NodeState getOrCreateLocalState(NodeState transientState)
+            throws RepositoryException {
+        NodeState localState = (NodeState) transientState.getOverlayedState();
+        if (localState == null) {
+            // The transient node state is new, create a new local state
+            localState = new NodeState(
+                    transientState.getNodeId(),
+                    transientState.getNodeTypeName(),
+                    transientState.getParentId(),
+                    ItemState.STATUS_NEW,
+                    false);
+            changeLog.added(localState);
+            localState.setContainer(this);
+            try {
+                transientState.connect(localState);
+            } catch (ItemStateException e) {
+                // should never happen
+                throw new RepositoryException(e);
+            }
+        }
+        return localState;
     }
 
     /**

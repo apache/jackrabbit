@@ -959,4 +959,31 @@ public class SessionItemStateManager
         }
     }
 
+    /**
+     * Pushes the given transient state to the change log so it'll be
+     * persisted when the change log is committed. The transient state
+     * is replaced with the local state that has been pushed to the
+     * change log.
+     *
+     * @param transientState transient state
+     * @return the local state to be persisted
+     * @throws RepositoryException if the transiet state can not be persisted
+     */
+    public NodeState makePersistent(NodeState transientState)
+            throws RepositoryException {
+        NodeState localState = stateMgr.getOrCreateLocalState(transientState);
+
+        synchronized (localState) {
+            // copy state from transient state:
+            localState.copy(transientState, true);
+            // make state persistent
+            store(localState);
+        }
+
+        // disconnect the transient item state
+        disconnectTransientItemState(transientState);
+
+        return localState;
+    }
+
 }

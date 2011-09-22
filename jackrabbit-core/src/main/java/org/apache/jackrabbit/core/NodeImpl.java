@@ -848,30 +848,8 @@ public class NodeImpl extends ItemImpl implements Node, JackrabbitNode {
         }
 
         NodeState transientState = data.getNodeState();
+        NodeState localState = stateMgr.makePersistent(transientState);
 
-        NodeState localState = (NodeState) transientState.getOverlayedState();
-        if (localState == null) {
-            // this node is 'new'
-            try {
-                localState = stateMgr.createNew(
-                        transientState.getNodeId(),
-                        transientState.getNodeTypeName(),
-                        transientState.getParentId());
-                transientState.connect(localState);
-            } catch (ItemStateException e) {
-                throw new RepositoryException(e);
-            }
-        }
-
-        synchronized (localState) {
-            // copy state from transient state:
-            localState.copy(transientState, true);
-            // make state persistent
-            stateMgr.store(localState);
-        }
-
-        // tell state manager to disconnect item state
-        stateMgr.disconnectTransientItemState(transientState);
         // swap transient state with local state
         data.setState(localState);
         // reset status
