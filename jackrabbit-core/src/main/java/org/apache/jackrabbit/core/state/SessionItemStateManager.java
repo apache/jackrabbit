@@ -37,7 +37,6 @@ import org.apache.jackrabbit.core.HierarchyManager;
 import org.apache.jackrabbit.core.ZombieHierarchyManager;
 import org.apache.jackrabbit.core.id.ItemId;
 import org.apache.jackrabbit.core.id.NodeId;
-import org.apache.jackrabbit.core.id.NodeIdFactory;
 import org.apache.jackrabbit.core.id.PropertyId;
 import org.apache.jackrabbit.spi.Name;
 import org.slf4j.Logger;
@@ -54,7 +53,7 @@ public class SessionItemStateManager
     /**
      * State manager that allows updates
      */
-    private final UpdatableItemStateManager stateMgr;
+    private final LocalItemStateManager stateMgr;
 
     /**
      * Hierarchy manager
@@ -218,23 +217,10 @@ public class SessionItemStateManager
     /**
      * {@inheritDoc}
      */
-    public NodeState createNew(NodeId id, Name nodeTypeName,
-                               NodeId parentId)
-            throws IllegalStateException {
+    public NodeState createNew(
+            NodeId id, Name nodeTypeName, NodeId parentId)
+            throws RepositoryException {
         return stateMgr.createNew(id, nodeTypeName, parentId);
-    }
-
-    /**
-     * Customized variant of {@link #createNew(NodeId, Name, NodeId)} that
-     * connects the newly created persistent state with the transient state.
-     */
-    public NodeState createNew(NodeState transientState)
-            throws ItemStateException {
-        NodeState persistentState = createNew(transientState.getNodeId(),
-                transientState.getNodeTypeName(),
-                transientState.getParentId());
-        transientState.connect(persistentState);
-        return persistentState;
     }
 
     /**
@@ -560,21 +546,25 @@ public class SessionItemStateManager
      * @param parentId
      * @param initialStatus
      * @return
-     * @throws ItemStateException
+     * @throws RepositoryException
      */
     public NodeState createTransientNodeState(NodeId id, Name nodeTypeName, NodeId parentId, int initialStatus)
-            throws ItemStateException {
-
+            throws RepositoryException {
         // check map; synchronized to ensure an entry is not created twice.
         synchronized (transientStore) {
-            if (transientStore.containsKey(id)) {
-                String msg = "there's already a node state instance with id " + id;
-                log.debug(msg);
-                throw new ItemStateException(msg);
+            if (id == null) {
+                id = stateMgr.getNodeIdFactory().newNodeId();
+            } else if (initialStatus == ItemState.STATUS_NEW
+                    && hasItemState(id)) {
+                throw new InvalidItemStateException(
+                        "Node " + id + " already exists");
+            } else if (transientStore.containsKey(id)) {
+                throw new RepositoryException(
+                        "There is already a transient state for node " + id);
             }
 
-            NodeState state = new NodeState(id, nodeTypeName, parentId,
-                    initialStatus, true);
+            NodeState state = new NodeState(
+                    id, nodeTypeName, parentId, initialStatus, true);
             // put transient state in the map
             transientStore.put(state.getId(), state);
             state.setContainer(this);
@@ -967,10 +957,6 @@ public class SessionItemStateManager
             // n/a
             return false;
         }
-    }
-
-    public NodeIdFactory getNodeIdFactory() {
-        return stateMgr.getNodeIdFactory();
     }
 
 }

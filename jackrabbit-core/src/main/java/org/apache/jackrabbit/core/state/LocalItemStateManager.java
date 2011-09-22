@@ -16,7 +16,9 @@
  */
 package org.apache.jackrabbit.core.state;
 
+import javax.jcr.InvalidItemStateException;
 import javax.jcr.ReferentialIntegrityException;
+import javax.jcr.RepositoryException;
 
 import org.apache.jackrabbit.core.id.ItemId;
 import org.apache.jackrabbit.core.id.NodeId;
@@ -252,17 +254,29 @@ public class LocalItemStateManager
     /**
      * {@inheritDoc}
      */
-    public NodeState createNew(NodeId id, Name nodeTypeName,
-                               NodeId parentId)
-            throws IllegalStateException {
+    public NodeState createNew(
+            NodeId id, Name nodeTypeName, NodeId parentId)
+            throws RepositoryException {
         if (!editMode) {
-            throw new IllegalStateException("Not in edit mode");
+            throw new RepositoryException("Not in edit mode");
         }
 
-        NodeState state = new NodeState(id, nodeTypeName, parentId,
-                ItemState.STATUS_NEW, false);
+        boolean nonRandomId = true;
+        if (id == null) {
+            id = getNodeIdFactory().newNodeId();
+            nonRandomId = false;
+        }
+
+        NodeState state = new NodeState(
+                id, nodeTypeName, parentId, ItemState.STATUS_NEW, false);
         changeLog.added(state);
         state.setContainer(this);
+
+        if (nonRandomId && sharedStateMgr.hasItemState(id)) {
+            throw new InvalidItemStateException(
+                    "Node " + id + " already exists");
+        }
+
         return state;
     }
 

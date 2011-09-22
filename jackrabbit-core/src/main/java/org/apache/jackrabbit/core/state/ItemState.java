@@ -176,7 +176,7 @@ public abstract class ItemState {
     /**
      * Connect this state to some underlying overlayed state.
      */
-    protected void connect(ItemState overlayedState)
+    public void connect(ItemState overlayedState)
             throws ItemStateException {
         if (this.overlayedState != null
                 && this.overlayedState != overlayedState) {

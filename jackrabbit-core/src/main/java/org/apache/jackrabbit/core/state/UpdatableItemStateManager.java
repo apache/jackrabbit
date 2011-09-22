@@ -18,9 +18,9 @@ package org.apache.jackrabbit.core.state;
 
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.core.id.NodeId;
-import org.apache.jackrabbit.core.id.NodeIdFactory;
 
 import javax.jcr.ReferentialIntegrityException;
+import javax.jcr.RepositoryException;
 
 /**
  * Identifies an <code>ItemStateManager</code> that allows updating
@@ -53,14 +53,15 @@ public interface UpdatableItemStateManager extends ItemStateManager {
      * i.e. not yet existing state. Call {@link #store}
      * on the returned object to make it persistent.
      *
-     * @param id           the id of the node
+     * @param id the id of the node, or <code>null</code> for a new node id
      * @param nodeTypeName The node type name
      * @param parentId     parent node's id
      * @return a node state
-     * @throws IllegalStateException if the manager is not in edit mode.
+     * @throws RepositoryException if the node state can not be created
      */
-    NodeState createNew(NodeId id, Name nodeTypeName,
-                        NodeId parentId) throws IllegalStateException;
+    NodeState createNew(
+            NodeId id, Name nodeTypeName, NodeId parentId)
+            throws RepositoryException;
 
     /**
      * Creates a {@link PropertyState} instance representing new,
@@ -121,7 +122,5 @@ public interface UpdatableItemStateManager extends ItemStateManager {
      * Disposes this <code>UpdatableItemStateManager</code> and frees resources.
      */
     void dispose();
-
-    NodeIdFactory getNodeIdFactory();
 
 }
