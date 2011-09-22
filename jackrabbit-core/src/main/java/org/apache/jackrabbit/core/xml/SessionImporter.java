@@ -64,7 +64,7 @@ public class SessionImporter implements Importer {
      */
     private final ReferenceChangeTracker refTracker;
 
-    private final List<ProtectedItemImporter> pItemImporters = new ArrayList();
+    private final List<ProtectedItemImporter> pItemImporters = new ArrayList<ProtectedItemImporter>();
 
     /**
      * Currently active importer for protected nodes.
@@ -106,7 +106,7 @@ public class SessionImporter implements Importer {
         parents.push(importTargetNode);
 
         if (config != null) {
-            List<ProtectedItemImporter> iList = (List<ProtectedItemImporter>) config.getProtectedItemImporters();
+            List<? extends ProtectedItemImporter> iList = config.getProtectedItemImporters();
             for (ProtectedItemImporter importer : iList) {
                 if (importer.init(session, session, false, uuidBehavior, refTracker)) {
                     pItemImporters.add(importer);

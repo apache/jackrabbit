@@ -40,7 +40,6 @@ import org.xml.sax.SAXException;
 /**
  * <code>SysViewImportHandler</code>  ...
  */
-@SuppressWarnings({"ThrowableInstanceNeverThrown"})
 class SysViewImportHandler extends TargetImportHandler {
 
     /**
