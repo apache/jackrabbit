@@ -56,6 +56,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 
 /**
  * Abstract base class for database persistence managers. This class
@@ -106,7 +107,7 @@ public abstract class DatabasePersistenceManager extends AbstractPersistenceMana
     protected static final int SLEEP_BEFORE_RECONNECT = 10000;
 
     // the map of prepared statements (key: sql stmt, value: prepared stmt)
-    private HashMap preparedStatements = new HashMap();
+    private Map<String, PreparedStatement> preparedStatements = new HashMap<String, PreparedStatement>();
 
     // SQL statements for NodeState management
     protected String nodeStateInsertSQL;
@@ -269,8 +270,8 @@ public abstract class DatabasePersistenceManager extends AbstractPersistenceMana
 
         try {
             // close shared prepared statements
-            for (Iterator it = preparedStatements.values().iterator(); it.hasNext();) {
-                closeStatement((PreparedStatement) it.next());
+            for (PreparedStatement ps : preparedStatements.values()) {
+                closeStatement(ps);
             }
             preparedStatements.clear();
 
@@ -828,8 +829,8 @@ public abstract class DatabasePersistenceManager extends AbstractPersistenceMana
         // gracefully in order to avoid potential memory leaks
 
         // close shared prepared statements
-        for (Iterator it = preparedStatements.values().iterator(); it.hasNext();) {
-            PreparedStatement stmt = ((PreparedStatement) it.next());
+        for (Iterator<PreparedStatement> it = preparedStatements.values().iterator(); it.hasNext();) {
+            PreparedStatement stmt = it.next();
             if (stmt != null) {
                 try {
                     stmt.close();
