@@ -254,7 +254,7 @@ public class EffectiveNodeTypeCacheImpl implements EffectiveNodeTypeCache {
          * @param ntNames
          * @param weight
          */
-        WeightedKey(Collection ntNames, int weight) {
+        WeightedKey(Collection<Name> ntNames, int weight) {
             this((Name[]) ntNames.toArray(new Name[ntNames.size()]), weight);
         }
 

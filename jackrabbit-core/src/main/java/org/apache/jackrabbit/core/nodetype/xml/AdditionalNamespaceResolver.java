@@ -43,7 +43,7 @@ public class AdditionalNamespaceResolver implements NamespaceResolver {
      * @param namespaces namespace properties
      */
     public AdditionalNamespaceResolver(Properties namespaces) {
-        Enumeration prefixes = namespaces.propertyNames();
+        Enumeration<?> prefixes = namespaces.propertyNames();
         while (prefixes.hasMoreElements()) {
             String prefix = (String) prefixes.nextElement();
             addNamespace(prefix, namespaces.getProperty(prefix));
