@@ -1,32 +1,31 @@
-Release Notes -- Apache Jackrabbit -- Version 1.6.4
+Release Notes -- Apache Jackrabbit -- Version 1.6.6
 
 Introduction
 ------------
 
-Apache Jackrabbit 1.6.4 is a bug fix release that fixes issues reported
+Apache Jackrabbit 1.6.5 is a bug fix release that fixes issues reported
 against previous releases. This release is backwards-compatible with the
 earlier 1.6.x releases, but contains a change in persistence format that
 makes it impossible to downgrade to releases earlier than 1.6.2 after a
 repository has been upgraded. A full backup of the repository is recommended
 before this upgrade.
 
+End of life notice
+------------------
+
+This patch release marks the end of active maintenance of the Jackrabbit
+1.6 branch. All users are encouraged to upgrade to the more recent
+Jackrabbit 2.x versions.
+
 Changes in this release
 -----------------------
 
 This release fixes the following issues:
 
-  JCR-2341 Unable to add/lock and unlock/remove Node with shared Session ...
-  JCR-2413 AlreadyClosedException on initial index creation
-  JCR-2546 SISM blocks the item state cache when loading a new item
-  JCR-2579 InvalidItemStateException when attempting concurrent, non ...
-  JCR-2598 Saving concurrent sessions executing random operations causes ...
-  JCR-2613 NoSuchItemStateException on checkin after removeVersion in XA ...
-  JCR-2651 Add a OnWorkspaceInconsistency with logging only
-  JCR-2652 Can no longer set a Date property using a Long value
-  JCR-2656 Embedded Derby fails under JBoss because of JMX-related conflicts
-  JCR-2659 Fails to remove a previously assigned mixin
-  JCR-2667 NodeReferences are lost when deleting and setting the same ...
-  JCR-2681 XMLPersistanceManager doesn't preserve a property's ...
+  JCR-2427 UUIDDocId.getDocumentNumbers() may return illegal value
+  JCR-2969 FileDataStore garbage collection can throw a ...
+  JCR-3065 ConcurrentModificationException in FineGrainedISMLocking
+  JCR-3077 WeightedHighlighter does not encode XML markup characters
 
 See the Jackrabbit issue tracker for more details about these changes:
 
@@ -45,20 +44,6 @@ The source archive is accompanied by SHA1 and MD5 checksums and a PGP
 signature that you can use to verify the authenticity of your download.
 The public key used for the PGP signature can be found at
 https://svn.apache.org/repos/asf/jackrabbit/dist/KEYS.
-
-Contributors
-------------
-
-The following people have contributed to this release by submitting bug
-reports or by participating in the issue resolution process.
-
-    Adam Cooney           Marcel Reutegger      Tobias Bocanegra
-    Cédric Damioli        Paco Avila            Tom Quellenberg
-    Claus Köll            Sergiy Shyrkov        Vidar Ramdal
-    Dan Diephouse         Stefan Guggisberg
-    Jukka Zitting         Stephan Huttenhuis
-
-Thank you to everyone involved!
 
 About Apache Jackrabbit
 -----------------------
