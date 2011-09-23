@@ -1,4 +1,4 @@
-Release Notes -- Apache Jackrabbit -- Version 2.2.8
+Release Notes -- Apache Jackrabbit -- Version 2.2.9
 
 Introduction
 ------------
@@ -7,14 +7,17 @@ This is Apache Jackrabbit(TM) 2.2, a fully compliant implementation of the
 Content Repository for Java(TM) Technology API, version 2.0 (JCR 2.0) as
 specified in the Java Specification Request 283 (JSR 283).
 
-Apache Jackrabbit 2.2.8 is patch release that contains fixes and
+Apache Jackrabbit 2.2.9 is patch release that contains fixes and
 improvements over previous 2.2.x releases. This release is backwards
 compatible with all earlier 2.x releases.
 
-Note that earlier 2.2.x releases (< 2.2.7) had a problem where very large
-positive or negative long property values (more than 62 bits) could not be
-correctly read from the reepository. The values are still correctly stored
-in the reporistory, and can be properly read after upgrading to this release,
+Data consistency issue in 2.2.[0-6]
+-----------------------------------
+
+Earlier 2.2.x releases (< 2.2.7) had a problem where very large positive
+or negative long property values (more than 62 bits) could not be correctly
+read from the reepository. The values are still correctly stored in the
+reporistory, and can be properly read after upgrading to this release,
 but any previous computations or other information derived from such
 properties should be checked for correctness.
 
@@ -23,16 +26,13 @@ Changes in this release
 
 Bug fixes
 
-  [JCR-2951] Item.remove fails if a child-item is not visible to the ...
-  [JCR-2980] Nodes that have properties marked for async extraction ...
-  [JCR-2996] QOM to SQL2 doesn't cast numeric literals
-  [JCR-2999] Access control evaluation does not properly cope with XA ...
-  [JCR-3000] SQL2 Join with OR clause still has some issues
-  [JCR-3001] DescendantSelfAxisQuery may fail with IOException when ...
-  [JCR-3007] setProperty access control evaluation does not properly cope ...
-  [JCR-3009] Prefix fulltext queries with Japanese or Chinese characters ...
-  [JCR-3013] ArrayIndexOutOfBoundsException: ConcurrentCache
-  [JCR-3015] EntryCollector may log warning for inexistent item
+  [JCR-2962] InputStream not being explicitly closed
+  [JCR-2967] SessionItemStateManager.getIdOfRootTransientNodeState() ...
+  [JCR-2969] FileDataStore garbage collection can throw a ...
+  [JCR-3052] spi2dav: avoid reusing the same document in repositoryserviceimpl
+  [JCR-3065] ConcurrentModificationException in FineGrainedISMLocking
+  [JCR-3075] incorrect HTML excerpt generation for queries on japanese ...
+  [JCR-3077] WeightedHighlighter does not encode XML markup characters
 
 For more detailed information about all the changes in this and other
 Jackrabbit releases, please see the Jackrabbit issue tracker at
