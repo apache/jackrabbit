@@ -512,12 +512,10 @@ public class InternalXAVersionManager extends InternalVersionManagerBase
             xaItems.put(history.getId(), history);
             // also put 'successor' and 'predecessor' version items to xaItem sets
             InternalVersion v = history.getVersion(name);
-            InternalVersion[] vs = v.getSuccessors();
-            for (InternalVersion v1 : vs) {
+            for (InternalVersion v1 : v.getSuccessors()) {
                 xaItems.put(v1.getId(), v1);
             }
-            vs = v.getPredecessors();
-            for (InternalVersion v1 : vs) {
+            for (InternalVersion v1 : v.getPredecessors()) {
                 xaItems.put(v1.getId(), v1);
             }
         }

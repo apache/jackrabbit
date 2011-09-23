@@ -664,7 +664,7 @@ abstract class InternalVersionManagerBase implements InternalVersionManager {
             return newVersionName;
         } else {
             // best is root version
-            return String.valueOf(best.getSuccessors().length + 1) + ".0";
+            return String.valueOf(best.getSuccessors().size() + 1) + ".0";
         }
     }
 

@@ -19,6 +19,7 @@ package org.apache.jackrabbit.core.version;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Set;
 
 import javax.jcr.ItemExistsException;
@@ -575,14 +576,14 @@ abstract public class VersionManagerImplRestore extends VersionManagerImplBase {
                     if (v == null) {
                         // if version selector was unable to select version,
                         // choose the initial one
-                        InternalVersion[] vs = vh.getRootVersion().getSuccessors();
-                        if (vs.length == 0) {
+                        List<InternalVersion> vs = vh.getRootVersion().getSuccessors();
+                        if (vs.isEmpty()) {
                             String msg = "Unable to select appropariate version for "
                                     + child.getName() + " using " + vsel;
                             log.error(msg);
                             throw new VersionException(msg);
                         }
-                        v = vs[0];
+                        v = vs.get(0);
                     }
                     InternalFrozenNode f = v.getFrozenNode();
                     restoredChild = state.addNode(fh.getName(), f.getFrozenPrimaryType(), f.getFrozenId());
