@@ -370,7 +370,7 @@ public class FineGrainedISMLocking implements ISMLocking {
             }
             for (int i = 0; i < slots.length; i++) {
                 Map locks = slots[i];
-                if (!locks.isEmpty()) {
+                synchronized (locks) {
                     Iterator it = locks.keySet().iterator();
                     while (it.hasNext()) {
                         ItemId id = (ItemId) it.next();
