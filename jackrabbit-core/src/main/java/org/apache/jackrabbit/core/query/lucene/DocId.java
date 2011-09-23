@@ -21,6 +21,9 @@ import org.apache.jackrabbit.uuid.UUID;
 import java.io.IOException;
 import java.util.BitSet;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * Implements a document id which can be based on a Node uuid or a lucene
  * document number.
@@ -207,6 +210,11 @@ abstract class DocId {
     private static final class UUIDDocId extends DocId {
 
         /**
+         * The logger instance for this class.
+         */
+        private static final Logger log = LoggerFactory.getLogger(UUIDDocId.class);
+
+        /**
          * The least significant 64 bits of the uuid (bytes 8-15)
          */
         private final long lsb;
@@ -247,6 +255,9 @@ abstract class DocId {
                 if (segDocId != null) {
                     realDoc = reader.getDocumentNumber(segDocId);
                     doc = segDocId;
+                } else {
+                    log.warn("Unknown parent node with id {}", segDocId);
+                    return EMPTY;
                 }
             }
 
