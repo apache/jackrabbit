@@ -720,7 +720,7 @@ public class NodeTypeRegistry implements Dumpable, NodeTypeEventListener {
         // use the improved node type cache
         // (replace with: entCache = new EffectiveNodeTypeCacheImpl();
         // for the old one)
-        entCache = new BitsetENTCacheImpl();
+        entCache = new BitSetENTCacheImpl();
         registeredNTDefs = new ConcurrentReaderHashMap();
 
         // setup definition of root node

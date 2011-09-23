@@ -30,7 +30,7 @@ import EDU.oswego.cs.dl.util.concurrent.ConcurrentReaderHashMap;
  * Implements an effective node type cache that uses a bit set for storing the
  * information about participating node types in a set.
  */
-public class BitsetENTCacheImpl implements EffectiveNodeTypeCache {
+public class BitSetENTCacheImpl implements EffectiveNodeTypeCache {
 
     /**
      * constant for bits-per-word
@@ -74,7 +74,7 @@ public class BitsetENTCacheImpl implements EffectiveNodeTypeCache {
     /**
      * Creates a new bitset effective node type cache
      */
-    BitsetENTCacheImpl() {
+    BitSetENTCacheImpl() {
         sortedKeys = new TreeSet();
         aggregates = new HashMap();
     }
@@ -83,7 +83,7 @@ public class BitsetENTCacheImpl implements EffectiveNodeTypeCache {
      * {@inheritDoc}
      */
     public Key getKey(Name[] ntNames) {
-        return new BitsetKey(ntNames, nameIndex.size() + ntNames.length);
+        return new BitSetKey(ntNames, nameIndex.size() + ntNames.length);
     }
 
     /**
@@ -210,7 +210,7 @@ public class BitsetENTCacheImpl implements EffectiveNodeTypeCache {
      * {@inheritDoc}
      */
     public Object clone() {
-        BitsetENTCacheImpl clone = new BitsetENTCacheImpl();
+        BitSetENTCacheImpl clone = new BitSetENTCacheImpl();
         clone.sortedKeys.addAll(sortedKeys);
         clone.aggregates.putAll(aggregates);
         clone.names = new Name[names.length];
@@ -238,10 +238,10 @@ public class BitsetENTCacheImpl implements EffectiveNodeTypeCache {
     /**
      * Implements a {@link Key} by storing the node type aggregate information
      * in a bit set. We do not use the {@link java.util.BitSet} because it
-     * does not suite all our needs. Every node type is represented by a bit
+     * does not suit all our requirements. Every node type is represented by a bit
      * in the set. This key is immutable.
      */
-    private class BitsetKey implements Key {
+    private class BitSetKey implements Key {
 
         /**
          * The names of the node types that form this key.
@@ -254,16 +254,16 @@ public class BitsetENTCacheImpl implements EffectiveNodeTypeCache {
         private final long[] bits;
 
         /**
-         * the hashcode, only calculated once
+         * the hash code, only calculated once
          */
         private final int hashCode;
 
         /**
-         * Creates a ew bitset key.
+         * Creates a new bit set key.
          * @param names the node type names
-         * @param maxBit the approximative number of the geatest bit
+         * @param maxBit the approximative number of the greatest bit
          */
-        public BitsetKey(Name[] names, int maxBit) {
+        public BitSetKey(Name[] names, int maxBit) {
             this.names = names;
             bits = new long[maxBit / BPW + 1];
 
@@ -275,17 +275,17 @@ public class BitsetENTCacheImpl implements EffectiveNodeTypeCache {
         }
 
         /**
-         * Creates new bitset key.
-         * @param bits the array if bits
-         * @param numBits the number of bits that are '1' in the given bis
+         * Creates a new bit set key.
+         * @param bits the array of bits
+         * @param numBits the number of bits that are '1' in the given bits
          */
-        private BitsetKey(long[] bits, int numBits) {
+        private BitSetKey(long[] bits, int numBits) {
             this.bits = bits;
             names = new Name[numBits];
             int i = nextSetBit(0);
             int j = 0;
             while (i >= 0) {
-                names[j++] = BitsetENTCacheImpl.this.getName(i);
+                names[j++] = BitSetENTCacheImpl.this.getName(i);
                 i = nextSetBit(i + 1);
             }
             hashCode = calcHashCode();
@@ -309,7 +309,7 @@ public class BitsetENTCacheImpl implements EffectiveNodeTypeCache {
              * 1 - 1 => 0
              * !a and b
              */
-            BitsetKey other = (BitsetKey) otherKey;
+            BitSetKey other = (BitSetKey) otherKey;
             int len = Math.max(bits.length, other.bits.length);
             for (int i = 0; i < len; i++) {
                 long w1 = i < bits.length ? bits[i] : 0;
@@ -333,7 +333,7 @@ public class BitsetENTCacheImpl implements EffectiveNodeTypeCache {
              * 1 - 1 => 0
              * a and !b
              */
-            BitsetKey other = (BitsetKey) otherKey;
+            BitSetKey other = (BitSetKey) otherKey;
             int len = Math.max(bits.length, other.bits.length);
             long[] newBits = new long[len];
             int numBits = 0;
@@ -343,12 +343,12 @@ public class BitsetENTCacheImpl implements EffectiveNodeTypeCache {
                 newBits[i] = w1 & ~w2;
                 numBits += bitCount(newBits[i]);
             }
-            return new BitsetKey(newBits, numBits);
+            return new BitSetKey(newBits, numBits);
         }
 
         /**
          * Returns the bit number of the next bit that is set, starting at
-         * <code>fromIndex</code> inclusieve.
+         * <code>fromIndex</code> inclusive.
          *
          * @param fromIndex the bit position to start the search
          * @return the bit position of the bit or -1 if none found.
@@ -394,11 +394,11 @@ public class BitsetENTCacheImpl implements EffectiveNodeTypeCache {
         /**
          * {@inheritDoc}
          *
-         * This compares 1. the cardinailty (number of set bits) and 2. the
-         * nummeric value of the bitsets in descending order.
+         * This compares 1. the cardinality (number of set bits) and 2. the
+         * numeric value of the bit sets in descending order.
          */
         public int compareTo(Object other) {
-            BitsetKey o = (BitsetKey) other;
+            BitSetKey o = (BitSetKey) other;
             int res = o.names.length - names.length;
             if (res == 0) {
                 int adr = Math.max(bits.length, o.bits.length) - 1;
@@ -413,7 +413,7 @@ public class BitsetENTCacheImpl implements EffectiveNodeTypeCache {
                             h1 = w1 & 0x0ffffL;
                             h2 = w2 & 0x0ffffL;
                         }
-                        return (int) (h2 - h1);
+                        return Long.signum(h2 - h1);
                     }
                     adr--;
                 }
@@ -428,8 +428,8 @@ public class BitsetENTCacheImpl implements EffectiveNodeTypeCache {
             if (this == obj) {
                 return true;
             }
-            if (obj instanceof BitsetKey) {
-                BitsetKey o = (BitsetKey) obj;
+            if (obj instanceof BitSetKey) {
+                BitSetKey o = (BitSetKey) obj;
                 if (names.length != o.names.length) {
                     return false;
                 }
@@ -455,8 +455,8 @@ public class BitsetENTCacheImpl implements EffectiveNodeTypeCache {
         }
 
         /**
-         * Calculates the hashcode.
-         * @return the calculated hashcode
+         * Calculates the hash code.
+         * @return the calculated hash code
          */
         private int calcHashCode() {
             long h = 1234;
@@ -480,7 +480,7 @@ public class BitsetENTCacheImpl implements EffectiveNodeTypeCache {
             int i = nextSetBit(0);
             while (i >= 0) {
                 buf.append(", ").append(i).append("=");
-                buf.append(BitsetENTCacheImpl.this.getName(i));
+                buf.append(BitSetENTCacheImpl.this.getName(i));
                 i = nextSetBit(i + 1);
             }
             return buf.toString();
