@@ -19,17 +19,19 @@ package org.apache.jackrabbit.core.query.lucene;
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.Set;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
+import org.apache.jackrabbit.util.Text;
 import org.apache.lucene.document.Field;
+import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermPositionVector;
 import org.apache.lucene.index.TermVectorOffsetInfo;
-import org.apache.lucene.index.Term;
-import org.apache.jackrabbit.util.Text;
 
 /**
  * This is an adapted version of the <code>FulltextHighlighter</code> posted in
@@ -93,7 +95,7 @@ public class DefaultHighlighter {
      *         highlighted
      */
     public static String highlight(TermPositionVector tvec,
-                                   Set<Term> queryTerms,
+                                   Set<Term[]> queryTerms,
                                    String text,
                                    String excerptStart,
                                    String excerptEnd,
@@ -120,7 +122,7 @@ public class DefaultHighlighter {
      *         highlighted
      */
     public static String highlight(TermPositionVector tvec,
-                                   Set<Term> queryTerms,
+                                   Set<Term[]> queryTerms,
                                    String text,
                                    int maxFragments,
                                    int surround)
@@ -134,7 +136,7 @@ public class DefaultHighlighter {
      * @see #highlight(TermPositionVector, Set, String, String, String, String, String, String, String, int, int)
      */
     protected String doHighlight(TermPositionVector tvec,
-                                 Set<Term> queryTerms,
+                                 Set<Term[]> queryTerms,
                                  String text,
                                  String excerptStart,
                                  String excerptEnd,
@@ -144,21 +146,102 @@ public class DefaultHighlighter {
                                  String hlEnd,
                                  int maxFragments,
                                  int surround) throws IOException {
-        String[] terms = new String[queryTerms.size()];
-        Iterator<Term> it = queryTerms.iterator();
-        for (int i = 0; it.hasNext(); i++) {
-            terms[i] = it.next().text();
-        }
-        List<TermVectorOffsetInfo> list = new ArrayList<TermVectorOffsetInfo>();
-        int[] tvecindexes = tvec.indexesOf(terms, 0, terms.length);
-        for (int tvecindex : tvecindexes) {
-            TermVectorOffsetInfo[] termoffsets = tvec.getOffsets(tvecindex);
-            list.addAll(Arrays.asList(termoffsets));
+
+        List<TermVectorOffsetInfo> termOffsetInfo = new ArrayList<TermVectorOffsetInfo>();
+        
+        Iterator<Term[]> it = queryTerms.iterator();
+        while (it.hasNext()) {
+            Term[] qt = it.next();
+            final int qtLen = qt.length;
+            if (qt == null || qtLen == 0) {
+                continue;
+            }
+            String[] qtText = new String[qtLen];
+            for (int i = 0; i < qtLen; i++) {
+                qtText[i] = qt[i].text();
+            }
+            int[] tvecindexes = tvec.indexesOf(qtText, 0, qtText.length);
+            Map<Integer, TermVectorOffsetInfo[]> localTermOffsetInfo = new HashMap<Integer, TermVectorOffsetInfo[]>();
+            for (int tvecindex : tvecindexes) {
+                TermVectorOffsetInfo[] termoffsets = tvec.getOffsets(tvecindex);
+                if (termoffsets == null || termoffsets.length == 0) {
+                    continue;
+                }
+                localTermOffsetInfo.put(tvecindex, termoffsets);
+            }
+
+            // to keep the order of the keys, use tvecindexes,
+            // if a term is not found tvecindexes[] = -1
+            // when dealing with multiple terms that have to exist, just check
+            // if the first one is there
+            if (tvecindexes.length > 0 && tvecindexes[0] >= 0) {
+                // we have to build one interval TermVectorOffsetInfo for each
+                // hit;
+                List<TermVectorOffsetInfo> intervalTermOffsetInfo = new ArrayList<TermVectorOffsetInfo>();
+
+                // pick all the first key's hist as interval start
+                TermVectorOffsetInfo[] firstKeyTermOffsets = localTermOffsetInfo
+                        .get(tvecindexes[0]);
+                Arrays.sort(firstKeyTermOffsets,
+                        new TermVectorOffsetInfoSorter());
+                intervalTermOffsetInfo.addAll(Arrays
+                        .asList(firstKeyTermOffsets));                
+
+                // check if each key is part of an interval, if not, it is
+                // dropped from the list
+                for (int i = 1; i < tvecindexes.length; i++) {
+                    final Integer key = tvecindexes[i];
+                    TermVectorOffsetInfo[] termoffsets = localTermOffsetInfo
+                            .get(key);
+                    if (termoffsets == null) {
+                        continue;
+                    }
+                    Arrays.sort(termoffsets, new TermVectorOffsetInfoSorter());
+
+                    Iterator<TermVectorOffsetInfo> intervalIterator = intervalTermOffsetInfo
+                            .iterator();
+
+                    int index = 0;
+                    while (intervalIterator.hasNext()) {
+                        TermVectorOffsetInfo intervalOI = intervalIterator
+                                .next();
+                        if (index >= termoffsets.length) {
+                            intervalIterator.remove();
+                            continue;
+                        }
+                        boolean matchSearch = true;
+                        boolean matchFound = false;
+                        while (matchSearch) {
+                            TermVectorOffsetInfo localOI = termoffsets[index];
+                            // check interval match
+                            // CJK languages will have the tokens from the PhraseQuery glued together (see LUCENE-2458)
+                            int diff = localOI.getStartOffset()
+                                    - intervalOI.getEndOffset();
+                            // TODO we'll probably have to remove 'diff == 0'
+                            // after upgrading to lucene 3.1
+                            if (diff == 1 || diff == 0) {
+                                intervalOI.setEndOffset(localOI.getEndOffset());
+                                matchSearch = false;
+                                matchFound = true;
+                            }
+                            index++;
+                            if (index >= termoffsets.length) {
+                                matchSearch = false;
+                            }
+                        }
+                        if (!matchFound) {
+                            index--;
+                            intervalIterator.remove();
+                        }
+                    }
+                }
+                termOffsetInfo.addAll(intervalTermOffsetInfo);
+            }
         }
 
-        TermVectorOffsetInfo[] offsets = list.toArray(new TermVectorOffsetInfo[list.size()]);
+        TermVectorOffsetInfo[] offsets = termOffsetInfo.toArray(new TermVectorOffsetInfo[termOffsetInfo.size()]);
         // sort offsets
-        if (terms.length > 1) {
+        if (offsets != null && offsets.length > 1) {
             Arrays.sort(offsets, new TermVectorOffsetInfoSorter());
         }
 
@@ -248,8 +331,8 @@ public class DefaultHighlighter {
                     if (skippedChars > surround) {
                         skippedChars = surround;
                     }
-                    sb.append(Text.encodeIllegalXMLCharacters(
-                            new String(cbuf, 0, surround - skippedChars)));
+                    sb.append(escape(new String(cbuf, 0, surround
+                            - skippedChars)));
                     sb.append(fragmentEnd);
                 }
             }
@@ -296,8 +379,8 @@ public class DefaultHighlighter {
             if (!sentenceStart) {
                 sb.append("... ");
             }
-            sb.append(Text.encodeIllegalXMLCharacters(
-                    new String(cbuf, skippedChars, cbuf.length - skippedChars)));
+            sb.append(escape(new String(cbuf, skippedChars, cbuf.length
+                    - skippedChars)));
 
             // iterate terms
             for (Iterator iter = fi.iterator(); iter.hasNext();) {
@@ -307,7 +390,7 @@ public class DefaultHighlighter {
                     cbuf = new char[nextStart - pos];
                     int charsRead = reader.read(cbuf, 0, nextStart - pos);
                     pos += (nextStart - pos);
-                    sb.append(cbuf, 0, charsRead);
+                    sb.append(escape(new String(cbuf, 0, charsRead)));
                 }
                 sb.append(hlStart);
                 nextStart = ti.getEndOffset();
@@ -315,7 +398,7 @@ public class DefaultHighlighter {
                 cbuf = new char[nextStart - pos];
                 reader.read(cbuf, 0, nextStart - pos);
                 pos += (nextStart - pos);
-                sb.append(cbuf);
+                sb.append(escape(new String(cbuf)));
                 sb.append(hlEnd);
             }
         }
@@ -341,8 +424,8 @@ public class DefaultHighlighter {
                 } else {
                     skippedChars = 0;
                 }
-                sb.append(Text.encodeIllegalXMLCharacters(
-                        new String(cbuf, 0, EOF ? skip : (surround - skippedChars))));
+                sb.append(escape(new String(cbuf, 0, EOF ? skip
+                        : (surround - skippedChars))));
                 if (!EOF) {
                     char lastChar = sb.charAt(sb.length() - 1);
                     if (lastChar != '.' && lastChar != '!' && lastChar != '?') {
@@ -362,7 +445,7 @@ public class DefaultHighlighter {
      * @param text the text.
      * @param excerptStart the excerpt start.
      * @param excerptEnd the excerpt end.
-     * @param fragmentStart the fragement start.
+     * @param fragmentStart the fragment start.
      * @param fragmentEnd the fragment end.
      * @param maxLength the maximum length of the fragment.
      * @return a default excerpt.
@@ -391,9 +474,23 @@ public class DefaultHighlighter {
                 }
             }
         }
-        excerpt.append(Text.encodeIllegalXMLCharacters(tmp.toString()));
+        excerpt.append(escape(tmp.toString()));
         excerpt.append(fragmentEnd).append(excerptEnd);
         return excerpt.toString();
+    }
+    
+    
+    /**
+     * Escapes input text suitable for the output format.
+     * <p>
+     * By default does XML-escaping. Can be overridden for
+     * other formats.
+     * 
+     * @param input raw text.
+     * @return text suitably escaped.
+     */
+    protected String escape(String input) {
+        return Text.encodeIllegalXMLCharacters(input);
     }
 
     private static class FragmentInfo {
