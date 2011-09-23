@@ -385,9 +385,11 @@ public class FineGrainedISMLocking implements ISMLocking {
             }
             for (int i = 0; i < slots.length; i++) {
                 Map<ItemId, Integer> locks = slots[i];
-                for (ItemId id : locks.keySet()) {
-                    if (FineGrainedISMLocking.hasDependency(changes, id)) {
-                        return true;
+                synchronized (locks) {
+                    for (ItemId id : locks.keySet()) {
+                        if (FineGrainedISMLocking.hasDependency(changes, id)) {
+                            return true;
+                        }
                     }
                 }
             }
