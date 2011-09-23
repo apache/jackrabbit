@@ -193,14 +193,17 @@ public class WeightedHighlighter extends DefaultHighlighter {
                 TermVectorOffsetInfo oi = (TermVectorOffsetInfo) fIt.next();
                 if (lastOffsetInfo != null) {
                     // fill in text between terms
-                    sb.append(text.substring(lastOffsetInfo.getEndOffset(), oi.getStartOffset()));
+                    sb.append(escape(text.substring(
+                            lastOffsetInfo.getEndOffset(), oi.getStartOffset())));
                 }
                 sb.append(hlStart);
-                sb.append(text.substring(oi.getStartOffset(), oi.getEndOffset()));
+                sb.append(escape(text.substring(oi.getStartOffset(),
+                        oi.getEndOffset())));
                 sb.append(hlEnd);
                 lastOffsetInfo = oi;
             }
-            limit = Math.min(text.length(), fi.getStartOffset() - len + (surround * 2));
+            limit = Math.min(text.length(), fi.getStartOffset() - len
+                    + (surround * 2));
             endFragment(sb, text, fi.getEndOffset(), limit);
             sb.append(fragmentEnd);
         }
@@ -221,10 +224,10 @@ public class WeightedHighlighter extends DefaultHighlighter {
      * @return the length of the start fragment that was appended to
      *         <code>sb</code>.
      */
-    private static int startFragment(StringBuffer sb, String text, int offset, int limit) {
+    private int startFragment(StringBuffer sb, String text, int offset, int limit) {
         if (limit == 0) {
             // append all
-            sb.append(text.substring(0, offset));
+            sb.append(escape(text.substring(0, offset)));
             return offset;
         }
         String intro = "... ";
@@ -240,7 +243,7 @@ public class WeightedHighlighter extends DefaultHighlighter {
                 }
             }
         }
-        sb.append(intro).append(text.substring(start, offset));
+        sb.append(intro).append(escape(text.substring(start, offset)));
         return offset - start;
     }
 
@@ -254,10 +257,10 @@ public class WeightedHighlighter extends DefaultHighlighter {
      * @param offset the end offset of the last matching term in the fragment.
      * @param limit  do not go further than <code>limit</code>.
      */
-    private static void endFragment(StringBuffer sb, String text, int offset, int limit) {
+    private void endFragment(StringBuffer sb, String text, int offset, int limit) {
         if (limit == text.length()) {
             // append all
-            sb.append(text.substring(offset));
+            sb.append(escape(text.substring(offset)));
             return;
         }
         int end = offset;
@@ -267,7 +270,7 @@ public class WeightedHighlighter extends DefaultHighlighter {
                 end = i;
             }
         }
-        sb.append(text.substring(offset, end)).append(" ...");
+        sb.append(escape(text.substring(offset, end))).append(" ...");
     }
 
     private static class FragmentInfo {
