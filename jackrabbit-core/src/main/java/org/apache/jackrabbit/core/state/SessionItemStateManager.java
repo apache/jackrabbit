@@ -578,15 +578,16 @@ public class SessionItemStateManager
 
         // the nearest common ancestor of all transient states
         // must be either
-        // a) a node state with STATUS_EXISTING_MODIFIED, or
-        // b) the parent node of a property state with STATUS_EXISTING_MODIFIED
+        // a) a node state with STATUS_EXISTING_MODIFIED or STATUS_STALE_DESTROYED, or
+        // b) the parent node of a property state with STATUS_EXISTING_MODIFIED or STATUS_STALE_DESTROYED
 
         // collect all candidates based on above criteria
         Collection<NodeId> candidateIds = new LinkedList<NodeId>();
         try {
             HierarchyManager hierMgr = getHierarchyMgr();
             for (ItemState state : transientStore.values()) {
-                if (state.getStatus() == ItemState.STATUS_EXISTING_MODIFIED) {
+                if (state.getStatus() == ItemState.STATUS_EXISTING_MODIFIED
+                        || state.getStatus() == ItemState.STATUS_STALE_DESTROYED) {
                     NodeId nodeId;
                     if (state.isNode()) {
                         nodeId = (NodeId) state.getId();
