@@ -33,6 +33,7 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Node;
 import javax.jcr.nodetype.ConstraintViolationException;
 import java.util.Calendar;
+import java.util.List;
 
 /**
  * Base implementation of the {@link javax.jcr.version.Version} interface.
@@ -80,10 +81,10 @@ public class VersionImpl extends NodeImpl implements Version {
      */
     public javax.jcr.version.Version[] getSuccessors() throws RepositoryException {
         // need to wrap it around proper node
-        InternalVersion[] suc = getInternalVersion().getSuccessors();
-        Version[] ret = new Version[suc.length];
-        for (int i = 0; i < suc.length; i++) {
-            ret[i] = (Version) session.getNodeById(suc[i].getId());
+        List<InternalVersion> suc = getInternalVersion().getSuccessors();
+        Version[] ret = new Version[suc.size()];
+        for (int i = 0; i < ret.length; i++) {
+            ret[i] = (Version) session.getNodeById(suc.get(i).getId());
         }
         return ret;
     }

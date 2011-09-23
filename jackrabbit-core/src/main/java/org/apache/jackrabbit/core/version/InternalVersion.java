@@ -21,6 +21,7 @@ import org.apache.jackrabbit.core.id.NodeId;
 import javax.jcr.version.Version;
 
 import java.util.Calendar;
+import java.util.List;
 
 /**
  * This interface defines the internal version.
@@ -63,7 +64,7 @@ public interface InternalVersion extends InternalVersionItem {
      * @see javax.jcr.version.Version#getSuccessors()
      * @return the successors as internal versions
      */
-    InternalVersion[] getSuccessors();
+    List<InternalVersion> getSuccessors();
 
     /**
      * Equivalent to {@link Version#getLinearSuccessor()}.

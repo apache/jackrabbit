@@ -162,7 +162,7 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
         }
 
         // fix legacy
-        if (rootVersion.getSuccessors().length == 0) {
+        if (rootVersion.getSuccessors().isEmpty()) {
             for (Name versionName : nameCache.keySet()) {
                 InternalVersionImpl v = createVersionInstance(versionName);
                 v.legacyResolveSuccessors();
