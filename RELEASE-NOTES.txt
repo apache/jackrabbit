@@ -1,9 +1,9 @@
-Release Notes -- Apache Jackrabbit -- Version 2.0.4
+Release Notes -- Apache Jackrabbit -- Version 2.0.5
 
 Introduction
 ------------
 
-Apache Jackrabbit 2.0.4 is a bug fix release that fixes issues reported
+Apache Jackrabbit 2.0.5 is a bug fix release that fixes issues reported
 against previous releases. This release is fully compatible with the
 earlier 2.0.x releases.
 
@@ -13,9 +13,19 @@ Changes in this release
 Bug fixes
 
   [JCR-2523] StaleItemStateException during distributed transaction
+  [JCR-2655] initVersions crashes with NPE
+  [JCR-2734] Inconsistencies in BitSetKey comparison
   [JCR-2753] Deadlock in DefaultISMLocking
   [JCR-2813] "overwriting cached entry" warnings
   [JCR-2820] FineGrainedISMLocking problems
+  [JCR-2890] Deadlock in acl.EntryCollector / ItemManager
+  [JCR-2953] PathParser accepts illegal paths containing curly brackets
+  [JCR-2962] InputStream not being explicitly closed
+  [JCR-2967] SessionItemStateManager.getIdOfRootTransientNodeState() ...
+  [JCR-2969] FileDataStore garbage collection can throw a ...
+  [JCR-3065] ConcurrentModificationException in FineGrainedISMLocking
+  [JCR-3075] incorrect HTML excerpt generation for queries on japanese ...
+  [JCR-3077] WeightedHighlighter does not encode XML markup characters
 
 See the Jackrabbit issue tracker for more details about these changes:
 
