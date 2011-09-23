@@ -18,5 +18,5 @@
 /**
  * Jackrabbit extensions for JCR observation.
  */
-@aQute.bnd.annotation.Version("2.2")
+@aQute.bnd.annotation.Version("2.3")
 package org.apache.jackrabbit.api.observation;

@@ -18,5 +18,5 @@
 /**
  * Interfaces for managing a Jackrabbit repository.
  */
-@aQute.bnd.annotation.Version("2.2")
+@aQute.bnd.annotation.Version("2.3")
 package org.apache.jackrabbit.api.management;
