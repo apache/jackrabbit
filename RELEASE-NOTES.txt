@@ -1,4 +1,4 @@
-Release Notes -- Apache Jackrabbit -- Version 2.1.5
+Release Notes -- Apache Jackrabbit -- Version 2.1.6
 
 Introduction
 ------------
@@ -7,7 +7,7 @@ This is Apache Jackrabbit 2.1, a fully compliant and production-ready
 implementation of the Content Repository for Java Technology API, version 2.0
 (JCR 2.0, http://jcp.org/en/jsr/summary?id=283).
 
-Apache Jackrabbit 2.1.5 is a bug fix release that fixes issues reported
+Apache Jackrabbit 2.1.6 is a bug fix release that fixes issues reported
 against previous releases. This release is fully compatible with the
 earlier 2.1.x releases.
 
@@ -16,14 +16,14 @@ Changes in this release
 
 Bug fixes
 
-  [JCR-2865] a dead lock in DefaultISMLocking
-  [JCR-2881] Deadlock on version operations in a clustered environment
-  [JCR-2888] Namespace comparison in Namespace.java doesn't work, if a ...
-  [JCR-2889] Occasional JCA test failures
-  [JCR-2890] Deadlock in acl.EntryCollector / ItemManager
-  [JCR-2891] VersionManagerImplRestore internalRestoreFrozen method has ...
-  [JCR-2901] JCR-2523 break the transaction handling in container managed ...
-  [JCR-2953] PathParser accepts illegal paths containing curly brackets
+  [JCR-2655] initVersions crashes with NPE
+  [JCR-2734] Inconsistencies in BitSetKey comparison
+  [JCR-2962] InputStream not being explicitly closed
+  [JCR-2967] SessionItemStateManager.getIdOfRootTransientNodeState() ...
+  [JCR-2969] FileDataStore garbage collection can throw a ...
+  [JCR-3065] ConcurrentModificationException in FineGrainedISMLocking
+  [JCR-3075] incorrect HTML excerpt generation for queries on japanese ...
+  [JCR-3077] - WeightedHighlighter does not encode XML markup characters
 
 For more detailed information about all the changes in this and other
 Jackrabbit releases, please see the Jackrabbit issue tracker at
