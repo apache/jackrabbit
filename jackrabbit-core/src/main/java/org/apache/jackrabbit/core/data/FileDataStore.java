@@ -309,15 +309,21 @@ public class FileDataStore implements DataStore {
                 }
             }
         } else if (file.isDirectory()) {
-            for (File f: file.listFiles()) {
-                count += deleteOlderRecursive(f, min);
+            File[] list = file.listFiles();
+            if (list != null) {
+                for (File f: list) {
+                    count += deleteOlderRecursive(f, min);
+                }
             }
 
             // JCR-1396: FileDataStore Garbage Collector and empty directories
             // Automatic removal of empty directories (but not the root!)
             synchronized (this) {
-                if (file != directory && file.list().length == 0) {
-                    file.delete();
+                if (file != directory) {
+                    list = file.listFiles();
+                    if (list != null && list.length == 0) {
+                        file.delete();
+                    }
                 }
             }
         }
