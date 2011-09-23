@@ -16,9 +16,9 @@
  */
 package org.apache.jackrabbit.core.query;
 
+import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
-import javax.jcr.Node;
 import javax.jcr.query.QueryResult;
 import javax.jcr.query.Row;
 import javax.jcr.query.RowIterator;
@@ -104,6 +104,10 @@ public class ExcerptTest extends AbstractQueryTest {
                 "apache jackrabbit");
     }
 
+    /**
+     * Verifies character encoding on a node property that does not contain any
+     * excerpt info
+     */
     public void testEncodeIllegalCharsNoHighlights() throws RepositoryException {
         String text = "bla <strong>bla</strong> bla";
         String excerpt = createExcerpt("bla &lt;strong&gt;bla&lt;/strong&gt; bla");
@@ -116,8 +120,125 @@ public class ExcerptTest extends AbstractQueryTest {
         QueryResult result = executeQuery(stmt);
         RowIterator rows = result.getRows();
         assertEquals(1, rows.getSize());
-        assertEquals(excerpt, rows.nextRow().getValue("rep:excerpt(text)").getString());
+        String ex = rows.nextRow().getValue("rep:excerpt(text)").getString();
+        assertEquals("Expected " + excerpt + ", but got ", excerpt, ex);
     }
+
+    /**
+     * Verifies character encoding on a node property that contains excerpt info
+     */
+    public void testEncodeIllegalCharsHighlights() throws RepositoryException {
+        checkExcerpt("bla <strong>bla</strong> foo",
+                "bla &lt;strong&gt;bla&lt;/strong&gt; <strong>foo</strong>",
+                "foo");
+    }
+
+    /**
+     * test for https://issues.apache.org/jira/browse/JCR-3077
+     * 
+     * when given a quoted phrase, the excerpt should evaluate it whole as a
+     * token (not break is down)
+     * 
+     */
+    public void testQuotedPhrase() throws RepositoryException {
+        checkExcerpt("one two three four",
+                "one <strong>two three</strong> four", "\"two three\"");
+    }
+
+    /**
+     * Verifies excerpt generation on a node property that does not contain any
+     * excerpt info for a quoted phrase
+     */
+    public void testQuotedPhraseNoMatch() throws RepositoryException {
+        String text = "one two three four";
+        String excerpt = createExcerpt("one two three four");
+        String terms = "\"five six\"";
+
+        Node n = testRootNode.addNode(nodeName1);
+        n.setProperty("text", text);
+        n.setProperty("other", terms);
+        superuser.save();
+
+        String stmt = getStatement(terms);
+        QueryResult result = executeQuery(stmt);
+        RowIterator rows = result.getRows();
+        assertEquals(1, rows.getSize());
+        String ex = rows.nextRow().getValue("rep:excerpt(text)").getString();
+        assertEquals("Expected " + excerpt + ", but got ", excerpt, ex);
+    }
+
+    /**
+     * 
+     * Verifies excerpt generation on a node property that contains the exact
+     * quoted phrase but with scrambled words.
+     * 
+     * More clearly it actually checks that the order of tokens is respected for
+     * a quoted phrase.
+     */
+    public void testQuotedPhraseNoMatchScrambled() throws RepositoryException {
+        String text = "one two three four";
+        String excerpt = createExcerpt("one two three four");
+        String terms = "\"three two\"";
+
+        Node n = testRootNode.addNode(nodeName1);
+        n.setProperty("text", text);
+        n.setProperty("other", terms);
+        superuser.save();
+
+        String stmt = getStatement(terms);
+        QueryResult result = executeQuery(stmt);
+        RowIterator rows = result.getRows();
+        assertEquals(1, rows.getSize());
+        String ex = rows.nextRow().getValue("rep:excerpt(text)").getString();
+        assertEquals("Expected " + excerpt + ", but got ", excerpt, ex);
+    }
+    
+    /**
+     * Verifies excerpt generation on a node property that does not contain the
+     * exact quoted phrase, but contains fragments of it.
+     * 
+     */
+    public void testQuotedPhraseNoMatchGap() throws RepositoryException {
+        String text = "one two three four";
+        String excerpt = createExcerpt("one two three four");
+        String terms = "\"two four\"";
+
+        Node n = testRootNode.addNode(nodeName1);
+        n.setProperty("text", text);
+        n.setProperty("other", terms);
+        superuser.save();
+
+        String stmt = getStatement(terms);
+        QueryResult result = executeQuery(stmt);
+        RowIterator rows = result.getRows();
+        assertEquals(1, rows.getSize());
+        String ex = rows.nextRow().getValue("rep:excerpt(text)").getString();
+        assertEquals("Expected " + excerpt + ", but got ", excerpt, ex);
+    }
+    
+    /**
+     * test for https://issues.apache.org/jira/browse/JCR-3077
+     * 
+     * JA search acts as a PhraseQuery, thanks to LUCENE-2458. so it should be
+     * covered by the QuotedTest search.
+     * 
+     */
+    public void testHighlightJa() throws RepositoryException {
+
+        // http://translate.google.com/#auto|en|%E3%82%B3%E3%83%B3%E3%83%86%E3%83%B3%E3%83%88
+        String jContent = "\u30b3\u30fe\u30c6\u30f3\u30c8";
+        // http://translate.google.com/#auto|en|%E3%83%86%E3%82%B9%E3%83%88
+        String jTest = "\u30c6\u30b9\u30c8";
+
+        String content = "some text with japanese: " + jContent + " (content)"
+                + " and " + jTest + " (test).";
+
+        // expected excerpt; note this may change if excerpt providers change
+        String expectedExcerpt = "some text with japanese: " + jContent
+                + " (content) and <strong>" + jTest + "</strong> (test).";
+        checkExcerpt(content, expectedExcerpt, jTest);
+    }
+
 
     private void checkExcerpt(String text, String fragmentText, String terms)
             throws RepositoryException {
@@ -137,7 +258,7 @@ public class ExcerptTest extends AbstractQueryTest {
     private void createTestData(String text) throws RepositoryException {
         Node n = testRootNode.addNode(nodeName1);
         n.setProperty("text", text);
-        testRootNode.save();
+        superuser.save();
     }
 
     private String getExcerpt(Row row) throws RepositoryException {
