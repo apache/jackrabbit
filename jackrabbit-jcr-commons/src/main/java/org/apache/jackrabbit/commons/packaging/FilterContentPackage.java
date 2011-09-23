@@ -32,7 +32,7 @@ import org.apache.jackrabbit.commons.predicate.Predicate;
 
 public class FilterContentPackage implements ContentPackage {
 
-    protected final List content = new ArrayList();
+    protected final List<Content> content = new ArrayList<Content>();
 
     protected boolean includeProperties = false;
 
@@ -47,9 +47,9 @@ public class FilterContentPackage implements ContentPackage {
     /**
      * @see org.apache.jackrabbit.commons.packaging.ContentPackage#getItems(javax.jcr.Session)
      */
-    public Iterator getItems(Session session)
+    public Iterator<Item> getItems(Session session)
     throws RepositoryException {
-        return new FilteringIterator(session, new ArrayList(this.content), this.includeProperties);
+        return new FilteringIterator(session, new ArrayList<Content>(this.content), this.includeProperties);
     }
 
     protected static class Content {
@@ -65,7 +65,7 @@ public class FilterContentPackage implements ContentPackage {
     public static class FilteringIterator implements Iterator {
 
         /** The content we will iterate over. */
-        protected final List content;
+        protected final List<Content> content;
 
         /**
          * Filter that defines which items are included
@@ -80,7 +80,7 @@ public class FilterContentPackage implements ContentPackage {
 
         protected final Session session;
 
-        protected final List nodeIteratorStack = new ArrayList();
+        protected final List<NodeIterator> nodeIteratorStack = new ArrayList<NodeIterator>();
 
         protected final boolean includeProperties;
 
@@ -95,7 +95,7 @@ public class FilterContentPackage implements ContentPackage {
          * @param includeProperties Should properties be included.
          */
         public FilteringIterator(final Session session,
-                                 final List contentList,
+                                 final List<Content> contentList,
                                  final boolean includeProperties) {
             this.content = contentList;
             this.session = session;
