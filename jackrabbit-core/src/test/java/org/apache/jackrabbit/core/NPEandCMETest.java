@@ -27,8 +27,14 @@ import javax.jcr.Session;
 
 import org.apache.jackrabbit.core.state.NoSuchItemStateException;
 import org.apache.jackrabbit.test.AbstractJCRTest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class NPEandCMETest extends AbstractJCRTest {
+
+    /** Logger instance */
+    private static final Logger log =
+            LoggerFactory.getLogger(NPEandCMETest.class);
 
     private final static int NUM_THREADS = 10;
     private final static boolean SHOW_STACKTRACE = true;
@@ -71,8 +77,8 @@ public class NPEandCMETest extends AbstractJCRTest {
             npes += tasks[i].npes;
             cmes += tasks[i].cmes;
         }
-        System.err.println("Total NPEs: " + npes);
-        System.err.println("Total CMEs: " + cmes);
+        assertEquals("Total NPEs > 0", 0, npes);
+        assertEquals("Total CMEs > 0", 0, cmes);
     }
     
     private static class TestTask implements Runnable {
@@ -121,24 +127,18 @@ public class NPEandCMETest extends AbstractJCRTest {
                 // ignorable
             }
             catch (RepositoryException e) {
-                if (e.getCause() == null || !(e.getCause() instanceof NoSuchItemStateException)) {
-                    System.err.println("thread" + id + ":" + e);
-                    e.printStackTrace();
+                Throwable cause = e.getCause();
+                if (!(cause instanceof NoSuchItemStateException)) {
+                    log.warn("Unexpected RepositoryException caught", e);
                 }
                 // else ignorable
             }
             catch (NullPointerException e) {
-                System.err.println("====> " + e);
-                if (SHOW_STACKTRACE) {
-                    e.printStackTrace();
-                }
+                log.error("NPE caught", e);
                 npes++;
             }
             catch (ConcurrentModificationException e) {
-                System.err.println("====> " + e);
-                if (SHOW_STACKTRACE) {
-                    e.printStackTrace();
-                }
+                log.error("CME caught", e);
                 cmes++;
             }
         }
