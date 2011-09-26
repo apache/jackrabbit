@@ -50,6 +50,7 @@ public class SmallFileWriteTest extends AbstractTest {
             content.setProperty(
                     "jcr:data", new TestInputStream(FILE_SIZE * 1024));
         }
+        session.save();
     }
 
     public void afterTest() throws RepositoryException {
