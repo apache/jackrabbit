@@ -26,7 +26,7 @@
   <parent>
     <groupId>org.apache.jackrabbit</groupId>
     <artifactId>jackrabbit-parent</artifactId>
-    <version>1.6.5-SNAPSHOT</version>
+    <version>1.6.5</version>
     <relativePath>../jackrabbit-parent/pom.xml</relativePath>
   </parent>
   <artifactId>jackrabbit-webapp</artifactId>
@@ -42,7 +42,7 @@
     <dependency>
       <groupId>org.apache.jackrabbit</groupId>
       <artifactId>jackrabbit-core</artifactId>
-      <version>1.6.5-SNAPSHOT</version>
+      <version>1.6.5</version>
       <exclusions>
         <exclusion>
           <groupId>commons-logging</groupId>
@@ -53,7 +53,7 @@
     <dependency>
       <groupId>org.apache.jackrabbit</groupId>
       <artifactId>jackrabbit-jcr-server</artifactId>
-      <version>1.6.5-SNAPSHOT</version>
+      <version>1.6.5</version>
       <exclusions>
         <!-- JCR-683: The commons-httpclient dependency from            -->
         <!-- jackrabbit-webapp depends on commons-logging. Since this   -->

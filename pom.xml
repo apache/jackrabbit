@@ -27,7 +27,7 @@
   <parent>
     <groupId>org.apache.jackrabbit</groupId>
     <artifactId>jackrabbit-parent</artifactId>
-    <version>1.6.5-SNAPSHOT</version>
+    <version>1.6.5</version>
     <relativePath>jackrabbit-parent/pom.xml</relativePath>
   </parent>
 
@@ -56,13 +56,13 @@
 
   <scm>
     <connection>
-      scm:svn:http://svn.apache.org/repos/asf/jackrabbit/branches/1.6
+      scm:svn:http://svn.apache.org/repos/asf/jackrabbit/tags/1.6.5
     </connection>
     <developerConnection>
-      scm:svn:https://svn.apache.org/repos/asf/jackrabbit/branches/1.6
+      scm:svn:https://svn.apache.org/repos/asf/jackrabbit/tags/1.6.5
     </developerConnection>
     <url>
-      http://svn.apache.org/viewvc/jackrabbit/branches/1.6
+      http://svn.apache.org/viewvc/jackrabbit/tags/1.6.5
     </url>
   </scm>
 
