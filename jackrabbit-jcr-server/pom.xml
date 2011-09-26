@@ -26,7 +26,7 @@
   <parent>
     <groupId>org.apache.jackrabbit</groupId>
     <artifactId>jackrabbit-parent</artifactId>
-    <version>1.6.5</version>
+    <version>1.6.6-SNAPSHOT</version>
     <relativePath>../jackrabbit-parent/pom.xml</relativePath>
   </parent>
   <artifactId>jackrabbit-jcr-server</artifactId>
@@ -57,17 +57,17 @@
       <!-- temporarily added dependency, needed as long as JCR2 interfaces are contained in jackrabbit-api -->
       <groupId>org.apache.jackrabbit</groupId>
       <artifactId>jackrabbit-api</artifactId>
-      <version>1.6.5</version>
+      <version>1.6.6-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>org.apache.jackrabbit</groupId>
       <artifactId>jackrabbit-jcr-commons</artifactId>
-      <version>1.6.5</version>
+      <version>1.6.6-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>org.apache.jackrabbit</groupId>
       <artifactId>jackrabbit-webdav</artifactId>
-      <version>1.6.5</version>
+      <version>1.6.6-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>

@@ -26,7 +26,7 @@
   <parent>
     <groupId>org.apache.jackrabbit</groupId>
     <artifactId>jackrabbit-parent</artifactId>
-    <version>1.6.5</version>
+    <version>1.6.6-SNAPSHOT</version>
     <relativePath>../jackrabbit-parent/pom.xml</relativePath>
   </parent>
   <artifactId>jackrabbit-standalone</artifactId>
@@ -80,13 +80,13 @@
     <dependency>
       <groupId>org.apache.jackrabbit</groupId>
       <artifactId>jackrabbit-webapp</artifactId>
-      <version>1.6.5</version>
+      <version>1.6.6-SNAPSHOT</version>
       <type>war</type>
     </dependency>
     <dependency>
       <groupId>org.apache.jackrabbit</groupId>
       <artifactId>jackrabbit-webapp</artifactId>
-      <version>1.6.5</version>
+      <version>1.6.6-SNAPSHOT</version>
       <type>jar</type>
     </dependency>
     <dependency>
