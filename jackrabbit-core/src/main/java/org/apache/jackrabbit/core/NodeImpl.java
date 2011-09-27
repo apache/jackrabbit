@@ -500,19 +500,8 @@ public class NodeImpl extends ItemImpl implements Node, JackrabbitNode {
                                                     NodeId id)
             throws RepositoryException {
         // create a new node state
-        NodeState nodeState;
-        try {
-            if (id == null) {
-                id = sessionContext.getNodeIdFactory().newNodeId();
-            }
-            nodeState =
-                    stateMgr.createTransientNodeState(id, nodeType.getQName(),
-                            getNodeId(), ItemState.STATUS_NEW);
-        } catch (ItemStateException ise) {
-            String msg = "failed to add child node " + name + " to " + this;
-            log.debug(msg);
-            throw new RepositoryException(msg, ise);
-        }
+        NodeState nodeState = stateMgr.createTransientNodeState(
+                id, nodeType.getQName(), getNodeId(), ItemState.STATUS_NEW);
 
         // create Node instance wrapping new node state
         NodeImpl node;
@@ -852,29 +841,15 @@ public class NodeImpl extends ItemImpl implements Node, JackrabbitNode {
     }
 
     @Override
-    protected void makePersistent() throws InvalidItemStateException {
+    protected void makePersistent() throws RepositoryException {
         if (!isTransient()) {
             log.debug(this + " (" + id + "): there's no transient state to persist");
             return;
         }
 
         NodeState transientState = data.getNodeState();
+        NodeState localState = stateMgr.makePersistent(transientState);
 
-        NodeState localState = (NodeState) transientState.getOverlayedState();
-        if (localState == null) {
-            // this node is 'new'
-            localState = stateMgr.createNew(transientState);
-        }
-
-        synchronized (localState) {
-            // copy state from transient state:
-            localState.copy(transientState, true);
-            // make state persistent
-            stateMgr.store(localState);
-        }
-
-        // tell state manager to disconnect item state
-        stateMgr.disconnectTransientItemState(transientState);
         // swap transient state with local state
         data.setState(localState);
         // reset status
@@ -902,16 +877,12 @@ public class NodeImpl extends ItemImpl implements Node, JackrabbitNode {
             // JCR-2503: Re-create transient state in the state manager,
             // because it was removed
             synchronized (data) {
-                try {
-                    thisState = stateMgr.createTransientNodeState(
-                            (NodeId) transientState.getId(),
-                            transientState.getNodeTypeName(),
-                            transientState.getParentId(),
-                            NodeState.STATUS_NEW);
-                    data.setState(thisState);
-                } catch (ItemStateException e) {
-                    throw new RepositoryException(e);
-                }
+                thisState = stateMgr.createTransientNodeState(
+                        (NodeId) transientState.getId(),
+                        transientState.getNodeTypeName(),
+                        transientState.getParentId(),
+                        NodeState.STATUS_NEW);
+                data.setState(thisState);
             }
         }
 
