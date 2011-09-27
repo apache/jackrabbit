@@ -134,7 +134,7 @@ public final class PrivilegeRegistry implements PrivilegeEventListener {
 
     private final NameResolver resolver;
 
-    private PrivilegeBits nextBits = PrivilegeBits.getInstance(RETENTION_MNGMT).nextBits();
+    private PrivilegeBits nextBits = PrivilegeBits.getInstance(PRIVILEGE_MNGMT).nextBits();
 
     /**
      * Privilege event channel for clustering support.

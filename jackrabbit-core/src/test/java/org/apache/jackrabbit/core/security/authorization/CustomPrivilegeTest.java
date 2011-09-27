@@ -375,7 +375,7 @@ public class CustomPrivilegeTest extends AbstractJCRTest {
     }
 
     public void testRegister100CustomPrivileges() throws RepositoryException, FileSystemException {
-        PrivilegeBits previous = privilegeRegistry.getBits(privilegeRegistry.get(NameConstants.JCR_RETENTION_MANAGEMENT)).unmodifiable();
+        PrivilegeBits previous = privilegeRegistry.getBits(privilegeRegistry.get(PrivilegeRegistry.REP_PRIVILEGE_MANAGEMENT_NAME)).unmodifiable();
         for (int i = 0; i < 100; i++) {
             boolean isAbstract = true;
             Name name = ((SessionImpl) superuser).getQName("test"+i);
