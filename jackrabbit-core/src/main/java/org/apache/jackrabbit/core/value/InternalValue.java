@@ -25,6 +25,7 @@ import java.math.BigDecimal;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Calendar;
+import java.util.TimeZone;
 
 import javax.jcr.Binary;
 import javax.jcr.PropertyType;
@@ -240,7 +241,7 @@ public class InternalValue extends AbstractQValue {
             case PropertyType.PATH:
                 return new InternalValue(value.getPath());
             case PropertyType.STRING:
-                return new InternalValue(value.getString());
+                return new InternalValue(value.getString(), PropertyType.STRING);
             default:
                 throw new IllegalArgumentException("illegal value");
         }
@@ -287,7 +288,7 @@ public class InternalValue extends AbstractQValue {
      * @return the created value
      */
     public static InternalValue create(String value) {
-        return new InternalValue(value);
+        return new InternalValue(value, PropertyType.STRING);
     }
 
     /**
@@ -312,6 +313,18 @@ public class InternalValue extends AbstractQValue {
      */
     public static InternalValue create(Calendar value) {
         return new InternalValue(value);
+    }
+    
+    /**
+     * https://issues.apache.org/jira/browse/JCR-3083
+     * 
+     * @param value
+     * @return the created value
+     */
+    public static InternalValue createDate(String value) {
+        InternalValue iv = new InternalValue(Calendar.getInstance(TimeZone.getTimeZone("GMT+00:00")));
+        iv.val = value;
+        return iv;
     }
 
     /**
@@ -456,14 +469,9 @@ public class InternalValue extends AbstractQValue {
         return (NodeId) val;
     }
 
-    public Calendar getDate() {
+    public Calendar getDate() throws RepositoryException {
         assert val != null && type == PropertyType.DATE;
-        try {
-            return getCalendar();
-        } catch (RepositoryException ignore) {
-            assert false;
-            return null;
-        }
+        return getCalendar();
     }
 
     /**
@@ -531,10 +539,10 @@ public class InternalValue extends AbstractQValue {
     }
 
     //-------------------------------------------------------< implementation >
-    private InternalValue(String value) {
-        super(value, PropertyType.STRING);
+    private InternalValue(String value, int type) {
+        super(value, type);
     }
-
+    
     private InternalValue(Name value) {
         super(value);
     }
@@ -726,8 +734,13 @@ public class InternalValue extends AbstractQValue {
         if (object instanceof InternalValue) {
             InternalValue that = (InternalValue) object;
             if (type == PropertyType.DATE) {
-                return that.type == PropertyType.DATE
-                    && getDate().getTimeInMillis() == that.getDate().getTimeInMillis();
+                try {
+                    return that.type == PropertyType.DATE
+                            && getDate().getTimeInMillis() == that.getDate()
+                                    .getTimeInMillis();
+                } catch (RepositoryException e) {
+                    return false;
+                }
             } else {
                 return type == that.type && val.equals(that.val);
             }
