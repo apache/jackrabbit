@@ -23,7 +23,7 @@ import java.util.Iterator;
 
 /**
  * The <code>UserManager</code> provides access to and means to maintain
- * {@link Authorizable authoriable objects} i.e. {@link User users} and
+ * {@link Authorizable authorizable objects} i.e. {@link User users} and
  * {@link Group groups}. The <code>UserManager</code> is bound to a particular
  * <code>Session</code>.
  */
