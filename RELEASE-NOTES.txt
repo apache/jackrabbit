@@ -26,6 +26,7 @@ Changes in this release
 
 Bug fixes
 
+  [JCR-2272] Errors during concurrent session import of nodes with same UUIDs
   [JCR-2962] InputStream not being explicitly closed
   [JCR-2967] SessionItemStateManager.getIdOfRootTransientNodeState() ...
   [JCR-2969] FileDataStore garbage collection can throw a ...

@@ -425,7 +425,7 @@ public class BundleBindingTest extends TestCase {
                 0, 70, -53, 75, -124 };
 
         NodePropBundle result = binding.readBundle(new ByteArrayInputStream(
-                corrupted), NodeId.randomId());
+                corrupted), new NodeId());
         
         Iterator<PropertyEntry> iterator = result.getPropertyEntries()
                 .iterator();

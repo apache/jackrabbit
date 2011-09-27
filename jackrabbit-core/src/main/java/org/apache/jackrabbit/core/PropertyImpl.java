@@ -142,7 +142,11 @@ public class PropertyImpl extends ItemImpl implements Property {
         PropertyState persistentState = (PropertyState) transientState.getOverlayedState();
         if (persistentState == null) {
             // this property is 'new'
-            persistentState = stateMgr.createNew(transientState);
+            try {
+                persistentState = stateMgr.createNew(transientState);
+            } catch (ItemStateException e) {
+                throw new InvalidItemStateException(e);
+            }
         }
 
         synchronized (persistentState) {
