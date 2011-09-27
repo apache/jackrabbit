@@ -874,7 +874,6 @@
     </developer>
   </developers>
 
-
   <scm>
     <connection>scm:svn:http://svn.apache.org/repos/asf/maven/pom/tags/2.3.0/jackrabbit-parent</connection>
     <developerConnection>scm:svn:https://svn.apache.org/repos/asf/maven/pom/tags/2.3.0/jackrabbit-parent</developerConnection>

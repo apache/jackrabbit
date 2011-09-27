@@ -1,16 +1,145 @@
-Release Notes -- Apache Jackrabbit -- Version 2.2.0
+Release Notes -- Apache Jackrabbit -- Version 2.3.0
 
 Introduction
 ------------
 
-This is the Apache Jackrabbit 2.2.0 release. This release is a fully compliant
-implementation of the JCR 2.0 API that was specified by the Java Specification
-Request 283 (JSR 283, http://jcp.org/en/jsr/detail?id=283).
+This is Apache Jackrabbit(TM) 2.3, a fully compliant implementation of the
+Content Repository for Java(TM) Technology API, version 2.0 (JCR 2.0) as
+specified in the Java Specification Request 283 (JSR 283).
 
-Changes in this release
------------------------
+Apache Jackrabbit 2.3 is an unstable series of releases cut directly from
+Jackrabbit trunk, with a focus on new features and other improvements.
+For production use we recommend the latest stable 2.2 release.
 
-TODO
+Changes in Jackrabbit 2.3.0
+---------------------------
+
+New features
+
+  [JCR-952]  Support lower and upper case functions in "order by" clause
+  [JCR-2454] spi2dav: JSR 283 NodeType Management
+  [JCR-2697] Add support for encrpted db password in repository.xml
+  [JCR-2851] Authentication Mechanism Based on Login Token
+  [JCR-2879] SQL Azure support: clustered indexes
+  [JCR-2911] Fine-grained access control for managing node types
+  [JCR-2961] Improve logging of Session.save() to trace back root cause ...
+  [JCR-3037] Add getPath method to Authorizable interface
+  [JCR-3042] jcr-commons: add cnd writer functionality
+  [JCR-3056] jcr-commons: Add utility to translate a string to a ...
+  [JCR-3058] BundleDumper to analyze broken bundles
+  [JCR-3078] Add CopyMoveHanlder so that the copy/move behavior can ...
+  [JCR-3080] Add User#changePassword(String newPw, String oldPw)
+  [JCR-3081] Add UserManager#getAuthorizableByPath(String) for symmetry ...
+
+Improvements
+
+  [JCR-1483] Move common node type functionality to jackrabbit-spi-commons
+  [JCR-1874] Move generic locking tests from jcr2spi to jackrabbit-jcr-tests
+  [JCR-2415] Update Lucene to 3.0
+  [JCR-2834] Make DefaultSecurityManager the default security manager ...
+  [JCR-2835] Poor performance of ISDESCENDANTNODE on SQL 2 queries
+  [JCR-2848] UserManagerImpl: typo in "compatibleJR16" config option constant
+  [JCR-2854] Add option to make sorting in user/group query case insensitive
+  [JCR-2856] Upgrade to latest SLF4J and Logback
+  [JCR-2864] Use out-of-process text extraction
+  [JCR-2873] Add a way to locate full text extraction problems
+  [JCR-2875] Exclude the netcdf dependency
+  [JCR-2876] org.apache.jackrabbit.server.io.IOUtil getTempFile misses ...
+  [JCR-2877] Extend the consistency check in BundleDbPersistenceManager's ...
+  [JCR-2885] Move tika-parsers dependency to deployment packages
+  [JCR-2886] Add SessionImpl#isAdminOrSystem
+  [JCR-2896] WebdavResponseImpl should cache TransformerFactory
+  [JCR-2897] Remove jcr-commons dependency from jackrabbit-webdav
+  [JCR-2898] [patch] remove bogus test
+  [JCR-2916] Avoid String.intern() when indexing
+  [JCR-2918] Avoid unnecessary index reader calls when using aggregate ...
+  [JCR-2923] SQL2 parser: improved error message for ambiguous properties ...
+  [JCR-2925] Various inner classes maintain references to owning class ...
+  [JCR-2926] DefaultProtectedPropertyImporter masks several fields from ...
+  [JCR-2929] Various places do map lookups in loop instead of using ...
+  [JCR-2934] SQL2 queries are not logged
+  [JCR-2942] Move privilege reader/writer to spi-commons and use ...
+  [JCR-2943] UserManagement: membership cache default size too small
+  [JCR-2944] Remove unnecessary NodeImpl references from LuceneQueryFactory
+  [JCR-2946] Jcr-Server: Improve implementation of DavResource#...
+  [JCR-2948] jcr-server: add possibility to PROPFIND the ...
+  [JCR-2955] Use GrowingLRUMap in CachingEntryCollector
+  [JCR-2957] Improve password hashing
+  [JCR-2971] Revert subsequent token-node updates (tentatively introduced)
+  [JCR-2972] Allow name to be set in PropertyInfoBuilder and NodeInfoBuilder
+  [JCR-2975] Make ItemInfoBuilder name space aware
+  [JCR-2976] Allow parent path to be set explicitly in NodeInfoBuilder
+  [JCR-2977] AccessControlManager#getApplicablePolicy should check for ...
+  [JCR-2978] Add accessor for parent to NodeInfoBuilder/PropertyInfoBuilder
+  [JCR-2979] Deprecate RepositoryService.getNodeInfo method
+  [JCR-2987] New JcrUtils utility methods
+  [JCR-2993] Add method to set uuid in NodeInfoBuilder
+  [JCR-2994] Add method to remove mappings from NamespaceMapping
+  [JCR-2995] jcr2spi: create ChangePolling thread on demand
+  [JCR-3002] Add read acessor for user data to SessionInfoImpl
+  [JCR-3004] Check if a DAV-Request has a Label in the header, before ...
+  [JCR-3011] Fix incorrect IndexingQueueTest logic
+  [JCR-3019] RepositoryImpl.activeSessions should use Session instead ...
+  [JCR-3020] AbstractRepositoryService should be able to handle ...
+  [JCR-3021] AbstractRepositoryService.createSessionInfo should handle ...
+  [JCR-3026] davex remoting has a performance bottleneck due limit of 2 ...
+  [JCR-3027] JCR Server has concurrency issues on JcrWebdavServer....
+  [JCR-3029] JcrRemotingServlet should interpolate system properties ...
+  [JCR-3032] QDefinitionBuilderFactory should auto-subtype from nt:base
+  [JCR-3033] Provide a method for writing name space declarations in ...
+  [JCR-3044] Remove ImportContextImpl#getDetector
+  [JCR-3045] ResourceConfig: read additional parameters for IOHandler ...
+  [JCR-3046] Improve exception handling in observation (ChangePolling)
+  [JCR-3047] OperandEvaluator should be able to handle Nodes as well, ...
+  [JCR-3048] Upgrade to latest Apache parent POM
+  [JCR-3051] AbstractLockTest.testLockExpiration fails intermittently
+  [JCR-3054] Deprecate RepositoryService.getPropertyInfo method
+  [JCR-3055] NPE in event polling thread
+  [JCR-3062] Move FilterIterator and SizedIterator from package flat ...
+  [JCR-3066] Use only one scheduler for repository tasks
+  [JCR-3067] Remove timeout handling from TransactionContext
+  [JCR-3073] Explicit management of public API
+  [JCR-3076] Mandatory authentication prevents webdav client connections
+
+Bug fixes
+
+  [JCR-2026] DbDataStore: garbage collection deadlock
+  [JCR-2837] Test failures in jcr-rmi and jcr2dav
+  [JCR-2861] Internal Timeout Handling in the TransactionContext is not ...
+  [JCR-2863] Session#importXML can't handle properly uuid collision if ...
+  [JCR-2880] Save fails after setting a binary property twice
+  [JCR-2883] Node.orderBefore and JackrabbitNode.rename should check for ...
+  [JCR-2888] Namespace comparison in Namespace.java doesn't work, if a ...
+  [JCR-2890] Deadlock in acl.EntryCollector / ItemManager
+  [JCR-2894] AbstractLoginModule#logout() : credentials will not be ...
+  [JCR-2895] SessionImpl#getSubject() should return an unmodifiable subject
+  [JCR-2899] [patch] fix uppercase/lowercase handling for not equal to
+  [JCR-2903] Session.importXml should close the input stream (as to ...
+  [JCR-2909] EntryCollectorTest failure on certain Java versions
+  [JCR-2915] Creating AccessControlEntryImpl from a base entry results ...
+  [JCR-2919] Security of token base authentication
+  [JCR-2920] Workspace.copy(src, dest) throws unexpected ...
+  [JCR-2921] URIResolverImpl: use of bitwise instead of logical AND operator
+  [JCR-2922] JcrParser: use of bitwise instead of logical AND operator
+  [JCR-2931] Compatibility issue if admin impersonates admin session
+  [JCR-2939] QueryObjectModel does not generate the corresponding SQL2 ...
+  [JCR-2940] PrivilegeDefinition should implement equals and hashcode
+  [JCR-2945] Token authentication parameters are not loaded from JAAS ...
+  [JCR-2952] PrivilegeHandlerTest fails on Windows
+  [JCR-2954] SQL-2 query returns more than the requested column
+  [JCR-2973] ItemInfoBuilder should not include PropertyInfos in ChildInfos
+  [JCR-2981] Bundle of events may be dropped due to NP.
+  [JCR-2984] JCR2SPI NamespaceRegistryImpl.unregisterNamespace passes ...
+  [JCR-3003] Tika configuration may use wrong class loader
+  [JCR-3014] Identifier paths for inexistent items throw exception
+  [JCR-3024] [SPI] Node.setProperty with null value throws ...
+  [JCR-3025] NPE in ConsolidatingChangeLog
+  [JCR-3049] NPE in ConsolidatingChangeLog for id base NodeId
+  [JCR-3057] ItemInfoBuilder fails to set correct path on properties
+  [JCR-3070] SystemSession.isAdmin() should return true
+
+In addition to the above-mentioned changes, this release contains
+all the changes included up to the Apache Jackrabbit 2.2.9 release.
 
 For more detailed information about all the changes in this and other
 Jackrabbit releases, please see the Jackrabbit issue tracker at
