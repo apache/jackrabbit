@@ -469,7 +469,9 @@ public class SessionItemStateManager
         Collection<NodeId> candidateIds = new LinkedList<NodeId>();
         try {
             HierarchyManager hierMgr = getHierarchyMgr();
-            for (ItemState state : transientStore.values()) {
+            ItemState[] states =
+                    transientStore.values().toArray(new ItemState[0]);
+            for (ItemState state : states) {
                 if (state.getStatus() == ItemState.STATUS_EXISTING_MODIFIED
                         || state.getStatus() == ItemState.STATUS_STALE_DESTROYED) {
                     NodeId nodeId;
@@ -566,7 +568,6 @@ public class SessionItemStateManager
      */
     public NodeState createTransientNodeState(NodeId id, Name nodeTypeName, NodeId parentId, int initialStatus)
             throws ItemStateException {
-
         // check map; synchronized to ensure an entry is not created twice.
         synchronized (transientStore) {
             if (transientStore.containsKey(id)) {
