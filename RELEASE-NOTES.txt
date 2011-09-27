@@ -34,6 +34,8 @@ Bug fixes
   [JCR-3065] ConcurrentModificationException in FineGrainedISMLocking
   [JCR-3075] incorrect HTML excerpt generation for queries on japanese ...
   [JCR-3077] WeightedHighlighter does not encode XML markup characters
+  [JCR-3063] NullPointerException in ItemManager
+  [JCR-3083] Degrade gracefully when reading invalid date values
 
 For more detailed information about all the changes in this and other
 Jackrabbit releases, please see the Jackrabbit issue tracker at
