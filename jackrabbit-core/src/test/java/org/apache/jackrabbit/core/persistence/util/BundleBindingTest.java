@@ -24,6 +24,7 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Iterator;
 
 import javax.jcr.PropertyType;
 
@@ -80,6 +81,9 @@ public class BundleBindingTest extends TestCase {
                 throw new IllegalArgumentException(string);
             }
             public String indexToString(int idx) {
+                if(idx> strings.length){
+                    return "";
+                }
                 return strings[idx];
             }
         };
@@ -366,6 +370,77 @@ public class BundleBindingTest extends TestCase {
         assertDateSerialization("2345-10-10T10:10:10.100Z");
         assertDateSerialization("+9876-10-10T10:10:10.100Z");
         assertDateSerialization("-9876-10-10T10:10:10.100Z");
+    }
+
+    /**
+     * Tests serialization of forbidden date values.
+     */
+    public void testForbiddenDateSerialization() throws Exception {
+
+        try {
+            // date from really far ahead
+            assertDateSerialization("20112022-11-11T19:00:00.000+01:00");
+            fail("should not be able to serialize future dates");
+        } catch (IllegalArgumentException e) {
+            // expected error
+        }
+    }
+
+    /**
+     * creates a future date that is illegal in v3 using v2, and checks that the
+     * error is being hadled gracefully
+     * 
+     * JCR-3083 Degrade gracefully when reading invalid date values
+     */
+    public void testCorruptedBundle() throws Exception {
+
+        // Bundle as described by the BundleDumper:
+        // version: 1
+        // nodeTypeName: #13:#49
+        // parentUUID: f22c788c-ab98-47cf-95ab-6c495239807a
+        // definitionId: 1705077083
+        // mixins: -
+        // property: #1:#509
+        // modcount: 1
+        // type: Date
+        // definitionId: 806470580
+        // value: string: 20112022-11-11T19:00:00.000+01:00
+        // referenceable: false
+        // childId: 08026c9f-a88a-471b-bcc3-fca2bd82000b #1:linked_products
+        // modCount: 3
+        //
+        // corrupted value: Date -> 20112022-11-11T19:00:00.000+01:00
+
+        byte[] corrupted = new byte[] { 1, 0, 0, 13, 0, 0, 0, 49, 1, -14, 44,
+                120, -116, -85, -104, 71, -49, -107, -85, 108, 73, 82, 57,
+                -128, 122, 0, 10, 49, 55, 48, 53, 48, 55, 55, 48, 56, 51, -1,
+                -1, -1, -1,  0,
+                0, 0, 1, 0, 0, 1, -3, 0, 1, 0, 5, 0, 0, 9, 56, 48, 54, 52, 55,
+                48, 53, 56, 48, 0, 0, 0, 1, 0, 0, 0, 33, 50, 48, 49, 49, 50,
+                48, 50, 50, 45, 49, 49, 45, 49, 49, 84, 49, 57, 58, 48, 48, 58,
+                48, 48, 46, 48, 48, 48, 43, 48, 49, 58, 48, 48, -1, -1, -1, -1,
+                0, 1, 8, 2, 108, -97, -88, -118, 71, 27, -68, -61, -4, -94,
+                -67, -126, 0, 11, 0, 0, 0, 1, 0, 15, 108, 105, 110, 107, 101,
+                100, 95, 112, 114, 111, 100, 117, 99, 116, 115, 0, 3, 0, 0, 0,
+                0, 70, -53, 75, -124 };
+
+        NodePropBundle result = binding.readBundle(new ByteArrayInputStream(
+                corrupted), NodeId.randomId());
+        
+        Iterator<PropertyEntry> iterator = result.getPropertyEntries()
+                .iterator();
+        PropertyEntry pe = iterator.next();
+        InternalValue iv = pe.getValues()[0];
+        assertEquals(PropertyType.DATE, pe.getType());
+        assertEquals(PropertyType.DATE, iv.getType());
+        assertEquals("20112022-11-11T19:00:00.000+01:00", iv.getString());
+
+        try {
+            iv.getDate();
+            fail("should not be able to read the property as a DATE");
+        } catch (Exception e) {
+            // expected
+        }
     }
 
     private void assertDateSerialization(String date) throws Exception {

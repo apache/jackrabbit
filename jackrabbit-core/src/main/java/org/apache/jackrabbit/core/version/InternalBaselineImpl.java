@@ -41,7 +41,7 @@ class InternalBaselineImpl extends InternalVersionImpl
      * @param node node state of this version
      * @param name name of this version
      */
-    InternalBaselineImpl(InternalVersionHistoryImpl vh, NodeStateEx node, Name name) {
+    InternalBaselineImpl(InternalVersionHistoryImpl vh, NodeStateEx node, Name name) throws RepositoryException {
         super(vh, node, name);
     }
 

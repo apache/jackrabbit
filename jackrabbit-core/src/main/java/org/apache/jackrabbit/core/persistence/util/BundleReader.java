@@ -398,15 +398,21 @@ class BundleReader {
                     if (version >= BundleBinding.VERSION_3) {
                         val = InternalValue.valueOf(
                                 readString(), entry.getType());
+                } else {
+                    // because writeUTF(String) has a size limit of 64k,
+                    // Strings are serialized as <length><byte[]>
+                    int len = in.readInt();
+                    byte[] bytes = new byte[len];
+                    in.readFully(bytes);
+                    String stringVal = new String(bytes, "UTF-8");
+
+                    // https://issues.apache.org/jira/browse/JCR-3083
+                    if (PropertyType.DATE == entry.getType()) {
+                        val = InternalValue.createDate(stringVal);
                     } else {
-                        // because writeUTF(String) has a size limit of 64k,
-                        // Strings are serialized as <length><byte[]>
-                        int len = in.readInt();
-                        byte[] bytes = new byte[len];
-                        in.readFully(bytes);
-                        val = InternalValue.valueOf(
-                                new String(bytes, "UTF-8"), entry.getType());
+                        val = InternalValue.valueOf(stringVal, entry.getType());
                     }
+                }
             }
             values[i] = val;
         }
