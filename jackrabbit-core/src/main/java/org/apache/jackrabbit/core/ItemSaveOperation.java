@@ -490,9 +490,18 @@ class ItemSaveOperation implements SessionWriteOperation<Object> {
                  * its primary type has changed, check its node type against the
                  * required node type in its definition
                  */
-                if (nodeState.getStatus() == ItemState.STATUS_NEW
-                        || !nodeState.getNodeTypeName().equals(
-                            ((NodeState) nodeState.getOverlayedState()).getNodeTypeName())) {
+                boolean primaryTypeChanged =
+                        nodeState.getStatus() == ItemState.STATUS_NEW;
+                if (!primaryTypeChanged) {
+                    NodeState overlaid =
+                            (NodeState) nodeState.getOverlayedState();
+                    if (overlaid != null) {
+                        Name newName = nodeState.getNodeTypeName();
+                        Name oldName = overlaid.getNodeTypeName();
+                        primaryTypeChanged = !newName.equals(oldName);
+                    }
+                }
+                if (primaryTypeChanged) {
                     for (NodeType ntReq : nodeDef.getRequiredPrimaryTypes()) {
                         Name ntName = ((NodeTypeImpl) ntReq).getQName();
                         if (!(pnt.getQName().equals(ntName)
