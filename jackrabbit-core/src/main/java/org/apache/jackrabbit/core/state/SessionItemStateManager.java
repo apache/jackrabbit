@@ -37,7 +37,6 @@ import org.apache.jackrabbit.core.HierarchyManager;
 import org.apache.jackrabbit.core.ZombieHierarchyManager;
 import org.apache.jackrabbit.core.id.ItemId;
 import org.apache.jackrabbit.core.id.NodeId;
-import org.apache.jackrabbit.core.id.NodeIdFactory;
 import org.apache.jackrabbit.core.id.PropertyId;
 import org.apache.jackrabbit.spi.Name;
 import org.slf4j.Logger;
@@ -54,7 +53,7 @@ public class SessionItemStateManager
     /**
      * State manager that allows updates
      */
-    private final UpdatableItemStateManager stateMgr;
+    private final LocalItemStateManager stateMgr;
 
     /**
      * Hierarchy manager
@@ -218,24 +217,10 @@ public class SessionItemStateManager
     /**
      * {@inheritDoc}
      */
-    public NodeState createNew(NodeId id, Name nodeTypeName,
-                               NodeId parentId)
-            throws IllegalStateException {
+    public NodeState createNew(
+            NodeId id, Name nodeTypeName, NodeId parentId)
+            throws RepositoryException {
         return stateMgr.createNew(id, nodeTypeName, parentId);
-    }
-
-    /**
-     * Customized variant of {@link #createNew(NodeId, Name, NodeId)} that
-     * connects the newly created persistent state with the transient state.
-     */
-    public NodeState createNew(NodeState transientState)
-            throws IllegalStateException {
-
-        NodeState persistentState = createNew(transientState.getNodeId(),
-                transientState.getNodeTypeName(),
-                transientState.getParentId());
-        transientState.connect(persistentState);
-        return persistentState;
     }
 
     /**
@@ -251,8 +236,7 @@ public class SessionItemStateManager
      * connects the newly created persistent state with the transient state.
      */
     public PropertyState createNew(PropertyState transientState)
-            throws IllegalStateException {
-
+            throws ItemStateException {
         PropertyState persistentState = createNew(transientState.getName(),
                 transientState.getParentId());
         transientState.connect(persistentState);
@@ -565,20 +549,27 @@ public class SessionItemStateManager
      * @param parentId
      * @param initialStatus
      * @return
-     * @throws ItemStateException
+     * @throws RepositoryException
      */
     public NodeState createTransientNodeState(NodeId id, Name nodeTypeName, NodeId parentId, int initialStatus)
-            throws ItemStateException {
+            throws RepositoryException {
+        if (initialStatus == ItemState.STATUS_NEW && id != null
+                && hasItemState(id)) {
+            throw new InvalidItemStateException(
+                    "Node " + id + " already exists");
+        }
+
         // check map; synchronized to ensure an entry is not created twice.
         synchronized (transientStore) {
-            if (transientStore.containsKey(id)) {
-                String msg = "there's already a node state instance with id " + id;
-                log.debug(msg);
-                throw new ItemStateException(msg);
+            if (id == null) {
+                id = stateMgr.getNodeIdFactory().newNodeId();
+            } else if (transientStore.containsKey(id)) {
+                throw new RepositoryException(
+                        "There is already a transient state for node " + id);
             }
 
-            NodeState state = new NodeState(id, nodeTypeName, parentId,
-                    initialStatus, true);
+            NodeState state = new NodeState(
+                    id, nodeTypeName, parentId, initialStatus, true);
             // put transient state in the map
             transientStore.put(state.getId(), state);
             state.setContainer(this);
@@ -973,8 +964,31 @@ public class SessionItemStateManager
         }
     }
 
-    public NodeIdFactory getNodeIdFactory() {
-        return stateMgr.getNodeIdFactory();
+    /**
+     * Pushes the given transient state to the change log so it'll be
+     * persisted when the change log is committed. The transient state
+     * is replaced with the local state that has been pushed to the
+     * change log.
+     *
+     * @param transientState transient state
+     * @return the local state to be persisted
+     * @throws RepositoryException if the transiet state can not be persisted
+     */
+    public NodeState makePersistent(NodeState transientState)
+            throws RepositoryException {
+        NodeState localState = stateMgr.getOrCreateLocalState(transientState);
+
+        synchronized (localState) {
+            // copy state from transient state:
+            localState.copy(transientState, true);
+            // make state persistent
+            store(localState);
+        }
+
+        // disconnect the transient item state
+        disconnectTransientItemState(transientState);
+
+        return localState;
     }
 
 }

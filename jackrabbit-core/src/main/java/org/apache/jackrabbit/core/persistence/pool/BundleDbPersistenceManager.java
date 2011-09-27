@@ -493,6 +493,10 @@ public class BundleDbPersistenceManager
                 } catch (SQLException e2) {
                     DbUtility.logException("rollback failed", e2);
                 }
+
+                // if we got here due to a constraint violation and we
+                // are running in test mode, we really want to stop
+                assert !isIntegrityConstraintViolation(e.getCause());
             }
             failures++;
             log.error("Failed to persist ChangeLog (stacktrace on DEBUG log level), blockOnConnectionLoss = "
@@ -509,6 +513,15 @@ public class BundleDbPersistenceManager
             }
         }
         throw lastException;
+    }
+
+    private boolean isIntegrityConstraintViolation(Throwable t) {
+        if (t instanceof SQLException) {
+            String state = ((SQLException) t).getSQLState();
+            return state != null && state.startsWith("23");
+        } else {
+            return false;
+        }
     }
 
     /**
@@ -1103,11 +1116,21 @@ public class BundleDbPersistenceManager
             Object[] params = createParams(bundle.getId(), out.toByteArray(), true);
             conHelper.update(sql, params);
         } catch (Exception e) {
-            String msg = "failed to write bundle: " + bundle.getId();
+            String msg;
+
+            if (isIntegrityConstraintViolation(e)) {
+                // we should never get an integrity constraint violation here
+                // other PMs may not be able to detect this and end up with
+                // corrupted data
+                msg = "FATAL error while writing the bundle: " + bundle.getId();
+            } else {
+                msg = "failed to write bundle: " + bundle.getId();
+            }
+
             log.error(msg, e);
             throw new ItemStateException(msg, e);
         }
-    }
+   }
 
     /**
      * {@inheritDoc}
