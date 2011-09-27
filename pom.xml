@@ -149,6 +149,10 @@ The release candidate is a zip archive of the sources in:
 
 The SHA1 checksum of the archive is ${checksum}.
 
+The command for running automated checks against this release candidate is:
+
+    $ check-release.sh ${username} ${project.version} ${checksum}
+
 Please vote on releasing this package as Apache Jackrabbit ${project.version}.
 The vote is open for the next 72 hours and passes if a majority of at
 least three +1 Jackrabbit PMC votes are cast.
@@ -158,9 +162,13 @@ least three +1 Jackrabbit PMC votes are cast.
                     </echo>
                     <echo />
                     <echo>
-The release candidate has been deployed to:
+The release candidate has been prepared in:
 
-    file://${basedir}/target/${project.version}/
+    ${basedir}/target/${project.version}
+
+Please deploy it to people.apache.org like this:
+
+    scp -r ${basedir}/target/${project.version} people.apache.org:public_html/jackrabbit/
 
 A release vote template has been generated for you:
 
@@ -174,18 +182,8 @@ A release vote template has been generated for you:
             <dependencies>
               <dependency>
                  <groupId>org.apache.ant</groupId>
-                 <artifactId>ant-optional</artifactId>
-                 <version>1.7.1</version>
-               </dependency>
-              <dependency>
-                 <groupId>org.apache.ant</groupId>
-                 <artifactId>ant-jsch</artifactId>
-                 <version>1.7.1</version>
-               </dependency>
-              <dependency>
-                 <groupId>com.jcraft</groupId>
-                 <artifactId>jsch</artifactId>
-                 <version>0.1.42</version>
+                 <artifactId>ant-nodeps</artifactId>
+                 <version>1.8.1</version>
                </dependency>
             </dependencies>
           </plugin>
