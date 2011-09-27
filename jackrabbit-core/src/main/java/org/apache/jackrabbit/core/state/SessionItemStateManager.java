@@ -64,13 +64,13 @@ public class SessionItemStateManager
      * map of those states that have been removed transiently
      */
     private final Map<ItemId, ItemState> atticStore =
-        new HashMap<ItemId, ItemState>();
+            Collections.synchronizedMap(new HashMap<ItemId, ItemState>());
 
     /**
      * map of new or modified transient states
      */
     private final Map<ItemId, ItemState> transientStore =
-        new HashMap<ItemId, ItemState>();
+            Collections.synchronizedMap(new HashMap<ItemId, ItemState>());
 
     /**
      * ItemStateManager view of the states in the attic; lazily instantiated
@@ -414,7 +414,8 @@ public class SessionItemStateManager
             // Group the descendants by reverse relative depth
             SortedMap<Integer, Collection<ItemState>> statesByReverseDepth =
                 new TreeMap<Integer, Collection<ItemState>>();
-            for (ItemState state : store.values()) {
+            ItemState[] states = store.values().toArray(new ItemState[0]);
+            for (ItemState state : states) {
                 // determine relative depth: > 0 means it's a descendant
                 int depth = hierarchyManager.getShareRelativeDepth(
                         (NodeId) id, state.getId());
@@ -731,11 +732,12 @@ public class SessionItemStateManager
     public void disposeAllTransientItemStates() {
         // dispose item states in transient map & attic
         // (use temp collection to avoid ConcurrentModificationException)
-        Collection<ItemState> tmp = new ArrayList<ItemState>(transientStore.values());
+        ItemState[] tmp;
+        tmp = transientStore.values().toArray(new ItemState[0]);
         for (ItemState state : tmp) {
             disposeTransientItemState(state);
         }
-        tmp = new ArrayList<ItemState>(atticStore.values());
+        tmp = atticStore.values().toArray(new ItemState[0]);
         for (ItemState state : tmp) {
             disposeTransientItemStateInAttic(state);
         }
@@ -840,9 +842,8 @@ public class SessionItemStateManager
                 visibleState = transientState;
             } else {
                 // check attic
-                transientState = atticStore.get(destroyed.getId());
+                transientState = atticStore.remove(destroyed.getId());
                 if (transientState != null) {
-                    atticStore.remove(destroyed.getId());
                     transientState.onDisposed();
                 }
             }
