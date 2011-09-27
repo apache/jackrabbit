@@ -1391,7 +1391,7 @@ public class SharedItemStateManager
         // Check whether the the changelog contains an entry for the parent as well.
         NodeId parentId = childState.getParentId();
         if (!parentId.equals(expectedParent)) {
-            Set sharedSet = childState.getSharedSet();
+            Set<NodeId> sharedSet = childState.getSharedSet();
             if (sharedSet.contains(expectedParent)) {
                 return;
             }
