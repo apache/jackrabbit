@@ -1101,10 +1101,6 @@ public class BatchedItemOperations extends ItemValidator {
             NodeId errorId = parent.getChildNodeEntry(nodeName, 1).getId();
             throw new ItemExistsException(safeGetJCRPath(errorId));
         }
-        if (id == null) {
-            // create new id
-            id = new NodeId();
-        }
         if (nodeTypeName == null) {
             // no primary node type specified,
             // try default primary type from definition
@@ -1123,7 +1119,7 @@ public class BatchedItemOperations extends ItemValidator {
         }
 
         // now add new child node entry to parent
-        parent.addChildNodeEntry(nodeName, id);
+        parent.addChildNodeEntry(nodeName, node.getNodeId());
 
         EffectiveNodeType ent = getEffectiveNodeType(node);
 
@@ -1602,7 +1598,7 @@ public class BatchedItemOperations extends ItemValidator {
 
         NodeState newState;
         try {
-            NodeId id;
+            NodeId id = null;
             EffectiveNodeType ent = getEffectiveNodeType(srcState);
             boolean referenceable = ent.includesNodeType(NameConstants.MIX_REFERENCEABLE);
             boolean versionable = ent.includesNodeType(NameConstants.MIX_SIMPLE_VERSIONABLE);
@@ -1620,17 +1616,10 @@ public class BatchedItemOperations extends ItemValidator {
                         sharedState.addShare(destParentId);
                         return sharedState;
                     }
-                    // always create new uuid
-                    id = new NodeId();
-                    if (referenceable) {
-                        // remember uuid mapping
-                        refTracker.mappedId(srcState.getNodeId(), id);
-                    }
                     break;
                 case CLONE:
                     if (!referenceable) {
                         // non-referenceable node: always create new uuid
-                        id = new NodeId();
                         break;
                     }
                     // use same uuid as source node
@@ -1649,7 +1638,6 @@ public class BatchedItemOperations extends ItemValidator {
                 case CLONE_REMOVE_EXISTING:
                     if (!referenceable) {
                         // non-referenceable node: always create new uuid
-                        id = new NodeId();
                         break;
                     }
                     // use same uuid as source node
@@ -1686,6 +1674,11 @@ public class BatchedItemOperations extends ItemValidator {
                             "unknown flag for copying node state: " + flag);
             }
             newState = stateMgr.createNew(id, srcState.getNodeTypeName(), destParentId);
+            id = newState.getNodeId();
+            if (flag == COPY && referenceable) {
+                // remember uuid mapping
+                refTracker.mappedId(srcState.getNodeId(), id);
+            }
             // copy node state
             newState.setMixinTypeNames(srcState.getMixinTypeNames());
             if (shareable) {

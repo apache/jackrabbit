@@ -132,7 +132,7 @@ public abstract class ItemState {
                 throw new IllegalArgumentException(msg);
         }
         this.isTransient = isTransient;
-        connect(overlayedState);
+        this.overlayedState = overlayedState;
     }
 
     /**
@@ -176,11 +176,13 @@ public abstract class ItemState {
     /**
      * Connect this state to some underlying overlayed state.
      */
-    protected void connect(ItemState overlayedState) {
-        if (this.overlayedState != null) {
-            if (this.overlayedState != overlayedState) {
-                throw new IllegalStateException("Item state already connected to another underlying state: " + this);
-            }
+    public void connect(ItemState overlayedState)
+            throws ItemStateException {
+        if (this.overlayedState != null
+                && this.overlayedState != overlayedState) {
+            throw new ItemStateException(
+                    "Item state already connected to another"
+                            + " underlying state: " + this);
         }
         this.overlayedState = overlayedState;
     }
@@ -189,9 +191,9 @@ public abstract class ItemState {
      * Reconnect this state to the overlayed state that it has been
      * disconnected from earlier.
      */
-    protected void reconnect() {
+    protected void reconnect() throws ItemStateException {
         if (this.overlayedState == null) {
-            throw new IllegalStateException(
+            throw new ItemStateException(
                     "Item state cannot be reconnected because there's no"
                     + " underlying state to reconnect to: " + this);
         }
