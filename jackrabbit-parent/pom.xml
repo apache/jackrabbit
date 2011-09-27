@@ -28,6 +28,7 @@
     <groupId>org.apache.jackrabbit</groupId>
     <artifactId>parent</artifactId>
     <version>5</version>
+    <relativePath/>
   </parent>
 
   <artifactId>jackrabbit-parent</artifactId>
