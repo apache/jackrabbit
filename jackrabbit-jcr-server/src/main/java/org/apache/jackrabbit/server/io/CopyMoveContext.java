@@ -14,9 +14,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package org.apache.jackrabbit.server.io;
+
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
+import javax.jcr.Workspace;
 
 /**
- * Interfaces for managing a Jackrabbit repository.
+ * <code>CopyMoveContext</code>...
  */
-@aQute.bnd.annotation.Version("2.3")
-package org.apache.jackrabbit.api.management;
+public interface CopyMoveContext {
+
+    /**
+     * @return true if this context defines a shallow copy.
+     */
+    boolean isShallowCopy();
+
+    /**
+     * @return the jcr session associated with this context.
+     */
+    Session getSession();
+
+    /**
+     * @return The JCR workspace associated with this context.
+     * @throws RepositoryException If an error occurs.
+     */
+    Workspace getWorkspace() throws RepositoryException;
+}

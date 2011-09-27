@@ -214,8 +214,8 @@ public final class NodeTypeWriter {
         // TODO do properly...
         String[] qops = def.getAvailableQueryOperators();
         if (qops != null && qops.length > 0) {
-            List ops = Arrays.asList(qops);
-            List defaultOps = Arrays.asList(Operator.getAllQueryOperators());
+            List<String> ops = Arrays.asList(qops);
+            List<String> defaultOps = Arrays.asList(Operator.getAllQueryOperators());
             if (!ops.containsAll(defaultOps)) {
                 StringBuilder sb = new StringBuilder();
                 for (int i = 0; i < qops.length; i++) {

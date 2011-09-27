@@ -79,6 +79,8 @@ public class TestAll extends TestCase {
 
         suite.addTestSuite(OverlappingNodeAddTest.class);
 
+        suite.addTestSuite(NPEandCMETest.class);
+
         return suite;
     }
 }

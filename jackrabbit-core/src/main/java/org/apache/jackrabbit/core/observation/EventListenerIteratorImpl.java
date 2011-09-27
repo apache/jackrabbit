@@ -37,7 +37,7 @@ class EventListenerIteratorImpl implements EventListenerIterator {
     /**
      * Iterator over {@link EventConsumer} instances
      */
-    private final Iterator consumers;
+    private final Iterator<EventConsumer> consumers;
 
     /**
      * The next <code>EventListener</code> that belongs to the session
@@ -59,7 +59,7 @@ class EventListenerIteratorImpl implements EventListenerIterator {
      * @throws NullPointerException if <code>ticket</code> or <code>consumer</code>
      *                              is <code>null</code>.
      */
-    EventListenerIteratorImpl(Session session, Collection sConsumers, Collection aConsumers)
+    EventListenerIteratorImpl(Session session, Collection<EventConsumer> sConsumers, Collection<EventConsumer> aConsumers)
             throws NullPointerException {
         if (session == null) {
             throw new NullPointerException("session");
@@ -71,7 +71,7 @@ class EventListenerIteratorImpl implements EventListenerIterator {
             throw new NullPointerException("consumers");
         }
         this.session = session;
-        Collection allConsumers = new ArrayList(sConsumers);
+        Collection<EventConsumer> allConsumers = new ArrayList<EventConsumer>(sConsumers);
         allConsumers.addAll(aConsumers);
         this.consumers = allConsumers.iterator();
         fetchNext();

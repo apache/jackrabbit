@@ -22,14 +22,10 @@ import org.apache.jackrabbit.core.id.PropertyId;
 import org.apache.jackrabbit.core.nodetype.EffectiveNodeType;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.QNodeDefinition;
-import org.apache.jackrabbit.spi.QNodeTypeDefinition;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 
 import javax.jcr.nodetype.NoSuchNodeTypeException;
-import javax.jcr.nodetype.NodeDefinition;
-import javax.jcr.nodetype.NodeType;
-import javax.jcr.nodetype.PropertyDefinition;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
