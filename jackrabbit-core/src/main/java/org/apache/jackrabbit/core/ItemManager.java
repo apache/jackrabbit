@@ -159,7 +159,13 @@ public class ItemManager implements ItemStateListener {
         if (parentId == null) {
             // removed state has parentId set to null
             // get from overlayed state
-            parentId = state.getOverlayedState().getParentId();
+            ItemState overlaid = state.getOverlayedState();
+            if (overlaid != null) {
+                parentId = overlaid.getParentId();
+            } else {
+                throw new InvalidItemStateException(
+                        "Could not find parent of node " + state.getNodeId());
+            }
         }
         NodeState parentState = null;
         try {
@@ -197,6 +203,12 @@ public class ItemManager implements ItemStateListener {
 
         // get child node entry
         ChildNodeEntry cne = parentState.getChildNodeEntry(state.getNodeId());
+        if (cne == null) {
+            throw new InvalidItemStateException(
+                    "Could not find child " + state.getNodeId()
+                    + " of node " + parentState.getNodeId());
+        }
+
         NodeTypeRegistry ntReg = sessionContext.getNodeTypeRegistry();
         try {
             EffectiveNodeType ent = ntReg.getEffectiveNodeType(

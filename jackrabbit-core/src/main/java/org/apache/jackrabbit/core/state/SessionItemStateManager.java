@@ -64,13 +64,13 @@ public class SessionItemStateManager
      * map of those states that have been removed transiently
      */
     private final Map<ItemId, ItemState> atticStore =
-        new HashMap<ItemId, ItemState>();
+            Collections.synchronizedMap(new HashMap<ItemId, ItemState>());
 
     /**
      * map of new or modified transient states
      */
     private final Map<ItemId, ItemState> transientStore =
-        new HashMap<ItemId, ItemState>();
+            Collections.synchronizedMap(new HashMap<ItemId, ItemState>());
 
     /**
      * ItemStateManager view of the states in the attic; lazily instantiated
@@ -399,7 +399,8 @@ public class SessionItemStateManager
             // Group the descendants by reverse relative depth
             SortedMap<Integer, Collection<ItemState>> statesByReverseDepth =
                 new TreeMap<Integer, Collection<ItemState>>();
-            for (ItemState state : store.values()) {
+            ItemState[] states = store.values().toArray(new ItemState[0]);
+            for (ItemState state : states) {
                 // determine relative depth: > 0 means it's a descendant
                 int depth = hierarchyManager.getShareRelativeDepth(
                         (NodeId) id, state.getId());
@@ -453,7 +454,9 @@ public class SessionItemStateManager
         Collection<NodeId> candidateIds = new LinkedList<NodeId>();
         try {
             HierarchyManager hierMgr = getHierarchyMgr();
-            for (ItemState state : transientStore.values()) {
+            ItemState[] states =
+                    transientStore.values().toArray(new ItemState[0]);
+            for (ItemState state : states) {
                 if (state.getStatus() == ItemState.STATUS_EXISTING_MODIFIED
                         || state.getStatus() == ItemState.STATUS_STALE_DESTROYED) {
                     NodeId nodeId;
@@ -550,14 +553,16 @@ public class SessionItemStateManager
      */
     public NodeState createTransientNodeState(NodeId id, Name nodeTypeName, NodeId parentId, int initialStatus)
             throws RepositoryException {
+        if (initialStatus == ItemState.STATUS_NEW && id != null
+                    && hasItemState(id)) {
+                throw new InvalidItemStateException(
+                        "Node " + id + " already exists");
+        }
+
         // check map; synchronized to ensure an entry is not created twice.
         synchronized (transientStore) {
             if (id == null) {
                 id = stateMgr.getNodeIdFactory().newNodeId();
-            } else if (initialStatus == ItemState.STATUS_NEW
-                    && hasItemState(id)) {
-                throw new InvalidItemStateException(
-                        "Node " + id + " already exists");
             } else if (transientStore.containsKey(id)) {
                 throw new RepositoryException(
                         "There is already a transient state for node " + id);
@@ -720,11 +725,12 @@ public class SessionItemStateManager
     public void disposeAllTransientItemStates() {
         // dispose item states in transient map & attic
         // (use temp collection to avoid ConcurrentModificationException)
-        Collection<ItemState> tmp = new ArrayList<ItemState>(transientStore.values());
+        ItemState[] tmp;
+        tmp = transientStore.values().toArray(new ItemState[0]);
         for (ItemState state : tmp) {
             disposeTransientItemState(state);
         }
-        tmp = new ArrayList<ItemState>(atticStore.values());
+        tmp = atticStore.values().toArray(new ItemState[0]);
         for (ItemState state : tmp) {
             disposeTransientItemStateInAttic(state);
         }
@@ -829,9 +835,8 @@ public class SessionItemStateManager
                 visibleState = transientState;
             } else {
                 // check attic
-                transientState = atticStore.get(destroyed.getId());
+                transientState = atticStore.remove(destroyed.getId());
                 if (transientState != null) {
-                    atticStore.remove(destroyed.getId());
                     transientState.onDisposed();
                 }
             }

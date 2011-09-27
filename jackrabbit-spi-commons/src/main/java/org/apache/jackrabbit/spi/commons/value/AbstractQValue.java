@@ -204,9 +204,7 @@ public abstract class AbstractQValue implements QValue, Serializable {
      * @see QValue#getCalendar()
      */
     public Calendar getCalendar() throws RepositoryException {
-        if (type == PropertyType.DATE) {
-            return ISO8601.parse(getString());
-        } else if (type == PropertyType.DOUBLE) {
+        if (type == PropertyType.DOUBLE) {
             Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("GMT+00:00"));
             cal.setTimeInMillis(((Double) val).longValue());
             return cal;
