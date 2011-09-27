@@ -16,11 +16,9 @@
  */
 package org.apache.jackrabbit.core.fs.db;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.fs.FileSystemException;
 import org.apache.jackrabbit.core.fs.FileSystemPathUtil;
-import org.apache.jackrabbit.core.fs.RandomAccessOutputStream;
 import org.apache.jackrabbit.core.persistence.PMContext;
 import org.apache.jackrabbit.core.util.db.CheckSchemaOperation;
 import org.apache.jackrabbit.core.util.db.ConnectionHelper;
@@ -40,7 +38,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.FileInputStream;
-import java.io.RandomAccessFile;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;

@@ -445,6 +445,17 @@ public class UserManagerImpl extends ProtectedItemModifier
     }
 
     /**
+     * Always throws <code>UnsupportedRepositoryOperationException</code> since
+     * this implementation of the user management API does not allow to retrieve
+     * the path of an authorizable.
+     * 
+     * @see UserManager#getAuthorizableByPath(String)
+     */
+    public Authorizable getAuthorizableByPath(String path) throws UnsupportedRepositoryOperationException, RepositoryException {
+        throw new UnsupportedRepositoryOperationException();
+    }
+
+    /**
      * @see UserManager#findAuthorizables(String,String)
      */
     public Iterator<Authorizable> findAuthorizables(String relPath, String value) throws RepositoryException {
@@ -744,6 +755,15 @@ public class UserManagerImpl extends ProtectedItemModifier
      */
     String getPath(Node authorizableNode) throws UnsupportedRepositoryOperationException, RepositoryException {
         throw new UnsupportedRepositoryOperationException();
+    }
+
+    /**
+     * Returns the session associated with this user manager.
+     *
+     * @return the session.
+     */
+    SessionImpl getSession() {
+        return session;
     }
 
     /**

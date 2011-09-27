@@ -39,7 +39,7 @@ public class DelegatingObservationDispatcher extends EventDispatcher {
     /**
      * the set of dispatchers
      */
-    private final HashSet dispatchers = new HashSet();
+    private final HashSet<ObservationDispatcher> dispatchers = new HashSet<ObservationDispatcher>();
 
     /**
      * Adds a new observation dispatcher to the set of dispatchers
@@ -110,7 +110,7 @@ public class DelegatingObservationDispatcher extends EventDispatcher {
      * @param pathPrefix event path prefix
      * @param userData the user data
      */
-    public void dispatch(List eventList, SessionImpl session,
+    public void dispatch(List<EventState> eventList, SessionImpl session,
                          Path pathPrefix, String userData) {
         ObservationDispatcher[] disp;
         synchronized (dispatchers) {

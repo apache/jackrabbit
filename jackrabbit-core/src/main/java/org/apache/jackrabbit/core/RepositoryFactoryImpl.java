@@ -68,7 +68,6 @@ public class RepositoryFactoryImpl implements JackrabbitRepositoryFactory {
     private final Set<TransientRepository> ownRepositories =
         new HashSet<TransientRepository>();
 
-    @SuppressWarnings("unchecked")
     public Repository getRepository(Map parameters) throws RepositoryException {
         if (parameters == null) {
             return getRepository(null, Collections.emptyMap());

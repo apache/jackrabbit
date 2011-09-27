@@ -20,7 +20,10 @@ import org.apache.jackrabbit.JcrConstants;
 import org.apache.jackrabbit.commons.NamespaceHelper;
 import org.apache.jackrabbit.util.ISO9075;
 import org.apache.jackrabbit.util.Text;
+import org.apache.jackrabbit.webdav.DavException;
 import org.apache.jackrabbit.webdav.DavResource;
+import org.apache.jackrabbit.webdav.DavServletResponse;
+import org.apache.jackrabbit.webdav.jcr.JcrDavException;
 import org.apache.jackrabbit.webdav.xml.Namespace;
 import org.apache.jackrabbit.webdav.property.DavPropertyName;
 import org.apache.jackrabbit.webdav.property.DavProperty;
@@ -32,6 +35,7 @@ import org.slf4j.LoggerFactory;
 import javax.jcr.Item;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
+import javax.jcr.PathNotFoundException;
 import javax.jcr.Property;
 import javax.jcr.RepositoryException;
 import javax.jcr.PropertyIterator;
@@ -67,7 +71,7 @@ import java.util.HashMap;
  * Subclasses therefore should provide their own {@link #importData(ImportContext, boolean, Node)
  * importData} method, that handles the data according their needs.
  */
-public class DefaultHandler implements IOHandler, PropertyHandler {
+public class DefaultHandler implements IOHandler, PropertyHandler, CopyMoveHandler {
 
     private static Logger log = LoggerFactory.getLogger(DefaultHandler.class);
 
@@ -574,9 +578,9 @@ public class DefaultHandler implements IOHandler, PropertyHandler {
                     continue;
                 }
                 if (JcrConstants.JCR_DATA.equals(name)
-                    || JcrConstants.JCR_MIMETYPE.equals(name)
-                    || JcrConstants.JCR_ENCODING.equals(name)
-                    || JcrConstants.JCR_LASTMODIFIED.equals(name)) {
+                        || JcrConstants.JCR_MIMETYPE.equals(name)
+                        || JcrConstants.JCR_ENCODING.equals(name)
+                        || JcrConstants.JCR_LASTMODIFIED.equals(name)) {
                     continue;
                 }
 
@@ -668,6 +672,54 @@ public class DefaultHandler implements IOHandler, PropertyHandler {
             // Can not happen since the InputStream above is null
             throw new IllegalStateException(
                     "Unexpected IOException", e);
+        }
+    }
+
+    //----------------------------------------------------< CopyMoveHandler >---
+    /**
+     * @see CopyMoveHandler#canCopy(CopyMoveContext, org.apache.jackrabbit.webdav.DavResource, org.apache.jackrabbit.webdav.DavResource)
+     */
+    public boolean canCopy(CopyMoveContext context, DavResource source, DavResource destination) {
+        return true;
+    }
+
+    /**
+     * @see CopyMoveHandler#copy(CopyMoveContext, org.apache.jackrabbit.webdav.DavResource, org.apache.jackrabbit.webdav.DavResource)
+     */
+    public boolean copy(CopyMoveContext context, DavResource source, DavResource destination) throws DavException {
+        if (context.isShallowCopy() && source.isCollection()) {
+            // TODO: currently no support for shallow copy; however this is
+            // only relevant if the source resource is a collection, because
+            // otherwise it doesn't make a difference
+            throw new DavException(DavServletResponse.SC_FORBIDDEN, "Unable to perform shallow copy.");
+        }
+        try {
+            context.getSession().getWorkspace().copy(source.getLocator().getRepositoryPath(), destination.getLocator().getRepositoryPath());
+            return true;
+        }  catch (PathNotFoundException e) {
+            // according to rfc 2518: missing parent
+            throw new DavException(DavServletResponse.SC_CONFLICT, e.getMessage());
+        } catch (RepositoryException e) {
+            throw new JcrDavException(e);
+        }
+    }
+
+    /**
+     * @see CopyMoveHandler#canMove(CopyMoveContext, org.apache.jackrabbit.webdav.DavResource, org.apache.jackrabbit.webdav.DavResource)
+     */
+    public boolean canMove(CopyMoveContext context, DavResource source, DavResource destination) {
+        return true;
+    }
+
+    /**
+     * @see CopyMoveHandler#move(CopyMoveContext, org.apache.jackrabbit.webdav.DavResource, org.apache.jackrabbit.webdav.DavResource) 
+     */
+    public boolean move(CopyMoveContext context, DavResource source, DavResource destination) throws DavException {
+        try {
+            context.getWorkspace().move(source.getLocator().getRepositoryPath(), destination.getLocator().getRepositoryPath());
+            return true;
+        } catch (RepositoryException e) {
+            throw new JcrDavException(e);
         }
     }
 
@@ -784,9 +836,9 @@ public class DefaultHandler implements IOHandler, PropertyHandler {
     private static boolean isDefinedByFilteredNodeType(PropertyDefinition def) {
         String ntName = def.getDeclaringNodeType().getName();
         return ntName.equals(JcrConstants.NT_BASE)
-               || ntName.equals(JcrConstants.MIX_REFERENCEABLE)
-               || ntName.equals(JcrConstants.MIX_VERSIONABLE)
-               || ntName.equals(JcrConstants.MIX_LOCKABLE);
+                || ntName.equals(JcrConstants.MIX_REFERENCEABLE)
+                || ntName.equals(JcrConstants.MIX_VERSIONABLE)
+                || ntName.equals(JcrConstants.MIX_LOCKABLE);
     }
 
     //-------------------------------------------< setter for configuration >---

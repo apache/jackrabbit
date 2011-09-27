@@ -43,7 +43,6 @@ import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.security.principal.PrincipalImpl;
-import org.apache.jackrabbit.core.security.user.UserImporter.ImportBehavior;
 import org.apache.jackrabbit.core.session.SessionContext;
 import org.apache.jackrabbit.core.session.SessionWriteOperation;
 import org.apache.jackrabbit.core.state.NodeState;

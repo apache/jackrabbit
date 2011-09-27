@@ -50,40 +50,6 @@
           </excludes>
         </configuration>
       </plugin>
-      <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>clirr-maven-plugin</artifactId>
-        <executions>
-          <execution>
-            <phase>verify</phase>
-            <goals>
-              <goal>check</goal>
-            </goals>
-            <configuration>
-<!-- NOTE: Clirr considers adding new methods to an interface a
-     potential backwards-compatibility issue, as it will break
-     source compatibility with code that implements the interface.
-     In our case that's acceptable, so such cases can simply be
-     excluded in the list below. Just remember to clear the exclude
-     list when updating the baseline version to a new minor release.
--->
-              <excludes>
-<exclude>org/apache/jackrabbit/api/JackrabbitWorkspace</exclude>
-<exclude>org/apache/jackrabbit/api/security/user/Authorizable</exclude>
-<exclude>org/apache/jackrabbit/api/security/user/QueryBuilder</exclude>
-<exclude>org/apache/jackrabbit/api/security/user/QueryBuilder$Direction</exclude>
-              </excludes>
-              <comparisonArtifacts>
-                <comparisonArtifact>
-                  <groupId>${project.groupId}</groupId>
-                  <artifactId>${project.artifactId}</artifactId>
-                  <version>${clirr.baseline.version}</version>
-                </comparisonArtifact>
-              </comparisonArtifacts>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
     </plugins>
   </build>
 
@@ -99,4 +65,34 @@
     </dependency>
   </dependencies>
 
+  <profiles>
+    <profile>
+      <id>clirr</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>clirr-maven-plugin</artifactId>
+            <executions>
+              <execution>
+                <phase>verify</phase>
+                <goals>
+                  <goal>check</goal>
+                </goals>
+                <configuration>
+                  <comparisonArtifacts>
+                    <comparisonArtifact>
+                      <groupId>${project.groupId}</groupId>
+                      <artifactId>${project.artifactId}</artifactId>
+                      <version>${clirr.baseline.version}</version>
+                    </comparisonArtifact>
+                  </comparisonArtifacts>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
 </project>

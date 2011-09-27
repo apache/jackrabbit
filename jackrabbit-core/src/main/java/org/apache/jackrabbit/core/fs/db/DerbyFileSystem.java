@@ -19,9 +19,6 @@ package org.apache.jackrabbit.core.fs.db;
 import org.apache.jackrabbit.core.fs.FileSystemException;
 import org.apache.jackrabbit.core.util.db.ConnectionHelper;
 import org.apache.jackrabbit.core.util.db.DerbyConnectionHelper;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.sql.SQLException;
 
 import javax.sql.DataSource;

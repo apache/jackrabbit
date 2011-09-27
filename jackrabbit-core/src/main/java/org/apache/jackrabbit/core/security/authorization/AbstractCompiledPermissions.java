@@ -16,15 +16,14 @@
  */
 package org.apache.jackrabbit.core.security.authorization;
 
-import org.apache.commons.collections.map.LRUMap;
-import org.apache.jackrabbit.spi.Path;
-
-import javax.jcr.RepositoryException;
-import javax.jcr.security.AccessControlException;
-import javax.jcr.security.Privilege;
-import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
+
+import javax.jcr.RepositoryException;
+import javax.jcr.security.Privilege;
+
+import org.apache.commons.collections.map.LRUMap;
+import org.apache.jackrabbit.spi.Path;
 
 /**
  * <code>AbstractCompiledPermissions</code>...

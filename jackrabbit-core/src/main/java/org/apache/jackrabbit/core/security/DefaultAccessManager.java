@@ -26,8 +26,6 @@ import org.apache.jackrabbit.core.security.authorization.AccessControlEditor;
 import org.apache.jackrabbit.core.security.authorization.AccessControlProvider;
 import org.apache.jackrabbit.core.security.authorization.CompiledPermissions;
 import org.apache.jackrabbit.core.security.authorization.Permission;
-import org.apache.jackrabbit.core.security.authorization.PrivilegeManagerImpl;
-import org.apache.jackrabbit.core.security.authorization.PrivilegeRegistry;
 import org.apache.jackrabbit.core.security.authorization.WorkspaceAccessManager;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
