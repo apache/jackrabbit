@@ -21,6 +21,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 import javax.jcr.ImportUUIDBehavior;
+import javax.jcr.InvalidItemStateException;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
@@ -94,9 +95,7 @@ public class ConcurrentImportTest extends AbstractConcurrencyTest {
                                 log.println("Added " + test.getPath() + "/"
                                         + uuid);
                                 log.flush();
-                            } catch (RepositoryException e) {
-                                // we allow all kinds of REs here; this is temporary
-                                // in theory, we shouldn't get exceptions at all; see JCR-3068
+                            } catch (InvalidItemStateException e) {
                                 log.println("Ignoring expected error: " + e.toString());
                                 log.flush();
                                 session.refresh(false);
