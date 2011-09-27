@@ -77,7 +77,7 @@ class InternalVersionImpl extends InternalVersionItemImpl
      * @param node node state of this version
      * @param name name of this version
      */
-    public InternalVersionImpl(InternalVersionHistoryImpl vh, NodeStateEx node, Name name) {
+    public InternalVersionImpl(InternalVersionHistoryImpl vh, NodeStateEx node, Name name) throws RepositoryException{
         super(vh.getVersionManager(), node);
         this.versionHistory = vh;
         this.name = name;
