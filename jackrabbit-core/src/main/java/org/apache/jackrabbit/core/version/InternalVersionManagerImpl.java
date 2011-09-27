@@ -22,6 +22,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
+import javax.jcr.InvalidItemStateException;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
@@ -258,7 +259,8 @@ public class InternalVersionManagerImpl extends InternalVersionManagerBase
         });
 
         if (state == null) {
-            throw new VersionException("History already exists for node " + node.getNodeId());
+            throw new InvalidItemStateException(
+                    "History already exists for node " + node.getNodeId());
         }
         Name root = NameConstants.JCR_ROOTVERSION;
         return new VersionHistoryInfo(

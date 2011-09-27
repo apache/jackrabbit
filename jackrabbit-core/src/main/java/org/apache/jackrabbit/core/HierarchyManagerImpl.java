@@ -464,7 +464,7 @@ public class HierarchyManagerImpl implements HierarchyManager {
         if (entry == null) {
             String msg = "failed to resolve name of " + id;
             log.debug(msg);
-            throw new RepositoryException(msg);
+            throw new ItemNotFoundException(msg);
         }
         return entry.getName();
     }

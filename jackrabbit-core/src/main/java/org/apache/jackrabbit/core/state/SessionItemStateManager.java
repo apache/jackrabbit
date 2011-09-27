@@ -554,9 +554,9 @@ public class SessionItemStateManager
     public NodeState createTransientNodeState(NodeId id, Name nodeTypeName, NodeId parentId, int initialStatus)
             throws RepositoryException {
         if (initialStatus == ItemState.STATUS_NEW && id != null
-                    && hasItemState(id)) {
-                throw new InvalidItemStateException(
-                        "Node " + id + " already exists");
+                && hasItemState(id)) {
+            throw new InvalidItemStateException(
+                    "Node " + id + " already exists");
         }
 
         // check map; synchronized to ensure an entry is not created twice.
