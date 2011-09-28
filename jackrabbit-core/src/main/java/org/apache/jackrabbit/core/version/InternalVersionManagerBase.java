@@ -245,7 +245,7 @@ abstract class InternalVersionManagerBase implements InternalVersionManager {
         }
 
         /**
-         * Closes the write operation. The pending operations are cancelled
+         * Closes the write operation. The pending operations are canceled
          * if they could not be properly saved. Finally the write lock is
          * released.
          */
@@ -474,7 +474,7 @@ abstract class InternalVersionManagerBase implements InternalVersionManager {
     /**
      * Removes the specified activity
      *
-     * @param activity the acitvity to remove
+     * @param activity the activity to remove
      * @throws javax.jcr.RepositoryException if any other error occurs.
      */
     protected void internalRemoveActivity(InternalActivityImpl activity)
@@ -632,7 +632,7 @@ abstract class InternalVersionManagerBase implements InternalVersionManager {
      * Calculates the name of the new version that will be created by a
      * checkin call. The name is determined as follows:
      * <ul>
-     * <li> first the predecessor version with the shortes name is searched.
+     * <li> first the predecessor version with the shortest name is searched.
      * <li> if that predecessor version is the root version, the new version gets
      *      the name "{number of successors}+1" + ".0"
      * <li> if that predecessor version has no successor, the last digit of it's
