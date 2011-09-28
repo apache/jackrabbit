@@ -199,7 +199,7 @@ public class NodeStateEx {
     }
 
     /**
-     * Returns the values of the given property of <code>null</code>
+     * Returns the values of the given property or <code>null</code>
      *
      * @param name name of the property
      * @return the values of the given property.
@@ -329,7 +329,7 @@ public class NodeStateEx {
     /**
      * removes the (first) child node with the given name.
      *
-     * @param name name of hte node
+     * @param name name of the node
      * @return <code>true</code> if the child was removed
      * @throws RepositoryException if an error occurs
      */
@@ -847,9 +847,9 @@ public class NodeStateEx {
     }
 
     /**
-     * Checks if this state has the inidcated ancestor
+     * Checks if this state has the indicated ancestor
      * @param nodeId the node id of the ancestor
-     * @return <code>true</code> if it has the inidicated ancestor
+     * @return <code>true</code> if it has the indicated ancestor
      * @throws RepositoryException if an error occurs
      */
     public boolean hasAncestor(NodeId nodeId) throws RepositoryException {
