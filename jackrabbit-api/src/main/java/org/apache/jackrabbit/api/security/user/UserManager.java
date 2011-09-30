@@ -16,16 +16,26 @@
  */
 package org.apache.jackrabbit.api.security.user;
 
-import javax.jcr.RepositoryException;
-import javax.jcr.UnsupportedRepositoryOperationException;
 import java.security.Principal;
 import java.util.Iterator;
+
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
+import javax.jcr.UnsupportedRepositoryOperationException;
 
 /**
  * The <code>UserManager</code> provides access to and means to maintain
  * {@link Authorizable authorizable objects} i.e. {@link User users} and
  * {@link Group groups}. The <code>UserManager</code> is bound to a particular
  * <code>Session</code>.
+ * <p>
+ * Note that all <code>create</code> calls will modify the session associated
+ * with the {@linkplain UserManager} (whether this is the current session or not
+ * depends on the repository configuration). If the user manager is <em>not</em>
+ * in "autosave" mode (see {@link UserManager#isAutoSave()}), problems like
+ * overlapping creation of intermediate nodes may only surface upon a subsequent
+ * {@link Session#save()} operation; callers should be prepared to repeat them
+ * in case this happens.
  */
 public interface UserManager {
 
