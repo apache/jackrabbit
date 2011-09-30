@@ -676,6 +676,13 @@ abstract class InternalVersionManagerBase implements InternalVersionManager {
         } else {
             // 1. search a predecessor, suitable for generating the new name
             InternalValue[] values = node.getPropertyValues(NameConstants.JCR_PREDECESSORS);
+
+            if (values == null) {
+                String message = "Mandatory jcr:predecessors property missing on node " + node.getNodeId();
+                log.error(message);
+                throw new VersionException(message);
+            }
+
             for (InternalValue value: values) {
                 InternalVersion pred = history.getVersion(value.getNodeId());
                 if (best == null
