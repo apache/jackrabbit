@@ -42,6 +42,7 @@ public class TestAll extends TestCase {
         suite.addTestSuite(NestedGroupTest.class);
         suite.addTestSuite(ImpersonationTest.class);
         suite.addTestSuite(UserManagerSearchTest.class);
+        suite.addTestSuite(ConcurrentCreateUserTest.class);
 
         return suite;
     }
