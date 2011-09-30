@@ -130,8 +130,7 @@ public class AccessControlImporter extends DefaultProtectedNodeImporter {
             return false;
         }
 
-        if (AccessControlConstants.N_POLICY.equals(protectedParent.getQName())
-                && protectedParent.isNodeType(AccessControlConstants.NT_REP_ACL)) {
+        if (isPolicyNode(protectedParent)) {
             acl = getACL(protectedParent.getParent().getPath());
             if (acl == null) {
                 log.warn("AccessControlImporter cannot be started: no ACL for {}.", protectedParent.getParent().getPath());
@@ -295,6 +294,12 @@ public class AccessControlImporter extends DefaultProtectedNodeImporter {
         if (status != expectedStatus) {
             throw new ConstraintViolationException(message);
         }
+    }
+
+    private static boolean isPolicyNode(NodeImpl node) throws RepositoryException {
+        Name nodeName = node.getQName();
+        return (AccessControlConstants.N_POLICY.equals(nodeName) || AccessControlConstants.N_REPO_POLICY.equals(nodeName))
+                && node.isNodeType(AccessControlConstants.NT_REP_ACL);
     }
 
     private static void checkDefinition(NodeInfo nInfo, Name expName, Name expNodeTypeName) throws ConstraintViolationException {

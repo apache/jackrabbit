@@ -554,6 +554,10 @@
   mixin
   + rep:policy (rep:Policy) protected IGNORE
 
+[rep:RepoAccessControllable]
+  mixin
+  + rep:repoPolicy (rep:Policy) protected IGNORE
+
 [rep:Policy]
   abstract
 

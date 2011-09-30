@@ -195,6 +195,16 @@ public class DefaultAccessManager extends AbstractAccessControlManager implement
     }
 
     /**
+     * @see AccessManager#checkRepositoryPermission(int)
+     */
+    public void checkRepositoryPermission(int permissions) throws AccessDeniedException, RepositoryException {
+        checkInitialized();
+        if (!compiledPermissions.grants(null, permissions)) {
+            throw new AccessDeniedException("Access denied.");
+        }
+    }
+
+    /**
      * @see AccessManager#isGranted(ItemId, int)
      */
     public boolean isGranted(ItemId id, int actions)
@@ -276,7 +286,7 @@ public class DefaultAccessManager extends AbstractAccessControlManager implement
             log.debug("No privileges passed -> allowed.");
             return true;
         } else {
-            Path p = resolver.getQPath(absPath);
+            Path p = getPath(absPath);
             return compiledPermissions.hasPrivileges(p, privileges);
         }
     }
@@ -287,7 +297,7 @@ public class DefaultAccessManager extends AbstractAccessControlManager implement
     public Privilege[] getPrivileges(String absPath) throws PathNotFoundException, RepositoryException {
         checkInitialized();
         checkValidNodePath(absPath);
-        Set<Privilege> privs = compiledPermissions.getPrivilegeSet(resolver.getQPath(absPath));
+        Set<Privilege> privs = compiledPermissions.getPrivilegeSet(getPath(absPath));
         return privs.toArray(new Privilege[privs.size()]);
     }
 
@@ -410,7 +420,7 @@ public class DefaultAccessManager extends AbstractAccessControlManager implement
             log.debug("No privileges passed -> allowed.");
             return true;
         } else {
-            Path p = resolver.getQPath(absPath);
+            Path p = getPath(absPath);
             CompiledPermissions perms = acProvider.compilePermissions(principals);
             try {
                 return perms.hasPrivileges(p, privileges);
@@ -430,7 +440,7 @@ public class DefaultAccessManager extends AbstractAccessControlManager implement
 
         CompiledPermissions perms = acProvider.compilePermissions(principals);
         try {
-            Set<Privilege> privs = perms.getPrivilegeSet(resolver.getQPath(absPath));
+            Set<Privilege> privs = perms.getPrivilegeSet(getPath(absPath));
             return privs.toArray(new Privilege[privs.size()]);
         } finally {
             perms.close();
@@ -453,12 +463,14 @@ public class DefaultAccessManager extends AbstractAccessControlManager implement
      */
     @Override
     protected void checkValidNodePath(String absPath) throws PathNotFoundException, RepositoryException {
-        Path p = resolver.getQPath(absPath);
-        if (!p.isAbsolute()) {
-            throw new RepositoryException("Absolute path expected.");
-        }
-        if (hierMgr.resolveNodePath(p) == null) {
-            throw new PathNotFoundException("No such node " + absPath);
+        Path p = getPath(absPath);
+        if (p != null) {
+            if (!p.isAbsolute()) {
+                throw new RepositoryException("Absolute path expected.");
+            }
+            if (hierMgr.resolveNodePath(p) == null) {
+                throw new PathNotFoundException("No such node " + absPath);
+            }
         }
     }
 
@@ -468,7 +480,7 @@ public class DefaultAccessManager extends AbstractAccessControlManager implement
     @Override
     protected void checkPermission(String absPath, int permission) throws AccessDeniedException, RepositoryException {
         checkValidNodePath(absPath);
-        Path p = resolver.getQPath(absPath);
+        Path p = getPath(absPath);
         if (!compiledPermissions.grants(p, permission)) {
             throw new AccessDeniedException("Access denied at " + absPath);
         }
@@ -485,7 +497,7 @@ public class DefaultAccessManager extends AbstractAccessControlManager implement
 
     //------------------------------------------------------------< private >---
     private Path getPath(String absPath) throws RepositoryException {
-        return resolver.getQPath(absPath);
+        return (absPath == null) ? null : resolver.getQPath(absPath);
     }
 
     /**

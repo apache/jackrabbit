@@ -195,6 +195,13 @@ class SystemSession extends SessionImpl {
 
         /**
          * {@inheritDoc}
+         */
+        public void checkRepositoryPermission(int permissions) throws AccessDeniedException, RepositoryException {
+            // allow everything
+        }
+
+        /**
+         * {@inheritDoc}
          *
          * @return always <code>true</code>
          * @throws RepositoryException   is never thrown
@@ -275,12 +282,14 @@ class SystemSession extends SessionImpl {
         @Override
         protected void checkValidNodePath(String absPath)
                 throws PathNotFoundException, RepositoryException {
-            Path p = getQPath(absPath);
-            if (!p.isAbsolute()) {
-                throw new RepositoryException("Absolute path expected.");
-            }
-            if (context.getHierarchyManager().resolveNodePath(p) == null) {
-                throw new PathNotFoundException("No such node " + absPath);
+            if (absPath != null) {
+                Path p = getQPath(absPath);
+                if (!p.isAbsolute()) {
+                    throw new RepositoryException("Absolute path expected.");
+                }
+                if (context.getHierarchyManager().resolveNodePath(p) == null) {
+                    throw new PathNotFoundException("No such node " + absPath);
+                }
             }
         }
 

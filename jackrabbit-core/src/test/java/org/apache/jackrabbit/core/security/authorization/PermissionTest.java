@@ -45,6 +45,9 @@ public class PermissionTest extends TestCase {
         assertEquals(1024, Permission.LIFECYCLE_MNGMT);
         assertEquals(2048, Permission.RETENTION_MNGMT);
         assertEquals(4096, Permission.MODIFY_CHILD_NODE_COLLECTION);        
-        assertEquals(8192, Permission.PRIVILEGE_MNGMT);        
+        assertEquals(8192, Permission.NODE_TYPE_DEF_MNGMT);        
+        assertEquals(16384, Permission.NAMESPACE_MNGMT);
+        assertEquals(32768, Permission.WORKSPACE_MNGMT);
+        assertEquals(65536, Permission.PRIVILEGE_MNGMT);
     }
 }

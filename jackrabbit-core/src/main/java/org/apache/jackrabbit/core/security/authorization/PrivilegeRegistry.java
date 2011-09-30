@@ -97,8 +97,11 @@ public final class PrivilegeRegistry implements PrivilegeEventListener {
     private static final int LOCK_MNGMT = VERSION_MNGMT << 1;
     private static final int LIFECYCLE_MNGMT = LOCK_MNGMT << 1;
     private static final int RETENTION_MNGMT = LIFECYCLE_MNGMT << 1;
-    private static final int PRIVILEGE_MNGMT = RETENTION_MNGMT << 1;
-
+    private static final int WORKSPACE_MNGMT = RETENTION_MNGMT << 1;
+    private static final int NODE_TYPE_DEF_MNGMT = WORKSPACE_MNGMT << 1;
+    private static final int NAMESPACE_MNGMT = NODE_TYPE_DEF_MNGMT << 1;
+    private static final int PRIVILEGE_MNGMT = NAMESPACE_MNGMT << 1;
+    
     private static final Map<Name, Integer> PRIVILEGE_NAMES = new HashMap<Name, Integer>();
     static {
         PRIVILEGE_NAMES.put(NameConstants.JCR_READ, READ);
@@ -113,6 +116,9 @@ public final class PrivilegeRegistry implements PrivilegeEventListener {
         PRIVILEGE_NAMES.put(NameConstants.JCR_LOCK_MANAGEMENT, LOCK_MNGMT);
         PRIVILEGE_NAMES.put(NameConstants.JCR_LIFECYCLE_MANAGEMENT, LIFECYCLE_MNGMT);
         PRIVILEGE_NAMES.put(NameConstants.JCR_RETENTION_MANAGEMENT, RETENTION_MNGMT);
+        PRIVILEGE_NAMES.put(NameConstants.JCR_WORKSPACE_MANAGEMENT, WORKSPACE_MNGMT);
+        PRIVILEGE_NAMES.put(NameConstants.JCR_NODE_TYPE_DEFINITION_MANAGEMENT, NODE_TYPE_DEF_MNGMT);
+        PRIVILEGE_NAMES.put(NameConstants.JCR_NAMESPACE_MANAGEMENT, NAMESPACE_MNGMT);
         PRIVILEGE_NAMES.put(REP_PRIVILEGE_MANAGEMENT_NAME, PRIVILEGE_MNGMT);
     }
 
@@ -420,6 +426,15 @@ public final class PrivilegeRegistry implements PrivilegeEventListener {
         if ((privs & VERSION_MNGMT) == VERSION_MNGMT) {
             perm |= Permission.VERSION_MNGMT;
         }
+        if ((privs & WORKSPACE_MNGMT) == WORKSPACE_MNGMT) {
+            perm |= Permission.WORKSPACE_MNGMT;
+        }
+        if ((privs & NODE_TYPE_DEF_MNGMT) == NODE_TYPE_DEF_MNGMT) {
+            perm |= Permission.NODE_TYPE_DEF_MNGMT;
+        }
+        if ((privs & NAMESPACE_MNGMT) == NAMESPACE_MNGMT) {
+            perm |= Permission.NAMESPACE_MNGMT;
+        }
         if ((privs & PRIVILEGE_MNGMT) == PRIVILEGE_MNGMT) {
             perm |= Permission.PRIVILEGE_MNGMT;
         }
@@ -539,6 +554,15 @@ public final class PrivilegeRegistry implements PrivilegeEventListener {
             }
             if ((bits & RETENTION_MNGMT) == RETENTION_MNGMT) {
                 names.add(NameConstants.JCR_RETENTION_MANAGEMENT);
+            }
+            if ((bits & WORKSPACE_MNGMT) == WORKSPACE_MNGMT) {
+                names.add(NameConstants.JCR_WORKSPACE_MANAGEMENT);
+            }
+            if ((bits & NODE_TYPE_DEF_MNGMT) == NODE_TYPE_DEF_MNGMT) {
+                names.add(NameConstants.JCR_NODE_TYPE_DEFINITION_MANAGEMENT);
+            }
+            if ((bits & NAMESPACE_MNGMT) == NAMESPACE_MNGMT) {
+                names.add(NameConstants.JCR_NAMESPACE_MANAGEMENT);
             }
             if ((bits & PRIVILEGE_MNGMT) == PRIVILEGE_MNGMT) {
                 names.add(REP_PRIVILEGE_MANAGEMENT_NAME);
@@ -694,10 +718,12 @@ public final class PrivilegeRegistry implements PrivilegeEventListener {
         jcrAllAggregates.add(NameConstants.JCR_NODE_TYPE_MANAGEMENT);
         jcrAllAggregates.add(NameConstants.JCR_RETENTION_MANAGEMENT);
         jcrAllAggregates.add(NameConstants.JCR_LIFECYCLE_MANAGEMENT);
+        jcrAllAggregates.add(NameConstants.JCR_NODE_TYPE_DEFINITION_MANAGEMENT);
+        jcrAllAggregates.add(NameConstants.JCR_NAMESPACE_MANAGEMENT);
+        jcrAllAggregates.add(NameConstants.JCR_WORKSPACE_MANAGEMENT);
         jcrAllAggregates.add(NameConstants.JCR_WRITE);
         jcrAllAggregates.add(REP_WRITE_NAME);
         jcrAllAggregates.add(REP_PRIVILEGE_MANAGEMENT_NAME);
-
 
         Definition jcrAll = new Definition(NameConstants.JCR_ALL, false, jcrAllAggregates, jcrAllBits);
         defs.put(jcrAll.getName(), jcrAll);
@@ -732,7 +758,7 @@ public final class PrivilegeRegistry implements PrivilegeEventListener {
             // - make sure the specified name defines a registered namespace
             namespaceRegistry.getPrefix(name.getNamespaceURI());
             // - and isn't one of the reserved namespaces
-            if (((NamespaceRegistryImpl) namespaceRegistry).isReservedURI(name.getNamespaceURI())) {
+            if (isReservedNamespaceURI(name.getNamespaceURI())) {
                 throw new RepositoryException("Failed to register custom privilege: Reserved namespace URI: " + name.getNamespaceURI());
             }
 
@@ -801,6 +827,17 @@ public final class PrivilegeRegistry implements PrivilegeEventListener {
         }
 
         return definitions;
+    }
+
+    private boolean isReservedNamespaceURI(String uri) {
+        if (namespaceRegistry instanceof NamespaceRegistryImpl) {
+            return ((NamespaceRegistryImpl) namespaceRegistry).isReservedURI(uri);
+        } else {
+            // hardcoded fallback
+            return Name.NS_REP_URI.equals(uri)
+                    || (uri.startsWith("http://www.w3.org"))
+                    || uri.startsWith("http://www.jcp.org");
+        }
     }
 
     /**

@@ -21,6 +21,7 @@ import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.security.authorization.PrivilegeRegistry;
 import org.apache.jackrabbit.spi.commons.conversion.IllegalNameException;
 import org.apache.jackrabbit.spi.commons.conversion.NameResolver;
+import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.test.AbstractJCRTest;
 
 import javax.jcr.NamespaceException;
@@ -71,7 +72,12 @@ public class PrivilegeManagerTest extends AbstractJCRTest {
         assertTrue(l.remove(privilegeMgr.getPrivilege(Privilege.JCR_RETENTION_MANAGEMENT)));
         assertTrue(l.remove(privilegeMgr.getPrivilege(Privilege.JCR_VERSION_MANAGEMENT)));
         assertTrue(l.remove(privilegeMgr.getPrivilege(PrivilegeRegistry.REP_WRITE)));
+        // including repo-level operation privileges
+        assertTrue(l.remove(privilegeMgr.getPrivilege(NameConstants.JCR_NAMESPACE_MANAGEMENT.toString())));
+        assertTrue(l.remove(privilegeMgr.getPrivilege(NameConstants.JCR_NODE_TYPE_DEFINITION_MANAGEMENT.toString())));
+        assertTrue(l.remove(privilegeMgr.getPrivilege(NameConstants.JCR_WORKSPACE_MANAGEMENT.toString())));
         assertTrue(l.remove(privilegeMgr.getPrivilege(PrivilegeRegistry.REP_PRIVILEGE_MANAGEMENT)));
+
         assertTrue(l.isEmpty());
     }
 
@@ -96,14 +102,18 @@ public class PrivilegeManagerTest extends AbstractJCRTest {
         assertTrue(l.remove(privilegeMgr.getPrivilege(Privilege.JCR_VERSION_MANAGEMENT)));
         assertTrue(l.remove(privilegeMgr.getPrivilege(Privilege.JCR_WRITE)));
         assertTrue(l.remove(privilegeMgr.getPrivilege(PrivilegeRegistry.REP_WRITE)));
+        // including repo-level operation privileges
+        assertTrue(l.remove(privilegeMgr.getPrivilege(NameConstants.JCR_NAMESPACE_MANAGEMENT.toString())));
+        assertTrue(l.remove(privilegeMgr.getPrivilege(NameConstants.JCR_NODE_TYPE_DEFINITION_MANAGEMENT.toString())));
+        assertTrue(l.remove(privilegeMgr.getPrivilege(NameConstants.JCR_WORKSPACE_MANAGEMENT.toString())));
         assertTrue(l.remove(privilegeMgr.getPrivilege(PrivilegeRegistry.REP_PRIVILEGE_MANAGEMENT)));
+        
         assertTrue(l.isEmpty());
 
         l = new ArrayList<Privilege>(Arrays.asList(p.getDeclaredAggregatePrivileges()));
         assertTrue(l.remove(privilegeMgr.getPrivilege(Privilege.JCR_READ)));
         assertTrue(l.remove(privilegeMgr.getPrivilege(Privilege.JCR_WRITE)));
         assertTrue(l.remove(privilegeMgr.getPrivilege(PrivilegeRegistry.REP_WRITE)));
-        assertTrue(l.remove(privilegeMgr.getPrivilege(PrivilegeRegistry.REP_PRIVILEGE_MANAGEMENT)));
         assertTrue(l.remove(privilegeMgr.getPrivilege(Privilege.JCR_READ_ACCESS_CONTROL)));
         assertTrue(l.remove(privilegeMgr.getPrivilege(Privilege.JCR_MODIFY_ACCESS_CONTROL)));
         assertTrue(l.remove(privilegeMgr.getPrivilege(Privilege.JCR_LIFECYCLE_MANAGEMENT)));
@@ -111,6 +121,12 @@ public class PrivilegeManagerTest extends AbstractJCRTest {
         assertTrue(l.remove(privilegeMgr.getPrivilege(Privilege.JCR_RETENTION_MANAGEMENT)));
         assertTrue(l.remove(privilegeMgr.getPrivilege(Privilege.JCR_VERSION_MANAGEMENT)));
         assertTrue(l.remove(privilegeMgr.getPrivilege(Privilege.JCR_NODE_TYPE_MANAGEMENT)));
+        // including repo-level operation privileges
+        assertTrue(l.remove(privilegeMgr.getPrivilege(NameConstants.JCR_NAMESPACE_MANAGEMENT.toString())));
+        assertTrue(l.remove(privilegeMgr.getPrivilege(NameConstants.JCR_NODE_TYPE_DEFINITION_MANAGEMENT.toString())));
+        assertTrue(l.remove(privilegeMgr.getPrivilege(NameConstants.JCR_WORKSPACE_MANAGEMENT.toString())));
+        assertTrue(l.remove(privilegeMgr.getPrivilege(PrivilegeRegistry.REP_PRIVILEGE_MANAGEMENT)));
+        
         assertTrue(l.isEmpty());
     }
 

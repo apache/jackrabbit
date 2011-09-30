@@ -43,6 +43,7 @@ import javax.jcr.Session;
 import javax.jcr.query.Query;
 import javax.jcr.query.QueryManager;
 import javax.jcr.query.QueryResult;
+import javax.jcr.security.AccessControlEntry;
 import javax.jcr.security.AccessControlList;
 import javax.jcr.security.AccessControlManager;
 import javax.jcr.security.AccessControlPolicy;
@@ -130,12 +131,27 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
     public AccessControlPolicy[] getEffectivePolicies(Path absPath, CompiledPermissions permissions) throws ItemNotFoundException, RepositoryException {
         checkInitialized();
 
-        NodeImpl targetNode = (NodeImpl) session.getNode(session.getJCRPath(absPath));
-        NodeImpl node = getNode(targetNode, isAcItem(targetNode));
+        NodeImpl targetNode;
         List<AccessControlList> acls = new ArrayList<AccessControlList>();
+        if (absPath == null) {
+            targetNode = (NodeImpl) session.getRootNode();
+            if (isRepoAccessControlled(targetNode)) {
+                if (permissions.grants(targetNode.getPrimaryPath(), Permission.READ_AC)) {
+                    // retrieve the entries for the access controlled node
+                    List<AccessControlEntry> entries = entryCollector.collectEntries(null, new EntryFilterImpl(null, (NodeId) null, session));
+                    acls.add(new UnmodifiableAccessControlList(entries));
+                } else {
+                    throw new AccessDeniedException("Access denied at " + targetNode.getPath());
+                }
+            }
+        } else {
+            targetNode = (NodeImpl) session.getNode(session.getJCRPath(absPath));
+            NodeImpl node = getNode(targetNode, isAcItem(targetNode));
 
-        // collect all ACLs effective at node
-        collectAcls(node, permissions, acls);
+            // collect all ACLs effective at node
+            collectAcls(node, permissions, acls);
+        }
+
         // if no effective ACLs are present -> add a default, empty acl.
         if (acls.isEmpty()) {
             // no access control information can be retrieved for the specified
@@ -332,7 +348,7 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
      * controlled if it is of node type
      * {@link AccessControlConstants#NT_REP_ACCESS_CONTROLLABLE "rep:AccessControllable"}
      * and if it has a child node named
-     * {@link AccessControlConstants#N_POLICY "rep:ACL"}.
+     * {@link AccessControlConstants#N_POLICY}.
      *
      * @param node the node to be tested
      * @return <code>true</code> if the node is access controlled and has a
@@ -341,6 +357,23 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
      */
     static boolean isAccessControlled(NodeImpl node) throws RepositoryException {
         return node.hasNode(N_POLICY) && node.isNodeType(NT_REP_ACCESS_CONTROLLABLE);
+    }
+
+
+    /**
+     * Test if the given node is access controlled. The node is access
+     * controlled if it is of node type
+     * {@link AccessControlConstants#NT_REP_REPO_ACCESS_CONTROLLABLE "rep:RepoAccessControllable"}
+     * and if it has a child node named
+     * {@link AccessControlConstants#N_REPO_POLICY}.
+     *
+     * @param node the node to be tested
+     * @return <code>true</code> if the node is access controlled and has a
+     * rep:policy child; <code>false</code> otherwise.
+     * @throws RepositoryException if an error occurs
+     */
+    static boolean isRepoAccessControlled(NodeImpl node) throws RepositoryException {
+        return node.hasNode(N_REPO_POLICY) && node.isNodeType(NT_REP_REPO_ACCESS_CONTROLLABLE);
     }
 
     /**

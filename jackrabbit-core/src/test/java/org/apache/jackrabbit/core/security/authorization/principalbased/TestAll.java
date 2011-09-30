@@ -43,6 +43,7 @@ public class TestAll extends TestCase {
         suite.addTestSuite(VersionTest.class);
         suite.addTestSuite(NodeTypeTest.class);
         suite.addTestSuite(EffectivePolicyTest.class);
+        suite.addTestSuite(RepositoryOperationTest.class);
 
         return suite;
     }

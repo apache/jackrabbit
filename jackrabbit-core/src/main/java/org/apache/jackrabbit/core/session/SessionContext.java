@@ -16,10 +16,6 @@
  */
 package org.apache.jackrabbit.core.session;
 
-import javax.jcr.NamespaceException;
-import javax.jcr.RepositoryException;
-import javax.jcr.ValueFactory;
-
 import org.apache.jackrabbit.api.security.authorization.PrivilegeManager;
 import org.apache.jackrabbit.core.HierarchyManager;
 import org.apache.jackrabbit.core.ItemManager;
@@ -36,6 +32,7 @@ import org.apache.jackrabbit.core.nodetype.NodeTypeManagerImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.observation.ObservationManagerImpl;
 import org.apache.jackrabbit.core.security.AccessManager;
+import org.apache.jackrabbit.core.security.authorization.Permission;
 import org.apache.jackrabbit.core.security.authorization.PrivilegeManagerImpl;
 import org.apache.jackrabbit.core.state.SessionItemStateManager;
 import org.apache.jackrabbit.core.value.ValueFactoryImpl;
@@ -44,6 +41,13 @@ import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.commons.conversion.IllegalNameException;
 import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
+
+import javax.jcr.AccessDeniedException;
+import javax.jcr.NamespaceException;
+import javax.jcr.NamespaceRegistry;
+import javax.jcr.RepositoryException;
+import javax.jcr.UnsupportedRepositoryOperationException;
+import javax.jcr.ValueFactory;
 
 /**
  * Component context of a session. This class keeps track of the internal
@@ -85,6 +89,12 @@ public class SessionContext implements NamePathResolver {
      * Privilege manager of this session.
      */
     private final PrivilegeManager privilegeManager;
+
+    /**
+     * The namespace registry exposed for this session context that includes
+     * permission checks.
+     */
+    private final NamespaceRegistry nsRegistry;
 
     /**
      * The workspace of this session
@@ -132,6 +142,7 @@ public class SessionContext implements NamePathResolver {
         this.itemValidator = new ItemValidator(this);
         this.nodeTypeManager = new NodeTypeManagerImpl(this);
         this.privilegeManager = new PrivilegeManagerImpl(repositoryContext.getPrivilegeRegistry(), session);
+        this.nsRegistry = new PermissionAwareNamespaceRegistry();
         this.workspace = new WorkspaceImpl(this, workspaceConfig);
     }
 
@@ -239,6 +250,16 @@ public class SessionContext implements NamePathResolver {
         return privilegeManager;
     }
 
+   /**
+     * Returns a namespace registry instance which asserts that the editing
+     * session is allowed to modify the namespace registry.
+     *
+     * @return
+     */
+    public NamespaceRegistry getNamespaceRegistry() {
+        return nsRegistry;
+    }
+
     /**
      * Returns the workspace of this session.
      *
@@ -337,6 +358,43 @@ public class SessionContext implements NamePathResolver {
     @Override
     public String toString() {
         return session + ":\n" + itemManager + "\n" + itemStateManager;
+    }
+
+    //--------------------------------------------------------------------------
+    /**
+     * Permission aware namespace registry implementation that makes sure that
+     * modifications of the namespace registry are only allowed if the editing
+     * session has the corresponding permissions.
+     */
+    private class PermissionAwareNamespaceRegistry implements NamespaceRegistry {
+
+        private final NamespaceRegistry nsRegistry = repositoryContext.getNamespaceRegistry();        
+
+        public void registerNamespace(String prefix, String uri) throws NamespaceException, UnsupportedRepositoryOperationException, AccessDeniedException, RepositoryException {
+            session.getAccessManager().checkRepositoryPermission(Permission.NAMESPACE_MNGMT);
+            nsRegistry.registerNamespace(prefix, uri);
+        }
+
+        public void unregisterNamespace(String prefix) throws NamespaceException, UnsupportedRepositoryOperationException, AccessDeniedException, RepositoryException {
+            session.getAccessManager().checkRepositoryPermission(Permission.NAMESPACE_MNGMT);
+            nsRegistry.unregisterNamespace(prefix);
+        }
+
+        public String[] getPrefixes() throws RepositoryException {
+            return nsRegistry.getPrefixes();
+        }
+
+        public String[] getURIs() throws RepositoryException {
+            return nsRegistry.getURIs();
+        }
+
+        public String getURI(String prefix) throws NamespaceException, RepositoryException {
+            return nsRegistry.getURI(prefix);
+        }
+
+        public String getPrefix(String uri) throws NamespaceException, RepositoryException {
+            return nsRegistry.getPrefix(uri);
+        }
     }
 
 }

@@ -20,6 +20,7 @@ import org.apache.jackrabbit.api.JackrabbitWorkspace;
 import org.apache.jackrabbit.api.security.authorization.PrivilegeManagerTest;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.spi.commons.conversion.IllegalNameException;
+import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.test.NotExecutableException;
 
 import javax.jcr.AccessDeniedException;
@@ -71,7 +72,7 @@ public class PrivilegeManagerImplTest extends PrivilegeManagerTest {
             fail();
         }
     }
-
+    
     public void testGetRegisteredPrivileges() throws RepositoryException {
         Privilege[] registered = privilegeMgr.getRegisteredPrivileges();
         Set<Privilege> set = new HashSet<Privilege>();
@@ -99,6 +100,12 @@ public class PrivilegeManagerImplTest extends PrivilegeManagerTest {
         assertPrivilege(privilegeMgr.getPrivilege(Privilege.JCR_RETENTION_MANAGEMENT), Privilege.JCR_RETENTION_MANAGEMENT, false, false);
         assertPrivilege(privilegeMgr.getPrivilege(Privilege.JCR_VERSION_MANAGEMENT), Privilege.JCR_VERSION_MANAGEMENT, false, false);
 
+        // repo-level operation privileges
+        assertPrivilege(privilegeMgr.getPrivilege(NameConstants.JCR_NAMESPACE_MANAGEMENT.toString()), NameConstants.JCR_NAMESPACE_MANAGEMENT.toString() , false, false);
+        assertPrivilege(privilegeMgr.getPrivilege(NameConstants.JCR_NODE_TYPE_DEFINITION_MANAGEMENT.toString()), NameConstants.JCR_NODE_TYPE_DEFINITION_MANAGEMENT.toString(), false, false);
+        assertPrivilege(privilegeMgr.getPrivilege(NameConstants.JCR_WORKSPACE_MANAGEMENT.toString()), NameConstants.JCR_WORKSPACE_MANAGEMENT.toString(), false, false);
+
+        // aggregates
         assertPrivilege(privilegeMgr.getPrivilege(Privilege.JCR_ALL), Privilege.JCR_ALL, true, false);
         assertPrivilege(privilegeMgr.getPrivilege(Privilege.JCR_WRITE), Privilege.JCR_WRITE, true, false);
         assertPrivilege(privilegeMgr.getPrivilege(PrivilegeRegistry.REP_WRITE), PrivilegeRegistry.REP_WRITE, true, false);

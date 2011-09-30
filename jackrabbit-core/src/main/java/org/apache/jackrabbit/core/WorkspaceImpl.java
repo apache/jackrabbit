@@ -54,6 +54,7 @@ import org.apache.jackrabbit.core.observation.EventStateCollectionFactory;
 import org.apache.jackrabbit.core.observation.ObservationManagerImpl;
 import org.apache.jackrabbit.core.query.QueryManagerImpl;
 import org.apache.jackrabbit.core.retention.RetentionRegistry;
+import org.apache.jackrabbit.core.security.authorization.Permission;
 import org.apache.jackrabbit.core.session.SessionContext;
 import org.apache.jackrabbit.core.state.ItemStateCacheFactory;
 import org.apache.jackrabbit.core.state.LocalItemStateManager;
@@ -210,12 +211,9 @@ public class WorkspaceImpl extends AbstractWorkspace
             throws AccessDeniedException, RepositoryException {
         // check state of this instance
         sanityCheck();
+        context.getAccessManager().checkRepositoryPermission(Permission.WORKSPACE_MNGMT);
 
-        WorkspaceManager manager =
-            context.getRepositoryContext().getWorkspaceManager();
-
-        // TODO verify that this session has the right privileges
-        // for this operation
+        WorkspaceManager manager = context.getRepositoryContext().getWorkspaceManager();
         manager.createWorkspace(name);
 
         SessionImpl tmpSession = null;
@@ -253,6 +251,8 @@ public class WorkspaceImpl extends AbstractWorkspace
             UnsupportedRepositoryOperationException, RepositoryException {
         // check if workspace exists (will throw NoSuchWorkspaceException if not)
         context.getRepository().getWorkspaceInfo(name);
+        context.getAccessManager().checkRepositoryPermission(Permission.WORKSPACE_MNGMT);
+
         // todo implement deleteWorkspace
         throw new UnsupportedRepositoryOperationException("not yet implemented");
     }
@@ -313,9 +313,8 @@ public class WorkspaceImpl extends AbstractWorkspace
             throws AccessDeniedException, RepositoryException {
         // check state of this instance
         sanityCheck();
+        context.getAccessManager().checkRepositoryPermission(Permission.WORKSPACE_MNGMT);
 
-        // TODO verify that this session has the right privileges
-        // for this operation
         context.getRepositoryContext().getWorkspaceManager().createWorkspace(name);
     }
 
@@ -337,9 +336,7 @@ public class WorkspaceImpl extends AbstractWorkspace
             throws AccessDeniedException, RepositoryException {
         // check state of this instance
         sanityCheck();
-
-        // TODO verify that this session has the right privileges
-        // for this operation
+        context.getAccessManager().checkRepositoryPermission(Permission.WORKSPACE_MNGMT);
         context.getRepositoryContext().getWorkspaceManager().createWorkspace(
                 workspaceName, configTemplate);
     }
@@ -576,7 +573,7 @@ public class WorkspaceImpl extends AbstractWorkspace
      * {@inheritDoc}
      */
     public NamespaceRegistry getNamespaceRegistry() throws RepositoryException {
-        return context.getRepositoryContext().getNamespaceRegistry();
+        return context.getNamespaceRegistry();
     }
 
     /**

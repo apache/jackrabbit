@@ -603,6 +603,9 @@ public class NameConstants {
     /** rep:policy */
     public static final Name REP_POLICY = rep("policy");
 
+    /** rep:repoPolicy */
+    public static final Name REP_REPO_POLICY = rep("repoPolicy");
+
     /** rep:accesscontrol */
     public static final Name REP_ACCESSCONTROL = rep("accesscontrol");
 
@@ -617,6 +620,9 @@ public class NameConstants {
 
     /** rep:AccessControllable */
     public static final Name REP_ACCESS_CONTROLLABLE = rep("AccessControllable");
+
+    /** rep:RepoAccessControllable */
+    public static final Name REP_REPO_ACCESS_CONTROLLABLE = rep("RepoAccessControllable");
 
     /** rep:ACL */
     public static final Name REP_ACL = rep("ACL");
@@ -721,12 +727,24 @@ public class NameConstants {
     public static final Name JCR_RETENTION_MANAGEMENT =
         FACTORY.create(Privilege.JCR_RETENTION_MANAGEMENT);
 
+    /** jcr:workspaceManagement */
+    // TODO replace with Privilege constant once next JCR version is released
+    public static final Name JCR_WORKSPACE_MANAGEMENT =
+        FACTORY.create("{http://www.jcp.org/jcr/1.0}workspaceManagement");
+
+    /** jcr:nodeTypeDefinitionManagement */
+    // TODO replace with Privilege constant once next JCR version is released
+    public static final Name JCR_NODE_TYPE_DEFINITION_MANAGEMENT =
+        FACTORY.create("{http://www.jcp.org/jcr/1.0}nodeTypeDefinitionManagement");
+
+    /** jcr:namespaceManagement */
+    // TODO replace with Privilege constant once next JCR version is released
+    public static final Name JCR_NAMESPACE_MANAGEMENT =
+        FACTORY.create("{http://www.jcp.org/jcr/1.0}namespaceManagement");
+
     /** jcr:write */
-    public static final Name JCR_WRITE =
-        FACTORY.create(Privilege.JCR_WRITE);
+    public static final Name JCR_WRITE = FACTORY.create(Privilege.JCR_WRITE);
 
     /** jcr:all */
-    public static final Name JCR_ALL =
-        FACTORY.create(Privilege.JCR_ALL);
-
+    public static final Name JCR_ALL = FACTORY.create(Privilege.JCR_ALL);
 }

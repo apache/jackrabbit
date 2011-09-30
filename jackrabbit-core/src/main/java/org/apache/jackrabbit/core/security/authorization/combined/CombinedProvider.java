@@ -243,6 +243,16 @@ public class CombinedProvider extends AbstractAccessControlProvider {
             return res;
         }
 
+        @Override
+        protected Result buildRepositoryResult() throws RepositoryException {
+            Result res = null;
+            for (AbstractCompiledPermissions acp : cPermissions) {
+                Result other = acp.getResult(null);
+                res = (res == null) ? other : res.combine(other);
+            }
+            return res;
+        }
+
         /**
          * @see AbstractCompiledPermissions#getPrivilegeManagerImpl()
          */

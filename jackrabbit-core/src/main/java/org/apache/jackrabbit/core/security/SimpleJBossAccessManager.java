@@ -107,6 +107,12 @@ public class SimpleJBossAccessManager implements AccessManager {
         }
     }
 
+    public void checkRepositoryPermission(int permissions) throws AccessDeniedException, RepositoryException {
+        if (!isGranted((ItemId) null, permissions)) {
+            throw new AccessDeniedException("Access denied");
+        }
+    }
+
     public boolean isGranted(ItemId id, int permissions) throws RepositoryException {
         // system has always all permissions
         // anonymous has only READ permissions

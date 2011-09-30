@@ -121,13 +121,25 @@ public class EntryCollector extends AccessControlObserver implements AccessContr
         LinkedList<AccessControlEntry> userAces = new LinkedList<AccessControlEntry>();
         LinkedList<AccessControlEntry> groupAces = new LinkedList<AccessControlEntry>();
 
-        NodeId next = node.getNodeId();
-        while (next != null) {
-            List<AccessControlEntry> entries = getEntries(next);
-            if (!entries.isEmpty() && filter != null) {
-                filter.filterEntries(entries, userAces, groupAces);
+        if (node == null) {
+            // repository level permissions
+            NodeImpl root = (NodeImpl) systemSession.getRootNode();
+            if (ACLProvider.isRepoAccessControlled(root)) {
+                NodeImpl aclNode = root.getNode(N_REPO_POLICY);
+                List<AccessControlEntry> entries = new ACLTemplate(aclNode).getEntries();
+                if (!entries.isEmpty() && filter != null) {
+                    filter.filterEntries(entries, userAces, groupAces);
+                }
             }
-            next = getParentId(next);
+        } else {
+            NodeId next = node.getNodeId();
+            while (next != null) {
+                List<AccessControlEntry> entries = getEntries(next);
+                if (!entries.isEmpty() && filter != null) {
+                    filter.filterEntries(entries, userAces, groupAces);
+                }
+                next = getParentId(next);
+            }
         }
         
         List<AccessControlEntry> entries = new ArrayList<AccessControlEntry>(userAces.size() + groupAces.size());

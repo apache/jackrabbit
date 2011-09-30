@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.core.security.authorization.principalbased;
 
+import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.security.AccessControlEntry;
 import javax.jcr.security.AccessControlException;
 import javax.jcr.security.Privilege;
@@ -335,6 +336,10 @@ public class ACLEditor extends ProtectedItemModifier implements AccessControlEdi
      * @throws RepositoryException
      */
     private void checkProtectsNode(String nodePath) throws RepositoryException {
+        if (nodePath == null) {
+            // TODO: JCR-2774
+            throw new UnsupportedRepositoryOperationException("JCR-2774");
+        }
         if (session.nodeExists(nodePath)) {
             NodeImpl n = (NodeImpl) session.getNode(nodePath);
             if (n.isNodeType(NT_REP_ACL) || n.isNodeType(NT_REP_ACE)) {
