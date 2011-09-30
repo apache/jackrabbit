@@ -111,6 +111,7 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
             throws RepositoryException {
         super(vMgr, node);
         init();
+        fixLegacy();
     }
 
     /**
@@ -160,8 +161,11 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
             }
             nameCache.put(child.getName(), child.getId());
         }
+    }
 
-        // fix legacy
+
+    // fix legacy
+    private void fixLegacy() throws RepositoryException {
         if (rootVersion.getSuccessors().isEmpty()) {
             for (Name versionName : nameCache.keySet()) {
                 InternalVersionImpl v = createVersionInstance(versionName);
