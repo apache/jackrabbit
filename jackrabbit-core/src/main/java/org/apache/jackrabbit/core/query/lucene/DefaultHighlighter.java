@@ -152,8 +152,11 @@ public class DefaultHighlighter {
         Iterator<Term[]> it = queryTerms.iterator();
         while (it.hasNext()) {
             Term[] qt = it.next();
+            if (qt == null) {
+                continue;
+            }
             final int qtLen = qt.length;
-            if (qt == null || qtLen == 0) {
+            if (qtLen == 0) {
                 continue;
             }
             String[] qtText = new String[qtLen];
