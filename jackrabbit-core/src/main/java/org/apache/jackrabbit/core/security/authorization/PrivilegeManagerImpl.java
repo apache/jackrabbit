@@ -141,14 +141,11 @@ public final class PrivilegeManagerImpl implements PrivilegeManager, PrivilegeRe
     public Privilege registerPrivilege(String privilegeName, boolean isAbstract,
                                        String[] declaredAggregateNames)
             throws AccessDeniedException, RepositoryException {
-        boolean allowed = false;
         if (resolver instanceof SessionImpl) {
-            // TODO: FIXME should be 'null' path as privilegeManagement is a
-            // TODO: repo-level privilege such as namespace or node type mgt.
             SessionImpl sImpl = (SessionImpl) resolver;
-            allowed = sImpl.getAccessManager().isGranted(sImpl.getQPath("/"), Permission.PRIVILEGE_MNGMT);
-        }
-        if (!allowed) {
+            sImpl.getAccessManager().checkRepositoryPermission(Permission.PRIVILEGE_MNGMT);
+        } else {
+            // cannot evaluate
             throw new AccessDeniedException("Registering privileges is not allowed for the editing session.");
         }
 

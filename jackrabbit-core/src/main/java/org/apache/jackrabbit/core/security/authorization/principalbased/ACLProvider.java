@@ -169,6 +169,12 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
      * @see org.apache.jackrabbit.core.security.authorization.AccessControlProvider#getEffectivePolicies(org.apache.jackrabbit.spi.Path,org.apache.jackrabbit.core.security.authorization.CompiledPermissions)
      */
     public AccessControlPolicy[] getEffectivePolicies(Path absPath, CompiledPermissions permissions) throws ItemNotFoundException, RepositoryException {
+        if (absPath == null) {
+            // TODO: JCR-2774
+            log.warn("TODO: JCR-2774 - Repository level permissions.");
+            return new AccessControlPolicy[0];
+        }
+
         String jcrPath = session.getJCRPath(absPath);
         String pName = ISO9075.encode(session.getJCRName(ACLTemplate.P_NODE_PATH));
         int ancestorCnt = absPath.getAncestorCount();
@@ -385,6 +391,13 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
 
             // retrieve principal-based permissions and privileges
             return buildResult(jcrPath, isAcItem);
+        }
+
+        @Override
+        protected Result buildRepositoryResult() throws RepositoryException {
+            log.warn("TODO: JCR-2774 - Repository level permissions.");
+            PrivilegeManagerImpl pm = getPrivilegeManagerImpl();
+            return new Result(Permission.NONE, Permission.NONE, PrivilegeBits.EMPTY, PrivilegeBits.EMPTY);        
         }
 
         /**

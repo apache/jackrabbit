@@ -87,7 +87,8 @@ class CompiledPermissionsImpl extends AbstractCompiledPermissions implements Acc
         }
     }
 
-    private Result buildResult(NodeImpl node, boolean isExistingNode, boolean isAcItem, EntryFilterImpl filter) throws RepositoryException {
+    private Result buildResult(NodeImpl node, boolean isExistingNode,
+                               boolean isAcItem, EntryFilterImpl filter) throws RepositoryException {
         // retrieve all ACEs at path or at the direct ancestor of path that
         // apply for the principal names.
         NodeImpl n = ACLProvider.getNode(node, isAcItem);
@@ -108,6 +109,7 @@ class CompiledPermissionsImpl extends AbstractCompiledPermissions implements Acc
         PrivilegeBits parentDenyBits = PrivilegeBits.getInstance();
 
         String parentPath = Text.getRelativeParent(filter.getPath(), 1);
+        NodeId nodeId = (node == null) ? null : node.getNodeId();
 
         while (entries.hasNext()) {
             ACLTemplate.Entry ace = (ACLTemplate.Entry) entries.next();
@@ -120,7 +122,7 @@ class CompiledPermissionsImpl extends AbstractCompiledPermissions implements Acc
             parent path.
             */
             PrivilegeBits entryBits = ace.getPrivilegeBits();
-            boolean isLocal = isExistingNode && ace.isLocal(node.getNodeId());
+            boolean isLocal = isExistingNode && ace.isLocal(nodeId);
             boolean matchesParent = (!isLocal && ace.matches(parentPath));
             if (matchesParent) {
                 if (ace.isAllow()) {
@@ -186,6 +188,11 @@ class CompiledPermissionsImpl extends AbstractCompiledPermissions implements Acc
 
         boolean isAcItem = util.isAcItem(absPath);
         return buildResult(node, existingNode, isAcItem, new EntryFilterImpl(principalNames, absPath, session));
+    }
+
+    @Override
+    protected Result buildRepositoryResult() throws RepositoryException {
+        return buildResult(null, true, false, new EntryFilterImpl(principalNames, session.getQPath("/"), session));
     }
 
     /**

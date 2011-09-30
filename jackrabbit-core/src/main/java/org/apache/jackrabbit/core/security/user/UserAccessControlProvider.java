@@ -494,6 +494,12 @@ public class UserAccessControlProvider extends AbstractAccessControlProvider
         }
 
         @Override
+        protected Result buildRepositoryResult() throws RepositoryException {
+            log.warn("TODO: JCR-2774 - Repository level permissions.");
+            return new Result(Permission.NONE, Permission.NONE, PrivilegeBits.EMPTY, PrivilegeBits.EMPTY);
+        }
+
+        @Override
         protected PrivilegeManagerImpl getPrivilegeManagerImpl() throws RepositoryException {
             return (PrivilegeManagerImpl) ((JackrabbitWorkspace) session.getWorkspace()).getPrivilegeManager();
         }

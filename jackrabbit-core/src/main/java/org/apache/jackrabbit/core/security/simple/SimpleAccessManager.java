@@ -146,6 +146,15 @@ public class SimpleAccessManager extends AbstractAccessControlManager implements
     /**
      * {@inheritDoc}
      */
+    public void checkRepositoryPermission(int permissions) throws AccessDeniedException, RepositoryException {
+        if (!isGranted((ItemId) null, permissions)) {
+            throw new AccessDeniedException("Access denied");
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     public boolean isGranted(ItemId id, int permissions) throws RepositoryException {
         checkInitialized();
         if (system) {
@@ -294,13 +303,15 @@ public class SimpleAccessManager extends AbstractAccessControlManager implements
      */
     @Override
     protected void checkValidNodePath(String absPath) throws PathNotFoundException, RepositoryException {
-        Path path = resolver.getQPath(absPath);
-        if (!path.isAbsolute()) {
-            throw new RepositoryException("Absolute path expected. Found: " + absPath);
-        }
+        if (absPath != null) {
+            Path path = resolver.getQPath(absPath);
+            if (!path.isAbsolute()) {
+                throw new RepositoryException("Absolute path expected. Found: " + absPath);
+            }
 
-        if (hierMgr.resolveNodePath(path) == null) {
-            throw new PathNotFoundException(absPath);
+            if (hierMgr.resolveNodePath(path) == null) {
+                throw new PathNotFoundException(absPath);
+            }
         }
     }
 

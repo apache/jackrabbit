@@ -31,6 +31,11 @@ public interface AccessControlConstants {
     Name N_POLICY = NameConstants.REP_POLICY;
 
     /**
+     * Name name for a node of type rep:Policy storing repository level privileges.
+     */
+    Name N_REPO_POLICY = NameConstants.REP_REPO_POLICY;
+
+    /**
      * PrincipalBased-ACL:
      * Name of the root-node of all access-control-nodes that store the
      * privileges for individual principals. This node is created upon
@@ -59,6 +64,10 @@ public interface AccessControlConstants {
      * rep:AccessControllable nodetype
      */
     Name NT_REP_ACCESS_CONTROLLABLE = NameConstants.REP_ACCESS_CONTROLLABLE;
+    /**
+     * rep:RepoAccessControllable nodetype
+     */
+    Name NT_REP_REPO_ACCESS_CONTROLLABLE = NameConstants.REP_REPO_ACCESS_CONTROLLABLE;
     /**
      * rep:ACL nodetype
      */

@@ -130,7 +130,19 @@ class ACLTemplate extends AbstractACLTemplate {
      * @throws RepositoryException if an error occurs
      */
     ACLTemplate(NodeImpl aclNode) throws RepositoryException {
-        super((aclNode != null) ? aclNode.getParent().getPath() : null, (aclNode != null) ? aclNode.getSession().getValueFactory() : null);
+        this(aclNode, ((aclNode != null) ? aclNode.getParent().getPath() : null));
+    }
+
+    /**
+     * Create a {@link ACLTemplate} that is used to edit an existing ACL
+     * node.
+     *
+     * @param aclNode node
+     * @param path The path as exposed by "@link JackrabbitAccessControlList#getPath()}
+     * @throws RepositoryException if an error occurs
+     */
+    ACLTemplate(NodeImpl aclNode, String path) throws RepositoryException {
+        super(path, (aclNode != null) ? aclNode.getSession().getValueFactory() : null);
         if (aclNode == null || !NT_REP_ACL.equals(((NodeTypeImpl)aclNode.getPrimaryNodeType()).getQName())) {
             throw new IllegalArgumentException("Node must be of type 'rep:ACL'");
         }
@@ -315,6 +327,10 @@ class ACLTemplate extends AbstractACLTemplate {
         } else if (!principalMgr.hasPrincipal(principal.getName())) {
             throw new AccessControlException("Principal " + principal.getName() + " does not exist.");
         }
+
+        if (path == null && restrictions != null && !restrictions.isEmpty()) {
+            throw new AccessControlException("Repository level policy does not support restrictions.");
+        }
     }
 
     /**
@@ -346,7 +362,7 @@ class ACLTemplate extends AbstractACLTemplate {
      * @see JackrabbitAccessControlList#getRestrictionNames()
      */
     public String[] getRestrictionNames() {
-        return new String[] {jcrRepGlob};
+        return (path == null) ? new String[0] : new String[] {jcrRepGlob};
     }
 
     /**
@@ -420,21 +436,26 @@ class ACLTemplate extends AbstractACLTemplate {
         private Entry(Principal principal, Privilege[] privileges, boolean allow, Map<String,Value> restrictions)
                 throws RepositoryException {
             super(principal, privileges, allow, restrictions);
-            Value glob = getRestrictions().get(P_GLOB);
-            if (glob != null) {
-                pattern = GlobPattern.create(path, glob.getString());
-            } else {
-                pattern = GlobPattern.create(path);
-            }
+            pattern = calculatePattern();
         }
 
         private Entry(Entry base, Privilege[] newPrivileges, boolean isAllow) throws RepositoryException {
             super(base, newPrivileges, isAllow);
-            Value glob = getRestrictions().get(P_GLOB);
-            if (glob != null) {
-                pattern = GlobPattern.create(path, glob.getString());
+            pattern = calculatePattern();
+        }
+
+        private GlobPattern calculatePattern() throws RepositoryException {
+            if (path == null) {
+                return null; // no pattern for repo-level aces.
             } else {
-                pattern = GlobPattern.create(path);
+                GlobPattern p;
+                Value glob = getRestrictions().get(P_GLOB);
+                if (glob != null) {
+                    p = GlobPattern.create(path, glob.getString());
+                } else {
+                    p = GlobPattern.create(path);
+                }
+                return p;
             }
         }
         
@@ -453,7 +474,7 @@ class ACLTemplate extends AbstractACLTemplate {
          * @return
          */
         boolean matches(String jcrPath) {
-            return pattern.matches(jcrPath);
+            return pattern != null && pattern.matches(jcrPath);
         }
 
         @Override

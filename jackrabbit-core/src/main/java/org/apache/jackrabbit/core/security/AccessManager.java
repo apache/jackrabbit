@@ -117,7 +117,17 @@ public interface AccessManager {
      * @throws RepositoryException   it another error occurs
      */
     void checkPermission(Path absPath, int permissions) throws AccessDeniedException, RepositoryException;
-    
+
+    /**
+     * Determines whether the specified <code>permissions</code> are granted
+     * on the repository level.
+     *
+     * @param permissions The permissions to check.
+     * @throws AccessDeniedException if permissions are denied.
+     * @throws RepositoryException if another error occurs.
+     */
+    void checkRepositoryPermission(int permissions) throws AccessDeniedException, RepositoryException;
+
     /**
      * Determines whether the specified <code>permissions</code> are granted
      * on the item with the specified <code>id</code> (i.e. the <i>target</i> item).

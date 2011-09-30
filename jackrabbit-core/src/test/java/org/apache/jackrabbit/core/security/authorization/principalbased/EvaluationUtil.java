@@ -65,7 +65,7 @@ class EvaluationUtil {
                                                  String path,
                                                  Principal principal)
             throws RepositoryException, AccessDeniedException, NotExecutableException {
-        if (acM instanceof JackrabbitAccessControlManager) {
+        if (acM instanceof JackrabbitAccessControlManager && path != null) {
             // first try applicable policies
             AccessControlPolicy[] policies = ((JackrabbitAccessControlManager) acM).getApplicablePolicies(principal);
             for (AccessControlPolicy policy : policies) {
@@ -86,7 +86,7 @@ class EvaluationUtil {
     }
 
     static  Map<String, Value> getRestrictions(Session s, String path) throws RepositoryException, NotExecutableException {
-        if (s instanceof SessionImpl) {
+        if (s instanceof SessionImpl && path != null) {
             Map<String, Value> restr = new HashMap<String, Value>();
             restr.put(((SessionImpl) s).getJCRName(ACLTemplate.P_NODE_PATH), s.getValueFactory().createValue(path, PropertyType.PATH));
             return restr;

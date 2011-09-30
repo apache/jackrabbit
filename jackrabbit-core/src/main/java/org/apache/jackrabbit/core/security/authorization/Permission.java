@@ -49,9 +49,19 @@ public final class Permission {
 
     public static final int MODIFY_CHILD_NODE_COLLECTION = RETENTION_MNGMT << 1;
 
-    public static final int PRIVILEGE_MNGMT = MODIFY_CHILD_NODE_COLLECTION << 1;
+    public static final int NODE_TYPE_DEF_MNGMT = MODIFY_CHILD_NODE_COLLECTION << 1;
 
-    public static final int ALL = (READ | SET_PROPERTY | ADD_NODE | REMOVE_NODE | REMOVE_PROPERTY | READ_AC | MODIFY_AC | NODE_TYPE_MNGMT | VERSION_MNGMT | LOCK_MNGMT | LIFECYCLE_MNGMT | RETENTION_MNGMT | MODIFY_CHILD_NODE_COLLECTION | PRIVILEGE_MNGMT);
+    public static final int NAMESPACE_MNGMT = NODE_TYPE_DEF_MNGMT << 1;
+
+    public static final int WORKSPACE_MNGMT = NAMESPACE_MNGMT << 1;
+
+    public static final int PRIVILEGE_MNGMT = WORKSPACE_MNGMT << 1;
+
+    public static final int ALL = (READ | SET_PROPERTY | ADD_NODE | REMOVE_NODE
+            | REMOVE_PROPERTY | READ_AC | MODIFY_AC | NODE_TYPE_MNGMT
+            | VERSION_MNGMT | LOCK_MNGMT | LIFECYCLE_MNGMT | RETENTION_MNGMT
+            | MODIFY_CHILD_NODE_COLLECTION | NODE_TYPE_DEF_MNGMT | NAMESPACE_MNGMT
+            | WORKSPACE_MNGMT | PRIVILEGE_MNGMT);
 
     /**
      * Returns those bits from <code>permissions</code> that are not present in

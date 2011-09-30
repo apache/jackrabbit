@@ -82,11 +82,12 @@ public class ACLEditor extends ProtectedItemModifier implements AccessControlEdi
     /**
      *
      * @param aclNode the node
+     * @param path
      * @return the control list
      * @throws RepositoryException if an error occurs
      */
-    ACLTemplate getACL(NodeImpl aclNode) throws RepositoryException {
-        return new ACLTemplate(aclNode);
+    ACLTemplate getACL(NodeImpl aclNode, String path) throws RepositoryException {
+        return new ACLTemplate(aclNode, path);
     }
 
     //------------------------------------------------< AccessControlEditor >---
@@ -100,7 +101,7 @@ public class ACLEditor extends ProtectedItemModifier implements AccessControlEdi
         if (aclNode == null) {
             return new AccessControlPolicy[0];
         } else {
-            return new AccessControlPolicy[] {getACL(aclNode)};
+            return new AccessControlPolicy[] {getACL(aclNode, nodePath)};
         }
     }
 
@@ -123,18 +124,30 @@ public class ACLEditor extends ProtectedItemModifier implements AccessControlEdi
     public AccessControlPolicy[] editAccessControlPolicies(String nodePath) throws AccessControlException, PathNotFoundException, RepositoryException {
         checkProtectsNode(nodePath);
 
+        String mixin;
+        Name aclName;
+        NodeImpl controlledNode;
+
+        if (nodePath == null) {
+            controlledNode = (NodeImpl) session.getRootNode();
+            mixin = session.getJCRName(NT_REP_REPO_ACCESS_CONTROLLABLE);
+            aclName = N_REPO_POLICY;
+        } else {
+            controlledNode = getNode(nodePath);
+            mixin = session.getJCRName(NT_REP_ACCESS_CONTROLLABLE);
+            aclName = N_POLICY;
+        }
+
         AccessControlPolicy acl = null;
-        NodeImpl controlledNode = getNode(nodePath);
-        NodeImpl aclNode = getAclNode(controlledNode);
+        NodeImpl aclNode = getAclNode(controlledNode, nodePath);
         if (aclNode == null) {
             // create an empty acl unless the node is protected or cannot have
-            // rep:AccessControllable mixin set (e.g. due to a lock) or
-            // has colliding rep:policy child node set.
-            if (controlledNode.hasNode(N_POLICY)) {
+            // mixin set (e.g. due to a lock) or
+            // has colliding rep:policy or rep:repoPolicy child node set.
+            if (controlledNode.hasNode(aclName)) {
                 // policy child node without node being access controlled
-                log.warn("Colliding rep:policy child without node being access controllable ({}).", nodePath);
+                log.warn("Colliding policy child without node being access controllable ({}).", nodePath);
             } else {
-                String mixin = session.getJCRName(NT_REP_ACCESS_CONTROLLABLE);
                 PrivilegeManager privMgr = ((JackrabbitWorkspace) session.getWorkspace()).getPrivilegeManager();
                 if (controlledNode.isNodeType(mixin) || controlledNode.canAddMixin(mixin)) {
                     acl = new ACLTemplate(nodePath, session.getPrincipalManager(),
@@ -144,6 +157,7 @@ public class ACLEditor extends ProtectedItemModifier implements AccessControlEdi
                 }
             }
         } // else: acl already present -> getPolicies must be used.
+
         return (acl != null) ? new AccessControlPolicy[] {acl} : new AccessControlPolicy[0];
     }
 
@@ -174,7 +188,7 @@ public class ACLEditor extends ProtectedItemModifier implements AccessControlEdi
             }
         } else {
             // create the acl node
-            aclNode = createAclNode(nodePath);
+            aclNode = (nodePath == null) ? createRepoAclNode() : createAclNode(nodePath);
         }
         
         AccessControlEntry[] entries = ((ACLTemplate) policy).getAccessControlEntries();
@@ -236,9 +250,11 @@ public class ACLEditor extends ProtectedItemModifier implements AccessControlEdi
      * @throws RepositoryException
      */
     private void checkProtectsNode(String nodePath) throws RepositoryException {
-        NodeImpl node = getNode(nodePath);
-        if (utils.isAcItem(node)) {
-            throw new AccessControlException("Node " + nodePath + " defines ACL or ACE itself.");
+        if (nodePath != null) {
+            NodeImpl node = getNode(nodePath);
+            if (utils.isAcItem(node)) {
+                throw new AccessControlException("Node " + nodePath + " defines ACL or ACE itself.");
+            }
         }
     }
 
@@ -254,7 +270,8 @@ public class ACLEditor extends ProtectedItemModifier implements AccessControlEdi
             throw new AccessControlException("Attempt to set/remove invalid policy " + policy);
         }
         ACLTemplate acl = (ACLTemplate) policy;
-        if (!nodePath.equals(acl.getPath())) {
+        boolean matchingPath = (nodePath == null) ? acl.getPath() == null : nodePath.equals(acl.getPath());
+        if (!matchingPath) {
             throw new AccessControlException("Policy " + policy + " cannot be applied/removed from the node at " + nodePath);
         }
     }
@@ -281,8 +298,13 @@ public class ACLEditor extends ProtectedItemModifier implements AccessControlEdi
      * @throws RepositoryException if an error occurs
      */
     private NodeImpl getAclNode(String nodePath) throws PathNotFoundException, RepositoryException {
-        NodeImpl controlledNode = getNode(nodePath);
-        return getAclNode(controlledNode);
+        NodeImpl controlledNode;
+        if (nodePath == null) {
+            controlledNode = (NodeImpl) session.getRootNode();
+        } else {
+            controlledNode = getNode(nodePath);
+        }
+        return getAclNode(controlledNode, nodePath);
     }
 
     /**
@@ -290,13 +312,20 @@ public class ACLEditor extends ProtectedItemModifier implements AccessControlEdi
      * if the node is not mix:AccessControllable or if no policy node exists.
      *
      * @param controlledNode the controlled node
+     * @param nodePath
      * @return node or <code>null</code>
      * @throws RepositoryException if an error occurs
      */
-    private NodeImpl getAclNode(NodeImpl controlledNode) throws RepositoryException {
+    private NodeImpl getAclNode(NodeImpl controlledNode, String nodePath) throws RepositoryException {
         NodeImpl aclNode = null;
-        if (ACLProvider.isAccessControlled(controlledNode)) {
-            aclNode = controlledNode.getNode(N_POLICY);
+        if (nodePath == null) {
+            if (ACLProvider.isRepoAccessControlled(controlledNode)) {
+                aclNode = controlledNode.getNode(N_REPO_POLICY);
+            }
+        } else {
+            if (ACLProvider.isAccessControlled(controlledNode)) {
+                aclNode = controlledNode.getNode(N_POLICY);
+            }
         }
         return aclNode;
     }
@@ -313,6 +342,19 @@ public class ACLEditor extends ProtectedItemModifier implements AccessControlEdi
             protectedNode.addMixin(NT_REP_ACCESS_CONTROLLABLE);
         }
         return addNode(protectedNode, N_POLICY, NT_REP_ACL);
+    }
+
+    /**
+     *
+     * @return the new acl node used to store repository level privileges.
+     * @throws RepositoryException if an error occurs
+     */
+    private NodeImpl createRepoAclNode() throws RepositoryException {
+        NodeImpl root = (NodeImpl) session.getRootNode();
+        if (!root.isNodeType(NT_REP_REPO_ACCESS_CONTROLLABLE)) {
+            root.addMixin(NT_REP_REPO_ACCESS_CONTROLLABLE);
+        }
+        return addNode(root, N_REPO_POLICY, NT_REP_ACL);
     }
 
     /**
