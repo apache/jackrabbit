@@ -108,7 +108,7 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
         // minimal protection on the root node.
         NodeImpl root = (NodeImpl) session.getRootNode();
         rootNodeId = root.getNodeId();
-        ACLEditor systemEditor = new ACLEditor(systemSession, this);
+        ACLEditor systemEditor = new ACLEditor(session, this);
 
         // TODO: replace by configurable default policy (see JCR-2331)
         boolean initializedWithDefaults = !configuration.containsKey(PARAM_OMIT_DEFAULT_PERMISSIONS);
@@ -116,7 +116,7 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
             initRootACL(session, systemEditor);
         }
 
-        entryCollector = createEntryCollector((SessionImpl) systemSession);
+        entryCollector = createEntryCollector(session);
     }
 
     @Override
