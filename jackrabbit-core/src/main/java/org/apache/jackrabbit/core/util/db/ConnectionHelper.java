@@ -369,7 +369,11 @@ public class ConnectionHelper {
                 stmt = con.prepareStatement(sql);
             }
             stmt.setMaxRows(maxRows);
-            stmt.setFetchSize(Math.min(10000, maxRows));
+            int fetchSize = 10000;
+            if (0 < maxRows && maxRows < fetchSize) {
+                fetchSize = maxRows; // JCR-3090
+            }
+            stmt.setFetchSize(fetchSize);
             execute(stmt, params);
             if (returnGeneratedKeys) {
                 rs = stmt.getGeneratedKeys();
