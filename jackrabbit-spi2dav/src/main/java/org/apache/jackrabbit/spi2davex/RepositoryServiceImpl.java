@@ -299,15 +299,14 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
     }
 
     /**
-     * @see RepositoryService#getItemInfos(SessionInfo, NodeId)
+     * @see RepositoryService#getItemInfos(SessionInfo, ItemId)
      */
     @Override
     public Iterator<? extends ItemInfo> getItemInfos(SessionInfo sessionInfo, ItemId itemId) throws ItemNotFoundException, RepositoryException {
         if (!itemId.denotesNode()) {
             PropertyInfo propertyInfo = super.getPropertyInfo(sessionInfo, (PropertyId) itemId);
             return Iterators.singleton(propertyInfo);
-        }
-        else {
+        } else {
             NodeId nodeId = (NodeId) itemId;
             Path path = getPath(itemId, sessionInfo);
             String uri = getURI(path, sessionInfo);
