@@ -42,15 +42,15 @@ public class IndexDeletionPolicyImpl implements IndexDeletionPolicy {
         readCurrentGeneration();
     }
 
-    public void onInit(List commits) throws IOException {
+    public void onInit(List<? extends IndexCommit> commits) throws IOException {
         checkCommits(commits);
     }
 
-    public void onCommit(List commits) throws IOException {
+    public void onCommit(List<? extends IndexCommit> commits) throws IOException {
         checkCommits(commits);
 
         // report back current generation
-        IndexCommit current = (IndexCommit) commits.get(commits.size() - 1);
+        IndexCommit current = commits.get(commits.size() - 1);
         String name = current.getSegmentsFileName();
         if (name.equals(SEGMENTS)) {
             index.setCurrentGeneration(0);
@@ -63,10 +63,10 @@ public class IndexDeletionPolicyImpl implements IndexDeletionPolicy {
 
     //-------------------------------< internal >-------------------------------
 
-    private void checkCommits(List commits) throws IOException {
+    private void checkCommits(List<? extends IndexCommit> commits) throws IOException {
         long currentTime = System.currentTimeMillis();
         for (int i = 0; i < commits.size() - 1; i++) {
-            IndexCommit ic = (IndexCommit) commits.get(i);
+            IndexCommit ic = commits.get(i);
             long lastModified = index.getDirectory().fileModified(ic.getSegmentsFileName());
             if (currentTime - lastModified > maxAge) {
                 ic.delete();
