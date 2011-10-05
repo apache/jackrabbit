@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
+import org.apache.lucene.index.Term;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.TermDocs;
 import org.apache.lucene.search.Explanation;
@@ -127,7 +128,7 @@ class DerefQuery extends Query {
     /**
      * {@inheritDoc}
      */
-    public void extractTerms(Set terms) {
+    public void extractTerms(Set<Term> terms) {
         // no terms to extract
     }
 

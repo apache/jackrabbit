@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
+import org.apache.lucene.index.Term;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.Searcher;
 import org.apache.lucene.search.Weight;
@@ -72,6 +73,6 @@ class MatchAllQuery extends Query {
     /**
      * Does nothing but simply returns. There are no terms to extract.
      */
-    public void extractTerms(Set terms) {
+    public void extractTerms(Set<Term> terms) {
     }
 }

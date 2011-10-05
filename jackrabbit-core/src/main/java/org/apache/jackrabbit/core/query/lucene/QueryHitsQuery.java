@@ -73,7 +73,7 @@ public class QueryHitsQuery extends Query implements JackrabbitQuery{
     /**
      * {@inheritDoc}
      */
-    public void extractTerms(Set terms) {
+    public void extractTerms(Set<Term> terms) {
         // no terms
     }
 
