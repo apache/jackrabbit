@@ -502,6 +502,14 @@ class DescendantSelfAxisQuery extends Query implements JackrabbitQuery {
                 return currentDoc;
             }
 
+            // optimize in the case of an advance to finish.
+            // see https://issues.apache.org/jira/browse/JCR-3082
+            if (target == NO_MORE_DOCS) {
+                subScorer.advance(target);
+                currentDoc = NO_MORE_DOCS;
+                return currentDoc;
+            }
+
             currentDoc = subScorer.nextDoc();
             if (currentDoc == NO_MORE_DOCS) {
                 return NO_MORE_DOCS;
