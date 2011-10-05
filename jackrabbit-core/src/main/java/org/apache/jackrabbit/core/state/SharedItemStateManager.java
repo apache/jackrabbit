@@ -1323,7 +1323,7 @@ public class SharedItemStateManager
 
                 } else if (!parentId.equals(oldParentId)) {
 
-                    // This node has been moved, check whether the parent has been modified aswell
+                    // This node has been moved, check whether the parent has been modified as well
                     if (changeLog.has(parentId)) {
                         checkParent(changeLog, modifiedNodeState, parentId);
                     } else if (!isShareable(modifiedNodeState)) {
@@ -1335,7 +1335,7 @@ public class SharedItemStateManager
                     // The old parent must be modified or deleted
                     if (!changeLog.isModified(oldParentId) && !changeLog.deleted(oldParentId)) {
                         String message = "Node with id " + id
-                                + " has been move, but the original parent is not part of the changelog: "
+                                + " has been moved, but the original parent is not part of the changelog: "
                                 + oldParentId;
                         log.error(message);
                         throw new ItemStateException(message);
@@ -1441,7 +1441,7 @@ public class SharedItemStateManager
      *             if an error occurs
      */
     private boolean isShareable(NodeState state) throws RepositoryException {
-        // shortcut: check some wellknown built-in types first
+        // shortcut: check some well-known built-in types first
         Name primary = state.getNodeTypeName();
         Set<Name> mixins = state.getMixinTypeNames();
         if (mixins.contains(NameConstants.MIX_SHAREABLE)) {
