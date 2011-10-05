@@ -177,7 +177,7 @@ class ReadOnlyIndexReader extends RefCountingIndexReader {
      * @exception UnsupportedOperationException always
      */
     @Override
-    protected void doCommit(Map commitUserData) throws IOException { 
+    protected void doCommit(Map<String,String> commitUserData) throws IOException { 
         throw new UnsupportedOperationException("IndexReader is read-only");
     }
 

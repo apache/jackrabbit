@@ -147,7 +147,7 @@ public class SortedMultiColumnQueryHits extends FilterMultiColumnQueryHits {
                 throws IOException {
             this.reader = reader;
             this.orderings = orderings;
-            List names = Arrays.asList(selectorNames);
+            List<Name> names = Arrays.asList(selectorNames);
             this.idx = new int[orderings.length];
             this.comparators = new ScoreDocComparator[orderings.length];
             this.isReverse = new boolean[orderings.length];
