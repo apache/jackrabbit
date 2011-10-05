@@ -54,7 +54,7 @@ public abstract class ProtectedItemModifier {
     }
 
     protected ProtectedItemModifier(int permission) {
-        Class cl = getClass();
+        Class<? extends ProtectedItemModifier> cl = getClass();
         if (!(UserManagerImpl.class.isAssignableFrom(cl) ||
               RetentionManagerImpl.class.isAssignableFrom(cl) ||
               ACLEditor.class.isAssignableFrom(cl) ||
