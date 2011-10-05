@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.core.query.lucene;
 
 import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermEnum;
 import org.apache.lucene.index.TermDocs;
 import org.apache.lucene.search.FilteredTermEnum;
@@ -191,7 +192,7 @@ public class WildcardQuery extends Query implements Transformable {
     }
 
     @Override
-    public void extractTerms(Set terms) {
+    public void extractTerms(Set<Term> terms) {
         if (multiTermQuery != null) {
             multiTermQuery.extractTerms(terms);
         }

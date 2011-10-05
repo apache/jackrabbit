@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.core.query.lucene;
 
 import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.index.Term;
 import org.apache.lucene.search.Explanation;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.Scorer;
@@ -71,7 +72,7 @@ class NotQuery extends Query {
     /**
      * {@inheritDoc}
      */
-    public void extractTerms(Set terms) {
+    public void extractTerms(Set<Term> terms) {
         context.extractTerms(terms);
     }
 

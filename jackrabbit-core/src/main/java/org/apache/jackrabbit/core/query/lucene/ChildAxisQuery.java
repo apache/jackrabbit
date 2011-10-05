@@ -200,7 +200,7 @@ class ChildAxisQuery extends Query implements JackrabbitQuery {
     /**
      * {@inheritDoc}
      */
-    public void extractTerms(Set terms) {
+    public void extractTerms(Set<Term> terms) {
         contextQuery.extractTerms(terms);
     }
 

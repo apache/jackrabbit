@@ -126,7 +126,7 @@ public class PredicateDerefQuery extends Query {
     /**
      * {@inheritDoc}
      */
-    public void extractTerms(Set terms) {
+    public void extractTerms(Set<Term> terms) {
         // no terms to extract
     }
 
