@@ -22,6 +22,8 @@ import javax.jcr.RepositoryException;
 import javax.jcr.NodeIterator;
 import javax.jcr.Node;
 import javax.jcr.NamespaceRegistry;
+import javax.jcr.query.Query;
+import javax.jcr.query.QueryResult;
 import java.util.List;
 import java.util.ArrayList;
 
@@ -55,12 +57,50 @@ public class QueryTest extends AbstractQueryTest {
         }
 
         Node n = testRootNode.addNode("spiTest:node");
-        testRootNode.save();
+        superuser.save();
 
         for (int i = 0; i < 10; i++) {
             String prefix = defaultPrefix + i;
             superuser.setNamespacePrefix(prefix, namespaceURI);
             executeXPathQuery(superuser, testPath + "/" + prefix + ":node", new Node[]{n});
         }
+    }
+
+    /**
+     * https://issues.apache.org/jira/browse/JCR-3089
+     */
+    public void testSQL2Simple() throws Exception {
+        Query q = qm.createQuery("SELECT * FROM [nt:unstructured]",
+                Query.JCR_SQL2);
+        QueryResult r = q.execute();
+        assertTrue(r.getNodes().hasNext());
+    }
+
+    /**
+     * https://issues.apache.org/jira/browse/JCR-2543
+     */
+    public void testSQL2Limit() throws Exception {
+        Query q = qm.createQuery("SELECT * FROM [nt:unstructured]",
+                Query.JCR_SQL2);
+        q.setLimit(1);
+        QueryResult r = q.execute();
+
+        NodeIterator it = r.getNodes();
+        assertTrue(it.hasNext());
+        it.next();
+        assertFalse(it.hasNext());
+    }
+
+    /**
+     * https://issues.apache.org/jira/browse/JCR-3089
+     */
+    public void testSQL2Join() throws Exception {
+        // he query is not supposed to return anything, it will just check that
+        // the back and forth between the client and the server works
+        Query q = qm
+                .createQuery(
+                        "SELECT * FROM [nt:unstructured] AS a INNER JOIN [nt:unstructured] AS b ON b.[refid] = a.[jcr:uuid]",
+                        Query.JCR_SQL2);
+        assertNotNull(q.execute());
     }
 }
