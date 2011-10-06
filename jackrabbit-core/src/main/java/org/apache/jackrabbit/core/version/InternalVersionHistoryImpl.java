@@ -238,7 +238,7 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
                     v = new InternalVersionImpl(this, child, child.getName());
                 }
             } catch (RepositoryException e) {
-                throw new InternalError("Version does not have a jcr:frozenNode: " + child.getNodeId());
+                throw new InconsistentVersioningState("Version does not have a jcr:frozenNode: " + child.getNodeId(), e);
             }
         }
         return v;
