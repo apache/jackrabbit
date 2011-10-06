@@ -62,9 +62,6 @@ public abstract class AbstractWriteTest extends AbstractEvaluationTest {
     protected String childchildPPath;
     protected String siblingPath;
 
-    // TODO: test AC for moved node
-    // TODO: test AC for moved AC-controlled node
-
     @Override
     protected void setUp() throws Exception {
         super.setUp();

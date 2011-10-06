@@ -222,6 +222,10 @@ class CachingEntryCollector extends EntryCollector {
                 } else if ((type & POLICY_MODIFIED) == POLICY_MODIFIED) {
                     // simply clear the cache entry -> reload upon next access.
                     cache.remove(nodeId);
+                } else if ((type & MOVE) == MOVE) {
+                    // some sort of move operation that may affect the cache
+                    cache.clear();
+                    break; // no need for further processing.
                 }
             }
         }

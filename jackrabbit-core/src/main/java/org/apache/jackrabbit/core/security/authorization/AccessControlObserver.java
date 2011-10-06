@@ -25,10 +25,11 @@ import java.util.Set;
  * <code>AccessControlObserver</code>...
  */
 public abstract class AccessControlObserver implements SynchronousEventListener {
-    
+
     public static final int POLICY_ADDED = 1;
     public static final int POLICY_REMOVED = 2;
     public static final int POLICY_MODIFIED = 4;
+    public static final int MOVE = 8;
 
     private final Set<AccessControlListener> listeners = new HashSet<AccessControlListener>();
     private final Object listenerMonitor = new Object();
