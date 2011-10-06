@@ -50,6 +50,7 @@ public class TestAll extends TestCase {
         suite.addTestSuite(EffectivePolicyTest.class);
         suite.addTestSuite(ACLEditorTest.class);
         suite.addTestSuite(RepositoryOperationTest.class);
+        suite.addTestSuite(MoveTest.class);
 
         return suite;
     }
