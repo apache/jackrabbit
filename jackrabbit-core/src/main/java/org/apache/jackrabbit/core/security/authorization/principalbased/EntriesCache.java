@@ -40,7 +40,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * <code>CachingEntryCollector</code>...
+ * <code>EntriesCache</code>...
  */
 class EntriesCache extends AccessControlObserver implements AccessControlConstants {
 
