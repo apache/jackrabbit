@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.server.remoting.davex;
 
+import java.io.PrintWriter;
+import java.util.logging.Level;
 import org.apache.jackrabbit.webdav.DavException;
 import org.apache.jackrabbit.webdav.DavLocatorFactory;
 import org.apache.jackrabbit.webdav.DavMethods;
@@ -214,6 +216,7 @@ public abstract class JcrRemotingServlet extends JCRWebdavServerServlet {
     private static final String PARAM_DIFF = ":diff";
     private static final String PARAM_COPY = ":copy";
     private static final String PARAM_CLONE = ":clone";
+    private static final String PARAM_GET = ":get";
 
     private BatchReadConfig brConfig;
 
@@ -325,6 +328,10 @@ public abstract class JcrRemotingServlet extends JCRWebdavServerServlet {
                 String[] pValues;
                 if ((pValues = data.getParameterValues(PARAM_CLONE)) != null) {
                     loc = clone(session, pValues, davResource.getLocator());
+                }
+                else if ((pValues = data.getParameterValues(PARAM_GET)) != null) {
+                   getMultiple(session, pValues, davResource.getLocator(), webdavResponse);
+                   return;
                 } else if ((pValues = data.getParameterValues(PARAM_COPY)) != null) {
                     loc = copy(session, pValues, davResource.getLocator());
                 } else if (data.getParameterValues(PARAM_DIFF) != null) {
@@ -361,6 +368,33 @@ public abstract class JcrRemotingServlet extends JCRWebdavServerServlet {
         }
     }
 
+    private boolean getSingle(Session session, String path, DavResourceLocator locator, PrintWriter webdavWriter, boolean isFirst, boolean withPath) throws IOException, RepositoryException {
+        try {
+            Item item = session.getItem(path);
+            JsonWriter writer = new JsonWriter(webdavWriter);
+            if (item.isNode()) {
+                if (!isFirst) {
+                    webdavWriter.write(',');
+                }
+                if (withPath) {
+                    webdavWriter.write("\"" + path + "\":");
+                }
+                int depth = ((WrappingLocator) locator).getDepth();
+                if (depth < BatchReadConfig.DEPTH_INFINITE) {
+                    depth = getDepth((Node) item);
+                }
+                writer.write((Node) item, depth);
+                
+                return true;
+            } else {
+                return false;
+            }
+        } catch (PathNotFoundException ex) {
+            return false;
+        } 
+    }
+
+    
     private boolean canHandle(int methodCode, WebdavRequest request, DavResource davResource) {
         DavResourceLocator locator = davResource.getLocator();
         switch (methodCode) {
@@ -546,6 +580,35 @@ public abstract class JcrRemotingServlet extends JCRWebdavServerServlet {
      */
     private static File getTempDirectory(ServletContext servletCtx) {
         return (File) servletCtx.getAttribute(ATTR_TMP_DIRECTORY);
+    }
+
+    protected void getMultiple(Session session, String[] getArgs, DavResourceLocator locator, WebdavResponse webdavResponse) {
+        try {
+            webdavResponse.setContentType("text/plain;charset=utf-8");
+            webdavResponse.setStatus(DavServletResponse.SC_OK);
+            PrintWriter webdavWriter = webdavResponse.getWriter();
+            Boolean isFirst = true;
+            webdavWriter.write("{\"nodes\": {");
+            String path = locator.getRepositoryPath();
+            if (getSingle(session, path, locator, webdavWriter, isFirst, true)) {
+                isFirst = false;
+            }
+           
+            for (String getArg : getArgs) {
+                try {
+                    if (!getArg.equals(path) && getSingle(session, getArg, locator, webdavWriter, isFirst, true)) {
+                        isFirst = false;
+                    }
+                } catch (RepositoryException ex) {
+
+                }
+            }
+            webdavWriter.write("}}");
+        } catch (IOException ex) {
+            java.util.logging.Logger.getLogger(JcrRemotingServlet.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (RepositoryException ex) {
+            java.util.logging.Logger.getLogger(JcrRemotingServlet.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 
     //--------------------------------------------------------------------------
