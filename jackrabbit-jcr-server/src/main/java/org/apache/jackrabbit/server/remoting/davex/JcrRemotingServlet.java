@@ -41,6 +41,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.jcr.Item;
 import javax.jcr.Node;
+import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.Workspace;
@@ -54,7 +55,9 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 
 /**
  * <code>JcrRemotingServlet</code> is an extended version of the
@@ -366,33 +369,6 @@ public abstract class JcrRemotingServlet extends JCRWebdavServerServlet {
         }
     }
 
-    private boolean getSingle(Session session, String path, DavResourceLocator locator, PrintWriter webdavWriter, boolean isFirst, boolean withPath) throws IOException, RepositoryException {
-        try {
-            Item item = session.getItem(path);
-            JsonWriter writer = new JsonWriter(webdavWriter);
-            if (item.isNode()) {
-                if (!isFirst) {
-                    webdavWriter.write(',');
-                }
-                if (withPath) {
-                    webdavWriter.write("\"" + path + "\":");
-                }
-                int depth = ((WrappingLocator) locator).getDepth();
-                if (depth < BatchReadConfig.DEPTH_INFINITE) {
-                    depth = getDepth((Node) item);
-                }
-                writer.write((Node) item, depth);
-
-                return true;
-            } else {
-                return false;
-            }
-        } catch (PathNotFoundException ex) {
-            return false;
-        } 
-    }
-
-    
     private boolean canHandle(int methodCode, WebdavRequest request, DavResource davResource) {
         DavResourceLocator locator = davResource.getLocator();
         switch (methodCode) {
@@ -581,29 +557,29 @@ public abstract class JcrRemotingServlet extends JCRWebdavServerServlet {
     }
 
     protected void getMultiple(
-            Session session, String[] getArgs, DavResourceLocator locator,
+            Session session, String[] paths, DavResourceLocator locator,
             WebdavResponse webdavResponse)
             throws IOException, RepositoryException {
-        webdavResponse.setContentType("text/plain;charset=utf-8");
-        webdavResponse.setStatus(DavServletResponse.SC_OK);
-        PrintWriter webdavWriter = webdavResponse.getWriter();
-        Boolean isFirst = true;
-        webdavWriter.write("{\"nodes\": {");
-        String path = locator.getRepositoryPath();
-        if (getSingle(session, path, locator, webdavWriter, isFirst, true)) {
-            isFirst = false;
-        }
-
-        for (String getArg : getArgs) {
+        // Collect all requested nodes
+        Map<String, Node> nodes = new HashMap<String, Node>();
+        Node node = session.getNode(locator.getRepositoryPath());
+        nodes.put(node.getPath(), node);
+        for (String path : paths) {
             try {
-                if (!getArg.equals(path) && getSingle(session, getArg, locator, webdavWriter, isFirst, true)) {
-                    isFirst = false;
-                }
-            } catch (RepositoryException ex) {
-
+                nodes.put(path, session.getNode(path));
+            } catch (PathNotFoundException ignore) {
+                // skip a missing node
             }
         }
-        webdavWriter.write("}}");
+
+        int depth = ((WrappingLocator) locator).getDepth();
+        if (depth < BatchReadConfig.DEPTH_INFINITE) {
+            depth = getDepth(node);
+        }
+
+        webdavResponse.setContentType("text/plain;charset=utf-8");
+        webdavResponse.setStatus(DavServletResponse.SC_OK);
+        new JsonWriter(webdavResponse.getWriter()).write(nodes, depth);
     }
 
     //--------------------------------------------------------------------------
