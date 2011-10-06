@@ -17,7 +17,6 @@
 package org.apache.jackrabbit.server.remoting.davex;
 
 import java.io.PrintWriter;
-import java.util.logging.Level;
 import org.apache.jackrabbit.webdav.DavException;
 import org.apache.jackrabbit.webdav.DavLocatorFactory;
 import org.apache.jackrabbit.webdav.DavMethods;
@@ -328,8 +327,7 @@ public abstract class JcrRemotingServlet extends JCRWebdavServerServlet {
                 String[] pValues;
                 if ((pValues = data.getParameterValues(PARAM_CLONE)) != null) {
                     loc = clone(session, pValues, davResource.getLocator());
-                }
-                else if ((pValues = data.getParameterValues(PARAM_GET)) != null) {
+                } else if ((pValues = data.getParameterValues(PARAM_GET)) != null) {
                    getMultiple(session, pValues, davResource.getLocator(), webdavResponse);
                    return;
                 } else if ((pValues = data.getParameterValues(PARAM_COPY)) != null) {
@@ -384,7 +382,7 @@ public abstract class JcrRemotingServlet extends JCRWebdavServerServlet {
                     depth = getDepth((Node) item);
                 }
                 writer.write((Node) item, depth);
-                
+
                 return true;
             } else {
                 return false;
@@ -582,33 +580,30 @@ public abstract class JcrRemotingServlet extends JCRWebdavServerServlet {
         return (File) servletCtx.getAttribute(ATTR_TMP_DIRECTORY);
     }
 
-    protected void getMultiple(Session session, String[] getArgs, DavResourceLocator locator, WebdavResponse webdavResponse) {
-        try {
-            webdavResponse.setContentType("text/plain;charset=utf-8");
-            webdavResponse.setStatus(DavServletResponse.SC_OK);
-            PrintWriter webdavWriter = webdavResponse.getWriter();
-            Boolean isFirst = true;
-            webdavWriter.write("{\"nodes\": {");
-            String path = locator.getRepositoryPath();
-            if (getSingle(session, path, locator, webdavWriter, isFirst, true)) {
-                isFirst = false;
-            }
-           
-            for (String getArg : getArgs) {
-                try {
-                    if (!getArg.equals(path) && getSingle(session, getArg, locator, webdavWriter, isFirst, true)) {
-                        isFirst = false;
-                    }
-                } catch (RepositoryException ex) {
-
-                }
-            }
-            webdavWriter.write("}}");
-        } catch (IOException ex) {
-            java.util.logging.Logger.getLogger(JcrRemotingServlet.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (RepositoryException ex) {
-            java.util.logging.Logger.getLogger(JcrRemotingServlet.class.getName()).log(Level.SEVERE, null, ex);
+    protected void getMultiple(
+            Session session, String[] getArgs, DavResourceLocator locator,
+            WebdavResponse webdavResponse)
+            throws IOException, RepositoryException {
+        webdavResponse.setContentType("text/plain;charset=utf-8");
+        webdavResponse.setStatus(DavServletResponse.SC_OK);
+        PrintWriter webdavWriter = webdavResponse.getWriter();
+        Boolean isFirst = true;
+        webdavWriter.write("{\"nodes\": {");
+        String path = locator.getRepositoryPath();
+        if (getSingle(session, path, locator, webdavWriter, isFirst, true)) {
+            isFirst = false;
         }
+
+        for (String getArg : getArgs) {
+            try {
+                if (!getArg.equals(path) && getSingle(session, getArg, locator, webdavWriter, isFirst, true)) {
+                    isFirst = false;
+                }
+            } catch (RepositoryException ex) {
+
+            }
+        }
+        webdavWriter.write("}}");
     }
 
     //--------------------------------------------------------------------------
