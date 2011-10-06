@@ -66,6 +66,7 @@ import org.slf4j.LoggerFactory;
  * that provides improved
  * <ul>
  * <li><a href="#bread">Batch read</a></li>
+ * <li><a href="#mread">Multi read</a></li>
  * <li><a href="#bwrite">Batch write</a></li>
  * </ul>
  * functionality and supports cross workspace copy and cloning.
@@ -126,6 +127,24 @@ import org.slf4j.LoggerFactory;
  *
  * - Double Property
  *   JSON value must not have any trailing ".0" removed.
+ * </pre>
+ *
+ * <h3><a name="mread">Multi Read</a></h3>
+ * <p>
+ * Since Jackrabbit 2.3.1 it is also possible to request multiple subtrees
+ * in a single request. This is done by sending a GET or a POST request to
+ * a workspace request and specifying the paths of the selected subtrees
+ * as ":path" parameters of the request. The response is a JSON object
+ * whose "nodes" property contains all the selected nodes keyed by
+ * path. Missing nodes are not included in the response. Each included
+ * node is serialized as defined above for <a href="#bread">batch read</a>.
+ * The configured default subtree depth can be overridden by specifying the
+ * optional ":depth" parameter.
+ * <p>
+ * Example:
+ * <pre>
+ * $ curl 'http://localhost:8080/server/default?:path=/node1&:path=/node2'
+ * {"nodes":{"/node1":{...},"/node2":{...}}}
  * </pre>
  *
  * <h3><a name="bwrite">Batch Write</a></h3>
@@ -324,7 +343,9 @@ public abstract class JcrRemotingServlet extends JCRWebdavServerServlet {
     @Override
     protected void doPost(WebdavRequest webdavRequest, WebdavResponse webdavResponse, DavResource davResource)
             throws IOException, DavException {
-        if (canHandle(DavMethods.DAV_POST, webdavRequest, davResource)) {
+        if (doGetMultiple(webdavRequest, webdavResponse, davResource)) {
+            // request was handled by the multi-get handler
+        } else if (canHandle(DavMethods.DAV_POST, webdavRequest, davResource)) {
             // special remoting request: the defined parameters are exclusive
             // and cannot be combined.
             Session session = getRepositorySession(webdavRequest);
@@ -557,9 +578,22 @@ public abstract class JcrRemotingServlet extends JCRWebdavServerServlet {
         return (File) servletCtx.getAttribute(ATTR_TMP_DIRECTORY);
     }
 
+    /**
+     * Conditionally processes a multi read request.
+     *
+     * @since Apache Jackrabbit 2.3.1
+     * @param request request object
+     * @param response response object
+     * @param resource resource object
+     * @return <code>true</code> if this was a multi read request,
+     *         <code>false</code> otherwise
+     * @throws IOException if the response could not be written
+     * @throws DavException if another error occurred
+     */
     protected boolean doGetMultiple(
             WebdavRequest request, WebdavResponse response,
             DavResource resource) throws IOException, DavException {
+        // Check if this is a multi-GET request
         String[] paths = request.getParameterValues(PARAM_PATH);
         if (paths == null
                 || resource.getLocator().getWorkspaceName() == null
@@ -567,7 +601,7 @@ public abstract class JcrRemotingServlet extends JCRWebdavServerServlet {
             return false;
         }
 
-        // Get the depth
+        // Get the depth (TODO: support depth per node type)
         int depth = brConfig.getDefaultDepth();
         String depthParam = request.getParameter(PARAM_DEPTH);
         if (depthParam != null) {
@@ -600,6 +634,7 @@ public abstract class JcrRemotingServlet extends JCRWebdavServerServlet {
             }
         }
 
+        // Send the response
         response.setContentType("text/plain;charset=utf-8");
         response.setStatus(DavServletResponse.SC_OK);
         try {
