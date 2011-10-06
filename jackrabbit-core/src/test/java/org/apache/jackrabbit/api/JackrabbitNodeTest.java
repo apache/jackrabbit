@@ -18,17 +18,21 @@ package org.apache.jackrabbit.api;
 
 import org.apache.jackrabbit.commons.cnd.CndImporter;
 import org.apache.jackrabbit.test.AbstractJCRTest;
+import org.apache.jackrabbit.test.api.observation.EventResult;
 
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
+import javax.jcr.Session;
+import javax.jcr.observation.Event;
+import javax.jcr.observation.ObservationManager;
 import java.io.InputStreamReader;
 import java.io.Reader;
 
 /**
  * <code>JackrabbitNodeTest</code>...
  */
-public class JackrabbitNodeTest  extends AbstractJCRTest {
+public class JackrabbitNodeTest extends AbstractJCRTest {
 
     static final String SEQ_BEFORE = "jackrabbit";
     static final String SEQ_AFTER =  "jackraBbit";
@@ -36,12 +40,14 @@ public class JackrabbitNodeTest  extends AbstractJCRTest {
 
     static final String TEST_NODETYPES = "org/apache/jackrabbit/api/test_mixin_nodetypes.cnd";
 
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
         assertTrue(testRootNode.getPrimaryNodeType().hasOrderableChildNodes());
         for (char c : SEQ_BEFORE.toCharArray()) {
             testRootNode.addNode(new String(new char[]{c}));
         }
+        superuser.save();
 
         Reader cnd = new InputStreamReader(getClass().getClassLoader().getResourceAsStream(TEST_NODETYPES));
         CndImporter.registerNodeTypes(cnd, superuser);
@@ -74,6 +80,40 @@ public class JackrabbitNodeTest  extends AbstractJCRTest {
                 assertTrue(n.isSame(renamedNode));
             }
             pos++;
+        }
+    }
+
+    public void testRenameEventHandling() throws RepositoryException {
+        Session s = getHelper().getSuperuserSession();
+        ObservationManager mgr = s.getWorkspace().getObservationManager();
+        EventResult result = new EventResult(log);
+
+        try {
+            mgr.addEventListener(result, Event.PERSIST|Event.NODE_ADDED|Event.NODE_MOVED|Event.NODE_REMOVED, testRootNode.getPath(), true, null, null, false);
+
+            NodeIterator it = testRootNode.getNodes();
+
+            Node n = it.nextNode();
+            String name = n.getName();
+
+            JackrabbitNode node = (JackrabbitNode) n;
+            node.rename(name.toUpperCase());
+            superuser.save();
+
+            boolean foundMove = false;
+            for (Event event : result.getEvents(5000)) {
+                if (Event.NODE_MOVED == event.getType()) {
+                    foundMove = true;
+                    break;
+                }
+            }
+
+            if (!foundMove) {
+                fail("Expected NODE_MOVED event upon renaming a node.");
+            }
+        } finally {
+            mgr.removeEventListener(result);
+            s.logout();
         }
     }
 
