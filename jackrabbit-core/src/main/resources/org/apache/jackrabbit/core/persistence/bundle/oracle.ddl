@@ -12,16 +12,17 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
-create table ${schemaObjectPrefix}BUNDLE (NODE_ID raw(16) not null, BUNDLE_DATA blob not null) ${tableSpace}
-create unique index ${schemaObjectPrefix}BUNDLE_IDX on ${schemaObjectPrefix}BUNDLE (NODE_ID) ${tableSpace}
+create table ${schemaObjectPrefix}BUNDLE (NODE_ID raw(16) not null, BUNDLE_DATA blob not null) ${tablespace}
+create unique index ${schemaObjectPrefix}BUNDLE_IDX on ${schemaObjectPrefix}BUNDLE (NODE_ID) ${indexTablespace}
 
-create table ${schemaObjectPrefix}REFS (NODE_ID raw(16) not null, REFS_DATA blob not null) ${tableSpace}
-create unique index ${schemaObjectPrefix}REFS_IDX on ${schemaObjectPrefix}REFS (NODE_ID) ${tableSpace}
+create table ${schemaObjectPrefix}REFS (NODE_ID raw(16) not null, REFS_DATA blob not null) ${tablespace}
+create unique index ${schemaObjectPrefix}REFS_IDX on ${schemaObjectPrefix}REFS (NODE_ID) ${indexTablespace}
 
-create table ${schemaObjectPrefix}BINVAL (BINVAL_ID varchar2(64) not null, BINVAL_DATA blob null) ${tableSpace}
-create unique index ${schemaObjectPrefix}BINVAL_IDX on ${schemaObjectPrefix}BINVAL (BINVAL_ID) ${tableSpace}
+create table ${schemaObjectPrefix}BINVAL (BINVAL_ID varchar2(64) not null, BINVAL_DATA blob null) ${tablespace}
+create unique index ${schemaObjectPrefix}BINVAL_IDX on ${schemaObjectPrefix}BINVAL (BINVAL_ID) ${indexTablespace}
 
-create table ${schemaObjectPrefix}NAMES (ID INTEGER primary key, NAME varchar2(255) not null) ${tableSpace}
-create unique index ${schemaObjectPrefix}NAMES_IDX on ${schemaObjectPrefix}NAMES (NAME) ${tableSpace}
+create table ${schemaObjectPrefix}NAMES (ID INTEGER primary key using index ${indexTablespace}, NAME varchar2(255) not null) ${tablespace}
+create unique index ${schemaObjectPrefix}NAMES_IDX on ${schemaObjectPrefix}NAMES (NAME) ${indexTablespace}
+
 create sequence ${schemaObjectPrefix}seq_names_id
 create trigger ${schemaObjectPrefix}t1 before insert on ${schemaObjectPrefix}NAMES for each row begin select ${schemaObjectPrefix}seq_names_id.nextval into :new.id from dual; end;

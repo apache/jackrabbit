@@ -12,11 +12,13 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
-create table ${schemaObjectPrefix}JOURNAL (REVISION_ID number(20,0) NOT NULL, JOURNAL_ID varchar(255), PRODUCER_ID varchar(255), REVISION_DATA blob) ${tableSpace}
-create unique index ${schemaObjectPrefix}JOURNAL_IDX on ${schemaObjectPrefix}JOURNAL (REVISION_ID) ${tableSpace}
-create table ${schemaObjectPrefix}GLOBAL_REVISION (REVISION_ID number(20,0) NOT NULL) ${tableSpace}
-create unique index ${schemaObjectPrefix}GLOBAL_REVISION_IDX on ${schemaObjectPrefix}GLOBAL_REVISION (REVISION_ID) ${tableSpace}
-create table ${schemaObjectPrefix}LOCAL_REVISIONS (JOURNAL_ID varchar(255) NOT NULL, REVISION_ID number(20,0) NOT NULL)
+create table ${schemaObjectPrefix}JOURNAL (REVISION_ID number(20,0) NOT NULL, JOURNAL_ID varchar(255), PRODUCER_ID varchar(255), REVISION_DATA blob) ${tablespace}
+create unique index ${schemaObjectPrefix}JOURNAL_IDX on ${schemaObjectPrefix}JOURNAL (REVISION_ID) ${indexTablespace}
+
+create table ${schemaObjectPrefix}GLOBAL_REVISION (REVISION_ID number(20,0) NOT NULL) ${tablespace}
+create unique index ${schemaObjectPrefix}GLOBAL_REVISION_IDX on ${schemaObjectPrefix}GLOBAL_REVISION (REVISION_ID) ${indexTablespace}
+
+create table ${schemaObjectPrefix}LOCAL_REVISIONS (JOURNAL_ID varchar(255) NOT NULL, REVISION_ID number(20,0) NOT NULL) ${tablespace}
 
 # Inserting the one and only revision counter record now helps avoiding race conditions
 insert into ${schemaObjectPrefix}GLOBAL_REVISION VALUES(0)
