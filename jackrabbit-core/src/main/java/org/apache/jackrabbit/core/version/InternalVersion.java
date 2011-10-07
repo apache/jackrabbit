@@ -36,8 +36,7 @@ public interface InternalVersion extends InternalVersionItem {
     Name getName();
 
     /**
-     * Returns the frozen node of this version or <code>null</code> if this is
-     * the root version.
+     * Returns the frozen node of this version.
      *
      * @return the frozen node.
      */
