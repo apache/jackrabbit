@@ -25,22 +25,88 @@ import org.apache.jackrabbit.core.util.db.OracleConnectionHelper;
 /**
  * It has the following property in addition to those of the DatabaseJournal:
  * <ul>
- * <li><code>tableSpace</code>: the Oracle tablespace to use</li>
+ * <li><code>tablespace</code>: the tablespace to use for tables</li>
+ * <li><code>indexTablespace</code>: the tablespace to use for indexes</li>
  * </ul>
  */
 public class OracleDatabaseJournal extends DatabaseJournal {
+    /**
+     * The default tablespace clause used when {@link #tablespace} or {@link #indexTablespace}
+     * are not specified.
+     */
+    protected static final String DEFAULT_TABLESPACE_CLAUSE = "";
 
-    /** the variable for the Oracle table space */
-    public static final String TABLE_SPACE_VARIABLE =
-        "${tableSpace}";
+    /**
+     * Name of the replacement variable in the DDL for {@link #tablespace}.
+     */
+    protected static final String TABLESPACE_VARIABLE = "${tablespace}";
 
-    /** the Oracle table space to use */
-    protected String tableSpace = "";
+    /**
+     * Name of the replacement variable in the DDL for {@link #indexTablespace}.
+     */
+    protected static final String INDEX_TABLESPACE_VARIABLE = "${indexTablespace}";
+
+    /** The Oracle tablespace to use for tables */
+    protected String tablespace;
+
+    /** The Oracle tablespace to use for indexes */
+    protected String indexTablespace;
 
     public OracleDatabaseJournal() {
         setDatabaseType("oracle");
         setDriver("oracle.jdbc.OracleDriver");
         setSchemaObjectPrefix("");
+        tablespace = DEFAULT_TABLESPACE_CLAUSE;
+        indexTablespace = DEFAULT_TABLESPACE_CLAUSE;
+    }
+
+    /**
+     * Returns the configured Oracle tablespace for tables.
+     * @return the configured Oracle tablespace for tables.
+     */
+    public String getTablespace() {
+        return tablespace;
+    }
+
+    /**
+     * Sets the Oracle tablespace for tables.
+     * @param tablespaceName the Oracle tablespace for tables.
+     */
+    public void setTablespace(String tablespaceName) {
+        this.tablespace = this.buildTablespaceClause(tablespaceName);
+    }
+    
+    /**
+     * Returns the configured Oracle tablespace for indexes.
+     * @return the configured Oracle tablespace for indexes.
+     */
+    public String getIndexTablespace() {
+        return indexTablespace;
+    }
+    
+    /**
+     * Sets the Oracle tablespace for indexes.
+     * @param tablespace the Oracle tablespace for indexes.
+     */
+    public void setIndexTablespace(String tablespaceName) {
+        this.indexTablespace = this.buildTablespaceClause(tablespaceName);
+    }
+    
+    /**
+     * Constructs the <code>tablespace &lt;tbs name&gt;</code> clause from
+     * the supplied tablespace name. If the name is empty, {@link #DEFAULT_TABLESPACE_CLAUSE}
+     * is returned instead.
+     * 
+     * @param tablespaceName A tablespace name
+     * @return A tablespace clause using the supplied name or
+     * <code>{@value #DEFAULT_TABLESPACE_CLAUSE}</code> if the name is empty
+     */
+    private String buildTablespaceClause(String tablespaceName) {
+        if (tablespaceName == null || tablespaceName.trim().length() == 0) {
+            return DEFAULT_TABLESPACE_CLAUSE;
+        } else {
+            return "tablespace " + tablespaceName.trim();
+        }
     }
 
     /**
@@ -58,27 +124,12 @@ public class OracleDatabaseJournal extends DatabaseJournal {
      */
     @Override
     protected CheckSchemaOperation createCheckSchemaOperation() {
-        return super.createCheckSchemaOperation().addVariableReplacement(
-            CheckSchemaOperation.TABLE_SPACE_VARIABLE, tableSpace);
-    }
-
-    /**
-     * Returns the configured Oracle table space.
-     * @return the configured Oracle table space.
-     */
-    public String getTableSpace() {
-        return tableSpace;
-    }
-
-    /**
-     * Sets the Oracle table space.
-     * @param tableSpace the Oracle table space.
-     */
-    public void setTableSpace(String tableSpace) {
-        if (tableSpace != null && tableSpace.trim().length() > 0) {
-            this.tableSpace = "tablespace " + tableSpace.trim();
-        } else {
-            this.tableSpace = "";
+        if (DEFAULT_TABLESPACE_CLAUSE.equals(indexTablespace) && !DEFAULT_TABLESPACE_CLAUSE.equals(tablespace)) {
+            // tablespace was set but not indexTablespace : use the same for both
+            indexTablespace = tablespace;
         }
+        return super.createCheckSchemaOperation()
+            .addVariableReplacement(TABLESPACE_VARIABLE, tablespace)
+            .addVariableReplacement(INDEX_TABLESPACE_VARIABLE, indexTablespace);
     }
 }
