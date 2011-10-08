@@ -168,9 +168,9 @@ public class JcrUtils {
                 log.append(newline);
                 log.append("Note that the given repository URI was invalid:");
                 log.append(newline);
-                log.append("        " + uri);
+                log.append("        ").append(uri);
                 log.append(newline);
-                log.append("        " + e.getMessage());
+                log.append("        ").append(e.getMessage());
             } catch (UnsupportedEncodingException e) {
                 throw new RepositoryException("UTF-8 is not supported!", e);
             }
