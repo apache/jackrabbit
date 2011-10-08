@@ -620,7 +620,7 @@ public abstract class JcrRemotingServlet extends JCRWebdavServerServlet {
         Session session =
                 JcrDavSession.getRepositorySession(resource.getSession());
         for (String path : paths) {
-            if (!alreadyAdded.contains(paths)) {
+            if (!alreadyAdded.contains(path)) {
                 try {
                     nodes.add(session.getNode(path));
                     alreadyAdded.add(path);
