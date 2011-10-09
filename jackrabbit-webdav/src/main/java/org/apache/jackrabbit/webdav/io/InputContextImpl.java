@@ -71,8 +71,7 @@ public class InputContextImpl implements InputContext {
     }
 
     public long getContentLength() {
-        int length = request.getIntHeader(DavConstants.HEADER_CONTENT_LENGTH);
-        return Long.parseLong(length + "");
+        return request.getIntHeader(DavConstants.HEADER_CONTENT_LENGTH);
     }
 
     public String getContentType() {
