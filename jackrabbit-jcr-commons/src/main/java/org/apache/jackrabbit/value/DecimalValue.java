@@ -81,7 +81,7 @@ public class DecimalValue extends BaseValue {
             if (number == other.number) {
                 return true;
             } else if (number != null && other.number != null) {
-                return number.equals(other.number);
+                return number.compareTo(other.number) == 0;
             }
         }
         return false;
