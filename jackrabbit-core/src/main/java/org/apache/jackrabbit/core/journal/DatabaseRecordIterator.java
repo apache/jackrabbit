@@ -35,7 +35,7 @@ class DatabaseRecordIterator implements RecordIterator {
     /**
      * Logger.
      */
-    private static Logger log = LoggerFactory.getLogger(DatabaseJournal.class);
+    private static Logger log = LoggerFactory.getLogger(DatabaseRecordIterator.class);
 
     /**
      * Underlying result set.

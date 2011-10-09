@@ -47,7 +47,7 @@ public class FileBasedNamespaceMappings extends AbstractNamespaceMappings {
     /**
      * Default logger instance for this class
      */
-    private static Logger log = LoggerFactory.getLogger(NamespaceMappings.class);
+    private static Logger log = LoggerFactory.getLogger(FileBasedNamespaceMappings.class);
 
     /**
      * Location of the file that persists the uri / prefix mappings

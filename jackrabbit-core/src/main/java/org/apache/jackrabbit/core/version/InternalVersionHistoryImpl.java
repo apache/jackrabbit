@@ -48,7 +48,7 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
     /**
      * default logger
      */
-    private static Logger log = LoggerFactory.getLogger(InternalVersionHistory.class);
+    private static Logger log = LoggerFactory.getLogger(InternalVersionHistoryImpl.class);
 
     /**
      * The last current time that was returned by {@link #getCurrentTime()}.
