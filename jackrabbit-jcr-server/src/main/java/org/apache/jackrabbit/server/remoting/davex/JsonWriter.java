@@ -48,10 +48,10 @@ import org.apache.jackrabbit.commons.json.JsonUtil;
 class JsonWriter {
 
     private final Writer writer;
-    
+
     /**
      * Create a new JsonItemWriter
-     * 
+     *
      * @param writer Writer to which the generated JSON string is written.
      */
     JsonWriter(Writer writer) {
@@ -72,7 +72,7 @@ class JsonWriter {
     void write(Collection<Node> nodes, int maxLevels)
             throws RepositoryException, IOException {
         writer.write('{');
-        writeKey(writer, "nodes");
+        writeKey("nodes");
         writer.write('{');
         boolean first = true;
         for (Node node : nodes) {
@@ -81,7 +81,7 @@ class JsonWriter {
             } else {
                 writer.write(',');
             }
-            writeKey(writer, node.getPath());
+            writeKey(node.getPath());
             write(node, maxLevels);
         }
         writer.write('}');
@@ -94,10 +94,10 @@ class JsonWriter {
         writer.write('{');
 
         // append the jcr properties as JSON pairs.
-        PropertyIterator props = node.getProperties();        
+        PropertyIterator props = node.getProperties();
         while (props.hasNext()) {
             Property prop = props.nextProperty();
-            writeProperty(writer, prop);
+            writeProperty(prop);
             // add separator: next json pair/member is either a property or
             // a childnode or the special no-children-present pair.
             writer.write(',');
@@ -108,7 +108,7 @@ class JsonWriter {
         final NodeIterator children = node.getNodes();
         if (!children.hasNext()) {
             // no child present at all -> add special property.
-            writeKeyValue(writer, "::NodeIteratorSize", 0);
+            writeKeyValue("::NodeIteratorSize", 0);
         } else {
             // the child nodes
             while (children.hasNext()) {
@@ -116,9 +116,9 @@ class JsonWriter {
                 String name = n.getName();
                 int index = n.getIndex();
                 if (index > 1) {
-                    writeKey(writer, name + "[" + index + "]");
+                    writeKey(name + "[" + index + "]");
                 } else {
-                    writeKey(writer, name);
+                    writeKey(name);
                 }
                 if (maxLevels < 0 || currentLevel < maxLevels) {
                     write(n, currentLevel + 1, maxLevels);
@@ -132,7 +132,7 @@ class JsonWriter {
                      * the latter is required in order to build the correct SPI
                      * ChildInfo for Node n.
                      */
-                    writeChildInfo(writer, n);
+                    writeChildInfo(n);
                 }
                 if (children.hasNext()) {
                     writer.write(',');
@@ -146,36 +146,34 @@ class JsonWriter {
 
     /**
      * Write child info without including the complete node info.
-     * 
-     * @param w
+     *
      * @param n
      * @throws RepositoryException
      * @throws IOException
      */
-    private static void writeChildInfo(Writer w, Node n) throws RepositoryException, IOException {
+    private void writeChildInfo(Node n) throws RepositoryException, IOException {
         // start child info
-        w.write('{');
+        writer.write('{');
 
         // make sure the SPI childInfo can be built correctly on the
         // client side -> pass uuid if present.
         if (n.isNodeType(JcrConstants.MIX_REFERENCEABLE) &&
                 n.hasProperty(JcrConstants.JCR_UUID)) {
-            writeProperty(w, n.getProperty(JcrConstants.JCR_UUID));
+            writeProperty(n.getProperty(JcrConstants.JCR_UUID));
         }
 
         // end child info
-        w.write('}');
+        writer.write('}');
     }
 
     /**
      * Write a single property
      *
-     * @param w
      * @param p
      * @throws javax.jcr.RepositoryException
      * @throws java.io.IOException
      */
-    private static void writeProperty(Writer w, Property p) throws RepositoryException, IOException {
+    private void writeProperty(Property p) throws RepositoryException, IOException {
         // special handling for binaries: we dump the length and not the length
         int type = p.getType();
         if (type == PropertyType.BINARY) {
@@ -184,9 +182,9 @@ class JsonWriter {
             String key = ":" + p.getName();
             if (p.isMultiple()) {
                 long[] binLengths = p.getLengths();
-                writeKeyArray(w, key, binLengths);
+                writeKeyArray(key, binLengths);
             } else {
-                writeKeyValue(w, key, p.getLength());
+                writeKeyValue(key, p.getLength());
             }
         } else {
             boolean isMultiple = p.isMultiple();
@@ -198,14 +196,14 @@ class JsonWriter {
                    the same applies for multivalued properties consisting of an
                    empty array -> property type guessing would not be possible.
                  */
-                writeKeyValue(w, ":" +  p.getName(), PropertyType.nameFromValue(type), true);
+                writeKeyValue(":" +  p.getName(), PropertyType.nameFromValue(type), true);
             }
             /* append key-value pair containing the jcr value(s).
                for String, Boolean, Double, Long -> types in json available */
             if (isMultiple) {
-                writeKeyArray(w, p.getName(), p.getValues());
+                writeKeyArray(p.getName(), p.getValues());
             } else {
-                writeKeyValue(w, p.getName(), p.getValue());
+                writeKeyValue(p.getName(), p.getValue());
             }
         }
     }
@@ -226,55 +224,56 @@ class JsonWriter {
         }
     }
 
-    private static void writeKeyValue(Writer w, String key, String value, boolean hasNext) throws IOException {
-        writeKey(w, key);
-        w.write(JsonUtil.getJsonString(value));
+    private void writeKeyValue(String key, String value, boolean hasNext) throws IOException {
+        writeKey(key);
+        writer.write(JsonUtil.getJsonString(value));
         if (hasNext) {
-            w.write(',');           
+            writer.write(',');
         }
     }
 
-    private static void writeKeyValue(Writer w, String key, Value value) throws RepositoryException, IOException {
-        writeKey(w, key);
-        w.write(getJsonValue(value));
+    private void writeKeyValue(String key, Value value) throws RepositoryException, IOException {
+        writeKey(key);
+        writeJsonValue(value);
     }
 
-    private static void writeKeyArray(Writer w, String key, Value[] values) throws RepositoryException, IOException {
-        writeKey(w, key);
-        w.write('[');
+    private void writeKeyArray(String key, Value[] values) throws RepositoryException, IOException {
+        writeKey(key);
+        writer.write('[');
         for (int i = 0; i < values.length; i++) {
             if (i > 0) {
-                w.write(',');
+                writer.write(',');
             }
-            w.write(getJsonValue(values[i]));
+            writeJsonValue(values[i]);
         }
-        w.write(']');
+        writer.write(']');
     }
-    
-    private static void writeKeyValue(Writer w, String key, long binLength) throws IOException {
-        writeKey(w, key);
-        w.write(binLength + "");
+
+    private void writeKeyValue(String key, long binLength) throws IOException {
+        writeKey(key);
+        writer.write(String.valueOf(binLength));
     }
-    
-    private static void writeKeyArray(Writer w, String key, long[] binLengths) throws RepositoryException, IOException {
-        writeKey(w, key);
-        w.write('[');
+
+    private void writeKeyArray(String key, long[] binLengths) throws RepositoryException, IOException {
+        writeKey(key);
+        writer.write('[');
         for (int i = 0; i < binLengths.length; i++) {
-            String delim = (i == 0) ? "" : ",";
-            w.write(delim + binLengths[i]);
+            if (i > 0) {
+                writer.write(',');
+            }
+            writer.write(String.valueOf(binLengths[i]));
         }
-        w.write(']');
+        writer.write(']');
     }
 
     /**
      *
-     * @param w
      * @param key
      * @throws IOException
      */
-    private static void writeKey(Writer w, String key) throws IOException {
-        w.write(JsonUtil.getJsonString(key));
-        w.write(':');
+   private void writeKey(String key) throws IOException {
+        writer.write(JsonUtil.getJsonString(key));
+        writer.write(':');
     }
 
     /**
@@ -282,7 +281,7 @@ class JsonWriter {
      * @throws RepositoryException
      * @throws IOException
      */
-    private static String getJsonValue(Value v) throws RepositoryException, IOException {
+    private void writeJsonValue(Value v) throws RepositoryException, IOException {
 
         switch (v.getType()) {
             case PropertyType.BINARY:
@@ -292,10 +291,10 @@ class JsonWriter {
             case PropertyType.BOOLEAN:
             case PropertyType.LONG:
             case PropertyType.DOUBLE:
-                return v.getString();
+                writer.write(v.getString());
 
             default:
-                return JsonUtil.getJsonString(v.getString());
+                writer.write(JsonUtil.getJsonString(v.getString()));
         }
     }
 }
