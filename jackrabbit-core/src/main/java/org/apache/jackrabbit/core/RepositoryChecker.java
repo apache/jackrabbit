@@ -20,6 +20,7 @@ import static org.apache.jackrabbit.core.RepositoryImpl.SYSTEM_ROOT_NODE_ID;
 import static org.apache.jackrabbit.spi.commons.name.NameConstants.JCR_BASEVERSION;
 import static org.apache.jackrabbit.spi.commons.name.NameConstants.JCR_ISCHECKEDOUT;
 import static org.apache.jackrabbit.spi.commons.name.NameConstants.JCR_PREDECESSORS;
+import static org.apache.jackrabbit.spi.commons.name.NameConstants.JCR_ROOTVERSION;
 import static org.apache.jackrabbit.spi.commons.name.NameConstants.JCR_VERSIONHISTORY;
 import static org.apache.jackrabbit.spi.commons.name.NameConstants.MIX_VERSIONABLE;
 
@@ -35,6 +36,9 @@ import org.apache.jackrabbit.core.state.ChangeLog;
 import org.apache.jackrabbit.core.state.ChildNodeEntry;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.NodeState;
+import org.apache.jackrabbit.core.version.InconsistentVersioningState;
+import org.apache.jackrabbit.core.version.InternalVersion;
+import org.apache.jackrabbit.core.version.InternalVersionHistory;
 import org.apache.jackrabbit.core.version.InternalVersionManager;
 import org.apache.jackrabbit.spi.Name;
 import org.slf4j.Logger;
@@ -104,11 +108,44 @@ class RepositoryChecker {
 
     private void checkVersionHistory(NodeState node) {
         if (node.hasPropertyName(JCR_VERSIONHISTORY)) {
-            log.debug("Checking version history of node {}", node.getNodeId());
+            String message = null;
+            NodeId nid = node.getNodeId();
+
             try {
-                versionManager.getVersionHistoryOfNode(node.getNodeId());
+                log.debug("Checking version history of node {}", nid);
+
+                message = "Removing references to a missing version history of node " + nid;
+                InternalVersionHistory vh = versionManager.getVersionHistoryOfNode(nid);
+
+                // additional checks, see JCR-3101
+                String intro = "Removing references to an inconsistent version history of node "
+                    + nid;
+
+                message = intro + " (getting the version names failed)";
+                Name[] versionNames = vh.getVersionNames();
+                boolean seenRoot = false;
+
+                for (Name versionName : versionNames) {
+                    seenRoot |= JCR_ROOTVERSION.equals(versionName);
+
+                    log.debug("Checking version history of node {}, version {}", nid, versionName);
+
+                    message = intro + " (getting version " + versionName + "  failed)";
+                    InternalVersion v = vh.getVersion(versionName);
+
+                    message = intro + "(frozen node of root version " + v.getId() + " missing)";
+                    if (null == v.getFrozenNode()) {
+                        throw new InconsistentVersioningState("frozen node of "
+                                + v.getId() + " is missing.");
+                    }
+                }
+
+                if (!seenRoot) {
+                    message = intro + " (root version is missing)";
+                    throw new InconsistentVersioningState("root version of " + nid +" is missing.");
+                }
             } catch (Exception e) {
-                log.info("Removing references to a missing version history", e);
+                log.info(message, e);
                 removeVersionHistoryReferences(node);
             }
         }
