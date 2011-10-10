@@ -419,6 +419,14 @@ class ChildAxisQuery extends Query implements JackrabbitQuery {
             if (nextDoc == NO_MORE_DOCS) {
                 return nextDoc;
             }
+            
+            // optimize in the case of an advance to finish.
+            // see https://issues.apache.org/jira/browse/JCR-3091
+            if (target == NO_MORE_DOCS) {
+                hits.skipTo(target);
+                nextDoc = NO_MORE_DOCS;
+                return nextDoc;
+            }
 
             calculateChildren();
             nextDoc = hits.skipTo(target);

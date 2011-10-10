@@ -351,6 +351,12 @@ public class WildcardQuery extends Query implements Transformable {
             if (nextDoc == NO_MORE_DOCS) {
                 return nextDoc;
             }
+            // optimize in the case of an advance to finish.
+            // see https://issues.apache.org/jira/browse/JCR-3091
+            if (target == NO_MORE_DOCS) {
+                nextDoc = NO_MORE_DOCS;
+                return nextDoc;
+            }
 
             calculateHits();
             nextDoc = hits.nextSetBit(target);

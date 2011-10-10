@@ -239,6 +239,12 @@ public class QueryHitsQuery extends Query implements JackrabbitQuery{
             if (currentDoc == NO_MORE_DOCS) {
                 return currentDoc;
             }
+            // optimize in the case of an advance to finish.
+            // see https://issues.apache.org/jira/browse/JCR-3091
+            if (target == NO_MORE_DOCS) {
+                currentDoc = NO_MORE_DOCS;
+                return currentDoc;
+            }
 
             do {
                 if (nextDoc() == NO_MORE_DOCS) {
