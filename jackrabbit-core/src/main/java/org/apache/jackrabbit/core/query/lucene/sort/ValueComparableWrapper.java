@@ -41,7 +41,7 @@ class ValueComparableWrapper implements Comparable<ValueComparableWrapper> {
             if (reversed) {
                 return -d;
             }
-            return -d;
+            return d;
         }
         return 0;
     }
