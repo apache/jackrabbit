@@ -75,7 +75,6 @@ class MultiScorer extends Scorer {
                 currentDoc = NO_MORE_DOCS;
             }
         }
-
         return currentDoc;
     }
 
@@ -92,6 +91,18 @@ class MultiScorer extends Scorer {
     @Override
     public int advance(int target) throws IOException {
         if (currentDoc == NO_MORE_DOCS) {
+            return currentDoc;
+        }
+        // optimize in the case of an advance to finish.
+        // see https://issues.apache.org/jira/browse/JCR-3091
+        if (target == NO_MORE_DOCS) {
+            // exhaust all the internal scorers
+            for (Scorer s : scorers) {
+                if (s.docID() != target) {
+                    s.advance(target);
+                }
+            }
+            currentDoc = NO_MORE_DOCS;
             return currentDoc;
         }
 

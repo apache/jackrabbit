@@ -226,6 +226,14 @@ class NotQuery extends Query {
                 return docNo;
             }
 
+            // optimize in the case of an advance to finish.
+            // see https://issues.apache.org/jira/browse/JCR-3091
+            if (target == NO_MORE_DOCS) {
+                contextScorer.advance(target);
+                docNo = NO_MORE_DOCS;
+                return docNo;
+            }
+
             if (contextNo != -1 && contextNo < target) {
                 int docId = contextScorer.advance(target);
                 contextNo = docId == NO_MORE_DOCS ? -1 : docId;

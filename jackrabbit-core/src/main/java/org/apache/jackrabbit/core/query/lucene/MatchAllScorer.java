@@ -109,6 +109,13 @@ class MatchAllScorer extends Scorer {
             return nextDoc;
         }
 
+        // optimize in the case of an advance to finish.
+        // see https://issues.apache.org/jira/browse/JCR-3091
+        if (target == NO_MORE_DOCS) {
+            nextDoc = NO_MORE_DOCS;
+            return nextDoc;
+        }
+
         nextDoc = target - 1;
         return nextDoc();
     }
