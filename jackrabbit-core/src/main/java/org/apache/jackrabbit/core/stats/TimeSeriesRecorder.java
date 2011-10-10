@@ -14,19 +14,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.core.jmx;
+package org.apache.jackrabbit.core.stats;
 
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Recorder of a time series. An instance of this class records (and clears)
  * the state of a given {@link AtomicLong} counter once every second and
- * exposes the collected time series through the {@link TimeSeriesMBean}
+ * exposes the collected time series through the {@link TimeSeries}
  * interface.
  */
-public class TimeSeriesRecorder implements TimeSeriesMBean {
+class TimeSeriesRecorder implements TimeSeries {
+
+    /** Event counter */
+    private final AtomicLong counter = new AtomicLong();
 
     /** Number of events per second over the last minute. */
     private final long[] eventsPerSecond = new long[60];
@@ -52,28 +53,38 @@ public class TimeSeriesRecorder implements TimeSeriesMBean {
     /** Current week (index in {@link #eventsPerWeek}) */
     private int weeks = 0;
 
-    public TimeSeriesRecorder(
-            final AtomicLong counter, ScheduledExecutorService executor) {
-        executor.scheduleAtFixedRate(new Runnable() {
-            public void run() {
-                eventsPerSecond[seconds++] = counter.getAndSet(0);
-                if (seconds == eventsPerSecond.length) {
-                    seconds = 0;
-                    eventsPerMinute[minutes++] = sum(eventsPerSecond);
-                }
-                if (minutes == eventsPerMinute.length) {
-                    minutes = 0;
-                    eventsPerHour[hours++] = sum(eventsPerMinute);
-                }
-                if (hours == eventsPerHour.length) {
-                    hours = 0;
-                    eventsPerWeek[weeks++] = sum(eventsPerHour);
-                }
-                if (weeks == eventsPerWeek.length) {
-                    weeks = 0;
-                }
-            }
-        }, 1, 1, TimeUnit.SECONDS);
+    /**
+     * Returns the {@link AtomicLong} instance used to count events for
+     * the time series.
+     *
+     * @return event counter
+     */
+    public AtomicLong getCounter() {
+        return counter;
+    }
+
+    /**
+     * Records the number of counted events over the past second and resets
+     * the counter. This method should be scheduled to be called once per
+     * second.
+     */
+    public synchronized void recordOneSecond() {
+        eventsPerSecond[seconds++] = counter.getAndSet(0);
+        if (seconds == eventsPerSecond.length) {
+            seconds = 0;
+            eventsPerMinute[minutes++] = sum(eventsPerSecond);
+        }
+        if (minutes == eventsPerMinute.length) {
+            minutes = 0;
+            eventsPerHour[hours++] = sum(eventsPerMinute);
+        }
+        if (hours == eventsPerHour.length) {
+            hours = 0;
+            eventsPerWeek[weeks++] = sum(eventsPerHour);
+        }
+        if (weeks == eventsPerWeek.length) {
+            weeks = 0;
+        }
     }
 
     //----------------------------------------------------------< TimeSeries >

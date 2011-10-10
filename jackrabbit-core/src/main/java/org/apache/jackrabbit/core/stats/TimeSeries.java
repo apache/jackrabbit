@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.core.jmx;
+package org.apache.jackrabbit.core.stats;
 
 /**
  * Interface for a time series of the number of events per
@@ -24,7 +24,7 @@ package org.apache.jackrabbit.core.jmx;
  *
  * @since Apache Jackrabbit 2.3.1
  */
-public interface TimeSeriesMBean {
+public interface TimeSeries {
 
     /**
      * Returns the number of events per second over the last minute.
