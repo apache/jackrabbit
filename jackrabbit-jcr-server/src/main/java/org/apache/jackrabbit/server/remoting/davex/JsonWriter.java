@@ -292,6 +292,7 @@ class JsonWriter {
             case PropertyType.LONG:
             case PropertyType.DOUBLE:
                 writer.write(v.getString());
+                break;
 
             default:
                 writer.write(JsonUtil.getJsonString(v.getString()));
