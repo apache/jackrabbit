@@ -26,7 +26,7 @@ import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.servlet.ServletException;
 
-import org.apache.jackrabbit.api.JackrabbitRepository;
+import org.apache.jackrabbit.core.RepositoryContext;
 import org.apache.jackrabbit.core.RepositoryImpl;
 import org.apache.jackrabbit.core.config.RepositoryConfig;
 import org.apache.jackrabbit.servlet.AbstractRepositoryServlet;
@@ -38,6 +38,12 @@ import org.apache.jackrabbit.servlet.AbstractRepositoryServlet;
  * <p>
  * The supported initialization parameters of this servlet are:
  * <dl>
+ *   <dt>org.apache.jackrabbit.core.RepositoryContext</dt>
+ *   <dd>
+ *     Name of the servlet context attribute to put the internal
+ *     component context of the repository in. The default value is
+ *     "<code>org.apache.jackrabbit.core.RepositoryContext</code>".
+ *   </dd>
  *   <dt>javax.jcr.Repository</dt>
  *   <dd>
  *     Name of the servlet context attribute to put the repository in.
@@ -75,7 +81,7 @@ public class JackrabbitRepositoryServlet extends AbstractRepositoryServlet {
     /**
      * Repository instance.
      */
-    private JackrabbitRepository repository;
+    private RepositoryContext context;
 
     /**
      * Starts the repository instance and makes it available in the
@@ -100,8 +106,12 @@ public class JackrabbitRepositoryServlet extends AbstractRepositoryServlet {
                 createDefaultConfiguration(config);
             }
 
-            repository = RepositoryImpl.create(RepositoryConfig.create(
+            context = RepositoryContext.create(RepositoryConfig.create(
                     config.toURI(), home.getPath()));
+
+            String name = RepositoryContext.class.getName();
+            getServletContext().setAttribute(
+                    getInitParameter(name, name), context);
         } catch (RepositoryException e) {
             throw new ServletException("Failed to start Jackrabbit", e);
         }
@@ -114,7 +124,7 @@ public class JackrabbitRepositoryServlet extends AbstractRepositoryServlet {
      */
     public void destroy() {
         super.destroy();
-        repository.shutdown();
+        context.getRepository().shutdown();
     }
 
     /**
@@ -124,7 +134,7 @@ public class JackrabbitRepositoryServlet extends AbstractRepositoryServlet {
      */
     @Override
     protected Repository getRepository() {
-        return repository;
+        return context.getRepository();
     }
 
     /**

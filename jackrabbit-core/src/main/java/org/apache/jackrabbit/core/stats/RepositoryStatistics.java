@@ -17,12 +17,16 @@
 package org.apache.jackrabbit.core.stats;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.TreeMap;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
-public class RepositoryStatistics {
+public class RepositoryStatistics
+        implements Iterable<Map.Entry<String, TimeSeries>> {
 
     private final Map<String, TimeSeriesRecorder> recorders =
             new HashMap<String, TimeSeriesRecorder>();
@@ -33,6 +37,12 @@ public class RepositoryStatistics {
                 recordOneSecond();
             }
         }, 1, 1, TimeUnit.SECONDS);
+    }
+
+    public synchronized Iterator<Entry<String, TimeSeries>> iterator() {
+        Map<String, TimeSeries> map = new TreeMap<String, TimeSeries>();
+        map.putAll(recorders);
+        return map.entrySet().iterator();
     }
 
     public AtomicLong getCounter(String name) {
