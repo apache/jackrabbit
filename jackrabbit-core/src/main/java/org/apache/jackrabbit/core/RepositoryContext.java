@@ -27,6 +27,7 @@ import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.security.JackrabbitSecurityManager;
 import org.apache.jackrabbit.core.security.authorization.PrivilegeRegistry;
 import org.apache.jackrabbit.core.state.ItemStateCacheFactory;
+import org.apache.jackrabbit.core.stats.RepositoryStatistics;
 import org.apache.jackrabbit.core.version.InternalVersionManagerImpl;
 
 /**
@@ -107,6 +108,11 @@ public class RepositoryContext {
             new JackrabbitThreadPool();
 
     /**
+     * Repository statistics collector.
+     */
+    private final RepositoryStatistics statistics;
+
+    /**
      * Creates a component context for the given repository.
      *
      * @param repository repository instance
@@ -114,6 +120,7 @@ public class RepositoryContext {
     RepositoryContext(RepositoryImpl repository) {
         assert repository != null;
         this.repository = repository;
+        this.statistics = new RepositoryStatistics(executor);
     }
 
     /**
@@ -359,6 +366,15 @@ public class RepositoryContext {
 
     public NodeIdFactory getNodeIdFactory() {
         return nodeIdFactory;
+    }
+
+    /**
+     * Returns the repository statistics collector.
+     *
+     * @return repository statistics collector
+     */
+    public RepositoryStatistics getRepositoryStatistics() {
+        return statistics;
     }
 
 }

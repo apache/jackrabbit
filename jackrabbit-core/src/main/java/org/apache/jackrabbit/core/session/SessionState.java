@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.core.session;
 
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -24,6 +25,7 @@ import javax.jcr.Session;
 
 import org.apache.jackrabbit.core.WorkspaceManager;
 import org.apache.jackrabbit.core.observation.ObservationDispatcher;
+import org.apache.jackrabbit.core.stats.RepositoryStatistics;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -66,6 +68,16 @@ public class SessionState {
     private final SessionContext context;
 
     /**
+     * Counter of read operations.
+     */
+    private final AtomicLong readCounter;
+
+    /**
+     * Counter of write operations.
+     */
+    private final AtomicLong writeCounter;
+
+    /**
      * The lock used to guarantee synchronized execution of repository
      * operations. An explicit lock is used instead of normal Java
      * synchronization in order to be able to log attempts to concurrently
@@ -95,6 +107,12 @@ public class SessionState {
      */
     public SessionState(SessionContext context) {
         this.context = context;
+
+        RepositoryStatistics statistics =
+                context.getRepositoryContext().getRepositoryStatistics();
+        statistics.getCounter("login").incrementAndGet();
+        this.readCounter = statistics.getCounter("read");
+        this.writeCounter = statistics.getCounter("write");
     }
 
     /**
@@ -180,6 +198,13 @@ public class SessionState {
             }
 
             try {
+                // JCR-3040: Increment the operation counters
+                if (isWriteOperation) {
+                    writeCounter.incrementAndGet();
+                } else {
+                    readCounter.incrementAndGet();
+                }
+
                 // Perform the actual operation, optionally with debug logs
                 if (log.isDebugEnabled()) {
                     log.debug("Performing {}", operation);
