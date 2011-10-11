@@ -61,10 +61,10 @@ public class ConcurrentGcTest extends TestCase {
     }
 
     public void testDatabases() throws Exception {
-        doTestDatabase(
-                "org.h2.Driver",
-                "jdbc:h2:" + TEST_DIR + "/db",
-                "sa", "sa");
+//        doTestDatabase(
+//                "org.h2.Driver",
+//                "jdbc:h2:" + TEST_DIR + "/db",
+//                "sa", "sa");
 
         // not enabled by default
         // doTestDatabase(
