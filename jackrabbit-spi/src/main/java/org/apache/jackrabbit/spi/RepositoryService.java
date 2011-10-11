@@ -250,7 +250,7 @@ public interface RepositoryService {
 
     /**
      * Retrieve the <code>NodeInfo</code> for the node identified by the given
-     * <code>NodeId</code>. See {@link #getItemInfos(SessionInfo, NodeId)} for
+     * <code>NodeId</code>. See {@link #getItemInfos(SessionInfo, ItemId)} for
      * a similar method that in addition may return <code>ItemInfo</code>s of
      * children <code>Item</code>s.
      *
@@ -268,7 +268,7 @@ public interface RepositoryService {
      * @see javax.jcr.Node#getBaseVersion()
      * @see javax.jcr.Node#getVersionHistory()
      * @see javax.jcr.version.Version#getContainingHistory()
-     * @deprecated Use {@link #getItemInfos(SessionInfo, NodeId)} 
+     * @deprecated Use {@link #getItemInfos(SessionInfo, ItemId)}
      */
     public NodeInfo getNodeInfo(SessionInfo sessionInfo, NodeId nodeId) throws ItemNotFoundException, RepositoryException;
 
@@ -348,7 +348,7 @@ public interface RepositoryService {
      * @throws javax.jcr.RepositoryException
      * @see javax.jcr.Session#getItem(String)
      * @see javax.jcr.Node#getProperty(String)
-     * @deprecated Use {@link #getItemInfos(SessionInfo, NodeId)}
+     * @deprecated Use {@link #getItemInfos(SessionInfo, ItemId)}
      */
     public PropertyInfo getPropertyInfo(SessionInfo sessionInfo, PropertyId propertyId) throws ItemNotFoundException, RepositoryException;
 
