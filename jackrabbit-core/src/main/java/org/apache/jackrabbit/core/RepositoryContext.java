@@ -16,9 +16,14 @@
  */
 package org.apache.jackrabbit.core;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.concurrent.ScheduledExecutorService;
 
+import javax.jcr.RepositoryException;
+
 import org.apache.jackrabbit.core.cluster.ClusterNode;
+import org.apache.jackrabbit.core.config.RepositoryConfig;
 import org.apache.jackrabbit.core.data.DataStore;
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.id.NodeId;
@@ -121,6 +126,39 @@ public class RepositoryContext {
         assert repository != null;
         this.repository = repository;
         this.statistics = new RepositoryStatistics(executor);
+    }
+
+    /**
+     * Starts a repository with the given configuration and returns
+     * the internal component context of the started repository.
+     *
+     * @since Apache Jackrabbit 2.3.1
+     * @param config repository configuration
+     * @return component context of the repository
+     * @throws RepositoryException if the repository could not be started
+     */
+    public static RepositoryContext create(RepositoryConfig config)
+            throws RepositoryException {
+        RepositoryImpl repository = RepositoryImpl.create(config);
+        return repository.getRepositoryContext();
+    }
+
+    /**
+     * Starts a repository in the given directory and returns the
+     * internal component context of the started repository. If needed,
+     * the directory is created and a default repository configuration
+     * is installed inside it.
+     *
+     * @since Apache Jackrabbit 2.3.1
+     * @see RepositoryConfig#install(File)
+     * @param dir repository directory
+     * @return component context of the repository
+     * @throws RepositoryException if the repository could not be started
+     * @throws IOException if the directory could not be initialized
+     */
+    public static RepositoryContext install(File dir)
+            throws RepositoryException, IOException {
+        return create(RepositoryConfig.install(dir));
     }
 
     /**
