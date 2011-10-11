@@ -16,7 +16,14 @@
  */
 package org.apache.jackrabbit.core;
 
+import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
+import javax.jcr.Session;
+
+import org.apache.jackrabbit.core.persistence.PersistenceManager;
+import org.apache.jackrabbit.core.persistence.check.ConsistencyChecker;
+import org.apache.jackrabbit.core.persistence.check.ConsistencyReport;
+import org.apache.jackrabbit.test.NotExecutableException;
 
 /**
  * <code>TestHelper</code> provides test utility methods.
@@ -34,5 +41,32 @@ public class TestHelper {
     public static void shutdownWorkspace(String name, RepositoryImpl repo)
             throws RepositoryException {
         repo.getWorkspaceInfo(name).dispose();
+    }
+
+    /**
+     * Runs a consistency check on the workspace used by the specified session.
+     *
+     * @param session the Session accessing the workspace to be checked
+     * @throws RepositoryException if an error occurs while getting the
+     * workspace with the given name.
+     * @throws NotExecutableException if the {@link PersistenceManager} does
+     * not implement {@link ConsistencyChecker}, or if the associated
+     * {@link Repository} is not a {@link RepositoryImpl}.
+     */
+    public static ConsistencyReport checkConsistency(Session session)
+            throws NotExecutableException, RepositoryException {
+        Repository r = session.getRepository();
+        if (!(r instanceof RepositoryImpl)) {
+            throw new NotExecutableException();
+        } else {
+            RepositoryImpl ri = (RepositoryImpl) r;
+            PersistenceManager pm = ri.getWorkspaceInfo(
+                    session.getWorkspace().getName()).getPersistenceManager();
+            if (!(pm instanceof ConsistencyChecker)) {
+                throw new NotExecutableException();
+            } else {
+                return ((ConsistencyChecker) pm).check(null, true, false);
+            }
+        }
     }
 }

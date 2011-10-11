@@ -21,15 +21,20 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.util.UUID;
+
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.SimpleCredentials;
+
 import junit.framework.TestCase;
+
 import org.apache.commons.io.FileUtils;
+import org.apache.jackrabbit.core.TestHelper;
 import org.apache.jackrabbit.core.TransientRepository;
+import org.apache.jackrabbit.core.persistence.check.ConsistencyReport;
 
 /**
  * Tests that a corrupt node is automatically fixed.
@@ -44,6 +49,51 @@ public class AutoFixCorruptNode extends TestCase {
 
     public void tearDown() throws Exception {
         setUp();
+    }
+
+    /**
+     * Unit test for <a
+     * href="https://issues.apache.org/jira/browse/JCR-3069">JCR-3069</a>
+     */
+    public void testAutoFixWithConsistencyCheck() throws Exception {
+
+        // new repository
+        TransientRepository rep = new TransientRepository(new File(TEST_DIR));
+        Session s = openSession(rep, false);
+        Node root = s.getRootNode();
+
+        // add nodes /test and /test/missing
+        Node test = root.addNode("test");
+        Node missing = test.addNode("missing");
+        missing.addMixin("mix:referenceable");
+        UUID id = UUID.fromString(missing.getIdentifier());
+        s.save();
+        s.logout();
+
+        // remove the bundle for /test/missing directly in the database
+        Connection conn = DriverManager.getConnection("jdbc:derby:" + TEST_DIR
+                + "/workspaces/default/db");
+        PreparedStatement prep = conn
+                .prepareStatement("delete from DEFAULT_BUNDLE  where NODE_ID_HI=? and NODE_ID_LO=?");
+        prep.setLong(1, id.getMostSignificantBits());
+        prep.setLong(2, id.getLeastSignificantBits());
+        prep.executeUpdate();
+        conn.close();
+
+        s = openSession(rep, false);
+        try {
+            ConsistencyReport r = TestHelper.checkConsistency(s);
+            assertNotNull(r);
+            assertNotNull(r.getItems());
+            assertEquals(1, r.getItems().size());
+            assertEquals(test.getIdentifier(), r.getItems().iterator().next()
+                    .getNodeId());
+        } finally {
+            s.logout();
+            rep.shutdown();
+            FileUtils.deleteDirectory(new File("repository"));
+        }
+
     }
 
     public void testAutoFix() throws Exception {
@@ -62,10 +112,10 @@ public class AutoFixCorruptNode extends TestCase {
         s.logout();
 
         // remove the bundle for /test/missing directly in the database
-        Connection conn = DriverManager.getConnection(
-                "jdbc:derby:"+TEST_DIR+"/workspaces/default/db");
-        PreparedStatement prep = conn.prepareStatement(
-                "delete from DEFAULT_BUNDLE  where NODE_ID_HI=? and NODE_ID_LO=?");
+        Connection conn = DriverManager.getConnection("jdbc:derby:" + TEST_DIR
+                + "/workspaces/default/db");
+        PreparedStatement prep = conn
+                .prepareStatement("delete from DEFAULT_BUNDLE  where NODE_ID_HI=? and NODE_ID_LO=?");
         prep.setLong(1, id.getMostSignificantBits());
         prep.setLong(2, id.getLeastSignificantBits());
         prep.executeUpdate();
@@ -108,10 +158,13 @@ public class AutoFixCorruptNode extends TestCase {
 
     }
 
-    private Session openSession(Repository rep, boolean autoFix) throws RepositoryException {
-        SimpleCredentials cred = new SimpleCredentials("admin", "admin".toCharArray());
+    private Session openSession(Repository rep, boolean autoFix)
+            throws RepositoryException {
+        SimpleCredentials cred = new SimpleCredentials("admin",
+                "admin".toCharArray());
         if (autoFix) {
-            cred.setAttribute("org.apache.jackrabbit.autoFixCorruptions", "true");
+            cred.setAttribute("org.apache.jackrabbit.autoFixCorruptions",
+                    "true");
         }
         return rep.login(cred);
     }
