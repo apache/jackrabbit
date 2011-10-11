@@ -203,7 +203,8 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
             
             if (isAccessControlled(accessControlledNode)) {
                 if (permissions.canRead(aclNode.getPrimaryPath(), aclNode.getNodeId())) {
-                    acls.add(new UnmodifiableAccessControlList(entryCollector.getEntries(accessControlledNode), accessControlledNode.getPath(), Collections.<String, Integer>emptyMap()));
+                    List<AccessControlEntry> aces = entryCollector.getEntries(accessControlledNode).getACEs();
+                    acls.add(new UnmodifiableAccessControlList(aces, accessControlledNode.getPath(), Collections.<String, Integer>emptyMap()));
                 } else {
                     throw new AccessDeniedException("Access denied at " + Text.getRelativeParent(aclNode.getPath(), 1));
                 }
@@ -282,7 +283,8 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
         if (isAccessControlled(node)) {
             if (permissions.grants(node.getPrimaryPath(), Permission.READ_AC)) {
                 // retrieve the entries for the access controlled node
-                acls.add(new UnmodifiableAccessControlList(entryCollector.getEntries(node), node.getPath(), Collections.<String, Integer>emptyMap()));
+                List<AccessControlEntry> aces = entryCollector.getEntries(node).getACEs();
+                acls.add(new UnmodifiableAccessControlList(aces, node.getPath(), Collections.<String, Integer>emptyMap()));
             } else {
                 throw new AccessDeniedException("Access denied at " + node.getPath());
             }

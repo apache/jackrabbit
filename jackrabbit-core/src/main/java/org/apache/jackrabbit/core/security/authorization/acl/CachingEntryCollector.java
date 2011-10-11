@@ -25,8 +25,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.jcr.RepositoryException;
-import javax.jcr.security.AccessControlEntry;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -45,7 +43,7 @@ class CachingEntryCollector extends EntryCollector {
      * nodeID (key). The map only contains an entry if the corresponding Node
      * is access controlled.
      */
-    private final Map<NodeId, CacheEntry> cache;
+    private final Map<NodeId, Entries> cache;
     private final Object monitor = new Object();
 
     /**
@@ -75,14 +73,12 @@ class CachingEntryCollector extends EntryCollector {
      * @see EntryCollector#getEntries(org.apache.jackrabbit.core.NodeImpl)
      */
     @Override    
-    protected List<AccessControlEntry> getEntries(NodeImpl node) throws RepositoryException {
-        List<AccessControlEntry> entries;
+    protected Entries getEntries(NodeImpl node) throws RepositoryException {
+        Entries entries;
         NodeId nodeId = node.getNodeId();
         synchronized (monitor) {
-            CacheEntry ce = cache.get(nodeId);
-            if (ce != null) {
-                entries = ce.entries;
-            } else {
+            entries = cache.get(nodeId);
+            if (entries == null) {
                 // fetch entries and update the cache
                 entries = updateCache(node);
             }
@@ -94,13 +90,11 @@ class CachingEntryCollector extends EntryCollector {
      * @see EntryCollector#getEntries(org.apache.jackrabbit.core.id.NodeId)
      */
     @Override
-    protected List<AccessControlEntry> getEntries(NodeId nodeId) throws RepositoryException {
-        List<AccessControlEntry> entries;
+    protected Entries getEntries(NodeId nodeId) throws RepositoryException {
+        Entries entries;
         synchronized (monitor) {
-            CacheEntry ce = cache.get(nodeId);
-            if (ce != null) {
-                entries = ce.entries;
-            } else {
+            entries = cache.get(nodeId);
+            if (entries == null) {
                 // fetch entries and update the cache
                 NodeImpl n = getNodeById(nodeId);
                 entries = updateCache(n);
@@ -117,8 +111,8 @@ class CachingEntryCollector extends EntryCollector {
      * @return The list of entries present on the specified node or an empty list.
      * @throws RepositoryException If an error occurs.
      */
-    private List<AccessControlEntry> updateCache(NodeImpl node) throws RepositoryException {
-        List<AccessControlEntry> entries = super.getEntries(node);
+    private Entries updateCache(NodeImpl node) throws RepositoryException {
+        Entries entries = super.getEntries(node);
         if (!entries.isEmpty()) {
             // find the next access control ancestor in the hierarchy
             // 'null' indicates that there is no ac-controlled ancestor.
@@ -137,11 +131,12 @@ class CachingEntryCollector extends EntryCollector {
                 }
             }
 
-            // build a new cacheEntry and add it to the cache
-            CacheEntry ce = new CacheEntry(entries, nextId);
-            cache.put(node.getNodeId(), ce);
+            // adjust the 'nextId' to point to the next access controlled
+            // ancestor node instead of the parent and remember the entries.
+            entries.setNextId(nextId);
+            cache.put(node.getNodeId(), entries);
             
-            log.debug("Update cache for node with ID {0}: {1}", node, ce);
+            log.debug("Update cache for node with ID {0}: {1}", node, entries);
         } // else: not access controlled -> ignore.
         return entries;
     }
@@ -166,32 +161,10 @@ class CachingEntryCollector extends EntryCollector {
     }
 
     /**
-     * Returns the id of the next access-controlled ancestor if the specified
-     * is contained in the cache. Otherwise the method of the super-class is called.
-     *
-     * @param nodeId The id of the node.
-     * @return the id of the next access-controlled ancestor if the specified
-     * is contained in the cache; otherwise the id of the parent.
-     * @throws RepositoryException
-     * @see EntryCollector#getParentId(org.apache.jackrabbit.core.id.NodeId)
-     */
-    @Override
-    protected NodeId getParentId(NodeId nodeId) throws RepositoryException {
-        synchronized (monitor) {
-            CacheEntry ce = cache.get(nodeId);
-            if (ce != null) {
-                return ce.nextAcNodeId;
-            } else {
-                // no cache entry
-                return super.getParentId(nodeId);
-            }
-        }
-    }
-
-    /**
      * @see EntryCollector#notifyListeners(org.apache.jackrabbit.core.security.authorization.AccessControlModifications)
      */
     @Override
+    @SuppressWarnings("unchecked")
     public void notifyListeners(AccessControlModifications modifications) {
         /* Update cache for all affected access controlled nodes */
         for (Object key : modifications.getNodeIdentifiers()) {
@@ -210,12 +183,12 @@ class CachingEntryCollector extends EntryCollector {
                 } else if ((type & POLICY_REMOVED) == POLICY_REMOVED) {
                     // clear the entry and change the entries having a nextID
                     // pointing to this node.
-                    CacheEntry ce = cache.remove(nodeId);
+                    Entries ce = cache.remove(nodeId);
                     if (ce != null) {
-                        NodeId nextId = ce.nextAcNodeId;
-                        for (CacheEntry entry : cache.values()) {
-                            if (nodeId.equals(entry.nextAcNodeId)) {
-                                entry.nextAcNodeId = nextId;
+                        NodeId nextId = ce.getNextId();
+                        for (Entries entry : cache.values()) {
+                            if (nodeId.equals(entry.getNextId())) {
+                                entry.setNextId(nextId);
                             }
                         }
                     }
@@ -230,28 +203,5 @@ class CachingEntryCollector extends EntryCollector {
             }
         }
         super.notifyListeners(modifications);
-    }
-
-    //--------------------------------------------------------------------------
-    /**
-     *
-     */
-    private static class CacheEntry {
-
-        private final List<AccessControlEntry> entries;
-        private NodeId nextAcNodeId;
-
-        private CacheEntry(List<AccessControlEntry> entries, NodeId nextAcNodeId) {
-            this.entries = entries;
-            this.nextAcNodeId = nextAcNodeId;
-        }
-
-        @Override
-        public String toString() {
-            StringBuilder sb = new StringBuilder();
-            sb.append("size = ").append(entries.size()).append(", ");
-            sb.append("nextAcNodeId = ").append(nextAcNodeId);
-            return sb.toString();
-        }
     }
 }

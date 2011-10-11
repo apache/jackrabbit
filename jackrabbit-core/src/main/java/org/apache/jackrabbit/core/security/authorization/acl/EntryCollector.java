@@ -139,27 +139,40 @@ public class EntryCollector extends AccessControlObserver implements AccessContr
             NodeImpl root = (NodeImpl) systemSession.getRootNode();
             if (ACLProvider.isRepoAccessControlled(root)) {
                 NodeImpl aclNode = root.getNode(N_REPO_POLICY);
-                List<AccessControlEntry> entries = new ACLTemplate(aclNode).getEntries();
-                if (!entries.isEmpty() && filter != null) {
-                    filter.filterEntries(entries, userAces, groupAces);
-                }
+                filterEntries(filter, new ACLTemplate(aclNode).getEntries(), userAces, groupAces);
             }
         } else {
-            NodeId next = node.getNodeId();
+            filterEntries(filter, getEntries(node).getACEs(), userAces, groupAces);
+            NodeId next = node.getParentId();
             while (next != null) {
-                List<AccessControlEntry> entries = getEntries(next);
-                if (!entries.isEmpty() && filter != null) {
-                    filter.filterEntries(entries, userAces, groupAces);
-                }
-                next = getParentId(next);
+                Entries entries = getEntries(next);
+                filterEntries(filter, entries.getACEs(), userAces, groupAces);
+                next = entries.getNextId();
             }
         }
-        
+
         List<AccessControlEntry> entries = new ArrayList<AccessControlEntry>(userAces.size() + groupAces.size());
         entries.addAll(userAces);
         entries.addAll(groupAces);
 
         return entries;
+    }
+
+    /**
+     * Filter the specified access control <code>entries</code>
+     *
+     * @param filter
+     * @param aces
+     * @param userAces
+     * @param groupAces
+     */
+    @SuppressWarnings("unchecked")
+    private static void filterEntries(EntryFilter filter, List<AccessControlEntry> aces,
+                                      LinkedList<AccessControlEntry> userAces,
+                                      LinkedList<AccessControlEntry> groupAces) {
+        if (!aces.isEmpty() && filter != null) {
+            filter.filterEntries(aces, userAces, groupAces);
+        }
     }
 
     /**
@@ -171,17 +184,17 @@ public class EntryCollector extends AccessControlObserver implements AccessContr
      * @return
      * @throws RepositoryException
      */
-    protected List<AccessControlEntry> getEntries(NodeImpl node) throws RepositoryException {
-        List<AccessControlEntry> entries;
+    protected Entries getEntries(NodeImpl node) throws RepositoryException {
+        List<AccessControlEntry> aces;
         if (ACLProvider.isAccessControlled(node)) {
             // collect the aces of that node.
             NodeImpl aclNode = node.getNode(N_POLICY);
-            entries = new ACLTemplate(aclNode).getEntries();
+            aces = new ACLTemplate(aclNode).getEntries();
         } else {
             // not access controlled
-            entries = Collections.emptyList();
+            aces = Collections.emptyList();
         }
-        return entries;
+        return new Entries(aces, node.getParentId());
     }
 
     /**
@@ -190,26 +203,9 @@ public class EntryCollector extends AccessControlObserver implements AccessContr
      * @return
      * @throws RepositoryException
      */
-    protected List<AccessControlEntry> getEntries(NodeId nodeId) throws RepositoryException {
+    protected Entries getEntries(NodeId nodeId) throws RepositoryException {
         NodeImpl node = getNodeById(nodeId);
         return getEntries(node);
-    }
-
-    /**
-     * Returns the parentId of the given nodeId.
-     *
-     * @param nodeId
-     * @return
-     * @throws RepositoryException
-     */
-    protected NodeId getParentId(NodeId nodeId) throws RepositoryException {
-        NodeId parentId;
-        if (rootID.equals(nodeId)) {
-            parentId = null; // root node reached.
-        } else {
-            parentId = getNodeById(nodeId).getParentId();
-        }
-        return parentId;
     }
 
     /**
@@ -426,6 +422,52 @@ public class EntryCollector extends AccessControlObserver implements AccessContr
                     break;
                 } //else: illegal event-type: should never occur. ignore
             }
+        }
+    }
+
+    //--------------------------------------------------------------------------
+    /**
+     * Inner class combining a list of access control entries with the information
+     * where to start looking for inherited entries.
+     *
+     * Thus <code>nextId</code> either points to the parent of the access
+     * controlled node associated with <code>aces</code> or to the next
+     * access controlled ancestor. It is <code>null</code> if the root node has
+     * been reached and there is no additional ancestor to retrieve access control
+     * entries from.
+     */
+    static class Entries {
+
+        private final List<AccessControlEntry> aces;
+        private NodeId nextId;
+
+        Entries(List<AccessControlEntry> aces, NodeId nextId) {
+            this.aces = aces;
+            this.nextId = nextId;
+        }
+
+        List<AccessControlEntry> getACEs() {
+            return aces;
+        }
+
+        NodeId getNextId() {
+            return nextId;
+        }
+
+        void setNextId(NodeId nextId) {
+            this.nextId = nextId;
+        }
+
+        boolean isEmpty() {
+            return aces.isEmpty();
+        }
+
+        @Override
+        public String toString() {
+            StringBuilder sb = new StringBuilder();
+            sb.append("size = ").append(aces.size()).append(", ");
+            sb.append("nextNodeId = ").append(nextId);
+            return sb.toString();
         }
     }
 }
