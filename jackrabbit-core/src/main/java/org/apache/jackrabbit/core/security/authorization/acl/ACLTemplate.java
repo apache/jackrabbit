@@ -49,6 +49,8 @@ import org.apache.jackrabbit.core.security.authorization.PrivilegeManagerImpl;
 import org.apache.jackrabbit.core.security.authorization.GlobPattern;
 import org.apache.jackrabbit.core.security.principal.PrincipalImpl;
 import org.apache.jackrabbit.core.security.principal.UnknownPrincipal;
+import org.apache.jackrabbit.core.value.InternalValue;
+import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.spi.commons.conversion.NameResolver;
 import org.slf4j.Logger;
@@ -167,10 +169,10 @@ class ACLTemplate extends AbstractACLTemplate {
                     princ = new PrincipalImpl(principalName);
                 }
 
-                Value[] privValues = aceNode.getProperty(P_PRIVILEGES).getValues();
-                Privilege[] privs = new Privilege[privValues.length];
+                InternalValue[] privValues = aceNode.getProperty(P_PRIVILEGES).internalGetValues();
+                Name[] privNames = new Name[privValues.length];
                 for (int i = 0; i < privValues.length; i++) {
-                    privs[i] = acMgr.privilegeFromName(privValues[i].getString());
+                    privNames[i] = privValues[i].getName();
                 }
 
                 Map<String,Value> restrictions = null;
@@ -178,9 +180,7 @@ class ACLTemplate extends AbstractACLTemplate {
                     restrictions = Collections.singletonMap(jcrRepGlob, aceNode.getProperty(P_GLOB).getValue());
                 }
                 // create a new ACEImpl (omitting validation check)
-                Entry ace = createEntry(
-                        princ,
-                        privs,
+                Entry ace = new Entry(princ, privilegeMgr.getBits(privNames),
                         NT_REP_GRANT_ACE.equals(((NodeTypeImpl) aceNode.getPrimaryNodeType()).getQName()),
                         restrictions);
                 // add the entry omitting any validation.
@@ -256,9 +256,8 @@ class ACLTemplate extends AbstractACLTemplate {
                         PrivilegeBits mergedBits = PrivilegeBits.getInstance(e.getPrivilegeBits());
                         mergedBits.add(entry.getPrivilegeBits());
                         
-                        Set<Privilege> mergedPrivs = privilegeMgr.getPrivileges(mergedBits);
                         // omit validation check.
-                        entry = createEntry(entry, mergedPrivs.toArray(new Privilege[mergedPrivs.size()]), entry.isAllow());
+                        entry = new Entry(entry, mergedBits, entry.isAllow());
                     } else {
                         complementEntry = e;
                     }
@@ -286,11 +285,8 @@ class ACLTemplate extends AbstractACLTemplate {
                     entries.remove(complementEntry);
 
                     // combine set of new builtin and custom privileges
-                    Set<Privilege> result = privilegeMgr.getPrivileges(diff);
                     // and create a new entry.
-                    Entry tmpl = createEntry(entry,
-                            result.toArray(new Privilege[result.size()]),
-                            !entry.isAllow());
+                    Entry tmpl = new Entry(entry, diff, !entry.isAllow());
                     entries.add(index, tmpl);
                 } /* else: does not need to be modified.*/
             }
@@ -433,9 +429,20 @@ class ACLTemplate extends AbstractACLTemplate {
 
         private final GlobPattern pattern;
 
+        private Entry(Principal principal, PrivilegeBits privilegeBits, boolean allow, Map<String,Value> restrictions)
+                throws RepositoryException {
+            super(principal, privilegeBits, allow, restrictions);
+            pattern = calculatePattern();
+        }
+
         private Entry(Principal principal, Privilege[] privileges, boolean allow, Map<String,Value> restrictions)
                 throws RepositoryException {
             super(principal, privileges, allow, restrictions);
+            pattern = calculatePattern();
+        }
+
+        private Entry(Entry base, PrivilegeBits newPrivilegeBits, boolean isAllow) throws RepositoryException {
+            super(base, newPrivilegeBits, isAllow);
             pattern = calculatePattern();
         }
 

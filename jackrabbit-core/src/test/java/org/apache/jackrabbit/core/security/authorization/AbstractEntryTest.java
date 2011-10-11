@@ -219,6 +219,90 @@ public abstract class AbstractEntryTest extends AbstractAccessControlTest {
         }
     }
 
+    public void testHashCode() throws RepositoryException, NotExecutableException  {
+
+        Map<AccessControlEntry, AccessControlEntry> equivalent = new HashMap<AccessControlEntry, AccessControlEntry>();
+        JackrabbitAccessControlEntry ace = createEntry(new String[] {Privilege.JCR_ALL}, true);
+        // create same entry again
+        equivalent.put(ace, createEntry(new String[] {Privilege.JCR_ALL}, true));
+        // create entry with declared aggregate privileges
+        Privilege[] declaredAllPrivs = acMgr.privilegeFromName(Privilege.JCR_ALL).getDeclaredAggregatePrivileges();
+        equivalent.put(ace, createEntry(testPrincipal, declaredAllPrivs, true));
+        // create entry with aggregate privileges
+        Privilege[] aggregateAllPrivs = acMgr.privilegeFromName(Privilege.JCR_ALL).getAggregatePrivileges();
+        equivalent.put(ace, createEntry(testPrincipal, aggregateAllPrivs, true));
+        // create entry with different privilege order
+        List<Privilege> reordered = new ArrayList<Privilege>(Arrays.asList(aggregateAllPrivs));
+        reordered.add(reordered.remove(0));
+        equivalent.put(createEntry(testPrincipal, reordered.toArray(new Privilege[reordered.size()]), true),
+                      createEntry(testPrincipal, aggregateAllPrivs, true));
+        // even if entries are build with aggregated or declared aggregate privileges
+        equivalent.put(createEntry(testPrincipal, declaredAllPrivs, true),
+                      createEntry(testPrincipal, aggregateAllPrivs, true));
+
+        for (AccessControlEntry entry : equivalent.keySet()) {
+            assertEquals(entry.hashCode(), equivalent.get(entry).hashCode());
+        }
+
+        // and the opposite:
+        List<JackrabbitAccessControlEntry> otherAces = new ArrayList<JackrabbitAccessControlEntry>();
+        try {
+            // ACE template with different principal
+            Principal princ = new Principal() {
+                public String getName() {
+                    return "a name";
+                }
+            };
+            Privilege[] privs = new Privilege[] {
+                    acMgr.privilegeFromName(Privilege.JCR_ALL)
+            };
+            otherAces.add(createEntry(princ, privs, true));
+        } catch (RepositoryException e) {
+        }
+        // ACE template with different privileges
+        try {
+            otherAces.add(createEntry(new String[] {Privilege.JCR_READ}, true));
+        } catch (RepositoryException e) {
+        }
+        // ACE template with different 'allow' flag
+        try {
+            otherAces.add(createEntry(new String[] {Privilege.JCR_ALL}, false));
+        } catch (RepositoryException e) {
+        }
+        // ACE template with different privileges and 'allows
+        try {
+            otherAces.add(createEntry(new String[] {PrivilegeRegistry.REP_WRITE}, false));
+        } catch (RepositoryException e) {
+        }
+        // other ace impl
+        final Privilege[] privs = new Privilege[] {
+                acMgr.privilegeFromName(Privilege.JCR_ALL)
+        };
+        JackrabbitAccessControlEntry pe = new JackrabbitAccessControlEntry() {
+            public boolean isAllow() {
+                return true;
+            }
+            public String[] getRestrictionNames() {
+                return new String[0];
+            }
+            public Value getRestriction(String restrictionName) {
+                return null;
+            }
+            public Principal getPrincipal() {
+                return testPrincipal;
+            }
+            public Privilege[] getPrivileges() {
+                return privs;
+            }
+        };
+        otherAces.add(pe);
+
+        for (JackrabbitAccessControlEntry otherAce : otherAces) {
+            assertFalse(ace.hashCode() == otherAce.hashCode());
+        }
+
+    }
+
     public void testNullPrincipal() throws RepositoryException {
         try {
             Privilege[] privs = new Privilege[] {

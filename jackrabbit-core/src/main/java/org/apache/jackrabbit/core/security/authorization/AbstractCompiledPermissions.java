@@ -119,7 +119,7 @@ public abstract class AbstractCompiledPermissions implements CompiledPermissions
     }
 
     /**
-     * @see CompiledPermissions#hasPrivileges(org.apache.jackrabbit.spi.Path,javax.jcr.security.Privilege...)
+     * @see CompiledPermissions#hasPrivileges(org.apache.jackrabbit.spi.Path, javax.jcr.security.Privilege[])
      */
     public boolean hasPrivileges(Path absPath, Privilege... privileges) throws RepositoryException {
         Result result = getResult(absPath);
@@ -167,8 +167,9 @@ public abstract class AbstractCompiledPermissions implements CompiledPermissions
         public Result(int allows, int denies, PrivilegeBits allowPrivileges, PrivilegeBits denyPrivileges) {
             this.allows = allows;
             this.denies = denies;
-            this.allowPrivileges = allowPrivileges;
-            this.denyPrivileges = denyPrivileges;
+            // make sure privilegebits are unmodifiable -> proper hashcode generation
+            this.allowPrivileges = allowPrivileges.unmodifiable();
+            this.denyPrivileges = denyPrivileges.unmodifiable();
         }
 
         public boolean grants(int permissions) {
