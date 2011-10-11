@@ -27,9 +27,11 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
+import java.util.Set;
 
 import javax.jcr.RepositoryException;
 import javax.sql.DataSource;
@@ -42,6 +44,11 @@ import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.id.PropertyId;
 import org.apache.jackrabbit.core.persistence.PMContext;
 import org.apache.jackrabbit.core.persistence.bundle.AbstractBundlePersistenceManager;
+import org.apache.jackrabbit.core.persistence.check.ConsistencyChecker;
+import org.apache.jackrabbit.core.persistence.check.ConsistencyReport;
+import org.apache.jackrabbit.core.persistence.check.ConsistencyReportImpl;
+import org.apache.jackrabbit.core.persistence.check.ReportItem;
+import org.apache.jackrabbit.core.persistence.check.ReportItemImpl;
 import org.apache.jackrabbit.core.persistence.util.BLOBStore;
 import org.apache.jackrabbit.core.persistence.util.BundleBinding;
 import org.apache.jackrabbit.core.persistence.util.ErrorHandling;
@@ -85,7 +92,7 @@ import org.slf4j.LoggerFactory;
  * </ul>
  */
 public class BundleDbPersistenceManager
-        extends AbstractBundlePersistenceManager implements DatabaseAware {
+        extends AbstractBundlePersistenceManager implements DatabaseAware, ConsistencyChecker {
 
     /** the default logger */
     private static Logger log = LoggerFactory.getLogger(BundleDbPersistenceManager.class);
@@ -700,6 +707,12 @@ public class BundleDbPersistenceManager
         return new DbBlobStore();
     }
 
+    private void addMessage(Set<ReportItem> reports, NodeId id, String message) {
+        if (reports != null) {
+            reports.add(new ReportItemImpl(id.toString(), message));
+        }
+    }
+
     /**
      * Checks a single bundle for inconsistencies, ie. inexistent child nodes
      * and inexistent parents.
@@ -711,7 +724,8 @@ public class BundleDbPersistenceManager
      * {@linkplain NodePropBundle bundles} here
      */
     protected void checkBundleConsistency(NodeId id, NodePropBundle bundle,
-                                          boolean fix, Collection<NodePropBundle> modifications) {
+                                          boolean fix, Collection<NodePropBundle> modifications,
+                                          Set<ReportItem> reports) {
         //log.info(name + ": checking bundle '" + id + "'");
 
         // skip all system nodes except root node
@@ -732,19 +746,24 @@ public class BundleDbPersistenceManager
             try {
                 // analyze child node bundles
                 NodePropBundle child = loadBundle(entry.getId());
+                String message = null;
                 if (child == null) {
-                    log.error(
-                            "NodeState '" + id + "' references inexistent child"
-                            + " '" + entry.getName() + "' with id "
-                            + "'" + entry.getId() + "'");
+                    message = "NodeState '" + id + "' references inexistent child" + " '"
+                            + entry.getName() + "' with id " + "'" + entry.getId() + "'";
+                    log.error(message);
                     missingChildren.add(entry);
                 } else {
                     NodeId cp = child.getParentId();
                     if (cp == null) {
-                        log.error("ChildNode has invalid parent uuid: <null>");
+                        message = "ChildNode has invalid parent uuid: <null>";
+                        log.error(message);
                     } else if (!cp.equals(id)) {
-                        log.error("ChildNode has invalid parent uuid: '" + cp + "' (instead of '" + id + "')");
+                        message = "ChildNode has invalid parent uuid: '" + cp + "' (instead of '" + id + "')";
+                        log.error(message);
                     }
+                }
+                if (message != null) {
+                    addMessage(reports, id, message);
                 }
             } catch (ItemStateException e) {
                 // problem already logged (loadBundle called with logDetailedErrors=true)
@@ -764,7 +783,9 @@ public class BundleDbPersistenceManager
             // skip root nodes (that point to itself)
             if (parentId != null && !id.toString().endsWith("babecafebabe")) {
                 if (loadBundle(parentId) == null) {
-                    log.error("NodeState '" + id + "' references inexistent parent uuid '" + parentId + "'");
+                    String message = "NodeState '" + id + "' references inexistent parent uuid '" + parentId + "'";
+                    log.error(message);
+                    addMessage(reports, id, message);
                 }
             	NodePropBundle parentBundle = loadBundle(parentId);
             	Iterator<NodePropBundle.ChildNodeEntry> childNodeIter = parentBundle.getChildNodeEntries().iterator();
@@ -776,29 +797,54 @@ public class BundleDbPersistenceManager
                     	break;
                     }
             	}
-            	if (!found) {
-            		log.error("NodeState '" + id + "' is not referenced by its parent node '" + parentId + "'");
-            		int l = (int) System.currentTimeMillis();
-            		int r = new Random().nextInt();
-            		int n = l + r; 
-            		String nodeName = Integer.toHexString(n);
-            		parentBundle.addChildNodeEntry(NameFactoryImpl.getInstance().create("{}" + nodeName), id);
-            		log.info("NodeState '" + id + "' adds itself to its parent node '" + parentId + "' with a new name '" + nodeName+ "'");
-            		modifications.add(parentBundle);
-            	}
+                if (!found) {
+                    String message = "NodeState '" + id + "' is not referenced by its parent node '" + parentId + "'";
+                    log.error(message);
+                    addMessage(reports, id, message);
+
+                    int l = (int) System.currentTimeMillis();
+                    int r = new Random().nextInt();
+                    int n = l + r;
+                    String nodeName = Integer.toHexString(n);
+                    parentBundle.addChildNodeEntry(NameFactoryImpl
+                            .getInstance().create("{}" + nodeName), id);
+                    log.info("NodeState '" + id + "' adds itself to its parent node '" + parentId + "' with a new name '" + nodeName + "'");
+                    modifications.add(parentBundle);
+                }
             }
         } catch (ItemStateException e) {
             log.error("Error reading node '" + parentId + "' (parent of '" + id + "'): " + e);
         }
     }
 
+    public ConsistencyReport check(String[] uuids, boolean recursive,
+            boolean fix) throws RepositoryException {
+
+        Set<ReportItem> reports = new HashSet<ReportItem>();
+
+        long tstart = System.currentTimeMillis();
+        int total = internalCheckConsistency(uuids, recursive, fix, reports);
+        long elapsed = System.currentTimeMillis() - tstart;
+
+        return new ConsistencyReportImpl(total, elapsed, reports);
+    }
+
     public void checkConsistency(String[] uuids, boolean recursive, boolean fix) {
+        try {
+            internalCheckConsistency(uuids, recursive, fix, null);
+        }
+        catch (RepositoryException ex) {
+            log.error("While running consistency check.", ex);
+        }
+    }
+    
+    private int internalCheckConsistency(String[] uuids, boolean recursive, boolean fix, Set<ReportItem> reports) throws RepositoryException {
         int count = 0;
         int total = 0;
         Collection<NodePropBundle> modifications = new ArrayList<NodePropBundle>();        
         
         if (uuids == null) {
-            // get all node bundles in the database with a single sql statement,
+            // get all node bundles in the database with a single SQL statement,
             // which is (probably) faster than loading each bundle and traversing the tree              
             ResultSet rs = null;
             try {               
@@ -806,8 +852,9 @@ public class BundleDbPersistenceManager
                 rs = conHelper.exec(sql, new Object[0], false, 0);
                 try {
                     if (!rs.next()) {
-                        log.error("Could not retrieve total number of bundles. empty result set.");
-                        return;
+                        String message = "Could not retrieve total number of bundles. empty result set.";
+                        log.error(message);
+                        throw new RepositoryException(message);
                     }
                     total = rs.getInt(1);
                 } finally {
@@ -838,7 +885,7 @@ public class BundleDbPersistenceManager
                         }
                         // parse and check bundle
                         NodePropBundle bundle = readBundle(id, bRs, 1);
-                        checkBundleConsistency(id, bundle, fix, modifications);
+                        checkBundleConsistency(id, bundle, fix, modifications, reports);
                     } catch (SQLException e) {
                         log.error("Unable to parse bundle " + id, e);
                     } finally {
@@ -887,7 +934,7 @@ public class BundleDbPersistenceManager
                         continue;
                     }
 
-                    checkBundleConsistency(id, bundle, fix, modifications);
+                    checkBundleConsistency(id, bundle, fix, modifications, reports);
 
                     if (recursive) {
                         for (NodePropBundle.ChildNodeEntry entry : bundle.getChildNodeEntries()) {
@@ -923,6 +970,8 @@ public class BundleDbPersistenceManager
         }
 
         log.info(name + ": checked " + count + "/" + total + " bundles.");
+
+        return total;
     }
 
     /**
