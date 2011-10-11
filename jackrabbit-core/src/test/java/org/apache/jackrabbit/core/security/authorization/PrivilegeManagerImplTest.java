@@ -118,7 +118,7 @@ public class PrivilegeManagerImplTest extends PrivilegeManagerTest {
 
         PrivilegeBits bits = getPrivilegeManagerImpl().getBits(privs);
         assertFalse(bits.isEmpty());
-        PrivilegeBits other = getPrivilegeManagerImpl().getBits(p1);
+        PrivilegeBits other = PrivilegeBits.getInstance(getPrivilegeManagerImpl().getBits(p1));
         other.add(getPrivilegeManagerImpl().getBits(p2));
         assertEquals(bits, other);
     }

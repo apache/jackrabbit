@@ -486,7 +486,6 @@ public class PrivilegeBitsTest extends JUnitTest {
         for (long l : LONGS) {
             pb = PrivilegeBits.getInstance(l);
             assertEquals(pb, PrivilegeBits.getInstance(l));
-            assertNotSame(pb, PrivilegeBits.getInstance(l));
             assertSame(pb, pb.unmodifiable());
 
             assertEquals(pb, PrivilegeBits.getInstance(pb));

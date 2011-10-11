@@ -191,6 +191,20 @@ public final class PrivilegeManagerImpl implements PrivilegeManager, PrivilegeRe
     }
 
     /**
+     * @param privilegeNames An array of privilege names.
+     * @return The bits of the privileges contained in the specified
+     * array.
+     * @throws AccessControlException If the specified array is null or if it
+     * contains the name of an unregistered privilege.
+     */
+    public PrivilegeBits getBits(Name... privilegeNames) throws RepositoryException {
+        if (privilegeNames == null) {
+            throw new AccessControlException("Privilege name array is null.");
+        }
+        return registry.getBits(privilegeNames);
+    }
+
+    /**
      * Returns an array of registered <code>Privilege</code>s. If the specified
      * <code>bits</code> represent a single registered privilege the returned array
      * contains a single element. Otherwise the returned array contains the

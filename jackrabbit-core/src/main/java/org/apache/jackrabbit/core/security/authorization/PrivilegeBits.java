@@ -17,6 +17,8 @@
 package org.apache.jackrabbit.core.security.authorization;
 
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * <code>PrivilegeBits</code> 
@@ -26,6 +28,11 @@ public class PrivilegeBits {
     public static final PrivilegeBits EMPTY = new PrivilegeBits(UnmodifiableData.EMPTY);
 
     private static final long READ = 1; // PrivilegeRegistry.READ
+
+    private static final Map<Long, PrivilegeBits> BUILT_IN = new HashMap<Long, PrivilegeBits>();
+    static {
+        BUILT_IN.put(EMPTY.longValue(), EMPTY);
+    }
 
     private final Data d;
 
@@ -60,26 +67,17 @@ public class PrivilegeBits {
         if (this == EMPTY) {
             return EMPTY;
         } else {
-            return new PrivilegeBits(d.next());
-        }
-    }
-        
-    /**
-     * Returns an unmodifiable instance.
-     *
-     * @return an unmodifiable <code>PrivilegeBits</code> instance.
-     */
-    PrivilegeBits unmodifiable() {
-        if (d instanceof ModifiableData) {
-            return (d.isSimple()) ? getInstance(d.longValue()) : getInstance(d.longValues());
-        } else {
-            return this;
+            PrivilegeBits pb = new PrivilegeBits(d.next());
+            if (pb.d.isSimple()) {
+                BUILT_IN.put(pb.longValue(), pb);
+            }
+            return pb;
         }
     }
 
     /**
-     * Package private method used by <code>PrivilegeRegistry</code> to create
-     * an instance of privilege bits for the specified long value.
+     * Package private method used by <code>PrivilegeRegistry</code> to get or
+     * create an instance of privilege bits for the specified long value.
      *
      * @param bits
      * @return an instance of <code>PrivilegeBits</code>
@@ -90,7 +88,12 @@ public class PrivilegeBits {
         } else if (bits < PrivilegeRegistry.NO_PRIVILEGE) {
             throw new IllegalArgumentException();
         } else {
-            return new PrivilegeBits(new UnmodifiableData(bits));
+            PrivilegeBits pb = BUILT_IN.get(bits);
+            if (pb == null) {
+                pb = new PrivilegeBits(new UnmodifiableData(bits));
+                BUILT_IN.put(bits, pb);
+            }
+            return pb;
         }
     }
 
@@ -138,6 +141,28 @@ public class PrivilegeBits {
     }
 
     /**
+     * Returns an unmodifiable instance.
+     *
+     * @return an unmodifiable <code>PrivilegeBits</code> instance.
+     */
+    public PrivilegeBits unmodifiable() {
+        if (d instanceof ModifiableData) {
+            return (d.isSimple()) ? getInstance(d.longValue()) : getInstance(d.longValues());
+        } else {
+            return this;
+        }
+    }
+
+    /**
+     * Returns <code>true</code> if this privilege bits instance can be altered.
+     *
+     * @return true if this privilege bits instance can be altered.
+     */
+    public boolean isModifiable() {
+        return (d instanceof ModifiableData);
+    }
+
+    /**
      * Returns <code>true</code> if this instance includes the jcr:read
      * privilege. Shortcut for calling {@link PrivilegeBits#includes(PrivilegeBits)}
      * where the other bits represented the jcr:read privilege.
@@ -148,10 +173,8 @@ public class PrivilegeBits {
     public boolean includesRead() {
         if (this == EMPTY) {
             return false;
-        } else if (d.isSimple()) {
-            return (d.longValue() & READ) == READ;
         } else {
-            return (d.longValues()[0] & READ) == READ;
+            return d.includesRead();
         }
     }
 
@@ -261,6 +284,19 @@ public class PrivilegeBits {
 
         abstract boolean includes(Data other);
 
+        abstract boolean includesRead();
+
+        boolean equalData(Data d) {
+            if (isSimple() != d.isSimple()) {
+                return false;
+            }
+            if (isSimple()) {
+                return longValue() == d.longValue();
+            } else {
+                return Arrays.equals(longValues(), d.longValues());
+            }
+        }
+
         static boolean includes(long bits, long otherBits) {
             return (bits | ~otherBits) == -1;
         }
@@ -279,26 +315,6 @@ public class PrivilegeBits {
                 return false;
             }
         }
-
-        //---------------------------------------------------------< Object >---
-        @Override
-        public boolean equals(Object o) {
-            if (o == this) {
-                return true;
-            } else if (o instanceof Data) {
-                Data d = (Data) o;
-                if (isSimple() != d.isSimple()) {
-                    return false;
-                }
-                if (isSimple()) {
-                    return longValue() == d.longValue();
-                } else {
-                    return Arrays.equals(longValues(), d.longValues());
-                }
-            } else {
-                return false;
-            }
-        }
     }
 
     /**
@@ -313,17 +329,20 @@ public class PrivilegeBits {
         private final long bits;
         private final long[] bitsArr;
         private final boolean isSimple;
+        private final boolean includesRead;
 
         private UnmodifiableData(long bits) {
             this.bits = bits;
             bitsArr = new long[] {bits};
             isSimple = true;
+            includesRead  = (bits & READ) == READ;
         }
 
         private UnmodifiableData(long[] bitsArr) {
             bits = PrivilegeRegistry.NO_PRIVILEGE;            
             this.bitsArr = bitsArr;
             isSimple = false;
+            includesRead = (bitsArr[0] & READ) == READ;
         }
 
         @Override
@@ -381,10 +400,36 @@ public class PrivilegeBits {
             }
         }
 
+        @Override
+        boolean includesRead() {
+            return includesRead;
+        }
+
         //---------------------------------------------------------< Object >---
         @Override
         public int hashCode() {
-            return (isSimple) ? new Long(bits).hashCode() : bitsArr.hashCode();
+            return (isSimple) ? new Long(bits).hashCode() : Arrays.hashCode(bitsArr);
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (o == this) {
+                return true;
+            } else if (o instanceof UnmodifiableData) {
+                UnmodifiableData d = (UnmodifiableData) o;
+                if (isSimple != d.isSimple) {
+                    return false;
+                }
+                if (isSimple) {
+                    return bits == d.bits;
+                } else {
+                    return Arrays.equals(bitsArr, d.bitsArr);
+                }
+            } else if (o instanceof ModifiableData) {
+                return equalData((Data) o);
+            } else {
+                return false;
+            }
         }
     }
 
@@ -449,6 +494,11 @@ public class PrivilegeBits {
             } else {
                 return includes(bits, other.longValues());
             }
+        }
+
+        @Override
+        boolean includesRead() {
+            return (bits[0] & READ) == READ;
         }
 
         /**
@@ -542,6 +592,20 @@ public class PrivilegeBits {
         public int hashCode() {
             // NOTE: mutable object. hashCode not implemented.
             return 0;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (o == this) {
+                return true;
+            } else if (o instanceof ModifiableData) {
+                ModifiableData d = (ModifiableData) o;
+                return Arrays.equals(bits, d.bits);
+            } else if (o instanceof UnmodifiableData) {
+                return equalData((Data) o);
+            } else {
+                return false;
+            }
         }
     }
 }

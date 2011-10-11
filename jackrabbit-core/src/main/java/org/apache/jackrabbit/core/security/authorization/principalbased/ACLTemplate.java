@@ -23,7 +23,9 @@ import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.security.authorization.AccessControlEntryImpl;
 import org.apache.jackrabbit.core.security.authorization.AbstractACLTemplate;
 import org.apache.jackrabbit.core.security.authorization.GlobPattern;
+import org.apache.jackrabbit.core.security.authorization.PrivilegeBits;
 import org.apache.jackrabbit.core.security.authorization.PrivilegeManagerImpl;
+import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.spi.commons.conversion.NameResolver;
@@ -114,10 +116,10 @@ class ACLTemplate extends AbstractACLTemplate {
                     // the isAllow flag:
                     boolean isAllow = aceNode.isNodeType(NT_REP_GRANT_ACE);
                     // the privileges
-                    Value[] pValues = aceNode.getProperty(P_PRIVILEGES).getValues();
-                    Privilege[] privileges = new Privilege[pValues.length];
+                    InternalValue[] pValues = aceNode.getProperty(P_PRIVILEGES).internalGetValues();
+                    Name[] privilegeNames = new Name[pValues.length];
                     for (int i = 0; i < pValues.length; i++) {
-                        privileges[i] = acMgr.privilegeFromName(pValues[i].getString());
+                        privilegeNames[i] = pValues[i].getName();
                     }
                     // the restrictions:
                     Map<String, Value> restrictions = new HashMap<String, Value>(2);
@@ -129,7 +131,7 @@ class ACLTemplate extends AbstractACLTemplate {
                         restrictions.put(prop.getName(), prop.getValue());
                     }
                     // finally add the entry
-                    AccessControlEntry entry = createEntry(principal, privileges, isAllow, restrictions);
+                    AccessControlEntry entry = new Entry(principal, privilegeMgr.getBits(privilegeNames), isAllow, restrictions);
                     entries.add(entry);
                 } else {
                     log.warn("ACE must be of nodetype rep:ACE -> ignored child-node " + aceNode.getPath());
@@ -313,6 +315,21 @@ class ACLTemplate extends AbstractACLTemplate {
                       Map<String, Value> restrictions)
                 throws AccessControlException, RepositoryException {
             super(principal, privileges, allow, restrictions);
+
+            Map<Name, Value> rstr = getRestrictions();
+            nodePath = rstr.get(P_NODE_PATH).getString();
+            Value glob = rstr.get(P_GLOB);
+            if (glob != null) {
+                pattern = GlobPattern.create(nodePath, glob.getString());
+            } else {
+                pattern = GlobPattern.create(nodePath);
+            }
+        }
+
+        private Entry(Principal principal, PrivilegeBits privilegeBits, boolean allow,
+                      Map<String, Value> restrictions)
+                throws AccessControlException, RepositoryException {
+            super(principal, privilegeBits, allow, restrictions);
 
             Map<Name, Value> rstr = getRestrictions();
             nodePath = rstr.get(P_NODE_PATH).getString();

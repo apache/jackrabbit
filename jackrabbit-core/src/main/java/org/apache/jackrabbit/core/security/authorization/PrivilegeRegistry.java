@@ -600,13 +600,60 @@ public final class PrivilegeRegistry implements PrivilegeEventListener {
      * @return privilege bits.
      */
     PrivilegeBits getBits(PrivilegeDefinition... definitions) {
-        PrivilegeBits bts = PrivilegeBits.getInstance();
-        for (PrivilegeDefinition d : definitions) {
-            if (d instanceof Definition) {
-                bts.add(((Definition) d).bits);
-            }
+        switch (definitions.length) {
+            case 0:
+                return PrivilegeBits.EMPTY;
+
+            case 1:
+                if (definitions[0] instanceof Definition) {
+                    return ((Definition) definitions[0]).bits;
+                } else {
+                    return PrivilegeBits.EMPTY;
+                }
+
+            default:
+                PrivilegeBits bts = PrivilegeBits.getInstance();
+                for (PrivilegeDefinition d : definitions) {
+                    if (d instanceof Definition) {
+                        bts.add(((Definition) d).bits);
+                    }
+                }
+                return bts;
         }
-        return bts;
+    }
+
+    /**
+     * Return the privilege bits for the specified privilege names.
+     *
+     * @param privilegeNames
+     * @return privilege bits.
+     */
+    PrivilegeBits getBits(Name... privilegeNames) {
+        switch (privilegeNames.length) {
+            case 0:
+                return PrivilegeBits.EMPTY;
+
+            case 1:
+                return getBits(privilegeNames[0]);
+
+            default:
+                PrivilegeBits bts = PrivilegeBits.getInstance();
+                for (Name privName : privilegeNames) {
+                    bts.add(getBits(privName));
+                }
+                return bts;
+        }
+    }
+
+    /**
+     * Return the privilege bits for the specified privilege name.
+     *
+     * @param privilegeName
+     * @return privilege bits.
+     */
+    PrivilegeBits getBits(Name privilegeName) {
+        Definition def = registeredPrivileges.get(privilegeName);
+        return (def == null) ? PrivilegeBits.EMPTY : def.bits;
     }
 
     /**
@@ -677,7 +724,7 @@ public final class PrivilegeRegistry implements PrivilegeEventListener {
                 allbits.add(d.bits);
             }
 
-            Definition newAll = new Definition(NameConstants.JCR_ALL, false, allAggrNames, allbits.unmodifiable(), false);
+            Definition newAll = new Definition(NameConstants.JCR_ALL, false, allAggrNames, allbits, false);
             registeredPrivileges.put(NameConstants.JCR_ALL, newAll);
             bitsToNames.put(newAll.bits, Collections.singleton(NameConstants.JCR_ALL));
         }
@@ -963,7 +1010,7 @@ public final class PrivilegeRegistry implements PrivilegeEventListener {
             if (bits == null || bits.isEmpty()) {
                 throw new IllegalArgumentException("Failed to build bit representation of PrivilegeDefinition.");
             } else {
-                this.bits = bits;
+                this.bits = bits.unmodifiable();
             }
             this.isCustom = isCustom;
         }

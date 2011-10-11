@@ -31,6 +31,7 @@ import java.security.Principal;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Simple, immutable implementation of the
@@ -40,9 +41,9 @@ import java.util.Map;
 public abstract class AccessControlEntryImpl implements JackrabbitAccessControlEntry {
 
     /**
-     * All privileges contained in this entry
+     * All privileges contained in this entry.
      */
-    private final Privilege[] privileges;
+    private Privilege[] privileges;
 
     /**
      * PrivilegeBits calculated from built-in privileges
@@ -76,19 +77,6 @@ public abstract class AccessControlEntryImpl implements JackrabbitAccessControlE
      *
      * @param principal Principal for this access control entry.
      * @param privileges Privileges for this access control entry.
-     * @throws AccessControlException if either principal or privileges are invalid.
-     * @throws RepositoryException if another error occurs.
-     */
-    protected AccessControlEntryImpl(Principal principal, Privilege[] privileges)
-            throws AccessControlException, RepositoryException {
-        this(principal, privileges, true, null);
-    }
-
-    /**
-     * Construct an access control entry for the given principal and privileges.
-     *
-     * @param principal Principal for this access control entry.
-     * @param privileges Privileges for this access control entry.
      * @param isAllow <code>true</code> if this ACE grants the specified
      * privileges to the specified principal; <code>false</code> otherwise.
      * @param restrictions A map of restriction name (String) to restriction
@@ -100,8 +88,8 @@ public abstract class AccessControlEntryImpl implements JackrabbitAccessControlE
     protected AccessControlEntryImpl(Principal principal, Privilege[] privileges,
                                      boolean isAllow, Map<String, Value> restrictions)
             throws AccessControlException, RepositoryException {
-        if (principal == null) {
-            throw new IllegalArgumentException();
+        if (principal == null || privileges == null) {
+            throw new AccessControlException();
         }
         // make sure no abstract privileges are passed.
         for (Privilege privilege : privileges) {
@@ -111,7 +99,7 @@ public abstract class AccessControlEntryImpl implements JackrabbitAccessControlE
         }
         this.principal = principal;
         this.privileges = privileges;
-        this.privilegeBits = getPrivilegeManager().getBits(privileges);
+        this.privilegeBits = getPrivilegeManager().getBits(privileges).unmodifiable();
         this.allow = isAllow;
 
         if (restrictions == null) {
@@ -122,6 +110,60 @@ public abstract class AccessControlEntryImpl implements JackrabbitAccessControlE
             for (String name : restrictions.keySet()) {
                 Value value = ValueHelper.copy(restrictions.get(name), getValueFactory());
                 this.restrictions.put(getResolver().getQName(name), value);
+            }
+        }
+    }
+
+    /**
+     * Construct an access control entry for the given principal and privileges.
+     *
+     * @param principal Principal for this access control entry.
+     * @param privilegesBits Privileges for this access control entry.
+     * @param isAllow <code>true</code> if this ACE grants the specified
+     * privileges to the specified principal; <code>false</code> otherwise.
+     * @param restrictions A map of restriction name (String) to restriction
+     * (Value). See {@link org.apache.jackrabbit.api.security.JackrabbitAccessControlList#getRestrictionNames()}
+     * and {@link org.apache.jackrabbit.api.security.JackrabbitAccessControlList#getRestrictionType(String)}.
+     * @throws RepositoryException if another error occurs.
+     */
+    protected AccessControlEntryImpl(Principal principal, PrivilegeBits privilegesBits,
+                                     boolean isAllow, Map<String, Value> restrictions)
+            throws RepositoryException {
+        if (principal == null || privilegesBits == null) {
+            throw new IllegalArgumentException();
+        }
+        this.principal = principal;
+        this.privilegeBits = privilegesBits.unmodifiable();
+        this.allow = isAllow;
+
+        if (restrictions == null) {
+            this.restrictions = Collections.emptyMap();
+        } else {
+            this.restrictions = new HashMap<Name, Value>(restrictions.size());
+            // validate the passed restrictions and fill the map
+            for (String name : restrictions.keySet()) {
+                Value value = ValueHelper.copy(restrictions.get(name), getValueFactory());
+                this.restrictions.put(getResolver().getQName(name), value);
+            }
+        }
+    }
+
+    /**
+     *
+     * @param base
+     * @param privilegeBits
+     * @param isAllow
+     * @throws AccessControlException
+     */
+    protected AccessControlEntryImpl(AccessControlEntryImpl base, PrivilegeBits privilegeBits, boolean isAllow)
+            throws AccessControlException, RepositoryException {
+        this(base.principal, privilegeBits, isAllow, (base.restrictions.isEmpty()) ? null : Collections.<String, Value>emptyMap());
+
+        if (!base.restrictions.isEmpty()) {
+            // validate the passed restrictions and fill the map
+            for (Name name : base.restrictions.keySet()) {
+                Value value = ValueHelper.copy(base.restrictions.get(name), getValueFactory());
+                this.restrictions.put(name, value);
             }
         }
     }
@@ -203,9 +245,7 @@ public abstract class AccessControlEntryImpl implements JackrabbitAccessControlE
     protected int buildHashCode() {
         int h = 17;
         h = 37 * h + principal.getName().hashCode();
-        for (Privilege p : privileges) {
-            h = 37 * h + p.hashCode();
-        }
+        h = 37 * h + privilegeBits.hashCode();
         h = 37 * h + Boolean.valueOf(allow).hashCode();
         h = 37 * h + restrictions.hashCode();
         return h;
@@ -223,6 +263,10 @@ public abstract class AccessControlEntryImpl implements JackrabbitAccessControlE
      * @see javax.jcr.security.AccessControlEntry#getPrivileges()
      */
     public Privilege[] getPrivileges() {
+        if (privileges == null) {
+            Set<Privilege> ps = getPrivilegeManager().getPrivileges(privilegeBits);
+            privileges = ps.toArray(new Privilege[ps.size()]);
+        }
         return privileges;
     }
 

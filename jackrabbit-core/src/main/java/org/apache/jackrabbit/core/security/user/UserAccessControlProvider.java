@@ -38,6 +38,7 @@ import org.apache.jackrabbit.core.security.authorization.PrivilegeBits;
 import org.apache.jackrabbit.core.security.authorization.PrivilegeManagerImpl;
 import org.apache.jackrabbit.core.security.authorization.PrivilegeRegistry;
 import org.apache.jackrabbit.core.security.principal.PrincipalImpl;
+import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.util.Text;
 import org.slf4j.Logger;
@@ -378,11 +379,19 @@ public class UserAccessControlProvider extends AbstractAccessControlProvider
 
         private PrivilegeBits getPrivilegeBits(String... privNames) throws RepositoryException {
             PrivilegeManagerImpl impl = getPrivilegeManagerImpl();
-            Privilege[] privs = new Privilege[privNames.length];
+            Name[] names = new Name[privNames.length];
             for (int i = 0; i < privNames.length; i++) {
-                privs[i] = impl.getPrivilege(privNames[i]);
+                names[i] = session.getQName(privNames[i]);
             }
-            return impl.getBits(privs);
+            return impl.getBits(names);
+        }
+
+        private PrivilegeBits assertModifiable(PrivilegeBits bits) {
+            if (bits.isModifiable()) {
+                return bits;
+            } else {
+                return PrivilegeBits.getInstance(bits);
+            }
         }
 
         //------------------------------------< AbstractCompiledPermissions >---
@@ -440,6 +449,7 @@ public class UserAccessControlProvider extends AbstractAccessControlProvider
                         if (calcPrivs) {
                             // grant WRITE privilege
                             // note: ac-read/modification is not included
+                            privs = assertModifiable(privs);
                             privs.add(getPrivilegeBits(PrivilegeRegistry.REP_WRITE));
                         }
                     }
@@ -452,6 +462,7 @@ public class UserAccessControlProvider extends AbstractAccessControlProvider
                         // user can only read && write his own props
                         allows |= (Permission.SET_PROPERTY | Permission.REMOVE_PROPERTY);
                         if (calcPrivs) {
+                            privs = assertModifiable(privs);
                             privs.add(getPrivilegeBits(Privilege.JCR_MODIFY_PROPERTIES));
                         }
                     } else if (isUserAdmin) {
@@ -459,6 +470,7 @@ public class UserAccessControlProvider extends AbstractAccessControlProvider
                         if (calcPrivs) {
                             // grant WRITE privilege
                             // note: ac-read/modification is not included
+                            privs = assertModifiable(privs);
                             privs.add(getPrivilegeBits(PrivilegeRegistry.REP_WRITE));
                         }
                     } // else: normal user that isn't allowed to modify another user.
@@ -478,12 +490,14 @@ public class UserAccessControlProvider extends AbstractAccessControlProvider
                             // no remove perm on group-admin node
                             allows |= (Permission.ADD_NODE | Permission.SET_PROPERTY | Permission.REMOVE_PROPERTY | Permission.NODE_TYPE_MNGMT);
                             if (calcPrivs) {
+                                privs = assertModifiable(privs);
                                 privs.add(getPrivilegeBits(Privilege.JCR_ADD_CHILD_NODES, Privilege.JCR_MODIFY_PROPERTIES, Privilege.JCR_NODE_TYPE_MANAGEMENT));
                             }
                         } else {
                             // complete write
                             allows |= (Permission.ADD_NODE | Permission.REMOVE_NODE | Permission.SET_PROPERTY | Permission.REMOVE_PROPERTY | Permission.NODE_TYPE_MNGMT);
                             if (calcPrivs) {
+                                privs = assertModifiable(privs);
                                 privs.add(getPrivilegeBits(PrivilegeRegistry.REP_WRITE));
                             }
                         }
