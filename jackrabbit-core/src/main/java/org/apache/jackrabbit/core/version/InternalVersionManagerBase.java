@@ -546,12 +546,13 @@ abstract class InternalVersionManagerBase implements InternalVersionManager {
         NodeStateEx n = parent;
         for (int i = 0; i < 3; i++) {
             Name name = getName(uuid.substring(i * 2, i * 2 + 2));
-            if (n.hasNode(name)) {
-                n = n.getNode(name, 1);
+            NodeStateEx childn = n.getNode(name, 1);
+            if (childn != null) {
+                n = childn;
             } else if (interNT != null) {
-                n.addNode(name, interNT, null, false);
+                childn = n.addNode(name, interNT, null, false);
                 n.store();
-                n = n.getNode(name, 1);
+                n = childn;
             } else {
                 return null;
             }
