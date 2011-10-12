@@ -314,7 +314,7 @@ public class DavPropertyTest extends AbstractSPITest implements ItemResourceCons
          */
         assertPropertyNames(expected, set);
 
-        DavPropertyNameSet all = doPropFindAll(uri.toString());
+        DavPropertyNameSet all = doPropFindAll(uri);
         expected.remove(DeltaVConstants.COMMENT);
         expected.remove(DeltaVConstants.CREATOR_DISPLAYNAME);
         expected.remove(DeltaVConstants.SUPPORTED_METHOD_SET);
@@ -355,7 +355,7 @@ public class DavPropertyTest extends AbstractSPITest implements ItemResourceCons
         props.add(ObservationConstants.SUBSCRIPTIONDISCOVERY);
         props.add(JCR_DEFINITION);
         props.add(JCR_LENGTH);
-        DavPropertyNameSet result = doPropFindByProp(uri.toString(), props);
+        DavPropertyNameSet result = doPropFindByProp(uri, props);
         assertPropertyNames(props, result);
     }
 
@@ -397,7 +397,7 @@ public class DavPropertyTest extends AbstractSPITest implements ItemResourceCons
          */
         assertPropertyNames(expected, set);
 
-        DavPropertyNameSet all = doPropFindAll(uri.toString());
+        DavPropertyNameSet all = doPropFindAll(uri);
         expected.remove(DeltaVConstants.COMMENT);
         expected.remove(DeltaVConstants.CREATOR_DISPLAYNAME);
         expected.remove(DeltaVConstants.SUPPORTED_METHOD_SET);
@@ -438,7 +438,7 @@ public class DavPropertyTest extends AbstractSPITest implements ItemResourceCons
         props.add(ObservationConstants.SUBSCRIPTIONDISCOVERY);
         props.add(JCR_DEFINITION);
         props.add(JCR_LENGTHS);
-        DavPropertyNameSet result = doPropFindByProp(uri.toString(), props);
+        DavPropertyNameSet result = doPropFindByProp(uri, props);
         assertPropertyNames(props, result);
     }
 
@@ -482,7 +482,7 @@ public class DavPropertyTest extends AbstractSPITest implements ItemResourceCons
         */
         assertPropertyNames(expected, set);
 
-        DavPropertyNameSet all = doPropFindAll(uri.toString());
+        DavPropertyNameSet all = doPropFindAll(uri);
         expected.remove(DeltaVConstants.COMMENT);
         expected.remove(DeltaVConstants.CREATOR_DISPLAYNAME);
         expected.remove(DeltaVConstants.SUPPORTED_METHOD_SET);
@@ -528,7 +528,7 @@ public class DavPropertyTest extends AbstractSPITest implements ItemResourceCons
         props.add(JCR_INDEX);
         props.add(JCR_REFERENCES);
         props.add(JCR_WEAK_REFERENCES);
-        DavPropertyNameSet result = doPropFindByProp(uri.toString(), props);
+        DavPropertyNameSet result = doPropFindByProp(uri, props);
         assertPropertyNames(props, result);
     }
 
@@ -574,7 +574,7 @@ public class DavPropertyTest extends AbstractSPITest implements ItemResourceCons
         */
         assertPropertyNames(expected, set);
 
-        DavPropertyNameSet all = doPropFindAll(uri.toString());
+        DavPropertyNameSet all = doPropFindAll(uri);
         expected.remove(DeltaVConstants.COMMENT);
         expected.remove(DeltaVConstants.CREATOR_DISPLAYNAME);
         expected.remove(DeltaVConstants.SUPPORTED_METHOD_SET);
@@ -621,7 +621,7 @@ public class DavPropertyTest extends AbstractSPITest implements ItemResourceCons
         props.add(JCR_INDEX);
         props.add(JCR_REFERENCES);
         props.add(JCR_WEAK_REFERENCES);
-        DavPropertyNameSet result = doPropFindByProp(uri.toString(), props);
+        DavPropertyNameSet result = doPropFindByProp(uri, props);
         assertPropertyNames(props, result);
     }
 
@@ -674,7 +674,7 @@ public class DavPropertyTest extends AbstractSPITest implements ItemResourceCons
         */
         assertPropertyNames(expected, set);
 
-        DavPropertyNameSet all = doPropFindAll(uri.toString());
+        DavPropertyNameSet all = doPropFindAll(uri);
         expected.remove(DeltaVConstants.COMMENT);
         expected.remove(DeltaVConstants.CREATOR_DISPLAYNAME);
         expected.remove(DeltaVConstants.SUPPORTED_METHOD_SET);
@@ -723,7 +723,7 @@ public class DavPropertyTest extends AbstractSPITest implements ItemResourceCons
         props.add(JCR_REFERENCES);
         props.add(JCR_WEAK_REFERENCES);
         props.add(JCR_UUID);
-        DavPropertyNameSet result = doPropFindByProp(uri.toString(), props);
+        DavPropertyNameSet result = doPropFindByProp(uri, props);
         assertPropertyNames(props, result);
     }
 
@@ -794,7 +794,7 @@ public class DavPropertyTest extends AbstractSPITest implements ItemResourceCons
         */
         assertPropertyNames(expected, set);
 
-        DavPropertyNameSet all = doPropFindAll(uri.toString());
+        DavPropertyNameSet all = doPropFindAll(uri);
         expected.remove(DeltaVConstants.COMMENT);
         expected.remove(DeltaVConstants.CREATOR_DISPLAYNAME);
         expected.remove(DeltaVConstants.SUPPORTED_METHOD_SET);
@@ -841,7 +841,7 @@ public class DavPropertyTest extends AbstractSPITest implements ItemResourceCons
         props.add(JCR_REFERENCES);
         props.add(JCR_WEAK_REFERENCES);
         props.add(JCR_PRIMARYITEM);
-        DavPropertyNameSet result = doPropFindByProp(uri.toString(), props);
+        DavPropertyNameSet result = doPropFindByProp(uri, props);
         assertPropertyNames(props, result);
     }
 
@@ -901,7 +901,7 @@ public class DavPropertyTest extends AbstractSPITest implements ItemResourceCons
         */
         assertPropertyNames(expected, set);
 
-        DavPropertyNameSet all = doPropFindAll(uri.toString());
+        DavPropertyNameSet all = doPropFindAll(uri);
         expected.remove(DeltaVConstants.COMMENT);
         expected.remove(DeltaVConstants.CREATOR_DISPLAYNAME);
         expected.remove(DeltaVConstants.SUPPORTED_METHOD_SET);
@@ -957,7 +957,7 @@ public class DavPropertyTest extends AbstractSPITest implements ItemResourceCons
         props.add(VersionControlledResource.CHECKED_OUT);
         props.add(VersionControlledResource.PREDECESSOR_SET);
         props.add(VersionControlledResource.VERSION_HISTORY);
-        DavPropertyNameSet result = doPropFindByProp(uri.toString(), props);
+        DavPropertyNameSet result = doPropFindByProp(uri, props);
         assertPropertyNames(props, result);
     }
 
@@ -1017,7 +1017,7 @@ public class DavPropertyTest extends AbstractSPITest implements ItemResourceCons
         */
         assertPropertyNames(expected, set);
 
-        DavPropertyNameSet all = doPropFindAll(uri.toString());
+        DavPropertyNameSet all = doPropFindAll(uri);
         expected.remove(DeltaVConstants.COMMENT);
         expected.remove(DeltaVConstants.CREATOR_DISPLAYNAME);
         expected.remove(DeltaVConstants.SUPPORTED_METHOD_SET);
@@ -1072,7 +1072,7 @@ public class DavPropertyTest extends AbstractSPITest implements ItemResourceCons
         props.add(JCR_UUID);
         props.add(VersionControlledResource.CHECKED_IN);
         props.add(VersionControlledResource.VERSION_HISTORY);
-        DavPropertyNameSet result = doPropFindByProp(uri.toString(), props);
+        DavPropertyNameSet result = doPropFindByProp(uri, props);
         assertPropertyNames(props, result);
     }
 
@@ -1131,7 +1131,7 @@ public class DavPropertyTest extends AbstractSPITest implements ItemResourceCons
         */
         assertPropertyNames(expected, set);
 
-        DavPropertyNameSet all = doPropFindAll(uri.toString());
+        DavPropertyNameSet all = doPropFindAll(uri);
         expected.remove(DeltaVConstants.COMMENT);
         expected.remove(DeltaVConstants.CREATOR_DISPLAYNAME);
         expected.remove(DeltaVConstants.SUPPORTED_METHOD_SET);
@@ -1190,7 +1190,7 @@ public class DavPropertyTest extends AbstractSPITest implements ItemResourceCons
         props.add(VersionResource.SUCCESSOR_SET);
         props.add(VersionResource.VERSION_HISTORY);
         props.add(VersionResource.CHECKOUT_SET);
-        DavPropertyNameSet result = doPropFindByProp(uri.toString(), props);
+        DavPropertyNameSet result = doPropFindByProp(uri, props);
         assertPropertyNames(props, result);
     }
 
@@ -1247,7 +1247,7 @@ public class DavPropertyTest extends AbstractSPITest implements ItemResourceCons
         */
         assertPropertyNames(expected, set);
 
-        DavPropertyNameSet all = doPropFindAll(uri.toString());
+        DavPropertyNameSet all = doPropFindAll(uri);
         expected.remove(DeltaVConstants.COMMENT);
         expected.remove(DeltaVConstants.CREATOR_DISPLAYNAME);
         expected.remove(DeltaVConstants.SUPPORTED_METHOD_SET);
@@ -1299,7 +1299,7 @@ public class DavPropertyTest extends AbstractSPITest implements ItemResourceCons
         props.add(JCR_UUID);
         props.add(VersionHistoryResource.ROOT_VERSION);
         props.add(VersionHistoryResource.VERSION_SET);
-        DavPropertyNameSet result = doPropFindByProp(uri.toString(), props);
+        DavPropertyNameSet result = doPropFindByProp(uri, props);
         assertPropertyNames(props, result);
     }
 
