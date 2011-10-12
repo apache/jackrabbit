@@ -1587,29 +1587,73 @@ public class SearchIndex extends AbstractQueryHandler {
 
     /**
      * Retrieves the root of the indexing aggregate for <code>state</code> and
-     * puts it into <code>map</code>.
+     * puts it into <code>aggregates</code>  map.
      *
      * @param state the node state for which we want to retrieve the aggregate
      *              root.
-     * @param map   aggregate roots are collected in this map.
+     * @param aggregates aggregate roots are collected in this map.
      */
-    protected void retrieveAggregateRoot(
-            NodeState state, Map<NodeId, NodeState> map) {
-        if (indexingConfig != null) {
-            AggregateRule[] aggregateRules = indexingConfig.getAggregateRules();
-            if (aggregateRules == null) {
-                return;
-            }
+    protected void retrieveAggregateRoot(NodeState state,
+            Map<NodeId, NodeState> aggregates) {
+        retrieveAggregateRoot(state, aggregates, state.getNodeId().toString(), 0);
+    }
+    
+    /**
+     * Retrieves the root of the indexing aggregate for <code>state</code> and
+     * puts it into <code>aggregates</code> map.
+     * 
+     * @param state
+     *            the node state for which we want to retrieve the aggregate
+     *            root.
+     * @param aggregates
+     *            aggregate roots are collected in this map.
+     * @param originNodeId
+     *            the originating node, used for reporting only
+     * @param level
+     *            current aggregation level, used to limit recursive aggregation
+     *            of nodes that have the same type
+     */
+    private void retrieveAggregateRoot(NodeState state,
+            Map<NodeId, NodeState> aggregates, String originNodeId, long level) {
+        if (indexingConfig == null) {
+            return;
+        }
+        AggregateRule[] aggregateRules = indexingConfig.getAggregateRules();
+        if (aggregateRules == null) {
+            return;
+        }
+        for (AggregateRule aggregateRule : aggregateRules) {
+            NodeState root = null;
             try {
-                for (AggregateRule aggregateRule : aggregateRules) {
-                    NodeState root = aggregateRule.getAggregateRoot(state);
-                    if (root != null) {
-                        map.put(root.getNodeId(), root);
-                    }
-                }
+                root = aggregateRule.getAggregateRoot(state);
             } catch (Exception e) {
-                log.warn("Unable to get aggregate root for "
-                        + state.getNodeId(), e);
+                log.warn("Unable to get aggregate root for " + state.getNodeId(), e);
+            }
+            if (root == null) {
+                continue;
+            }
+            if (root.getNodeTypeName().equals(state.getNodeTypeName())) {
+                level++;
+            } else {
+                level = 0;
+            }
+
+            // JCR-2989 Support for embedded index aggregates
+            if ((aggregateRule.getRecursiveAggregationLimit() == 0)
+                    || (aggregateRule.getRecursiveAggregationLimit() != 0 && level <= aggregateRule
+                            .getRecursiveAggregationLimit())) {
+
+                // check if the update parent is already in the
+                // map, then all its parents are already there so I can
+                // skip this update subtree
+                if (aggregates.put(root.getNodeId(), root) == null) {
+                    retrieveAggregateRoot(root, aggregates, originNodeId, level);
+                }
+            } else {
+                log.warn(
+                        "Reached {} levels of recursive aggregation for nodeId {}, type {}, will stop at nodeId {}. Are you sure this did not occur by mistake? Please check the indexing-configuration.xml.",
+                        new Object[] { level, originNodeId,
+                                root.getNodeTypeName(), root.getNodeId() });
             }
         }
     }
@@ -1618,11 +1662,11 @@ public class SearchIndex extends AbstractQueryHandler {
      * Retrieves the root of the indexing aggregate for <code>removedIds</code>
      * and puts it into <code>map</code>.
      *
-     * @param removedIds     the ids of removed nodes.
-     * @param map            aggregate roots are collected in this map
+     * @param removedIds the ids of removed nodes.
+     * @param aggregates aggregate roots are collected in this map
      */
     protected void retrieveAggregateRoot(
-            Set<NodeId> removedIds, Map<NodeId, NodeState> map) {
+            Set<NodeId> removedIds, Map<NodeId, NodeState> aggregates) {
         if(removedIds.isEmpty() || indexingConfig == null){
             return;
         }
@@ -1648,8 +1692,14 @@ public class SearchIndex extends AbstractQueryHandler {
                             Document doc = reader.document(
                                     tDocs.doc(), FieldSelectors.UUID);
                             NodeId nId = new NodeId(doc.get(FieldNames.UUID));
-                            map.put(nId, (NodeState) ism.getItemState(nId));
+                            NodeState nodeState = (NodeState) ism.getItemState(nId);
+                            aggregates.put(nId, nodeState);
                             found++;
+
+                            // JCR-2989 Support for embedded index aggregates
+                            int sizeBefore = aggregates.size();
+                            retrieveAggregateRoot(nodeState, aggregates);
+                            found += aggregates.size() - sizeBefore;
                         }
                     }
                 } finally {

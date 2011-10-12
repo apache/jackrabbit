@@ -43,6 +43,7 @@ public class TestAll extends TestCase {
         suite.addTestSuite(ChainedTermEnumTest.class);
         suite.addTestSuite(IndexingConfigurationImplTest.class);
         suite.addTestSuite(SQL2IndexingAggregateTest.class);
+        suite.addTestSuite(SQL2IndexingAggregateTest2.class);
 
         return suite;
     }
