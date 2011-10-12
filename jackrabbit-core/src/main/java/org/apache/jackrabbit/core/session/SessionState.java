@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.core.session;
 
+import static org.apache.jackrabbit.api.stats.RepositoryStatistics.Type;
+
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -25,7 +27,7 @@ import javax.jcr.Session;
 
 import org.apache.jackrabbit.core.WorkspaceManager;
 import org.apache.jackrabbit.core.observation.ObservationDispatcher;
-import org.apache.jackrabbit.core.stats.RepositoryStatistics;
+import org.apache.jackrabbit.core.stats.RepositoryStatisticsImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -76,6 +78,11 @@ public class SessionState {
      * Duration of write operations.
      */
     private final AtomicLong writeDuration;
+    
+    /**
+     * Number of open sessions.
+     */
+    private final AtomicLong sessionCount;
 
     /**
      * The lock used to guarantee synchronized execution of repository
@@ -108,13 +115,15 @@ public class SessionState {
     public SessionState(SessionContext context) {
         this.context = context;
 
-        RepositoryStatistics statistics =
+        RepositoryStatisticsImpl statistics =
                 context.getRepositoryContext().getRepositoryStatistics();
-        statistics.getCounter("login").incrementAndGet();
-        this.readCounter = statistics.getCounter("read");
-        this.writeCounter = statistics.getCounter("write");
-        this.readDuration = statistics.getCounter("read.duration");
-        this.writeDuration = statistics.getCounter("write.duration");
+        this.readCounter = statistics.getCounter(Type.SESSION_READ_COUNTER);
+        this.writeCounter = statistics.getCounter(Type.SESSION_WRITE_COUNTER);
+        this.readDuration = statistics.getCounter(Type.SESSION_READ_DURATION);
+        this.writeDuration = statistics.getCounter(Type.SESSION_WRITE_DURATION);
+        this.sessionCount = statistics.getCounter(Type.SESSION_COUNT);
+        statistics.getCounter(Type.SESSION_LOGIN_COUNTER).incrementAndGet();
+        sessionCount.incrementAndGet();
     }
 
     /**
@@ -262,6 +271,7 @@ public class SessionState {
         }
         try {
             if (isAlive()) {
+                sessionCount.decrementAndGet();
                 closed = new Exception(
                         "Stack trace of  where " + session
                         + " was originally closed");

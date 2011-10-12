@@ -18,6 +18,9 @@ package org.apache.jackrabbit.core.stats;
 
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.apache.jackrabbit.api.stats.TimeSeries;
+import org.apache.jackrabbit.api.stats.RepositoryStatistics.Type;
+
 /**
  * Recorder of a time series. An instance of this class records (and clears)
  * the state of a given {@link AtomicLong} counter once every second and
@@ -26,83 +29,94 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 class TimeSeriesRecorder implements TimeSeries {
 
-    /** Event counter */
+    /** Type */
+    private final Type type;
+    
+    /** Value */
     private final AtomicLong counter = new AtomicLong();
 
-    /** Number of events per second over the last minute. */
-    private final long[] eventsPerSecond = new long[60];
+    /** Measured value per second over the last minute. */
+    private final long[] valuePerSecond = new long[60];
 
-    /** Number of events per minute over the last hour. */
-    private final long[] eventsPerMinute = new long[60];
+    /** Measured value per minute over the last hour. */
+    private final long[] valuePerMinute = new long[60];
 
-    /** Number of events per hour over the last week. */
-    private final long[] eventsPerHour = new long[7 * 24];
+    /** Measured value per hour over the last week. */
+    private final long[] valuePerHour = new long[7 * 24];
 
-    /** Number of events per week over the last three years. */
-    private final long[] eventsPerWeek = new long[3 * 52];
+    /** Measured value per week over the last three years. */
+    private final long[] valuePerWeek = new long[3 * 52];
 
-    /** Current second (index in {@link #eventsPerSecond}) */
+    /** Current second (index in {@link #valuePerSecond}) */
     private int seconds = 0;
 
-    /** Current minute (index in {@link #eventsPerMinute}) */
+    /** Current minute (index in {@link #valuePerMinute}) */
     private int minutes = 0;
 
-    /** Current hour (index in {@link #eventsPerHour}) */
+    /** Current hour (index in {@link #valuePerHour}) */
     private int hours = 0;
 
-    /** Current week (index in {@link #eventsPerWeek}) */
+    /** Current week (index in {@link #valuePerWeek}) */
     private int weeks = 0;
 
+    public TimeSeriesRecorder(Type type) {
+        this.type = type;
+    }
+
     /**
-     * Returns the {@link AtomicLong} instance used to count events for
+     * Returns the {@link AtomicLong} instance used to measure the value for
      * the time series.
      *
-     * @return event counter
+     * @return value
      */
     public AtomicLong getCounter() {
         return counter;
     }
 
     /**
-     * Records the number of counted events over the past second and resets
+     * Records the number of measured values over the past second and resets
      * the counter. This method should be scheduled to be called once per
      * second.
      */
     public synchronized void recordOneSecond() {
-        eventsPerSecond[seconds++] = counter.getAndSet(0);
-        if (seconds == eventsPerSecond.length) {
+        if (type.isResetValueEachSecond()) {
+            valuePerSecond[seconds++] = counter.getAndSet(0);
+        } else {
+            valuePerSecond[seconds++] = counter.get();
+        }
+        if (seconds == valuePerSecond.length) {
             seconds = 0;
-            eventsPerMinute[minutes++] = sum(eventsPerSecond);
+            valuePerMinute[minutes++] = aggregate(valuePerSecond);
         }
-        if (minutes == eventsPerMinute.length) {
+        if (minutes == valuePerMinute.length) {
             minutes = 0;
-            eventsPerHour[hours++] = sum(eventsPerMinute);
+            valuePerHour[hours++] = aggregate(valuePerMinute);
         }
-        if (hours == eventsPerHour.length) {
+        if (hours == valuePerHour.length) {
             hours = 0;
-            eventsPerWeek[weeks++] = sum(eventsPerHour);
+            valuePerWeek[weeks++] = aggregate(valuePerHour);
         }
-        if (weeks == eventsPerWeek.length) {
+        if (weeks == valuePerWeek.length) {
             weeks = 0;
         }
     }
 
     //----------------------------------------------------------< TimeSeries >
 
-    public synchronized long[] getEventsPerSecond() {
-        return cyclicCopyFrom(eventsPerSecond, seconds);
+    public synchronized long[] getValuePerSecond() {
+        return cyclicCopyFrom(valuePerSecond, seconds);
     }
 
-    public synchronized long[] getEventsPerMinute() {
-        return cyclicCopyFrom(eventsPerMinute, minutes);
+    public synchronized long[] getValuePerMinute() {
+        return cyclicCopyFrom(valuePerMinute, minutes);
     }
 
-    public synchronized long[] getEventsPerHour() {
-        return cyclicCopyFrom(eventsPerHour, hours);
+    public synchronized long[] getValuePerHour() {
+        return cyclicCopyFrom(valuePerHour, hours);
     }
 
-    public synchronized long[] getEventsPerWeek() {
-        return cyclicCopyFrom(eventsPerWeek, weeks);
+    public synchronized long[] getValuePerWeek() {
+        return cyclicCopyFrom(valuePerWeek, weeks);
     }
 
     //-------------------------------------------------------------< private >
@@ -113,12 +127,16 @@ class TimeSeriesRecorder implements TimeSeries {
      * @param array array to be summed
      * @return sum of entries
      */
-    private static long sum(long[] array) {
+    private long aggregate(long[] array) {
         long sum = 0;
         for (int i = 0; i < array.length; i++) {
+
             sum += array[i];
         }
-        return sum;
+        if (type.isResetValueEachSecond()) {
+            return sum;
+        }
+        return sum / array.length;
     }
 
     /**

@@ -83,6 +83,17 @@ public class JackrabbitRepositoryStub extends RepositoryStub {
         }));
     }
 
+    public static RepositoryContext getCurrentRepositoryContext() {
+        synchronized (REPOSITORY_INSTANCES) {
+            for (Repository repo : REPOSITORY_INSTANCES.values()) {
+                if (repo instanceof RepositoryImpl) {
+                    return ((RepositoryImpl) repo).context;
+                }
+            }
+        }
+        return null;
+    }
+
     private static Properties getStaticProperties() {
         Properties properties = new Properties();
         try {

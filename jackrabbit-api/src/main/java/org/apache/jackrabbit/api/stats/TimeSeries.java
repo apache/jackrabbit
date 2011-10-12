@@ -14,44 +14,44 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.core.stats;
+package org.apache.jackrabbit.api.stats;
 
 /**
- * Interface for a time series of the number of events per
- * second, minute, hour and day. The type of the events is arbitrary; it
+ * Interface for a time series of the measured values per
+ * second, minute, hour and day. The type of the value is arbitrary; it
  * could be cache hits or misses, disk reads or writes, created sessions,
  * completed transactions, or pretty much anything of interest.
  *
- * @since Apache Jackrabbit 2.3.1
+ * @since Apache Jackrabbit 2.3.2
  */
 public interface TimeSeries {
 
     /**
-     * Returns the number of events per second over the last minute.
+     * Returns the measured value per second over the last minute.
      *
-     * @return number of events per second, in chronological order
+     * @return measured value per second, in chronological order
      */
-    long[] getEventsPerSecond();
+    long[] getValuePerSecond();
 
     /**
-     * Returns the number of events per minute over the last hour.
+     * Returns the measured value per minute over the last hour.
      *
-     * @return number of events per minute, in chronological order
+     * @return measured value per minute, in chronological order
      */
-    long[] getEventsPerMinute();
+    long[] getValuePerMinute();
 
     /**
-     * Returns the number of events per hour over the last week.
+     * Returns the measured value per hour over the last week.
      *
-     * @return number of events per hour, in chronological order
+     * @return measured value per hour, in chronological order
      */
-    long[] getEventsPerHour();
+    long[] getValuePerHour();
 
     /**
-     * Returns the number of events per week over the last three years.
+     * Returns the measured value per week over the last three years.
      *
-     * @return number of events per week, in chronological order
+     * @return measured value per week, in chronological order
      */
-    long[] getEventsPerWeek();
+    long[] getValuePerWeek();
 
 }
