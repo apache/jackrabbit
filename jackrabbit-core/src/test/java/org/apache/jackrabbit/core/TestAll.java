@@ -79,6 +79,8 @@ public class TestAll extends TestCase {
 
         suite.addTestSuite(NPEandCMETest.class);
 
+        suite.addTestSuite(ConsistencyCheck.class);
+
         return suite;
     }
 }
