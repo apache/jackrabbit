@@ -53,16 +53,6 @@ public class SessionState {
         LoggerFactory.getLogger(SessionState.class);
 
     /**
-     * Number of nanoseconds in a microsecond.
-     */
-    private static final int NS_PER_US = 1000;
-
-    /**
-     * Number of nanoseconds in a millisecond.
-     */
-    private static final int NS_PER_MS = 1000000;
-
-    /**
      * Component context of this session.
      */
     private final SessionContext context;
@@ -76,6 +66,16 @@ public class SessionState {
      * Counter of write operations.
      */
     private final AtomicLong writeCounter;
+
+    /**
+     * Duration of read operations.
+     */
+    private final AtomicLong readDuration;
+
+    /**
+     * Duration of write operations.
+     */
+    private final AtomicLong writeDuration;
 
     /**
      * The lock used to guarantee synchronized execution of repository
@@ -113,6 +113,8 @@ public class SessionState {
         statistics.getCounter("login").incrementAndGet();
         this.readCounter = statistics.getCounter("read");
         this.writeCounter = statistics.getCounter("write");
+        this.readDuration = statistics.getCounter("read.duration");
+        this.writeDuration = statistics.getCounter("write.duration");
     }
 
     /**
@@ -198,31 +200,24 @@ public class SessionState {
             }
 
             try {
-                // JCR-3040: Increment the operation counters
-                if (isWriteOperation) {
-                    writeCounter.incrementAndGet();
-                } else {
-                    readCounter.incrementAndGet();
-                }
-
-                // Perform the actual operation, optionally with debug logs
-                if (log.isDebugEnabled()) {
-                    log.debug("Performing {}", operation);
-                    long start = System.nanoTime();
-                    try {
-                        return operation.perform(context);
-                    } finally {
-                        long time = System.nanoTime() - start;
-                        if (time > NS_PER_MS) {
-                            log.debug("Performed {} in {}ms",
-                                    operation, time / NS_PER_MS);
-                        } else {
-                            log.debug("Performed {} in {}us",
-                                    operation, time / NS_PER_US);
-                        }
-                    }
-                } else {
+                // Perform the actual operation
+                log.debug("Performing {}", operation);
+                long start = System.nanoTime();
+                try {
                     return operation.perform(context);
+                } finally {
+                    long time = System.nanoTime() - start;
+
+                    // JCR-3040: Increment the operation counters
+                    if (isWriteOperation) {
+                        writeCounter.incrementAndGet();
+                        writeDuration.addAndGet(time);
+                    } else {
+                        readCounter.incrementAndGet();
+                        readDuration.addAndGet(time);
+                    }
+
+                    log.debug("Performed {} in {}us", operation, time);
                 }
             } finally {
                 isWriteOperation = wasWriteOperation;
