@@ -333,24 +333,24 @@ public abstract class JcrRemotingServlet extends JCRWebdavServerServlet {
                 webdavResponse.setStatus(DavServletResponse.SC_OK);
                 JsonWriter writer = new JsonWriter(webdavResponse.getWriter());
 
-                String[] includes =
-                        webdavRequest.getParameterValues(PARAM_INCLUDE);
+                String[] includes = webdavRequest.getParameterValues(PARAM_INCLUDE);
                 if (includes == null || !JCR_3005) {
                     writer.write(node, depth);
                 } else {
                     Collection<Node> nodes = new ArrayList<Node>();
                     Set<String> alreadyAdded = new HashSet<String>();
-                    for (int i = 0; i < includes.length; i++) {
+                    for (String include : includes) {
                         try {
                             Node n;
-                            if (includes[i].startsWith("/")) {
-                                n = session.getNode(includes[i]);
+                            if (include.startsWith("/")) {
+                                n = session.getNode(include);
                             } else {
-                                n = node.getNode(includes[i]);
+                                n = node.getNode(include);
                             }
-                            if (!alreadyAdded.contains(n.getPath())) {
+                            String np = n.getPath();
+                            if (!alreadyAdded.contains(np)) {
                                 nodes.add(n);
-                                alreadyAdded.add(n.getPath());
+                                alreadyAdded.add(np);
                             }
                         } catch (PathNotFoundException e) {
                             // skip missing node
