@@ -794,7 +794,6 @@ public class Parser {
             while (true) {
                 type = types[i];
                 if (type != CHAR_NAME && type != CHAR_VALUE) {
-                    c = chars[i];
                     break;
                 }
                 i++;
