@@ -32,6 +32,7 @@ public class TestAll extends TestCase {
     public static Test suite() {
         TestSuite suite = new TestSuite("org.apache.jackrabbit.core.persistence tests");
 
+        suite.addTestSuite(PersistenceManagerTest.class);
         suite.addTestSuite(AutoFixCorruptNode.class);
 
         return suite;

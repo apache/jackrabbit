@@ -16,11 +16,11 @@
  */
 package org.apache.jackrabbit.core;
 
-import org.apache.jackrabbit.test.ConcurrentTestSuite;
-
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
+
+import org.apache.jackrabbit.test.ConcurrentTestSuite;
 
 /**
  * Test suite that includes all testcases for the Core module.
@@ -74,8 +74,6 @@ public class TestAll extends TestCase {
 //        }
 
         suite.addTestSuite(UserPerWorkspaceSecurityManagerTest.class);
-
-        suite.addTestSuite(PersistenceManagerTest.class);
 
         suite.addTestSuite(OverlappingNodeAddTest.class);
 
