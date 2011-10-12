@@ -81,6 +81,7 @@ public interface ItemResourceConstants extends JcrRemotingConstants {
     public static final DavPropertyName JCR_VALUES = DavPropertyName.create(JCR_VALUES_LN, NAMESPACE);
     public static final DavPropertyName JCR_LENGTH = DavPropertyName.create(JCR_LENGTH_LN, NAMESPACE);
     public static final DavPropertyName JCR_LENGTHS = DavPropertyName.create(JCR_LENGTHS_LN, NAMESPACE);
+    public static final DavPropertyName JCR_GET_STRING = DavPropertyName.create(JCR_GET_STRING_LN, NAMESPACE);
 
     // property names used for resource representing a workspace
     public static final DavPropertyName JCR_NAMESPACES = DavPropertyName.create(JCR_NAMESPACES_LN, NAMESPACE);

@@ -184,11 +184,19 @@ public class DefaultItemResource extends AbstractItemResource {
         if (prop == null && exists()) {
             try {
                 Property p = (Property) item;
-                if (JCR_LENGTH.equals(name) && !isMultiple()) {
-                    long length = p.getLength();
-                    prop = new DefaultDavProperty<String>(JCR_LENGTH, String.valueOf(length), true);
-                } else if (JCR_LENGTHS.equals(name) && isMultiple()) {
-                    prop = new LengthsProperty(p.getLengths());
+                if (isMultiple()) {
+                    if (JCR_LENGTHS.equals(name)) {
+                        prop = new LengthsProperty(p.getLengths());
+                    }
+                } else {
+                    if (JCR_LENGTH.equals(name)) {
+                        long length = p.getLength();
+                        prop = new DefaultDavProperty<String>(JCR_LENGTH, String.valueOf(length), true);
+                    } else if (JCR_GET_STRING.equals(name) && p.getType() != PropertyType.BINARY) {
+                        // getstring property is only created for single value
+                        // non-binary jcr properties
+                        prop = new DefaultDavProperty<String>(JCR_GET_STRING, p.getString(), true);
+                    }
                 }
             } catch (RepositoryException e) {
                 log.error("Failed to retrieve resource properties: "+e.getMessage());

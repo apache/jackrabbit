@@ -129,6 +129,7 @@ public interface JcrRemotingConstants {
     public static final String JCR_VALUES_LN = "values";
     public static final String JCR_LENGTH_LN = "length";
     public static final String JCR_LENGTHS_LN = "lengths";
+    public static final String JCR_GET_STRING_LN = "getstring";
 
     public static final String JCR_NAMESPACES_LN = "namespaces";
     public static final String JCR_NODETYPES_CND_LN = "nodetypes-cnd";
