@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.core;
+package org.apache.jackrabbit.core.persistence;
 
 import java.io.File;
 import java.util.Arrays;
@@ -24,6 +24,8 @@ import javax.jcr.PropertyType;
 import junit.framework.TestCase;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.jackrabbit.core.NamespaceRegistryImpl;
+import org.apache.jackrabbit.core.RepositoryImpl;
 import org.apache.jackrabbit.core.fs.mem.MemoryFileSystem;
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.id.PropertyId;
