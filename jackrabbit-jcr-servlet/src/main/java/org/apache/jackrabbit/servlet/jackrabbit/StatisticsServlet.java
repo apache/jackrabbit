@@ -25,9 +25,9 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.jackrabbit.api.stats.RepositoryStatistics;
+import org.apache.jackrabbit.api.stats.TimeSeries;
 import org.apache.jackrabbit.core.RepositoryContext;
-import org.apache.jackrabbit.core.stats.RepositoryStatistics;
-import org.apache.jackrabbit.core.stats.TimeSeries;
 
 /**
  * Servlet that makes Jackrabbit repository statistics available as
@@ -57,15 +57,14 @@ public class StatisticsServlet extends HttpServlet {
             response.setContentType("application/json");
             Writer writer = response.getWriter();
             writer.write('{');
-            boolean first = true;
-            for (Map.Entry<String, TimeSeries> entry : statistics) {
-                if (first) {
-                    first = false;
-                } else {
-                    writer.write(',');
-                }
-                write(writer, entry.getKey(), entry.getValue());
-            }
+            write(writer, "read", statistics.getTimeSeries(
+                    RepositoryStatistics.Type.SESSION_READ_COUNTER));
+            writer.write(',');
+            write(writer, "write", statistics.getTimeSeries(
+                    RepositoryStatistics.Type.SESSION_WRITE_COUNTER));
+            writer.write(',');
+            write(writer, "login", statistics.getTimeSeries(
+                    RepositoryStatistics.Type.SESSION_LOGIN_COUNTER));
             writer.write('}');
         } else {
             response.sendError(
@@ -81,13 +80,13 @@ public class StatisticsServlet extends HttpServlet {
         writer.write('"');
         writer.write(':');
         writer.write('{');
-        write(writer, "second", series.getEventsPerSecond());
+        write(writer, "second", series.getValuePerSecond());
         writer.write(',');
-        write(writer, "minute", series.getEventsPerMinute());
+        write(writer, "minute", series.getValuePerMinute());
         writer.write(',');
-        write(writer, "hour", series.getEventsPerHour());
+        write(writer, "hour", series.getValuePerHour());
         writer.write(',');
-        write(writer, "week", series.getEventsPerWeek());
+        write(writer, "week", series.getValuePerWeek());
         writer.write('}');
     }
 
