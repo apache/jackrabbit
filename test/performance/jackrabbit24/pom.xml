@@ -23,36 +23,36 @@
                              http://maven.apache.org/maven-v4_0_0.xsd ">
   <modelVersion>4.0.0</modelVersion>
 
-  <!-- =================================================================== -->
-  <!-- P R O J E C T  D E S C R I P T I O N                                -->
-  <!-- =================================================================== -->
-
   <parent>
     <groupId>org.apache.jackrabbit</groupId>
     <artifactId>jackrabbit-perf-parent</artifactId>
     <version>SNAPSHOT</version>
-    <relativePath>parent/pom.xml</relativePath>
+    <relativePath>../parent/pom.xml</relativePath>
   </parent>
 
-  <artifactId>jackrabbit-perf</artifactId>
-  <name>Jackrabbit Performance Tests</name>
-  <packaging>pom</packaging>
+  <artifactId>jackrabbit-perf-jackrabbit24</artifactId>
+  <name>Jackrabbit 2.4 Performance Test</name>
 
-  <modules>
-    <module>parent</module>
-    <module>base</module>
-    <module>jackrabbit10</module>
-    <module>jackrabbit11</module>
-    <module>jackrabbit12</module>
-    <module>jackrabbit13</module>
-    <module>jackrabbit14</module>
-    <module>jackrabbit15</module>
-    <module>jackrabbit16</module>
-    <module>jackrabbit20</module>
-    <module>jackrabbit21</module>
-    <module>jackrabbit22</module>
-    <module>jackrabbit23</module>
-    <module>jackrabbit24</module>
-  </modules>
+  <dependencies>
+    <dependency>
+      <groupId>org.apache.jackrabbit</groupId>
+      <artifactId>jackrabbit-perf-base</artifactId>
+      <version>${project.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>javax.jcr</groupId>
+      <artifactId>jcr</artifactId>
+      <version>2.0</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.jackrabbit</groupId>
+      <artifactId>jackrabbit-core</artifactId>
+      <version>2.4-SNAPSHOT</version>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
 
 </project>
+
