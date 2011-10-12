@@ -451,6 +451,7 @@ public class LuceneQueryFactory {
             DescendantNode dn, JackrabbitIndexSearcher searcher)
             throws RepositoryException, IOException {
         BooleanQuery query = new BooleanQuery();
+        int clauses = 0;
 
         try {
             LinkedList<String> ids = new LinkedList<String>();
@@ -458,10 +459,19 @@ public class LuceneQueryFactory {
             ids.add(ancestor.getIdentifier());
             while (!ids.isEmpty()) {
                 String id = ids.removeFirst();
+                clauses++;
                 Query q = new JackrabbitTermQuery(new Term(FieldNames.PARENT, id));
                 QueryHits hits = searcher.evaluate(q);
                 ScoreNode sn = hits.nextScoreNode();
                 if (sn != null) {
+                    // reset query so it does not overflow because of the max
+                    // clause count condition,
+                    // see JCR-3108
+                    if (clauses == BooleanQuery.getMaxClauseCount()) {
+                        BooleanQuery wrapQ = new BooleanQuery();
+                        wrapQ.add(query, SHOULD);
+                        query = wrapQ;
+                    }
                     query.add(q, SHOULD);
                     do {
                         ids.add(sn.getNodeId().toString());
