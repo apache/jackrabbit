@@ -14,5 +14,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-@aQute.bnd.annotation.Version("2.3.1")
-package org.apache.jackrabbit.commons;
+
+/**
+ * JMX management interfaces for JCR.
+ */
+@aQute.bnd.annotation.Version("1.0")
+package org.apache.jackrabbit.api.jmx;
