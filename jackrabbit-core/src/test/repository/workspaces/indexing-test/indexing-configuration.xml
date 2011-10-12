@@ -46,6 +46,11 @@
         <!-- do not index any properties -->
     </index-rule>
 
+    <aggregate primaryType="nt:folder" recursive="true" recursiveLimit="10">
+        <include primaryType="nt:folder">*</include>
+        <include primaryType="nt:file">*</include>
+    </aggregate>
+
     <aggregate primaryType="nt:file">
         <include>jcr:content</include>
         <include>jcr:content/*</include>
