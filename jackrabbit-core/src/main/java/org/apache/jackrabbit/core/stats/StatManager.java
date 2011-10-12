@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.core.stats;
 
-import org.apache.jackrabbit.api.stats.CoreStat;
 import org.apache.jackrabbit.api.stats.QueryStat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,23 +32,16 @@ public class StatManager {
     /* STATS */
     private final QueryStat queryStat = new QueryStatImpl();
 
-    private final CoreStat coreStat = new CoreStatImpl();
-
     public StatManager() {
     }
 
     public void init() {
-        coreStat.setEnabled(false);
         queryStat.setEnabled(false);
         log.debug("Started StatManager");
     }
 
     public void stop() {
 
-    }
-
-    public CoreStat getCoreStat() {
-        return coreStat;
     }
 
     public QueryStat getQueryStat() {

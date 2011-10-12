@@ -16,51 +16,31 @@
  */
 package org.apache.jackrabbit.api.stats;
 
+
 /**
- * Statistics on core JCR operations
+ * Statistics on core repository operations
  * 
  */
-public interface CoreStat {
+public interface RepositoryStatistics {
 
-    /** -- SESSION INFO -- **/
+    enum Type {
+        SESSION_READ_COUNTER(true), 
+        SESSION_READ_DURATION(true), 
+        SESSION_WRITE_COUNTER(true),
+        SESSION_WRITE_DURATION(true),
+        SESSION_LOGIN_COUNTER(true),
+        SESSION_COUNT(false);
 
-    void sessionCreated();
+        private final boolean resetValueEachSecond;
 
-    void sessionLoggedOut();
+        Type(final boolean resetValueEachSecond) {
+            this.resetValueEachSecond = resetValueEachSecond;
+        }
 
-    long getNumberOfSessions();
+        public boolean isResetValueEachSecond() {
+            return resetValueEachSecond;
+        }
+    }
 
-    void resetNumberOfSessions();
-
-    /**
-     * @param timeNs
-     *            as given by timeNs = System.nanoTime() - timeNs;
-     */
-    void onSessionOperation(boolean isWrite, long timeNs);
-
-    double getReadOpsPerSecond();
-
-    double getWriteOpsPerSecond();
-
-    void resetNumberOfOperations();
-
-    /**
-     * If this service is currently registering stats
-     * 
-     * @return <code>true</code> if the service is enabled
-     */
-    boolean isEnabled();
-
-    /**
-     * Enables/Disables the service
-     * 
-     * @param enabled
-     */
-    void setEnabled(boolean enabled);
-
-    /**
-     * clears all data
-     */
-    void reset();
-
+    TimeSeries getTimeSeries(Type type);
 }

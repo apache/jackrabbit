@@ -25,39 +25,50 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
-public class RepositoryStatistics
-        implements Iterable<Map.Entry<String, TimeSeries>> {
+import org.apache.jackrabbit.api.stats.RepositoryStatistics;
+import org.apache.jackrabbit.api.stats.RepositoryStatistics.Type;
+import org.apache.jackrabbit.api.stats.TimeSeries;
 
-    private final Map<String, TimeSeriesRecorder> recorders =
-            new HashMap<String, TimeSeriesRecorder>();
+public class RepositoryStatisticsImpl implements
+        Iterable<Map.Entry<Type, TimeSeries>>, RepositoryStatistics {
 
-    public RepositoryStatistics(ScheduledExecutorService executor) {
+    private final Map<Type, TimeSeriesRecorder> recorders =
+            new HashMap<Type, TimeSeriesRecorder>();
+
+    public RepositoryStatisticsImpl(ScheduledExecutorService executor) {
         executor.scheduleAtFixedRate(new Runnable() {
             public void run() {
                 recordOneSecond();
             }
         }, 1, 1, TimeUnit.SECONDS);
+        
+        getOrCreateRecorder(Type.SESSION_COUNT);
+        getOrCreateRecorder(Type.SESSION_LOGIN_COUNTER);
+        getOrCreateRecorder(Type.SESSION_READ_COUNTER);
+        getOrCreateRecorder(Type.SESSION_READ_DURATION);
+        getOrCreateRecorder(Type.SESSION_WRITE_COUNTER);
+        getOrCreateRecorder(Type.SESSION_WRITE_DURATION);
     }
 
-    public synchronized Iterator<Entry<String, TimeSeries>> iterator() {
-        Map<String, TimeSeries> map = new TreeMap<String, TimeSeries>();
+    public synchronized Iterator<Entry<Type, TimeSeries>> iterator() {
+        Map<Type, TimeSeries> map = new TreeMap<Type, TimeSeries>();
         map.putAll(recorders);
         return map.entrySet().iterator();
     }
 
-    public AtomicLong getCounter(String name) {
-        return getOrCreateRecorder(name).getCounter();
+    public AtomicLong getCounter(Type type) {
+        return getOrCreateRecorder(type).getCounter();
     }
 
-    public TimeSeries getTimeSeries(String name) {
-        return getOrCreateRecorder(name);
+    public TimeSeries getTimeSeries(Type type) {
+        return getOrCreateRecorder(type);
     }
 
-    private synchronized TimeSeriesRecorder getOrCreateRecorder(String name) {
-        TimeSeriesRecorder recorder = recorders.get(name);
+    private synchronized TimeSeriesRecorder getOrCreateRecorder(Type type) {
+        TimeSeriesRecorder recorder = recorders.get(type);
         if (recorder == null) {
-            recorder = new TimeSeriesRecorder();
-            recorders.put(name, recorder);
+            recorder = new TimeSeriesRecorder(type);
+            recorders.put(type, recorder);
         }
         return recorder;
     }

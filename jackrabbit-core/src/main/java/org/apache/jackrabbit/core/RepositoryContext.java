@@ -32,7 +32,7 @@ import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.security.JackrabbitSecurityManager;
 import org.apache.jackrabbit.core.security.authorization.PrivilegeRegistry;
 import org.apache.jackrabbit.core.state.ItemStateCacheFactory;
-import org.apache.jackrabbit.core.stats.RepositoryStatistics;
+import org.apache.jackrabbit.core.stats.RepositoryStatisticsImpl;
 import org.apache.jackrabbit.core.version.InternalVersionManagerImpl;
 
 /**
@@ -115,7 +115,7 @@ public class RepositoryContext {
     /**
      * Repository statistics collector.
      */
-    private final RepositoryStatistics statistics;
+    private final RepositoryStatisticsImpl statistics;
 
     /**
      * Creates a component context for the given repository.
@@ -125,7 +125,7 @@ public class RepositoryContext {
     RepositoryContext(RepositoryImpl repository) {
         assert repository != null;
         this.repository = repository;
-        this.statistics = new RepositoryStatistics(executor);
+        this.statistics = new RepositoryStatisticsImpl(executor);
     }
 
     /**
@@ -411,7 +411,7 @@ public class RepositoryContext {
      *
      * @return repository statistics collector
      */
-    public RepositoryStatistics getRepositoryStatistics() {
+    public RepositoryStatisticsImpl getRepositoryStatistics() {
         return statistics;
     }
 
