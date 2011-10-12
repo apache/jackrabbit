@@ -16,32 +16,32 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
-import org.apache.jackrabbit.spi.Path;
-import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.spi.commons.name.NameConstants;
-import org.apache.jackrabbit.spi.commons.name.PathBuilder;
-import org.apache.jackrabbit.spi.commons.conversion.IllegalNameException;
-import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
-import org.apache.jackrabbit.spi.commons.conversion.NameResolver;
-import org.apache.jackrabbit.core.state.NodeState;
-import org.apache.jackrabbit.core.state.ItemStateManager;
-import org.apache.jackrabbit.core.state.ItemStateException;
-import org.apache.jackrabbit.core.state.ChildNodeEntry;
-import org.apache.jackrabbit.core.state.PropertyState;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+import javax.jcr.NamespaceException;
+import javax.jcr.RepositoryException;
+
 import org.apache.jackrabbit.core.HierarchyManager;
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.id.PropertyId;
+import org.apache.jackrabbit.core.state.ChildNodeEntry;
+import org.apache.jackrabbit.core.state.ItemStateException;
+import org.apache.jackrabbit.core.state.ItemStateManager;
+import org.apache.jackrabbit.core.state.NodeState;
+import org.apache.jackrabbit.core.state.PropertyState;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.spi.commons.conversion.IllegalNameException;
+import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
+import org.apache.jackrabbit.spi.commons.conversion.NameResolver;
+import org.apache.jackrabbit.spi.commons.name.NameConstants;
+import org.apache.jackrabbit.spi.commons.name.PathBuilder;
 import org.apache.jackrabbit.util.Text;
+import org.w3c.dom.CharacterData;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-import org.w3c.dom.CharacterData;
-
-import javax.jcr.RepositoryException;
-import javax.jcr.NamespaceException;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Arrays;
 
 /**
  * <code>AggregateRule</code> defines a configuration for a node index
@@ -82,6 +82,30 @@ class AggregateRuleImpl implements AggregateRule {
     private final HierarchyManager hmgr;
 
     /**
+     * recursive aggregation (for same type nodes) default value.
+     */
+    private static final boolean RECURSIVE_AGGREGATION_DEFAULT = false;
+
+    /**
+     * flag to enable recursive aggregation (for same type nodes).
+     */
+    private final boolean recursiveAggregation;
+
+    /**
+     * recursive aggregation (for same type nodes) limit default value.
+     */
+
+    protected static final long RECURSIVE_AGGREGATION_LIMIT_DEFAULT = 100;
+
+    /**
+     * recursive aggregation (for same type nodes) limit. embedded aggregation
+     * of nodes that have the same type can go only this levels up.
+     * 
+     * A value eq to 0 gives unlimited aggregation.
+     */
+    private final long recursiveAggregationLimit;
+
+    /**
      * Creates a new indexing aggregate using the given <code>config</code>.
      *
      * @param config     the configuration for this indexing aggregate.
@@ -107,6 +131,8 @@ class AggregateRuleImpl implements AggregateRule {
         this.propertyIncludes = getPropertyIncludes(config);
         this.ism = ism;
         this.hmgr = hmgr;
+        this.recursiveAggregation = getRecursiveAggregation(config);
+        this.recursiveAggregationLimit = getRecursiveAggregationLimit(config);
     }
 
     /**
@@ -125,14 +151,21 @@ class AggregateRuleImpl implements AggregateRule {
         for (NodeInclude nodeInclude : nodeIncludes) {
             NodeState aggregateRoot = nodeInclude.matches(nodeState);
             if (aggregateRoot != null && aggregateRoot.getNodeTypeName().equals(nodeTypeName)) {
-                return aggregateRoot;
+                boolean sameNodeTypeAsRoot = nodeState.getNodeTypeName().equals(aggregateRoot.getNodeTypeName());
+                if(!sameNodeTypeAsRoot || (sameNodeTypeAsRoot && recursiveAggregation)){
+                    return aggregateRoot;
+                }
             }
         }
+        
         // check property includes
         for (PropertyInclude propertyInclude : propertyIncludes) {
             NodeState aggregateRoot = propertyInclude.matches(nodeState);
             if (aggregateRoot != null && aggregateRoot.getNodeTypeName().equals(nodeTypeName)) {
-                return aggregateRoot;
+                boolean sameNodeTypeAsRoot = nodeState.getNodeTypeName().equals(aggregateRoot.getNodeTypeName());
+                if(!sameNodeTypeAsRoot || (sameNodeTypeAsRoot && recursiveAggregation)){
+                    return aggregateRoot;
+                }
             }
         }
         return null;
@@ -153,7 +186,12 @@ class AggregateRuleImpl implements AggregateRule {
         if (nodeState.getNodeTypeName().equals(nodeTypeName)) {
             List<NodeState> nodeStates = new ArrayList<NodeState>();
             for (NodeInclude nodeInclude : nodeIncludes) {
-                nodeStates.addAll(Arrays.asList(nodeInclude.resolve(nodeState)));
+                for (NodeState childNs : nodeInclude.resolve(nodeState)) {
+                    boolean sameNodeTypeAsRoot = nodeState.getNodeTypeName().equals(childNs.getNodeTypeName());
+                    if (!sameNodeTypeAsRoot || (sameNodeTypeAsRoot && recursiveAggregation)) {
+                        nodeStates.add(childNs);
+                    }
+                }
             }
             if (nodeStates.size() > 0) {
                 return nodeStates.toArray(new NodeState[nodeStates.size()]);
@@ -177,6 +215,13 @@ class AggregateRuleImpl implements AggregateRule {
             }
         }
         return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public long getRecursiveAggregationLimit() {
+        return recursiveAggregationLimit;
     }
 
     //---------------------------< internal >-----------------------------------
@@ -269,7 +314,30 @@ class AggregateRuleImpl implements AggregateRule {
         }
         return includes.toArray(new PropertyInclude[includes.size()]);
     }
+    
+    private boolean getRecursiveAggregation(Node config) {
+        Node rAttr = config.getAttributes().getNamedItem("recursive");
+        if (rAttr == null) {
+            return RECURSIVE_AGGREGATION_DEFAULT;
+        }
+        return Boolean.valueOf(rAttr.getNodeValue());
+    }
 
+    private long getRecursiveAggregationLimit(Node config)
+            throws RepositoryException {
+        Node rAttr = config.getAttributes().getNamedItem("recursiveLimit");
+        if (rAttr == null) {
+            return RECURSIVE_AGGREGATION_LIMIT_DEFAULT;
+        }
+        try {
+            return Long.valueOf(rAttr.getNodeValue());
+        } catch (NumberFormatException e) {
+            throw new RepositoryException(
+                    "Unable to read indexing configuration (recursiveLimit).",
+                    e);
+        }
+    }
+    
     //---------------------------< internal >-----------------------------------
 
     /**

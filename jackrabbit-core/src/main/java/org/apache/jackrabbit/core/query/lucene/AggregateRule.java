@@ -43,6 +43,14 @@ public interface AggregateRule {
      */
     NodeState getAggregateRoot(NodeState nodeState)
             throws ItemStateException, RepositoryException;
+    
+    /**
+     * recursive aggregation (for same type nodes) limit. embedded aggregation
+     * of nodes that have the same type can go only this levels up.
+     * 
+     * A value eq to 0 gives unlimited aggregation.
+     */
+    long getRecursiveAggregationLimit();
 
     /**
      * Returns the node states that are part of the indexing aggregate of the
