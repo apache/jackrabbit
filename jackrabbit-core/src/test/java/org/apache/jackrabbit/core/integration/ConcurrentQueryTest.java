@@ -26,7 +26,6 @@ import javax.jcr.query.QueryManager;
 import javax.jcr.query.Query;
 import java.util.List;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.Collections;
 import java.io.PrintWriter;
 
@@ -43,7 +42,7 @@ public class ConcurrentQueryTest extends AbstractJCRTest {
     /**
      * The read sessions executing the queries.
      */
-    private List readSessions = new ArrayList();
+    private List<Session> readSessions = new ArrayList<Session>();
 
     /**
      * Gets the read sessions for the test cases.
@@ -56,12 +55,12 @@ public class ConcurrentQueryTest extends AbstractJCRTest {
     }
 
     /**
-     * Logs out the sessions aquired in setUp().
+     * Logs out the sessions acquired in setUp().
      */
     protected void tearDown() throws Exception {
         super.tearDown();
-        for (Iterator it = readSessions.iterator(); it.hasNext(); ) {
-            ((Session) it.next()).logout();
+        for (Session s : readSessions) {
+            s.logout();
         }
         readSessions.clear();
     }
@@ -74,11 +73,10 @@ public class ConcurrentQueryTest extends AbstractJCRTest {
      */
     public void testConcurrentQueryWithWrite() throws Exception {
 
-        final List exceptions = Collections.synchronizedList(new ArrayList());
-        List readers = new ArrayList();
+        final List<Exception> exceptions = Collections.synchronizedList(new ArrayList<Exception>());
+        List<QueryWorker> readers = new ArrayList<QueryWorker>();
         String query = "/jcr:root" + testRoot + "//*[@testprop = 'foo']";
-        for (Iterator it = readSessions.iterator(); it.hasNext(); ) {
-            Session s = (Session) it.next();
+        for (Session s : readSessions) {
             readers.add(new QueryWorker(s, query, exceptions, log));
         }
 
@@ -103,16 +101,15 @@ public class ConcurrentQueryTest extends AbstractJCRTest {
 
         // start the threads
         writer.start();
-        for (Iterator it = readers.iterator(); it.hasNext(); ) {
-            ((Thread) it.next()).start();
+        for (Thread t : readers ) {
+            t.start();
         }
 
         // wait for writer thread to finish its work
         writer.join();
 
         // request readers to finish
-        for (Iterator it = readers.iterator(); it.hasNext(); ) {
-            QueryWorker t = (QueryWorker) it.next();
+        for (QueryWorker t : readers) {
             t.finish();
             t.join();
         }
@@ -143,11 +140,10 @@ public class ConcurrentQueryTest extends AbstractJCRTest {
             testRootNode.save();
         }
 
-        final List exceptions = Collections.synchronizedList(new ArrayList());
-        List readers = new ArrayList();
+        final List<Exception> exceptions = Collections.synchronizedList(new ArrayList<Exception>());
+        List<QueryWorker> readers = new ArrayList<QueryWorker>();
         String query = "/jcr:root" + testRoot + "//*[@testprop = 'foo']";
-        for (Iterator it = readSessions.iterator(); it.hasNext(); ) {
-            Session s = (Session) it.next();
+        for (Session s : readSessions) {
             readers.add(new QueryWorker(s, query, exceptions, log));
         }
 
@@ -172,16 +168,15 @@ public class ConcurrentQueryTest extends AbstractJCRTest {
 
         // start the threads
         writer.start();
-        for (Iterator it = readers.iterator(); it.hasNext(); ) {
-            ((Thread) it.next()).start();
+        for (Thread t : readers) {
+            t.start();
         }
 
         // wait for writer thread to finish its work
         writer.join();
 
         // request readers to finish
-        for (Iterator it = readers.iterator(); it.hasNext(); ) {
-            QueryWorker t = (QueryWorker) it.next();
+        for (QueryWorker t : readers) {
             t.finish();
             t.join();
         }
@@ -199,12 +194,12 @@ public class ConcurrentQueryTest extends AbstractJCRTest {
 
         private Session s;
         private String query;
-        private final List exceptions;
+        private final List<Exception> exceptions;
         private final PrintWriter log;
         private boolean finish = false;
         private int count;
 
-        QueryWorker(Session s, String query, List exceptions, PrintWriter log) {
+        QueryWorker(Session s, String query, List<Exception> exceptions, PrintWriter log) {
             this.s = s;
             this.query = query;
             this.exceptions = exceptions;
