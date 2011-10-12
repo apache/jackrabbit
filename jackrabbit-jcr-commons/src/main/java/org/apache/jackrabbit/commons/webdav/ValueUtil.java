@@ -110,4 +110,40 @@ public class ValueUtil {
         // deserialize value ->> see #valueToXml where values are serialized
         return ValueHelper.deserialize(value, type, true, valueFactory);
     }
+
+    public static long[] lengthsFromXml(Object propValue) throws RepositoryException {
+        long[] lengths;
+        // retrieve jcr-values from child 'value'-element(s)
+        List<Element> lengthElements = new ArrayList<Element>();
+        if (propValue == null) {
+            lengths = new long[0];
+        } else { /* not null propValue */
+            if (isLengthElement(propValue)) {
+                lengthElements.add((Element) propValue);
+            } else if (propValue instanceof List) {
+                for (Object el : ((List<?>) propValue)) {
+                    /* make sure, only Elements with name 'value' are used for
+                    * the 'value' field. any other content (other elements, text,
+                    * comment etc.) is ignored. NO bad-request/conflict error is
+                    * thrown.
+                    */
+                    if (isLengthElement(el)) {
+                        lengthElements.add((Element) el);
+                    }
+                }
+            }
+            /* fill the 'value' with the valid 'value' elements found before */
+            lengths = new long[lengthElements.size()];
+            int i = 0;
+            for (Element element : lengthElements) {
+                lengths[i] = Long.parseLong(XMLUtil.getText(element, "0"));
+                i++;
+            }
+        }
+        return lengths;
+    }
+
+    private static boolean isLengthElement(Object obj) {
+        return obj instanceof Element && JcrRemotingConstants.XML_LENGTH.equals(((Element)obj).getLocalName());
+    }
 }

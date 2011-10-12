@@ -16,19 +16,6 @@
  */
 package org.apache.jackrabbit.spi2davex;
 
-import java.io.IOException;
-import java.io.StringWriter;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-
-import javax.jcr.Credentials;
-import javax.jcr.ItemNotFoundException;
-import javax.jcr.PropertyType;
-import javax.jcr.RepositoryException;
-
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpException;
 import org.apache.commons.httpclient.HttpMethod;
@@ -41,6 +28,7 @@ import org.apache.jackrabbit.commons.json.JsonParser;
 import org.apache.jackrabbit.commons.json.JsonUtil;
 import org.apache.jackrabbit.commons.webdav.JcrRemotingConstants;
 import org.apache.jackrabbit.commons.webdav.JcrValueType;
+import org.apache.jackrabbit.commons.webdav.ValueUtil;
 import org.apache.jackrabbit.spi.Batch;
 import org.apache.jackrabbit.spi.ItemId;
 import org.apache.jackrabbit.spi.ItemInfo;
@@ -61,13 +49,34 @@ import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
 import org.apache.jackrabbit.spi.commons.name.PathBuilder;
 import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
+import org.apache.jackrabbit.spi.commons.value.ValueFormat;
 import org.apache.jackrabbit.spi2dav.ExceptionConverter;
+import org.apache.jackrabbit.spi2dav.ItemResourceConstants;
 import org.apache.jackrabbit.util.Text;
+import org.apache.jackrabbit.webdav.DavConstants;
 import org.apache.jackrabbit.webdav.DavException;
 import org.apache.jackrabbit.webdav.DavServletResponse;
+import org.apache.jackrabbit.webdav.MultiStatusResponse;
+import org.apache.jackrabbit.webdav.client.methods.PropFindMethod;
 import org.apache.jackrabbit.webdav.header.IfHeader;
+import org.apache.jackrabbit.webdav.property.DavProperty;
+import org.apache.jackrabbit.webdav.property.DavPropertyName;
+import org.apache.jackrabbit.webdav.property.DavPropertyNameSet;
+import org.apache.jackrabbit.webdav.property.DavPropertySet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.jcr.Credentials;
+import javax.jcr.ItemNotFoundException;
+import javax.jcr.PropertyType;
+import javax.jcr.RepositoryException;
+import java.io.IOException;
+import java.io.StringWriter;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 /**
  * <code>RepositoryServiceImpl</code>...
@@ -89,6 +98,25 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
     private static final String ORDER_POSITION_BEFORE = "#before";
 
     private static final String DEFAULT_CHARSET = "UTF-8";
+
+    private static final DavPropertyName JCR_TYPE =
+            DavPropertyName.create(ItemResourceConstants.JCR_TYPE_LN, ItemResourceConstants.NAMESPACE);
+
+    private static final DavPropertyName JCR_LENGTH =
+            DavPropertyName.create(ItemResourceConstants.JCR_LENGTH_LN, ItemResourceConstants.NAMESPACE);
+
+    private static final DavPropertyName JCR_LENGTHS =
+            DavPropertyName.create(ItemResourceConstants.JCR_LENGTHS_LN, ItemResourceConstants.NAMESPACE);
+
+    private static final DavPropertyName JCR_GET_STRING =
+            DavPropertyName.create(ItemResourceConstants.JCR_GET_STRING_LN, ItemResourceConstants.NAMESPACE);
+
+    private static final DavPropertyNameSet LAZY_PROPERTY_NAME_SET = new DavPropertyNameSet(){{
+        add(JCR_TYPE);
+        add(JCR_LENGTH);
+        add(JCR_LENGTHS);
+        add(JCR_GET_STRING);
+    }};
 
     /**
      * base uri to the extended jcr-server that can handle the GET and POST
@@ -211,7 +239,7 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
     }
 
     private String getURI(Path path, SessionInfo sessionInfo) throws RepositoryException {
-        StringBuffer sb = new StringBuffer(getRootURI(sessionInfo));
+        StringBuilder sb = new StringBuilder(getRootURI(sessionInfo));
         String jcrPath = getNamePathResolver(sessionInfo).getJCRPath(path);
         sb.append(Text.escapePath(jcrPath));
         return sb.toString();
@@ -227,13 +255,13 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
     }
 
     private String getRootURI(SessionInfo sessionInfo) {
-        StringBuffer sb = new StringBuffer(getWorkspaceURI(sessionInfo));
+        StringBuilder sb = new StringBuilder(getWorkspaceURI(sessionInfo));
         sb.append(Text.escapePath(JcrRemotingConstants.ROOT_ITEM_RESOURCEPATH));
         return sb.toString();
     }
 
     private String getWorkspaceURI(SessionInfo sessionInfo) {
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         sb.append(jcrServerURI);
         sb.append(Text.escape(sessionInfo.getWorkspaceName()));
         return sb.toString();
@@ -304,7 +332,7 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
     @Override
     public Iterator<? extends ItemInfo> getItemInfos(SessionInfo sessionInfo, ItemId itemId) throws ItemNotFoundException, RepositoryException {
         if (!itemId.denotesNode()) {
-            PropertyInfo propertyInfo = super.getPropertyInfo(sessionInfo, (PropertyId) itemId);
+            PropertyInfo propertyInfo = getPropertyInfo(sessionInfo, (PropertyId) itemId);
             return Iterators.singleton(propertyInfo);
         } else {
             NodeId nodeId = (NodeId) itemId;
@@ -347,6 +375,66 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
         }
     }
 
+    /**
+     * @see RepositoryService#getPropertyInfo(SessionInfo, PropertyId)
+     */
+    @Override
+    public PropertyInfo getPropertyInfo(SessionInfo sessionInfo, PropertyId propertyId) throws RepositoryException {
+        Path p = getPath(propertyId, sessionInfo);
+        String uri = getURI(p, sessionInfo);
+        PropFindMethod method = null;
+        try {
+            method = new PropFindMethod(uri, LAZY_PROPERTY_NAME_SET, DavConstants.DEPTH_0);
+            getClient(sessionInfo).executeMethod(method);
+            method.checkSuccess();
+
+            MultiStatusResponse[] responses = method.getResponseBodyAsMultiStatus().getResponses();
+            if (responses.length != 1) {
+                throw new ItemNotFoundException("Unable to retrieve the PropertyInfo. No such property " + uri);
+            }
+
+            MultiStatusResponse response = responses[0];
+            DavPropertySet props = response.getProperties(DavServletResponse.SC_OK);
+            int propertyType = PropertyType.valueFromName(props.get(JCR_TYPE).getValue().toString());
+
+            if (propertyType == PropertyType.BINARY) {
+                DavProperty<?> lengthsProp = props.get(JCR_LENGTHS);
+                if (lengthsProp != null) {
+                    // multivalued binary property
+                    long[] lengths = ValueUtil.lengthsFromXml(lengthsProp.getValue());
+                    QValue[] qValues = new QValue[lengths.length];
+                    for (int i = 0 ; i < lengths.length ; i ++) {
+                        qValues[i] = getQValueFactory(sessionInfo).create(lengths[i], uri, i);
+                    }
+                    return new PropertyInfoImpl(propertyId, p, propertyType, qValues);
+                } else {
+                    // single valued binary property
+                    long length = Long.parseLong(props.get(JCR_LENGTH).getValue().toString());
+                    QValue qValue = getQValueFactory(sessionInfo).create(length, uri, 0) ;
+                    return new PropertyInfoImpl(propertyId, p, propertyType, qValue);
+                }
+            } else if (props.contains(JCR_GET_STRING)) {
+                // single valued non-binary property
+                String str = props.get(JCR_GET_STRING).getValue().toString();
+                QValue qValue = ValueFormat.getQValue(str, propertyType, getNamePathResolver(sessionInfo), getQValueFactory(sessionInfo));
+                return new PropertyInfoImpl(propertyId, p, propertyType, qValue);
+            } else {
+                // multivalued non-binary property or some other property that
+                // didn't expose the JCR_GET_STRING dav property.
+                return super.getPropertyInfo(sessionInfo, propertyId);
+            }
+        } catch (IOException e) {
+            log.error("Internal error while retrieving ItemInfo.",e);
+            throw new RepositoryException(e.getMessage());
+        } catch (DavException e) {
+            throw ExceptionConverter.generate(e);
+        } finally {
+            if (method != null) {
+                method.releaseConnection();
+            }
+        }
+    }
+
     @Override
     public Batch createBatch(SessionInfo sessionInfo, ItemId itemId) throws RepositoryException {
         return new BatchImpl(itemId, sessionInfo);
@@ -378,7 +466,7 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
             method = new PostMethod(getWorkspaceURI(sessionInfo));
             NamePathResolver resolver = getNamePathResolver(sessionInfo);
 
-            StringBuffer args = new StringBuffer();
+            StringBuilder args = new StringBuilder();
             args.append(srcWorkspaceName);
             args.append(",");
             args.append(resolver.getJCRPath(getPath(srcNodeId, sessionInfo, srcWorkspaceName)));
@@ -412,7 +500,7 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
             method = new PostMethod(getWorkspaceURI(sessionInfo));
 
             NamePathResolver resolver = getNamePathResolver(sessionInfo);
-            StringBuffer args = new StringBuffer();
+            StringBuilder args = new StringBuilder();
             args.append(srcWorkspaceName);
             args.append(",");
             args.append(resolver.getJCRPath(getPath(srcNodeId, sessionInfo, srcWorkspaceName)));
@@ -489,7 +577,7 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
 
             // insert the content of 'batchMap' part containing the ordered list
             // of methods to be executed:
-            StringBuffer buf = new StringBuffer();
+            StringBuilder buf = new StringBuilder();
             for (Iterator<String> it = diff.iterator(); it.hasNext();) {
                 buf.append(it.next());
                 if (it.hasNext()) {
@@ -651,7 +739,7 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
             // TODO: multiple reorder of SNS nodes requires readjustment of path -> see remove()
             String srcPath = getNamePathResolver(sessionInfo).getJCRPath(getPath(srcNodeId, sessionInfo));
 
-            StringBuffer val = new StringBuffer();
+            StringBuilder val = new StringBuilder();
             if (beforeNodeId != null) {
                 Path beforePath = getPath(beforeNodeId, sessionInfo);
                 String beforeJcrPath = getNamePathResolver(sessionInfo).getJCRPath(beforePath);
@@ -719,7 +807,7 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
          * @param value
          */
         private void appendDiff(char symbol, String targetPath, String value) {
-            StringBuffer bf = new StringBuffer();
+            StringBuilder bf = new StringBuilder();
             bf.append(symbol).append(targetPath).append(" : ");
             if (value != null) {
                 bf.append(value);
@@ -754,7 +842,7 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
                 clearPreviousSetProperty(jcrPropPath);
             }
 
-            StringBuffer strVal = new StringBuffer("[");
+            StringBuilder strVal = new StringBuilder("[");
             for (int i = 0; i < values.length; i++) {
                 String str = getJsonString(values[i]);
                 if (str == null) {
