@@ -57,10 +57,12 @@ public class ConcurrentCache<K, V> extends AbstractCache {
 
     }
 
+    private final String name;
     private final Map<K, E<V>>[] segments;
 
     @SuppressWarnings({ "unchecked", "serial" })
-    public ConcurrentCache(int numberOfSegments) {
+    public ConcurrentCache(String name, int numberOfSegments) {
+        this.name = name;
         this.segments = new Map[numberOfSegments];
         for (int i = 0; i < segments.length; i++) {
             segments[i] = new LinkedHashMap<K, E<V>>(16, 0.75f, true) {
@@ -77,8 +79,8 @@ public class ConcurrentCache<K, V> extends AbstractCache {
         }
     }
 
-    public ConcurrentCache() {
-        this(DEFAULT_NUMBER_OF_SEGMENTS);
+    public ConcurrentCache(String name) {
+        this(name, DEFAULT_NUMBER_OF_SEGMENTS);
     }
 
     /**
@@ -124,10 +126,10 @@ public class ConcurrentCache<K, V> extends AbstractCache {
             E<V> entry = segment.get(key);
             if (entry != null) {
                 return entry.value;
-            } else {
-                return null;
             }
         }
+        recordCacheMiss();
+        return null;
     }
 
     /**
@@ -252,4 +254,17 @@ public class ConcurrentCache<K, V> extends AbstractCache {
         }
     }
 
+    public long getElementCount() {
+        long count = 0;
+        for (int i = 0; i < segments.length; i++) {
+            count += segments[i].size();
+        }
+        return count;
+    }
+
+    @Override
+    public String toString() {
+        return name + "[" + getClass().getSimpleName() + "@"
+                + Integer.toHexString(hashCode()) + "]";
+    }
 }

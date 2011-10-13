@@ -37,7 +37,7 @@ public class ConcurrentCacheTest extends TestCase {
         }
 
         ConcurrentCache<NodeId, NodeId> cache =
-            new ConcurrentCache<NodeId, NodeId>();
+            new ConcurrentCache<NodeId, NodeId>("test");
         cache.setMaxMemorySize(ids.length / 2);
 
         for (int i = 0; i < ids.length; i++) {

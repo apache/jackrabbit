@@ -65,6 +65,22 @@ public abstract class AbstractCache implements Cache {
     private final AtomicLong accessCount = new AtomicLong();
 
     /**
+     * Cache access counter. Unike his counterpart {@link #accessCount}, this
+     * does not get reset.
+     * 
+     * It is used in the cases where a cache listener needs to call
+     * {@link Cache#resetAccessCount()}, but also needs a total access count. If
+     * you are sure that nobody calls reset, you can just use
+     * {@link #accessCount}.
+     */
+    private final AtomicLong totalAccessCount = new AtomicLong();
+
+    /**
+     * Cache miss counter.
+     */
+    private final AtomicLong missCount = new AtomicLong();
+
+    /**
      * Cache access listener. Set in the
      * {@link #setAccessListener(CacheAccessListener)} method and accessed
      * by periodically by the {@link #recordCacheAccess()} method.
@@ -98,13 +114,18 @@ public abstract class AbstractCache implements Cache {
      * interval has passed since the previous listener call.
      */
     protected void recordCacheAccess() {
+        totalAccessCount.incrementAndGet();
         long count = accessCount.incrementAndGet();
         if (count % ACCESS_INTERVAL == 0) {
             CacheAccessListener listener = accessListener.get();
             if (listener != null) {
-                listener.cacheAccessed();
+                listener.cacheAccessed(count);
             }
         }
+    }
+
+    protected void recordCacheMiss() {
+        missCount.incrementAndGet();
     }
 
     public long getAccessCount() {
@@ -113,6 +134,18 @@ public abstract class AbstractCache implements Cache {
 
     public void resetAccessCount() {
         accessCount.set(0);
+    }
+    
+    public long getTotalAccessCount(){
+        return totalAccessCount.get();
+    }
+
+    public long getMissCount() {
+        return missCount.get();
+    }
+
+    public void resetMissCount() {
+        missCount.set(0);
     }
 
     public long getMemoryUsed() {
@@ -146,4 +179,25 @@ public abstract class AbstractCache implements Cache {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    public String getCacheInfoAsString() {
+        long u = getMemoryUsed() / 1024;
+        long m = getMaxMemorySize() / 1024;
+        StringBuilder c = new StringBuilder();
+        c.append("cachename=");
+        c.append(this.toString());
+        c.append(", elements=");
+        c.append(getElementCount());
+        c.append(", usedmemorykb=");
+        c.append(u);
+        c.append(", maxmemorykb=");
+        c.append(m);
+        c.append(", access=");
+        c.append(getTotalAccessCount());
+        c.append(", miss=");
+        c.append(getMissCount());
+        return c.toString();
+    }
 }
