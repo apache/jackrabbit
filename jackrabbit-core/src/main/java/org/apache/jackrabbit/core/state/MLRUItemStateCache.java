@@ -45,7 +45,7 @@ public class MLRUItemStateCache implements ItemStateCache {
     private volatile long numWrites = 0;
 
     private final ConcurrentCache<ItemId, ItemState> cache =
-        new ConcurrentCache<ItemId, ItemState>();
+        new ConcurrentCache<ItemId, ItemState>(MLRUItemStateCache.class.getSimpleName());
 
     public MLRUItemStateCache(CacheManager cacheMgr) {
         cache.setMaxMemorySize(DEFAULT_MAX_MEM);

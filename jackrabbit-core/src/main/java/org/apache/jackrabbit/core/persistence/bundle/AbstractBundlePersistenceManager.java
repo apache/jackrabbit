@@ -377,7 +377,7 @@ public abstract class AbstractBundlePersistenceManager implements
     public void init(PMContext context) throws Exception {
         this.context = context;
         // init bundle cache
-        bundles = new ConcurrentCache<NodeId, NodePropBundle>();
+        bundles = new ConcurrentCache<NodeId, NodePropBundle>(context.getHomeDir().getName() + "BundleCache");
         bundles.setMaxMemorySize(bundleCacheSize);
     }
 
