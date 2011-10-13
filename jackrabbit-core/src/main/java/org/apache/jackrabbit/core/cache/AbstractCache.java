@@ -114,6 +114,7 @@ public abstract class AbstractCache implements Cache {
      * interval has passed since the previous listener call.
      */
     protected void recordCacheAccess() {
+        totalAccessCount.incrementAndGet();
         long count = accessCount.incrementAndGet();
         if (count % ACCESS_INTERVAL == 0) {
             CacheAccessListener listener = accessListener.get();
@@ -121,7 +122,6 @@ public abstract class AbstractCache implements Cache {
                 listener.cacheAccessed(count);
             }
         }
-        totalAccessCount.incrementAndGet();
     }
 
     protected void recordCacheMiss() {
@@ -186,13 +186,13 @@ public abstract class AbstractCache implements Cache {
         long u = getMemoryUsed() / 1024;
         long m = getMaxMemorySize() / 1024;
         StringBuilder c = new StringBuilder();
-        c.append("Cache name=");
+        c.append("cachename=");
         c.append(this.toString());
         c.append(", elements=");
         c.append(getElementCount());
-        c.append(", used memory=");
+        c.append(", usedmemorykb=");
         c.append(u);
-        c.append(", max memory=");
+        c.append(", maxmemorykb=");
         c.append(m);
         c.append(", access=");
         c.append(getTotalAccessCount());

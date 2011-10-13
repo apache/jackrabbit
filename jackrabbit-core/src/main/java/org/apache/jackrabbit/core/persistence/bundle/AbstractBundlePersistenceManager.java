@@ -28,6 +28,8 @@ import javax.jcr.PropertyType;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.apache.jackrabbit.core.cache.Cache;
+import org.apache.jackrabbit.core.cache.CacheAccessListener;
 import org.apache.jackrabbit.core.cache.ConcurrentCache;
 import org.apache.jackrabbit.core.fs.FileSystemResource;
 import org.apache.jackrabbit.core.fs.FileSystem;
@@ -82,7 +84,7 @@ import org.apache.jackrabbit.spi.Name;
  * </ul>
  */
 public abstract class AbstractBundlePersistenceManager implements
-    PersistenceManager, CachingPersistenceManager, IterablePersistenceManager {
+    PersistenceManager, CachingPersistenceManager, IterablePersistenceManager, CacheAccessListener {
 
     /** the default logger */
     private static Logger log = LoggerFactory.getLogger(AbstractBundlePersistenceManager.class);
@@ -111,6 +113,18 @@ public abstract class AbstractBundlePersistenceManager implements
 
     /** the cache of loaded bundles */
     private ConcurrentCache<NodeId, NodePropBundle> bundles;
+
+    /** The default minimum stats logging interval (in ms). */
+    private static final int DEFAULT_LOG_STATS_INTERVAL = 60 * 1000;
+
+    /** The minimum interval time between stats are logged */
+    private long minLogStatsInterval = Long.getLong(
+            "org.apache.jackrabbit.cacheLogStatsInterval",
+            DEFAULT_LOG_STATS_INTERVAL);
+
+    /** The last time the cache stats were logged. */
+    private volatile long nextLogStats =
+            System.currentTimeMillis() + DEFAULT_LOG_STATS_INTERVAL;
 
     /** the persistence manager context */
     protected PMContext context;
@@ -379,6 +393,7 @@ public abstract class AbstractBundlePersistenceManager implements
         // init bundle cache
         bundles = new ConcurrentCache<NodeId, NodePropBundle>(context.getHomeDir().getName() + "BundleCache");
         bundles.setMaxMemorySize(bundleCacheSize);
+        bundles.setAccessListener(this);
     }
 
     /**
@@ -709,4 +724,22 @@ public abstract class AbstractBundlePersistenceManager implements
         bundles.remove(id);
     }
 
+    public void cacheAccessed(long accessCount) {
+        logCacheStats();
+    }
+
+    private void logCacheStats() {
+        if (log.isInfoEnabled()) {
+            long now = System.currentTimeMillis();
+            if (now < nextLogStats) {
+                return;
+            }
+            log.info(bundles.getCacheInfoAsString());
+            nextLogStats = now + minLogStatsInterval;
+        }
+    }
+
+    public void disposeCache(Cache cache) {
+        // NOOP
+    }
 }

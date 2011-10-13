@@ -156,17 +156,18 @@ public class CacheManager implements CacheAccessListener {
      * Log info about the caches.
      */
     private void logCacheStats() {
-        if (log.isDebugEnabled()) {
+        if (log.isInfoEnabled()) {
             long now = System.currentTimeMillis();
             if (now < nextLogStats) {
                 return;
             }
             for (Cache cache : caches.keySet()) {
-                log.debug(cache.getCacheInfoAsString());
+                log.info(cache.getCacheInfoAsString());
             }
             nextLogStats = now + minLogStatsInterval;
         }
     }
+
     /**
      * Re-calculate the maximum memory for each cache, and set the new limits.
      */
