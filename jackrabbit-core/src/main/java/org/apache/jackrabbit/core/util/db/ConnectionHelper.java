@@ -77,6 +77,11 @@ public class ConnectionHelper {
     protected final DataSource dataSource;
 
     private ThreadLocal<Connection> batchConnectionTl = new ThreadLocal<Connection>();
+    
+    /**
+     * The default fetchSize is '0'. This means the fetchSize Hint will be ignored 
+     */
+    private int fetchSize = 0;
 
     /**
      * @param dataSrc the {@link DataSource} on which this instance acts
@@ -98,6 +103,19 @@ public class ConnectionHelper {
         dataSource = dataSrc;
         checkTablesWithUserName = checkWithUserName;
         blockOnConnectionLoss = block;
+    }
+
+    /**
+     * @param dataSrc the {@link DataSource} on which this instance acts
+     * @param checkWithUserName whether the username is to be used for the {@link #tableExists(String)} method
+     * @param block whether the helper should transparently block on DB connection loss (otherwise it throws exceptions)
+     * @param fetchSize the fetchSize that will be used per default
+     */
+    protected ConnectionHelper(DataSource dataSrc, boolean checkWithUserName, boolean block, int fetchSize) {
+        dataSource = dataSrc;
+        checkTablesWithUserName = checkWithUserName;
+        blockOnConnectionLoss = block;
+        this.fetchSize = fetchSize;
     }
 
     /**
@@ -326,7 +344,6 @@ public class ConnectionHelper {
      *
      * @param sql an SQL statement string
      * @param params the parameters for the SQL statement
-     * @param returnGeneratedKeys whether generated keys should be returned
      * @return a {@link ResultSet}
      */
     public final ResultSet query(String sql, Object... params) throws SQLException {
@@ -369,11 +386,11 @@ public class ConnectionHelper {
                 stmt = con.prepareStatement(sql);
             }
             stmt.setMaxRows(maxRows);
-            int fetchSize = 10000;
-            if (0 < maxRows && maxRows < fetchSize) {
-                fetchSize = maxRows; // JCR-3090
+            int currentFetchSize = this.fetchSize;
+            if (0 < maxRows && maxRows < currentFetchSize) {
+            	currentFetchSize = maxRows; // JCR-3090
             }
-            stmt.setFetchSize(fetchSize);
+            stmt.setFetchSize(currentFetchSize);
             execute(stmt, params);
             if (returnGeneratedKeys) {
                 rs = stmt.getGeneratedKeys();
@@ -395,7 +412,7 @@ public class ConnectionHelper {
         }
     }
 
-    /**
+	/**
      * Gets a connection based on the {@code batchMode} state of this helper. The connection should be closed
      * by a call to {@link #closeResources(Connection, Statement, ResultSet)} which also takes the {@code
      * batchMode} state into account.

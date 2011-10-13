@@ -18,7 +18,11 @@ package org.apache.jackrabbit.core.persistence.pool;
 
 import java.sql.SQLException;
 
+import javax.sql.DataSource;
+
 import org.apache.jackrabbit.core.persistence.PMContext;
+import org.apache.jackrabbit.core.util.db.ConnectionHelper;
+import org.apache.jackrabbit.core.util.db.PostgreSQLConnectionHelper;
 
 /**
  * Extends the {@link BundleDbPersistenceManager} by PostgreSQL specific code.
@@ -60,6 +64,14 @@ public class PostgreSQLPersistenceManager extends BundleDbPersistenceManager {
      */
     protected DbNameIndex createDbNameIndex() throws SQLException {
         return new PostgreSQLNameIndex(conHelper, schemaObjectPrefix);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected ConnectionHelper createConnectionHelper(DataSource dataSrc) throws Exception {
+    	return new PostgreSQLConnectionHelper(dataSrc, blockOnConnectionLoss);
     }
 
     /**
