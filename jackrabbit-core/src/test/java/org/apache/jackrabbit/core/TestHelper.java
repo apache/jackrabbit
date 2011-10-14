@@ -69,4 +69,30 @@ public class TestHelper {
             }
         }
     }
+
+    /**
+     * Runs a consistency check on the versioning store used by the specified session.
+     *
+     * @param session the Session accessing the workspace to be checked
+     * @throws RepositoryException
+     * @throws NotExecutableException if the {@link PersistenceManager} does
+     * not implement {@link ConsistencyChecker}, or if the associated
+     * {@link Repository} is not a {@link RepositoryImpl}.
+     */
+    public static ConsistencyReport checkVersionStoreConsistency(Session session)
+            throws NotExecutableException, RepositoryException {
+        Repository r = session.getRepository();
+        if (!(r instanceof RepositoryImpl)) {
+            throw new NotExecutableException();
+        } else {
+            RepositoryImpl ri = (RepositoryImpl) r;
+            PersistenceManager pm = ri.getRepositoryContext()
+                    .getInternalVersionManager().getPersistenceManager();
+            if (!(pm instanceof ConsistencyChecker)) {
+                throw new NotExecutableException();
+            } else {
+                return ((ConsistencyChecker) pm).check(null, true, false);
+            }
+        }
+    }
 }

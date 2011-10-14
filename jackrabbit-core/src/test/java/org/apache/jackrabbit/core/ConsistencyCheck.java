@@ -36,9 +36,17 @@ public class ConsistencyCheck extends AbstractJCRTest {
     }
 
     private void runCheck() throws Exception {
-        log.print("running consistency check on repository " + getHelper().getRepository());
+        log.print("running consistency check on repository "
+                + getHelper().getRepository());
 
-        ConsistencyReport rep = TestHelper.checkConsistency(testRootNode.getSession());
-        assertEquals("Found broken nodes in repository: " + rep, 0, rep.getItems().size());
+        ConsistencyReport rep = TestHelper.checkConsistency(testRootNode
+                .getSession());
+        assertEquals("Found broken nodes in repository: " + rep, 0, rep
+                .getItems().size());
+
+        rep = TestHelper
+                .checkVersionStoreConsistency(testRootNode.getSession());
+        assertEquals("Found broken nodes in version storage: " + rep, 0, rep
+                .getItems().size());
     }
 }
