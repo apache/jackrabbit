@@ -149,6 +149,9 @@ abstract class InternalVersionManagerBase implements InternalVersionManager {
             NodeStateEx parent = getParentNode(getHistoryRoot(), uuid, null);
             if (parent != null && parent.hasNode(name)) {
                 NodeStateEx history = parent.getNode(name, 1);
+                if (history == null) {
+                    throw new InconsistentVersioningState("Unexpected failure to get child node " + name + " on parent node" + parent.getNodeId());
+                }
                 return getVersionHistory(history.getNodeId());
             } else {
                 throw new ItemNotFoundException("Version history of node " + id + " not found.");
@@ -315,6 +318,9 @@ abstract class InternalVersionManagerBase implements InternalVersionManager {
             NodeStateEx parent = getParentNode(getHistoryRoot(), uuid, null);
             if (parent != null && parent.hasNode(name)) {
                 NodeStateEx history = parent.getNode(name, 1);
+                if (history == null) {
+                    throw new InconsistentVersioningState("Unexpected failure to get child node " + name + " on parent node" + parent.getNodeId());
+                }
                 Name root = NameConstants.JCR_ROOTVERSION;
                 info = new VersionHistoryInfo(
                         history.getNodeId(),

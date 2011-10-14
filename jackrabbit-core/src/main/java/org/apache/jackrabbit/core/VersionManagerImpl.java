@@ -48,6 +48,7 @@ import org.apache.jackrabbit.core.session.SessionWriteOperation;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.UpdatableItemStateManager;
+import org.apache.jackrabbit.core.version.InconsistentVersioningState;
 import org.apache.jackrabbit.core.version.InternalActivity;
 import org.apache.jackrabbit.core.version.InternalBaseline;
 import org.apache.jackrabbit.core.version.InternalVersion;
@@ -181,6 +182,9 @@ public class VersionManagerImpl extends VersionManagerImplConfig
                     throws RepositoryException {
                 NodeStateEx state = getNodeState(absPath);
                 InternalVersionHistory vh = getVersionHistory(state);
+                if (vh == null) {
+                    throw new InconsistentVersioningState("Couldn't get version history for node " + state.getNodeId());
+                }
                 return (VersionHistory) session.getNodeById(vh.getId());
             }
             public String toString() {
