@@ -755,10 +755,10 @@ public class BundleDbPersistenceManager
                 } else {
                     NodeId cp = child.getParentId();
                     if (cp == null) {
-                        message = "ChildNode has invalid parent uuid: <null>";
+                        message = "ChildNode has invalid parent id: <null>";
                         log.error(message);
                     } else if (!cp.equals(id)) {
-                        message = "ChildNode has invalid parent uuid: '" + cp + "' (instead of '" + id + "')";
+                        message = "ChildNode has invalid parent id: '" + cp + "' (instead of '" + id + "')";
                         log.error(message);
                     }
                 }
@@ -767,6 +767,7 @@ public class BundleDbPersistenceManager
                 }
             } catch (ItemStateException e) {
                 // problem already logged (loadBundle called with logDetailedErrors=true)
+                addMessage(reports, id, e.getMessage());
             }
         }
         // remove child node entry (if fixing is enabled)
@@ -782,38 +783,43 @@ public class BundleDbPersistenceManager
         try {
             // skip root nodes (that point to itself)
             if (parentId != null && !id.toString().endsWith("babecafebabe")) {
-                if (loadBundle(parentId) == null) {
-                    String message = "NodeState '" + id + "' references inexistent parent uuid '" + parentId + "'";
+                NodePropBundle parentBundle = loadBundle(parentId);
+                
+                if (parentBundle == null) {
+                    String message = "NodeState '" + id + "' references inexistent parent id '" + parentId + "'";
                     log.error(message);
                     addMessage(reports, id, message);
                 }
-            	NodePropBundle parentBundle = loadBundle(parentId);
-            	Iterator<NodePropBundle.ChildNodeEntry> childNodeIter = parentBundle.getChildNodeEntries().iterator();
-            	boolean found = false;
-            	while (childNodeIter.hasNext()) {
-                    NodePropBundle.ChildNodeEntry entry = childNodeIter.next();
-                    if (entry.getId().equals(id)){
-                    	found = true;
-                    	break;
-                    }
-            	}
-                if (!found) {
-                    String message = "NodeState '" + id + "' is not referenced by its parent node '" + parentId + "'";
-                    log.error(message);
-                    addMessage(reports, id, message);
+                else {
+                    boolean found = false;
 
-                    int l = (int) System.currentTimeMillis();
-                    int r = new Random().nextInt();
-                    int n = l + r;
-                    String nodeName = Integer.toHexString(n);
-                    parentBundle.addChildNodeEntry(NameFactoryImpl
-                            .getInstance().create("{}" + nodeName), id);
-                    log.info("NodeState '" + id + "' adds itself to its parent node '" + parentId + "' with a new name '" + nodeName + "'");
-                    modifications.add(parentBundle);
+                    for (NodePropBundle.ChildNodeEntry entry : parentBundle.getChildNodeEntries()) {
+                        if (entry.getId().equals(id)){
+                            found = true;
+                            break;
+                        }
+                    }
+
+                    if (!found) {
+                        String message = "NodeState '" + id + "' is not referenced by its parent node '" + parentId + "'";
+                        log.error(message);
+                        addMessage(reports, id, message);
+
+                        int l = (int) System.currentTimeMillis();
+                        int r = new Random().nextInt();
+                        int n = l + r;
+                        String nodeName = Integer.toHexString(n);
+                        parentBundle.addChildNodeEntry(NameFactoryImpl
+                                .getInstance().create("{}" + nodeName), id);
+                        log.info("NodeState '" + id + "' adds itself to its parent node '" + parentId + "' with a new name '" + nodeName + "'");
+                        modifications.add(parentBundle);
+                    }
                 }
             }
         } catch (ItemStateException e) {
-            log.error("Error reading node '" + parentId + "' (parent of '" + id + "'): " + e);
+            String message = "Error reading node '" + parentId + "' (parent of '" + id + "'): " + e;
+            log.error(message);
+            addMessage(reports, id, message);
         }
     }
 
@@ -918,7 +924,7 @@ public class BundleDbPersistenceManager
                 try {
                     idList.add(new NodeId(uuids[i]));
                 } catch (IllegalArgumentException e) {
-                    log.error("Invalid uuid for consistency check, skipping: '" + uuids[i] + "': " + e);
+                    log.error("Invalid id for consistency check, skipping: '" + uuids[i] + "': " + e);
                 }
             }
             
@@ -930,7 +936,7 @@ public class BundleDbPersistenceManager
                     NodePropBundle bundle = loadBundle(id);
 
                     if (bundle == null) {
-                        log.error("No bundle found for uuid '" + id + "'");
+                        log.error("No bundle found for id '" + id + "'");
                         continue;
                     }
 
