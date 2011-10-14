@@ -156,13 +156,13 @@ public class CacheManager implements CacheAccessListener {
      * Log info about the caches.
      */
     private void logCacheStats() {
-        if (log.isInfoEnabled()) {
+        if (log.isDebugEnabled()) {
             long now = System.currentTimeMillis();
             if (now < nextLogStats) {
                 return;
             }
             for (Cache cache : caches.keySet()) {
-                log.info(cache.getCacheInfoAsString());
+                log.debug(cache.getCacheInfoAsString());
             }
             nextLogStats = now + minLogStatsInterval;
         }
@@ -172,8 +172,8 @@ public class CacheManager implements CacheAccessListener {
      * Re-calculate the maximum memory for each cache, and set the new limits.
      */
     private void resizeAll() {
-        if (log.isDebugEnabled()) {
-            log.debug("resizeAll size=" + caches.size());
+        if (log.isTraceEnabled()) {
+            log.trace("resizeAll size=" + caches.size());
         }
         // get strong references
         // entries in a weak hash map may disappear any time
@@ -238,8 +238,8 @@ public class CacheManager implements CacheAccessListener {
         // set the new limit
         for (CacheInfo info : infos) {
             Cache cache = info.getCache();
-            if (log.isDebugEnabled()) {
-                log.debug(cache + " now:" + cache.getMaxMemorySize() + " used:"
+            if (log.isTraceEnabled()) {
+                log.trace(cache + " now:" + cache.getMaxMemorySize() + " used:"
                         + info.getMemoryUsed() + " access:" + info.getAccessCount()
                         + " new:" + info.getMemory());
             }
