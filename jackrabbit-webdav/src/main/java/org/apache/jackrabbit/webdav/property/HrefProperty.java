@@ -127,14 +127,10 @@ public class HrefProperty extends AbstractDavProperty<String[]> {
     @Override
     public Element toXml(Document document) {
         Element elem = getName().toXml(document);
-        Object value = getValue();
+        String[] value = getValue();
         if (value != null) {
-            if (value instanceof String[]) {
-                for (String href : (String[]) value) {
-                    elem.appendChild(DomUtil.hrefToXml(href, document));
-                }
-            } else {
-                elem.appendChild(DomUtil.hrefToXml(value.toString(), document));
+            for (String href : value) {
+                elem.appendChild(DomUtil.hrefToXml(href, document));
             }
         }
         return elem;
