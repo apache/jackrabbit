@@ -157,7 +157,6 @@ public class SessionMoveOperation implements SessionWriteOperation<Object> {
         }
 
         NodeId targetId = targetNode.getNodeId();
-        int index = srcPath.getNormalizedIndex();
 
         // check permissions
         AccessManager acMgr = context.getAccessManager();
