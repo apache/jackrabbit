@@ -47,13 +47,14 @@ public class TestHelper {
      * Runs a consistency check on the workspace used by the specified session.
      *
      * @param session the Session accessing the workspace to be checked
+     * @param runFix whether to attempt fixup
      * @throws RepositoryException if an error occurs while getting the
      * workspace with the given name.
      * @throws NotExecutableException if the {@link PersistenceManager} does
      * not implement {@link ConsistencyChecker}, or if the associated
      * {@link Repository} is not a {@link RepositoryImpl}.
      */
-    public static ConsistencyReport checkConsistency(Session session)
+    public static ConsistencyReport checkConsistency(Session session, boolean runFix)
             throws NotExecutableException, RepositoryException {
         Repository r = session.getRepository();
         if (!(r instanceof RepositoryImpl)) {
@@ -65,7 +66,7 @@ public class TestHelper {
             if (!(pm instanceof ConsistencyChecker)) {
                 throw new NotExecutableException();
             } else {
-                return ((ConsistencyChecker) pm).check(null, true, false);
+                return ((ConsistencyChecker) pm).check(null, true, runFix);
             }
         }
     }
@@ -74,12 +75,13 @@ public class TestHelper {
      * Runs a consistency check on the versioning store used by the specified session.
      *
      * @param session the Session accessing the workspace to be checked
+     * @param runFix whether to attempt fixup
      * @throws RepositoryException
      * @throws NotExecutableException if the {@link PersistenceManager} does
      * not implement {@link ConsistencyChecker}, or if the associated
      * {@link Repository} is not a {@link RepositoryImpl}.
      */
-    public static ConsistencyReport checkVersionStoreConsistency(Session session)
+    public static ConsistencyReport checkVersionStoreConsistency(Session session, boolean runFix)
             throws NotExecutableException, RepositoryException {
         Repository r = session.getRepository();
         if (!(r instanceof RepositoryImpl)) {
@@ -91,7 +93,7 @@ public class TestHelper {
             if (!(pm instanceof ConsistencyChecker)) {
                 throw new NotExecutableException();
             } else {
-                return ((ConsistencyChecker) pm).check(null, true, false);
+                return ((ConsistencyChecker) pm).check(null, true, runFix);
             }
         }
     }
