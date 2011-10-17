@@ -830,7 +830,7 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
                     File file = new File(home, CLUSTER_NODE_ID_FILE);
                     try {
                         if (file.exists() && file.canRead()) {
-                            id = FileUtils.readFileToString(file);
+                            id = FileUtils.readFileToString(file).trim();
                         } else {
                             id = UUID.randomUUID().toString();
                             FileUtils.writeStringToFile(file, id);
