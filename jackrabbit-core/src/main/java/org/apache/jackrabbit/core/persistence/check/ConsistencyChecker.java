@@ -21,7 +21,7 @@ import javax.jcr.RepositoryException;
 /**
  * Optional interface for Persistence Managers. Allows running consistency
  * checks similar to the base one (see @link
- * {@link PersistenceManager#checkConsistency(String[], boolean, boolean)) but
+ * {@link PersistenceManager#checkConsistency(String[], boolean, boolean)} but
  * providing a result that can be acted upon.
  * <p>
  * <em>Beware: this interface is designed for unit tests only.</em>
