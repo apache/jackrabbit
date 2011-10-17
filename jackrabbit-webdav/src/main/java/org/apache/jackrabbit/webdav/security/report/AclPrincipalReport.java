@@ -82,7 +82,7 @@ public class AclPrincipalReport extends AbstractSecurityReport {
         List<AclProperty.Ace> list = (List<AclProperty.Ace>) ((AclProperty)acl).getValue();
         for (AclProperty.Ace ace : list) {
             String href = ace.getPrincipal().getHref();
-            if (href == null && respMap.containsKey(href)) {
+            if (href == null || respMap.containsKey(href)) {
                 // ignore non-href principals and principals that have been listed before
                 continue;
             }
