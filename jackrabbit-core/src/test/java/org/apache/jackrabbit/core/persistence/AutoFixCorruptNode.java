@@ -20,8 +20,10 @@ import java.io.File;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.util.UUID;
 
+import javax.jcr.ItemNotFoundException;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.Repository;
@@ -70,19 +72,11 @@ public class AutoFixCorruptNode extends TestCase {
         s.save();
         s.logout();
 
-        // remove the bundle for /test/missing directly in the database
-        Connection conn = DriverManager.getConnection("jdbc:derby:" + TEST_DIR
-                + "/workspaces/default/db");
-        PreparedStatement prep = conn
-                .prepareStatement("delete from DEFAULT_BUNDLE  where NODE_ID_HI=? and NODE_ID_LO=?");
-        prep.setLong(1, id.getMostSignificantBits());
-        prep.setLong(2, id.getLeastSignificantBits());
-        prep.executeUpdate();
-        conn.close();
+        destroyBundle(id, "workspaces/default");
 
         s = openSession(rep, false);
         try {
-            ConsistencyReport r = TestHelper.checkConsistency(s);
+            ConsistencyReport r = TestHelper.checkConsistency(s, false);
             assertNotNull(r);
             assertNotNull(r.getItems());
             assertEquals(1, r.getItems().size());
@@ -93,7 +87,117 @@ public class AutoFixCorruptNode extends TestCase {
             rep.shutdown();
             FileUtils.deleteDirectory(new File("repository"));
         }
+    }
 
+    public void testMissingVHR() throws Exception {
+
+        // new repository
+        TransientRepository rep = new TransientRepository(new File(TEST_DIR));
+        Session s = openSession(rep, false);
+
+        String oldVersionRecoveryProp = System
+                .getProperty("org.apache.jackrabbit.version.recovery");
+
+        try {
+            Node root = s.getRootNode();
+
+            // add nodes /test and /test/missing
+            Node test = root.addNode("test");
+            test.addMixin("mix:versionable");
+
+            s.save();
+
+            Node vhr = s.getWorkspace().getVersionManager()
+                    .getVersionHistory(test.getPath());
+
+            assertNotNull(vhr);
+
+            Node brokenNode = vhr;
+            String vhrRootVersionId = vhr.getNode("jcr:rootVersion").getIdentifier();
+            
+            UUID destroy = UUID.fromString(brokenNode.getIdentifier());
+            s.logout();
+            
+            destroyBundle(destroy, "version");
+
+            s = openSession(rep, false);
+
+            ConsistencyReport report = TestHelper.checkVersionStoreConsistency(s, false);
+            assertTrue("Report should have reported broken nodes", !report.getItems().isEmpty());
+            
+            try {
+                test = s.getRootNode().getNode("test");
+                vhr = s.getWorkspace().getVersionManager()
+                        .getVersionHistory(test.getPath());
+                fail("should not get here");
+            } catch (Exception ex) {
+                // expected
+            }
+
+            s.logout();
+
+            System.setProperty("org.apache.jackrabbit.version.recovery", "true");
+
+            s = openSession(rep, false);
+
+            test = s.getRootNode().getNode("test");
+            // versioning should be disabled now
+            assertFalse(test.isNodeType("mix:versionable"));
+            
+            try {
+                // try to enable versioning again
+                test.addMixin("mix:versionable");
+                s.save();
+                
+                fail("enabling versioning succeeded unexpectedly");
+            }
+            catch (Exception e) {
+                // we expect this to fail
+            }
+            
+            s.logout();
+            
+            // now redo after running fixup on versioning storage
+            s = openSession(rep, false);
+
+            report = TestHelper.checkVersionStoreConsistency(s, true);
+            assertTrue("Report should have reported broken nodes", !report.getItems().isEmpty());
+            int reportitems = report.getItems().size();
+            
+            // problems should now be fixed
+            report = TestHelper.checkVersionStoreConsistency(s, false);
+            assertTrue("Some problems should have been fixed but are not: " + report, report.getItems().size() < reportitems);
+            
+            test = s.getRootNode().getNode("test");
+            // versioning should be disabled now
+            assertFalse(test.isNodeType("mix:versionable"));
+            
+            // try to enable versioning again
+            test.addMixin("mix:versionable");
+            s.save();
+            
+            Node oldRootVersion = s.getNodeByIdentifier(vhrRootVersionId);
+            try {
+                String path = oldRootVersion.getPath();
+                fail("got path " + path + " for a node believed to be orphaned");
+            }
+            catch (ItemNotFoundException ex) {
+                // orphaned
+            }
+            
+            Node newRootVersion = s.getWorkspace().getVersionManager()
+                    .getVersionHistory(test.getPath()).getRootVersion();
+            assertFalse(
+                    "new root version should be a different node than the one destroyed by the test case",
+                    newRootVersion.getIdentifier().equals(vhrRootVersionId));
+            assertNotNull("new root version should have a intact path",
+                    newRootVersion.getPath());
+        } finally {
+            s.logout();
+            System.setProperty("org.apache.jackrabbit.version.recovery",
+                    oldVersionRecoveryProp == null ? ""
+                            : oldVersionRecoveryProp);
+        }
     }
 
     public void testAutoFix() throws Exception {
@@ -111,15 +215,7 @@ public class AutoFixCorruptNode extends TestCase {
         s.save();
         s.logout();
 
-        // remove the bundle for /test/missing directly in the database
-        Connection conn = DriverManager.getConnection("jdbc:derby:" + TEST_DIR
-                + "/workspaces/default/db");
-        PreparedStatement prep = conn
-                .prepareStatement("delete from DEFAULT_BUNDLE  where NODE_ID_HI=? and NODE_ID_LO=?");
-        prep.setLong(1, id.getMostSignificantBits());
-        prep.setLong(2, id.getLeastSignificantBits());
-        prep.executeUpdate();
-        conn.close();
+        destroyBundle(id, "workspaces/default");
 
         // login and try the operation
         s = openSession(rep, false);
@@ -155,7 +251,18 @@ public class AutoFixCorruptNode extends TestCase {
         rep.shutdown();
 
         FileUtils.deleteDirectory(new File("repository"));
+    }
 
+    private void destroyBundle(UUID id, String where) throws SQLException {
+        Connection conn = DriverManager.getConnection("jdbc:derby:" + TEST_DIR
+                + "/" + where + "/db");
+        String table = where.equals("version") ? "VERSION_BUNDLE" : "DEFAULT_BUNDLE";
+        PreparedStatement prep = conn.prepareStatement("delete from " + table
+                + " where NODE_ID_HI=? and NODE_ID_LO=?");
+        prep.setLong(1, id.getMostSignificantBits());
+        prep.setLong(2, id.getLeastSignificantBits());
+        prep.executeUpdate();
+        conn.close();
     }
 
     private Session openSession(Repository rep, boolean autoFix)
@@ -168,5 +275,4 @@ public class AutoFixCorruptNode extends TestCase {
         }
         return rep.login(cred);
     }
-
 }

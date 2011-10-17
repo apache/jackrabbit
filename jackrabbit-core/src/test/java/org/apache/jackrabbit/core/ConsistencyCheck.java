@@ -40,12 +40,12 @@ public class ConsistencyCheck extends AbstractJCRTest {
                 + getHelper().getRepository());
 
         ConsistencyReport rep = TestHelper.checkConsistency(testRootNode
-                .getSession());
+                .getSession(), false);
         assertEquals("Found broken nodes in repository: " + rep, 0, rep
                 .getItems().size());
 
         rep = TestHelper
-                .checkVersionStoreConsistency(testRootNode.getSession());
+                .checkVersionStoreConsistency(testRootNode.getSession(), false);
         assertEquals("Found broken nodes in version storage: " + rep, 0, rep
                 .getItems().size());
     }
