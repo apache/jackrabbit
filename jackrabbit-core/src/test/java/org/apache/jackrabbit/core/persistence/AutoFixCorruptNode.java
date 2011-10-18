@@ -200,6 +200,115 @@ public class AutoFixCorruptNode extends TestCase {
         }
     }
 
+    public void testMissingRootVersion() throws Exception {
+
+        // new repository
+        TransientRepository rep = new TransientRepository(new File(TEST_DIR));
+        Session s = openSession(rep, false);
+
+        String oldVersionRecoveryProp = System
+                .getProperty("org.apache.jackrabbit.version.recovery");
+
+        try {
+            Node root = s.getRootNode();
+
+            // add nodes /test and /test/missing
+            Node test = root.addNode("test");
+            test.addMixin("mix:versionable");
+
+            s.save();
+
+            Node vhr = s.getWorkspace().getVersionManager()
+                    .getVersionHistory(test.getPath());
+
+            assertNotNull(vhr);
+
+            Node brokenNode = vhr.getNode("jcr:rootVersion");
+            String vhrId = vhr.getIdentifier();
+            
+            UUID destroy = UUID.fromString(brokenNode.getIdentifier());
+            s.logout();
+            
+            destroyBundle(destroy, "version");
+
+            s = openSession(rep, false);
+
+            ConsistencyReport report = TestHelper.checkVersionStoreConsistency(s, false);
+            assertTrue("Report should have reported broken nodes", !report.getItems().isEmpty());
+            
+            try {
+                test = s.getRootNode().getNode("test");
+                vhr = s.getWorkspace().getVersionManager()
+                        .getVersionHistory(test.getPath());
+                fail("should not get here");
+            } catch (Exception ex) {
+                // expected
+            }
+
+            s.logout();
+
+            System.setProperty("org.apache.jackrabbit.version.recovery", "true");
+
+            s = openSession(rep, false);
+
+            test = s.getRootNode().getNode("test");
+            // versioning should be disabled now
+            assertFalse(test.isNodeType("mix:versionable"));
+            
+            try {
+                // try to enable versioning again
+                test.addMixin("mix:versionable");
+                s.save();
+                
+                fail("enabling versioning succeeded unexpectedly");
+            }
+            catch (Exception e) {
+                // we expect this to fail
+            }
+            
+            s.logout();
+            
+            // now redo after running fixup on versioning storage
+            s = openSession(rep, false);
+
+            report = TestHelper.checkVersionStoreConsistency(s, true);
+            assertTrue("Report should have reported broken nodes", !report.getItems().isEmpty());
+            int reportitems = report.getItems().size();
+            
+            // problems should now be fixed
+            report = TestHelper.checkVersionStoreConsistency(s, false);
+            assertTrue("Some problems should have been fixed but are not: " + report, report.getItems().size() < reportitems);
+            
+            test = s.getRootNode().getNode("test");
+            // versioning should be disabled now
+            assertFalse(test.isNodeType("mix:versionable"));
+            
+            // try to enable versioning again
+            test.addMixin("mix:versionable");
+            s.save();
+            
+            Node oldVHR = s.getNodeByIdentifier(vhrId);
+            Node newVHR = s.getWorkspace().getVersionManager().getVersionHistory(test.getPath());
+
+            assertTrue("old and new version history path should be different: "
+                    + oldVHR.getPath() + " vs " + newVHR.getPath(), !oldVHR
+                    .getPath().equals(newVHR.getPath()));
+
+            // name should be same plus suffix
+            assertTrue(oldVHR.getName().startsWith(newVHR.getName()));
+            
+            // try a checkout / checkin
+            s.getWorkspace().getVersionManager().checkout(test.getPath());
+            s.getWorkspace().getVersionManager().checkin(test.getPath());
+            
+        } finally {
+            s.logout();
+            System.setProperty("org.apache.jackrabbit.version.recovery",
+                    oldVersionRecoveryProp == null ? ""
+                            : oldVersionRecoveryProp);
+        }
+    }
+
     public void testAutoFix() throws Exception {
 
         // new repository
