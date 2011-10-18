@@ -213,7 +213,7 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
             }
             return v;
         } catch (RepositoryException e) {
-            throw new IllegalArgumentException("Failed to create version " + name + ".");
+            throw new InconsistentVersioningState("Failed to create version " + name + " in VHR " + historyId + ".", historyId, null);
         }
     }
 
@@ -238,7 +238,7 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
                     v = new InternalVersionImpl(this, child, child.getName());
                 }
             } catch (RepositoryException e) {
-                throw new InconsistentVersioningState("Version does not have a jcr:frozenNode: " + child.getNodeId(), e);
+                throw new InconsistentVersioningState("Version does not have a jcr:frozenNode: " + child.getNodeId(), historyId, e);
             }
         }
         return v;
