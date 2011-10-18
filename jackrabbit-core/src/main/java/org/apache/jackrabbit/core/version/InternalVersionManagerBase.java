@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.core.version;
 
 import static org.apache.jackrabbit.spi.commons.name.NameConstants.JCR_ACTIVITY;
+import static org.apache.jackrabbit.spi.commons.name.NameConstants.JCR_ROOTVERSION;
 import static org.apache.jackrabbit.spi.commons.name.NameConstants.JCR_VERSIONHISTORY;
 import static org.apache.jackrabbit.spi.commons.name.NameConstants.MIX_VERSIONABLE;
 
@@ -30,6 +31,7 @@ import javax.jcr.version.VersionException;
 
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
+import org.apache.jackrabbit.core.state.ChildNodeEntry;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.LocalItemStateManager;
 import org.apache.jackrabbit.core.state.NodeReferences;
@@ -314,12 +316,14 @@ abstract class InternalVersionManagerBase implements InternalVersionManager {
             if (parent != null && parent.hasNode(name)) {
                 NodeStateEx history = parent.getNode(name, 1);
                 if (history == null) {
-                    throw new InconsistentVersioningState("Unexpected failure to get child node " + name + " on parent node" + parent.getNodeId());
+                    throw new InconsistentVersioningState("Unexpected failure to get child node " + name + " on parent node " + parent.getNodeId());
                 }
-                Name root = NameConstants.JCR_ROOTVERSION;
-                info = new VersionHistoryInfo(
-                        history.getNodeId(),
-                        history.getState().getChildNodeEntry(root, 1).getId());
+                ChildNodeEntry rootv = history.getState().getChildNodeEntry(JCR_ROOTVERSION, 1);
+                if (rootv == null) {
+                    throw new InconsistentVersioningState("missing child node entry for " + JCR_ROOTVERSION + " on version history node " + history.getNodeId());
+                }
+                info = new VersionHistoryInfo(history.getNodeId(),
+                        rootv.getId());
             }
         } finally {
             lock.release();

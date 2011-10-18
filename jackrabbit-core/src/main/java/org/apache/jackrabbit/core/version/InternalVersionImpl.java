@@ -119,7 +119,7 @@ class InternalVersionImpl extends InternalVersionItemImpl
         try {
             return (InternalFrozenNode) vMgr.getItem(getFrozenNodeId());
         } catch (RepositoryException e) {
-            throw new InconsistentVersioningState("unable to retrieve frozen node: " + e, e);
+            throw new InconsistentVersioningState("unable to retrieve frozen node: " + e, null, e);
         }
     }
 
