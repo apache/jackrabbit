@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.core.version;
 
+import org.apache.jackrabbit.core.id.NodeId;
+
 /**
  * The <code>InconsistentVersionControlState</code> is used to signal
  * inconsistencies in the versioning related state of a node, such
@@ -23,6 +25,8 @@ package org.apache.jackrabbit.core.version;
  */
 public class InconsistentVersioningState extends RuntimeException {
 
+    private final NodeId versionHistoryNodeId;
+    
     /**
      * Constructs a new instance of this class with the specified detail
      * message.
@@ -32,18 +36,28 @@ public class InconsistentVersioningState extends RuntimeException {
      */
     public InconsistentVersioningState(String message) {
         super(message);
+        this.versionHistoryNodeId = null;
     }
 
     /**
      * Constructs a new instance of this class with the specified detail
-     * message and root cause.
+     * message.
      *
-     * @param message   the detail message. The detail message is saved for
-     *                  later retrieval by the {@link #getMessage()} method.
-     * @param rootCause root failure cause
+     * @param message the detail message. The detail message is saved for
+     *                later retrieval by the {@link #getMessage()} method.
+     * @param rootCause root cause (or otherwise <code>null</code>)
+     * @param versionHistoryNodeId NodeId of the version history that has problems (or otherwise <code>null</code>
      */
-    public InconsistentVersioningState(String message, Throwable rootCause) {
+    public InconsistentVersioningState(String message, NodeId versionHistoryNodeId, Throwable rootCause) {
         super(message, rootCause);
+        this.versionHistoryNodeId = versionHistoryNodeId;
     }
 
+    /**
+     * @return the NodeId of the version history having problems or <code>null</code>
+     * when unknown.
+     */
+    public NodeId getVersionHistoryNodeId() {
+        return this.versionHistoryNodeId;
+    }
 }
