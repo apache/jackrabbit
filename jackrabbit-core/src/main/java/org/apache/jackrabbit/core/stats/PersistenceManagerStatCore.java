@@ -14,35 +14,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.core.cache;
+package org.apache.jackrabbit.core.stats;
 
-/**
- * The cache access listener can be registered to a class.
- * From time to time, the method cacheAccess is called.
- */
-public interface CacheAccessListener {
+import org.apache.jackrabbit.api.stats.PersistenceManagerStat;
+
+public interface PersistenceManagerStatCore extends PersistenceManagerStat {
 
     /**
-     * The access listener is only called each x accesses.
+     * @param durationMs
+     *            in milliseconds
      */
-    int ACCESS_INTERVAL = 127;
+    void onReadCacheMiss(long durationMs);
 
     /**
-     * The cache calls this method after a number of cache accesses.<br>
-     * 
-     * For statistical purposes, the cache access count since the last call is
-     * included. In normal circumstances this is equal to
-     * {@link CacheAccessListener#ACCESS_INTERVAL}
-     * 
-     * @param accessCount
-     *            number of cache accesses since the last call
-     * 
+     * @param durationMs
+     *            in milliseconds
      */
+    void onBundleWrite(long durationMs);
+
     void cacheAccessed(long accessCount);
-
-    /**
-     * Called after the cache is no longer used.
-     */
-    void disposeCache(Cache cache);
 
 }

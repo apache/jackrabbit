@@ -119,7 +119,7 @@ public abstract class AbstractCache implements Cache {
         if (count % ACCESS_INTERVAL == 0) {
             CacheAccessListener listener = accessListener.get();
             if (listener != null) {
-                listener.cacheAccessed(count);
+                listener.cacheAccessed(ACCESS_INTERVAL);
             }
         }
     }

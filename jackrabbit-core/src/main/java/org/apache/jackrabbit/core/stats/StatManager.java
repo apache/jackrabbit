@@ -16,35 +16,49 @@
  */
 package org.apache.jackrabbit.core.stats;
 
+import static java.lang.Boolean.getBoolean;
 import org.apache.jackrabbit.api.stats.QueryStat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * StatManager represents a single entry point to the stats objects available.<br>
+ * StatManager represents a single entry point to the statistics objects
+ * available.<br>
  * 
  */
 public class StatManager {
 
+    public static String ALL_STATS_ENABLED_PROPERTY = "org.apache.jackrabbit.api.stats.ALL";
+    public static String QUERY_STATS_ENABLED_PROPERTY = "org.apache.jackrabbit.api.stats.QueryStat";
+    public static String PM_STATS_ENABLED_PROPERTY = "org.apache.jackrabbit.api.stats.PersistenceManagerStat";
+
     private static final Logger log = LoggerFactory
             .getLogger(StatManager.class);
 
-    /* STATS */
+    /* STAT OBJECTS */
     private final QueryStat queryStat = new QueryStatImpl();
 
+    private final PersistenceManagerStatCore pmStat = new PersistenceManagerStatImpl();
+
     public StatManager() {
+        init();
     }
 
-    public void init() {
-        queryStat.setEnabled(false);
-        log.debug("Started StatManager");
-    }
-
-    public void stop() {
-
+    protected void init() {
+        boolean allEnabled = getBoolean(ALL_STATS_ENABLED_PROPERTY);
+        queryStat.setEnabled(allEnabled
+                || getBoolean(QUERY_STATS_ENABLED_PROPERTY));
+        pmStat.setEnabled(allEnabled || getBoolean(PM_STATS_ENABLED_PROPERTY));
+        log.debug(
+                "Started StatManager. QueryStat is enabled {}, PersistenceManagerStat is enabled {}",
+                new Object[] { queryStat.isEnabled(), pmStat.isEnabled() });
     }
 
     public QueryStat getQueryStat() {
         return queryStat;
+    }
+
+    public PersistenceManagerStatCore getPersistenceManagerStatCore() {
+        return pmStat;
     }
 }

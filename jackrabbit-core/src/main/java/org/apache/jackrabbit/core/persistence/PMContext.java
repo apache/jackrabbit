@@ -16,13 +16,15 @@
  */
 package org.apache.jackrabbit.core.persistence;
 
-import org.apache.jackrabbit.core.data.DataStore;
-import org.apache.jackrabbit.core.fs.FileSystem;
-import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
-import org.apache.jackrabbit.core.id.NodeId;
+import java.io.File;
 
 import javax.jcr.NamespaceRegistry;
-import java.io.File;
+
+import org.apache.jackrabbit.core.data.DataStore;
+import org.apache.jackrabbit.core.fs.FileSystem;
+import org.apache.jackrabbit.core.id.NodeId;
+import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
+import org.apache.jackrabbit.core.stats.PersistenceManagerStatCore;
 
 /**
  * A <code>PMContext</code> is used to provide context information for a
@@ -61,6 +63,11 @@ public class PMContext {
      * Data store for binary properties.
      */
     private final DataStore dataStore;
+
+    /**
+     * PersistenceManagerStatCore stats object for the PM.
+     */
+    private PersistenceManagerStatCore persistenceManagerStatCore;
 
     /**
      * Creates a new <code>PMContext</code>.
@@ -135,5 +142,19 @@ public class PMContext {
      */
     public DataStore getDataStore() {
         return dataStore;
+    }
+
+    /**
+     * Returns the PersistenceManagerStatCore stats object for the PM.
+     * 
+     * @return the PersistenceManagerStatCore stats object for the PM.
+     */
+    public PersistenceManagerStatCore getPersistenceManagerStatCore() {
+        return persistenceManagerStatCore;
+    }
+
+    public void setPersistenceManagerStatCore(
+            PersistenceManagerStatCore persistenceManagerStatCore) {
+        this.persistenceManagerStatCore = persistenceManagerStatCore;
     }
 }
