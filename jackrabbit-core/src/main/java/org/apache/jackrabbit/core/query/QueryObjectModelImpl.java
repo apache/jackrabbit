@@ -35,6 +35,7 @@ import org.apache.jackrabbit.core.query.lucene.LuceneQueryFactory;
 import org.apache.jackrabbit.core.query.lucene.SearchIndex;
 import org.apache.jackrabbit.core.query.lucene.join.QueryEngine;
 import org.apache.jackrabbit.core.session.SessionContext;
+import org.apache.jackrabbit.core.session.SessionOperation;
 import org.apache.jackrabbit.spi.commons.query.qom.BindVariableValueImpl;
 import org.apache.jackrabbit.spi.commons.query.qom.DefaultTraversingQOMTreeVisitor;
 import org.apache.jackrabbit.spi.commons.query.qom.QueryObjectModelTree;
@@ -116,16 +117,25 @@ public class QueryObjectModelImpl extends QueryImpl implements QueryObjectModel 
     }
 
     public QueryResult execute() throws RepositoryException {
-        QueryEngine engine = new QueryEngine(sessionContext.getSessionImpl(),
-                lqf, variables);
         long time = System.currentTimeMillis();
-        QueryResult qr = engine.execute(getColumns(), getSource(),
-                getConstraint(), getOrderings(), offset, limit);
+        final QueryResult result = sessionContext.getSessionState().perform(
+                new SessionOperation<QueryResult>() {
+                    public QueryResult perform(SessionContext context)
+                            throws RepositoryException {
+                        final QueryEngine engine = new QueryEngine(
+                                sessionContext.getSessionImpl(), lqf, variables);
+                        return engine.execute(getColumns(), getSource(),
+                                getConstraint(), getOrderings(), offset, limit);
+                    }
+                    public String toString() {
+                        return "query.execute(" + statement + ")";
+                    }
+                });
         if (log.isDebugEnabled()) {
             time = System.currentTimeMillis() - time;
             log.debug("executed in {} ms. ({})", time, statement);
         }
-        return qr;
+        return result;
     }
 
     @Override
