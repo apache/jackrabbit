@@ -1330,13 +1330,14 @@ public class RepositoryImpl extends AbstractRepository
             File homeDir, FileSystem fs, PersistenceManagerConfig pmConfig)
             throws RepositoryException {
         try {
-            PersistenceManager pm = pmConfig.newInstance(PersistenceManager.class);
-            pm.init(new PMContext(
-                    homeDir, fs,
-                    context.getRootNodeId(),
-                    context.getNamespaceRegistry(),
-                    context.getNodeTypeRegistry(),
-                    context.getDataStore()));
+            PersistenceManager pm = pmConfig
+                    .newInstance(PersistenceManager.class);
+            PMContext pmContext = new PMContext(homeDir, fs,
+                    context.getRootNodeId(), context.getNamespaceRegistry(),
+                    context.getNodeTypeRegistry(), context.getDataStore());
+            pmContext.setPersistenceManagerStatCore(context.getStatManager()
+                    .getPersistenceManagerStatCore());
+            pm.init(pmContext);
             return pm;
         } catch (Exception e) {
             String msg = "Cannot instantiate persistence manager " + pmConfig.getClassName();

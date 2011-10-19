@@ -45,7 +45,7 @@ public class CachingOpsPerSecondDto {
 
     private long operations = 0;
 
-    private long totalTimeNs = 0;
+    private long totalTimeMs = 0;
 
     // cached stats
 
@@ -61,15 +61,15 @@ public class CachingOpsPerSecondDto {
         this(DEFAULT_UPDATE_FREQ_MS);
     }
 
-    public void onOp(long timeNs) {
+    public void onOp(long timeMs) {
         w.lock();
         try {
-            final long localStart = System.currentTimeMillis() - timeNs / 1000;
+            final long localStart = System.currentTimeMillis() - timeMs;
             if (localStart < startMs) {
                 startMs = localStart;
             }
             operations++;
-            totalTimeNs += timeNs;
+            totalTimeMs += timeMs;
         } finally {
             w.unlock();
         }
@@ -83,6 +83,10 @@ public class CachingOpsPerSecondDto {
     public double getOpAvgTime() {
         checkUpdate(false);
         return opAvgTime;
+    }
+
+    public long getOperations() {
+        return operations;
     }
 
     private void checkUpdate(boolean forceUpdate) {
@@ -110,26 +114,22 @@ public class CachingOpsPerSecondDto {
 
     private final static MathContext DEFAULT_CONTEXT = new MathContext(3);
 
-    private void update(long now) {
+    private void update(final long now) {
         if (operations == 0) {
             opsPerSecond = 0;
             opAvgTime = 0;
             return;
         }
         long durationMs = now - startMs;
-        if (durationMs == 0) {
+        if (durationMs < 1000) {
             durationMs = 1000;
         }
         opsPerSecond = BigDecimal.valueOf(operations).multiply(thousand)
                 .divide(BigDecimal.valueOf(durationMs), DEFAULT_CONTEXT)
                 .doubleValue();
-        opAvgTime = BigDecimal.valueOf(totalTimeNs)
+        opAvgTime = BigDecimal.valueOf(totalTimeMs)
                 .divide(BigDecimal.valueOf(operations), DEFAULT_CONTEXT)
                 .doubleValue();
-        // reset if needed
-        if (operations > Long.MAX_VALUE - 5000) {
-            reset();
-        }
     }
 
     public void reset() {
@@ -140,7 +140,7 @@ public class CachingOpsPerSecondDto {
             lastUpdate = System.currentTimeMillis();
             operations = 0;
             startMs = lastUpdate;
-            totalTimeNs = 0;
+            totalTimeMs = 0;
         } finally {
             w.unlock();
         }
