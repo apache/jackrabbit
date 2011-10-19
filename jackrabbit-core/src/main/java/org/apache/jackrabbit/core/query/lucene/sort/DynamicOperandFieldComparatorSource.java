@@ -47,7 +47,6 @@ public final class DynamicOperandFieldComparatorSource extends
     public FieldComparator newComparator(String fieldname, int numHits,
             int sortPos, boolean reversed) throws IOException {
         final Ordering o = orderByProperties.get(fieldname);
-        return new DynamicOperandFieldComparator(session, evaluator, o,
-                numHits, reversed);
+        return new DynamicOperandFieldComparator(session, evaluator, o, numHits);
     }
 }

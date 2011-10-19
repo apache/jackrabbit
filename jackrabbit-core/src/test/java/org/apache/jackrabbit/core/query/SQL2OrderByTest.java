@@ -29,6 +29,12 @@ import org.apache.jackrabbit.commons.JcrUtils;
 public class SQL2OrderByTest extends AbstractQueryTest {
 
     // TODO order by aggregate test?
+    // TODO enable the test once the native sort is properly handled.
+
+    static {
+        // To see JCR-2959 in action, enable the following
+        // System.setProperty(QueryEngine.NATIVE_SORT_SYSTEM_PROPERTY, "true");
+    }
 
     @Override
     protected void setUp() throws Exception {
@@ -73,77 +79,131 @@ public class SQL2OrderByTest extends AbstractQueryTest {
         Node n2 = testRootNode.addNode("node2");
         Node n3 = testRootNode.addNode("node3");
 
-        n1.setProperty("text", "aaa");
         n1.setProperty("value", 3);
-        n2.setProperty("text", "bbb");
-        n2.setProperty("value", 2);
-        n3.setProperty("text", "ccc");
-        n3.setProperty("value", 1);
-
-        testRootNode.getSession().save();
-
-        QueryResult qr = executeSQL2Query("SELECT * FROM [nt:base] WHERE ISCHILDNODE(["
-                + testRoot + "]) ORDER BY [value] desc");
-        checkSeq(qr, new Node[] { n1, n2, n3 });
-    }
-
-    public void testOrderByVal2() throws RepositoryException {
-
-        Node n1 = testRootNode.addNode("node1");
-        Node n2 = testRootNode.addNode("node2");
-        Node n3 = testRootNode.addNode("node3");
-
-        n1.setProperty("text", "aaa");
-        n1.setProperty("value", 3);
-        n2.setProperty("text", "bbb");
-        n2.setProperty("value", 2);
-        n3.setProperty("text", "ccc");
-        n3.setProperty("value", 1);
+        n2.setProperty("value", 1);
+        n3.setProperty("value", 2);
 
         testRootNode.getSession().save();
 
         QueryResult qr = executeSQL2Query("SELECT * FROM [nt:base] WHERE ISCHILDNODE(["
                 + testRoot + "]) ORDER BY [value]");
-        checkSeq(qr, new Node[] { n3, n2, n1 });
+        checkSeq(qr, new Node[] { n2, n3, n1 });
     }
 
-    public void testOrderByFunction() throws RepositoryException {
+    public void testOrderByValDesc() throws RepositoryException {
+
+        Node n1 = testRootNode.addNode("node1");
+        Node n2 = testRootNode.addNode("node2");
+        Node n3 = testRootNode.addNode("node3");
+
+        n1.setProperty("value", 3);
+        n2.setProperty("value", 1);
+        n3.setProperty("value", 2);
+
+        testRootNode.getSession().save();
+
+        QueryResult qr = executeSQL2Query("SELECT * FROM [nt:base] WHERE ISCHILDNODE(["
+                + testRoot + "]) ORDER BY [value] desc");
+        checkSeq(qr, new Node[] { n1, n3, n2 });
+    }
+
+    public void testOrderByValMult() throws RepositoryException {
+
+        Node n1 = testRootNode.addNode("node1");
+        Node n2 = testRootNode.addNode("node2");
+        Node n3 = testRootNode.addNode("node3");
+
+        n1.setProperty("value", 2);
+        n1.setProperty("text", "b");
+
+        n2.setProperty("value", 1);
+        n2.setProperty("text", "x");
+
+        n3.setProperty("value", 2);
+        n3.setProperty("text", "a");
+
+        testRootNode.getSession().save();
+
+        QueryResult qr = executeSQL2Query("SELECT * FROM [nt:base] WHERE ISCHILDNODE(["
+                + testRoot + "]) ORDER BY [value], [text]");
+        checkSeq(qr, new Node[] { n2, n3, n1 });
+    }
+
+    public void testOrderByValMultDesc() throws RepositoryException {
+
+        Node n1 = testRootNode.addNode("node1");
+        Node n2 = testRootNode.addNode("node2");
+        Node n3 = testRootNode.addNode("node3");
+
+        n1.setProperty("value", 2);
+        n1.setProperty("text", "b");
+
+        n2.setProperty("value", 1);
+        n2.setProperty("text", "x");
+
+        n3.setProperty("value", 2);
+        n3.setProperty("text", "a");
+
+        testRootNode.getSession().save();
+
+        QueryResult qr = executeSQL2Query("SELECT * FROM [nt:base] WHERE ISCHILDNODE(["
+                + testRoot + "]) ORDER BY [value] desc, [text] desc");
+        checkSeq(qr, new Node[] { n1, n3, n2 });
+    }
+
+    public void testOrderByValMultMix() throws RepositoryException {
+
+        Node n1 = testRootNode.addNode("node1");
+        Node n2 = testRootNode.addNode("node2");
+        Node n3 = testRootNode.addNode("node3");
+
+        n1.setProperty("value", 2);
+        n1.setProperty("text", "b");
+
+        n2.setProperty("value", 1);
+        n2.setProperty("text", "x");
+
+        n3.setProperty("value", 2);
+        n3.setProperty("text", "a");
+
+        testRootNode.getSession().save();
+
+        QueryResult qr = executeSQL2Query("SELECT * FROM [nt:base] WHERE ISCHILDNODE(["
+                + testRoot + "]) ORDER BY [value], [text] desc");
+        checkSeq(qr, new Node[] { n2, n1, n3 });
+    }
+
+    public void testOrderByFnc() throws RepositoryException {
 
         Node n1 = testRootNode.addNode("node1", "nt:unstructured");
         Node n2 = testRootNode.addNode("node2", "nt:unstructured");
         Node n3 = testRootNode.addNode("node3", "nt:unstructured");
 
-        n1.setProperty("t", "aa");
-        n1.setProperty("value", 3);
-        n2.setProperty("t", "bbb");
-        n2.setProperty("value", 2);
-        n3.setProperty("t", "ccc");
-        n3.setProperty("value", 1);
+        n1.setProperty("value", "aaa");
+        n2.setProperty("value", "a");
+        n3.setProperty("value", "aa");
 
         testRootNode.getSession().save();
 
-        QueryResult qr = executeSQL2Query("SELECT * FROM [nt:base] as sissy WHERE ISCHILDNODE(["
-                + testRoot + "]) ORDER BY LENGTH([t]), t");
-        checkSeq(qr, new Node[] { n1, n2, n3 });
+        QueryResult qr = executeSQL2Query("SELECT * FROM [nt:base] WHERE ISCHILDNODE(["
+                + testRoot + "]) ORDER BY LENGTH([value])");
+        checkSeq(qr, new Node[] { n2, n3, n1 });
     }
 
-    public void testOrderByFunction2() throws RepositoryException {
+    public void testOrderByFncDesc() throws RepositoryException {
 
         Node n1 = testRootNode.addNode("node1", "nt:unstructured");
         Node n2 = testRootNode.addNode("node2", "nt:unstructured");
         Node n3 = testRootNode.addNode("node3", "nt:unstructured");
 
-        n1.setProperty("t", "aa");
-        n1.setProperty("value", 3);
-        n2.setProperty("t", "bbb");
-        n2.setProperty("value", 2);
-        n3.setProperty("t", "ccc");
-        n3.setProperty("value", 1);
+        n1.setProperty("value", "aaa");
+        n2.setProperty("value", "a");
+        n3.setProperty("value", "aa");
 
         testRootNode.getSession().save();
 
-        QueryResult qr = executeSQL2Query("SELECT * FROM [nt:base] as sissy WHERE ISCHILDNODE(["
-                + testRoot + "]) ORDER BY LENGTH([t]), t desc");
+        QueryResult qr = executeSQL2Query("SELECT * FROM [nt:base] WHERE ISCHILDNODE(["
+                + testRoot + "]) ORDER BY LENGTH([value]) desc");
         checkSeq(qr, new Node[] { n1, n3, n2 });
     }
 
