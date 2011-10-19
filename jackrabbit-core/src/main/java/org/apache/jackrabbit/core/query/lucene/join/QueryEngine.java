@@ -515,7 +515,7 @@ public class QueryEngine {
                 sortFields.add(new SortField(null, SortField.SCORE, !isAsc));
             } else {
                 // TODO use native sort if available
-                sortFields.add(new SortField(p, dofcs, isAsc));
+                sortFields.add(new SortField(p, dofcs, !isAsc));
             }
         }
         return sortFields.toArray(new SortField[sortFields.size()]);

@@ -22,9 +22,6 @@ import javax.jcr.Value;
 import javax.jcr.query.qom.Ordering;
 
 import org.apache.jackrabbit.commons.query.qom.OperandEvaluator;
-import org.apache.jackrabbit.core.query.lucene.FieldNames;
-import org.apache.lucene.document.Document;
-import org.apache.lucene.index.IndexReader;
 
 public final class DynamicOperandFieldComparator extends
         AbstractFieldComparator {
@@ -32,28 +29,23 @@ public final class DynamicOperandFieldComparator extends
     private final Session session;
     private final OperandEvaluator evaluator;
     private final Ordering ordering;
-    private final boolean reversed;
 
     public DynamicOperandFieldComparator(final Session session,
             final OperandEvaluator evaluator, final Ordering ordering,
-            int numHits, final boolean reversed) {
+            int numHits) {
         super(numHits);
         this.session = session;
         this.evaluator = evaluator;
         this.ordering = ordering;
-        this.reversed = reversed;
     }
 
     @Override
-    protected Comparable sortValue(int doc) {
+    protected Comparable<ValueComparableWrapper> sortValue(int doc) {
         try {
-            int idx = readerIndex(doc);
-            IndexReader reader = readers.get(idx);
-            Document document = reader.document(doc - starts[idx]);
-            final String uuid = document.get(FieldNames.UUID);
+            final String uuid = getUUIDForIndex(doc);
             final Node n = session.getNodeByIdentifier(uuid);
-            Value[] v = evaluator.getValues(ordering.getOperand(), n);
-            return new ValueComparableWrapper(v, reversed);
+            final Value[] v = evaluator.getValues(ordering.getOperand(), n);
+            return new ValueComparableWrapper(v);
         } catch (Exception e) {
             e.printStackTrace();
         }

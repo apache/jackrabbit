@@ -188,10 +188,8 @@ public class SharedFieldComparatorSource extends FieldComparatorSource {
         @Override
         protected Comparable sortValue(int doc) {
             try {
-                int idx = readerIndex(doc);
-                IndexReader reader = readers.get(idx);
-                Document document = reader.document(doc - starts[idx], FieldSelectors.UUID);
-                String uuid = document.get(FieldNames.UUID);
+                final String uuid = getUUIDForIndex(doc);
+                
                 Path path = hmgr.getPath(new NodeId(uuid));
                 PathBuilder builder = new PathBuilder(path);
                 builder.addAll(propertyName.getElements());
