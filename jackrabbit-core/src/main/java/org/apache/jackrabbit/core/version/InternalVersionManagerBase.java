@@ -325,7 +325,8 @@ abstract class InternalVersionManagerBase implements InternalVersionManager {
                 }
                 ChildNodeEntry rootv = history.getState().getChildNodeEntry(JCR_ROOTVERSION, 1);
                 if (rootv == null) {
-                    throw new InconsistentVersioningState("missing child node entry for " + JCR_ROOTVERSION + " on version history node " + history.getNodeId());
+                    throw new InconsistentVersioningState("missing child node entry for " + JCR_ROOTVERSION + " on version history node " + history.getNodeId(),
+                            history.getNodeId(), null);
                 }
                 info = new VersionHistoryInfo(history.getNodeId(),
                         rootv.getId());
