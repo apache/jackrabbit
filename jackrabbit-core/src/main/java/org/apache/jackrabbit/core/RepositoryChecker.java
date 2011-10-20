@@ -41,6 +41,7 @@ import org.apache.jackrabbit.core.version.InconsistentVersioningState;
 import org.apache.jackrabbit.core.version.InternalVersion;
 import org.apache.jackrabbit.core.version.InternalVersionHistory;
 import org.apache.jackrabbit.core.version.InternalVersionManagerImpl;
+import org.apache.jackrabbit.core.version.VersionHistoryInfo;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.NameFactory;
 import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
@@ -129,14 +130,23 @@ class RepositoryChecker {
             try {
                 log.debug("Checking version history of node {}", nid);
 
-                message = "Removing references to a missing version history of node " + nid;
+                String intro = "Removing references to an inconsistent version history of node "
+                    + nid;
+
+                message = intro + " (getting the VersionInfo)";
+                VersionHistoryInfo vhi = versionManager.getVersionHistoryInfoForNode(node);
+                if (vhi != null) {
+                    // get the version history's node ID as early as possible
+                    // so we can attempt a fixup even when the next call fails
+                    vhid = vhi.getVersionHistoryId();
+                }
+
+                message = intro + " (getting the InternalVersionHistory)";
                 InternalVersionHistory vh = versionManager.getVersionHistoryOfNode(nid);
 
                 vhid = vh.getId();
                 
                 // additional checks, see JCR-3101
-                String intro = "Removing references to an inconsistent version history of node "
-                    + nid;
 
                 message = intro + " (getting the version names failed)";
                 Name[] versionNames = vh.getVersionNames();
