@@ -305,11 +305,14 @@ abstract class InternalVersionManagerBase implements InternalVersionManager {
     }
 
     /**
-     * {@inheritDoc}
+     * Returns information about the version history of the specified node
+     * or <code>null</code> when unavailable.
+     *
+     * @param vNode node whose version history should be returned
+     * @return identifiers of the version history and root version nodes
+     * @throws RepositoryException if an error occurs
      */
-    public VersionHistoryInfo getVersionHistory(Session session, NodeState node,
-                                                NodeId copiedFrom)
-            throws RepositoryException {
+    public VersionHistoryInfo getVersionHistoryInfoForNode(NodeState node) throws RepositoryException {
         VersionHistoryInfo info = null;
 
         VersioningLock.ReadLock lock = acquireReadLock();
@@ -334,6 +337,17 @@ abstract class InternalVersionManagerBase implements InternalVersionManager {
         } finally {
             lock.release();
         }
+
+        return info;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public VersionHistoryInfo getVersionHistory(Session session, NodeState node,
+                                                NodeId copiedFrom)
+            throws RepositoryException {
+        VersionHistoryInfo info = getVersionHistoryInfoForNode(node);
 
         if (info == null) {
             info = createVersionHistory(session, node, copiedFrom);
