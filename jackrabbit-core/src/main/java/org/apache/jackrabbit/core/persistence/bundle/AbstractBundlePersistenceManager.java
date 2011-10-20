@@ -23,9 +23,11 @@ import static org.apache.jackrabbit.spi.commons.name.NameConstants.JCR_UUID;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicLong;
 
 import javax.jcr.PropertyType;
 
+import org.apache.jackrabbit.api.stats.RepositoryStatistics;
 import org.apache.jackrabbit.core.cache.Cache;
 import org.apache.jackrabbit.core.cache.CacheAccessListener;
 import org.apache.jackrabbit.core.cache.ConcurrentCache;
@@ -49,7 +51,7 @@ import org.apache.jackrabbit.core.state.NoSuchItemStateException;
 import org.apache.jackrabbit.core.state.NodeReferences;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.PropertyState;
-import org.apache.jackrabbit.core.stats.PersistenceManagerStatCore;
+import org.apache.jackrabbit.core.stats.RepositoryStatisticsImpl;
 import org.apache.jackrabbit.core.util.StringIndex;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.spi.Name;
@@ -133,8 +135,20 @@ public abstract class AbstractBundlePersistenceManager implements
     /** default size of the bundle cache */
     private long bundleCacheSize = 8 * 1024 * 1024;
 
-    /** statistics object */
-    private PersistenceManagerStatCore pmStatCore;
+    /** Counter of read operations. */
+    private AtomicLong readCounter;
+
+    /** Counter of write operations. */
+    private AtomicLong writeCounter;
+
+    /** Duration of read operations. */
+    private AtomicLong readDuration;
+
+    /** Duration of write operations. */
+    private AtomicLong writeDuration;
+
+    /** Counter of bundle cache accesses. */
+    private AtomicLong cacheCounter;
 
     /**
      * Returns the size of the bundle cache in megabytes.
@@ -398,7 +412,19 @@ public abstract class AbstractBundlePersistenceManager implements
         bundles = new ConcurrentCache<NodeId, NodePropBundle>(context.getHomeDir().getName() + "BundleCache");
         bundles.setMaxMemorySize(bundleCacheSize);
         bundles.setAccessListener(this);
-        pmStatCore = context.getPersistenceManagerStatCore();
+
+        // statistics
+        RepositoryStatisticsImpl stats = context.getRepositoryStatistics();
+        cacheCounter = stats.getCounter(
+                RepositoryStatistics.Type.BUNDLE_CACHE_COUNTER);
+        readCounter = stats.getCounter(
+                RepositoryStatistics.Type.BUNDLE_READ_COUNTER);
+        readDuration = stats.getCounter(
+                RepositoryStatistics.Type.BUNDLE_READ_DURATION);
+        writeCounter = stats.getCounter(
+                RepositoryStatistics.Type.BUNDLE_WRITE_COUNTER);
+        writeDuration = stats.getCounter(
+                RepositoryStatistics.Type.BUNDLE_WRITE_DURATION);
     }
 
     /**
@@ -675,17 +701,7 @@ public abstract class AbstractBundlePersistenceManager implements
             return bundle;
         }
         // cache miss
-        if (pmStatCore != null && pmStatCore.isEnabled()) {
-            long t = System.currentTimeMillis();
-            try {
-                return getBundleCacheMiss(id);
-            } finally {
-                t = System.currentTimeMillis() - t;
-                pmStatCore.onReadCacheMiss(t);
-            }
-        } else {
-            return getBundleCacheMiss(id);
-        }
+        return getBundleCacheMiss(id);
     }
 
     /**
@@ -700,7 +716,11 @@ public abstract class AbstractBundlePersistenceManager implements
      */
     private NodePropBundle getBundleCacheMiss(NodeId id)
             throws ItemStateException {
+        long time = System.nanoTime();
         NodePropBundle bundle = loadBundle(id);
+        readDuration.addAndGet(System.nanoTime() - time);
+        readCounter.incrementAndGet();
+
         if (bundle != null) {
             bundle.markOld();
             bundles.put(id, bundle, bundle.getSize());
@@ -729,15 +749,12 @@ public abstract class AbstractBundlePersistenceManager implements
      * @throws ItemStateException if an error occurs
      */
     private void putBundle(NodePropBundle bundle) throws ItemStateException {
-
-        long time = System.currentTimeMillis();
+        long time = System.nanoTime();
         storeBundle(bundle);
+        writeDuration.addAndGet(System.nanoTime() - time);
+        writeCounter.incrementAndGet();
+
         bundle.markOld();
-        log.debug("stored bundle {} in {} ms", new Object[] { bundle.getId(),
-                System.currentTimeMillis() - time });
-        if (pmStatCore != null && pmStatCore.isEnabled()) {
-            pmStatCore.onBundleWrite(System.currentTimeMillis() - time);
-        }
 
         // only put to cache if already exists. this is to ensure proper
         // overwrite and not creating big contention during bulk loads
@@ -765,7 +782,7 @@ public abstract class AbstractBundlePersistenceManager implements
 
     public void cacheAccessed(long accessCount) {
         logCacheStats();
-        pmStatCore.cacheAccessed(accessCount);
+        cacheCounter.addAndGet(accessCount);
     }
 
     private void logCacheStats() {

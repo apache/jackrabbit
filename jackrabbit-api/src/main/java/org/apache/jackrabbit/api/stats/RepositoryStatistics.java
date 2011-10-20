@@ -24,8 +24,13 @@ package org.apache.jackrabbit.api.stats;
 public interface RepositoryStatistics {
 
     enum Type {
-        SESSION_READ_COUNTER(true), 
-        SESSION_READ_DURATION(true), 
+        BUNDLE_READ_COUNTER(true),
+        BUNDLE_READ_DURATION(true),
+        BUNDLE_WRITE_COUNTER(true),
+        BUNDLE_WRITE_DURATION(true),
+        BUNDLE_CACHE_COUNTER(true),
+        SESSION_READ_COUNTER(true),
+        SESSION_READ_DURATION(true),
         SESSION_WRITE_COUNTER(true),
         SESSION_WRITE_DURATION(true),
         SESSION_LOGIN_COUNTER(true),
