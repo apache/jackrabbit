@@ -18,6 +18,8 @@ package org.apache.jackrabbit.core.persistence;
 
 import java.io.File;
 import java.util.Arrays;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 
 import javax.jcr.PropertyType;
 
@@ -40,6 +42,7 @@ import org.apache.jackrabbit.core.state.NoSuchItemStateException;
 import org.apache.jackrabbit.core.state.NodeReferences;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.PropertyState;
+import org.apache.jackrabbit.core.stats.RepositoryStatisticsImpl;
 import org.apache.jackrabbit.core.util.db.ConnectionFactory;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.spi.Name;
@@ -116,13 +119,15 @@ public class PersistenceManagerTest extends TestCase {
 
     private void assertPersistenceManager(PersistenceManager manager)
             throws Exception {
+        ScheduledExecutorService pool = Executors.newScheduledThreadPool(1);
         manager.init(new PMContext(
                 directory,
                 new MemoryFileSystem(),
                 RepositoryImpl.ROOT_NODE_ID,
                 new NamespaceRegistryImpl(new MemoryFileSystem()),
                 null,
-                null));
+                null,
+                new RepositoryStatisticsImpl(pool)));
         try {
             assertCreateNewNode(manager);
             assertCreateNewProperty(manager);
@@ -130,6 +135,7 @@ public class PersistenceManagerTest extends TestCase {
             assertCreateUpdateDelete(manager);
         } finally {
             manager.close();
+            pool.shutdown();
         }
     }
 
