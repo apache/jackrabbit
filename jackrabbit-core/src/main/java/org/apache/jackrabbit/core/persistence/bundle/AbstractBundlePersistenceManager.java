@@ -717,6 +717,7 @@ public abstract class AbstractBundlePersistenceManager implements
     private NodePropBundle getBundleCacheMiss(NodeId id)
             throws ItemStateException {
         long time = System.nanoTime();
+        log.debug("Loading bundle {}", id);
         NodePropBundle bundle = loadBundle(id);
         readDuration.addAndGet(System.nanoTime() - time);
         readCounter.incrementAndGet();
@@ -750,6 +751,7 @@ public abstract class AbstractBundlePersistenceManager implements
      */
     private void putBundle(NodePropBundle bundle) throws ItemStateException {
         long time = System.nanoTime();
+        log.debug("Storing bundle {}", bundle.getId());
         storeBundle(bundle);
         writeDuration.addAndGet(System.nanoTime() - time);
         writeCounter.incrementAndGet();
