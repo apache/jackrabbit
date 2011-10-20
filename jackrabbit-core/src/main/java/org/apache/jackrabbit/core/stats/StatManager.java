@@ -30,15 +30,12 @@ public class StatManager {
 
     public static String ALL_STATS_ENABLED_PROPERTY = "org.apache.jackrabbit.api.stats.ALL";
     public static String QUERY_STATS_ENABLED_PROPERTY = "org.apache.jackrabbit.api.stats.QueryStat";
-    public static String PM_STATS_ENABLED_PROPERTY = "org.apache.jackrabbit.api.stats.PersistenceManagerStat";
 
     private static final Logger log = LoggerFactory
             .getLogger(StatManager.class);
 
     /* STAT OBJECTS */
     private final QueryStatCore queryStat = new QueryStatImpl();
-
-    private final PersistenceManagerStatCore pmStat = new PersistenceManagerStatImpl();
 
     public StatManager() {
         init();
@@ -48,17 +45,13 @@ public class StatManager {
         boolean allEnabled = getBoolean(ALL_STATS_ENABLED_PROPERTY);
         queryStat.setEnabled(allEnabled
                 || getBoolean(QUERY_STATS_ENABLED_PROPERTY));
-        pmStat.setEnabled(allEnabled || getBoolean(PM_STATS_ENABLED_PROPERTY));
         log.debug(
-                "Started StatManager. QueryStat is enabled {}, PersistenceManagerStat is enabled {}",
-                new Object[] { queryStat.isEnabled(), pmStat.isEnabled() });
+                "Started StatManager. QueryStat is enabled {}",
+                new Object[] { queryStat.isEnabled() });
     }
 
     public QueryStatCore getQueryStat() {
         return queryStat;
     }
 
-    public PersistenceManagerStatCore getPersistenceManagerStatCore() {
-        return pmStat;
-    }
 }

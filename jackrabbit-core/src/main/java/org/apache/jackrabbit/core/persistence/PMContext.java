@@ -20,11 +20,12 @@ import java.io.File;
 
 import javax.jcr.NamespaceRegistry;
 
+import org.apache.jackrabbit.core.RepositoryContext;
 import org.apache.jackrabbit.core.data.DataStore;
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
-import org.apache.jackrabbit.core.stats.PersistenceManagerStatCore;
+import org.apache.jackrabbit.core.stats.RepositoryStatisticsImpl;
 
 /**
  * A <code>PMContext</code> is used to provide context information for a
@@ -64,32 +65,26 @@ public class PMContext {
      */
     private final DataStore dataStore;
 
-    /**
-     * PersistenceManagerStatCore stats object for the PM.
-     */
-    private PersistenceManagerStatCore persistenceManagerStatCore;
+    /** Repository statistics collector. */
+    private final RepositoryStatisticsImpl stats;
 
     /**
      * Creates a new <code>PMContext</code>.
      *
      * @param homeDir the physical home directory
      * @param fs the virtual jackrabbit filesystem
-     * @param rootNodeId id of the root node
-     * @param nsReg        namespace registry
-     * @param ntReg        node type registry
+     * @param context repository component context
      */
     public PMContext(File homeDir,
                      FileSystem fs,
-                     NodeId rootNodeId,
-                     NamespaceRegistry nsReg,
-                     NodeTypeRegistry ntReg,
-                     DataStore dataStore) {
+                     RepositoryContext context) {
         this.physicalHomeDir = homeDir;
         this.fs = fs;
-        this.rootNodeId = rootNodeId;
-        this.nsReg = nsReg;
-        this.ntReg = ntReg;
-        this.dataStore = dataStore;
+        this.rootNodeId = context.getRootNodeId();
+        this.nsReg = context.getNamespaceRegistry();
+        this.ntReg = context.getNodeTypeRegistry();
+        this.dataStore = context.getDataStore();
+        this.stats = context.getRepositoryStatistics();
     }
 
 
@@ -144,17 +139,14 @@ public class PMContext {
         return dataStore;
     }
 
+
     /**
-     * Returns the PersistenceManagerStatCore stats object for the PM.
-     * 
-     * @return the PersistenceManagerStatCore stats object for the PM.
+     * Returns the repository statistics collector.
+     *
+     * @return repository statistics
      */
-    public PersistenceManagerStatCore getPersistenceManagerStatCore() {
-        return persistenceManagerStatCore;
+    public RepositoryStatisticsImpl getRepositoryStatistics() {
+        return stats;
     }
 
-    public void setPersistenceManagerStatCore(
-            PersistenceManagerStatCore persistenceManagerStatCore) {
-        this.persistenceManagerStatCore = persistenceManagerStatCore;
-    }
 }

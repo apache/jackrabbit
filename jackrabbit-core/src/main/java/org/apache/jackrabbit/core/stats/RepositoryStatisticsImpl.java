@@ -48,6 +48,10 @@ public class RepositoryStatisticsImpl implements
         getOrCreateRecorder(Type.SESSION_READ_DURATION);
         getOrCreateRecorder(Type.SESSION_WRITE_COUNTER);
         getOrCreateRecorder(Type.SESSION_WRITE_DURATION);
+        getOrCreateRecorder(Type.BUNDLE_READ_COUNTER);
+        getOrCreateRecorder(Type.BUNDLE_READ_DURATION);
+        getOrCreateRecorder(Type.BUNDLE_WRITE_COUNTER);
+        getOrCreateRecorder(Type.BUNDLE_WRITE_DURATION);
     }
 
     public synchronized Iterator<Entry<Type, TimeSeries>> iterator() {
