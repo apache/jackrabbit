@@ -22,8 +22,6 @@ package org.apache.jackrabbit.api.stats;
  */
 public interface QueryStat {
 
-    void logQuery(final String language, final String statement, long duration);
-
     /** Slowest Queries */
 
     QueryStatDto[] getSlowQueries();
@@ -50,7 +48,7 @@ public interface QueryStat {
 
     double getAvgQueryTime();
 
-    /** Generic Stats Stuff */
+    /** -- GENERAL OPS -- **/
 
     /**
      * If this service is currently registering stats

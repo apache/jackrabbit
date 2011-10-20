@@ -133,11 +133,10 @@ public class QueryImpl extends AbstractQueryImpl {
                         return "query.execute(" + statement + ")";
                     }
                 });
-
-        if (log.isDebugEnabled()) {
-            time = System.currentTimeMillis() - time;
-            log.debug("executed in {} ms. ({})", time, statement);
-        }
+        time = System.currentTimeMillis() - time;
+        log.debug("executed in {} ms. ({})", time, statement);
+        sessionContext.getRepositoryContext().getStatManager().getQueryStat()
+                .logQuery(language, statement, time);
         return result;
     }
 
