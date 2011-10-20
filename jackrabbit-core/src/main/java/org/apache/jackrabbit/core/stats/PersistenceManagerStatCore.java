@@ -18,6 +18,11 @@ package org.apache.jackrabbit.core.stats;
 
 import org.apache.jackrabbit.api.stats.PersistenceManagerStat;
 
+/**
+ * Extends external facing {@link PersistenceManagerStat} with some internal
+ * operations
+ * 
+ */
 public interface PersistenceManagerStatCore extends PersistenceManagerStat {
 
     /**
@@ -32,6 +37,12 @@ public interface PersistenceManagerStatCore extends PersistenceManagerStat {
      */
     void onBundleWrite(long durationMs);
 
+    /**
+     * Called whenever the cache access count reaches a certain threshold.
+     * 
+     * @param accessCount
+     *            number of access times since last call
+     */
     void cacheAccessed(long accessCount);
 
 }

@@ -21,7 +21,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.apache.jackrabbit.core.stats.util.CachingOpsPerSecondDto;
 
 /**
- * Default PersistenceManagerStat impl
+ * Default {@link PersistenceManagerStatCore} impl
  * 
  */
 public class PersistenceManagerStatImpl implements PersistenceManagerStatCore {
