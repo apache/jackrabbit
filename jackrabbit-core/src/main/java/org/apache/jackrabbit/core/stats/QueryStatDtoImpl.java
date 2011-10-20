@@ -40,9 +40,9 @@ public class QueryStatDtoImpl implements QueryStatDto {
     private final Date creationTime;
 
     /**
-     * run duration
+     * run duration in ms
      */
-    private final long duration;
+    private final long durationMs;
 
     /**
      * query language
@@ -55,18 +55,18 @@ public class QueryStatDtoImpl implements QueryStatDto {
     private final String statement;
 
     public QueryStatDtoImpl(final String language, final String statement,
-            long duration) {
-        this.duration = duration;
+            long durationMs) {
+        this.durationMs = durationMs;
         this.language = language;
         this.statement = statement;
 
         Calendar c = Calendar.getInstance();
-        c.setTimeInMillis(System.currentTimeMillis() - duration);
+        c.setTimeInMillis(System.currentTimeMillis() - durationMs);
         this.creationTime = c.getTime();
     }
 
     public long getDuration() {
-        return duration;
+        return durationMs;
     }
 
     public String getLanguage() {
@@ -92,7 +92,7 @@ public class QueryStatDtoImpl implements QueryStatDto {
     @Override
     public String toString() {
         return "QueryStat [creationTime=" + creationTime + ", duration="
-                + duration + ", language=" + language + ", statement="
+                + durationMs + ", language=" + language + ", statement="
                 + statement + "]";
     }
 }

@@ -17,7 +17,7 @@
 package org.apache.jackrabbit.core.stats;
 
 import static java.lang.Boolean.getBoolean;
-import org.apache.jackrabbit.api.stats.QueryStat;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,7 +36,7 @@ public class StatManager {
             .getLogger(StatManager.class);
 
     /* STAT OBJECTS */
-    private final QueryStat queryStat = new QueryStatImpl();
+    private final QueryStatCore queryStat = new QueryStatImpl();
 
     private final PersistenceManagerStatCore pmStat = new PersistenceManagerStatImpl();
 
@@ -54,7 +54,7 @@ public class StatManager {
                 new Object[] { queryStat.isEnabled(), pmStat.isEnabled() });
     }
 
-    public QueryStat getQueryStat() {
+    public QueryStatCore getQueryStat() {
         return queryStat;
     }
 

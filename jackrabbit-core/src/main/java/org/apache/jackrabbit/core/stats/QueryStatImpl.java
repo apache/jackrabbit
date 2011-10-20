@@ -19,15 +19,14 @@ package org.apache.jackrabbit.core.stats;
 import java.util.Comparator;
 import java.util.PriorityQueue;
 
-import org.apache.jackrabbit.api.stats.QueryStat;
 import org.apache.jackrabbit.api.stats.QueryStatDto;
 import org.apache.jackrabbit.core.stats.util.CachingOpsPerSecondDto;
 
 /**
- * Default {@link QueryStat} implementation
+ * Default {@link QueryStatCore} implementation
  * 
  */
-public class QueryStatImpl implements QueryStat {
+public class QueryStatImpl implements QueryStatCore {
 
     private final static Comparator<QueryStatDto> comparator = new QueryStatDtoComparator();
 
@@ -47,10 +46,12 @@ public class QueryStatImpl implements QueryStat {
         return queueSize;
     }
 
-    public synchronized void setSlowQueriesQueueSize(int size) {
-        this.queueSize = size;
-        this.queries = new PriorityQueue<QueryStatDto>(this.queueSize + 1,
-                comparator);
+    public void setSlowQueriesQueueSize(int size) {
+        synchronized (queries) {
+            this.queueSize = size;
+            this.queries = new PriorityQueue<QueryStatDto>(this.queueSize + 1,
+                    comparator);
+        }
     }
 
     public boolean isEnabled() {
@@ -58,25 +59,31 @@ public class QueryStatImpl implements QueryStat {
     }
 
     public void setEnabled(boolean enabled) {
-        this.enabled = enabled;
-        this.queries = new PriorityQueue<QueryStatDto>(this.queueSize + 1,
-                comparator);
+        synchronized (queries) {
+            this.enabled = enabled;
+            this.queries = new PriorityQueue<QueryStatDto>(this.queueSize + 1,
+                    comparator);
+        }
     }
 
-    public synchronized void logQuery(final String language,
-            final String statement, long duration) {
+    public void logQuery(final String language, final String statement,
+            long durationMs) {
         if (!enabled) {
             return;
         }
-        queries.add(new QueryStatDtoImpl(language, statement, duration));
-        if (queries.size() > queueSize) {
-            queries.remove();
+        synchronized (queries) {
+            queries.add(new QueryStatDtoImpl(language, statement, durationMs));
+            if (queries.size() > queueSize) {
+                queries.remove();
+            }
+            qps.onOp(durationMs);
         }
-        qps.onOp(duration * 1000);
     }
 
     public void clearSlowQueriesQueue() {
-        this.queries.clear();
+        synchronized (queries) {
+            queries.clear();
+        }
     }
 
     public void reset() {
