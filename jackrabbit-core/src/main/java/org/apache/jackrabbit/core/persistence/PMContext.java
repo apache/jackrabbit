@@ -20,7 +20,6 @@ import java.io.File;
 
 import javax.jcr.NamespaceRegistry;
 
-import org.apache.jackrabbit.core.RepositoryContext;
 import org.apache.jackrabbit.core.data.DataStore;
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.id.NodeId;
@@ -73,18 +72,24 @@ public class PMContext {
      *
      * @param homeDir the physical home directory
      * @param fs the virtual jackrabbit filesystem
-     * @param context repository component context
+     * @param rootNodeId id of the root node
+     * @param nsReg        namespace registry
+     * @param ntReg        node type registry
      */
     public PMContext(File homeDir,
-                     FileSystem fs,
-                     RepositoryContext context) {
+            FileSystem fs,
+            NodeId rootNodeId,
+            NamespaceRegistry nsReg,
+            NodeTypeRegistry ntReg,
+            DataStore dataStore,
+            RepositoryStatisticsImpl stats) {
         this.physicalHomeDir = homeDir;
         this.fs = fs;
-        this.rootNodeId = context.getRootNodeId();
-        this.nsReg = context.getNamespaceRegistry();
-        this.ntReg = context.getNodeTypeRegistry();
-        this.dataStore = context.getDataStore();
-        this.stats = context.getRepositoryStatistics();
+        this.rootNodeId = rootNodeId;
+        this.nsReg = nsReg;
+        this.ntReg = ntReg;
+        this.dataStore = dataStore;
+        this.stats = stats;
     }
 
 

@@ -1332,7 +1332,13 @@ public class RepositoryImpl extends AbstractRepository
         try {
             PersistenceManager pm = pmConfig
                     .newInstance(PersistenceManager.class);
-            PMContext pmContext = new PMContext(homeDir, fs, context);
+            PMContext pmContext = new PMContext(
+                    homeDir, fs,
+                    context.getRootNodeId(),
+                    context.getNamespaceRegistry(),
+                    context.getNodeTypeRegistry(),
+                    context.getDataStore(),
+                    context.getRepositoryStatistics());
             pm.init(pmContext);
             return pm;
         } catch (Exception e) {
