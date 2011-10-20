@@ -35,13 +35,7 @@ public class RepositoryStatisticsImpl implements
     private final Map<Type, TimeSeriesRecorder> recorders =
             new HashMap<Type, TimeSeriesRecorder>();
 
-    public RepositoryStatisticsImpl(ScheduledExecutorService executor) {
-        executor.scheduleAtFixedRate(new Runnable() {
-            public void run() {
-                recordOneSecond();
-            }
-        }, 1, 1, TimeUnit.SECONDS);
-        
+    public RepositoryStatisticsImpl() {
         getOrCreateRecorder(Type.SESSION_COUNT);
         getOrCreateRecorder(Type.SESSION_LOGIN_COUNTER);
         getOrCreateRecorder(Type.SESSION_READ_COUNTER);
@@ -52,6 +46,15 @@ public class RepositoryStatisticsImpl implements
         getOrCreateRecorder(Type.BUNDLE_READ_DURATION);
         getOrCreateRecorder(Type.BUNDLE_WRITE_COUNTER);
         getOrCreateRecorder(Type.BUNDLE_WRITE_DURATION);
+    }
+
+    public RepositoryStatisticsImpl(ScheduledExecutorService executor) {
+        this();
+        executor.scheduleAtFixedRate(new Runnable() {
+            public void run() {
+                recordOneSecond();
+            }
+        }, 1, 1, TimeUnit.SECONDS);
     }
 
     public synchronized Iterator<Entry<Type, TimeSeries>> iterator() {

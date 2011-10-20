@@ -119,7 +119,6 @@ public class PersistenceManagerTest extends TestCase {
 
     private void assertPersistenceManager(PersistenceManager manager)
             throws Exception {
-        ScheduledExecutorService pool = Executors.newScheduledThreadPool(1);
         manager.init(new PMContext(
                 directory,
                 new MemoryFileSystem(),
@@ -127,7 +126,7 @@ public class PersistenceManagerTest extends TestCase {
                 new NamespaceRegistryImpl(new MemoryFileSystem()),
                 null,
                 null,
-                new RepositoryStatisticsImpl(pool)));
+                new RepositoryStatisticsImpl()));
         try {
             assertCreateNewNode(manager);
             assertCreateNewProperty(manager);
@@ -135,7 +134,6 @@ public class PersistenceManagerTest extends TestCase {
             assertCreateUpdateDelete(manager);
         } finally {
             manager.close();
-            pool.shutdown();
         }
     }
 
