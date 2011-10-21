@@ -32,6 +32,8 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
 
 /**
@@ -347,6 +349,37 @@ public class ConfigurationParser {
                     + parent.getNodeName() + ".");
         }
         return found;
+    }
+
+    /**
+     * Returns the named child of the given parent element.
+     *
+     * @param parent parent element
+     * @param name name of the child element
+     * @param required indicates if the child element is required
+     * @return named child element, or <code>null</code> if not found and
+     *         <code>required</code> is <code>false</code>.
+     * @throws ConfigurationException if the child element is not found and
+     *         <code>required</code> is <code>true</code>;
+     *         or if more than one element with this name exists.
+     */
+    protected Element[] getElements(Element parent, String name, boolean required)
+            throws ConfigurationException {
+        NodeList children = parent.getChildNodes();
+        List<Element> found = new ArrayList<Element>();
+        for (int i = 0; i < children.getLength(); i++) {
+            Node child = children.item(i);
+            if (child.getNodeType() == Node.ELEMENT_NODE
+                    && name.equals(child.getNodeName())) {
+                found.add((Element) child);
+            }
+        }
+        if (required && found.isEmpty()) {
+            throw new ConfigurationException(
+                    "Configuration element " + name + " not found in "
+                    + parent.getNodeName() + ".");
+        }
+        return found.toArray(new Element[found.size()]);
     }
 
     /**

@@ -193,6 +193,12 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
     private static final String AC_PROVIDER_ELEMENT = "AccessControlProvider";
 
     /**
+     * Optional configuration elements with the user manager configuration.
+     * @see org.apache.jackrabbit.core.security.user.action.AuthorizableAction
+     */
+    private static final String AUTHORIZABLE_ACTION = "AuthorizableAction";
+
+    /**
      * The repositories {@link ConnectionFactory}. 
      */
     protected final ConnectionFactory connectionFactory;
@@ -419,7 +425,12 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
             UserManagerConfig umc = null;
             element = getElement(smElement, USER_MANAGER_ELEMENT, false);
             if (element != null) {
-                umc = new UserManagerConfig(parseBeanConfig(smElement, USER_MANAGER_ELEMENT));
+                Element[] acElements = getElements(element, AUTHORIZABLE_ACTION, false);
+                BeanConfig[] aaConfig = new BeanConfig[acElements.length];
+                for (int i = 0; i < acElements.length; i++) {
+                    aaConfig[i] = parseBeanConfig(acElements[i]);
+                }
+                umc = new UserManagerConfig(parseBeanConfig(element), aaConfig);
             }
 
             BeanConfig uidcc = null;
@@ -531,7 +542,8 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
      * Parse workspace config.
      *
      * @param root root element of the workspace configuration
-     *
+     * @return The workspace configuration
+     * @throws ConfigurationException
      * @see #parseWorkspaceConfig(InputSource)
      */
     protected WorkspaceConfig parseWorkspaceConfig(Element root)

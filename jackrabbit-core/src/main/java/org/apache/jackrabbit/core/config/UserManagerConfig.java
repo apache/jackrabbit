@@ -16,11 +16,14 @@
  */
 package org.apache.jackrabbit.core.config;
 
+import org.apache.jackrabbit.core.security.user.action.AuthorizableAction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.jackrabbit.api.security.user.UserManager;
 
 import java.lang.reflect.Constructor;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * User manager configuration. This bean configuration class is used to
@@ -39,9 +42,16 @@ public class UserManagerConfig extends BeanConfig {
 
     private Constructor<?> constr;
 
+    private final BeanConfig[] actionConfig;
+
     public UserManagerConfig(BeanConfig config) {
+        this(config, null);
+    }
+
+    public UserManagerConfig(BeanConfig config, BeanConfig[] actionConfig) {
         super(config);
         setValidate(false); // omit validation of the config properties
+        this.actionConfig = actionConfig;
     }
 
     /**
@@ -87,6 +97,19 @@ public class UserManagerConfig extends BeanConfig {
             return (UserManager) constr.newInstance(initArgs);
         } catch (Exception e) {
             throw new ConfigurationException("Invalid UserManager implementation '" + getClassName() + "'.", e);
+        }
+    }
+
+    public AuthorizableAction[] getAuthorizableActions() throws ConfigurationException {
+        if (actionConfig == null || actionConfig.length == 0) {
+            return new AuthorizableAction[0];
+        } else {
+            List<AuthorizableAction> actions = new ArrayList<AuthorizableAction>(actionConfig.length);
+            for (BeanConfig c : actionConfig) {
+                AuthorizableAction action = c.newInstance(AuthorizableAction.class);
+                actions.add(action);
+            }
+            return actions.toArray(new AuthorizableAction[actions.size()]);
         }
     }
 }

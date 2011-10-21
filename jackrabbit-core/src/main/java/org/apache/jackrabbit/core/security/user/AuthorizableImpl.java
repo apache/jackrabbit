@@ -266,6 +266,7 @@ abstract class AuthorizableImpl implements Authorizable, UserConstants {
             throw new RepositoryException("The administrator cannot be removed.");
         }
         Session s = getSession();
+        userManager.onRemove(this);
         node.remove();
         if (userManager.isAutoSave()) {
             s.save();

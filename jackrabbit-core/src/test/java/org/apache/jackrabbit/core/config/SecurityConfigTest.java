@@ -29,6 +29,7 @@ import org.apache.jackrabbit.core.security.user.UserPerWorkspaceUserManager;
 import org.apache.jackrabbit.core.security.authentication.DefaultLoginModule;
 import org.apache.jackrabbit.core.security.simple.SimpleAccessManager;
 import org.apache.jackrabbit.core.security.simple.SimpleSecurityManager;
+import org.apache.jackrabbit.core.security.user.action.AuthorizableAction;
 import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.apache.jackrabbit.api.security.principal.ItemBasedPrincipal;
 import org.apache.jackrabbit.api.security.user.UserManager;
@@ -207,6 +208,30 @@ public class SecurityConfigTest extends AbstractJCRTest {
         assertTrue(um.isAutoSave());
         // changing autosave behavior must succeed.
         um.autoSave(false);
+
+        // test authorizable-action configuration
+        xml = parseXML(new InputSource(new StringReader(USER_MANAGER_CONFIG_WITH_ACTIONS)), true);
+        umc = parser.parseSecurityConfig(xml).getSecurityManagerConfig().getUserManagerConfig();
+        AuthorizableAction[] actions = umc.getAuthorizableActions();
+        assertEquals(2, actions.length);
+
+        xml = parseXML(new InputSource(new StringReader(USER_MANAGER_CONFIG_WITH_INVALID_ACTIONS)), true);
+        umc = parser.parseSecurityConfig(xml).getSecurityManagerConfig().getUserManagerConfig();
+        try {
+            actions = umc.getAuthorizableActions();
+            fail("Invalid configuration - must fail");
+        } catch (ConfigurationException e) {
+            // success
+        }
+
+        xml = parseXML(new InputSource(new StringReader(USER_MANAGER_CONFIG_WITH_INVALID_ACTIONS_2)), true);
+        umc = parser.parseSecurityConfig(xml).getSecurityManagerConfig().getUserManagerConfig();
+        try {
+            actions = umc.getAuthorizableActions();
+            fail("Invalid configuration - must fail");
+        } catch (ConfigurationException e) {
+            // success
+        }
     }
 
     /**
@@ -355,6 +380,42 @@ public class SecurityConfigTest extends AbstractJCRTest {
                     "           <UserManager class=\"org.apache.jackrabbit.core.security.user.UserPerWorkspaceUserManager\" />" +
                     "        </SecurityManager>" +
                     "    </Security>";
+
+    private static final String USER_MANAGER_CONFIG_WITH_ACTIONS =
+            "    <Security appName=\"Jackrabbit\">" +
+            "        <SecurityManager class=\"org.apache.jackrabbit.core.DefaultSecurityManager\" workspaceName=\"security\">" +
+            "           <UserManager class=\"org.apache.jackrabbit.core.security.user.UserManagerImpl\">" +
+            "              <AuthorizableAction class=\"org.apache.jackrabbit.core.security.user.action.AccessControlAction\">" +
+            "                 <param name=\"groupPrivilegeNames\" value=\"jcr:read, jcr:write\"/>" +
+            "                 <param name=\"userPrivilegeNames\" value=\" jcr:read    ,  jcr:readAccessControl  \"/>" +
+            "              </AuthorizableAction>" +
+            "              <AuthorizableAction class=\"org.apache.jackrabbit.core.security.user.action.ClearMembershipAction\"/>" +
+            "           </UserManager>" +
+            "           <UserIdClass class=\"org.apache.jackrabbit.api.security.principal.ItemBasedPrincipal\"/>" +
+            "        </SecurityManager>" +
+            "    </Security>";
+
+    private static final String USER_MANAGER_CONFIG_WITH_INVALID_ACTIONS =
+            "    <Security appName=\"Jackrabbit\">" +
+            "        <SecurityManager class=\"org.apache.jackrabbit.core.DefaultSecurityManager\" workspaceName=\"security\">" +
+            "           <UserManager class=\"org.apache.jackrabbit.core.security.user.UserManagerImpl\">" +
+            "              <AuthorizableAction class=\"org.apache.jackrabbit.core.security.user.action.NonExistingAction\"/>" +
+            "           </UserManager>" +
+            "           <UserIdClass class=\"org.apache.jackrabbit.api.security.principal.ItemBasedPrincipal\"/>" +
+            "        </SecurityManager>" +
+            "    </Security>";
+
+    private static final String USER_MANAGER_CONFIG_WITH_INVALID_ACTIONS_2 =
+            "    <Security appName=\"Jackrabbit\">" +
+            "        <SecurityManager class=\"org.apache.jackrabbit.core.DefaultSecurityManager\" workspaceName=\"security\">" +
+            "           <UserManager class=\"org.apache.jackrabbit.core.security.user.UserManagerImpl\">" +
+            "              <AuthorizableAction class=\"org.apache.jackrabbit.core.security.user.action.AccessControlAction\">" +
+            "                 <param name=\"invalidParam\" value=\"any value\"/>" +
+            "              </AuthorizableAction>" +
+            "           </UserManager>" +
+            "           <UserIdClass class=\"org.apache.jackrabbit.api.security.principal.ItemBasedPrincipal\"/>" +
+            "        </SecurityManager>" +
+            "    </Security>";
 
     private static final String PRINCIPAL_PROVIDER_CONFIG =
             "    <Security appName=\"Jackrabbit\">" +

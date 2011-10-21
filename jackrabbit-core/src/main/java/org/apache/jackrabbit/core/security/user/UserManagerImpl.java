@@ -31,6 +31,7 @@ import org.apache.jackrabbit.core.SessionListener;
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.security.principal.EveryonePrincipal;
 import org.apache.jackrabbit.core.security.principal.PrincipalImpl;
+import org.apache.jackrabbit.core.security.user.action.AuthorizableAction;
 import org.apache.jackrabbit.core.session.SessionOperation;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
@@ -256,7 +257,18 @@ public class UserManagerImpl extends ProtectedItemModifier
      */
     private final int groupMembershipSplitSize;
 
+    /**
+     * The membership cache.
+     */
     private final MembershipCache membershipCache;
+
+    /**
+     * Authorizable actions that will all be executed upon creation and removal
+     * of authorizables in the order they are contained in the array.<p/>
+     * Note, that if {@link #isAutoSave() autosave} is turned on, the configured
+     * actions are executed before persisting the creation or removal.
+     */
+    private AuthorizableAction[] authorizableActions = new AuthorizableAction[0];
 
     /**
      * Create a new <code>UserManager</code> with the default configuration.
@@ -378,6 +390,18 @@ public class UserManagerImpl extends ProtectedItemModifier
      */
     public int getGroupMembershipSplitSize() {
         return groupMembershipSplitSize;
+    }
+
+    /**
+     * Set the authorizable actions that will be invoked upon authorizable
+     * creation and removal.
+     *
+     * @param authorizableActions An array of authorizable actions.
+     */
+    public void setAuthorizableActions(AuthorizableAction[] authorizableActions) {
+        if (authorizableActions != null) {
+            this.authorizableActions = authorizableActions;
+        }
     }
 
     //--------------------------------------------------------< UserManager >---
@@ -535,6 +559,7 @@ public class UserManagerImpl extends ProtectedItemModifier
             setProperty(userNode, P_PASSWORD, getValue(UserImpl.buildPasswordValue(password)), true);
 
             User user = createUser(userNode);
+            onCreate(user);
             if (isAutoSave()) {
                 session.save();
             }
@@ -616,6 +641,7 @@ public class UserManagerImpl extends ProtectedItemModifier
             }
 
             Group group = createGroup(groupNode);
+            onCreate(group);
             if (isAutoSave()) {
                 session.save();
             }
@@ -1002,6 +1028,35 @@ public class UserManagerImpl extends ProtectedItemModifier
         }
 
         return n;
+    }
+
+    //--------------------------------------------------------------------------
+    /**
+     * Let the configured <code>AuthorizableAction</code>s perform additional
+     * tasks associated with the creation of the new authorizable before the
+     * corresponding new node is persisted.
+     *
+     * @param authorizable The new authorizable.
+     * @throws RepositoryException If an exception occurs.
+     */
+    void onCreate(Authorizable authorizable) throws RepositoryException {
+        for (AuthorizableAction action : authorizableActions) {
+            action.onCreate(authorizable, session);
+        }
+    }
+
+    /**
+     * Let the configured <code>AuthorizableAction</code>s perform any clean
+     * up tasks related to the authorizable removal (before the corresponding
+     * node gets removed).
+     *
+     * @param authorizable The authorizable to be removed.
+     * @throws RepositoryException If an exception occurs.
+     */
+    void onRemove(Authorizable authorizable) throws RepositoryException {
+        for (AuthorizableAction action : authorizableActions) {
+            action.onRemove(authorizable, session);
+        }
     }
 
     //----------------------------------------------------< SessionListener >---
