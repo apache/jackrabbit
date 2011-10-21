@@ -25,6 +25,9 @@ import org.apache.jackrabbit.api.security.user.UserManager;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.security.TestPrincipal;
 import org.apache.jackrabbit.core.security.principal.EveryonePrincipal;
+import org.apache.jackrabbit.core.security.user.action.AccessControlAction;
+import org.apache.jackrabbit.core.security.user.action.AuthorizableAction;
+import org.apache.jackrabbit.core.security.user.action.ClearMembershipAction;
 import org.apache.jackrabbit.test.NotExecutableException;
 import org.apache.jackrabbit.spi.commons.conversion.NameResolver;
 
@@ -32,8 +35,13 @@ import javax.jcr.Credentials;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.SimpleCredentials;
+import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.Value;
 import javax.jcr.Node;
+import javax.jcr.security.AccessControlList;
+import javax.jcr.security.AccessControlManager;
+import javax.jcr.security.AccessControlPolicy;
+import javax.jcr.security.AccessControlPolicyIterator;
 import java.security.Principal;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -852,6 +860,107 @@ public class UserManagerImplTest extends AbstractUserTest {
                 // success
                 assertNull(userMgr.getAuthorizable(uid));
             }
+        }
+    }
+
+    public void testAccessControlAction() throws Exception {
+        UserManagerImpl impl = (UserManagerImpl) userMgr;
+
+        AccessControlAction action = new AccessControlAction();
+        action.setUserPrivilegeNames("jcr:all");
+        action.setGroupPrivilegeNames("jcr:read");
+        AuthorizableAction[] testActions = new AuthorizableAction[] {action};
+
+        User u = null;
+        Group gr = null;
+        try {
+            impl.setAuthorizableActions(testActions);
+            String uid = getTestPrincipal().getName();
+            u = impl.createUser(uid, buildPassword(uid));
+            save(superuser);
+            assertAcAction(u, impl);
+
+            String grId = getTestPrincipal().getName();
+            gr = impl.createGroup(grId);
+            save(superuser);
+            assertAcAction(gr, impl);
+        } catch (UnsupportedRepositoryOperationException e) {
+            throw new NotExecutableException(e.getMessage());
+        } finally {
+            impl.setAuthorizableActions(new AuthorizableAction[0]);
+            if (u != null) {
+                u.remove();
+            }
+            if (gr != null) {
+                gr.remove();
+            }
+            save(superuser);
+        }
+    }
+
+    private static void assertAcAction(Authorizable a, UserManagerImpl umgr) throws RepositoryException, NotExecutableException {
+        Session s = umgr.getSession();
+        AccessControlManager acMgr = s.getAccessControlManager();
+        boolean hasACL = false;
+        AccessControlPolicyIterator it = acMgr.getApplicablePolicies("/");
+        while (it.hasNext()) {
+            if (it.nextAccessControlPolicy() instanceof AccessControlList) {
+                hasACL = true;
+                break;
+            }
+        }
+
+        if (!hasACL) {
+            for (AccessControlPolicy p : acMgr.getPolicies("/")) {
+                if (p instanceof AccessControlList) {
+                    hasACL = true;
+                    break;
+                }
+            }
+        }
+
+        if (!hasACL) {
+            throw new NotExecutableException("No ACLs in workspace containing users.");
+        }
+
+        String path = a.getPath();
+        assertEquals(1, acMgr.getPolicies(path).length);
+        assertTrue(acMgr.getPolicies(path)[0] instanceof AccessControlList);
+    }
+
+    public void testClearMembershipAction() throws Exception {
+        UserManagerImpl impl = (UserManagerImpl) userMgr;
+
+        AuthorizableAction[] testActions = new AuthorizableAction[] {new ClearMembershipAction()};
+
+        User u = null;
+        Group gr = null;
+        try {
+            impl.setAuthorizableActions(testActions);
+            String uid = getTestPrincipal().getName();
+            u = impl.createUser(uid, buildPassword(uid));
+
+            String grId = getTestPrincipal().getName();
+            gr = impl.createGroup(grId);
+            gr.addMember(u);
+
+            save(superuser);
+
+            assertTrue(gr.isMember(u));
+
+            u.remove();
+            u = null;
+
+            assertFalse(gr.isMember(u));
+        } finally {
+            impl.setAuthorizableActions(new AuthorizableAction[0]);
+            if (u != null) {
+                u.remove();
+            }
+            if (gr != null) {
+                gr.remove();
+            }
+            save(superuser);
         }
     }
 }

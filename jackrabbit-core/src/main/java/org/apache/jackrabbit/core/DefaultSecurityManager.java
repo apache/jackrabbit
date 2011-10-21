@@ -63,6 +63,7 @@ import org.apache.jackrabbit.core.security.principal.PrincipalProviderRegistry;
 import org.apache.jackrabbit.core.security.principal.ProviderRegistryImpl;
 import org.apache.jackrabbit.core.security.user.MembershipCache;
 import org.apache.jackrabbit.core.security.user.UserManagerImpl;
+import org.apache.jackrabbit.core.security.user.action.AuthorizableAction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -427,19 +428,20 @@ public class DefaultSecurityManager implements JackrabbitSecurityManager {
     }   
 
     /**
-     * @param workspaceName
+     * @param workspaceName The name of the target workspace.
      * @return The system user manager. Since this implementation stores users
      * in a dedicated workspace the system user manager is the same for all
      * sessions irrespective of the workspace.
+     * @throws javax.jcr.RepositoryException If an error occurs.
      */
     protected UserManager getSystemUserManager(String workspaceName) throws RepositoryException {
         return systemUserManager;
     }
 
     /**
-     * @param session
-     * @return
-     * @throws RepositoryException
+     * @param session The session for which to retrieve the membership cache.
+     * @return The membership cache.
+     * @throws RepositoryException If an error occurs.
      */
     protected MembershipCache getMembershipCache(SessionImpl session) throws RepositoryException {
         if (session == systemSession || session instanceof SystemSession) {
@@ -474,13 +476,17 @@ public class DefaultSecurityManager implements JackrabbitSecurityManager {
                     Properties.class,
                     MembershipCache.class};
             um = (UserManagerImpl) umc.getUserManager(UserManagerImpl.class,
-                    paramTypes, (SessionImpl) session, adminId, params,
-                    getMembershipCache(session));
+                    paramTypes, session, adminId, params, getMembershipCache(session));
             // TODO: should we make sure the implementation doesn't allow
             // TODO: to change the autosave behavior? since the user manager
             // TODO: writes to a separate workspace this would cause troubles.
         } else {
             um = new UserManagerImpl(session, adminId, params, getMembershipCache(session));
+        }
+
+        if (umc != null && !(session instanceof SystemSession)) {
+            AuthorizableAction[] actions = umc.getAuthorizableActions();
+            um.setAuthorizableActions(actions);
         }
         return um;
     }
@@ -592,7 +598,7 @@ public class DefaultSecurityManager implements JackrabbitSecurityManager {
      * Make sure the system users (admin and anonymous) exist.
      *
      * @param userManager Manager to create users/groups.
-     * @param session
+     * @param session The editing session.
      * @param adminId UserID of the administrator.
      * @param anonymousId UserID of the anonymous user.
      * @throws RepositoryException If an error occurs.
@@ -602,11 +608,11 @@ public class DefaultSecurityManager implements JackrabbitSecurityManager {
                                   String adminId,
                                   String anonymousId) throws RepositoryException {
 
-        Authorizable admin = null;
+        Authorizable admin;
         if (adminId != null) {
             admin = userManager.getAuthorizable(adminId);
             if (admin == null) {
-                admin = userManager.createUser(adminId, adminId);
+                userManager.createUser(adminId, adminId);
                 if (!userManager.isAutoSave()) {
                     session.save();
                 }

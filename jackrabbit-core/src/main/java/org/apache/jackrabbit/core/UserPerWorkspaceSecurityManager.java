@@ -29,6 +29,7 @@ import org.apache.jackrabbit.core.security.simple.SimpleWorkspaceAccessManager;
 import org.apache.jackrabbit.core.security.user.MembershipCache;
 import org.apache.jackrabbit.core.security.user.UserPerWorkspaceUserManager;
 import org.apache.jackrabbit.core.security.user.UserManagerImpl;
+import org.apache.jackrabbit.core.security.user.action.AuthorizableAction;
 
 import javax.jcr.Credentials;
 import javax.jcr.Repository;
@@ -219,7 +220,8 @@ public class UserPerWorkspaceSecurityManager extends DefaultSecurityManager {
     protected UserManagerImpl createUserManager(SessionImpl session) throws RepositoryException {
         UserManagerConfig umc = getConfig().getUserManagerConfig();
         Properties params = (umc == null) ? null : umc.getParameters();
-        
+
+        UserManagerImpl umgr;
         // in contrast to the DefaultSecurityManager users are not retrieved
         // from a dedicated workspace: the system session of each workspace must
         // get a system user manager that asserts the existence of the admin user.
@@ -229,11 +231,17 @@ public class UserPerWorkspaceSecurityManager extends DefaultSecurityManager {
                     String.class,
                     Properties.class,
                     MembershipCache.class};
-            return (UserPerWorkspaceUserManager) umc.getUserManager(UserPerWorkspaceUserManager.class,
-                    paramTypes, (SessionImpl) session, adminId, params, getMembershipCache(session));
+            umgr = (UserPerWorkspaceUserManager) umc.getUserManager(UserPerWorkspaceUserManager.class,
+                    paramTypes, session, adminId, params, getMembershipCache(session));
         } else {
-            return new UserPerWorkspaceUserManager(session, adminId, params, getMembershipCache(session));
+            umgr = new UserPerWorkspaceUserManager(session, adminId, params, getMembershipCache(session));
         }
+
+        if (umc != null && !(session instanceof SystemSession)) {
+            AuthorizableAction[] actions = umc.getAuthorizableActions();
+            umgr.setAuthorizableActions(actions);
+        }
+        return umgr;
     }
 
     /**
