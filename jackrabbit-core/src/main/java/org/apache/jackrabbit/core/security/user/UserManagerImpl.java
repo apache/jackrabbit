@@ -762,14 +762,23 @@ public class UserManagerImpl extends ProtectedItemModifier
         Authorizable authorz = null;
         if (n != null) {
             String path = n.getPath();
-            if (n.isNodeType(NT_REP_USER) && Text.isDescendant(usersPath, path)) {
-                authorz = createUser(n);
-            } else if (n.isNodeType(NT_REP_GROUP) && Text.isDescendant(groupsPath, path)) {
-                authorz = createGroup(n);
+            if (n.isNodeType(NT_REP_USER)) {
+                if (Text.isDescendant(usersPath, path)) {
+                    authorz = createUser(n);
+                } else {
+                    /* user node outside of configured tree -> return null */
+                    log.error("User node outside of configured user tree ('" + usersPath + "') -> Not a valid user.");
+                }
+            } else if (n.isNodeType(NT_REP_GROUP)) {
+                if (Text.isDescendant(groupsPath, path)) {
+                    authorz = createGroup(n);
+                } else {
+                    /* group node outside of configured tree -> return null */
+                    log.error("Group node outside of configured group tree ('" + groupsPath + "') -> Not a valid group.");
+                }
             } else {
-                /* else some other node type or outside of the valid user/group
-                   hierarchy  -> return null. */
-                log.debug("Unexpected user nodetype " + n.getPrimaryNodeType().getName());
+                /* else some other node type -> return null. */
+                log.warn("Unexpected user/group nodetype " + n.getPrimaryNodeType().getName());
             }
         } /* else no matching node -> return null */
         return authorz;
