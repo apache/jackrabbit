@@ -72,8 +72,7 @@ public class JcrUtils {
      * {@link RepositoryFactory} parameters through the
      * {@link #getRepository(Map)} method.
      */
-    public static final String REPOSITORY_URI =
-        "org.apache.jackrabbit.repository.uri";
+    public static final String REPOSITORY_URI = "org.apache.jackrabbit.repository.uri";
 
     /**
      * A pre-allocated empty array of values.
@@ -161,7 +160,7 @@ public class JcrUtils {
                             JcrUtils.REPOSITORY_URI,
                             new URI(u.getScheme(), u.getRawAuthority(),
                                     u.getRawPath(), null, u.getRawFragment()
-                                    ).toASCIIString());
+                            ).toASCIIString());
                     parameters = copy;
                 }
             } catch (URISyntaxException e) {
@@ -180,7 +179,7 @@ public class JcrUtils {
         log.append(newline);
         log.append("The following RepositoryFactory classes were consulted:");
         Iterator<RepositoryFactory> iterator =
-            ServiceRegistry.lookupProviders(RepositoryFactory.class);
+                ServiceRegistry.lookupProviders(RepositoryFactory.class);
         while (iterator.hasNext()) {
             RepositoryFactory factory = iterator.next();
             log.append(newline);
@@ -209,7 +208,7 @@ public class JcrUtils {
         log.append(newline);
         log.append(
                 "Perhaps the repository you are trying"
-                + " to access is not available at the moment.");
+                        + " to access is not available at the moment.");
 
         // No matching repository found. Throw an exception with the
         // detailed information we gathered during the above process.
@@ -623,12 +622,10 @@ public class JcrUtils {
     public static Node putFile(
             Node parent, String name, String mime,
             InputStream data, Calendar date) throws RepositoryException {
-        Binary binary =
-            parent.getSession().getValueFactory().createBinary(data);
+        Binary binary = parent.getSession().getValueFactory().createBinary(data);
         try {
             Node file = getOrAddNode(parent, name, NodeType.NT_FILE);
-            Node content =
-                getOrAddNode(file, Node.JCR_CONTENT, NodeType.NT_RESOURCE);
+            Node content = getOrAddNode(file, Node.JCR_CONTENT, NodeType.NT_RESOURCE);
 
             content.setProperty(Property.JCR_MIMETYPE, mime);
             String[] parameters = mime.split(";");
@@ -743,8 +740,7 @@ public class JcrUtils {
      * @param date modified date
      * @throws RepositoryException if the last modified date can not be set
      */
-    public void setLastModified(Node node, Calendar date)
-            throws RepositoryException {
+    public void setLastModified(Node node, Calendar date) throws RepositoryException {
         if (node.hasNode(Node.JCR_CONTENT)) {
             setLastModified(node.getNode(Node.JCR_CONTENT), date);
         } else {
@@ -834,11 +830,10 @@ public class JcrUtils {
         }
     }
 
-    private static final Map<String, Integer> PROPERTY_TYPES =
-        new HashMap<String, Integer>();
+    private static final Map<String, Integer> PROPERTY_TYPES = new HashMap<String, Integer>();
 
     static {
-        for (int i = 0; i < 13; i++) {
+        for (int i = PropertyType.UNDEFINED; i <= PropertyType.DECIMAL; i++) {
             PROPERTY_TYPES.put(PropertyType.nameFromValue(i).toLowerCase(), i);
         }
     }
@@ -861,8 +856,7 @@ public class JcrUtils {
         if (type != null) {
             return type;
         } else {
-            throw new IllegalArgumentException(
-                    "Unknown property type: " + name);
+            throw new IllegalArgumentException("Unknown property type: " + name);
         }
     }
 
@@ -904,10 +898,9 @@ public class JcrUtils {
      * @throws RepositoryException in case of exception accessing the Repository
      */
     public static Node getOrCreateByPath(String absolutePath,
-                                  String intermediateNodeType,
-                                  String nodeType,
-                                  Session session,
-                                  boolean autoSave)
+                                         String intermediateNodeType,
+                                         String nodeType, Session session,
+                                         boolean autoSave)
             throws RepositoryException {
         return getOrCreateByPath(absolutePath, false, intermediateNodeType, nodeType, session, autoSave);
     }
@@ -943,7 +936,7 @@ public class JcrUtils {
      *             in case of exception accessing the Repository
      */
     public static Node getOrCreateUniqueByPath(String pathHint, String nodeType, Session session)
-           throws RepositoryException {
+            throws RepositoryException {
         return getOrCreateByPath(pathHint, true, nodeType, nodeType, session, false);
     }
 
@@ -982,11 +975,10 @@ public class JcrUtils {
      *             in case of exception accessing the Repository
      */
     public static Node getOrCreateByPath(String absolutePath,
-                                  boolean createUniqueLeaf,
-                                  String intermediateNodeType,
-                                  String nodeType,
-                                  Session session,
-                                  boolean autoSave)
+                                         boolean createUniqueLeaf,
+                                         String intermediateNodeType,
+                                         String nodeType, Session session,
+                                         boolean autoSave)
             throws RepositoryException {
         if (absolutePath == null || absolutePath.length() == 0 || "/".equals(absolutePath)) {
             // path denotes root node
@@ -1028,8 +1020,8 @@ public class JcrUtils {
      *             in case of exception accessing the Repository
      */
     public static Node getOrCreateUniqueByPath(Node parent,
-                                        String nodeNameHint,
-                                        String nodeType)
+                                               String nodeNameHint,
+                                               String nodeType)
             throws RepositoryException {
         return getOrCreateByPath(parent, nodeNameHint, true, nodeType, nodeType, false);
     }
@@ -1070,11 +1062,11 @@ public class JcrUtils {
      *             in case of exception accessing the Repository
      */
     public static Node getOrCreateByPath(Node baseNode,
-                                  String path,
-                                  boolean createUniqueLeaf,
-                                  String intermediateNodeType,
-                                  String nodeType,
-                                  boolean autoSave)
+                                         String path,
+                                         boolean createUniqueLeaf,
+                                         String intermediateNodeType,
+                                         String nodeType,
+                                         boolean autoSave)
             throws RepositoryException {
 
         if (!createUniqueLeaf && baseNode.hasNode(path)) {
@@ -1092,12 +1084,14 @@ public class JcrUtils {
                 final String token = st.nextToken();
                 if (!node.hasNode(token)) {
                     try {
-                        if ( intermediateNodeType != null ) {
+                        if (intermediateNodeType != null) {
                             node.addNode(token, intermediateNodeType);
                         } else {
                             node.addNode(token);
                         }
-                        if (autoSave) node.getSession().save();
+                        if (autoSave) {
+                            node.getSession().save();
+                        }
                     } catch (RepositoryException e) {
                         // we ignore this as this folder might be created from a different task
                         node.refresh(false);
@@ -1110,12 +1104,14 @@ public class JcrUtils {
 
         // last path element (path = leaf node name)
         if (!node.hasNode(path)) {
-            if ( nodeType != null ) {
+            if (nodeType != null) {
                 node.addNode(path, nodeType);
             } else {
                 node.addNode(path);
             }
-            if (autoSave) node.getSession().save();
+            if (autoSave) {
+                node.getSession().save();
+            }
         } else if (createUniqueLeaf) {
             // leaf node already exists, create new unique name
             String leafNodeName;
@@ -1126,12 +1122,14 @@ public class JcrUtils {
             } while (node.hasNode(leafNodeName));
 
             Node leaf;
-            if ( nodeType != null ) {
+            if (nodeType != null) {
                 leaf = node.addNode(leafNodeName, nodeType);
             } else {
                 leaf = node.addNode(leafNodeName);
             }
-            if (autoSave) node.getSession().save();
+            if (autoSave) {
+                node.getSession().save();
+            }
             return leaf;
         }
 
