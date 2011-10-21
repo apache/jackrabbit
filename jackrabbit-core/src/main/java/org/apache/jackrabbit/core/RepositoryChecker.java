@@ -28,6 +28,7 @@ import java.util.Calendar;
 import java.util.HashSet;
 import java.util.Set;
 
+import javax.jcr.ItemNotFoundException;
 import javax.jcr.RepositoryException;
 
 import org.apache.jackrabbit.core.id.NodeId;
@@ -122,28 +123,49 @@ class RepositoryChecker {
     }
 
     private void checkVersionHistory(NodeState node) {
-        if (node.hasPropertyName(JCR_VERSIONHISTORY)) {
-            String message = null;
-            NodeId nid = node.getNodeId();
-            NodeId vhid = null;
 
+        String message = null;
+        NodeId nid = node.getNodeId();
+        boolean isVersioned = node.hasPropertyName(JCR_VERSIONHISTORY);
+
+        NodeId vhid = null;
+
+        try {
+            String type = isVersioned ? "in-use" : "candidate";
+            
+            log.debug("Checking " + type + " version history of node {}", nid);
+
+            String intro = "Removing references to an inconsistent " + type
+                    + " version history of node " + nid;
+
+            message = intro + " (getting the VersionInfo)";
+            VersionHistoryInfo vhi = versionManager.getVersionHistoryInfoForNode(node);
+            if (vhi != null) {
+                // get the version history's node ID as early as possible
+                // so we can attempt a fixup even when the next call fails
+                vhid = vhi.getVersionHistoryId();
+            }
+
+            message = intro + " (getting the InternalVersionHistory)";
+
+            InternalVersionHistory vh = null;
+            
             try {
-                log.debug("Checking version history of node {}", nid);
-
-                String intro = "Removing references to an inconsistent version history of node "
-                    + nid;
-
-                message = intro + " (getting the VersionInfo)";
-                VersionHistoryInfo vhi = versionManager.getVersionHistoryInfoForNode(node);
-                if (vhi != null) {
-                    // get the version history's node ID as early as possible
-                    // so we can attempt a fixup even when the next call fails
-                    vhid = vhi.getVersionHistoryId();
+                vh = versionManager.getVersionHistoryOfNode(nid);
+            }
+            catch (ItemNotFoundException ex) {
+                // it's ok if we get here if the node didn't claim to be versioned
+                if (isVersioned) {
+                    throw ex;
                 }
+            }
 
-                message = intro + " (getting the InternalVersionHistory)";
-                InternalVersionHistory vh = versionManager.getVersionHistoryOfNode(nid);
-
+            if (vh == null) {
+                if (isVersioned) {
+                    message = intro + "getVersionHistoryOfNode returned null";
+                    throw new InconsistentVersioningState(message);    
+                }
+            } else { 
                 vhid = vh.getId();
                 
                 // additional checks, see JCR-3101
@@ -162,34 +184,34 @@ class RepositoryChecker {
 
                     message = intro + "(frozen node of root version " + v.getId() + " missing)";
                     if (null == v.getFrozenNode()) {
-                        throw new InconsistentVersioningState("frozen node of "
-                                + v.getId() + " is missing.");
+                        throw new InconsistentVersioningState(message);
                     }
                 }
 
                 if (!seenRoot) {
                     message = intro + " (root version is missing)";
-                    throw new InconsistentVersioningState("root version of " + nid +" is missing.");
+                    throw new InconsistentVersioningState(message);
                 }
-            } catch (InconsistentVersioningState e) {
-                log.info(message, e);
-                NodeId nvhid = e.getVersionHistoryNodeId();
-                if (nvhid != null) {
-                    if (vhid != null && !nvhid.equals(vhid)) {
-                        log.error("vhrid returned with InconsistentVersioningState does not match the id we already had: "
-                                + vhid + " vs " + nvhid);
-                    }
-                    vhid = nvhid; 
-                }
-                removeVersionHistoryReferences(node, vhid);
-            } catch (Exception e) {
-                log.info(message, e);
-                removeVersionHistoryReferences(node, vhid);
             }
+        } catch (InconsistentVersioningState e) {
+            log.info(message, e);
+            NodeId nvhid = e.getVersionHistoryNodeId();
+            if (nvhid != null) {
+                if (vhid != null && !nvhid.equals(vhid)) {
+                    log.error("vhrid returned with InconsistentVersioningState does not match the id we already had: "
+                            + vhid + " vs " + nvhid);
+                }
+                vhid = nvhid; 
+            }
+            removeVersionHistoryReferences(node, vhid);
+        } catch (Exception e) {
+            log.info(message, e);
+            removeVersionHistoryReferences(node, vhid);
         }
     }
 
-    private void removeVersionHistoryReferences(NodeState node, NodeId vhid) {
+    // un-versions the node, and potentially moves the version history away
+    private void removeVersionHistoryReferences(NodeState node,  NodeId vhid) {
         NodeState modified =
             new NodeState(node, NodeState.STATUS_EXISTING_MODIFIED, true);
 
