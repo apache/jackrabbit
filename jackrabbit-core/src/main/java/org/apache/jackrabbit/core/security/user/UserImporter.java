@@ -198,7 +198,7 @@ public class UserImporter implements ProtectedPropertyImporter, ProtectedNodeImp
            {@link UserManager#createGroup} respectively. */
         Authorizable a = userManager.getAuthorizable(parent);
         if (a == null) {
-            log.debug("Cannot handle protected PropInfo " + protectedPropInfo + ". Node " + parent + " doesn't represent a valid Authorizable.");
+            log.warn("Cannot handle protected PropInfo " + protectedPropInfo + ". Node " + parent + " doesn't represent a valid Authorizable.");
             return false;
         }
 
