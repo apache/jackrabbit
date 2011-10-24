@@ -57,12 +57,12 @@ public class TestAll extends TestCase {
         suite.addTestSuite(ConcurrentReorderTest.class);
         suite.addTestSuite(ConcurrentAddRemoveNodeTest.class);
 
-// TODO: These tests pass, but they cause some instability in other
-//       parts of the test suite, most likely due to uncleaned test data
-//        if (Boolean.getBoolean("org.apache.jackrabbit.test.integration")) {
-//            suite.addTestSuite(ConcurrencyTest.class);
+        // TODO: These tests pass, but they cause some instability in other
+        // parts of the test suite, most likely due to uncleaned test data
+        if (Boolean.getBoolean("org.apache.jackrabbit.test.integration")) {
+            suite.addTestSuite(ConcurrencyTest.class);
 //            // suite.addTestSuite(ConcurrencyTest3.class);
-//            suite.addTestSuite(ConcurrentVersioningTest.class);
+            suite.addTestSuite(ConcurrentVersioningTest.class);
 //            // suite.addTestSuite(ConcurrentVersioningWithTransactionsTest.class);
 //            suite.addTestSuite(ConcurrentCheckinMixedTransactionTest.class);
 //            suite.addTestSuite(ConcurrentLoginTest.class);
@@ -71,7 +71,7 @@ public class TestAll extends TestCase {
 //            suite.addTestSuite(ConcurrentRenameTest.class);
 //            suite.addTestSuite(ConcurrentSaveTest.class);
 //            suite.addTestSuite(ConcurrentWorkspaceCopyTest.class);
-//        }
+        }
 
         suite.addTestSuite(UserPerWorkspaceSecurityManagerTest.class);
 
