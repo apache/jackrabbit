@@ -393,7 +393,7 @@ public class QNodeTypeDefinitionImpl implements QNodeTypeDefinition, Serializabl
             if (pd instanceof Serializable) {
                 defs.add(pd);
             } else {
-                defs.add(pd);
+                defs.add(new QPropertyDefinitionImpl(pd)); 
             }
         }
         return defs;
