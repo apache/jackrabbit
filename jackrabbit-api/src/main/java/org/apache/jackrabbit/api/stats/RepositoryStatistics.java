@@ -26,13 +26,17 @@ public interface RepositoryStatistics {
     enum Type {
         BUNDLE_READ_COUNTER(true),
         BUNDLE_READ_DURATION(true),
+        BUNDLE_READ_AVERAGE(false),
         BUNDLE_WRITE_COUNTER(true),
         BUNDLE_WRITE_DURATION(true),
+        BUNDLE_WRITE_AVERAGE(false),
         BUNDLE_CACHE_COUNTER(true),
         SESSION_READ_COUNTER(true),
         SESSION_READ_DURATION(true),
+        SESSION_READ_AVERAGE(false),
         SESSION_WRITE_COUNTER(true),
         SESSION_WRITE_DURATION(true),
+        SESSION_WRITE_AVERAGE(false),
         SESSION_LOGIN_COUNTER(true),
         SESSION_COUNT(false);
 
