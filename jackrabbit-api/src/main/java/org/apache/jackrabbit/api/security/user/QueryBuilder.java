@@ -73,7 +73,7 @@ public interface QueryBuilder<T> {
      *
      * @param propertyName  The name of the property to sort on
      * @param direction  Direction to sort. Either {@link Direction#ASCENDING} or {@link Direction#DESCENDING}
-     * @param ignoreCase  Ignore character case in sort iff <code>true</code>. Note: For <code>false</code>
+     * @param ignoreCase  Ignore character case in sort if <code>true</code>. Note: For <code>false</code>
      * sorting is done lexicographically even for non string properties.
      */
     void setSortOrder(String propertyName, Direction direction, boolean ignoreCase);
@@ -118,7 +118,7 @@ public interface QueryBuilder<T> {
     void setLimit(long offset, long maxCount);
 
     /**
-     * Create a condition which holds iff the name of the {@link Authorizable}
+     * Create a condition which holds if the name of the {@link Authorizable}
      * matches a <code>pattern</code>.
      * The percent character "%" represents any string of zero or more characters and the
      * underscore character "_" represents any single character. Any literal use of these characters
@@ -126,13 +126,13 @@ public interface QueryBuilder<T> {
      * The pattern is matched against the {@link Authorizable#getID() id} and the
      * {@link Authorizable#getPrincipal() principal}.
      *
-     * @param pattern  Pattern to match the property at <code>relPath</code> against
+     * @param pattern Pattern to match the name of an authorizable.
      * @return  A condition
      */
     T nameMatches(String pattern);
 
     /**
-     * Create a condition which holds iff the node of an {@link Authorizable} has a
+     * Create a condition which holds if the node of an {@link Authorizable} has a
      * property at <code>relPath</code> which is not equal to <code>value</code>.
      * The format of the <code>relPath</code> argument is the same as in XPath:
      * <code>@attributeName</code> for an attribute on this node and
@@ -145,7 +145,7 @@ public interface QueryBuilder<T> {
     T neq(String relPath, Value value);
 
     /**
-     * Create a condition which holds iff the node of an {@link Authorizable} has a
+     * Create a condition which holds if the node of an {@link Authorizable} has a
      * property at <code>relPath</code> which is equal to <code>value</code>.
      * The format of the <code>relPath</code> argument is the same as in XPath:
      * <code>@attributeName</code> for an attribute on this node and
@@ -158,7 +158,7 @@ public interface QueryBuilder<T> {
     T eq(String relPath, Value value);
 
     /**
-     * Create a condition which holds iff the node of an {@link Authorizable} has a
+     * Create a condition which holds if the node of an {@link Authorizable} has a
      * property at <code>relPath</code> which is smaller than <code>value</code>.
      * The format of the <code>relPath</code> argument is the same as in XPath:
      * <code>@attributeName</code> for an attribute on this node and
@@ -171,7 +171,7 @@ public interface QueryBuilder<T> {
     T lt(String relPath, Value value);
 
     /**
-     * Create a condition which holds iff the node of an {@link Authorizable} has a
+     * Create a condition which holds if the node of an {@link Authorizable} has a
      * property at <code>relPath</code> which is smaller than or equal to <code>value</code>.
      * The format of the <code>relPath</code> argument is the same as in XPath:
      * <code>@attributeName</code> for an attribute on this node and
@@ -184,7 +184,7 @@ public interface QueryBuilder<T> {
     T le(String relPath, Value value);
 
     /**
-     * Create a condition which holds iff the node of an {@link Authorizable} has a
+     * Create a condition which holds if the node of an {@link Authorizable} has a
      * property at <code>relPath</code> which is greater than <code>value</code>.
      * The format of the <code>relPath</code> argument is the same as in XPath:
      * <code>@attributeName</code> for an attribute on this node and
@@ -197,7 +197,7 @@ public interface QueryBuilder<T> {
     T gt(String relPath, Value value);
 
     /**
-     * Create a condition which holds iff the node of an {@link Authorizable} has a
+     * Create a condition which holds if the node of an {@link Authorizable} has a
      * property at <code>relPath</code> which is greater than or equal to <code>value</code>.
      * The format of the <code>relPath</code> argument is the same as in XPath:
      * <code>@attributeName</code> for an attribute on this node and
@@ -210,7 +210,7 @@ public interface QueryBuilder<T> {
     T ge(String relPath, Value value);
 
     /**
-     * Create a condition which holds iff the node of an {@link Authorizable} has a
+     * Create a condition which holds if the node of an {@link Authorizable} has a
      * property at <code>relPath</code>.
      * The format of the <code>relPath</code> argument is the same as in XPath:
      * <code>@attributeName</code> for an attribute on this node and
@@ -222,7 +222,7 @@ public interface QueryBuilder<T> {
     T exists(String relPath);
 
     /**
-     * Create a condition which holds iff the node of an {@link Authorizable} has a
+     * Create a condition which holds if the node of an {@link Authorizable} has a
      * property at <code>relPath</code> which matches the pattern in <code>pattern</code>.
      * The percent character "%" represents any string of zero or more characters and the
      * underscore character "_" represents any single character. Any literal use of these characters
@@ -238,7 +238,7 @@ public interface QueryBuilder<T> {
     T like(String relPath, String pattern);
 
     /**
-     * Create a full text search condition. The condition holds iff the node of an
+     * Create a full text search condition. The condition holds if the node of an
      * {@link Authorizable} has a property at <code>relPath</code> for which
      * <code>searchExpr</code> yields results.
      * The format of the <code>relPath</code> argument is the same as in XPath:
@@ -265,7 +265,7 @@ public interface QueryBuilder<T> {
     T impersonates(String name);
 
     /**
-     * Return a condition which holds iff <code>condition</code> does not hold.
+     * Return a condition which holds if <code>condition</code> does not hold.
      *
      * @param condition  Condition to negate
      * @return  A condition
@@ -273,7 +273,7 @@ public interface QueryBuilder<T> {
     T not(T condition);
 
     /**
-     * Return a condition which holds iff both sub conditions hold.
+     * Return a condition which holds if both sub conditions hold.
      *
      * @param condition1  first sub condition
      * @param condition2  second sub condition
@@ -282,7 +282,7 @@ public interface QueryBuilder<T> {
     T and(T condition1, T condition2);
 
     /**
-     * Return a condition which holds iff any of the two sub conditions hold.
+     * Return a condition which holds if any of the two sub conditions hold.
      *
      * @param condition1  first sub condition
      * @param condition2  second sub condition
