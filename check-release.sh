@@ -104,9 +104,12 @@ else
 fi
 
 ## 4. run the build with the pedantic profile to have the rat licence check enabled
-## TODO
 
 echo "[INFO] ------------------------------------------------------------------------"
-echo "[INFO] DONE                                                                    "
+echo "[INFO] RUNNING MAVEN BUILD                                                     "
 echo "[INFO] ------------------------------------------------------------------------"
+echo "[INFO] "
+
+cd "$ZIPTAGDIR"
+mvn package -Ppedantic
 

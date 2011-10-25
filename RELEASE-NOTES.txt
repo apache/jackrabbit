@@ -1,4 +1,4 @@
-Release Notes -- Apache Jackrabbit -- Version 2.3.1
+Release Notes -- Apache Jackrabbit -- Version 2.3.2
 
 Introduction
 ------------
@@ -10,6 +10,35 @@ specified in the Java Specification Request 283 (JSR 283).
 Apache Jackrabbit 2.3 is an unstable series of releases cut directly from
 Jackrabbit trunk, with a focus on new features and other improvements.
 For production use we recommend the latest stable 2.2 release.
+
+Changes in Jackrabbit 2.3.2
+---------------------------
+
+New features
+
+  [JCR-3117] Stats for the PersistenceManager
+  [JCR-3124] Stats for Queries
+
+Improvements
+
+  [JCR-2989] Support for embedded index aggregates
+  [JCR-3098] Add hit miss statistics and logging to caches
+  [JCR-3107] Speed up hierarchy cache initialization
+  [JCR-3109] Move PersistenceManagerTest from o.a.j.core to o.a.j.core....
+  [JCR-3114] expose PM for versioning manager so that the consistency ...
+  [JCR-3119] Improve aggregate node indexing code
+  [JCR-3122] QueryObjectModelImpl should execute queries as SessionOperation(s)
+
+Bug fixes
+
+  [JCR-2892] - Large fetch sizes have potentially deleterious effects on ...
+  [JCR-3093] - Inconsistency between Session.getProperty and Node....
+  [JCR-3108] - SQL2 ISDESCENDANTNODE can throw BooleanQuery#...
+  [JCR-3111] - InternalVersionManagerBase; missing null check after getNode()
+  [JCR-3112] - NodeTypeDefDiff.PropDefDiff.init() constraints change check ...
+  [JCR-3115] - Versioning fixup leaves persistence in a state where the ...
+  [JCR-3126] - The CredentialsWrapper should use a empty String as userId ...
+  [JCR-3128] - Problem with formerly escaped JCR node names when upgrading ...
 
 Changes in Jackrabbit 2.3.1
 ---------------------------
