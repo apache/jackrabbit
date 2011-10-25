@@ -182,11 +182,17 @@ public class TextTest extends TestCase {
             fail("Text.unescape(" + string + "): " + unexpected.getMessage());
         }
     }
-        
-    public void testEscapeIllegalJcrChars() throws Exception {
 
+    public void testEscapeIllegalJcr10Chars() throws Exception {
+        // single and double quote are illegal in JCR 1.0
+        assertEquals("local%27name", Text.escapeIllegalJcr10Chars("local'name"));
+        assertEquals("local%22name", Text.escapeIllegalJcr10Chars("local\"name"));
+    }
+
+    public void testEscapeIllegalJcrChars() throws Exception {
         // single and double quote are valid since JCR 2.0
         assertEquals("local'name", Text.escapeIllegalJcrChars("local'name"));
-        assertEquals("local\"name", Text.escapeIllegalJcrChars("local\"name"));       
+        assertEquals("local\"name", Text.escapeIllegalJcrChars("local\"name"));
     }
+
 }

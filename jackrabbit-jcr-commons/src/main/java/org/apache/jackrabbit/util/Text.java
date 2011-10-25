@@ -464,14 +464,40 @@ public class Text {
      * @return the escaped name
      */
     public static String escapeIllegalJcrChars(String name) {
-        StringBuffer buffer = new StringBuffer(name.length() * 2);
+        return escapeIllegalChars(name, "%/:[]*|\t\r\n");
+    }
+
+    /**
+     * Escapes all illegal JCR 1.0 name characters of a string.
+     * Use {@link #unescapeIllegalJcrChars(String)} for decoding.
+     * <p>
+     * QName EBNF:<br>
+     * <xmp>
+     * simplename ::= onecharsimplename | twocharsimplename | threeormorecharname
+     * onecharsimplename ::= (* Any Unicode character except: '.', '/', ':', '[', ']', '*', ''', '"', '|' or any whitespace character *)
+     * twocharsimplename ::= '.' onecharsimplename | onecharsimplename '.' | onecharsimplename onecharsimplename
+     * threeormorecharname ::= nonspace string nonspace
+     * string ::= char | string char
+     * char ::= nonspace | ' '
+     * nonspace ::= (* Any Unicode character except: '/', ':', '[', ']', '*', ''', '"', '|' or any whitespace character *)
+     * </xmp>
+     *
+     * @since Apache Jackrabbit 2.3.2 and 2.2.10
+     * @see <a href="https://issues.apache.org/jira/browse/JCR-3128">JCR-3128</a>
+     * @param name the name to escape
+     * @return the escaped name
+     */
+    public static String escapeIllegalJcr10Chars(String name) {
+        return escapeIllegalChars(name, "%/:[]*'\"|\t\r\n");
+    }
+
+    private static String escapeIllegalChars(String name, String illegal) {
+        StringBuilder buffer = new StringBuilder(name.length() * 2);
         for (int i = 0; i < name.length(); i++) {
             char ch = name.charAt(i);
-            if (ch == '%' || ch == '/' || ch == ':' || ch == '[' || ch == ']'
-                || ch == '*' || ch == '|'
-                || (ch == '.' && name.length() < 3)
-                || (ch == ' ' && (i == 0 || i == name.length() - 1))
-                || ch == '\t' || ch == '\r' || ch == '\n') {
+            if (illegal.indexOf(ch) != -1
+                    || (ch == '.' && name.length() < 3)
+                    || (ch == ' ' && (i == 0 || i == name.length() - 1))) {
                 buffer.append('%');
                 buffer.append(Character.toUpperCase(Character.forDigit(ch / 16, 16)));
                 buffer.append(Character.toUpperCase(Character.forDigit(ch % 16, 16)));
