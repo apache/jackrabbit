@@ -30,6 +30,7 @@ import org.xml.sax.SAXException;
  * This simple resolver contains mappings for the following
  * public identifiers used for the Jackrabbit configuration files:
  * <ul>
+ * <li><code>-//The Apache Software Foundation//DTD Jackrabbit 2.4//EN</code></li>
  * <li><code>-//The Apache Software Foundation//DTD Jackrabbit 2.0//EN</code></li>
  * <li><code>-//The Apache Software Foundation//DTD Jackrabbit 1.6//EN</code></li>
  * <li><code>-//The Apache Software Foundation//DTD Jackrabbit 1.5//EN</code></li>
@@ -40,6 +41,7 @@ import org.xml.sax.SAXException;
  * <p>
  * Also the following system identifiers are mapped to local resources:
  * <ul>
+ * <li><code>http://jackrabbit.apache.org/dtd/repository-2.4.dtd</code></li>
  * <li><code>http://jackrabbit.apache.org/dtd/repository-2.0.dtd</code></li>
  * <li><code>http://jackrabbit.apache.org/dtd/repository-1.6.dtd</code></li>
  * <li><code>http://jackrabbit.apache.org/dtd/repository-1.5.dtd</code></li>
@@ -73,6 +75,20 @@ public class ConfigurationEntityResolver implements EntityResolver {
      * Creates the singleton instance of this class.
      */
     private ConfigurationEntityResolver() {
+        // Apache Jackrabbit 2.4 DTD
+        publicIds.put(
+                "-//The Apache Software Foundation//DTD Jackrabbit 2.4//EN",
+                "repository-2.4.dtd");
+        systemIds.put(
+                "http://jackrabbit.apache.org/dtd/repository-2.4.dtd",
+                "repository-2.4.dtd");
+        publicIds.put(
+                "-//The Apache Software Foundation//DTD Jackrabbit 2.4 Elements//EN",
+                "repository-2.4-elements.dtd");
+        systemIds.put(
+                "http://jackrabbit.apache.org/dtd/repository-2.4-elements.dtd",
+                "repository-2.4-elements.dtd");
+
         // Apache Jackrabbit 2.0 DTD
         publicIds.put(
                 "-//The Apache Software Foundation//DTD Jackrabbit 2.0//EN",
