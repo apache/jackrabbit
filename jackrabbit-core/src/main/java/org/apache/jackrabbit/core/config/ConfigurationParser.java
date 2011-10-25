@@ -276,8 +276,7 @@ public class ConfigurationParser {
      */
     protected Element parseXML(InputSource xml, boolean validate) throws ConfigurationException {
         try {
-            DocumentBuilderFactory factory =
-                DocumentBuilderFactory.newInstance();
+            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
             factory.setValidating(validate);
             DocumentBuilder builder = factory.newDocumentBuilder();
             if (validate) {
