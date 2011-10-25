@@ -18,5 +18,5 @@
 /**
  * Jackrabbit repository statistics
  */
-@aQute.bnd.annotation.Version("1.0")
+@aQute.bnd.annotation.Version("1.1")
 package org.apache.jackrabbit.api.stats;
