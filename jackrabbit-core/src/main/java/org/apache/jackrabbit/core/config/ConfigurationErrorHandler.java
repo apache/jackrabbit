@@ -24,8 +24,6 @@ import org.xml.sax.SAXParseException;
 
 /**
  * Error handler for errors in the repository or workspace configuration.
- *
- * @author Thomas Mueller
  */
 public class ConfigurationErrorHandler implements ErrorHandler {
 
