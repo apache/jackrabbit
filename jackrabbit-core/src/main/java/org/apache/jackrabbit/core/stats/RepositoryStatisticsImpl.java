@@ -35,17 +35,28 @@ public class RepositoryStatisticsImpl implements
     private final Map<Type, TimeSeriesRecorder> recorders =
             new HashMap<Type, TimeSeriesRecorder>();
 
+    private final Map<Type, TimeSeriesAverage> avg =
+            new HashMap<Type, TimeSeriesAverage>();
+
     public RepositoryStatisticsImpl() {
         getOrCreateRecorder(Type.SESSION_COUNT);
         getOrCreateRecorder(Type.SESSION_LOGIN_COUNTER);
-        getOrCreateRecorder(Type.SESSION_READ_COUNTER);
-        getOrCreateRecorder(Type.SESSION_READ_DURATION);
-        getOrCreateRecorder(Type.SESSION_WRITE_COUNTER);
-        getOrCreateRecorder(Type.SESSION_WRITE_DURATION);
-        getOrCreateRecorder(Type.BUNDLE_READ_COUNTER);
-        getOrCreateRecorder(Type.BUNDLE_READ_DURATION);
-        getOrCreateRecorder(Type.BUNDLE_WRITE_COUNTER);
-        getOrCreateRecorder(Type.BUNDLE_WRITE_DURATION);
+
+        TimeSeries src = getOrCreateRecorder(Type.SESSION_READ_COUNTER);
+        TimeSeries srd = getOrCreateRecorder(Type.SESSION_READ_DURATION);
+        avg.put(Type.SESSION_READ_AVERAGE, new TimeSeriesAverage(srd, src));
+
+        TimeSeries swc = getOrCreateRecorder(Type.SESSION_WRITE_COUNTER);
+        TimeSeries swd = getOrCreateRecorder(Type.SESSION_WRITE_DURATION);
+        avg.put(Type.SESSION_WRITE_AVERAGE, new TimeSeriesAverage(swd, swc));
+
+        TimeSeries brc = getOrCreateRecorder(Type.BUNDLE_READ_COUNTER);
+        TimeSeries brd = getOrCreateRecorder(Type.BUNDLE_READ_DURATION);
+        avg.put(Type.BUNDLE_READ_AVERAGE, new TimeSeriesAverage(brd, brc));
+
+        TimeSeries bwc = getOrCreateRecorder(Type.BUNDLE_WRITE_COUNTER);
+        TimeSeries bwd = getOrCreateRecorder(Type.BUNDLE_WRITE_DURATION);
+        avg.put(Type.BUNDLE_WRITE_AVERAGE, new TimeSeriesAverage(bwd, bwc));
     }
 
     public RepositoryStatisticsImpl(ScheduledExecutorService executor) {
@@ -60,6 +71,7 @@ public class RepositoryStatisticsImpl implements
     public synchronized Iterator<Entry<Type, TimeSeries>> iterator() {
         Map<Type, TimeSeries> map = new TreeMap<Type, TimeSeries>();
         map.putAll(recorders);
+        map.putAll(avg);
         return map.entrySet().iterator();
     }
 
@@ -68,7 +80,11 @@ public class RepositoryStatisticsImpl implements
     }
 
     public TimeSeries getTimeSeries(Type type) {
-        return getOrCreateRecorder(type);
+        if (avg.containsKey(type)) {
+            return avg.get(type);
+        } else {
+            return getOrCreateRecorder(type);
+        }
     }
 
     private synchronized TimeSeriesRecorder getOrCreateRecorder(Type type) {
