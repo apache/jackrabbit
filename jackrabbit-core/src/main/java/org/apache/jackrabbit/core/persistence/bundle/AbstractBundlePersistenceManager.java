@@ -141,14 +141,21 @@ public abstract class AbstractBundlePersistenceManager implements
     /** Counter of write operations. */
     private AtomicLong writeCounter;
 
-    /** Duration of read operations. */
-    private AtomicLong readDuration;
-
     /** Duration of write operations. */
     private AtomicLong writeDuration;
 
     /** Counter of bundle cache accesses. */
-    private AtomicLong cacheCounter;
+    private AtomicLong cacheAccessCounter;
+
+    /** Counter of bundle read operations. */
+    private AtomicLong cacheMissCounter;
+
+    /** Duration of bundle read operations. */
+    private AtomicLong cacheMissDuration;
+
+    
+    /** Counter of bundle cache size. */
+    private AtomicLong cacheSizeCounter;
 
     /**
      * Returns the size of the bundle cache in megabytes.
@@ -415,16 +422,20 @@ public abstract class AbstractBundlePersistenceManager implements
 
         // statistics
         RepositoryStatisticsImpl stats = context.getRepositoryStatistics();
-        cacheCounter = stats.getCounter(
-                RepositoryStatistics.Type.BUNDLE_CACHE_COUNTER);
         readCounter = stats.getCounter(
                 RepositoryStatistics.Type.BUNDLE_READ_COUNTER);
-        readDuration = stats.getCounter(
-                RepositoryStatistics.Type.BUNDLE_READ_DURATION);
         writeCounter = stats.getCounter(
                 RepositoryStatistics.Type.BUNDLE_WRITE_COUNTER);
         writeDuration = stats.getCounter(
                 RepositoryStatistics.Type.BUNDLE_WRITE_DURATION);
+        cacheAccessCounter = stats.getCounter(
+                RepositoryStatistics.Type.BUNDLE_CACHE_ACCESS_COUNTER);
+        cacheSizeCounter = stats.getCounter(
+                RepositoryStatistics.Type.BUNDLE_CACHE_SIZE_COUNTER);
+        cacheMissCounter = stats.getCounter(
+                RepositoryStatistics.Type.BUNDLE_CACHE_MISS_COUNTER);
+        cacheMissDuration = stats.getCounter(
+                RepositoryStatistics.Type.BUNDLE_CACHE_MISS_DURATION);
     }
 
     /**
@@ -694,6 +705,7 @@ public abstract class AbstractBundlePersistenceManager implements
      */
     private NodePropBundle getBundle(NodeId id) throws ItemStateException {
         NodePropBundle bundle = bundles.get(id);
+        readCounter.incrementAndGet();
         if (bundle == MISSING) {
             return null;
         }
@@ -719,9 +731,8 @@ public abstract class AbstractBundlePersistenceManager implements
         long time = System.nanoTime();
         log.debug("Loading bundle {}", id);
         NodePropBundle bundle = loadBundle(id);
-        readDuration.addAndGet(System.nanoTime() - time);
-        readCounter.incrementAndGet();
-
+        cacheMissDuration.addAndGet(System.nanoTime() - time);
+        cacheMissCounter.incrementAndGet();
         if (bundle != null) {
             bundle.markOld();
             bundles.put(id, bundle, bundle.getSize());
@@ -784,7 +795,8 @@ public abstract class AbstractBundlePersistenceManager implements
 
     public void cacheAccessed(long accessCount) {
         logCacheStats();
-        cacheCounter.addAndGet(accessCount);
+        cacheAccessCounter.addAndGet(accessCount);
+        cacheSizeCounter.set(bundles.getMemoryUsed());
     }
 
     private void logCacheStats() {
