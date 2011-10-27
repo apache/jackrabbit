@@ -38,7 +38,9 @@ import org.apache.jackrabbit.commons.JcrUtils;
 public final class JCAManagedConnectionFactory
         implements ManagedConnectionFactory {
 
-    /**
+	private static final long serialVersionUID = 4775747072955577131L;
+
+	/**
      * Repository parameters.
      */
     private final Map<String, String> parameters = new HashMap<String, String>();
