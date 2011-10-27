@@ -95,7 +95,6 @@ public final class JCAManagedConnection
     /**
      * Create a new session.
      */
-    @SuppressWarnings("deprecation")
     private Session openSession() throws ResourceException {
         try {
             Session session = mcf.getRepository().login(
@@ -106,7 +105,7 @@ public final class JCAManagedConnection
             log("Failed to create session", e);
             ResourceException exception = new ResourceException(
                     "Failed to create session: " + e.getMessage());
-            exception.setLinkedException(e);
+            exception.initCause(e);
             throw exception;
         }
     }
@@ -240,7 +239,6 @@ public final class JCAManagedConnection
         }
     }
 
-    @SuppressWarnings("deprecation")
     private String getDescriptor(String key) throws ResourceException {
         try {
             return mcf.getRepository().getDescriptor(key);
@@ -248,7 +246,7 @@ public final class JCAManagedConnection
             log("Failed to access the repository", e);
             ResourceException exception = new ResourceException(
                     "Failed to access the repository: " + e.getMessage());
-            exception.setLinkedException(e);
+            exception.initCause(e);
             throw exception;
         }
     }
