@@ -36,7 +36,7 @@ import java.util.LinkedList;
  * This class implements the managed connection for
  * this resource adapter.
  */
-public final class JCAManagedConnection
+public class JCAManagedConnection
         implements ManagedConnection, ManagedConnectionMetaData {
 
     /**

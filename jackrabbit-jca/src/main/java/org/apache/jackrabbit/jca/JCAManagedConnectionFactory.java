@@ -35,7 +35,7 @@ import org.apache.jackrabbit.commons.JcrUtils;
 /**
  * Implements the JCA ManagedConnectionFactory contract.
  */
-public final class JCAManagedConnectionFactory
+public class JCAManagedConnectionFactory
         implements ManagedConnectionFactory {
 
 	private static final long serialVersionUID = 4775747072955577131L;
