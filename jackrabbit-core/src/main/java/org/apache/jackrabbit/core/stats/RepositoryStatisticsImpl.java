@@ -50,9 +50,9 @@ public class RepositoryStatisticsImpl implements
         TimeSeries swd = getOrCreateRecorder(Type.SESSION_WRITE_DURATION);
         avg.put(Type.SESSION_WRITE_AVERAGE, new TimeSeriesAverage(swd, swc));
 
-        TimeSeries brc = getOrCreateRecorder(Type.BUNDLE_READ_COUNTER);
-        TimeSeries brd = getOrCreateRecorder(Type.BUNDLE_READ_DURATION);
-        avg.put(Type.BUNDLE_READ_AVERAGE, new TimeSeriesAverage(brd, brc));
+        TimeSeries brc = getOrCreateRecorder(Type.BUNDLE_CACHE_MISS_COUNTER);
+        TimeSeries brd = getOrCreateRecorder(Type.BUNDLE_CACHE_MISS_DURATION);
+        avg.put(Type.BUNDLE_CACHE_MISS_AVERAGE, new TimeSeriesAverage(brd, brc));
 
         TimeSeries bwc = getOrCreateRecorder(Type.BUNDLE_WRITE_COUNTER);
         TimeSeries bwd = getOrCreateRecorder(Type.BUNDLE_WRITE_DURATION);
