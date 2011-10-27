@@ -27,7 +27,9 @@ import javax.resource.spi.ManagedConnectionFactory;
  */
 public final class JCAConnectionManager implements ConnectionManager {
 
-    /**
+	private static final long serialVersionUID = 1479445982219812432L;
+
+	/**
      * The method allocateConnection gets called by the resource adapter's
      * connection factory instance.
      */
