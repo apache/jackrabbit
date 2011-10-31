@@ -767,18 +767,18 @@ public class UserManagerImpl extends ProtectedItemModifier
                     authorz = createUser(n);
                 } else {
                     /* user node outside of configured tree -> return null */
-                    log.error("User node outside of configured user tree ('" + usersPath + "') -> Not a valid user.");
+                    log.error("User node '" + path + "' outside of configured user tree ('" + usersPath + "') -> Not a valid user.");
                 }
             } else if (n.isNodeType(NT_REP_GROUP)) {
                 if (Text.isDescendant(groupsPath, path)) {
                     authorz = createGroup(n);
                 } else {
                     /* group node outside of configured tree -> return null */
-                    log.error("Group node outside of configured group tree ('" + groupsPath + "') -> Not a valid group.");
+                    log.error("Group node '" + path + "' outside of configured group tree ('" + groupsPath + "') -> Not a valid group.");
                 }
             } else {
                 /* else some other node type -> return null. */
-                log.warn("Unexpected user/group nodetype " + n.getPrimaryNodeType().getName());
+                log.warn("Unexpected user/group node type " + n.getPrimaryNodeType().getName());
             }
         } /* else no matching node -> return null */
         return authorz;
