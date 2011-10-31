@@ -69,7 +69,7 @@ public class TestAll extends TestCase {
 //            suite.addTestSuite(ConcurrentNodeModificationTest.class);
 //            suite.addTestSuite(ConcurrentReadWriteTest.class);
 //            suite.addTestSuite(ConcurrentRenameTest.class);
-//            suite.addTestSuite(ConcurrentSaveTest.class);
+            suite.addTestSuite(ConcurrentSaveTest.class);
 //            suite.addTestSuite(ConcurrentWorkspaceCopyTest.class);
         }
 
