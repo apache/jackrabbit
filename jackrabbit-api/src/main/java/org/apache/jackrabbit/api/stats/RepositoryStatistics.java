@@ -42,7 +42,10 @@ public interface RepositoryStatistics {
         SESSION_WRITE_DURATION(true),
         SESSION_WRITE_AVERAGE(false),
         SESSION_LOGIN_COUNTER(true),
-        SESSION_COUNT(false);
+        SESSION_COUNT(false),
+        QUERY_COUNT(true),
+        QUERY_DURATION(true),
+        QUERY_AVERAGE(true);
 
         private final boolean resetValueEachSecond;
 

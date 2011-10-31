@@ -30,12 +30,14 @@ import javax.jcr.query.qom.Ordering;
 import javax.jcr.query.qom.QueryObjectModel;
 import javax.jcr.query.qom.Source;
 
+import org.apache.jackrabbit.api.stats.RepositoryStatistics.Type;
 import org.apache.jackrabbit.commons.query.QueryObjectModelBuilderRegistry;
 import org.apache.jackrabbit.core.query.lucene.LuceneQueryFactory;
 import org.apache.jackrabbit.core.query.lucene.SearchIndex;
 import org.apache.jackrabbit.core.query.lucene.join.QueryEngine;
 import org.apache.jackrabbit.core.session.SessionContext;
 import org.apache.jackrabbit.core.session.SessionOperation;
+import org.apache.jackrabbit.core.stats.RepositoryStatisticsImpl;
 import org.apache.jackrabbit.spi.commons.query.qom.BindVariableValueImpl;
 import org.apache.jackrabbit.spi.commons.query.qom.DefaultTraversingQOMTreeVisitor;
 import org.apache.jackrabbit.spi.commons.query.qom.QueryObjectModelTree;
@@ -117,7 +119,7 @@ public class QueryObjectModelImpl extends QueryImpl implements QueryObjectModel 
     }
 
     public QueryResult execute() throws RepositoryException {
-        long time = System.currentTimeMillis();
+        long time = System.nanoTime();
         final QueryResult result = sessionContext.getSessionState().perform(
                 new SessionOperation<QueryResult>() {
                     public QueryResult perform(SessionContext context)
@@ -127,12 +129,17 @@ public class QueryObjectModelImpl extends QueryImpl implements QueryObjectModel 
                         return engine.execute(getColumns(), getSource(),
                                 getConstraint(), getOrderings(), offset, limit);
                     }
+
                     public String toString() {
                         return "query.execute(" + statement + ")";
                     }
                 });
-        time = System.currentTimeMillis() - time;
-        log.debug("executed in {} ms. ({})", time, statement);
+        time = System.nanoTime() - time;
+        log.debug("executed in {} ms. ({})", time / 1000, statement);
+        RepositoryStatisticsImpl statistics = sessionContext
+                .getRepositoryContext().getRepositoryStatistics();
+        statistics.getCounter(Type.QUERY_COUNT).incrementAndGet();
+        statistics.getCounter(Type.QUERY_DURATION).addAndGet(time);
         sessionContext.getRepositoryContext().getStatManager().getQueryStat()
                 .logQuery(language, statement, time);
         return result;

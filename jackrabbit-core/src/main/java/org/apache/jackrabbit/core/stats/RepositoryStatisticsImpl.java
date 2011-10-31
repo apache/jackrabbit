@@ -42,21 +42,21 @@ public class RepositoryStatisticsImpl implements
         getOrCreateRecorder(Type.SESSION_COUNT);
         getOrCreateRecorder(Type.SESSION_LOGIN_COUNTER);
 
-        TimeSeries src = getOrCreateRecorder(Type.SESSION_READ_COUNTER);
-        TimeSeries srd = getOrCreateRecorder(Type.SESSION_READ_DURATION);
-        avg.put(Type.SESSION_READ_AVERAGE, new TimeSeriesAverage(srd, src));
+        createAvg(Type.SESSION_READ_COUNTER, Type.SESSION_READ_DURATION,
+                Type.SESSION_READ_AVERAGE);
+        createAvg(Type.SESSION_WRITE_COUNTER, Type.SESSION_WRITE_DURATION,
+                Type.SESSION_WRITE_AVERAGE);
+        createAvg(Type.BUNDLE_CACHE_MISS_COUNTER,
+                Type.BUNDLE_CACHE_MISS_DURATION, Type.BUNDLE_CACHE_MISS_AVERAGE);
+        createAvg(Type.BUNDLE_WRITE_COUNTER, Type.BUNDLE_WRITE_DURATION,
+                Type.BUNDLE_WRITE_AVERAGE);
+        createAvg(Type.QUERY_COUNT, Type.QUERY_DURATION, Type.QUERY_AVERAGE);
 
-        TimeSeries swc = getOrCreateRecorder(Type.SESSION_WRITE_COUNTER);
-        TimeSeries swd = getOrCreateRecorder(Type.SESSION_WRITE_DURATION);
-        avg.put(Type.SESSION_WRITE_AVERAGE, new TimeSeriesAverage(swd, swc));
+    }
 
-        TimeSeries brc = getOrCreateRecorder(Type.BUNDLE_CACHE_MISS_COUNTER);
-        TimeSeries brd = getOrCreateRecorder(Type.BUNDLE_CACHE_MISS_DURATION);
-        avg.put(Type.BUNDLE_CACHE_MISS_AVERAGE, new TimeSeriesAverage(brd, brc));
-
-        TimeSeries bwc = getOrCreateRecorder(Type.BUNDLE_WRITE_COUNTER);
-        TimeSeries bwd = getOrCreateRecorder(Type.BUNDLE_WRITE_DURATION);
-        avg.put(Type.BUNDLE_WRITE_AVERAGE, new TimeSeriesAverage(bwd, bwc));
+    private void createAvg(Type count, Type duration, Type avgTs) {
+        avg.put(avgTs, new TimeSeriesAverage(getOrCreateRecorder(duration),
+                getOrCreateRecorder(count)));
     }
 
     public RepositoryStatisticsImpl(ScheduledExecutorService executor) {
