@@ -33,8 +33,10 @@ import javax.jcr.query.InvalidQueryException;
 import javax.jcr.query.QueryResult;
 import javax.jcr.version.VersionException;
 
+import org.apache.jackrabbit.api.stats.RepositoryStatistics.Type;
 import org.apache.jackrabbit.core.session.SessionContext;
 import org.apache.jackrabbit.core.session.SessionOperation;
+import org.apache.jackrabbit.core.stats.RepositoryStatisticsImpl;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.commons.conversion.NameException;
 import org.slf4j.Logger;
@@ -122,21 +124,27 @@ public class QueryImpl extends AbstractQueryImpl {
      */
     public QueryResult execute() throws RepositoryException {
         checkInitialized();
-        long time = System.currentTimeMillis();
+        long time = System.nanoTime();
         QueryResult result = sessionContext.getSessionState().perform(
                 new SessionOperation<QueryResult>() {
                     public QueryResult perform(SessionContext context)
                             throws RepositoryException {
                         return query.execute(offset, limit);
                     }
+
                     public String toString() {
                         return "query.execute(" + statement + ")";
                     }
                 });
-        time = System.currentTimeMillis() - time;
-        log.debug("executed in {} ms. ({})", time, statement);
+        time = System.nanoTime() - time;
+        final long timeMs = time / 1000;
+        log.debug("executed in {} ms. ({})", timeMs, statement);
+        RepositoryStatisticsImpl statistics = sessionContext
+                .getRepositoryContext().getRepositoryStatistics();
+        statistics.getCounter(Type.QUERY_COUNT).incrementAndGet();
+        statistics.getCounter(Type.QUERY_DURATION).addAndGet(time);
         sessionContext.getRepositoryContext().getStatManager().getQueryStat()
-                .logQuery(language, statement, time);
+                .logQuery(language, statement, timeMs);
         return result;
     }
 

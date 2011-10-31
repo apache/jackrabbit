@@ -44,10 +44,6 @@ public interface QueryStat {
      */
     void clearSlowQueriesQueue();
 
-    double getQueriesPerSecond();
-
-    double getAvgQueryTime();
-
     /** -- GENERAL OPS -- **/
 
     /**

@@ -20,7 +20,6 @@ import java.util.Comparator;
 import java.util.PriorityQueue;
 
 import org.apache.jackrabbit.api.stats.QueryStatDto;
-import org.apache.jackrabbit.core.stats.util.CachingOpsPerSecondDto;
 
 /**
  * Default {@link QueryStatCore} implementation
@@ -34,8 +33,6 @@ public class QueryStatImpl implements QueryStatCore {
 
     private PriorityQueue<QueryStatDto> queries = new PriorityQueue<QueryStatDto>(
             queueSize + 1, comparator);
-
-    private CachingOpsPerSecondDto qps = new CachingOpsPerSecondDto();
 
     private boolean enabled = false;
 
@@ -76,7 +73,6 @@ public class QueryStatImpl implements QueryStatCore {
             if (queries.size() > queueSize) {
                 queries.remove();
             }
-            qps.onOp(durationMs);
         }
     }
 
@@ -92,13 +88,5 @@ public class QueryStatImpl implements QueryStatCore {
 
     public QueryStatDto[] getSlowQueries() {
         return queries.toArray(new QueryStatDto[queries.size()]);
-    }
-
-    public double getQueriesPerSecond() {
-        return qps.getOpsPerSecond();
-    }
-
-    public double getAvgQueryTime() {
-        return qps.getOpAvgTime();
     }
 }
