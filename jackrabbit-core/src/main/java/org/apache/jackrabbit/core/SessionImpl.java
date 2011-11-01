@@ -806,7 +806,10 @@ public class SessionImpl extends AbstractSession
      * {@inheritDoc}
      */
     public void save() throws RepositoryException {
-        perform(new SessionSaveOperation());
+        // JCR-3131: no need to perform save op when there's nothing to save...
+        if (context.getItemStateManager().hasAnyTransientItemStates()) {
+            perform(new SessionSaveOperation());
+        }
     }
 
     /**
