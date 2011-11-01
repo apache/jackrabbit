@@ -504,4 +504,30 @@ public class WriteTest extends AbstractWriteTest {
             // success
         }
     }
+    
+    // https://issues.apache.org/jira/browse/JCR-3131
+    public void testEmptySaveNoRootAccess() throws RepositoryException, NotExecutableException {
+
+        Session s = getTestSession();
+        s.save();
+
+        Privilege[] read = privilegesFromName(Privilege.JCR_READ);
+
+        try {
+            JackrabbitAccessControlList tmpl = getPolicy(acMgr, "/", testUser.getPrincipal());
+            tmpl.addEntry(testUser.getPrincipal(), read, false, getRestrictions(superuser, path));
+            acMgr.setPolicy(tmpl.getPath(), tmpl);
+            superuser.save();
+
+            // empty save operation
+            s.save();
+        }
+        finally {
+            // undo revocation of read privilege
+            JackrabbitAccessControlList tmpl = getPolicy(acMgr, "/", testUser.getPrincipal());
+            tmpl.addEntry(testUser.getPrincipal(), read, true, getRestrictions(superuser, path));
+            acMgr.setPolicy(tmpl.getPath(), tmpl);
+            superuser.save();
+        }
+    }
 }
