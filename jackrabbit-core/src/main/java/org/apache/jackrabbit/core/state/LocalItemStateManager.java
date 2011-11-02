@@ -342,6 +342,7 @@ public class LocalItemStateManager
      * {@inheritDoc}
      */
     public void destroy(ItemState state) throws IllegalStateException {
+        assert state != null;
         if (!editMode) {
             throw new IllegalStateException("Not in edit mode");
         }

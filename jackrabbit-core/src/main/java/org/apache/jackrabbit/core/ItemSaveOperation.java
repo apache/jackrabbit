@@ -718,6 +718,7 @@ class ItemSaveOperation implements SessionWriteOperation<Object> {
             // remove persistent state
             // this will indirectly (through stateDestroyed listener method)
             // permanently invalidate all Item instances wrapping it
+            assert persistentState != null;
             sism.destroy(persistentState);
         }
     }
