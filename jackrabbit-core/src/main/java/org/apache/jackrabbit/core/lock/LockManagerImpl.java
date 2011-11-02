@@ -120,38 +120,42 @@ public class LockManagerImpl
          */
         @Override
         public void acquire() throws InterruptedException {
-        	if (Thread.interrupted()) throw new InterruptedException();
-        	Xid currentXid = TransactionContext.getCurrentXid();
+            if (Thread.interrupted()) {
+                throw new InterruptedException();
+            }
+            Xid currentXid = TransactionContext.getCurrentXid();
             synchronized(this) {
-            	if (currentXid == activeXid || (activeXid != null && isSameGlobalTx(currentXid))) { 
-                ++holds_;
-            	} else {
-            		try {  
-            			while (activeXid != null) 
-            				wait(); 
-            			activeXid = currentXid;
-            			holds_ = 1;
-            		} catch (InterruptedException ex) {
-            			notify();
-            			throw ex;
-            		}
-            	}
+                if (currentXid == activeXid || (activeXid != null && isSameGlobalTx(currentXid))) { 
+                    ++holds_;
+                } else {
+                    try {  
+                        while (activeXid != null) {
+                            wait(); 
+                        }
+                        activeXid = currentXid;
+                        holds_ = 1;
+                    } catch (InterruptedException ex) {
+                        notify();
+                        throw ex;
+                    }
+                }
             }
         }
-        
+
         /**
          * {@inheritDoc}
          */
         @Override
         public synchronized void release()  {
-        	Xid currentXid = TransactionContext.getCurrentXid();
-            if (activeXid != null && !isSameGlobalTx(currentXid))
+            Xid currentXid = TransactionContext.getCurrentXid();
+            if (activeXid != null && !isSameGlobalTx(currentXid)) {
                 throw new Error("Illegal Lock usage"); 
+            }
 
-              if (--holds_ == 0) {
+            if (--holds_ == 0) {
                 activeXid = null;
                 notify(); 
-              }
+            }
         }
     };
 
@@ -789,10 +793,8 @@ public class LockManagerImpl
             PathMap.Element<LockInfo> element = lockMap.map(path, true);
             if (element != null) {
                 LockInfo info = element.get();
-                if (info != null) {
-                    if (info.isLockHolder(session)) {
-                        // nothing to do
-                    } else if (info.getLockHolder() == null) {
+                if (info != null && !info.isLockHolder(session)) {
+                    if (info.getLockHolder() == null) {
                         info.setLockHolder(session);
                         if (info instanceof InternalLockInfo) {
                             session.addListener((InternalLockInfo) info);
@@ -830,9 +832,7 @@ public class LockManagerImpl
                 if (info != null) {
                     if (info.isLockHolder(session)) {
                         info.setLockHolder(null);
-                    } else if (info.getLockHolder() == null) {
-                        // nothing to do
-                    } else {
+                    } else if (info.getLockHolder() != null) {
                         String msg = "Cannot remove lock token: lock held by other session.";
                         log.warn(msg);
                         info.throwLockException(msg, session);

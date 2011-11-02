@@ -141,19 +141,6 @@ public class ImportFileSystem implements Command {
     }
 
     /**
-     * @param name
-     *        the file name
-     * @return the extension for the given file name
-     */
-    private String getExtension(String name) {
-        String ext = null;
-        if (name.lastIndexOf('.') != -1) {
-            ext = name.substring(name.lastIndexOf('.') + 1);
-        }
-        return ext;
-    }
-
-    /**
      * @return the from key
      */
     public String getSrcFsPathKey() {

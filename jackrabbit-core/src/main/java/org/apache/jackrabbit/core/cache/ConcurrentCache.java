@@ -140,8 +140,7 @@ public class ConcurrentCache<K, V> extends AbstractCache {
      *
      * @return cached values
      */
-    @SuppressWarnings("unchecked")
-    public V[] values() {
+    public List<V> values() {
         List<V> values = new ArrayList<V>();
         for (int i = 0; i < segments.length; i++) {
             synchronized (segments[i]) {
@@ -150,7 +149,7 @@ public class ConcurrentCache<K, V> extends AbstractCache {
                 }
             }
         }
-        return (V[]) values.toArray();
+        return values;
     }
 
     /**

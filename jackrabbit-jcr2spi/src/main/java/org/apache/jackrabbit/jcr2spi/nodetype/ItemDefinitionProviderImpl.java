@@ -323,13 +323,11 @@ public class ItemDefinitionProviderImpl implements ItemDefinitionProvider {
                                 throw new ConstraintViolationException("ambiguous property definitions found: " + match + " vs " + pd);
                             }
 
-                            if (match != null && match.getRequiredType() == PropertyType.STRING) {
-                                // If we already found a match, and that was of PropertyType.STRING,
-                                // then do not overwrite it. The whole reason there are multiple
-                                // potential matches is that the client did not specify the type,
-                                // thus obviously specified a String.
-                            }
-                            else {
+                            // If we already found a match, and that was of PropertyType.STRING,
+                            // then do not overwrite it. The whole reason there are multiple
+                            // potential matches is that the client did not specify the type,
+                            // thus obviously specified a String.
+                            if (match == null || match.getRequiredType() != PropertyType.STRING) {
                                 // found best possible match
                                 match = pd;
                             }

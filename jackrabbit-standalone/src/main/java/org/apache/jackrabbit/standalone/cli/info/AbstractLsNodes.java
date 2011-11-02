@@ -45,7 +45,7 @@ import org.apache.jackrabbit.standalone.cli.CommandHelper;
  * <li>referenceableKey</li>
  * <li>lockedKey</li>
  * <li>hasLockKey</li>
- * <li>new_Key</li>
+ * <li>newKey</li>
  * <li>modifiedKey</li>
  * </ul>
  */
@@ -87,7 +87,7 @@ public abstract class AbstractLsNodes extends AbstractLs {
     private String hasLockKey = "hasLock";
 
     /** show is new */
-    private String new_Key = "new";
+    private String newKey = "new";
 
     /** show is modified */
     private String modifiedKey = "modified";
@@ -186,7 +186,7 @@ public abstract class AbstractLsNodes extends AbstractLs {
         }
 
         // is new
-        if (oh.isNew_()) {
+        if (oh.isNew()) {
             widths.add(new Integer(this.longWidth));
             texts.add(Boolean.toString(n.isNew()));
         }
@@ -309,7 +309,7 @@ public abstract class AbstractLsNodes extends AbstractLs {
         }
 
         // is new
-        if (oh.isNew_()) {
+        if (oh.isNew()) {
             widths.add(new Integer(this.longWidth));
             texts.add(bundle.getString("word.new"));
         }
@@ -470,7 +470,7 @@ public abstract class AbstractLsNodes extends AbstractLs {
             referenceable = getFlag(referenceableKey);
             locked = getFlag(lockedKey);
             hasLock = getFlag(hasLockKey);
-            new_ = getFlag(new_Key);
+            new_ = getFlag(newKey);
             modified = getFlag(modifiedKey);
             lockToken = getFlag(lockTokenKey);
         }
@@ -513,7 +513,7 @@ public abstract class AbstractLsNodes extends AbstractLs {
         /**
          * @return Returns the new_.
          */
-        public boolean isNew_() {
+        public boolean isNew() {
             return new_;
         }
 
@@ -647,18 +647,18 @@ public abstract class AbstractLsNodes extends AbstractLs {
     }
 
     /**
-     * @return Returns the new_Key.
+     * @return Returns the newKey.
      */
-    public String getNew_Key() {
-        return new_Key;
+    public String getNewKey() {
+        return newKey;
     }
 
     /**
-     * @param new_Key
+     * @param newKey
      *        The new_Key to set.
      */
-    public void setNew_Key(String new_Key) {
-        this.new_Key = new_Key;
+    public void setNewKey(String newKey) {
+        this.newKey = newKey;
     }
 
     /**

@@ -228,12 +228,19 @@ public class Rank<T> {
         // Partition values around pivot
         while (lo < hi) {
             // Find values to swap around the pivot
-            while (order.compare(values[lo], values[pivot]) < 0) lo++;
-            while (order.compare(values[hi], values[pivot]) > 0) hi--;
+            while (order.compare(values[lo], values[pivot]) < 0) {
+                lo++;
+            }
+            while (order.compare(values[hi], values[pivot]) > 0) {
+                hi--;
+            }
             if (lo < hi) {
                 // Swap values and keep track of pivot position in case the pivot itself is swapped
-                if (lo == pivot) pivot = hi;
-                else if (hi == pivot) pivot = lo;
+                if (lo == pivot) {
+                    pivot = hi;
+                } else if (hi == pivot) {
+                    pivot = lo;
+                }
                 swap(lo, hi);
                 lo++;
                 hi--;

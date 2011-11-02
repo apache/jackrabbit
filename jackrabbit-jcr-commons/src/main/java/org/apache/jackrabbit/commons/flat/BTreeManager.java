@@ -210,7 +210,9 @@ public class BTreeManager implements TreeManager {
         SizedIterator<Node> nodes = getNodes(node);
         long count = nodes.getSize();
         if (count < 0) {
-            for (count = 0; nodes.hasNext(); count++, nodes.next());
+            for (count = 0; nodes.hasNext(); count++) {
+                nodes.next();
+            }
         }
 
         if (count == 0) {
@@ -232,7 +234,9 @@ public class BTreeManager implements TreeManager {
         SizedIterator<Property> properties = getProperties(node);
         long count = properties.getSize();
         if (count < 0) {
-            for (count = 0; properties.hasNext(); count++, properties.next());
+            for (count = 0; properties.hasNext(); count++) {
+                properties.next();
+            }
         }
 
         if (count == 0) {

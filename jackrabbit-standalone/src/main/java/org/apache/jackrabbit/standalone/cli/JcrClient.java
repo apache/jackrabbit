@@ -199,14 +199,16 @@ public class JcrClient {
         while (!exit) {
             try {
                 String input = reader.readLine("[" + this.getPrompt() + "] > ");
-                
+                if (input == null) {
+                    input = "exit";
+                } else {
+                    input = input.trim();
+                }
                 log.debug("running: " + input);
-                if (input.trim().equals("exit") || input.trim().equals("quit")) { // exit?
+                if (input.equals("exit") || input.equals("quit")) { // exit?
                     exit = true;
                     System.out.println("Good bye...");
-                } else if (input.trim().length() == 0) {
-                    // Do nothing
-                } else {
+                } else if (input.length() > 0) {
                     this.runCommand(input);
                 }
             } catch (JcrParserException e) {

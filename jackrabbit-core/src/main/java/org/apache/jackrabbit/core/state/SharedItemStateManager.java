@@ -1187,13 +1187,11 @@ public class SharedItemStateManager
                 boolean addedAndRemoved = changeLog.has(removedNodeState.getId());
                 if (!addedAndRemoved) {
 
-                    // Check the old parent
+                    // Check the old parent; it should be either also deleted
+                    // or at least modified to reflect the removal of a child
                     NodeId oldParentId = overlayedState.getParentId();
-                    if (changeLog.deleted(oldParentId)) {
-                        // parent has been deleted as well
-                    } else if (changeLog.isModified(oldParentId)) {
-                        // the modified state will be check later on
-                    } else {
+                    if (!changeLog.deleted(oldParentId)
+                            && !changeLog.isModified(oldParentId)) {
                         String message = "Node with id " + id
                                 + " has been removed, but the parent node isn't part of the changelog " + oldParentId;
                         log.error(message);
@@ -1203,15 +1201,11 @@ public class SharedItemStateManager
                     // Get the original list of child ids
                     for (ChildNodeEntry entry : overlayedState.getChildNodeEntries()) {
 
-                        // Check the next child
+                        // Check the next child; it should be either also deleted
+                        // or at least modified to reflect being moved elsewhere
                         NodeId childId = entry.getId();
-
-                        if (changeLog.deleted(childId)) {
-                            // child has been deleted as well
-                        } else if (changeLog.isModified(childId)) {
-
-                            // the modified state will be check later on
-                        } else {
+                        if (!changeLog.deleted(childId)
+                                && !changeLog.isModified(childId)) {
                             String message = "Node with id " + id
                                     + " has been removed, but the old child node isn't part of the changelog "
                                     + childId;
@@ -1317,13 +1311,10 @@ public class SharedItemStateManager
                     checkParent(changeLog, modifiedNodeState, parentId);
                 }
 
-                // Check whether this node is the root node
-                if (parentId == null && oldParentId == null) {
-                    // The root node can be ignored
-
-                } else if (!parentId.equals(oldParentId)) {
-
-                    // This node has been moved, check whether the parent has been modified as well
+                if (!(parentId == null && oldParentId == null)
+                        && !parentId.equals(oldParentId)) {
+                    // This node (not the root) has been moved; check
+                    // whether the parent has been modified as well
                     if (changeLog.has(parentId)) {
                         checkParent(changeLog, modifiedNodeState, parentId);
                     } else if (!isShareable(modifiedNodeState)) {
