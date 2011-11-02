@@ -48,6 +48,7 @@
     <jetty.version>6.1.22</jetty.version>
     <tika.version>0.10</tika.version>
     <clirr.baseline.version>2.2.0</clirr.baseline.version>
+    <project.reporting.outputEncoding>${project.build.sourceEncoding}</project.reporting.outputEncoding>
   </properties>
 
   <url>http://jackrabbit.apache.org/</url>
@@ -109,6 +110,24 @@
                 <systemPath>${java.home}/../lib/tools.jar</systemPath>
               </dependency>
             </dependencies>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <profile>
+      <id>integrationTesting</id>
+      <build>
+        <plugins>
+          <plugin>
+            <artifactId>maven-failsafe-plugin</artifactId>
+            <executions>
+              <execution>
+                <goals>
+                  <goal>integration-test</goal>
+                  <goal>verify</goal>
+                </goals>
+              </execution>
+            </executions>
           </plugin>
         </plugins>
       </build>
@@ -187,6 +206,10 @@
         <plugin>
           <artifactId>maven-surefire-plugin</artifactId>
           <version>2.4.3</version>
+        </plugin>
+        <plugin>
+          <artifactId>maven-failsafe-plugin</artifactId>
+          <version>2.10</version>
         </plugin>
         <plugin>
           <artifactId>maven-war-plugin</artifactId>
