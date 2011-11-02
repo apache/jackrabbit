@@ -43,8 +43,8 @@
   </issueManagement>
 
   <properties>
-    <slf4j.version>1.6.1</slf4j.version>
-    <logback.version>0.9.27</logback.version>
+    <slf4j.version>1.6.4</slf4j.version>
+    <logback.version>1.0.0</logback.version>
     <jetty.version>6.1.22</jetty.version>
     <tika.version>0.10</tika.version>
     <clirr.baseline.version>2.2.0</clirr.baseline.version>
