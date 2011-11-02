@@ -26,12 +26,11 @@
   <parent>
     <groupId>org.apache.jackrabbit</groupId>
     <artifactId>jackrabbit-perf-parent</artifactId>
-    <version>SNAPSHOT</version>
+    <version>1-SNAPSHOT</version>
     <relativePath>../parent/pom.xml</relativePath>
   </parent>
 
   <artifactId>jackrabbit-perf-base</artifactId>
-  <version>SNAPSHOT</version>
   <name>Jackrabbit Performance Test Utilities</name>
 
   <dependencies>

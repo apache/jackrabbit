@@ -154,9 +154,9 @@
           <execution>
             <phase>package</phase>
             <configuration>
-              <tasks>
+              <target>
                 <jar basedir="${project.build.outputDirectory}" destfile="${project.build.directory}/jackrabbit-webapp-${project.version}.jar" />
-              </tasks>
+              </target>
             </configuration>
             <goals>
               <goal>run</goal>

@@ -28,15 +28,16 @@
   <!-- =================================================================== -->
 
   <parent>
-    <groupId>org.apache.jackrabbit</groupId>
-    <artifactId>parent</artifactId>
-    <version>5</version>
-    <relativePath/>
+    <groupId>org.apache</groupId>
+    <artifactId>apache</artifactId>
+    <version>10</version>
+    <relativePath />
   </parent>
 
+  <groupId>org.apache.jackrabbit</groupId>
   <artifactId>jackrabbit-perf-parent</artifactId>
   <name>Jackrabbit Performance Test Parent</name>
-  <version>SNAPSHOT</version>
+  <version>1-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <properties>

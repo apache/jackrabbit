@@ -26,7 +26,7 @@
   <parent>
     <groupId>org.apache.jackrabbit</groupId>
     <artifactId>jackrabbit-perf-parent</artifactId>
-    <version>SNAPSHOT</version>
+    <version>1-SNAPSHOT</version>
     <relativePath>../parent/pom.xml</relativePath>
   </parent>
 
@@ -49,7 +49,7 @@
     <dependency>
       <groupId>org.apache.jackrabbit</groupId>
       <artifactId>jackrabbit-core</artifactId>
-      <version>2.3-SNAPSHOT</version>
+      <version>2.3.0</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
