@@ -101,6 +101,7 @@ public class ChangeLog {
      * @param state state that has been deleted
      */
     public void deleted(ItemState state) {
+        assert state != null;
         if (addedStates.remove(state.getId()) == null) {
             state.disconnect();
             modifiedStates.remove(state.getId());

@@ -255,6 +255,7 @@ public class SessionItemStateManager
      * {@inheritDoc}
      */
     public void destroy(ItemState state) throws IllegalStateException {
+        assert state != null;
         stateMgr.destroy(state);
     }
 
