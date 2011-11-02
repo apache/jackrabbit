@@ -196,36 +196,20 @@
         </configuration>
       </plugin>
     </plugins>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <artifactId>maven-failsafe-plugin</artifactId>
+          <configuration>
+            <workingDirectory>${project.build.directory}</workingDirectory>
+            <systemPropertyVariables>
+              <webapp.directory>${project.build.directory}/${project.artifactId}-${project.version}</webapp.directory>
+              <default.webxml>${basedir}/src/test/resources/default-web.xml</default.webxml>
+            </systemPropertyVariables>
+          </configuration>
+        </plugin>
+      </plugins>
+    </pluginManagement>
   </build>
-
-  <profiles>
-    <profile>
-      <id>integrationTesting</id>
-      <build>
-        <plugins>
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-failsafe-plugin</artifactId>
-            <version>2.6</version>
-            <configuration>
-              <workingDirectory>${project.build.directory}</workingDirectory>
-              <systemPropertyVariables>
-                <webapp.directory>${project.build.directory}/${project.artifactId}-${project.version}</webapp.directory>
-                <default.webxml>${basedir}/src/test/resources/default-web.xml</default.webxml>
-              </systemPropertyVariables>
-            </configuration>
-            <executions>
-              <execution>
-                <goals>
-                  <goal>integration-test</goal>
-                  <goal>verify</goal>
-                </goals>
-              </execution>
-            </executions>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
-  </profiles>
 
 </project>
