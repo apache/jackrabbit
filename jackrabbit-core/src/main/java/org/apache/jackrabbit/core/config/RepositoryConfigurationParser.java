@@ -193,7 +193,7 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
     private static final String AC_PROVIDER_ELEMENT = "AccessControlProvider";
 
     /**
-     * The repositories {@link ConnectionFactory}. 
+     * The repositories {@link ConnectionFactory}.
      */
     protected final ConnectionFactory connectionFactory;
 
@@ -341,7 +341,7 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
                 maxIdleTime, template, vc, qhf, cc, dsf, rlf, dsc, connectionFactory, this);
     }
 
-    
+
     /**
      * {@inheritDoc}
      */
@@ -830,7 +830,7 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
                     File file = new File(home, CLUSTER_NODE_ID_FILE);
                     try {
                         if (file.exists() && file.canRead()) {
-                            id = FileUtils.readFileToString(file);
+                            id = FileUtils.readFileToString(file).trim();
                         } else {
                             id = UUID.randomUUID().toString();
                             FileUtils.writeStringToFile(file, id);
