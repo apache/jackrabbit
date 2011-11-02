@@ -109,6 +109,7 @@ org.apache.jackrabbit.test.api.ShareableNodeTest#testGetNodesByPattern
 org.apache.jackrabbit.test.api.lock.OpenScopedLockTest#testLockExpiration
 org.apache.jackrabbit.test.api.lock.SessionScopedLockTest#testLockExpiration
 org.apache.jackrabbit.core.data.ConcurrentGcTest#testDatabases
+org.apache.jackrabbit.core.data.GarbageCollectorTest#testCloseSessionWhileRunningGc
               </value>
             </property>
             <property>
