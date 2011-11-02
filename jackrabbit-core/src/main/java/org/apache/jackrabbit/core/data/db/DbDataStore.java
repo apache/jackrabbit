@@ -371,14 +371,13 @@ public class DbDataStore implements DataStore, DatabaseAware {
                     // WHERE ID=? AND LAST_MODIFIED=?
                     int count = conHelper.update(updateSQL,
                             id, length, newModified, tempId, tempModified);
-                    if (count == 0) {
-                        // update count is 0, meaning the last modified time of the
-                        // temporary row was changed - which means we need to
-                        // re-try using a new last modified date (a later one)
-                        // because we need to ensure the new last modified date
-                        // is _newer_ than the old (otherwise the garbage collection
-                        // could delete rows)
-                    } else {
+                    // If update count is 0, the last modified time of the
+                    // temporary row was changed - which means we need to
+                    // re-try using a new last modified date (a later one)
+                    // because we need to ensure the new last modified date
+                    // is _newer_ than the old (otherwise the garbage
+                    // collection could delete rows)
+                    if (count != 0) {
                         // update was successful
                         break;
                     }
@@ -702,13 +701,9 @@ public class DbDataStore implements DataStore, DatabaseAware {
         selectAllSQL = getProperty(prop, "selectAll", selectAllSQL);
         selectDataSQL = getProperty(prop, "selectData", selectDataSQL);
         storeStream = getProperty(prop, "storeStream", storeStream);
-        if (STORE_SIZE_MINUS_ONE.equals(storeStream)) {
-            // ok
-        } else if (STORE_TEMP_FILE.equals(storeStream)) {
-            // ok
-        } else if (STORE_SIZE_MAX.equals(storeStream)) {
-            // ok
-        } else {
+        if (!STORE_SIZE_MINUS_ONE.equals(storeStream)
+                && !STORE_TEMP_FILE.equals(storeStream)
+                && !STORE_SIZE_MAX.equals(storeStream)) {
             String msg = "Unsupported Stream store mechanism: " + storeStream
                     + " supported are: " + STORE_SIZE_MINUS_ONE + ", "
                     + STORE_TEMP_FILE + ", " + STORE_SIZE_MAX;

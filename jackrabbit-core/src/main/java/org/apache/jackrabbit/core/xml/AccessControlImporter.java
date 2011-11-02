@@ -223,12 +223,10 @@ public class AccessControlImporter extends DefaultProtectedNodeImporter {
         } else {
             switch (status) {
                 case STATUS_AC_FOLDER:
-                    if (AccessControlConstants.NT_REP_ACCESS_CONTROL.equals(ntName)) {
-                        // yet another intermediate node -> keep status
-                    } else if (AccessControlConstants.NT_REP_PRINCIPAL_ACCESS_CONTROL.equals(ntName)) {
+                    if (AccessControlConstants.NT_REP_PRINCIPAL_ACCESS_CONTROL.equals(ntName)) {
                         // the start of a principal-based acl
                         status = STATUS_PRINCIPAL_AC;
-                    } else {
+                    } else if (!AccessControlConstants.NT_REP_ACCESS_CONTROL.equals(ntName)) {
                         // illegal node type.
                         throw new ConstraintViolationException("Unexpected node type " + ntName + ". Should be rep:AccessControl or rep:PrincipalAccessControl.");
                     }
@@ -238,10 +236,7 @@ public class AccessControlImporter extends DefaultProtectedNodeImporter {
                     if (AccessControlConstants.NT_REP_ACCESS_CONTROL.equals(ntName)) {
                         // some intermediate path between principal paths.
                         status = STATUS_AC_FOLDER;
-                    } else if (AccessControlConstants.NT_REP_PRINCIPAL_ACCESS_CONTROL.equals(ntName)) {
-                        // principal-based ac node underneath another one
-                        // keep status
-                    } else {
+                    } else if (!AccessControlConstants.NT_REP_PRINCIPAL_ACCESS_CONTROL.equals(ntName)) {
                         // the start the acl definition itself
                         checkDefinition(childInfo, AccessControlConstants.N_POLICY, AccessControlConstants.NT_REP_ACL);
                         status = STATUS_ACL;

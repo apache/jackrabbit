@@ -160,11 +160,9 @@ public class BundleDumper {
 
         // mixin types
         int mn = readVarInt((b >> 7) & 1, 1);
-        if (mn == 0) {
-            // 0
-        } else if (mn == 1) {
+        if (mn == 1) {
             buffer.append("mixing type:").append(readName()).append("\n");
-        } else {
+        } else if (mn > 1) {
             buffer.append("mixing type count:").append(mn).append("\n");
             for (int i = 0; i < mn; i++) {
                 buffer.append("mixing type:").append(readName()).append("\n");
@@ -187,11 +185,9 @@ public class BundleDumper {
 
         // read shared set
         int sn = readVarInt((b >> 1) & 1, 1);
-        if (sn == 0) {
-            // 0
-        } else if (sn == 1) {
+        if (sn == 1) {
             buffer.append("shared set:").append(readNodeId()).append("\n");
-        } else {
+        } else if (sn > 1) {
             buffer.append("shared set count:").append(sn).append("\n");
             for (int i = 0; i < sn; i++) {
                 buffer.append("shared set:").append(readNodeId()).append("\n");

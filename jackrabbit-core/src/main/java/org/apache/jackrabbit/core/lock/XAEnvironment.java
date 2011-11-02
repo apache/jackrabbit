@@ -272,10 +272,8 @@ class XAEnvironment {
             NodeId id = LockInfo.parseLockToken(lt);
             NodeImpl node = (NodeImpl) session.getItemManager().getItem(id);
             LockInfo info = getLockInfo(node);
-            if (info != null) {
-                if (info.isLockHolder(session)) {
-                    // nothing to do
-                } else if (info.getLockHolder() == null) {
+            if (info != null && !info.isLockHolder(session)) {
+                if (info.getLockHolder() == null) {
                     info.setLockHolder(session);
                 } else {
                     String msg = "Cannot add lock token: lock already held by other session.";
@@ -307,9 +305,7 @@ class XAEnvironment {
             if (info != null) {
                 if (info.isLockHolder(session)) {
                     info.setLockHolder(null);
-                } else if (info.getLockHolder() == null) {
-                    // nothing to do
-                } else {
+                } else if (info.getLockHolder() != null) {
                     String msg = "Cannot remove lock token: lock held by other session.";
                     log.warn(msg);
                     throw new LockException(msg);

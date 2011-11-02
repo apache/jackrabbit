@@ -222,7 +222,7 @@ public class QueryObjectModelFactoryTest extends AbstractQOMTest {
             Comparison comp = qf.comparison(op1, operator, op2);
             assertTrue("Not a PropertyValue operand", comp.getOperand1() instanceof PropertyValue);
             assertTrue("Not a BindVariableValue operand", comp.getOperand2() instanceof BindVariableValue);
-            assertEquals("Wrong operator", operator.toString(), comp.getOperator());
+            assertEquals("Wrong operator", operator, comp.getOperator());
         }
     }
 

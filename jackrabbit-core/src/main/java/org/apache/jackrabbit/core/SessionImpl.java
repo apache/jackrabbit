@@ -1243,24 +1243,25 @@ public class SessionImpl extends AbstractSession
                     return false;
                 }
             }
-        } else if (target instanceof Workspace) {
-            if (methodName.equals("clone")
-                    || methodName.equals("copy")
-                    || methodName.equals("createWorkspace")
-                    || methodName.equals("deleteWorkspace")
-                    || methodName.equals("getImportContentHandler")
-                    || methodName.equals("importXML")
-                    || methodName.equals("move")) {
-                // todo minimal, best effort checks (e.g. permissions for write methods etc)
-            }
-        } else if (target instanceof Session) {
-            if (methodName.equals("clone")
-                    || methodName.equals("removeItem")
-                    || methodName.equals("getImportContentHandler")
-                    || methodName.equals("importXML")
-                    || methodName.equals("save")) {
-                // todo minimal, best effort checks (e.g. permissions for write methods etc)
-            }
+// TODO: Add minimal, best effort checks for Workspace and Session operations
+//        } else if (target instanceof Workspace) {
+//            if (methodName.equals("clone")
+//                    || methodName.equals("copy")
+//                    || methodName.equals("createWorkspace")
+//                    || methodName.equals("deleteWorkspace")
+//                    || methodName.equals("getImportContentHandler")
+//                    || methodName.equals("importXML")
+//                    || methodName.equals("move")) {
+//                // TODO minimal, best effort checks (e.g. permissions for write methods etc)
+//            }
+//        } else if (target instanceof Session) {
+//            if (methodName.equals("clone")
+//                    || methodName.equals("removeItem")
+//                    || methodName.equals("getImportContentHandler")
+//                    || methodName.equals("importXML")
+//                    || methodName.equals("save")) {
+//                // TODO minimal, best effort checks (e.g. permissions for write methods etc)
+//            }
         }
 
         // we're unable to evaluate capability, return true (staying on the safe side)

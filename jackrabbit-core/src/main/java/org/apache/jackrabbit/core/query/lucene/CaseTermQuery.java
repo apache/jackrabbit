@@ -142,10 +142,6 @@ abstract class CaseTermQuery extends MultiTermQuery implements TransformConstant
                             int compare = currentTerm.compareTo(termText);
                             if (compare == 0) {
                                 orderedTerms.put(t, terms.docFreq());
-                            } else if (compare < 0) {
-                                // try next one
-                            } else {
-                                // compare > 0
                             }
                         } else {
                             break;

@@ -109,11 +109,8 @@ class InternalFrozenNodeImpl extends InternalFreezeImpl
                         mixins.add(value.getName());
                     }
                 }
-            } else if (prop.getName().equals(NameConstants.JCR_PRIMARYTYPE)) {
-                // ignore
-            } else if (prop.getName().equals(NameConstants.JCR_UUID)) {
-                // ignore
-            } else {
+            } else if (!prop.getName().equals(NameConstants.JCR_PRIMARYTYPE)
+                    && !prop.getName().equals(NameConstants.JCR_UUID)) {
                 propList.add(prop);
             }
         }

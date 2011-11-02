@@ -109,7 +109,7 @@ class NodeStateMerger {
                     ArrayList<ChildNodeEntry> removed = new ArrayList<ChildNodeEntry>();
 
                     for (ChildNodeEntry cne : state.getAddedChildNodeEntries()) {
-
+                        // locally added?
                         if (context.isAdded(cne.getId()) || context.isModified(cne.getId())) {
                             // a new child node entry has been added to this state;
                             // check for name collisions with other state
@@ -125,17 +125,14 @@ class NodeStateMerger {
                             }
 
                             added.add(cne);
-                        } else {
-                            // externally added
                         }
                     }
 
                     for (ChildNodeEntry cne : state.getRemovedChildNodeEntries()) {
+                        // locally removed?
                         if (context.isDeleted(cne.getId()) || context.isModified(cne.getId())) {
                             // a child node entry has been removed from this node state
                             removed.add(cne);
-                        } else {
-                            // externally removed
                         }
                     }
 

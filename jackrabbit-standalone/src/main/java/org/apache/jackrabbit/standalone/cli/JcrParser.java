@@ -42,8 +42,7 @@ public class JcrParser {
             ConfigParser parser = new ConfigParser();
             parser.parse(JcrParser.class.getResource("command.xml"));
         } catch (Exception e) {
-            e.printStackTrace();
-            log.error(e);
+            log.error("Failed to parse command.xml", e);
         }
     }
 
