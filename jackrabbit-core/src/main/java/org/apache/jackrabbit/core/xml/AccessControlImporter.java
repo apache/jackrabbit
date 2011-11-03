@@ -16,6 +16,9 @@
  */
 package org.apache.jackrabbit.core.xml;
 
+import static org.apache.jackrabbit.core.security.authorization.AccessControlConstants.NT_REP_ACCESS_CONTROL;
+import static org.apache.jackrabbit.core.security.authorization.AccessControlConstants.NT_REP_PRINCIPAL_ACCESS_CONTROL;
+
 import java.security.Principal;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -223,20 +226,26 @@ public class AccessControlImporter extends DefaultProtectedNodeImporter {
         } else {
             switch (status) {
                 case STATUS_AC_FOLDER:
-                    if (AccessControlConstants.NT_REP_PRINCIPAL_ACCESS_CONTROL.equals(ntName)) {
+                    if (NT_REP_ACCESS_CONTROL.equals(ntName)) {
+                        // yet another intermediate node -> keep status
+                        status = STATUS_AC_FOLDER;
+                    } else if (NT_REP_PRINCIPAL_ACCESS_CONTROL.equals(ntName)) {
                         // the start of a principal-based acl
                         status = STATUS_PRINCIPAL_AC;
-                    } else if (!AccessControlConstants.NT_REP_ACCESS_CONTROL.equals(ntName)) {
-                        // illegal node type.
+                    } else {
+                        // illegal node type -> throw exception
                         throw new ConstraintViolationException("Unexpected node type " + ntName + ". Should be rep:AccessControl or rep:PrincipalAccessControl.");
                     }
                     checkIdMixins(childInfo);
                     break;
                 case STATUS_PRINCIPAL_AC:
-                    if (AccessControlConstants.NT_REP_ACCESS_CONTROL.equals(ntName)) {
+                    if (NT_REP_ACCESS_CONTROL.equals(ntName)) {
                         // some intermediate path between principal paths.
                         status = STATUS_AC_FOLDER;
-                    } else if (!AccessControlConstants.NT_REP_PRINCIPAL_ACCESS_CONTROL.equals(ntName)) {
+                    } else if (NT_REP_PRINCIPAL_ACCESS_CONTROL.equals(ntName)) {
+                        // principal-based ac node underneath another one -> keep status
+                        status = STATUS_PRINCIPAL_AC;
+                    } else {
                         // the start the acl definition itself
                         checkDefinition(childInfo, AccessControlConstants.N_POLICY, AccessControlConstants.NT_REP_ACL);
                         status = STATUS_ACL;
