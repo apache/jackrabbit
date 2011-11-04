@@ -2150,7 +2150,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
 
             ItemId eventId = null;
             try {
-                if (type == Event.NODE_ADDED || type == Event.NODE_REMOVED) {
+                if (type == Event.NODE_ADDED || type == Event.NODE_REMOVED || type == Event.NODE_MOVED) {
                     eventId = uriResolver.getNodeId(href, sessionInfo);
                 } else {
                     eventId = uriResolver.getPropertyId(href, sessionInfo);
