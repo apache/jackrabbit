@@ -79,7 +79,6 @@
                       <!-- JCR-2539 : user data (observation) -->
                       org.apache.jackrabbit.test.api.observation.GetUserDataTest
                       <!-- JCR-2540 : move/reorder (observation) -->
-                      org.apache.jackrabbit.test.api.observation.GetIdentifierTest#testNodeMoved
                       org.apache.jackrabbit.test.api.observation.GetIdentifierTest#testNodeRemoved                      
                       <!-- JCR-2541 : event journal -->
                       org.apache.jackrabbit.test.api.observation.EventJournalTest
