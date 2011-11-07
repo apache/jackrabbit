@@ -634,9 +634,12 @@ public class InternalVersionManagerImpl extends InternalVersionManagerBase
 
         Collection<InternalVersionItem> items =
             new ArrayList<InternalVersionItem>();
-        for (Map.Entry<ItemId, InternalVersionItem> entry : versionItems.entrySet()) {
-            if (changes.has(entry.getKey())) {
-                items.add(entry.getValue());
+        synchronized (versionItems) {
+            for (Map.Entry<ItemId, InternalVersionItem> entry : versionItems
+                    .entrySet()) {
+                if (changes.has(entry.getKey())) {
+                    items.add(entry.getValue());
+                }
             }
         }
         itemsUpdated(items);
