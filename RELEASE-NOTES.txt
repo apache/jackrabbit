@@ -1,4 +1,4 @@
-Release Notes -- Apache Jackrabbit -- Version 2.3.2
+Release Notes -- Apache Jackrabbit -- Version 2.3.3
 
 Introduction
 ------------
@@ -10,6 +10,32 @@ specified in the Java Specification Request 283 (JSR 283).
 Apache Jackrabbit 2.3 is an unstable series of releases cut directly from
 Jackrabbit trunk, with a focus on new features and other improvements.
 For production use we recommend the latest stable 2.2 release.
+
+Changes in Jackrabbit 2.3.3
+---------------------------
+
+New features
+
+  [JCR-3118] Configurable actions upon authorizable creation and removal
+
+Improvements
+
+  [JCR-1443] ake JCAManagedConnectionFactory non final, so it can be extended
+  [JCR-2798] JCAManagedConnectionFactory should chain cause exception
+  [JCR-3120] Change log level in UserManagerImpl#getAuthorizable(NodeImpl) ...
+  [JCR-3127] Upgrade to Tika 0.10
+  [JCR-3132] Test tooling updates
+  [JCR-3135] Upgrade to Logback 1.0
+  [JCR-3136] Add m2e lifecycle mappings for Eclipse Indigo
+  [JCR-3141] Upgrade to Tika 1.0
+
+Bug fixes
+
+  [JCR-3093] Inconsistency between Session.getProperty and Node....
+  [JCR-3110] QNodeTypeDefinitionImpl.getSerializablePropertyDefs() ...
+  [JCR-3116] Cluster Node ID should be trimmed
+  [JCR-3131] NPE in ItemManager when calling Session.save() with nothing ...
+  [JCR-3139] missing sync in InternalVersionManagerImpl.externalUpdate ...
 
 Changes in Jackrabbit 2.3.2
 ---------------------------
