@@ -73,6 +73,8 @@ class QValueFactoryImpl extends org.apache.jackrabbit.spi.commons.value.QValueFa
      */
     private static final byte[] EMPTY_BYTE_ARRAY = new byte[0];
 
+    static final int NO_INDEX = -1;
+
     private final ValueLoader loader;
     private final ValueFactory vf;
 
@@ -153,7 +155,7 @@ class QValueFactoryImpl extends org.apache.jackrabbit.spi.commons.value.QValueFa
          */
         private final String uri;
         private final long length;
-        private int index = -1;
+        private final int index;
         private boolean initialized = true;
 
         private BinaryQValue(long length, String uri, int index) {
@@ -543,7 +545,7 @@ class QValueFactoryImpl extends org.apache.jackrabbit.spi.commons.value.QValueFa
 
         //---------------------------------------------------------< Target >---
         public void setStream(InputStream in) throws IOException {
-            if (index == -1) {
+            if (index == NO_INDEX) {
                 init(in, true);
             } else {
                 // TODO: improve. jcr-server sends XML for multivalued properties

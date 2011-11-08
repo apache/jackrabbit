@@ -410,7 +410,7 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
                 } else {
                     // single valued binary property
                     long length = Long.parseLong(props.get(JCR_LENGTH).getValue().toString());
-                    QValue qValue = getQValueFactory(sessionInfo).create(length, uri, 0) ;
+                    QValue qValue = getQValueFactory(sessionInfo).create(length, uri, QValueFactoryImpl.NO_INDEX) ;
                     return new PropertyInfoImpl(propertyId, p, propertyType, qValue);
                 }
             } else if (props.contains(JCR_GET_STRING)) {

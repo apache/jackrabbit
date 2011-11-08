@@ -73,6 +73,25 @@ public class BinaryTest extends AbstractJCRTest {
         }
     }
 
+    public void testStreamBinary2() throws Exception {
+        Node test = testRootNode.addNode("test");
+        Property p = test.setProperty("prop", generateValue());
+        // check before save
+        checkBinary(p);
+        superuser.save();
+        // check after save
+        checkBinary(p);
+
+        // check from other session
+        Session s = getHelper().getReadOnlySession();
+        try {
+            p = s.getProperty(testRoot + "/test/prop");
+            checkBinary(p);
+        } finally {
+            s.logout();
+        }
+    }
+
     public void testBinaryTwiceNewProperty() throws Exception {
         Node test = testRootNode.addNode("test");
         Property p = test.setProperty("prop", generateValue());
