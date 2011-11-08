@@ -19,6 +19,12 @@
 
 <properties>
 
+  <detectors>
+
+    <detector class="org.apache.tika.detect.DefaultDetector"/>
+
+  </detectors>
+
   <parsers>
 
     <parser class="org.apache.tika.parser.DefaultParser"/>
