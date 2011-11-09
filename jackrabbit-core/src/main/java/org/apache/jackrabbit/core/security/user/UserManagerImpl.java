@@ -559,7 +559,7 @@ public class UserManagerImpl extends ProtectedItemModifier
             setProperty(userNode, P_PASSWORD, getValue(UserImpl.buildPasswordValue(password)), true);
 
             User user = createUser(userNode);
-            onCreate(user);
+            onCreate(user, password);
             if (isAutoSave()) {
                 session.save();
             }
@@ -1042,15 +1042,30 @@ public class UserManagerImpl extends ProtectedItemModifier
     //--------------------------------------------------------------------------
     /**
      * Let the configured <code>AuthorizableAction</code>s perform additional
-     * tasks associated with the creation of the new authorizable before the
+     * tasks associated with the creation of the new user before the
      * corresponding new node is persisted.
      *
-     * @param authorizable The new authorizable.
+     * @param user The new user.
+     * @param pw The password.
      * @throws RepositoryException If an exception occurs.
      */
-    void onCreate(Authorizable authorizable) throws RepositoryException {
+    private void onCreate(User user, String pw) throws RepositoryException {
         for (AuthorizableAction action : authorizableActions) {
-            action.onCreate(authorizable, session);
+            action.onCreate(user, pw, session);
+        }
+    }
+
+    /**
+     * Let the configured <code>AuthorizableAction</code>s perform additional
+     * tasks associated with the creation of the new group before the
+     * corresponding new node is persisted.
+     *
+     * @param group The new group.
+     * @throws RepositoryException If an exception occurs.
+     */
+    private void onCreate(Group group) throws RepositoryException {
+        for (AuthorizableAction action : authorizableActions) {
+            action.onCreate(group, session);
         }
     }
 
@@ -1065,6 +1080,21 @@ public class UserManagerImpl extends ProtectedItemModifier
     void onRemove(Authorizable authorizable) throws RepositoryException {
         for (AuthorizableAction action : authorizableActions) {
             action.onRemove(authorizable, session);
+        }
+    }
+
+    /**
+     * Let the configured <code>AuthorizableAction</code>s perform additional
+     * tasks associated with password changing of a given user before the
+     * corresponding property is being changed.
+     *
+     * @param user The target user.
+     * @param password The new password.
+     * @throws RepositoryException If an exception occurs.
+     */
+    void onPasswordChange(User user, String password) throws RepositoryException {
+        for (AuthorizableAction action : authorizableActions) {
+            action.onPasswordChange(user, password, session);
         }
     }
 

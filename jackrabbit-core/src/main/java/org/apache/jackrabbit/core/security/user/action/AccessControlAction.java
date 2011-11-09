@@ -1,25 +1,25 @@
 /*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
  *
- *  * Licensed to the Apache Software Foundation (ASF) under one or more
- *  * contributor license agreements.  See the NOTICE file distributed with
- *  * this work for additional information regarding copyright ownership.
- *  * The ASF licenses this file to You under the Apache License, Version 2.0
- *  * (the "License"); you may not use this file except in compliance with
- *  * the License.  You may obtain a copy of the License at
- *  *
- *  *      http://www.apache.org/licenses/LICENSE-2.0
- *  *
- *  * Unless required by applicable law or agreed to in writing, software
- *  * distributed under the License is distributed on an "AS IS" BASIS,
- *  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  * See the License for the specific language governing permissions and
- *  * limitations under the License.
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package org.apache.jackrabbit.core.security.user.action;
 
 import org.apache.jackrabbit.api.security.JackrabbitAccessControlList;
 import org.apache.jackrabbit.api.security.user.Authorizable;
+import org.apache.jackrabbit.api.security.user.Group;
+import org.apache.jackrabbit.api.security.user.User;
 import org.apache.jackrabbit.core.security.principal.UnknownPrincipal;
 import org.apache.jackrabbit.util.Text;
 import org.slf4j.Logger;
@@ -37,9 +37,65 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * <code>AccessControlAction</code>
+ * The <code>AccessControlAction</code> allows to setup permissions upon creation
+ * of a new authorizable; namely the privileges the new authorizable should be
+ * granted on it's own 'home directory' being represented by the new node
+ * associated with that new authorizable.
+ *
+ * <p>The following to configuration parameters are available with this implementation:
+ * <ul>
+ *    <li><strong>groupPrivilegeNames</strong>: the value is expected to be a
+ *    comma separated list of privileges that will be granted to the new group on
+ *    the group node</li>
+ *    <li><strong>userPrivilegeNames</strong>: the value is expected to be a
+ *    comma separated list of privileges that will be granted to the new user on
+ *    the user node.</li>
+ * </ul>
+ * </p>
+ * <p>Example configuration:
+ * <pre>
+ *    &lt;UserManager class="org.apache.jackrabbit.core.security.user.UserPerWorkspaceUserManager"&gt;
+ *       &lt;AuthorizableAction class="org.apache.jackrabbit.core.security.user.action.AccessControlAction"&gt;
+ *          &lt;param name="groupPrivilegeNames" value="jcr:read"/&gt;
+ *          &lt;param name="userPrivilegeNames" value="jcr:read, rep:write"/&gt;
+ *       &lt;/AuthorizableAction&gt;
+ *    &lt;/UserManager&gt;
+ * </pre>
+ * </p>
+ * <p>The example configuration will lead to the following content structure upon
+ * user or group creation::
+ *
+ * <pre>
+ *     UserManager umgr = ((JackrabbitSession) session).getUserManager();
+ *     User user = umgr.createUser("testUser", "t");
+ *
+ *     + t                           rep:AuthorizableFolder
+ *       + te                        rep:AuthorizableFolder
+ *         + testUser                rep:User, mix:AccessControllable
+ *           + rep:policy            rep:ACL
+ *             + allow               rep:GrantACE
+ *               - rep:principalName = "testUser"
+ *               - rep:privileges    = ["jcr:read","rep:write"]
+ *           - rep:password
+ *           - rep:principalName     = "testUser"
+ * </pre>
+ *
+ * <pre>
+ *     UserManager umgr = ((JackrabbitSession) session).getUserManager();
+ *     Group group = umgr.createGroup("testGroup");
+ *
+ *     + t                           rep:AuthorizableFolder
+ *       + te                        rep:AuthorizableFolder
+ *         + testGroup               rep:Group, mix:AccessControllable
+ *           + rep:policy            rep:ACL
+ *             + allow               rep:GrantACE
+ *               - rep:principalName = "testGroup"
+ *               - rep:privileges    = ["jcr:read"]
+ *           - rep:principalName     = "testGroup"
+ * </pre>
+ * </p>
  */
-public class AccessControlAction implements AuthorizableAction {
+public class AccessControlAction extends AbstractAuthorizableAction {
 
     /**
      * logger instance
@@ -56,9 +112,48 @@ public class AccessControlAction implements AuthorizableAction {
 
     //-------------------------------------------------< AuthorizableAction >---
     /**
-     * @see AuthorizableAction#onCreate(org.apache.jackrabbit.api.security.user.Authorizable, javax.jcr.Session)
+     * @see AuthorizableAction#onCreate(org.apache.jackrabbit.api.security.user.Group, javax.jcr.Session)
      */
-    public void onCreate(Authorizable authorizable, Session session) throws RepositoryException {
+    @Override
+    public void onCreate(Group group, Session session) throws RepositoryException {
+        setAC(group, session);
+    }
+
+    /**
+     * @see AuthorizableAction#onCreate(org.apache.jackrabbit.api.security.user.User, String, javax.jcr.Session)
+     */
+    @Override
+    public void onCreate(User user, String password, Session session) throws RepositoryException {
+        setAC(user, session);
+    }
+
+    //--------------------------------------------------------< Bean Config >---
+
+    /**
+     * Sets the privileges a new group will be granted on the group's home directory.
+     *
+     * @param privilegeNames A comma separated list of privilege names.
+     */
+    public void setGroupPrivilegeNames(String privilegeNames) {
+        if (privilegeNames != null && privilegeNames.length() > 0) {
+            groupPrivilegeNames = split(privilegeNames);
+        }
+
+    }
+
+    /**
+     * Sets the privileges a new user will be granted on the user's home directory.
+     *
+     * @param privilegeNames  A comma separated list of privilege names.
+     */
+    public void setUserPrivilegeNames(String privilegeNames) {
+        if (privilegeNames != null && privilegeNames.length() > 0) {
+            userPrivilegeNames = split(privilegeNames);
+        }
+    }
+
+    //------------------------------------------------------------< private >---
+    private void setAC(Authorizable authorizable, Session session) throws RepositoryException {
         Node aNode;
         String path = authorizable.getPath();
 
@@ -95,29 +190,6 @@ public class AccessControlAction implements AuthorizableAction {
         }
     }
 
-    /**
-     * @see AuthorizableAction#onRemove(org.apache.jackrabbit.api.security.user.Authorizable, javax.jcr.Session)
-     */
-    public void onRemove(Authorizable authorizable, Session session) throws RepositoryException {
-        // nothing to do.
-    }
-
-    //--------------------------------------------------------< Bean Config >---
-
-    public void setGroupPrivilegeNames(String privilegeNames) {
-        if (privilegeNames != null && privilegeNames.length() > 0) {
-            groupPrivilegeNames = split(privilegeNames);
-        }
-
-    }
-
-    public void setUserPrivilegeNames(String privilegeNames) {
-        if (privilegeNames != null && privilegeNames.length() > 0) {
-            userPrivilegeNames = split(privilegeNames);
-        }
-    }
-
-    //------------------------------------------------------------< private >---
     /**
      * Retrieve privileges for the specified privilege names.
      *
