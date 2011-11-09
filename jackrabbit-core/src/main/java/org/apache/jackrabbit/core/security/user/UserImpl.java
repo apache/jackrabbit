@@ -126,6 +126,7 @@ public class UserImpl extends AuthorizableImpl implements User {
      * @see User#changePassword(String)
      */
     public void changePassword(String password) throws RepositoryException {
+        userManager.onPasswordChange(this, password);
         Value v = getSession().getValueFactory().createValue(buildPasswordValue(password));
         userManager.setProtectedProperty(getNode(), P_PASSWORD, v);
     }

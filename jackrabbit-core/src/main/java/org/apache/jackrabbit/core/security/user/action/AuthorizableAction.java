@@ -1,24 +1,24 @@
 /*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
  *
- *  * Licensed to the Apache Software Foundation (ASF) under one or more
- *  * contributor license agreements.  See the NOTICE file distributed with
- *  * this work for additional information regarding copyright ownership.
- *  * The ASF licenses this file to You under the Apache License, Version 2.0
- *  * (the "License"); you may not use this file except in compliance with
- *  * the License.  You may obtain a copy of the License at
- *  *
- *  *      http://www.apache.org/licenses/LICENSE-2.0
- *  *
- *  * Unless required by applicable law or agreed to in writing, software
- *  * distributed under the License is distributed on an "AS IS" BASIS,
- *  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  * See the License for the specific language governing permissions and
- *  * limitations under the License.
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package org.apache.jackrabbit.core.security.user.action;
 
 import org.apache.jackrabbit.api.security.user.Authorizable;
+import org.apache.jackrabbit.api.security.user.Group;
+import org.apache.jackrabbit.api.security.user.User;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
@@ -29,16 +29,29 @@ import javax.jcr.Session;
 public interface AuthorizableAction {
 
     /**
-     * Allows to add application specific modifications associated with the
-     * creation of a new authorizable. Note, that this method is called
+     * Allows to add application specific modifications or validation associated
+     * with the creation of a new group. Note, that this method is called
      * <strong>before</strong> any <code>Session.save</code> call.
      *
-     * @param authorizable The new authorizable that has not yet been persisted;
+     * @param group The new group that has not yet been persisted;
      * e.g. the associated node is still 'NEW'.
      * @param session The editing session associated with the user manager.
      * @throws RepositoryException If an error occurs.
      */
-    void onCreate(Authorizable authorizable, Session session) throws RepositoryException;
+    void onCreate(Group group, Session session) throws RepositoryException;
+
+    /**
+     * Allows to add application specific modifications or validation associated
+     * with the creation of a new user. Note, that this method is called
+     * <strong>before</strong> any <code>Session.save</code> call.
+     *
+     * @param user The new user that has not yet been persisted;
+     * e.g. the associated node is still 'NEW'.
+     * @param password The password that was specified upon user creation.
+     * @param session The editing session associated with the user manager.
+     * @throws RepositoryException If an error occurs.
+     */
+    void onCreate(User user, String password, Session session) throws RepositoryException;
 
     /**
      * Allows to add application specific behavior associated with the removal
@@ -51,4 +64,16 @@ public interface AuthorizableAction {
      * @throws RepositoryException If an error occurs.
      */
     void onRemove(Authorizable authorizable, Session session) throws RepositoryException;
+
+    /**
+     * Allows to add application specific action or validation associated with
+     * changing a user password. Note, that this method is called <strong>before</strong>
+     * the password property is being modified in the content.
+     *
+     * @param user The user that whose password is going to change.
+     * @param newPassword The new password as specified in {@link User#changePassword}
+     * @param session The editing session associated with the user manager.
+     * @throws RepositoryException If an exception or error occurs.
+     */
+    void onPasswordChange(User user, String newPassword, Session session) throws RepositoryException;
 }
