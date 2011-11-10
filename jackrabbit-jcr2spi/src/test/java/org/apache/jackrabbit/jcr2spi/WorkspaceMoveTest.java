@@ -38,7 +38,6 @@ public class WorkspaceMoveTest extends MoveTest {
         return false;
     }
 
-
     /**
      * Tries to move a node using to a location where a property already exists
      * with same name.
