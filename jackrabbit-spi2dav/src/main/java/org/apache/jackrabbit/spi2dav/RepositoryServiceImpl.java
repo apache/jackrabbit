@@ -147,6 +147,7 @@ import org.apache.jackrabbit.webdav.client.methods.LabelMethod;
 import org.apache.jackrabbit.webdav.client.methods.LockMethod;
 import org.apache.jackrabbit.webdav.client.methods.MergeMethod;
 import org.apache.jackrabbit.webdav.client.methods.MkColMethod;
+import org.apache.jackrabbit.webdav.client.methods.MkWorkspaceMethod;
 import org.apache.jackrabbit.webdav.client.methods.MoveMethod;
 import org.apache.jackrabbit.webdav.client.methods.OptionsMethod;
 import org.apache.jackrabbit.webdav.client.methods.OrderPatchMethod;
@@ -1009,7 +1010,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     }
 
     /**
-     * @see RepositoryService#getItemInfos(SessionInfo, NodeId)
+     * @see RepositoryService#getItemInfos(SessionInfo, ItemId)
      */
     public Iterator<? extends ItemInfo> getItemInfos(SessionInfo sessionInfo, ItemId itemId) throws RepositoryException {
         // TODO: implement batch read properly:
@@ -2414,16 +2415,46 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
      * {@inheritDoc}
      */
     public void createWorkspace(SessionInfo sessionInfo, String name, String srcWorkspaceName) throws AccessDeniedException, UnsupportedRepositoryOperationException, NoSuchWorkspaceException, RepositoryException {
-        // TODO
-        throw new UnsupportedOperationException("JCR-2003. Implementation missing");
+        if (srcWorkspaceName != null) {
+            throw new UnsupportedOperationException("JCR-2003. Implementation missing");
+        }
+
+        MkWorkspaceMethod method = null;
+     	try {
+             method = new MkWorkspaceMethod(uriResolver.getWorkspaceUri(name));
+             initMethod(method, sessionInfo, true);
+             getClient(sessionInfo).executeMethod(method);
+             method.checkSuccess();
+         } catch (IOException e) {
+             throw new RepositoryException(e);
+         } catch (DavException e) {
+             throw ExceptionConverter.generate(e);
+         } finally {
+             if (method != null) {
+                 method.releaseConnection();
+             }
+         }
     }
 
     /**
      * {@inheritDoc}
      */
     public void deleteWorkspace(SessionInfo sessionInfo, String name) throws AccessDeniedException, UnsupportedRepositoryOperationException, NoSuchWorkspaceException, RepositoryException {
-        // TODO
-        throw new UnsupportedOperationException("JCR-2003. Implementation missing");
+        DeleteMethod method = null;
+     	try {
+             method = new DeleteMethod(uriResolver.getWorkspaceUri(name));
+             initMethod(method, sessionInfo, true);
+             getClient(sessionInfo).executeMethod(method);
+             method.checkSuccess();
+         } catch (IOException e) {
+             throw new RepositoryException(e);
+         } catch (DavException e) {
+             throw ExceptionConverter.generate(e);
+         } finally {
+             if (method != null) {
+                 method.releaseConnection();
+             }
+         }
     }
 
     /**

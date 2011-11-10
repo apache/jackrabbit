@@ -23,6 +23,7 @@ import org.apache.jackrabbit.server.SessionProviderImpl;
 import org.apache.jackrabbit.server.jcr.JCRWebdavServer;
 import org.apache.jackrabbit.webdav.DavException;
 import org.apache.jackrabbit.webdav.DavLocatorFactory;
+import org.apache.jackrabbit.webdav.DavMethods;
 import org.apache.jackrabbit.webdav.DavResource;
 import org.apache.jackrabbit.webdav.DavResourceFactory;
 import org.apache.jackrabbit.webdav.DavServletResponse;
@@ -131,8 +132,10 @@ public abstract class JCRWebdavServerServlet extends AbstractWebdavServlet {
             Session repositorySesssion = JcrDavSession.getRepositorySession(request.getDavSession());
             String reqWspName = resource.getLocator().getWorkspaceName();
             String wsName = repositorySesssion.getWorkspace().getName();
-            //  compare workspace names if the requested resource isn't the root-collection.
-            if (reqWspName != null && !reqWspName.equals(wsName)) {
+            // compare workspace names if the requested resource isn't the
+            // root-collection and the request not MKWORKSPACE.
+            if (DavMethods.DAV_MKWORKSPACE != DavMethods.getMethodCode(request.getMethod()) &&
+                    reqWspName != null && !reqWspName.equals(wsName)) {
                 return false;
             }
         } catch (DavException e) {

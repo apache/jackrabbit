@@ -18,6 +18,7 @@ package org.apache.jackrabbit.server.jcr;
 
 import org.apache.jackrabbit.server.SessionProvider;
 import org.apache.jackrabbit.webdav.DavException;
+import org.apache.jackrabbit.webdav.DavMethods;
 import org.apache.jackrabbit.webdav.DavSession;
 import org.apache.jackrabbit.webdav.DavSessionProvider;
 import org.apache.jackrabbit.webdav.WebdavRequest;
@@ -320,7 +321,10 @@ public class JCRWebdavServer implements DavSessionProvider {
          */
         private Session getRepositorySession(WebdavRequest request) throws DavException {
             try {
-                String workspaceName = request.getRequestLocator().getWorkspaceName();
+                String workspaceName = null;
+                if (DavMethods.DAV_MKWORKSPACE != DavMethods.getMethodCode(request.getMethod())) {
+                    workspaceName = request.getRequestLocator().getWorkspaceName();
+                }
                 return sessionProvider.getSession(request, repository, workspaceName);
             } catch (LoginException e) {
                 // LoginException results in UNAUTHORIZED,
