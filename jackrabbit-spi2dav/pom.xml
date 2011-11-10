@@ -73,8 +73,6 @@
                   org.apache.jackrabbit.test.api.lock.LockManagerTest#testAddInvalidLockToken
                   org.apache.jackrabbit.test.api.lock.LockManagerTest#testAddLockTokenToAnotherSession
                   org.apache.jackrabbit.test.api.lock.LockManagerTest#testLockTransfer2
-                  <!-- JCR-2539 : user data (observation) -->
-                  org.apache.jackrabbit.test.api.observation.GetUserDataTest
                   <!-- JCR-2540 : move/reorder (observation) -->
                   org.apache.jackrabbit.test.api.observation.GetIdentifierTest#testNodeRemoved
                   <!-- JCR-2541 : event journal -->

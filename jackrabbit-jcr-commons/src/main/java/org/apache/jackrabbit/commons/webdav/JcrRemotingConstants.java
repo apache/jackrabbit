@@ -150,4 +150,17 @@ public interface JcrRemotingConstants {
     public static final String REPORT_NODETYPES = "nodetypes";
     public static final String REPORT_REGISTERED_NAMESPACES = "registerednamespaces";
     public static final String REPORT_REPOSITORY_DESCRIPTORS = "repositorydescriptors";
+
+    /**
+     * RFC 5988 relation type for user data
+     * <p>
+     * We transport JCR User Data in a Link header field with this relation name
+     * <p>
+     * Example:
+     * 
+     * <pre>
+     * Link: <data:,my%20user%data>, rel="<i>RELATION_USER_DATA</i>"
+     * </pre>
+     */
+    public static final String RELATION_USER_DATA = NS_URI + "/user-data";
 }
