@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.webdav.jcr;
 
+import org.apache.jackrabbit.util.Text;
 import org.apache.jackrabbit.webdav.DavException;
 import org.apache.jackrabbit.webdav.DavResource;
 import org.apache.jackrabbit.webdav.DavResourceFactory;
@@ -33,6 +34,7 @@ import org.slf4j.LoggerFactory;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.Repository;
+import javax.jcr.Workspace;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Date;
@@ -66,6 +68,7 @@ public class RootCollection extends AbstractResource {
         initSupportedReports();
     }
 
+    //--------------------------------------------------------< DavResource >---
     /**
      * Returns a string listing the METHODS for this resource as it
      * is required for the "Allow" response header.
@@ -74,7 +77,7 @@ public class RootCollection extends AbstractResource {
      * @see org.apache.jackrabbit.webdav.DavResource#getSupportedMethods()
      */
     public String getSupportedMethods() {
-        StringBuffer sb = new StringBuffer(DavResource.METHODS);
+        StringBuilder sb = new StringBuilder(DavResource.METHODS);
         sb.append(", ");
         sb.append(DeltaVResource.METHODS_INCL_MKWORKSPACE);
         sb.append(", ");
@@ -116,6 +119,7 @@ public class RootCollection extends AbstractResource {
      * Always returns 'now'
      *
      * @return
+     * @see org.apache.jackrabbit.webdav.DavResource#getModificationTime()
      */
     public long getModificationTime() {
         return new Date().getTime();
@@ -126,6 +130,7 @@ public class RootCollection extends AbstractResource {
      *
      * @param outputContext
      * @throws IOException
+     * @see DavResource#spool(org.apache.jackrabbit.webdav.io.OutputContext)
      */
     public void spool(OutputContext outputContext) throws IOException {
         if (outputContext.hasStream()) {
@@ -136,7 +141,7 @@ public class RootCollection extends AbstractResource {
             String repVersion = rep.getDescriptor(Repository.REP_VERSION_DESC);
             String repostr = repName + " " + repVersion;
 
-            StringBuffer sb = new StringBuffer();
+            StringBuilder sb = new StringBuilder();
             sb.append("<html><head><title>");
             sb.append(repostr);
             sb.append("</title></head>");
@@ -213,11 +218,34 @@ public class RootCollection extends AbstractResource {
     }
 
     /**
-     * Throws exception: 403 Forbidden.
+     * Calls {@link Workspace#deleteWorkspace(String)} for the workspace with
+     * the name as indicated by the specified member.
+     *
      * @see DavResource#removeMember(org.apache.jackrabbit.webdav.DavResource)
      */
     public void removeMember(DavResource member) throws DavException {
-        throw new DavException(DavServletResponse.SC_FORBIDDEN);
+        Workspace wsp = getRepositorySession().getWorkspace();
+        String name = Text.getName(member.getResourcePath());
+        try {
+            wsp.deleteWorkspace(name);
+        } catch (RepositoryException e) {
+            throw new JcrDavException(e);
+        }
+    }
+
+    //-----------------------------------------------------< DeltaVResource >---
+    /**
+     * @see DeltaVResource#addWorkspace(org.apache.jackrabbit.webdav.DavResource)
+     */
+    @Override
+    public void addWorkspace(DavResource workspace) throws DavException {
+        Workspace wsp = getRepositorySession().getWorkspace();
+        String name = workspace.getDisplayName();
+        try {
+            wsp.createWorkspace(name);
+        } catch (RepositoryException e) {
+            throw new JcrDavException(e);
+        }
     }
 
     //--------------------------------------------------------------------------

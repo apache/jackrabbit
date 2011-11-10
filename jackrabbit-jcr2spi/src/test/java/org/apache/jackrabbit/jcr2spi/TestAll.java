@@ -104,6 +104,9 @@ public class TestAll extends TestCase {
         // observation
         suite.addTestSuite(ObservationTest.class);
 
+        // workspace mgt
+        suite.addTestSuite(WorkspaceTest.class);
+
         return suite;
     }
 }
