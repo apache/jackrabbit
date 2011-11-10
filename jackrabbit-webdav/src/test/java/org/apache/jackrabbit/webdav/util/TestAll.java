@@ -32,8 +32,8 @@ public class TestAll extends TestCase {
     public static Test suite() {
         TestSuite suite = new TestSuite("org.apache.jackrabbit.webdav.util tests");
 
-........suite.addTestSuite(CSRFUtilTest.class);
-........suite.addTestSuite(LinkHeaderFieldParserTest.class);
+        suite.addTestSuite(CSRFUtilTest.class);
+        suite.addTestSuite(LinkHeaderFieldParserTest.class);
 
         return suite;
     }
