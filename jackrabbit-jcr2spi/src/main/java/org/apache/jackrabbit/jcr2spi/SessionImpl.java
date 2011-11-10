@@ -933,17 +933,37 @@ public class SessionImpl extends AbstractSession
      * <ul>
      * <li>{@link Repository#LEVEL_1_SUPPORTED}</li>
      * <li>{@link Repository#LEVEL_2_SUPPORTED}</li>
-     * <li>{@link Repository#OPTION_TRANSACTIONS_SUPPORTED}</li>
-     * <li>{@link Repository#OPTION_VERSIONING_SUPPORTED}</li>
-     * <li>{@link Repository#OPTION_OBSERVATION_SUPPORTED}</li>
+     * <li>{@link Repository#OPTION_ACCESS_CONTROL_SUPPORTED}</li>
+     * <li>{@link Repository#OPTION_ACTIVITIES_SUPPORTED}</li>
+     * <li>{@link Repository#OPTION_BASELINES_SUPPORTED}</li>
+     * <li>{@link Repository#OPTION_JOURNALED_OBSERVATION_SUPPORTED}</li>
+     * <li>{@link Repository#OPTION_LIFECYCLE_SUPPORTED}</li>
      * <li>{@link Repository#OPTION_LOCKING_SUPPORTED}</li>
+     * <li>{@link Repository#OPTION_NODE_AND_PROPERTY_WITH_SAME_NAME_SUPPORTED}</li>
+     * <li>{@link Repository#OPTION_NODE_TYPE_MANAGEMENT_SUPPORTED}</li>
+     * <li>{@link Repository#OPTION_OBSERVATION_SUPPORTED}</li>
      * <li>{@link Repository#OPTION_QUERY_SQL_SUPPORTED}</li>
+     * <li>{@link Repository#OPTION_RETENTION_SUPPORTED}</li>
+     * <li>{@link Repository#OPTION_SHAREABLE_NODES_SUPPORTED}</li>
+     * <li>{@link Repository#OPTION_SIMPLE_VERSIONING_SUPPORTED}</li>
+     * <li>{@link Repository#OPTION_TRANSACTIONS_SUPPORTED}</li>
+     * <li>{@link Repository#OPTION_UNFILED_CONTENT_SUPPORTED}</li>
+     * <li>{@link Repository#OPTION_UPDATE_MIXIN_NODE_TYPES_SUPPORTED}</li>
+     * <li>{@link Repository#OPTION_UPDATE_PRIMARY_NODE_TYPE_SUPPORTED}</li>
+     * <li>{@link Repository#OPTION_VERSIONING_SUPPORTED}</li>
+     * <li>{@link Repository#OPTION_WORKSPACE_MANAGEMENT_SUPPORTED}</li>
+     * <li>{@link Repository#OPTION_XML_EXPORT_SUPPORTED}</li>
+     * <li>{@link Repository#OPTION_XML_IMPORT_SUPPORTED}</li>
+     * <li>{@link Repository#WRITE_SUPPORTED}</li>
      * </ul>
      * @return true if the repository supports the given option. False otherwise.
      */
     boolean isSupportedOption(String option) {
         String desc = repository.getDescriptor(option);
-        return Boolean.valueOf(desc);
+        // if the descriptors are not available return true. the missing
+        // functionality of the given SPI impl will in this case be detected
+        // upon the corresponding SPI call (see JCR-3143).
+        return (desc == null) ? true : Boolean.valueOf(desc);
     }
 
     /**
