@@ -16,6 +16,11 @@
  */
 package org.apache.jackrabbit.server;
 
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.Enumeration;
+import java.util.Locale;
+
 import javax.jcr.Credentials;
 import javax.jcr.LoginException;
 import javax.jcr.Repository;
@@ -23,6 +28,10 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
+
+import org.apache.jackrabbit.commons.webdav.JcrRemotingConstants;
+import org.apache.jackrabbit.util.Text;
+import org.apache.jackrabbit.webdav.util.LinkHeaderFieldParser;
 
 /**
  * This Class implements a default session provider uses a credentials provider.
@@ -36,6 +45,7 @@ public class SessionProviderImpl implements SessionProvider {
 
     /**
      * Creates a new SessionProvider
+     * 
      * @param cp
      */
     public SessionProviderImpl(CredentialsProvider cp) {
@@ -45,15 +55,19 @@ public class SessionProviderImpl implements SessionProvider {
     /**
      * {@inheritDoc }
      */
-    public Session getSession(HttpServletRequest request, Repository repository,
-                              String workspace)
-        throws LoginException, RepositoryException, ServletException {
+    public Session getSession(HttpServletRequest request,
+            Repository repository, String workspace) throws LoginException,
+            RepositoryException, ServletException {
         Credentials creds = cp.getCredentials(request);
+        Session s;
         if (creds == null) {
-            return repository.login(workspace);
+            s = repository.login(workspace);
         } else {
-            return repository.login(creds, workspace);
+            s = repository.login(creds, workspace);
         }
+        String userData = getJcrUserData(request);
+        s.getWorkspace().getObservationManager().setUserData(userData);
+        return s;
     }
 
     /**
@@ -61,5 +75,45 @@ public class SessionProviderImpl implements SessionProvider {
      */
     public void releaseSession(Session session) {
         session.logout();
+    }
+
+    // find first link relation for JCR User Data
+    private String getJcrUserData(HttpServletRequest request) {
+        String jcrUserData = null;
+        Enumeration<?> fieldValues = request.getHeaders("link");
+        if (fieldValues.hasMoreElements()) {
+            LinkHeaderFieldParser lhfp = new LinkHeaderFieldParser(fieldValues);
+            String target = lhfp
+                    .getFirstTargetForRelation(JcrRemotingConstants.RELATION_USER_DATA);
+            if (target != null) {
+                jcrUserData = getJcrUserData(target);
+            }
+        }
+        return jcrUserData;
+    }
+
+    // extracts User Data string from RFC 2397 "data" URI
+    // only supports the simple case of "data:,..." for now
+    private String getJcrUserData(String target) {
+        try {
+            URI datauri = new URI(target);
+
+            String scheme = datauri.getScheme();
+
+            // Poor Man's data: URI parsing
+            if (scheme != null
+                    && "data".equals(scheme.toLowerCase(Locale.ENGLISH))) {
+
+                String sspart = datauri.getRawSchemeSpecificPart();
+
+                if (sspart.startsWith(",")) {
+                    return Text.unescape(sspart.substring(1));
+                }
+            }
+        } catch (URISyntaxException ex) {
+            // not a URI, skip
+        }
+
+        return null;
     }
 }

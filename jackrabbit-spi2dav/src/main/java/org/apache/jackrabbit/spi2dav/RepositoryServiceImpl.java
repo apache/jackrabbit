@@ -375,6 +375,16 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
                 method.setRequestHeader(ifH.getHeaderName(), ifH.getHeaderValue());
             }
         }
+
+        if (sessionInfo instanceof SessionInfoImpl) {
+            String userdata = ((SessionInfoImpl) sessionInfo).getUserData();
+            if (userdata != null) {
+                String escaped = Text.escape(userdata);
+                method.addRequestHeader("Link", "<data:," + escaped
+                        + ">; rel=\"" + JcrRemotingConstants.RELATION_USER_DATA
+                        + "\"");
+            }
+        }
     }
 
     private static void initMethod(DavMethod method, BatchImpl batchImpl, boolean addIfHeader) throws RepositoryException {
