@@ -30,7 +30,7 @@ import org.apache.jackrabbit.standalone.cli.CommandHelper;
  */
 public class RemoveLockToken implements Command {
     /** logger */
-    private static Log log = LogFactory.getLog(AddLockToken.class);
+    private static Log log = LogFactory.getLog(RemoveLockToken.class);
 
     // ---------------------------- < keys >
     /**
