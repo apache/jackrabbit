@@ -2001,6 +2001,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     public Subscription createSubscription(SessionInfo sessionInfo,
                                            EventFilter[] filters)
             throws UnsupportedRepositoryOperationException, RepositoryException {
+        checkEventFilterSupport(filters);
         checkSessionInfo(sessionInfo);
         String rootUri = uriResolver.getRootItemUri(sessionInfo.getWorkspaceName());
         String subscriptionId = subscribe(rootUri, S_INFO, null, sessionInfo, null);
@@ -2017,6 +2018,21 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         // do nothing ...
         // this is actually not correct because we listen for everything and
         // rely on the client of the repository service to filter the events
+        checkEventFilterSupport(filters);
+    }
+
+    private void checkEventFilterSupport(EventFilter[] filters) throws UnsupportedRepositoryOperationException {
+        for (EventFilter ef : filters) {
+            if (ef instanceof EventFilterImpl) {
+                EventFilterImpl efi = (EventFilterImpl)ef;
+                if (efi.getNodeTypeNames() != null && ! efi.getNodeTypeNames().isEmpty()) {
+                    throw new UnsupportedRepositoryOperationException("This SPI implementation does not support filtering by node types (see issue JCR-2542)");
+                }
+                if (efi.getNoLocal()) {
+                    throw new UnsupportedRepositoryOperationException("This SPI implementation does not support filtering using the 'noLocal' flag (see issue JCR-2542)");
+                }
+            }
+        }
     }
 
     public void dispose(Subscription subscription) throws RepositoryException {
