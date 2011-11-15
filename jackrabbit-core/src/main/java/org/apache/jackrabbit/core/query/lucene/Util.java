@@ -52,8 +52,7 @@ public class Util {
      * @param old the document to dispose.
      */
     public static void disposeDocument(Document old) {
-        for (Object o : old.getFields()) {
-            Fieldable f = (Fieldable) o;
+        for (Fieldable f : old.getFields()) {
             try {
                 if (f.readerValue() != null) {
                     f.readerValue().close();
@@ -76,8 +75,7 @@ public class Util {
      *         otherwise.
      */
     public static boolean isDocumentReady(Document doc) {
-        for (Object o : doc.getFields()) {
-            Fieldable f = (Fieldable) o;
+        for (Fieldable f : doc.getFields()) {
             if (f instanceof LazyTextExtractorField) {
                 LazyTextExtractorField field = (LazyTextExtractorField) f;
                 if (!field.isExtractorFinished()) {

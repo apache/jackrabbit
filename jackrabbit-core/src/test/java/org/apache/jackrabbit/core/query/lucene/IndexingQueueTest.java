@@ -40,7 +40,7 @@ import org.apache.jackrabbit.core.query.AbstractIndexingTest;
 public class IndexingQueueTest extends AbstractIndexingTest {
 
     private static final File TEMP_DIR =
-        new File(System.getProperty("java.io.tmpdir")); 
+        new File(System.getProperty("java.io.tmpdir"));
 
     public void testQueue() throws Exception {
         SearchIndex index = getSearchIndex();
@@ -63,7 +63,7 @@ public class IndexingQueueTest extends AbstractIndexingTest {
         assertFalse(nodes.hasNext());
 
         BlockingParser.unblock();
-        index.flush();
+        waitForTextExtractionTasksToFinish();
         assertEquals(0, queue.getNumPendingDocuments());
 
         q = qm.createQuery(testPath + "/*[jcr:contains(., 'fox')]", Query.XPATH);
@@ -121,7 +121,7 @@ public class IndexingQueueTest extends AbstractIndexingTest {
         }
 
         qm = session.getWorkspace().getQueryManager();
-        getSearchIndex().flush();
+        waitForTextExtractionTasksToFinish();
 
         String stmt = testPath + "//element(*, nt:resource)[jcr:contains(., 'fox')] order by @jcr:score descending";
         Query q = qm.createQuery(stmt, Query.XPATH);

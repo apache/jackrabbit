@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.core;
 
+import java.util.concurrent.TimeUnit;
+
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
@@ -95,6 +97,19 @@ public class TestHelper {
             } else {
                 return ((ConsistencyChecker) pm).check(null, true, runFix);
             }
+        }
+    }
+
+    /**
+     * wait for async text-extraction tasks to finish
+     */
+    public static void waitForTextExtractionTasksToFinish(Session session) throws Exception {
+        final RepositoryContext context = JackrabbitRepositoryStub
+                .getRepositoryContext(session.getRepository());
+        JackrabbitThreadPool jtp = ((JackrabbitThreadPool) context
+                .getExecutor());
+        while (jtp.getPendingLowPriorityTaskCount() != 0) {
+            TimeUnit.MILLISECONDS.sleep(100);
         }
     }
 }

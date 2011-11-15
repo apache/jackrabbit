@@ -1011,7 +1011,9 @@ public class MultiIndex {
         synchronized (iq) {
             while (iq.getNumPendingDocuments() > 0 || indexingQueueCommitPending) {
                 try {
-                    log.debug("waiting for indexing queue to become empty");
+                    log.debug(
+                            "waiting for indexing queue to become empty. {} pending docs.",
+                            iq.getNumPendingDocuments());
                     iq.wait();
                     log.debug("notified");
                 } catch (InterruptedException e) {

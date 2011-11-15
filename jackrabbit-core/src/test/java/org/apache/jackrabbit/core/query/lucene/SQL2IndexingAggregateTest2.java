@@ -131,6 +131,7 @@ public class SQL2IndexingAggregateTest2 extends AbstractIndexingTest {
                 .createBinary(new ByteArrayInputStream(out.toByteArray())));
 
         testRootNode.getSession().save();
+        waitForTextExtractionTasksToFinish();
         executeSQL2Query(sqlDog, expectedNodes.toArray(new Node[] {}));
 
         // update jcr:data
@@ -140,6 +141,7 @@ public class SQL2IndexingAggregateTest2 extends AbstractIndexingTest {
         resource.setProperty("jcr:data", session.getValueFactory()
                 .createBinary(new ByteArrayInputStream(out.toByteArray())));
         testRootNode.getSession().save();
+        waitForTextExtractionTasksToFinish();
         executeSQL2Query(sqlDog, new Node[] {});
         executeSQL2Query(sqlCat, expectedNodes.toArray(new Node[] {}));
 
@@ -149,12 +151,14 @@ public class SQL2IndexingAggregateTest2 extends AbstractIndexingTest {
         Node foo = unstrContent.addNode("foo");
         foo.setProperty("text", "the quick brown fox jumps over the lazy dog.");
         testRootNode.getSession().save();
+        waitForTextExtractionTasksToFinish();
         executeSQL2Query(sqlDog, expectedNodes.toArray(new Node[] {}));
         executeSQL2Query(sqlCat, new Node[] {});
 
         // remove foo
         foo.remove();
         testRootNode.getSession().save();
+        waitForTextExtractionTasksToFinish();
         executeSQL2Query(sqlDog, new Node[] {});
         executeSQL2Query(sqlCat, new Node[] {});
 
