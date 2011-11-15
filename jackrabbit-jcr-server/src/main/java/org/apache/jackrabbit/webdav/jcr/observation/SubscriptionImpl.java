@@ -17,13 +17,15 @@
 package org.apache.jackrabbit.webdav.jcr.observation;
 
 import org.apache.jackrabbit.commons.webdav.EventUtil;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.commons.AdditionalEventInfo;
 import org.apache.jackrabbit.webdav.DavException;
 import org.apache.jackrabbit.webdav.DavResourceLocator;
 import org.apache.jackrabbit.webdav.DavServletResponse;
 import org.apache.jackrabbit.webdav.transaction.TransactionResource;
 import org.apache.jackrabbit.webdav.jcr.transaction.TransactionListener;
-import org.apache.jackrabbit.webdav.jcr.JcrDavSession;
 import org.apache.jackrabbit.webdav.jcr.JcrDavException;
+import org.apache.jackrabbit.webdav.jcr.JcrDavSession;
 import org.apache.jackrabbit.webdav.observation.EventBundle;
 import org.apache.jackrabbit.webdav.observation.EventDiscovery;
 import org.apache.jackrabbit.webdav.observation.EventType;
@@ -449,6 +451,15 @@ public class SubscriptionImpl implements Subscription, ObservationConstants, Eve
                 eType.appendChild(getEventType(event.getType()).toXml(document));
                 // user id
                 DomUtil.addChildElement(eventElem, XML_EVENTUSERID, NAMESPACE, event.getUserID());
+
+                if (event instanceof AdditionalEventInfo) {
+                    DomUtil.addChildElement(eventElem, "primarynodetype", NAMESPACE,
+                            ((AdditionalEventInfo)event).getPrimaryNodeTypeName().toString());
+                    for (Name mixin : ((AdditionalEventInfo)event).getMixinTypeNames()) {
+                        DomUtil.addChildElement(eventElem, "mixinnodetype", NAMESPACE,
+                                mixin.toString());
+                    }
+                }
 
                 // Additional JCR 2.0 event information
                 // user data

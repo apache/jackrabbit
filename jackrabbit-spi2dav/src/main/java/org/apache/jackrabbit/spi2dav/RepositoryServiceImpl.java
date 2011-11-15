@@ -2025,9 +2025,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         for (EventFilter ef : filters) {
             if (ef instanceof EventFilterImpl) {
                 EventFilterImpl efi = (EventFilterImpl)ef;
-                if (efi.getNodeTypeNames() != null && ! efi.getNodeTypeNames().isEmpty()) {
-                    throw new UnsupportedRepositoryOperationException("This SPI implementation does not support filtering by node types (see issue JCR-2542)");
-                }
+                // TODO: add code that verifies that the remote server can send node type information
                 if (efi.getNoLocal()) {
                     throw new UnsupportedRepositoryOperationException("This SPI implementation does not support filtering using the 'noLocal' flag (see issue JCR-2542)");
                 }
@@ -2150,7 +2148,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         }
     }
 
-    private List<Event> buildEventList(Element bundleElement, SessionInfoImpl sessionInfo) {
+    private List<Event> buildEventList(Element bundleElement, SessionInfoImpl sessionInfo) throws IllegalNameException, NamespaceException {
         List<Event> events = new ArrayList<Event>();
         ElementIterator eventElementIterator = DomUtil.getChildren(bundleElement, ObservationConstants.XML_EVENT, ObservationConstants.NAMESPACE);
         while (eventElementIterator.hasNext()) {

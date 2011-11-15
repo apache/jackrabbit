@@ -18,13 +18,16 @@ package org.apache.jackrabbit.core.observation;
 
 import java.util.Map;
 import java.util.HashMap;
+import java.util.Set;
 
 import org.apache.jackrabbit.api.observation.JackrabbitEvent;
 import javax.jcr.observation.Event;
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.value.InternalValue;
+import org.apache.jackrabbit.spi.commons.AdditionalEventInfo;
 import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
+import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
 import org.apache.jackrabbit.spi.commons.value.ValueFormat;
@@ -37,7 +40,7 @@ import javax.jcr.RepositoryException;
  * Implementation of the {@link javax.jcr.observation.Event} and
  * the {@link JackrabbitEvent} interface.
  */
-public final class EventImpl implements JackrabbitEvent, Event {
+public final class EventImpl implements JackrabbitEvent, AdditionalEventInfo, Event {
 
     /**
      * Logger instance for this class
@@ -218,6 +221,22 @@ public final class EventImpl implements JackrabbitEvent, Event {
      */
     public boolean isExternal() {
         return eventState.isExternal();
+    }
+
+    /**
+     * @return the primary node type of the node associated with the event
+     * @see AdditionalEventInfo#getPrimaryNodeTypeName()
+     */
+    public Name getPrimaryNodeTypeName() {
+        return eventState.getNodeType();
+    }
+    
+    /**
+     * @return the mixin node types of the node associated with the event
+     * @see AdditionalEventInfo#getMixinTypeNames()
+     */
+    public Set<Name> getMixinTypeNames() {
+        return eventState.getMixinNames();
     }
 
     /**
