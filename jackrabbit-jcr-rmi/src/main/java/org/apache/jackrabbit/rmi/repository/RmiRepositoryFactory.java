@@ -43,7 +43,7 @@ public class RmiRepositoryFactory implements RepositoryFactory {
     private static final String REPOSITORY_URI =
         "org.apache.jackrabbit.repository.uri";
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({"unchecked", "rawtypes"})
     public Repository getRepository(Map parameters) throws RepositoryException {
         if (parameters != null && parameters.containsKey(REPOSITORY_URI)) {
             URI uri;
@@ -99,7 +99,7 @@ public class RmiRepositoryFactory implements RepositoryFactory {
         }
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings("rawtypes")
     private Repository getJndiRepository(String name, Hashtable environment)
             throws RepositoryException {
         try {
