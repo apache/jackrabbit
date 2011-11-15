@@ -24,6 +24,7 @@ import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.spi.QValueFactory;
+import org.apache.jackrabbit.spi.commons.conversion.IllegalNameException;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
 import org.apache.jackrabbit.spi.commons.value.ValueFormat;
@@ -35,10 +36,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Element;
 
+import javax.jcr.NamespaceException;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
+
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -53,10 +58,10 @@ public class EventImpl
     private static final NameFactory N_FACTORY = NameFactoryImpl.getInstance();
 
     public EventImpl(ItemId eventId, Path eventPath, NodeId parentId, int eventType,
-                     Element eventElement, NamePathResolver resolver, QValueFactory qvFactory) {
+                     Element eventElement, NamePathResolver resolver, QValueFactory qvFactory) throws NamespaceException, IllegalNameException {
         super(getSpiEventType(eventType), eventPath, eventId, parentId,
-                null, // TODO not available from XML_EVENT element
-                null, // TODO not available from XML_EVENT element
+                resolver.getQName(DomUtil.getChildTextTrim(eventElement, "primarynodetype", NAMESPACE)),
+                getNames(DomUtil.getChildren(eventElement, "mixinnodetype", NAMESPACE), resolver),
                 DomUtil.getChildTextTrim(eventElement, XML_EVENTUSERID, NAMESPACE),
                 DomUtil.getChildTextTrim(eventElement, XML_EVENTUSERDATA, NAMESPACE),
                 Long.parseLong(DomUtil.getChildTextTrim(eventElement, XML_EVENTDATE, NAMESPACE)),
@@ -114,5 +119,33 @@ public class EventImpl
             }
         }
         return info;
+    }
+
+    private static Name[] getNames(ElementIterator elements,
+            NamePathResolver resolver) {
+
+        List<Name> results = Collections.emptyList();
+
+        while (elements.hasNext()) {
+            String rawname = DomUtil.getText(elements.nextElement());
+            Name name = null;
+
+            try {
+                name = resolver.getQName(rawname);
+
+                if (results.size() == 0) {
+                    results = Collections.singletonList(name);
+                } else if (results.size() == 1) {
+                    results = new ArrayList<Name>(results);
+                    results.add(name);
+                } else {
+                    results.add(name);
+                }
+            } catch (Exception ex) {
+                log.error("Exception converting name " + rawname, ex);
+            }
+        }
+
+        return results.toArray(new Name[results.size()]);
     }
 }
