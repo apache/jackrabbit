@@ -53,7 +53,7 @@ public class RepositoryFactoryImpl implements RepositoryFactory {
      *
      * @see RepositoryFactory#getRepository(java.util.Map)
      */
-    public Repository getRepository(@SuppressWarnings("unchecked") Map parameters) throws RepositoryException {
+    public Repository getRepository(@SuppressWarnings("rawtypes") Map parameters) throws RepositoryException {
         String repositoryFactoryName = parameters != null && (
                                        parameters.containsKey(PARAM_REPOSITORY_SERVICE_FACTORY) ||
                                        parameters.containsKey(PARAM_REPOSITORY_CONFIG))
