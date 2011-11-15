@@ -16,19 +16,15 @@
  */
 package org.apache.jackrabbit.spi2dav;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import javax.jcr.SimpleCredentials;
+
 import org.apache.commons.httpclient.Credentials;
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
-
-import javax.jcr.SimpleCredentials;
 
 /**
  * <code>CredentialsWrapper</code>...
  */
 class CredentialsWrapper {
-
-    private static Logger log = LoggerFactory.getLogger(CredentialsWrapper.class);
 
     private final String userId;
     private final UsernamePasswordCredentials credentials;
@@ -37,14 +33,14 @@ class CredentialsWrapper {
 
         if (creds == null) {
             // NOTE: null credentials only work if 'missing-auth-mapping' param is set on the server
-            userId = null;
+            userId = "";
             this.credentials = null;
         } else if (creds instanceof SimpleCredentials) {
             SimpleCredentials sCred = (SimpleCredentials) creds;
             userId = sCred.getUserID();
             this.credentials = new UsernamePasswordCredentials(userId, String.valueOf(sCred.getPassword()));
         } else {
-            userId = null;
+            userId = "";
             this.credentials = new UsernamePasswordCredentials(creds.toString());
         }
     }
