@@ -217,7 +217,9 @@ public final class PrivilegeRegistry {
     }
 
     /**
-     * Build the permissions granted by evaluating the given privileges.
+     * Build the permissions granted by evaluating the given privileges. Note,
+     * that only built-in privileges can be mapped to permissions. Any other
+     * privileges will be ignored.
      *
      * @param privs The privileges granted on the Node itself (for properties
      * the ACL of the direct ancestor).
@@ -255,6 +257,14 @@ public final class PrivilegeRegistry {
             if ((parentPrivs & ADD_CHILD_NODES) == ADD_CHILD_NODES) {
                 perm |= Permission.ADD_NODE;
             }
+
+            // modify_child_node_collection permission is granted through
+            // privileges on the parent
+            if ((parentPrivs & ADD_CHILD_NODES) == ADD_CHILD_NODES &&
+                    (parentPrivs & REMOVE_CHILD_NODES) == REMOVE_CHILD_NODES) {
+                perm |= Permission.MODIFY_CHILD_NODE_COLLECTION;
+            }
+
             /*
              remove_node is
              allowed: only if remove_child_nodes privilege is present on
