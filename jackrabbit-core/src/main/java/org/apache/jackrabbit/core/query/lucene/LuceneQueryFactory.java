@@ -681,12 +681,11 @@ public class LuceneQueryFactory {
             BooleanQuery query = new BooleanQuery();
             query.add(Util.createMatchAllQuery(
                     field, index.getIndexFormatVersion(), cache), SHOULD);
-            switch (transform) {
-            case TRANSFORM_UPPER_CASE:
+            if (transform == TRANSFORM_UPPER_CASE) {
                 query.add(new CaseTermQuery.Upper(term), MUST_NOT);
-            case TRANSFORM_LOWER_CASE:
+            } else if (transform == TRANSFORM_LOWER_CASE) {
                 query.add(new CaseTermQuery.Lower(term), MUST_NOT);
-            default:
+            } else {
                 query.add(new JackrabbitTermQuery(term), MUST_NOT);
             }
             // and exclude all nodes where 'field' is multi valued
