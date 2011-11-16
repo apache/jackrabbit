@@ -298,8 +298,9 @@ public class ConnectionHelper {
                 stmt = con.createStatement();
                 stmt.execute(sql);
             } else {
-                stmt = con.prepareStatement(sql);
-                execute((PreparedStatement) stmt, params);
+                PreparedStatement p = con.prepareStatement(sql);
+                stmt = p;
+                execute(p, params);
             }
         } finally {
             closeResources(con, stmt, null);
@@ -314,7 +315,7 @@ public class ConnectionHelper {
      * @return the update count
      * @throws SQLException on error
      */
-    public final int update(final String sql, final Object[] params) throws SQLException {
+    public final int update(final String sql, final Object... params) throws SQLException {
         return new RetryManager<Integer>() {
 
             @Override
@@ -325,7 +326,7 @@ public class ConnectionHelper {
         }.doTry();
     }
 
-    int reallyUpdate(String sql, Object[] params) throws SQLException {
+    int reallyUpdate(String sql, Object... params) throws SQLException {
         Connection con = null;
         PreparedStatement stmt = null;
         try {
@@ -335,6 +336,19 @@ public class ConnectionHelper {
         } finally {
             closeResources(con, stmt, null);
         }
+    }
+
+    /**
+     * Executes a SQL query and returns the {@link ResultSet}. The
+     * returned {@link ResultSet} should be closed by clients.
+     *
+     * @param sql an SQL statement string
+     * @param params the parameters for the SQL statement
+     * @param returnGeneratedKeys whether generated keys should be returned
+     * @return a {@link ResultSet}
+     */
+    public final ResultSet query(String sql, Object... params) throws SQLException {
+        return exec(sql, params, false, 0);
     }
 
     /**

@@ -35,19 +35,21 @@ public class TestAll extends TestCase {
     public static Test suite() {
         TestSuite suite = new ConcurrentTestSuite("Data tests");
 
+        suite.addTestSuite(ConcurrentGcTest.class);
+        suite.addTestSuite(CopyValueTest.class);
         suite.addTestSuite(DataStoreAPITest.class);
-        suite.addTestSuite(LazyFileInputStreamTest.class);
-        suite.addTestSuite(OpenFilesTest.class);
         suite.addTestSuite(DataStoreTest.class);
-        suite.addTestSuite(NodeTypeTest.class);
+        suite.addTestSuite(DBDataStoreTest.class);
         suite.addTestSuite(ExportImportTest.class);
         suite.addTestSuite(GarbageCollectorTest.class);
         suite.addTestSuite(GCConcurrentTest.class);
         suite.addTestSuite(GCEventListenerTest.class);
+        suite.addTestSuite(LazyFileInputStreamTest.class);
+        suite.addTestSuite(NodeTypeTest.class);
+        suite.addTestSuite(OpenFilesTest.class);
         suite.addTestSuite(PersistenceManagerIteratorTest.class);
-        suite.addTestSuite(CopyValueTest.class);
-        suite.addTestSuite(TestTwoGetStreams.class);
         suite.addTestSuite(TempFileInputStreamTest.class);
+        suite.addTestSuite(TestTwoGetStreams.class);
         suite.addTestSuite(WriteWhileReadingTest.class);
 
         return suite;
