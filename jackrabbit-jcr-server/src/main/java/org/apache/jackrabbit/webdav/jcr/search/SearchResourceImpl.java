@@ -241,9 +241,16 @@ public class SearchResourceImpl implements SearchResource {
                 values.add(rv.getValue(row));
             }
 
-            // get the path for the first selector and build
-            // a webdav compliant resource path of it.
-            String itemPath = row.getPath();
+            /*
+             * get the path for the first selector and build a webdav compliant
+             * resource path based on it.
+             * 
+             * Use Row#getPath(String) which works for both simple rows and join
+             * rows (in contrast to Row#getPath()).
+             * 
+             * see also https://issues.apache.org/jira/browse/JCR-3089
+             */
+            final String itemPath = row.getPath(sn.get(0));
             // create a new ms-response for this row of the result set
             DavResourceLocator loc = locator.getFactory().createResourceLocator(locator.getPrefix(), locator.getWorkspacePath(), itemPath, false);
             String href = loc.getHref(true);
