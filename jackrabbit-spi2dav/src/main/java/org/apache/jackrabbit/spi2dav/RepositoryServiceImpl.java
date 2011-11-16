@@ -405,7 +405,11 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
                               SessionInfo sessionInfo) throws RepositoryException {
         String parentUri = uriResolver.getItemUri(parentId, sessionInfo.getWorkspaceName(), sessionInfo);
         NamePathResolver resolver = getNamePathResolver(sessionInfo);
-        return parentUri + "/" + Text.escape(resolver.getJCRName(childName));
+        // JCR-2920: don't append '/' to a trailing '/'
+        if (!parentUri.endsWith("/")) {
+            parentUri += "/";
+        }
+        return parentUri + Text.escape(resolver.getJCRName(childName));
     }
 
     private NodeId getParentId(DavPropertySet propSet, SessionInfo sessionInfo)
