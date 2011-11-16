@@ -18,7 +18,9 @@ package org.apache.jackrabbit.test.api;
 
 import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.apache.jackrabbit.test.NotExecutableException;
+import org.apache.jackrabbit.test.api.util.InputStreamWrapper;
 
+import javax.jcr.Binary;
 import javax.jcr.Session;
 import javax.jcr.ValueFactory;
 import javax.jcr.Node;
@@ -318,5 +320,22 @@ public class ValueFactoryTest extends AbstractJCRTest {
             }
         }
 
+    }
+
+    /**
+     * Tests whether a passed <code>InputStream</code> is closed
+     * by the implementation.
+     *
+     * @throws RepositoryException
+     */
+    public void testInputStream() throws RepositoryException {
+        InputStreamWrapper in = new InputStreamWrapper(new ByteArrayInputStream(binaryValue));
+        valueFactory.createValue(in);
+        assertTrue("ValueFactory.createValue(InputStream) is expected to close the passed input stream", in.isClosed());
+
+        in = new InputStreamWrapper(new ByteArrayInputStream(binaryValue));
+        Binary bin = valueFactory.createBinary(in);
+        assertTrue("ValueFactory.createBinary(InputStream) is expected to close the passed input stream", in.isClosed());
+        bin.dispose();
     }
 }

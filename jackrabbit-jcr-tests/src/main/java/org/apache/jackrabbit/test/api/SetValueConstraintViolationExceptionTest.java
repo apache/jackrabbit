@@ -102,9 +102,7 @@ public class SetValueConstraintViolationExceptionTest extends AbstractJCRTest {
         } catch (ConstraintViolationException e) {
             // success
         } finally {
-            try {
-                in.close();
-            } catch (IOException ignore) {}
+            try { in.close(); } catch (IOException ignore) {}
         }
 
         // test of signature setValue(Value value)
