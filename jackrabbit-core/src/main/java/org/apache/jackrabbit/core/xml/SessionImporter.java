@@ -195,10 +195,20 @@ public class SessionImporter implements Importer {
     }
 
     protected NodeImpl resolveUUIDConflict(NodeImpl parent,
-                                           NodeImpl conflicting,
+                                           NodeId conflictingId,
                                            NodeInfo nodeInfo)
             throws RepositoryException {
         NodeImpl node;
+
+        NodeImpl conflicting;
+        try {
+            conflicting = session.getNodeById(conflictingId);
+        } catch (ItemNotFoundException infe) {
+            // conflicting node can't be read,
+            // most likely due to lack of read permission
+            conflicting = null;
+        }
+
         if (uuidBehavior == ImportUUIDBehavior.IMPORT_UUID_CREATE_NEW) {
             // create new with new uuid
             checkPermission(parent, nodeInfo.getName());
@@ -210,7 +220,8 @@ public class SessionImporter implements Importer {
             }
         } else if (uuidBehavior == ImportUUIDBehavior.IMPORT_UUID_COLLISION_THROW) {
             // if conflicting node is shareable, then clone it
-            if (conflicting.isNodeType(NameConstants.MIX_SHAREABLE)) {
+            if (conflicting != null
+                    && conflicting.isNodeType(NameConstants.MIX_SHAREABLE)) {
                 parent.clone(conflicting, nodeInfo.getName());
                 return null;
             }
@@ -218,6 +229,14 @@ public class SessionImporter implements Importer {
             log.debug(msg);
             throw new ItemExistsException(msg);
         } else if (uuidBehavior == ImportUUIDBehavior.IMPORT_UUID_COLLISION_REMOVE_EXISTING) {
+            if (conflicting == null) {
+                // since the conflicting node can't be read,
+                // we can't remove it
+                String msg = "node with uuid " + conflictingId + " cannot be removed";
+                log.debug(msg);
+                throw new RepositoryException(msg);
+            }
+
             // make sure conflicting node is not importTargetNode or an ancestor thereof
             if (importTargetNode.getPath().startsWith(conflicting.getPath())) {
                 String msg = "cannot remove ancestor node";
@@ -232,6 +251,14 @@ public class SessionImporter implements Importer {
                     nodeInfo.getNodeTypeName(), nodeInfo.getMixinNames(),
                     nodeInfo.getId());
         } else if (uuidBehavior == ImportUUIDBehavior.IMPORT_UUID_COLLISION_REPLACE_EXISTING) {
+            if (conflicting == null) {
+                // since the conflicting node can't be read,
+                // we can't replace it
+                String msg = "node with uuid " + conflictingId + " cannot be replaced";
+                log.debug(msg);
+                throw new RepositoryException(msg);
+            }
+
             if (conflicting.getDepth() == 0) {
                 String msg = "root node cannot be replaced";
                 log.debug(msg);
@@ -366,15 +393,19 @@ public class SessionImporter implements Importer {
                 node = createNode(parent, nodeName, ntName, mixins, null);
             } else {
                 // potential uuid conflict
-                NodeImpl conflicting;
+                boolean isConflicting;
                 try {
-                    conflicting = session.getNodeById(id);
+                    // the following is a fail-fast test whether
+                    // an item exists (regardless of access control)
+                    session.getHierarchyManager().getName(id);
+                    isConflicting = true;
                 } catch (ItemNotFoundException infe) {
-                    conflicting = null;
+                    isConflicting = false;
                 }
-                if (conflicting != null) {
+
+                if (isConflicting) {
                     // resolve uuid conflict
-                    node = resolveUUIDConflict(parent, conflicting, nodeInfo);
+                    node = resolveUUIDConflict(parent, id, nodeInfo);
                     if (node == null) {
                         // no new node has been created, so skip this node
                         parents.push(null); // push null onto stack for skipped node
