@@ -70,6 +70,11 @@ public class TransactionContext extends Timer.Task {
     private final int timeout;
 
     /**
+     * Indicates if this {@link TransactionContext} has timed out internally
+     */
+    private boolean timedOut = false;
+
+    /**
     * The Xid
     */
    private final Xid xid;
@@ -144,9 +149,11 @@ public class TransactionContext extends Timer.Task {
      * all resources. If some resource reports an error on prepare,
      * automatically rollback changes on all other resources. Throw exception
      * at the end if errors were found.
+     * @param onePhaseOptimized if true this prepare comes from a onePhase optimized Transaction.
+     * 			Internal Timeout-Task will be started.
      * @throws XAException if an error occurs
      */
-    public synchronized void prepare() throws XAException {
+    public synchronized void prepare(boolean onePhaseOptimized) throws XAException {
         bindCurrentXid();
         status = STATUS_PREPARING;
         beforeOperation();
@@ -176,8 +183,10 @@ public class TransactionContext extends Timer.Task {
             throw e;
         }
 
-        // start rollback task in case the commit is never issued
-        timer.schedule(this, timeout * 1000, Integer.MAX_VALUE);
+        if (onePhaseOptimized) {
+            // start rollback task in case the commit is never issued
+            timer.schedule(this, timeout * 1000, Integer.MAX_VALUE);
+        }
     }
 
     /**
@@ -185,12 +194,18 @@ public class TransactionContext extends Timer.Task {
      * all resources. If some resource reports an error on commit,
      * automatically rollback changes on all other resources. Throw
      * exception at the end if some commit failed.
+     * @param true if the commit comes from a onePhase optimized Transaction.
      * @throws XAException if an error occurs
      */
-    public synchronized void commit() throws XAException {
+    public synchronized void commit(boolean onePhase) throws XAException {
         if (status == STATUS_ROLLED_BACK) {
-            throw new XAException(XAException.XA_RBTIMEOUT);
+        	if (onePhase && timedOut) {
+        		throw new XAException(XAException.XA_RBTIMEOUT);
+        	} else {
+        		throw new XAException(XAException.XA_HEURRB);
+        	}
         }
+        boolean heuristicCommit = false;
         bindCurrentXid();
         status = STATUS_COMMITTING;
         beforeOperation();
@@ -207,6 +222,7 @@ public class TransactionContext extends Timer.Task {
             } else {
                 try {
                     resource.commit(this);
+                    heuristicCommit = true;
                 } catch (TransactionException e) {
                     txe = e;
                 }
@@ -215,14 +231,21 @@ public class TransactionContext extends Timer.Task {
         afterOperation();
         status = STATUS_COMMITTED;
 
-        // cancel the rollback task
-        cancel();
+        if (onePhase) {
+        	// cancel the rollback task only in onePhase Transactions
+        	cancel();
+        }
         cleanCurrentXid();
 
         if (txe != null) {
-            XAException e = new XAException(XAException.XA_RBOTHER);
-            e.initCause(txe);
-            throw e;
+        	XAException e = null;
+        	if (heuristicCommit) {
+        		e = new XAException(XAException.XA_HEURMIX);
+        	} else {
+        		e = new XAException(XAException.XA_HEURRB);
+        	}
+    		e.initCause(txe);
+    		throw e;
         }
     }
 
@@ -233,7 +256,7 @@ public class TransactionContext extends Timer.Task {
      */
     public synchronized void rollback() throws XAException {
         if (status == STATUS_ROLLED_BACK) {
-            throw new XAException(XAException.XA_RBTIMEOUT);
+            throw new XAException(XAException.XA_RBOTHER);
         }
         bindCurrentXid();
         status = STATUS_ROLLING_BACK;
@@ -273,6 +296,7 @@ public class TransactionContext extends Timer.Task {
                 } catch (XAException e) {
                     /* ignore */
                 }
+                timedOut = true;
                 log.warn("Transaction rolled back because timeout expired.");
             }
             // cancel the rollback task

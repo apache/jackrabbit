@@ -309,7 +309,7 @@ public class XASessionImpl extends SessionImpl
         if (tx == null) {
             throw new XAException(XAException.XAER_NOTA);
         }
-        tx.prepare();
+        tx.prepare(false);
         return XA_OK;
     }
 
@@ -322,9 +322,9 @@ public class XASessionImpl extends SessionImpl
             throw new XAException(XAException.XAER_NOTA);
         }
         if (onePhase) {
-            tx.prepare();
+            tx.prepare(onePhase);
         }
-        tx.commit();
+        tx.commit(onePhase);
 
         txGlobal.remove(xid);
     }
