@@ -41,6 +41,7 @@ import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
@@ -229,8 +230,8 @@ public class DbDataStore implements DataStore, DatabaseAware {
      * in the [databaseType].properties file, initialized with the default value.
      */
     protected String updateSQL =
-        "UPDATE ${tablePrefix}${table} SET ID=?, LENGTH=?, LAST_MODIFIED=?"
-        + " WHERE ID=? AND NOT EXISTS(SELECT ID FROM ${tablePrefix}${table} WHERE ID=?)";
+        "UPDATE ${tablePrefix}${table} SET ID=?, LENGTH=?, LAST_MODIFIED=? " +
+        "WHERE ID=? AND LAST_MODIFIED=?";
 
     /**
      * This is the property 'delete'
@@ -299,48 +300,42 @@ public class DbDataStore implements DataStore, DatabaseAware {
      */
     private ConnectionFactory connectionFactory;
 
-    /**
-     * {@inheritDoc}
-     */
     public void setConnectionFactory(ConnectionFactory connnectionFactory) {
         this.connectionFactory = connnectionFactory;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public DataRecord addRecord(InputStream stream) throws DataStoreException {
-        ResultSet rs = null;
         InputStream fileInput = null;
-        String id = null, tempId = null;
+        String tempId = null;
+        ResultSet rs = null;
         try {
-            long now;
+            long tempModified;
             while (true) {
                 try {
-                    now = System.currentTimeMillis();
-                    id = UUID.randomUUID().toString();
+                    tempModified = System.currentTimeMillis();
+                    String id = UUID.randomUUID().toString();
                     tempId = TEMP_PREFIX + id;
+                    temporaryInUse.add(tempId);
                     // SELECT LENGTH, LAST_MODIFIED FROM DATASTORE WHERE ID=?
-                    rs = conHelper.exec(selectMetaSQL, new Object[]{tempId}, false, 0);
-                    if (rs.next()) {
+                    rs = conHelper.query(selectMetaSQL, tempId);
+                    boolean hasNext = rs.next();
+                    rs.close();
+                    rs = null;
+                    if (hasNext) {
                         // re-try in the very, very unlikely event that the row already exists
                         continue;
                     }
                     // INSERT INTO DATASTORE VALUES(?, 0, ?, NULL)
-                    conHelper.exec(insertTempSQL, new Object[]{tempId, new Long(now)});
+                    conHelper.exec(insertTempSQL, tempId, tempModified);
                     break;
                 } catch (Exception e) {
                     throw convert("Can not insert new record", e);
                 } finally {
                     DbUtility.close(rs);
+                    // prevent that rs.close() is called again
+                    rs = null;
                 }
             }
-            if (id == null) {
-                String msg = "Can not create new record";
-                log.error(msg);
-                throw new DataStoreException(msg);
-            }
-            temporaryInUse.add(tempId);
             MessageDigest digest = getDigest();
             DigestInputStream dIn = new DigestInputStream(stream, digest);
             CountingInputStream in = new CountingInputStream(dIn);
@@ -358,41 +353,59 @@ public class DbDataStore implements DataStore, DatabaseAware {
                 throw new DataStoreException("Unsupported stream store algorithm: " + storeStream);
             }
             // UPDATE DATASTORE SET DATA=? WHERE ID=?
-            conHelper.exec(updateDataSQL, new Object[]{wrapper, tempId});
-            now = System.currentTimeMillis();
+            conHelper.exec(updateDataSQL, wrapper, tempId);
             long length = in.getByteCount();
             DataIdentifier identifier = new DataIdentifier(digest.digest());
             usesIdentifier(identifier);
-            id = identifier.toString();
-            // UPDATE DATASTORE SET ID=?, LENGTH=?, LAST_MODIFIED=?
-            // WHERE ID=?
-            // AND NOT EXISTS(SELECT ID FROM DATASTORE WHERE ID=?)
-            int count = conHelper.update(updateSQL, new Object[]{
-                    id, new Long(length), new Long(now),
-                    tempId, id});
-            rs = null; // prevent that rs.close() is called in finally block if count != 0 (rs is closed above)
-            if (count == 0) {
-                // update count is 0, meaning such a row already exists
-                // DELETE FROM DATASTORE WHERE ID=?
-                conHelper.exec(deleteSQL, new Object[]{tempId});
-                // SELECT LENGTH, LAST_MODIFIED FROM DATASTORE WHERE ID=?
-                rs = conHelper.exec(selectMetaSQL, new Object[]{id}, false, 0);
-                if (rs.next()) {
-                    long oldLength = rs.getLong(1);
-                    long lastModified = rs.getLong(2);
-                    if (oldLength != length) {
-                        String msg =
-                            DIGEST + " collision: temp=" + tempId
-                            + " id=" + id + " length=" + length
-                            + " oldLength=" + oldLength;
-                        log.error(msg);
-                        throw new DataStoreException(msg);
-                    }
-                    touch(identifier, lastModified);
+            String id = identifier.toString();
+            long newModified;
+            while (true) {
+                newModified = System.currentTimeMillis();
+                if (checkExisting(tempId, length, identifier)) {
+                    touch(identifier, newModified);
+                    conHelper.exec(deleteSQL, tempId);
+                    break;
                 }
+                try {
+                    // UPDATE DATASTORE SET ID=?, LENGTH=?, LAST_MODIFIED=?
+                    // WHERE ID=? AND LAST_MODIFIED=?
+                    int count = conHelper.update(updateSQL,
+                            id, length, newModified, tempId, tempModified);
+                    if (count == 0) {
+                        // update count is 0, meaning the last modified time of the
+                        // temporary row was changed - which means we need to
+                        // re-try using a new last modified date (a later one)
+                        // because we need to ensure the new last modified date
+                        // is _newer_ than the old (otherwise the garbage collection
+                        // could delete rows)
+                    } else {
+                        // update was successful
+                        break;
+                    }
+                } catch (SQLException e) {
+                    // duplicate key (the row already exists) - repeat
+                    // we use exception handling for flow control here, which is bad,
+                    // but the alternative is to use UPDATE ... WHERE ... (SELECT ...)
+                    // which could cause a deadlock in some databases - also,
+                    // duplicate key will only occur if somebody else concurrently
+                    // added the same record (which is very unlikely)
+                }
+                // SELECT LENGTH, LAST_MODIFIED FROM DATASTORE WHERE ID=?
+                rs = conHelper.query(selectMetaSQL, tempId);
+                if (!rs.next()) {
+                    // the row was deleted, which is unexpected / not allowed
+                    String msg =
+                        DIGEST + " temporary entry deleted: " +
+                            " id=" + tempId + " length=" + length;
+                    log.error(msg);
+                    throw new DataStoreException(msg);
+                }
+                tempModified = rs.getLong(2);
+                DbUtility.close(rs);
+                rs = null;
             }
             usesIdentifier(identifier);
-            DbDataRecord record = new DbDataRecord(this, identifier, length, now);
+            DbDataRecord record = new DbDataRecord(this, identifier, length, newModified);
             return record;
         } catch (Exception e) {
             throw convert("Can not insert new record", e);
@@ -412,6 +425,40 @@ public class DbDataStore implements DataStore, DatabaseAware {
     }
 
     /**
+     * Check if a row with this ID already exists.
+     *
+     * @return true if the row exists and the length matches
+     * @throw DataStoreException if a row exists, but the length is different
+     */
+    private boolean checkExisting(String tempId, long length, DataIdentifier identifier) throws DataStoreException, SQLException {
+        String id = identifier.toString();
+        // SELECT LENGTH, LAST_MODIFIED FROM DATASTORE WHERE ID=?
+        ResultSet rs = null;
+        try {
+            rs = conHelper.query(selectMetaSQL, id);
+            if (rs.next()) {
+                long oldLength = rs.getLong(1);
+                long lastModified = rs.getLong(2);
+                if (oldLength != length) {
+                    String msg =
+                        DIGEST + " collision: temp=" + tempId
+                        + " id=" + id + " length=" + length
+                        + " oldLength=" + oldLength;
+                    log.error(msg);
+                    throw new DataStoreException(msg);
+                }
+                touch(identifier, lastModified);
+                // row already exists
+                conHelper.exec(deleteSQL, tempId);
+                return true;
+            }
+        } finally {
+            DbUtility.close(rs);
+        }
+        return false;
+    }
+
+    /**
      * Creates a temp file and copies the data there.
      * The input stream is closed afterwards.
      *
@@ -425,9 +472,6 @@ public class DbDataStore implements DataStore, DatabaseAware {
         return temp;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public synchronized int deleteAllOlderThan(long min) throws DataStoreException {
         try {
             ArrayList<String> touch = new ArrayList<String>();
@@ -442,21 +486,18 @@ public class DbDataStore implements DataStore, DatabaseAware {
                 updateLastModifiedDate(key, 0);
             }
             // DELETE FROM DATASTORE WHERE LAST_MODIFIED<?
-            return conHelper.update(deleteOlderSQL, new Long[]{new Long(min)});
+            return conHelper.update(deleteOlderSQL, min);
         } catch (Exception e) {
             throw convert("Can not delete records", e);
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public Iterator<DataIdentifier> getAllIdentifiers() throws DataStoreException {
         ArrayList<DataIdentifier> list = new ArrayList<DataIdentifier>();
         ResultSet rs = null;
         try {
             // SELECT ID FROM DATASTORE
-            rs = conHelper.exec(selectAllSQL, new Object[0], false, 0);
+            rs = conHelper.query(selectAllSQL);
             while (rs.next()) {
                 String id = rs.getString(1);
                 if (!id.startsWith(TEMP_PREFIX)) {
@@ -472,9 +513,6 @@ public class DbDataStore implements DataStore, DatabaseAware {
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public int getMinRecordLength() {
         return minRecordLength;
     }
@@ -489,16 +527,13 @@ public class DbDataStore implements DataStore, DatabaseAware {
         this.minRecordLength = minRecordLength;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public DataRecord getRecordIfStored(DataIdentifier identifier) throws DataStoreException {
         usesIdentifier(identifier);
         ResultSet rs = null;
         try {
             String id = identifier.toString();
             // SELECT LENGTH, LAST_MODIFIED FROM DATASTORE WHERE ID = ?
-            rs = conHelper.exec(selectMetaSQL, new Object[]{id}, false, 0);
+            rs = conHelper.query(selectMetaSQL, id);
             if (!rs.next()) {
                 throw new DataStoreException("Record not found: " + identifier);
             }
@@ -513,9 +548,6 @@ public class DbDataStore implements DataStore, DatabaseAware {
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public DataRecord getRecord(DataIdentifier identifier) throws DataStoreException {
         DataRecord record = getRecordIfStored(identifier);
         if (record == null) {
@@ -537,7 +569,7 @@ public class DbDataStore implements DataStore, DatabaseAware {
         ResultSet rs = null;
         try {
             // SELECT ID, DATA FROM DATASTORE WHERE ID = ?
-            rs = conHelper.exec(selectDataSQL, new Object[]{identifier.toString()}, false, 0);
+            rs = conHelper.query(selectDataSQL, identifier.toString());
             if (!rs.next()) {
                 throw new DataStoreException("Record not found: " + identifier);
             }
@@ -561,9 +593,6 @@ public class DbDataStore implements DataStore, DatabaseAware {
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public synchronized void init(String homeDir) throws DataStoreException {
         try {
             initDatabaseType();
@@ -674,8 +703,11 @@ public class DbDataStore implements DataStore, DatabaseAware {
         selectDataSQL = getProperty(prop, "selectData", selectDataSQL);
         storeStream = getProperty(prop, "storeStream", storeStream);
         if (STORE_SIZE_MINUS_ONE.equals(storeStream)) {
+            // ok
         } else if (STORE_TEMP_FILE.equals(storeStream)) {
+            // ok
         } else if (STORE_SIZE_MAX.equals(storeStream)) {
+            // ok
         } else {
             String msg = "Unsupported Stream store mechanism: " + storeStream
                     + " supported are: " + STORE_SIZE_MINUS_ONE + ", "
@@ -718,9 +750,6 @@ public class DbDataStore implements DataStore, DatabaseAware {
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public void updateModifiedDateOnAccess(long before) {
         log.debug("Update modifiedDate on access before " + before);
         minModifiedDate = before;
@@ -741,12 +770,9 @@ public class DbDataStore implements DataStore, DatabaseAware {
     private long updateLastModifiedDate(String key, long lastModified) throws DataStoreException {
         if (lastModified < minModifiedDate) {
             long now = System.currentTimeMillis();
-            Long n = new Long(now);
             try {
                 // UPDATE DATASTORE SET LAST_MODIFIED = ? WHERE ID = ? AND LAST_MODIFIED < ?
-                conHelper.exec(updateLastModifiedSQL, new Object[]{
-                        n, key, n
-                });
+                conHelper.update(updateLastModifiedSQL, now, key, now);
                 return now;
             } catch (Exception e) {
                 throw convert("Can not update lastModified", e);
@@ -862,19 +888,14 @@ public class DbDataStore implements DataStore, DatabaseAware {
         schemaCheckEnabled = enabled;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public synchronized void close() throws DataStoreException {
+        // nothing to do
     }
 
     protected void usesIdentifier(DataIdentifier identifier) {
         inUse.put(identifier, new WeakReference<DataIdentifier>(identifier));
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public void clearInUse() {
         inUse.clear();
     }
@@ -905,6 +926,7 @@ public class DbDataStore implements DataStore, DatabaseAware {
      * @param maxConnections the new value
      */
     public void setMaxConnections(int maxConnections) {
+        // no effect
     }
 
     /**

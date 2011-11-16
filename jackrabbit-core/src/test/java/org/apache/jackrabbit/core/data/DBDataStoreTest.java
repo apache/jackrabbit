@@ -16,15 +16,12 @@
  */
 package org.apache.jackrabbit.core.data;
 
-import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.InputStream;
 import java.util.Random;
-
 import org.apache.commons.io.FileUtils;
 import org.apache.jackrabbit.core.data.db.DbDataStore;
-import org.apache.jackrabbit.core.data.db.DbInputStream;
 import org.apache.jackrabbit.core.util.db.ConnectionFactory;
 import org.apache.jackrabbit.test.JUnitTest;
 
@@ -61,6 +58,7 @@ public class DBDataStoreTest extends JUnitTest {
         try {
             store.close();
         } catch (DataStoreException expected) {
+            // ignore
         }
     }
 
@@ -90,8 +88,6 @@ public class DBDataStoreTest extends JUnitTest {
         InputStream in = record.getStream();
         try {
             // test whether mark and reset works
-            assertTrue(in instanceof DbInputStream);
-            in = new BufferedInputStream(in);
             assertTrue(in.markSupported());
             in.mark(data.length);
             while (-1 != in.read()) {
@@ -189,4 +185,5 @@ public class DBDataStoreTest extends JUnitTest {
             streams[i].close();
         }
     }
+
 }
