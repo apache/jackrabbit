@@ -30,6 +30,7 @@ import javax.jcr.Value;
 import javax.jcr.ValueFactory;
 import javax.jcr.ValueFormatException;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.spi.commons.conversion.IllegalNameException;
 import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
@@ -158,6 +159,9 @@ public class ValueFactoryQImpl implements ValueFactory {
             throw new RuntimeException(ex);
         } catch (RepositoryException ex) {
             throw new RuntimeException(ex);
+        } finally {
+            // JCR-2903
+            IOUtils.closeQuietly(value);
         }
     }
 
@@ -208,6 +212,9 @@ public class ValueFactoryQImpl implements ValueFactory {
             throw new RuntimeException(ex);
         } catch (RepositoryException ex) {
             throw new RuntimeException(ex);
+        } finally {
+            // JCR-2903
+            IOUtils.closeQuietly(stream);
         }
     }
 

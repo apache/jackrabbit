@@ -270,9 +270,7 @@ public class SetPropertyConstraintViolationExceptionTest extends AbstractJCRTest
         } catch (ConstraintViolationException e) {
             // success
         } finally {
-            try {
-                in.close();
-            } catch (IOException ignore) {}
+            try { in.close(); } catch (IOException ignore) {}
         }
 
         // test of signature setProperty(String name, Value value)

@@ -242,7 +242,7 @@ abstract class AbstractImportXmlTest extends AbstractJCRTest {
                 session.save();
             }
         } finally {
-            bin.close();
+            try { bin.close(); } catch (IOException ignore) {}
         }
     }
 

@@ -18,10 +18,12 @@ package org.apache.jackrabbit.test.api;
 
 import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.apache.jackrabbit.test.NotExecutableException;
+import org.apache.jackrabbit.test.api.util.InputStreamWrapper;
 
 import javax.jcr.Node;
 import javax.jcr.Property;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.ByteArrayInputStream;
 
@@ -74,8 +76,8 @@ public class SetPropertyInputStreamTest extends AbstractJCRTest {
             assertTrue("Setting property with Node.setProperty(String, InputStream) and Session.save() not working",
                     compareInputStreams(is1, in));
         } finally {
-            in.close();
-        }
+            try { in.close(); } catch (IOException ignore) {}
+         }
     }
 
     /**
@@ -93,8 +95,8 @@ public class SetPropertyInputStreamTest extends AbstractJCRTest {
             assertTrue("Modifying property with Node.setProperty(String, InputStream) and Session.save() not working",
                     compareInputStreams(is2, in));
         } finally {
-            in.close();
-        }
+            try { in.close(); } catch (IOException ignore) {}
+         }
     }
 
     /**
@@ -110,7 +112,7 @@ public class SetPropertyInputStreamTest extends AbstractJCRTest {
             assertTrue("Setting property with Node.setProperty(String, InputStream) and parentNode.save() not working",
                     compareInputStreams(is1, in));
         } finally {
-            in.close();
+            try { in.close(); } catch (IOException ignore) {}
         }
     }
 
@@ -129,8 +131,8 @@ public class SetPropertyInputStreamTest extends AbstractJCRTest {
             assertTrue("Modifying property with Node.setProperty(String, InputStream) and parentNode.save() not working",
                     compareInputStreams(is2, in));
         } finally {
-            in.close();
-        }
+            try { in.close(); } catch (IOException ignore) {}
+         }
     }
 
     /**
@@ -171,6 +173,16 @@ public class SetPropertyInputStreamTest extends AbstractJCRTest {
         testRootNode.save();
         assertFalse("Removing property with Node.setProperty(String, (InputStream)null) and parentNode.save() not working",
                 testNode.hasProperty(propertyName1));
+    }
+
+    /**
+     * Tests whether the passed input stream is closed.
+     * @throws Exception
+     */
+    public void testInputStreamClosed() throws Exception {
+        InputStreamWrapper in = new InputStreamWrapper(new ByteArrayInputStream(bytes1));
+        testNode.setProperty(propertyName1, in);
+        assertTrue("Node.setProperty(..., InputStream) is expected to close the passed input stream", in.isClosed());
     }
 
     /**

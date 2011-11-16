@@ -88,7 +88,12 @@ public abstract class AbstractValueFactory implements ValueFactory {
      * {@inheritDoc}
      */
     public Value createValue(InputStream value) {
-        return new BinaryValue(value);
+        try {
+            return new BinaryValue(value);
+        } finally {
+            // JCR-2903
+            try { value.close(); } catch (IOException ignore) {}
+        }
     }
 
     /**
@@ -171,6 +176,9 @@ public abstract class AbstractValueFactory implements ValueFactory {
             return new BinaryImpl(stream);
         } catch (IOException e) {
             throw new RepositoryException("failed to create Binary instance", e);
+        } finally {
+            // JCR-2903
+            try { stream.close(); } catch (IOException ignore) {}
         }
     }
 

@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.jcr2spi;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.jcr2spi.config.CacheBehaviour;
 import org.apache.jackrabbit.jcr2spi.config.RepositoryConfig;
 import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyManager;
@@ -339,8 +340,13 @@ public class WorkspaceImpl implements Workspace, ManagerProvider {
         int options = ItemStateValidator.CHECK_ACCESS | ItemStateValidator.CHECK_LOCK | ItemStateValidator.CHECK_VERSIONING;
         getValidator().checkIsWritable(parentState, options);
 
-        // run the import
-        wspManager.execute(WorkspaceImport.create(parentState, in, uuidBehavior));
+        try {
+            // run the import
+            wspManager.execute(WorkspaceImport.create(parentState, in, uuidBehavior));
+        } finally {
+            // JCR-2903
+            IOUtils.closeQuietly(in);
+        }
     }
 
     /**
