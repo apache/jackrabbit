@@ -21,6 +21,7 @@ import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.Arrays;
+import java.util.UUID;
 
 /**
  * <code>SessionInfoImpl</code>...
@@ -29,7 +30,10 @@ public class SessionInfoImpl extends org.apache.jackrabbit.spi.commons.SessionIn
 
     private final CredentialsWrapper credentials;
     private final Set<String> sessionScopedTokens = new HashSet<String>();
-
+    
+    // a globally unique URI identifiying this session
+    private final String sessionIdentifier = "urn:uuid" + UUID.randomUUID();
+    
     private String lastBatchId;
     private NamePathResolver resolver;
 
@@ -52,6 +56,10 @@ public class SessionInfoImpl extends org.apache.jackrabbit.spi.commons.SessionIn
 
     CredentialsWrapper getCredentials() {
         return credentials;
+    }
+
+    String getSessionIdentifier() {
+        return sessionIdentifier;
     }
 
     /**

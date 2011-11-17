@@ -171,6 +171,7 @@ import org.apache.jackrabbit.webdav.observation.DefaultEventType;
 import org.apache.jackrabbit.webdav.observation.EventDiscovery;
 import org.apache.jackrabbit.webdav.observation.EventType;
 import org.apache.jackrabbit.webdav.observation.ObservationConstants;
+import org.apache.jackrabbit.webdav.observation.SubscriptionDiscovery;
 import org.apache.jackrabbit.webdav.observation.SubscriptionInfo;
 import org.apache.jackrabbit.webdav.ordering.OrderingConstants;
 import org.apache.jackrabbit.webdav.property.DavProperty;
@@ -244,6 +245,10 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     /** Repository descriptors. */
     private final Map<String, QValue[]> descriptors =
             new HashMap<String, QValue[]>();
+
+    /** Observation features. */
+    private boolean remoteServerProvidesNodeTypes = false;
+    private boolean remoteServerProvidesNoLocalFlag = false;
 
     /**
      * Same as {@link #RepositoryServiceImpl(String, IdFactory, NameFactory, PathFactory, QValueFactory, int, int)}
@@ -376,22 +381,52 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
                 method.setRequestHeader(ifH.getHeaderName(), ifH.getHeaderValue());
             }
         }
+        
+        initMethod(method, sessionInfo);
+    }
 
-        if (sessionInfo instanceof SessionInfoImpl) {
+    // set of HTTP methods that will not change the remote state
+    private static final Set<String> readMethods;
+    static {
+        Set<String> tmp = new HashSet<String>();
+        tmp.add("GET");
+        tmp.add("HEAD");
+        tmp.add("PROPFIND");
+        tmp.add("POLL");
+        tmp.add("REPORT");
+        tmp.add("SEARCH");
+        readMethods = Collections.unmodifiableSet(tmp);
+    }
+
+    // set headers for user data and session identification
+    protected static void initMethod(HttpMethod method, SessionInfo sessionInfo) throws RepositoryException {
+
+        boolean isReadAccess = readMethods.contains(method.getName());
+        boolean needsSessionId = !isReadAccess || "POLL".equals(method.getName());
+
+        if (sessionInfo instanceof SessionInfoImpl && needsSessionId) {
+            StringBuilder linkHeaderField = new StringBuilder();
+
+            String sessionIdentifier = ((SessionInfoImpl) sessionInfo)
+                    .getSessionIdentifier();
+            linkHeaderField.append("<" + sessionIdentifier + ">; rel=\""
+                    + JcrRemotingConstants.RELATION_REMOTE_SESSION_ID + "\"");
+
             String userdata = ((SessionInfoImpl) sessionInfo).getUserData();
-            if (userdata != null) {
+            if (userdata != null && ! isReadAccess) {
                 String escaped = Text.escape(userdata);
-                method.addRequestHeader("Link", "<data:," + escaped
-                        + ">; rel=\"" + JcrRemotingConstants.RELATION_USER_DATA
-                        + "\"");
+                linkHeaderField.append((", <data:," + escaped + ">; rel=\""
+                        + JcrRemotingConstants.RELATION_USER_DATA + "\""));
             }
+
+            method.addRequestHeader("Link", linkHeaderField.toString());
         }
     }
 
     private static void initMethod(DavMethod method, BatchImpl batchImpl, boolean addIfHeader) throws RepositoryException {
         initMethod(method, batchImpl.sessionInfo,  addIfHeader);
 
-        // add batchId as separate header
+        // add batchId as separate header, TODO: could probably re-use session id Link relation
         CodedUrlHeader ch = new CodedUrlHeader(TransactionConstants.HEADER_TRANSACTIONID, batchImpl.batchId);
         method.setRequestHeader(ch.getHeaderName(), ch.getHeaderValue());
     }
@@ -1254,7 +1289,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             } else if (ct.startsWith("text/xml")) {
                 // jcr:values property spooled
                 values = getValues(method.getResponseBodyAsStream(), resolver, propertyId);
-                type = (values.length > 0) ? values[0].getType() : loadType(uri, client, propertyId, resolver);
+                type = (values.length > 0) ? values[0].getType() : loadType(uri, client, propertyId, sessionInfo, resolver);
                 isMultiValued = true;
             } else {
                 throw new ItemNotFoundException("Unable to retrieve the property with id " + saveGetIdString(propertyId, resolver));
@@ -1312,7 +1347,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         }
     }
 
-    private int loadType(String propertyURI, HttpClient client, PropertyId propertyId, NamePathResolver resolver) throws IOException, DavException, RepositoryException {
+    private int loadType(String propertyURI, HttpClient client, PropertyId propertyId, SessionInfo sessionInfo, NamePathResolver resolver) throws IOException, DavException, RepositoryException {
         DavPropertyNameSet nameSet = new DavPropertyNameSet();
         nameSet.add(JcrRemotingConstants.JCR_TYPE_LN, ItemResourceConstants.NAMESPACE);
 
@@ -2001,11 +2036,19 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     public Subscription createSubscription(SessionInfo sessionInfo,
                                            EventFilter[] filters)
             throws UnsupportedRepositoryOperationException, RepositoryException {
-        checkEventFilterSupport(filters);
+
         checkSessionInfo(sessionInfo);
         String rootUri = uriResolver.getRootItemUri(sessionInfo.getWorkspaceName());
         String subscriptionId = subscribe(rootUri, S_INFO, null, sessionInfo, null);
         log.debug("Subscribed on server for session info " + sessionInfo);
+
+        try {
+            checkEventFilterSupport(filters);
+        }
+        catch (UnsupportedRepositoryOperationException ex) {
+            unsubscribe(rootUri, subscriptionId, sessionInfo);
+            throw (ex);
+        }
         return new EventSubscriptionImpl(subscriptionId, (SessionInfoImpl) sessionInfo);
     }
 
@@ -2021,13 +2064,19 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         checkEventFilterSupport(filters);
     }
 
-    private void checkEventFilterSupport(EventFilter[] filters) throws UnsupportedRepositoryOperationException {
+    private void checkEventFilterSupport(EventFilter[] filters)
+            throws UnsupportedRepositoryOperationException {
         for (EventFilter ef : filters) {
             if (ef instanceof EventFilterImpl) {
-                EventFilterImpl efi = (EventFilterImpl)ef;
-                // TODO: add code that verifies that the remote server can send node type information
-                if (efi.getNoLocal()) {
-                    throw new UnsupportedRepositoryOperationException("This SPI implementation does not support filtering using the 'noLocal' flag (see issue JCR-2542)");
+                EventFilterImpl efi = (EventFilterImpl) ef;
+                if (efi.getNodeTypeNames() != null
+                        && !remoteServerProvidesNodeTypes) {
+                    throw new UnsupportedRepositoryOperationException(
+                            "Remote server does not provide node type information in events");
+                }
+                if (efi.getNoLocal() && !remoteServerProvidesNoLocalFlag) {
+                    throw new UnsupportedRepositoryOperationException(
+                            "Remote server does not provide local flag in events");
                 }
             }
         }
@@ -2051,6 +2100,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             } else {
                 method = new SubscribeMethod(uri, subscriptionInfo);
             }
+            initMethod(method, sessionInfo);
 
             if (batchId != null) {
                 // add batchId as separate header
@@ -2060,6 +2110,13 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
 
             getClient(sessionInfo).executeMethod(method);
             method.checkSuccess();
+
+            org.apache.jackrabbit.webdav.observation.Subscription[] subs = method.getResponseAsSubscriptionDiscovery().getValue();
+            if (subs.length == 1) {
+                this.remoteServerProvidesNodeTypes = subs[0].eventsProvideNodeTypeInformation();
+                this.remoteServerProvidesNoLocalFlag = subs[0].eventsProvideNoLocalFlag();
+            }
+
             return method.getSubscriptionId();
         } catch (IOException e) {
             throw new RepositoryException(e);
@@ -2076,6 +2133,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         UnSubscribeMethod method = null;
         try {
             method = new UnSubscribeMethod(uri, subscriptionId);
+            initMethod(method, sessionInfo);
             getClient(sessionInfo).executeMethod(method);
             method.checkSuccess();
         } catch (IOException e) {
@@ -2121,12 +2179,12 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
                 while (it.hasNext()) {
                     Element bundleElement = it.nextElement();
                     String value = DomUtil.getAttribute(bundleElement,
-                            ObservationConstants.XML_EVENT_TRANSACTION_ID,
+                            ObservationConstants.XML_EVENT_LOCAL,
                             ObservationConstants.NAMESPACE);
                     // check if it matches a batch id recently submitted
                     boolean isLocal = false;
                     if (value != null) {
-                        isLocal = value.equals(sessionInfo.getLastBatchId());
+                        isLocal = Boolean.parseBoolean(value);
                     }
                     bundles.add(new EventBundleImpl(
                             buildEventList(bundleElement, sessionInfo),

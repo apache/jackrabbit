@@ -18,7 +18,6 @@ package org.apache.jackrabbit.server;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.Enumeration;
 import java.util.Locale;
 
 import javax.jcr.Credentials;
@@ -30,6 +29,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.jackrabbit.commons.webdav.JcrRemotingConstants;
+import org.apache.jackrabbit.spi.commons.SessionExtensions;
 import org.apache.jackrabbit.util.Text;
 import org.apache.jackrabbit.webdav.util.LinkHeaderFieldParser;
 
@@ -38,6 +38,8 @@ import org.apache.jackrabbit.webdav.util.LinkHeaderFieldParser;
  */
 public class SessionProviderImpl implements SessionProvider {
 
+    public static final String ATTRIBUTE_SESSION_ID = SessionProviderImpl.class + "#sessionid()";
+    
     /**
      * the credentials provider
      */
@@ -65,8 +67,18 @@ public class SessionProviderImpl implements SessionProvider {
         } else {
             s = repository.login(creds, workspace);
         }
-        String userData = getJcrUserData(request);
+
+        // extract information from Link header fields
+        LinkHeaderFieldParser lhfp = new LinkHeaderFieldParser(
+                request.getHeaders("Link"));
+        String userData = getJcrUserData(lhfp);
         s.getWorkspace().getObservationManager().setUserData(userData);
+
+        String sessionId = getSessionIdentifier(lhfp);
+        if (s instanceof SessionExtensions) {
+            SessionExtensions xs = (SessionExtensions) s;
+            xs.setAttribute(ATTRIBUTE_SESSION_ID, sessionId);
+        }
         return s;
     }
 
@@ -78,18 +90,21 @@ public class SessionProviderImpl implements SessionProvider {
     }
 
     // find first link relation for JCR User Data
-    private String getJcrUserData(HttpServletRequest request) {
+    private String getJcrUserData(LinkHeaderFieldParser lhfp) {
         String jcrUserData = null;
-        Enumeration<?> fieldValues = request.getHeaders("link");
-        if (fieldValues.hasMoreElements()) {
-            LinkHeaderFieldParser lhfp = new LinkHeaderFieldParser(fieldValues);
-            String target = lhfp
-                    .getFirstTargetForRelation(JcrRemotingConstants.RELATION_USER_DATA);
-            if (target != null) {
-                jcrUserData = getJcrUserData(target);
-            }
+        String target = lhfp
+                .getFirstTargetForRelation(JcrRemotingConstants.RELATION_USER_DATA);
+        if (target != null) {
+            jcrUserData = getJcrUserData(target);
         }
+
         return jcrUserData;
+    }
+
+    // find first link relation for remote session identifier
+    private String getSessionIdentifier(LinkHeaderFieldParser lhfp) {
+        return lhfp
+                .getFirstTargetForRelation(JcrRemotingConstants.RELATION_REMOTE_SESSION_ID);
     }
 
     // extracts User Data string from RFC 2397 "data" URI

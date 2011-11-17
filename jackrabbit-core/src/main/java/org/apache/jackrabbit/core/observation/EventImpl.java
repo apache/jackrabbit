@@ -223,6 +223,8 @@ public final class EventImpl implements JackrabbitEvent, AdditionalEventInfo, Ev
         return eventState.isExternal();
     }
 
+    //---------------------------------------------------------------< AdditionalEventInfo >
+
     /**
      * @return the primary node type of the node associated with the event
      * @see AdditionalEventInfo#getPrimaryNodeTypeName()
@@ -230,13 +232,20 @@ public final class EventImpl implements JackrabbitEvent, AdditionalEventInfo, Ev
     public Name getPrimaryNodeTypeName() {
         return eventState.getNodeType();
     }
-    
+
     /**
      * @return the mixin node types of the node associated with the event
      * @see AdditionalEventInfo#getMixinTypeNames()
      */
     public Set<Name> getMixinTypeNames() {
         return eventState.getMixinNames();
+    }
+
+    /**
+     * @return the specified session attribute
+     */
+    public Object getSessionAttribute(String name) {
+        return eventState.getSession().getAttribute(name);
     }
 
     /**

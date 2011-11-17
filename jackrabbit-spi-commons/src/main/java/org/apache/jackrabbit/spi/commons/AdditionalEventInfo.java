@@ -18,6 +18,8 @@ package org.apache.jackrabbit.spi.commons;
 
 import java.util.Set;
 
+import javax.jcr.UnsupportedRepositoryOperationException;
+
 import org.apache.jackrabbit.spi.Event;
 import org.apache.jackrabbit.spi.Name;
 
@@ -29,10 +31,15 @@ public interface AdditionalEventInfo {
 	/**
 	 * @return the name of the primary node type of the node associated with the event
 	 */
-    public Name getPrimaryNodeTypeName();
-    
+    public Name getPrimaryNodeTypeName() throws UnsupportedRepositoryOperationException;
+
 	/**
 	 * @return the names of the mixin node types of the node associated with the event
 	 */
-    public Set<Name> getMixinTypeNames();
+    public Set<Name> getMixinTypeNames() throws UnsupportedRepositoryOperationException;
+
+    /**
+     * @return the specified Session attribute
+     */
+    public Object getSessionAttribute(String name) throws UnsupportedRepositoryOperationException;
 }

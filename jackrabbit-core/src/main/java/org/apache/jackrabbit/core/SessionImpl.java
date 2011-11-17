@@ -94,6 +94,7 @@ import org.apache.jackrabbit.core.xml.ImportHandler;
 import org.apache.jackrabbit.core.xml.SessionImporter;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.spi.commons.SessionExtensions;
 import org.apache.jackrabbit.spi.commons.conversion.DefaultNamePathResolver;
 import org.apache.jackrabbit.spi.commons.conversion.IdentifierResolver;
 import org.apache.jackrabbit.spi.commons.conversion.IllegalNameException;
@@ -111,7 +112,7 @@ import org.xml.sax.ContentHandler;
  * A <code>SessionImpl</code> ...
  */
 public class SessionImpl extends AbstractSession
-        implements JackrabbitSession, NamespaceResolver, NamePathResolver, IdentifierResolver {
+        implements JackrabbitSession, SessionExtensions, NamespaceResolver, NamePathResolver, IdentifierResolver {
 
     /**
      * Name of the session attribute that controls whether the
@@ -510,7 +511,7 @@ public class SessionImpl extends AbstractSession
      * @param value attribute value
      * @since Apache Jackrabbit 1.6
      */
-    protected void setAttribute(String name, Object value) {
+    public void setAttribute(String name, Object value) {
         if (value != null) {
             attributes.put(name, value);
         } else {

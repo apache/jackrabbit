@@ -113,6 +113,17 @@ public class SubscriptionDiscovery extends AbstractDavProperty<Subscription[]> {
                     }
                     return null;
                 }
+
+                public boolean eventsProvideNodeTypeInformation() {
+                    String t = DomUtil.getChildText(sb, ObservationConstants.XML_EVENTSWITHTYPES, ObservationConstants.NAMESPACE);
+                    return t == null ? false : Boolean.parseBoolean(t);
+                }
+
+                public boolean eventsProvideNoLocalFlag() {
+                    String t = DomUtil.getChildText(sb, ObservationConstants.XML_EVENTSWITHLOCALFLAG, ObservationConstants.NAMESPACE);
+                    return t == null ? false : Boolean.parseBoolean(t);
+                }
+
                 /**
                  * @see XmlSerializable#toXml(Document)
                  */
