@@ -2538,20 +2538,20 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
      */
     private Iterator<QNodeTypeDefinition> retrieveQNodeTypeDefinitions(SessionInfo sessionInfo, Document reportDoc) throws RepositoryException {
         ElementIterator it = DomUtil.getChildren(reportDoc.getDocumentElement(), NodeTypeConstants.NODETYPE_ELEMENT, null);
-            List<QNodeTypeDefinition> ntDefs = new ArrayList<QNodeTypeDefinition>();
-            NamePathResolver resolver = getNamePathResolver(sessionInfo);
-            while (it.hasNext()) {
-                ntDefs.add(DefinitionUtil.createQNodeTypeDefinition(it.nextElement(), resolver, getQValueFactory()));
+        List<QNodeTypeDefinition> ntDefs = new ArrayList<QNodeTypeDefinition>();
+        NamePathResolver resolver = getNamePathResolver(sessionInfo);
+        while (it.hasNext()) {
+            ntDefs.add(DefinitionUtil.createQNodeTypeDefinition(it.nextElement(), resolver, getQValueFactory()));
+        }
+        // refresh node type definitions map
+        synchronized (nodeTypeDefinitions) {
+            nodeTypeDefinitions.clear();
+            for (Object ntDef : ntDefs) {
+                QNodeTypeDefinition def = (QNodeTypeDefinition) ntDef;
+                nodeTypeDefinitions.put(def.getName(), def);
             }
-            // refresh node type definitions map
-            synchronized (nodeTypeDefinitions) {
-                nodeTypeDefinitions.clear();
-                for (Object ntDef : ntDefs) {
-                    QNodeTypeDefinition def = (QNodeTypeDefinition) ntDef;
-                    nodeTypeDefinitions.put(def.getName(), def);
-                }
-            }
-            return ntDefs.iterator();
+        }
+        return ntDefs.iterator();
     }
 
     private DavProperty<List<XmlSerializable>> createRegisterNodeTypesProperty(SessionInfo sessionInfo, QNodeTypeDefinition[] nodeTypeDefinitions, final boolean allowUpdate) throws IOException {
