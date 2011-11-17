@@ -288,6 +288,14 @@ public class SubscriptionManagerImpl implements SubscriptionManager, Transaction
         public Element toXml(Document document) {
             return delegatee.toXml(document);
         }
+
+        public boolean eventsProvideNodeTypeInformation() {
+            return delegatee.eventsProvideNodeTypeInformation();
+        }
+
+        public boolean eventsProvideNoLocalFlag() {
+            return delegatee.eventsProvideNoLocalFlag();
+        }
     }
 
     /**

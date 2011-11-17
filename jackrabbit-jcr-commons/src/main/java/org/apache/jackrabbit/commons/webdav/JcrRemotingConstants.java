@@ -154,7 +154,7 @@ public interface JcrRemotingConstants {
     /**
      * RFC 5988 relation type for user data
      * <p>
-     * We transport JCR User Data in a Link header field with this relation name
+     * Used to transport JCR User Data inside an HTTP request.
      * <p>
      * Example:
      * 
@@ -163,4 +163,17 @@ public interface JcrRemotingConstants {
      * </pre>
      */
     public static final String RELATION_USER_DATA = NS_URI + "/user-data";
+
+    /**
+     * RFC 5988 relation type for remote session identification
+     * <p>
+     * Used to transport an identifier for the remote session.
+     * <p>
+     * Example:
+     * 
+     * <pre>
+     * Link: <urn:uuid:96d3c6fe-1073-11e1-a3c0-00059a3c7a00>, rel="<i>RELATION_REMOTE_SESSION_ID</i>"
+     * </pre>
+     */
+    public static final String RELATION_REMOTE_SESSION_ID = NS_URI + "/session-id";
 }

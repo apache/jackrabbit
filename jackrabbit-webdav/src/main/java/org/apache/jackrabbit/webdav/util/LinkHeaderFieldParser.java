@@ -57,13 +57,18 @@ public class LinkHeaderFieldParser {
 
     public LinkHeaderFieldParser(Enumeration<?> en) {
 
-        List<LinkRelation> tmp = new ArrayList<LinkRelation>();
+        if (en.hasMoreElements()) {
+            List<LinkRelation> tmp = new ArrayList<LinkRelation>();
 
-        while (en.hasMoreElements()) {
-            addFields(tmp, en.nextElement().toString());
+            while (en.hasMoreElements()) {
+                addFields(tmp, en.nextElement().toString());
+            }
+
+            relations = Collections.unmodifiableList(tmp);
+        } else {
+            // optimize case of no Link headers
+            relations = Collections.emptyList();
         }
-
-        relations = Collections.unmodifiableList(tmp);
     }
 
     public String getFirstTargetForRelation(String relationType) {

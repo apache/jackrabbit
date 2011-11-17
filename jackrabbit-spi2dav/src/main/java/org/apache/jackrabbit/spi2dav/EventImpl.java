@@ -57,15 +57,22 @@ public class EventImpl
 
     private static final NameFactory N_FACTORY = NameFactoryImpl.getInstance();
 
-    public EventImpl(ItemId eventId, Path eventPath, NodeId parentId, int eventType,
-                     Element eventElement, NamePathResolver resolver, QValueFactory qvFactory) throws NamespaceException, IllegalNameException {
+    public EventImpl(ItemId eventId, Path eventPath, NodeId parentId,
+            int eventType, Element eventElement, NamePathResolver resolver,
+            QValueFactory qvFactory) throws NamespaceException,
+            IllegalNameException {
         super(getSpiEventType(eventType), eventPath, eventId, parentId,
-                resolver.getQName(DomUtil.getChildTextTrim(eventElement, "primarynodetype", NAMESPACE)),
-                getNames(DomUtil.getChildren(eventElement, "mixinnodetype", NAMESPACE), resolver),
-                DomUtil.getChildTextTrim(eventElement, XML_EVENTUSERID, NAMESPACE),
-                DomUtil.getChildTextTrim(eventElement, XML_EVENTUSERDATA, NAMESPACE),
-                Long.parseLong(DomUtil.getChildTextTrim(eventElement, XML_EVENTDATE, NAMESPACE)),
-                getEventInfo(DomUtil.getChildElement(eventElement, XML_EVENTINFO, NAMESPACE), resolver, qvFactory));
+                resolver.getQName(DomUtil.getChildTextTrim(eventElement,
+                        XML_EVENTPRIMARNODETYPE, NAMESPACE)), getNames(
+                        DomUtil.getChildren(eventElement,
+                                XML_EVENTMIXINNODETYPE, NAMESPACE), resolver),
+                DomUtil.getChildTextTrim(eventElement, XML_EVENTUSERID,
+                        NAMESPACE), DomUtil.getChildTextTrim(eventElement,
+                        XML_EVENTUSERDATA, NAMESPACE), Long.parseLong(DomUtil
+                        .getChildTextTrim(eventElement, XML_EVENTDATE,
+                                NAMESPACE)), getEventInfo(
+                        DomUtil.getChildElement(eventElement, XML_EVENTINFO,
+                                NAMESPACE), resolver, qvFactory));
     }
 
     //--------------------------------------------------------------------------

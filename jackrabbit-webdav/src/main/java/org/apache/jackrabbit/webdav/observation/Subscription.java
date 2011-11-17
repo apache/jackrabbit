@@ -36,4 +36,14 @@ public interface Subscription extends XmlSerializable {
      * @return subscriptionId
      */
     public String getSubscriptionId();
+
+    /**
+     * @return whether events will be returned with node type information
+     */
+    public boolean eventsProvideNodeTypeInformation();
+
+    /**
+     * @return whether events will be returned with the "noLocal" flag
+     */
+    public boolean eventsProvideNoLocalFlag();
 }

@@ -80,8 +80,6 @@
                       org.apache.jackrabbit.test.api.observation.GetIdentifierTest#testNodeRemoved                      
                       <!-- JCR-2541 : event journal -->
                       org.apache.jackrabbit.test.api.observation.EventJournalTest
-                      <!-- JCR-2542 : event filter -->
-                      org.apache.jackrabbit.test.api.observation.AddEventListenerTest#testNoLocalTrue
                       <!-- JCR-2533 : missing impl of checkQueryStatement -->                      
                       org.apache.jackrabbit.test.api.query.CreateQueryTest#testUnknownQueryLanguage
                       <!-- JCR-2543 : query offset -->
