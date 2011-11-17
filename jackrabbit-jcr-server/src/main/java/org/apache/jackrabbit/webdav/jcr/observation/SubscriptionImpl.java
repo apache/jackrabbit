@@ -511,7 +511,7 @@ public class SubscriptionImpl implements Subscription, ObservationConstants, Eve
                         for (Name mixin : ((AdditionalEventInfo) event)
                                 .getMixinTypeNames()) {
                             DomUtil.addChildElement(eventElem,
-                                    XML_EVENTPRIMARNODETYPE, NAMESPACE,
+                                    XML_EVENTMIXINNODETYPE, NAMESPACE,
                                     mixin.toString());
                         }
                     } catch (UnsupportedRepositoryOperationException ex) {
