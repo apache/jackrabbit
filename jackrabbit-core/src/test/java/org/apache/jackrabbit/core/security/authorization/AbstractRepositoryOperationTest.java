@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.core.security.authorization;
 
 import org.apache.jackrabbit.api.JackrabbitWorkspace;
+import org.apache.jackrabbit.api.security.JackrabbitAccessControlManager;
 import org.apache.jackrabbit.api.security.JackrabbitAccessControlPolicy;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.security.AccessManager;
@@ -36,8 +37,11 @@ import javax.jcr.security.AccessControlManager;
 import javax.jcr.security.AccessControlPolicy;
 import javax.jcr.security.AccessControlPolicyIterator;
 import javax.jcr.security.Privilege;
+import java.security.Principal;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 /**
  * <code>AbstractRepositoryOperationTest</code>...
@@ -47,6 +51,18 @@ public abstract class AbstractRepositoryOperationTest extends AbstractEvaluation
     @Override
     protected void setUp() throws Exception {
         super.setUp();
+    }
+
+    @Override
+    protected void tearDown() throws Exception {
+        try {
+            for (AccessControlPolicy policy : acMgr.getPolicies(null)) {
+                acMgr.removePolicy(null, policy);
+            }
+            superuser.save();
+        } finally {
+            super.tearDown();
+        }
     }
 
     private Workspace getTestWorkspace() throws RepositoryException {
@@ -458,28 +474,86 @@ public abstract class AbstractRepositoryOperationTest extends AbstractEvaluation
             assertPrivilege(NameConstants.JCR_NODE_TYPE_DEFINITION_MANAGEMENT, false);
             assertPermission(Permission.NODE_TYPE_DEF_MNGMT, false);
 
-
+        } catch (UnsupportedRepositoryOperationException e) {
+            throw new NotExecutableException();
+        } finally {
             // remove it again
-            acMgr.removePolicy(null, acl);
+            for (AccessControlPolicy plc : acMgr.getPolicies(null)) {
+                acMgr.removePolicy(null, plc);
+            }
             superuser.save();
 
             // back to initial state: no repo level policy
-            policies = acMgr.getPolicies(null);
+            AccessControlPolicy[] policies = acMgr.getPolicies(null);
             assertNotNull(policies);
             assertEquals(0, policies.length);
 
-            effective = acMgr.getEffectivePolicies(null);
+            AccessControlPolicy[] effective = acMgr.getEffectivePolicies(null);
             assertNotNull(effective);
             assertEquals(0, effective.length);
 
-            it = acMgr.getApplicablePolicies(null);
+            AccessControlPolicyIterator it = acMgr.getApplicablePolicies(null);
             assertNotNull(it);
             assertTrue(it.hasNext());
-            acp = it.nextAccessControlPolicy();
+            AccessControlPolicy acp = it.nextAccessControlPolicy();
             assertNotNull(acp);
             assertTrue(acp instanceof JackrabbitAccessControlPolicy);
+        }
+    }
+
+    public void testGetEffectivePoliciesByPrincipal() throws Exception {
+        if (!(acMgr instanceof JackrabbitAccessControlManager)) {
+            throw new NotExecutableException();
+        }
+        JackrabbitAccessControlManager jAcMgr = (JackrabbitAccessControlManager) acMgr;
+        System.out.println(testUser.getPrincipal().getName());
+        Set<Principal> principalSet = Collections.singleton(testUser.getPrincipal());
+
+        try {
+            // initial state: no repo level policy
+            AccessControlPolicy[] policies = acMgr.getPolicies(null);
+            assertNotNull(policies);
+            assertEquals(0, policies.length);
+
+            AccessControlPolicy[] effective = jAcMgr.getEffectivePolicies(principalSet);
+            assertNotNull(effective);
+            assertEquals(0, effective.length);
+
+            AccessControlPolicyIterator it = acMgr.getApplicablePolicies(null);
+            assertTrue(it.hasNext());
+
+            // modify the repo level policy
+            modifyPrivileges(null, NameConstants.JCR_NODE_TYPE_DEFINITION_MANAGEMENT.toString(), false);
+            modifyPrivileges(null, NameConstants.JCR_NAMESPACE_MANAGEMENT.toString(), true);
+
+            // verify that the effective policies for the given principal set
+            // is properly calculated.
+            AccessControlPolicy[] eff = jAcMgr.getEffectivePolicies(principalSet);
+            assertNotNull(eff);
+            assertEquals(1, eff.length);
+            assertTrue(eff[0] instanceof AccessControlList);
+
+            AccessControlList acl = (AccessControlList) eff[0];
+            AccessControlEntry[] aces = acl.getAccessControlEntries();
+            assertNotNull(aces);
+            assertEquals(2, aces.length);
+            for (AccessControlEntry ace : aces) {
+                assertEquals(testUser.getPrincipal(), ace.getPrincipal());
+            }
+
         } catch (UnsupportedRepositoryOperationException e) {
             throw new NotExecutableException();
+        } finally {
+            // remove it again
+            for (AccessControlPolicy plc : acMgr.getPolicies(null)) {
+                acMgr.removePolicy(null, plc);
+            }
+            superuser.save();
+
+            // back to initial state: no repo level policy
+            AccessControlPolicy[] policies = acMgr.getPolicies(null);
+            assertNotNull(policies);
+            assertEquals(0, policies.length);
         }
     }
 }
