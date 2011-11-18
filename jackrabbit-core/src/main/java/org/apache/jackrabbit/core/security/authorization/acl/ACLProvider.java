@@ -199,16 +199,24 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
         Set<AccessControlPolicy> acls = new LinkedHashSet<AccessControlPolicy>();
         for (NodeIterator it = result.getNodes(); it.hasNext();) {
             NodeImpl aclNode = (NodeImpl) it.nextNode().getParent();
+            Name aclName = aclNode.getQName();
             NodeImpl accessControlledNode = (NodeImpl) aclNode.getParent();
-            
-            if (isAccessControlled(accessControlledNode)) {
+
+            if (N_POLICY.equals(aclName) && isAccessControlled(accessControlledNode)) {
                 if (permissions.canRead(aclNode.getPrimaryPath(), aclNode.getNodeId())) {
                     List<AccessControlEntry> aces = entryCollector.getEntries(accessControlledNode).getACEs();
                     acls.add(new UnmodifiableAccessControlList(aces, accessControlledNode.getPath(), Collections.<String, Integer>emptyMap()));
                 } else {
                     throw new AccessDeniedException("Access denied at " + Text.getRelativeParent(aclNode.getPath(), 1));
                 }
-            }
+            } else if (N_REPO_POLICY.equals(aclName) && isRepoAccessControlled(accessControlledNode)) {
+                if (permissions.canRead(aclNode.getPrimaryPath(), aclNode.getNodeId())) {
+                    List<AccessControlEntry> aces = entryCollector.collectEntries(null, new EntryFilterImpl(null, (NodeId) null, session));
+                    acls.add(new UnmodifiableAccessControlList(aces));
+                } else {
+                    throw new AccessDeniedException("Access denied at " + Text.getRelativeParent(aclNode.getPath(), 1));
+                }
+            } // else: not a regular policy node -> ignore.
         }
 
         return acls.toArray(new AccessControlPolicy[acls.size()]);
