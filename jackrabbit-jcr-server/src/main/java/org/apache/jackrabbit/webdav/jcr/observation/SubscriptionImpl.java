@@ -541,10 +541,10 @@ public class SubscriptionImpl implements Subscription, ObservationConstants, Eve
                 // info
                 Element info = DomUtil.addChildElement(eventElem, XML_EVENTINFO, NAMESPACE);
                 try {
-                    @SuppressWarnings({"RawUseOfParameterizedType"}) Map m = event.getInfo();
-                    for (Object o : m.keySet()) {
-                        String key = o.toString();
-                        Object value = m.get(key);
+                    Map<?, ?> m = event.getInfo();
+                    for (Map.Entry<?, ?> entry : m.entrySet()) {
+                        String key = entry.getKey().toString();
+                        Object value = entry.getValue();
                         if (value != null) {
                             DomUtil.addChildElement(info, key, Namespace.EMPTY_NAMESPACE, value.toString());
                         } else {
