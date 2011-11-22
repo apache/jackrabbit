@@ -2231,15 +2231,31 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
                 continue;
             }
 
+            boolean isForNode = (type == Event.NODE_ADDED
+                    || type == Event.NODE_REMOVED || type == Event.NODE_MOVED);
+            
             ItemId eventId = null;
             try {
-                if (type == Event.NODE_ADDED || type == Event.NODE_REMOVED || type == Event.NODE_MOVED) {
-                    eventId = uriResolver.getNodeId(href, sessionInfo);
+                if (isForNode) {
+                    eventId = uriResolver.getNodeIdAfterEvent(href,
+                            sessionInfo, type == Event.NODE_REMOVED);
                 } else {
                     eventId = uriResolver.getPropertyId(href, sessionInfo);
                 }
             } catch (RepositoryException e) {
-                log.warn("Unable to build event itemId: ", e.getMessage());
+                if (isForNode) {
+                    eventId = idFactory.createNodeId((String) null, eventPath);
+                } else {
+                    try {
+                        eventId = idFactory.createPropertyId(
+                                idFactory.createNodeId((String) null,
+                                        eventPath.getAncestor(1)),
+                                eventPath.getName());
+                    } catch (RepositoryException e1) {
+                        log.warn("Unable to build event itemId: ",
+                                e.getMessage());
+                    }
+                }
             }
             String parentHref = Text.getRelativeParent(href, 1, true);
             NodeId parentId = null;

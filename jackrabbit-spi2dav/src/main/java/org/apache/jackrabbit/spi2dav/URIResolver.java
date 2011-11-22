@@ -32,5 +32,7 @@ interface URIResolver {
 
     NodeId getNodeId(String uri, SessionInfo sessionInfo) throws RepositoryException;
 
+    NodeId getNodeIdAfterEvent(String uri, SessionInfo sessionInfo, boolean nodeIsGone) throws RepositoryException;
+
     PropertyId getPropertyId(String uri, SessionInfo sessionInfo) throws RepositoryException;
 }
