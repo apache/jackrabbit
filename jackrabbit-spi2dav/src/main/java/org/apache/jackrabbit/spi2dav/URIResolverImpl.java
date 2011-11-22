@@ -231,30 +231,8 @@ class URIResolverImpl implements URIResolver {
             return uri;
         }
     }
-    //-------------------------------------------------------< URI resolver >---
-    /**
-     * @inheritDoc
-     */
-    public Path getQPath(String uri, SessionInfo sessionInfo) throws RepositoryException {
-        String rootUri = getRootItemUri(sessionInfo.getWorkspaceName());
-        String jcrPath;
-        if (uri.startsWith(rootUri)) {
-            jcrPath = uri.substring(rootUri.length());
-        } else {
-            // todo: probably rather an error?
-            jcrPath = uri;
-        }
-        try {
-            return service.getNamePathResolver(sessionInfo).getQPath(Text.unescape(jcrPath));
-        } catch (NameException e) {
-            throw new RepositoryException(e);
-        }
-    }
 
-    /**
-     * @inheritDoc
-     */
-    public NodeId getNodeId(String uri, SessionInfo sessionInfo) throws RepositoryException {
+    private NodeId getNodeId(String uri, SessionInfo sessionInfo, boolean nodeIsGone) throws RepositoryException {
         IdURICache cache = getCache(sessionInfo.getWorkspaceName());
         if (cache.containsUri(uri)) {
             // id has been accessed before and is cached
@@ -264,13 +242,17 @@ class URIResolverImpl implements URIResolver {
             }
         }
 
+        if (nodeIsGone) {
+            throw new RepositoryException("Can't reconstruct nodeId from URI when the remote node is gone.");
+        }
+        
         // retrieve parentId from cache or by recursive calls
         NodeId parentId;
         if (isSameURI(uri, getRootItemUri(sessionInfo.getWorkspaceName()))) {
             parentId = null;
         } else {
             String parentUri = Text.getRelativeParent(uri, 1, true);
-            parentId = getNodeId(parentUri, sessionInfo);
+            parentId = getNodeId(parentUri, sessionInfo, false);
         }
 
         DavPropertyNameSet nameSet = new DavPropertyNameSet();
@@ -299,6 +281,40 @@ class URIResolverImpl implements URIResolver {
         }
     }
 
+    //-------------------------------------------------------< URI resolver >---
+    /**
+     * @inheritDoc
+     */
+    public Path getQPath(String uri, SessionInfo sessionInfo) throws RepositoryException {
+        String rootUri = getRootItemUri(sessionInfo.getWorkspaceName());
+        String jcrPath;
+        if (uri.startsWith(rootUri)) {
+            jcrPath = uri.substring(rootUri.length());
+        } else {
+            // todo: probably rather an error?
+            jcrPath = uri;
+        }
+        try {
+            return service.getNamePathResolver(sessionInfo).getQPath(Text.unescape(jcrPath));
+        } catch (NameException e) {
+            throw new RepositoryException(e);
+        }
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public NodeId getNodeId(String uri, SessionInfo sessionInfo) throws RepositoryException {
+        return getNodeId(uri, sessionInfo, false);
+    }
+    
+    /**
+     * @inheritDoc
+     */
+    public NodeId getNodeIdAfterEvent(String uri, SessionInfo sessionInfo, boolean nodeIsGone) throws RepositoryException {
+        return getNodeId(uri, sessionInfo, nodeIsGone);
+    }
+    
     /**
      * @inheritDoc
      */
@@ -316,7 +332,7 @@ class URIResolverImpl implements URIResolver {
         // make sure propName is unescaped
         String propName = Text.unescape(Text.getName(uri, true));
         // retrieve parent node id
-        NodeId parentId = getNodeId(parentUri, sessionInfo);
+        NodeId parentId = getNodeId(parentUri, sessionInfo, false);
         // build property id
         try {
             Name name = service.getNamePathResolver(sessionInfo).getQName(propName);
