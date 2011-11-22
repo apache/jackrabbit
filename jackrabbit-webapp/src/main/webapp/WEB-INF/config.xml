@@ -179,20 +179,6 @@
             -->
         </namespaces>
     </filter>
-    
-    <!--
-     Optional 'mimetypeproperties' element.
-     It defines additional or replaces existing mappings for the MimeResolver
-     instance created by the ResourceConfig.
-     The default mappings are defined in org.apache.jackrabbit.server.io.mimetypes.properties.
-     If the default mime type defined by MimeResolver is 'application/octet-stream'.
-    -->
-    <!--
-    <mimetypeproperties>
-        <mimemapping extension="rtf" mimetype="application/rtf" />
-        <mimemapping extension="ott" mimetype="application/vnd.oasis.opendocument.text-template" />
-        <defaultmimetype>text/html</defaultmimetype>
-    </mimetypeproperties>
-    -->
+
 </config>
 
