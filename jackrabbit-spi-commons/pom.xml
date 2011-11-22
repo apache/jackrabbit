@@ -43,14 +43,6 @@
           <groupId>org.apache.felix</groupId>
           <artifactId>maven-bundle-plugin</artifactId>
           <extensions>true</extensions>
-          <configuration>
-            <instructions>
-              <Export-Package>
-                org.apache.jackrabbit.spi.commons;version=${project.version},
-                org.apache.jackrabbit.spi.commons.*;version=${project.version}
-              </Export-Package>
-            </instructions>
-          </configuration>
         </plugin>
       <plugin>
         <artifactId>maven-antrun-plugin</artifactId>
@@ -178,6 +170,11 @@
   </build>
 
   <dependencies>
+    <dependency>
+      <groupId>biz.aQute</groupId>
+      <artifactId>bndlib</artifactId>
+      <scope>provided</scope>
+    </dependency>
     <dependency>
       <groupId>javax.jcr</groupId>
       <artifactId>jcr</artifactId>
