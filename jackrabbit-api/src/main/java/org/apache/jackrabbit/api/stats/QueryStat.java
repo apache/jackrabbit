@@ -22,17 +22,19 @@ package org.apache.jackrabbit.api.stats;
  */
 public interface QueryStat {
 
-    /** Slowest Queries */
-
+    /**
+     * @return a sorted array containing the top
+     *         {@link #getSlowQueriesQueueSize()} slowest queries
+     */
     QueryStatDto[] getSlowQueries();
 
     /**
-     * @return how big the <b>Top X</b> queue is
+     * @return size of the <b>Slow</b> queue
      */
     int getSlowQueriesQueueSize();
 
     /**
-     * Change the <b>Top X</b> queue size
+     * Change the size of the <b>Slow</b> queue
      * 
      * @param size
      *            the new size
@@ -40,9 +42,33 @@ public interface QueryStat {
     void setSlowQueriesQueueSize(int size);
 
     /**
-     * clears the queue
+     * clears the <b>Slow</b> queue
      */
     void clearSlowQueriesQueue();
+
+    /**
+     * @return a sorted array containing the
+     *         {@link #getPopularQueriesQueueSize()} most popular queries
+     */
+    QueryStatDto[] getPopularQueries();
+
+    /**
+     * @return size of the <b>Popular</b> queue
+     */
+    int getPopularQueriesQueueSize();
+
+    /**
+     * Change the size of the <b>Popular</b> queue
+     * 
+     * @param size
+     *            the new size
+     */
+    void setPopularQueriesQueueSize(int size);
+
+    /**
+     * clears the <b>Popular</b> queue
+     */
+    void clearPopularQueriesQueue();
 
     /** -- GENERAL OPS -- **/
 

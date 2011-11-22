@@ -14,28 +14,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.api.stats;
+package org.apache.jackrabbit.core.stats;
 
-import java.io.Serializable;
+import java.util.Comparator;
 
 /**
- * Object that holds statistical info about a query.
+ * QueryStatDto comparator by occurrence count
+ * 
+ * used by the popular queries queue
  * 
  */
-public interface QueryStatDto extends Serializable {
-
-    long getDuration();
-
-    String getLanguage();
-
-    String getStatement();
-
-    String getCreationTime();
-
-    int getOccurrenceCount();
-
-    long getPosition();
-
-    void setPosition(long position);
-
+public class QueryStatDtoOccurrenceComparator implements
+        Comparator<QueryStatDtoImpl> {
+    public int compare(QueryStatDtoImpl o1, QueryStatDtoImpl o2) {
+        return new Integer(o1.getOccurrenceCount()).compareTo(o2
+                .getOccurrenceCount());
+    }
 }

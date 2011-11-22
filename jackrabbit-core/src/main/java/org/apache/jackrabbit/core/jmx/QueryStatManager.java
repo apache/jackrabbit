@@ -16,10 +16,6 @@
  */
 package org.apache.jackrabbit.core.jmx;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
-
 import javax.management.openmbean.CompositeDataSupport;
 import javax.management.openmbean.CompositeType;
 import javax.management.openmbean.OpenDataException;
@@ -32,7 +28,6 @@ import javax.management.openmbean.TabularType;
 import org.apache.jackrabbit.api.jmx.QueryStatManagerMBean;
 import org.apache.jackrabbit.api.stats.QueryStat;
 import org.apache.jackrabbit.api.stats.QueryStatDto;
-import org.apache.jackrabbit.core.stats.QueryStatDtoComparator;
 
 /**
  * The QueryStatManagerMBean default implementation
@@ -41,9 +36,6 @@ import org.apache.jackrabbit.core.stats.QueryStatDtoComparator;
 public class QueryStatManager implements QueryStatManagerMBean {
 
     private final QueryStat queryStat;
-
-    private final static Comparator<QueryStatDto> comparatorRev = Collections
-            .reverseOrder(new QueryStatDtoComparator());
 
     public QueryStatManager(final QueryStat queryStat) {
         this.queryStat = queryStat;
@@ -65,28 +57,39 @@ public class QueryStatManager implements QueryStatManagerMBean {
         this.queryStat.reset();
     }
 
-    public int getQueueSize() {
+    public int getSlowQueriesQueueSize() {
         return queryStat.getSlowQueriesQueueSize();
     }
 
-    public void setQueueSize(int size) {
+    public void setSlowQueriesQueueSize(int size) {
         this.queryStat.setSlowQueriesQueueSize(size);
     }
 
-    public void clearQueue() {
+    public void clearSlowQueriesQueue() {
         this.queryStat.clearSlowQueriesQueue();
     }
 
-    public QueryStatDto[] getTopQueries() {
-        QueryStatDto[] top = this.queryStat.getSlowQueries();
-        Arrays.sort(top, comparatorRev);
-        for (int i = 0; i < top.length; i++) {
-            top[i].setPosition(i + 1);
-        }
-        return top;
+    public int getPopularQueriesQueueSize() {
+        return queryStat.getPopularQueriesQueueSize();
     }
 
-    public TabularData getQueries() {
+    public void setPopularQueriesQueueSize(int size) {
+        queryStat.setPopularQueriesQueueSize(size);
+    }
+
+    public void clearPopularQueriesQueue() {
+        queryStat.clearPopularQueriesQueue();
+    }
+
+    public TabularData getSlowQueries() {
+        return asTabularData(queryStat.getSlowQueries());
+    }
+
+    public TabularData getPopularQueries() {
+        return asTabularData(queryStat.getPopularQueries());
+    }
+
+    private TabularData asTabularData(QueryStatDto[] data) {
         TabularDataSupport tds = null;
         try {
             CompositeType ct = QueryStatCompositeTypeFactory.getCompositeType();
@@ -95,7 +98,7 @@ public class QueryStatManager implements QueryStatManagerMBean {
                     "Query History", ct, QueryStatCompositeTypeFactory.index);
             tds = new TabularDataSupport(tt);
 
-            for (QueryStatDto q : getTopQueries()) {
+            for (QueryStatDto q : data) {
                 tds.put(new CompositeDataSupport(ct,
                         QueryStatCompositeTypeFactory.names,
                         QueryStatCompositeTypeFactory.getValues(q)));
@@ -112,14 +115,14 @@ public class QueryStatManager implements QueryStatManagerMBean {
         private final static String[] index = { "position" };
 
         private final static String[] names = { "position", "duration",
-                "language", "statement", "creationTime" };
+                "occurrenceCount", "language", "statement", "creationTime" };
 
         private final static String[] descriptions = { "position", "duration",
-                "language", "statement", "creationTime" };
+                "occurrenceCount", "language", "statement", "creationTime" };
 
         private final static OpenType[] types = { SimpleType.LONG,
-                SimpleType.LONG, SimpleType.STRING, SimpleType.STRING,
-                SimpleType.STRING };
+                SimpleType.LONG, SimpleType.INTEGER, SimpleType.STRING,
+                SimpleType.STRING, SimpleType.STRING };
 
         public static CompositeType getCompositeType() throws OpenDataException {
             return new CompositeType(QueryStat.class.getName(),
@@ -128,7 +131,9 @@ public class QueryStatManager implements QueryStatManagerMBean {
 
         public static Object[] getValues(QueryStatDto q) {
             return new Object[] { q.getPosition(), q.getDuration(),
-                    q.getLanguage(), q.getStatement(), q.getCreationTime() };
+                    q.getOccurrenceCount(), q.getLanguage(), q.getStatement(),
+                    q.getCreationTime() };
         }
     }
+
 }
