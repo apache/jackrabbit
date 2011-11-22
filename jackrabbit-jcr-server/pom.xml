@@ -32,6 +32,7 @@
   <artifactId>jackrabbit-jcr-server</artifactId>
   <name>Jackrabbit JCR Server</name>
   <description>WebDAV server implementations for JCR</description>
+  <packaging>bundle</packaging>
 
   <build>
     <plugins>
@@ -43,6 +44,41 @@
           </includes>
           <forkMode>once</forkMode>
           <argLine>-Xmx128m -enableassertions</argLine>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>maven-scr-plugin</artifactId>
+        <version>1.7.2</version>
+        <executions>
+            <execution>
+              <id>generate-scr-scrdescriptor</id>
+              <goals>
+                <goal>scr</goal>
+              </goals>
+              <configuration>
+                <properties>
+                  <service.vendor>The Apache Software Foundation</service.vendor>
+              </properties>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>maven-bundle-plugin</artifactId>
+        <extensions>true</extensions>
+        <configuration>
+          <instructions>
+            <Export-Package>
+              !*
+            </Export-Package>
+            <Private-Package>
+              org.apache.jackrabbit.server.*,
+              org.apache.jackrabbit.webdav.jcr.*,
+              org.apache.jackrabbit.webdav.simple
+            </Private-Package>
+          </instructions>
         </configuration>
       </plugin>
     </plugins>
@@ -125,6 +161,21 @@
       <groupId>commons-fileupload</groupId>
       <artifactId>commons-fileupload</artifactId>
     </dependency>
+    
+    <!-- OSGi support -->
+    <dependency>
+      <groupId>org.osgi</groupId>
+      <artifactId>org.osgi.compendium</artifactId>
+      <version>4.0.0</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.felix</groupId>
+      <artifactId>org.apache.felix.scr.annotations</artifactId>
+      <version>1.6.0</version>
+      <scope>provided</scope>
+    </dependency>
+    
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
