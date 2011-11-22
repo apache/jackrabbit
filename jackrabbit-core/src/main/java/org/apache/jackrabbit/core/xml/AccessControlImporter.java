@@ -134,9 +134,17 @@ public class AccessControlImporter extends DefaultProtectedNodeImporter {
         }
 
         if (isPolicyNode(protectedParent)) {
-            acl = getACL(protectedParent.getParent().getPath());
+            String parentPath = protectedParent.getParent().getPath();
+            acl = getACL(parentPath);
             if (acl == null) {
-                log.warn("AccessControlImporter cannot be started: no ACL for {}.", protectedParent.getParent().getPath());
+                log.warn("AccessControlImporter cannot be started: no ACL for {}.", parentPath);
+                return false;
+            }
+            status = STATUS_ACL;
+        } else if (isRepoPolicyNode(protectedParent)) {
+            acl = getACL(null);
+            if (acl == null) {
+                log.warn("AccessControlImporter cannot be started: no Repo ACL.");
                 return false;
             }
             status = STATUS_ACL;
@@ -159,11 +167,7 @@ public class AccessControlImporter extends DefaultProtectedNodeImporter {
         for (AccessControlPolicy p: acMgr.getPolicies(path)) {
             if (p instanceof JackrabbitAccessControlList) {
                 acl = (JackrabbitAccessControlList) p;
-                // don't know if this check is needed
-                if (path.equals(acl.getPath())) {
-                    break;
-                }
-                acl = null;
+                break;
             }
         }
         if (acl != null) {
@@ -302,8 +306,20 @@ public class AccessControlImporter extends DefaultProtectedNodeImporter {
 
     private static boolean isPolicyNode(NodeImpl node) throws RepositoryException {
         Name nodeName = node.getQName();
-        return (AccessControlConstants.N_POLICY.equals(nodeName) || AccessControlConstants.N_REPO_POLICY.equals(nodeName))
-                && node.isNodeType(AccessControlConstants.NT_REP_ACL);
+        return AccessControlConstants.N_POLICY.equals(nodeName) && node.isNodeType(AccessControlConstants.NT_REP_ACL);
+    }
+
+    /**
+     * @param node The node to be tested.
+     * @return <code>true</code> if the specified node is the 'rep:repoPolicy'
+     * acl node underneath the root node; <code>false</code> otherwise.
+     * @throws RepositoryException If an error occurs.
+     */
+    private static boolean isRepoPolicyNode(NodeImpl node) throws RepositoryException {
+        Name nodeName = node.getQName();
+        return AccessControlConstants.N_REPO_POLICY.equals(nodeName) &&
+                node.isNodeType(AccessControlConstants.NT_REP_ACL) &&
+                node.getDepth() == 1;
     }
 
     private static void checkDefinition(NodeInfo nInfo, Name expName, Name expNodeTypeName) throws ConstraintViolationException {
