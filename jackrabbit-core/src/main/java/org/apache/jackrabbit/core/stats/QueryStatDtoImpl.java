@@ -54,6 +54,11 @@ public class QueryStatDtoImpl implements QueryStatDto {
      */
     private final String statement;
 
+    /**
+     * used in popular queries list
+     */
+    private int occurrenceCount = 1;
+
     public QueryStatDtoImpl(final String language, final String statement,
             long durationMs) {
         this.durationMs = durationMs;
@@ -95,4 +100,46 @@ public class QueryStatDtoImpl implements QueryStatDto {
                 + durationMs + ", language=" + language + ", statement="
                 + statement + "]";
     }
+
+    public int getOccurrenceCount() {
+        return occurrenceCount;
+    }
+
+    public void setOccurrenceCount(int occurrenceCount) {
+        this.occurrenceCount = occurrenceCount;
+    }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result
+                + ((language == null) ? 0 : language.hashCode());
+        result = prime * result
+                + ((statement == null) ? 0 : statement.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        QueryStatDtoImpl other = (QueryStatDtoImpl) obj;
+        if (language == null) {
+            if (other.language != null)
+                return false;
+        } else if (!language.equals(other.language))
+            return false;
+        if (statement == null) {
+            if (other.statement != null)
+                return false;
+        } else if (!statement.equals(other.statement))
+            return false;
+        return true;
+    }
+
 }

@@ -137,12 +137,12 @@ public class QueryImpl extends AbstractQueryImpl {
                     }
                 });
         time = System.nanoTime() - time;
-        final long timeMs = time / 1000;
+        final long timeMs = time / 1000000;
         log.debug("executed in {} ms. ({})", timeMs, statement);
         RepositoryStatisticsImpl statistics = sessionContext
                 .getRepositoryContext().getRepositoryStatistics();
         statistics.getCounter(Type.QUERY_COUNT).incrementAndGet();
-        statistics.getCounter(Type.QUERY_DURATION).addAndGet(time);
+        statistics.getCounter(Type.QUERY_DURATION).addAndGet(timeMs);
         sessionContext.getRepositoryContext().getStatManager().getQueryStat()
                 .logQuery(language, statement, timeMs);
         return result;

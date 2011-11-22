@@ -28,23 +28,52 @@ public interface QueryStatManagerMBean {
 
     String NAME = "org.apache.jackrabbit:type=QueryStats";
 
-    TabularData getQueries();
-
     /**
-     * @return how big the <b>Top X</b> queue is
+     * @return a sorted array containing the top
+     *         {@link #getSlowQueriesQueueSize()} slowest queries
      */
-    int getQueueSize();
+    TabularData getSlowQueries();
 
     /**
-     * Change the <b>Top X</b> queue size
+     * @return a sorted array containing the
+     *         {@link #getPopularQueriesQueueSize()} most popular queries
+     */
+    TabularData getPopularQueries();
+
+    /**
+     * @return size of the <b>Slow</b> queue
+     */
+    int getSlowQueriesQueueSize();
+
+    /**
+     * Change the size of the <b>Slow</b> queue
      * 
      * @param size
      *            the new size
      */
-    void setQueueSize(int size);
+    void setSlowQueriesQueueSize(int size);
 
     /**
-     * clears the queue
+     * clears the <b>Slow</b> queue
      */
-    void clearQueue();
+    void clearSlowQueriesQueue();
+
+    /**
+     * @return size of the <b>Popular</b> queue
+     */
+    int getPopularQueriesQueueSize();
+
+    /**
+     * Change the size of the <b>Popular</b> queue
+     * 
+     * @param size
+     *            the new size
+     */
+    void setPopularQueriesQueueSize(int size);
+
+    /**
+     * clears the <b>Popular</b> queue
+     */
+    void clearPopularQueriesQueue();
+
 }

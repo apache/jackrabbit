@@ -16,8 +16,11 @@
  */
 package org.apache.jackrabbit.core.stats;
 
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
-import java.util.PriorityQueue;
+import java.util.Iterator;
+import java.util.concurrent.PriorityBlockingQueue;
 
 import org.apache.jackrabbit.api.stats.QueryStatDto;
 
@@ -29,10 +32,59 @@ public class QueryStatImpl implements QueryStatCore {
 
     private final static Comparator<QueryStatDto> comparator = new QueryStatDtoComparator();
 
-    private int queueSize = 15;
+    private final BoundedPriorityBlockingQueue<QueryStatDto> slowQueries = new BoundedPriorityBlockingQueue<QueryStatDto>(
+            15, comparator);
 
-    private PriorityQueue<QueryStatDto> queries = new PriorityQueue<QueryStatDto>(
-            queueSize + 1, comparator);
+    private final static Comparator<QueryStatDtoImpl> comparatorOccurrence = new QueryStatDtoOccurrenceComparator();
+
+    /**
+     * the real queue size will be bigger than the desired number of popular
+     * queries by POPULAR_QUEUE_MULTIPLIER times
+     */
+    private static final int POPULAR_QUEUE_MULTIPLIER = 5;
+
+    private final BoundedPriorityBlockingQueue<QueryStatDtoImpl> popularQueries = new BoundedPriorityBlockingQueue<QueryStatDtoImpl>(
+            15 * POPULAR_QUEUE_MULTIPLIER, comparatorOccurrence);
+
+    private static final class BoundedPriorityBlockingQueue<E> extends
+            PriorityBlockingQueue<E> {
+
+        private static final long serialVersionUID = 1L;
+        private int maxSize;
+
+        public BoundedPriorityBlockingQueue(int maxSize,
+                Comparator<? super E> comparator) {
+            super(maxSize + 1, comparator);
+            this.maxSize = maxSize;
+        }
+
+        @Override
+        public boolean offer(E e) {
+            boolean s = super.offer(e);
+            if (!s) {
+                return false;
+            }
+            if (size() > maxSize) {
+                poll();
+            }
+            return true;
+        }
+
+        public synchronized void setMaxSize(int maxSize) {
+            if (maxSize < this.maxSize) {
+                // shrink the queue
+                int delta = this.maxSize - maxSize;
+                for (int i = 0; i < delta; i++) {
+                    poll();
+                }
+            }
+            this.maxSize = maxSize;
+        }
+
+        public int getMaxSize() {
+            return maxSize;
+        }
+    }
 
     private boolean enabled = false;
 
@@ -40,27 +92,19 @@ public class QueryStatImpl implements QueryStatCore {
     }
 
     public int getSlowQueriesQueueSize() {
-        return queueSize;
+        return slowQueries.getMaxSize();
     }
 
     public void setSlowQueriesQueueSize(int size) {
-        synchronized (queries) {
-            this.queueSize = size;
-            this.queries = new PriorityQueue<QueryStatDto>(this.queueSize + 1,
-                    comparator);
-        }
+        slowQueries.setMaxSize(size);
     }
 
     public boolean isEnabled() {
         return enabled;
     }
 
-    public void setEnabled(boolean enabled) {
-        synchronized (queries) {
-            this.enabled = enabled;
-            this.queries = new PriorityQueue<QueryStatDto>(this.queueSize + 1,
-                    comparator);
-        }
+    public synchronized void setEnabled(boolean enabled) {
+        this.enabled = enabled;
     }
 
     public void logQuery(final String language, final String statement,
@@ -68,25 +112,63 @@ public class QueryStatImpl implements QueryStatCore {
         if (!enabled) {
             return;
         }
-        synchronized (queries) {
-            queries.add(new QueryStatDtoImpl(language, statement, durationMs));
-            if (queries.size() > queueSize) {
-                queries.remove();
+        final QueryStatDtoImpl qs = new QueryStatDtoImpl(language, statement,
+                durationMs);
+        slowQueries.offer(qs);
+        Iterator<QueryStatDtoImpl> iterator = popularQueries.iterator();
+        while (iterator.hasNext()) {
+            QueryStatDtoImpl qsdi = iterator.next();
+            if (qsdi.equals(qs)) {
+                qs.setOccurrenceCount(qsdi.getOccurrenceCount() + 1);
+                iterator.remove();
+                break;
             }
         }
+        popularQueries.offer(qs);
     }
 
     public void clearSlowQueriesQueue() {
-        synchronized (queries) {
-            queries.clear();
+        slowQueries.clear();
+    }
+
+    public QueryStatDto[] getSlowQueries() {
+        QueryStatDto[] top = slowQueries.toArray(new QueryStatDto[slowQueries
+                .size()]);
+        Arrays.sort(top, Collections.reverseOrder(comparator));
+        for (int i = 0; i < top.length; i++) {
+            top[i].setPosition(i + 1);
         }
+        return top;
+    }
+
+    public QueryStatDto[] getPopularQueries() {
+        QueryStatDtoImpl[] top = popularQueries
+                .toArray(new QueryStatDtoImpl[popularQueries.size()]);
+        Arrays.sort(top, Collections.reverseOrder(comparatorOccurrence));
+        int retSize = Math.min(popularQueries.size(),
+                popularQueries.getMaxSize() / POPULAR_QUEUE_MULTIPLIER);
+        QueryStatDto[] retval = new QueryStatDto[retSize];
+        for (int i = 0; i < retSize; i++) {
+            top[i].setPosition(i + 1);
+            retval[i] = top[i];
+        }
+        return top;
+    }
+
+    public int getPopularQueriesQueueSize() {
+        return popularQueries.getMaxSize();
+    }
+
+    public void setPopularQueriesQueueSize(int size) {
+        popularQueries.setMaxSize(size * POPULAR_QUEUE_MULTIPLIER);
+    }
+
+    public void clearPopularQueriesQueue() {
+        popularQueries.clear();
     }
 
     public void reset() {
         clearSlowQueriesQueue();
-    }
-
-    public QueryStatDto[] getSlowQueries() {
-        return queries.toArray(new QueryStatDto[queries.size()]);
+        clearPopularQueriesQueue();
     }
 }
