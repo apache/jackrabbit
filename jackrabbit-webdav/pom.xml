@@ -42,6 +42,37 @@
         <extensions>true</extensions>
       </plugin>
       <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>clirr-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <phase>verify</phase>
+            <goals>
+              <goal>check</goal>
+            </goals>
+            <configuration>
+              <excludes>
+<!-- http://clirr.sourceforge.net/clirr-core/exegesis.html#7012_-_Method_Added_to_Interface -->
+<!-- This is not a problem for us, so exclude. -->
+<exclude>org/apache/jackrabbit/webdav/observation/Subscription</exclude>
+<exclude>org/apache/jackrabbit/webdav/DavCompliance</exclude>
+<exclude>org/apache/jackrabbit/webdav/DavMethods</exclude>
+<exclude>org/apache/jackrabbit/webdav/DavResourceIteratorImpl</exclude>
+<exclude>org/apache/jackrabbit/webdav/security/report/PrincipalMatchReport</exclude>
+<exclude>org/apache/jackrabbit/webdav/security/report/SearchablePropertyReport*</exclude>
+              </excludes>
+              <comparisonArtifacts>
+                <comparisonArtifact>
+                  <groupId>${project.groupId}</groupId>
+                  <artifactId>${project.artifactId}</artifactId>
+                  <version>${clirr.baseline.version}</version>
+                </comparisonArtifact>
+              </comparisonArtifacts>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
           <includes>
@@ -55,6 +86,11 @@
   </build>
 
   <dependencies>
+    <dependency>
+      <groupId>biz.aQute</groupId>
+      <artifactId>bndlib</artifactId>
+      <scope>provided</scope>
+    </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
