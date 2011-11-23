@@ -165,6 +165,8 @@ public final class CachingMultiIndexReader
         for (ReadOnlyIndexReader subReader : subReaders) {
             subReader.release();
         }
+        subReaders = null;
+        readersByCreationTick.clear();
     }
 
     //-------------------------< MultiIndexReader >-----------------------------
