@@ -646,7 +646,31 @@ class GroupImpl extends AuthorizableImpl implements Group {
             }
         };
 
-        return new LazyIteratorChain<Authorizable>(indirectMembers);
+        return unique(new LazyIteratorChain<Authorizable>(indirectMembers));
+    }
+
+    /**
+     * Filter the passed {@code authorizables} in order to ensure uniqueness.
+     * @param authorizables
+     * @return  all members of {@code authorizable} with duplicates removed
+     *
+     * @see <a href="https://issues.apache.org/jira/browse/JCR-3156">JCR-3156</a>
+     */
+    private Iterator<Authorizable> unique(Iterator<Authorizable> authorizables) {
+        final HashSet<String> seenAuthorizables = new HashSet<String>();
+        return Iterators.filterIterator(authorizables,
+                new org.apache.jackrabbit.spi.commons.iterator.Predicate<Authorizable>() {
+
+            public boolean evaluate(Authorizable authorizable) {
+                try {
+                    return seenAuthorizables.add(authorizable.getID());
+                }
+                catch (RepositoryException e) {
+                    log.warn("Could not determine id of " + authorizable, e);
+                    return true;
+                }
+            }
+        });
     }
 
     /**

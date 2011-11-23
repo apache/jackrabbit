@@ -474,10 +474,40 @@ public class GroupTest extends AbstractUserTest {
                 assertTrue(a.equals(auth) || allGroups.remove(a));
             }
             assertTrue(allGroups.isEmpty());
-        }
-        finally {
+        } finally {
             for (Group g : groups) {
                 g.remove();
+            }
+        }
+    }
+
+    public void testInheritedMembers() throws Exception {
+        Set<Authorizable> authorizables = new HashSet<Authorizable>();
+        try {
+            User testUser = userMgr.createUser(getTestPrincipal().getName(), "pw");
+            authorizables.add(testUser);
+            Group group1 = userMgr.createGroup(getTestPrincipal());
+            authorizables.add(group1);
+            Group group2 = userMgr.createGroup(getTestPrincipal());
+            authorizables.add(group2);
+            Group group3 = userMgr.createGroup(getTestPrincipal());
+
+            group1.addMember(testUser);
+            group2.addMember(testUser);
+            group3.addMember(group1);
+            group3.addMember(group2);
+
+            Iterator<Authorizable> members = group3.getMembers();
+            while (members.hasNext()) {
+                Authorizable a = members.next();
+                assertTrue(authorizables.contains(a));
+                assertTrue(authorizables.remove(a));
+            }
+
+            assertTrue(authorizables.isEmpty());
+        } finally {
+            for (Authorizable a : authorizables) {
+                a.remove();
             }
         }
     }
