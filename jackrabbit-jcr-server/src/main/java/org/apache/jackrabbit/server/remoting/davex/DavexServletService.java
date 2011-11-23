@@ -18,23 +18,22 @@
  */
 package org.apache.jackrabbit.server.remoting.davex;
 
-import java.util.Hashtable;
 import java.util.Map;
 
 import javax.jcr.Repository;
+import javax.servlet.Servlet;
 
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.Service;
 import org.apache.jackrabbit.webdav.server.AbstractWebdavServlet;
 import org.apache.jackrabbit.webdav.util.CSRFUtil;
-import org.osgi.service.http.HttpService;
-import org.slf4j.LoggerFactory;
 
 @Component(metatype = true, label = "%dav.name", description = "%dav.description")
+@Service(Servlet.class)
 @Properties({
     @Property(name = "service.description", value = "Apache Jackrabbit JcrRemoting Servlet"),
     @Property(name = JcrRemotingServlet.INIT_PARAM_AUTHENTICATE_HEADER, value = AbstractWebdavServlet.DEFAULT_AUTHENTICATE_HEADER),
@@ -43,7 +42,7 @@ import org.slf4j.LoggerFactory;
 public class DavexServletService extends JcrRemotingServlet {
 
     /** Serial version UID */
-    private static final long serialVersionUID = -8588285209666835376L;
+    private static final long serialVersionUID = -901601294536148635L;
 
     private static final String DEFAULT_ALIAS = "/server";
 
@@ -53,9 +52,6 @@ public class DavexServletService extends JcrRemotingServlet {
     @Reference
     private Repository repository;
 
-    @Reference
-    private HttpService httpService;
-
     private String alias;
 
     @Override
@@ -63,37 +59,22 @@ public class DavexServletService extends JcrRemotingServlet {
         return repository;
     }
 
-    @SuppressWarnings("unused")
-    @Activate
-    private void activate(Map<String, ?> config) {
-        String alias;
-        Object aliasPar = config.get(PARAM_ALIAS);
-        if (aliasPar == null) {
-            alias = DEFAULT_ALIAS;
-        } else {
-            alias = aliasPar.toString();
-            if (alias.length() == 0) {
-                alias = DEFAULT_ALIAS;
-            }
-        }
-
-        Hashtable<String, ?> initparams = new Hashtable<String, Object>(config);
-        initparams.remove(PARAM_ALIAS);
-
-        try {
-            this.httpService.registerServlet(alias, this, initparams, null);
-            this.alias = alias;
-        } catch (Exception e) {
-            LoggerFactory.getLogger(getClass()).error("activate: Failed registering DavEx Servlet at " + alias, e);
-        }
+    @Override
+    protected String getResourcePathPrefix() {
+        return alias;
     }
 
-    @SuppressWarnings("unused")
-    @Deactivate
-    private void deactivate() {
-        if (this.alias != null) {
-            this.httpService.unregister(alias);
-            this.alias = null;
+    @Activate
+    public void activate(Map<String, ?> config) {
+        Object object = config.get(PARAM_ALIAS);
+        String string = "";
+        if (object != null) {
+            string = object.toString();
+        }
+        if (string.length() > 0) {
+            this.alias = string;
+        } else {
+            this.alias = DEFAULT_ALIAS;
         }
     }
 

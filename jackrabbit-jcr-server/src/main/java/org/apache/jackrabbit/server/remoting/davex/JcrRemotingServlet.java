@@ -302,7 +302,11 @@ public abstract class JcrRemotingServlet extends JCRWebdavServerServlet {
         getServletContext().setAttribute(ATTR_TMP_DIRECTORY, tmp);
 
         // force usage of custom locator factory.
-        super.setLocatorFactory(new DavLocatorFactoryImpl(getInitParameter(INIT_PARAM_RESOURCE_PATH_PREFIX)));
+        super.setLocatorFactory(new DavLocatorFactoryImpl(getResourcePathPrefix()));
+    }
+
+    protected String getResourcePathPrefix() {
+        return getInitParameter(INIT_PARAM_RESOURCE_PATH_PREFIX);
     }
 
     @Override
