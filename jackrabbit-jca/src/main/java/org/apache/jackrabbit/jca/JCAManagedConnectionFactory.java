@@ -46,6 +46,15 @@ public class JCAManagedConnectionFactory
     private final Map<String, String> parameters = new HashMap<String, String>();
 
     /**
+     * Key for the repository home
+     */
+    final static String HOMEDIR_KEY = "org.apache.jackrabbit.repository.home";
+    /**
+     * Key for the repository config file
+     */
+    final static String CONFIGFILE_KEY = "org.apache.jackrabbit.repository.conf";
+    
+    /**
      * Flag indicating whether the session should be bound to the
      * transaction lifecycle.
      * In other words, if this flag is true the handle
@@ -81,28 +90,28 @@ public class JCAManagedConnectionFactory
      * Return the repository home directory.
      */
     public String getHomeDir() {
-        return parameters.get("org.apache.jackrabbit.repository.home");
+        return parameters.get(HOMEDIR_KEY);
     }
 
     /**
      * Set the repository home directory.
      */
     public void setHomeDir(String home) {
-        parameters.put("org.apache.jackrabbit.repository.home", home);
+        parameters.put(HOMEDIR_KEY, home);
     }
 
     /**
      * Return the repository configuration file.
      */
     public String getConfigFile() {
-        return parameters.get("org.apache.jackrabbit.repository.conf");
+        return parameters.get(CONFIGFILE_KEY);
     }
 
     /**
      * Set the repository configuration file.
      */
     public void setConfigFile(String conf) {
-        parameters.put("org.apache.jackrabbit.repository.conf", conf);
+        parameters.put(CONFIGFILE_KEY, conf);
     }
 
     /**
@@ -168,7 +177,8 @@ public class JCAManagedConnectionFactory
     /**
      * Returns a matched connection from the candidate set of connections.
      */
-    public ManagedConnection matchManagedConnections(
+    @SuppressWarnings("rawtypes")
+	public ManagedConnection matchManagedConnections(
             Set set, Subject subject, ConnectionRequestInfo cri)
             throws ResourceException {
         for (Object connection : set) {

@@ -21,7 +21,10 @@ import javax.jcr.RepositoryException;
 
 import org.apache.jackrabbit.api.JackrabbitRepository;
 import org.apache.jackrabbit.commons.JcrUtils;
+import org.apache.jackrabbit.core.RepositoryImpl;
+import org.apache.jackrabbit.core.config.RepositoryConfig;
 
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -68,13 +71,46 @@ public final class JCARepositoryManager {
             Map<String, String> parameters) throws RepositoryException {
         Repository repository = repositories.get(parameters);
         if (repository == null) {
-            repository =  JcrUtils.getRepository(parameters);
+        	if (parameters.containsKey(JcrUtils.REPOSITORY_URI)) {
+	            repository = JcrUtils.getRepository(parameters);
+        	} else {
+	            repository = createNonTransientRepository(parameters);
+        	}
             repositories.put(parameters, repository);
         }
         return repository;
     }
 
     /**
+     * Creates a non transient Repository
+     * 
+     * @param parameters
+     * @return Repository
+     * @throws RepositoryException
+     */
+    private Repository createNonTransientRepository(
+			Map<String, String> parameters) throws RepositoryException {
+        RepositoryConfig config = null;
+
+        String configFile = parameters.get(JCAManagedConnectionFactory.CONFIGFILE_KEY);
+        String homeDir = parameters.get(JCAManagedConnectionFactory.HOMEDIR_KEY);
+        
+        if (configFile != null && configFile.startsWith(CLASSPATH_CONFIG_PREFIX)) {
+            ClassLoader cl = Thread.currentThread().getContextClassLoader();
+            if (cl == null) {
+                cl = this.getClass().getClassLoader();
+            }
+
+            InputStream configInputStream = cl.getResourceAsStream(
+                configFile.substring(CLASSPATH_CONFIG_PREFIX.length()));
+            config = RepositoryConfig.create(configInputStream, homeDir);
+        } else {
+            config = RepositoryConfig.create(configFile, homeDir);
+        }
+        return RepositoryImpl.create(config);
+	}
+
+	/**
      * Shutdown all the repositories.
      */
     public synchronized void shutdown() {
