@@ -17,6 +17,8 @@
 
 package org.apache.jackrabbit.core.query.lucene;
 
+import java.io.IOException;
+
 import org.apache.jackrabbit.core.HierarchyManager;
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.id.PropertyId;
@@ -29,18 +31,17 @@ import org.apache.jackrabbit.spi.PathFactory;
 import org.apache.jackrabbit.spi.commons.conversion.IllegalNameException;
 import org.apache.jackrabbit.spi.commons.name.PathBuilder;
 import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
-import org.apache.lucene.document.Document;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.search.FieldComparator;
 import org.apache.lucene.search.FieldComparatorSource;
-
-import java.io.IOException;
 
 /**
  * Implements a <code>FieldComparatorSource</code> for <code>FieldComparator</code>s which
  * know how to sort on a lucene field that contains values for multiple properties.
  */
 public class SharedFieldComparatorSource extends FieldComparatorSource {
+
+    private static final long serialVersionUID = -5803240954874585429L;
 
     /**
      * The name of the shared field in the lucene index.
@@ -151,12 +152,13 @@ public class SharedFieldComparatorSource extends FieldComparatorSource {
             String namedValue = FieldNames.createNamedValue(propertyName, "");
             for (int i = 0; i < readers.size(); i++) {
                 IndexReader r = readers.get(i);
-                indexes[i] = SharedFieldCache.INSTANCE.getValueIndex(r, fieldName, namedValue, this);
+                indexes[i] = SharedFieldCache.INSTANCE.getValueIndex(r,
+                        fieldName, namedValue);
             }
         }
 
         @Override
-        protected Comparable sortValue(int doc) {
+        protected Comparable<?> sortValue(int doc) {
             int idx = readerIndex(doc);
             return indexes[idx].getValue(doc - starts[idx]);
         }
@@ -186,7 +188,7 @@ public class SharedFieldComparatorSource extends FieldComparatorSource {
         }
 
         @Override
-        protected Comparable sortValue(int doc) {
+        protected Comparable<?> sortValue(int doc) {
             try {
                 final String uuid = getUUIDForIndex(doc);
                 
@@ -236,10 +238,10 @@ public class SharedFieldComparatorSource extends FieldComparatorSource {
         }
 
         @Override
-        public Comparable sortValue(int doc) {
+        public Comparable<?> sortValue(int doc) {
             for (FieldComparator fieldComparator : fieldComparators) {
                 if (fieldComparator instanceof FieldComparatorBase) {
-                    Comparable c = ((FieldComparatorBase) fieldComparator).sortValue(doc);
+                    Comparable<?> c = ((FieldComparatorBase) fieldComparator).sortValue(doc);
 
                     if (c != null) {
                         return c;
