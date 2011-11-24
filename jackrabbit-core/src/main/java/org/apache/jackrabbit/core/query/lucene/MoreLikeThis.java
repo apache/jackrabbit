@@ -650,10 +650,10 @@ public final class MoreLikeThis {
      */
     public String describeParams() {
         StringBuffer sb = new StringBuffer();
-        sb.append("\t" + "maxQueryTerms  : " + maxQueryTerms + "\n");
-        sb.append("\t" + "minWordLen     : " + minWordLen + "\n");
-        sb.append("\t" + "maxWordLen     : " + maxWordLen + "\n");
-        sb.append("\t" + "fieldNames     : ");
+        sb.append("\tmaxQueryTerms  : ").append(maxQueryTerms).append("\n");
+        sb.append("\tminWordLen     : ").append(minWordLen).append("\n");
+        sb.append("\tmaxWordLen     : ").append(maxWordLen).append("\n");
+        sb.append("\tfieldNames     : ");
         String delim = "";
         for (int i = 0; i < fieldNames.length; i++) {
             String fieldName = fieldNames[i];
@@ -661,9 +661,9 @@ public final class MoreLikeThis {
             delim = ", ";
         }
         sb.append("\n");
-        sb.append("\t" + "boost          : " + boost + "\n");
-        sb.append("\t" + "minTermFreq    : " + minTermFreq + "\n");
-        sb.append("\t" + "minDocFreq     : " + minDocFreq + "\n");
+        sb.append("\tboost          : ").append(boost).append("\n");
+        sb.append("\tminTermFreq    : ").append(minTermFreq).append("\n");
+        sb.append("\tminDocFreq     : ").append(minDocFreq).append("\n");
         return sb.toString();
     }
 
