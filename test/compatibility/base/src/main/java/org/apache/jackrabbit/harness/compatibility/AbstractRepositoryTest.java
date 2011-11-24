@@ -126,6 +126,7 @@ public class AbstractRepositoryTest {
 
         Node versionable = createVersionable(test);
         createProperties(test, versionable);
+        createLock(test);
         createUsers(session);
     }
 
@@ -165,6 +166,14 @@ public class AbstractRepositoryTest {
         properties.setProperty("binary", new ByteArrayInputStream(binary));
 
         parent.save();
+    }
+
+    protected void createLock(Node parent) throws RepositoryException {
+        Node lock = parent.addNode("lock", "nt:unstructured");
+        lock.addMixin("mix:lockable");
+        parent.save();
+
+        lock.lock(true, false);
     }
 
     protected void createUsers(Session session) throws RepositoryException {
