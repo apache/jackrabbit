@@ -42,10 +42,6 @@ public class StopJackrabbit implements Command {
         if (repo == null) {
             throw new IllegalStateException("No current working repository");
         }
-        if (!(repo instanceof RepositoryImpl)) {
-            throw new IllegalStateException(
-                    "Jackrabbit is not the current working repository");
-        }
         repo.shutdown();
         CommandHelper.setRepository(ctx, null, null);
         return false;
