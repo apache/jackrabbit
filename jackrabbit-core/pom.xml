@@ -74,6 +74,7 @@
           <includes>
             <include>**/*TestAll.java</include>
           </includes>
+          <runOrder>alphabetical</runOrder>
           <argLine>-Xmx256m</argLine>
           <systemProperties>
             <property>
