@@ -1,4 +1,4 @@
-Release Notes -- Apache Jackrabbit -- Version 2.3.3
+Release Notes -- Apache Jackrabbit -- Version 2.3.4
 
 Introduction
 ------------
@@ -10,6 +10,35 @@ specified in the Java Specification Request 283 (JSR 283).
 Apache Jackrabbit 2.3 is an unstable series of releases cut directly from
 Jackrabbit trunk, with a focus on new features and other improvements.
 For production use we recommend the latest stable 2.2 release.
+
+Changes in Jackrabbit 2.3.4
+---------------------------
+
+New features
+
+  [JCR-2936] JMX Bindings for Jackrabbit
+  [JCR-3040] JMX Stats for the Session
+  [JCR-3140] Add configurable hook for password validation
+  [JCR-3154] Stats for Queries continued
+
+Improvements
+
+  [JCR-3129] It should be possible to create a non-transient Repository ...
+  [JCR-3133] Query Stats should use the TimeSeries mechanism
+  [JCR-3142] Create OSGi Bundles from jackrabbit-webdav and ...
+  [JCR-3143] SessionImpl#isSupportedOption: Skip descriptor evaluation ...
+  [JCR-3146] Text extraction may congest thread pool in the repository
+
+Bug fixes
+
+  [JCR-2539] spi2dav: Observation's user data not property handled
+  [JCR-2540] spi2dav : move/reorder not properly handled by observation
+  [JCR-2542] spi2dav: EventFilters not respected
+  [JCR-3148] Using transactions still leads to memory leak
+  [JCR-3149] AccessControlProvider#getEffectivePolicies for a set of ...
+  [JCR-3151] SharedFieldCache can cause a memory leak
+  [JCR-3152] AccessControlImporter does not import repo level ac content
+  [JCR-3156] Group#getMembers may list inherited members multiple times
 
 Changes in Jackrabbit 2.3.3
 ---------------------------
