@@ -105,6 +105,7 @@ public class BackwardsCompatibilityTest extends TestCase {
         Node versionable = assertVersionable(test);
         assertProperties(test, versionable);
         assertVersionableCopy(test, versionable);
+        assertLock(test);
         assertUsers(session);
     }
 
@@ -170,6 +171,12 @@ public class BackwardsCompatibilityTest extends TestCase {
         Node copy = test.getNode(versionable.getName() + "-copy");
         copy.remove();
         test.save();
+    }
+
+    private void assertLock(Node test) throws RepositoryException {
+        Node lock = test.getNode("lock");
+        assertTrue(lock.isLocked());
+        assertTrue(lock.hasProperty("jcr:lockOwner"));
     }
 
     private void assertUsers(Session session) throws RepositoryException {
