@@ -139,6 +139,18 @@ public class GQLTest extends AbstractQueryTest {
         checkResultWithRetries(stmt, "jcr:content", new Node[]{file1});
     }
 
+    /**
+     * Test for JCR-3157
+     */
+    public void testApostrophe() throws RepositoryException {
+        Node n1 = testRootNode.addNode("node1");
+        n1.setProperty("text", "let's go");
+        superuser.save();
+        String stmt = createStatement("\"let's go\"");
+        RowIterator rows = GQL.execute(stmt, superuser);
+        checkResult(rows, new Node[]{n1});
+    }
+
     public void testExcludeTerm() throws RepositoryException {
         Node n1 = testRootNode.addNode("node1");
         n1.setProperty("text", "foo");
