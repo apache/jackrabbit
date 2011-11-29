@@ -91,4 +91,31 @@ public class SQL2NodeLocalNameTest extends AbstractQueryTest {
                         + testRootNode.getPath()
                         + "]) AND localname(NODE) like '%' "), 2);
     }
+
+    /**
+     * test for JCR-3159
+     */
+    public void testLowerLocalName() throws Exception {
+        checkResult(
+                executeSQL2Query("SELECT * FROM [nt:base] as NODE WHERE LOWER(localname(NODE)) like 'sql2nodelocalnametest%'"),
+                2);
+    }
+
+    /**
+     * test for JCR-3159
+     */
+    public void testUpperLocalName() throws Exception {
+        checkResult(
+                executeSQL2Query("SELECT * FROM [nt:base] as NODE WHERE UPPER(localname(NODE)) like 'SQL2NODELOCALNAMETEST%'"),
+                2);
+    }
+
+    /**
+     * test for JCR-3159
+     */
+    public void testLowerName() throws Exception {
+        checkResult(
+                executeSQL2Query("SELECT * FROM [nt:base] as NODE WHERE LOWER(name(NODE)) like 'sql2nodelocalnametest%'"),
+                2);
+    }
 }
