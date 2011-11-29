@@ -188,10 +188,13 @@ public class OperandEvaluator {
             return new Value[] { factory.createValue(score) };
         } else if (operand instanceof NodeName) {
             NodeName nn = (NodeName) operand;
-            Value value = factory.createValue(
-                    row.getNode(nn.getSelectorName()).getName(),
-                    PropertyType.NAME);
-            return new Value[] { value };
+            String name = row.getNode(nn.getSelectorName()).getName();
+            // root node
+            if ("".equals(name)) {
+                return new Value[] { factory.createValue(name,
+                        PropertyType.STRING) };
+            }
+            return new Value[] { factory.createValue(name, PropertyType.NAME) };
         } else if (operand instanceof Length) {
             return getLengthValues((Length) operand, row);
         } else if (operand instanceof LowerCase) {
@@ -227,9 +230,13 @@ public class OperandEvaluator {
             return new Value[] { factory.createValue(defaultScore) };
         }
         if (operand instanceof NodeName) {
-            Value value = factory
-                    .createValue(node.getName(), PropertyType.NAME);
-            return new Value[] { value };
+            String name = node.getName();
+            // root node
+            if ("".equals(name)) {
+                return new Value[] { factory.createValue(name,
+                        PropertyType.STRING) };
+            }
+            return new Value[] { factory.createValue(name, PropertyType.NAME) };
         }
         if (operand instanceof Length) {
             return getLengthValues((Length) operand, node);
@@ -415,6 +422,11 @@ public class OperandEvaluator {
     private Value[] getNodeLocalNameValues(NodeLocalName operand, Node node)
             throws RepositoryException {
         String name = node.getName();
+
+        // root node has no local name
+        if ("".equals(name)) {
+            return new Value[] { factory.createValue("", PropertyType.STRING) };
+        }
         int colon = name.indexOf(':');
         if (colon != -1) {
             name = name.substring(colon + 1);
