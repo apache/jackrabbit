@@ -217,38 +217,58 @@ public abstract class AbstractJournal implements Journal {
      * @throws JournalException if an error occurs
      */
     protected void doSync(long startRevision) throws JournalException {
-        RecordIterator iterator = getRecords(startRevision);
-        long stopRevision = Long.MIN_VALUE;
-
-        try {
-            while (iterator.hasNext()) {
-                Record record = iterator.nextRecord();
-                if (record.getJournalId().equals(id)) {
-                    log.info("Record with revision '" + record.getRevision()
-                            + "' created by this journal, skipped.");
-                } else {
-                    RecordConsumer consumer = getConsumer(record.getProducerId());
-                    if (consumer != null) {
-                        try {
-                            consumer.consume(record);
-                        } catch (IllegalStateException e) {
-                            log.error("Could not synchronize to revision: " + record.getRevision() + " due illegal state of RecordConsumer.");
-                            return;
+        for (;;) {
+            RecordIterator iterator = getRecords(startRevision);
+            long stopRevision = Long.MIN_VALUE;
+    
+            try {
+                while (iterator.hasNext()) {
+                    Record record = iterator.nextRecord();
+                    if (record.getJournalId().equals(id)) {
+                        log.info("Record with revision '" + record.getRevision()
+                                + "' created by this journal, skipped.");
+                    } else {
+                        RecordConsumer consumer = getConsumer(record.getProducerId());
+                        if (consumer != null) {
+                            try {
+                                consumer.consume(record);
+                            } catch (IllegalStateException e) {
+                                log.error("Could not synchronize to revision: " + record.getRevision() + " due illegal state of RecordConsumer.");
+                                return;
+                            }
                         }
                     }
+                    stopRevision = record.getRevision();
                 }
-                stopRevision = record.getRevision();
+            } finally {
+                iterator.close();
             }
-        } finally {
-            iterator.close();
-        }
+    
+            if (stopRevision > 0) {
+                for (RecordConsumer consumer : consumers.values()) {
+                    consumer.setRevision(stopRevision);
+                }
+                log.info("Synchronized to revision: " + stopRevision);
 
-        if (stopRevision > 0) {
-            for (RecordConsumer consumer : consumers.values()) {
-                consumer.setRevision(stopRevision);
+                if (syncAgainOnNewRecords()) {
+                    // changes detected, sync again
+                    startRevision = stopRevision;
+                    continue;
+                }
             }
-            log.info("Synchronized to revision: " + stopRevision);
+            break;
         }
+    }
+    
+    /**
+     * Return a flag indicating whether synchronization should continue
+     * in a loop until no more new records are found. Subclass overridable.
+     * 
+     * @return <code>true</code> if synchronization should continue;
+     *         <code>false</code> otherwise
+     */
+    protected boolean syncAgainOnNewRecords() {
+        return false;
     }
 
     /**

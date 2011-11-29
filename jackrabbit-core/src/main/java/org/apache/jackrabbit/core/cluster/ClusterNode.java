@@ -187,6 +187,11 @@ public class ClusterNode implements Runnable,
      * Record deserializer.
      */
     private ClusterRecordDeserializer deserializer = new ClusterRecordDeserializer();
+    
+    /**
+     * Flag indicating whether sync is manual.
+     */
+    private boolean disableAutoSync;
 
     /**
      * Initialize this cluster node.
@@ -243,6 +248,13 @@ public class ClusterNode implements Runnable,
     public long getStopDelay() {
         return stopDelay;
     }
+    
+    /**
+     * Disable periodic background synchronization. Used for testing purposes, only.
+     */
+    protected void disableAutoSync() {
+        disableAutoSync = true;
+    }
 
     /**
      * Starts this cluster node.
@@ -253,11 +265,12 @@ public class ClusterNode implements Runnable,
         if (status == NONE) {
             sync();
 
-            Thread t = new Thread(this, "ClusterNode-" + clusterNodeId);
-            t.setDaemon(true);
-            t.start();
-            syncThread = t;
-
+            if (!disableAutoSync) {
+                Thread t = new Thread(this, "ClusterNode-" + clusterNodeId);
+                t.setDaemon(true);
+                t.start();
+                syncThread = t;
+            }
             status = STARTED;
         }
     }
