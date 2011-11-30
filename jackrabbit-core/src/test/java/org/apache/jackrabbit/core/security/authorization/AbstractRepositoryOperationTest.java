@@ -506,7 +506,6 @@ public abstract class AbstractRepositoryOperationTest extends AbstractEvaluation
             throw new NotExecutableException();
         }
         JackrabbitAccessControlManager jAcMgr = (JackrabbitAccessControlManager) acMgr;
-        System.out.println(testUser.getPrincipal().getName());
         Set<Principal> principalSet = Collections.singleton(testUser.getPrincipal());
 
         try {
