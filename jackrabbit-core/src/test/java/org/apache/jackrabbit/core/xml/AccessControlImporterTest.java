@@ -202,7 +202,7 @@ public class AccessControlImporterTest extends AbstractJCRTest {
                 "<sv:property sv:name=\"jcr:primaryType\" sv:type=\"Name\">" +
                     "<sv:value>rep:ACL</sv:value>" +
                 "</sv:property>" +
-                "<sv:node sv:name=\"allow0\">" +
+                "<sv:node sv:name=\"allow\">" +
                     "<sv:property sv:name=\"jcr:primaryType\" sv:type=\"Name\">" +
                         "<sv:value>rep:GrantACE</sv:value>" +
                     "</sv:property>" +
@@ -578,6 +578,13 @@ public class AccessControlImporterTest extends AbstractJCRTest {
         NodeImpl target = (NodeImpl) sImpl.getRootNode();
         AccessControlManager acMgr = sImpl.getAccessControlManager();
         try {
+            // need to add mixin. in contrast to only using JCR API to retrieve
+            // and set the policies the protected item import only is called if
+            // the node to be imported is defined to be protected. however, if
+            // the root node doesn't have the mixin assigned the defining node
+            // type of the imported policy nodes will be rep:root (unstructured)
+            // and the items will not be detected as being protected.
+            target.addMixin("rep:RepoAccessControllable");            
             InputStream in = new ByteArrayInputStream(XML_REPO_POLICY_TREE.getBytes("UTF-8"));
 
             SessionImporter importer = new SessionImporter(target, sImpl, ImportUUIDBehavior.IMPORT_UUID_CREATE_NEW, new PseudoConfig());
@@ -595,7 +602,12 @@ public class AccessControlImporterTest extends AbstractJCRTest {
             assertEquals(acMgr.privilegeFromName("jcr:workspaceManagement"), entries[0].getPrivileges()[0]);
 
             assertTrue(target.hasNode("rep:repoPolicy"));
-            assertFalse(target.hasNode("rep:repoPolicy/allow0"));
+            assertTrue(target.hasNode("rep:repoPolicy/allow"));
+
+            // clean up again
+            acMgr.removePolicy(null, policies[0]);
+            assertFalse(target.hasNode("rep:repoPolicy"));
+            assertFalse(target.hasNode("rep:repoPolicy/allow"));
 
         } finally {
             superuser.refresh(false);
