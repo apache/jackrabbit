@@ -27,8 +27,10 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Calendar;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 import java.util.StringTokenizer;
 
 import javax.imageio.spi.ServiceRegistry;
@@ -830,11 +832,13 @@ public class JcrUtils {
         }
     }
 
+    private static final Set<String> PROPERTY_TYPES_NAMES = new HashSet<String>();
     private static final Map<String, Integer> PROPERTY_TYPES = new HashMap<String, Integer>();
-
     static {
         for (int i = PropertyType.UNDEFINED; i <= PropertyType.DECIMAL; i++) {
-            PROPERTY_TYPES.put(PropertyType.nameFromValue(i).toLowerCase(), i);
+            String typeName = PropertyType.nameFromValue(i);
+            PROPERTY_TYPES_NAMES.add(typeName);
+            PROPERTY_TYPES.put(typeName.toLowerCase(), i);
         }
     }
 
@@ -857,6 +861,29 @@ public class JcrUtils {
             return type;
         } else {
             throw new IllegalArgumentException("Unknown property type: " + name);
+        }
+    }
+
+    /**
+     * Return the property type names including or excluding 'undefined' depending
+     * on the specified flag.
+     *
+     * @param includeUndefined If true the returned array will contain the name
+     * of the 'undefined' property type.
+     * @return array of property type names.
+     */
+    public static String[] getPropertyTypeNames(boolean includeUndefined) {
+        if (includeUndefined) {
+            return PROPERTY_TYPES_NAMES.toArray(new String[PROPERTY_TYPES_NAMES.size()]);
+        } else {
+            String[] typeNames = new String[PROPERTY_TYPES_NAMES.size()-1];
+            int i = 0;
+            for (String name : PROPERTY_TYPES_NAMES) {
+                if (!PropertyType.TYPENAME_UNDEFINED.equals(name)) {
+                    typeNames[i++] = name;
+                }
+            }
+            return typeNames;
         }
     }
 
