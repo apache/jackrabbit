@@ -95,8 +95,9 @@ public class CopyMoveManagerImpl implements CopyMoveManager {
      */
     public static CopyMoveManager getDefaultManager() {
         if (DEFAULT_MANAGER == null) {
-            DEFAULT_MANAGER = new CopyMoveManagerImpl();
-            DEFAULT_MANAGER.addCopyMoveHandler(new DefaultHandler());
+            CopyMoveManager manager = new CopyMoveManagerImpl();
+            manager.addCopyMoveHandler(new DefaultHandler());
+            DEFAULT_MANAGER = manager;
         }
         return DEFAULT_MANAGER;
     }

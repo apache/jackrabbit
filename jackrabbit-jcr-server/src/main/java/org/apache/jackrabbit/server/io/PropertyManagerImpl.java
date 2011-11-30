@@ -103,10 +103,11 @@ public class PropertyManagerImpl implements PropertyManager {
      */
     public static PropertyManager getDefaultManager() {
         if (DEFAULT_MANAGER == null) {
-            DEFAULT_MANAGER = new PropertyManagerImpl();
-            DEFAULT_MANAGER.addPropertyHandler(new ZipHandler());
-            DEFAULT_MANAGER.addPropertyHandler(new XmlHandler());
-            DEFAULT_MANAGER.addPropertyHandler(new DefaultHandler());
+            PropertyManager manager = new PropertyManagerImpl();
+            manager.addPropertyHandler(new ZipHandler());
+            manager.addPropertyHandler(new XmlHandler());
+            manager.addPropertyHandler(new DefaultHandler());
+            DEFAULT_MANAGER = manager;
         }
         return DEFAULT_MANAGER;
     }
