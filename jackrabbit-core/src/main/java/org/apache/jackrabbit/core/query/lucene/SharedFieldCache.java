@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.core.query.lucene;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.WeakHashMap;
@@ -112,6 +113,78 @@ public class SharedFieldCache {
         }
     }
 
+    static class ComparableArray implements Comparable<ComparableArray> {
+
+        private int offset = 0;
+
+        private Comparable<?>[] c = new Comparable[0];
+
+        public ComparableArray(Comparable<?> item, int index) {
+            insert(item, index);
+        }
+
+        public int compareTo(ComparableArray o) {
+            return Util.compare(c, o.c);
+        }
+
+        /**
+         * testing purpose only.
+         * 
+         * @return the offset
+         */
+        int getOffset() {
+            return offset;
+        }
+
+        public ComparableArray insert(Comparable<?> item, int index) {
+            // optimize for most common scenario
+            if (c.length == 0) {
+                offset = index;
+                c = new Comparable<?>[] { item };
+                return this;
+            }
+
+            // inside
+            if (index >= offset && index < offset + c.length) {
+                c[index - offset] = item;
+                return this;
+            }
+
+            // before
+            if (index < offset) {
+                int relativeOffset = offset - index;
+                Comparable<?>[] newC = new Comparable[relativeOffset + c.length];
+                newC[0] = item;
+                System.arraycopy(c, 0, newC, relativeOffset, c.length);
+                c = newC;
+                offset = index;
+                return this;
+            }
+
+            // after
+            if (index >= offset + c.length) {
+                c = Arrays.copyOf(c, index - offset + 1);
+                c[index - offset] = item;
+                return this;
+            }
+            return this;
+        }
+
+        /*
+         * This is needed by {@link UpperCaseSortComparator} and {@link LowerCaseSortComparator}
+         */
+        @Override
+        public String toString() {
+            if (c == null) {
+                return null;
+            }
+            if (c.length == 1) {
+                return c[0].toString();
+            }
+            return Arrays.toString(c);
+        }
+    }
+
     /**
      * Reference to the single instance of <code>SharedFieldCache</code>.
      */
@@ -152,9 +225,10 @@ public class SharedFieldCache {
         field = field.intern();
         ValueIndex ret = lookup(reader, field, prefix);
         if (ret == null) {
-            Comparable<?>[] retArray = new Comparable[reader.maxDoc()];
+            final int maxDocs = reader.maxDoc();
+            ComparableArray[] retArray = new ComparableArray[maxDocs];
             int setValues = 0;
-            if (retArray.length > 0) {
+            if (maxDocs > 0) {
                 IndexFormatVersion version = IndexFormatVersion.getVersion(reader);
                 boolean hasPayloads = version.isAtLeast(IndexFormatVersion.V3);
                 TermDocs termDocs;
@@ -167,8 +241,6 @@ public class SharedFieldCache {
                     termDocs = reader.termDocs();
                 }
                 TermEnum termEnum = reader.terms(new Term(field, prefix));
-
-                char[] tmp = new char[16];
                 try {
                     if (termEnum.term() == null) {
                         throw new RuntimeException("no terms in field " + field);
@@ -178,30 +250,28 @@ public class SharedFieldCache {
                         if (term.field() != field || !term.text().startsWith(prefix)) {
                             break;
                         }
-
-                        // make sure term is compacted
-                        String text = term.text();
-                        int len = text.length() - prefix.length();
-                        if (tmp.length < len) {
-                            // grow tmp
-                            tmp = new char[len];
-                        }
-                        text.getChars(prefix.length(), text.length(), tmp, 0);
-                        String value = new String(tmp, 0, len);
-
-                        termDocs.seek(termEnum);
+                        final String value = termValueAsString(term, prefix);
+                        termDocs.seek(term);
                         while (termDocs.next()) {
+                            int termPosition = 0;
                             type = PropertyType.UNDEFINED;
                             if (hasPayloads) {
                                 TermPositions termPos = (TermPositions) termDocs;
-                                termPos.nextPosition();
+                                termPosition = termPos.nextPosition();
                                 if (termPos.isPayloadAvailable()) {
                                     payload = termPos.getPayload(payload, 0);
                                     type = PropertyMetaData.fromByteArray(payload).getPropertyType();
                                 }
                             }
                             setValues++;
-                            retArray[termDocs.doc()] = getValue(value, type);
+                            Comparable<?> v = getValue(value, type);
+                            int doc = termDocs.doc();
+                            ComparableArray ca = retArray[doc];
+                            if (ca == null) {
+                                retArray[doc] = new ComparableArray(v, termPosition);
+                            } else {
+                                retArray[doc] = ca.insert(v, termPosition);
+                            }
                         }
                     } while (termEnum.next());
                 } finally {
@@ -214,6 +284,22 @@ public class SharedFieldCache {
             return value;
         }
         return ret;
+    }
+
+    /**
+     * Extracts the value from a given Term as a String
+     * 
+     * @param term
+     * @param prefix
+     * @return string value contained in the term
+     */
+    private static String termValueAsString(Term term, String prefix) {
+        // make sure term is compacted
+        String text = term.text();
+        int length = text.length() - prefix.length();
+        char[] tmp = new char[length];
+        text.getChars(prefix.length(), text.length(), tmp, 0);
+        return new String(tmp, 0, length);
     }
 
     /**

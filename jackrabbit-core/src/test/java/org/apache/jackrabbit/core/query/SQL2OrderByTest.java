@@ -73,6 +73,30 @@ public class SQL2OrderByTest extends AbstractQueryTest {
 
     }
 
+    /**
+     * SQL2 Test for JCR-2906
+     */
+    public void testOrderByMVP() throws RepositoryException {
+        Node n1 = testRootNode.addNode("node1");
+        Node n2 = testRootNode.addNode("node2");
+        Node n3 = testRootNode.addNode("node3");
+        Node n4 = testRootNode.addNode("node4");
+        Node n5 = testRootNode.addNode("node5");
+
+        n1.setProperty("text", new String[] { "ccc" });
+        n2.setProperty("text", new String[] { "eee", "bbb" });
+        n3.setProperty("text", new String[] { "aaa" });
+        n4.setProperty("text", new String[] { "bbb", "aaa" });
+        n5.setProperty("text", new String[] { "eee", "aaa" });
+
+        testRootNode.getSession().save();
+
+        String sql = "SELECT value FROM [nt:unstructured] WHERE ISCHILDNODE(["
+                + testRoot + "]) ORDER BY text";
+
+        checkSeq(executeSQL2Query(sql), new Node[] { n3, n4, n1, n5, n2 });
+    }
+
     public void testOrderByVal() throws RepositoryException {
 
         Node n1 = testRootNode.addNode("node1");
