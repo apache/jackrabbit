@@ -236,6 +236,25 @@ public class Util {
     }
 
     /**
+     * Compares two arrays of comparables.
+     */
+    public static int compare(Comparable<?>[] c1, Comparable<?>[] c2) {
+        if (c1 == null) {
+            return -1;
+        }
+        if (c2 == null) {
+            return 1;
+        }
+        for (int i = 0; i < c1.length && i < c2.length; i++) {
+            int d = compare(c1[i], c2[i]);
+            if (d != 0) {
+                return d;
+            }
+        }
+        return c1.length - c2.length;
+    }
+
+    /**
      * Compares the two values. If the values have differing types, then an
      * attempt is made to convert the second value into the type of the first
      * value.

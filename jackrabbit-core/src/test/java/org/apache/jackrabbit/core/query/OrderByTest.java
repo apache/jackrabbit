@@ -60,6 +60,38 @@ public class OrderByTest extends AbstractIndexingTest {
         checkResult(result, 3);
     }
 
+    /**
+     * Test for JCR-2906
+     */
+    public void testOrderByMVP() throws RepositoryException {
+        Node n1 = testRootNode.addNode("node1");
+        Node n2 = testRootNode.addNode("node2");
+        Node n3 = testRootNode.addNode("node3");
+        Node n4 = testRootNode.addNode("node4");
+        Node n5 = testRootNode.addNode("node5");
+
+        n1.setProperty("extra", new String[] { "12345" });
+        n1.setProperty("text", new String[] { "ccc" });
+
+        n2.setProperty("text", new String[] { "eee", "bbb" });
+        n3.setProperty("text", new String[] { "aaa" });
+        n4.setProperty("text", new String[] { "bbb", "aaa" });
+        n5.setProperty("text", new String[] { "eee", "aaa" });
+
+        testRootNode.getSession().save();
+
+        String sql = "SELECT value FROM nt:unstructured WHERE "
+                + "jcr:path LIKE '" + testRoot + "/%' ORDER BY text";
+        checkResultSequence(executeQuery(sql).getRows(), new Node[] { n3, n4,
+                n1, n5, n2 });
+
+        String xpath = "/"
+                + testRoot
+                + "/*[@jcr:primaryType='nt:unstructured'] order by jcr:score(), @text";
+        checkResultSequence(executeQuery(xpath).getRows(), new Node[] { n3, n4,
+                n1, n5, n2 });
+    }
+
     public void testOrderByUpperCase() throws RepositoryException {
         Node n1 = testRootNode.addNode("node1");
         Node n2 = testRootNode.addNode("node2");
