@@ -25,12 +25,12 @@ import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.StringTokenizer;
 
 import javax.imageio.spi.ServiceRegistry;
@@ -832,7 +832,7 @@ public class JcrUtils {
         }
     }
 
-    private static final Set<String> PROPERTY_TYPES_NAMES = new HashSet<String>();
+    private static final List<String> PROPERTY_TYPES_NAMES = new ArrayList<String>();
     private static final Map<String, Integer> PROPERTY_TYPES = new HashMap<String, Integer>();
     static {
         for (int i = PropertyType.UNDEFINED; i <= PropertyType.DECIMAL; i++) {
