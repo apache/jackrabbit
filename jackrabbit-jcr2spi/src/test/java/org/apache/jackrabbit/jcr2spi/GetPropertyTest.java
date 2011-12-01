@@ -271,4 +271,16 @@ public class GetPropertyTest extends AbstractJCRTest {
             rw.logout();
         }
     }
+
+    public void testGetDeepEmptyStringProperty() throws RepositoryException, NotExecutableException {
+        Node n = testRootNode.getNode(nodeName1);
+        Node n2 = n.addNode(nodeName2);
+        Node n3 = n2.addNode(nodeName3);
+        Node n4 = n3.addNode(nodeName4);
+        Property emptyProp = n4.setProperty(propertyName1, "");
+        testRootNode.save();
+
+        Property p = readOnly.getProperty(emptyProp.getPath());
+        assertEquals("", p.getString());
+    }
 }
