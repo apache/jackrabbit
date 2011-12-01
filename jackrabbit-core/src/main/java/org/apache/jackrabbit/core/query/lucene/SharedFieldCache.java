@@ -163,8 +163,10 @@ public class SharedFieldCache {
 
             // after
             if (index >= offset + c.length) {
-                c = Arrays.copyOf(c, index - offset + 1);
-                c[index - offset] = item;
+                Comparable<?>[] newC = new Comparable[index - offset + 1];
+                System.arraycopy(c, 0, newC, 0, c.length);
+                newC[index - offset] = item;
+                c = newC;
                 return this;
             }
             return this;
