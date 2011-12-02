@@ -16,10 +16,6 @@
  */
 package org.apache.jackrabbit.core.query.lucene.join;
 
-import static javax.jcr.PropertyType.DATE;
-import static javax.jcr.PropertyType.DECIMAL;
-import static javax.jcr.PropertyType.DOUBLE;
-import static javax.jcr.PropertyType.LONG;
 import static javax.jcr.query.qom.QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO;
 import static javax.jcr.query.qom.QueryObjectModelConstants.JCR_OPERATOR_GREATER_THAN;
 import static javax.jcr.query.qom.QueryObjectModelConstants.JCR_OPERATOR_GREATER_THAN_OR_EQUAL_TO;
@@ -28,6 +24,7 @@ import static javax.jcr.query.qom.QueryObjectModelConstants.JCR_OPERATOR_LESS_TH
 import static javax.jcr.query.qom.QueryObjectModelConstants.JCR_OPERATOR_LIKE;
 import static javax.jcr.query.qom.QueryObjectModelConstants.JCR_OPERATOR_NOT_EQUAL_TO;
 
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.regex.Pattern;
 
@@ -46,20 +43,10 @@ public class ValueComparator implements Comparator<Value> {
      */
     public int compare(Value a, Value b) {
         try {
-            int ta = a.getType();
-            int tb = b.getType();
-
-            if ((ta == DECIMAL || ta == DOUBLE || ta == LONG)
-                    && (tb == DECIMAL || tb == DOUBLE || tb == LONG)) {
-                return a.getDecimal().compareTo(b.getDecimal());
-            } else if (ta == DATE && tb == DATE) {
-                return a.getDate().compareTo(b.getDate());
-            } else {
-                return a.getString().compareTo(b.getString());
-            }
+            return Util.compare(a, b);
         } catch (RepositoryException e) {
-            throw new RuntimeException(
-                    "Unable to compare values " + a + " and " + b, e);
+            throw new RuntimeException("Unable to compare values " + a
+                    + " and " + b, e);
         }
     }
 
@@ -98,6 +85,15 @@ public class ValueComparator implements Comparator<Value> {
         }
     }
 
+    public int compare(Value[] a, Value[] b) {
+        try {
+            return Util.compare(a, b);
+        } catch (RepositoryException e) {
+            throw new RuntimeException("Unable to compare values "
+                    + Arrays.toString(a) + " and " + Arrays.toString(b), e);
+        }
+    }
+
     /**
      * Evaluates the given QOM comparison operation with the given value arrays.
      *
@@ -108,15 +104,20 @@ public class ValueComparator implements Comparator<Value> {
      */
     public boolean evaluate(String operator, Value[] a, Value[] b) {
         if (JCR_OPERATOR_EQUAL_TO.equals(operator)) {
-            for (int i = 0; i < a.length; i++) {
-                for (int j = 0; j < b.length; j++) {
-                    if (compare(a[i], b[j]) == 0) {
-                        return true;
-                    }
-                }
-            }
+            return compare(a, b) == 0;
+        } else if (JCR_OPERATOR_GREATER_THAN.equals(operator)) {
+            return compare(a, b) > 0;
+        } else if (JCR_OPERATOR_GREATER_THAN_OR_EQUAL_TO.equals(operator)) {
+            return compare(a, b) >= 0;
+        } else if (JCR_OPERATOR_LESS_THAN.equals(operator)) {
+            return compare(a, b) < 0;
+        } else if (JCR_OPERATOR_LESS_THAN_OR_EQUAL_TO.equals(operator)) {
+            return compare(a, b) <= 0;
+        } else if (JCR_OPERATOR_NOT_EQUAL_TO.equals(operator)) {
+            return compare(a, b) != 0;
         }
-        return false; // FIXME
+        // TODO JCR_OPERATOR_LIKE
+        throw new IllegalArgumentException("Unknown comparison operator: "
+                + operator);
     }
-
 }
