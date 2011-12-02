@@ -21,7 +21,8 @@ import javax.jcr.Value;
 import org.apache.jackrabbit.core.query.lucene.join.ValueComparator;
 
 class ValueComparableWrapper implements Comparable<ValueComparableWrapper> {
-    private final static ValueComparator comparator = new ValueComparator();
+
+    private static final ValueComparator comparator = new ValueComparator();
 
     private final Value[] v;
 
@@ -30,16 +31,6 @@ class ValueComparableWrapper implements Comparable<ValueComparableWrapper> {
     }
 
     public int compareTo(ValueComparableWrapper o) {
-        return compare(v, o.v);
-    }
-
-    private int compare(Value[] a, Value[] b) {
-        for (int i = 0; i < a.length && i < b.length; i++) {
-            int d = comparator.compare(a[i], b[i]);
-            if (d != 0) {
-                return d;
-            }
-        }
-        return a.length - b.length;
+        return comparator.compare(v, o.v);
     }
 }

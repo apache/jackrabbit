@@ -34,7 +34,7 @@ import org.apache.jackrabbit.core.query.lucene.join.ValueComparator;
  */
 public class RowComparator implements Comparator<Row> {
 
-    private final ValueComparator comparator = new ValueComparator();
+    private static final ValueComparator comparator = new ValueComparator();
 
     private final Ordering[] orderings;
 
@@ -51,7 +51,7 @@ public class RowComparator implements Comparator<Row> {
                 Operand operand = ordering.getOperand();
                 Value[] va = evaluator.getValues(operand, a);
                 Value[] vb = evaluator.getValues(operand, b);
-                int d = compare(va, vb);
+                int d = comparator.compare(va, vb);
                 if (d != 0) {
                     if (JCR_ORDER_DESCENDING.equals(ordering.getOrder())) {
                         return -d;
@@ -66,15 +66,4 @@ public class RowComparator implements Comparator<Row> {
                     + b, e);
         }
     }
-
-    private int compare(Value[] a, Value[] b) {
-        for (int i = 0; i < a.length && i < b.length; i++) {
-            int d = comparator.compare(a[i], b[i]);
-            if (d != 0) {
-                return d;
-            }
-        }
-        return a.length - b.length;
-    }
-
 }
