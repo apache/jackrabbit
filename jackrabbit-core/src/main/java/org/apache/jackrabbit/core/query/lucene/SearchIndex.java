@@ -633,7 +633,6 @@ public class SearchIndex extends AbstractQueryHandler {
             if (state != null) {
                 NodeId id = state.getNodeId();
                 addedIds.add(id);
-                removedIds.remove(id);
                 retrieveAggregateRoot(state, aggregateRoots);
 
                 try {

@@ -219,6 +219,41 @@ public class SQL2IndexingAggregateTest extends AbstractIndexingTest {
     }
 
     /**
+     * JCR-3160 - Session#move doesn't trigger rebuild of parent node
+     * aggregation
+     */
+    public void testAggregateMove() throws Exception {
+
+        String sql = "SELECT * FROM [nt:folder] as f"
+                + " WHERE ISDESCENDANTNODE([" + testRoot + "])"
+                + " AND CONTAINS (f.*, 'dog')";
+
+        Node folderA = testRootNode.addNode("folderA", "nt:folder");
+        Node folderB = testRootNode.addNode("folderB", "nt:folder");
+
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        Writer writer = new OutputStreamWriter(out, "UTF-8");
+        writer.write("the quick brown fox jumps over the lazy dog.");
+        writer.flush();
+
+        Node file = folderA.addNode("myFile", "nt:file");
+        Node resource = file.addNode("jcr:content", "nt:resource");
+        resource.setProperty("jcr:lastModified", Calendar.getInstance());
+        resource.setProperty("jcr:encoding", "UTF-8");
+        resource.setProperty("jcr:mimeType", "text/plain");
+        resource.setProperty("jcr:data", session.getValueFactory()
+                .createBinary(new ByteArrayInputStream(out.toByteArray())));
+        
+        testRootNode.getSession().save();
+        executeSQL2Query(sql, new Node[] { folderA });
+
+        testRootNode.getSession().move(file.getPath(),
+                folderB.getPath() + "/myFile");
+        testRootNode.getSession().save();
+        executeSQL2Query(sql, new Node[] { folderB });
+    }
+
+    /**
      * By default, the recursive aggregation is turned off.
      * 
      * The aggregation hierarchy is defined in
