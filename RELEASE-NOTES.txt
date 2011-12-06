@@ -1,4 +1,4 @@
-Release Notes -- Apache Jackrabbit -- Version 2.3.4
+Release Notes -- Apache Jackrabbit -- Version 2.3.5
 
 Introduction
 ------------
@@ -10,6 +10,25 @@ specified in the Java Specification Request 283 (JSR 283).
 Apache Jackrabbit 2.3 is an unstable series of releases cut directly from
 Jackrabbit trunk, with a focus on new features and other improvements.
 For production use we recommend the latest stable 2.2 release.
+
+Changes in Jackrabbit 2.3.5
+---------------------------
+
+Improvements
+
+  [JCR-2887] Split PrivilegeRegistry in a per-session manager instance ...
+  [JCR-2906] Multivalued property sorted by last/random value
+  [JCR-3138] Skip sync delay when changes are found
+  [JCR-3161] Add JcrUtils.getPropertyTypeNames
+  [JCR-3165] Consolidate compare behaviour for Value(s) and Comparable(s)
+  [JCR-3167] Make Jackrabbit compile on Java 7
+  [JCR-3170] Precompile JavaCC parsers in jackrabbit-spi-commons
+
+Bug fixes
+
+  [JCR-3159] LOWER operand with nested LOCALNAME operand not work with SQL2
+  [JCR-3160] Session#move doesn't trigger rebuild of parent node aggregation
+  [JCR-3163] NPE in RepositoryServiceImpl.getPropertyInfo()
 
 Changes in Jackrabbit 2.3.4
 ---------------------------
