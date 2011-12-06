@@ -214,12 +214,12 @@ public class AbstractQueryTest extends AbstractJCRTest {
         // check if all expected are in result
         for (Iterator<String> it = expectedPaths.iterator(); it.hasNext();) {
             String path = it.next();
-            assertTrue(path + " is not part of the result set", resultPaths.contains(path));
+            assertTrue(path + " is not part of the result set "+ expectedPaths, resultPaths.contains(path));
         }
         // check result does not contain more than expected
         for (Iterator<String> it = resultPaths.iterator(); it.hasNext();) {
             String path = it.next();
-            assertTrue(path + " is not expected to be part of the result set", expectedPaths.contains(path));
+            assertTrue(path + " is not expected to be part of the result set " + expectedPaths, expectedPaths.contains(path));
         }
     }
 
