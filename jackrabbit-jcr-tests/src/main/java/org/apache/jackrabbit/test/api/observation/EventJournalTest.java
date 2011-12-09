@@ -185,7 +185,52 @@ public class EventJournalTest extends AbstractObservationTest {
 
         checkJournal(new String[]{n2.getPath()}, new String[]{n1.getPath()});
     }
-    
+
+    public void testPersist() throws RepositoryException, NotExecutableException {
+        Node n1 = testRootNode.addNode(nodeName1);
+
+        journal = getEventJournal(Event.PERSIST, testRoot, true, null, null);
+        skipToNow();
+
+        superuser.save();
+
+        boolean hasPersistEvents = journal.hasNext();
+        if (! hasPersistEvents) {
+        	throw new NotExecutableException("repository does not appear to provide PERSIST events");
+        }
+
+        journal = getEventJournal(ALL_TYPES | Event.PERSIST, testRoot, true, null, null);
+        skipToNow();
+
+        // add another child node
+        Node n3 = testRootNode.addNode(nodeName2);
+        String target = n1.getPath();
+        n1.remove();
+        superuser.save();
+
+        // move it
+        superuser.getWorkspace().move(n3.getPath(), target);
+
+        // remove it again
+        n3 = superuser.getNode(target);
+        n3.remove();
+        superuser.save();
+
+        int persistCount = 0;
+        Event e = null;
+        while (journal.hasNext()) {
+        	e = journal.nextEvent();
+        	if (e.getType() == Event.PERSIST) {
+        		persistCount += 1;
+        	}
+        }
+
+        assertEquals(3, persistCount);
+
+        // last event should be persist
+        assertEquals(Event.PERSIST, e.getType());
+    }
+
     //-------------------------------< internal >-------------------------------
 
     private void skipToNow() {

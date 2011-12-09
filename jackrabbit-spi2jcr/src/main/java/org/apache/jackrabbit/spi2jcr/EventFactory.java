@@ -66,11 +66,11 @@ class EventFactory {
 
     public Event fromJCREvent(javax.jcr.observation.Event e)
             throws RepositoryException {
-        Path p = resolver.getQPath(e.getPath());
-        Path parent = p.getAncestor(1);
+        Path p = e.getPath() != null ? resolver.getQPath(e.getPath()) : null;
+        Path parent = p != null ? p.getAncestor(1) : null;
         int type = e.getType();
 
-        NodeId parentId = idFactory.createNodeId((String) null, parent);
+        NodeId parentId = parent != null ?idFactory.createNodeId((String) null, parent) : null;
         String identifier = e.getIdentifier();
         ItemId itemId;
         Node node = null;

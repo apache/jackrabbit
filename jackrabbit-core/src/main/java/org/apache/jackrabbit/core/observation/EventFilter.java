@@ -25,6 +25,7 @@ import org.apache.jackrabbit.spi.Path;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.nodetype.NodeType;
+import javax.jcr.observation.Event;
 
 /**
  * The <code>EventFilter</code> class implements the filter logic based
@@ -130,6 +131,11 @@ public class EventFilter {
         if (noLocal && session.equals(eventState.getSession())) {
             // listener does not wish to get local events
             return true;
+        }
+
+        // UUIDs, types, and paths do not need to match for persist
+        if (eventState.getType() == Event.PERSIST) {
+            return false;
         }
 
         // check UUIDs

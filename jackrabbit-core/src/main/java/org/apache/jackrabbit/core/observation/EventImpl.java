@@ -104,7 +104,8 @@ public final class EventImpl implements JackrabbitEvent, AdditionalEventInfo, Ev
      * {@inheritDoc}
      */
     public String getPath() throws RepositoryException {
-        return session.getJCRPath(getQPath());
+        Path p = getQPath();
+        return p != null ? session.getJCRPath(getQPath()) : null;
     }
 
     /**
@@ -132,12 +133,20 @@ public final class EventImpl implements JackrabbitEvent, AdditionalEventInfo, Ev
      * {@inheritDoc}
      */
     public String getIdentifier() throws RepositoryException {
-        NodeId id = eventState.getChildId();
-        if (id == null) {
-            // property event
-            id = eventState.getParentId();
+        if (eventState.getType() == Event.PERSIST) {
+            return null;
         }
-        return id.toString();
+        else {
+            NodeId id = eventState.getChildId();
+
+            if (id != null) {
+                return id.toString();
+            }
+            else {
+                // property event
+                return eventState.getParentId().toString();
+            }
+        }
     }
 
     /**
@@ -161,18 +170,25 @@ public final class EventImpl implements JackrabbitEvent, AdditionalEventInfo, Ev
     /**
      * Returns the <code>Path</code> of this event.
      *
-     * @return path
+     * @return path or <code>null</code> when no path is associated with the event
      * @throws RepositoryException if the path can't be constructed
      */
     public Path getQPath() throws RepositoryException {
         try {
             Path parent = eventState.getParentPath();
             Path child = eventState.getChildRelPath();
-            int index = child.getIndex();
-            if (index > 0) {
-                return PathFactoryImpl.getInstance().create(parent, child.getName(), index, false);
-            } else {
-                return PathFactoryImpl.getInstance().create(parent, child.getName(), false);
+
+            if (parent == null || child == null) {
+                // an event without associated path information
+                return null;
+            }
+            else {
+                int index = child.getIndex();
+                if (index > 0) {
+                    return PathFactoryImpl.getInstance().create(parent, child.getName(), index, false);
+                } else {
+                    return PathFactoryImpl.getInstance().create(parent, child.getName(), false);
+                }
             }
         } catch (MalformedPathException e) {
             String msg = "internal error: malformed path for event";
