@@ -91,7 +91,7 @@ final class EventImpl implements Event {
      * {@inheritDoc}
      */
     public String getPath() throws RepositoryException {
-        return resolver.getJCRPath(event.getPath());
+        return event.getPath() != null ? resolver.getJCRPath(event.getPath()) : null;
     }
 
     /**

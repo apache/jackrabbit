@@ -415,7 +415,7 @@ public class EventJournalImpl implements EventJournal {
                 List<EventState> eventStates, long timestamp, String userData) {
             this.events = new FilteredEventIterator(
                     session, eventStates.iterator(),
-                    timestamp, userData, filter, Collections.emptySet());
+                    timestamp, userData, filter, Collections.emptySet(), true);
             this.timestamp = timestamp;
         }
     }

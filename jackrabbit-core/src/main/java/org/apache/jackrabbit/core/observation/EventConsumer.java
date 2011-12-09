@@ -242,7 +242,7 @@ class EventConsumer {
         // check if filtered iterator has at least one event
         EventIterator it = new FilteredEventIterator(
                 session, events.iterator(), events.getTimestamp(),
-                events.getUserData(), filter, denied);
+                events.getUserData(), filter, denied, false);
         if (it.hasNext()) {
             long time = System.currentTimeMillis();
             listener.onEvent(it);

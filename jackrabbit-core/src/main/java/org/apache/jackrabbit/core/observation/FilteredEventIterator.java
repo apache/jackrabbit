@@ -17,9 +17,11 @@
 package org.apache.jackrabbit.core.observation;
 
 import java.util.Iterator;
+import java.util.NoSuchElementException;
 import java.util.Set;
 
 import javax.jcr.RepositoryException;
+import javax.jcr.observation.Event;
 
 import org.apache.jackrabbit.commons.iterator.EventIteratorAdapter;
 import org.apache.jackrabbit.commons.iterator.FilteredRangeIterator;
@@ -64,12 +66,13 @@ class FilteredEventIterator extends EventIteratorAdapter {
      *               event listener.
      * @param denied <code>Set</code> of <code>ItemId</code>s of denied <code>ItemState</code>s
      *               rejected by the <code>AccessManager</code>
+     * @param includePersistEvent whether or not to include the {@link Event#PERSIST} event
      */
     public FilteredEventIterator(
-            SessionImpl session, Iterator<?> eventStates,
+            SessionImpl session, Iterator<EventState> eventStates,
             long timestamp, String userData,
-            final EventFilter filter, final Set<?> denied) {
-        super(new FilteredRangeIterator(eventStates, new Predicate() {
+            final EventFilter filter, final Set<?> denied, boolean includePersistEvent) {
+        super(new FilteredRangeIterator(wrapAndAddPersist(eventStates, includePersistEvent), new Predicate() {
             public boolean evaluate(Object object) {
                 try {
                     EventState state = (EventState) object;
@@ -92,4 +95,58 @@ class FilteredEventIterator extends EventIteratorAdapter {
                 session, (EventState) super.next(), timestamp, userData);
     }
 
+    /**
+     * Optionally wrap the iterator into one that adds PERSIST events
+     */
+    private static Iterator<EventState> wrapAndAddPersist(final Iterator<EventState> states,
+            boolean includePersistEvents) {
+        if (includePersistEvents) {
+            return new PersistEventAddingWrapper(states);
+        }
+        else {
+            return states;
+        }
+    }
+
+    /**
+     * A wrapper around {@link Iterator} that adds a "PERSIST" event at the end.
+     */
+    private static class PersistEventAddingWrapper implements Iterator<EventState> {
+
+        private Iterator<EventState> states;
+        private boolean persistSent = false;
+        private EventState previous = null;
+
+        public PersistEventAddingWrapper(Iterator<EventState> states) {
+            this.states = states;
+        }
+
+        public boolean hasNext() {
+            if (states.hasNext()) {
+                return true;
+            } else {
+                return !persistSent;
+            }
+        }
+
+        public EventState next() {
+            if (states.hasNext()) {
+                previous = states.next();
+                return previous;
+            }
+            else if (persistSent || previous == null) {
+                // we are at the end; either because we already sent
+                // PERSIST, or because the iterator was empty anyway
+                throw new NoSuchElementException();
+            }
+            else {
+                persistSent = true;
+                return EventState.persist(previous.getSession(), previous.isExternal());
+            }
+        }
+
+        public void remove() {
+            throw new UnsupportedOperationException();
+        }
+    }
 }

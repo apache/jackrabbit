@@ -177,7 +177,7 @@ public class EventState {
                 throw new IllegalArgumentException("childId only allowed for Node events.");
             }
         } else {
-            if (childId == null) {
+            if (childId == null && type != Event.PERSIST) {
                 throw new IllegalArgumentException("childId must not be null for Node events.");
             }
         }
@@ -580,6 +580,20 @@ public class EventState {
     }
 
     /**
+     * Creates a new {@link javax.jcr.observation.Event} of type
+     * {@link javax.jcr.observation.Event#PERSIST}.
+     *
+     * @param session    the session that changed the property.
+     * @param external   flag indicating whether this is an external event
+     * @return an <code>EventState</code> instance.
+     */
+    public static EventState persist(Session session, boolean external) {
+
+        return new EventState(Event.PERSIST, null, null, null, null,
+                null, null, session, external);
+    }
+
+    /**
      * {@inheritDoc}
      */
     public int getType() {
@@ -695,10 +709,12 @@ public class EventState {
     /**
      * Returns the id of the associated item of this <code>EventState</code>.
      *
-     * @return the <code>ItemId</code>.
+     * @return the <code>ItemId</code> or <code>null</code> for {@link Event#PERSIST} events 
      */
     ItemId getTargetId() {
-        if (childId == null) {
+        if (type == Event.PERSIST) {
+            return null;
+        } else if (childId == null) {
             // property event
             return new PropertyId(parentId, childRelPath.getName());
         } else {
@@ -782,8 +798,8 @@ public class EventState {
         if (h == 0) {
             h = 37;
             h = 37 * h + type;
-            h = 37 * h + parentId.hashCode();
-            h = 37 * h + childRelPath.hashCode();
+            h = 37 * h + (parentId != null ? parentId.hashCode() : 0);
+            h = 37 * h + (childRelPath != null ? childRelPath.hashCode() : 0);
             h = 37 * h + session.hashCode();
             h = 37 * h + info.hashCode();
             hashCode = h;
@@ -833,6 +849,8 @@ public class EventState {
             return "PropertyChanged";
         } else if (eventType == Event.PROPERTY_REMOVED) {
             return "PropertyRemoved";
+        } else if (eventType == Event.PERSIST) {
+            return "Persist";
         } else {
             return "UnknownEventType";
         }

@@ -88,6 +88,11 @@ public class EventFilterImpl implements EventFilter, Serializable {
             return false;
         }
 
+        // UUIDs, types, and paths do not need to match for persist
+        if (event.getType() == Event.PERSIST) {
+            return true;
+        }
+
         // check UUIDs
         NodeId parentId = event.getParentId();
         if (uuids != null) {
