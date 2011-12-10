@@ -674,6 +674,8 @@ org.apache.jackrabbit.test.api.security.AccessControlListTest#testAddAccessContr
 org.apache.jackrabbit.test.api.security.AccessControlListTest#testAddAccessControlEntryAgain
 org.apache.jackrabbit.test.api.security.AccessControlListTest#testExtendPrivileges
 org.apache.jackrabbit.test.api.security.RSessionAccessControlPolicyTest#testSetPolicy
+<!-- JCRRMI-26 -->
+org.apache.jackrabbit.test.api.observation.EventJournalTest
                   </value>
                 </property>
                 <property>
