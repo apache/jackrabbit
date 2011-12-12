@@ -56,6 +56,7 @@ import org.apache.jackrabbit.core.query.lucene.hits.AbstractHitCollector;
 import org.apache.jackrabbit.core.session.SessionContext;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.ItemStateManager;
+import org.apache.jackrabbit.core.state.NoSuchItemStateException;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.spi.Name;
@@ -1525,10 +1526,15 @@ public class SearchIndex extends AbstractQueryHandler {
                         break;
                     }
                 }
+            } catch (NoSuchItemStateException e) {
+                // do not fail if aggregate cannot be created
+                log.info(
+                        "Exception while building indexing aggregate for {}. Node is not available {}.",
+                        state.getNodeId(), e.getMessage());
             } catch (Exception e) {
                 // do not fail if aggregate cannot be created
-                log.warn("Exception while building indexing aggregate for"
-                        + " node with id: " + state.getNodeId(), e);
+                log.warn("Exception while building indexing aggregate for "
+                        + state.getNodeId(), e);
             }
         }
     }
@@ -1694,6 +1700,10 @@ public class SearchIndex extends AbstractQueryHandler {
             } finally {
                 reader.release();
             }
+        } catch (NoSuchItemStateException e) {
+            log.info(
+                    "Exception while retrieving aggregate roots. Node is not available {}.",
+                    e.getMessage());
         } catch (Exception e) {
             log.warn("Exception while retrieving aggregate roots", e);
         }
