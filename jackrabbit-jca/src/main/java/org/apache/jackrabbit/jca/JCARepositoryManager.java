@@ -24,6 +24,7 @@ import org.apache.jackrabbit.commons.JcrUtils;
 import org.apache.jackrabbit.core.RepositoryImpl;
 import org.apache.jackrabbit.core.config.RepositoryConfig;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
@@ -101,9 +102,19 @@ public final class JCARepositoryManager {
                 cl = this.getClass().getClassLoader();
             }
 
-            InputStream configInputStream = cl.getResourceAsStream(
-                configFile.substring(CLASSPATH_CONFIG_PREFIX.length()));
-            config = RepositoryConfig.create(configInputStream, homeDir);
+        	InputStream configInputStream = cl.getResourceAsStream(
+        			configFile.substring(CLASSPATH_CONFIG_PREFIX.length()));
+            try {
+            	config = RepositoryConfig.create(configInputStream, homeDir);
+            } finally {
+                if (configInputStream != null) {
+                    try {
+                        configInputStream.close();
+                    } catch (IOException e) {
+                        // ignore
+                    }
+                }
+            }            	
         } else {
             config = RepositoryConfig.create(configFile, homeDir);
         }
