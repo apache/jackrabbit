@@ -39,31 +39,27 @@ public class LinkHeaderFieldParser {
     /**
      * the default logger
      */
-    private static Logger log = LoggerFactory
-            .getLogger(LinkHeaderFieldParser.class);
+    private static Logger log = LoggerFactory.getLogger(LinkHeaderFieldParser.class);
 
     private final List<LinkRelation> relations;
 
     public LinkHeaderFieldParser(List<String> fieldValues) {
-
         List<LinkRelation> tmp = new ArrayList<LinkRelation>();
-
-        for (String s : fieldValues) {
-            addFields(tmp, s);
+        if (fieldValues != null) {
+            for (String value : fieldValues) {
+                addFields(tmp, value);
+            }
         }
-
         relations = Collections.unmodifiableList(tmp);
     }
 
     public LinkHeaderFieldParser(Enumeration<?> en) {
-
-        if (en.hasMoreElements()) {
+        if (en != null && en.hasMoreElements()) {
             List<LinkRelation> tmp = new ArrayList<LinkRelation>();
 
             while (en.hasMoreElements()) {
                 addFields(tmp, en.nextElement().toString());
             }
-
             relations = Collections.unmodifiableList(tmp);
         } else {
             // optimize case of no Link headers
