@@ -153,7 +153,7 @@ public class LockManagerTest extends AbstractJCRTest {
             NotExecutableException {
         assertLockable(testNode);
 
-        List tokensBefore = Arrays.asList(lockMgr.getLockTokens());
+        List<String> tokensBefore = Arrays.asList(lockMgr.getLockTokens());
 
         boolean sessionScoped = true;
         Lock l = lockMgr.lock(testPath, true, sessionScoped, Long.MAX_VALUE, null);
