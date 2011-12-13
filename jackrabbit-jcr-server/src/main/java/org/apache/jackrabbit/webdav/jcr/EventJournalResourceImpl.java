@@ -408,7 +408,7 @@ public class EventJournalResourceImpl extends AbstractResource {
                 os.flush();
             }
         } catch (Exception ex) {
-            throw new IOException("error generating feed", ex);
+            throw new IOException("error generating feed: " + ex.getMessage());
         }
     }
 
