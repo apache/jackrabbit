@@ -36,6 +36,7 @@ public class TestAll extends TestCase {
         suite.addTestSuite(InternalVersionHistoryImplTest.class);
         suite.addTestSuite(RemoveVersionLabelTest.class);
         suite.addTestSuite(RestoreTest.class);
+        suite.addTestSuite(RestoreNodeWithSNSTest.class);
         suite.addTestSuite(VersionIteratorImplTest.class);
         return suite;
     }

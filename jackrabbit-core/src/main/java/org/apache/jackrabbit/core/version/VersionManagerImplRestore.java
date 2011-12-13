@@ -16,11 +16,7 @@
  */
 package org.apache.jackrabbit.core.version;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import javax.jcr.ItemExistsException;
 import javax.jcr.PropertyType;
@@ -473,6 +469,19 @@ abstract public class VersionManagerImplRestore extends VersionManagerImplBase {
         // need to sync with state manager
         state.store();
 
+        // create a map that contains a int->NodeStateEx mapping for each child name
+        Map<Name, Map<Integer, NodeStateEx>> entryToNodeStateExMapping = new HashMap<Name, Map<Integer, NodeStateEx>>();
+        for (ChildNodeEntry entry : state.getState().getChildNodeEntries()) {
+            Map<Integer, NodeStateEx> id2stateMap = entryToNodeStateExMapping
+                    .get(entry.getName());
+            if (id2stateMap == null) {
+                id2stateMap = new HashMap<Integer, NodeStateEx>();
+            }
+            id2stateMap.put(entry.getIndex(),
+                    state.getNode(entry.getName(), entry.getIndex()));
+            entryToNodeStateExMapping.put(entry.getName(), id2stateMap);
+        }
+
         // For each child node C present on F:
         // - F will never have a child node with an OPV of IGNORE, INITIALIZE,
         //   COMPUTE or ABORT (see 15.2 Check-In: Creating a Version).
@@ -494,7 +503,12 @@ abstract public class VersionManagerImplRestore extends VersionManagerImplBase {
                 InternalFrozenNode f = (InternalFrozenNode) child;
 
                 // if node is present, remove it
-                state.removeNode(entry.getName(), entry.getIndex());
+                Map<Integer, NodeStateEx> id2stateMap = entryToNodeStateExMapping
+                        .get(entry.getName());
+                if (id2stateMap != null
+                        && id2stateMap.containsKey(entry.getIndex())) {
+                    state.removeNode(id2stateMap.get(entry.getIndex()));
+                }
 
                 // check for existing
                 if (f.getFrozenId() != null) {
