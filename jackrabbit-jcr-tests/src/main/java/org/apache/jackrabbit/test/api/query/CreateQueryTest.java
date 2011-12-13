@@ -30,7 +30,7 @@ import javax.jcr.query.InvalidQueryException;
 public class CreateQueryTest extends AbstractQueryTest {
 
     public void testUnknownQueryLanguage() throws RepositoryException {
-        List supported = Arrays.asList(qm.getSupportedQueryLanguages());
+        List<String> supported = Arrays.asList(qm.getSupportedQueryLanguages());
         String language;
         do {
             language = createRandomString(5);

@@ -192,14 +192,14 @@ class AbstractOrderByTest extends AbstractQueryTest {
      */
     protected void checkResultOrder(QueryResult result, String[] nodeNames)
             throws RepositoryException {
-        List nodes = new ArrayList();
+        List<Node> nodes = new ArrayList<Node>();
         for (NodeIterator it = result.getNodes(); it.hasNext();) {
             nodes.add(it.nextNode());
         }
         assertEquals("Wrong hit count:", nodeNames.length, nodes.size());
 
         for (int i = 0; i < nodeNames.length; i++) {
-            String name = ((Node) nodes.get(i)).getName();
+            String name = nodes.get(i).getName();
             assertEquals("Wrong order of nodes:", nodeNames[i], name);
         }
     }
@@ -256,7 +256,7 @@ class AbstractOrderByTest extends AbstractQueryTest {
      * @throws RepositoryException if an error occurs.
      */
     protected String createXPath() throws RepositoryException {
-        List languages = Arrays.asList(superuser.getWorkspace().getQueryManager().getSupportedQueryLanguages());
+        List<String> languages = Arrays.asList(superuser.getWorkspace().getQueryManager().getSupportedQueryLanguages());
         if (languages.contains(Query.XPATH)) {
             return xpathRoot + "/*[@jcr:primaryType='" + testNodeType + "'] order by @" + propertyName1;
         } else {
