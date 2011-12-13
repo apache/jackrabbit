@@ -31,6 +31,7 @@ import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
 import javax.xml.XMLConstants;
+import javax.xml.namespace.QName;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -289,6 +290,28 @@ public class DomUtil {
     }
 
     /**
+     * Returns the first child element that matches the given {@link QName}.
+     * If no child element is present or no child element matches,
+     * <code>null</code> is returned.
+     *
+     * @param parent
+     * @param childName
+     * @return first child element matching the specified name or <code>null</code>.
+     */
+    public static Element getChildElement(Node parent, QName childName) {
+        if (parent != null) {
+            NodeList children = parent.getChildNodes();
+            for (int i = 0; i < children.getLength(); i++) {
+                Node child = children.item(i);
+                if (isElement(child) && matches(child, childName)) {
+                    return (Element)child;
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
      * Returns a <code>ElementIterator</code> containing all child elements of
      * the given parent node that match the given local name and namespace.
      * If the namespace is <code>null</code> only the localName is compared.
@@ -301,6 +324,20 @@ public class DomUtil {
      */
     public static ElementIterator getChildren(Element parent, String childLocalName, Namespace childNamespace) {
         return new ElementIterator(parent, childLocalName, childNamespace);
+    }
+
+    /**
+     * Returns a <code>ElementIterator</code> containing all child elements of
+     * the given parent node that match the given {@link QName}.
+     * 
+     * @param parent
+     *            the node the children elements should be retrieved from
+     * @param childName
+     * @return an <code>ElementIterator</code> giving access to all child
+     *         elements that match the specified name.
+     */
+    public static ElementIterator getChildren(Element parent, QName childName) {
+        return new ElementIterator(parent, childName);
     }
 
     /**
@@ -406,6 +443,24 @@ public class DomUtil {
         }
         boolean matchingNamespace = matchingNamespace(node, requiredNamespace);
         return matchingNamespace && matchingLocalName(node, requiredLocalName);
+    }
+
+    /**
+     * Returns true if the specified node matches the required {@link QName}.
+     *
+     * @param node
+     * @param requiredName
+     * @return true if local name and namespace match the corresponding properties
+     * of the given DOM node.
+     */
+    public static boolean matches(Node node, QName requiredName) {
+        if (node == null) {
+            return false;
+        } else {
+            String nodens = node.getNamespaceURI() != null ? node.getNamespaceURI() : "";
+            return nodens.equals(requiredName.getNamespaceURI())
+                    && node.getLocalName().equals(requiredName.getLocalPart());
+        }
     }
 
     /**

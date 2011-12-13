@@ -21,6 +21,7 @@ import org.apache.jackrabbit.commons.cnd.CompactNodeTypeDefWriter;
 import org.apache.jackrabbit.commons.cnd.DefinitionBuilderFactory;
 import org.apache.jackrabbit.commons.cnd.ParseException;
 import org.apache.jackrabbit.commons.cnd.TemplateBuilderFactory;
+import org.apache.jackrabbit.commons.webdav.AtomFeedConstants;
 import org.apache.jackrabbit.webdav.DavException;
 import org.apache.jackrabbit.webdav.DavMethods;
 import org.apache.jackrabbit.webdav.DavResource;
@@ -198,12 +199,14 @@ public class WorkspaceResourceImpl extends AbstractResource
     }
 
     /**
-     * Sets content lengths to '0' and retrieves the modification time.
-     *
      * @param outputContext
      * @throws IOException
      */
     public void spool(OutputContext outputContext) throws IOException {
+
+        outputContext.setProperty("Link", "<?" + EventJournalResourceImpl.RELURIFROMWORKSPACE
+                + ">; title=\"Event Journal\"; rel=alternate; type=\"" + AtomFeedConstants.MEDIATYPE + "\"");
+
         if (outputContext.hasStream()) {
             Session session = getRepositorySession();
             Repository rep = session.getRepository();
@@ -215,7 +218,10 @@ public class WorkspaceResourceImpl extends AbstractResource
             StringBuilder sb = new StringBuilder();
             sb.append("<html><head><title>");
             sb.append(repostr);
-            sb.append("</title></head>");
+            sb.append("</title>");
+            sb.append("<link rel=alternate type=\"" + AtomFeedConstants.MEDIATYPE
+                    + "\" title=\"Event Journal\" href=\"?" + EventJournalResourceImpl.RELURIFROMWORKSPACE + "\">");
+            sb.append("</head>");
             sb.append("<body><h2>").append(repostr).append("</h2><ul>");
             sb.append("<li><a href=\"..\">..</a></li>");
             DavResourceIterator it = getMembers();
