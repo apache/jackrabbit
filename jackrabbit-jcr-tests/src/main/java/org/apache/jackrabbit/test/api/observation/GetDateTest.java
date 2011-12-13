@@ -32,10 +32,10 @@ import javax.jcr.observation.Event;
 public class GetDateTest extends AbstractObservationTest {
 
     public void testLinearTime() throws RepositoryException {
-        List names = Arrays.asList(new String[]{nodeName1, nodeName2, nodeName3});
-        List dates = new ArrayList();
-        for (Iterator it = names.iterator(); it.hasNext(); ) {
-            final String name = (String) it.next();
+        List<String> names = Arrays.asList(new String[]{nodeName1, nodeName2, nodeName3});
+        List<Long> dates = new ArrayList<Long>();
+        for (Iterator<String> it = names.iterator(); it.hasNext(); ) {
+            final String name = it.next();
             Event[] events = getEvents(new Callable() {
                 public void call() throws RepositoryException {
                     testRootNode.addNode(name, testNodeType);
@@ -52,7 +52,7 @@ public class GetDateTest extends AbstractObservationTest {
                 // ignore
             }
         }
-        List sortedDates = new ArrayList(dates);
+        List<Long> sortedDates = new ArrayList<Long>(dates);
         Collections.sort(sortedDates);
         assertEquals(sortedDates, dates);
     }
