@@ -91,12 +91,12 @@ public class QueryObjectModelFactoryTest extends AbstractQOMTest {
     /**
      * Set of all possible operators.
      */
-    private static final Set OPERATORS = new HashSet();
+    private static final Set<String> OPERATORS = new HashSet<String>();
 
     /**
      * Set of all possible join types.
      */
-    private static final Set JOIN_TYPES = new HashSet();
+    private static final Set<String> JOIN_TYPES = new HashSet<String>();
 
     static {
         OPERATORS.add(QueryObjectModelConstants.JCR_OPERATOR_EQUAL_TO);
@@ -217,8 +217,8 @@ public class QueryObjectModelFactoryTest extends AbstractQOMTest {
     public void testComparison() throws RepositoryException {
         PropertyValue op1 = qf.propertyValue(SELECTOR_NAME1, propertyName1);
         BindVariableValue op2 = qf.bindVariable(VARIABLE_NAME);
-        for (Iterator it = OPERATORS.iterator(); it.hasNext(); ) {
-            String operator = (String) it.next();
+        for (Iterator<String> it = OPERATORS.iterator(); it.hasNext(); ) {
+            String operator = it.next();
             Comparison comp = qf.comparison(op1, operator, op2);
             assertTrue("Not a PropertyValue operand", comp.getOperand1() instanceof PropertyValue);
             assertTrue("Not a BindVariableValue operand", comp.getOperand2() instanceof BindVariableValue);
@@ -437,8 +437,8 @@ public class QueryObjectModelFactoryTest extends AbstractQOMTest {
         Selector s1 = qf.selector(ntBase, SELECTOR_NAME1);
         Selector s2 = qf.selector(testNodeType, SELECTOR_NAME1);
         JoinCondition cond = qf.equiJoinCondition(ntBase, jcrPrimaryType, testNodeType, jcrPrimaryType);
-        for (Iterator it = JOIN_TYPES.iterator(); it.hasNext(); ) {
-            String joinType = (String) it.next();
+        for (Iterator<String> it = JOIN_TYPES.iterator(); it.hasNext(); ) {
+            String joinType = it.next();
             Join join = qf.join(s1, s2, joinType, cond);
             assertTrue("Not a selector source", join.getLeft() instanceof Selector);
             assertTrue("Not a selector source", join.getRight() instanceof Selector);

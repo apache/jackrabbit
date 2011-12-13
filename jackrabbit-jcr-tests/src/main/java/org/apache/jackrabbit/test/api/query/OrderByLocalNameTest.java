@@ -31,10 +31,10 @@ public class OrderByLocalNameTest extends AbstractOrderByTest {
     public void testLocalName() throws RepositoryException {
         populate(new String[]{"a", "a", "a", "a"}); // dummy values
         String[] names = new String[]{nodeName1, nodeName2, nodeName3, nodeName4};
-        Arrays.sort(names, new Comparator() {
-            public int compare(Object o1, Object o2) {
-                String s1 = getLocalName((String) o1);
-                String s2 = getLocalName((String) o2);
+        Arrays.sort(names, new Comparator<String>() {
+            public int compare(String o1, String o2) {
+                String s1 = getLocalName(o1);
+                String s2 = getLocalName(o2);
                 return s1.compareTo(s2);
             }
         });

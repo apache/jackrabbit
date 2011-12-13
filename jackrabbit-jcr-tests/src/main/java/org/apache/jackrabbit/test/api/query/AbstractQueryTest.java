@@ -20,7 +20,6 @@ import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.apache.jackrabbit.test.NotExecutableException;
 import org.apache.jackrabbit.test.api.util.ISO9075;
 
-import javax.jcr.query.InvalidQueryException;
 import javax.jcr.query.QueryResult;
 import javax.jcr.query.RowIterator;
 import javax.jcr.query.Query;
@@ -328,22 +327,22 @@ public abstract class AbstractQueryTest extends AbstractJCRTest {
     protected void checkResult(QueryResult result, Node[] nodes)
             throws RepositoryException {
         // collect paths
-        Set expectedPaths = new HashSet();
+        Set<String> expectedPaths = new HashSet<String>();
         for (int i = 0; i < nodes.length; i++) {
             expectedPaths.add(nodes[i].getPath());
         }
-        Set resultPaths = new HashSet();
+        Set<String> resultPaths = new HashSet<String>();
         for (NodeIterator it = result.getNodes(); it.hasNext();) {
             resultPaths.add(it.nextNode().getPath());
         }
         // check if all expected are in result
-        for (Iterator it = expectedPaths.iterator(); it.hasNext();) {
-            String path = (String) it.next();
+        for (Iterator<String> it = expectedPaths.iterator(); it.hasNext();) {
+            String path = it.next();
             assertTrue(path + " is not part of the result set", resultPaths.contains(path));
         }
         // check result does not contain more than expected
-        for (Iterator it = resultPaths.iterator(); it.hasNext();) {
-            String path = (String) it.next();
+        for (Iterator<String> it = resultPaths.iterator(); it.hasNext();) {
+            String path = it.next();
             assertTrue(path + " is not expected to be part of the result set", expectedPaths.contains(path));
         }
     }
@@ -354,11 +353,11 @@ public abstract class AbstractQueryTest extends AbstractJCRTest {
      * @return the elements of the iterator as an array of Nodes.
      */
     protected Node[] toArray(NodeIterator it) {
-        List nodes = new ArrayList();
+        List<Node> nodes = new ArrayList<Node>();
         while (it.hasNext()) {
             nodes.add(it.nextNode());
         }
-        return (Node[]) nodes.toArray(new Node[nodes.size()]);
+        return nodes.toArray(new Node[nodes.size()]);
     }
 
     /**
