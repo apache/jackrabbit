@@ -195,12 +195,12 @@ public class NodeDefTest extends AbstractJCRTest {
             
             for (int i = 0; i < defs.length; i++) {
                 NodeType requiredPrimaryTypes[] = defs[i].getRequiredPrimaryTypes();
-                Set rptnames = new HashSet();
+                Set<String> rptnames = new HashSet<String>();
                 for (int j = 0; j < requiredPrimaryTypes.length; j++) {
                     rptnames.add(requiredPrimaryTypes[j].getName());
                 }
                 
-                Set rptnames2 = new HashSet(Arrays.asList(defs[i].getRequiredPrimaryTypeNames()));
+                Set<String> rptnames2 = new HashSet<String>(Arrays.asList(defs[i].getRequiredPrimaryTypeNames()));
                 assertEquals("names returned from getRequiredPrimaryTypeNames should match types returned from getRequiredPrimaryTypes", rptnames, rptnames2);
             }
         }

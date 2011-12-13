@@ -208,15 +208,15 @@ public class NodeTypeTest extends AbstractJCRTest {
         for (NodeTypeIterator types = manager.getAllNodeTypes(); types.hasNext(); ) {
             NodeType type = types.nextNodeType();
 
-            Set declaredSupertypeNames = asSetOfNames(type.getDeclaredSupertypes());
-            Set supertypeNames = asSetOfNames(type.getSupertypes());
+            Set<String> declaredSupertypeNames = asSetOfNames(type.getDeclaredSupertypes());
+            Set<String> supertypeNames = asSetOfNames(type.getSupertypes());
             
             assertTrue("all declared supertypes must be supertypes: "
-                    + (new HashSet(declaredSupertypeNames).removeAll(supertypeNames)),
+                    + (new HashSet<String>(declaredSupertypeNames).removeAll(supertypeNames)),
                     supertypeNames.containsAll(declaredSupertypeNames));
             
             assertEquals("getDeclaredSuperTypes and getDeclaredSuperTypeNames must be consistent",
-                    declaredSupertypeNames, new HashSet(Arrays.asList(type.getDeclaredSupertypeNames())));
+                    declaredSupertypeNames, new HashSet<String>(Arrays.asList(type.getDeclaredSupertypeNames())));
         }
     }
 
@@ -234,26 +234,26 @@ public class NodeTypeTest extends AbstractJCRTest {
             NodeType type = types.nextNodeType();
             String name = type.getName();
 
-            Set declaredSubtypeNames = asSetOfNames(type.getDeclaredSubtypes());
-            Set subtypeNames = asSetOfNames(type.getSubtypes());
+            Set<String> declaredSubtypeNames = asSetOfNames(type.getDeclaredSubtypes());
+            Set<String> subtypeNames = asSetOfNames(type.getSubtypes());
             
             assertTrue("all declared subtypes must be subtypes: "
-                    + (new HashSet(declaredSubtypeNames).removeAll(subtypeNames)),
+                    + (new HashSet<String>(declaredSubtypeNames).removeAll(subtypeNames)),
                     subtypeNames.containsAll(declaredSubtypeNames));
             
             // check the reverse relation
-            for (Iterator it = subtypeNames.iterator(); it.hasNext(); ) {
-                String subtypename = (String) it.next();
+            for (Iterator<String> it = subtypeNames.iterator(); it.hasNext(); ) {
+                String subtypename = it.next();
                 boolean isDeclared = declaredSubtypeNames.contains(subtypename);
                 
                 NodeType subtype = manager.getNodeType(subtypename);
-                Set supertypeNames = asSetOfNames(subtype.getSupertypes());
+                Set<String> supertypeNames = asSetOfNames(subtype.getSupertypes());
                 
                 assertTrue(name + " should occur in set of super types: " + supertypeNames,
                         supertypeNames.contains(name));
                 
                 if (isDeclared) {
-                    Set declaredSupertypeNames = asSetOfNames(subtype.getDeclaredSupertypes());
+                    Set<String> declaredSupertypeNames = asSetOfNames(subtype.getDeclaredSupertypes());
                     assertTrue(name + " should occur in set of declared super types: " + declaredSupertypeNames,
                             declaredSupertypeNames.contains(name));
                 }
@@ -444,8 +444,8 @@ public class NodeTypeTest extends AbstractJCRTest {
     /**
      * Return the set of node type names for the specified node types.
      */
-    private Set asSetOfNames(NodeType[] types) {
-        Set result = new HashSet();
+    private Set<String> asSetOfNames(NodeType[] types) {
+        Set<String> result = new HashSet<String>();
         for (int i = 0; i < types.length; i++) {
             result.add(types[i].getName());
         }
@@ -455,8 +455,8 @@ public class NodeTypeTest extends AbstractJCRTest {
     /**
      * Return the set of node type names for the specified node types.
      */
-    private Set asSetOfNames(NodeTypeIterator it) {
-        Set result = new HashSet();
+    private Set<String> asSetOfNames(NodeTypeIterator it) {
+        Set<String> result = new HashSet<String>();
         while (it.hasNext()) {
             result.add(it.nextNodeType().getName());
         }
