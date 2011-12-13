@@ -25,14 +25,10 @@ import javax.jcr.lock.Lock;
 import javax.jcr.lock.LockException;
 import javax.jcr.lock.LockManager;
 import javax.jcr.nodetype.ConstraintViolationException;
-import javax.jcr.observation.Event;
-import javax.jcr.observation.ObservationManager;
 
 import org.apache.jackrabbit.test.AbstractJCRTest;
-import org.apache.jackrabbit.test.JUnitTest;
 import org.apache.jackrabbit.test.NotExecutableException;
 import org.apache.jackrabbit.test.RepositoryStub;
-import org.apache.jackrabbit.test.api.observation.EventResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
