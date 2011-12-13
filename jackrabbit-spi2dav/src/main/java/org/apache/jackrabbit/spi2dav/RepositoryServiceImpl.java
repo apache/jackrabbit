@@ -75,6 +75,7 @@ import org.apache.commons.httpclient.methods.InputStreamRequestEntity;
 import org.apache.commons.httpclient.methods.RequestEntity;
 import org.apache.commons.httpclient.methods.StringRequestEntity;
 import org.apache.commons.httpclient.params.HttpConnectionManagerParams;
+import org.apache.jackrabbit.commons.webdav.AtomFeedConstants;
 import org.apache.jackrabbit.commons.webdav.EventUtil;
 import org.apache.jackrabbit.commons.webdav.JcrRemotingConstants;
 import org.apache.jackrabbit.commons.webdav.JcrValueType;
@@ -171,7 +172,6 @@ import org.apache.jackrabbit.webdav.observation.DefaultEventType;
 import org.apache.jackrabbit.webdav.observation.EventDiscovery;
 import org.apache.jackrabbit.webdav.observation.EventType;
 import org.apache.jackrabbit.webdav.observation.ObservationConstants;
-import org.apache.jackrabbit.webdav.observation.SubscriptionDiscovery;
 import org.apache.jackrabbit.webdav.observation.SubscriptionInfo;
 import org.apache.jackrabbit.webdav.ordering.OrderingConstants;
 import org.apache.jackrabbit.webdav.property.DavProperty;
@@ -2023,11 +2023,64 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     /**
      * @see RepositoryService#getEvents(SessionInfo, EventFilter, long)
      */
-    public EventBundle getEvents(SessionInfo sessionInfo, EventFilter filter,
-                                   long after) throws
-            RepositoryException, UnsupportedRepositoryOperationException {
-        // TODO
-        throw new UnsupportedRepositoryOperationException("Not implemented -> JCR-2541");
+    public EventBundle getEvents(SessionInfo sessionInfo, EventFilter filter, long after) throws RepositoryException,
+            UnsupportedRepositoryOperationException {
+        // TODO: use filters remotely (JCR-3179)
+
+        GetMethod method = null;
+        String rootUri = uriResolver.getWorkspaceUri(sessionInfo.getWorkspaceName());
+        rootUri += "?type=journal"; // TODO should have a way to discover URI template
+
+        try {
+            method = new GetMethod(rootUri);
+            method.addRequestHeader("If-None-Match", "\"" + Long.toHexString(after) + "\""); // TODO
+            initMethod(method, sessionInfo);
+
+            getClient(sessionInfo).executeMethod(method);
+            assert method.getStatusCode() == 200;
+
+            InputStream in = method.getResponseBodyAsStream();
+            Document doc = null;
+            if (in != null) {
+                // read response and try to build a xml document
+                try {
+                    doc = DomUtil.parseDocument(in);
+                } catch (ParserConfigurationException e) {
+                    IOException exception = new IOException("XML parser configuration error");
+                    exception.initCause(e);
+                    throw exception;
+                } catch (SAXException e) {
+                    IOException exception = new IOException("XML parsing error");
+                    exception.initCause(e);
+                    throw exception;
+                } finally {
+                    in.close();
+                }
+            }
+
+            List<Event> events = new ArrayList<Event>();
+
+            ElementIterator entries = DomUtil.getChildren(doc.getDocumentElement(), AtomFeedConstants.N_ENTRY);
+            while (entries.hasNext()) {
+                Element entryElem = entries.next();
+
+                Element contentElem = DomUtil.getChildElement(entryElem, AtomFeedConstants.N_CONTENT);
+                if (contentElem != null
+                        && "application/vnd.apache.jackrabbit.event+xml".equals(contentElem.getAttribute("type"))) {
+                    List<Event> el = buildEventList(contentElem, (SessionInfoImpl) sessionInfo);
+                    for (Event e : el) {
+                        if (e.getDate() > after && (filter == null || filter.accept(e, false))) {
+                            events.add(e);
+                        }
+                    }
+                }
+            }
+
+            return new EventBundleImpl(events, false);
+        } catch (Exception ex) {
+            log.error("extracting events from journal feed", ex);
+            throw new RepositoryException(ex);
+        }
     }
 
     /**
@@ -2209,6 +2262,18 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     private List<Event> buildEventList(Element bundleElement, SessionInfoImpl sessionInfo) throws IllegalNameException, NamespaceException {
         List<Event> events = new ArrayList<Event>();
         ElementIterator eventElementIterator = DomUtil.getChildren(bundleElement, ObservationConstants.XML_EVENT, ObservationConstants.NAMESPACE);
+
+        String userId = null;
+
+        // get user id from enclosing Atom entry element in case this was a feed
+        if (DomUtil.matches(bundleElement, AtomFeedConstants.N_ENTRY)) {
+            Element authorEl = DomUtil.getChildElement(bundleElement, AtomFeedConstants.N_AUTHOR);
+            Element nameEl = authorEl != null ? DomUtil.getChildElement(authorEl, AtomFeedConstants.N_NAME) : null;
+            if (nameEl != null) {
+                userId = DomUtil.getTextTrim(nameEl);
+            }
+        }
+
         while (eventElementIterator.hasNext()) {
             Element evElem = eventElementIterator.nextElement();
             Element typeEl = DomUtil.getChildElement(evElem, ObservationConstants.XML_EVENTTYPE, ObservationConstants.NAMESPACE);
@@ -2222,51 +2287,61 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             String href = DomUtil.getChildTextTrim(evElem, XML_HREF, NAMESPACE);
 
             int type = EventUtil.getJcrEventType(et[0].getName());
-            Path eventPath;
-            try {
-                eventPath = uriResolver.getQPath(href, sessionInfo);
-            } catch (RepositoryException e) {
-                // should not occur
-                log.error("Internal error while building Event", e.getMessage());
-                continue;
-            }
-
-            boolean isForNode = (type == Event.NODE_ADDED
-                    || type == Event.NODE_REMOVED || type == Event.NODE_MOVED);
-            
+            Path eventPath = null;
             ItemId eventId = null;
-            try {
-                if (isForNode) {
-                    eventId = uriResolver.getNodeIdAfterEvent(href,
-                            sessionInfo, type == Event.NODE_REMOVED);
-                } else {
-                    eventId = uriResolver.getPropertyId(href, sessionInfo);
+            NodeId parentId = null;
+
+            if (href != null) {
+                try {
+                    eventPath = uriResolver.getQPath(href, sessionInfo);
+                } catch (RepositoryException e) {
+                    // should not occur
+                    log.error("Internal error while building Event", e.getMessage());
+                    continue;
                 }
-            } catch (RepositoryException e) {
-                if (isForNode) {
-                    eventId = idFactory.createNodeId((String) null, eventPath);
-                } else {
-                    try {
-                        eventId = idFactory.createPropertyId(
-                                idFactory.createNodeId((String) null,
-                                        eventPath.getAncestor(1)),
-                                eventPath.getName());
-                    } catch (RepositoryException e1) {
-                        log.warn("Unable to build event itemId: ",
-                                e.getMessage());
+
+                boolean isForNode = (type == Event.NODE_ADDED
+                        || type == Event.NODE_REMOVED || type == Event.NODE_MOVED);
+                
+                try {
+                    if (isForNode) {
+                        eventId = uriResolver.getNodeIdAfterEvent(href,
+                                sessionInfo, type == Event.NODE_REMOVED);
+                    } else {
+                        eventId = uriResolver.getPropertyId(href, sessionInfo);
+                    }
+                } catch (RepositoryException e) {
+                    if (isForNode) {
+                        eventId = idFactory.createNodeId((String) null, eventPath);
+                    } else {
+                        try {
+                            eventId = idFactory.createPropertyId(
+                                    idFactory.createNodeId((String) null,
+                                            eventPath.getAncestor(1)),
+                                    eventPath.getName());
+                        } catch (RepositoryException e1) {
+                            log.warn("Unable to build event itemId: ",
+                                    e.getMessage());
+                        }
                     }
                 }
-            }
-            String parentHref = Text.getRelativeParent(href, 1, true);
-            NodeId parentId = null;
-            try {
-                parentId = uriResolver.getNodeId(parentHref, sessionInfo);
-            } catch (RepositoryException e) {
-                log.warn("Unable to build event parentId: ", e.getMessage());
+
+                String parentHref = Text.getRelativeParent(href, 1, true);
+                try {
+                    parentId = uriResolver.getNodeId(parentHref, sessionInfo);
+                } catch (RepositoryException e) {
+                    log.warn("Unable to build event parentId: ", e.getMessage());
+                }
+                
             }
 
+            if (userId == null) {
+                // user id not retrieved from container
+                userId = DomUtil.getChildTextTrim(evElem, ObservationConstants.XML_EVENTUSERID, ObservationConstants.NAMESPACE);
+            }
 
-            events.add(new EventImpl(eventId, eventPath, parentId, type, evElem, getNamePathResolver(sessionInfo), getQValueFactory()));
+            events.add(new EventImpl(eventId, eventPath, parentId, type, userId, evElem,
+                    getNamePathResolver(sessionInfo), getQValueFactory()));
         }
 
         return events;

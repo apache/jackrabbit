@@ -26,6 +26,7 @@ import org.apache.jackrabbit.spi.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.jcr.AccessDeniedException;
 import javax.jcr.RepositoryException;
 import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.observation.EventJournal;
@@ -246,7 +247,7 @@ public class ObservationManagerImpl implements ObservationManager, EventStateCol
         }
 
         if (!session.isAdmin()) {
-            throw new RepositoryException("Only administrator session may access EventJournal");
+            throw new AccessDeniedException("Only administrator session may access EventJournal");
         }
 
         EventFilter filter = createEventFilter(

@@ -25,6 +25,8 @@ import org.w3c.dom.NodeList;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
+import javax.xml.namespace.QName;
+
 /**
  * <code>ElementIterator</code>...
  */
@@ -34,6 +36,7 @@ public class ElementIterator implements Iterator<Element> {
 
     private final Namespace namespace;
     private final String localName;
+    private final QName qName;
 
     private Element next;
 
@@ -49,6 +52,22 @@ public class ElementIterator implements Iterator<Element> {
     public ElementIterator(Element parent, String localName, Namespace namespace) {
         this.localName = localName;
         this.namespace = namespace;
+        this.qName = null;
+        seek(parent);
+    }
+
+    /**
+     * Create a new instance of <code>ElementIterator</code> with the given
+     * parent element. Only child elements that match the given {@link QName}
+     * will be respected by {@link #hasNext()} and {@link #nextElement()}.
+     *
+     * @param parent
+     * @param qname name to match (exactly)
+     */
+    public ElementIterator(Element parent, QName qname) {
+        this.localName = null;
+        this.namespace = null;
+        this.qName = qname;
         seek(parent);
     }
 
@@ -111,7 +130,7 @@ public class ElementIterator implements Iterator<Element> {
         NodeList nodeList = parent.getChildNodes();
         for (int i = 0; i < nodeList.getLength(); i++) {
             Node n = nodeList.item(i);
-            if (DomUtil.isElement(n) && DomUtil.matches(n, localName, namespace)) {
+            if (matchesName(n)) {
                 next = (Element)n;
                 return;
             }
@@ -124,7 +143,7 @@ public class ElementIterator implements Iterator<Element> {
     private void seek() {
         Node n = next.getNextSibling();
         while (n != null) {
-            if (DomUtil.isElement(n) && DomUtil.matches(n, localName, namespace)) {
+            if (matchesName(n)) {
                 next = (Element)n;
                 return;
             } else {
@@ -133,5 +152,19 @@ public class ElementIterator implements Iterator<Element> {
         }
         // no next element found -> set to null in order to leave the loop.
         next = null;
+    }
+
+    /**
+     * Matches the node name according to either {@link #qName} or the pair
+     * of {@link #localName) and {@link #namespace}.
+     */
+    private boolean matchesName(Node n) {
+        if (!DomUtil.isElement(n)) {
+            return false;
+        } else if (qName != null) {
+            return DomUtil.matches(n, qName);
+        } else {
+            return DomUtil.matches(n, localName, namespace);
+        }
     }
 }

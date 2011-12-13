@@ -80,8 +80,6 @@
                       org.apache.jackrabbit.test.api.query.CreateQueryTest#testUnknownQueryLanguage
                       <!-- JCR-2543 : query offset -->
                       org.apache.jackrabbit.test.api.query.SetOffsetTest#testSetOffset
-                      <!-- JCR-2541 : event journal -->
-                      org.apache.jackrabbit.test.api.observation.EventJournalTest
                       <!-- JCR-2533 : missing impl of checkQueryStatement -->
                       org.apache.jackrabbit.test.api.query.qom.BindVariableValueTest
                       <!-- JCR-2535 : Row.getPath() called with multiple selectors (server-side) -->

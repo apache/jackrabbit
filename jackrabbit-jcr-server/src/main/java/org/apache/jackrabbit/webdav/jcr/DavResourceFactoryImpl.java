@@ -16,6 +16,18 @@
  */
 package org.apache.jackrabbit.webdav.jcr;
 
+import javax.jcr.AccessDeniedException;
+import javax.jcr.Item;
+import javax.jcr.Node;
+import javax.jcr.PathNotFoundException;
+import javax.jcr.RepositoryException;
+import javax.jcr.observation.EventJournal;
+import javax.jcr.version.Version;
+import javax.jcr.version.VersionHistory;
+import javax.servlet.http.HttpServletResponse;
+
+import org.apache.jackrabbit.JcrConstants;
+import org.apache.jackrabbit.util.Text;
 import org.apache.jackrabbit.webdav.DavException;
 import org.apache.jackrabbit.webdav.DavMethods;
 import org.apache.jackrabbit.webdav.DavResource;
@@ -33,16 +45,8 @@ import org.apache.jackrabbit.webdav.transaction.TransactionDavServletRequest;
 import org.apache.jackrabbit.webdav.transaction.TransactionResource;
 import org.apache.jackrabbit.webdav.version.DeltaVServletRequest;
 import org.apache.jackrabbit.webdav.version.VersionControlledResource;
-import org.apache.jackrabbit.JcrConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.jcr.Item;
-import javax.jcr.Node;
-import javax.jcr.PathNotFoundException;
-import javax.jcr.RepositoryException;
-import javax.jcr.version.Version;
-import javax.jcr.version.VersionHistory;
 
 /**
  * <code>DavResourceFactoryImpl</code>...
@@ -88,9 +92,26 @@ public class DavResourceFactoryImpl implements DavResourceFactory {
         JcrDavSession session = (JcrDavSession)request.getDavSession();
 
         DavResource resource;
+        String type = request.getParameter("type");
+
         if (locator.isRootLocation()) {
             // root
             resource = new RootCollection(locator, session, this);
+        } else if ("journal".equals(type) && locator.getResourcePath().equals(locator.getWorkspacePath())) {
+            // feed/event journal resource
+            try {
+                EventJournal ej = session.getRepositorySession().getWorkspace().getObservationManager()
+                        .getEventJournal();
+                if (ej == null) {
+                    throw new DavException(HttpServletResponse.SC_NOT_IMPLEMENTED, "event journal not supported");
+                }
+                resource = new EventJournalResourceImpl(ej, locator, session, request, this);
+            } catch (AccessDeniedException ex) {
+                // EventJournal only allowed for admin?
+                throw new DavException(HttpServletResponse.SC_UNAUTHORIZED, ex);
+            } catch (RepositoryException ex) {
+                throw new DavException(HttpServletResponse.SC_BAD_REQUEST, ex);
+            }
         } else if (locator.getResourcePath().equals(locator.getWorkspacePath())) {
             // workspace resource
             resource = new WorkspaceResourceImpl(locator, session, this);

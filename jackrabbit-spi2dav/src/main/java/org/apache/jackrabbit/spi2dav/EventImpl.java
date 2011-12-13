@@ -57,22 +57,15 @@ public class EventImpl
 
     private static final NameFactory N_FACTORY = NameFactoryImpl.getInstance();
 
-    public EventImpl(ItemId eventId, Path eventPath, NodeId parentId,
-            int eventType, Element eventElement, NamePathResolver resolver,
-            QValueFactory qvFactory) throws NamespaceException,
+    public EventImpl(ItemId eventId, Path eventPath, NodeId parentId, int eventType, String userId,
+            Element eventElement, NamePathResolver resolver, QValueFactory qvFactory) throws NamespaceException,
             IllegalNameException {
-        super(getSpiEventType(eventType), eventPath, eventId, parentId,
-                resolver.getQName(DomUtil.getChildTextTrim(eventElement,
-                        XML_EVENTPRIMARNODETYPE, NAMESPACE)), getNames(
-                        DomUtil.getChildren(eventElement,
-                                XML_EVENTMIXINNODETYPE, NAMESPACE), resolver),
-                DomUtil.getChildTextTrim(eventElement, XML_EVENTUSERID,
-                        NAMESPACE), DomUtil.getChildTextTrim(eventElement,
-                        XML_EVENTUSERDATA, NAMESPACE), Long.parseLong(DomUtil
-                        .getChildTextTrim(eventElement, XML_EVENTDATE,
-                                NAMESPACE)), getEventInfo(
-                        DomUtil.getChildElement(eventElement, XML_EVENTINFO,
-                                NAMESPACE), resolver, qvFactory));
+        super(getSpiEventType(eventType), eventPath, eventId, parentId, getNameSafe(
+                DomUtil.getChildTextTrim(eventElement, XML_EVENTPRIMARNODETYPE, NAMESPACE), resolver), getNames(
+                DomUtil.getChildren(eventElement, XML_EVENTMIXINNODETYPE, NAMESPACE), resolver), userId, DomUtil
+                .getChildTextTrim(eventElement, XML_EVENTUSERDATA, NAMESPACE), Long.parseLong(DomUtil.getChildTextTrim(
+                eventElement, XML_EVENTDATE, NAMESPACE)), getEventInfo(
+                DomUtil.getChildElement(eventElement, XML_EVENTINFO, NAMESPACE), resolver, qvFactory));
     }
 
     //--------------------------------------------------------------------------
@@ -126,6 +119,15 @@ public class EventImpl
             }
         }
         return info;
+    }
+
+    private static Name getNameSafe(String name, NamePathResolver resolver) throws IllegalNameException, NamespaceException {
+        if (name == null) {
+            return null;
+        }
+        else {
+            return resolver.getQName(name);
+        }
     }
 
     private static Name[] getNames(ElementIterator elements,
