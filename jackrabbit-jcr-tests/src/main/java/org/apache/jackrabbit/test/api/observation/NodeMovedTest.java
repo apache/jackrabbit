@@ -187,7 +187,7 @@ public class NodeMovedTest extends AbstractObservationTest {
             throws RepositoryException {
         checkNodes(events, new String[]{to}, null, Event.NODE_MOVED);
         assertEquals("Wrong number of events", 1, events.length);
-        Map info = events[0].getInfo();
+        Map<?, ?> info = events[0].getInfo();
         checkInfoEntry(info, SRC_ABS_PATH, testRoot + "/" + from);
         checkInfoEntry(info, DEST_ABS_PATH, testRoot + "/" + to);
     }
@@ -201,7 +201,7 @@ public class NodeMovedTest extends AbstractObservationTest {
      * @param key the name of the key.
      * @param expected the expected value.
      */
-    protected void checkInfoEntry(Map info, String key, String expected) {
+    protected void checkInfoEntry(Map<?, ?> info, String key, String expected) {
         String value = (String) info.get(key);
         assertNotNull("Missing event info key: " + key, value);
         assertEquals("Wrong event info value for: " + key, expected, value);

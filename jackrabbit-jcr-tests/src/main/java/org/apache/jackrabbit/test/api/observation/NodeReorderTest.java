@@ -292,7 +292,7 @@ public class NodeReorderTest extends AbstractObservationTest {
             throws RepositoryException {
         checkNodes(events, new String[]{dest}, null, Event.NODE_MOVED);
         assertEquals("Wrong number of events", 1, events.length);
-        Map info = events[0].getInfo();
+        Map<?, ?> info = events[0].getInfo();
         checkInfoEntry(info, SRC_CHILD_REL_PATH, src);
         checkInfoEntry(info, DEST_CHILD_REL_PATH, before);
     }
@@ -305,7 +305,7 @@ public class NodeReorderTest extends AbstractObservationTest {
      * @param key the name of the key.
      * @param expected the expected value.
      */
-    protected void checkInfoEntry(Map info, String key, String expected) {
+    protected void checkInfoEntry(Map<?, ?> info, String key, String expected) {
         assertTrue("Missing event info key: " + key, info.containsKey(key));
         assertEquals("Wrong event info value for: " + key,
                 expected, (String) info.get(key));
