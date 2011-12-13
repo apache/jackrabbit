@@ -35,14 +35,6 @@
 
   <build>
     <plugins>
-      <!-- JCR-2100: jackrabbit-jcr-tests should still be based on Java 1.4 -->
-      <plugin>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <configuration>
-          <target>1.4</target>
-          <source>1.4</source>
-        </configuration>
-      </plugin>
       <plugin>
         <groupId>org.apache.rat</groupId>
         <artifactId>apache-rat-plugin</artifactId>
