@@ -18,6 +18,8 @@ package org.apache.jackrabbit.test.api.version;
 
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Set;
+
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.UnsupportedRepositoryOperationException;
@@ -337,7 +339,7 @@ public class VersionLabelTest extends AbstractVersionTest {
      */
     public void testGetVersionLabels() throws RepositoryException {
 
-        HashSet testLabels = new HashSet(Arrays.asList(vHistory.getVersionLabels()));
+        Set<String> testLabels = new HashSet<String>(Arrays.asList(vHistory.getVersionLabels()));
         versionableNode.checkout();
         Version v = versionableNode.checkin();
 
@@ -366,7 +368,7 @@ public class VersionLabelTest extends AbstractVersionTest {
      */
     public void testGetVersionLabelsJcr2() throws RepositoryException {
 
-        HashSet testLabels = new HashSet(Arrays.asList(vHistory.getVersionLabels()));
+        Set<String> testLabels = new HashSet<String>(Arrays.asList(vHistory.getVersionLabels()));
 
         VersionManager versionManager = versionableNode.getSession().getWorkspace().getVersionManager();
         String path = versionableNode.getPath();
@@ -399,7 +401,7 @@ public class VersionLabelTest extends AbstractVersionTest {
      */
     public void testGetVersionLabelsForVersion() throws RepositoryException {
 
-        HashSet testLabels = new HashSet(Arrays.asList(vHistory.getVersionLabels(rootVersion)));
+        Set<String> testLabels = new HashSet<String>(Arrays.asList(vHistory.getVersionLabels(rootVersion)));
 
         vHistory.addVersionLabel(rootVersion.getName(), versionLabel, false);
         testLabels.add(versionLabel);
@@ -430,7 +432,7 @@ public class VersionLabelTest extends AbstractVersionTest {
      */
     public void testGetVersionLabelsForVersionJcr2() throws RepositoryException {
 
-        HashSet testLabels = new HashSet(Arrays.asList(vHistory.getVersionLabels(rootVersion)));
+        Set<String> testLabels = new HashSet<String>(Arrays.asList(vHistory.getVersionLabels(rootVersion)));
 
         vHistory.addVersionLabel(rootVersion.getName(), versionLabel, false);
         testLabels.add(versionLabel);

@@ -114,7 +114,7 @@ public class RemoveVersionTest extends AbstractVersionTest {
     public void testRemoveVersionAdjustPredecessorSet() throws RepositoryException {
 
         // retrieve predecessors to test and remove the version
-        List predecPaths = new ArrayList();
+        List<String> predecPaths = new ArrayList<String>();
         Version[] predec = version.getPredecessors();
         for (int i = 0; i < predec.length; i++) {
             predecPaths.add(predec[i].getPath());

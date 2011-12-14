@@ -30,7 +30,6 @@ import javax.jcr.InvalidItemStateException;
 import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.ItemExistsException;
 import javax.jcr.NodeIterator;
-import javax.jcr.Session;
 
 /**
  * <code>RestoreTest</code> covers tests related to the restore methods available
