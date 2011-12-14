@@ -63,7 +63,7 @@ public class LockingTest extends AbstractObservationTest {
         for (int i = 0; i < events.length; i++) {
             assertEquals("Wrong type of event.", Event.PROPERTY_ADDED, events[i].getType());
         }
-        List paths = new ArrayList();
+        List<String> paths = new ArrayList<String>();
         for (int i = 0; i < events.length; i++) {
             paths.add(events[i].getPath());
         }
@@ -96,7 +96,7 @@ public class LockingTest extends AbstractObservationTest {
         for (int i = 0; i < events.length; i++) {
             assertEquals("Wrong type of event.", Event.PROPERTY_REMOVED, events[i].getType());
         }
-        List paths = new ArrayList();
+        List<String> paths = new ArrayList<String>();
         for (int i = 0; i < events.length; i++) {
             paths.add(events[i].getPath());
         }

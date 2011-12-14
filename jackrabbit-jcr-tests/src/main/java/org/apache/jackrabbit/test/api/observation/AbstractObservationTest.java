@@ -122,11 +122,11 @@ public abstract class AbstractObservationTest extends AbstractJCRTest {
      * @return array of <code>EventListeners</code>.
      */
     protected EventListener[] toArray(EventListenerIterator it) {
-        List listeners = new ArrayList();
+        List<EventListener> listeners = new ArrayList<EventListener>();
         while (it.hasNext()) {
             listeners.add(it.nextEventListener());
         }
-        return (EventListener[]) listeners.toArray(new EventListener[listeners.size()]);
+        return listeners.toArray(new EventListener[listeners.size()]);
     }
 
     //--------------------< check methods >-------------------------------------
@@ -223,7 +223,7 @@ public abstract class AbstractObservationTest extends AbstractJCRTest {
      */
     protected void checkNodes(Event[] events, String[] requiredRelPaths, String[] optionalRelPaths, long eventType)
             throws RepositoryException {
-        Set paths = new HashSet();
+        Set<String> paths = new HashSet<String>();
         for (int i = 0; i < events.length; i++) {
             assertEquals("Wrong event type", eventType, events[i].getType());
             String path = events[i].getPath();
@@ -237,14 +237,14 @@ public abstract class AbstractObservationTest extends AbstractJCRTest {
             paths.remove(expected);
         }
         // check what remains in the set is indeed optional
-        Set optional = new HashSet();
+        Set<String> optional = new HashSet<String>();
         if (optionalRelPaths != null) {
             for (int i = 0; i < optionalRelPaths.length; i++) {
                 optional.add(testRoot + "/" + optionalRelPaths[i]);
             }
         }
-        for (Iterator it = paths.iterator(); it.hasNext(); ) {
-            String path = (String)it.next();
+        for (Iterator<String> it = paths.iterator(); it.hasNext(); ) {
+            String path = it.next();
             assertTrue("Path " + path + " not expected in events.",
                     optional.contains(path));
         }

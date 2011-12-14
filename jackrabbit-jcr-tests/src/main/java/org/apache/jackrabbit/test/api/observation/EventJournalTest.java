@@ -258,8 +258,8 @@ public class EventJournalTest extends AbstractObservationTest {
      *          journal.
      */
     private void checkJournal(String[] allowed, String[] denied) throws RepositoryException {
-        Set allowedSet = new HashSet(Arrays.asList(allowed));
-        Set deniedSet = new HashSet(Arrays.asList(denied));
+        Set<String> allowedSet = new HashSet<String>(Arrays.asList(allowed));
+        Set<String> deniedSet = new HashSet<String>(Arrays.asList(denied));
         while (journal.hasNext()) {
             String path = journal.nextEvent().getPath();
             allowedSet.remove(path);

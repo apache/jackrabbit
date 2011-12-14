@@ -127,10 +127,10 @@ public class EventResult implements EventListener {
      * @return the events from the iterator.
      */
     private Event[] getEvents(EventIterator events) {
-        List eventList = new ArrayList();
+        List<Event> eventList = new ArrayList<Event>();
         while (events.hasNext()) {
             eventList.add(events.nextEvent());
         }
-        return (Event[]) eventList.toArray(new Event[eventList.size()]);
+        return eventList.toArray(new Event[eventList.size()]);
     }
 }
