@@ -40,7 +40,7 @@ public class GetQueryTest extends AbstractQOMTest {
         checkNtQuery();
         Node n = testRootNode.addNode(nodeName1, testNodeType);
         superuser.save();
-        List queries = new ArrayList();
+        List<Query> queries = new ArrayList<Query>();
         QueryObjectModel qom = qf.createQuery(
                 qf.selector(testNodeType, "s"),
                 qf.childNode("s", testRoot),
@@ -57,8 +57,8 @@ public class GetQueryTest extends AbstractQOMTest {
             String sql = "select * from " + testNodeType + " where jcr:path like '" + testRoot + "/%'";
             queries.add(qm.createQuery(sql, Query.SQL));
         }
-        for (Iterator it = queries.iterator(); it.hasNext(); ) {
-            Query q = (Query) it.next();
+        for (Iterator<Query> it = queries.iterator(); it.hasNext(); ) {
+            Query q = it.next();
             String lang = q.getLanguage();
             checkResult(q.execute(), new Node[]{n});
 

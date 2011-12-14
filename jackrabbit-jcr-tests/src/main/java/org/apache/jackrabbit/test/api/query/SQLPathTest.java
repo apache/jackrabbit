@@ -111,7 +111,7 @@ public class SQLPathTest extends AbstractQueryTest {
         String sql = getStatement(testRoot + "/%/" + name);
         sql += " OR " + jcrPath + " = '" + testRoot + "/" + name + "'";
         // gather the nodes with visitor
-        final List nodes = new ArrayList();
+        final List<Node> nodes = new ArrayList<Node>();
         testRootNode.accept(new TraversingItemVisitor.Default() {
             protected void entering(Node node, int level) throws RepositoryException {
                 if (node.getName().equals(name) && !testRootNode.isSame(node)) {
@@ -119,7 +119,7 @@ public class SQLPathTest extends AbstractQueryTest {
                 }
             }
         });
-        executeSqlQuery(session, sql, (Node[]) nodes.toArray(new Node[nodes.size()]));
+        executeSqlQuery(session, sql, nodes.toArray(new Node[nodes.size()]));
     }
 
     /**
@@ -180,7 +180,7 @@ public class SQLPathTest extends AbstractQueryTest {
      * @throws RepositoryException if an error occurs.
      */
     private Node[] getDescendants(final Node node) throws RepositoryException {
-        final List descendants = new ArrayList();
+        final List<Node> descendants = new ArrayList<Node>();
 
         node.accept(new TraversingItemVisitor.Default() {
             protected void entering(Node n, int level)
@@ -191,6 +191,6 @@ public class SQLPathTest extends AbstractQueryTest {
             }
         });
 
-        return (Node[]) descendants.toArray(new Node[descendants.size()]);
+        return descendants.toArray(new Node[descendants.size()]);
     }
 }

@@ -68,7 +68,7 @@ public abstract class AbstractQOMTest extends AbstractQueryTest {
                                     Node[][] nodes)
             throws RepositoryException {
         // collect rows
-        List expectedPaths = new ArrayList();
+        List<String> expectedPaths = new ArrayList<String>();
         log.println("expected:");
         for (int i = 0; i < nodes.length; i++) {
             StringBuffer aggregatedPaths = new StringBuffer();
@@ -80,7 +80,7 @@ public abstract class AbstractQOMTest extends AbstractQueryTest {
             log.println(aggregatedPaths.toString());
         }
 
-        List resultPaths = new ArrayList();
+        List<String> resultPaths = new ArrayList<String>();
         log.println("result:");
         for (RowIterator it = result.getRows(); it.hasNext();) {
             Row r = it.nextRow();
@@ -138,7 +138,7 @@ public abstract class AbstractQOMTest extends AbstractQueryTest {
                                Node[][] nodes)
             throws RepositoryException {
         // collect rows
-        Set expectedPaths = new HashSet();
+        Set<String> expectedPaths = new HashSet<String>();
         log.println("expected:");
         for (int i = 0; i < nodes.length; i++) {
             StringBuffer aggregatedPaths = new StringBuffer();
@@ -150,7 +150,7 @@ public abstract class AbstractQOMTest extends AbstractQueryTest {
             log.println(aggregatedPaths.toString());
         }
 
-        Set resultPaths = new HashSet();
+        Set<String> resultPaths = new HashSet<String>();
         log.println("result:");
         for (RowIterator it = result.getRows(); it.hasNext();) {
             Row r = it.nextRow();
@@ -164,13 +164,13 @@ public abstract class AbstractQOMTest extends AbstractQueryTest {
         }
 
         // check if all expected are in result
-        for (Iterator it = expectedPaths.iterator(); it.hasNext();) {
-            String path = (String) it.next();
+        for (Iterator<String> it = expectedPaths.iterator(); it.hasNext();) {
+            String path = it.next();
             assertTrue(path + " is not part of the result set", resultPaths.contains(path));
         }
         // check result does not contain more than expected
-        for (Iterator it = resultPaths.iterator(); it.hasNext();) {
-            String path = (String) it.next();
+        for (Iterator<String> it = resultPaths.iterator(); it.hasNext();) {
+            String path = it.next();
             assertTrue(path + " is not expected to be part of the result set", expectedPaths.contains(path));
         }
     }
@@ -203,11 +203,11 @@ public abstract class AbstractQOMTest extends AbstractQueryTest {
      */
     protected void forQOMandSQL2(QueryObjectModel qom, Callable callable)
             throws RepositoryException {
-        List queries = new ArrayList();
+        List<Query> queries = new ArrayList<Query>();
         queries.add(qom);
         queries.add(qm.createQuery(qom.getStatement(), Query.JCR_SQL2));
-        for (Iterator it = queries.iterator(); it.hasNext();) {
-            callable.call((Query) it.next());
+        for (Iterator<Query> it = queries.iterator(); it.hasNext();) {
+            callable.call(it.next());
         }
     }
 
