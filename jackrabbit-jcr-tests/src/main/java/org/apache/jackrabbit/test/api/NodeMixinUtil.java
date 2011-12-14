@@ -58,7 +58,7 @@ public class NodeMixinUtil {
     public static String getNotAssignedMixinName(Session session, Node node) throws RepositoryException {
         NodeTypeManager manager = session.getWorkspace().getNodeTypeManager();
         NodeTypeIterator mixins = manager.getMixinNodeTypes();
-        List existingMixins = Arrays.asList(node.getMixinNodeTypes());
+        List<NodeType> existingMixins = Arrays.asList(node.getMixinNodeTypes());
 
         while (mixins.hasNext()) {
             NodeType nt = mixins.nextNodeType();

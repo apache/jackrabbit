@@ -115,8 +115,8 @@ public class NamespaceRemappingTest extends AbstractJCRTest {
      * </blockquote>
      */
     public void testAutomaticNewLocalPrefix() throws RepositoryException {
-        Set prefixes =
-            new HashSet(Arrays.asList(session.getNamespacePrefixes()));
+        Set<String> prefixes =
+            new HashSet<String>(Arrays.asList(session.getNamespacePrefixes()));
         prefixes.remove(session.getNamespacePrefix(NS_JCR_URI));
         prefixes.remove(session.getNamespacePrefix(NS_NT_URI));
 
@@ -242,7 +242,7 @@ public class NamespaceRemappingTest extends AbstractJCRTest {
      * <blockquote>
      * However, the method will throw an exception if
      * <ul>
-     * <li>the specified prefix begins with the characters “xml”
+     * <li>the specified prefix begins with the characters "xml"
      *     (in any combination of case) or,</li>
      * <li>the specified prefix is the empty string or,</li>
      * <li>the specified namespace URI is the empty string.</li>
@@ -374,7 +374,7 @@ public class NamespaceRemappingTest extends AbstractJCRTest {
      * @return a namespace prefix that is not in use.
      */
     private String getUnusedPrefix() throws RepositoryException {
-        Set prefixes = new HashSet();
+        Set<String> prefixes = new HashSet<String>();
         prefixes.addAll(Arrays.asList(session.getNamespacePrefixes()));
         String prefix = "myapp";
         int count = 0;

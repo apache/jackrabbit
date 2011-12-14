@@ -323,7 +323,7 @@ public class NodeReadMethodsTest extends AbstractJCRTest {
                     "Root node must have at least one child node.");
         }
         NodeIterator allNodesIt = node.getNodes();
-        ArrayList allNodes = new ArrayList();
+        List<Node> allNodes = new ArrayList<Node>();
         while (allNodesIt.hasNext()) {
             Node n = allNodesIt.nextNode();
             allNodes.add(n);
@@ -342,7 +342,7 @@ public class NodeReadMethodsTest extends AbstractJCRTest {
         }
 
         // all further tests are using root's first sub node
-        Node firstNode = (Node) allNodes.get(0);
+        Node firstNode = allNodes.get(0);
 
         // test pattern "*"
         String pattern1 = "*";
@@ -367,7 +367,7 @@ public class NodeReadMethodsTest extends AbstractJCRTest {
         // test if the number of found nodes is correct
         int numExpected2 = 0;
         for (int i = 0; i < allNodes.size(); i++) {
-            Node n = (Node) allNodes.get(i);
+            Node n = allNodes.get(i);
             if (n.getName().equals(firstNode.getName())) {
                 numExpected2++;
             }
@@ -392,7 +392,7 @@ public class NodeReadMethodsTest extends AbstractJCRTest {
         // test if the number of found nodes is correct
         int numExpected3 = 0;
         for (int i = 0; i < allNodes.size(); i++) {
-            Node n = (Node) allNodes.get(i);
+            Node n = allNodes.get(i);
             if (n.getName().equals(firstNode.getName())) {
                 numExpected3++;
             }
@@ -420,7 +420,7 @@ public class NodeReadMethodsTest extends AbstractJCRTest {
             // test if the number of found nodes is correct
             int numExpected4 = 0;
             for (int i = 0; i < allNodes.size(); i++) {
-                Node n = (Node) allNodes.get(i);
+                Node n = allNodes.get(i);
                 if (n.getName().indexOf(shortenName) != -1) {
                     numExpected4++;
                 }
@@ -448,7 +448,7 @@ public class NodeReadMethodsTest extends AbstractJCRTest {
                     "Root node must have at least one child node.");
         }
         NodeIterator allNodesIt = node.getNodes();
-        ArrayList allNodes = new ArrayList();
+        List<Node> allNodes = new ArrayList<Node>();
         while (allNodesIt.hasNext()) {
             Node n = allNodesIt.nextNode();
             allNodes.add(n);
@@ -467,7 +467,7 @@ public class NodeReadMethodsTest extends AbstractJCRTest {
         }
 
         // all further tests are using root's first sub node
-        Node firstNode = (Node) allNodes.get(0);
+        Node firstNode = allNodes.get(0);
 
         // test pattern "*"
         String pattern1 = "*";
@@ -492,7 +492,7 @@ public class NodeReadMethodsTest extends AbstractJCRTest {
         // test if the number of found nodes is correct
         int numExpected2 = 0;
         for (int i = 0; i < allNodes.size(); i++) {
-            Node n = (Node) allNodes.get(i);
+            Node n = allNodes.get(i);
             if (n.getName().equals(firstNode.getName())) {
                 numExpected2++;
             }
@@ -515,7 +515,7 @@ public class NodeReadMethodsTest extends AbstractJCRTest {
         // test if the number of found nodes is correct
         int numExpected4 = 0;
         for (int i = 0; i < allNodes.size(); i++) {
-            Node n = (Node) allNodes.get(i);
+            Node n = allNodes.get(i);
             if (n.getName().equals(firstNode.getName())) {
                 numExpected4++;
             }
@@ -542,7 +542,7 @@ public class NodeReadMethodsTest extends AbstractJCRTest {
             // test if the number of found nodes is correct
             int numExpected5 = 0;
             for (int i = 0; i < allNodes.size(); i++) {
-                Node n = (Node) allNodes.get(i);
+                Node n = allNodes.get(i);
                 if (n.getName().indexOf(shortenName) != -1) {
                     numExpected5++;
                 }
@@ -610,7 +610,7 @@ public class NodeReadMethodsTest extends AbstractJCRTest {
             fail("Root node must always have at least one property: jcr:primaryType");
         }
         PropertyIterator allPropertiesIt = node.getProperties();
-        ArrayList allProperties = new ArrayList();
+        List<Property> allProperties = new ArrayList<Property>();
         StringBuffer notExistingPropertyName = new StringBuffer();
         while (allPropertiesIt.hasNext()) {
             Property p = allPropertiesIt.nextProperty();
@@ -632,7 +632,7 @@ public class NodeReadMethodsTest extends AbstractJCRTest {
         }
 
         // all tests are running using root's first property
-        Property firstProperty = (Property) allProperties.get(0);
+        Property firstProperty = allProperties.get(0);
 
         // test: getProperties("*")
         String pattern1 = "*";
@@ -656,7 +656,7 @@ public class NodeReadMethodsTest extends AbstractJCRTest {
         // test if the number of found properties is correct
         int numExpected2 = 0;
         for (int i = 0; i < allProperties.size(); i++) {
-            Property p = (Property) allProperties.get(i);
+            Property p = allProperties.get(i);
             if (p.getName().equals(firstProperty.getName())) {
                 numExpected2++;
             }
@@ -681,7 +681,7 @@ public class NodeReadMethodsTest extends AbstractJCRTest {
         // test if the number of found properties is correct
         int numExpected3 = 0;
         for (int i = 0; i < allProperties.size(); i++) {
-            Property p = (Property) allProperties.get(i);
+            Property p = allProperties.get(i);
             if (p.getName().equals(firstProperty.getName())) {
                 numExpected3++;
             }
@@ -709,7 +709,7 @@ public class NodeReadMethodsTest extends AbstractJCRTest {
             // test if the number of found properties is correct
             int numExpected4 = 0;
             for (int i = 0; i < allProperties.size(); i++) {
-                Property p = (Property) allProperties.get(i);
+                Property p = allProperties.get(i);
                 if (p.getName().indexOf(shortenName) != -1) {
                     numExpected4++;
                 }
@@ -734,7 +734,7 @@ public class NodeReadMethodsTest extends AbstractJCRTest {
             fail("Root node must always have at least one property: jcr:primaryType");
         }
         PropertyIterator allPropertiesIt = node.getProperties();
-        List allProperties = new ArrayList();
+        List<Property> allProperties = new ArrayList<Property>();
         StringBuffer notExistingPropertyName = new StringBuffer();
         while (allPropertiesIt.hasNext()) {
             Property p = allPropertiesIt.nextProperty();
@@ -743,7 +743,7 @@ public class NodeReadMethodsTest extends AbstractJCRTest {
         }
 
         // all tests are running using root's first property
-        Property firstProperty = (Property) allProperties.get(0);
+        Property firstProperty = allProperties.get(0);
 
         // test: getProperties("*")
         String pattern1 = "*";
@@ -767,7 +767,7 @@ public class NodeReadMethodsTest extends AbstractJCRTest {
         // test if the number of found properties is correct
         int numExpected2 = 0;
         for (int i = 0; i < allProperties.size(); i++) {
-            Property p = (Property) allProperties.get(i);
+            Property p = allProperties.get(i);
             if (p.getName().equals(firstProperty.getName())) {
                 numExpected2++;
             }
@@ -791,7 +791,7 @@ public class NodeReadMethodsTest extends AbstractJCRTest {
         // test if the number of found properties is correct
         int numExpected4 = 0;
         for (int i = 0; i < allProperties.size(); i++) {
-            Property p = (Property) allProperties.get(i);
+            Property p = allProperties.get(i);
             if (p.getName().equals(firstProperty.getName())) {
                 numExpected4++;
             }
@@ -817,7 +817,7 @@ public class NodeReadMethodsTest extends AbstractJCRTest {
             // test if the number of found properties is correct
             int numExpected5 = 0;
             for (int i = 0; i < allProperties.size(); i++) {
-                Property p = (Property) allProperties.get(i);
+                Property p = allProperties.get(i);
                 if (p.getName().indexOf(shortenName) != -1) {
                     numExpected5++;
                 }

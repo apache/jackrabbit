@@ -466,7 +466,7 @@ abstract class AbstractImportXmlTest extends AbstractJCRTest {
      * @return an unused namespace prefix.
      */
     protected String getUnusedPrefix() throws RepositoryException {
-        Set prefixes = new HashSet(Arrays.asList(nsp.getPrefixes()));
+        Set<String> prefixes = new HashSet<String>(Arrays.asList(nsp.getPrefixes()));
         String prefix = TEST_PREFIX;
         int i = 0;
         while (prefixes.contains(prefix)) {
@@ -482,7 +482,7 @@ abstract class AbstractImportXmlTest extends AbstractJCRTest {
      * @return an unused namespace URI.
      */
     protected String getUnusedURI() throws RepositoryException {
-        Set uris = new HashSet(Arrays.asList(nsp.getURIs()));
+        Set<String> uris = new HashSet<String>(Arrays.asList(nsp.getURIs()));
         String uri = TEST_URI;
         int i = 0;
         while (uris.contains(uri)) {

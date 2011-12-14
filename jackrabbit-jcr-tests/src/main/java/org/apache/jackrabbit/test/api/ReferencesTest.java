@@ -148,7 +148,7 @@ public class ReferencesTest extends AbstractJCRTest {
         // get references with name propertyName1
         // (should return p1 and p3))
         PropertyIterator iter = n1.getReferences(propertyName1);
-        Set results = new HashSet();
+        Set<String> results = new HashSet<String>();
         while (iter.hasNext()) {
             results.add(iter.nextProperty().getPath());
         }

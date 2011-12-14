@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.List;
 
 import javax.jcr.ImportUUIDBehavior;
 import javax.jcr.Item;
@@ -1128,14 +1129,14 @@ public class ShareableNodeTest extends AbstractJCRTest {
         String sql = "SELECT * FROM nt:unstructured WHERE jcr:uuid = '"+c.getUUID()+"'";
         QueryResult res = workspace.getQueryManager().createQuery(sql, Query.SQL).execute();
 
-        ArrayList list = new ArrayList();
+        List<Node> list = new ArrayList<Node>();
 
         NodeIterator iter = res.getNodes();
         while (iter.hasNext()) {
             list.add(iter.nextNode());
         }
         assertEquals(1, list.size());
-        assertTrue(((Node) list.get(0)).isSame(c));
+        assertTrue(list.get(0).isSame(c));
     }
 
     //--------------------------------------------------------- limitation tests

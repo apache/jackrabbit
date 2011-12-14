@@ -39,7 +39,7 @@ import java.util.Arrays;
  */
 public class RepositoryDescriptorTest extends AbstractJCRTest {
 
-    private static final Set requiredDescriptorKeys = new HashSet();
+    private static final Set<String> requiredDescriptorKeys = new HashSet<String>();
 
     static {
         requiredDescriptorKeys.add(Repository.IDENTIFIER_STABILITY);
@@ -121,8 +121,8 @@ public class RepositoryDescriptorTest extends AbstractJCRTest {
      */
     public void testRequiredDescriptors() {
         Repository rep = session.getRepository();
-        for (Iterator it = requiredDescriptorKeys.iterator(); it.hasNext();) {
-            String descName = (String) it.next();
+        for (Iterator<String> it = requiredDescriptorKeys.iterator(); it.hasNext();) {
+            String descName = it.next();
             assertTrue(descName + " is a standard descriptor", rep.isStandardDescriptor(descName));
             if (rep.isSingleValueDescriptor(descName)) {
                 Value val = rep.getDescriptorValue(descName);
@@ -141,9 +141,9 @@ public class RepositoryDescriptorTest extends AbstractJCRTest {
      * descriptors keys.
      */
     public void testGetDescriptorKeys() {
-        List keys = Arrays.asList(session.getRepository().getDescriptorKeys());
-        for (Iterator it = requiredDescriptorKeys.iterator(); it.hasNext();) {
-            String key = (String) it.next();
+        List<String> keys = Arrays.asList(session.getRepository().getDescriptorKeys());
+        for (Iterator<String> it = requiredDescriptorKeys.iterator(); it.hasNext();) {
+            String key = it.next();
             assertTrue("Required descriptor is missing: " + key,
                     keys.contains(key));
         }

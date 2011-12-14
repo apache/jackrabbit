@@ -77,7 +77,7 @@ public class NamespaceRegistryReadMethodsTest extends AbstractJCRTest {
      * required namespace prefixes and if they are mapped to the correct URIs.
      */
     public void testGetNamespacePrefixes() throws RepositoryException {
-        Set prefixes = new HashSet();
+        Set<String> prefixes = new HashSet<String>();
         prefixes.addAll(Arrays.asList(nsr.getPrefixes()));
         for (int i = 0; i < BUILTIN_PREFIXES.length; i++) {
             String prefix = BUILTIN_PREFIXES[i];
@@ -92,7 +92,7 @@ public class NamespaceRegistryReadMethodsTest extends AbstractJCRTest {
      * required namespace URIs and if they are mapped to the correct prefixes.
      */
     public void testGetNamespaceURIs() throws RepositoryException {
-        Set uris = new HashSet();
+        Set<String> uris = new HashSet<String>();
         uris.addAll(Arrays.asList(nsr.getURIs()));
         for (int i = 0; i < BUILTIN_URIS.length; i++) {
             String uri = BUILTIN_URIS[i];
@@ -108,7 +108,7 @@ public class NamespaceRegistryReadMethodsTest extends AbstractJCRTest {
      * unknown prefix.
      */
     public void testGetURINamespaceException() throws RepositoryException, NotExecutableException {
-        Set prefixes = new HashSet();
+        Set<String> prefixes = new HashSet<String>();
         prefixes.addAll(Arrays.asList(nsr.getPrefixes()));
         String prefix = "myapp";
         int count = 0;
@@ -131,7 +131,7 @@ public class NamespaceRegistryReadMethodsTest extends AbstractJCRTest {
      * unknown URI.
      */
     public void testGetPrefixNamespaceException() throws RepositoryException, NotExecutableException {
-        Set uris = new HashSet();
+        Set<String> uris = new HashSet<String>();
         uris.addAll(Arrays.asList(nsr.getURIs()));
         String uri = "http://www.unknown-company.com/namespace";
         int count = 0;
