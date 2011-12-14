@@ -24,6 +24,7 @@ import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javax.jcr.ItemNotFoundException;
@@ -165,7 +166,7 @@ public class VersionHistoryTest extends AbstractVersionTest {
         
         VersionManager vm = versionableNode.getSession().getWorkspace().getVersionManager();
         
-        List lvh = new ArrayList();
+        List<String> lvh = new ArrayList<String>();
         for (VersionIterator it = vHistory.getAllLinearVersions(); it.hasNext(); ) {
             lvh.add(it.nextVersion().getName());
         }
@@ -188,7 +189,7 @@ public class VersionHistoryTest extends AbstractVersionTest {
      */
     public void testGetAllVersions() throws RepositoryException {
         int cnt = 5;
-        HashMap versions = new HashMap();
+        Map<String, Version> versions = new HashMap<String, Version>();
         Version v = vHistory.getRootVersion();
         versions.put(v.getUUID(), v);
         for (int i = 0; i < cnt; i++) {
@@ -217,7 +218,7 @@ public class VersionHistoryTest extends AbstractVersionTest {
      */
     public void testGetAllVersionsJcr2() throws RepositoryException {
         int cnt = 5;
-        HashMap versions = new HashMap();
+        Map<String, Version> versions = new HashMap<String, Version>();
         Version v = vHistory.getRootVersion();
         versions.put(v.getIdentifier(), v);
         for (int i = 0; i < cnt; i++) {
@@ -256,13 +257,13 @@ public class VersionHistoryTest extends AbstractVersionTest {
             vm.checkpoint(path);
         }
 
-        Set frozenIds = new HashSet();
+        Set<String> frozenIds = new HashSet<String>();
         for (VersionIterator it = vm.getVersionHistory(path).getAllVersions(); it.hasNext(); ) {
             Version v = it.nextVersion();
             frozenIds.add(v.getFrozenNode().getIdentifier());
         }
         
-        Set test = new HashSet();
+        Set<String> test = new HashSet<String>();
         for (NodeIterator it = vHistory.getAllFrozenNodes(); it.hasNext(); ) {
             Node n = it.nextNode();
             assertTrue("Node " + n.getPath() + " must be of type frozen node",

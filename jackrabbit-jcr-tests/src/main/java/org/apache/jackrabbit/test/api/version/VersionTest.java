@@ -448,7 +448,7 @@ public class VersionTest extends AbstractVersionTest {
      * Tests if <code>Version.getUUID()</code> returns the right UUID
      */
     public void testGetUUID() throws Exception {
-        List successorValues = Arrays.asList(versionableNode.getVersionHistory().getRootVersion().getProperty(jcrSuccessors).getValues());
+        List<Value> successorValues = Arrays.asList(versionableNode.getVersionHistory().getRootVersion().getProperty(jcrSuccessors).getValues());
         assertTrue("Version.getUUID() did not return the right UUID", successorValues.contains(superuser.getValueFactory().createValue(version)));
     }
 

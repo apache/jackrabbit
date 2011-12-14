@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.test.api.version;
 
+import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.Node;
 import javax.jcr.version.VersionManager;
@@ -53,11 +54,11 @@ public class MergeNodeIteratorTest extends AbstractMergeTest {
 
         Node nodeToMerge = testRootNodeW2.getNode(nodeName1);
 
-        Iterator failedNodes = nodeToMerge.merge(workspace.getName(), true);
+        NodeIterator failedNodes1 = nodeToMerge.merge(workspace.getName(), true);
 
-        List nodeList = new ArrayList();
-        while (failedNodes.hasNext()) {
-            nodeList.add(failedNodes.next());
+        List<Node> nodeList = new ArrayList<Node>();
+        while (failedNodes1.hasNext()) {
+            nodeList.add(failedNodes1.nextNode());
         }
 
         assertEquals("Node.merge() does not return a NodeIterator with " +
@@ -66,10 +67,10 @@ public class MergeNodeIteratorTest extends AbstractMergeTest {
                 nodeList.size());
 
         // re-aquire iterator, has been consumed to get size
-        failedNodes = nodeList.iterator();
+        Iterator<Node> failedNodes2 = nodeList.iterator();
         compareReturnedWithExpected:
-        while (failedNodes.hasNext()) {
-            String path = ((Node) failedNodes.next()).getPath();
+        while (failedNodes2.hasNext()) {
+            String path = failedNodes2.next().getPath();
             for (int i = 0; i < expectedFailedNodes.length; i++) {
                 if (expectedFailedNodes[i] != null) {
                     String expectedPath = expectedFailedNodes[i].getPath();
@@ -94,12 +95,12 @@ public class MergeNodeIteratorTest extends AbstractMergeTest {
 
         Node nodeToMerge = testRootNodeW2.getNode(nodeName1);
 
-        Iterator failedNodes = nodeToMerge.getSession().getWorkspace().getVersionManager().merge(
+        NodeIterator failedNodes1 = nodeToMerge.getSession().getWorkspace().getVersionManager().merge(
                 nodeToMerge.getPath(), workspace.getName(), true);
 
-        List nodeList = new ArrayList();
-        while (failedNodes.hasNext()) {
-            nodeList.add(failedNodes.next());
+        List<Node> nodeList = new ArrayList<Node>();
+        while (failedNodes1.hasNext()) {
+            nodeList.add(failedNodes1.nextNode());
         }
 
         assertEquals("Node.merge() does not return a NodeIterator with " +
@@ -108,10 +109,10 @@ public class MergeNodeIteratorTest extends AbstractMergeTest {
                 nodeList.size());
 
         // re-aquire iterator, has been consumed to get size
-        failedNodes = nodeList.iterator();
+        Iterator<Node> failedNodes2 = nodeList.iterator();
         compareReturnedWithExpected:
-        while (failedNodes.hasNext()) {
-            String path = ((Node) failedNodes.next()).getPath();
+        while (failedNodes2.hasNext()) {
+            String path = failedNodes2.next().getPath();
             for (int i = 0; i < expectedFailedNodes.length; i++) {
                 if (expectedFailedNodes[i] != null) {
                     String expectedPath = expectedFailedNodes[i].getPath();
