@@ -253,7 +253,7 @@ public class HoldTest extends AbstractRetentionTest {
     public void testAddHoldOnLockedNode() throws NotExecutableException, RepositoryException {
         Node child = getLockedChildNode();
         // remember current holds for clean up.
-        List holdsBefore = Arrays.asList(retentionMgr.getHolds(child.getPath()));
+        List<Hold> holdsBefore = Arrays.asList(retentionMgr.getHolds(child.getPath()));
 
         // get another session.
         javax.jcr.Session otherS = getHelper().getSuperuserSession();
@@ -269,9 +269,9 @@ public class HoldTest extends AbstractRetentionTest {
             otherS.logout();
 
             // clear holds (in case of test failure)
-            List holds = new ArrayList(Arrays.asList(retentionMgr.getHolds(child.getPath())));
+            List<Hold> holds = new ArrayList<Hold>(Arrays.asList(retentionMgr.getHolds(child.getPath())));
             if (holds.removeAll(holdsBefore)) {
-                for (Iterator it = holds.iterator(); it.hasNext();) {
+                for (Iterator<Hold> it = holds.iterator(); it.hasNext();) {
                     retentionMgr.removeHold(child.getPath(), (Hold) it.next());
                 }
             }
