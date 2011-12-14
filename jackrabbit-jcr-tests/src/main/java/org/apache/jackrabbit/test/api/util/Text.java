@@ -24,6 +24,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.BitSet;
+import java.util.List;
 import java.util.Properties;
 
 /**
@@ -141,7 +142,7 @@ public class Text {
             return new String[0];
         }
 
-        ArrayList strings = new ArrayList();
+        List<String> strings = new ArrayList<String>();
         int pos;
         int lastpos = 0;
 
@@ -160,7 +161,7 @@ public class Text {
         }
 
         // return stringarray
-        return (String[]) strings.toArray(new String[strings.size()]);
+        return strings.toArray(new String[strings.size()]);
     }
 
     /**
