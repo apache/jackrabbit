@@ -55,7 +55,7 @@ import org.apache.jackrabbit.test.NotExecutableException;
  */
 public class PredefinedNodeTypeTest extends AbstractJCRTest {
 
-    private static final Map SUPERTYPES = new HashMap();
+    private static final Map<String, String[]> SUPERTYPES = new HashMap<String, String[]>();
 
     static {
         SUPERTYPES.put("mix:created", new String[]{});
@@ -334,15 +334,15 @@ public class PredefinedNodeTypeTest extends AbstractJCRTest {
             assertEquals("Predefined node type " + name, expected, current);
 
             // check minimum declared supertypes
-            Set declaredSupertypes = new HashSet();
-            for (Iterator it = Arrays.asList(
+            Set<String> declaredSupertypes = new HashSet<String>();
+            for (Iterator<NodeType> it = Arrays.asList(
                     type.getDeclaredSupertypes()).iterator(); it.hasNext(); ) {
-                NodeType nt = (NodeType) it.next();
+                NodeType nt = it.next();
                 declaredSupertypes.add(nt.getName());
             }
-            for (Iterator it = Arrays.asList(
-                    (String[]) SUPERTYPES.get(name)).iterator(); it.hasNext(); ) {
-                String supertype = (String) it.next();
+            for (Iterator<String> it = Arrays.asList(
+                    SUPERTYPES.get(name)).iterator(); it.hasNext(); ) {
+                String supertype = it.next();
                 assertTrue("Predefined node type " + name + " does not " +
                         "declare supertype " + supertype,
                         declaredSupertypes.contains(supertype));
@@ -518,10 +518,8 @@ public class PredefinedNodeTypeTest extends AbstractJCRTest {
      * Comparator for ordering node definition arrays. Node definitions are
      * ordered by name, with the wildcard item definition ("*") ordered last.
      */
-    private static final Comparator NODE_DEF_COMPARATOR = new Comparator() {
-        public int compare(Object a, Object b) {
-            NodeDefinition nda = (NodeDefinition) a;
-            NodeDefinition ndb = (NodeDefinition) b;
+    private static final Comparator<NodeDefinition> NODE_DEF_COMPARATOR = new Comparator<NodeDefinition>() {
+        public int compare(NodeDefinition nda, NodeDefinition ndb) {
             if (nda.getName().equals("*") && !ndb.getName().equals("*")) {
                 return 1;
             } else if (!nda.getName().equals("*") && ndb.getName().equals("*")) {
@@ -537,10 +535,8 @@ public class PredefinedNodeTypeTest extends AbstractJCRTest {
      * are ordered by name, with the wildcard item definition ("*") ordered
      * last, and isMultiple flag, with <code>isMultiple==true</code> ordered last.
      */
-    private static final Comparator PROPERTY_DEF_COMPARATOR = new Comparator() {
-        public int compare(Object a, Object b) {
-            PropertyDefinition pda = (PropertyDefinition) a;
-            PropertyDefinition pdb = (PropertyDefinition) b;
+    private static final Comparator<PropertyDefinition> PROPERTY_DEF_COMPARATOR = new Comparator<PropertyDefinition>() {
+        public int compare(PropertyDefinition pda, PropertyDefinition pdb) {
             if (pda.getName().equals("*") && !pdb.getName().equals("*")) {
                 return 1;
             } else if (!pda.getName().equals("*") && pdb.getName().equals("*")) {
@@ -564,10 +560,8 @@ public class PredefinedNodeTypeTest extends AbstractJCRTest {
      * Comparator for ordering node type arrays. Node types are ordered by
      * name, with all primary node types ordered before mixin node types.
      */
-    private static final Comparator NODE_TYPE_COMPARATOR = new Comparator() {
-        public int compare(Object a, Object b) {
-            NodeType nta = (NodeType) a;
-            NodeType ntb = (NodeType) b;
+    private static final Comparator<NodeType> NODE_TYPE_COMPARATOR = new Comparator<NodeType>() {
+        public int compare(NodeType nta, NodeType ntb) {
             if (nta.isMixin() && !ntb.isMixin()) {
                 return 1;
             } else if (!nta.isMixin() && ntb.isMixin()) {
