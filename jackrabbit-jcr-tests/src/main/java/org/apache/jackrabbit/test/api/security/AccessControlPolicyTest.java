@@ -48,7 +48,7 @@ public class AccessControlPolicyTest extends AbstractAccessControlTest {
     private static Logger log = LoggerFactory.getLogger(AccessControlPolicyTest.class);
 
     private String path;
-    private Map addedPolicies = new HashMap();
+    private Map<String, AccessControlPolicy> addedPolicies = new HashMap<String, AccessControlPolicy>();
 
     protected void setUp() throws Exception {
         super.setUp();
@@ -62,9 +62,9 @@ public class AccessControlPolicyTest extends AbstractAccessControlTest {
 
     protected void tearDown() throws Exception {
         try {
-            for (Iterator it = addedPolicies.keySet().iterator(); it.hasNext();) {
-                String path = it.next().toString();
-                AccessControlPolicy policy = (AccessControlPolicy) addedPolicies.get(path);
+            for (Iterator<String> it = addedPolicies.keySet().iterator(); it.hasNext();) {
+                String path = it.next();
+                AccessControlPolicy policy = addedPolicies.get(path);
                 acMgr.removePolicy(path, policy);
             }
             superuser.save();
@@ -130,7 +130,7 @@ public class AccessControlPolicyTest extends AbstractAccessControlTest {
         checkCanReadAc(path);
         // call must succeed without exception
         AccessControlPolicyIterator it = acMgr.getApplicablePolicies(path);
-        Set acps = new HashSet();
+        Set<AccessControlPolicy> acps = new HashSet<AccessControlPolicy>();
 
         while (it.hasNext()) {
             AccessControlPolicy policy = it.nextAccessControlPolicy();
@@ -144,7 +144,7 @@ public class AccessControlPolicyTest extends AbstractAccessControlTest {
         checkCanReadAc(path);
         // call must succeed without exception
         AccessControlPolicyIterator it = acMgr.getApplicablePolicies(path);
-        Set acps = new HashSet();
+        Set<AccessControlPolicy> acps = new HashSet<AccessControlPolicy>();
         while (it.hasNext()) {
             acps.add(it.nextAccessControlPolicy());
         }
@@ -236,7 +236,7 @@ public class AccessControlPolicyTest extends AbstractAccessControlTest {
     public void testSetPolicyIsTransient() throws RepositoryException, AccessDeniedException, NotExecutableException {
         checkCanModifyAc(path);
 
-        List currentPolicies = Arrays.asList(acMgr.getPolicies(path));
+        List<AccessControlPolicy> currentPolicies = Arrays.asList(acMgr.getPolicies(path));
         AccessControlPolicyIterator it = acMgr.getApplicablePolicies(path);
         if (it.hasNext()) {
             AccessControlPolicy policy = it.nextAccessControlPolicy();
@@ -274,7 +274,7 @@ public class AccessControlPolicyTest extends AbstractAccessControlTest {
         Session s2 = null;
         try {
             s2 = getHelper().getSuperuserSession();
-            List plcs = Arrays.asList(getAccessControlManager(s2).getPolicies(path));
+            List<AccessControlPolicy> plcs = Arrays.asList(getAccessControlManager(s2).getPolicies(path));
             // TODO: check again if policies can be compared with equals!
             assertTrue("Policy must be visible to another superuser session.", plcs.contains(policy));
         } finally {

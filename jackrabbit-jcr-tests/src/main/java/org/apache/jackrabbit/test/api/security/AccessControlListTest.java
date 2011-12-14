@@ -50,7 +50,7 @@ public class AccessControlListTest extends AbstractAccessControlTest {
     private Privilege[] privs;
     private Principal testPrincipal;
 
-    private List privilegesToRestore = new ArrayList();
+    private List<Privilege> privilegesToRestore = new ArrayList<Privilege>();
 
     protected void setUp() throws Exception {
         checkSupportedOption(Repository.OPTION_ACCESS_CONTROL_SUPPORTED);
@@ -121,8 +121,8 @@ public class AccessControlListTest extends AbstractAccessControlTest {
         throw new NotExecutableException("No AccessControlList at " + path);
     }
 
-    private static List currentPrivileges(AccessControlList acl, Principal principal) throws RepositoryException {
-        List privileges = new ArrayList();
+    private static List<Privilege> currentPrivileges(AccessControlList acl, Principal principal) throws RepositoryException {
+        List<Privilege> privileges = new ArrayList<Privilege>();
         AccessControlEntry[] entries = acl.getAccessControlEntries();
         for (int i = 0; i < entries.length; i++) {
             AccessControlEntry ace = entries[i];
@@ -189,7 +189,7 @@ public class AccessControlListTest extends AbstractAccessControlTest {
         acl.addAccessControlEntry(testPrincipal, new Privilege[] {aggregate});
 
         // make sure all privileges are present now
-        List privs = currentPrivileges(acl, testPrincipal);
+        List<Privilege> privs = currentPrivileges(acl, testPrincipal);
         assertTrue("Privileges added through 'addAccessControlEntry' must be " +
                 "reflected upon getAccessControlEntries",
                 privs.contains(aggregate) || privs.containsAll(Arrays.asList(aggregate.getAggregatePrivileges())));
@@ -249,7 +249,7 @@ public class AccessControlListTest extends AbstractAccessControlTest {
         AccessControlList acl = getList(acMgr, path);
         acl.addAccessControlEntry(testPrincipal, privs);
 
-        Set assignedPrivs = new HashSet();
+        Set<Privilege> assignedPrivs = new HashSet<Privilege>();
         AccessControlEntry[] entries = acl.getAccessControlEntries();
         for (int i = 0; i < entries.length; i++) {
             if (entries[i].getPrincipal().equals(testPrincipal)) {
@@ -264,7 +264,7 @@ public class AccessControlListTest extends AbstractAccessControlTest {
             }
         }
 
-        Set expected = new HashSet();
+        Set<Privilege> expected = new HashSet<Privilege>();
         for (int i = 0; i < privs.length; i++) {
             if (privs[i].isAggregate()) {
                 expected.addAll(Arrays.asList(privs[i].getAggregatePrivileges()));
@@ -279,7 +279,7 @@ public class AccessControlListTest extends AbstractAccessControlTest {
         checkCanModifyAc(path);
 
         AccessControlList acl = getList(acMgr, path);
-        List originalAces = Arrays.asList(acl.getAccessControlEntries());
+        List<AccessControlEntry> originalAces = Arrays.asList(acl.getAccessControlEntries());
 
         if (!acl.addAccessControlEntry(testPrincipal, privs)) {
             throw new NotExecutableException();
@@ -297,7 +297,7 @@ public class AccessControlListTest extends AbstractAccessControlTest {
         checkCanModifyAc(path);
 
         AccessControlList acl = getList(acMgr, path);
-        List originalAces = Arrays.asList(acl.getAccessControlEntries());
+        List<AccessControlEntry> originalAces = Arrays.asList(acl.getAccessControlEntries());
 
         if (!acl.addAccessControlEntry(testPrincipal, privs)) {
             throw new NotExecutableException();
@@ -380,7 +380,7 @@ public class AccessControlListTest extends AbstractAccessControlTest {
             acl.removeAccessControlEntry(ace);
 
             // retrieve entries again:
-            List remainingEntries = Arrays.asList(acl.getAccessControlEntries());
+            List<AccessControlEntry> remainingEntries = Arrays.asList(acl.getAccessControlEntries());
             assertFalse("AccessControlList.getAccessControlEntries still returns a removed ACE.", remainingEntries.contains(ace));
         }
     }
@@ -449,7 +449,7 @@ public class AccessControlListTest extends AbstractAccessControlTest {
 
         // revert changes -> removed entry must be present again.
         superuser.refresh(false);
-        List entries = Arrays.asList(getList(acMgr, path).getAccessControlEntries());
+        List<AccessControlEntry> entries = Arrays.asList(getList(acMgr, path).getAccessControlEntries());
         assertTrue("After reverting any changes the removed ACE should be present again.", entries.contains(ace));
     }
 
@@ -498,7 +498,7 @@ public class AccessControlListTest extends AbstractAccessControlTest {
     public void testExtendPrivileges() throws NotExecutableException, RepositoryException {
         checkCanModifyAc(path);
         // search 2 non-aggregated privileges
-        List twoPrivs = new ArrayList(2);
+        List<Privilege> twoPrivs = new ArrayList<Privilege>(2);
         for (int i = 0; i < privs.length && twoPrivs.size() < 2; i++) {
             if (!privs[i].isAggregate()) {
                 twoPrivs.add(privs[i]);
@@ -509,16 +509,16 @@ public class AccessControlListTest extends AbstractAccessControlTest {
         }
 
         AccessControlList acl = getList(acMgr, path);
-        Privilege privilege = (Privilege) twoPrivs.get(0);
+        Privilege privilege = twoPrivs.get(0);
         // add first privilege:
         acl.addAccessControlEntry(testPrincipal, new Privilege[] {privilege});
 
         // add a second privilege (but not specifying the privilege added before)
         // -> the first privilege must not be removed.
-        Privilege privilege2 = (Privilege) twoPrivs.get(1);
+        Privilege privilege2 = twoPrivs.get(1);
         acl.addAccessControlEntry(testPrincipal, new Privilege[] {privilege2});
 
-        List currentPrivileges = currentPrivileges(acl, testPrincipal);
+        List<Privilege> currentPrivileges = currentPrivileges(acl, testPrincipal);
         assertTrue("'AccessControlList.addAccessControlEntry' must not remove privileges added before", currentPrivileges.containsAll(twoPrivs));
     }
 }
