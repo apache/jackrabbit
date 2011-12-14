@@ -321,7 +321,7 @@ public class SetValueStringTest extends AbstractJCRTest {
         property2.setValue(mv);
         superuser.save();
         Value[] values = property2.getValues();
-        List strValues = new ArrayList();
+        List<String> strValues = new ArrayList<String>();
         for (int i = 0; i < values.length; i++) {
             strValues.add(values[i].getString());
         }
@@ -338,7 +338,7 @@ public class SetValueStringTest extends AbstractJCRTest {
         property2.setValue(mv);
         node.save();
         Value[] values = property2.getValues();
-        List strValues = new ArrayList();
+        List<String> strValues = new ArrayList<String>();
         for (int i = 0; i < values.length; i++) {
             strValues.add(values[i].getString());
         }

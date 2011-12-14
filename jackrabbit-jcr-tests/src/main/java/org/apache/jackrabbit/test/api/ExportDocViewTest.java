@@ -45,6 +45,8 @@ import javax.jcr.Property;
 import javax.jcr.PropertyType;
 import javax.jcr.PropertyIterator;
 import javax.jcr.Value;
+
+import java.util.List;
 import java.util.Stack;
 import java.util.ArrayList;
 import java.util.Properties;
@@ -88,11 +90,11 @@ public class ExportDocViewTest extends AbstractJCRTest {
     /**
      * the stack of the text node values to check
      */
-    private Stack textValuesStack;
+    private Stack<StackEntry> textValuesStack;
 
     private class StackEntry {
         // the list of text node values of the text nodes of an xml element
-        ArrayList textValues;
+        List<String> textValues;
         // the current position in the ArrayList
         int position = 0;
     }
@@ -236,7 +238,7 @@ public class ExportDocViewTest extends AbstractJCRTest {
      */
     private void compareTree() throws RepositoryException, IOException {
         Element root = doc.getDocumentElement();
-        textValuesStack = new Stack();
+        textValuesStack = new Stack<StackEntry>();
         // we assume the path is valid
         Item item = session.getItem(testPath);
 
@@ -315,7 +317,7 @@ public class ExportDocViewTest extends AbstractJCRTest {
             textValuesStack.push(entry);
             // xmltext nodes directly following each other
             // are serialized together as xml text
-            ArrayList jcrTextNodes = new ArrayList();
+            List<Node> jcrTextNodes = new ArrayList<Node>();
 
             while (nodeIter.hasNext()) {
                 Node childNode = nodeIter.nextNode();
@@ -383,7 +385,7 @@ public class ExportDocViewTest extends AbstractJCRTest {
 
         name = !isValidName ? escapeNames(name) : name;
         // same name sibs
-        ArrayList children = getChildElems(parentElem, name);
+        List<Element> children = getChildElems(parentElem, name);
 
         if (children.size() > 0) {
             // xmltext nodes are not exported as elements
@@ -394,7 +396,7 @@ public class ExportDocViewTest extends AbstractJCRTest {
                 // order of same name siblings is preserved during export
                 int index = node.getIndex();
                 try {
-                    nodeElem = (Element) children.get(index - 1);
+                    nodeElem = children.get(index - 1);
                 } catch (IndexOutOfBoundsException iobe) {
                     fail("Node " + node.getPath() + " is not exported."
                             + iobe.toString());
@@ -685,7 +687,7 @@ public class ExportDocViewTest extends AbstractJCRTest {
      * @param parentElem
      * @throws RepositoryException
      */
-    private void compareXmltextNodes(ArrayList nodes, Element parentElem)
+    private void compareXmltextNodes(List<Node> nodes, Element parentElem)
             throws RepositoryException {
         // only this case
         if (withHandler) {
@@ -703,7 +705,7 @@ public class ExportDocViewTest extends AbstractJCRTest {
 
             int size = nodes.size();
             if (size == 1) {
-                Node node = (Node) nodes.get(0);
+                Node node = nodes.get(0);
                 Property prop = node.getProperty(JCR_XMLDATA);
                 value = prop.getString();
                 assertEquals("The " + JCR_XMLTEXT + " node " + node.getPath() +
@@ -712,7 +714,7 @@ public class ExportDocViewTest extends AbstractJCRTest {
             } else {
                 // check the concatenated values sequenceally
                 for (int i = 0; i < nodes.size(); i++) {
-                    Node node = (Node) nodes.get(i);
+                    Node node = nodes.get(i);
                     Property prop = node.getProperty(JCR_XMLDATA);
                     value = prop.getString();
                     // the first one
@@ -1027,13 +1029,13 @@ public class ExportDocViewTest extends AbstractJCRTest {
      * @param name
      * @return
      */
-    private ArrayList getChildElems(Element elem, String name) {
-        ArrayList children = new ArrayList();
+    private List<Element> getChildElems(Element elem, String name) {
+        List<Element> children = new ArrayList<Element>();
         org.w3c.dom.Node child = elem.getFirstChild();
         while (child != null) {
             if (child.getNodeType() == org.w3c.dom.Node.ELEMENT_NODE) {
                 if (name.equals("*") || name.equals(child.getNodeName())) {
-                    children.add(child);
+                    children.add((Element)child);
                 }
             }
             child = child.getNextSibling();
@@ -1066,8 +1068,8 @@ public class ExportDocViewTest extends AbstractJCRTest {
      * @param elem
      * @return
      */
-    private ArrayList getChildTextNodeValues(Element elem) {
-        ArrayList textValues = new ArrayList();
+    private List<String> getChildTextNodeValues(Element elem) {
+        List<String> textValues = new ArrayList<String>();
         StringBuffer buf = new StringBuffer();
         org.w3c.dom.Node child = elem.getFirstChild();
         // collect the characters of successive text nodes

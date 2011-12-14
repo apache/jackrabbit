@@ -38,6 +38,7 @@ import java.io.IOException;
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Stack;
 import java.util.Hashtable;
 import java.util.Enumeration;
@@ -67,14 +68,12 @@ class SysViewContentHandler extends DefaultHandler {
     PropElemData currentPropElem;
     // the valueElem in process
     protected StringBuffer currentValue;
-    // the value(s) of the current propElem e.g if multiple values
-    protected ArrayList currentValues;
     // prefix mapping data
-    protected HashMap prefixes;
+    protected Map<String, String> prefixes;
     // if the first node is yet treated
     protected boolean testRootDone;
     // The stack holding the opened nodeElems
-    Stack nodeElemStack;
+    Stack<NodeElemData> nodeElemStack;
 
     // resolved QNames for well known node and property names
     private String jcrRoot;
@@ -124,12 +123,12 @@ class SysViewContentHandler extends DefaultHandler {
             // Check the given path, init the treeState stack
             Item item = session.getItem(path);
             checkCondition("TestPath "+path+" is not a path to a node.", item.isNode());
-            nodeElemStack = new Stack();
+            nodeElemStack = new Stack<NodeElemData>();
             currentNodeElem = new NodeElemData();
             currentNodeElem.name = item.getName();
             currentNodeElem.node = (Node) item;
             currentNodeElem.path = path;
-            prefixes = new HashMap();
+            prefixes = new HashMap<String, String>();
             testRootDone = false;
         } catch (PathNotFoundException pe) {
             checkCondition("TestPath " + path + " is not a valid path."
@@ -248,7 +247,7 @@ class SysViewContentHandler extends DefaultHandler {
                 currentPropElem.name = attributes.getValue(svName);
                 currentPropElem.typeName = attributes.getValue(svType);
                 currentPropElem.type = PropertyType.valueFromName(currentPropElem.typeName);
-                currentPropElem.values = new ArrayList();
+                currentPropElem.values = new ArrayList<String>();
             }
 
             else if (qName.equals(svValue)) {
@@ -338,20 +337,20 @@ class SysViewContentHandler extends DefaultHandler {
     public void endDocument() throws SAXException {
         // check exported namespaces
         try {
-            Map sessionNamespaces = new HashMap();
+            Map<String, String> sessionNamespaces = new HashMap<String, String>();
             String[] sessionPrefixes = session.getNamespacePrefixes();
             for (int i = 0; i < sessionPrefixes.length; i++) {
                 sessionNamespaces.put(sessionPrefixes[i], session.getNamespaceURI(sessionPrefixes[i]));
             }
 
             // check prefixes against namespace mapping in session
-            for (Iterator it = prefixes.keySet().iterator(); it.hasNext(); ) {
-                String prefix = (String) it.next();
+            for (Iterator<String> it = prefixes.keySet().iterator(); it.hasNext(); ) {
+                String prefix = it.next();
                 if ("xml".equals(prefix)) {
                     Assert.fail("Prefix mapping for 'xml' must not be exported.");
                 }
 
-                String uri = (String) prefixes.get(prefix);
+                String uri = prefixes.get(prefix);
                 checkCondition("Exported uri " + uri + " is not a registered namespace.",
                         sessionNamespaces.containsValue(uri));
                 checkCondition("Exported prefix " + prefix + " does not match " +
@@ -387,13 +386,13 @@ class SysViewContentHandler extends DefaultHandler {
         boolean jcrPrimaryTypeFound = false;
         boolean jcrMixinTypesFound = true;
         boolean uuidFound = true;
-        PropElemData propElem = (PropElemData) nodeElem.propElems.get(0);
+        PropElemData propElem = nodeElem.propElems.get(0);
         jcrPrimaryTypeFound = (jcrPrimaryType.equals(propElem.name));
         checkCondition("Exported property jcr:primaryType of node " + nodeElem.path +
                 " is not at the first position.", jcrPrimaryTypeFound);
 
         if (nodeElem.node.hasProperty(jcrMixinTypes)) {
-            PropElemData propElem2 = (PropElemData) nodeElem.propElems.get(1);
+            PropElemData propElem2 = nodeElem.propElems.get(1);
             jcrMixinTypesFound = (jcrMixinTypes.equals(propElem2.name));
             checkCondition("Exported property jcr:jcrMixinTypes of node " + nodeElem.path +
                 " is not at the second position.", jcrMixinTypesFound);
@@ -401,7 +400,7 @@ class SysViewContentHandler extends DefaultHandler {
             NodeType[] mixins = nodeElem.node.getMixinNodeTypes();
             for (int j=0; j<mixins.length; j++) {
                 if (mixins[j].getName().equals(mixReferenceable)) {
-                uuidFound = (jcrUuid.equals(((PropElemData)nodeElem.propElems.get(2)).name));
+                uuidFound = (jcrUuid.equals(nodeElem.propElems.get(2).name));
                 checkCondition("Exported property jcr:uuid of node " + nodeElem.path +
                         " is not at the third position.", uuidFound);
                 }
@@ -425,7 +424,7 @@ class SysViewContentHandler extends DefaultHandler {
         boolean allFound = false;
         boolean correctVal = false;
         Node node = nodeElem.node;
-        ArrayList propElems = nodeElem.propElems;
+        List<PropElemData> propElems = nodeElem.propElems;
 
         // no props exported
         if (propElems.size() == 0) {
@@ -452,7 +451,7 @@ class SysViewContentHandler extends DefaultHandler {
             // compare the propElems with the properties of the given node
             for (int i = 0; i < propElems.size(); i++) {
                 correctVal = false;
-                PropElemData propElem = (PropElemData) propElems.get(i);
+                PropElemData propElem = propElems.get(i);
                 int propType = propElem.type;
                 if (node.hasProperty(propElem.name)) {
                     Property prop = node.getProperty(propElem.name);
@@ -490,7 +489,7 @@ class SysViewContentHandler extends DefaultHandler {
                                 else {
                                     str = prop.getString();
                                 }
-                                String val = (String) propElem.values.get(0);
+                                String val = propElem.values.get(0);
 
                                if (prop.getType() == PropertyType.BINARY) {
                                     // decode value
@@ -511,7 +510,7 @@ class SysViewContentHandler extends DefaultHandler {
                                 for (int j = 0; j < size; j++) {
                                     // we know that the order of the values
                                     // of a mulitval prop is preserved during export
-                                    String val = (String)propElem.values.get(j);
+                                    String val = propElem.values.get(j);
 
                                     if (prop.getType() == PropertyType.BINARY) {
                                         // decode value
@@ -563,7 +562,7 @@ class SysViewContentHandler extends DefaultHandler {
     private void checkChildren(NodeElemData nodeElem, boolean noRecurse)
             throws RepositoryException, SAXException {
 
-        Hashtable childElemsFound = nodeElem.childNodeElemNames;
+        Hashtable<String, ChildNodeElem> childElemsFound = nodeElem.childNodeElemNames;
         boolean totalSumOk = false;
         boolean partialSumOk = true;
         if (noRecurse) {
@@ -577,8 +576,8 @@ class SysViewContentHandler extends DefaultHandler {
             NodeIterator nodeIter = nodeElem.node.getNodes();
 
             long children = getSize(nodeIter);
-            for (Enumeration e = childElemsFound.elements();  e.hasMoreElements();) {
-                ChildNodeElem child = (ChildNodeElem) e.nextElement();
+            for (Enumeration<ChildNodeElem> e = childElemsFound.elements();  e.hasMoreElements();) {
+                ChildNodeElem child = e.nextElement();
                 String name = child.name;
                 long number = child.number;
 
@@ -647,7 +646,7 @@ class SysViewContentHandler extends DefaultHandler {
         // the path of the node
         String path;
         // List of PropElemData
-        ArrayList  propElems = new ArrayList();
+        List<PropElemData>  propElems = new ArrayList<PropElemData>();
         // the node itself
         Node node;
         // the current position of the child node in process among its same name siblings.
@@ -655,7 +654,7 @@ class SysViewContentHandler extends DefaultHandler {
         int position = 0;
         // the childNodeElems (stored are key: name and
         // value: number of the same name siblings)
-        Hashtable childNodeElemNames = new Hashtable();
+        Hashtable<String, ChildNodeElem> childNodeElemNames = new Hashtable<String, ChildNodeElem>();
     }
 
     /**
@@ -665,7 +664,7 @@ class SysViewContentHandler extends DefaultHandler {
         String name;
         String typeName;
         int type;
-        ArrayList values;
+        List<String> values;
     }
 
     /**

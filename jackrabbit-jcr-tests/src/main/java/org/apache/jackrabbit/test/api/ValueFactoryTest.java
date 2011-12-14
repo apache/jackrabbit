@@ -31,7 +31,6 @@ import javax.jcr.PathNotFoundException;
 import javax.jcr.Value;
 import javax.jcr.ValueFormatException;
 import java.util.Calendar;
-import java.util.ArrayList;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 
@@ -53,13 +52,10 @@ public class ValueFactoryTest extends AbstractJCRTest {
     private static final double doubleValue = 3.1414926;
     private static final long  longValue = Long.MAX_VALUE;
     private Node referenceNode = null;
-    private Node notReferenceableNode = null;
     private static final String stringValue = "a string";
     private static String nameValue = "aName";
     private static String pathValue = "/a/Path[1]";
     private byte[] binaryValue = null;
-
-    private  ArrayList values = new ArrayList();
 
     private String dateValueFail = nameValue;
     private static final String doubleValueFail = nameValue;
