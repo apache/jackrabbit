@@ -59,7 +59,7 @@ public class RSessionAccessControlDiscoveryTest extends AbstractAccessControlTes
     }
 
     public void testGetPrivileges() throws RepositoryException {
-        List privs = Arrays.asList(testAcMgr.getPrivileges(testPath));
+        List<Privilege> privs = Arrays.asList(testAcMgr.getPrivileges(testPath));
         Privilege readPrivilege = testAcMgr.privilegeFromName(Privilege.JCR_READ);
         assertTrue("A read-only session must have READ access to the test node.",
                 privs.contains(readPrivilege));

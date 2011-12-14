@@ -45,7 +45,7 @@ public class AccessControlDiscoveryTest extends AbstractAccessControlTest {
 
         // Quote from spec:
         // "A repository must support the following standard privileges."
-        List names = new ArrayList(privileges.length);
+        List<String> names = new ArrayList<String>(privileges.length);
         for (int i = 0; i < privileges.length; i++) {
             names.add(privileges[i].getName());
         }
@@ -73,7 +73,7 @@ public class AccessControlDiscoveryTest extends AbstractAccessControlTest {
     }
 
     public void testMandatoryPrivilegeFromName() throws RepositoryException {
-        List l = new ArrayList();
+        List<String> l = new ArrayList<String>();
         l.add(getJCRName(Privilege.JCR_READ, superuser));
         l.add(getJCRName(Privilege.JCR_ADD_CHILD_NODES, superuser));
         l.add(getJCRName(Privilege.JCR_REMOVE_CHILD_NODES, superuser));
@@ -84,8 +84,8 @@ public class AccessControlDiscoveryTest extends AbstractAccessControlTest {
         l.add(getJCRName(Privilege.JCR_WRITE, superuser));
         l.add(getJCRName(Privilege.JCR_ALL, superuser));
 
-        for (Iterator it = l.iterator(); it.hasNext();) {
-            String privName = it.next().toString();
+        for (Iterator<String> it = l.iterator(); it.hasNext();) {
+            String privName = it.next();
             Privilege p = acMgr.privilegeFromName(privName);
             assertEquals("Expected equal privilege name.", privName, p.getName());
         }
@@ -105,14 +105,14 @@ public class AccessControlDiscoveryTest extends AbstractAccessControlTest {
         Privilege[] supported = acMgr.getSupportedPrivileges(testRootNode.getPath());
 
         Privilege all = acMgr.privilegeFromName(Privilege.JCR_ALL);
-        Set allSet = new HashSet();
+        Set<Privilege> allSet = new HashSet<Privilege>();
         allSet.addAll(Arrays.asList(all.getAggregatePrivileges()));
 
         String msg = "The all privilege must also contain ";
         for (int i=0; i < supported.length; i++) {
             Privilege sp = supported[i];
             if (sp.isAggregate()) {
-                Collection col = Arrays.asList(sp.getAggregatePrivileges());
+                Collection<Privilege> col = Arrays.asList(sp.getAggregatePrivileges());
                 assertTrue(msg + sp.getName(), allSet.containsAll(col));
             } else {
                 assertTrue(msg + sp.getName(), allSet.contains(sp));
@@ -153,12 +153,12 @@ public class AccessControlDiscoveryTest extends AbstractAccessControlTest {
      * @throws RepositoryException
      */
     public void testAggregregatePrivileges() throws RepositoryException {
-        List l = new ArrayList();
+        List<String> l = new ArrayList<String>();
         l.add(getJCRName(Privilege.JCR_WRITE, superuser));
         l.add(getJCRName(Privilege.JCR_ALL, superuser));
 
-        for (Iterator it = l.iterator(); it.hasNext();) {
-            String privName = it.next().toString();
+        for (Iterator<String> it = l.iterator(); it.hasNext();) {
+            String privName = it.next();
             Privilege p = acMgr.privilegeFromName(privName);
 
             assertTrue("write and all must always be aggregate privileges.", p.isAggregate());
@@ -188,12 +188,12 @@ public class AccessControlDiscoveryTest extends AbstractAccessControlTest {
             String remappedPrefix = "_jcr";
             superuser.setNamespacePrefix(remappedPrefix, "http://www.jcp.org/jcr/1.0");
 
-            List l = new ArrayList();
+            List<Privilege> l = new ArrayList<Privilege>();
             l.add(acMgr.privilegeFromName(Privilege.JCR_ALL));
             l.add(acMgr.privilegeFromName(remappedPrefix + ":all"));
 
-            for (Iterator it = l.iterator(); it.hasNext();) {
-                Privilege p = (Privilege) it.next();
+            for (Iterator<Privilege> it = l.iterator(); it.hasNext();) {
+                Privilege p = it.next();
 
                 assertEquals("The privilege name must reflect the modified namespace prefix.",remappedPrefix + ":all", p.getName());
                 assertEquals("jcr:all privileges must be equal.",allPriv, p);
@@ -279,7 +279,7 @@ public class AccessControlDiscoveryTest extends AbstractAccessControlTest {
         Privilege all = acMgr.privilegeFromName(Privilege.JCR_ALL);
 
         // remove all privileges that are granted.
-        Set notGranted = new HashSet(Arrays.asList(all.getAggregatePrivileges()));
+        Set<Privilege> notGranted = new HashSet<Privilege>(Arrays.asList(all.getAggregatePrivileges()));
         for (int i = 0; i < privs.length; i++) {
             if (privs[i].isAggregate()) {
                 notGranted.removeAll(Arrays.asList(privs[i].getAggregatePrivileges()));
@@ -292,7 +292,7 @@ public class AccessControlDiscoveryTest extends AbstractAccessControlTest {
         if (notGranted.isEmpty()) {
             assertTrue(acMgr.hasPrivileges(testRootNode.getPath(), new Privilege[] {all}));
         } else {
-            Privilege[] toTest = (Privilege[]) notGranted.toArray(new Privilege[notGranted.size()]);
+            Privilege[] toTest = notGranted.toArray(new Privilege[notGranted.size()]);
             assertTrue(!acMgr.hasPrivileges(testRootNode.getPath(), toTest));
         }
     }
