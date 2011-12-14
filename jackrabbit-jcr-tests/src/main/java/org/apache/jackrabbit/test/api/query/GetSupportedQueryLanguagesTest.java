@@ -64,7 +64,7 @@ public class GetSupportedQueryLanguagesTest extends AbstractQueryTest {
      * that have the SQL descriptor set in the repository return {@link Query#SQL}.
      */
     public void testGetSupportedQueryLanguages() throws RepositoryException {
-        List langs = Arrays.asList(session.getWorkspace().getQueryManager().getSupportedQueryLanguages());
+        List<String> langs = Arrays.asList(session.getWorkspace().getQueryManager().getSupportedQueryLanguages());
         // all repositories must support XPath
         assertTrue("JCR_SQL2 not retured with QueryManager.getSupportedQueryLanguages()",
                 langs.contains(Query.JCR_SQL2));

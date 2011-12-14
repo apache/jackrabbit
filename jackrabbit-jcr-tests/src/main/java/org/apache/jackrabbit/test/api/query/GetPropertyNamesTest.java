@@ -74,7 +74,7 @@ public class GetPropertyNamesTest extends AbstractQueryTest {
         // Get the node's non-residual properties
         PropertyDefinition[] pd = superuser.getWorkspace().getNodeTypeManager().getNodeType(ntBase).getDeclaredPropertyDefinitions();
 
-        List singleValPropNames = new ArrayList();
+        List<String> singleValPropNames = new ArrayList<String>();
         for (int i = 0; i < pd.length; i++) {
             // only keep the single-value properties
             if (!pd[i].isMultiple()) {

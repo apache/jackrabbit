@@ -115,13 +115,13 @@ public class DerefQueryLevel1Test extends AbstractQueryTest {
             throw new NotExecutableException("Reference property does not contain a value");
         }
         String nodeName = targetNodes[0].getName();
-        List resultNodes = new ArrayList();
+        List<Node> resultNodes = new ArrayList<Node>();
         for (int i = 0; i < targetNodes.length; i++) {
             if (targetNodes[i].getName().equals(nodeName)) {
                 resultNodes.add(targetNodes[i]);
             }
         }
-        targetNodes = (Node[]) resultNodes.toArray(new Node[resultNodes.size()]);
+        targetNodes = resultNodes.toArray(new Node[resultNodes.size()]);
         String xpath = createStatement(refProp, nodeName);
         executeDerefQuery(session, xpath, targetNodes);
     }

@@ -58,13 +58,13 @@ public class ChildNodeJoinConditionTest extends AbstractJoinTest {
     public void testLeftOuterJoin() throws RepositoryException {
         JoinCondition c = qf.childNodeJoinCondition(LEFT, RIGHT);
         QueryObjectModel qom = createQuery(QueryObjectModelConstants.JCR_JOIN_TYPE_LEFT_OUTER, c);
-        List result = new ArrayList();
+        List<Node[]> result = new ArrayList<Node[]>();
         result.add(new Node[]{n2, n1});
         if (testRootNode.isNodeType(testNodeType)) {
             result.add(new Node[]{n1, testRootNode});
         } else {
             result.add(new Node[]{n1, null});
         }
-        checkQOM(qom, (Node[][]) result.toArray(new Node[result.size()][]));
+        checkQOM(qom, result.toArray(new Node[result.size()][]));
     }
 }

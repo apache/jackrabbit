@@ -65,7 +65,7 @@ public class ColumnTest extends AbstractQOMTest {
         forQOMandSQL2(qom, new Callable() {
             public Object call(Query query) throws RepositoryException {
                 QueryResult result = query.execute();
-                List names = new ArrayList(Arrays.asList(result.getColumnNames()));
+                List<String> names = new ArrayList<String>(Arrays.asList(result.getColumnNames()));
                 NodeTypeManager ntMgr = superuser.getWorkspace().getNodeTypeManager();
                 NodeType nt = ntMgr.getNodeType(testNodeType);
                 PropertyDefinition[] propDefs = nt.getPropertyDefinitions();
@@ -77,7 +77,7 @@ public class ColumnTest extends AbstractQOMTest {
                                 names.remove(columnName));
                     }
                 }
-                for (Iterator it = names.iterator(); it.hasNext(); ) {
+                for (Iterator<String> it = names.iterator(); it.hasNext(); ) {
                     fail(it.next() + " is not a property on node type " + testNodeType);
                 }
                 return null;
@@ -100,9 +100,9 @@ public class ColumnTest extends AbstractQOMTest {
         forQOMandSQL2(qom, new Callable() {
             public Object call(Query query) throws RepositoryException {
                 QueryResult result = query.execute();
-                List names = new ArrayList(Arrays.asList(result.getColumnNames()));
+                List<String> names = new ArrayList<String>(Arrays.asList(result.getColumnNames()));
                 assertTrue("Missing column: " + propertyName1, names.remove(propertyName1));
-                for (Iterator it = names.iterator(); it.hasNext(); ) {
+                for (Iterator<String> it = names.iterator(); it.hasNext(); ) {
                     fail(it.next() + " was not declared as a column");
                 }
                 return null;
