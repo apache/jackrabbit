@@ -51,7 +51,7 @@ public class PropertyAddedTest extends AbstractObservationTest {
         testRootNode.save();
         Event[] events = result.getEvents(DEFAULT_WAIT_TIMEOUT);
         removeEventListener(result);
-        List paths = new ArrayList();
+        List<String> paths = new ArrayList<String>();
         for (int i = 0; i < events.length; i++) {
             paths.add(events[i].getPath());
         }
