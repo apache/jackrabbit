@@ -605,7 +605,7 @@ public class RepositoryImpl extends AbstractRepository
         if (systemSearchMgr == null) {
             if (repConfig.isSearchEnabled()) {
                 systemSearchMgr = new SearchManager(
-                        context,
+                        null, context,
                         repConfig,
                         getWorkspaceInfo(wspName).itemStateMgr,
                         context.getInternalVersionManager().getPersistenceManager(),
@@ -1853,6 +1853,7 @@ public class RepositoryImpl extends AbstractRepository
                     // search manager is lazily instantiated in order to avoid
                     // 'chicken & egg' bootstrap problems
                     searchMgr = new SearchManager(
+                            getName(),
                             context,
                             config,
                             itemStateMgr, persistMgr,

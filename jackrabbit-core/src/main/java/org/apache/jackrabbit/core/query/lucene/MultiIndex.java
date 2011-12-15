@@ -266,14 +266,13 @@ public class MultiIndex {
         merger.setMergeFactor(handler.getMergeFactor());
         merger.setMinMergeDocs(handler.getMinMergeDocs());
 
-        IndexingQueueStore store = new IndexingQueueStore(indexDir);
-
         // initialize indexing queue
-        this.indexingQueue = new IndexingQueue(store);
+        this.indexingQueue = new IndexingQueue(new IndexingQueueStore(indexDir));
 
         // open persistent indexes
-        for (Iterator<?> it = indexNames.iterator(); it.hasNext(); ) {
-            IndexInfo info = (IndexInfo) it.next();
+        Iterator<IndexInfo> iterator = indexNames.iterator();
+        while (iterator.hasNext()) {
+            IndexInfo info = iterator.next();
             String name = info.getName();
             // only open if it still exists
             // it is possible that indexNames still contains a name for
@@ -386,10 +385,11 @@ public class MultiIndex {
                 executeAndLog(new Start(Action.INTERNAL_TRANSACTION));
                 NodeState rootState = (NodeState) stateMgr.getItemState(rootId);
                 count = createIndex(rootState, rootPath, stateMgr, count);
+                checkIndexingQueue(true);
                 executeAndLog(new Commit(getTransactionId()));
                 log.debug("Created initial index for {} nodes", count);
                 releaseMultiReader();
-                scheduleFlushTask();
+                safeFlush();
             } catch (Exception e) {
                 String msg = "Error indexing workspace";
                 IOException ex = new IOException(msg);
@@ -397,6 +397,7 @@ public class MultiIndex {
                 throw ex;
             } finally {
                 reindexing = false;
+                scheduleFlushTask();
             }
         } else {
             throw new IllegalStateException("Index already present");
@@ -1167,7 +1168,8 @@ public class MultiIndex {
     private void commitVolatileIndex() throws IOException {
 
         // check if volatile index contains documents at all
-        if (volatileIndex.getNumDocuments() > 0) {
+        int volatileIndexDocuments = volatileIndex.getNumDocuments();
+        if (volatileIndexDocuments > 0) {
 
             long time = System.currentTimeMillis();
             // create index
@@ -1185,7 +1187,7 @@ public class MultiIndex {
             resetVolatileIndex();
 
             time = System.currentTimeMillis() - time;
-            log.debug("Committed in-memory index in " + time + "ms.");
+            log.debug("Committed in-memory index containing {} documents in {}ms.", volatileIndexDocuments, time);
         }
     }
 
@@ -1298,7 +1300,7 @@ public class MultiIndex {
             }
         }
     }
-    
+
     void safeFlush() throws IOException{
         synchronized (updateMonitor) {
             updateInProgress = true;
