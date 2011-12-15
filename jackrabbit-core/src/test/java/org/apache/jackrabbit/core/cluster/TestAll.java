@@ -40,6 +40,7 @@ public class TestAll extends TestCase {
         suite.addTestSuite(ClusterRecordTest.class);
         suite.addTestSuite(ClusterSyncTest.class);
         suite.addTestSuite(DbClusterTest.class);
+        suite.addTestSuite(DbClusterTestJCR3162.class);
 
         return suite;
     }
