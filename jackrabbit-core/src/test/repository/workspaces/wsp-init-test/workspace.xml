@@ -28,7 +28,7 @@
       persistence of the workspace:
       class: FQN of class implementing PersistenceManager interface
   -->
-  <PersistenceManager class="org.apache.jackrabbit.core.persistence.mem.InMemPersistenceManager"/>
+  <PersistenceManager class="org.apache.jackrabbit.core.persistence.mem.InMemBundlePersistenceManager"/>
   
   <!--
       Search index and the file system it uses.
