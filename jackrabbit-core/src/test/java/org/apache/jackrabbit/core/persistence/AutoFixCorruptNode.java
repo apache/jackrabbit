@@ -392,6 +392,63 @@ public class AutoFixCorruptNode extends TestCase {
         }
     }
 
+    // tests recovery from a broken hierarchy in the version store
+    public void testBrokenVhrParent() throws Exception {
+
+        // new repository
+        TransientRepository rep = new TransientRepository(new File(TEST_DIR));
+        Session s = openSession(rep, false);
+
+        try {
+            Node root = s.getRootNode();
+
+            // add node /test
+            Node test = root.addNode("test");
+            test.addMixin("mix:versionable");
+
+            s.save();
+
+            Node vhr = s.getWorkspace().getVersionManager().getVersionHistory(test.getPath());
+
+            assertNotNull(vhr);
+
+            Node brokenNode = vhr.getParent().getParent();
+
+            UUID destroy = UUID.fromString(brokenNode.getIdentifier());
+
+            // disable versioning
+            test.removeMixin("mix:versionable");
+            s.save();
+
+            s.logout();
+
+            destroyBundle(destroy, "version");
+
+            s = openSession(rep, false);
+
+            ConsistencyReport report = TestHelper.checkVersionStoreConsistency(s, true);
+            assertTrue("Report should have reported broken nodes", !report.getItems().isEmpty());
+
+            s.logout();
+
+            s = openSession(rep, false);
+
+            test = s.getRootNode().getNode("test");
+            // versioning should still be disabled
+            assertFalse(test.isNodeType("mix:versionable"));
+
+            // try to enable versioning again
+            test.addMixin("mix:versionable");
+            s.save();
+
+            // try a checkout / checkin
+            s.getWorkspace().getVersionManager().checkout(test.getPath());
+            s.getWorkspace().getVersionManager().checkin(test.getPath());
+        } finally {
+            s.logout();
+        }
+    }
+
     public void testAutoFix() throws Exception {
 
         // new repository
