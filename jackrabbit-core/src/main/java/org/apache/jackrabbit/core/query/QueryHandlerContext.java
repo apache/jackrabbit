@@ -22,7 +22,6 @@ import org.apache.jackrabbit.core.CachingHierarchyManager;
 import org.apache.jackrabbit.core.HierarchyManager;
 import org.apache.jackrabbit.core.NamespaceRegistryImpl;
 import org.apache.jackrabbit.core.RepositoryContext;
-import org.apache.jackrabbit.core.cluster.ClusterNode;
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.persistence.PersistenceManager;
@@ -35,11 +34,6 @@ import org.apache.jackrabbit.core.state.SharedItemStateManager;
  * handler is running in.
  */
 public class QueryHandlerContext {
-
-    /**
-     * The workspace
-     */
-    private final String workspace;
 
     /**
      * Repository context.
@@ -84,26 +78,22 @@ public class QueryHandlerContext {
     /**
      * Creates a new context instance.
      *
-     * @param workspace          the workspace name.
-     * @param repositoryContext  the repository context.
-     * @param stateMgr           provides persistent item states.
-     * @param pm                 the underlying persistence manager.
-     * @param rootId             the id of the root node.
-     * @param parentHandler      the parent query handler or <code>null</code> it
-     *                           there is no parent handler.
-     * @param excludedNodeId     id of the node that should be excluded from
-     *                           indexing. Any descendant of that node is also
-     *                           excluded from indexing.
+     * @param stateMgr         provides persistent item states.
+     * @param pm               the underlying persistence manager.
+     * @param rootId           the id of the root node.
+     * @param parentHandler    the parent query handler or <code>null</code> it
+     *                         there is no parent handler.
+     * @param excludedNodeId   id of the node that should be excluded from
+     *                         indexing. Any descendant of that node is also
+     *                         excluded from indexing.
      */
     public QueryHandlerContext(
-            String workspace,
             RepositoryContext repositoryContext,
             SharedItemStateManager stateMgr,
             PersistenceManager pm,
             NodeId rootId,
             QueryHandler parentHandler,
             NodeId excludedNodeId) {
-        this.workspace = workspace;
         this.repositoryContext = repositoryContext;
         this.stateMgr = stateMgr;
         this.hmgr = new CachingHierarchyManager(rootId, stateMgr);
@@ -211,17 +201,4 @@ public class QueryHandlerContext {
         return repositoryContext.getExecutor();
     }
 
-    /**
-     * Returns the cluster node instance of this repository, or
-     * <code>null</code> if clustering is not enabled.
-     * 
-     * @return cluster node
-     */
-    public ClusterNode getClusterNode() {
-        return repositoryContext.getClusterNode();
-    }
-
-    public String getWorkspace() {
-        return workspace;
-    }
 }

@@ -41,25 +41,11 @@ import javax.xml.parsers.ParserConfigurationException;
 
 import org.apache.jackrabbit.core.HierarchyManager;
 import org.apache.jackrabbit.core.SessionImpl;
-import org.apache.jackrabbit.core.cluster.ChangeLogRecord;
-import org.apache.jackrabbit.core.cluster.ClusterNode;
-import org.apache.jackrabbit.core.cluster.ClusterRecord;
-import org.apache.jackrabbit.core.cluster.ClusterRecordDeserializer;
-import org.apache.jackrabbit.core.cluster.ClusterRecordProcessor;
-import org.apache.jackrabbit.core.cluster.LockRecord;
-import org.apache.jackrabbit.core.cluster.NamespaceRecord;
-import org.apache.jackrabbit.core.cluster.NodeTypeRecord;
-import org.apache.jackrabbit.core.cluster.PrivilegeRecord;
-import org.apache.jackrabbit.core.cluster.WorkspaceRecord;
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.fs.FileSystemException;
 import org.apache.jackrabbit.core.fs.FileSystemResource;
 import org.apache.jackrabbit.core.fs.local.LocalFileSystem;
 import org.apache.jackrabbit.core.id.NodeId;
-import org.apache.jackrabbit.core.journal.Journal;
-import org.apache.jackrabbit.core.journal.JournalException;
-import org.apache.jackrabbit.core.journal.Record;
-import org.apache.jackrabbit.core.journal.RecordIterator;
 import org.apache.jackrabbit.core.query.AbstractQueryHandler;
 import org.apache.jackrabbit.core.query.ExecutableQuery;
 import org.apache.jackrabbit.core.query.QueryHandler;
@@ -68,7 +54,6 @@ import org.apache.jackrabbit.core.query.lucene.directory.DirectoryManager;
 import org.apache.jackrabbit.core.query.lucene.directory.FSDirectoryManager;
 import org.apache.jackrabbit.core.query.lucene.hits.AbstractHitCollector;
 import org.apache.jackrabbit.core.session.SessionContext;
-import org.apache.jackrabbit.core.state.ItemState;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.apache.jackrabbit.core.state.NoSuchItemStateException;
@@ -562,7 +547,6 @@ public class SearchIndex extends AbstractQueryHandler {
             }
             index.createInitialIndex(context.getItemStateManager(),
                     context.getRootId(), rootPath);
-            checkPendingJournalChanges(context);
         }
         if (consistencyCheckEnabled
                 && (index.getRedoLogApplied() || forceConsistencyCheck)) {
@@ -2493,46 +2477,6 @@ public class SearchIndex extends AbstractQueryHandler {
         this.redoLogFactoryClass = className;
     }
 
-    /**
-     * In the case of an initial index build operation, this checks if there are
-     * some new nodes pending in the journal and tries to preemptively delete
-     * them, to keep the index consistent.
-     * 
-     * See JCR-3162
-     * 
-     * @param context
-     * @throws IOException
-     */
-    private void checkPendingJournalChanges(QueryHandlerContext context) {
-        ClusterNode cn = context.getClusterNode();
-        if (cn == null) {
-            return;
-        }
-
-        List<NodeId> addedIds = new ArrayList<NodeId>();
-        long rev = cn.getRevision();
-
-        List<ChangeLogRecord> changes = getChangeLogRecords(rev, context.getWorkspace());
-        Iterator<ChangeLogRecord> iterator = changes.iterator();
-        while (iterator.hasNext()) {
-            ChangeLogRecord record = iterator.next();
-            for (ItemState state : record.getChanges().addedStates()) {
-                if (!state.isNode()) {
-                    continue;
-                }
-                addedIds.add((NodeId) state.getId());
-            }
-        }
-        if (!addedIds.isEmpty()) {
-            Collection<NodeState> empty = Collections.emptyList();
-            try {
-                updateNodes(addedIds.iterator(), empty.iterator());
-            } catch (Exception e) {
-                log.error(e.getMessage(), e);
-            }
-        }
-    }
-
     //----------------------------< internal >----------------------------------
 
     /**
@@ -2545,80 +2489,5 @@ public class SearchIndex extends AbstractQueryHandler {
         if (closed) {
             throw new IOException("query handler closed and cannot be used anymore.");
         }
-    }
-
-    /**
-     * Polls the underlying journal for events of the type ChangeLogRecord that
-     * happened after a given revision, on a given workspace.
-     *
-     * @param revision
-     *            starting revision
-     * @param workspace
-     *            the workspace name
-     * @return
-     */
-    private List<ChangeLogRecord> getChangeLogRecords(long revision,
-            final String workspace) {
-        log.debug(
-                "Get changes from the Journal for revision {} and workspace {}.",
-                revision, workspace);
-        ClusterNode cn = getContext().getClusterNode();
-        if (cn == null) {
-            return Collections.emptyList();
-        }
-        Journal journal = cn.getJournal();
-        final List<ChangeLogRecord> events = new ArrayList<ChangeLogRecord>();
-        ClusterRecordDeserializer deserializer = new ClusterRecordDeserializer();
-        RecordIterator records = null;
-        try {
-            records = journal.getRecords(revision);
-            while (records.hasNext()) {
-                Record record = records.nextRecord();
-                if (!record.getProducerId().equals(cn.getId())) {
-                    continue;
-                }
-                ClusterRecord r = null;
-                try {
-                    r = deserializer.deserialize(record);
-                } catch (JournalException e) {
-                    log.error(
-                            "Unable to read revision '" + record.getRevision()
-                                    + "'.", e);
-                }
-                if (r == null) {
-                    continue;
-                }
-                r.process(new ClusterRecordProcessor() {
-                    public void process(ChangeLogRecord record) {
-                        String eventW = record.getWorkspace();
-                        if (eventW != null ? eventW.equals(workspace) : workspace == null) {
-                            events.add(record);
-                        }
-                    }
-
-                    public void process(LockRecord record) {
-                    }
-
-                    public void process(NamespaceRecord record) {
-                    }
-
-                    public void process(NodeTypeRecord record) {
-                    }
-
-                    public void process(PrivilegeRecord record) {
-                    }
-
-                    public void process(WorkspaceRecord record) {
-                    }
-                });
-            }
-        } catch (JournalException e1) {
-            log.error(e1.getMessage(), e1);
-        } finally {
-            if (records != null) {
-                records.close();
-            }
-        }
-        return events;
     }
 }
