@@ -46,11 +46,12 @@ import javax.jcr.PropertyType;
 import javax.jcr.PropertyIterator;
 import javax.jcr.Value;
 
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Stack;
 import java.util.ArrayList;
-import java.util.Properties;
-import java.util.Enumeration;
 import java.io.File;
 import java.io.IOException;
 import java.io.BufferedOutputStream;
@@ -588,11 +589,11 @@ public class ExportDocViewTest extends AbstractJCRTest {
      */
     private void compareNamespaces(Element root) throws RepositoryException {
 
-        Properties nameSpaces = new AttributeSeparator(root).getNsAttrs();
+        Map<String, String> nameSpaces = new AttributeSeparator(root).getNsAttrs();
         // check if all namespaces exist that were exported
-        for (Enumeration e = nameSpaces.keys(); e.hasMoreElements();) {
-            String prefix = (String) e.nextElement();
-            String URI = nameSpaces.getProperty(prefix);
+        for (Iterator<String> e = nameSpaces.keySet().iterator(); e.hasNext(); ) {
+            String prefix = e.next();
+            String URI = nameSpaces.get(prefix);
 
             assertEquals("Prefix of uri" + URI + "is not exported correctly.",
                     nsr.getPrefix(URI), prefix);
@@ -1120,22 +1121,22 @@ public class ExportDocViewTest extends AbstractJCRTest {
 
         Element elem;
         NamedNodeMap attrs;
-        Properties nsAttrs;
-        Properties nonNsAttrs;
+        Map<String, String> nsAttrs;
+        Map<String, String> nonNsAttrs;
 
         AttributeSeparator(Element elem) {
             this.elem = elem;
-            nsAttrs = new Properties();
-            nonNsAttrs = new Properties();
+            nsAttrs = new HashMap<String, String>();
+            nonNsAttrs = new HashMap<String, String>();
             attrs = elem.getAttributes();
             separateAttrs();
         }
 
-        public Properties getNsAttrs() {
+        public Map<String, String> getNsAttrs() {
             return nsAttrs;
         }
 
-        public Properties getNonNsAttrs() {
+        public Map<String, String> getNonNsAttrs() {
             return nonNsAttrs;
         }
 
