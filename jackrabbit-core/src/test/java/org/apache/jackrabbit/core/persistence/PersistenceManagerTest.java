@@ -33,6 +33,7 @@ import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.id.PropertyId;
 import org.apache.jackrabbit.core.persistence.PMContext;
 import org.apache.jackrabbit.core.persistence.PersistenceManager;
+import org.apache.jackrabbit.core.persistence.mem.InMemBundlePersistenceManager;
 import org.apache.jackrabbit.core.persistence.mem.InMemPersistenceManager;
 import org.apache.jackrabbit.core.persistence.obj.ObjectPersistenceManager;
 import org.apache.jackrabbit.core.persistence.xml.XMLPersistenceManager;
@@ -80,6 +81,10 @@ public class PersistenceManagerTest extends TestCase {
 
     public void testInMemPersistenceManager() throws Exception {
         assertPersistenceManager(new InMemPersistenceManager());
+    }
+
+    public void testInMemBundlePersistenceManager() throws Exception {
+        assertPersistenceManager(new InMemBundlePersistenceManager());
     }
 
     public void testXMLPersistenceManager() throws Exception {
