@@ -847,54 +847,27 @@ public class BundleDbPersistenceManager
         int count = 0;
         int total = 0;
         Collection<NodePropBundle> modifications = new ArrayList<NodePropBundle>();        
-        
+
         if (uuids == null) {
-            // get all node bundles in the database with a single SQL statement,
-            // which is (probably) faster than loading each bundle and traversing the tree              
-            ResultSet rs = null;
-            try {               
-                String sql = "select count(*) from " + schemaObjectPrefix + "BUNDLE";
-                rs = conHelper.exec(sql, new Object[0], false, 0);
-                try {
-                    if (!rs.next()) {
-                        String message = "Could not retrieve total number of bundles. empty result set.";
-                        log.error(message);
-                        throw new RepositoryException(message);
-                    }
-                    total = rs.getInt(1);
-                } finally {
-                    DbUtility.close(rs);
-                }
-                if (getStorageModel() == SM_BINARY_KEYS) {
-                    sql = "select NODE_ID from " + schemaObjectPrefix + "BUNDLE";
-                } else {
-                    sql = "select NODE_ID_HI, NODE_ID_LO from " + schemaObjectPrefix + "BUNDLE";
-                }
-                rs = conHelper.exec(sql, new Object[0], false, 0);
+            total = getNumberOfNodeIds();
+            
+            try {
+                Iterable<NodeId> allIds = getAllNodeIds(null, 0);
 
-                // iterate over all node bundles in the db
-                while (rs.next()) {
-                    NodeId id;
-                    if (getStorageModel() == SM_BINARY_KEYS) {
-                        id = new NodeId(rs.getBytes(1));
-                    } else {
-                        id = new NodeId(rs.getLong(1), rs.getLong(2));
-                    }
-
-                    // issuing 2nd statement to circumvent issue JCR-1474
-                    ResultSet bRs = null;
+                for (NodeId id : allIds) {
+                    ResultSet rs = null;
                     try {
-                        bRs = conHelper.exec(bundleSelectSQL, getKey(id), false, 0);
-                        if (!bRs.next()) {
+                        rs = conHelper.exec(bundleSelectSQL, getKey(id), false, 0);
+                        if (!rs.next()) {
                             throw new SQLException("bundle cannot be retrieved?");
                         }
                         // parse and check bundle
-                        NodePropBundle bundle = readBundle(id, bRs, 1);
+                        NodePropBundle bundle = readBundle(id, rs, 1);
                         checkBundleConsistency(id, bundle, fix, modifications, reports);
                     } catch (SQLException e) {
                         log.error("Unable to parse bundle " + id, e);
                     } finally {
-                        DbUtility.close(bRs);
+                        DbUtility.close(rs);
                     }
 
                     count++;
@@ -902,10 +875,9 @@ public class BundleDbPersistenceManager
                         log.info(name + ": checked " + count + "/" + total + " bundles...");
                     }
                 }
-            } catch (Exception e) {
-                log.error("Error loading bundle", e);
-            } finally {                 
-                DbUtility.close(rs);
+            } catch (ItemStateException ex) {
+                throw new RepositoryException("getting nodeIds", ex);
+            } finally {
                 total = count;
             }
         } else {
@@ -1047,6 +1019,25 @@ public class BundleDbPersistenceManager
         }
 
         return params.toArray();
+    }
+
+    private synchronized int getNumberOfNodeIds() throws RepositoryException {
+        ResultSet rs = null;
+        try {
+            String sql = "select count(*) from " + schemaObjectPrefix + "BUNDLE";
+            rs = conHelper.exec(sql, new Object[0], false, 0);
+
+            if (!rs.next()) {
+                String message = "Could not retrieve total number of bundles: empty result set.";
+                log.error(message);
+                throw new RepositoryException(message);
+            }
+            return rs.getInt(1);
+        } catch (SQLException ex) {
+            throw new RepositoryException("Could not retrieve total number of bundles", ex);
+        } finally {
+            DbUtility.close(rs);
+        }
     }
 
     /**
