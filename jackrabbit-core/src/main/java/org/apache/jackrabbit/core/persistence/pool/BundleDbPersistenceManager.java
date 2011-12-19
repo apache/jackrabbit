@@ -855,25 +855,24 @@ public class BundleDbPersistenceManager
                 Iterable<NodeId> allIds = getAllNodeIds(null, 0);
 
                 for (NodeId id : allIds) {
-                    ResultSet rs = null;
                     try {
-                        rs = conHelper.exec(bundleSelectSQL, getKey(id), false, 0);
-                        if (!rs.next()) {
-                            throw new SQLException("bundle cannot be retrieved?");
-                        }
                         // parse and check bundle
-                        NodePropBundle bundle = readBundle(id, rs, 1);
-                        checkBundleConsistency(id, bundle, fix, modifications, reports);
-                    } catch (SQLException e) {
-                        log.error("Unable to parse bundle " + id, e);
-                    } finally {
-                        DbUtility.close(rs);
+                        NodePropBundle bundle = loadBundle(id);
+                        if (bundle == null) {
+                            log.error("No bundle found for id '" + id + "'");
+                        } else {
+                            checkBundleConsistency(id, bundle, fix, modifications, reports);
+
+                            count++;
+                            if (count % 1000 == 0) {
+                                log.info(name + ": checked " + count + "/" + total + " bundles...");
+                            }
+                        }
+                    } catch (ItemStateException e) {
+                        // problem already logged (loadBundle called with
+                        // logDetailedErrors=true)
                     }
 
-                    count++;
-                    if (count % 1000 == 0) {
-                        log.info(name + ": checked " + count + "/" + total + " bundles...");
-                    }
                 }
             } catch (ItemStateException ex) {
                 throw new RepositoryException("getting nodeIds", ex);
@@ -908,20 +907,20 @@ public class BundleDbPersistenceManager
 
                     if (bundle == null) {
                         log.error("No bundle found for id '" + id + "'");
-                        continue;
                     }
+                    else {
+                        checkBundleConsistency(id, bundle, fix, modifications, reports);
 
-                    checkBundleConsistency(id, bundle, fix, modifications, reports);
-
-                    if (recursive) {
-                        for (NodePropBundle.ChildNodeEntry entry : bundle.getChildNodeEntries()) {
-                            idList.add(entry.getId());
+                        if (recursive) {
+                            for (NodePropBundle.ChildNodeEntry entry : bundle.getChildNodeEntries()) {
+                                idList.add(entry.getId());
+                            }
                         }
-                    }
 
-                    count++;
-                    if (count % 1000 == 0) {
-                        log.info(name + ": checked " + count + "/" + idList.size() + " bundles...");
+                        count++;
+                        if (count % 1000 == 0) {
+                            log.info(name + ": checked " + count + "/" + idList.size() + " bundles...");
+                        }
                     }
                 } catch (ItemStateException e) {
                     // problem already logged (loadBundle called with logDetailedErrors=true)
