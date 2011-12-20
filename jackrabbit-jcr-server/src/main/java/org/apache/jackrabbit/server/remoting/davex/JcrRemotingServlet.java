@@ -130,10 +130,9 @@ import org.slf4j.LoggerFactory;
  *   JSON value must not have any trailing ".0" removed.
  * </pre>
  *
- * <!--
  * <h3><a name="mread">Multi Read</a></h3>
  * <p>
- * Since Jackrabbit 2.3.1 it is also possible to request multiple subtrees
+ * Since Jackrabbit 2.3.6 it is also possible to request multiple subtrees
  * in a single request. This is done by adding one or more ":include"
  * parameters to a batch read request describe above. These extra parameters
  * specify the (relative) paths of all the nodes to be included in the
@@ -147,7 +146,6 @@ import org.slf4j.LoggerFactory;
  * $ curl 'http://.../parent.json?:path=child1&:path=child2'
  * {"nodes":{"/parent/child1":{...},"/parent/child2":{...}}}
  * </pre>
- * -->
  *
  * <h3><a name="bwrite">Batch Write</a></h3>
  *
@@ -216,9 +214,6 @@ import org.slf4j.LoggerFactory;
 public abstract class JcrRemotingServlet extends JCRWebdavServerServlet {
 
     private static Logger log = LoggerFactory.getLogger(JcrRemotingServlet.class);
-
-    /** Temporary feature switch, remove when JCR-3005 is resolved. */
-    private static final boolean JCR_3005 = Boolean.getBoolean("JCR-3005");
 
     /**
      * the home init parameter. other relative filesystem paths are
@@ -323,44 +318,24 @@ public abstract class JcrRemotingServlet extends JCRWebdavServerServlet {
             DavResourceLocator locator = davResource.getLocator();
             String path = locator.getRepositoryPath();
 
-            Session session = JcrDavSession.getRepositorySession(
-                    webdavRequest.getDavSession());
+            Session session = getRepositorySession(webdavRequest);
             try {
                 Node node = session.getNode(path);
                 int depth = ((WrappingLocator) locator).getDepth();
-                if (depth < BatchReadConfig.DEPTH_INFINITE) {
-                    NodeType type = node.getPrimaryNodeType();
-                    depth = brConfig.getDepth(type.getName());
-                }
 
                 webdavResponse.setContentType("text/plain;charset=utf-8");
                 webdavResponse.setStatus(DavServletResponse.SC_OK);
                 JsonWriter writer = new JsonWriter(webdavResponse.getWriter());
 
                 String[] includes = webdavRequest.getParameterValues(PARAM_INCLUDE);
-                if (includes == null || !JCR_3005) {
+                if (includes == null) {
+                    if (depth < BatchReadConfig.DEPTH_INFINITE) {
+                        NodeType type = node.getPrimaryNodeType();
+                        depth = brConfig.getDepth(type.getName());
+                    }
                     writer.write(node, depth);
                 } else {
-                    Collection<Node> nodes = new ArrayList<Node>();
-                    Set<String> alreadyAdded = new HashSet<String>();
-                    for (String include : includes) {
-                        try {
-                            Node n;
-                            if (include.startsWith("/")) {
-                                n = session.getNode(include);
-                            } else {
-                                n = node.getNode(include);
-                            }
-                            String np = n.getPath();
-                            if (!alreadyAdded.contains(np)) {
-                                nodes.add(n);
-                                alreadyAdded.add(np);
-                            }
-                        } catch (PathNotFoundException e) {
-                            // skip missing node
-                        }
-                    }
-                    writer.write(nodes, depth);
+                    writeMultiple(writer, node, includes, depth);
                 }
             } catch (PathNotFoundException e) {
                 // properties cannot be requested as json object.
@@ -377,6 +352,31 @@ public abstract class JcrRemotingServlet extends JCRWebdavServerServlet {
         }
     }
 
+    private void writeMultiple(
+            JsonWriter writer, Node node, String[] includes, int depth)
+            throws RepositoryException, IOException {
+        Collection<Node> nodes = new ArrayList<Node>();
+        Set<String> alreadyAdded = new HashSet<String>();
+        for (String include : includes) {
+            try {
+                Node n;
+                if (include.startsWith("/")) {
+                    n = node.getSession().getNode(include);
+                } else {
+                    n = node.getNode(include);
+                }
+                String np = n.getPath();
+                if (!alreadyAdded.contains(np)) {
+                    nodes.add(n);
+                    alreadyAdded.add(np);
+                }
+            } catch (PathNotFoundException e) {
+                // skip missing node
+            }
+        }
+        writer.write(nodes, depth);
+    }
+
     @Override
     protected void doPost(WebdavRequest webdavRequest, WebdavResponse webdavResponse, DavResource davResource)
             throws IOException, DavException {
@@ -388,6 +388,7 @@ public abstract class JcrRemotingServlet extends JCRWebdavServerServlet {
             String loc = null;
             try {
                 String[] pValues;
+                String[] includes = null; // multi-read over POST
                 if ((pValues = data.getParameterValues(PARAM_CLONE)) != null) {
                     loc = clone(session, pValues, davResource.getLocator());
                 } else if ((pValues = data.getParameterValues(PARAM_COPY)) != null) {
@@ -395,6 +396,9 @@ public abstract class JcrRemotingServlet extends JCRWebdavServerServlet {
                 } else if (data.getParameterValues(PARAM_DIFF) != null) {
                     String targetPath = davResource.getLocator().getRepositoryPath();
                     processDiff(session, targetPath, data);
+                } else if ((pValues = data.getParameterValues(PARAM_INCLUDE)) != null
+                        && canHandle(DavMethods.DAV_GET, webdavRequest, davResource)) {
+                    includes = pValues;
                 } else {
                     String targetPath = davResource.getLocator().getRepositoryPath();
                     loc = modifyContent(session, targetPath, data);
@@ -403,6 +407,18 @@ public abstract class JcrRemotingServlet extends JCRWebdavServerServlet {
                 // TODO: append entity
                 if (loc == null) {
                     webdavResponse.setStatus(HttpServletResponse.SC_OK);
+                    if (includes != null) {
+                        webdavResponse.setContentType("text/plain;charset=utf-8");
+                        JsonWriter writer = new JsonWriter(webdavResponse.getWriter());
+
+                        DavResourceLocator locator = davResource.getLocator();
+                        String path = locator.getRepositoryPath();
+
+                        Node node = session.getNode(path);
+                        int depth = ((WrappingLocator) locator).getDepth();
+
+                        writeMultiple(writer, node, includes, depth);
+                    }
                 } else {
                     webdavResponse.setHeader(DeltaVConstants.HEADER_LOCATION, loc);
                     webdavResponse.setStatus(HttpServletResponse.SC_CREATED);
