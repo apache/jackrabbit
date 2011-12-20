@@ -1,4 +1,4 @@
-Release Notes -- Apache Jackrabbit -- Version 2.3.5
+Release Notes -- Apache Jackrabbit -- Version 2.3.6
 
 Introduction
 ------------
@@ -10,6 +10,29 @@ specified in the Java Specification Request 283 (JSR 283).
 Apache Jackrabbit 2.3 is an unstable series of releases cut directly from
 Jackrabbit trunk, with a focus on new features and other improvements.
 For production use we recommend the latest stable 2.2 release.
+
+Changes in Jackrabbit 2.3.6
+---------------------------
+
+New features
+
+  [JCR-3005] Make it possible to get multiple nodes in one call via davex
+  [JCR-3183] Add memory based bundle store
+
+Improvements
+
+  [JCR-3162] Index update overhead on cluster slave due to JCR-905
+  [JCR-3172] implement PERSIST events for the EventJournal
+  [JCR-3177] Remove jdk 1.4 restriction for jcr-tests
+  [JCR-3178] Improve error messages for index aggregates
+
+Bug fixes
+
+  [JCR-2541] spi2dav : EventJournal not  implemented
+  [JCR-2930] same named child nodes disappear on restore
+  [JCR-3174] Destination URI should be normalized
+  [JCR-3175] InputContextImpl: cannot upload file larger than 2GB
+  [JCR-3176] JCARepositoryManager does not close InputStream
 
 Changes in Jackrabbit 2.3.5
 ---------------------------
