@@ -42,6 +42,7 @@ import java.io.OutputStream;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 /**
  * This is a generic persistence manager that stores the {@link NodePropBundle}s
@@ -482,7 +483,7 @@ public class BundleFsPersistenceManager extends AbstractBundlePersistenceManager
     /**
      * {@inheritDoc}
      */
-    public Iterable<NodeId> getAllNodeIds(NodeId bigger, int maxCount)
+    public List<NodeId> getAllNodeIds(NodeId bigger, int maxCount)
             throws ItemStateException {
         ArrayList<NodeId> list = new ArrayList<NodeId>();
         try {
