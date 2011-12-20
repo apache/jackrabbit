@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.test;
 
+import junit.framework.TestFailure;
 import junit.framework.TestResult;
 import junit.framework.Test;
 import junit.framework.AssertionFailedError;
@@ -43,13 +44,13 @@ public class JCRTestResult extends TestResult {
      * Set of Strings that identify the test methods that currently fails but
      * are recognized as known issues. Those will not be reported as errors.
      */
-    private final Set knownIssues;
+    private final Set<String> knownIssues;
 
     /**
      * Set of Strings that identify the test methods that are listed as known
      * issues but whose test failures should still be reported.
      */
-    private final Set knownIssuesOverride;
+    private final Set<String> knownIssuesOverride;
 
     /**
      * Creates a new JCRTestResult that delegates to <code>orig</code>.
@@ -111,7 +112,7 @@ public class JCRTestResult extends TestResult {
         return orig.errorCount();
     }
 
-    public synchronized Enumeration errors() {
+    public synchronized Enumeration<TestFailure> errors() {
         return orig.errors();
     }
 
@@ -119,7 +120,7 @@ public class JCRTestResult extends TestResult {
         return orig.failureCount();
     }
 
-    public synchronized Enumeration failures() {
+    public synchronized Enumeration<TestFailure> failures() {
         return orig.failures();
     }
 
@@ -153,8 +154,8 @@ public class JCRTestResult extends TestResult {
      * @param name name of the system property
      * @return set of string tokens
      */
-    private static Set tokenize(String name) {
-        Set tokens = new HashSet();
+    private static Set<String> tokenize(String name) {
+        Set<String> tokens = new HashSet<String>();
         StringTokenizer tokenizer =
             new StringTokenizer(System.getProperty(name, ""));
         while (tokenizer.hasMoreTokens()) {
@@ -180,7 +181,7 @@ public class JCRTestResult extends TestResult {
      * @return <code>true</code> if the test case name is included,
      *         <code>false</code> otherwise
      */
-    private static boolean contains(Set tokens, TestCase test) {
+    private static boolean contains(Set<String> tokens, TestCase test) {
         String className = test.getClass().getName();
         String methodName = test.getName();
 

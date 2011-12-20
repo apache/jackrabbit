@@ -611,7 +611,7 @@ public abstract class AbstractJCRTest extends JUnitTest {
      * @throws RepositoryException if an error occurs.
      */
     protected String getNonExistingWorkspaceName(Session session) throws RepositoryException {
-        List names = Arrays.asList(session.getWorkspace().getAccessibleWorkspaceNames());
+        List<String> names = Arrays.asList(session.getWorkspace().getAccessibleWorkspaceNames());
         String nonExisting = null;
         while (nonExisting == null) {
             String name = createRandomString(10);
