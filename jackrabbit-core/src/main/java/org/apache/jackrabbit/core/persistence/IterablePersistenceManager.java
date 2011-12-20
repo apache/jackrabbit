@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.core.persistence;
 
+import java.util.List;
+
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.state.ItemStateException;
 
@@ -37,11 +39,11 @@ public interface IterablePersistenceManager extends PersistenceManager {
      *
      * @param after the lower limit, or null for no limit.
      * @param maxCount the maximum number of node ids to return, or 0 for no limit.
-     * @return an iterator of all bundles.
+     * @return a list of all bundles.
      * @throws ItemStateException if an error while loading occurs.
      * @throws RepositoryException if a repository exception occurs
      */
-    Iterable<NodeId> getAllNodeIds(NodeId after, int maxCount)
+    List<NodeId> getAllNodeIds(NodeId after, int maxCount)
             throws ItemStateException, RepositoryException;
 
 }

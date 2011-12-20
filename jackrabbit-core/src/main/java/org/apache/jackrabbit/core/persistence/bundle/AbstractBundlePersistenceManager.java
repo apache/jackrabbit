@@ -26,6 +26,7 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 
 import javax.jcr.PropertyType;
+import javax.jcr.RepositoryException;
 
 import org.apache.jackrabbit.api.stats.RepositoryStatistics;
 import org.apache.jackrabbit.core.cache.Cache;
@@ -40,6 +41,8 @@ import org.apache.jackrabbit.core.persistence.CachingPersistenceManager;
 import org.apache.jackrabbit.core.persistence.IterablePersistenceManager;
 import org.apache.jackrabbit.core.persistence.PMContext;
 import org.apache.jackrabbit.core.persistence.PersistenceManager;
+import org.apache.jackrabbit.core.persistence.check.ConsistencyChecker;
+import org.apache.jackrabbit.core.persistence.check.ConsistencyReport;
 import org.apache.jackrabbit.core.persistence.util.BLOBStore;
 import org.apache.jackrabbit.core.persistence.util.FileBasedIndex;
 import org.apache.jackrabbit.core.persistence.util.NodePropBundle;
@@ -87,7 +90,7 @@ import org.slf4j.LoggerFactory;
  * </ul>
  */
 public abstract class AbstractBundlePersistenceManager implements
-    PersistenceManager, CachingPersistenceManager, IterablePersistenceManager, CacheAccessListener {
+    PersistenceManager, CachingPersistenceManager, IterablePersistenceManager, CacheAccessListener, ConsistencyChecker {
 
     /** the default logger */
     private static Logger log = LoggerFactory.getLogger(AbstractBundlePersistenceManager.class);
@@ -777,11 +780,23 @@ public abstract class AbstractBundlePersistenceManager implements
     }
 
     /**
-     * This implementation does nothing.
-     *
      * {@inheritDoc}
      */
     public void checkConsistency(String[] uuids, boolean recursive, boolean fix) {
+        try {
+            ConsistencyCheckerImpl cs = new ConsistencyCheckerImpl(this);
+            cs.check(uuids, recursive, fix);
+        } catch (RepositoryException ex) {
+            log.error("While running consistency check.", ex);
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public ConsistencyReport check(String[] uuids, boolean recursive, boolean fix) throws RepositoryException {
+        ConsistencyCheckerImpl cs = new ConsistencyCheckerImpl(this);
+        return cs.check(uuids, recursive, fix);
     }
 
     /**

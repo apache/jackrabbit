@@ -25,7 +25,9 @@ import java.io.DataOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.jcr.RepositoryException;
@@ -489,9 +491,11 @@ public class InMemBundlePersistenceManager extends AbstractBundlePersistenceMana
     /**
      * {@inheritDoc}
      */
-    public Iterable<NodeId> getAllNodeIds(NodeId after, int maxCount) throws ItemStateException, RepositoryException {
+    public List<NodeId> getAllNodeIds(NodeId after, int maxCount) throws ItemStateException, RepositoryException {
         // ignore after and count parameters.
-        return bundleStore.keySet();
+        List<NodeId> result = new ArrayList<NodeId>();
+        result.addAll(bundleStore.keySet());
+        return result;
     }
 
     /**
