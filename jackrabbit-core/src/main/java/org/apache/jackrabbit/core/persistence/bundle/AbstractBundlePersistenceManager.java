@@ -66,7 +66,7 @@ import org.slf4j.LoggerFactory;
  * persistence managers that store the state in a {@link NodePropBundle}.
  * <p/>
  * The state and all property states of one node are stored together in one
- * record. Property values of a certain size can be store outside of the bundle.
+ * record. Property values of a certain size can be stored outside of the bundle.
  * This currently only works for binary properties. NodeReferences are not
  * included in the bundle since they are addressed by the target id.
  * <p/>
@@ -78,11 +78,11 @@ import org.slf4j.LoggerFactory;
  * and "jcr:mixinTypes". As they are also stored in the node state they are not
  * included in the bundle but generated when required.
  * <p/>
- * In order to increase performance, there are 2 caches maintained. One is the
+ * In order to increase performance, there are two caches being maintained. One is the
  * bundle cache that caches already loaded bundles. The other is the
  * {@link LRUNodeIdCache} that caches non-existent bundles. This is useful
  * because a lot of {@link #exists(NodeId)} calls are issued that would result
- * in a useless SQL execution if the desired bundle does not exist.
+ * in a useless persistence lookup if the desired bundle does not exist.
  * <p/>
  * Configuration:<br>
  * <ul>
