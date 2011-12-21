@@ -44,6 +44,12 @@ public interface ConsistencyChecker {
      *            if true, any problems found that can be repaired will be
      *            repaired. if false, no data will be modified, instead all
      *            inconsistencies will only get logged
+     * @param lostNFoundId
+     *            node to which to attach orphaned nodes (or <code>null</code>,
+     *            in which case orphaned nodes will not get moved); this node
+     *            should be of a node type that allows adding arbitrary child
+     *            nodes
      */
-    ConsistencyReport check(String[] uuids, boolean recursive, boolean fix) throws RepositoryException;
+    ConsistencyReport check(String[] uuids, boolean recursive, boolean fix, String lostNFoundId)
+            throws RepositoryException;
 }

@@ -76,7 +76,7 @@ public class AutoFixCorruptNode extends TestCase {
 
         s = openSession(rep, false);
         try {
-            ConsistencyReport r = TestHelper.checkConsistency(s, false);
+            ConsistencyReport r = TestHelper.checkConsistency(s, false, null);
             assertNotNull(r);
             assertNotNull(r.getItems());
             assertEquals(1, r.getItems().size());
@@ -86,6 +86,53 @@ public class AutoFixCorruptNode extends TestCase {
             s.logout();
             rep.shutdown();
             FileUtils.deleteDirectory(new File("repository"));
+        }
+    }
+
+    public void testOrphan() throws Exception {
+
+        // new repository
+        TransientRepository rep = new TransientRepository(new File(TEST_DIR));
+        Session s = openSession(rep, false);
+
+        try {
+            Node root = s.getRootNode();
+
+            Node parent = root.addNode("parent");
+            Node test = parent.addNode("test");
+            test.addMixin("mix:referenceable");
+
+            String lost = test.getIdentifier();
+            
+            Node lnf = root.addNode("lost+found");
+            lnf.addMixin("mix:referenceable");
+            String lnfid = lnf.getIdentifier();
+            
+            s.save();
+
+            Node brokenNode = parent;
+            UUID destroy = UUID.fromString(brokenNode.getIdentifier());
+            s.logout();
+            
+            destroyBundle(destroy, "workspaces/default");
+
+            s = openSession(rep, false);
+            ConsistencyReport report = TestHelper.checkConsistency(s, false, null);
+            assertTrue("Report should have reported broken nodes", !report.getItems().isEmpty());
+
+            // now retry with lost+found functionality
+            ConsistencyReport report2 = TestHelper.checkConsistency(s, true, lnfid);
+            assertTrue("Report should have reported broken nodes", !report2.getItems().isEmpty());
+            
+            s.logout();
+            
+            s = openSession(rep, false);
+            Node q = s.getNodeByIdentifier(lost);
+            
+            // check the node was moved
+            assertEquals(lnfid, q.getParent().getIdentifier());
+        } finally {
+            s.logout();
         }
     }
 
@@ -120,7 +167,7 @@ public class AutoFixCorruptNode extends TestCase {
 
             s = openSession(rep, false);
 
-            ConsistencyReport report = TestHelper.checkVersionStoreConsistency(s, false);
+            ConsistencyReport report = TestHelper.checkVersionStoreConsistency(s, false, null);
             assertTrue("Report should have reported broken nodes", !report.getItems().isEmpty());
             
             try {
@@ -158,12 +205,12 @@ public class AutoFixCorruptNode extends TestCase {
             // now redo after running fixup on versioning storage
             s = openSession(rep, false);
 
-            report = TestHelper.checkVersionStoreConsistency(s, true);
+            report = TestHelper.checkVersionStoreConsistency(s, true, null);
             assertTrue("Report should have reported broken nodes", !report.getItems().isEmpty());
             int reportitems = report.getItems().size();
             
             // problems should now be fixed
-            report = TestHelper.checkVersionStoreConsistency(s, false);
+            report = TestHelper.checkVersionStoreConsistency(s, false, null);
             assertTrue("Some problems should have been fixed but are not: " + report, report.getItems().size() < reportitems);
             
             // get a fresh session
@@ -235,7 +282,7 @@ public class AutoFixCorruptNode extends TestCase {
 
             s = openSession(rep, false);
 
-            ConsistencyReport report = TestHelper.checkVersionStoreConsistency(s, false);
+            ConsistencyReport report = TestHelper.checkVersionStoreConsistency(s, false, null);
             assertTrue("Report should have reported broken nodes", !report.getItems().isEmpty());
             
             try {
@@ -273,12 +320,12 @@ public class AutoFixCorruptNode extends TestCase {
             // now redo after running fixup on versioning storage
             s = openSession(rep, false);
 
-            report = TestHelper.checkVersionStoreConsistency(s, true);
+            report = TestHelper.checkVersionStoreConsistency(s, true, null);
             assertTrue("Report should have reported broken nodes", !report.getItems().isEmpty());
             int reportitems = report.getItems().size();
             
             // problems should now be fixed
-            report = TestHelper.checkVersionStoreConsistency(s, false);
+            report = TestHelper.checkVersionStoreConsistency(s, false, null);
             assertTrue("Some problems should have been fixed but are not: " + report, report.getItems().size() < reportitems);
             
             test = s.getRootNode().getNode("test");
@@ -351,7 +398,7 @@ public class AutoFixCorruptNode extends TestCase {
 
             s = openSession(rep, false);
 
-            ConsistencyReport report = TestHelper.checkVersionStoreConsistency(s, false);
+            ConsistencyReport report = TestHelper.checkVersionStoreConsistency(s, false, null);
             assertTrue("Report should have reported broken nodes", !report.getItems().isEmpty());
             
             s.logout();
@@ -426,7 +473,7 @@ public class AutoFixCorruptNode extends TestCase {
 
             s = openSession(rep, false);
 
-            ConsistencyReport report = TestHelper.checkVersionStoreConsistency(s, true);
+            ConsistencyReport report = TestHelper.checkVersionStoreConsistency(s, true, null);
             assertTrue("Report should have reported broken nodes", !report.getItems().isEmpty());
 
             s.logout();
