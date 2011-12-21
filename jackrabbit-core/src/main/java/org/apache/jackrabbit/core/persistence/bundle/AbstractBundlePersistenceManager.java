@@ -785,7 +785,7 @@ public abstract class AbstractBundlePersistenceManager implements
     public void checkConsistency(String[] uuids, boolean recursive, boolean fix) {
         try {
             ConsistencyCheckerImpl cs = new ConsistencyCheckerImpl(this);
-            cs.check(uuids, recursive, fix);
+            cs.check(uuids, recursive, fix, null);
         } catch (RepositoryException ex) {
             log.error("While running consistency check.", ex);
         }
@@ -794,9 +794,9 @@ public abstract class AbstractBundlePersistenceManager implements
     /**
      * {@inheritDoc}
      */
-    public ConsistencyReport check(String[] uuids, boolean recursive, boolean fix) throws RepositoryException {
+    public ConsistencyReport check(String[] uuids, boolean recursive, boolean fix, String lostNFoundId) throws RepositoryException {
         ConsistencyCheckerImpl cs = new ConsistencyCheckerImpl(this);
-        return cs.check(uuids, recursive, fix);
+        return cs.check(uuids, recursive, fix, lostNFoundId);
     }
 
     /**

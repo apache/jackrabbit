@@ -33,6 +33,8 @@ import org.apache.jackrabbit.core.persistence.check.ReportItem;
 import org.apache.jackrabbit.core.persistence.check.ReportItemImpl;
 import org.apache.jackrabbit.core.persistence.util.NodePropBundle;
 import org.apache.jackrabbit.core.state.ItemStateException;
+import org.apache.jackrabbit.spi.NameFactory;
+import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,24 +46,47 @@ public class ConsistencyCheckerImpl implements ConsistencyChecker {
 
     private AbstractBundlePersistenceManager pm;
     
+    private static final NameFactory NF = NameFactoryImpl.getInstance();
+    
     public ConsistencyCheckerImpl(AbstractBundlePersistenceManager pm) {
         this.pm = pm;
     }
 
-    public ConsistencyReport check(String[] uuids, boolean recursive, boolean fix) throws RepositoryException {
+    public ConsistencyReport check(String[] uuids, boolean recursive, boolean fix, String lostNFoundId)
+            throws RepositoryException {
         Set<ReportItem> reports = new HashSet<ReportItem>();
 
         long tstart = System.currentTimeMillis();
-        int total = internalCheckConsistency(uuids, recursive, fix, reports);
+        int total = internalCheckConsistency(uuids, recursive, fix, reports, lostNFoundId);
         long elapsed = System.currentTimeMillis() - tstart;
 
         return new ConsistencyReportImpl(total, elapsed, reports);
     }
     
-    private int internalCheckConsistency(String[] uuids, boolean recursive, boolean fix, Set<ReportItem> reports) throws RepositoryException {
+    private int internalCheckConsistency(String[] uuids, boolean recursive, boolean fix, Set<ReportItem> reports,
+            String lostNFoundId) throws RepositoryException {
         int count = 0;
         int total = 0;
-        Collection<NodePropBundle> modifications = new ArrayList<NodePropBundle>();        
+        Collection<NodePropBundle> modifications = new ArrayList<NodePropBundle>();
+        Set<NodeId> orphaned = new HashSet<NodeId>();
+
+        NodeId lostNFound = null;
+        if (fix && lostNFoundId != null) {
+            // do we have a "lost+found" node?
+            try {
+                NodeId tmpid = new NodeId(lostNFoundId);
+                NodePropBundle lfBundle = pm.loadBundle(tmpid);
+                if (lfBundle == null) {
+                    log.error("specified 'lost+found' node does not exist");
+                } else if (!NameConstants.NT_UNSTRUCTURED.equals(lfBundle.getNodeTypeName())) {
+                    log.error("specified 'lost+found' node is not of type nt:unstructered");
+                } else {
+                    lostNFound = lfBundle.getId();
+                }
+            } catch (Exception ex) {
+                log.error("finding 'lost+found' folder", ex);
+            }
+        }
 
         if (uuids == null) {
             try {
@@ -75,7 +100,7 @@ public class ConsistencyCheckerImpl implements ConsistencyChecker {
                         if (bundle == null) {
                             log.error("No bundle found for id '" + id + "'");
                         } else {
-                            checkBundleConsistency(id, bundle, fix, modifications, reports);
+                            checkBundleConsistency(id, bundle, fix, modifications, lostNFound, orphaned, reports);
 
                             count++;
                             if (count % 1000 == 0) {
@@ -123,7 +148,7 @@ public class ConsistencyCheckerImpl implements ConsistencyChecker {
                         log.error("No bundle found for id '" + id + "'");
                     }
                     else {
-                        checkBundleConsistency(id, bundle, fix, modifications, reports);
+                        checkBundleConsistency(id, bundle, fix, modifications, lostNFound, orphaned, reports);
 
                         if (recursive) {
                             for (NodePropBundle.ChildNodeEntry entry : bundle.getChildNodeEntries()) {
@@ -159,6 +184,28 @@ public class ConsistencyCheckerImpl implements ConsistencyChecker {
             }
         }
 
+        if (fix && lostNFoundId != null && !orphaned.isEmpty()) {
+            // do we have things to add to "lost+found"?
+            try {
+                NodePropBundle lfBundle = pm.loadBundle(lostNFound);
+                if (lfBundle == null) {
+                    log.error("specified 'lost+found' node does not exist");
+                } else if (!NameConstants.NT_UNSTRUCTURED.equals(lfBundle.getNodeTypeName())) {
+                    log.error("specified 'lost+found' node is not of type nt:unstructered");
+                } else {
+                    lfBundle.markOld();
+                    for (NodeId orphan : orphaned) {
+                        String nodeName = orphan + "-" + System.currentTimeMillis();
+                        lfBundle.addChildNodeEntry(NF.create("", nodeName), orphan);
+                    }
+                    pm.storeBundle(lfBundle);
+                    pm.evictBundle(lfBundle.getId());
+                }
+            } catch (Exception ex) {
+                log.error("trying orphan adoption", ex);
+            }
+        }
+
         log.info(pm + ": checked " + count + "/" + total + " bundles.");
 
         return total;
@@ -176,7 +223,7 @@ public class ConsistencyCheckerImpl implements ConsistencyChecker {
      */
     private void checkBundleConsistency(NodeId id, NodePropBundle bundle,
                                           boolean fix, Collection<NodePropBundle> modifications,
-                                          Set<ReportItem> reports) {
+                                          NodeId lostNFoundId, Set<NodeId> orphaned, Set<ReportItem> reports) {
         //log.info(name + ": checking bundle '" + id + "'");
 
         // skip all system nodes except root node
@@ -240,6 +287,11 @@ public class ConsistencyCheckerImpl implements ConsistencyChecker {
                     String message = "NodeState '" + id + "' references inexistent parent id '" + parentId + "'";
                     log.error(message);
                     addMessage(reports, id, message);
+                    orphaned.add(id);
+                    if (lostNFoundId != null) {
+                        bundle.setParentId(lostNFoundId);
+                        modifications.add(bundle);
+                    }
                 }
                 else {
                     boolean found = false;
@@ -260,8 +312,7 @@ public class ConsistencyCheckerImpl implements ConsistencyChecker {
                         int r = new Random().nextInt();
                         int n = l + r;
                         String nodeName = Integer.toHexString(n);
-                        parentBundle.addChildNodeEntry(NameFactoryImpl
-                                .getInstance().create("{}" + nodeName), id);
+                        parentBundle.addChildNodeEntry(NF.create("{}" + nodeName), id);
                         log.info("NodeState '" + id + "' adds itself to its parent node '" + parentId + "' with a new name '" + nodeName + "'");
                         modifications.add(parentBundle);
                     }
