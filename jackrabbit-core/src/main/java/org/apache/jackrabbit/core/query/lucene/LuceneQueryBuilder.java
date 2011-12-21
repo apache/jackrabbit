@@ -938,7 +938,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                         if (steps.length == 2) {
                             selectParent = false;
                         }
-                    } else if (step instanceof LocationStepQueryNode) {
+                    } else if (step != null) {
                         // join name test with property query if there is one
                         if (name != null) {
                             if (!name.equals(PARENT_ELEMENT_NAME)) {
@@ -982,7 +982,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                                                indexFormatVersion,
                                                nsMappings);
                 } else {
-                    if (step instanceof LocationStepQueryNode) {
+                    if (step != null) {
                         query = new ParentAxisQuery(query, name, indexFormatVersion, nsMappings);
                     } else {
                         throw new UnsupportedOperationException();
