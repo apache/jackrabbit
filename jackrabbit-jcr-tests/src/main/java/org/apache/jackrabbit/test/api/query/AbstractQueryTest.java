@@ -93,6 +93,18 @@ public abstract class AbstractQueryTest extends AbstractJCRTest {
     protected QueryManager qm;
 
     /**
+     * The identifier for the "XPATH" query syntax
+     */
+    @SuppressWarnings("deprecation")
+	protected String qsXPATH = Query.XPATH;
+
+    /**
+     * The identifier for the "SQL" query syntax
+     */
+    @SuppressWarnings("deprecation")
+	protected String qsSQL = Query.SQL;
+
+    /**
      * Set-up the configuration values used for the test. Per default retrieves
      * a session, configures testRoot, and nodetype and checks if the query
      * language for the current language is available.<br>
@@ -301,7 +313,7 @@ public abstract class AbstractQueryTest extends AbstractJCRTest {
      */
     protected void executeXPathQuery(Session session, String xpath, Node[] nodes)
             throws RepositoryException, NotExecutableException {
-        QueryResult res = createQuery(session, xpath, Query.XPATH).execute();
+        QueryResult res = createQuery(session, xpath, qsXPATH).execute();
         checkResult(res, nodes);
     }
 
@@ -315,7 +327,7 @@ public abstract class AbstractQueryTest extends AbstractJCRTest {
      */
     protected void executeSqlQuery(Session session, String sql, Node[] nodes)
             throws RepositoryException, NotExecutableException {
-        QueryResult res = createQuery(session, sql, Query.SQL).execute();
+        QueryResult res = createQuery(session, sql, qsSQL).execute();
         checkResult(res, nodes);
     }
 

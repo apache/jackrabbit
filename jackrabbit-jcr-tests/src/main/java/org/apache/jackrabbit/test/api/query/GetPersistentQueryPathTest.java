@@ -51,7 +51,7 @@ public class GetPersistentQueryPathTest extends AbstractQueryTest {
             throw new NotExecutableException("repository does not support nt:query");
         }
         String statement = "/" + jcrRoot;
-        Query q = superuser.getWorkspace().getQueryManager().createQuery(statement, Query.XPATH);
+        Query q = superuser.getWorkspace().getQueryManager().createQuery(statement, qsXPATH);
         String path = testRoot + "/" + nodeName1;
         q.storeAsNode(path);
         assertEquals("Query.getPersistentQueryPath() does not return the correct path.",

@@ -21,7 +21,6 @@ import org.apache.jackrabbit.test.NotExecutableException;
 import javax.jcr.RepositoryException;
 import javax.jcr.NodeIterator;
 import javax.jcr.Repository;
-import javax.jcr.query.Query;
 import javax.jcr.query.QueryResult;
 
 /**
@@ -58,7 +57,7 @@ public class XPathDocOrderTest extends AbstractQueryTest {
         for (NodeIterator nodes = testRootNode.getNodes(); nodes.hasNext() && nodes.getPosition() < 2;) {
             resultPath = nodes.nextNode().getPath();
         }
-        docOrderTest(new Statement(xpath, Query.XPATH), resultPath);
+        docOrderTest(new Statement(xpath, qsXPATH), resultPath);
     }
 
     /**
@@ -73,7 +72,7 @@ public class XPathDocOrderTest extends AbstractQueryTest {
         for (NodeIterator nodes = testRootNode.getNodes(); nodes.hasNext() && nodes.getPosition() < 2;) {
             resultPath = nodes.nextNode().getPath();
         }
-        docOrderTest(new Statement(xpath, Query.XPATH), resultPath);
+        docOrderTest(new Statement(xpath, qsXPATH), resultPath);
     }
 
     /**
@@ -87,7 +86,7 @@ public class XPathDocOrderTest extends AbstractQueryTest {
         for (NodeIterator nodes = testRootNode.getNodes(); nodes.hasNext();) {
             resultPath = nodes.nextNode().getPath();
         }
-        docOrderTest(new Statement(xpath, Query.XPATH), resultPath);
+        docOrderTest(new Statement(xpath, qsXPATH), resultPath);
     }
 
     /**
@@ -98,7 +97,7 @@ public class XPathDocOrderTest extends AbstractQueryTest {
     public void testDocOrderFirstFunction() throws Exception {
         String xpath = xpathRoot + "/*[first()]";
         String resultPath = testRootNode.getNodes().nextNode().getPath();
-        docOrderTest(new Statement(xpath, Query.XPATH), resultPath);
+        docOrderTest(new Statement(xpath, qsXPATH), resultPath);
     }
 
     //-----------------------------< internal >---------------------------------

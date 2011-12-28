@@ -68,7 +68,7 @@ public class GetPropertyNamesTest extends AbstractQueryTest {
         String queryStatement = "/" + jcrRoot;
 
         // build and execute search query
-        Query query = superuser.getWorkspace().getQueryManager().createQuery(queryStatement, Query.XPATH);
+        Query query = superuser.getWorkspace().getQueryManager().createQuery(queryStatement, qsXPATH);
         QueryResult result = query.execute();
 
         // Get the node's non-residual properties

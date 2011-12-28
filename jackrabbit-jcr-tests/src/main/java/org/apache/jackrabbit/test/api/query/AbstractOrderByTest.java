@@ -149,13 +149,13 @@ class AbstractOrderByTest extends AbstractQueryTest {
         Query q;
         QueryResult result;
         if (sql != null) {
-            q = superuser.getWorkspace().getQueryManager().createQuery(sql, Query.SQL);
+            q = superuser.getWorkspace().getQueryManager().createQuery(sql, qsSQL);
             result = q.execute();
             checkResultOrder(result, nodeNames);
         }
 
         if (xpath != null) {
-            q = superuser.getWorkspace().getQueryManager().createQuery(xpath, Query.XPATH);
+            q = superuser.getWorkspace().getQueryManager().createQuery(xpath, qsXPATH);
             result = q.execute();
             checkResultOrder(result, nodeNames);
         }
@@ -168,13 +168,13 @@ class AbstractOrderByTest extends AbstractQueryTest {
         Collections.reverse(Arrays.asList(nodeNames));
 
         if (sql != null) {
-            q = superuser.getWorkspace().getQueryManager().createQuery(sql + " DESC", Query.SQL);
+            q = superuser.getWorkspace().getQueryManager().createQuery(sql + " DESC", qsSQL);
             result = q.execute();
             checkResultOrder(result, nodeNames);
         }
 
         if (xpath != null) {
-            q = superuser.getWorkspace().getQueryManager().createQuery(xpath + " descending", Query.XPATH);
+            q = superuser.getWorkspace().getQueryManager().createQuery(xpath + " descending", qsXPATH);
             result = q.execute();
             checkResultOrder(result, nodeNames);
         }
@@ -257,7 +257,7 @@ class AbstractOrderByTest extends AbstractQueryTest {
      */
     protected String createXPath() throws RepositoryException {
         List<String> languages = Arrays.asList(superuser.getWorkspace().getQueryManager().getSupportedQueryLanguages());
-        if (languages.contains(Query.XPATH)) {
+        if (languages.contains(qsXPATH)) {
             return xpathRoot + "/*[@jcr:primaryType='" + testNodeType + "'] order by @" + propertyName1;
         } else {
             return null;

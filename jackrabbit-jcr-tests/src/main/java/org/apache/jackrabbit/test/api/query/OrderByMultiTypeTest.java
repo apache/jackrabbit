@@ -62,14 +62,14 @@ public class OrderByMultiTypeTest extends AbstractOrderByTest {
         Query q;
         QueryResult result;
         if (checkSQL) {
-            q = superuser.getWorkspace().getQueryManager().createQuery(sql, Query.SQL);
+            q = superuser.getWorkspace().getQueryManager().createQuery(sql, qsSQL);
             result = q.execute();
             checkResultOrder(result, new String[]{nodeName2, nodeName3, nodeName1});
         }
 
         String xpath = "/" + testRoot + "/*[@" + jcrPrimaryType + "='" + testNodeType +
                 "'] order by @" + propertyName2 + ", @" + propertyName1;
-        q = superuser.getWorkspace().getQueryManager().createQuery(xpath, Query.XPATH);
+        q = superuser.getWorkspace().getQueryManager().createQuery(xpath, qsXPATH);
         result = q.execute();
         checkResultOrder(result, new String[]{nodeName2, nodeName3, nodeName1});
 
@@ -79,7 +79,7 @@ public class OrderByMultiTypeTest extends AbstractOrderByTest {
                 propertyName2 + " DESC, " +
                 propertyName1 + " DESC";
         if (checkSQL) {
-            q = superuser.getWorkspace().getQueryManager().createQuery(sql, Query.SQL);
+            q = superuser.getWorkspace().getQueryManager().createQuery(sql, qsSQL);
             result = q.execute();
             checkResultOrder(result, new String[]{nodeName1, nodeName3, nodeName2});
         }
@@ -88,7 +88,7 @@ public class OrderByMultiTypeTest extends AbstractOrderByTest {
                 testNodeType + "'] order by @" +
                 propertyName2 + " descending, @" +
                 propertyName1 + " descending";
-        q = superuser.getWorkspace().getQueryManager().createQuery(xpath, Query.XPATH);
+        q = superuser.getWorkspace().getQueryManager().createQuery(xpath, qsXPATH);
         result = q.execute();
         checkResultOrder(result, new String[]{nodeName1, nodeName3, nodeName2});
 
@@ -97,7 +97,7 @@ public class OrderByMultiTypeTest extends AbstractOrderByTest {
                 jcrPath + " LIKE '" + testRoot + "/%' ORDER BY " +
                 propertyName2 + " DESC, " + propertyName1;
         if (checkSQL) {
-            q = superuser.getWorkspace().getQueryManager().createQuery(sql, Query.SQL);
+            q = superuser.getWorkspace().getQueryManager().createQuery(sql, qsSQL);
             result = q.execute();
             checkResultOrder(result, new String[]{nodeName1, nodeName2, nodeName3});
         }
@@ -105,7 +105,7 @@ public class OrderByMultiTypeTest extends AbstractOrderByTest {
         xpath = "/" + jcrRoot + testRoot + "/*[@" + jcrPrimaryType + "='" +
                 testNodeType + "'] order by @" + propertyName2 +
                 " descending, @" + propertyName1;
-        q = superuser.getWorkspace().getQueryManager().createQuery(xpath, Query.XPATH);
+        q = superuser.getWorkspace().getQueryManager().createQuery(xpath, qsXPATH);
         result = q.execute();
         checkResultOrder(result, new String[]{nodeName1, nodeName2, nodeName3});
     }

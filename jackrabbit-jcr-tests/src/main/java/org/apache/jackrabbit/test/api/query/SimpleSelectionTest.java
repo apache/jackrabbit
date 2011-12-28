@@ -78,7 +78,7 @@ public class SimpleSelectionTest extends AbstractQueryTest {
         String propQuery = "/" + jcrRoot + firstChildpath + "[@" + jcrPrimaryType + "]";
 
         // execute search query
-        Query query = session.getWorkspace().getQueryManager().createQuery(propQuery, Query.XPATH);
+        Query query = session.getWorkspace().getQueryManager().createQuery(propQuery, qsXPATH);
         QueryResult result = query.execute();
 
         assertEquals("Should have only 1 result", 1, getSize(result.getRows()));

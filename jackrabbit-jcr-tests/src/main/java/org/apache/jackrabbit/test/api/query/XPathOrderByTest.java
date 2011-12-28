@@ -16,8 +16,6 @@
  */
 package org.apache.jackrabbit.test.api.query;
 
-import javax.jcr.query.Query;
-
 /**
  * This test searches for all nodes of a specific node type and orders them by
  * the property with name configured as {@link #propertyName1}.
@@ -54,7 +52,7 @@ public class XPathOrderByTest extends AbstractQueryTest {
      * For configuration description see {@link XPathOrderByTest}.
      */
     public void testOrderByAscending() throws Exception {
-        Statement stmt = new Statement(baseStatement + " ascending", Query.XPATH);
+        Statement stmt = new Statement(baseStatement + " ascending", qsXPATH);
         evaluateResultOrder(execute(stmt), propertyName1, false);
     }
 
@@ -64,7 +62,7 @@ public class XPathOrderByTest extends AbstractQueryTest {
      * For configuration description see {@link XPathOrderByTest}.
      */
     public void testOrderByDescending() throws Exception {
-        Statement stmt = new Statement(baseStatement + " descending", Query.XPATH);
+        Statement stmt = new Statement(baseStatement + " descending", qsXPATH);
         evaluateResultOrder(execute(stmt), propertyName1, true);
     }
 
@@ -74,7 +72,7 @@ public class XPathOrderByTest extends AbstractQueryTest {
      * For configuration description see {@link XPathOrderByTest}.
      */
     public void testOrderBy() throws Exception {
-        Statement stmt = new Statement(baseStatement, Query.XPATH);
+        Statement stmt = new Statement(baseStatement, qsXPATH);
         evaluateResultOrder(execute(stmt), propertyName1, false);
     }
 

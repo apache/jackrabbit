@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.test.api.query;
 
-import javax.jcr.query.Query;
 import javax.jcr.query.QueryResult;
 import javax.jcr.query.RowIterator;
 import javax.jcr.query.Row;
@@ -137,7 +136,7 @@ public class SQLQueryLevel2Test extends AbstractQueryLevel2Test {
         tmp.append(" WHERE CONTAINS(., '\"quick brown\" -cat')");
         tmp.append(" AND ").append(jcrPath).append(" LIKE '");
         tmp.append(testRoot).append("/%'");
-        return new Statement(tmp.toString(), Query.SQL);
+        return new Statement(tmp.toString(), qsSQL);
     }
 
     /**
@@ -154,7 +153,7 @@ public class SQLQueryLevel2Test extends AbstractQueryLevel2Test {
         tmp.append(escapeIdentifierForSQL(propertyName1));
         tmp.append(" AND ").append(jcrPath).append(" LIKE '");
         tmp.append(testRoot).append("/%'");
-        return new Statement(tmp.toString(), Query.SQL);
+        return new Statement(tmp.toString(), qsSQL);
     }
 
     /**
@@ -171,6 +170,6 @@ public class SQLQueryLevel2Test extends AbstractQueryLevel2Test {
         tmp.append(" > 'a'");
         tmp.append(" AND ").append(jcrPath).append(" LIKE '");
         tmp.append(testRoot).append("/%'");
-        return new Statement(tmp.toString(), Query.SQL);
+        return new Statement(tmp.toString(), qsSQL);
     }
 }

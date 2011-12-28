@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.test.api.query;
 
-import javax.jcr.query.Query;
 import javax.jcr.query.QueryResult;
 import javax.jcr.query.RowIterator;
 import javax.jcr.Value;
@@ -131,7 +130,7 @@ public class XPathQueryLevel2Test extends AbstractQueryLevel2Test {
     private Statement getFullTextStatement() {
         String xpath =
             xpathRoot + "/*[" + jcrContains + "(., '\"quick brown\" -cat')]";
-        return new Statement(xpath, Query.XPATH);
+        return new Statement(xpath, qsXPATH);
     }
 
     /**
@@ -142,7 +141,7 @@ public class XPathQueryLevel2Test extends AbstractQueryLevel2Test {
         String xpath =
             xpathRoot + "/*[@" + propertyName2 + " = 'two' and @"
             + propertyName1 + " = 'existence']";
-        return new Statement(xpath, Query.XPATH);
+        return new Statement(xpath, qsXPATH);
     }
 
     /**
@@ -152,7 +151,7 @@ public class XPathQueryLevel2Test extends AbstractQueryLevel2Test {
         String xpath =
             xpathRoot + "/*[@" + propertyName1 + " <= 'b' and @"
             + propertyName1 + " > 'a']";
-        return new Statement(xpath, Query.XPATH);
+        return new Statement(xpath, qsXPATH);
     }
 
 }

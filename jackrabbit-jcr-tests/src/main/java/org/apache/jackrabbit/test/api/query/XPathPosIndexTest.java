@@ -21,7 +21,6 @@ import org.apache.jackrabbit.test.NotExecutableException;
 import javax.jcr.RepositoryException;
 import javax.jcr.NodeIterator;
 import javax.jcr.Repository;
-import javax.jcr.query.Query;
 import javax.jcr.query.QueryResult;
 
 /**
@@ -57,7 +56,7 @@ public class XPathPosIndexTest extends AbstractQueryTest {
         String path = testRoot + "/" + nodeName1 + "[2]";
         StringBuffer tmp = new StringBuffer("/");
         tmp.append(jcrRoot).append(path);
-        docOrderTest(new Statement(tmp.toString(), Query.XPATH), path);
+        docOrderTest(new Statement(tmp.toString(), qsXPATH), path);
     }
 
     //-----------------------------< internal >---------------------------------
