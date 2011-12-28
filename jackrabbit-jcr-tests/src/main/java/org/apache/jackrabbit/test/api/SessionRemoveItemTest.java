@@ -47,7 +47,7 @@ public class SessionRemoveItemTest extends AbstractJCRTest {
         readOnlySession = getHelper().getReadOnlySession();
 
         removeNode = testRootNode.addNode(nodeName1, testNodeType);
-        testRootNode.save();
+        testRootNode.getSession().save();
         nPath = removeNode.getPath();
     }
 

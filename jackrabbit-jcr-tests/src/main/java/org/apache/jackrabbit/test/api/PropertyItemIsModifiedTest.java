@@ -46,7 +46,7 @@ public class PropertyItemIsModifiedTest extends AbstractJCRTest {
         // build persistent node
         try {
             testNode = testRootNode.addNode(nodeName1, testNodeType);
-            testRootNode.save();
+            testRootNode.getSession().save();
         } catch (RepositoryException e) {
             fail("Failed to create test node." + e.getMessage());
         }

@@ -73,7 +73,7 @@ abstract class AbstractWorkspaceCopyTest extends AbstractJCRTest {
         // create a non-referenceable node
         try {
             node2 = testRootNode.addNode(nodeName2, testNodeType);
-            testRootNode.save();
+            testRootNode.getSession().save();
         } catch (RepositoryException e) {
             fail("Failed to createtest node." + e.getMessage());
         }

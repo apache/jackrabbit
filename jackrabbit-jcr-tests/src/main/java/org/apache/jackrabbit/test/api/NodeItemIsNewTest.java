@@ -58,7 +58,7 @@ public class NodeItemIsNewTest extends AbstractJCRTest {
      */
     public void testPersistentNodeItemIsNew () throws RepositoryException {
         Node testNode = testRootNode.addNode(nodeName1, testNodeType);
-        testRootNode.save();
+        testRootNode.getSession().save();
         Item testNodeItem = superuser.getItem(testNode.getPath());
         // check testNodeItem is new after save
         assertFalse("Item.isNew() must return false after a new NodeItem is added and the parent Node is saved", testNodeItem.isNew());

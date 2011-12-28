@@ -208,7 +208,7 @@ public class SerializationTest extends AbstractJCRTest {
             //A LockException is thrown if a lock prevents the addition of the subtree.
             Node lNode = testRootNode.addNode(nodeName1);
             ensureMixinType(lNode, mixLockable);
-            testRootNode.save();
+            testRootNode.getSession().save();
             Lock lock = lNode.lock(true, true);
             session.removeLockToken(lock.getLockToken());   //remove the token, so the lock is for me, too
             FileInputStream in = new FileInputStream(file);

@@ -57,7 +57,7 @@ public class ElementTest extends AbstractQueryTest {
         Node n1 = testRootNode.addNode(nodeName1, testNodeType);
         Node n2 = testRootNode.addNode(nodeName2, simpleNodeType);
         Node n3 = testRootNode.addNode(nodeName3, testNodeType);
-        testRootNode.save();
+        testRootNode.getSession().save();
 
         String query = "/" + jcrRoot + testRoot + "/element()";
         executeXPathQuery(superuser, query, new Node[]{n1, n2, n3});
@@ -71,7 +71,7 @@ public class ElementTest extends AbstractQueryTest {
         Node n1 = testRootNode.addNode(nodeName1, testNodeType);
         Node n2 = testRootNode.addNode(nodeName2, simpleNodeType);
         Node n3 = testRootNode.addNode(nodeName3, testNodeType);
-        testRootNode.save();
+        testRootNode.getSession().save();
 
         String query = "/" + jcrRoot + testRoot + "/element(*)";
         executeXPathQuery(superuser, query, new Node[]{n1, n2, n3});
@@ -86,7 +86,7 @@ public class ElementTest extends AbstractQueryTest {
         Node n1 = testRootNode.addNode(nodeName1, testNodeType);
         Node n2 = testRootNode.addNode(nodeName2, simpleNodeType);
         Node n3 = testRootNode.addNode(nodeName3, testNodeType);
-        testRootNode.save();
+        testRootNode.getSession().save();
 
         String query = "/" + jcrRoot + testRoot + "/element(*, " + ntBase + ")";
         executeXPathQuery(superuser, query, new Node[]{n1, n2, n3});
@@ -101,7 +101,7 @@ public class ElementTest extends AbstractQueryTest {
         Node n1 = testRootNode.addNode(nodeName1, testNodeType);
         testRootNode.addNode(nodeName2, simpleNodeType);
         Node n3 = testRootNode.addNode(nodeName3, testNodeType);
-        testRootNode.save();
+        testRootNode.getSession().save();
 
         String query = "/" + jcrRoot + testRoot + "/element(*, " + testNodeType + ")";
         executeXPathQuery(superuser, query, new Node[]{n1, n3});
@@ -115,7 +115,7 @@ public class ElementTest extends AbstractQueryTest {
         Node n1 = testRootNode.addNode(nodeName1, testNodeType);
         testRootNode.addNode(nodeName2, simpleNodeType);
         testRootNode.addNode(nodeName3, testNodeType);
-        testRootNode.save();
+        testRootNode.getSession().save();
 
         String query = "/" + jcrRoot + testRoot + "/element(" + nodeName1 + ")";
         executeXPathQuery(superuser, query, new Node[]{n1});
@@ -130,7 +130,7 @@ public class ElementTest extends AbstractQueryTest {
         Node n1 = testRootNode.addNode(nodeName1, testNodeType);
         testRootNode.addNode(nodeName2, simpleNodeType);
         testRootNode.addNode(nodeName3, testNodeType);
-        testRootNode.save();
+        testRootNode.getSession().save();
 
         String query = "/" + jcrRoot + testRoot + "/element(" + nodeName1 + ", " + ntBase + ")";
         executeXPathQuery(superuser, query, new Node[]{n1});
@@ -145,7 +145,7 @@ public class ElementTest extends AbstractQueryTest {
         Node n1 = testRootNode.addNode(nodeName1, testNodeType);
         testRootNode.addNode(nodeName2, simpleNodeType);
         testRootNode.addNode(nodeName3, testNodeType);
-        testRootNode.save();
+        testRootNode.getSession().save();
 
         String query = "/" + jcrRoot + testRoot + "/element(" + nodeName1 + ", " + testNodeType + ")";
         executeXPathQuery(superuser, query, new Node[]{n1});
@@ -165,7 +165,7 @@ public class ElementTest extends AbstractQueryTest {
         Node n2 = testRootNode.addNode(nodeName1, testNodeType);
         testRootNode.addNode(nodeName2, simpleNodeType);
         testRootNode.addNode(nodeName3, testNodeType);
-        testRootNode.save();
+        testRootNode.getSession().save();
 
         String query = "/" + jcrRoot + testRoot + "/element(" + nodeName1 + ", " + testNodeType + ")";
         executeXPathQuery(superuser, query, new Node[]{n1, n2});

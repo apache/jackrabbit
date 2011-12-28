@@ -42,7 +42,7 @@ public class QueryResultNodeIteratorTest extends AbstractQueryTest {
         testRootNode.addNode(nodeName1, testNodeType);
         testRootNode.addNode(nodeName2, testNodeType);
         testRootNode.addNode(nodeName3, testNodeType);
-        testRootNode.save();
+        testRootNode.getSession().save();
     }
 
     /**

@@ -217,7 +217,7 @@ public class SetValueValueFormatExceptionTest extends AbstractJCRTest {
             }
 
             // some implementations may require a save after addMixin()
-            testRootNode.save();
+            testRootNode.getSession().save();
 
             // make sure the node is now referenceable
             assertTrue("test node should be mix:referenceable", referenceableNode.isNodeType(mixReferenceable));
@@ -271,7 +271,7 @@ public class SetValueValueFormatExceptionTest extends AbstractJCRTest {
             } else {
                 n.addMixin(mixReferenceable);
                 // some implementations may require a save after addMixin()
-                testRootNode.save();
+                testRootNode.getSession().save();
             }
         }
 

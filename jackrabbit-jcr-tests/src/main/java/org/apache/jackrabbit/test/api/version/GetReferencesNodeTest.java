@@ -78,13 +78,13 @@ public class GetReferencesNodeTest extends AbstractJCRTest {
         ensureCanSetProperty(testNode, propertyName1, PropertyType.REFERENCE, false);
         testNode.setProperty(propertyName1, nodeToBeReferenced);
 
-        testRootNode.save();
+        testRootNode.getSession().save();
         testNode.checkin();
 
         // create a version 1.1 and remove reference
         testNode.checkout();
         testNode.getProperty(propertyName1).remove();
-        testRootNode.save();
+        testRootNode.getSession().save();
         testNode.checkin();
 
         // check if reference is returned
@@ -107,6 +107,6 @@ public class GetReferencesNodeTest extends AbstractJCRTest {
 
         // node to be referenced, does not have to be versionable
         nodeToBeReferenced = testRootNode.addNode(nodeName2, versionableNodeType);
-        testRootNode.save();
+        testRootNode.getSession().save();
     }
 }

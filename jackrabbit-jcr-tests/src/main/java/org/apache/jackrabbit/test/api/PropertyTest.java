@@ -55,7 +55,7 @@ public class PropertyTest extends AbstractJCRTest {
         // create a node, add a property and save it
         Node testNode1 = testRootNode.addNode(nodeName1, testNodeType);
         Property prop1 = testNode1.setProperty(propertyName1, "value1");
-        testRootNode.save();
+        testRootNode.getSession().save();
 
         // accuire the same property through a different session
         Session session = getHelper().getSuperuserSession();

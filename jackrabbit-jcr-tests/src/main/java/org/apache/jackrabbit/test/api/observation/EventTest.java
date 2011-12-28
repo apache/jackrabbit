@@ -42,7 +42,7 @@ public class EventTest extends AbstractObservationTest {
         EventResult result = new EventResult(log);
         addEventListener(result, Event.NODE_ADDED);
         Node addedNode = testRootNode.addNode(nodeName1, testNodeType);
-        testRootNode.save();
+        testRootNode.getSession().save();
         Event[] events = result.getEvents(DEFAULT_WAIT_TIMEOUT);
         removeEventListener(result);
         assertEquals("Wrong number of events returned", 1, events.length);
@@ -59,7 +59,7 @@ public class EventTest extends AbstractObservationTest {
         EventResult result = new EventResult(log);
         addEventListener(result, Event.NODE_ADDED);
         testRootNode.addNode(nodeName1, testNodeType);
-        testRootNode.save();
+        testRootNode.getSession().save();
         Event[] events = result.getEvents(DEFAULT_WAIT_TIMEOUT);
         removeEventListener(result);
         assertEquals("Wrong number of events returned", 1, events.length);
@@ -75,7 +75,7 @@ public class EventTest extends AbstractObservationTest {
         EventResult result = new EventResult(log);
         addEventListener(result, Event.NODE_ADDED);
         testRootNode.addNode(nodeName1, testNodeType);
-        testRootNode.save();
+        testRootNode.getSession().save();
         Event[] events = result.getEvents(DEFAULT_WAIT_TIMEOUT);
         removeEventListener(result);
         assertEquals("Wrong number of events returned", 1, events.length);

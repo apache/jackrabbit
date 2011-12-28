@@ -39,7 +39,7 @@ public class GetDateTest extends AbstractObservationTest {
             Event[] events = getEvents(new Callable() {
                 public void call() throws RepositoryException {
                     testRootNode.addNode(name, testNodeType);
-                    testRootNode.save();
+                    testRootNode.getSession().save();
                 }
             }, Event.NODE_ADDED);
             for (int i = 0; i < events.length; i++) {

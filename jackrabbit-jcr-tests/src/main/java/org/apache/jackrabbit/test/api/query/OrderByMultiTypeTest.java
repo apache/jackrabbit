@@ -54,7 +54,7 @@ public class OrderByMultiTypeTest extends AbstractOrderByTest {
         n3.setProperty(propertyName1, "ccc");
         n3.setProperty(propertyName2, 2);
 
-        testRootNode.save();
+        testRootNode.getSession().save();
 
         // both ascending
         String sql = "SELECT " + propertyName2 + " FROM " + testNodeType + " WHERE " +

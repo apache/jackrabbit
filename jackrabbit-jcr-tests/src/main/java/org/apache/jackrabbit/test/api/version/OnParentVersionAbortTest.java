@@ -80,7 +80,7 @@ public class OnParentVersionAbortTest extends AbstractOnParentVersionTest {
     public void testRestoreNode() throws RepositoryException, NotExecutableException {
         // create child node with OPV-ABORT behaviour
         addChildNode(OPVAction);
-        testRootNode.save();
+        testRootNode.getSession().save();
         try {
             versionableNode.checkin();
             fail("On checkin of N which has a child node with OnParentVersion ABORT defined, an UnsupportedRepositoryOperationException must be thrown.");

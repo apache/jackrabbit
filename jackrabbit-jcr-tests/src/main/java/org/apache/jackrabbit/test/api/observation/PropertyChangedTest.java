@@ -50,11 +50,11 @@ public class PropertyChangedTest extends AbstractObservationTest {
     public void testSinglePropertyChanged() throws RepositoryException {
         Node node = testRootNode.addNode(nodeName1, testNodeType);
         node.setProperty(propertyName1, "foo");
-        testRootNode.save();
+        testRootNode.getSession().save();
         EventResult result = new EventResult(log);
         addEventListener(result, Event.PROPERTY_CHANGED);
         node.getProperty(propertyName1).setValue("foobar");
-        testRootNode.save();
+        testRootNode.getSession().save();
         Event[] events = result.getEvents(DEFAULT_WAIT_TIMEOUT);
         removeEventListener(result);
         checkPropertyChanged(events, new String[]{nodeName1 + "/" + propertyName1});
@@ -69,12 +69,12 @@ public class PropertyChangedTest extends AbstractObservationTest {
         Node node = testRootNode.addNode(nodeName1, testNodeType);
         node.setProperty(propertyName1, "foo");
         node.setProperty(propertyName2, "bar");
-        testRootNode.save();
+        testRootNode.getSession().save();
         EventResult result = new EventResult(log);
         addEventListener(result, Event.PROPERTY_CHANGED);
         node.getProperty(propertyName1).setValue("foobar");
         node.getProperty(propertyName2).setValue("foobar");
-        testRootNode.save();
+        testRootNode.getSession().save();
         Event[] events = result.getEvents(DEFAULT_WAIT_TIMEOUT);
         removeEventListener(result);
         checkPropertyChanged(events, new String[]{nodeName1 + "/" + propertyName1,
@@ -88,12 +88,12 @@ public class PropertyChangedTest extends AbstractObservationTest {
     public void testSinglePropertyChangedWithAdded() throws RepositoryException {
         Node node = testRootNode.addNode(nodeName1, testNodeType);
         node.setProperty(propertyName1, "foo");
-        testRootNode.save();
+        testRootNode.getSession().save();
         EventResult result = new EventResult(log);
         addEventListener(result, Event.PROPERTY_CHANGED);
         node.getProperty(propertyName1).setValue("foobar");
         node.setProperty(propertyName2, "bar");    // will not fire prop changed event
-        testRootNode.save();
+        testRootNode.getSession().save();
         Event[] events = result.getEvents(DEFAULT_WAIT_TIMEOUT);
         removeEventListener(result);
         checkPropertyChanged(events, new String[]{nodeName1 + "/" + propertyName1});
@@ -122,12 +122,12 @@ public class PropertyChangedTest extends AbstractObservationTest {
             throw new NotExecutableException("Property " + propertyName1 + " is not of type UNDEFINED");
         }
         n.setProperty(propertyName1, v1);
-        testRootNode.save();
+        testRootNode.getSession().save();
         EventResult result = new EventResult(log);
         addEventListener(result, Event.PROPERTY_ADDED | Event.PROPERTY_CHANGED | Event.PROPERTY_REMOVED);
         n.getProperty(propertyName1).remove();
         n.setProperty(propertyName1, v2);
-        testRootNode.save();
+        testRootNode.getSession().save();
         Event[] events = result.getEvents(DEFAULT_WAIT_TIMEOUT);
         removeEventListener(result);
 

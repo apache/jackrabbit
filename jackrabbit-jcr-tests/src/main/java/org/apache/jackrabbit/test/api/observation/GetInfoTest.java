@@ -33,7 +33,7 @@ public class GetInfoTest extends AbstractObservationTest {
         Event[] events = getEvents(new Callable(){
             public void call() throws RepositoryException {
                 testRootNode.addNode(nodeName1, testNodeType);
-                testRootNode.save();
+                testRootNode.getSession().save();
             }
         }, Event.NODE_ADDED);
         for (int i = 0; i < events.length; i++) {
@@ -43,11 +43,11 @@ public class GetInfoTest extends AbstractObservationTest {
 
     public void testNodeRemoved() throws RepositoryException {
         final Node n = testRootNode.addNode(nodeName1, testNodeType);
-        testRootNode.save();
+        testRootNode.getSession().save();
         Event[] events = getEvents(new Callable(){
             public void call() throws RepositoryException {
                 n.remove();
-                testRootNode.save();
+                testRootNode.getSession().save();
             }
         }, Event.NODE_REMOVED);
         for (int i = 0; i < events.length; i++) {
@@ -59,7 +59,7 @@ public class GetInfoTest extends AbstractObservationTest {
         Event[] events = getEvents(new Callable(){
             public void call() throws RepositoryException {
                 testRootNode.addNode(nodeName1, testNodeType).setProperty(propertyName1, "test");
-                testRootNode.save();
+                testRootNode.getSession().save();
             }
         }, Event.PROPERTY_ADDED);
         for (int i = 0; i < events.length; i++) {
@@ -70,7 +70,7 @@ public class GetInfoTest extends AbstractObservationTest {
     public void testPropertyChanged() throws RepositoryException {
         Node n = testRootNode.addNode(nodeName1, testNodeType);
         final Property prop = n.setProperty(propertyName1, "test");
-        testRootNode.save();
+        testRootNode.getSession().save();
         Event[] events = getEvents(new Callable(){
             public void call() throws RepositoryException {
                 prop.setValue("modified");
@@ -84,7 +84,7 @@ public class GetInfoTest extends AbstractObservationTest {
     public void testPropertyRemoved() throws RepositoryException {
         Node n = testRootNode.addNode(nodeName1, testNodeType);
         final Property prop = n.setProperty(propertyName1, "test");
-        testRootNode.save();
+        testRootNode.getSession().save();
         Event[] events = getEvents(new Callable(){
             public void call() throws RepositoryException {
                 prop.remove();

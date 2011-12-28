@@ -81,7 +81,7 @@ public class SetPropertyCalendarTest extends AbstractJCRTest {
      */
     public void testNewCalendarPropertyParent() throws Exception {
         testNode.setProperty(propertyName1, c1);
-        testRootNode.save();
+        testRootNode.getSession().save();
         assertEquals("Setting property with Node.setProperty(String, Calendar) and parentNode.save() not working",
                 vf.createValue(c1),
                 testNode.getProperty(propertyName1).getValue());
@@ -93,9 +93,9 @@ public class SetPropertyCalendarTest extends AbstractJCRTest {
      */
     public void testModifyCalendarPropertyParent() throws Exception {
         testNode.setProperty(propertyName1, c1);
-        testRootNode.save();
+        testRootNode.getSession().save();
         testNode.setProperty(propertyName1, c2);
-        testRootNode.save();
+        testRootNode.getSession().save();
         assertEquals("Modifying property with Node.setProperty(String, Calendar) and parentNode.save() not working",
                 vf.createValue(c2),
                 testNode.getProperty(propertyName1).getValue());
@@ -122,9 +122,9 @@ public class SetPropertyCalendarTest extends AbstractJCRTest {
      */
     public void testRemoveCalendarPropertyParent() throws Exception {
         testNode.setProperty(propertyName1, c1);
-        testRootNode.save();
+        testRootNode.getSession().save();
         testNode.setProperty(propertyName1, (Calendar) null);
-        testRootNode.save();
+        testRootNode.getSession().save();
         assertFalse("Removing property with Node.setProperty(String, (Calendar)null) and parentNode.save() not working",
                 testNode.hasProperty(propertyName1));
     }

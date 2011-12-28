@@ -55,7 +55,7 @@ public class NodeCanAddMixinTest extends AbstractJCRTest {
         Node node = testRootNode.addNode(nodeName1, testNodeType);
         // or try to make it lockable if it is not
         ensureMixinType(node, mixLockable);
-        testRootNode.save();
+        testRootNode.getSession().save();
 
         String mixinName = NodeMixinUtil.getAddableMixinName(session, node);
         if (mixinName == null) {
@@ -99,7 +99,7 @@ public class NodeCanAddMixinTest extends AbstractJCRTest {
         Node node = testRootNode.addNode(nodeName1, testNodeType);
         // or try to make it versionable if it is not
         ensureMixinType(node, mixVersionable);
-        testRootNode.save();
+        testRootNode.getSession().save();
 
         String mixinName = NodeMixinUtil.getAddableMixinName(session, node);
         if (mixinName == null) {

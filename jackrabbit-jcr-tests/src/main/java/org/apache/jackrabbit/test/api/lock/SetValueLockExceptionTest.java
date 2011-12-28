@@ -114,7 +114,7 @@ public class SetValueLockExceptionTest extends AbstractJCRTest {
             testNode.setProperty(stringProp, stringValue);
             ensureCanSetProperty(testNode, multiStringProp, PropertyType.STRING, true);
             testNode.setProperty(multiStringProp, multiString);
-            testRootNode.save();
+            testRootNode.getSession().save();
         }
     }
 

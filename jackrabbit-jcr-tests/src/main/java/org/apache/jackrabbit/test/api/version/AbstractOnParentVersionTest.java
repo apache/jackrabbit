@@ -50,7 +50,7 @@ public abstract class AbstractOnParentVersionTest extends AbstractVersionTest {
         if (pd.getOnParentVersion() != OPVAction) {
             fail("JCR Property at '"+p.getPath()+"' does not have the required OnParentVersion "+OnParentVersionAction.nameFromValue(OPVAction)+" definition.");
         }
-        testRootNode.save();
+        testRootNode.getSession().save();
     }
 
     protected void tearDown() throws Exception {

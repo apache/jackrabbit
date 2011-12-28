@@ -658,7 +658,7 @@ public class NodeTest extends AbstractJCRTest {
         Node node = testRootNode.addNode(nodeName1, testNodeType);
         // or try to make it lockable if it is not
         ensureMixinType(node, mixLockable);
-        testRootNode.save();
+        testRootNode.getSession().save();
 
         // remove first slash of path to get rel path to root
         String pathRelToRoot = node.getPath().substring(1);
@@ -701,7 +701,7 @@ public class NodeTest extends AbstractJCRTest {
         ensureMixinType(node, mixLockable);
         // create a child node
         Node subNode = node.addNode(nodeName2, testNodeType);
-        testRootNode.save();
+        testRootNode.getSession().save();
 
         // lock the node
         // remove first slash of path to get rel path to root
@@ -780,7 +780,7 @@ public class NodeTest extends AbstractJCRTest {
 
         // create a node and save it
         Node testNode1 = testRootNode.addNode(nodeName1, testNodeType);
-        testRootNode.save();
+        testRootNode.getSession().save();
 
         // accuire the same node with a different session
         Session session = getHelper().getReadOnlySession();

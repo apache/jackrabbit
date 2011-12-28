@@ -45,7 +45,7 @@ public class WorkspaceOperationTest extends AbstractObservationTest {
     public void testCopy() throws RepositoryException {
         Node n1 = testRootNode.addNode(nodeName1, testNodeType);
         n1.addNode(nodeName2, testNodeType);
-        testRootNode.save();
+        testRootNode.getSession().save();
         EventResult listener = new EventResult(log);
         addEventListener(listener, Event.NODE_ADDED);
         superuser.getWorkspace().copy(testRoot + "/" + nodeName1, testRoot + "/" + nodeName3);
@@ -61,13 +61,13 @@ public class WorkspaceOperationTest extends AbstractObservationTest {
     public void testRename() throws RepositoryException {
         Node n1 = testRootNode.addNode(nodeName1, testNodeType);
         n1.addNode(nodeName2, testNodeType);
-        testRootNode.save();
+        testRootNode.getSession().save();
         EventResult addNodeListener = new EventResult(log);
         EventResult removeNodeListener = new EventResult(log);
         addEventListener(addNodeListener, Event.NODE_ADDED);
         addEventListener(removeNodeListener, Event.NODE_REMOVED);
         superuser.getWorkspace().move(n1.getPath(), testRoot + "/" + nodeName3);
-        testRootNode.save();
+        testRootNode.getSession().save();
         Event[] added = addNodeListener.getEvents(DEFAULT_WAIT_TIMEOUT);
         Event[] removed = removeNodeListener.getEvents(DEFAULT_WAIT_TIMEOUT);
         removeEventListener(addNodeListener);
@@ -84,13 +84,13 @@ public class WorkspaceOperationTest extends AbstractObservationTest {
         Node n1 = testRootNode.addNode(nodeName1, testNodeType);
         Node n3 = testRootNode.addNode(nodeName3, testNodeType);
         n1.addNode(nodeName2, testNodeType);
-        testRootNode.save();
+        testRootNode.getSession().save();
         EventResult addNodeListener = new EventResult(log);
         EventResult removeNodeListener = new EventResult(log);
         addEventListener(addNodeListener, Event.NODE_ADDED);
         addEventListener(removeNodeListener, Event.NODE_REMOVED);
         superuser.getWorkspace().move(n1.getPath(), n3.getPath() + "/" + nodeName4);
-        testRootNode.save();
+        testRootNode.getSession().save();
         Event[] added = addNodeListener.getEvents(DEFAULT_WAIT_TIMEOUT);
         Event[] removed = removeNodeListener.getEvents(DEFAULT_WAIT_TIMEOUT);
         removeEventListener(addNodeListener);

@@ -52,7 +52,7 @@ public class DeepLockTest extends AbstractLockTest {
     public void testParentChildDeepLock()
             throws RepositoryException, NotExecutableException {
         ensureMixinType(childNode, mixLockable);
-        testRootNode.save();
+        testRootNode.getSession().save();
 
         // try to lock child node
         try {

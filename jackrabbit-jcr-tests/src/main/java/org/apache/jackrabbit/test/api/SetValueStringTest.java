@@ -106,7 +106,7 @@ public class SetValueStringTest extends AbstractJCRTest {
      */
     public void testValueParent() throws RepositoryException {
         property1.setValue(sv2);
-        testRootNode.save();
+        testRootNode.getSession().save();
         assertEquals("Value node property not saved", sv2, property1.getValue());
     }
 

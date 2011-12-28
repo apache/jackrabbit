@@ -134,7 +134,7 @@ public class SaveTest extends AbstractJCRTest {
         Node versionable = testRootNode.addNode(nodeName1, testNodeType);
         // or try to make it versionable if it is not
         ensureMixinType(versionable, mixVersionable);
-        testRootNode.save();
+        testRootNode.getSession().save();
         versionable.checkin();
 
         try {
@@ -186,7 +186,7 @@ public class SaveTest extends AbstractJCRTest {
         Node lockable = testRootNode.addNode(nodeName1, testNodeType);
         // or try to make it lockable if it is not
         ensureMixinType(lockable, mixLockable);
-        testRootNode.save();
+        testRootNode.getSession().save();
         lockable.lock(false, true);
 
         Session readWrite = getHelper().getReadWriteSession();

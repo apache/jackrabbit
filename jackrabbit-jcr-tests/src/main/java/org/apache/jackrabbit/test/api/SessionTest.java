@@ -264,7 +264,7 @@ public class SessionTest extends AbstractJCRTest {
         // add a sub node (the one that is tried to move later on)
         Node srcNode = lockableNode.addNode(nodeName1, testNodeType);
 
-        testRootNode.save();
+        testRootNode.getSession().save();
 
         // remove first slash of path to get rel path to root
         String pathRelToRoot = lockableNode.getPath().substring(1);
@@ -278,7 +278,7 @@ public class SessionTest extends AbstractJCRTest {
             try {
                 String destPath = testRoot + "/" + nodeName2;
                 session.move(srcNode.getPath(), destPath);
-                testRootNode.save();
+                testRootNode.getSession().save();
                 fail("A LockException is thrown either immediately or on save  if a lock prevents the move.");
             } catch (LockException e){
                 // success

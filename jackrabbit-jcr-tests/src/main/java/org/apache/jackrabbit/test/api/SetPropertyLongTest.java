@@ -79,7 +79,7 @@ public class SetPropertyLongTest extends AbstractJCRTest {
      */
     public void testNewLongPropertyParent() throws Exception {
         testNode.setProperty(propertyName1, l1);
-        testRootNode.save();
+        testRootNode.getSession().save();
         assertEquals("Setting property with Node.setProperty(String, long) and parentNode.save() not working",
                 new Long(l1),
                 new Long(testNode.getProperty(propertyName1).getLong()));
@@ -91,9 +91,9 @@ public class SetPropertyLongTest extends AbstractJCRTest {
      */
     public void testModifyLongPropertyParent() throws Exception {
         testNode.setProperty(propertyName1, l1);
-        testRootNode.save();
+        testRootNode.getSession().save();
         testNode.setProperty(propertyName1, l2);
-        testRootNode.save();
+        testRootNode.getSession().save();
         assertEquals("Modifying property with Node.setProperty(String, long) and parentNode.save() not working",
                 new Long(l2),
                 new Long(testNode.getProperty(propertyName1).getLong()));
@@ -120,9 +120,9 @@ public class SetPropertyLongTest extends AbstractJCRTest {
      */
     public void testRemoveLongPropertyParent() throws Exception {
         testNode.setProperty(propertyName1, l1);
-        testRootNode.save();
+        testRootNode.getSession().save();
         testNode.setProperty(propertyName1, (Value) null);
-        testRootNode.save();
+        testRootNode.getSession().save();
         assertFalse("Removing long property with Node.setProperty(String, null) and parentNode.save() not working",
                 testNode.hasProperty(propertyName1));
     }

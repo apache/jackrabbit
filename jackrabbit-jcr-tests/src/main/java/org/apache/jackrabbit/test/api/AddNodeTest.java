@@ -46,7 +46,7 @@ public class AddNodeTest extends AbstractJCRTest {
      */
     public void testName() throws RepositoryException {
         Node n1 = testRootNode.addNode(nodeName1, testNodeType);
-        testRootNode.save();
+        testRootNode.getSession().save();
         assertEquals("Wrong node name.", n1.getName(), nodeName1);
     }
 
@@ -55,7 +55,7 @@ public class AddNodeTest extends AbstractJCRTest {
      */
     public void testNodeType() throws RepositoryException {
         Node n1 = testRootNode.addNode(nodeName1, testNodeType);
-        testRootNode.save();
+        testRootNode.getSession().save();
         String ntName = n1.getPrimaryNodeType().getName();
         assertEquals("Wrong node NodeType name.", testNodeType, ntName);
     }
@@ -68,7 +68,7 @@ public class AddNodeTest extends AbstractJCRTest {
         if (testRootNode.getDefinition().allowsSameNameSiblings()) {
             Node n1 = testRootNode.addNode(nodeName1, testNodeType);
             Node n2 = testRootNode.addNode(nodeName1, testNodeType);
-            testRootNode.save();
+            testRootNode.getSession().save();
             assertEquals("Names of same name siblings are not equal.",
                     n1.getName(), n2.getName());
         } else {
@@ -143,7 +143,7 @@ public class AddNodeTest extends AbstractJCRTest {
      */
     public void testPath() throws RepositoryException {
         Node n1 = testRootNode.addNode(nodeName1, testNodeType);
-        testRootNode.save();
+        testRootNode.getSession().save();
         String expected = testRootNode.getPath() + "/" + nodeName1;
         assertEquals("Wrong path for created node.", expected, n1.getPath());
     }

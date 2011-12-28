@@ -70,7 +70,7 @@ public class NodeMovedTest extends AbstractObservationTest {
 
         Node n1 = testRootNode.addNode(nodeName1, testNodeType);
         n1.addNode(nodeName2, testNodeType);
-        testRootNode.save();
+        testRootNode.getSession().save();
         EventResult addNodeListener = new EventResult(log);
         EventResult removeNodeListener = new EventResult(log);
         EventResult moveNodeListener = new EventResult(log);
@@ -78,7 +78,7 @@ public class NodeMovedTest extends AbstractObservationTest {
         addEventListener(removeNodeListener, Event.NODE_REMOVED);
         addEventListener(moveNodeListener, Event.NODE_MOVED);
         superuser.move(n1.getPath(), testRoot + "/" + nodeName3);
-        testRootNode.save();
+        testRootNode.getSession().save();
         Event[] added = addNodeListener.getEvents(DEFAULT_WAIT_TIMEOUT);
         Event[] removed = removeNodeListener.getEvents(DEFAULT_WAIT_TIMEOUT);
         Event[] moved = moveNodeListener.getEvents(DEFAULT_WAIT_TIMEOUT);
@@ -109,7 +109,7 @@ public class NodeMovedTest extends AbstractObservationTest {
 
         Node n1 = testRootNode.addNode(nodeName1, testNodeType);
         Node n2 = n1.addNode(nodeName2, testNodeType);
-        testRootNode.save();
+        testRootNode.getSession().save();
         EventResult addNodeListener = new EventResult(log);
         EventResult removeNodeListener = new EventResult(log);
         EventResult moveNodeListener = new EventResult(log);
@@ -117,7 +117,7 @@ public class NodeMovedTest extends AbstractObservationTest {
         addEventListener(removeNodeListener, Event.NODE_REMOVED);
         addEventListener(moveNodeListener, Event.NODE_MOVED);
         superuser.move(n2.getPath(), testRoot + "/" + nodeName2);
-        testRootNode.save();
+        testRootNode.getSession().save();
         Event[] added = addNodeListener.getEvents(DEFAULT_WAIT_TIMEOUT);
         Event[] removed = removeNodeListener.getEvents(DEFAULT_WAIT_TIMEOUT);
         Event[] moved = moveNodeListener.getEvents(DEFAULT_WAIT_TIMEOUT);
@@ -149,7 +149,7 @@ public class NodeMovedTest extends AbstractObservationTest {
         Node n1 = testRootNode.addNode(nodeName1, testNodeType);
         Node n2 = n1.addNode(nodeName2, testNodeType);
         Node n3 = testRootNode.addNode(nodeName3, testNodeType);
-        testRootNode.save();
+        testRootNode.getSession().save();
         EventResult addNodeListener = new EventResult(log);
         EventResult removeNodeListener = new EventResult(log);
         EventResult moveNodeListener = new EventResult(log);
@@ -160,7 +160,7 @@ public class NodeMovedTest extends AbstractObservationTest {
         superuser.move(n2.getPath(), n3.getPath() + "/" + nodeName2);
         // remove n1
         n1.remove();
-        testRootNode.save();
+        testRootNode.getSession().save();
         Event[] added = addNodeListener.getEvents(DEFAULT_WAIT_TIMEOUT);
         Event[] removed = removeNodeListener.getEvents(DEFAULT_WAIT_TIMEOUT);
         Event[] moved = moveNodeListener.getEvents(DEFAULT_WAIT_TIMEOUT);

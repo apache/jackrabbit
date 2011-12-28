@@ -57,7 +57,7 @@ public class NodeRemoveMixinTest extends AbstractJCRTest {
         }
 
         node.addMixin(mixinName);
-        testRootNode.save();
+        testRootNode.getSession().save();
 
         try {
             node.removeMixin(mixinName);
@@ -86,7 +86,7 @@ public class NodeRemoveMixinTest extends AbstractJCRTest {
 
         // it is implementation-specific if a removed mixin isn't available
         // before or after save therefore save before further tests
-        testRootNode.save();
+        testRootNode.getSession().save();
 
         // test if removed mixin isn't available anymore by node.getMixinNodeTypes()
         assertTrue("removeMixin(String mixinName) did not remove mixin.",
@@ -110,7 +110,7 @@ public class NodeRemoveMixinTest extends AbstractJCRTest {
         }
 
         node.addMixin(mixinName);
-        testRootNode.save();
+        testRootNode.getSession().save();
 
 
         String notAssignedMixin = NodeMixinUtil.getNotAssignedMixinName(session, node);
@@ -150,7 +150,7 @@ public class NodeRemoveMixinTest extends AbstractJCRTest {
         Node node = testRootNode.addNode(nodeName1, testNodeType);
         // or try to make it lockable if it is not
         ensureMixinType(node, mixLockable);
-        testRootNode.save();
+        testRootNode.getSession().save();
 
         String mixinName = NodeMixinUtil.getAddableMixinName(session, node);
         if (mixinName == null) {
@@ -158,7 +158,7 @@ public class NodeRemoveMixinTest extends AbstractJCRTest {
         }
 
         node.addMixin(mixinName);
-        testRootNode.save();
+        testRootNode.getSession().save();
 
         // remove first slash of path to get rel path to root
         String pathRelToRoot = node.getPath().substring(1);
@@ -208,7 +208,7 @@ public class NodeRemoveMixinTest extends AbstractJCRTest {
         Node node = testRootNode.addNode(nodeName1, testNodeType);
         // or try to make it versionable if it is not
         ensureMixinType(node, mixVersionable);
-        testRootNode.save();
+        testRootNode.getSession().save();
 
         String mixinName = NodeMixinUtil.getAddableMixinName(session, node);
         if (mixinName == null || node.isNodeType(mixinName)) {
@@ -216,7 +216,7 @@ public class NodeRemoveMixinTest extends AbstractJCRTest {
         }
 
         node.addMixin(mixinName);
-        testRootNode.save();
+        testRootNode.getSession().save();
         node.checkin();
 
         try {

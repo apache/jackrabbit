@@ -45,7 +45,7 @@ public class ReferencesTest extends AbstractJCRTest {
         ensureMixinType(n1, mixReferenceable);
 
         // with some impls. the mixin type has only affect upon save
-        testRootNode.save();
+        testRootNode.getSession().save();
 
         // make sure the node is now referenceable
         assertTrue("test node should be mix:referenceable", n1.isNodeType(mixReferenceable));
@@ -60,7 +60,7 @@ public class ReferencesTest extends AbstractJCRTest {
         ensureCanSetProperty(n2, propertyName1, values);
 
         Property p1 = n2.setProperty(propertyName1, values);
-        testRootNode.save();
+        testRootNode.getSession().save();
         PropertyIterator iter = n1.getReferences();
         if (iter.hasNext()) {
             assertEquals("Wrong referer", iter.nextProperty().getPath(), p1.getPath());
@@ -71,7 +71,7 @@ public class ReferencesTest extends AbstractJCRTest {
         // create references: n3.p1 -> n1
         Node n3 = testRootNode.addNode(nodeName3, testNodeType);
         n3.setProperty(propertyName1, n1);
-        testRootNode.save();
+        testRootNode.getSession().save();
         iter = n1.getReferences();
         while (iter.hasNext()) {
             Property p = iter.nextProperty();
@@ -92,7 +92,7 @@ public class ReferencesTest extends AbstractJCRTest {
 
         // remove reference n3.p1 -> n1
         testRootNode.getNode(nodeName3).getProperty(propertyName1).remove();
-        testRootNode.save();
+        testRootNode.getSession().save();
         iter = n1.getReferences();
         if (iter.hasNext()) {
             assertEquals("Wrong referer", iter.nextProperty().getParent().getPath(), testRootNode.getNode(nodeName2).getPath());
@@ -105,7 +105,7 @@ public class ReferencesTest extends AbstractJCRTest {
 
         // remove reference n2.p1 -> n1
         testRootNode.getNode(nodeName2).getProperty(propertyName1).setValue(new Value[0]);
-        testRootNode.save();
+        testRootNode.getSession().save();
         iter = n1.getReferences();
         if (iter.hasNext()) {
             fail("too many referers: " + iter.nextProperty().getPath());
@@ -120,7 +120,7 @@ public class ReferencesTest extends AbstractJCRTest {
         ensureMixinType(n1, mixReferenceable);
 
         // with some impls. the mixin type has only affect upon save
-        testRootNode.save();
+        testRootNode.getSession().save();
 
         // make sure the node is now referenceable
         assertTrue("test node should be mix:referenceable", n1.isNodeType(mixReferenceable));
@@ -143,7 +143,7 @@ public class ReferencesTest extends AbstractJCRTest {
         Property p1 = n2.setProperty(propertyName1, values);
         Property p2 = n2.setProperty(propertyName2, values);
         Property p3 = n3.setProperty(propertyName1, n1);
-        testRootNode.save();
+        testRootNode.getSession().save();
 
         // get references with name propertyName1
         // (should return p1 and p3))
@@ -168,7 +168,7 @@ public class ReferencesTest extends AbstractJCRTest {
 
         // remove reference n3.p1 -> n1
         testRootNode.getNode(nodeName3).getProperty(propertyName1).remove();
-        testRootNode.save();
+        testRootNode.getSession().save();
 
         // get references with name propertyName1
         // (should return p1))
@@ -182,7 +182,7 @@ public class ReferencesTest extends AbstractJCRTest {
 
         // remove reference n2.p1 -> n1
         p1.remove();
-        testRootNode.save();
+        testRootNode.getSession().save();
 
         // get references with name propertyName1
         // (should nothing))
@@ -202,7 +202,7 @@ public class ReferencesTest extends AbstractJCRTest {
         ensureMixinType(n1, mixReferenceable);
 
         // with some impls. the mixin type has only affect upon save
-        testRootNode.save();
+        testRootNode.getSession().save();
 
         // make sure the node is now referenceable
         assertTrue("test node should be mix:referenceable", n1.isNodeType(mixReferenceable));
@@ -215,10 +215,10 @@ public class ReferencesTest extends AbstractJCRTest {
         ensureCanSetProperty(n2, propertyName1, n2.getSession().getValueFactory().createValue(n1));
 
         n2.setProperty(propertyName1, n1);
-        testRootNode.save();
+        testRootNode.getSession().save();
         assertEquals("Wrong reference target.", n2.getProperty(propertyName1).getNode().getUUID(), n1.getUUID());
         n2.remove();
-        testRootNode.save();
+        testRootNode.getSession().save();
     }
 
     /**
@@ -231,7 +231,7 @@ public class ReferencesTest extends AbstractJCRTest {
         ensureMixinType(n2, mixReferenceable);
 
         // with some impls. the mixin type has only affect upon save
-        testRootNode.save();
+        testRootNode.getSession().save();
 
         // make sure the nodes are now referenceable
         assertTrue("test node should be mix:referenceable", n1.isNodeType(mixReferenceable));
@@ -245,7 +245,7 @@ public class ReferencesTest extends AbstractJCRTest {
         ensureCanSetProperty(n3, propertyName1, n3.getSession().getValueFactory().createValue(n1));
 
         n3.setProperty(propertyName1, n1);
-        testRootNode.save();
+        testRootNode.getSession().save();
         assertEquals("Wrong reference target.", n3.getProperty(propertyName1).getNode().getUUID(), n1.getUUID());
         PropertyIterator iter = n1.getReferences();
         if (iter.hasNext()) {

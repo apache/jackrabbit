@@ -48,7 +48,7 @@ public class PropertyAddedTest extends AbstractObservationTest {
         EventResult result = new EventResult(log);
         addEventListener(result, Event.PROPERTY_ADDED);
         testRootNode.addNode(nodeName1, testNodeType);
-        testRootNode.save();
+        testRootNode.getSession().save();
         Event[] events = result.getEvents(DEFAULT_WAIT_TIMEOUT);
         removeEventListener(result);
         List<String> paths = new ArrayList<String>();
@@ -66,11 +66,11 @@ public class PropertyAddedTest extends AbstractObservationTest {
      */
     public void testSinglePropertyAdded() throws RepositoryException {
         Node foo = testRootNode.addNode(nodeName1, testNodeType);
-        testRootNode.save();
+        testRootNode.getSession().save();
         EventResult result = new EventResult(log);
         addEventListener(result, Event.PROPERTY_ADDED);
         foo.setProperty(propertyName1, "test content");
-        testRootNode.save();
+        testRootNode.getSession().save();
         Event[] events = result.getEvents(DEFAULT_WAIT_TIMEOUT);
         removeEventListener(result);
         checkPropertyAdded(events, new String[]{nodeName1 + "/" + propertyName1});
@@ -82,12 +82,12 @@ public class PropertyAddedTest extends AbstractObservationTest {
      */
     public void testMultiPropertyAdded() throws RepositoryException {
         Node foo = testRootNode.addNode(nodeName1, testNodeType);
-        testRootNode.save();
+        testRootNode.getSession().save();
         EventResult result = new EventResult(log);
         addEventListener(result, Event.PROPERTY_ADDED);
         foo.setProperty(propertyName1, "foo");
         foo.setProperty(propertyName2, "bar");
-        testRootNode.save();
+        testRootNode.getSession().save();
         Event[] events = result.getEvents(DEFAULT_WAIT_TIMEOUT);
         removeEventListener(result);
         checkPropertyAdded(events, new String[]{nodeName1 + "/" + propertyName1,

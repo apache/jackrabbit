@@ -212,7 +212,7 @@ public class NodeSetPrimaryTypeTest extends AbstractJCRTest {
         Node node = testRootNode.addNode(nodeName1, testNodeType);
         // or try to make it lockable if it is not
         ensureMixinType(node, mixLockable);
-        testRootNode.save();
+        testRootNode.getSession().save();
 
         String primaryTypeName = getPrimaryTypeName(session, node);
         if (primaryTypeName == null) {
