@@ -64,8 +64,10 @@ public class LockTest extends AbstractJCRTest {
 
             // remove lock token
             superuser.removeLockToken(lockToken);
-            // assert: session must get a null lock token
-            assertNull("session must get a null lock token", lock.getLockToken());
+
+            String nlt = lock.getLockToken();
+            assertTrue("freshly obtained lock token must either be null or the same as the one returned earlier",
+                    nlt == null || nlt.equals(lockToken));
 
             // assert: session must still hold lock token
             assertFalse("session must not hold lock token",
@@ -427,8 +429,9 @@ public class LockTest extends AbstractJCRTest {
             otherSuperuser.removeLockToken(lockToken);
             superuser.addLockToken(lockToken);
 
-            // assert: user must get null token
-            assertNull("user must get null token", lock.getLockToken());
+            String nlt = lock.getLockToken();
+            assertTrue("freshly obtained lock token must either be null or the same as the one returned earlier",
+                    nlt == null || nlt.equals(lockToken));
 
             // assert: user must get non-null token
             assertNotNull("user must get non-null token",
