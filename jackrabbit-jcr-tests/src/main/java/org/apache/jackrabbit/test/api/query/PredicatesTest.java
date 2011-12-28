@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.test.api.query;
 
-import javax.jcr.query.Query;
 import javax.jcr.query.InvalidQueryException;
 import javax.jcr.query.QueryManager;
 import javax.jcr.RepositoryException;
@@ -84,7 +83,7 @@ public class PredicatesTest extends AbstractQueryTest {
             xpathRoot + "/*[@" + jcrPrimaryType + "='" + nodeTypeName + "']";
 
         try {
-            qm.createQuery(stmt, Query.XPATH);
+            qm.createQuery(stmt, qsXPATH);
         } catch (InvalidQueryException e) {
             fail("invalid statement syntax for '" + stmt + "'");
         }
@@ -101,7 +100,7 @@ public class PredicatesTest extends AbstractQueryTest {
             + "' or @" + jcrPrimaryType + "='" + ntBase + "']";
 
         try {
-            qm.createQuery(stmt, Query.XPATH);
+            qm.createQuery(stmt, qsXPATH);
         } catch (InvalidQueryException e) {
             fail("invalid statement syntax for '" + stmt + "'");
         }
@@ -117,7 +116,7 @@ public class PredicatesTest extends AbstractQueryTest {
             xpathRoot + "/*[@" + jcrPrimaryType + " or @" + jcrMixinTypes + "]";
 
         try {
-            qm.createQuery(stmt, Query.XPATH);
+            qm.createQuery(stmt, qsXPATH);
         } catch (InvalidQueryException e) {
             fail("invalid statement syntax for '" + stmt + "'");
         }
@@ -133,7 +132,7 @@ public class PredicatesTest extends AbstractQueryTest {
             xpathRoot + "/*[@" + jcrPrimaryType + " and @" + jcrMixinTypes + "]";
 
         try {
-            qm.createQuery(stmt, Query.XPATH);
+            qm.createQuery(stmt, qsXPATH);
         } catch (InvalidQueryException e) {
             fail("invalid statement syntax for '" + stmt + "'");
         }
@@ -150,7 +149,7 @@ public class PredicatesTest extends AbstractQueryTest {
             + "' and @" + jcrPrimaryType + "='" + ntBase + "']";
 
         try {
-            qm.createQuery(stmt, Query.XPATH);
+            qm.createQuery(stmt, qsXPATH);
         } catch (InvalidQueryException e) {
             fail("invalid statement syntax for '" + stmt + "'");
         }

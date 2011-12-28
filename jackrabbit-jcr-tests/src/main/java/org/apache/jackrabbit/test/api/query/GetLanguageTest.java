@@ -63,8 +63,8 @@ public class GetLanguageTest extends AbstractQueryTest {
      */
     public void testGetLanguage() throws RepositoryException {
         String statement = "/" + jcrRoot;
-        Query q = session.getWorkspace().getQueryManager().createQuery(statement, Query.XPATH);
-        assertEquals("Query returns wrong language.", Query.XPATH, q.getLanguage());
+        Query q = session.getWorkspace().getQueryManager().createQuery(statement, qsXPATH);
+        assertEquals("Query returns wrong language.", qsXPATH, q.getLanguage());
     }
 
     /**
@@ -72,10 +72,10 @@ public class GetLanguageTest extends AbstractQueryTest {
      * {@link Query#getLanguage()}.
      */
     public void testSQL() throws RepositoryException, NotExecutableException {
-        if (isSupportedLanguage(Query.SQL)) {
+        if (isSupportedLanguage(qsSQL)) {
             String stmt = "select * from " + testNodeType;
-            Query q = session.getWorkspace().getQueryManager().createQuery(stmt, Query.SQL);
-            assertEquals("Query returns wrong language.", Query.SQL, q.getLanguage());
+            Query q = session.getWorkspace().getQueryManager().createQuery(stmt, qsSQL);
+            assertEquals("Query returns wrong language.", qsSQL, q.getLanguage());
         } else {
             throw new NotExecutableException("SQL not supported");
         }

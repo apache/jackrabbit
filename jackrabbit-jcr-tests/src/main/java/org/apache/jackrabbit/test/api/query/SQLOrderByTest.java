@@ -16,9 +16,6 @@
  */
 package org.apache.jackrabbit.test.api.query;
 
-import javax.jcr.query.Query;
-
-
 /**
  * This test searches for all nodes of a specific node type and orders them by
  * the property with name configured as {@link #propertyName1}.
@@ -61,7 +58,7 @@ public class SQLOrderByTest extends AbstractQueryTest {
      * For configuration description see {@link SQLOrderByTest}.
      */
     public void testOrderByAscending() throws Exception {
-        Statement stmt = new Statement(baseStatement + " ASC", Query.SQL);
+        Statement stmt = new Statement(baseStatement + " ASC", qsSQL);
         evaluateResultOrder(execute(stmt), propertyName1, false);
     }
 
@@ -71,7 +68,7 @@ public class SQLOrderByTest extends AbstractQueryTest {
      * For configuration description see {@link SQLOrderByTest}.
      */
     public void testOrderByDescending() throws Exception {
-        Statement stmt = new Statement(baseStatement + " DESC", Query.SQL);
+        Statement stmt = new Statement(baseStatement + " DESC", qsSQL);
         evaluateResultOrder(execute(stmt), propertyName1, true);
     }
 
@@ -82,7 +79,7 @@ public class SQLOrderByTest extends AbstractQueryTest {
      * For configuration description see {@link SQLOrderByTest}.
      */
     public void testOrderByDefault() throws Exception {
-        Statement stmt = new Statement(baseStatement, Query.SQL);
+        Statement stmt = new Statement(baseStatement, qsSQL);
         evaluateResultOrder(execute(stmt), propertyName1, false);
     }
 }

@@ -66,7 +66,7 @@ public class XPathJcrPathTest extends AbstractQueryTest {
         String queryStatement = "//element(*, " + nodeTypeName + ")";
 
         // execute the search query
-        Query query = session.getWorkspace().getQueryManager().createQuery(queryStatement, Query.XPATH);
+        Query query = session.getWorkspace().getQueryManager().createQuery(queryStatement, qsXPATH);
         QueryResult result = query.execute();
 
         assertTrue("jcr:path must be present in query result row",

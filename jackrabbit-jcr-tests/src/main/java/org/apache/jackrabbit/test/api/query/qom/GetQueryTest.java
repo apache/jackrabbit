@@ -49,13 +49,13 @@ public class GetQueryTest extends AbstractQOMTest {
         );
         queries.add(qom);
         queries.add(qm.createQuery(qom.getStatement(), Query.JCR_SQL2));
-        if (isSupportedLanguage(Query.XPATH)) {
+        if (isSupportedLanguage(qsXPATH)) {
             String xpath = testPath + "/element(*, " + testNodeType + ")";
-            queries.add(qm.createQuery(xpath, Query.XPATH));
+            queries.add(qm.createQuery(xpath, qsXPATH));
         }
-        if (isSupportedLanguage(Query.SQL)) {
+        if (isSupportedLanguage(qsSQL)) {
             String sql = "select * from " + testNodeType + " where jcr:path like '" + testRoot + "/%'";
-            queries.add(qm.createQuery(sql, Query.SQL));
+            queries.add(qm.createQuery(sql, qsSQL));
         }
         for (Iterator<Query> it = queries.iterator(); it.hasNext(); ) {
             Query q = it.next();

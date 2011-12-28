@@ -60,7 +60,7 @@ public class GetStatementTest extends AbstractQueryTest {
      */
     public void testGetStatement() throws RepositoryException {
         String statement = "/" + jcrRoot + "/foo";
-        Query q = session.getWorkspace().getQueryManager().createQuery(statement, Query.XPATH);
+        Query q = session.getWorkspace().getQueryManager().createQuery(statement, qsXPATH);
         assertEquals("Statement returned by Query.getStatement() is not equal to the initial statement.",
                 statement,
                 q.getStatement());

@@ -61,7 +61,7 @@ public class GetPersistentQueryPathLevel1Test extends AbstractQueryTest {
      */
     public void testGetStoredQueryPath() throws RepositoryException {
         String statement = "/" + jcrRoot;
-        Query q = session.getWorkspace().getQueryManager().createQuery(statement, Query.XPATH);
+        Query q = session.getWorkspace().getQueryManager().createQuery(statement, qsXPATH);
         try {
             q.getStoredQueryPath();
             fail("Query.getStoredQueryPath() on a transient query must throw an ItemNotFoundException.");

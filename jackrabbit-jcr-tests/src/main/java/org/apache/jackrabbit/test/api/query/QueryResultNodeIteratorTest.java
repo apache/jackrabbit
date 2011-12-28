@@ -20,7 +20,6 @@ import org.apache.jackrabbit.test.NotExecutableException;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.NodeIterator;
-import javax.jcr.query.Query;
 import javax.jcr.query.QueryResult;
 import java.util.NoSuchElementException;
 
@@ -54,7 +53,7 @@ public class QueryResultNodeIteratorTest extends AbstractQueryTest {
      *          if getSize() returns -1 (unavailable).
      */
     public void testGetSize() throws RepositoryException, NotExecutableException {
-        NodeIterator it = execute(xpathRoot + "//*", Query.XPATH).getNodes();
+        NodeIterator it = execute(xpathRoot + "//*", qsXPATH).getNodes();
         long size = testRootNode.getNodes().getSize();
         if (size != -1) {
             long count = 0;
@@ -72,7 +71,7 @@ public class QueryResultNodeIteratorTest extends AbstractQueryTest {
      * Tests the method <code>NodeIterator.getPosition()</code>.
      */
     public void testGetPosition() throws RepositoryException, NotExecutableException {
-        QueryResult rs = execute(xpathRoot + "//*", Query.XPATH);
+        QueryResult rs = execute(xpathRoot + "//*", qsXPATH);
 
         // getPosition initially returns 0
         NodeIterator it = rs.getNodes();
@@ -92,7 +91,7 @@ public class QueryResultNodeIteratorTest extends AbstractQueryTest {
      * @throws NotExecutableException 
      */
     public void testGetPositionEmptyIterator() throws RepositoryException, NotExecutableException {
-        QueryResult rs = execute(xpathRoot + "/" + nodeName4, Query.XPATH);
+        QueryResult rs = execute(xpathRoot + "/" + nodeName4, qsXPATH);
 
         NodeIterator it = rs.getNodes();
         assertFalse("NodeIterator must be empty.", it.hasNext());
@@ -107,7 +106,7 @@ public class QueryResultNodeIteratorTest extends AbstractQueryTest {
      * @throws NotExecutableException 
      */
     public void testNoSuchElementException() throws RepositoryException, NotExecutableException {
-        NodeIterator it = execute(xpathRoot + "//*", Query.XPATH).getNodes();
+        NodeIterator it = execute(xpathRoot + "//*", qsXPATH).getNodes();
         while (it.hasNext()) {
             it.nextNode();
         }
@@ -125,7 +124,7 @@ public class QueryResultNodeIteratorTest extends AbstractQueryTest {
      */
     public void testSkip() throws RepositoryException, NotExecutableException {
         String query = xpathRoot + "//*";
-        QueryResult rs = execute(query, Query.XPATH);
+        QueryResult rs = execute(query, qsXPATH);
         NodeIterator it = rs.getNodes();
 
         // find out if there is anything we can skip
@@ -136,7 +135,7 @@ public class QueryResultNodeIteratorTest extends AbstractQueryTest {
         }
         if (count > 1) {
             // re-execute the query
-            rs = execute(query, Query.XPATH);
+            rs = execute(query, qsXPATH);
             it = rs.getNodes();
             // skip all but one
             it.skip(count - 1);
@@ -150,7 +149,7 @@ public class QueryResultNodeIteratorTest extends AbstractQueryTest {
             }
 
             // re-execute the query
-            rs = execute(query, Query.XPATH);
+            rs = execute(query, qsXPATH);
             it = rs.getNodes();
             try {
                 it.skip(count + 1);
