@@ -63,7 +63,7 @@ public class NodeItemIsModifiedTest extends AbstractJCRTest {
      */
     public void testPersistentNewNodeItemIsModified () throws RepositoryException {
         Node testNode = testRootNode.addNode(nodeName1, testNodeType);
-        testRootNode.save();
+        testRootNode.getSession().save();
         Item testNodeItem = superuser.getItem(testNode.getPath());
         // check testNodeItem.isModified() for a new NodeItem after save
         assertFalse("Item.isModified() must return false after a new NodeItem is added and the parent Node is saved", testNodeItem.isModified());
@@ -78,7 +78,7 @@ public class NodeItemIsModifiedTest extends AbstractJCRTest {
      */
     public void testTransientNodeItemIsModified () throws RepositoryException {
         Node testNode = testRootNode.addNode(nodeName1, testNodeType);
-        testRootNode.save();
+        testRootNode.getSession().save();
         // modify the persistent testNode
         testNode.setProperty(propertyName1, "test");
         Item testNodeItem = superuser.getItem(testNode.getPath());
@@ -95,7 +95,7 @@ public class NodeItemIsModifiedTest extends AbstractJCRTest {
      */
     public void testPersistentNodeItemIsModified () throws RepositoryException {
         Node testNode = testRootNode.addNode(nodeName1, testNodeType);
-        testRootNode.save();
+        testRootNode.getSession().save();
         // modify the persistent testNode
         testNode.setProperty(propertyName1, "test");
         testNode.save();

@@ -51,7 +51,7 @@ public abstract class AbstractLockTest extends AbstractJCRTest {
         lockedNode = testRootNode.addNode(nodeName1, testNodeType);
         ensureMixinType(lockedNode, mixLockable);
         childNode = lockedNode.addNode(nodeName2, testNodeType);
-        testRootNode.save();
+        testRootNode.getSession().save();
 
         lockMgr = getLockManager(testRootNode.getSession());
         lock = lockMgr.lock(lockedNode.getPath(), isDeep(), isSessionScoped(), getTimeoutHint(), getLockOwner());

@@ -44,7 +44,7 @@ public class RSessionAccessControlTest extends AbstractJCRTest {
         Value v = getJcrValue(superuser, RepositoryStub.PROP_PROP_VALUE1, RepositoryStub.PROP_PROP_TYPE1, "test");
         Property p = n.setProperty(propertyName1, v);
         testPropertyPath = p.getPath();
-        testRootNode.save();
+        testRootNode.getSession().save();
 
         readOnlySession = getHelper().getReadOnlySession();
     }

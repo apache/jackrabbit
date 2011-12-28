@@ -372,7 +372,7 @@ public class SetPropertyAssumeTypeTest extends AbstractJCRTest {
         ensureMixinType(referenceableNode, mixReferenceable);
 
         // some implementations may require a save after addMixin()
-        testRootNode.save();
+        testRootNode.getSession().save();
 
         Property prop = testNode.setProperty(testPropName, referenceableNode);
         assertEquals("setProperty(String, Value) of a property of type undefined " +
@@ -456,7 +456,7 @@ public class SetPropertyAssumeTypeTest extends AbstractJCRTest {
             cal.setTime(new Date(0));
             Value v = superuser.getValueFactory().createValue(ISO8601.format(cal));
             testNode.setProperty(propertyName1, v, PropertyType.DATE);
-            testRootNode.save();
+            testRootNode.getSession().save();
             fail("Node.setProperty(String, Value, int) must throw a " +
                  "ConstraintViolationExcpetion if the type parameter and the " +
                  "type of the property do not match." );
@@ -479,7 +479,7 @@ public class SetPropertyAssumeTypeTest extends AbstractJCRTest {
             Calendar cal = Calendar.getInstance();
             cal.setTime(new Date(0));
             testNode.setProperty(propertyName1, ISO8601.format(cal), PropertyType.DATE);
-            testRootNode.save();
+            testRootNode.getSession().save();
             fail("Node.setProperty(String, Value, int) must throw a " +
                  "ConstraintViolationExcpetion if the type parameter and the " +
                  "type of the property do not match." );
@@ -500,7 +500,7 @@ public class SetPropertyAssumeTypeTest extends AbstractJCRTest {
 
         try {
             testNode.setProperty(propertyName1, stringValues, PropertyType.DATE);
-            testRootNode.save();
+            testRootNode.getSession().save();
             fail("Node.setProperty(String, Value, int) must throw a " +
                     "ConstraintViolationExcpetion or a ValueFormatException if " +
                     "the type parameter and the type of the property do not match.");

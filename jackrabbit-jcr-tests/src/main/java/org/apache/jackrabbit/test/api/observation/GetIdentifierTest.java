@@ -30,7 +30,7 @@ public class GetIdentifierTest extends AbstractObservationTest {
         Event[] events = getEvents(new Callable(){
             public void call() throws RepositoryException {
                 testRootNode.addNode(nodeName1, testNodeType);
-                testRootNode.save();
+                testRootNode.getSession().save();
             }
         }, Event.NODE_ADDED);
         Node n = testRootNode.getNode(nodeName1);
@@ -39,7 +39,7 @@ public class GetIdentifierTest extends AbstractObservationTest {
 
     public void testNodeMoved() throws RepositoryException {
         final Node n = testRootNode.addNode(nodeName1, testNodeType);
-        testRootNode.save();
+        testRootNode.getSession().save();
         Event[] events = getEvents(new Callable(){
             public void call() throws RepositoryException {
                 superuser.getWorkspace().move(n.getPath(), testRoot + "/" + nodeName2);
@@ -52,12 +52,12 @@ public class GetIdentifierTest extends AbstractObservationTest {
     public void testNodeRemoved() throws RepositoryException {
         final Node n = testRootNode.addNode(nodeName1, testNodeType);
         String path = n.getPath();
-        testRootNode.save();
+        testRootNode.getSession().save();
         String identifier = n.getIdentifier();
         Event[] events = getEvents(new Callable(){
             public void call() throws RepositoryException {
                 n.remove();
-                testRootNode.save();
+                testRootNode.getSession().save();
             }
         }, Event.NODE_REMOVED);
         assertEquals(identifier, getEventByPath(events, path).getIdentifier());
@@ -67,7 +67,7 @@ public class GetIdentifierTest extends AbstractObservationTest {
         Event[] events = getEvents(new Callable(){
             public void call() throws RepositoryException {
                 testRootNode.addNode(nodeName1, testNodeType).setProperty(propertyName1, "test");
-                testRootNode.save();
+                testRootNode.getSession().save();
             }
         }, Event.PROPERTY_ADDED);
         Node n = testRootNode.getNode(nodeName1);
@@ -78,11 +78,11 @@ public class GetIdentifierTest extends AbstractObservationTest {
     public void testPropertyChanged() throws RepositoryException {
         Node n = testRootNode.addNode(nodeName1, testNodeType);
         final Property prop = n.setProperty(propertyName1, "test");
-        testRootNode.save();
+        testRootNode.getSession().save();
         Event[] events = getEvents(new Callable(){
             public void call() throws RepositoryException {
                 prop.setValue("modified");
-                testRootNode.save();
+                testRootNode.getSession().save();
             }
         }, Event.PROPERTY_CHANGED);
         assertEquals(n.getIdentifier(), getEventByPath(events, prop.getPath()).getIdentifier());
@@ -92,11 +92,11 @@ public class GetIdentifierTest extends AbstractObservationTest {
         Node n = testRootNode.addNode(nodeName1, testNodeType);
         final Property prop = n.setProperty(propertyName1, "test");
         String propPath = prop.getPath();
-        testRootNode.save();
+        testRootNode.getSession().save();
         Event[] events = getEvents(new Callable(){
             public void call() throws RepositoryException {
                 prop.remove();
-                testRootNode.save();
+                testRootNode.getSession().save();
             }
         }, Event.PROPERTY_REMOVED);
         assertEquals(n.getIdentifier(), getEventByPath(events, propPath).getIdentifier());

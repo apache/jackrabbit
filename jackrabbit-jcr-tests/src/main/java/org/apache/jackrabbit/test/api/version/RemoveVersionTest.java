@@ -209,7 +209,7 @@ public class RemoveVersionTest extends AbstractVersionTest {
         Value refValue = superuser.getValueFactory().createValue(version);
         ensureCanSetProperty(n1, propertyName1, refValue);
         n1.setProperty(propertyName1, refValue);
-        testRootNode.save();
+        testRootNode.getSession().save();
 
         try {
             vHistory.removeVersion(version.getName());

@@ -48,7 +48,7 @@ public class SetPropertyInputStreamTest extends AbstractJCRTest {
     protected void setUp() throws Exception {
         super.setUp();
         testNode = testRootNode.addNode(nodeName1, testNodeType);
-        testRootNode.save();
+        testRootNode.getSession().save();
 
         // special case for repositories that do allow binary property
         // values, but only on jcr:content/jcr:data
@@ -105,7 +105,7 @@ public class SetPropertyInputStreamTest extends AbstractJCRTest {
      */
     public void testNewInputStreamPropertyParent() throws Exception {
         testNode.setProperty(propertyName1, is1);
-        testRootNode.save();
+        testRootNode.getSession().save();
         is1 = new ByteArrayInputStream(bytes1);
         InputStream in = testNode.getProperty(propertyName1).getStream();
         try {
@@ -122,9 +122,9 @@ public class SetPropertyInputStreamTest extends AbstractJCRTest {
      */
     public void testModifyInputStreamPropertyParent() throws Exception {
         testNode.setProperty(propertyName1, is1);
-        testRootNode.save();
+        testRootNode.getSession().save();
         testNode.setProperty(propertyName1, is2);
-        testRootNode.save();
+        testRootNode.getSession().save();
         is2 = new ByteArrayInputStream(bytes2);
         InputStream in = testNode.getProperty(propertyName1).getStream();
         try {
@@ -162,7 +162,7 @@ public class SetPropertyInputStreamTest extends AbstractJCRTest {
      */
     public void testRemoveInputStreamPropertyParent() throws Exception {
         testNode.setProperty(propertyName1, is1);
-        testRootNode.save();
+        testRootNode.getSession().save();
 
         Property property = testNode.getProperty(propertyName1);
         if (property.getDefinition().isMandatory() || property.getDefinition().isProtected()) {
@@ -170,7 +170,7 @@ public class SetPropertyInputStreamTest extends AbstractJCRTest {
         }
 
         testNode.setProperty(propertyName1, (InputStream) null);
-        testRootNode.save();
+        testRootNode.getSession().save();
         assertFalse("Removing property with Node.setProperty(String, (InputStream)null) and parentNode.save() not working",
                 testNode.hasProperty(propertyName1));
     }

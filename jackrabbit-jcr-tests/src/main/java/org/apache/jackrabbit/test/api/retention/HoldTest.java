@@ -282,7 +282,7 @@ public class HoldTest extends AbstractRetentionTest {
     public void testRemoveHoldOnLockedNode() throws NotExecutableException, RepositoryException {
         Node child = getLockedChildNode();
         Hold h = retentionMgr.addHold(child.getPath(), getHoldName(), false);
-        testRootNode.save();
+        testRootNode.getSession().save();
 
         javax.jcr.Session otherS = getHelper().getSuperuserSession();
         try {
@@ -313,7 +313,7 @@ public class HoldTest extends AbstractRetentionTest {
         checkSupportedOption(Repository.OPTION_LOCKING_SUPPORTED);
         Node child = testRootNode.addNode(nodeName2, testNodeType);
         ensureMixinType(child, mixLockable);
-        testRootNode.save();
+        testRootNode.getSession().save();
         child.lock(false, true); // session-scoped lock clean upon superuser-logout.
         return child;
     }
@@ -386,7 +386,7 @@ public class HoldTest extends AbstractRetentionTest {
         checkSupportedOption(Repository.OPTION_VERSIONING_SUPPORTED);
         Node child = testRootNode.addNode(nodeName2, testNodeType);
         ensureMixinType(child, mixVersionable);
-        testRootNode.save();
+        testRootNode.getSession().save();
         return child;
     }
 

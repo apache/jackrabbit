@@ -54,7 +54,7 @@ public class SQLJoinTest extends AbstractQueryTest {
         }
 
         Node n2 = testRootNode.addNode(nodeName2, testNodeType);
-        testRootNode.save();
+        testRootNode.getSession().save();
 
         assertFalse("Node at " + n2.getPath() + " should not have mixin " + testMixin, n2.isNodeType(testMixin));
 
@@ -87,7 +87,7 @@ public class SQLJoinTest extends AbstractQueryTest {
         }
 
         Node n2 = testRootNode.addNode(nodeName2, testNodeType);
-        testRootNode.save();
+        testRootNode.getSession().save();
 
         assertFalse("Node at " + n2.getPath() + " should not have mixin " + testMixin, n2.isNodeType(testMixin));
 
@@ -113,7 +113,7 @@ public class SQLJoinTest extends AbstractQueryTest {
         String nodetype = testNodeTypeNoChildren == null ? ntBase : testNodeTypeNoChildren;
         Node n2 = testRootNode.addNode(nodeName2, nodetype);
         ensureMixinType(n2, mixReferenceable);
-        testRootNode.save();
+        testRootNode.getSession().save();
 
         StringBuffer query = new StringBuffer("SELECT * FROM ");
         query.append(testNodeType).append(", ").append(ntBase);
@@ -144,7 +144,7 @@ public class SQLJoinTest extends AbstractQueryTest {
         testRootNode.addNode(nodeName1, testNodeType);
         Node n2 = testRootNode.addNode(nodeName2, testNodeType);
         ensureMixinType(n2, mixReferenceable);
-        testRootNode.save();
+        testRootNode.getSession().save();
 
         StringBuffer query = new StringBuffer("SELECT * FROM ");
         query.append(testNodeType).append(", ").append(mixReferenceable);

@@ -33,14 +33,14 @@ public class GetUserDataTest extends AbstractObservationTest {
         runWithUserData(new Callable() {
             public void call() throws RepositoryException {
                 testRootNode.addNode(nodeName1, testNodeType);
-                testRootNode.save();
+                testRootNode.getSession().save();
             }
         }, ALL_TYPES);
     }
 
     public void testWorkspaceOperation() throws RepositoryException {
         testRootNode.addNode(nodeName1);
-        testRootNode.save();
+        testRootNode.getSession().save();
 
         runWithUserData(new Callable() {
             public void call() throws RepositoryException {
@@ -57,7 +57,7 @@ public class GetUserDataTest extends AbstractObservationTest {
 
         final Node n1 = testRootNode.addNode(nodeName1);
         ensureMixinType(n1, mixVersionable);
-        testRootNode.save();
+        testRootNode.getSession().save();
 
         runWithUserData(new Callable() {
             public void call() throws RepositoryException {

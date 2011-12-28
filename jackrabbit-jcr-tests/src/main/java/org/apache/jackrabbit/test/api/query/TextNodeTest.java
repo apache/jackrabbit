@@ -64,7 +64,7 @@ public class TextNodeTest extends AbstractQueryTest {
     public void testTextNodeTest() throws RepositoryException, NotExecutableException {
         Node text1 = testRootNode.addNode(jcrXMLText);
         text1.setProperty(jcrXMLCharacters, "foo");
-        testRootNode.save();
+        testRootNode.getSession().save();
         String xpath = "/" + jcrRoot + testRoot + "/text()";
         executeXPathQuery(superuser, xpath, new Node[]{text1});
     }
@@ -79,7 +79,7 @@ public class TextNodeTest extends AbstractQueryTest {
         text1.setProperty(jcrXMLCharacters, "foo");
         Node text2 = testRootNode.addNode(nodeName1, testNodeType).addNode(jcrXMLText);
         text2.setProperty(jcrXMLCharacters, "foo");
-        testRootNode.save();
+        testRootNode.getSession().save();
         String xpath = "/" + jcrRoot + testRoot + "//text()";
         executeXPathQuery(superuser, xpath, new Node[]{text1, text2});
     }
@@ -94,7 +94,7 @@ public class TextNodeTest extends AbstractQueryTest {
         text1.setProperty(jcrXMLCharacters, "the quick brown fox jumps over the lazy dog.");
         Node text2 = testRootNode.addNode(nodeName1, testNodeType).addNode(jcrXMLText);
         text2.setProperty(jcrXMLCharacters, "java content repository");
-        testRootNode.save();
+        testRootNode.getSession().save();
         String xpath = "/" + jcrRoot + testRoot + "//text()[" + jcrContains + "(., 'fox')]";
         executeXPathQuery(superuser, xpath, new Node[]{text1});
     }
@@ -118,7 +118,7 @@ public class TextNodeTest extends AbstractQueryTest {
         testRootNode.addNode(nodeName1, testNodeType);
         Node text2 = testRootNode.addNode(jcrXMLText);
         text2.setProperty(jcrXMLCharacters, "foo");
-        testRootNode.save();
+        testRootNode.getSession().save();
         String xpath = "/" + jcrRoot + testRoot + "/text()[2]";
         executeXPathQuery(superuser, xpath, new Node[]{text2});
         xpath = "/" + jcrRoot + testRoot + "/text()[last()]";

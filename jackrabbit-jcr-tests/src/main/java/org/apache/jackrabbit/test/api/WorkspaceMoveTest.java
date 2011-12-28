@@ -76,7 +76,7 @@ public class WorkspaceMoveTest extends AbstractWorkspaceCopyTest {
         // if parent node is nt:base then no sub nodes can be created
         String nodetype = testNodeTypeNoChildren == null ? ntBase : testNodeTypeNoChildren;
         Node subNodesNotAllowedNode = testRootNode.addNode(nodeName3, nodetype);
-        testRootNode.save();
+        testRootNode.getSession().save();
         try {
             String dstAbsPath = subNodesNotAllowedNode.getPath() + "/" + node2.getName();
             workspace.move(node2.getPath(), dstAbsPath);

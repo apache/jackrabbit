@@ -49,7 +49,7 @@ public class LockingTest extends AbstractObservationTest {
     public void testAddLockToNode() throws RepositoryException,
             NotExecutableException {
         Node lockable = createLockable(nodeName1, testNodeType);
-        testRootNode.save();
+        testRootNode.getSession().save();
         EventResult result = new EventResult(log);
         addEventListener(result, Event.PROPERTY_ADDED);
 
@@ -82,7 +82,7 @@ public class LockingTest extends AbstractObservationTest {
     public void testRemoveLockFromNode() throws RepositoryException,
             NotExecutableException {
         Node lockable = createLockable(nodeName1, testNodeType);
-        testRootNode.save();
+        testRootNode.getSession().save();
         // lock the node
         lockable.lock(false, true);
 

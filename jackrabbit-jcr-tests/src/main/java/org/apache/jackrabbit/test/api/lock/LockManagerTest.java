@@ -51,7 +51,7 @@ public class LockManagerTest extends AbstractJCRTest {
         }
         
         testNode = testRootNode.addNode(nodeName1, testNodeType);
-        testRootNode.save();
+        testRootNode.getSession().save();
         testPath = testNode.getPath();
 
         lockMgr = getLockManager(superuser);

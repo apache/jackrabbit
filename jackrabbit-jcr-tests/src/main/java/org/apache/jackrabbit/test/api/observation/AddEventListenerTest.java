@@ -53,7 +53,7 @@ public class AddEventListenerTest extends AbstractObservationTest {
         obsMgr.addEventListener(listener, Event.NODE_ADDED, testRoot + "/" + nodeName1, true, null, null, false);
         Node n = testRootNode.addNode(nodeName1, testNodeType);
         n.addNode(nodeName2, testNodeType);
-        testRootNode.save();
+        testRootNode.getSession().save();
         Event[] events = listener.getEvents(DEFAULT_WAIT_TIMEOUT);
         obsMgr.removeEventListener(listener);
         checkNodeAdded(events, new String[]{nodeName1 + "/" + nodeName2}, null);
@@ -68,7 +68,7 @@ public class AddEventListenerTest extends AbstractObservationTest {
         obsMgr.addEventListener(listener, Event.NODE_ADDED, testRoot + "/" + nodeName1, false, null, null, false);
         Node n = testRootNode.addNode(nodeName1, testNodeType);
         n.addNode(nodeName2, testNodeType);
-        testRootNode.save();
+        testRootNode.getSession().save();
         Event[] events = listener.getEvents(DEFAULT_WAIT_TIMEOUT);
         obsMgr.removeEventListener(listener);
         checkNodeAdded(events, new String[]{nodeName1 + "/" + nodeName2}, null);
@@ -81,12 +81,12 @@ public class AddEventListenerTest extends AbstractObservationTest {
     public void testIsDeepFalsePropertyAdded() throws RepositoryException {
         Node n1 = testRootNode.addNode(nodeName1, testNodeType);
         Node n2 = testRootNode.addNode(nodeName2, testNodeType);
-        testRootNode.save();
+        testRootNode.getSession().save();
         EventResult listener = new EventResult(log);
         obsMgr.addEventListener(listener, Event.PROPERTY_ADDED, testRoot + "/" + nodeName1, false, null, null, false);
         n1.setProperty(propertyName1, "foo");
         n2.setProperty(propertyName1, "foo");
-        testRootNode.save();
+        testRootNode.getSession().save();
         Event[] events = listener.getEvents(DEFAULT_WAIT_TIMEOUT);
         obsMgr.removeEventListener(listener);
         checkPropertyAdded(events, new String[]{nodeName1 + "/" + propertyName1});
@@ -107,7 +107,7 @@ public class AddEventListenerTest extends AbstractObservationTest {
                 true); // noLocal
 
         testRootNode.addNode(nodeName1, testNodeType);
-        testRootNode.save();
+        testRootNode.getSession().save();
         Event[] events = listener.getEvents(DEFAULT_WAIT_TIMEOUT);
         obsMgr.removeEventListener(listener);
         assertEquals("EventListener must not receive own modification when noLocal=true", 0, events.length);
@@ -125,7 +125,7 @@ public class AddEventListenerTest extends AbstractObservationTest {
         } catch (RepositoryException e) {
             throw new NotExecutableException("Repository does not support mix:referenceable");
         }
-        testRootNode.save();
+        testRootNode.getSession().save();
         EventResult listener = new EventResult(log);
         obsMgr.addEventListener(listener,
                 Event.PROPERTY_ADDED,
@@ -136,7 +136,7 @@ public class AddEventListenerTest extends AbstractObservationTest {
                 false);
         n1.setProperty(propertyName1, "foo");
         n2.setProperty(propertyName1, "foo");
-        testRootNode.save();
+        testRootNode.getSession().save();
         Event[] events = listener.getEvents(DEFAULT_WAIT_TIMEOUT);
         obsMgr.removeEventListener(listener);
         checkPropertyAdded(events, new String[]{nodeName1 + "/" + propertyName1});
@@ -150,7 +150,7 @@ public class AddEventListenerTest extends AbstractObservationTest {
         EventResult listener = new EventResult(log);
         Node n1 = testRootNode.addNode(nodeName1, testNodeType);
         Node n2 = testRootNode.addNode(nodeName2, nodetype2);
-        testRootNode.save();
+        testRootNode.getSession().save();
         obsMgr.addEventListener(listener,
                 Event.NODE_ADDED,
                 testRoot,
@@ -191,7 +191,7 @@ public class AddEventListenerTest extends AbstractObservationTest {
             throws RepositoryException, NotExecutableException {
         Node n = testRootNode.addNode(nodeName, nodeType);
         ensureMixinType(n, mixReferenceable);
-        testRootNode.save();
+        testRootNode.getSession().save();
         return n;
     }
 }

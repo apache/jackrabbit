@@ -130,7 +130,7 @@ public class MergeSubNodeTest extends AbstractMergeTest {
         originalNode.checkout();
         originalNode.checkin();
 
-        testRootNode.save();
+        testRootNode.getSession().save();
 
         // "merge" the clonedNode with the newNode from the default workspace
         // besteffort set to false to stop at the first failure

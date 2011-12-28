@@ -53,7 +53,7 @@ public class WorkspaceMoveSameNameSibsTest extends AbstractWorkspaceSameNameSibs
 
         // create a new node to move nodes
         Node newNode = testRootNode.addNode(nodeName2, testNodeType);
-        testRootNode.save();
+        testRootNode.getSession().save();
 
         // copy node three times below a node and check the order
         for (int i = 0; i < orderList.length; i++) {
@@ -82,7 +82,7 @@ public class WorkspaceMoveSameNameSibsTest extends AbstractWorkspaceSameNameSibs
     public void testMoveNodesNodeExistsAtDestPath() throws RepositoryException {
         // create a parent node where allowSameNameSiblings are set to false
         Node snsfNode = testRootNode.addNode(nodeName3, sameNameSibsFalseNodeType.getName());
-        testRootNode.save();
+        testRootNode.getSession().save();
 
         String dstAbsPath = snsfNode.getPath() + "/" + node1.getName();
         workspace.copy(node1.getPath(), dstAbsPath);

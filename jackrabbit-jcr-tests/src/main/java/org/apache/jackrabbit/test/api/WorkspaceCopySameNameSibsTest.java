@@ -78,7 +78,7 @@ public class WorkspaceCopySameNameSibsTest extends AbstractWorkspaceSameNameSibs
     public void testCopyNodesNodeExistsAtDestPath() throws RepositoryException {
         // create a parent node where allowSameNameSiblings are set to false
         Node snsfNode = testRootNode.addNode(nodeName3, sameNameSibsFalseNodeType.getName());
-        testRootNode.save();
+        testRootNode.getSession().save();
 
         String dstAbsPath = snsfNode.getPath() + "/" + node1.getName();
         workspace.copy(node1.getPath(), dstAbsPath);
@@ -104,7 +104,7 @@ public class WorkspaceCopySameNameSibsTest extends AbstractWorkspaceSameNameSibs
     public void testCopyNodesNodeExistsAtDestPath2() throws RepositoryException {
         // create a parent node where allowSameNameSiblings are set to true
         Node snsfNode = testRootNode.addNode(nodeName3, sameNameSibsTrueNodeType.getName());
-        testRootNode.save();
+        testRootNode.getSession().save();
 
         String dstAbsPath = snsfNode.getPath() + "/" + node1.getName();
         workspace.copy(node1.getPath(), dstAbsPath);

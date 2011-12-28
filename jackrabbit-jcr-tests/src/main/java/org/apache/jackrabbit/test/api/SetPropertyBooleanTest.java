@@ -76,7 +76,7 @@ public class SetPropertyBooleanTest extends AbstractJCRTest {
      */
     public void testNewBooleanPropertyParent() throws Exception {
         testNode.setProperty(propertyName1, true);
-        testRootNode.save();
+        testRootNode.getSession().save();
         assertEquals("Setting property with Node.setProperty(String, boolean) and parentNode.save() not working",
                 true,
                 testNode.getProperty(propertyName1).getBoolean());
@@ -88,9 +88,9 @@ public class SetPropertyBooleanTest extends AbstractJCRTest {
      */
     public void testModifyBooleanPropertyParent() throws Exception {
         testNode.setProperty(propertyName1, true);
-        testRootNode.save();
+        testRootNode.getSession().save();
         testNode.setProperty(propertyName1, false);
-        testRootNode.save();
+        testRootNode.getSession().save();
         assertEquals("Modifying property with Node.setProperty(String, boolean) and parentNode.save() not working",
                 false,
                 testNode.getProperty(propertyName1).getBoolean());
@@ -117,9 +117,9 @@ public class SetPropertyBooleanTest extends AbstractJCRTest {
      */
     public void testRemoveBooleanPropertyParent() throws Exception {
         testNode.setProperty(propertyName1, true);
-        testRootNode.save();
+        testRootNode.getSession().save();
         testNode.setProperty(propertyName1, (Value) null);
-        testRootNode.save();
+        testRootNode.getSession().save();
         assertFalse("Removing boolean property with Node.setProperty(String, null) and parentNode.save() not working",
                 testNode.hasProperty(propertyName1));
     }

@@ -47,11 +47,11 @@ public class PropertyRemovedTest extends AbstractObservationTest {
         Node node = testRootNode.addNode(nodeName1, testNodeType);
         Property prop1 = node.setProperty(propertyName1, "foo");
         node.setProperty(propertyName2, "bar");
-        testRootNode.save();
+        testRootNode.getSession().save();
         EventResult result = new EventResult(log);
         addEventListener(result, Event.PROPERTY_REMOVED);
         prop1.remove();
-        testRootNode.save();
+        testRootNode.getSession().save();
         Event[] events = result.getEvents(DEFAULT_WAIT_TIMEOUT);
         removeEventListener(result);
         checkPropertyRemoved(events, new String[]{nodeName1 + "/" + propertyName1});
@@ -65,12 +65,12 @@ public class PropertyRemovedTest extends AbstractObservationTest {
         Node node = testRootNode.addNode(nodeName1, testNodeType);
         Property prop1 = node.setProperty(propertyName1, "foo");
         Property prop2 = node.setProperty(propertyName2, "bar");
-        testRootNode.save();
+        testRootNode.getSession().save();
         EventResult result = new EventResult(log);
         addEventListener(result, Event.PROPERTY_REMOVED);
         prop1.remove();
         prop2.remove();
-        testRootNode.save();
+        testRootNode.getSession().save();
         Event[] events = result.getEvents(DEFAULT_WAIT_TIMEOUT);
         removeEventListener(result);
         checkPropertyRemoved(events, new String[]{nodeName1 + "/" + propertyName1,

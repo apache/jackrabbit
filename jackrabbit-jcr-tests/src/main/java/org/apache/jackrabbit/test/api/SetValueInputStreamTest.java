@@ -68,7 +68,7 @@ public class SetValueInputStreamTest extends AbstractJCRTest {
 
         // create a new node under the testRootNode
         node = testRootNode.addNode(nodeName1, testNodeType);
-        testRootNode.save();
+        testRootNode.getSession().save();
 
         // special case for repositories that do allow binary property
         // values, but only on jcr:content/jcr:data

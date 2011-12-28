@@ -42,7 +42,7 @@ public abstract class AbstractQueryLevel2Test extends AbstractQueryTest {
 
         node = testRootNode.addNode(nodeName2, testNodeType);
         node.setProperty(propertyName1, "The quick brown cat jumps over the lazy dog.");
-        testRootNode.save();
+        testRootNode.getSession().save();
     }
 
     /**
@@ -60,7 +60,7 @@ public abstract class AbstractQueryLevel2Test extends AbstractQueryTest {
 
         Node cNode = node.addNode(nodeName3, testNodeType);
         cNode.setProperty(propertyName1, "c");
-        testRootNode.save();
+        testRootNode.getSession().save();
     }
 
     /**
@@ -91,7 +91,7 @@ public abstract class AbstractQueryLevel2Test extends AbstractQueryTest {
 
         Node cNode = node.addNode(nodeName3, testNodeType);
         cNode.setProperty(propertyName1, "existence");
-        testRootNode.save();
+        testRootNode.getSession().save();
     }
 
     /**

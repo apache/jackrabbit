@@ -53,7 +53,7 @@ public class EventIteratorTest extends AbstractObservationTest{
         EventResult listener = new EventResult(log);
         addEventListener(listener, Event.NODE_ADDED);
         testRootNode.addNode(nodeName1, testNodeType);
-        testRootNode.save();
+        testRootNode.getSession().save();
         EventIterator events = listener.getEventIterator(DEFAULT_WAIT_TIMEOUT);
         removeEventListener(listener);
         assertNotNull("No events delivered within " + DEFAULT_WAIT_TIMEOUT + "ms.", events);
@@ -73,7 +73,7 @@ public class EventIteratorTest extends AbstractObservationTest{
         testRootNode.addNode(nodeName1, testNodeType);
         testRootNode.addNode(nodeName2, testNodeType);
         testRootNode.addNode(nodeName3, testNodeType);
-        testRootNode.save();
+        testRootNode.getSession().save();
         EventIterator events = listener.getEventIterator(DEFAULT_WAIT_TIMEOUT);
         removeEventListener(listener);
         assertNotNull("No events delivered within " + DEFAULT_WAIT_TIMEOUT + "ms.", events);
@@ -95,7 +95,7 @@ public class EventIteratorTest extends AbstractObservationTest{
         testRootNode.addNode(nodeName1, testNodeType);
         testRootNode.addNode(nodeName2, testNodeType);
         testRootNode.addNode(nodeName3, testNodeType);
-        testRootNode.save();
+        testRootNode.getSession().save();
         EventIterator events = listener.getEventIterator(DEFAULT_WAIT_TIMEOUT);
         removeEventListener(listener);
         assertNotNull("No events delivered within " + DEFAULT_WAIT_TIMEOUT + "ms.", events);

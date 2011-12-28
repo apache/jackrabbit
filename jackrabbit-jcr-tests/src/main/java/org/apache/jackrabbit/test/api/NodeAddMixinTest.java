@@ -70,7 +70,7 @@ public class NodeAddMixinTest extends AbstractJCRTest {
 
         // it is implementation-specific if a added mixin is available
         // before or after save therefore save before further tests
-        testRootNode.save();
+        testRootNode.getSession().save();
 
         // test if added mixin is available by node.getMixinNodeTypes()
         NodeType mixins[] = node.getMixinNodeTypes();
@@ -180,7 +180,7 @@ public class NodeAddMixinTest extends AbstractJCRTest {
         Node node = testRootNode.addNode(nodeName1, testNodeType);
         // or try to make it lockable if it is not
         ensureMixinType(node, mixLockable);
-        testRootNode.save();
+        testRootNode.getSession().save();
 
         String mixinName = NodeMixinUtil.getAddableMixinName(session, node);
         if (mixinName == null) {
@@ -235,7 +235,7 @@ public class NodeAddMixinTest extends AbstractJCRTest {
         Node node = testRootNode.addNode(nodeName1, testNodeType);
         // or try to make it versionable if it is not
         ensureMixinType(node, mixVersionable);
-        testRootNode.save();
+        testRootNode.getSession().save();
 
         String mixinName = NodeMixinUtil.getAddableMixinName(session, node);
         if (mixinName == null || node.isNodeType(mixinName)) {
@@ -267,7 +267,7 @@ public class NodeAddMixinTest extends AbstractJCRTest {
         Node node = testRootNode.addNode(nodeName1, testNodeType);
         ensureMixinType(node, mixReferenceable);
         // implementation specific: mixin may take effect only upon save
-        testRootNode.save();
+        testRootNode.getSession().save();
 
         // check that it did
         assertTrue(node.isNodeType(mixReferenceable));

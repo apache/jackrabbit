@@ -358,7 +358,7 @@ abstract class AbstractImportXmlTest extends AbstractJCRTest {
         }
         n1.addMixin(mixReferenceable);
         // make sure jcr:uuid is available
-        testRootNode.save();
+        testRootNode.getSession().save();
         return n1.getUUID();
     }
 

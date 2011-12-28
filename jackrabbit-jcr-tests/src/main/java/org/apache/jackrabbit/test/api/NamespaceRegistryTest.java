@@ -142,18 +142,18 @@ public class NamespaceRegistryTest extends AbstractJCRTest {
 
         try {
             created = testRootNode.addNode(namespacePrefix + ":root");
-            testRootNode.save();
+            testRootNode.getSession().save();
         }
         catch (RepositoryException ex) {
             // that didn't work; maybe the repository allows a property here?
             testRootNode.getSession().refresh(false);
             created = testRootNode.setProperty(namespacePrefix + ":root", "test");
-            testRootNode.save();
+            testRootNode.getSession().save();
         }
 
         // Need to remove it here, otherwise teardown can't unregister the NS.
         testRootNode.getSession().getItem(created.getPath()).remove();
-        testRootNode.save();
+        testRootNode.getSession().save();
     }
 
     /**

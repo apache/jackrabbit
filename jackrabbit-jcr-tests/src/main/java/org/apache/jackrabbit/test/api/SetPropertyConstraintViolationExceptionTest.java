@@ -75,7 +75,7 @@ public class SetPropertyConstraintViolationExceptionTest extends AbstractJCRTest
         try {
             String nodeType = propDef.getDeclaringNodeType().getName();
             node = testRootNode.addNode(nodeName2, nodeType);
-            testRootNode.save();
+            testRootNode.getSession().save();
         } catch (ConstraintViolationException e) {
             // implementation specific constraints do not allow to set up test environment
             throw new NotExecutableException("Not able to create required test items.");
@@ -134,7 +134,7 @@ public class SetPropertyConstraintViolationExceptionTest extends AbstractJCRTest
         try {
             String nodeType = propDef.getDeclaringNodeType().getName();
             node = testRootNode.addNode(nodeName2, nodeType);
-            testRootNode.save();
+            testRootNode.getSession().save();
         } catch (ConstraintViolationException e) {
             // implementation specific constraints do not allow to set up test environment
             throw new NotExecutableException("Not able to create required test items.");
@@ -193,7 +193,7 @@ public class SetPropertyConstraintViolationExceptionTest extends AbstractJCRTest
         try {
             String nodeType = propDef.getDeclaringNodeType().getName();
             node = testRootNode.addNode(nodeName2, nodeType);
-            testRootNode.save();
+            testRootNode.getSession().save();
         } catch (ConstraintViolationException e) {
             // implementation specific constraints do not allow to set up test environment
             throw new NotExecutableException("Not able to create required test items.");
@@ -253,7 +253,7 @@ public class SetPropertyConstraintViolationExceptionTest extends AbstractJCRTest
         try {
             String nodeType = propDef.getDeclaringNodeType().getName();
             node = testRootNode.addNode(nodeName2, nodeType);
-            testRootNode.save();
+            testRootNode.getSession().save();
         } catch (ConstraintViolationException e) {
             // implementation specific constraints do not allow to set up test environment
             throw new NotExecutableException("Not able to create required test items.");
@@ -315,7 +315,7 @@ public class SetPropertyConstraintViolationExceptionTest extends AbstractJCRTest
         try {
             String nodeType = propDef.getDeclaringNodeType().getName();
             node = testRootNode.addNode(nodeName2, nodeType);
-            testRootNode.save();
+            testRootNode.getSession().save();
         } catch (ConstraintViolationException e) {
             // implementation specific constraints do not allow to set up test environment
             throw new NotExecutableException("Not able to create required test items.");
@@ -398,7 +398,7 @@ public class SetPropertyConstraintViolationExceptionTest extends AbstractJCRTest
             nodeNotSatisfied = testRootNode.addNode(nodeName4, nodeTypeNotSatisfied);
             ensureMixinType(nodeNotSatisfied, mixReferenceable);
 
-            testRootNode.save();
+            testRootNode.getSession().save();
         } catch (ConstraintViolationException e) {
             // implementation specific constraints do not allow to set up test environment
             throw new NotExecutableException("Not able to create required test items.");
