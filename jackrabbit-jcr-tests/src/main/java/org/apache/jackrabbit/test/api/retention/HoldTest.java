@@ -403,13 +403,11 @@ public class HoldTest extends AbstractRetentionTest {
     }
 
     public void testHoldIsDeep() throws RepositoryException, NotExecutableException {
-        String holdName = getHoldName();
         Hold h = retentionMgr.addHold(testNodePath, getHoldName(), false);
         assertEquals("Hold.isDeep() must reflect the specified flag.", false, h.isDeep());
     }
 
     public void testHoldIsDeep2() throws RepositoryException, NotExecutableException {
-        String holdName = getHoldName();
         Hold h = retentionMgr.addHold(testNodePath, getHoldName(), true);
         assertEquals("Hold.isDeep() must reflect the specified flag.", true, h.isDeep());
     }

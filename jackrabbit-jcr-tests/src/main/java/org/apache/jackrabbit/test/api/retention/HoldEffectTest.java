@@ -219,7 +219,6 @@ public class HoldEffectTest extends AbstractRetentionTest {
     }
 
     private void assertNoEffect(Property target) throws RepositoryException {
-        Session s = target.getSession();
         target.setValue("test3");
         target.remove();
     }
