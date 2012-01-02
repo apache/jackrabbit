@@ -54,6 +54,7 @@ public class OnParentVersionCopyTest extends AbstractOnParentVersionTest {
      *
      * @throws javax.jcr.RepositoryException
      */
+    @SuppressWarnings("deprecation")
     public void testRestoreNode() throws RepositoryException {
         // prepare for node test
         Node childNode = addChildNode(OPVAction);
