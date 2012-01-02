@@ -100,6 +100,7 @@ public class RestoreTest extends AbstractVersionTest {
      *
      * @throws RepositoryException
      */
+    @SuppressWarnings("deprecation")
     public void testRestoreRootVersionFail() throws RepositoryException {
         try {
             versionableNode.restore(rootVersion, true);
@@ -128,6 +129,7 @@ public class RestoreTest extends AbstractVersionTest {
      *
      * @throws RepositoryException
      */
+    @SuppressWarnings("deprecation")
     public void testRestoreOnCheckedInNode() throws RepositoryException {
         versionableNode.checkin();
         versionableNode.restore(version, true);
@@ -178,6 +180,7 @@ public class RestoreTest extends AbstractVersionTest {
      *
      * @throws RepositoryException
      */
+    @SuppressWarnings("deprecation")
     public void testRestoreOnCheckedOutNode() throws RepositoryException {
         versionableNode.restore(version, true);
     }
@@ -223,6 +226,7 @@ public class RestoreTest extends AbstractVersionTest {
      *
      * @throws RepositoryException
      */
+    @SuppressWarnings("deprecation")
     public void testRestoreSetsIsCheckedOutToFalse() throws RepositoryException {
         versionableNode.restore(version, true);
         assertFalse("Restoring a node sets the jcr:isCheckedOut property to false", versionableNode.isCheckedOut());
@@ -273,6 +277,7 @@ public class RestoreTest extends AbstractVersionTest {
      *
      * @throws RepositoryException
      */
+    @SuppressWarnings("deprecation")
     public void testRestoreCorrectProperty() throws RepositoryException {
         versionableNode.restore(version, true);
         String value = versionableNode.getProperty(propertyName1).getString();
@@ -328,6 +333,7 @@ public class RestoreTest extends AbstractVersionTest {
      *
      * @throws javax.jcr.RepositoryException
      */
+    @SuppressWarnings("deprecation")
     public void testRestoreSetsBaseVersion() throws RepositoryException {
         versionableNode.restore(version, true);
         Version baseV = versionableNode.getBaseVersion();
@@ -383,6 +389,7 @@ public class RestoreTest extends AbstractVersionTest {
      *
      * @throws RepositoryException
      */
+    @SuppressWarnings("deprecation")
     public void testRestoreWithPendingChanges() throws RepositoryException {
         // modify node without calling save()
         try {
@@ -469,6 +476,7 @@ public class RestoreTest extends AbstractVersionTest {
      *
      * @throws RepositoryException
      */
+    @SuppressWarnings("deprecation")
     public void testRestoreInvalidVersion() throws RepositoryException {
         Version vNode2 = versionableNode2.checkin();
         try {
@@ -502,6 +510,7 @@ public class RestoreTest extends AbstractVersionTest {
      *
      * @throws RepositoryException
      */
+    @SuppressWarnings("deprecation")
     public void testRestoreInvalidVersion2() throws RepositoryException {
         String invalidName;
         do {
@@ -555,6 +564,7 @@ public class RestoreTest extends AbstractVersionTest {
      * @throws RepositoryException
      * @see Node#restore(String, boolean)
      */
+    @SuppressWarnings("deprecation")
     public void testRestoreNonVersionableNode() throws RepositoryException {
         try {
             nonVersionableNode.restore("foo", true);
@@ -602,6 +612,7 @@ public class RestoreTest extends AbstractVersionTest {
      * @throws RepositoryException
      * @see Node#restore(Version, boolean)
      */
+    @SuppressWarnings("deprecation")
     public void testRestoreNonVersionableNode3() throws RepositoryException {
         try {
             nonVersionableNode.restore(version, true);
@@ -631,6 +642,7 @@ public class RestoreTest extends AbstractVersionTest {
      *
      * @throws RepositoryException
      */
+    @SuppressWarnings("deprecation")
     public void testRestoreWithInvalidVersion() throws RepositoryException {
         Version invalidVersion = versionableNode2.checkin();
         try {
@@ -660,6 +672,7 @@ public class RestoreTest extends AbstractVersionTest {
      * Tests if restoring the <code>Version</code> of an existing node throws an
      * <code>ItemExistsException</code> if removeExisting is set to FALSE.
      */
+    @SuppressWarnings("deprecation")
     public void testRestoreWithUUIDConflict() throws RepositoryException, NotExecutableException {
         try {
             Node naa = createVersionableNode(versionableNode, nodeName4, versionableNodeType);
@@ -801,6 +814,7 @@ public class RestoreTest extends AbstractVersionTest {
         }
     }
 
+    @SuppressWarnings("deprecation")
     public void testRestoreRemoved() throws RepositoryException {
         Node parent = versionableNode.getParent();
         String oldName = versionableNode.getName();
@@ -916,6 +930,7 @@ public class RestoreTest extends AbstractVersionTest {
      * Test the restore of a versionable node using a label.
      * @throws RepositoryException
      */
+    @SuppressWarnings("deprecation")
     public void testRestoreLabel() throws RepositoryException {
         // mark V1 with label test1
         versionableNode.getVersionHistory().addVersionLabel(version.getName(), "test", true);
@@ -944,6 +959,7 @@ public class RestoreTest extends AbstractVersionTest {
      * Test the restore of the OPV=Version child nodes.
      * @throws RepositoryException
      */
+    @SuppressWarnings("deprecation")
     public void testRestoreName() throws RepositoryException,
             NotExecutableException {
         // V1.0 of versionableNode has no child
@@ -1035,6 +1051,7 @@ public class RestoreTest extends AbstractVersionTest {
      * Test the child ordering of restored nodes.
      * @throws RepositoryException
      */
+    @SuppressWarnings("deprecation")
     public void testRestoreOrder() throws RepositoryException,
             NotExecutableException {
         // create a test-root that has orderable child nodes
@@ -1240,6 +1257,7 @@ public class RestoreTest extends AbstractVersionTest {
      * Test the child ordering of restored nodes.
      * @throws RepositoryException
      */
+    @SuppressWarnings("deprecation")
     public void testRestoreOrder2() throws RepositoryException,
             NotExecutableException {
         // create a test-root that has orderable child nodes

@@ -58,6 +58,7 @@ public class MergeCancelMergeTest extends AbstractMergeTest {
      * the jcr:mergeFailed property of N. <br> without adding it to
      * jcr:predecessors.<br> Branches will not be joined.<br>
      */
+    @SuppressWarnings("deprecation")
     public void testMergeNodeCancelMerge() throws RepositoryException {
         // create 2 independent versions for a node and its corresponding node
         // so merge fails for this node

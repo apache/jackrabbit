@@ -52,6 +52,7 @@ public class CheckoutTest extends AbstractVersionTest {
      * Test if Node.isCheckedOut() returns true, if the versionable node has
      * been checked out before.
      */
+    @SuppressWarnings("deprecation")
     public void testIsCheckedOut() throws RepositoryException {
         versionableNode.checkout();
         assertTrue("After calling Node.checkout() a versionable node N, N.isCheckedOut() must return true.", versionableNode.isCheckedOut());
@@ -127,6 +128,7 @@ public class CheckoutTest extends AbstractVersionTest {
     /**
      * Test calling Node.checkout() on a non-versionable node.
      */
+    @SuppressWarnings("deprecation")
     public void testCheckoutNonVersionableNode() throws RepositoryException {
         try {
             nonVersionableNode.checkout();
@@ -155,6 +157,7 @@ public class CheckoutTest extends AbstractVersionTest {
      * Test if Node.checkout() doesn't throw any exception if the versionable
      * node has been checked out before.
      */
+    @SuppressWarnings("deprecation")
     public void testCheckoutTwiceDoesNotThrow() throws RepositoryException {
         versionableNode.checkout();
         versionableNode.checkout();
@@ -176,6 +179,7 @@ public class CheckoutTest extends AbstractVersionTest {
      * Test if Node.checkout() copies the node's jcr:baseVersion to node's
      * jcr:predecessors property (no save required).
      */
+    @SuppressWarnings("deprecation")
     public void testCheckoutCopiesBaseValueToPredecessorProperty() throws RepositoryException {
         Value baseVersionValue = versionableNode.getProperty(jcrBaseVersion).getValue();
         versionableNode.checkout();

@@ -161,6 +161,7 @@ public class WorkspaceRestoreTest extends AbstractVersionTest {
      * Test if InvalidItemStateException is thrown if the session affected by
      * Workspace.restore(Version[], boolean) has pending changes.
      */
+    @SuppressWarnings("deprecation")
     public void testWorkspaceRestoreWithPendingChanges() throws RepositoryException {
         versionableNode.checkout();
         try {
@@ -203,6 +204,7 @@ public class WorkspaceRestoreTest extends AbstractVersionTest {
      * Test if VersionException is thrown if the specified version array does
      * not contain a version that has a corresponding node in this workspace.
      */
+    @SuppressWarnings("deprecation")
     public void testWorkspaceRestoreHasCorrespondingNode() throws RepositoryException {
         try {
             superuser.getWorkspace().restore(new Version[]{wChildVersion}, false);
@@ -234,6 +236,7 @@ public class WorkspaceRestoreTest extends AbstractVersionTest {
      * node in the workspace.</li>
      * </ul>
      */
+    @SuppressWarnings("deprecation")
     public void testWorkspaceRestoreWithParent() throws RepositoryException {
 
         try {
@@ -266,6 +269,7 @@ public class WorkspaceRestoreTest extends AbstractVersionTest {
     /**
      * Test if the removeExisting-flag removes an existing node in case of uuid conflict.
      */
+    @SuppressWarnings("deprecation")
     public void testWorkspaceRestoreWithRemoveExisting() throws NotExecutableException, RepositoryException {
         // create version for parentNode of childNode
         superuser.getWorkspace().clone(workspaceName, wVersionableChildNode.getPath(), wVersionableChildNode.getPath(), false);
@@ -309,6 +313,7 @@ public class WorkspaceRestoreTest extends AbstractVersionTest {
      * Tests if restoring the <code>Version</code> of an existing node throws an
      * <code>ItemExistsException</code> if removeExisting is set to FALSE.
      */
+    @SuppressWarnings("deprecation")
     public void testWorkspaceRestoreWithUUIDConflict() throws RepositoryException, NotExecutableException {
         try {
             // Verify that nodes used for the test are indeed versionable
@@ -359,6 +364,7 @@ public class WorkspaceRestoreTest extends AbstractVersionTest {
     /**
      * Test if workspace-restoring a node works on checked-in node.
      */
+    @SuppressWarnings("deprecation")
     public void testWorkspaceRestoreOnCheckedInNode() throws RepositoryException {
         if (versionableNode.isCheckedOut()) {
             versionableNode.checkin();
@@ -381,6 +387,7 @@ public class WorkspaceRestoreTest extends AbstractVersionTest {
     /**
      * Test if workspace-restoring a node works on checked-out node.
      */
+    @SuppressWarnings("deprecation")
     public void testWorkspaceRestoreOnCheckedOutNode() throws RepositoryException {
         if (!versionableNode.isCheckedOut()) {
             versionableNode.checkout();
