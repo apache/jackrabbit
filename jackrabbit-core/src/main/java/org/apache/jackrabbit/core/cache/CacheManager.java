@@ -161,7 +161,12 @@ public class CacheManager implements CacheAccessListener {
             if (now < nextLogStats) {
                 return;
             }
-            for (Cache cache : caches.keySet()) {
+            // JCR-3194 avoid ConcurrentModificationException
+            List<Cache> list = new ArrayList<Cache>();
+            synchronized (caches) {
+                list.addAll(caches.keySet());
+            }
+            for (Cache cache : list) {
                 log.debug(cache.getCacheInfoAsString());
             }
             nextLogStats = now + minLogStatsInterval;
