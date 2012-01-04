@@ -29,7 +29,6 @@ import org.apache.jackrabbit.commons.webdav.JcrRemotingConstants;
 import org.apache.jackrabbit.commons.webdav.QueryUtil;
 import org.apache.jackrabbit.spi.QueryResultRow;
 import org.apache.jackrabbit.spi.NodeId;
-import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.spi.QValueFactory;
 import org.apache.jackrabbit.spi.IdFactory;
@@ -54,15 +53,13 @@ public class QueryResultRowImpl implements QueryResultRow {
 
     private static final DavPropertyName SEARCH_RESULT_PROPERTY = DavPropertyName.create(JcrRemotingConstants.JCR_QUERY_RESULT_LN, ItemResourceConstants.NAMESPACE);
 
-    private final Map<Name, NodeId> nodeIds = new HashMap<Name, NodeId>();
+    private final Map<String, NodeId> nodeIds = new HashMap<String, NodeId>();
 
-    private final Map<Name, Double> scores = new HashMap<Name, Double>();
+    private final Map<String, Double> scores = new HashMap<String, Double>();
 
     private final Map<String, QValue> qValues = new HashMap<String, QValue>();
 
     private final String[] columnNames;
-
-    private final Name[] selectorNames;
 
     public QueryResultRowImpl(MultiStatusResponse response,
                               String[] columnNames,
@@ -72,6 +69,7 @@ public class QueryResultRowImpl implements QueryResultRow {
                               IdFactory idFactory)
             throws RepositoryException {
         this.columnNames = columnNames;
+
         DavPropertySet okSet = response.getProperties(DavServletResponse.SC_OK);
 
         String jcrPath = resolver.getJCRName(NameConstants.JCR_PATH);
@@ -86,24 +84,22 @@ public class QueryResultRowImpl implements QueryResultRow {
         String[] names = colList.toArray(new String[colList.size()]);
         Value[] values = valList.toArray(new Value[valList.size()]);
 
-        this.selectorNames = new Name[selList.size()];
         for (int i = 0; i < values.length; i++) {
             try {
                 String selectorName = selList.get(i);
                 QValue v = (values[i] == null) ? null : ValueFormat.getQValue(values[i], resolver, qValueFactory);
-                this.selectorNames[i] = (selectorName == null) ? null : resolver.getQName(selectorName);
                 if (jcrScore.equals(names[i])) {
                     Double score = 0.0;
                     if (v != null) {
                         score = v.getDouble();
                     }
-                    scores.put(this.selectorNames[i], score);
+                    scores.put(selectorName, score);
                 } else if (jcrPath.equals(names[i])) {
                     NodeId id = null;
                     if (v != null) {
                         id = idFactory.createNodeId((String) null, v.getPath());
                     }
-                    nodeIds.put(this.selectorNames[i], id);
+                    nodeIds.put(selectorName, id);
                 }
                 qValues.put(names[i], v);
             } catch (RepositoryException e) {
@@ -113,26 +109,26 @@ public class QueryResultRowImpl implements QueryResultRow {
         }
     }
 
-    public NodeId getNodeId(Name selectorName) {
+    public NodeId getNodeId(String selectorName) {
+        if (selectorName == null && scores.size() == 1) {
+            return nodeIds.values().iterator().next();
+        }
+
         NodeId id = nodeIds.get(selectorName);
-        if (id == null) {
-            if (nodeIds.size() == 1) {
-                return nodeIds.values().iterator().next();
-            } else {
-                throw new IllegalArgumentException(selectorName + " is not a valid selectorName");
-            }
+        if (id == null && !nodeIds.containsKey(selectorName)) {
+            throw new IllegalArgumentException(selectorName + " is not a valid selectorName");
         }
         return id;
     }
 
-    public double getScore(Name selectorName) {
+    public double getScore(String selectorName) {
+        if (selectorName == null && scores.size() == 1) {
+            return scores.values().iterator().next();
+        }
+
         Double score = scores.get(selectorName);
-        if (score == null) {
-            if (scores.size() == 1) {
-                return scores.values().iterator().next();
-            } else {
-                throw new IllegalArgumentException(selectorName + " is not a valid selectorName");
-            }
+        if (score == null && !nodeIds.containsKey(selectorName)) {
+            throw new IllegalArgumentException(selectorName + " is not a valid selectorName");
         }
         return score;
     }
@@ -145,7 +141,4 @@ public class QueryResultRowImpl implements QueryResultRow {
         return values;
     }
 
-    Name[] getSelectorNames() {
-        return selectorNames;
-    }
 }

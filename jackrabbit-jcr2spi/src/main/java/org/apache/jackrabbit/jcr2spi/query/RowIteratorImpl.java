@@ -291,7 +291,7 @@ class RowIteratorImpl implements RowIterator {
          * @see Row#getNode(String)
          */
         public Node getNode(String selectorName) throws RepositoryException {
-            return getNode(row.getNodeId(resolver.getQName(selectorName)));
+            return getNode(row.getNodeId(selectorName));
         }
 
         /**
@@ -329,7 +329,7 @@ class RowIteratorImpl implements RowIterator {
          * @see Row#getScore(String)
          */
         public double getScore(String selectorName) throws RepositoryException {
-            return row.getScore(resolver.getQName(selectorName));
+            return row.getScore(selectorName);
         }
 
         /**

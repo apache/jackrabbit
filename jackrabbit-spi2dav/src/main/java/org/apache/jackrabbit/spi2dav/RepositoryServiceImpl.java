@@ -1945,8 +1945,9 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         SearchMethod method = null;
         try {
             String uri = uriResolver.getWorkspaceUri(sessionInfo.getWorkspaceName());
-            SearchInfo sInfo = new SearchInfo(language,
-                    Namespace.EMPTY_NAMESPACE, statement, namespaces);
+            SearchInfo sInfo = new SearchInfo(
+                    language, ItemResourceConstants.NAMESPACE,
+                    statement, namespaces);
 
             if (limit != -1) {
                 sInfo.setNumberResults(limit);
