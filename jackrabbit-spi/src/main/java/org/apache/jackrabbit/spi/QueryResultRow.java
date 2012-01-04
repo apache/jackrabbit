@@ -35,7 +35,7 @@ public interface QueryResultRow {
      * @see javax.jcr.query.Row#getNode()
      * @see javax.jcr.query.Row#getNode(String)
      */
-    public NodeId getNodeId(Name selectorName);
+    public NodeId getNodeId(String selectorName);
 
     /**
      * Returns score for the given <code>selectorName</code> of this result row.
@@ -44,7 +44,7 @@ public interface QueryResultRow {
      *                     default selector.
      * @return score for the given selector in this result row.
      */
-    public double getScore(Name selectorName);
+    public double getScore(String selectorName);
 
     /**
      * Returns an array of <code>QValue</code>s.
