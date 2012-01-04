@@ -26,7 +26,6 @@ import org.apache.jackrabbit.spi.QueryResultRow;
 import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.spi.QValueFactory;
-import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.commons.value.ValueFormat;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 
@@ -44,12 +43,12 @@ class QueryResultRowImpl implements QueryResultRow {
     /**
      * The node ids of the underlying row.
      */
-    private final Map<Name, NodeId> nodeIds = new HashMap<Name, NodeId>();
+    private final Map<String, NodeId> nodeIds = new HashMap<String, NodeId>();
 
     /**
      * The score values for this row.
      */
-    private final Map<Name, Double> scores = new HashMap<Name, Double>();
+    private final Map<String, Double> scores = new HashMap<String, Double>();
 
     /**
      * The QValues for this row.
@@ -70,7 +69,7 @@ class QueryResultRowImpl implements QueryResultRow {
      */
     public QueryResultRowImpl(Row row,
                               String[] columnNames,
-                              Name[] selectorNames,
+                              String[] selectorNames,
                               IdFactoryImpl idFactory,
                               NamePathResolver resolver,
                               QValueFactory qValueFactory) throws RepositoryException {
@@ -83,21 +82,20 @@ class QueryResultRowImpl implements QueryResultRow {
                 values[i] = ValueFormat.getQValue(v, resolver, qValueFactory);
             }
         }
-        List<Name> selNames = new ArrayList<Name>();
+        List<String> selNames = new ArrayList<String>();
         selNames.addAll(Arrays.asList(selectorNames));
         if (selNames.isEmpty()) {
             selNames.add(null); // default selector
         }
-        for (Name sn : selNames) {
+        for (String sn : selNames) {
             Node n;
             double score;
             if (sn == null) {
                 n = row.getNode();
                 score = row.getScore();
             } else {
-                String selName = resolver.getJCRName(sn);
-                n = row.getNode(selName);
-                score = row.getScore(selName);
+                n = row.getNode(sn);
+                score = row.getScore(sn);
             }
             NodeId id = null;
             if (n != null) {
@@ -108,7 +106,7 @@ class QueryResultRowImpl implements QueryResultRow {
         }
     }
 
-    public NodeId getNodeId(Name selectorName) {
+    public NodeId getNodeId(String selectorName) {
         if (nodeIds.containsKey(selectorName)) {
             return nodeIds.get(selectorName);
         } else {
@@ -120,7 +118,7 @@ class QueryResultRowImpl implements QueryResultRow {
         }
     }
 
-    public double getScore(Name selectorName) {
+    public double getScore(String selectorName) {
         Double score;
         if (scores.containsKey(selectorName)) {
             score = scores.get(selectorName);

@@ -17,6 +17,8 @@
 package org.apache.jackrabbit.spi;
 
 import javax.jcr.RangeIterator;
+import javax.jcr.RepositoryException;
+
 import java.util.Map;
 
 /**
@@ -46,9 +48,9 @@ public interface QueryInfo {
     public String[] getColumnNames();
 
     /**
-     * @return an array of <code>Name</code>s representing the selector names of
+     * @return an array of <code>String</code>s representing the selector names of
      *         the query result.
      * @see javax.jcr.query.QueryResult#getSelectorNames()
      */
-    public Name[] getSelectorNames();
+    public String[] getSelectorNames();
 }

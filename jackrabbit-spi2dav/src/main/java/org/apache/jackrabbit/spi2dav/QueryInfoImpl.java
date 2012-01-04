@@ -18,8 +18,6 @@ package org.apache.jackrabbit.spi2dav;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
-import java.util.HashSet;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.ValueFactory;
@@ -29,26 +27,24 @@ import org.apache.jackrabbit.spi.QueryInfo;
 import org.apache.jackrabbit.spi.QValueFactory;
 import org.apache.jackrabbit.spi.QueryResultRow;
 import org.apache.jackrabbit.spi.IdFactory;
-import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.util.ISO9075;
 import org.apache.jackrabbit.webdav.MultiStatus;
 import org.apache.jackrabbit.webdav.MultiStatusResponse;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.commons.iterator.RangeIteratorAdapter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * <code>QueryInfoImpl</code>...
  */
 public class QueryInfoImpl implements QueryInfo {
 
-    /**
-     * Logger instance for this class.
-     */
-    private static final Logger log = LoggerFactory.getLogger(QueryInfoImpl.class);
+    private static final String COLUMNS = "Columns: ";
 
-    private final String[] columnNames;
+    private static final String SELECTORS = "Selectors: ";
+
+    private final List<String> columnNames = new ArrayList<String>();
+
+    private final List<String> selectorNames = new ArrayList<String>();
 
     private final List<QueryResultRow> results = new ArrayList<QueryResultRow>();
 
@@ -58,19 +54,41 @@ public class QueryInfoImpl implements QueryInfo {
         throws RepositoryException {
 
         String responseDescription = ms.getResponseDescription();
-        if (responseDescription != null) {
-            String[] cn = responseDescription.split(" ");
-            this.columnNames = new String[cn.length];
-            for (int i = 0; i < cn.length; i++) {
-                columnNames[i] = ISO9075.decode(cn[i]);
+        if (responseDescription == null) {
+            throw new RepositoryException(
+                    "Missing column infos: Unable to build QueryInfo object.");
+        }
+        if (responseDescription.startsWith(COLUMNS)) {
+            for (String line : responseDescription.split("\n")) {
+                if (line.startsWith(COLUMNS)) {
+                    decode(line.substring(COLUMNS.length()), columnNames);
+                } else if (line.startsWith(SELECTORS)) {
+                    decode(line.substring(SELECTORS.length()), selectorNames);
+                }
             }
         } else {
-            throw new RepositoryException("Missing column infos: Unable to build QueryInfo object.");
+            // Backwards compatibility with old servers that only provide
+            // the list of columns as the response description
+            decode(responseDescription, columnNames);
         }
 
         for (MultiStatusResponse response : ms.getResponses()) {
-            results.add(new QueryResultRowImpl(response, columnNames, resolver,
+            results.add(new QueryResultRowImpl(
+                    response, getColumnNames(), resolver,
                     qValueFactory, valueFactory, idFactory));
+        }
+    }
+
+    /**
+     * Splits the given string at spaces and ISO9075-decodes the parts.
+     *
+     * @param string source string
+     * @param list where the decoded parts get added
+     */
+    private void decode(String string, List<String> list) {
+        String[] parts = string.split(" ");
+        for (int i = 0; i < parts.length; i++) {
+            list.add(ISO9075.decode(parts[i]));
         }
     }
 
@@ -85,27 +103,13 @@ public class QueryInfoImpl implements QueryInfo {
      * @see QueryInfo#getColumnNames()
      */
     public String[] getColumnNames() {
-        String[] names = new String[columnNames.length];
-        System.arraycopy(columnNames, 0, names, 0, columnNames.length);
-        return names;
+        return columnNames.toArray(new String[columnNames.size()]);
     }
 
     /**
      * @see QueryInfo#getSelectorNames()
      */
-    public Name[] getSelectorNames() {
-        if (results.isEmpty()) {
-            // TODO: this is not correct
-            return Name.EMPTY_ARRAY;
-        } else {
-            Set<Name> uniqueNames = new HashSet<Name>();
-            QueryResultRowImpl row = (QueryResultRowImpl) results.get(0);
-            for (Name n : row.getSelectorNames()) {
-                if (n != null) {
-                    uniqueNames.add(n);
-                }
-            }
-            return uniqueNames.toArray(new Name[uniqueNames.size()]);
-        }
+    public String[] getSelectorNames() {
+        return selectorNames.toArray(new String[selectorNames.size()]);
     }
 }

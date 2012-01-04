@@ -22,6 +22,7 @@ import org.apache.jackrabbit.webdav.DavResourceLocator;
 import org.apache.jackrabbit.webdav.DavServletResponse;
 import org.apache.jackrabbit.webdav.MultiStatus;
 import org.apache.jackrabbit.webdav.MultiStatusResponse;
+import org.apache.jackrabbit.webdav.jcr.ItemResourceConstants;
 import org.apache.jackrabbit.webdav.jcr.JcrDavException;
 import org.apache.jackrabbit.webdav.jcr.JcrDavSession;
 import org.apache.jackrabbit.webdav.search.QueryGrammerSet;
@@ -45,16 +46,10 @@ import javax.jcr.query.QueryManager;
 import javax.jcr.query.QueryResult;
 import javax.jcr.query.Row;
 import javax.jcr.query.RowIterator;
-import javax.jcr.query.qom.Source;
-import javax.jcr.query.qom.Join;
-import javax.jcr.query.qom.Selector;
-import javax.jcr.query.qom.QueryObjectModel;
 
 import java.util.Map;
-import java.util.Iterator;
 import java.util.List;
 import java.util.ArrayList;
-import java.util.Arrays;
 
 /**
  * <code>SearchResourceImpl</code>...
@@ -81,7 +76,10 @@ public class SearchResourceImpl implements SearchResource {
             QueryManager qMgr = getRepositorySession().getWorkspace().getQueryManager();
             String[] langs = qMgr.getSupportedQueryLanguages();
             for (String lang : langs) {
-                // todo: define proper namespace
+                // Note: Existing clients already assume that the
+                // query languages returned in the DASL header are
+                // not prefixed with any namespace, so we probably
+                // shouldn't use an explicit namespace here.
                 qgs.addQueryLanguage(lang, Namespace.EMPTY_NAMESPACE);
             }
         } catch (RepositoryException e) {
@@ -97,8 +95,22 @@ public class SearchResourceImpl implements SearchResource {
      */
     public MultiStatus search(SearchInfo sInfo) throws DavException {
         try {
-            return queryResultToMultiStatus(getQuery(sInfo));
+            QueryResult result = getQuery(sInfo).execute();
 
+            MultiStatus ms = new MultiStatus();
+
+            if (ItemResourceConstants.NAMESPACE.equals(
+                    sInfo.getLanguageNameSpace())) {
+                ms.setResponseDescription(
+                        "Columns: " + encode(result.getColumnNames())
+                        + "\nSelectors: " + encode(result.getSelectorNames()));
+            } else {
+                ms.setResponseDescription(encode(result.getColumnNames()));
+            }
+
+            queryResultToMultiStatus(result, ms);
+
+            return ms;
         } catch (RepositoryException e) {
             throw new JcrDavException(e);
         }
@@ -196,44 +208,34 @@ public class SearchResourceImpl implements SearchResource {
      * Webdav compatible form.
      * @throws RepositoryException if an error occurs.
      */
-    private MultiStatus queryResultToMultiStatus(Query query)
+    private void queryResultToMultiStatus(QueryResult result, MultiStatus ms)
             throws RepositoryException {
-        QueryResult qResult = query.execute();
-        MultiStatus ms = new MultiStatus();
-
         List<String> columnNames = new ArrayList<String>();
-        columnNames.addAll(Arrays.asList(qResult.getColumnNames()));
-        StringBuffer responseDescription = new StringBuffer();
-        String delim = "";
-        for (String columnName : columnNames) {
-            responseDescription.append(delim);
-            responseDescription.append(ISO9075.encode(columnName));
-            delim = " ";
-        }
-        ms.setResponseDescription(responseDescription.toString());
 
         ValueFactory vf = getRepositorySession().getValueFactory();
         List<RowValue> descr = new ArrayList<RowValue>();
-        for (Iterator<String> it = columnNames.iterator(); it.hasNext(); ) {
-            String columnName = it.next();
+        for (String columnName : result.getColumnNames()) {
             if (!isPathOrScore(columnName)) {
+                columnNames.add(columnName);
                 descr.add(new PlainValue(columnName, null, vf));
-            } else {
-                it.remove();
             }
         }
+
         // add path and score for each selector
-        List<String> sn = new ArrayList<String>();
-        collectSelectorNames(query, qResult, sn);
-        for (String selectorName : sn) {
+        String[] sns = result.getSelectorNames();
+        boolean join = sns.length > 1;
+        for (String selectorName : sns) {
             descr.add(new PathValue(JcrConstants.JCR_PATH, selectorName, vf));
             columnNames.add(JcrConstants.JCR_PATH);
             descr.add(new ScoreValue(JcrConstants.JCR_SCORE, selectorName, vf));
             columnNames.add(JcrConstants.JCR_SCORE);
         }
+
+        int n = 0;
+        String root = getHref("/");
         String[] selectorNames = createSelectorNames(descr);
         String[] colNames = columnNames.toArray(new String[columnNames.size()]);
-        RowIterator rowIter = qResult.getRows();
+        RowIterator rowIter = result.getRows();
         while (rowIter.hasNext()) {
             Row row = rowIter.nextRow();
             List<Value> values = new ArrayList<Value>();
@@ -241,27 +243,49 @@ public class SearchResourceImpl implements SearchResource {
                 values.add(rv.getValue(row));
             }
 
-            /*
-             * get the path for the first selector and build a webdav compliant
-             * resource path based on it.
-             * 
-             * Use Row#getPath(String) which works for both simple rows and join
-             * rows (in contrast to Row#getPath()).
-             * 
-             * see also https://issues.apache.org/jira/browse/JCR-3089
-             */
-            final String itemPath = row.getPath(sn.get(0));
             // create a new ms-response for this row of the result set
-            DavResourceLocator loc = locator.getFactory().createResourceLocator(locator.getPrefix(), locator.getWorkspacePath(), itemPath, false);
-            String href = loc.getHref(true);
+            String href;
+            if (join) {
+                // We need a distinct href for each join result row to
+                // allow the MultiStatus response to keep them separate
+                href = root + "?" + n++;
+            } else {
+                href = getHref(row.getPath());
+            }
             MultiStatusResponse resp = new MultiStatusResponse(href, null);
+
             // build the s-r-property
             SearchResultProperty srp = new SearchResultProperty(colNames,
                     selectorNames, values.toArray(new Value[values.size()]));
             resp.add(srp);
             ms.addResponse(resp);
         }
-        return ms;
+    }
+
+    /**
+     * Returns the resource location of the given query result row.
+     * The result rows of join queries have no meaningful single resource
+     * location, so we'll just default to the root node for all such rows.
+     *
+     * @param row query result row
+     * @param join flag to indicate a join query
+     * @return resource location of the row
+     */
+    private String getHref(String path) throws RepositoryException {
+        DavResourceLocator l = locator.getFactory().createResourceLocator(
+                locator.getPrefix(), locator.getWorkspacePath(), path, false);
+        return l.getHref(true);
+    }
+
+    private String encode(String[] names) {
+        StringBuilder builder = new StringBuilder();
+        String delim = "";
+        for (String name : names) {
+            builder.append(delim);
+            builder.append(ISO9075.encode(name));
+            delim = " ";
+        }
+        return builder.toString();
     }
 
     private static String[] createSelectorNames(Iterable<RowValue> rows)
@@ -376,31 +400,4 @@ public class SearchResourceImpl implements SearchResource {
         }
     }
 
-    private static void collectSelectorNames(Query query,
-                                             QueryResult result,
-                                             List<String> sn) throws RepositoryException {
-        if (query instanceof QueryObjectModel) {
-            QueryObjectModel qom = (QueryObjectModel) query;
-            collectSelectorNames(qom.getSource(), sn);
-        } else {
-            sn.addAll(Arrays.asList(result.getSelectorNames()));
-        }
-    }
-
-    private static void collectSelectorNames(Source source, List<String> sn) {
-        if (source instanceof Join) {
-            collectSelectorNames((Join) source, sn);
-        } else {
-            collectSelectorNames((Selector) source, sn);
-        }
-    }
-
-    private static void collectSelectorNames(Join join, List<String> sn) {
-        collectSelectorNames(join.getLeft(), sn);
-        collectSelectorNames(join.getRight(), sn);
-    }
-
-    private static void collectSelectorNames(Selector s, List<String> sn) {
-        sn.add(s.getSelectorName());
-    }
 }
