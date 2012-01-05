@@ -63,7 +63,7 @@ import javax.jcr.observation.ObservationManager;
  * Example code to run the data store garbage collection:
  * <pre>
  * JackrabbitRepositoryFactory jf = (JackrabbitRepositoryFactory) factory;
- * RepositoryManager m = factory.getRepositoryManager((JackrabbitRepository) rep);
+ * RepositoryManager m = jf.getRepositoryManager((JackrabbitRepository) repository);
  * GarbageCollector gc = m.createDataStoreGarbageCollector();
  * try {
  *     gc.mark();

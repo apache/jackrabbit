@@ -29,7 +29,9 @@ import javax.jcr.RepositoryException;
  * <p>
  * Example code to run the data store garbage collection:
  * <pre>
- * DataStoreGarbageCollector gc = ((JackrabbitSession)session).createDataStoreGarbageCollector();
+ * JackrabbitRepositoryFactory jf = (JackrabbitRepositoryFactory) factory;
+ * RepositoryManager m = jf.getRepositoryManager((JackrabbitRepository) repository);
+ * GarbageCollector gc = m.createDataStoreGarbageCollector();
  * gc.mark();
  * gc.sweep();
  * </pre>
