@@ -941,21 +941,14 @@ public class XATest extends AbstractJCRTest {
         n.save();
 
         superuser.removeLockToken(lockToken);
-
-        String nlt = lock.getLockToken();
-        assertTrue("freshly obtained lock token must either be null or the same as the one returned earlier",
-                nlt == null || nlt.equals(lockToken));
-
+        assertNull("session must get a null lock token", lock.getLockToken());
         assertFalse("session must not hold lock token", containsLockToken(superuser, lockToken));
         
         // commit
         utx.commit();
 
-        nlt = lock.getLockToken();
-        assertTrue("freshly obtained lock token must either be null or the same as the one returned earlier",
-                nlt == null || nlt.equals(lockToken));
-
         assertFalse("session must not hold lock token", containsLockToken(superuser, lockToken));
+        assertNull("session must get a null lock token", lock.getLockToken());
 
         // start new Transaction and try to unlock
         utx = new UserTransactionImpl(superuser);
@@ -1148,10 +1141,7 @@ public class XATest extends AbstractJCRTest {
         assertTrue("session must hold lock token", containsLockToken(superuser, lockToken));
 
         superuser.removeLockToken(lockToken);
-
-        String nlt = lock.getLockToken();
-        assertTrue("freshly obtained lock token must either be null or the same as the one returned earlier",
-                nlt == null || nlt.equals(lockToken));
+        assertNull("session must get a null lock token", lock.getLockToken());
 
         // commit
         utx.commit();
@@ -1159,9 +1149,7 @@ public class XATest extends AbstractJCRTest {
         // refresh Lock Info
         lock = n.getLock();
 
-        nlt = lock.getLockToken();
-        assertTrue("freshly obtained lock token must either be null or the same as the one returned earlier",
-                nlt == null || nlt.equals(lockToken));
+        assertNull("session must get a null lock token", lock.getLockToken());
 
         Session other = getHelper().getSuperuserSession();
         try {
@@ -1922,20 +1910,15 @@ public class XATest extends AbstractJCRTest {
         assertTrue("session must hold lock token", containsLockToken(superuser, lockToken));
 
         superuser.removeLockToken(lockToken);
-
-        String nlt = lock.getLockToken();
-        assertTrue("freshly obtained lock token must either be null or the same as the one returned earlier",
-                nlt == null || nlt.equals(lockToken));
-
+        assertNull("session must get a null lock token", lock.getLockToken());
+        
         // commit
         utx.commit();
         
         // refresh Lock Info
         lock = n.getLock();
 
-        nlt = lock.getLockToken();
-        assertTrue("freshly obtained lock token must either be null or the same as the one returned earlier",
-                nlt == null || nlt.equals(lockToken));
+        assertNull("session must get a null lock token", lock.getLockToken());
 
         Session other = getHelper().getSuperuserSession();
         // start new Transaction and try to add lock token unlock the node and then remove it
