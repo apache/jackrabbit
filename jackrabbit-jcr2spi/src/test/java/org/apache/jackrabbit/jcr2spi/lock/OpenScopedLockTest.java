@@ -89,10 +89,7 @@ public class OpenScopedLockTest extends AbstractLockTest {
         String lockToken = lock.getLockToken();
         try {
             superuser.removeLockToken(lockToken);
-
-            String nlt = lock.getLockToken();
-            assertTrue("freshly obtained lock token must either be null or the same as the one returned earlier",
-                    nlt == null || nlt.equals(lockToken));
+            assertNull("After token transfer lock-token must not be visible", lock.getLockToken());
         } finally {
             // move lock token back in order to have lock removed properly
             superuser.addLockToken(lockToken);
