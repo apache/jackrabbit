@@ -20,6 +20,7 @@ import org.apache.jackrabbit.api.security.principal.ItemBasedPrincipal;
 import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.jackrabbit.api.security.user.Group;
 import org.apache.jackrabbit.api.security.user.User;
+import org.apache.jackrabbit.commons.iterator.RangeIteratorAdapter;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.id.NodeId;
@@ -370,7 +371,7 @@ abstract class AuthorizableImpl implements Authorizable, UserConstants {
                 // group node doesn't exist or cannot be read -> ignore.
             }
         }
-        return groups.iterator();
+        return new RangeIteratorAdapter(groups.iterator(), groups.size());
     }
 
     /**
