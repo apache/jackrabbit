@@ -124,14 +124,21 @@ public class JcrActiveLock extends AbstractActiveLock implements ActiveLock, Dav
     }
 
     /**
-     * Since jcr locks do not reveal the time left until they expire, {@link #INFINITE_TIMEOUT}
-     * is returned. A missing timeout causes problems with Microsoft clients.
+     * Calculates the milliseconds of the timeout from
+     * {@link javax.jcr.lock.Lock#getSecondsRemaining()}. If the timeout of
+     * jcr lock is undefined or infinite {@link #INFINITE_TIMEOUT} is
+     * returned. A missing timeout causes problems with Microsoft clients.
      *
      * @return Always returns {@link #INFINITE_TIMEOUT}
      * @see ActiveLock#getTimeout()
      */
     public long getTimeout() {
-        return INFINITE_TIMEOUT;
+        try {
+            long to = lock.getSecondsRemaining();
+            return (to == Long.MAX_VALUE) ? INFINITE_TIMEOUT : to*1000;
+        } catch (RepositoryException e) {
+            return INFINITE_TIMEOUT;
+        }
     }
 
     /**

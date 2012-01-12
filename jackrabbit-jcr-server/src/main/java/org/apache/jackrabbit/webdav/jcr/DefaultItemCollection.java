@@ -666,7 +666,15 @@ public class DefaultItemCollection extends AbstractItemResource
             }
             try {
                 boolean sessionScoped = EXCLUSIVE_SESSION.equals(reqLockInfo.getScope());
-                Lock jcrLock = ((Node)item).lock(reqLockInfo.isDeep(), sessionScoped);
+                long timeout = reqLockInfo.getTimeout();
+                if (timeout == LockInfo.INFINITE_TIMEOUT) {
+                    timeout = Long.MAX_VALUE;
+                } else {
+                    timeout = timeout/1000;
+                }
+                javax.jcr.lock.LockManager lockMgr = getRepositorySession().getWorkspace().getLockManager();
+                Lock jcrLock = lockMgr.lock((item).getPath(), reqLockInfo.isDeep(),
+                        sessionScoped, timeout, reqLockInfo.getOwner());
                 ActiveLock lock = new JcrActiveLock(jcrLock);
                  // add reference to DAVSession for this lock
                 getSession().addReference(lock.getToken());
