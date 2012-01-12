@@ -22,7 +22,9 @@ import org.apache.jackrabbit.test.NotExecutableException;
 import javax.jcr.AccessDeniedException;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
+import javax.jcr.Session;
 import javax.jcr.lock.Lock;
+import javax.jcr.lock.LockManager;
 
 /** <code>AbstractVersionAccessTest</code>... */
 public abstract class AbstractLockManagementTest extends AbstractEvaluationTest {
@@ -128,5 +130,50 @@ public abstract class AbstractLockManagementTest extends AbstractEvaluationTest 
         getTestSession().logout();
         boolean isLocked = n.isLocked();
         assertFalse(isLocked);
+    }
+
+    public void testLockBreaking() throws RepositoryException, NotExecutableException {
+        String locktoken = null;
+        LockManager sulm = superuser.getWorkspace().getLockManager();
+        String lockedpath = null;
+
+        try {
+            Node trn = getTestNode();
+            modifyPrivileges(trn.getPath(), Privilege.JCR_READ, true);
+            modifyPrivileges(trn.getPath(), PrivilegeRegistry.REP_WRITE, true);
+            modifyPrivileges(trn.getPath(), Privilege.JCR_LOCK_MANAGEMENT, true);
+
+            Session lockingSession = trn.getSession();
+
+            assertFalse("super user and test user should have different user ids: " + lockingSession.getUserID() + " vs " + superuser.getUserID(),
+                    lockingSession.getUserID().equals(superuser.getUserID()));
+
+            trn.addNode("locktest", "nt:unstructured");
+            trn.addMixin("mix:lockable");
+            lockingSession.save();
+
+            // let the "other" user lock the node
+            LockManager oulm = lockingSession.getWorkspace().getLockManager();
+            Lock l = oulm.lock(trn.getPath(), true, false, Long.MAX_VALUE, null);
+            lockedpath = trn.getPath();
+            locktoken = l.getLockToken();
+            lockingSession.logout();
+
+            // transfer the lock token to the super user and try the unlock
+
+            Node lockednode = superuser.getNode(lockedpath);
+            assertTrue(lockednode.isLocked());
+            Lock sl = sulm.getLock(lockedpath);
+            assertNotNull(sl.getLockToken());
+            sulm.addLockToken(sl.getLockToken());
+            sulm.unlock(lockedpath);
+            locktoken = null;
+        }
+        finally {
+            if (locktoken != null && lockedpath != null) {
+                sulm.addLockToken(locktoken);
+                sulm.unlock(lockedpath);
+            }
+        }
     }
 }

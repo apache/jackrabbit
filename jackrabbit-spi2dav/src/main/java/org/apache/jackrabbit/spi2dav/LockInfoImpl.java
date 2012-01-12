@@ -15,12 +15,14 @@
 */
 package org.apache.jackrabbit.spi2dav;
 
-import org.apache.jackrabbit.webdav.lock.ActiveLock;
-import org.apache.jackrabbit.webdav.DavConstants;
+import java.util.Set;
+
 import org.apache.jackrabbit.spi.LockInfo;
 import org.apache.jackrabbit.spi.NodeId;
-import org.slf4j.LoggerFactory;
+import org.apache.jackrabbit.webdav.DavConstants;
+import org.apache.jackrabbit.webdav.lock.ActiveLock;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <code>LockInfoImpl</code>...
@@ -31,10 +33,12 @@ public class LockInfoImpl implements LockInfo {
 
     private final ActiveLock activeLock;
     private final NodeId nodeId;
+    private final Set<String> sessionLockTokens;
 
-    public LockInfoImpl(ActiveLock activeLock, NodeId nodeId) {
+    public LockInfoImpl(ActiveLock activeLock, NodeId nodeId, Set<String> sessionLockTokens) {
         this.activeLock = activeLock;
         this.nodeId = nodeId;
+        this.sessionLockTokens = sessionLockTokens;
     }
 
     ActiveLock getActiveLock() {
@@ -64,7 +68,12 @@ public class LockInfoImpl implements LockInfo {
     }
 
     public boolean isLockOwner() {
-        return activeLock.getToken() != null;
+        String lt = activeLock.getToken();
+        if (lt == null) {
+            return false;
+        } else {
+            return sessionLockTokens.contains(lt);
+        }
     }
 
     public NodeId getNodeId() {
