@@ -374,9 +374,10 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     protected static void initMethod(HttpMethod method, SessionInfo sessionInfo, boolean addIfHeader) throws RepositoryException {
         if (addIfHeader) {
             checkSessionInfo(sessionInfo);
-            String[] locktokens = ((SessionInfoImpl) sessionInfo).getAllLockTokens();
+            Set<String> allLockTokens = ((SessionInfoImpl) sessionInfo).getAllLockTokens();
             // TODO: ev. build tagged if header
-            if (locktokens != null && locktokens.length > 0) {
+            if (!allLockTokens.isEmpty()) {
+                String[] locktokens = allLockTokens.toArray(new String[allLockTokens.size()]);
                 IfHeader ifH = new IfHeader(locktokens);
                 method.setRequestHeader(ifH.getHeaderName(), ifH.getHeaderValue());
             }
@@ -1571,7 +1572,9 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         String uri = getItemUri(nodeId, sessionInfo);
         // since sessionInfo does not allow to retrieve token by NodeId,
         // pass all available lock tokens to the LOCK method (TODO: correct?)
-        LockMethod method = new LockMethod(uri, INFINITE_TIMEOUT, ((SessionInfoImpl) sessionInfo).getAllLockTokens());
+        Set<String> allLockTokens = ((SessionInfoImpl) sessionInfo).getAllLockTokens();
+        String[] locktokens = allLockTokens.toArray(new String[allLockTokens.size()]);
+        LockMethod method = new LockMethod(uri, INFINITE_TIMEOUT, locktokens);
         execute(method, sessionInfo);
     }
 
@@ -1592,6 +1595,10 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         String lockToken = lInfo.getActiveLock().getToken();
         boolean isSessionScoped = lInfo.isSessionScoped();
 
+        if (!((SessionInfoImpl) sessionInfo).getAllLockTokens().contains(lockToken)) {
+            throw new LockException("Lock " + lockToken + " not owned by this session");
+        }
+
         UnLockMethod method = new UnLockMethod(uri, lockToken);
         execute(method, sessionInfo);
 
@@ -1600,6 +1607,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
 
     private LockInfo retrieveLockInfo(LockDiscovery lockDiscovery, SessionInfo sessionInfo,
                                       NodeId nodeId, NodeId parentId) throws RepositoryException {
+        checkSessionInfo(sessionInfo);
         List<ActiveLock> activeLocks = lockDiscovery.getValue();
         ActiveLock activeLock = null;
         for (ActiveLock l : activeLocks) {
@@ -1625,7 +1633,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         }
         // no deep lock or parentID == null or lock is not present on parent
         // -> nodeID is lockHolding Id.
-        return new LockInfoImpl(activeLock, nodeId);
+        return new LockInfoImpl(activeLock, nodeId, ((SessionInfoImpl)sessionInfo).getAllLockTokens());
     }
 
     /**
