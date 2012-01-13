@@ -105,6 +105,7 @@
 <!ELEMENT Workspaces EMPTY>
 <!ATTLIST Workspaces rootPath         CDATA #REQUIRED
                      defaultWorkspace CDATA #REQUIRED
+                     defaultLockTimeout CDATA #IMPLIED
                      configRootPath   CDATA #IMPLIED
                      maxIdleTime      CDATA #IMPLIED>
 

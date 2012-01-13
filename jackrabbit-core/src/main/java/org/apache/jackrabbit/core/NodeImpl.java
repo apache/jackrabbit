@@ -2953,7 +2953,8 @@ public class NodeImpl extends ItemImpl implements Node, JackrabbitNode {
         // check state of this instance
         sanityCheck();
         LockManager lockMgr = getSession().getWorkspace().getLockManager();
-        return lockMgr.lock(getPath(), isDeep, isSessionScoped, Long.MAX_VALUE, null);
+        return lockMgr.lock(getPath(), isDeep, isSessionScoped,
+                sessionContext.getWorkspace().getConfig().getDefaultLockTimeout(), null);
     }
 
     /**
