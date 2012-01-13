@@ -88,6 +88,11 @@ public class WorkspaceConfig
     private final ImportConfig importConfig;
 
     /**
+     * Default lock timeout in seconds.
+     */
+    private final long defaultLockTimeout;
+
+    /**
      * Creates a workspace configuration object.
      *
      * @param home home directory
@@ -104,7 +109,7 @@ public class WorkspaceConfig
                            QueryHandlerFactory qhf,
                            ISMLockingFactory ismLockingFactory,
                            WorkspaceSecurityConfig workspaceSecurityConfig) {
-        this(home, name, clustered, fsf, pmc, qhf, ismLockingFactory, workspaceSecurityConfig, null);
+        this(home, name, clustered, fsf, pmc, qhf, ismLockingFactory, workspaceSecurityConfig, null, Long.MAX_VALUE);
     }
 
     /**
@@ -125,6 +130,25 @@ public class WorkspaceConfig
                            ISMLockingFactory ismLockingFactory,
                            WorkspaceSecurityConfig workspaceSecurityConfig,
                            ImportConfig importConfig) {
+        this(home, name, clustered, fsf, pmc, qhf, ismLockingFactory, workspaceSecurityConfig, importConfig, Long.MAX_VALUE);
+    }
+
+    /**
+     * Creates a workspace configuration object.
+     *
+     * @param home home directory
+     * @param name workspace name
+     * @param clustered
+     * @param fsf file system factory
+     * @param pmc persistence manager configuration
+     * @param qhf query handler factory, or <code>null</code> if not configured
+     * @param ismLockingFactory the item state manager locking factory
+     * @param workspaceSecurityConfig the workspace specific security configuration.
+     * @param defaultLockTimeout default timeout for locks (in seconds)
+     */
+    public WorkspaceConfig(String home, String name, boolean clustered, FileSystemFactory fsf,
+            PersistenceManagerConfig pmc, QueryHandlerFactory qhf, ISMLockingFactory ismLockingFactory,
+            WorkspaceSecurityConfig workspaceSecurityConfig, ImportConfig importConfig, long defaultLockTimeout) {
         this.home = home;
         this.name = name;
         this.clustered = clustered;
@@ -134,6 +158,7 @@ public class WorkspaceConfig
         this.ismLockingFactory = ismLockingFactory;
         this.workspaceSecurityConfig = workspaceSecurityConfig;
         this.importConfig = importConfig;
+        this.defaultLockTimeout = defaultLockTimeout;
     }
 
     /**
@@ -162,6 +187,17 @@ public class WorkspaceConfig
      */
     public boolean isClustered() {
         return clustered;
+    }
+
+    /**
+     * Returns the default lock timeout in number of seconds or
+     * <code>Long.MAX_VALUE</code> when not specified.
+     * 
+     * @return default lock timeout in number of seconds or
+     *         <code>Long.MAX_VALUE</code> when not specified
+     */
+    public long getDefaultLockTimeout() {
+        return defaultLockTimeout;
     }
 
     /**
