@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.spi2davex;
 
+import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.HeadMethod;
@@ -74,7 +75,10 @@ class ValueLoader {
             if (statusCode == DavServletResponse.SC_OK) {
                 Map<String, String> headers = new HashMap<String, String>();
                 for (String name : headerNames) {
-                    headers.put(name, method.getResponseHeader(name).getValue());
+                    Header hdr = method.getResponseHeader(name);
+                    if (hdr != null) {
+                        headers.put(name, hdr.getValue());
+                    }
                 }
                 return headers;
             } else {
