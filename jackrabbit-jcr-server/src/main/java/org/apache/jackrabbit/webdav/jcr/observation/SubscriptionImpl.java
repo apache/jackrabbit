@@ -17,7 +17,6 @@
 package org.apache.jackrabbit.webdav.jcr.observation;
 
 import org.apache.jackrabbit.commons.webdav.EventUtil;
-import org.apache.jackrabbit.commons.webdav.JcrRemotingConstants;
 import org.apache.jackrabbit.server.SessionProviderImpl;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.commons.AdditionalEventInfo;
@@ -45,12 +44,9 @@ import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
-import com.sun.org.apache.xalan.internal.xsltc.dom.ExtendedSAX;
-
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.UnsupportedRepositoryOperationException;
-import javax.jcr.Value;
 import javax.jcr.observation.Event;
 import javax.jcr.observation.EventIterator;
 import javax.jcr.observation.EventListener;
@@ -476,8 +472,7 @@ public class SubscriptionImpl implements Subscription, ObservationConstants, Eve
                                     .getSessionAttribute(SessionProviderImpl.ATTRIBUTE_SESSION_ID);
                             boolean isLocal = forSessionId
                                     .equals(eventforSessionId);
-                            DomUtil.setAttribute(bundle, XML_EVENT_LOCAL,
-                                    NAMESPACE, Boolean.toString(isLocal));
+                            DomUtil.setAttribute(bundle, XML_EVENT_LOCAL, null, Boolean.toString(isLocal));
                         } catch (UnsupportedRepositoryOperationException ex) {
                             // optional feature
                         }

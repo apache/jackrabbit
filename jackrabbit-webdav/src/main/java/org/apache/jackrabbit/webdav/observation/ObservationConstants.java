@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.webdav.observation;
 
+import javax.xml.namespace.QName;
+
 import org.apache.jackrabbit.webdav.property.DavPropertyName;
 import org.apache.jackrabbit.webdav.xml.Namespace;
 
@@ -78,7 +80,18 @@ public interface ObservationConstants {
     public static final String XML_EVENTINFO = "eventinfo";
     public static final String XML_EVENTPRIMARNODETYPE = "eventprimarynodetype";
     public static final String XML_EVENTMIXINNODETYPE = "eventmixinnodetype";
-    
+
+    public static final QName N_EVENT = new QName(NAMESPACE.getURI(), XML_EVENT);
+    public static final QName N_EVENTBUNDLE = new QName(NAMESPACE.getURI(), XML_EVENTBUNDLE);
+    public static final QName N_EVENTDATE = new QName(NAMESPACE.getURI(), XML_EVENTDATE);
+    public static final QName N_EVENTDISCOVERY = new QName(NAMESPACE.getURI(), XML_EVENTDISCOVERY);
+    public static final QName N_EVENTINFO = new QName(NAMESPACE.getURI(), XML_EVENTINFO);
+    public static final QName N_EVENTMIXINNODETYPE = new QName(NAMESPACE.getURI(), XML_EVENTMIXINNODETYPE);
+    public static final QName N_EVENTPRIMARYNODETYPE = new QName(NAMESPACE.getURI(), XML_EVENTPRIMARNODETYPE);
+    public static final QName N_EVENTTYPE = new QName(NAMESPACE.getURI(), XML_EVENTTYPE);
+    public static final QName N_EVENTUSERDATA = new QName(NAMESPACE.getURI(), XML_EVENTUSERDATA);
+    public static final QName N_EVENTUSERID = new QName(NAMESPACE.getURI(), XML_EVENTUSERID);
+
     //---< Property Names >-----------------------------------------------------
     /**
      * The protected subscription discovery property is used to find out about
