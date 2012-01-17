@@ -265,9 +265,11 @@ public abstract class AbstractLockTest extends AbstractJCRTest {
         // only test if timeout hint was respected.
         long remaining = lock.getSecondsRemaining();
         if (remaining <= hint) {
-            try {
-                wait(remaining * 4000); // wait four time as long to be safe
-            } catch (InterruptedException ignore) {
+            if (remaining > 0) {
+                try {
+                    wait(remaining * 4000); // wait four time as long to be safe
+                } catch (InterruptedException ignore) {
+                }
             }
             long secs = lock.getSecondsRemaining();
             assertTrue(
@@ -282,6 +284,24 @@ public abstract class AbstractLockTest extends AbstractJCRTest {
             assertFalse(message, lockedNode.hasProperty(Property.JCR_LOCK_OWNER));
         } else {
             throw new NotExecutableException("timeout hint was ignored.");
+        }
+    }
+
+    /**
+     * Test expiration of the lock
+     */
+    public synchronized void testOwnerHint()
+            throws RepositoryException, NotExecutableException {
+        lockedNode.unlock();
+
+        lock = lockMgr.lock(lockedNode.getPath(), isDeep(), isSessionScoped(), Long.MAX_VALUE, "test");
+
+        String owner = lock.getLockOwner();
+        if (!"test".equals(lock.getLockOwner())) {
+            throw new NotExecutableException();
+        } else {
+            assertTrue(lockedNode.hasProperty(Property.JCR_LOCK_OWNER));
+            assertEquals("test", lockedNode.getProperty(Property.JCR_LOCK_OWNER).getString());
         }
     }
 
