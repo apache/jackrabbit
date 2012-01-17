@@ -58,6 +58,7 @@ public class MergeSubNodeTest extends AbstractMergeTest {
      * update, then the subnode N is removed<br> retrieve the initialised node
      * to perform operations we need before for this test<br>
      */
+    @SuppressWarnings("deprecation")
     public void disable_testRemoveNodeFromSourceWorkspaceAndMergeWithUpdate() throws RepositoryException {
         // status 'update' for parent
         nodeToMerge.checkin();
@@ -123,6 +124,7 @@ public class MergeSubNodeTest extends AbstractMergeTest {
      * on the workspace1 and then merge the one in workspace2 with the one in
      * workspace1 precondition is that the node in workspace2 is checked in
      */
+    @SuppressWarnings("deprecation")
     public void disable_testMergeNodeFromUpdatedSourceWorkspace() throws RepositoryException {
         Node originalNode = testRootNode.getNode(nodeName1);
 
@@ -179,6 +181,7 @@ public class MergeSubNodeTest extends AbstractMergeTest {
      * workspace1<br> the node in workspace2 should be updated<br> precondition
      * is that the node in workspace2 is checked in
      */
+    @SuppressWarnings("deprecation")
     public void testMergeNodeFromOlderSourceWorkspace() throws RepositoryException {
         // touch the version on workspace2
         nodeToMerge.checkin();
@@ -223,6 +226,7 @@ public class MergeSubNodeTest extends AbstractMergeTest {
      * Node.merge(): bestEffort is true > (sub)node which could not be merged
      * are not affected.<br>
      */
+    @SuppressWarnings("deprecation")
     public void disable_testMergeNodeBestEffortTrue() throws RepositoryException {
         // create 2 new nodes with two independent versions
         // so merge fails for this node
@@ -301,6 +305,7 @@ public class MergeSubNodeTest extends AbstractMergeTest {
      * node,<br> a merge test is performed comparing N with its corresponding
      * node in workspace, N'.<br>
      */
+    @SuppressWarnings("deprecation")
     public void disable_testMergeNodeSubNodesMergeTest() throws RepositoryException {
         //setCheckProperty(nodeToMerge);
         nodeToMerge.checkout();

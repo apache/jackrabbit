@@ -30,13 +30,9 @@ import javax.jcr.lock.LockManager;
 
 import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.apache.jackrabbit.test.NotExecutableException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /** <code>LockManagerTest</code>... */
 public class LockManagerTest extends AbstractJCRTest {
-
-    private static Logger log = LoggerFactory.getLogger(LockManagerTest.class);
 
     protected LockManager lockMgr;
     protected Node testNode;

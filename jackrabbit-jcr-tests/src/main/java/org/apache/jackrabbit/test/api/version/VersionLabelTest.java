@@ -133,6 +133,7 @@ public class VersionLabelTest extends AbstractVersionTest {
      *
      * @see VersionHistory#addVersionLabel(String, String, boolean)
      */
+    @SuppressWarnings("deprecation")
     public void testAddVersionCheckVersionLabelsNode() throws RepositoryException {
         vHistory.addVersionLabel(rootVersion.getName(), versionLabel, false);
 
@@ -205,6 +206,7 @@ public class VersionLabelTest extends AbstractVersionTest {
      *
      * @throws RepositoryException
      */
+    @SuppressWarnings("deprecation")
     public void testAddDuplicateVersionLabel() throws RepositoryException {
         vHistory.addVersionLabel(rootVersion.getName(), versionLabel, false);
         try {
@@ -245,6 +247,7 @@ public class VersionLabelTest extends AbstractVersionTest {
      * @throws RepositoryException
      * @see VersionHistory#addVersionLabel(String, String, boolean)  with boolan flag equals true.
      */
+    @SuppressWarnings("deprecation")
     public void testMoveLabel() throws RepositoryException {
         vHistory.addVersionLabel(rootVersion.getName(), versionLabel, false);
         try {
@@ -337,6 +340,7 @@ public class VersionLabelTest extends AbstractVersionTest {
      * @throws RepositoryException
      * @see javax.jcr.version.VersionHistory#getVersionLabels()
      */
+    @SuppressWarnings("deprecation")
     public void testGetVersionLabels() throws RepositoryException {
 
         Set<String> testLabels = new HashSet<String>(Arrays.asList(vHistory.getVersionLabels()));
@@ -399,6 +403,7 @@ public class VersionLabelTest extends AbstractVersionTest {
      * @throws RepositoryException
      * @see VersionHistory#getVersionLabels(javax.jcr.version.Version)
      */
+    @SuppressWarnings("deprecation")
     public void testGetVersionLabelsForVersion() throws RepositoryException {
 
         Set<String> testLabels = new HashSet<String>(Arrays.asList(vHistory.getVersionLabels(rootVersion)));
@@ -462,6 +467,7 @@ public class VersionLabelTest extends AbstractVersionTest {
      * @throws javax.jcr.RepositoryException
      * @see javax.jcr.Node#restoreByLabel(String, boolean)
      */
+    @SuppressWarnings("deprecation")
     public void testRestoreByLabelNonVersionableNode() throws RepositoryException {
         try {
             nonVersionableNode.restoreByLabel(versionLabel, true);

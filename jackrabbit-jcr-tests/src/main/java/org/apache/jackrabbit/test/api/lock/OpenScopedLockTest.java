@@ -16,13 +16,8 @@
  */
 package org.apache.jackrabbit.test.api.lock;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 /** <code>OpenScopedLockTest</code>... */
 public class OpenScopedLockTest extends AbstractLockTest {
-
-    private static Logger log = LoggerFactory.getLogger(OpenScopedLockTest.class);
 
     protected boolean isSessionScoped() {
         return false;

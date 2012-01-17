@@ -47,6 +47,7 @@ public class CheckinTest extends AbstractVersionTest {
      *
      * @throws javax.jcr.RepositoryException
      */
+    @SuppressWarnings("deprecation")
     public void testIsCheckedOut() throws RepositoryException {
         versionableNode.checkin();
         assertTrue("After calling Node.checkin() on a versionable node N, N.isCheckedOut() must return false", versionableNode.isCheckedOut() == false);
@@ -71,6 +72,7 @@ public class CheckinTest extends AbstractVersionTest {
      *
      * @throws RepositoryException
      */
+    @SuppressWarnings("deprecation")
     public void testCheckinRemovesPredecessorProperty() throws RepositoryException {
 
         versionableNode.checkin();
@@ -101,6 +103,7 @@ public class CheckinTest extends AbstractVersionTest {
      *
      * @throws RepositoryException
      */
+    @SuppressWarnings("deprecation")
     public void testPredecessorIsCopiedToNewVersion() throws RepositoryException {
 
         Value[] nPredecessorsValue = versionableNode.getProperty(jcrPredecessors).getValues();
@@ -134,6 +137,7 @@ public class CheckinTest extends AbstractVersionTest {
      *
      * @throws RepositoryException
      */
+    @SuppressWarnings("deprecation")
     public void testMultipleCheckinHasNoEffect() throws RepositoryException {
 
         Version v = versionableNode.checkin();
@@ -172,6 +176,7 @@ public class CheckinTest extends AbstractVersionTest {
      *
      * @throws RepositoryException
      */
+    @SuppressWarnings("deprecation")
     public void testBaseVersionAfterCheckin() throws RepositoryException {
         Version v = versionableNode.checkin();
         Value baseVersionRef = versionableNode.getProperty(jcrBaseVersion).getValue();
@@ -200,6 +205,7 @@ public class CheckinTest extends AbstractVersionTest {
      *
      * @throws RepositoryException
      */
+    @SuppressWarnings("deprecation")
     public void testCheckinWithPendingChanges() throws RepositoryException {
         try {
             // modify node without calling save()
@@ -237,6 +243,7 @@ public class CheckinTest extends AbstractVersionTest {
      *
      * @throws RepositoryException
      */
+    @SuppressWarnings("deprecation")
     public void testIsNotCheckedOut() throws RepositoryException {
         versionableNode.checkin();
         boolean isCheckedOut = versionableNode.isCheckedOut();
@@ -263,6 +270,7 @@ public class CheckinTest extends AbstractVersionTest {
      *
      * @throws RepositoryException
      */
+    @SuppressWarnings("deprecation")
     public void testCheckinCreatesNewVersion() throws RepositoryException {
 
         long initialNumberOfVersions = getNumberOfVersions(versionableNode.getVersionHistory());
@@ -293,6 +301,7 @@ public class CheckinTest extends AbstractVersionTest {
      *
      * @throws RepositoryException
      */
+    @SuppressWarnings("deprecation")
     public void testCheckinNonVersionableNode() throws RepositoryException {
         try {
             nonVersionableNode.checkin();

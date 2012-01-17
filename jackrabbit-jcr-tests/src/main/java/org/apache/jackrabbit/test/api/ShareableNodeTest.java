@@ -1446,7 +1446,7 @@ public class ShareableNodeTest extends AbstractJCRTest {
      * @return node array
      */
     private static Node[] toArray(NodeIterator iter) {
-        ArrayList list = new ArrayList();
+        List<Node> list = new ArrayList<Node>();
 
         while (iter.hasNext()) {
             list.add(iter.nextNode());

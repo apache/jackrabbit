@@ -67,6 +67,7 @@ public class MergeNodeTest extends AbstractMergeTest {
      * Node.merge(): InvalidItemStateException if unsaved changes within the
      * current Session<br>
      */
+    @SuppressWarnings("deprecation")
     public void testMergeNodeWithUnsavedStates() throws RepositoryException {
         // set a property and do not save workspace
         nodeToMerge.setProperty(propertyName1, CHANGED_STRING);
@@ -97,6 +98,7 @@ public class MergeNodeTest extends AbstractMergeTest {
     /**
      * Perform a merge on a node with a unkwnown workspacename
      */
+    @SuppressWarnings("deprecation")
     public void testMergeUnknownWorkspaceName() throws RepositoryException {
         try {
             nodeToMerge.merge(getNonExistingWorkspaceName(superuser), false);
@@ -122,6 +124,7 @@ public class MergeNodeTest extends AbstractMergeTest {
      * indicated workspace <br> then the merge method returns quietly and no
      * changes are made.<br>
      */
+    @SuppressWarnings("deprecation")
     public void testMergeNodeNonCorrespondingNode() throws RepositoryException {
         // create new node - this node has no corresponding node in default workspace
         Node subNode = nodeToMerge.addNode(nodeName3, versionableNodeType);
@@ -156,6 +159,7 @@ public class MergeNodeTest extends AbstractMergeTest {
      * successor of, predecessor of, nor identical with V', then the merge
      * result for N is failed<br>
      */
+    @SuppressWarnings("deprecation")
     public void testMergeNodeVersionAmbiguous() throws RepositoryException {
         // create 2 independent versions for a node and its corresponding node
         // so merge fails for this node
@@ -215,6 +219,7 @@ public class MergeNodeTest extends AbstractMergeTest {
      * Node.merge(): bestEffort is true > any merge-failure (represented by the
      * version in the workspace) is reported in the jcrMergeFailed property<br>
      */
+    @SuppressWarnings("deprecation")
     public void testMergeNodeBestEffortTrueCheckMergeFailedProperty() throws RepositoryException {
         // create 2 independent versions for a node and its corresponding node
         // so merge fails for this node
@@ -298,6 +303,7 @@ public class MergeNodeTest extends AbstractMergeTest {
     /**
      * if mergeFailedProperty is present > VersionException<br>
      */
+    @SuppressWarnings("deprecation")
     public void disable_testMergeNodeForceFailure() throws RepositoryException {
         // create 2 independent versions for a node and its corresponding node
         // so merge fails for this node
@@ -359,6 +365,7 @@ public class MergeNodeTest extends AbstractMergeTest {
      * Node.merge(): bestEffort is false and any merge fails a MergeException is
      * thrown.<br>
      */
+    @SuppressWarnings("deprecation")
     public void testMergeNodeBestEffortFalse() throws RepositoryException {
         /// create successor versions for a node
         // so merge fails for this node
@@ -409,6 +416,7 @@ public class MergeNodeTest extends AbstractMergeTest {
      * versionable node is encountered whose corresponding node's base version
      * is on a divergent branch from this node's base version.
      */
+    @SuppressWarnings("deprecation")
     public void testMergeNodeBestEffortFalseAmbiguousVersions() throws RepositoryException {
         /// create 2 independent base versions for a node and its corresponding node
         // so merge fails for this node
@@ -471,6 +479,7 @@ public class MergeNodeTest extends AbstractMergeTest {
      * locked node.
      * @throws NotExecutableException if repository does not support locking.
      */
+    @SuppressWarnings("deprecation")
     public void disable_testMergeLocked()
             throws NotExecutableException, RepositoryException {
 

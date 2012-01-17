@@ -16,8 +16,6 @@
  */
 package org.apache.jackrabbit.test.api.lock;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.apache.jackrabbit.test.NotExecutableException;
 
 import javax.jcr.RepositoryException;
@@ -29,8 +27,6 @@ import javax.jcr.lock.LockManager;
 
 /** <code>SessionScopedLockTest</code>... */
 public class SessionScopedLockTest extends AbstractLockTest {
-
-    private static Logger log = LoggerFactory.getLogger(SessionScopedLockTest.class);
 
     protected boolean isSessionScoped() {
         return true;

@@ -1119,13 +1119,11 @@ public class ExportDocViewTest extends AbstractJCRTest {
         private static final String xmlnsURI = "http://www.w3.org/2000/xmlns/";
         private static final String xmlnsPrefix = "xmlns";
 
-        Element elem;
         NamedNodeMap attrs;
         Map<String, String> nsAttrs;
         Map<String, String> nonNsAttrs;
 
         AttributeSeparator(Element elem) {
-            this.elem = elem;
             nsAttrs = new HashMap<String, String>();
             nonNsAttrs = new HashMap<String, String>();
             attrs = elem.getAttributes();
