@@ -553,8 +553,7 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
         String home = getVariables().getProperty(WORKSPACE_HOME_VARIABLE);
 
         // Workspace name
-        String name =
-            getAttribute(root, NAME_ATTRIBUTE, new File(home).getName());
+        String name = getAttribute(root, "name", new File(home).getName());
 
         // Clustered attribute
         boolean clustered = Boolean.valueOf(
@@ -582,12 +581,22 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
         // workspace specific security configuration
         WorkspaceSecurityConfig workspaceSecurityConfig = tmpParser.parseWorkspaceSecurityConfig(root);
 
-        // optinal config for import handling
+        // optional config for import handling
         ImportConfig importConfig = tmpParser.parseImportConfig(root);
+
+        // default lock timeout
+        String to = getAttribute(root, "defaultLockTimeout", new Long(Long.MAX_VALUE).toString());
+        long defaultLockTimeout;
+        try {
+            defaultLockTimeout = Long.parseLong(to);
+        }
+        catch (NumberFormatException ex) {
+            throw new ConfigurationException("defaultLockTimeout must be an integer value", ex);
+        }
 
         return new WorkspaceConfig(
                 home, name, clustered, fsf, pmc, qhf,
-                ismLockingFactory, workspaceSecurityConfig, importConfig);
+                ismLockingFactory, workspaceSecurityConfig, importConfig, defaultLockTimeout);
     }
 
     /**
