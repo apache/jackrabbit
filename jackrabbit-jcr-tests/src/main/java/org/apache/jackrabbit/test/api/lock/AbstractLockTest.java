@@ -149,7 +149,7 @@ public abstract class AbstractLockTest extends AbstractJCRTest {
     /**
      * Test {@link javax.jcr.lock.Lock#getNode()}.
      *
-     * @throws RepositoryException If an execption occurs.
+     * @throws RepositoryException If an exception occurs.
      */
     public void testLockHoldingNode() throws RepositoryException {
         assertTrue("Lock.getNode() must be lockholding node.", lock.getNode().isSame(lockedNode));
@@ -158,7 +158,7 @@ public abstract class AbstractLockTest extends AbstractJCRTest {
     /**
      * Test {@link LockManager#isLocked(String)} and {@link javax.jcr.Node#isLocked()}.
      *
-     * @throws RepositoryException If an execption occurs.
+     * @throws RepositoryException If an exception occurs.
      */
     public void testNodeIsLocked() throws RepositoryException {
         assertTrue("Node must be locked after lock creation.", lockedNode.isLocked());
@@ -168,7 +168,7 @@ public abstract class AbstractLockTest extends AbstractJCRTest {
     /**
      * Test {@link LockManager#holdsLock(String)} and {@link javax.jcr.Node#holdsLock()}. 
      *
-     * @throws RepositoryException If an execption occurs.
+     * @throws RepositoryException If an exception occurs.
      */
     public void testNodeHoldsLocked() throws RepositoryException {
         assertTrue("Node must hold lock after lock creation.", lockedNode.holdsLock());
@@ -201,7 +201,7 @@ public abstract class AbstractLockTest extends AbstractJCRTest {
     /**
      * Test {@link javax.jcr.lock.Lock#isLockOwningSession()}
      *
-     * @throws RepositoryException If an execption occurs.
+     * @throws RepositoryException If an exception occurs.
      */
     public void testIsLockOwningSession() throws RepositoryException {
         assertTrue("Session must be lock owner", lock.isLockOwningSession());
@@ -429,7 +429,7 @@ public abstract class AbstractLockTest extends AbstractJCRTest {
             lockedNode.removeMixin(mixLockable);
             lockedNode.save();
 
-            // the mixin got removed -> the lock should implicitely be released
+            // the mixin got removed -> the lock should implicitly be released
             // as well in order not to have inconsistencies
             String msg = "Lock should have been released.";
             assertFalse(msg, lock.isLive());

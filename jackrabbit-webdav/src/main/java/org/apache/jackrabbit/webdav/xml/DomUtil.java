@@ -253,6 +253,22 @@ public class DomUtil {
     }
 
     /**
+     * Calls {@link #getTextTrim(Element)} on the first child element that matches
+     * the given name.
+     *
+     * @param parent
+     * @param childName
+     * @return text contained in the first child that matches the given name
+     * or <code>null</code>. Note, that leading and trailing whitespace
+     * is removed from the text.
+     * @see #getTextTrim(Element)
+     */
+    public static String getChildTextTrim(Element parent, QName childName) {
+        Element child = getChildElement(parent, childName);
+        return (child == null) ? null : getTextTrim(child);
+    }
+
+    /**
      * Returns true if the given parent node has a child element that matches
      * the specified local name and namespace.
      *

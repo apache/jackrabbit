@@ -2235,14 +2235,12 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             } else {
                 Element discEl = disc.toXml(DomUtil.createDocument());
                 ElementIterator it = DomUtil.getChildren(discEl,
-                        ObservationConstants.XML_EVENTBUNDLE,
-                        ObservationConstants.NAMESPACE);
+                        ObservationConstants.N_EVENTBUNDLE);
                 List<EventBundle> bundles = new ArrayList<EventBundle>();
                 while (it.hasNext()) {
                     Element bundleElement = it.nextElement();
                     String value = DomUtil.getAttribute(bundleElement,
-                            ObservationConstants.XML_EVENT_LOCAL,
-                            ObservationConstants.NAMESPACE);
+                            ObservationConstants.XML_EVENT_LOCAL, null);
                     // check if it matches a batch id recently submitted
                     boolean isLocal = false;
                     if (value != null) {
@@ -2270,7 +2268,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
 
     private List<Event> buildEventList(Element bundleElement, SessionInfoImpl sessionInfo) throws IllegalNameException, NamespaceException {
         List<Event> events = new ArrayList<Event>();
-        ElementIterator eventElementIterator = DomUtil.getChildren(bundleElement, ObservationConstants.XML_EVENT, ObservationConstants.NAMESPACE);
+        ElementIterator eventElementIterator = DomUtil.getChildren(bundleElement, ObservationConstants.N_EVENT);
 
         String userId = null;
 
@@ -2285,7 +2283,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
 
         while (eventElementIterator.hasNext()) {
             Element evElem = eventElementIterator.nextElement();
-            Element typeEl = DomUtil.getChildElement(evElem, ObservationConstants.XML_EVENTTYPE, ObservationConstants.NAMESPACE);
+            Element typeEl = DomUtil.getChildElement(evElem, ObservationConstants.N_EVENTTYPE);
             EventType[] et = DefaultEventType.createFromXml(typeEl);
             if (et.length == 0 || et.length > 1) {
                 // should not occur.
@@ -2346,7 +2344,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
 
             if (userId == null) {
                 // user id not retrieved from container
-                userId = DomUtil.getChildTextTrim(evElem, ObservationConstants.XML_EVENTUSERID, ObservationConstants.NAMESPACE);
+                userId = DomUtil.getChildTextTrim(evElem, ObservationConstants.N_EVENTUSERID);
             }
 
             events.add(new EventImpl(eventId, eventPath, parentId, type, userId, evElem,

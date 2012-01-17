@@ -61,11 +61,10 @@ public class EventImpl
             Element eventElement, NamePathResolver resolver, QValueFactory qvFactory) throws NamespaceException,
             IllegalNameException {
         super(getSpiEventType(eventType), eventPath, eventId, parentId, getNameSafe(
-                DomUtil.getChildTextTrim(eventElement, XML_EVENTPRIMARNODETYPE, NAMESPACE), resolver), getNames(
-                DomUtil.getChildren(eventElement, XML_EVENTMIXINNODETYPE, NAMESPACE), resolver), userId, DomUtil
-                .getChildTextTrim(eventElement, XML_EVENTUSERDATA, NAMESPACE), Long.parseLong(DomUtil.getChildTextTrim(
-                eventElement, XML_EVENTDATE, NAMESPACE)), getEventInfo(
-                DomUtil.getChildElement(eventElement, XML_EVENTINFO, NAMESPACE), resolver, qvFactory));
+                DomUtil.getChildTextTrim(eventElement, N_EVENTPRIMARYNODETYPE), resolver), getNames(
+                DomUtil.getChildren(eventElement, N_EVENTMIXINNODETYPE), resolver), userId, DomUtil.getChildTextTrim(
+                eventElement, N_EVENTUSERDATA), Long.parseLong(DomUtil.getChildTextTrim(eventElement, N_EVENTDATE)),
+                getEventInfo(DomUtil.getChildElement(eventElement, N_EVENTINFO), resolver, qvFactory));
     }
 
     //--------------------------------------------------------------------------
