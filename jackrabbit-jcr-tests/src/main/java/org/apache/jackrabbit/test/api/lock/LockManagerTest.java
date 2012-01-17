@@ -239,7 +239,9 @@ public class LockManagerTest extends AbstractJCRTest {
         try {
             lockMgr.removeLockToken(ltoken);
 
-            assertNull("Lock token must not be exposed any more.", l.getLockToken());
+            String nlt = l.getLockToken();
+            assertTrue("freshly obtained lock token must either be null or the same as the one returned earlier",
+                    nlt == null || nlt.equals(ltoken));
         } finally {
             // make sure lock token is added even if test fail
             lockMgr.addLockToken(ltoken);

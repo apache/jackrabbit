@@ -22,6 +22,7 @@ import org.apache.jackrabbit.core.security.authorization.Permission;
 
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
+import javax.jcr.Session;
 import javax.jcr.lock.LockException;
 
 /**
@@ -78,7 +79,7 @@ class LockImpl implements javax.jcr.lock.Lock {
      * {@inheritDoc}
      */
     public String getLockToken() {
-        if (!info.isSessionScoped() && info.isLockHolder(node.getSession())) {
+        if (!info.isSessionScoped() && (info.isLockHolder(node.getSession()) || isAdminUser(node.getSession()))) {
             return info.getLockToken();
         } else {
             return null;
@@ -151,4 +152,15 @@ class LockImpl implements javax.jcr.lock.Lock {
         return info.isLockHolder(node.getSession());
     }
 
+    /**
+     * Check whether a session belongs to an administrative user.
+     */
+    private boolean isAdminUser(Session session) {
+        if (session instanceof SessionImpl) {
+            return ((SessionImpl) session).isAdmin();
+        } else {
+            // fallback. use hardcoded default admin ID
+            return "admin".equals(session.getUserID());
+        }
+    }
 }
