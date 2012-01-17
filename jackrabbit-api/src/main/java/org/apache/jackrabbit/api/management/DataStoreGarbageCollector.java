@@ -19,17 +19,19 @@ package org.apache.jackrabbit.api.management;
 import javax.jcr.RepositoryException;
 
 /**
- * Garbage collector for DataStore. This implementation is iterates through all
+ * Garbage collector for DataStore. This implementation iterates through all
  * nodes and reads the binary properties. To detect nodes that are moved while
  * the scan runs, event listeners are started. Like the well known garbage
  * collection in Java, the items that are still in use are marked. Currently
- * this achieved by updating the modified date of the entries. Newly added
+ * this is achieved by updating the modified date of the entries. Newly added
  * entries are detected because the modified date is changed when they are
  * added.
  * <p>
  * Example code to run the data store garbage collection:
  * <pre>
- * DataStoreGarbageCollector gc = ((JackrabbitSession)session).createDataStoreGarbageCollector();
+ * JackrabbitRepositoryFactory jf = (JackrabbitRepositoryFactory) factory;
+ * RepositoryManager m = jf.getRepositoryManager((JackrabbitRepository) repository);
+ * GarbageCollector gc = m.createDataStoreGarbageCollector();
  * gc.mark();
  * gc.sweep();
  * </pre>
