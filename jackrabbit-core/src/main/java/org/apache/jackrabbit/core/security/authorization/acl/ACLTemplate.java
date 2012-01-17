@@ -157,7 +157,6 @@ class ACLTemplate extends AbstractACLTemplate {
         jcrRepGlob = sImpl.getJCRName(P_GLOB);
 
         // load the entries:
-        AccessControlManager acMgr = sImpl.getAccessControlManager();
         NodeIterator itr = aclNode.getNodes();
         while (itr.hasNext()) {
             NodeImpl aceNode = (NodeImpl) itr.nextNode();
