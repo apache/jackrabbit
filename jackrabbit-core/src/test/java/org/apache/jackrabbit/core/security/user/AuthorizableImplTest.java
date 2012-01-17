@@ -30,6 +30,7 @@ import org.apache.jackrabbit.value.StringValue;
 
 import javax.jcr.Property;
 import javax.jcr.PropertyIterator;
+import javax.jcr.RangeIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.Value;
@@ -167,6 +168,42 @@ public class AuthorizableImplTest extends AbstractUserTest {
         Property p = n.getProperty(UserConstants.P_MEMBERS);
         for (Value v : p.getValues()) {
             assertEquals(PropertyType.WEAKREFERENCE, v.getType());
+        }
+    }
+
+    public void testMemberOfRangeIterator() throws NotExecutableException, RepositoryException {
+        Authorizable auth = null;
+        Group group = null;
+
+        try {
+            auth = userMgr.createUser(getTestPrincipal().getName(), "pw");
+            group = userMgr.createGroup(getTestPrincipal());
+            save(superuser);
+
+            Iterator<Group>groups = auth.declaredMemberOf();
+            assertTrue(groups instanceof RangeIterator);
+            assertEquals(0, ((RangeIterator) groups).getSize());
+            groups = auth.memberOf();
+            assertTrue(groups instanceof RangeIterator);
+            assertEquals(0, ((RangeIterator) groups).getSize());
+
+            group.addMember(auth);
+            groups = auth.declaredMemberOf();
+            assertTrue(groups instanceof RangeIterator);
+            assertEquals(1, ((RangeIterator) groups).getSize());
+
+            groups = auth.memberOf();
+            assertTrue(groups instanceof RangeIterator);
+            assertEquals(1, ((RangeIterator) groups).getSize());
+
+        } finally {
+            if (auth != null) {
+                auth.remove();
+            }
+            if (group != null) {
+                group.remove();
+            }
+            save(superuser);
         }
     }
 

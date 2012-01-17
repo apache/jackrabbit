@@ -25,6 +25,7 @@ import org.apache.jackrabbit.commons.flat.PropertySequence;
 import org.apache.jackrabbit.commons.flat.Rank;
 import org.apache.jackrabbit.commons.flat.TreeManager;
 import org.apache.jackrabbit.commons.iterator.LazyIteratorChain;
+import org.apache.jackrabbit.commons.iterator.RangeIteratorAdapter;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.PropertyImpl;
 import org.apache.jackrabbit.core.session.SessionContext;
@@ -189,7 +190,16 @@ class GroupImpl extends AuthorizableImpl implements Group {
     }
 
     //--------------------------------------------------------------------------
-
+    /**
+     * Retrieve the membership provider for this group. This method deals with
+     * members stored in the <code>P_MEMBERS</code> property and with those
+     * repositories the store group members in a separate tree underneath the
+     * <code>N_MEMBERS</code> node.
+     *
+     * @param node The node associated with this group.
+     * @return an instance of <code>MembershipProvider</code>.
+     * @throws RepositoryException If an error occurs.
+     */
     private MembershipProvider getMembershipProvider(NodeImpl node) throws RepositoryException {
         MembershipProvider msp;
         if (userManager.getGroupMembershipSplitSize() > 0) {
@@ -212,9 +222,9 @@ class GroupImpl extends AuthorizableImpl implements Group {
 
     /**
      * @param includeIndirect If <code>true</code> all members of this group
-     *                        will be return; otherwise only the declared members.
-     * @param type            Any of {@link UserManager#SEARCH_TYPE_AUTHORIZABLE},
-     *                        {@link UserManager#SEARCH_TYPE_GROUP}, {@link UserManager#SEARCH_TYPE_USER}.
+     * will be return; otherwise only the declared members.
+     * @param type Any of {@link UserManager#SEARCH_TYPE_AUTHORIZABLE},
+     * {@link UserManager#SEARCH_TYPE_GROUP}, {@link UserManager#SEARCH_TYPE_USER}.
      * @return A collection of members of this group.
      * @throws RepositoryException If an error occurs while collecting the members.
      */
@@ -228,7 +238,7 @@ class GroupImpl extends AuthorizableImpl implements Group {
      *
      * @param newMember The new member to be tested for cyclic membership.
      * @return true if the 'newMember' is a group and 'this' is an declared or
-     *         inherited member of it.
+     * inherited member of it.
      * @throws javax.jcr.RepositoryException If an error occurs.
      */
     private boolean isCyclicMembership(AuthorizableImpl newMember) throws RepositoryException {
@@ -461,7 +471,7 @@ class GroupImpl extends AuthorizableImpl implements Group {
                 if (includeIndirect) {
                     return includeIndirect(toAuthorizables(members, type), type);
                 } else {
-                    return toAuthorizables(members, type);
+                    return new RangeIteratorAdapter(toAuthorizables(members, type), members.length);
                 }
             } else {
                 return Iterators.empty();
