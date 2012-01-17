@@ -50,13 +50,14 @@ public class TestHelper {
      *
      * @param session the Session accessing the workspace to be checked
      * @param runFix whether to attempt fixup
+     * @param lostNFoundId node to which to attach orphaned nodes (or <code>null</code>)
      * @throws RepositoryException if an error occurs while getting the
      * workspace with the given name.
      * @throws NotExecutableException if the {@link PersistenceManager} does
      * not implement {@link ConsistencyChecker}, or if the associated
      * {@link Repository} is not a {@link RepositoryImpl}.
      */
-    public static ConsistencyReport checkConsistency(Session session, boolean runFix)
+    public static ConsistencyReport checkConsistency(Session session, boolean runFix, String lostNFoundId)
             throws NotExecutableException, RepositoryException {
         Repository r = session.getRepository();
         if (!(r instanceof RepositoryImpl)) {
@@ -68,7 +69,7 @@ public class TestHelper {
             if (!(pm instanceof ConsistencyChecker)) {
                 throw new NotExecutableException();
             } else {
-                return ((ConsistencyChecker) pm).check(null, true, runFix);
+                return ((ConsistencyChecker) pm).check(null, true, runFix, lostNFoundId);
             }
         }
     }
@@ -78,12 +79,13 @@ public class TestHelper {
      *
      * @param session the Session accessing the workspace to be checked
      * @param runFix whether to attempt fixup
+     * @param lostNFoundId node to which to attach orphaned nodes (or <code>null</code>)
      * @throws RepositoryException
      * @throws NotExecutableException if the {@link PersistenceManager} does
      * not implement {@link ConsistencyChecker}, or if the associated
      * {@link Repository} is not a {@link RepositoryImpl}.
      */
-    public static ConsistencyReport checkVersionStoreConsistency(Session session, boolean runFix)
+    public static ConsistencyReport checkVersionStoreConsistency(Session session, boolean runFix, String lostNFoundId)
             throws NotExecutableException, RepositoryException {
         Repository r = session.getRepository();
         if (!(r instanceof RepositoryImpl)) {
@@ -95,7 +97,7 @@ public class TestHelper {
             if (!(pm instanceof ConsistencyChecker)) {
                 throw new NotExecutableException();
             } else {
-                return ((ConsistencyChecker) pm).check(null, true, runFix);
+                return ((ConsistencyChecker) pm).check(null, true, runFix, lostNFoundId);
             }
         }
     }

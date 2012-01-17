@@ -215,7 +215,7 @@ public class ConcurrentImportTest extends AbstractConcurrencyTest {
 
     private void checkConsistency() throws RepositoryException {
         try {
-            ConsistencyReport rep = TestHelper.checkConsistency(testRootNode.getSession(), false);
+            ConsistencyReport rep = TestHelper.checkConsistency(testRootNode.getSession(), false, null);
             assertEquals("Found broken nodes in repository: " + rep, 0, rep.getItems().size());
         } catch (NotExecutableException ex) {
             // ignore
