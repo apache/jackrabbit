@@ -78,8 +78,6 @@
                       org.apache.jackrabbit.jcr2spi.lock.OpenScopedLockTest#testLogoutHasNoEffect 
                       <!-- JCR-2533 : missing impl of checkQueryStatement -->                      
                       org.apache.jackrabbit.test.api.query.CreateQueryTest#testUnknownQueryLanguage
-                      <!-- JCR-2543 : query offset -->
-                      org.apache.jackrabbit.test.api.query.SetOffsetTest#testSetOffset
                       <!-- JCR-2533 : missing impl of checkQueryStatement -->
                       org.apache.jackrabbit.test.api.query.qom.BindVariableValueTest
                       <!-- JCR-2112 : simple versioning not implemented -->
