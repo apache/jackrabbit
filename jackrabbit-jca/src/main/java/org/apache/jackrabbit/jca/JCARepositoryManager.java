@@ -24,6 +24,7 @@ import org.apache.jackrabbit.commons.JcrUtils;
 import org.apache.jackrabbit.core.RepositoryImpl;
 import org.apache.jackrabbit.core.config.RepositoryConfig;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
@@ -115,8 +116,10 @@ public final class JCARepositoryManager {
                     }
                 }
             }            	
-        } else {
+        } else if (configFile != null) {
             config = RepositoryConfig.create(configFile, homeDir);
+        } else {
+            config = RepositoryConfig.create(new File(homeDir));
         }
         return RepositoryImpl.create(config);
 	}
