@@ -47,7 +47,10 @@ public class ConsistencyCheckerImpl implements ConsistencyChecker {
     private AbstractBundlePersistenceManager pm;
     
     private static final NameFactory NF = NameFactoryImpl.getInstance();
-    
+
+    // process 64K nodes at once
+    private static int NODESATONCE = 1024 * 64;
+
     public ConsistencyCheckerImpl(AbstractBundlePersistenceManager pm) {
         this.pm = pm;
     }
@@ -66,7 +69,6 @@ public class ConsistencyCheckerImpl implements ConsistencyChecker {
     private int internalCheckConsistency(String[] uuids, boolean recursive, boolean fix, Set<ReportItem> reports,
             String lostNFoundId) throws RepositoryException {
         int count = 0;
-        int total = 0;
         Collection<NodePropBundle> modifications = new ArrayList<NodePropBundle>();
         Set<NodeId> orphaned = new HashSet<NodeId>();
 
@@ -79,7 +81,7 @@ public class ConsistencyCheckerImpl implements ConsistencyChecker {
                 if (lfBundle == null) {
                     log.error("specified 'lost+found' node does not exist");
                 } else if (!NameConstants.NT_UNSTRUCTURED.equals(lfBundle.getNodeTypeName())) {
-                    log.error("specified 'lost+found' node is not of type nt:unstructered");
+                    log.error("specified 'lost+found' node is not of type nt:unstructured");
                 } else {
                     lostNFound = lfBundle.getId();
                 }
@@ -90,33 +92,38 @@ public class ConsistencyCheckerImpl implements ConsistencyChecker {
 
         if (uuids == null) {
             try {
-                List<NodeId> allIds = pm.getAllNodeIds(null, 0);
-                total = allIds.size();
-                
-                for (NodeId id : allIds) {
-                    try {
-                        // parse and check bundle
-                        NodePropBundle bundle = pm.loadBundle(id);
-                        if (bundle == null) {
-                            log.error("No bundle found for id '" + id + "'");
-                        } else {
-                            checkBundleConsistency(id, bundle, fix, modifications, lostNFound, orphaned, reports);
+                List<NodeId> allIds = pm.getAllNodeIds(null, NODESATONCE);
 
-                            count++;
-                            if (count % 1000 == 0) {
-                                log.info(pm + ": checked " + count + "/" + (total == -1 ? "?" : total) + " bundles...");
+                while (!allIds.isEmpty()) {
+                    NodeId lastId = null;
+                    
+                    for (NodeId id : allIds) {
+                        lastId = id;
+                        try {
+                            // parse and check bundle
+                            NodePropBundle bundle = pm.loadBundle(id);
+                            if (bundle == null) {
+                                log.error("No bundle found for id '" + id + "'");
+                            } else {
+                                checkBundleConsistency(id, bundle, fix, modifications, lostNFound, orphaned, reports);
+
+                                count++;
+                                if (count % 1000 == 0) {
+                                    log.info(pm + ": checked " + count + " bundles...");
+                                }
                             }
+                        } catch (ItemStateException e) {
+                            // problem already logged (loadBundle called with
+                            // logDetailedErrors=true)
                         }
-                    } catch (ItemStateException e) {
-                        // problem already logged (loadBundle called with
-                        // logDetailedErrors=true)
                     }
 
+                    if (! allIds.isEmpty()) {
+                        allIds = pm.getAllNodeIds(lastId, NODESATONCE);
+                    }
                 }
             } catch (ItemStateException ex) {
                 throw new RepositoryException("getting nodeIds", ex);
-            } finally {
-                total = count;
             }
         } else {
             // check only given uuids, handle recursive flag
@@ -165,8 +172,6 @@ public class ConsistencyCheckerImpl implements ConsistencyChecker {
                     // problem already logged (loadBundle called with logDetailedErrors=true)
                 }
             }
-
-            total = idList.size();
         }
 
         // repair collected broken bundles
@@ -206,9 +211,9 @@ public class ConsistencyCheckerImpl implements ConsistencyChecker {
             }
         }
 
-        log.info(pm + ": checked " + count + "/" + total + " bundles.");
+        log.info(pm + ": checked " + count + " bundles.");
 
-        return total;
+        return count;
     }
 
     /**
