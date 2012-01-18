@@ -75,7 +75,9 @@
                       org.apache.jackrabbit.test.api.lock.LockManagerTest#testAddInvalidLockToken
                       org.apache.jackrabbit.test.api.lock.LockManagerTest#testAddLockTokenToAnotherSession
                       org.apache.jackrabbit.test.api.lock.LockManagerTest#testLockTransfer2
-                      org.apache.jackrabbit.jcr2spi.lock.OpenScopedLockTest#testLogoutHasNoEffect 
+                      org.apache.jackrabbit.jcr2spi.lock.OpenScopedLockTest#testLogoutHasNoEffect
+                      <!-- JCR-3207 -->
+                      org.apache.jackrabbit.test.api.observation.NodeReorderTest#testNodeReorderMove
                       <!-- JCR-2533 : missing impl of checkQueryStatement -->                      
                       org.apache.jackrabbit.test.api.query.CreateQueryTest#testUnknownQueryLanguage
                       <!-- JCR-2533 : missing impl of checkQueryStatement -->
