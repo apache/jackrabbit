@@ -1,4 +1,4 @@
-Release Notes -- Apache Jackrabbit -- Version 2.3.6
+Release Notes -- Apache Jackrabbit -- Version 2.3.7
 
 Introduction
 ------------
@@ -10,6 +10,31 @@ specified in the Java Specification Request 283 (JSR 283).
 Apache Jackrabbit 2.3 is an unstable series of releases cut directly from
 Jackrabbit trunk, with a focus on new features and other improvements.
 For production use we recommend the latest stable 2.2 release.
+
+Changes in Jackrabbit 2.3.7
+---------------------------
+
+New features
+
+  [JCR-2859] Make open scoped locks recoverable
+
+Improvements
+
+  [JCR-3184] extend ConsistencyChecker API to allow adoption of orphaned ...
+  [JCR-3185] refactor consistency checks in BundleDBPersistenceManager ...
+  [JCR-3199] workspace-wide default for lock timeout
+  [JCR-3200] consistency check should get node ids in chunks, not rely on ...
+  [JCR-3202] AuthorizableImpl#memberOf and #declaredMemberOf should ...
+
+Bug fixes
+
+  [JCR-2543] spi2dav : Query offset not respected
+  [JCR-3189] JCARepositoryManager.createNonTransientRepository throws NPE ...
+  [JCR-3194] ConcurrentModificationException in CacheManager.
+  [JCR-3195] wrong assumptions in test cases about lock tokens
+  [JCR-3198] Broken handling of outer join results over davex
+  [JCR-3205] Missing support for lock timeout and ownerHint in jcr-server
+  [JCR-3210] NPE in spi2dav when server does not send all headers
 
 Changes in Jackrabbit 2.3.6
 ---------------------------
