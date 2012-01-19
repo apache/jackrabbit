@@ -14,5 +14,5 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-@aQute.bnd.annotation.Version("2.2")
+@aQute.bnd.annotation.Version("2.2.1")
 package org.apache.jackrabbit.commons.packaging;
