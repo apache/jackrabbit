@@ -16,28 +16,31 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.text.NumberFormat;
+import java.util.Arrays;
+import java.util.BitSet;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
+import org.apache.commons.collections.map.LRUMap;
+import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.FieldSelector;
+import org.apache.lucene.index.CorruptIndexException;
 import org.apache.lucene.index.FilterIndexReader;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermDocs;
 import org.apache.lucene.index.TermEnum;
-import org.apache.lucene.index.CorruptIndexException;
-import org.apache.jackrabbit.core.id.NodeId;
-import org.apache.commons.collections.map.LRUMap;
+import org.apache.lucene.store.IndexInput;
+import org.apache.lucene.store.IndexOutput;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.BitSet;
-import java.util.Map;
-import java.util.HashMap;
-import java.util.Collections;
-import java.text.NumberFormat;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Implements an <code>IndexReader</code> that maintains caches to resolve
@@ -86,7 +89,7 @@ class CachingIndexReader extends FilterIndexReader {
      * Initializes the {@link #inSegmentParents} and {@link #foreignParentDocIds}
      * caches.
      */
-    private CacheInitializer cacheInitializer;
+    private final CacheInitializer cacheInitializer;
 
     /**
      * Tick when this index reader was created.
@@ -128,16 +131,7 @@ class CachingIndexReader extends FilterIndexReader {
         this.cache = cache;
         this.inSegmentParents = new int[delegatee.maxDoc()];
         Arrays.fill(this.inSegmentParents, -1);
-        this.shareableNodes = new BitSet();
-        TermDocs tDocs = delegatee.termDocs(
-                new Term(FieldNames.SHAREABLE_NODE, ""));
-        try {
-            while (tDocs.next()) {
-                shareableNodes.set(tDocs.doc());
-            }
-        } finally {
-            tDocs.close();
-        }
+        this.shareableNodes = initShareableNodes(delegatee);
         this.cacheInitializer = new CacheInitializer(delegatee);
         if (initCache) {
             cacheInitializer.run();
@@ -146,6 +140,20 @@ class CachingIndexReader extends FilterIndexReader {
         this.docNumber2id = Collections.synchronizedMap(
                 new LRUMap(Math.max(10, delegatee.maxDoc() / 100)));
         this.termDocsCache = new TermDocsCache(delegatee, FieldNames.PROPERTIES);
+    }
+
+    private BitSet initShareableNodes(IndexReader delegatee) throws IOException {
+        BitSet shareableNodes = new BitSet();
+        TermDocs tDocs = delegatee.termDocs(new Term(FieldNames.SHAREABLE_NODE,
+                ""));
+        try {
+            while (tDocs.next()) {
+                shareableNodes.set(tDocs.doc());
+            }
+        } finally {
+            tDocs.close();
+        }
+        return shareableNodes;
     }
 
     /**
@@ -355,6 +363,11 @@ class CachingIndexReader extends FilterIndexReader {
     private class CacheInitializer implements Runnable {
 
         /**
+         * The {@link #inSegmentParents} is persisted using this filename.
+         */
+        private static final String FILE_CACHE_NAME_ARRAY = "cache.inSegmentParents";
+
+        /**
          * From where to read.
          */
         private final IndexReader reader;
@@ -371,8 +384,8 @@ class CachingIndexReader extends FilterIndexReader {
 
         /**
          * Creates a new initializer with the given <code>reader</code>.
-         *
-         * @param reader an index reader.
+         * @param reader
+         *            an index reader.
          */
         public CacheInitializer(IndexReader reader) {
             this.reader = reader;
@@ -390,7 +403,13 @@ class CachingIndexReader extends FilterIndexReader {
                     // immediately return when stop is requested
                     return;
                 }
-                initializeParents(reader);
+                boolean initCacheFromFile = loadCacheFromFile();
+                if (!initCacheFromFile) {
+                    // file-based cache is not available, load from the
+                    // repository
+                    log.debug("persisted cache is not available, will load directly from the repository.");
+                    initializeParents(reader);
+                }
             } catch (Exception e) {
                 // only log warn message during regular operation
                 if (!stopRequested) {
@@ -463,7 +482,8 @@ class CachingIndexReader extends FilterIndexReader {
                 });
 
                 if (docs.isEmpty()) {
-                    // no more nodes to initialize
+                    // no more nodes to initialize, persist cache to file
+                    saveCacheToFile();
                     break;
                 }
 
@@ -590,6 +610,69 @@ class CachingIndexReader extends FilterIndexReader {
             } finally {
                 tDocs.close();
             }
+        }
+
+        /**
+         * Persists the cache info {@link #inSegmentParents} to a file:
+         * {@link #FILE_CACHE_NAME_ARRAY}, for faster init times on startup.
+         * 
+         * see https://issues.apache.org/jira/browse/JCR-3107
+         */
+        public void saveCacheToFile() throws IOException {
+            IndexOutput io = null;
+            try {
+                io = reader.directory().createOutput(FILE_CACHE_NAME_ARRAY);
+                for (int parent : inSegmentParents) {
+                    io.writeInt(parent);
+                }
+            } catch (Exception e) {
+                log.error(
+                        "Error saving " + FILE_CACHE_NAME_ARRAY + ": "
+                                + e.getMessage(), e);
+            } finally {
+                io.close();
+            }
+        }
+
+        /**
+         * Loads the cache info {@link #inSegmentParents} from the file
+         * {@link #FILE_CACHE_NAME_ARRAY}.
+         * 
+         * see https://issues.apache.org/jira/browse/JCR-3107
+         * 
+         * @return true if the cache has been initialized of false if the cache
+         *         file does not exist yet, or an error happened
+         */
+        private boolean loadCacheFromFile() throws IOException {
+            IndexInput ii = null;
+            try {
+                long time = System.currentTimeMillis();
+                ii = reader.directory().openInput(FILE_CACHE_NAME_ARRAY);
+                for (int i = 0; i < inSegmentParents.length; i++) {
+                    inSegmentParents[i] = ii.readInt();
+                }
+                log.debug(
+                        "persisted cache initialized {} DocIds in {} ms",
+                        new Object[] { inSegmentParents.length,
+                                System.currentTimeMillis() - time });
+                return true;
+            } catch (FileNotFoundException ignore) {
+                // expected in the case where the file-based cache has not been
+                // initialized yet
+            } catch (IOException ignore) {
+                log.warn(
+                        "Saved state of CachingIndexReader is corrupt, will try to remove offending file "
+                                + FILE_CACHE_NAME_ARRAY, ignore);
+                // In the case where is a read error, the cache file is removed
+                // so it can be recreated after
+                // the cache loads the data from the repository directly
+                reader.directory().deleteFile(FILE_CACHE_NAME_ARRAY);
+            } finally {
+                if (ii != null) {
+                    ii.close();
+                }
+            }
+            return false;
         }
     }
 
