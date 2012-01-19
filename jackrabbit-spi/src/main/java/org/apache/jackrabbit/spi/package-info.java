@@ -53,5 +53,5 @@
  * <code>RepositoryService.getEvents()</code> will always throw an
  * {@link javax.jcr.UnsupportedRepositoryOperationException}.
  */
-@aQute.bnd.annotation.Version("2.4.0")
+@aQute.bnd.annotation.Version("3.0.0")
 package org.apache.jackrabbit.spi;
