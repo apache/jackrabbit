@@ -93,20 +93,14 @@ public class JcrActiveLock extends AbstractActiveLock implements ActiveLock, Dav
      * @see ActiveLock#getToken()
      */
     public String getToken() {
-        String token = lock.getLockToken();
-        if (token == null && lock.isSessionScoped()
-                && lock.isLockOwningSession()) {
-            // special handling for session scoped locks that are owned by the
-            // current session but never expose their token with jsr 283.
-            try {
-                token = lock.getNode().getIdentifier();
-            } catch (RepositoryException e) {
-                // should never get here
-                log.warn("Unexpected error while retrieving node identifier for building a DAV specific lock token.",e.getMessage());
-            }
+        try {
+            return LockTokenMapper.getDavLocktoken(lock);
+        } catch (RepositoryException e) {
+            // should never get here
+            log.warn("Unexpected error while retrieving node identifier for building a DAV specific lock token.",
+                    e.getMessage());
+            return null;
         }
-        // default behaviour: just return the token exposed by the lock.
-        return token;
     }
 
     /**

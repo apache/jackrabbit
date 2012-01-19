@@ -20,9 +20,11 @@ import org.apache.jackrabbit.webdav.DavException;
 import org.apache.jackrabbit.webdav.DavServletResponse;
 import org.apache.jackrabbit.webdav.DavSession;
 import org.apache.jackrabbit.webdav.DavConstants;
+import org.apache.jackrabbit.webdav.jcr.lock.LockTokenMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import java.util.HashSet;
 
@@ -97,7 +99,14 @@ public abstract class JcrDavSession implements DavSession {
      * @see DavSession#addLockToken(String)
      */
     public void addLockToken(String token) {
-        session.addLockToken(getJCRLockToken(token));
+        if (!LockTokenMapper.isForSessionScopedLock(token)) {
+            try {
+                session.getWorkspace().getLockManager().addLockToken(LockTokenMapper.getJcrLockToken(token));
+            }
+            catch (RepositoryException ex) {
+                log.debug("trying to add lock token " + token + " to session", ex);
+            }
+        }
         lockTokens.add(token);
     }
 
@@ -116,16 +125,14 @@ public abstract class JcrDavSession implements DavSession {
      * @see DavSession#removeLockToken(String)
      */
     public void removeLockToken(String token) {
-        session.removeLockToken(getJCRLockToken(token));
-        lockTokens.remove(token);
-    }
-
-    //------------------------------------------------------------< private >---
-    private static String getJCRLockToken(String token) {
-        if (token.startsWith(DavConstants.OPAQUE_LOCK_TOKEN_PREFIX)) {
-            return token.substring(DavConstants.OPAQUE_LOCK_TOKEN_PREFIX.length());
-        } else {
-            return token;
+        if (!LockTokenMapper.isForSessionScopedLock(token)) {
+            try {
+                session.getWorkspace().getLockManager().removeLockToken(LockTokenMapper.getJcrLockToken(token));
+            }
+            catch (RepositoryException ex) {
+                log.debug("trying to remove lock token " + token + " to session", ex);
+            }
         }
+        lockTokens.remove(token);
     }
 }
