@@ -569,7 +569,7 @@ public class DavResourceImpl implements DavResource, BindableResource, JcrConsta
 
             // make sure, non-jcr locks are removed, once the removal is completed
             try {
-                if (!isJsrLockable()) {
+                if (!isJcrLockable()) {
                     ActiveLock lock = getLock(Type.WRITE, Scope.EXCLUSIVE);
                     if (lock != null) {
                         lockManager.releaseLock(lock.getToken(), member);
@@ -683,10 +683,17 @@ public class DavResourceImpl implements DavResource, BindableResource, JcrConsta
         ActiveLock lock = null;
         if (isLockable(lockInfo.getType(), lockInfo.getScope())) {
             // TODO: deal with existing locks, that may have been created, before the node was jcr-lockable...
-            if (isJsrLockable()) {
+            if (isJcrLockable()) {
                 try {
+                    javax.jcr.lock.LockManager lockMgr = node.getSession().getWorkspace().getLockManager();
+                    long timeout = lockInfo.getTimeout();
+                    if (timeout == LockInfo.INFINITE_TIMEOUT) {
+                        timeout = Long.MAX_VALUE;
+                    } else {
+                        timeout = timeout / 1000;
+                    }
                     // try to execute the lock operation
-                    Lock jcrLock = node.lock(lockInfo.isDeep(), false);
+                    Lock jcrLock = lockMgr.lock(node.getPath(), lockInfo.isDeep(), false, timeout, lockInfo.getOwner());
                     if (jcrLock != null) {
                         lock = new JcrActiveLock(jcrLock);
                     }
@@ -922,7 +929,7 @@ public class DavResourceImpl implements DavResource, BindableResource, JcrConsta
      *
      * @return true if this resource is lockable.
      */
-    private boolean isJsrLockable() {
+    private boolean isJcrLockable() {
         boolean lockable = false;
         if (exists()) {
             try {
