@@ -685,17 +685,14 @@ public class DomUtil {
     /**
      * Converts the given timeout (long value defining the number of milli-
      * second until timeout is reached) to its Xml representation as defined
-     * by RTF 2518.<br>
-     * Note, that {@link DavConstants#INFINITE_TIMEOUT} is not represented by the String
-     * {@link DavConstants#TIMEOUT_INFINITE 'Infinite'} defined by RFC 2518, due to a known
-     * issue with Microsoft Office that opens the document "read only" and
-     * never unlocks the resource if the timeout is missing or 'Infinite'.
+     * by RFC 4918.<br>
      *
      * @param timeout number of milli-seconds until timeout is reached.
      * @return 'timeout' Xml element
      */
     public static Element timeoutToXml(long timeout, Document factory) {
-        String expString = "Second-"+ timeout/1000;
+        boolean infinite = timeout / 1000 > Integer.MAX_VALUE || timeout == DavConstants.INFINITE_TIMEOUT;
+        String expString = infinite ? DavConstants.TIMEOUT_INFINITE : "Second-" + timeout / 1000;
         return createElement(factory, DavConstants.XML_TIMEOUT, DavConstants.NAMESPACE, expString);
     }
 
