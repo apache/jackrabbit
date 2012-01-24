@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.core.security.user.action;
 
 import org.apache.jackrabbit.api.security.user.User;
+import org.apache.jackrabbit.core.security.authentication.CryptedSimpleCredentials;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -100,11 +101,19 @@ public class PasswordValidationAction extends AbstractAuthorizableAction {
      * doesn't match the specified password pattern.
      */
     private void validatePassword(String password) throws RepositoryException {
-        if (password != null) {
+        if (password != null && isPlainText(password)) {
             if (pattern != null && !pattern.matcher(password).matches()) {
                 throw new ConstraintViolationException("Password violates password constraint (" + pattern.pattern() + ").");
             }
         }
     }
 
+    private static boolean isPlainText(String password) {
+        try {
+            return !CryptedSimpleCredentials.buildPasswordHash(password).equals(password);
+        } catch (RepositoryException e) {
+            // failed to build hash from pw -> proceed with the validation.
+            return true;
+        }
+    }
 }
