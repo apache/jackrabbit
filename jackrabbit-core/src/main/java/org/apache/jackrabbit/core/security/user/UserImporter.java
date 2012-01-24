@@ -140,6 +140,17 @@ public class UserImporter implements ProtectedPropertyImporter, ProtectedNodeImp
 
     private int importBehavior = ImportBehavior.IGNORE;
 
+    /**
+     * Container used to collect group members stored in protected nodes.
+     */
+    private Membership currentMembership;
+
+    /**
+     * Temporary store for the pw an imported new user to be able to call
+     * the creation actions irrespective of the order of protected properties
+     */
+    private Map<String,String> currentPw = new HashMap<String,String>(1);
+
     public boolean init(JackrabbitSession session, NamePathResolver resolver,
                         boolean isWorkspaceImport,
                         int uuidBehavior, ReferenceChangeTracker referenceTracker) {
@@ -182,8 +193,10 @@ public class UserImporter implements ProtectedPropertyImporter, ProtectedNodeImp
         return initialized;
     }
 
-    // -----------------------------------------------------< ProtectedPropertyImporter >---
-
+    // -----------------------------------------< ProtectedPropertyImporter >---
+    /**
+     * @see ProtectedPropertyImporter#handlePropInfo(org.apache.jackrabbit.core.NodeImpl, org.apache.jackrabbit.core.xml.PropInfo, org.apache.jackrabbit.spi.QPropertyDefinition)
+     */
     public boolean handlePropInfo(NodeImpl parent, PropInfo protectedPropInfo, QPropertyDefinition def) throws RepositoryException {
         if (!initialized) {
             throw new IllegalStateException("Not initialized");
@@ -222,6 +235,22 @@ public class UserImporter implements ProtectedPropertyImporter, ProtectedNodeImp
                 Value v = protectedPropInfo.getValues(PropertyType.STRING, resolver)[0];
                 String princName = v.getString();
                 userManager.setPrincipal(parent, new PrincipalImpl(princName));
+
+                /*
+                Execute authorizable actions for a NEW group as this is the
+                same place in the userManager#createGroup that the actions
+                are called.
+                In case of a NEW user the actions are executed if the password
+                has been imported before.
+                */
+                if (parent.isNew()) {
+                    if (a.isGroup()) {
+                        userManager.onCreate((Group) a);
+                    } else if (currentPw.containsKey(a.getID())) {
+                        userManager.onCreate((User) a, currentPw.remove(a.getID()));
+                    }
+                }
+
                 return true;
             } else if (UserConstants.P_PASSWORD.equals(propName)) {
                 if (a.isGroup()) {
@@ -236,8 +265,23 @@ public class UserImporter implements ProtectedPropertyImporter, ProtectedNodeImp
                 }
 
                 Value v = protectedPropInfo.getValues(PropertyType.STRING, resolver)[0];
-                ((User) a).changePassword(v.getString());
+                String pw = v.getString();
+                ((User) a).changePassword(pw);
 
+                /*
+                 Execute authorizable actions for a NEW user at this point after
+                 having set the password if the principal name has already been
+                 processed, otherwise postpone it.
+                 */
+                if (parent.isNew()) {
+                    if (parent.hasProperty(UserConstants.P_PRINCIPAL_NAME)) {
+                        userManager.onCreate((User) a, pw);
+                    } else {
+                        // principal name not yet available -> remember the pw
+                        currentPw.clear();
+                        currentPw.put(a.getID(), pw);
+                    }
+                }
                 return true;
 
             } else if (UserConstants.P_IMPERSONATORS.equals(propName)) {
@@ -314,10 +358,16 @@ public class UserImporter implements ProtectedPropertyImporter, ProtectedNodeImp
         }
     }
 
+    /**
+     * @see ProtectedPropertyImporter#handlePropInfo(org.apache.jackrabbit.core.NodeImpl, org.apache.jackrabbit.core.xml.PropInfo, org.apache.jackrabbit.spi.QPropertyDefinition)
+     */
     public boolean handlePropInfo(NodeState parent, PropInfo protectedPropInfo, QPropertyDefinition def) throws RepositoryException {
         return false;
     }
 
+    /**
+     * @see org.apache.jackrabbit.core.xml.ProtectedPropertyImporter#processReferences()
+     */
     public void processReferences() throws RepositoryException {
         if (!initialized) {
             throw new IllegalStateException("Not initialized");
@@ -494,25 +544,10 @@ public class UserImporter implements ProtectedPropertyImporter, ProtectedNodeImp
         }
     }
 
-    //------------------------------------------------------------< private >---
-    private void handleFailure(String msg) throws RepositoryException {
-        switch (importBehavior) {
-            case ImportBehavior.IGNORE:
-            case ImportBehavior.BESTEFFORT:
-                log.warn(msg);
-                break;
-            case ImportBehavior.ABORT:
-                throw new ConstraintViolationException(msg);
-            default:
-                // no other behavior. nothing to do.
-
-        }
-    }
-
-    // -----------------------------------------------------< ProtectedNodeImporter >---
-
-    private Membership currentMembership;
-
+    // ---------------------------------------------< ProtectedNodeImporter >---
+    /**
+     * @see ProtectedNodeImporter#start(org.apache.jackrabbit.core.NodeImpl)
+     */
     public boolean start(NodeImpl protectedParent) throws RepositoryException {
         String repMembers = resolver.getJCRName(UserConstants.NT_REP_MEMBERS);
         if (repMembers.equals(protectedParent.getPrimaryNodeType().getName())) {
@@ -537,10 +572,16 @@ public class UserImporter implements ProtectedPropertyImporter, ProtectedNodeImp
         }
     }
 
+    /**
+     * @see ProtectedNodeImporter#start(org.apache.jackrabbit.core.state.NodeState)
+     */
     public boolean start(NodeState protectedParent) {
         return false;
     }
 
+    /**
+     * @see ProtectedNodeImporter#start(org.apache.jackrabbit.core.NodeImpl)
+     */
     public void startChildInfo(NodeInfo childInfo, List<PropInfo> propInfos) throws RepositoryException {
         assert (currentMembership != null);
 
@@ -558,14 +599,23 @@ public class UserImporter implements ProtectedPropertyImporter, ProtectedNodeImp
         }
     }
 
+    /**
+     * @see org.apache.jackrabbit.core.xml.ProtectedNodeImporter#endChildInfo()
+     */
     public void endChildInfo() throws RepositoryException {
     }
 
+    /**
+     * @see ProtectedNodeImporter#end(org.apache.jackrabbit.core.NodeImpl)
+     */
     public void end(NodeImpl protectedParent) throws RepositoryException {
         referenceTracker.processedReference(currentMembership);
         currentMembership = null;
     }
 
+    /**
+     * @see ProtectedNodeImporter#end(org.apache.jackrabbit.core.state.NodeState)
+     */
     public void end(NodeState protectedParent) {
     }
 
@@ -585,7 +635,28 @@ public class UserImporter implements ProtectedPropertyImporter, ProtectedNodeImp
         this.importBehavior = ImportBehavior.valueFromName(importBehaviorStr);
     }
 
-    //--------------------------------------------------------------------------
+    //------------------------------------------------------------< private >---
+    /**
+     * Handling the import behavior
+     *
+     * @param msg
+     * @throws RepositoryException
+     */
+    private void handleFailure(String msg) throws RepositoryException {
+        switch (importBehavior) {
+            case ImportBehavior.IGNORE:
+            case ImportBehavior.BESTEFFORT:
+                log.warn(msg);
+                break;
+            case ImportBehavior.ABORT:
+                throw new ConstraintViolationException(msg);
+            default:
+                // no other behavior. nothing to do.
+
+        }
+    }
+
+    //------------------------------------------------------< inner classes >---
     /**
      * Inner class used to postpone import of group membership to the very end
      * of the import. This allows to import membership of user/groups that

@@ -230,7 +230,27 @@ public class AuthorizableActionTest extends AbstractUserTest {
         }
     }
 
+    public void testPasswordValidationActionIgnoresHashedPwString() throws Exception {
+        User u = null;
 
+        try {
+            String uid = getTestPrincipal().getName();
+            u = impl.createUser(uid, buildPassword(uid));
+
+            PasswordValidationAction pwAction = new PasswordValidationAction();
+            pwAction.setConstraint("^.*(?=.{8,})(?=.*[a-z])(?=.*[A-Z]).*");
+            setActions(pwAction);
+
+            String hashed = ((UserImpl) u).buildPasswordValue("DWkej32H");
+            u.changePassword(hashed);
+
+        } finally {
+            if (u != null) {
+                u.remove();
+            }
+            save(superuser);
+        }
+    }
 
     //--------------------------------------------------------------------------
     private class TestAction extends AbstractAuthorizableAction {
