@@ -22,6 +22,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.jcr.Credentials;
+import javax.jcr.RepositoryException;
 import javax.jcr.SimpleCredentials;
 import java.io.UnsupportedEncodingException;
 import java.security.NoSuchAlgorithmException;
@@ -165,6 +166,23 @@ public class CryptedSimpleCredentials implements Credentials {
             return hashedPassword.equals(generateHash(String.valueOf(credentials.getPassword()), algorithm, salt));
         }
         return false;
+    }
+
+    /**
+     * Creates a hash of the specified password if it is found to be plain text.
+     *
+     * @param password
+     * @return
+     * @throws javax.jcr.RepositoryException
+     */
+    public static String buildPasswordHash(String password) throws RepositoryException {
+        try {
+            return new CryptedSimpleCredentials("_", password).getPassword();
+        } catch (NoSuchAlgorithmException e) {
+            throw new RepositoryException(e);
+        } catch (UnsupportedEncodingException e) {
+            throw new RepositoryException(e);
+        }
     }
 
     /**

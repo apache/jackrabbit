@@ -48,18 +48,13 @@ public class UserImpl extends AuthorizableImpl implements User {
     /**
      * Creates a hash of the specified password if it is found to be plain text.
      * 
-     * @param password
-     * @return
-     * @throws RepositoryException
+     * @param password The password string.
+     * @return Hash for the given password string.
+     * @throws RepositoryException If an error occurs.
+     * @see CryptedSimpleCredentials#buildPasswordHash(String)
      */
     static String buildPasswordValue(String password) throws RepositoryException {
-        try {
-            return new CryptedSimpleCredentials("_", password).getPassword();
-        } catch (NoSuchAlgorithmException e) {
-            throw new RepositoryException(e);
-        } catch (UnsupportedEncodingException e) {
-            throw new RepositoryException(e);
-        }
+        return CryptedSimpleCredentials.buildPasswordHash(password);
     }
 
     //-------------------------------------------------------< Authorizable >---

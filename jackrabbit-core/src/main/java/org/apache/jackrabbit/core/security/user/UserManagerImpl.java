@@ -1049,7 +1049,7 @@ public class UserManagerImpl extends ProtectedItemModifier
      * @param pw The password.
      * @throws RepositoryException If an exception occurs.
      */
-    private void onCreate(User user, String pw) throws RepositoryException {
+    void onCreate(User user, String pw) throws RepositoryException {
         for (AuthorizableAction action : authorizableActions) {
             action.onCreate(user, pw, session);
         }
@@ -1063,7 +1063,7 @@ public class UserManagerImpl extends ProtectedItemModifier
      * @param group The new group.
      * @throws RepositoryException If an exception occurs.
      */
-    private void onCreate(Group group) throws RepositoryException {
+    void onCreate(Group group) throws RepositoryException {
         for (AuthorizableAction action : authorizableActions) {
             action.onCreate(group, session);
         }
