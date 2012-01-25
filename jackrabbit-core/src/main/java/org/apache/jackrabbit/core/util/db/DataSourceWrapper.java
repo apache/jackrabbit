@@ -19,6 +19,7 @@ package org.apache.jackrabbit.core.util.db;
 import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.logging.Logger;
 
 import javax.sql.DataSource;
 
@@ -65,6 +66,15 @@ public class DataSourceWrapper implements DataSource {
     }
 
     /**
+     * Unsupported Java 7 method.
+     *
+     * @see <a href="https://issues.apache.org/jira/browse/JCR-3167">JCR-3167</a>
+     */
+    public Logger getParentLogger() {
+        throw new UnsupportedOperationException("Java 7 method not supported");
+    }
+
+    /**
      * {@inheritDoc}
      */
     public Connection getConnection() throws SQLException {
@@ -105,4 +115,5 @@ public class DataSourceWrapper implements DataSource {
     public void setLoginTimeout(int seconds) throws SQLException {
         dataSource.setLoginTimeout(seconds);
     }
+
 }
