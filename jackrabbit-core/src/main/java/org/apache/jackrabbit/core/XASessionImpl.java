@@ -321,12 +321,14 @@ public class XASessionImpl extends SessionImpl
         if (tx == null) {
             throw new XAException(XAException.XAER_NOTA);
         }
-        if (onePhase) {
-            tx.prepare(onePhase);
+        try {
+            if (onePhase) {
+                tx.prepare(onePhase);
+            }
+            tx.commit(onePhase);
+        } finally {
+            txGlobal.remove(xid);
         }
-        tx.commit(onePhase);
-
-        txGlobal.remove(xid);
     }
 
     /**
@@ -337,9 +339,11 @@ public class XASessionImpl extends SessionImpl
         if (tx == null) {
             throw new XAException(XAException.XAER_NOTA);
         }
-        tx.rollback();
-
-        txGlobal.remove(xid);
+        try {
+        	tx.rollback();
+        } finally {
+        	txGlobal.remove(xid);
+        }
     }
 
     /**
