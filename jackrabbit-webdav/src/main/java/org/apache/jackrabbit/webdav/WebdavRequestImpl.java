@@ -183,7 +183,7 @@ public class WebdavRequestImpl implements WebdavRequest, DavConstants {
             //href should be a Simple-ref production as defined in RFC4918, so it is either an absolute URI
             //or an absolute path
             try {
-                URI uri = new URI(ref);
+                URI uri = new URI(ref).normalize(); // normalize path (see JCR-3174)
                 String auth = uri.getAuthority();
                 ref = uri.getRawPath();
                 if (auth == null) {
