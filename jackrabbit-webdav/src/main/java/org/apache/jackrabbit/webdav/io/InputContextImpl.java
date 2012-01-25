@@ -70,9 +70,22 @@ public class InputContextImpl implements InputContext {
         return request.getHeader(DavConstants.HEADER_CONTENT_LANGUAGE);
     }
 
+    /**
+     * @return content length or -1 when unknown
+     */
     public long getContentLength() {
-        int length = request.getIntHeader(DavConstants.HEADER_CONTENT_LENGTH);
-        return Long.parseLong(length + "");
+        String length = request.getHeader(DavConstants.HEADER_CONTENT_LENGTH);
+        if (length == null) {
+            // header not present
+            return -1;
+        } else {
+            try {
+                return Long.parseLong(length);
+            } catch (NumberFormatException ex) {
+                log.error("broken Content-Length header: " + length);
+                return -1;
+            }
+        }
     }
 
     public String getContentType() {
