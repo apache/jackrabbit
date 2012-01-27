@@ -77,6 +77,20 @@ public class NodeTypeRegistry implements NodeTypeEventListener {
             "/nodetypes/custom_nodetypes.xml";
 
     /**
+     * Feature flag for the unfortunate behavior in Jackrabbit 2.1 and 2.2
+     * where the exception from {@link #checkForReferencesInContent(Name)}
+     * was never thrown because of a mistaken commit for
+     * <a href="https://issues.apache.org/jira/browse/JCR-2587">JCR-2587</a>.
+     * Setting this flag to <code>true</code> (the default value comes from
+     * the "disableCheckForReferencesInContentException" system property)
+     * will disable the exception thrown by default by the method.
+     *
+     * @see <a href="https://issues.apache.org/jira/browse/JCR-3223">JCR-3223</a>
+     */
+    public static volatile boolean disableCheckForReferencesInContentException =
+            Boolean.getBoolean("disableCheckForReferencesInContentException");
+
+    /**
      * resource holding custom node type definitions which are represented as
      * nodes in the repository; it is needed in order to make the registrations
      * persistent.
@@ -978,7 +992,18 @@ public class NodeTypeRegistry implements NodeTypeEventListener {
      */
     protected void checkForReferencesInContent(Name nodeTypeName)
             throws RepositoryException {
-        throw new RepositoryException("not yet implemented");
+        if (!disableCheckForReferencesInContentException) {
+            throw new RepositoryException(
+                    "The check for the existence of content using the"
+                    + " given node type is not yet implemented, so to"
+                    + " guarantee repository consistency the request to"
+                    + " unregister the type is denied. Contributions to"
+                    + " implement this feature would be welcome! To restore"
+                    + " the broken behavior of previous Jackrabbit versions"
+                    + " where this check was simply skipped, please set the"
+                    + " disableCheckForReferencesInContentException system"
+                    + " property to true.");
+        }
     }
 
     //-------------------------------------------------------< implementation >
