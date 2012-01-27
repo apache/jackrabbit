@@ -16,7 +16,10 @@
  */
 package org.apache.jackrabbit.server.jcr;
 
+import org.apache.jackrabbit.commons.webdav.JcrRemotingConstants;
 import org.apache.jackrabbit.server.SessionProvider;
+import org.apache.jackrabbit.spi.commons.SessionExtensions;
+import org.apache.jackrabbit.util.Text;
 import org.apache.jackrabbit.webdav.DavException;
 import org.apache.jackrabbit.webdav.DavMethods;
 import org.apache.jackrabbit.webdav.DavSession;
@@ -25,6 +28,7 @@ import org.apache.jackrabbit.webdav.WebdavRequest;
 import org.apache.jackrabbit.webdav.header.IfHeader;
 import org.apache.jackrabbit.webdav.jcr.JcrDavException;
 import org.apache.jackrabbit.webdav.jcr.JcrDavSession;
+import org.apache.jackrabbit.webdav.util.LinkHeaderFieldParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,8 +36,12 @@ import javax.jcr.LoginException;
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletResponse;
+
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
@@ -325,7 +333,17 @@ public class JCRWebdavServer implements DavSessionProvider {
                 if (DavMethods.DAV_MKWORKSPACE != DavMethods.getMethodCode(request.getMethod())) {
                     workspaceName = request.getRequestLocator().getWorkspaceName();
                 }
-                return sessionProvider.getSession(request, repository, workspaceName);
+
+                Session session = sessionProvider.getSession(
+                        request, repository, workspaceName);
+
+                // extract information from Link header fields
+                LinkHeaderFieldParser lhfp =
+                        new LinkHeaderFieldParser(request.getHeaders("Link"));
+                setJcrUserData(session, lhfp);
+                setSessionIdentifier(session, lhfp);
+
+                return session;
             } catch (LoginException e) {
                 // LoginException results in UNAUTHORIZED,
                 throw new JcrDavException(e);
@@ -334,6 +352,53 @@ public class JCRWebdavServer implements DavSessionProvider {
                 throw new JcrDavException(e);
             } catch (ServletException e) {
                 throw new DavException(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            }
+        }
+
+        /**
+         * Find first link relation for JCR user data and set it as
+         * the user data of the observation manager of the given session.
+         */
+        private void setJcrUserData(
+                Session session, LinkHeaderFieldParser lhfp)
+                throws RepositoryException {
+            String data = null;
+
+            // extract User Data string from RFC 2397 "data" URI
+            // only supports the simple case of "data:,..." for now
+            String target = lhfp.getFirstTargetForRelation(
+                    JcrRemotingConstants.RELATION_USER_DATA);
+            if (target != null) {
+                try {
+                    URI uri = new URI(target);
+                    // Poor Man's data: URI parsing
+                    if ("data".equalsIgnoreCase(uri.getScheme())) {
+                        String sspart = uri.getRawSchemeSpecificPart();
+                        if (sspart.startsWith(",")) {
+                            data = Text.unescape(sspart.substring(1));
+                        }
+                    }
+                } catch (URISyntaxException ex) {
+                    // not a URI, skip
+                }
+            }
+
+            try {
+                session.getWorkspace().getObservationManager().setUserData(data);
+            } catch (UnsupportedRepositoryOperationException ignore) {
+            }
+        }
+
+        /**
+         * Find first link relation for remote session identifier and set
+         * it as an attribute of the given session.
+         */
+        private void setSessionIdentifier(
+                Session session, LinkHeaderFieldParser lhfp) {
+            if (session instanceof SessionExtensions) {
+                String name = JcrRemotingConstants.RELATION_REMOTE_SESSION_ID;
+                String id = lhfp.getFirstTargetForRelation(name);
+                ((SessionExtensions) session).setAttribute(name, id);
             }
         }
 

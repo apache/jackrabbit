@@ -71,13 +71,8 @@
         <configuration>
           <instructions>
             <Export-Package>
-              !*
+              org.apache.jackrabbit.server
             </Export-Package>
-            <Private-Package>
-              org.apache.jackrabbit.server.*,
-              org.apache.jackrabbit.webdav.jcr.*,
-              org.apache.jackrabbit.webdav.simple
-            </Private-Package>
           </instructions>
         </configuration>
       </plugin>
@@ -208,7 +203,12 @@
       <version>1.6.0</version>
       <scope>provided</scope>
     </dependency>
-    
+    <dependency>
+      <groupId>biz.aQute</groupId>
+      <artifactId>bndlib</artifactId>
+      <scope>provided</scope>
+    </dependency>
+
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>

@@ -17,7 +17,7 @@
 package org.apache.jackrabbit.webdav.jcr.observation;
 
 import org.apache.jackrabbit.commons.webdav.EventUtil;
-import org.apache.jackrabbit.server.SessionProviderImpl;
+import org.apache.jackrabbit.commons.webdav.JcrRemotingConstants;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.commons.AdditionalEventInfo;
 import org.apache.jackrabbit.spi.commons.SessionExtensions;
@@ -462,17 +462,18 @@ public class SubscriptionImpl implements Subscription, ObservationConstants, Eve
                 if (!localFlagSet) {
                     // obtain remote session identifier
                     localFlagSet = true;
-                    String forSessionId = (String) session
-                            .getAttribute(SessionProviderImpl.ATTRIBUTE_SESSION_ID);
+                    String name = JcrRemotingConstants.RELATION_REMOTE_SESSION_ID;
+                    Object forSessionId = session.getAttribute(name);
                     // calculate "local" flags
                     if (forSessionId != null
                             && event instanceof AdditionalEventInfo) {
+                        AdditionalEventInfo aei = (AdditionalEventInfo) event;
                         try {
-                            String eventforSessionId = (String) ((AdditionalEventInfo) event)
-                                    .getSessionAttribute(SessionProviderImpl.ATTRIBUTE_SESSION_ID);
-                            boolean isLocal = forSessionId
-                                    .equals(eventforSessionId);
-                            DomUtil.setAttribute(bundle, XML_EVENT_LOCAL, null, Boolean.toString(isLocal));
+                            boolean isLocal = forSessionId.equals(
+                                    aei.getSessionAttribute(name));
+                            DomUtil.setAttribute(
+                                    bundle, XML_EVENT_LOCAL, null,
+                                    Boolean.toString(isLocal));
                         } catch (UnsupportedRepositoryOperationException ex) {
                             // optional feature
                         }
