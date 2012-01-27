@@ -978,7 +978,7 @@ public class NodeTypeRegistry implements NodeTypeEventListener {
      */
     protected void checkForReferencesInContent(Name nodeTypeName)
             throws RepositoryException {
-        // throw new RepositoryException("not yet implemented");
+        throw new RepositoryException("not yet implemented");
     }
 
     //-------------------------------------------------------< implementation >
