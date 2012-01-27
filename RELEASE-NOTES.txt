@@ -1,4 +1,4 @@
-Release Notes -- Apache Jackrabbit -- Version 2.2.10
+Release Notes -- Apache Jackrabbit -- Version 2.2.11
 
 Introduction
 ------------
@@ -7,7 +7,7 @@ This is Apache Jackrabbit(TM) 2.2, a fully compliant implementation of the
 Content Repository for Java(TM) Technology API, version 2.0 (JCR 2.0) as
 specified in the Java Specification Request 283 (JSR 283).
 
-Apache Jackrabbit 2.2.10 is patch release that contains fixes and
+Apache Jackrabbit 2.2.11 is patch release that contains fixes and
 improvements over previous 2.2.x releases. This release is backwards
 compatible with all earlier 2.x releases.
 
@@ -16,41 +16,41 @@ Changes in this release
 
 Improvements
 
-  [JCR-3085] better diagnostics when version storage is broken
-  [JCR-3098] Add hit miss statistics and logging to caches
+  [JCR-3107] Speed up hierarchy cache initialization
+  [JCR-3167] Make Jackrabbit compile on Java 7
 
 Bug fixes
 
-  [JCR-2026] DbDataStore: garbage collection deadlock
-  [JCR-2861] Internal Timeout Handling in the TransactionContext is not ...
-  [JCR-2863] Session#importXML can't handle properly uuid collision if ...
-  [JCR-2883] Node.orderBefore and JackrabbitNode.rename should check for ...
-  [JCR-2892] Large fetch sizes have potentially deleterious effects on ...
-  [JCR-2899] [patch] fix uppercase/lowercase handling for not equal to
-  [JCR-2903] Session.importXml should close the input stream (as to ...
-  [JCR-2920] Workspace.copy(src, dest) throws unexpected ...
-  [JCR-2921] URIResolverImpl: use of bitwise instead of logical AND operator
-  [JCR-2922] JcrParser: use of bitwise instead of logical AND operator
-  [JCR-2954] SQL-2 query returns more than the requested column
-  [JCR-3017] Version history recovery fails in case a version does not ...
-  [JCR-3086] potential infinite loop around InternalVersionImpl.getSuccessors
-  [JCR-3089] javax.jcr.RepositoryException when a JOIN SQL2 query is ...
-  [JCR-3090] setFetchSize() fails in getAllNodeIds()
-  [JCR-3101] recovery tool does not recover when version history can be ...
-  [JCR-3105] NPE when versioning operations are concurrent
-  [JCR-3108] SQL2 ISDESCENDANTNODE can throw BooleanQuery#TooManyClauses ...
-  [JCR-3111] InternalVersionManagerBase; missing null check after getNode()
-  [JCR-3112] NodeTypeDefDiff.PropDefDiff.init() constraints change check bugs
-  [JCR-3115] Versioning fixup leaves persistence in a state where the ...
-  [JCR-3116] Cluster Node ID should be trimmed
-  [JCR-3126] The CredentialsWrapper should use a empty String as userId ...
-  [JCR-3128] Problem with formerly escaped JCR node names when upgrading ...
-  [JCR-3139] missing sync in InternalVersionManagerImpl.externalUpdate ...
+  [JCR-3148] Using transactions still leads to memory leak
+  [JCR-3174] Destination URI should be normalized
+  [JCR-3175] InputContextImpl: cannot upload file larger than 2GB
+  [JCR-3210] NPE in spi2dav when server does not send all headers
+  [JCR-3223] Disallow unregistering of node types still (possibly) in use
 
 For more detailed information about all the changes in this and other
 Jackrabbit releases, please see the Jackrabbit issue tracker at
 
     https://issues.apache.org/jira/browse/JCR
+
+Node type unregistration problem in 2.2.[0-10]
+----------------------------------------------
+
+Earlier 2.2.x releases (< 2.2.11) mistakenly allowed node types to be
+unregistered without no checks on whether those types are still referenced
+in content. Before Jackrabbit 2.1 the "checkForReferencesInContent" method
+used to always throw a "not yet implemented" exception since we haven't yet
+implemented that functionality and didn't want people to accidentally break
+the consistency of their content by removing types that are still used.
+However, before the 2.1 release this exception was accidentally disabled
+and thus in Jackrabbit versions 2.1.x and 2.2.x it has so far been possible
+to remove node types with no such consistency constraints.
+
+This issue was fixed in Jackrabbit 2.2.11 by re-enabling the exception in
+the checkForReferencesInContent method, which will break all client code
+that tries to unregister node types. If you need this functionality and
+are aware of the potential problems, you can restore the old behaviour
+by setting the disableCheckForReferencesInContentException system property
+to "true".
 
 Data consistency issue in 2.2.[0-6]
 -----------------------------------
