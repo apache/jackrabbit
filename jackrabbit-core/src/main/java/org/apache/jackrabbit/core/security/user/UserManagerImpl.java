@@ -60,6 +60,8 @@ import java.util.Set;
 import java.util.UUID;
 
 /**
+ * <h2>Implementation Characteristics</h2>
+ *
  * Default implementation of the <code>UserManager</code> interface with the
  * following characteristics:
  *
@@ -77,6 +79,8 @@ import java.util.UUID;
  *    </ul>
  * </li>
  * </ul>
+ *
+ * <h3>Authorizable Creation</h3>
  *
  * The built-in logic applies the following rules:
  * <ul>
@@ -115,9 +119,12 @@ import java.util.UUID;
  *           + aSmith        [rep:User]
  * </pre>
  *
+ * <h3>Configuration</h3>
+ *
  * This <code>UserManager</code> is able to handle the following configuration
  * options:
  *
+ * <h4>Configuration Parameters</h4>
  * <ul>
  * <li>{@link #PARAM_USERS_PATH}: Defines where user nodes are created.
  * If missing set to {@link #USERS_PATH}.</li>
@@ -142,7 +149,19 @@ import java.util.UUID;
  * <li>{@link #PARAM_AUTO_EXPAND_SIZE}: This parameter only takes effect
  * if {@link #PARAM_AUTO_EXPAND_TREE} is enabled.<br>The value is expected to be
  * a positive long greater than zero. The default value is 1000.</li>
+ * <li>{@link #PARAM_GROUP_MEMBERSHIP_SPLIT_SIZE}: If this parameter is present
+ * group memberships are collected in a node structure below {@link UserConstants#N_MEMBERS}
+ * instead of the default multi valued property {@link UserConstants#P_MEMBERS}.
+ * Its value determines the maximum number of member properties until additional
+ * intermediate nodes are inserted. Valid parameter values are integers &gt; 4.</li>
  * </ul>
+ *
+ * <h4>Authorizable Actions</h4>
+ * In addition to the specified configuration parameters this user manager
+ * implementation allows to define zero to many {@link AuthorizableAction}s.
+ * Authorizable actions provide the ability to execute additional validation or
+ * tasks upon authorizable creation, removal and upon changing a users password.<br/>
+ * See also {@link org.apache.jackrabbit.core.config.UserManagerConfig#getAuthorizableActions()}
  */
 public class UserManagerImpl extends ProtectedItemModifier
         implements UserManager, UserConstants, SessionListener {
