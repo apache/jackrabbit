@@ -70,6 +70,8 @@ Improvements
   [JCR-3199] workspace-wide default for lock timeout
   [JCR-3200] consistency check should get node ids in chunks, not rely on ...
   [JCR-3202] AuthorizableImpl#memberOf and #declaredMemberOf should ...
+  [JCR-3203] GroupImp#getMembers and #getDeclaredMembers should return ...
+  [JCR-3222] Allow servlet filters to specify custom session providers
 
 Bug fixes
 
@@ -116,6 +118,13 @@ Bug fixes
   [JCR-3198] Broken handling of outer join results over davex
   [JCR-3205] Missing support for lock timeout and ownerHint in jcr-server
   [JCR-3210] NPE in spi2dav when server does not send all headers
+  [JCR-3214] [Lock] weird number for "infinite"
+  [JCR-3216] When fetching node ids in checks for the checker all ...
+  [JCR-3218] UserImporter should trigger execution AuthorizableActions ...
+  [JCR-3220] simple webdav server does not support lock timeouts
+  [JCR-3223] Disallow unregistering of node types still (possibly) in use
+  [JCR-3224] SystemSession#createSession should return SessionImpl again
+  [JCR-3225] ConcurrentModificationException in QueryStatImpl
 
 In addition to the above-mentioned changes, this release contains
 all the changes included up to the Apache Jackrabbit 2.2.0 release.
