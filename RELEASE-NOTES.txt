@@ -7,8 +7,9 @@ This is Apache Jackrabbit(TM) 2.4, a fully compliant implementation of the
 Content Repository for Java(TM) Technology API, version 2.0 (JCR 2.0) as
 specified in the Java Specification Request 283 (JSR 283).
 
-Apache Jackrabbit 2.4 is a stable series of releases intended for
-production use.
+Apache Jackrabbit 2.4 is an incremental feature release based on and
+compatible with earlier stable Jackrabbit 2.x releases. Jackrabbit 2.4.x
+releases are considered stable and targeted for production use.
 
 Changes since Jackrabbit 2.2.0
 ------------------------------
@@ -28,7 +29,7 @@ New features
 
 Improvements
 
-  [JCR-1443] ake JCAManagedConnectionFactory non final, so it can be extended
+  [JCR-1443] Make JCAManagedConnectionFactory non final, so it can be extended
   [JCR-2798] JCAManagedConnectionFactory should chain cause exception
   [JCR-2887] Split PrivilegeRegistry in a per-session manager instance ...
   [JCR-2906] Multivalued property sorted by last/random value
