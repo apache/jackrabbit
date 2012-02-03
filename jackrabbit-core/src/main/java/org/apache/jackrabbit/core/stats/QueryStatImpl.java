@@ -115,16 +115,19 @@ public class QueryStatImpl implements QueryStatCore {
         final QueryStatDtoImpl qs = new QueryStatDtoImpl(language, statement,
                 durationMs);
         slowQueries.offer(qs);
-        Iterator<QueryStatDtoImpl> iterator = popularQueries.iterator();
-        while (iterator.hasNext()) {
-            QueryStatDtoImpl qsdi = iterator.next();
-            if (qsdi.equals(qs)) {
-                qs.setOccurrenceCount(qsdi.getOccurrenceCount() + 1);
-                iterator.remove();
-                break;
+
+        synchronized (popularQueries) {
+            Iterator<QueryStatDtoImpl> iterator = popularQueries.iterator();
+            while (iterator.hasNext()) {
+                QueryStatDtoImpl qsdi = iterator.next();
+                if (qsdi.equals(qs)) {
+                    qs.setOccurrenceCount(qsdi.getOccurrenceCount() + 1);
+                    iterator.remove();
+                    break;
+                }
             }
+            popularQueries.offer(qs);
         }
-        popularQueries.offer(qs);
     }
 
     public void clearSlowQueriesQueue() {
@@ -142,11 +145,17 @@ public class QueryStatImpl implements QueryStatCore {
     }
 
     public QueryStatDto[] getPopularQueries() {
-        QueryStatDtoImpl[] top = popularQueries
-                .toArray(new QueryStatDtoImpl[popularQueries.size()]);
+        QueryStatDtoImpl[] top = new QueryStatDtoImpl[0];
+        int size = 0;
+        int maxSize = 0;
+        synchronized (popularQueries) {
+            top = popularQueries.toArray(new QueryStatDtoImpl[popularQueries
+                    .size()]);
+            size = popularQueries.size();
+            maxSize = popularQueries.getMaxSize();
+        }
         Arrays.sort(top, Collections.reverseOrder(comparatorOccurrence));
-        int retSize = Math.min(popularQueries.size(),
-                popularQueries.getMaxSize() / POPULAR_QUEUE_MULTIPLIER);
+        int retSize = Math.min(size, maxSize / POPULAR_QUEUE_MULTIPLIER);
         QueryStatDto[] retval = new QueryStatDto[retSize];
         for (int i = 0; i < retSize; i++) {
             top[i].setPosition(i + 1);
