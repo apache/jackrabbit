@@ -105,7 +105,7 @@ public final class EventImpl implements JackrabbitEvent, AdditionalEventInfo, Ev
      */
     public String getPath() throws RepositoryException {
         Path p = getQPath();
-        return p != null ? session.getJCRPath(getQPath()) : null;
+        return p != null ? session.getJCRPath(p) : null;
     }
 
     /**
