@@ -39,6 +39,11 @@ public class FileRevision implements InstanceRevision {
     private final RandomAccessFile raf;
 
     /**
+     * Flag indicating whether to sync the file on every write.
+     */
+    private final boolean sync;
+
+    /**
      * Cached value.
      */
     private long value;
@@ -52,9 +57,13 @@ public class FileRevision implements InstanceRevision {
      * Creates a new file based revision counter.
      *
      * @param file holding global counter
+     * @param sync whether to sync the file on every write
+     * 
      * @throws JournalException if some error occurs
      */
-    public FileRevision(File file) throws JournalException {
+    public FileRevision(File file, boolean sync) throws JournalException {
+        this.sync = sync;
+
         try {
             if (!file.exists()) {
                 file.createNewFile();
@@ -101,7 +110,9 @@ public class FileRevision implements InstanceRevision {
             }
             raf.seek(0L);
             raf.writeLong(value);
-            raf.getFD().sync();
+            if (sync) {
+                raf.getFD().sync();
+            }
             this.value = value;
         } catch (IOException e) {
             throw new JournalException("I/O error occurred.", e);

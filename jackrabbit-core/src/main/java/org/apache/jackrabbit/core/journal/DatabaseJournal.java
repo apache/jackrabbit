@@ -364,7 +364,7 @@ public class DatabaseJournal extends AbstractJournal implements DatabaseAware {
         // Get the local file revision from disk (upgrade; see JCR-1087)
         long localFileRevision = 0L;
         if (getRevision() != null) {
-            InstanceRevision currentFileRevision = new FileRevision(new File(getRevision()));
+            InstanceRevision currentFileRevision = new FileRevision(new File(getRevision()), true);
             localFileRevision = currentFileRevision.get();
             currentFileRevision.close();
         }
