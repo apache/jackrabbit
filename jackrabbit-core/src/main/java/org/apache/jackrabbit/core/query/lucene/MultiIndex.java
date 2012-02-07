@@ -1101,6 +1101,10 @@ public class MultiIndex {
      * @throws IOException if the volatile index cannot be reset.
      */
     private void resetVolatileIndex() throws IOException {
+        // JCR-3227 close VolatileIndex properly
+        if (volatileIndex != null) {
+            volatileIndex.close();
+        }
         volatileIndex = new VolatileIndex(handler.getTextAnalyzer(),
                 handler.getSimilarity(), indexingQueue);
         volatileIndex.setUseCompoundFile(handler.getUseCompoundFile());
