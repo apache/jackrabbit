@@ -21,7 +21,10 @@
     <param name="path" value="${wsp.home}" />
   </FileSystem>
 
-  <PersistenceManager class="org.apache.jackrabbit.core.persistence.pool.BundleFsPersistenceManager" />
+  <PersistenceManager class="org.apache.jackrabbit.core.persistence.pool.DerbyPersistenceManager">
+     <param name="url" value="jdbc:derby:${wsp.home}/db;create=true"/>
+     <param name="schemaObjectPrefix" value="${wsp.name}_"/>
+  </PersistenceManager>
 
   <SearchIndex class="org.apache.jackrabbit.core.query.lucene.SearchIndex">
     <param name="path" value="${wsp.home}/index" />
