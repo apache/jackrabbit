@@ -247,7 +247,7 @@ public class FileJournal extends AbstractJournal {
      * {@inheritDoc}
      */
     public InstanceRevision getInstanceRevision() throws JournalException {
-        return new FileRevision(new File(getRevision()));
+        return new FileRevision(new File(getRevision()), true);
     }
 
     /**
