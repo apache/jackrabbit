@@ -255,8 +255,9 @@ public class NodeIndexer {
                 }
 
                 InternalValue[] values = propState.getValues();
+                boolean isIndexed = isIndexed(propState.getName());
                 for (InternalValue value : values) {
-                    addValue(doc, value, propState.getName());
+                    addValue(doc, value, propState.getName(), isIndexed);
                 }
                 if (values.length > 1) {
                     // real multi-valued
@@ -312,8 +313,9 @@ public class NodeIndexer {
      * @param doc   the document.
      * @param value the internal jackrabbit value.
      * @param name  the name of the property.
+     * @param isIndexed  if the property should be added to the index
      */
-    protected void addValue(Document doc, InternalValue value, Name name) throws RepositoryException {
+    protected void addValue(Document doc, InternalValue value, Name name, boolean isIndexed) throws RepositoryException {
         String fieldName = name.getLocalName();
         try {
             fieldName = resolver.getJCRName(name);
@@ -322,52 +324,52 @@ public class NodeIndexer {
         }
         switch (value.getType()) {
             case PropertyType.BINARY:
-                if (isIndexed(name)) {
+                if (isIndexed) {
                     addBinaryValue(doc, fieldName, value);
                 }
                 break;
             case PropertyType.BOOLEAN:
-                if (isIndexed(name)) {
+                if (isIndexed) {
                     addBooleanValue(doc, fieldName, value.getBoolean());
                 }
                 break;
             case PropertyType.DATE:
-                if (isIndexed(name)) {
+                if (isIndexed) {
                     addCalendarValue(doc, fieldName, value.getDate());
                 }
                 break;
             case PropertyType.DOUBLE:
-                if (isIndexed(name)) {
+                if (isIndexed) {
                     addDoubleValue(doc, fieldName, value.getDouble());
                 }
                 break;
             case PropertyType.LONG:
-                if (isIndexed(name)) {
+                if (isIndexed) {
                     addLongValue(doc, fieldName, value.getLong());
                 }
                 break;
             case PropertyType.REFERENCE:
-                if (isIndexed(name)) {
+                if (isIndexed) {
                     addReferenceValue(doc, fieldName, value.getNodeId(), false);
                 }
                 break;
             case PropertyType.WEAKREFERENCE:
-                if (isIndexed(name)) {
+                if (isIndexed) {
                     addReferenceValue(doc, fieldName, value.getNodeId(), true);
                 }
                 break;
             case PropertyType.PATH:
-                if (isIndexed(name)) {
+                if (isIndexed) {
                     addPathValue(doc, fieldName, value.getPath());
                 }
                 break;
             case PropertyType.URI:
-                if (isIndexed(name)) {
+                if (isIndexed) {
                     addURIValue(doc, fieldName, value.getURI());
                 }
                 break;
             case PropertyType.STRING:
-                if (isIndexed(name)) {
+                if (isIndexed) {
                     // never fulltext index jcr:uuid String
                     if (name.equals(NameConstants.JCR_UUID)) {
                         addStringValue(doc, fieldName, value.getString(),
@@ -384,19 +386,19 @@ public class NodeIndexer {
                 // node type resolution in queries
                 if (name.equals(NameConstants.JCR_PRIMARYTYPE)
                         || name.equals(NameConstants.JCR_MIXINTYPES)
-                        || isIndexed(name)) {
+                        || isIndexed) {
                     addNameValue(doc, fieldName, value.getName());
                 }
                 break;
             case PropertyType.DECIMAL:
-                if (isIndexed(name)) {
+                if (isIndexed) {
                     addDecimalValue(doc, fieldName, value.getDecimal());
                 }
                 break;
             default:
                 throw new IllegalArgumentException("illegal internal value type: " + value.getType());
         }
-        addValueProperty(doc, value, name, fieldName);
+        addValueProperty(doc, value, name, fieldName, isIndexed);
     }
 
     /**
@@ -410,12 +412,14 @@ public class NodeIndexer {
      *            the internal jackrabbit value.
      * @param name
      *            the name of the property.
+     * @param isIndexed  
+     *            if the property should added to the index
      */
     protected void addValueProperty(Document doc, InternalValue value,
-            Name name, String fieldName) throws RepositoryException {
+            Name name, String fieldName, boolean isIndexed) throws RepositoryException {
 
         // skip this method if field is not indexed
-        if (!isIndexed(name)) {
+        if (!isIndexed) {
             return;
         }
 
