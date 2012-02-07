@@ -244,29 +244,32 @@ public class NodeIndexer {
 
         Set<Name> props = node.getPropertyNames();
         for (Name propName : props) {
-            PropertyId id = new PropertyId(node.getNodeId(), propName);
-            try {
-                PropertyState propState = (PropertyState) stateProvider.getItemState(id);
+            if (isIndexed(propName)) {
+                PropertyId id = new PropertyId(node.getNodeId(), propName);
+                try {
+                    PropertyState propState =
+                            (PropertyState) stateProvider.getItemState(id);
 
-                // add each property to the _PROPERTIES_SET for searching
-                // beginning with V2
-                if (indexFormatVersion.getVersion() >= IndexFormatVersion.V2.getVersion()) {
-                    addPropertyName(doc, propState.getName());
-                }
+                    // add each property to the _PROPERTIES_SET for searching
+                    // beginning with V2
+                    if (indexFormatVersion.getVersion() >= IndexFormatVersion.V2.getVersion()) {
+                        addPropertyName(doc, propState.getName());
+                    }
 
-                InternalValue[] values = propState.getValues();
-                boolean isIndexed = isIndexed(propState.getName());
-                for (InternalValue value : values) {
-                    addValue(doc, value, propState.getName(), isIndexed);
+                    InternalValue[] values = propState.getValues();
+                    for (InternalValue value : values) {
+                        addValue(doc, value, propState.getName());
+                    }
+
+                    if (values.length > 1) {
+                        // real multi-valued
+                        addMVPName(doc, propState.getName());
+                    }
+                } catch (NoSuchItemStateException e) {
+                    throwRepositoryException(e);
+                } catch (ItemStateException e) {
+                    throwRepositoryException(e);
                 }
-                if (values.length > 1) {
-                    // real multi-valued
-                    addMVPName(doc, propState.getName());
-                }
-            } catch (NoSuchItemStateException e) {
-                throwRepositoryException(e);
-            } catch (ItemStateException e) {
-                throwRepositoryException(e);
             }
         }
 
@@ -313,9 +316,8 @@ public class NodeIndexer {
      * @param doc   the document.
      * @param value the internal jackrabbit value.
      * @param name  the name of the property.
-     * @param isIndexed  if the property should be added to the index
      */
-    protected void addValue(Document doc, InternalValue value, Name name, boolean isIndexed) throws RepositoryException {
+    protected void addValue(Document doc, InternalValue value, Name name) throws RepositoryException {
         String fieldName = name.getLocalName();
         try {
             fieldName = resolver.getJCRName(name);
@@ -324,81 +326,53 @@ public class NodeIndexer {
         }
         switch (value.getType()) {
             case PropertyType.BINARY:
-                if (isIndexed) {
-                    addBinaryValue(doc, fieldName, value);
-                }
+                addBinaryValue(doc, fieldName, value);
                 break;
             case PropertyType.BOOLEAN:
-                if (isIndexed) {
-                    addBooleanValue(doc, fieldName, value.getBoolean());
-                }
+                addBooleanValue(doc, fieldName, value.getBoolean());
                 break;
             case PropertyType.DATE:
-                if (isIndexed) {
-                    addCalendarValue(doc, fieldName, value.getDate());
-                }
+                addCalendarValue(doc, fieldName, value.getDate());
                 break;
             case PropertyType.DOUBLE:
-                if (isIndexed) {
-                    addDoubleValue(doc, fieldName, value.getDouble());
-                }
+                addDoubleValue(doc, fieldName, value.getDouble());
                 break;
             case PropertyType.LONG:
-                if (isIndexed) {
-                    addLongValue(doc, fieldName, value.getLong());
-                }
+                addLongValue(doc, fieldName, value.getLong());
                 break;
             case PropertyType.REFERENCE:
-                if (isIndexed) {
-                    addReferenceValue(doc, fieldName, value.getNodeId(), false);
-                }
+                addReferenceValue(doc, fieldName, value.getNodeId(), false);
                 break;
             case PropertyType.WEAKREFERENCE:
-                if (isIndexed) {
-                    addReferenceValue(doc, fieldName, value.getNodeId(), true);
-                }
+                addReferenceValue(doc, fieldName, value.getNodeId(), true);
                 break;
             case PropertyType.PATH:
-                if (isIndexed) {
-                    addPathValue(doc, fieldName, value.getPath());
-                }
+                addPathValue(doc, fieldName, value.getPath());
                 break;
             case PropertyType.URI:
-                if (isIndexed) {
-                    addURIValue(doc, fieldName, value.getURI());
-                }
+                addURIValue(doc, fieldName, value.getURI());
                 break;
             case PropertyType.STRING:
-                if (isIndexed) {
-                    // never fulltext index jcr:uuid String
-                    if (name.equals(NameConstants.JCR_UUID)) {
-                        addStringValue(doc, fieldName, value.getString(),
-                                false, false, DEFAULT_BOOST, true);
-                    } else {
-                        addStringValue(doc, fieldName, value.getString(),
-                                true, isIncludedInNodeIndex(name),
-                                getPropertyBoost(name), useInExcerpt(name));
-                    }
+                // never fulltext index jcr:uuid String
+                if (name.equals(NameConstants.JCR_UUID)) {
+                    addStringValue(doc, fieldName, value.getString(),
+                            false, false, DEFAULT_BOOST, true);
+                } else {
+                    addStringValue(doc, fieldName, value.getString(),
+                            true, isIncludedInNodeIndex(name),
+                            getPropertyBoost(name), useInExcerpt(name));
                 }
                 break;
             case PropertyType.NAME:
-                // jcr:primaryType and jcr:mixinTypes are required for correct
-                // node type resolution in queries
-                if (name.equals(NameConstants.JCR_PRIMARYTYPE)
-                        || name.equals(NameConstants.JCR_MIXINTYPES)
-                        || isIndexed) {
-                    addNameValue(doc, fieldName, value.getName());
-                }
+                addNameValue(doc, fieldName, value.getName());
                 break;
             case PropertyType.DECIMAL:
-                if (isIndexed) {
-                    addDecimalValue(doc, fieldName, value.getDecimal());
-                }
+                addDecimalValue(doc, fieldName, value.getDecimal());
                 break;
             default:
                 throw new IllegalArgumentException("illegal internal value type: " + value.getType());
         }
-        addValueProperty(doc, value, name, fieldName, isIndexed);
+        addValueProperty(doc, value, name, fieldName);
     }
 
     /**
@@ -412,17 +386,9 @@ public class NodeIndexer {
      *            the internal jackrabbit value.
      * @param name
      *            the name of the property.
-     * @param isIndexed  
-     *            if the property should added to the index
      */
     protected void addValueProperty(Document doc, InternalValue value,
-            Name name, String fieldName, boolean isIndexed) throws RepositoryException {
-
-        // skip this method if field is not indexed
-        if (!isIndexed) {
-            return;
-        }
-
+            Name name, String fieldName) throws RepositoryException {
         // add length
         if (indexFormatVersion.getVersion() >= IndexFormatVersion.V3.getVersion()) {
             addLength(doc, fieldName, value);
@@ -859,19 +825,21 @@ public class NodeIndexer {
     }
 
     /**
-     * Returns <code>true</code> if the property with the given name should be
-     * indexed.
+     * Returns <code>true</code> if the property with the given name should
+     * be indexed. The default is to index all properties unless explicit
+     * indexing configuration is specified. The <code>jcr:primaryType</code>
+     * and <code>jcr:mixinTypes</code> properties are always indexed for
+     * correct node type resolution in queries.
      *
      * @param propertyName name of a property.
-     * @return <code>true</code> if the property should be fulltext indexed;
+     * @return <code>true</code> if the property should be indexed;
      *         <code>false</code> otherwise.
      */
     protected boolean isIndexed(Name propertyName) {
-        if (indexingConfig == null) {
-            return true;
-        } else {
-            return indexingConfig.isIndexed(node, propertyName);
-        }
+        return indexingConfig == null
+                || propertyName.equals(NameConstants.JCR_PRIMARYTYPE)
+                || propertyName.equals(NameConstants.JCR_MIXINTYPES)
+                || indexingConfig.isIndexed(node, propertyName);
     }
 
     /**
