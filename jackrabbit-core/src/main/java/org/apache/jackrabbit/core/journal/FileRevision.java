@@ -36,22 +36,22 @@ public class FileRevision implements InstanceRevision {
     /**
      * Underlying random access file.
      */
-    private final RandomAccessFile raf;
+    protected final RandomAccessFile raf;
 
     /**
      * Flag indicating whether to sync the file on every write.
      */
-    private final boolean sync;
+    protected final boolean sync;
 
     /**
      * Cached value.
      */
-    private long value;
+    protected long value;
     
     /**
      * Flag indicating whether this revision file is closed.
      */
-    private boolean closed;
+    protected boolean closed;
 
     /**
      * Creates a new file based revision counter.
