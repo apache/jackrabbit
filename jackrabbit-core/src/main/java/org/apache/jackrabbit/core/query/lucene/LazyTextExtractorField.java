@@ -20,6 +20,7 @@ import java.io.InputStream;
 import java.io.Reader;
 import java.util.concurrent.Executor;
 
+import org.apache.jackrabbit.core.LowPriorityTask;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.document.AbstractField;
@@ -146,7 +147,7 @@ public class LazyTextExtractorField extends AbstractField {
     /**
      * The background task for extracting text from a binary value.
      */
-    private class ParsingTask extends DefaultHandler implements Runnable {
+    private class ParsingTask extends DefaultHandler implements LowPriorityTask {
 
         private final Parser parser;
 

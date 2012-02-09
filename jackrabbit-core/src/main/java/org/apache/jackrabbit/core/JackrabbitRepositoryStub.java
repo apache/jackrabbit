@@ -83,6 +83,18 @@ public class JackrabbitRepositoryStub extends RepositoryStub {
         }));
     }
 
+    public static RepositoryContext getRepositoryContext(
+            Repository repository) {
+        synchronized (REPOSITORY_INSTANCES) {
+            for (Repository r : REPOSITORY_INSTANCES.values()) {
+                if (r == repository) {
+                    return ((RepositoryImpl) r).context;
+                }
+            }
+        }
+        throw new RuntimeException("Not a test repository: " + repository);
+    }
+
     private static Properties getStaticProperties() {
         Properties properties = new Properties();
         try {

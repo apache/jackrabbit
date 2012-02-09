@@ -16,7 +16,11 @@
  */
 package org.apache.jackrabbit.core;
 
+import java.util.concurrent.TimeUnit;
+
+import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
+import javax.jcr.Session;
 
 /**
  * <code>TestHelper</code> provides test utility methods.
@@ -34,5 +38,18 @@ public class TestHelper {
     public static void shutdownWorkspace(String name, RepositoryImpl repo)
             throws RepositoryException {
         repo.getWorkspaceInfo(name).dispose();
+    }
+
+    /**
+     * wait for async text-extraction tasks to finish
+     */
+    public static void waitForTextExtractionTasksToFinish(Session session) throws Exception {
+        final RepositoryContext context = JackrabbitRepositoryStub
+                .getRepositoryContext(session.getRepository());
+        JackrabbitThreadPool jtp = ((JackrabbitThreadPool) context
+                .getExecutor());
+        while (jtp.getPendingLowPriorityTaskCount() != 0) {
+            TimeUnit.MILLISECONDS.sleep(100);
+        }
     }
 }

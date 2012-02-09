@@ -19,6 +19,8 @@ package org.apache.jackrabbit.core.query;
 import javax.jcr.Session;
 import javax.jcr.Node;
 
+import org.apache.jackrabbit.core.TestHelper;
+
 /**
  * <code>AbstractIndexingTest</code> is a base class for all indexing
  * configuration tests.
@@ -47,5 +49,13 @@ public class AbstractIndexingTest extends AbstractQueryTest {
         }
         testRootNode = null;
         super.tearDown();
+    }
+
+    /**
+     * wait for async text-extraction tasks to finish
+     */
+    protected void waitForTextExtractionTasksToFinish() throws Exception {
+        TestHelper.waitForTextExtractionTasksToFinish(session);
+        getSearchIndex().flush();
     }
 }
