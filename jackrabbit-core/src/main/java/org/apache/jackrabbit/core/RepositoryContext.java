@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.core;
 
+import java.util.concurrent.ScheduledExecutorService;
+
 import org.apache.jackrabbit.core.cluster.ClusterNode;
 import org.apache.jackrabbit.core.data.DataStore;
 import org.apache.jackrabbit.core.fs.FileSystem;
@@ -96,6 +98,12 @@ public class RepositoryContext {
     private final Timer timer = new Timer(false);
 
     /**
+     * Thread pool of this repository.
+     */
+    private final ScheduledExecutorService executor =
+            new JackrabbitThreadPool();
+
+    /**
      * Creates a component context for the given repository.
      *
      * @param repository repository instance
@@ -121,6 +129,15 @@ public class RepositoryContext {
      */
     public Timer getTimer() {
         return timer;
+    }
+
+    /**
+     * Returns the thread pool of this repository.
+     *
+     * @return repository thread pool
+     */
+    public ScheduledExecutorService getExecutor() {
+        return executor;
     }
 
     /**
