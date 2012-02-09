@@ -130,12 +130,11 @@ public class SearchManager implements SynchronousEventListener {
     public SearchManager(
             RepositoryContext repositoryContext,
             QueryHandlerFactory qhf,
-                         SharedItemStateManager itemMgr,
-                         PersistenceManager pm,
-                         NodeId rootNodeId,
-                         SearchManager parentMgr,
-                         NodeId excludedNodeId,
-                         Executor executor) throws RepositoryException {
+            SharedItemStateManager itemMgr,
+            PersistenceManager pm,
+            NodeId rootNodeId,
+            SearchManager parentMgr,
+            NodeId excludedNodeId) throws RepositoryException {
         this.nsReg = repositoryContext.getNamespaceRegistry();
         this.itemMgr = itemMgr;
         this.parentHandler = (parentMgr != null) ? parentMgr.handler : null;
@@ -174,7 +173,7 @@ public class SearchManager implements SynchronousEventListener {
         this.handler = qhf.getQueryHandler(new QueryHandlerContext(
                 repositoryContext,
                 itemMgr, pm, rootNodeId,
-                parentHandler, excludedNodeId, executor));
+                parentHandler, excludedNodeId));
     }
 
     /**
