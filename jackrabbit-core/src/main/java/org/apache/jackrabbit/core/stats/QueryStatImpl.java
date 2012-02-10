@@ -158,10 +158,10 @@ public class QueryStatImpl implements QueryStatCore {
         int retSize = Math.min(size, maxSize / POPULAR_QUEUE_MULTIPLIER);
         QueryStatDto[] retval = new QueryStatDto[retSize];
         for (int i = 0; i < retSize; i++) {
-            top[i].setPosition(i + 1);
             retval[i] = top[i];
+            retval[i].setPosition(i + 1);
         }
-        return top;
+        return retval;
     }
 
     public int getPopularQueriesQueueSize() {
