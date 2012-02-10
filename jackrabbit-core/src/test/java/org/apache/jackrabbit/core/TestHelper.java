@@ -69,7 +69,7 @@ public class TestHelper {
             if (!(pm instanceof ConsistencyChecker)) {
                 throw new NotExecutableException();
             } else {
-                return ((ConsistencyChecker) pm).check(null, true, runFix, lostNFoundId);
+                return ((ConsistencyChecker) pm).check(null, true, runFix, lostNFoundId, null);
             }
         }
     }
@@ -97,7 +97,7 @@ public class TestHelper {
             if (!(pm instanceof ConsistencyChecker)) {
                 throw new NotExecutableException();
             } else {
-                return ((ConsistencyChecker) pm).check(null, true, runFix, lostNFoundId);
+                return ((ConsistencyChecker) pm).check(null, true, runFix, lostNFoundId, null);
             }
         }
     }
