@@ -49,7 +49,10 @@ public interface ConsistencyChecker {
      *            in which case orphaned nodes will not get moved); this node
      *            should be of a node type that allows adding arbitrary child
      *            nodes
+     * @param listener
+     *            to be called on each node that was checked (may be <code>null</code>)
      */
-    ConsistencyReport check(String[] uuids, boolean recursive, boolean fix, String lostNFoundId)
+    ConsistencyReport check(String[] uuids, boolean recursive, boolean fix,
+            String lostNFoundId, ConsistencyCheckListener listener)
             throws RepositoryException;
 }

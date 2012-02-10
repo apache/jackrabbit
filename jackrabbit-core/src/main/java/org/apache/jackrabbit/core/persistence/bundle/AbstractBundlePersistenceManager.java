@@ -41,6 +41,7 @@ import org.apache.jackrabbit.core.persistence.CachingPersistenceManager;
 import org.apache.jackrabbit.core.persistence.IterablePersistenceManager;
 import org.apache.jackrabbit.core.persistence.PMContext;
 import org.apache.jackrabbit.core.persistence.PersistenceManager;
+import org.apache.jackrabbit.core.persistence.check.ConsistencyCheckListener;
 import org.apache.jackrabbit.core.persistence.check.ConsistencyChecker;
 import org.apache.jackrabbit.core.persistence.check.ConsistencyReport;
 import org.apache.jackrabbit.core.persistence.util.BLOBStore;
@@ -784,7 +785,7 @@ public abstract class AbstractBundlePersistenceManager implements
      */
     public void checkConsistency(String[] uuids, boolean recursive, boolean fix) {
         try {
-            ConsistencyCheckerImpl cs = new ConsistencyCheckerImpl(this);
+            ConsistencyCheckerImpl cs = new ConsistencyCheckerImpl(this, null);
             cs.check(uuids, recursive, fix, null);
         } catch (RepositoryException ex) {
             log.error("While running consistency check.", ex);
@@ -794,8 +795,10 @@ public abstract class AbstractBundlePersistenceManager implements
     /**
      * {@inheritDoc}
      */
-    public ConsistencyReport check(String[] uuids, boolean recursive, boolean fix, String lostNFoundId) throws RepositoryException {
-        ConsistencyCheckerImpl cs = new ConsistencyCheckerImpl(this);
+    public ConsistencyReport check(String[] uuids, boolean recursive,
+            boolean fix, String lostNFoundId, ConsistencyCheckListener listener)
+            throws RepositoryException {
+        ConsistencyCheckerImpl cs = new ConsistencyCheckerImpl(this, listener);
         return cs.check(uuids, recursive, fix, lostNFoundId);
     }
 
