@@ -134,7 +134,14 @@ public class NameConstants {
      */
     public static final Name JCR_ID = FACTORY.create(Name.NS_JCR_URI, "id");
 
-    /** jcr:title */
+    /**
+     * jcr:description
+     */
+    public static final Name JCR_DESCRIPTION = FACTORY.create(Property.JCR_DESCRIPTION);
+
+    /**
+     * jcr:title
+     */
     public static final Name JCR_TITLE = FACTORY.create(Property.JCR_TITLE);
 
     //--------------------------------------< xml related item name constants >
