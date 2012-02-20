@@ -99,6 +99,7 @@ import org.apache.lucene.search.Similarity;
 import org.apache.lucene.search.Sort;
 import org.apache.lucene.search.SortField;
 import org.apache.lucene.search.TermQuery;
+import org.apache.lucene.util.Version;
 import org.apache.tika.config.TikaConfig;
 import org.apache.tika.fork.ForkParser;
 import org.apache.tika.parser.AutoDetectParser;
@@ -1867,11 +1868,12 @@ public class SearchIndex extends AbstractQueryHandler {
     //--------------------------< properties >----------------------------------
 
     /**
-     * Sets the analyzer in use for indexing. The given analyzer class name
-     * must satisfy the following conditions:
+     * Sets the default analyzer in use for indexing. The given analyzer
+     * class name must satisfy the following conditions:
      * <ul>
      *   <li>the class must exist in the class path</li>
-     *   <li>the class must have a public default constructor</li>
+     *   <li>the class must have a public default constructor, or
+     *       a constructor that takes a Lucene {@link Version} argument</li>
      *   <li>the class must be a Lucene Analyzer</li>
      * </ul>
      * <p>
@@ -1886,21 +1888,16 @@ public class SearchIndex extends AbstractQueryHandler {
      * @param analyzerClassName the analyzer class name
      */
     public void setAnalyzer(String analyzerClassName) {
-        try {
-            Class<?> analyzerClass = Class.forName(analyzerClassName);
-            analyzer.setDefaultAnalyzer((Analyzer) analyzerClass.newInstance());
-        } catch (Exception e) {
-            log.warn("Invalid Analyzer class: " + analyzerClassName, e);
-        }
+        analyzer.setDefaultAnalyzerClass(analyzerClassName);
     }
 
     /**
-     * Returns the class name of the analyzer that is currently in use.
+     * Returns the class name of the default analyzer that is currently in use.
      *
      * @return class name of analyzer in use.
      */
     public String getAnalyzer() {
-        return analyzer.getClass().getName();
+        return analyzer.getDefaultAnalyzerClass();
     }
 
     /**

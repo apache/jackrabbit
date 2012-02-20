@@ -159,41 +159,26 @@ public class IndexingConfigurationImpl
                 for (int j = 0; j < childNodes.getLength(); j++) {
                     Node analyzerNode = childNodes.item(j);
                     if (analyzerNode.getNodeName().equals("analyzer")) {
-                        String analyzerClassName = analyzerNode.getAttributes().getNamedItem("class").getNodeValue();
-                        try {
-                            @SuppressWarnings("rawtypes")
-                            Class clazz = Class.forName(analyzerClassName);
-                            if (clazz == JackrabbitAnalyzer.class) {
-                                log.warn("Not allowed to configure " + JackrabbitAnalyzer.class.getName() +  " for a property. "
-                                        + "Using default analyzer for that property.");
-                            }
-                            else if (Analyzer.class.isAssignableFrom(clazz)) {
-                                Analyzer analyzer = (Analyzer) clazz.newInstance();
-                                NodeList propertyChildNodes = analyzerNode.getChildNodes();
-                                for (int k = 0; k < propertyChildNodes.getLength(); k++) {
-                                    Node propertyNode = propertyChildNodes.item(k);
-                                    if (propertyNode.getNodeName().equals("property")) {
-                                        // get property name
-                                        Name propName = resolver.getQName(getTextContent(propertyNode));
-                                        String fieldName = nsMappings.translateName(propName);
-                                        // set analyzer for the fulltext property fieldname
-                                        int idx = fieldName.indexOf(':');
-                                        fieldName = fieldName.substring(0, idx + 1)
-                                                    + FieldNames.FULLTEXT_PREFIX + fieldName.substring(idx + 1);
-                                        Object prevAnalyzer = analyzers.put(fieldName, analyzer);
-                                        if (prevAnalyzer != null) {
-                                            log.warn("Property " + propName.getLocalName()
-                                                    + " has been configured for multiple analyzers. "
-                                                    + " Last configured analyzer is used");
-                                        }
-                                    }
+                        Analyzer analyzer = JackrabbitAnalyzer.getAnalyzerInstance(
+                                analyzerNode.getAttributes().getNamedItem("class").getNodeValue());
+                        NodeList propertyChildNodes = analyzerNode.getChildNodes();
+                        for (int k = 0; k < propertyChildNodes.getLength(); k++) {
+                            Node propertyNode = propertyChildNodes.item(k);
+                            if (propertyNode.getNodeName().equals("property")) {
+                                // get property name
+                                Name propName = resolver.getQName(getTextContent(propertyNode));
+                                String fieldName = nsMappings.translateName(propName);
+                                // set analyzer for the fulltext property fieldname
+                                int idx = fieldName.indexOf(':');
+                                fieldName = fieldName.substring(0, idx + 1)
+                                        + FieldNames.FULLTEXT_PREFIX + fieldName.substring(idx + 1);
+                                Object prevAnalyzer = analyzers.put(fieldName, analyzer);
+                                if (prevAnalyzer != null) {
+                                    log.warn("Property " + propName.getLocalName()
+                                            + " has been configured for multiple analyzers. "
+                                            + " Last configured analyzer is used");
                                 }
-                            } else {
-                                log.warn("org.apache.lucene.analysis.Analyzer is not a superclass of "
-                                        + analyzerClassName + ". Ignoring this configure analyzer" );
                             }
-                        } catch (ClassNotFoundException e) {
-                            log.warn("Analyzer class not found: " + analyzerClassName, e);
                         }
                     }
                 }
