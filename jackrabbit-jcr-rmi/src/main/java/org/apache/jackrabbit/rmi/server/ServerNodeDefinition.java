@@ -72,4 +72,14 @@ public class ServerNodeDefinition extends ServerItemDefinition implements Remote
         return def.allowsSameNameSiblings();
     }
 
+    /** {@inheritDoc} */
+	public String getDefaultPrimaryTypeName() throws RemoteException {
+        return def.getDefaultPrimaryTypeName();
+	}
+
+    /** {@inheritDoc} */
+	public String[] getRequiredPrimaryTypeNames() throws RemoteException {
+        return def.getRequiredPrimaryTypeNames();
+	}
+
 }

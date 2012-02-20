@@ -22,6 +22,7 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 import javax.jcr.query.Row;
 
+import org.apache.jackrabbit.rmi.remote.RemoteNode;
 import org.apache.jackrabbit.rmi.remote.RemoteRow;
 import org.apache.jackrabbit.rmi.value.SerialValueFactory;
 
@@ -54,12 +55,80 @@ public class ServerRow extends ServerObject implements RemoteRow {
 
     /** {@inheritDoc} */
     public Value[] getValues() throws RepositoryException, RemoteException {
-        return getSerialValues(row.getValues());
+    	try {
+    		return getSerialValues(row.getValues());
+    	} catch (RepositoryException ex) {
+    		throw getRepositoryException(ex);    		
+    	}
     }
 
     /** {@inheritDoc} */
     public Value getValue(String propertyName)
             throws RepositoryException, RemoteException {
-        return SerialValueFactory.makeSerialValue(row.getValue(propertyName));
+    	try {
+    		return SerialValueFactory.makeSerialValue(row.getValue(propertyName));
+    	} catch (RepositoryException ex) {
+    		 throw getRepositoryException(ex);    		
+    	}
     }
+
+    /** {@inheritDoc} */
+	public RemoteNode getNode() 
+			throws RepositoryException, RemoteException {
+    	try {
+    		return getRemoteNode(row.getNode());
+    	} catch (RepositoryException ex) {
+    		throw getRepositoryException(ex);    		
+    	}
+	}
+
+    /** {@inheritDoc} */
+	public RemoteNode getNode(String selectorName) 
+			throws RepositoryException, RemoteException {
+    	try {
+    		return getRemoteNode(row.getNode(selectorName));
+    	} catch (RepositoryException ex) {
+    		throw getRepositoryException(ex);    		
+    	}
+	}
+
+    /** {@inheritDoc} */
+	public String getPath() 
+			throws RepositoryException, RemoteException {
+    	try {
+    		return row.getPath();
+    	} catch (RepositoryException ex) {
+    		throw getRepositoryException(ex);    		
+    	}
+	}
+
+    /** {@inheritDoc} */
+	public String getPath(String selectorName) 
+			throws RepositoryException, RemoteException {
+    	try {
+    		return row.getPath(selectorName);
+    	} catch (RepositoryException ex) {
+    		throw getRepositoryException(ex);    		
+    	}
+	}
+
+    /** {@inheritDoc} */
+	public double getScore() 
+			throws RepositoryException, RemoteException {
+    	try {
+    		return row.getScore();
+    	} catch (RepositoryException ex) {
+    		throw getRepositoryException(ex);    		
+    	}
+	}
+
+    /** {@inheritDoc} */
+	public double getScore(String selectorName) 
+			throws RepositoryException, RemoteException {
+    	try {
+    		return row.getScore(selectorName);
+    	} catch (RepositoryException ex) {
+    		throw getRepositoryException(ex);    		
+    	}
+	}
 }

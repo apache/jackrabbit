@@ -68,4 +68,9 @@ public class ServerQueryResult extends ServerObject
         return getFactory().getRemoteNodeIterator(result.getNodes());
     }
 
+    /** {@inheritDoc} */
+	public String[] getSelectorNames() throws RepositoryException, RemoteException {
+		return result.getSelectorNames();
+	}
+
 }

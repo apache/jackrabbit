@@ -85,16 +85,31 @@ public class ClientPropertyDefinition extends ClientItemDefinition implements Pr
         }
     }
 
+    /** {@inheritDoc} */
     public String[] getAvailableQueryOperators() {
-        throw new RuntimeException("TODO: JCRRMI-26");
+        try {
+            return remote.getAvailableQueryOperators();
+        } catch (RemoteException ex) {
+            throw new RemoteRuntimeException(ex);
+        }
     }
 
+    /** {@inheritDoc} */
     public boolean isFullTextSearchable() {
-        throw new RuntimeException("TODO: JCRRMI-26");
+        try {
+            return remote.isFullTextSearchable();
+        } catch (RemoteException ex) {
+            throw new RemoteRuntimeException(ex);
+        }
     }
 
+    /** {@inheritDoc} */
     public boolean isQueryOrderable() {
-        throw new RuntimeException("TODO: JCRRMI-26");
+        try {
+            return remote.isQueryOrderable();
+        } catch (RemoteException ex) {
+            throw new RemoteRuntimeException(ex);
+        }
     }
 
 }

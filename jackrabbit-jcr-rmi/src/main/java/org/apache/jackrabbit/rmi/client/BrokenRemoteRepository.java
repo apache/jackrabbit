@@ -19,6 +19,7 @@ package org.apache.jackrabbit.rmi.client;
 import java.rmi.RemoteException;
 
 import javax.jcr.Credentials;
+import javax.jcr.Value;
 
 import org.apache.jackrabbit.rmi.remote.RemoteRepository;
 import org.apache.jackrabbit.rmi.remote.RemoteSession;
@@ -129,5 +130,49 @@ public class BrokenRemoteRepository implements RemoteRepository {
             throws RemoteException {
         throw exception;
     }
+
+    /**
+     * Throws a {@link RemoteException}.
+     *
+     * @param key ignored
+     * @return nothing
+     * @throws RemoteException always thrown
+     */
+	public Value getDescriptorValue(String key) throws RemoteException {
+        throw exception;
+	}
+
+    /**
+     * Throws a {@link RemoteException}.
+     *
+     * @param key ignored
+     * @return nothing
+     * @throws RemoteException always thrown
+     */
+	public Value[] getDescriptorValues(String key) throws RemoteException {
+        throw exception;
+	}
+
+    /**
+     * Throws a {@link RemoteException}.
+     *
+     * @param key ignored
+     * @return nothing
+     * @throws RemoteException always thrown
+     */
+	public boolean isSingleValueDescriptor(String key) throws RemoteException {
+        throw exception;
+	}
+
+    /**
+     * Throws a {@link RemoteException}.
+     *
+     * @param key ignored
+     * @return nothing
+     * @throws RemoteException always thrown
+     */
+	public boolean isStandardDescriptor(String key) throws RemoteException {
+        throw exception;
+	}
 
 }

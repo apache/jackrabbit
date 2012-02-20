@@ -137,20 +137,64 @@ public abstract class SafeClientRepository extends ClientObject
         return login(null, null);
     }
 
-    public Value getDescriptorValue(String key) {
-        throw new RuntimeException("TODO: JCRRMI-26");
+    /** {@inheritDoc} */
+    public synchronized Value getDescriptorValue(String key) {
+        try {
+            return remote.getDescriptorValue(key);
+        } catch (RemoteException e1) {
+            try {
+                remote = getRemoteRepository();
+                return remote.getDescriptorValue(key);
+            } catch (RemoteException e2) {
+                remote = new BrokenRemoteRepository(e2);
+                throw new RemoteRuntimeException(e2);
+            }
+        }
     }
 
-    public Value[] getDescriptorValues(String key) {
-        throw new RuntimeException("TODO: JCRRMI-26");
+    /** {@inheritDoc} */
+    public synchronized Value[] getDescriptorValues(String key) {
+        try {
+            return remote.getDescriptorValues(key);
+        } catch (RemoteException e1) {
+            try {
+                remote = getRemoteRepository();
+                return remote.getDescriptorValues(key);
+            } catch (RemoteException e2) {
+                remote = new BrokenRemoteRepository(e2);
+                throw new RemoteRuntimeException(e2);
+            }
+        }
     }
 
-    public boolean isSingleValueDescriptor(String key) {
-        throw new RuntimeException("TODO: JCRRMI-26");
+    /** {@inheritDoc} */
+    public synchronized boolean isSingleValueDescriptor(String key) {
+        try {
+            return remote.isSingleValueDescriptor(key);
+        } catch (RemoteException e1) {
+            try {
+                remote = getRemoteRepository();
+                return remote.isSingleValueDescriptor(key);
+            } catch (RemoteException e2) {
+                remote = new BrokenRemoteRepository(e2);
+                throw new RemoteRuntimeException(e2);
+            }
+        }
     }
 
-    public boolean isStandardDescriptor(String key) {
-        throw new RuntimeException("TODO: JCRRMI-26");
+    /** {@inheritDoc} */
+    public synchronized boolean isStandardDescriptor(String key) {
+        try {
+            return remote.isStandardDescriptor(key);
+        } catch (RemoteException e1) {
+            try {
+                remote = getRemoteRepository();
+                return remote.isStandardDescriptor(key);
+            } catch (RemoteException e2) {
+                remote = new BrokenRemoteRepository(e2);
+                throw new RemoteRuntimeException(e2);
+            }
+        }
     }
 
 }

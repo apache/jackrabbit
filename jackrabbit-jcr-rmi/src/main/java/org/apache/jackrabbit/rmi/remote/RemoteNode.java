@@ -652,4 +652,92 @@ public interface RemoteNode extends RemoteItem {
      */
     RemoteLock getLock() throws RepositoryException, RemoteException;
 
+    /**
+     * Remote version of the
+     * {@link javax.jcr.Node#getSharedSet() Node.getSharedSet()} method.
+     *
+     * @return a <code>NodeIterator</code>.
+     * @throws RepositoryException on repository errors
+     * @throws RemoteException on RMI errors
+     */
+	RemoteIterator getSharedSet() throws RepositoryException, RemoteException;
+
+    /**
+     * Remote version of the
+     * {@link javax.jcr.Node#followLifecycleTransition(String) Node.followLifecycleTransition(String)}
+     * method.
+     *
+     * @param transition a state transition
+     * @throws RepositoryException on repository errors
+     * @throws RemoteException on RMI errors
+     */
+	void followLifecycleTransition(String transition) throws RepositoryException, RemoteException;
+
+    /**
+     * Remote version of the
+     * {@link javax.jcr.Node#getAllowedLifecycleTransistions() Node.getAllowedLifecycleTransistions()}
+     * method.
+     *
+     * @return a <code>String</code> array.
+     * @throws RepositoryException on repository errors
+     * @throws RemoteException on RMI errors
+     */
+	String[] getAllowedLifecycleTransistions() throws RepositoryException, RemoteException;
+
+    /**
+     * Remote version of the
+     * {@link javax.jcr.Node#getWeakReferences() Node.getWeakReferences()}
+     * method.
+     *
+     * @return A <code>PropertyIterator</code>.
+     * @throws RepositoryException on repository errors
+     * @throws RemoteException on RMI errors
+     */
+	RemoteIterator getWeakReferences() throws RepositoryException, RemoteException;
+
+    /**
+     * Remote version of the
+     * {@link javax.jcr.Node#getWeakReferences(String) Node.getWeakReferences(String)}
+     * method.
+     *
+     * @param name name of referring <code>WEAKREFERENCE</code> properties to be
+     *             returned; if <code>null</code> then all referring
+     *             <code>WEAKREFERENCE</code>s are returned.
+     * @return A <code>PropertyIterator</code>.
+     * @throws RepositoryException on repository errors
+     * @throws RemoteException on RMI errors
+     */
+	RemoteIterator getWeakReferences(String name) throws RepositoryException, RemoteException;
+
+    /**
+     * Remote version of the
+     * {@link javax.jcr.Node#removeShare() Node.removeShare()}
+     * method.
+     *
+     * @throws RepositoryException on repository errors
+     * @throws RemoteException on RMI errors
+     */
+	void removeShare() throws RepositoryException, RemoteException;
+
+    /**
+     * Remote version of the
+     * {@link javax.jcr.Node#removeSharedSet() Node.removeSharedSet()}
+     * method.
+     *
+     * @throws RepositoryException on repository errors
+     * @throws RemoteException on RMI errors
+     */
+	void removeSharedSet() throws RepositoryException, RemoteException;
+
+    /**
+     * Remote version of the
+     * {@link javax.jcr.Node#setPrimaryType(String) Node.setPrimaryType(String)}
+     * method.
+     *
+     * @param the nodeTypeName
+     * @throws RepositoryException on repository errors
+     * @throws RemoteException on RMI errors
+     */
+	void setPrimaryType(String nodeTypeName) throws RepositoryException, RemoteException;
+
 }

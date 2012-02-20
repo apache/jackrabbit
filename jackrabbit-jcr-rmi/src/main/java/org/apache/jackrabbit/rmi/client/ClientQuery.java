@@ -104,6 +104,7 @@ public class ClientQuery extends ClientObject implements Query {
         }
     }
 
+    /** {@inheritDoc} */
     public void bindValue(String varName, Value value)
             throws RepositoryException {
         throw new UnsupportedRepositoryOperationException("TODO: JCRRMI-26");

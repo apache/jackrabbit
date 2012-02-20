@@ -22,9 +22,11 @@ import javax.jcr.Credentials;
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.Value;
 
 import org.apache.jackrabbit.rmi.remote.RemoteRepository;
 import org.apache.jackrabbit.rmi.remote.RemoteSession;
+import org.apache.jackrabbit.rmi.value.SerialValueFactory;
 
 /**
  * Remote adapter for the JCR {@link javax.jcr.Repository Repository}
@@ -107,5 +109,33 @@ public class ServerRepository extends ServerObject implements RemoteRepository {
             throw getRepositoryException(ex);
         }
     }
+
+    /** {@inheritDoc} */
+	public Value getDescriptorValue(String key) throws RemoteException {
+    	try {
+            return SerialValueFactory.makeSerialValue(repository.getDescriptorValue(key));
+    	} catch (RepositoryException ex) {
+    		 throw new RemoteException(ex.getMessage(), ex);    		
+    	}
+	}
+
+    /** {@inheritDoc} */
+	public Value[] getDescriptorValues(String key) throws RemoteException {
+    	try {
+            return SerialValueFactory.makeSerialValueArray(repository.getDescriptorValues(key));
+    	} catch (RepositoryException ex) {
+    		throw new RemoteException(ex.getMessage(), ex);    		
+    	}
+	}
+
+    /** {@inheritDoc} */
+	public boolean isSingleValueDescriptor(String key) throws RemoteException {
+		return repository.isSingleValueDescriptor(key);
+	}
+
+    /** {@inheritDoc} */
+	public boolean isStandardDescriptor(String key) throws RemoteException {
+		return repository.isStandardDescriptor(key);
+	}
 
 }

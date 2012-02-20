@@ -108,8 +108,4 @@ public class ClientPrivilege extends ClientObject implements Privilege {
     public int hashCode() {
         return getName().hashCode();
     }
-
-    RemotePrivilege getRemotePrivilege() {
-        return rp;
-    }
 }

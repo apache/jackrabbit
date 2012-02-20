@@ -17,7 +17,6 @@
 package org.apache.jackrabbit.rmi.server;
 
 import java.rmi.RemoteException;
-import java.rmi.server.UnicastRemoteObject;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.lock.Lock;
@@ -85,4 +84,15 @@ public class ServerLock extends ServerObject implements RemoteLock {
     public boolean isSessionScoped() throws RemoteException {
         return lock.isSessionScoped();
     }
+
+    /** {@inheritDoc} */
+    public long getSecondsRemaining() throws RepositoryException, RemoteException {
+        return lock.getSecondsRemaining();
+    }
+
+    /** {@inheritDoc} */
+	public boolean isLockOwningSession() throws RemoteException {
+        return lock.isLockOwningSession();
+	}
+
 }

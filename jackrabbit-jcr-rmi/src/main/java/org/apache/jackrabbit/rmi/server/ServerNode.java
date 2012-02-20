@@ -19,6 +19,7 @@ package org.apache.jackrabbit.rmi.server;
 import java.rmi.RemoteException;
 
 import javax.jcr.Node;
+import javax.jcr.NodeIterator;
 import javax.jcr.Property;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
@@ -573,6 +574,85 @@ public class ServerNode extends ServerItem implements RemoteNode {
         }
     }
 
+    /** {@inheritDoc} */
+    public RemoteIterator getSharedSet() 
+    		throws RepositoryException, RemoteException {
+    	try {
+    		NodeIterator sharedSet = node.getSharedSet();
+    		return getFactory().getRemoteNodeIterator(sharedSet);
+    	} catch (RepositoryException ex) {
+    		throw getRepositoryException(ex);
+    	}
+    }
+
+    /** {@inheritDoc} */
+    public void followLifecycleTransition(String transition)
+    		throws RepositoryException, RemoteException {
+    	try {
+    		node.followLifecycleTransition(transition);
+    	} catch (RepositoryException ex) {
+    		throw getRepositoryException(ex);
+    	}
+    }
+
+    /** {@inheritDoc} */
+	public String[] getAllowedLifecycleTransistions()
+			throws RepositoryException, RemoteException {
+    	try {
+    		return node.getAllowedLifecycleTransistions();
+    	} catch (RepositoryException ex) {
+    		throw getRepositoryException(ex);
+    	}
+	}
+
+    /** {@inheritDoc} */
+	public RemoteIterator getWeakReferences() 
+			throws RepositoryException, RemoteException {
+    	try {
+    		return getFactory().getRemotePropertyIterator(node.getWeakReferences());
+    	} catch (RepositoryException ex) {
+    		throw getRepositoryException(ex);
+    	}
+	}
+
+    /** {@inheritDoc} */
+	public RemoteIterator getWeakReferences(String name)
+			throws RepositoryException, RemoteException {
+    	try {
+    		return getFactory().getRemotePropertyIterator(node.getWeakReferences(name));
+    	} catch (RepositoryException ex) {
+    		throw getRepositoryException(ex);
+    	}
+	}
+
+    /** {@inheritDoc} */
+	public void removeShare() throws RepositoryException, RemoteException {
+    	try {
+    		node.removeShare();
+    	} catch (RepositoryException ex) {
+    		throw getRepositoryException(ex);
+    	}
+	}
+
+    /** {@inheritDoc} */
+	public void removeSharedSet() throws RepositoryException, RemoteException {
+    	try {
+    		node.removeSharedSet();
+    	} catch (RepositoryException ex) {
+    		throw getRepositoryException(ex);
+    	}
+	}
+
+    /** {@inheritDoc} */
+	public void setPrimaryType(String nodeTypeName) 
+			throws RepositoryException, RemoteException {
+    	try {
+    		node.setPrimaryType(nodeTypeName);
+    	} catch (RepositoryException ex) {
+    		throw getRepositoryException(ex);
+    	}
+	}
+
     //---------- Implementation helper -----------------------------------------
 
     /**
@@ -602,4 +682,5 @@ public class ServerNode extends ServerItem implements RemoteNode {
         // otherwise fail
         throw new RepositoryException("Cannot find version " + versionUUID);
     }
+
 }

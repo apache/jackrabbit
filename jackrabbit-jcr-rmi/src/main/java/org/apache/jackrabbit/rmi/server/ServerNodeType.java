@@ -23,6 +23,7 @@ import javax.jcr.nodetype.NodeDefinition;
 import javax.jcr.nodetype.NodeType;
 import javax.jcr.nodetype.PropertyDefinition;
 
+import org.apache.jackrabbit.rmi.remote.RemoteIterator;
 import org.apache.jackrabbit.rmi.remote.RemoteNodeDefinition;
 import org.apache.jackrabbit.rmi.remote.RemoteNodeType;
 import org.apache.jackrabbit.rmi.remote.RemotePropertyDefinition;
@@ -196,5 +197,35 @@ public class ServerNodeType extends ServerObject implements RemoteNodeType {
     public String getPrimaryItemName() throws RemoteException {
         return type.getPrimaryItemName();
     }
+
+    /** {@inheritDoc} */
+	public boolean canRemoveNode(String nodeName) {
+		return type.canRemoveNode(nodeName);
+	}
+
+    /** {@inheritDoc} */
+	public boolean canRemoveProperty(String propertyName) {
+		return type.canRemoveProperty(propertyName);
+	}
+
+    /** {@inheritDoc} */
+	public String[] getDeclaredSupertypeNames() {
+		return type.getDeclaredSupertypeNames();
+	}
+
+    /** {@inheritDoc} */
+	public boolean isQueryable() {
+		return type.isQueryable();
+	}
+
+    /** {@inheritDoc} */
+	public RemoteIterator getDeclaredSubtypes() throws RemoteException {
+       	return getFactory().getRemoteNodeTypeIterator(type.getDeclaredSubtypes());
+	}
+
+    /** {@inheritDoc} */
+	public RemoteIterator getSubtypes() throws RemoteException {
+		return getFactory().getRemoteNodeTypeIterator(type.getSubtypes());
+	}
 
 }

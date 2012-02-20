@@ -19,6 +19,7 @@ package org.apache.jackrabbit.rmi.server;
 import java.rmi.RemoteException;
 
 import javax.jcr.RepositoryException;
+import javax.jcr.Value;
 import javax.jcr.query.Query;
 
 import org.apache.jackrabbit.rmi.remote.RemoteQuery;
@@ -79,5 +80,31 @@ public class ServerQuery extends ServerObject implements RemoteQuery {
             throws RepositoryException, RemoteException {
         return getRemoteNode(query.storeAsNode(absPath));
     }
+
+    /** {@inheritDoc} */
+	public void bindValue(String varName, Value value)
+			throws RepositoryException, RemoteException {
+		query.bindValue(varName, value);
+	}
+
+    /** {@inheritDoc} */
+	public String[] getBindVariableNames() 
+			throws RepositoryException, RemoteException {
+        try {
+        	return query.getBindVariableNames();
+        } catch (RepositoryException ex) {
+            throw getRepositoryException(ex);
+        }
+	}
+
+    /** {@inheritDoc} */
+	public void setLimit(long limit) throws RemoteException {
+    	query.setLimit(limit);
+	}
+
+    /** {@inheritDoc} */
+	public void setOffset(long offset) throws RemoteException {
+		query.setOffset(offset);
+	}
 
 }

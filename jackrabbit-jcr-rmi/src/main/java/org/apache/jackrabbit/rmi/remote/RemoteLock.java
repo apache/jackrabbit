@@ -108,5 +108,24 @@ public interface RemoteLock extends Remote {
      */
     boolean isSessionScoped() throws RemoteException;
 
+    /**
+     * Remote version of the
+     * {@link javax.jcr.lock.Lock#getSecondsRemaining()} () Lock.getSecondsRemaining()} method.
+     *
+     * @return the number of seconds remaining until this lock times out.
+     * @throws RepositoryException on repository errors
+     * @throws RemoteException on RMI errors
+     */
+	long getSecondsRemaining() throws RepositoryException, RemoteException;
+
+    /**
+     * Remote version of the
+     * {@link javax.jcr.lock.Lock#isLockOwningSession()} () Lock.isLockOwningSession()} method.
+     *
+     * @return a <code>boolean</code>.
+     * @throws RemoteException on RMI errors
+     */
+	boolean isLockOwningSession() throws RemoteException;
+
 
 }
