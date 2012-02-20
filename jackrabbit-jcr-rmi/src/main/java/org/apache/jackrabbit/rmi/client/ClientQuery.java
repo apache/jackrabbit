@@ -107,19 +107,19 @@ public class ClientQuery extends ClientObject implements Query {
     /** {@inheritDoc} */
     public void bindValue(String varName, Value value)
             throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("TODO: JCRRMI-26");
+        throw new UnsupportedRepositoryOperationException("TODO: JCR-3206");
     }
 
     public String[] getBindVariableNames() throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("TODO: JCRRMI-26");
+        throw new UnsupportedRepositoryOperationException("TODO: JCR-3206");
     }
 
     public void setLimit(long limit) {
-        throw new RuntimeException("TODO: JCRRMI-26");
+        throw new RuntimeException("TODO: JCR-3206");
     }
 
     public void setOffset(long offset) {
-        throw new RuntimeException("TODO: JCRRMI-26");
+        throw new RuntimeException("TODO: JCR-3206");
     }
 
 }

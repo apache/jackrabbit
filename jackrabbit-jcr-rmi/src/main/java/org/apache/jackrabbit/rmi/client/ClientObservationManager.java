@@ -109,17 +109,17 @@ public class ClientObservationManager extends ClientObject implements
     }
 
     public EventJournal getEventJournal() throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("TODO: JCRRMI-26");
+        throw new UnsupportedRepositoryOperationException("TODO: JCR-3206");
     }
 
     public EventJournal getEventJournal(
             int eventTypes, String absPath, boolean isDeep,
             String[] uuid, String[] nodeTypeName) throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("TODO: JCRRMI-26");
+        throw new UnsupportedRepositoryOperationException("TODO: JCR-3206");
     }
 
     public void setUserData(String userData) throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("TODO: JCRRMI-26");
+        throw new UnsupportedRepositoryOperationException("TODO: JCR-3206");
     }
 
     //---------- internal ------------------------------------------------------

@@ -575,13 +575,13 @@ public class ClientSession extends ClientObject implements Session {
 
     public RetentionManager getRetentionManager()
             throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("TODO: JCRRMI-26");
+        throw new UnsupportedRepositoryOperationException("TODO: JCR-3206");
     }
 
     public boolean hasCapability(
             String methodName, Object target, Object[] arguments)
             throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("TODO: JCRRMI-26");
+        throw new UnsupportedRepositoryOperationException("TODO: JCR-3206");
     }
 
 }
