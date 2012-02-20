@@ -55,4 +55,61 @@ public interface RemoteRow extends Remote {
      */
     Value getValue(String propertyName)
             throws RepositoryException, RemoteException;
+
+    /**
+     * @see javax.jcr.query.Row#getNode()
+     *
+     * @return a node
+     * @throws RepositoryException on repository errors
+     * @throws RemoteException on RMI errors
+     */
+	RemoteNode getNode() throws RepositoryException, RemoteException;
+
+    /**
+     * @see javax.jcr.query.Row#getNode(String)
+     *
+     * @param selectorName
+     * @return a node
+     * @throws RepositoryException on repository errors
+     * @throws RemoteException on RMI errors
+     */
+	RemoteNode getNode(String selectorName) throws RepositoryException, RemoteException;
+
+    /**
+     * @see javax.jcr.query.Row#getPath()
+     *
+     * @return the path
+     * @throws RepositoryException on repository errors
+     * @throws RemoteException on RMI errors
+     */
+	String getPath() throws RepositoryException, RemoteException;
+
+    /**
+     * @see javax.jcr.query.Row#getPath(String)
+     *
+     * @param selectorName
+     * @return the path
+     * @throws RepositoryException on repository errors
+     * @throws RemoteException on RMI errors
+     */
+	String getPath(String selectorName) throws RepositoryException, RemoteException;
+
+    /**
+     * @see javax.jcr.query.Row#getScore()
+     *
+     * @return the score
+     * @throws RepositoryException on repository errors
+     * @throws RemoteException on RMI errors
+     */
+	double getScore() throws RepositoryException, RemoteException;
+
+    /**
+     * @see javax.jcr.query.Row#getScore(String)
+     *
+     * @param selectorName
+     * @return the score
+     * @throws RepositoryException on repository errors
+     * @throws RemoteException on RMI errors
+     */
+	double getScore(String selectorName) throws RepositoryException, RemoteException;
 }

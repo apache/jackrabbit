@@ -71,4 +71,24 @@ public interface RemoteNodeDefinition extends RemoteItemDefinition {
      */
     boolean allowsSameNameSiblings() throws RemoteException;
 
+    /**
+     * Remote version of the
+     * {@link javax.jcr.nodetype.NodeDefinition#getDefaultPrimaryTypeName() NodeDef.getDefaultPrimaryTypeName()}
+     * method.
+     *
+     * @return a String
+     * @throws RemoteException on RMI errors
+     */
+	String getDefaultPrimaryTypeName() throws RemoteException;
+
+    /**
+     * Remote version of the
+     * {@link javax.jcr.nodetype.NodeDefinition#getRequiredPrimaryTypeNames() NodeDef.getRequiredPrimaryTypeNames()}
+     * method.
+     *
+     * @return a String array
+     * @throws RemoteException on RMI errors
+     */
+	String[] getRequiredPrimaryTypeNames() throws RemoteException;
+
 }

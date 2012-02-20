@@ -86,4 +86,34 @@ public interface RemotePropertyDefinition extends RemoteItemDefinition {
      */
     boolean isMultiple() throws RemoteException;
 
+    /**
+     * Remote version of the
+     * {@link javax.jcr.nodetype.PropertyDefinition#getAvailableQueryOperators() PropertyDefinition.getAvailableQueryOperators()}
+     * method.
+     *
+     * @return a String[]
+     * @throws RemoteException on RMI errors
+     */
+	String[] getAvailableQueryOperators() throws RemoteException;
+
+    /**
+     * Remote version of the
+     * {@link javax.jcr.nodetype.PropertyDefinition#isFullTextSearchable() PropertyDefinition.isFullTextSearchable()}
+     * method.
+     *
+     * @return a boolean
+     * @throws RemoteException on RMI errors
+     */
+	boolean isFullTextSearchable() throws RemoteException;
+
+    /**
+     * Remote version of the
+     * {@link javax.jcr.nodetype.PropertyDefinition#isQueryOrderable() PropertyDefinition.isQueryOrderable()}
+     * method.
+     *
+     * @return a boolean
+     * @throws RemoteException on RMI errors
+     */
+	boolean isQueryOrderable() throws RemoteException;
+
 }

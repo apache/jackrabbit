@@ -21,6 +21,7 @@ import java.rmi.RemoteException;
 
 import javax.jcr.Credentials;
 import javax.jcr.RepositoryException;
+import javax.jcr.Value;
 
 /**
  * Remote version of the JCR {@link javax.jcr.Repository Repository} interface.
@@ -114,5 +115,46 @@ public interface RemoteRepository extends Remote {
      */
     RemoteSession login(Credentials credentials, String workspace)
             throws RepositoryException, RemoteException;
+
+    /**
+     * Remote version of the
+     * {@link javax.jcr.Repository#getDescriptorValue(String) Repository.getDescriptorValue(String)}
+     * method.
+     *
+     * @return descriptor value
+     * @throws RepositoryException on repository errors
+     * @throws RemoteException on RMI errors
+     */
+	Value getDescriptorValue(String key) throws RemoteException;
+
+    /**
+     * Remote version of the
+     * {@link javax.jcr.Repository#getDescriptorValues(String) Repository.getDescriptorValues(String)}
+     * method.
+     *
+     * @return descriptor value array
+     * @throws RemoteException on RMI errors
+     */
+	Value[] getDescriptorValues(String key) throws RemoteException;
+
+    /**
+     * Remote version of the
+     * {@link javax.jcr.Repository#isSingleValueDescriptor(String) Repository.isSingleValueDescriptor(String)}
+     * method.
+     *
+     * @return boolean
+     * @throws RemoteException on RMI errors
+     */
+	boolean isSingleValueDescriptor(String key) throws RemoteException;
+
+    /**
+     * Remote version of the
+     * {@link javax.jcr.Repository#isStandardDescriptor(String) Repository.isStandardDescriptor(String)}
+     * method.
+     *
+     * @return boolean
+     * @throws RemoteException on RMI errors
+     */
+	boolean isStandardDescriptor(String key) throws RemoteException;
 
 }

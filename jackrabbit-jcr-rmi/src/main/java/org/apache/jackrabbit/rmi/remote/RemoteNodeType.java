@@ -227,4 +227,64 @@ public interface RemoteNodeType extends Remote {
      */
     String getPrimaryItemName() throws RemoteException;
 
+    /**
+     * Remote version of the
+     * {@link javax.jcr.nodetype.NodeType#canRemoveNode() NodeType.canRemoveNode()}
+     * method.
+     *
+     * @return boolean
+     * @throws RemoteException on RMI errors
+     */
+	boolean canRemoveNode(String nodeName) throws RemoteException;
+
+    /**
+     * Remote version of the
+     * {@link javax.jcr.nodetype.NodeType#canRemoveProperty() NodeType.canRemoveProperty()}
+     * method.
+     *
+     * @return boolean
+     * @throws RemoteException on RMI errors
+     */
+	boolean canRemoveProperty(String propertyName) throws RemoteException;
+
+    /**
+     * Remote version of the
+     * {@link javax.jcr.nodetype.NodeType#getDeclaredSupertypeNames() NodeType.getDeclaredSupertypeNames()}
+     * method.
+     *
+     * @return a String[]
+     * @throws RemoteException on RMI errors
+     */
+	String[] getDeclaredSupertypeNames() throws RemoteException;
+
+    /**
+     * Remote version of the
+     * {@link javax.jcr.nodetype.NodeType#isQueryable() NodeType.isQueryable()}
+     * method.
+     *
+     * @return boolean
+     * @throws RemoteException on RMI errors
+     */
+	boolean isQueryable() throws RemoteException;
+
+    /**
+     * Remote version of the
+     * {@link javax.jcr.nodetype.NodeType#getDeclaredSubtypes() NodeType.getDeclaredSubtypes()}
+     * method.
+     *
+     * @return RemoteIterator
+     * @throws RemoteException on RMI errors
+     */
+	RemoteIterator getDeclaredSubtypes() throws RemoteException;
+
+    /**
+     * Remote version of the
+     * {@link javax.jcr.nodetype.NodeType#getSubtypes() NodeType.getSubtypes()}
+     * method.
+     *
+     * @return RemoteIterator
+     * @throws RemoteException on RMI errors
+     */
+	RemoteIterator getSubtypes() throws RemoteException;
+
 }

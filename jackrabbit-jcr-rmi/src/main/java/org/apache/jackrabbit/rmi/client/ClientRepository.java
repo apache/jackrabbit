@@ -136,11 +136,10 @@ public class ClientRepository implements Repository {
 
     /** {@inheritDoc} */
     public Value[] getDescriptorValues(String key) {
-        Value value = getDescriptorValue(key);
-        if (value != null) {
-            return new Value[] { value };
-        } else {
-            return null;
+        try {
+            return remote.getDescriptorValues(key);
+        } catch (RemoteException ex) {
+            throw new RemoteRuntimeException(ex);
         }
     }
 

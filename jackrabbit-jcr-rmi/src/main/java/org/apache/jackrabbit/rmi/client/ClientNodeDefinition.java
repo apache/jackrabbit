@@ -81,12 +81,22 @@ public class ClientNodeDefinition extends ClientItemDefinition implements NodeDe
         }
     }
 
+    /** {@inheritDoc} */
     public String getDefaultPrimaryTypeName() {
-        throw new RuntimeException("TODO: JCRRMI-26");
+        try {
+            return remote.getDefaultPrimaryTypeName();
+        } catch (RemoteException ex) {
+            throw new RemoteRuntimeException(ex);
+        }
     }
 
+    /** {@inheritDoc} */
     public String[] getRequiredPrimaryTypeNames() {
-        throw new RuntimeException("TODO: JCRRMI-26");
+        try {
+            return remote.getRequiredPrimaryTypeNames();
+        } catch (RemoteException ex) {
+            throw new RemoteRuntimeException(ex);
+        }
     }
 
 }

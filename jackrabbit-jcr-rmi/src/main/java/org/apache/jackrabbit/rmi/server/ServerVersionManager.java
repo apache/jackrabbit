@@ -164,4 +164,12 @@ public class ServerVersionManager extends ServerObject
         }
     }
 
+	public void cancelMerge(String absPath, RemoteVersion version)
+			throws RepositoryException, RemoteException {
+	}
+
+	public void doneMerge(String absPath, RemoteVersion version)
+			throws RepositoryException, RemoteException {
+	}
+
 }

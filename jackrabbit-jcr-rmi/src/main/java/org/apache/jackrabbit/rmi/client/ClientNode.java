@@ -30,7 +30,6 @@ import javax.jcr.Property;
 import javax.jcr.PropertyIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.Value;
 import javax.jcr.lock.Lock;
 import javax.jcr.nodetype.NodeDefinition;
@@ -720,40 +719,80 @@ public class ClientNode extends ClientItem implements Node {
         }
     }
 
+    /** {@inheritDoc} */
     public void followLifecycleTransition(String transition)
             throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("TODO: JCRRMI-26");
+        try {
+        	remote.followLifecycleTransition(transition);
+        } catch (RemoteException ex) {
+            throw new RemoteRepositoryException(ex);
+        }
     }
 
+    /** {@inheritDoc} */
     public String[] getAllowedLifecycleTransistions()
             throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("TODO: JCRRMI-26");
+        try {
+        	return remote.getAllowedLifecycleTransistions();
+        } catch (RemoteException ex) {
+            throw new RemoteRepositoryException(ex);
+        }
     }
 
+    /** {@inheritDoc} */
     public NodeIterator getSharedSet() throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("TODO: JCRRMI-26");
+        try {
+            return getFactory().getNodeIterator(getSession(), remote.getSharedSet());
+        } catch (RemoteException ex) {
+            throw new RemoteRepositoryException(ex);
+        }
     }
 
+    /** {@inheritDoc} */
     public PropertyIterator getWeakReferences() throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("TODO: JCRRMI-26");
+        try {
+            return getFactory().getPropertyIterator(getSession(), remote.getWeakReferences());
+        } catch (RemoteException ex) {
+            throw new RemoteRepositoryException(ex);
+        }
     }
 
+    /** {@inheritDoc} */
     public PropertyIterator getWeakReferences(String name)
             throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("TODO: JCRRMI-26");
+        try {
+            return getFactory().getPropertyIterator(getSession(), remote.getWeakReferences(name));
+        } catch (RemoteException ex) {
+            throw new RemoteRepositoryException(ex);
+        }
     }
 
+    /** {@inheritDoc} */
     public void removeShare() throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("TODO: JCRRMI-26");
+        try {
+            remote.removeShare();
+        } catch (RemoteException ex) {
+            throw new RemoteRepositoryException(ex);
+        }
     }
 
+    /** {@inheritDoc} */
     public void removeSharedSet() throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("TODO: JCRRMI-26");
+        try {
+            remote.removeSharedSet();
+        } catch (RemoteException ex) {
+            throw new RemoteRepositoryException(ex);
+        }
     }
 
+    /** {@inheritDoc} */
     public void setPrimaryType(String nodeTypeName)
             throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("TODO: JCRRMI-26");
+        try {
+            remote.setPrimaryType(nodeTypeName);
+        } catch (RemoteException ex) {
+            throw new RemoteRepositoryException(ex);
+        }
     }
 
 }

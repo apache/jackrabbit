@@ -45,11 +45,13 @@ public class ClientVersionManager extends ClientObject
         this.remote = remote;
     }
 
+    /** {@inheritDoc} */
     public void cancelMerge(String absPath, Version version)
             throws RepositoryException {
         throw new UnsupportedRepositoryOperationException("TODO: JCRRMI-26");
     }
 
+    /** {@inheritDoc} */
     public Version checkin(String absPath) throws RepositoryException {
         try {
             return getFactory().getVersion(session, remote.checkin(absPath));
@@ -58,6 +60,7 @@ public class ClientVersionManager extends ClientObject
         }
     }
 
+    /** {@inheritDoc} */
     public void checkout(String absPath) throws RepositoryException {
         try {
             remote.checkout(absPath);
@@ -66,6 +69,7 @@ public class ClientVersionManager extends ClientObject
         }
     }
 
+    /** {@inheritDoc} */
     public Version checkpoint(String absPath) throws RepositoryException {
         try {
             return getFactory().getVersion(session, remote.checkpoint(absPath));
@@ -74,6 +78,7 @@ public class ClientVersionManager extends ClientObject
         }
     }
 
+    /** {@inheritDoc} */
     public Node createActivity(String title)
             throws RepositoryException {
         try {
@@ -83,6 +88,7 @@ public class ClientVersionManager extends ClientObject
         }
     }
 
+    /** {@inheritDoc} */
     public Node createConfiguration(String absPath)
             throws RepositoryException {
         try {
@@ -93,11 +99,13 @@ public class ClientVersionManager extends ClientObject
         }
     }
 
+    /** {@inheritDoc} */
     public void doneMerge(String absPath, Version version)
             throws RepositoryException {
         throw new UnsupportedRepositoryOperationException("TODO: JCRRMI-26");
     }
 
+    /** {@inheritDoc} */
     public Node getActivity() throws RepositoryException {
         try {
             return getFactory().getNode(session, remote.getActivity());
@@ -106,6 +114,7 @@ public class ClientVersionManager extends ClientObject
         }
     }
 
+    /** {@inheritDoc} */
     public Version getBaseVersion(String absPath) throws RepositoryException {
         try {
             return getFactory().getVersion(
@@ -115,6 +124,7 @@ public class ClientVersionManager extends ClientObject
         }
     }
 
+    /** {@inheritDoc} */
     public VersionHistory getVersionHistory(String absPath)
             throws RepositoryException {
         try {
@@ -125,6 +135,7 @@ public class ClientVersionManager extends ClientObject
         }
     }
 
+    /** {@inheritDoc} */
     public boolean isCheckedOut(String absPath) throws RepositoryException {
         try {
             return remote.isCheckedOut(absPath);
@@ -133,10 +144,12 @@ public class ClientVersionManager extends ClientObject
         }
     }
 
+    /** {@inheritDoc} */
     public NodeIterator merge(Node activityNode) throws RepositoryException {
         throw new UnsupportedRepositoryOperationException("TODO: JCRRMI-26");
     }
 
+    /** {@inheritDoc} */
     public NodeIterator merge(
             String absPath, String srcWorkspace, boolean bestEffort)
             throws RepositoryException {
@@ -148,6 +161,7 @@ public class ClientVersionManager extends ClientObject
         }
     }
 
+    /** {@inheritDoc} */
     public NodeIterator merge(
             String absPath, String srcWorkspace, boolean bestEffort,
             boolean isShallow) throws RepositoryException {
@@ -159,20 +173,24 @@ public class ClientVersionManager extends ClientObject
         }
     }
 
+    /** {@inheritDoc} */
     public void removeActivity(Node activityNode) throws RepositoryException {
         throw new UnsupportedRepositoryOperationException("TODO: JCRRMI-26");
     }
 
+    /** {@inheritDoc} */
     public void restore(Version[] versions, boolean removeExisting)
             throws RepositoryException {
         throw new UnsupportedRepositoryOperationException("TODO: JCRRMI-26");
     }
 
+    /** {@inheritDoc} */
     public void restore(Version version, boolean removeExisting)
             throws RepositoryException {
         throw new UnsupportedRepositoryOperationException("TODO: JCRRMI-26");
     }
 
+    /** {@inheritDoc} */
     public void restore(
             String absPath, String versionName, boolean removeExisting)
             throws RepositoryException {
@@ -183,11 +201,13 @@ public class ClientVersionManager extends ClientObject
         }
     }
 
+    /** {@inheritDoc} */
     public void restore(String absPath, Version version, boolean removeExisting)
             throws RepositoryException {
         throw new UnsupportedRepositoryOperationException("TODO: JCRRMI-26");
     }
 
+    /** {@inheritDoc} */
     public void restoreByLabel(
             String absPath, String versionLabel, boolean removeExisting)
             throws RepositoryException {
@@ -198,6 +218,7 @@ public class ClientVersionManager extends ClientObject
         }
     }
 
+    /** {@inheritDoc} */
     public Node setActivity(Node activity) throws RepositoryException {
         throw new UnsupportedRepositoryOperationException("TODO: JCRRMI-26");
     }

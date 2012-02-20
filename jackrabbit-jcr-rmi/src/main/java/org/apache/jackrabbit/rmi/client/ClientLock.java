@@ -21,7 +21,6 @@ import java.rmi.RemoteException;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.lock.Lock;
 
 import org.apache.jackrabbit.rmi.remote.RemoteLock;
@@ -121,11 +120,21 @@ public class ClientLock extends ClientObject implements Lock {
         }
     }
 
+    /** {@inheritDoc} */
     public long getSecondsRemaining() throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("TODO: JCRRMI-26");
+        try {
+            return remote.getSecondsRemaining();
+        } catch (RemoteException ex) {
+            throw new RemoteRuntimeException(ex);
+        }
     }
 
+    /** {@inheritDoc} */
     public boolean isLockOwningSession() {
-        throw new RuntimeException("TODO: JCRRMI-26");
+        try {
+            return remote.isLockOwningSession();
+        } catch (RemoteException ex) {
+            throw new RemoteRuntimeException(ex);
+        }
     }
 }

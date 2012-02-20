@@ -23,7 +23,6 @@ import javax.jcr.Value;
 import javax.jcr.nodetype.PropertyDefinition;
 
 import org.apache.jackrabbit.rmi.remote.RemotePropertyDefinition;
-import org.apache.jackrabbit.rmi.value.SerialValueFactory;
 
 /**
  * Remote adapter for the JCR
@@ -78,5 +77,20 @@ public class ServerPropertyDefinition extends ServerItemDefinition
     public boolean isMultiple() throws RemoteException {
         return def.isMultiple();
     }
+
+    /** {@inheritDoc} */
+	public String[] getAvailableQueryOperators() throws RemoteException {
+		return def.getAvailableQueryOperators();
+	}
+
+    /** {@inheritDoc} */
+	public boolean isFullTextSearchable() throws RemoteException {
+		return def.isFullTextSearchable();
+	}
+
+    /** {@inheritDoc} */
+	public boolean isQueryOrderable() throws RemoteException {
+		return def.isQueryOrderable();
+	}
 
 }

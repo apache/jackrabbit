@@ -250,26 +250,52 @@ public class ClientNodeType extends ClientObject implements NodeType {
         }
     }
 
+    /** {@inheritDoc} */
     public boolean canRemoveNode(String nodeName) {
-        throw new RuntimeException("TODO: JCRRMI-26");
+        try {
+            return remote.canRemoveNode(nodeName);
+        } catch (RemoteException ex) {
+            throw new RemoteRuntimeException(ex);
+        }
     }
 
+    /** {@inheritDoc} */
     public boolean canRemoveProperty(String propertyName) {
-        throw new RuntimeException("TODO: JCRRMI-26");
+        try {
+            return remote.canRemoveProperty(propertyName);
+        } catch (RemoteException ex) {
+            throw new RemoteRuntimeException(ex);
+        }
     }
 
+    /** {@inheritDoc} */
     public NodeTypeIterator getDeclaredSubtypes() {
-        throw new RuntimeException("TODO: JCRRMI-26");
+        try {
+            return getFactory().getNodeTypeIterator(remote.getDeclaredSubtypes());
+        } catch (RemoteException ex) {
+            throw new RemoteRuntimeException(ex);
+        }
     }
 
+    /** {@inheritDoc} */
     public NodeTypeIterator getSubtypes() {
-        throw new RuntimeException("TODO: JCRRMI-26");
+        try {
+            return getFactory().getNodeTypeIterator(remote.getSubtypes());
+        } catch (RemoteException ex) {
+            throw new RemoteRuntimeException(ex);
+        }
     }
 
+    /** {@inheritDoc} */
     public String[] getDeclaredSupertypeNames() {
-        throw new RuntimeException("TODO: JCRRMI-26");
+        try {
+            return remote.getDeclaredSupertypeNames();
+        } catch (RemoteException ex) {
+            throw new RemoteRuntimeException(ex);
+        }
     }
 
+    /** {@inheritDoc} */
     public boolean isAbstract() {
         try {
             return remote.isAbstract();
@@ -278,7 +304,12 @@ public class ClientNodeType extends ClientObject implements NodeType {
         }
     }
 
+    /** {@inheritDoc} */
     public boolean isQueryable() {
-        throw new RuntimeException("TODO: JCRRMI-26");
+        try {
+            return remote.isQueryable();
+        } catch (RemoteException ex) {
+            throw new RemoteRuntimeException(ex);
+        }
     }
 }
