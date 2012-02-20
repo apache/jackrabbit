@@ -18,12 +18,15 @@ package org.apache.jackrabbit.core.query.lucene;
 
 import java.io.IOException;
 import java.io.Reader;
+import java.lang.reflect.Constructor;
 import java.util.Collections;
 
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.util.Version;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * This is the global jackrabbit lucene analyzer. By default, all
@@ -34,14 +37,68 @@ import org.apache.lucene.util.Version;
  * indexed with a specific analyzer. If configured, this analyzer is used to
  * index the text of the property and to parse searchtext for this property.
  */
+public class JackrabbitAnalyzer extends Analyzer {
 
-public class JackrabbitAnalyzer  extends Analyzer {
+    private static Logger log =
+            LoggerFactory.getLogger(JackrabbitAnalyzer.class);
+
+    private static final Analyzer DEFAULT_ANALYZER =
+            new StandardAnalyzer(Version.LUCENE_24, Collections.emptySet());
 
     /**
-     * The default Jackrabbit analyzer if none is configured in <code><SearchIndex></code>
-     * configuration.
+     * Returns a new instance of the named Lucene {@link Analyzer} class,
+     * or the default analyzer if the given class can not be instantiated.
+     *
+     * @param className name of the analyzer class
+     * @return new analyzer instance, or the default analyzer
      */
-    private Analyzer defaultAnalyzer =  new StandardAnalyzer(Version.LUCENE_24, Collections.emptySet());
+    static Analyzer getAnalyzerInstance(String className) {
+        Class<?> analyzerClass;
+        try {
+            analyzerClass = Class.forName(className);
+        } catch (ClassNotFoundException e) {
+            log.warn(className + " could not be found", e);
+            return DEFAULT_ANALYZER;
+        }
+        if (!Analyzer.class.isAssignableFrom(analyzerClass)) {
+            log.warn(className + " is not a Lucene Analyzer");
+            return DEFAULT_ANALYZER;
+        } else if (JackrabbitAnalyzer.class.isAssignableFrom(analyzerClass)) {
+            log.warn(className + " can not be used as a JackrabbitAnalyzer component");
+            return DEFAULT_ANALYZER;
+        }
+
+        Exception cause = null;
+        Constructor<?>[] constructors = analyzerClass.getConstructors();
+        for (Constructor<?> constructor : constructors) {
+            Class<?>[] types = constructor.getParameterTypes();
+            if (types.length == 1 && types[0] == Version.class) {
+                try {
+                    return (Analyzer) constructor.newInstance(Version.LUCENE_24);
+                } catch (Exception e) {
+                    cause = e;
+                }
+            }
+        }
+        for (Constructor<?> constructor : constructors) {
+            if (constructor.getParameterTypes().length == 0) {
+                try {
+                    return (Analyzer) constructor.newInstance();
+                } catch (Exception e) {
+                    cause = e;
+                }
+            }
+        }
+
+        log.warn(className + " could not be instantiated", cause);
+        return DEFAULT_ANALYZER;
+    }
+
+    /**
+     * The default Jackrabbit analyzer if none is configured in
+     * <code>&lt;SearchIndex&gt;</code> configuration.
+     */
+    private Analyzer defaultAnalyzer = DEFAULT_ANALYZER;
 
     /**
      * The indexing configuration.
@@ -60,6 +117,14 @@ public class JackrabbitAnalyzer  extends Analyzer {
      */
     protected void setDefaultAnalyzer(Analyzer analyzer) {
         defaultAnalyzer = analyzer;
+    }
+
+    String getDefaultAnalyzerClass() {
+        return defaultAnalyzer.getClass().getName();
+    }
+
+    void setDefaultAnalyzerClass(String className) {
+        setDefaultAnalyzer(getAnalyzerInstance(className));
     }
 
     /**
