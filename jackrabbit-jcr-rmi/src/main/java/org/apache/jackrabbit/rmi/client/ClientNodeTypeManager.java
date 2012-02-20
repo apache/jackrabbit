@@ -96,22 +96,22 @@ public class ClientNodeTypeManager extends ClientObject
 
     public NodeDefinitionTemplate createNodeDefinitionTemplate()
             throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("TODO: JCRRMI-26");
+        throw new UnsupportedRepositoryOperationException("TODO: JCR-3206");
     }
 
     public NodeTypeTemplate createNodeTypeTemplate()
             throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("TODO: JCRRMI-26");
+        throw new UnsupportedRepositoryOperationException("TODO: JCR-3206");
     }
 
     public NodeTypeTemplate createNodeTypeTemplate(NodeTypeDefinition ntd)
             throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("TODO: JCRRMI-26");
+        throw new UnsupportedRepositoryOperationException("TODO: JCR-3206");
     }
 
     public PropertyDefinitionTemplate createPropertyDefinitionTemplate()
             throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("TODO: JCRRMI-26");
+        throw new UnsupportedRepositoryOperationException("TODO: JCR-3206");
     }
 
     public boolean hasNodeType(String name) throws RepositoryException {
@@ -125,13 +125,13 @@ public class ClientNodeTypeManager extends ClientObject
     public NodeType registerNodeType(
             NodeTypeDefinition ntd, boolean allowUpdate)
             throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("TODO: JCRRMI-26");
+        throw new UnsupportedRepositoryOperationException("TODO: JCR-3206");
     }
 
     public NodeTypeIterator registerNodeTypes(
             NodeTypeDefinition[] ntds, boolean allowUpdate)
             throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("TODO: JCRRMI-26");
+        throw new UnsupportedRepositoryOperationException("TODO: JCR-3206");
     }
 
     public void unregisterNodeType(String name) throws RepositoryException {

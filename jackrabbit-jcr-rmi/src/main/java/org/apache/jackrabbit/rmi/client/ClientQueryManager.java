@@ -91,7 +91,7 @@ public class ClientQueryManager extends ClientObject implements QueryManager {
     }
 
     public QueryObjectModelFactory getQOMFactory() {
-        throw new RuntimeException("TODO: JCRRMI-26");
+        throw new RuntimeException("TODO: JCR-3206");
     }
 
 }

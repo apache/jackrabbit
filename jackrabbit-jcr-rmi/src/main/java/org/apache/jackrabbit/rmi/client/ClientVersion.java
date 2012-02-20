@@ -115,14 +115,14 @@ public class ClientVersion extends ClientNode implements Version {
    }
 
     public Node getFrozenNode() throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("TODO: JCRRMI-26");
+        throw new UnsupportedRepositoryOperationException("TODO: JCR-3206");
     }
 
     public Version getLinearPredecessor() throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("TODO: JCRRMI-26");
+        throw new UnsupportedRepositoryOperationException("TODO: JCR-3206");
     }
 
     public Version getLinearSuccessor() throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("TODO: JCRRMI-26");
+        throw new UnsupportedRepositoryOperationException("TODO: JCR-3206");
     }
 }

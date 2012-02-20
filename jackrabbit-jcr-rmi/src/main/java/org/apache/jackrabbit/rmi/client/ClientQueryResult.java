@@ -87,7 +87,7 @@ public class ClientQueryResult extends ClientObject implements QueryResult {
     }
 
     public String[] getSelectorNames() throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("TODO: JCRRMI-26");
+        throw new UnsupportedRepositoryOperationException("TODO: JCR-3206");
     }
 
 }

@@ -48,7 +48,7 @@ public class ClientVersionManager extends ClientObject
     /** {@inheritDoc} */
     public void cancelMerge(String absPath, Version version)
             throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("TODO: JCRRMI-26");
+        throw new UnsupportedRepositoryOperationException("TODO: JCR-3206");
     }
 
     /** {@inheritDoc} */
@@ -102,7 +102,7 @@ public class ClientVersionManager extends ClientObject
     /** {@inheritDoc} */
     public void doneMerge(String absPath, Version version)
             throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("TODO: JCRRMI-26");
+        throw new UnsupportedRepositoryOperationException("TODO: JCR-3206");
     }
 
     /** {@inheritDoc} */
@@ -146,7 +146,7 @@ public class ClientVersionManager extends ClientObject
 
     /** {@inheritDoc} */
     public NodeIterator merge(Node activityNode) throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("TODO: JCRRMI-26");
+        throw new UnsupportedRepositoryOperationException("TODO: JCR-3206");
     }
 
     /** {@inheritDoc} */
@@ -175,19 +175,19 @@ public class ClientVersionManager extends ClientObject
 
     /** {@inheritDoc} */
     public void removeActivity(Node activityNode) throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("TODO: JCRRMI-26");
+        throw new UnsupportedRepositoryOperationException("TODO: JCR-3206");
     }
 
     /** {@inheritDoc} */
     public void restore(Version[] versions, boolean removeExisting)
             throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("TODO: JCRRMI-26");
+        throw new UnsupportedRepositoryOperationException("TODO: JCR-3206");
     }
 
     /** {@inheritDoc} */
     public void restore(Version version, boolean removeExisting)
             throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("TODO: JCRRMI-26");
+        throw new UnsupportedRepositoryOperationException("TODO: JCR-3206");
     }
 
     /** {@inheritDoc} */
@@ -204,7 +204,7 @@ public class ClientVersionManager extends ClientObject
     /** {@inheritDoc} */
     public void restore(String absPath, Version version, boolean removeExisting)
             throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("TODO: JCRRMI-26");
+        throw new UnsupportedRepositoryOperationException("TODO: JCR-3206");
     }
 
     /** {@inheritDoc} */
@@ -220,7 +220,7 @@ public class ClientVersionManager extends ClientObject
 
     /** {@inheritDoc} */
     public Node setActivity(Node activity) throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("TODO: JCRRMI-26");
+        throw new UnsupportedRepositoryOperationException("TODO: JCR-3206");
     }
 
 }

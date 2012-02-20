@@ -301,19 +301,19 @@ public class ClientEventPoll extends Thread {
         }
 
         public long getDate() throws RepositoryException {
-            throw new UnsupportedRepositoryOperationException("TODO: JCRRMI-26");
+            throw new UnsupportedRepositoryOperationException("TODO: JCR-3206");
         }
 
         public String getIdentifier() throws RepositoryException {
-            throw new UnsupportedRepositoryOperationException("TODO: JCRRMI-26");
+            throw new UnsupportedRepositoryOperationException("TODO: JCR-3206");
         }
 
         public Map getInfo() throws RepositoryException {
-            throw new UnsupportedRepositoryOperationException("TODO: JCRRMI-26");
+            throw new UnsupportedRepositoryOperationException("TODO: JCR-3206");
         }
 
         public String getUserData() throws RepositoryException {
-            throw new UnsupportedRepositoryOperationException("TODO: JCRRMI-26");
+            throw new UnsupportedRepositoryOperationException("TODO: JCR-3206");
         }
     }
 }

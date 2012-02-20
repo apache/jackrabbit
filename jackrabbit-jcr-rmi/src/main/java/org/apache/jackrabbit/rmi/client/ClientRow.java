@@ -67,27 +67,27 @@ public class ClientRow implements Row {
     }
 
     public Node getNode() throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("TODO: JCRRMI-26");
+        throw new UnsupportedRepositoryOperationException("TODO: JCR-3206");
     }
 
     public Node getNode(String selectorName) throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("TODO: JCRRMI-26");
+        throw new UnsupportedRepositoryOperationException("TODO: JCR-3206");
     }
 
     public String getPath() throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("TODO: JCRRMI-26");
+        throw new UnsupportedRepositoryOperationException("TODO: JCR-3206");
     }
 
     public String getPath(String selectorName) throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("TODO: JCRRMI-26");
+        throw new UnsupportedRepositoryOperationException("TODO: JCR-3206");
     }
 
     public double getScore() throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("TODO: JCRRMI-26");
+        throw new UnsupportedRepositoryOperationException("TODO: JCR-3206");
     }
 
     public double getScore(String selectorName) throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("TODO: JCRRMI-26");
+        throw new UnsupportedRepositoryOperationException("TODO: JCR-3206");
     }
 
 }
