@@ -79,7 +79,6 @@ public class OperandEvaluator {
      *
      * @param factory value factory
      * @param variables bind variables
-     * @param locale locale to use in upper- and lower-case conversions
      */
     public OperandEvaluator(
             ValueFactory factory, Map<String, Value> variables) {

@@ -90,14 +90,14 @@ public class AbstractLogger {
     }
 
     /**
-     * Type of thunk used in {@link AbstractLogger#execute(Callable, String, Object[])
+     * Type of thunk used in {@link AbstractLogger#execute(Callable, String, Object[])}
      */
     protected interface Callable {
         public Object call() throws RepositoryException;
     }
 
     /**
-     * Type of thunk used in {@link AbstractLogger#execute(SafeCallable, String, Object[])
+     * Type of thunk used in {@link AbstractLogger#execute(SafeCallable, String, Object[])}
      */
     protected interface SafeCallable {
         public Object call();

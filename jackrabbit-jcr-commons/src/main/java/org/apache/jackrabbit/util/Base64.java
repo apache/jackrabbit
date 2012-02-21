@@ -234,7 +234,7 @@ public class Base64 {
      *
      * @since Apache Jackrabbit 2.3
      * @param data the string to be encoded
-     * @param base64-encoding of the string
+     * @return base64-encoding of the string
      */
     public static String encode(String data) {
         try {

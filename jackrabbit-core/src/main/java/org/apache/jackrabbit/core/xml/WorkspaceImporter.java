@@ -86,7 +86,7 @@ public class WorkspaceImporter implements Importer {
      *
      * @param parentPath   target path where to add the imported subtree
      * @param wsp the workspace to operate on
-     * @param ntReg the node type registry
+     * @param sessionContext the session context
      * @param uuidBehavior flag that governs how incoming UUIDs are handled
      * @throws PathNotFoundException        if no node exists at
      *                                      <code>parentPath</code> or if the
@@ -115,7 +115,7 @@ public class WorkspaceImporter implements Importer {
      *
      * @param parentPath   target path where to add the imported subtree
      * @param wsp the workspace to operate on
-     * @param ntReg the node type registry
+     * @param sessionContext the session context
      * @param uuidBehavior flag that governs how incoming UUIDs are handled
      * @param config import configuration.
      * @throws PathNotFoundException        if no node exists at

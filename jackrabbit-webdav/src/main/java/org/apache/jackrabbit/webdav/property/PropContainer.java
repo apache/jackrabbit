@@ -40,7 +40,7 @@ public abstract class PropContainer implements XmlSerializable, DavConstants {
      *
      * @param contentEntry
      * @return true if the object could be added; false otherwise
-     * @deprecated Use {@link #addContent(PropEntry) instead.
+     * @deprecated Use {@link #addContent(PropEntry)} instead.
      */
     public boolean addContent(Object contentEntry) {
         if (contentEntry instanceof PropEntry) {
@@ -57,8 +57,6 @@ public abstract class PropContainer implements XmlSerializable, DavConstants {
      *
      * @param contentEntry
      * @return true if the object could be added; false otherwise
-     * @param contentEntry
-     * @return
      */
     public abstract boolean addContent(PropEntry contentEntry);
 

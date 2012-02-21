@@ -116,7 +116,7 @@ public class SerializingContentHandler extends DefaultContentHandler {
     /**
      * Creates a serializing content handler that writes to the given stream.
      *
-     * @param stream serialization target
+     * @param output serialization target
      * @return serializing content handler
      * @throws SAXException if the content handler could not be initialized
      */
