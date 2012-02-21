@@ -308,7 +308,7 @@ abstract class InternalVersionManagerBase implements InternalVersionManager {
      * Returns information about the version history of the specified node
      * or <code>null</code> when unavailable.
      *
-     * @param vNode node whose version history should be returned
+     * @param node node whose version history should be returned
      * @return identifiers of the version history and root version nodes
      * @throws RepositoryException if an error occurs
      */

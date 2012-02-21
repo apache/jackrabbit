@@ -310,7 +310,7 @@ public class BundleDbPersistenceManager
      * @deprecated
      * This method is deprecated; {@link setDatabaseType} should be used instead.
      *
-     * @param database type name
+     * @param databaseType database type name
      */
     public void setSchema(String databaseType) {
         this.databaseType = databaseType;
@@ -321,7 +321,7 @@ public class BundleDbPersistenceManager
      * the respective .ddl resource in order to create the required schema
      * objects.
      *
-     * @param database type name
+     * @param databaseType database type name
      */
     public void setDatabaseType(String databaseType) {
         this.databaseType = databaseType;

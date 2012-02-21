@@ -27,7 +27,7 @@ public interface Transformer<A, R> {
     /**
      * Transforms the input object (leaving it unchanged) into some output object.
      *
-     * @param input  the object to be transformed, should be left unchanged
+     * @param argument  the object to be transformed, should be left unchanged
      * @return a transformed object
      */
     public R transform(A argument);

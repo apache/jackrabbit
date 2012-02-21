@@ -50,7 +50,7 @@ public class DbNameIndex implements StringIndex {
 
     /**
      * Creates a new index that is stored in a db.
-     * @param conHelper the {@link ConnectionHelper}
+     * @param conHlpr the {@link ConnectionHelper}
      * @param schemaObjectPrefix the prefix for table names
      * @throws SQLException if the statements cannot be prepared.
      */
@@ -63,7 +63,6 @@ public class DbNameIndex implements StringIndex {
     /**
      * Inits this index and prepares the statements.
      *
-     * @param con the jdbc connection
      * @param schemaObjectPrefix the prefix for table names
      * @throws SQLException if the statements cannot be prepared.
      */

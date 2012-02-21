@@ -47,7 +47,7 @@ public class ClusterConfig implements JournalFactory {
      *
      * @param id custom cluster node id
      * @param syncDelay syncDelay, in milliseconds
-     * @param jc journal configuration
+     * @param jf journal factory
      */
     public ClusterConfig(String id, long syncDelay, JournalFactory jf) {
         this.id = id;

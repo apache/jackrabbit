@@ -71,7 +71,7 @@ public class LazyFileInputStream extends AutoCloseInputStream {
      * descriptor.
      * The file is not opened until the first byte is read from the stream.
      *
-     * @param fdObj
+     * @param fd
      */
     public LazyFileInputStream(FileDescriptor fd) {
         super(null);

@@ -273,7 +273,7 @@ public abstract class AbstractJournal implements Journal {
 
     /**
      * Lock the journal revision, disallowing changes from other sources until
-     * {@link #unlock has been called, and synchronizes to the latest change.
+     * {@link #unlock} has been called, and synchronizes to the latest change.
      *
      * @throws JournalException if an error occurs
      */
