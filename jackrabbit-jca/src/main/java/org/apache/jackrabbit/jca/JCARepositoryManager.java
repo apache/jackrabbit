@@ -154,9 +154,6 @@ public final class JCARepositoryManager {
     /**
      * Try to shutdown the repository only if
      * {@link JCARepositoryManager#autoShutdown} is true.
-     *
-     * @param homeDir   The location of the repository.
-     * @param configFile The path to the repository configuration file.
      */
     public synchronized void autoShutdownRepository(
             Map<String, String> parameters) {

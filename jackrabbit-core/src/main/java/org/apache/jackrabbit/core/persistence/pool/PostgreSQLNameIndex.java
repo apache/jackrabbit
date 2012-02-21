@@ -39,7 +39,6 @@ public class PostgreSQLNameIndex extends DbNameIndex {
     /**
      * Inits this index and prepares the statements.
      *
-     * @param con the jdbc connection
      * @param schemaObjectPrefix the prefix for table names
      * @throws SQLException if the statements cannot be prepared.
      */

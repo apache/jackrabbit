@@ -31,7 +31,7 @@ public class FilterIterator<T> extends org.apache.jackrabbit.commons.iterator.Fi
     /**
      * Create a new filtered iterator based on the given <code>iterator</code>.
      *
-     * @param iterator  iterator to filter
+     * @param tIterator  iterator to filter
      * @param predicate only item matching this predicate are included
      */
     public FilterIterator(Iterator<T> tIterator, Predicate predicate) {

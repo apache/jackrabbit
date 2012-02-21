@@ -96,7 +96,6 @@ public class FilteredRangeIterator implements RangeIterator {
      * 
      *
      * @param iterator underlying iterator
-     * @param predicate predicate used for filtering
      */
     public FilteredRangeIterator(Iterator<?> iterator) {
         this(iterator, Predicate.TRUE, 1000);

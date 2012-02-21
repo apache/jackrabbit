@@ -42,7 +42,6 @@ public abstract class AbstractRemoteRepositoryFactory
      * Creates a factory for looking up a repository from the given RMI URL.
      *
      * @param factory local adapter factory
-     * @param url RMI URL of the repository
      */
     protected AbstractRemoteRepositoryFactory(LocalAdapterFactory factory) {
         this.factory = factory;

@@ -274,7 +274,7 @@ public class ToXmlContentHandler extends DefaultHandler {
      * Returns the serialized XML document (assuming the default no-argument
      * constructor was used).
      *
-     * @param serialized XML document
+     * @return serialized XML document
      */
     public String toString() {
         return writer.toString();

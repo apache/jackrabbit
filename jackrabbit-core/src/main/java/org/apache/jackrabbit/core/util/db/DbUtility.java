@@ -85,7 +85,7 @@ public final class DbUtility {
      * Logs an SQL exception on error level, and debug level (more detail).
      * 
      * @param message the message
-     * @param se the exception
+     * @param e the exception
      */
     public static void logException(String message, SQLException e) {
         if (message != null) {

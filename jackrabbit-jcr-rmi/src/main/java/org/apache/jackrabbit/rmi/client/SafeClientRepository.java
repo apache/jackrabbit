@@ -48,7 +48,6 @@ public abstract class SafeClientRepository extends ClientObject
     /**
      * Creates a client adapter for the given remote repository.
      *
-     * @param remote remote repository
      * @param factory local adapter factory
      */
     public SafeClientRepository(LocalAdapterFactory factory) {

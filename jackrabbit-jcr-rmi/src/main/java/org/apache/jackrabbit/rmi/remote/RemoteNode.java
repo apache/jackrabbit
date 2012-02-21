@@ -734,7 +734,7 @@ public interface RemoteNode extends RemoteItem {
      * {@link javax.jcr.Node#setPrimaryType(String) Node.setPrimaryType(String)}
      * method.
      *
-     * @param the nodeTypeName
+     * @param nodeTypeName the node type name
      * @throws RepositoryException on repository errors
      * @throws RemoteException on RMI errors
      */

@@ -117,7 +117,7 @@ public class OracleFileSystem extends DbFileSystem {
     
     /**
      * Sets the Oracle tablespace for indexes.
-     * @param tablespace the Oracle tablespace for indexes.
+     * @param tablespaceName the Oracle tablespace for indexes.
      */
     public void setIndexTablespace(String tablespaceName) {
         this.indexTablespace = this.buildTablespaceClause(tablespaceName);

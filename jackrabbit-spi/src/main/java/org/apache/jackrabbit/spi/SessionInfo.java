@@ -66,7 +66,6 @@ public interface SessionInfo {
      * lock identified by the given token.
      *
      * @param lockToken to be added.
-     * @param lockToken
      * @throws UnsupportedRepositoryOperationException If locking is not supported.
      * @throws LockException If the token cannot be added.
      * @throws RepositoryException If another error occurs.
