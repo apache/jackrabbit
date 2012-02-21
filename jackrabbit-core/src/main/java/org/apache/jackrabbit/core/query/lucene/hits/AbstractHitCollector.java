@@ -49,7 +49,7 @@ public abstract class AbstractHitCollector extends Collector {
      * Called once for every document matching a query, with the re-based document
      * number and its computed score.
      * @param doc the re-based document number.
-     * @param doc the document's score.
+     * @param score the document's score.
      */
     protected abstract void collect(int doc, float score);
 

@@ -32,7 +32,7 @@ public interface QueryStatCore extends QueryStat {
      *            {@link org.apache.jackrabbit.spi.commons.name.NameConstants#JCR_LANGUAGE}
      * @param statement
      *            the query
-     * @param duration
+     * @param durationMs
      *            time in ms
      */
     void logQuery(final String language, final String statement, long durationMs);

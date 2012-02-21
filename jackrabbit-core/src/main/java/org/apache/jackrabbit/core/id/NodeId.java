@@ -119,7 +119,7 @@ public class NodeId implements ItemId, Comparable<NodeId> {
      * Creates a node identifier from the given UUID string.
      *
      * @see #fromString(String)
-     * @param uuid UUID string
+     * @param uuidString UUID string
      * @throws IllegalArgumentException if the UUID string is invalid
      */
     public NodeId(String uuidString) throws IllegalArgumentException {

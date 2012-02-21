@@ -262,7 +262,7 @@ public final class PrivilegeManagerImpl implements PrivilegeManager, PrivilegeRe
 
     //-----------------------------------------< PrivilegeRegistry.Listener >---
     /**
-     * @see PrivilegeRegistry.Listener#privilegesRegistered(java.util.Set
+     * @see PrivilegeRegistry.Listener#privilegesRegistered(java.util.Set)
      * @param privilegeNames
      */
     public void privilegesRegistered(Set<Name> privilegeNames) {

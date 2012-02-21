@@ -56,7 +56,7 @@ public class EquiJoin extends AbstractCondition {
      *
      * @param inner               the inner query hits.
      * @param innerScoreNodeIndex the selector name for the inner query hits.
-     * @param scs                 the sort comparator source.
+     * @param nsMappings          the namespace mappings
      * @param reader              the index reader.
      * @param innerProperty       the name of the property of the inner query
      *                            hits.

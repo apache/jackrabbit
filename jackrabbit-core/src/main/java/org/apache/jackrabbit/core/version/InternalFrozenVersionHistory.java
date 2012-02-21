@@ -53,7 +53,7 @@ public interface InternalFrozenVersionHistory extends InternalFreeze {
     NodeId getBaseVersionId();
 
     /**
-     * @deprecate use {@link #getBaseVersion()} instead
+     * @deprecated use {@link #getBaseVersion()} instead
      */
     InternalVersion getBaseVesion() throws VersionException;
 
