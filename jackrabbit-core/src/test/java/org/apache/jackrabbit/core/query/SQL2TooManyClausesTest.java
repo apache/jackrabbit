@@ -35,7 +35,7 @@ public class SQL2TooManyClausesTest extends AbstractQueryTest {
 
     private Node girls;
 
-    private final int nodes = 1100;
+    private final int nodes = 3300;
 
     @Override
     protected void setUp() throws Exception {
