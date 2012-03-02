@@ -16,48 +16,6 @@
  */
 package org.apache.jackrabbit.core.lock;
 
-import EDU.oswego.cs.dl.util.concurrent.ReentrantLock;
-import org.apache.commons.collections.map.LinkedMap;
-import org.apache.commons.io.IOUtils;
-import org.apache.jackrabbit.core.id.ItemId;
-import org.apache.jackrabbit.core.id.NodeId;
-import org.apache.jackrabbit.core.NodeImpl;
-import org.apache.jackrabbit.core.id.PropertyId;
-import org.apache.jackrabbit.core.SessionImpl;
-import org.apache.jackrabbit.core.SessionListener;
-import org.apache.jackrabbit.core.TransactionContext;
-import org.apache.jackrabbit.core.WorkspaceImpl;
-import org.apache.jackrabbit.core.cluster.ClusterOperation;
-import org.apache.jackrabbit.core.cluster.LockEventChannel;
-import org.apache.jackrabbit.core.cluster.LockEventListener;
-import org.apache.jackrabbit.core.fs.FileSystem;
-import org.apache.jackrabbit.core.fs.FileSystemException;
-import org.apache.jackrabbit.core.fs.FileSystemResource;
-import org.apache.jackrabbit.core.observation.EventImpl;
-import org.apache.jackrabbit.core.observation.SynchronousEventListener;
-import org.apache.jackrabbit.core.state.ItemStateException;
-import org.apache.jackrabbit.core.state.NodeState;
-import org.apache.jackrabbit.core.state.PropertyState;
-import org.apache.jackrabbit.core.state.UpdatableItemStateManager;
-import org.apache.jackrabbit.core.value.InternalValue;
-import org.apache.jackrabbit.spi.Path;
-import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
-import org.apache.jackrabbit.spi.commons.name.NameConstants;
-import org.apache.jackrabbit.spi.commons.name.PathMap;
-import javax.jcr.Workspace;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.jcr.ItemNotFoundException;
-import javax.jcr.PropertyType;
-import javax.jcr.RepositoryException;
-import javax.jcr.Session;
-import javax.jcr.lock.Lock;
-import javax.jcr.lock.LockException;
-import javax.jcr.observation.Event;
-import javax.jcr.observation.EventIterator;
-import javax.transaction.xa.Xid;
-
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -69,6 +27,49 @@ import java.util.Iterator;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+
+import javax.jcr.ItemNotFoundException;
+import javax.jcr.PropertyType;
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
+import javax.jcr.Workspace;
+import javax.jcr.lock.Lock;
+import javax.jcr.lock.LockException;
+import javax.jcr.observation.Event;
+import javax.jcr.observation.EventIterator;
+import javax.transaction.xa.Xid;
+
+import org.apache.commons.collections.map.LinkedMap;
+import org.apache.commons.io.IOUtils;
+import org.apache.jackrabbit.core.NodeImpl;
+import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.SessionListener;
+import org.apache.jackrabbit.core.TransactionContext;
+import org.apache.jackrabbit.core.WorkspaceImpl;
+import org.apache.jackrabbit.core.cluster.ClusterOperation;
+import org.apache.jackrabbit.core.cluster.LockEventChannel;
+import org.apache.jackrabbit.core.cluster.LockEventListener;
+import org.apache.jackrabbit.core.fs.FileSystem;
+import org.apache.jackrabbit.core.fs.FileSystemException;
+import org.apache.jackrabbit.core.fs.FileSystemResource;
+import org.apache.jackrabbit.core.id.ItemId;
+import org.apache.jackrabbit.core.id.NodeId;
+import org.apache.jackrabbit.core.id.PropertyId;
+import org.apache.jackrabbit.core.observation.EventImpl;
+import org.apache.jackrabbit.core.observation.SynchronousEventListener;
+import org.apache.jackrabbit.core.state.ItemStateException;
+import org.apache.jackrabbit.core.state.NodeState;
+import org.apache.jackrabbit.core.state.PropertyState;
+import org.apache.jackrabbit.core.state.UpdatableItemStateManager;
+import org.apache.jackrabbit.core.value.InternalValue;
+import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
+import org.apache.jackrabbit.spi.commons.name.NameConstants;
+import org.apache.jackrabbit.spi.commons.name.PathMap;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import EDU.oswego.cs.dl.util.concurrent.ReentrantLock;
 
 /**
  * Provides the functionality needed for locking and unlocking nodes.
@@ -232,26 +233,31 @@ public class LockManagerImpl
      *      JSR 283: Locking
      */
     private class TimeoutHandler implements Runnable {
+        private final TimeoutHandlerVisitor visitor = new TimeoutHandlerVisitor();
+
         public void run() {
-            lockMap.traverse(new PathMap.ElementVisitor<LockInfo>() {
-                public void elementVisited(PathMap.Element<LockInfo> element) {
-                    LockInfo info = element.get();
-                    if (info != null && info.isLive() && info.isExpired()) {
-                        NodeId id = info.getId();
-                        SessionImpl holder = info.getLockHolder();
-                        if (holder == null) {
-                            info.setLockHolder(sysSession);
-                            holder = sysSession;
-                        }
-                        try {
-                            // FIXME: This session access is not thread-safe!
-                            unlock(holder.getNodeById(id));
-                        } catch (RepositoryException e) {
-                            log.warn("Unable to expire the lock " + id, e);
-                        }
-                    }
+            lockMap.traverse(visitor, false);
+        }
+    }
+
+    private class TimeoutHandlerVisitor implements
+            PathMap.ElementVisitor<LockInfo> {
+        public void elementVisited(PathMap.Element<LockInfo> element) {
+            LockInfo info = element.get();
+            if (info != null && info.isLive() && info.isExpired()) {
+                NodeId id = info.getId();
+                SessionImpl holder = info.getLockHolder();
+                if (holder == null) {
+                    info.setLockHolder(sysSession);
+                    holder = sysSession;
                 }
-            }, false);
+                try {
+                    // FIXME: This session access is not thread-safe!
+                    unlock(holder.getNodeById(id));
+                } catch (RepositoryException e) {
+                    log.warn("Unable to expire the lock " + id, e);
+                }
+            }
         }
     }
 
