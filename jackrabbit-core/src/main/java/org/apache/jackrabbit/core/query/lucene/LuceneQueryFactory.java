@@ -459,7 +459,6 @@ public class LuceneQueryFactory {
             ids.add(ancestor.getIdentifier());
             while (!ids.isEmpty()) {
                 String id = ids.removeFirst();
-                clauses++;
                 Query q = new JackrabbitTermQuery(new Term(FieldNames.PARENT, id));
                 QueryHits hits = searcher.evaluate(q);
                 ScoreNode sn = hits.nextScoreNode();
@@ -467,10 +466,12 @@ public class LuceneQueryFactory {
                     // reset query so it does not overflow because of the max
                     // clause count condition,
                     // see JCR-3108
+                    clauses++;
                     if (clauses == BooleanQuery.getMaxClauseCount()) {
                         BooleanQuery wrapQ = new BooleanQuery();
                         wrapQ.add(query, SHOULD);
                         query = wrapQ;
+                        clauses = 1;
                     }
                     query.add(q, SHOULD);
                     do {
