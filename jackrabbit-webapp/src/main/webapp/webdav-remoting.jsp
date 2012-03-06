@@ -21,8 +21,9 @@
 request.setAttribute("title", "JCR Remoting Server with Batch Read/Write");
 
 URI uri = new URI(request.getRequestURL().toString());
+int port = uri.getPort();
 String href =
-    uri.getScheme() + "://" + uri.getHost() + ":" + uri.getPort()
+    uri.getScheme() + "://" + uri.getHost() + (port == -1 ? "" : (":" + port))
     + request.getContextPath()
     + JCRWebdavServerServlet.getPathPrefix(pageContext.getServletContext());
 href = Text.encodeIllegalXMLCharacters(href);

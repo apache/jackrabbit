@@ -19,8 +19,9 @@
 request.setAttribute("title", "Standard WebDAV Server");
 
 URI uri = new URI(request.getRequestURL().toString());
+int port = uri.getPort();
 String href =
-    uri.getScheme() + "://" + uri.getHost() + ":" + uri.getPort()
+    uri.getScheme() + "://" + uri.getHost() + (port == -1 ? "" : (":" + port))
     + request.getContextPath()
     + SimpleWebdavServlet.getPathPrefix(pageContext.getServletContext())
     + "/default/";
