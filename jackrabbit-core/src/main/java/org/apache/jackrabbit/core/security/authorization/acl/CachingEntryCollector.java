@@ -57,7 +57,19 @@ class CachingEntryCollector extends EntryCollector {
     CachingEntryCollector(SessionImpl systemSession, NodeId rootID) throws RepositoryException {
         super(systemSession, rootID);
 
-        cache = new GrowingLRUMap(1024, 5000);
+        int maxsize = 5000;
+        String propname = "org.apache.jackrabbit.core.security.authorization.acl.CachingEntryCollector.maxsize";
+        try {
+            maxsize = Integer.parseInt(System.getProperty(propname,
+                    Integer.toString(maxsize)));
+        } catch (NumberFormatException ex) {
+            log.error("Parsing system property " + propname + " with value: "
+                    + System.getProperty(propname), ex);
+        }
+
+        log.info("Creating cache with max size of: " + maxsize);
+
+        cache = new GrowingLRUMap(1024, maxsize);
     }
 
     @Override
