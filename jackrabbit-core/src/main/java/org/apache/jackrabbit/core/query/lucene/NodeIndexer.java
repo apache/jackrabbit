@@ -217,9 +217,11 @@ public class NodeIndexer {
             // parent UUID
             if (node.getParentId() == null) {
                 // root node
-                doc.add(new Field(FieldNames.PARENT, false, "",
+                Field parent = new Field(FieldNames.PARENT, false, "",
                         Field.Store.YES, Field.Index.NOT_ANALYZED_NO_NORMS,
-                        Field.TermVector.NO));
+                        Field.TermVector.NO);
+                parent.setOmitTermFreqAndPositions(true);
+                doc.add(parent);
                 addNodeName(doc, "", "");
             } else if (node.getSharedSet().isEmpty()) {
                 addParentChildRelation(doc, node.getParentId());
@@ -955,9 +957,11 @@ public class NodeIndexer {
     protected void addParentChildRelation(Document doc,
                                           NodeId parentId)
             throws ItemStateException, RepositoryException {
-        doc.add(new Field(FieldNames.PARENT, false, parentId.toString(),
-                Field.Store.YES, Field.Index.NOT_ANALYZED_NO_NORMS,
-                Field.TermVector.NO));
+        Field parentField = new Field(FieldNames.PARENT, false,
+                parentId.toString(), Field.Store.YES,
+                Field.Index.NOT_ANALYZED_NO_NORMS, Field.TermVector.NO);
+        parentField.setOmitTermFreqAndPositions(true);
+        doc.add(parentField);
         NodeState parent = (NodeState) stateProvider.getItemState(parentId);
         ChildNodeEntry child = parent.getChildNodeEntry(node.getNodeId());
         if (child == null) {
