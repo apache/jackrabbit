@@ -26,17 +26,16 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.jackrabbit.api.stats.RepositoryStatistics;
-import org.apache.jackrabbit.api.stats.RepositoryStatistics.Type;
 import org.apache.jackrabbit.api.stats.TimeSeries;
 
 public class RepositoryStatisticsImpl implements
-        Iterable<Map.Entry<Type, TimeSeries>>, RepositoryStatistics {
+        Iterable<Map.Entry<String, TimeSeries>>, RepositoryStatistics {
 
-    private final Map<Type, TimeSeriesRecorder> recorders =
-            new HashMap<Type, TimeSeriesRecorder>();
+    private final Map<String, TimeSeriesRecorder> recorders =
+            new HashMap<String, TimeSeriesRecorder>();
 
-    private final Map<Type, TimeSeriesAverage> avg =
-            new HashMap<Type, TimeSeriesAverage>();
+    private final Map<String, TimeSeriesAverage> avg =
+            new HashMap<String, TimeSeriesAverage>();
 
     public RepositoryStatisticsImpl() {
         getOrCreateRecorder(Type.SESSION_COUNT);
@@ -55,7 +54,7 @@ public class RepositoryStatisticsImpl implements
     }
 
     private void createAvg(Type count, Type duration, Type avgTs) {
-        avg.put(avgTs, new TimeSeriesAverage(getOrCreateRecorder(duration),
+        avg.put(avgTs.name(), new TimeSeriesAverage(getOrCreateRecorder(duration),
                 getOrCreateRecorder(count)));
     }
 
@@ -68,8 +67,8 @@ public class RepositoryStatisticsImpl implements
         }, 1, 1, TimeUnit.SECONDS);
     }
 
-    public synchronized Iterator<Entry<Type, TimeSeries>> iterator() {
-        Map<Type, TimeSeries> map = new TreeMap<Type, TimeSeries>();
+    public synchronized Iterator<Entry<String, TimeSeries>> iterator() {
+        Map<String, TimeSeries> map = new TreeMap<String, TimeSeries>();
         map.putAll(recorders);
         map.putAll(avg);
         return map.entrySet().iterator();
@@ -79,18 +78,29 @@ public class RepositoryStatisticsImpl implements
         return getOrCreateRecorder(type).getCounter();
     }
 
+    public AtomicLong getCounter(String type, boolean resetValueEachSecond) {
+        return getOrCreateRecorder(type, resetValueEachSecond).getCounter();
+    }
+
     public TimeSeries getTimeSeries(Type type) {
+        return getTimeSeries(type.name(), type.isResetValueEachSecond());
+    }
+
+    public TimeSeries getTimeSeries(String type, boolean resetValueEachSecond) {
         if (avg.containsKey(type)) {
             return avg.get(type);
-        } else {
-            return getOrCreateRecorder(type);
         }
+        return getOrCreateRecorder(type, resetValueEachSecond);
     }
 
     private synchronized TimeSeriesRecorder getOrCreateRecorder(Type type) {
+        return getOrCreateRecorder(type.name(), type.isResetValueEachSecond());
+    }
+
+    private synchronized TimeSeriesRecorder getOrCreateRecorder(String type, boolean resetValueEachSecond) {
         TimeSeriesRecorder recorder = recorders.get(type);
         if (recorder == null) {
-            recorder = new TimeSeriesRecorder(type);
+            recorder = new TimeSeriesRecorder(resetValueEachSecond);
             recorders.put(type, recorder);
         }
         return recorder;
@@ -101,5 +111,4 @@ public class RepositoryStatisticsImpl implements
             recorder.recordOneSecond();
         }
     }
-
 }
