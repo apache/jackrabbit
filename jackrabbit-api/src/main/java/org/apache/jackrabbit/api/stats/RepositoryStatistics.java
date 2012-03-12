@@ -53,10 +53,20 @@ public interface RepositoryStatistics {
             this.resetValueEachSecond = resetValueEachSecond;
         }
 
+        public static Type getType(String type) {
+            Type realType = null;
+            try {
+                realType = Type.valueOf(type);
+            } catch (IllegalArgumentException ignore) {};
+            return realType;
+        }
+
         public boolean isResetValueEachSecond() {
             return resetValueEachSecond;
         }
     }
 
     TimeSeries getTimeSeries(Type type);
+
+    TimeSeries getTimeSeries(String type, boolean resetValueEachSecond);
 }

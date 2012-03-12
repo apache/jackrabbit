@@ -29,11 +29,11 @@ import org.apache.jackrabbit.api.stats.RepositoryStatistics.Type;
  */
 class TimeSeriesRecorder implements TimeSeries {
 
-    /** Type */
-    private final Type type;
-    
     /** Value */
     private final AtomicLong counter = new AtomicLong();
+
+    /** Whether to reset value each second */
+    private final boolean resetValueEachSecond;
 
     /** Measured value per second over the last minute. */
     private final long[] valuePerSecond = new long[60];
@@ -60,7 +60,11 @@ class TimeSeriesRecorder implements TimeSeries {
     private int weeks = 0;
 
     public TimeSeriesRecorder(Type type) {
-        this.type = type;
+        this(type.isResetValueEachSecond());
+    }
+
+    public TimeSeriesRecorder(boolean resetValueEachSecond) {
+        this.resetValueEachSecond = resetValueEachSecond;
     }
 
     /**
@@ -79,7 +83,7 @@ class TimeSeriesRecorder implements TimeSeries {
      * second.
      */
     public synchronized void recordOneSecond() {
-        if (type.isResetValueEachSecond()) {
+        if (resetValueEachSecond) {
             valuePerSecond[seconds++] = counter.getAndSet(0);
         } else {
             valuePerSecond[seconds++] = counter.get();
@@ -133,7 +137,7 @@ class TimeSeriesRecorder implements TimeSeries {
 
             sum += array[i];
         }
-        if (type.isResetValueEachSecond()) {
+        if (resetValueEachSecond) {
             return sum;
         }
         return sum / array.length;
@@ -154,5 +158,4 @@ class TimeSeriesRecorder implements TimeSeries {
         }
         return reverse;
     }
-
 }
