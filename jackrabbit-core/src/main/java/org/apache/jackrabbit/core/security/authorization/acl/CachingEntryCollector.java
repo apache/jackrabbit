@@ -97,6 +97,8 @@ class CachingEntryCollector extends EntryCollector {
             } else {
                 // fetch entries and update the cache
                 entries = updateCache(node);
+            } else {
+                log.debug("Cache hit for nodeId {}", nodeId);
             }
         }
         return entries;
@@ -116,6 +118,8 @@ class CachingEntryCollector extends EntryCollector {
                 // fetch entries and update the cache
                 NodeImpl n = getNodeById(nodeId);
                 entries = updateCache(n);
+            } else {
+                log.debug("Cache hit for nodeId {}", nodeId);
             }
         }
         return entries;
@@ -213,6 +217,7 @@ class CachingEntryCollector extends EntryCollector {
                 if ((type & POLICY_ADDED) == POLICY_ADDED) {
                     // clear the complete cache since the nextAcNodeId may
                     // have changed due to the added acl.
+                    log.debug("Policy added, clearing the cache");
                     cache.clear();
                     break; // no need for further processing.
                 } else if ((type & POLICY_REMOVED) == POLICY_REMOVED) {
