@@ -94,11 +94,10 @@ class CachingEntryCollector extends EntryCollector {
             CacheEntry ce = cache.get(nodeId);
             if (ce != null) {
                 entries = ce.entries;
+                log.debug("Cache hit for nodeId {}", nodeId);
             } else {
                 // fetch entries and update the cache
                 entries = updateCache(node);
-            } else {
-                log.debug("Cache hit for nodeId {}", nodeId);
             }
         }
         return entries;
@@ -114,12 +113,11 @@ class CachingEntryCollector extends EntryCollector {
             CacheEntry ce = cache.get(nodeId);
             if (ce != null) {
                 entries = ce.entries;
+                log.debug("Cache hit for nodeId {}", nodeId);
             } else {
                 // fetch entries and update the cache
                 NodeImpl n = getNodeById(nodeId);
                 entries = updateCache(n);
-            } else {
-                log.debug("Cache hit for nodeId {}", nodeId);
             }
         }
         return entries;
