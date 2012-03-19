@@ -162,6 +162,12 @@ public class RepositoryImpl extends AbstractRepository
     private static final String PROPERTIES_RESOURCE = "repository.properties";
 
     /**
+     * Key to a <code>string</code> descriptor. Returns the repository cluster id if
+     * and only if clustering is enabled.
+     */
+    public static final String JACKRABBIT_CLUSTER_ID = "jackrabbit.cluster.id";
+
+    /**
      * the repository descriptors, maps String keys to Value/Value[] objects
      */
     private final Map<String, DescriptorValue> repDescriptors = new HashMap<String, DescriptorValue>();
@@ -331,6 +337,7 @@ public class RepositoryImpl extends AbstractRepository
 
             // now start cluster node as last step
             if (clusterNode != null) {
+                setDescriptor(JACKRABBIT_CLUSTER_ID, repConfig.getClusterConfig().getId());
                 try {
                     clusterNode.start();
                 } catch (ClusterException e) {
