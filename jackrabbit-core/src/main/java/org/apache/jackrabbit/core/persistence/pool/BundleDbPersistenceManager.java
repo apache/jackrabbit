@@ -781,7 +781,7 @@ public class BundleDbPersistenceManager
                 lowId = bigger;
                 keys = getKey(bigger);
             }
-            if (maxCount > 0) {
+            if (getStorageModel() == SM_LONGLONG_KEYS  && maxCount > 0) {
                 // get some more rows, in case the first row is smaller
                 // only required for SM_LONGLONG_KEYS
                 // probability is very low to get get the wrong first key, < 1 : 2^64
@@ -798,11 +798,12 @@ public class BundleDbPersistenceManager
                     long high = rs.getLong(1);
                     long low = rs.getLong(2);
                     current = new NodeId(high, low);
-                }
-                if (lowId != null) {
-                    // skip the keys that are smaller or equal (see above, maxCount += 10)
-                    if (current.compareTo(lowId) <= 0) {
-                        continue;
+                    if (lowId != null) {
+                        // skip the keys that are smaller or equal (see above, maxCount += 10)
+                        // only required for SM_LONGLONG_KEYS
+                        if (current.compareTo(lowId) <= 0) {
+                            continue;
+                        }
                     }
                 }
                 result.add(current);
