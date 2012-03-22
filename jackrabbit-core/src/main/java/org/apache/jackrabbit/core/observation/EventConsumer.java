@@ -31,6 +31,7 @@ import javax.jcr.observation.EventListener;
 
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.id.ItemId;
+import org.apache.jackrabbit.core.security.authorization.Permission;
 import org.apache.jackrabbit.core.state.ItemState;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.PathFactory;
@@ -303,6 +304,6 @@ class EventConsumer {
      */
     private boolean canRead(EventState eventState) throws RepositoryException {
         Path targetPath = pathFactory.create(eventState.getParentPath(), eventState.getChildRelPath().getName(), eventState.getChildRelPath().getNormalizedIndex(), true);
-        return session.getAccessManager().canRead(targetPath, null);
+        return session.getAccessManager().isGranted(targetPath, Permission.READ);
     }
 }
