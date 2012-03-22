@@ -27,7 +27,9 @@ import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.nodetype.NodeTypeManager;
 import javax.jcr.query.QueryResult;
+import javax.jcr.query.Row;
 
+import org.apache.jackrabbit.commons.JcrUtils;
 import org.apache.jackrabbit.commons.cnd.CndImporter;
 
 /**
@@ -112,6 +114,10 @@ public class SQL2QueryResultTest extends AbstractQueryTest {
                     .getColumnNames())));
             assertTrue("Got unexpected columns: " + expectedCols,
                     expectedCols.isEmpty());
+            for (Row row : JcrUtils.getRows(r)) {
+                assertNotNull(row.getValues());
+                assertEquals(expected, row.getValues().length);
+            }
         }
     }
 }

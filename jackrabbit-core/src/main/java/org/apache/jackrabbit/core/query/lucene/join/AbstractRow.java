@@ -42,8 +42,9 @@ abstract class AbstractRow implements Row {
 
     public Value[] getValues() throws RepositoryException {
         Value[] values = new Value[columns.size()];
-        for (Operand operand : columns.values()) {
-            values = evaluator.getValues(operand, this);
+        int i = 0;
+        for (String columnName : columns.keySet()) {
+            values[i++] = getValue(columnName);
         }
         return values;
     }
