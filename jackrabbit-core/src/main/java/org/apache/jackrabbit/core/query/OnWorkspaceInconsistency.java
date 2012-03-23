@@ -161,4 +161,36 @@ public abstract class OnWorkspaceInconsistency {
                                                 NodeState node,
                                                 ChildNodeEntry child)
             throws ItemStateException, RepositoryException;
+
+    /**
+     * Logs a generic workspace inconsistency error.
+     *
+     * @param exception the exception that was thrown when working on the workspace
+     * @param handler   the query handler.
+     * @param path      the path of the parent node.
+     * @param node      the parent node state.
+     * @param child     the child node entry, for which no node state could be
+     *                  found.
+     * @throws RepositoryException if another error occurs not related to item
+     *                             state reading.
+     */
+    public void logError(ItemStateException exception, QueryHandler handler,
+            Path path, NodeState node, ChildNodeEntry child)
+            throws RepositoryException {
+        if (log.isErrorEnabled()) {
+            NamePathResolver resolver = new DefaultNamePathResolver(handler
+                    .getContext().getNamespaceRegistry());
+            StringBuilder err = new StringBuilder();
+            err.append("Workspace inconsistency error on node ");
+            err.append(resolver.getJCRPath(path));
+            err.append(" (");
+            err.append(node.getNodeId());
+            err.append(") with child ");
+            err.append(resolver.getJCRName(child.getName()));
+            err.append(" (");
+            err.append(child.getId());
+            err.append(").");
+            log.error(err.toString(), exception);
+        }
+    }
 }
