@@ -24,6 +24,7 @@ import java.lang.reflect.Modifier;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
 
@@ -238,7 +239,7 @@ public class BeanConfig {
                     && Void.TYPE.equals(method.getReturnType())
                     && method.getParameterTypes().length == 1) {
                 methods.put(
-                        name.substring(3, 4).toLowerCase() + name.substring(4),
+                        name.substring(3, 4).toLowerCase(Locale.ENGLISH) + name.substring(4),
                         method);
             }
         }
