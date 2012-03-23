@@ -1237,6 +1237,10 @@ public class MultiIndex {
             } catch (NoSuchItemStateException e) {
                 handler.getOnWorkspaceInconsistencyHandler().handleMissingChildNode(
                         e, handler, path, node, child);
+            } catch (ItemStateException e) {
+                // JCR-3268 log bundle corruption and continue
+                handler.getOnWorkspaceInconsistencyHandler().logError(e,
+                        handler, childPath, node, child);
             }
             if (childState != null) {
                 count = createIndex(childState, childPath, stateMgr, count);
