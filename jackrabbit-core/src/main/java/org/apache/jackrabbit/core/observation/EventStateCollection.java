@@ -802,12 +802,21 @@ public final class EventStateCollection {
                 if (common == null) {
                     common = s;
                 } else if (!common.equals(s)) {
+
+                    // Assign the shorter path to common.
+                    if (s.length() < common.length()) {
+                        String temp = common;
+                        common = s;
+                        s = temp;
+                    }
+
+                    // Find the real common.
                     while (!s.startsWith(common)) {
                         int idx = s.lastIndexOf('/');
                         if (idx < 0) {
                             break;
                         }
-                        common = s.substring(0, idx);
+                        common = s.substring(0, idx + 1);
                     }
                 }
             }
