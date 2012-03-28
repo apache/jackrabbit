@@ -1,4 +1,4 @@
-Release Notes -- Apache Jackrabbit -- Version 2.4.0
+Release Notes -- Apache Jackrabbit -- Version 2.4.1
 
 Introduction
 ------------
@@ -7,9 +7,33 @@ This is Apache Jackrabbit(TM) 2.4, a fully compliant implementation of the
 Content Repository for Java(TM) Technology API, version 2.0 (JCR 2.0) as
 specified in the Java Specification Request 283 (JSR 283).
 
-Apache Jackrabbit 2.4 is an incremental feature release based on and
-compatible with earlier stable Jackrabbit 2.x releases. Jackrabbit 2.4.x
-releases are considered stable and targeted for production use.
+
+Apache Jackrabbit 2.4.1 is patch release that contains fixes and
+improvements over Jackrabbit 2.4.0. This release is fully compatible
+with earlier 2.x.x releases.
+
+Changes since Jackrabbit 2.4.0
+------------------------------
+
+Improvements
+
+  [JCR-3237] add missing name constants for mix:title
+  [JCR-3254] make max size of CachingEntryCollector's cache configurable
+  [JCR-3255] Access cluster node id
+  [JCR-3259] augment logging information around CachingEntryCollector
+  [JCR-3280] SQL2 joins on empty sets are not efficient
+
+Bug fixes
+
+  [JCR-3158] Deadlock in DBCP when accessing node
+  [JCR-3227] VolatileIndex not closed properly
+  [JCR-3236] Can not instantiate lucene Analyzer in SearchIndex
+  [JCR-3247] SQL2 ISDESCENDANTNODE BooleanQuery#TooManyClauses returns
+  [JCR-3250] webapp welcome page shows incorrect port when port is the ...
+  [JCR-3261] Problems with BundleDbPersistenceManager getAllNodeIds
+  [JCR-3266] JCR-SQL2 query with multiple columns in result only returns ...
+  [JCR-3268] Re-index fails on corrupt bundle
+  [JCR-3270] Error instantiating lucene search index in Turkish Regional ...
 
 Changes since Jackrabbit 2.2.0
 ------------------------------
