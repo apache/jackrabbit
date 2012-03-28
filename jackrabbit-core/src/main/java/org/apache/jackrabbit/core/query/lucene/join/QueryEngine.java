@@ -245,6 +245,11 @@ public class QueryEngine {
         Comparator<Row> rightCo = new RowPathComparator(
                 merger.getRightSelectors());
 
+        if (leftRows == null || leftRows.isEmpty()) {
+            return merger.merge(new RowIteratorAdapter(leftRows),
+                    new RowIteratorAdapter(new TreeSet<Row>()), null, rightCo);
+        }
+
         Set<Row> rightRows = buildRightRowsJoin(csInfo, rightConstraints,
                 isOuterJoin, rightCo, printIndentation + printIndentStep);
 
