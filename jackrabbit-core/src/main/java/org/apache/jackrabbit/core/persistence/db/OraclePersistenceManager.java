@@ -24,6 +24,7 @@ import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.core.state.ItemState;
+import org.apache.jackrabbit.core.util.db.ConnectionFactory;
 import org.apache.jackrabbit.util.Text;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -374,8 +375,9 @@ public class OraclePersistenceManager extends SimpleDbPersistenceManager {
         */
         Method createTemporary = blobClass.getMethod("createTemporary",
                 new Class[]{Connection.class, Boolean.TYPE, Integer.TYPE});
-        Object blob = createTemporary.invoke(null,
-                new Object[]{con, Boolean.FALSE, durationSessionConstant});
+        Object blob = createTemporary.invoke(null, new Object[]{
+                ConnectionFactory.unwrap(con),
+                Boolean.FALSE, durationSessionConstant });
         Method open = blobClass.getMethod("open", new Class[]{Integer.TYPE});
         open.invoke(blob, new Object[]{modeReadWriteConstant});
         Method getBinaryOutputStream =
