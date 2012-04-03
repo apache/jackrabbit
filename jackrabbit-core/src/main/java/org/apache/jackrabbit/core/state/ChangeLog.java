@@ -53,6 +53,8 @@ public class ChangeLog {
     @SuppressWarnings("unchecked")
     private final Map<NodeId, NodeReferences> modifiedRefs = (Map<NodeId, NodeReferences>) new LinkedMap();
 
+    private long updateSize;
+
     /**
      * Checks whether this change log contains any changes. This method is
      * used to avoid extra work on updates that contain no changes.
@@ -366,6 +368,24 @@ public class ChangeLog {
             state.discard();
         }
         reset();
+    }
+
+    /**
+     * Returns the update size of the change log.
+     * 
+     * @return The update size.
+     */
+    public long getUpdateSize() {
+        return updateSize;
+    }
+
+    /**
+     * Sets the update size of the change log.
+     * 
+     * @param updateSize The update size.
+     */
+    public void setUpdateSize(long updateSize) {
+        this.updateSize = updateSize;
     }
 
     /**

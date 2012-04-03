@@ -45,6 +45,8 @@ class BLOBInDataStore extends BLOBFileValue {
      */
     private static Logger log = LoggerFactory.getLogger(BLOBInDataStore.class);
 
+    /** the audit logger */
+    private static Logger auditLogger = LoggerFactory.getLogger("org.apache.jackrabbit.core.audit");
 
     private BLOBInDataStore(DataStore store, DataIdentifier identifier) {
         assert store != null;
@@ -118,6 +120,9 @@ class BLOBInDataStore extends BLOBFileValue {
     static BLOBInDataStore getInstance(DataStore store, InputStream in) throws DataStoreException {
         DataRecord rec = store.addRecord(in);
         DataIdentifier identifier = rec.getIdentifier();
+        if (auditLogger.isDebugEnabled()) {
+            auditLogger.debug("Stored {} to DataStore ({})", identifier, rec.getLength());
+        }
         return new BLOBInDataStore(store, identifier);
     }
 
