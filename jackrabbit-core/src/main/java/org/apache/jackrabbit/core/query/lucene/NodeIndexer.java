@@ -62,7 +62,7 @@ public class NodeIndexer {
     /**
      * The default boost for a lucene field: 1.0f.
      */
-    protected static final float DEFAULT_BOOST = 1.0f;
+    protected static final float DEFAULT_BOOST = IndexingConfiguration.DEFAULT_BOOST;
 
     /**
      * The <code>NodeState</code> of the node to index
@@ -733,15 +733,18 @@ public class NodeIndexer {
             int idx = fieldName.indexOf(':');
             fieldName = fieldName.substring(0, idx + 1)
                     + FieldNames.FULLTEXT_PREFIX + fieldName.substring(idx + 1);
+            boolean hasNorms = boost != DEFAULT_BOOST;
+            Field.Index indexType = hasNorms ? Field.Index.ANALYZED
+                    : Field.Index.ANALYZED_NO_NORMS;
             Field f = new Field(fieldName, true, internalValue, Field.Store.NO,
-                    Field.Index.ANALYZED, Field.TermVector.NO);
+                    indexType, Field.TermVector.NO);
             f.setBoost(boost);
             doc.add(f);
 
             if (includeInNodeIndex) {
                 // also create fulltext index of this value
                 boolean store = supportHighlighting && useInExcerpt;
-                f = createFulltextField(internalValue, store, supportHighlighting);
+                f = createFulltextField(internalValue, store, supportHighlighting, hasNorms);
                 if (useInExcerpt) {
                     doc.add(f);
                 } else {
@@ -777,10 +780,25 @@ public class NodeIndexer {
      *
      * @param value the string value.
      * @return a lucene field.
-     * @deprecated use {@link #createFulltextField(String, boolean, boolean)} instead.
+     * @deprecated use {@link #createFulltextField(String, boolean, boolean, boolean)} instead.
      */
     protected Field createFulltextField(String value) {
         return createFulltextField(value, supportHighlighting, supportHighlighting);
+    }
+
+    /**
+     * Creates a fulltext field for the string <code>value</code>.
+     * 
+     * @param value the string value.
+     * @param store if the value of the field should be stored.
+     * @param withOffsets if a term vector with offsets should be stored.
+     * @return a lucene field.
+     * @deprecated use {@link #createFulltextField(String, boolean, boolean, boolean)} instead.
+     */
+    protected Field createFulltextField(String value,
+                                        boolean store,
+                                        boolean withOffsets) {
+        return createFulltextField(value, store, withOffsets, true);
     }
 
     /**
@@ -789,26 +807,34 @@ public class NodeIndexer {
      * @param value the string value.
      * @param store if the value of the field should be stored.
      * @param withOffsets if a term vector with offsets should be stored.
+     * @param withNorms if norm information should be added for this value
      * @return a lucene field.
      */
     protected Field createFulltextField(String value,
                                         boolean store,
-                                        boolean withOffsets) {
+                                        boolean withOffsets,
+                                        boolean withNorms) {
         Field.TermVector tv;
         if (withOffsets) {
             tv = Field.TermVector.WITH_OFFSETS;
         } else {
             tv = Field.TermVector.NO;
         }
+        Field.Index index;
+        if (withNorms) {
+            index = Field.Index.ANALYZED;
+        } else {
+            index = Field.Index.ANALYZED_NO_NORMS;
+        }
         if (store) {
             // We would be able to store the field compressed or not depending
             // on a criterion but then we could not determine later is this field
             // has been compressed or not, so we choose to store it uncompressed
             return new Field(FieldNames.FULLTEXT, false, value, Field.Store.YES,
-                    Field.Index.ANALYZED, tv);
+                    index, tv);
         } else {
             return new Field(FieldNames.FULLTEXT, false, value,
-                    Field.Store.NO, Field.Index.ANALYZED, tv);
+                    Field.Store.NO, index, tv);
         }
     }
 
