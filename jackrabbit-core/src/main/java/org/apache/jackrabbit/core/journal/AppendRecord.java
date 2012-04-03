@@ -253,7 +253,7 @@ public class AppendRecord extends AbstractRecord {
     /**
      * {@inheritDoc}
      */
-    public void update() throws JournalException {
+    public long update() throws JournalException {
         boolean succeeded = false;
 
         try {
@@ -265,6 +265,7 @@ public class AppendRecord extends AbstractRecord {
             try {
                 journal.append(this, in, length);
                 succeeded = true;
+                return length;
             } finally {
                 try {
                     in.close();

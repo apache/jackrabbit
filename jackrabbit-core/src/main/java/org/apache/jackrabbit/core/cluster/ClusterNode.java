@@ -80,7 +80,12 @@ public class ClusterNode implements Runnable,
     private static final int STOPPED = 2;
 
     /**
-     * Logger.
+     * Audit logger.
+     */
+    private static Logger auditLogger = LoggerFactory.getLogger("org.apache.jackrabbit.core.audit");
+
+    /**
+     * Default Logger.
      */
     private static Logger log = LoggerFactory.getLogger(ClusterNode.class);
 
@@ -118,6 +123,11 @@ public class ClusterNode implements Runnable,
      * Mutex used when syncing.
      */
     private final Mutex syncLock = new Mutex();
+
+    /**
+     * Update counter, used in displaying the number of updates in audit log.
+     */
+    private final AtomicInteger updateCount = new AtomicInteger();
 
     /**
      * Latch used to communicate a stop request to the synchronization thread.
@@ -573,6 +583,11 @@ public class ClusterNode implements Runnable,
         private static final String ATTRIBUTE_RECORD = "record";
 
         /**
+         * Attribute name used to store the size of the update.
+         */
+        private static final String ATTRIBUTE_UPDATE_SIZE = "updateSize";
+
+        /**
          * Workspace name.
          */
         private final String workspace;
@@ -660,9 +675,19 @@ public class ClusterNode implements Runnable,
                 return;
             }
             try {
-                record.update();
-                setRevision(record.getRevision());
-                log.debug("revision {} {}", record.getRevision(), path);
+                long journalUpdateSize = record.update();
+
+                long recordRevision = record.getRevision();
+                setRevision(recordRevision);
+
+                log.debug("Stored record '{}' to Journal ({})", recordRevision, journalUpdateSize);
+
+                long updateSize = (Long)update.getAttribute(ATTRIBUTE_UPDATE_SIZE);
+                updateCount.compareAndSet(Integer.MAX_VALUE, 0);
+
+                auditLogger.info("[{}] {} {} ({})", new Object[]{updateCount.incrementAndGet(), 
+                        record.getRevision(), path, updateSize});
+
             } catch (JournalException e) {
                 String msg = "Unable to commit log entry.";
                 log.error(msg, e);

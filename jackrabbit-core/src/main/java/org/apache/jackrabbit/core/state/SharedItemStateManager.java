@@ -493,6 +493,11 @@ public class SharedItemStateManager
     class Update implements org.apache.jackrabbit.core.cluster.Update {
 
         /**
+         * Attribute name used to store the size of the update.
+         */
+        private static final String ATTRIBUTE_UPDATE_SIZE = "updateSize";
+
+        /**
          * Local change log.
          */
         private final ChangeLog local;
@@ -768,6 +773,7 @@ public class SharedItemStateManager
                 /* Store items in the underlying persistence manager */
                 long t0 = System.currentTimeMillis();
                 persistMgr.store(shared);
+                setAttribute(ATTRIBUTE_UPDATE_SIZE, shared.getUpdateSize());
                 succeeded = true;
                 if (log.isDebugEnabled()) {
                     long t1 = System.currentTimeMillis();
@@ -805,8 +811,10 @@ public class SharedItemStateManager
                 // always gets released, even if a post-store() exception
                 // is thrown from the code above. See also JCR-2272.
                 String path = events.getSession().getUserID()
-                        + "@" + events.getCommonPath();
+                        + "@" + events.getSession().getWorkspace().getName()
+                        + ":" + events.getCommonPath();
                 eventChannel.updateCommitted(this, path);
+                setAttribute(ATTRIBUTE_UPDATE_SIZE, null);
 
                 if (writeLock != null) {
                     // exception occurred before downgrading lock

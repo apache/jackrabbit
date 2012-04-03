@@ -93,6 +93,9 @@ import org.slf4j.LoggerFactory;
 public abstract class AbstractBundlePersistenceManager implements
     PersistenceManager, CachingPersistenceManager, IterablePersistenceManager, CacheAccessListener, ConsistencyChecker {
 
+    /** the audit logger */
+    private static Logger auditLogger = LoggerFactory.getLogger("org.apache.jackrabbit.core.audit");
+
     /** the default logger */
     private static Logger log = LoggerFactory.getLogger(AbstractBundlePersistenceManager.class);
 
@@ -683,9 +686,12 @@ public abstract class AbstractBundlePersistenceManager implements
         }
 
         // now store all modified bundles
+        long updateSize = 0;
         for (NodePropBundle bundle : modified.values()) {
             putBundle(bundle);
+            updateSize += bundle.getSize();
         }
+        changeLog.setUpdateSize(updateSize);
 
         // store the refs
         for (NodeReferences refs : changeLog.modifiedRefs()) {
@@ -768,6 +774,7 @@ public abstract class AbstractBundlePersistenceManager implements
         long time = System.nanoTime();
         log.debug("Storing bundle {}", bundle.getId());
         storeBundle(bundle);
+        auditLogger.debug("Stored bundle '{}' to PM ({})", bundle.getId(), bundle.getSize());
         writeDuration.addAndGet(System.nanoTime() - time);
         writeCounter.incrementAndGet();
 

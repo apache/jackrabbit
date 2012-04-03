@@ -271,7 +271,7 @@ public class ReadRecord extends AbstractRecord {
         throw unsupported();
     }
 
-    public void update() throws JournalException {
+    public long update() throws JournalException {
         throw unsupported();
     }
 
