@@ -16,16 +16,11 @@
  */
 package org.apache.jackrabbit.core.query;
 
-import javax.jcr.RepositoryException;
 import javax.jcr.Node;
-import javax.jcr.NodeIterator;
+import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 import javax.jcr.query.QueryResult;
-import javax.jcr.query.Row;
 import javax.jcr.query.RowIterator;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Arrays;
 
 /**
  * <code>IndexingRuleTest</code> performs indexing rule tests.
@@ -62,16 +57,11 @@ public class IndexingRuleTest extends AbstractIndexingTest {
         Node node3 = testRootNode.addNode(nodeName3, NT_UNSTRUCTURED);
         node3.setProperty("rule", "boost3");
         node3.setProperty("text", TEXT);
-        testRootNode.save();
-        String stmt = "/jcr:root" + testRootNode.getPath() +
-                "/*[jcr:contains(@text, 'quick')] order by @jcr:score descending";
-        List names = new ArrayList();
-        for (NodeIterator it = executeQuery(stmt).getNodes(); it.hasNext(); ) {
-            names.add(it.nextNode().getName());
-        }
-        assertEquals("Wrong sequence or number of results.",
-                Arrays.asList(new String[]{nodeName3, nodeName2, nodeName1}),
-                names);
+        testRootNode.getSession().save();
+        String stmt = "/jcr:root"
+                + testRootNode.getPath()
+                + "/*[jcr:contains(@text, 'quick')] order by @jcr:score descending";
+        executeXPathQuery(stmt, new Node[] { node3, node2, node1 });
     }
 
     public void testNodeScopeIndex() throws RepositoryException {
