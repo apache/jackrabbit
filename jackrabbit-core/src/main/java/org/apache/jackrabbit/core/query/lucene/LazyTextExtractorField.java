@@ -66,20 +66,24 @@ public class LazyTextExtractorField extends AbstractField {
     private volatile String extract = null;
 
     /**
-     * Creates a new <code>LazyTextExtractorField</code> with the given
-     * <code>name</code>.
-     *
-     * @param name the name of the field.
-     * @param reader the reader where to obtain the string from.
-     * @param highlighting set to <code>true</code> to
-     *                     enable result highlighting support
+     * Creates a new <code>LazyTextExtractorField</code>.
+     * 
+     * @param parser
+     * @param value
+     * @param metadata
+     * @param executor
+     * @param highlighting
+     *            set to <code>true</code> to enable result highlighting support
+     * @param maxFieldLength
+     * @param withNorms
      */
     public LazyTextExtractorField(
             Parser parser, InternalValue value, Metadata metadata,
-            Executor executor, boolean highlighting, int maxFieldLength) {
+            Executor executor, boolean highlighting, int maxFieldLength,
+            boolean withNorms) {
         super(FieldNames.FULLTEXT,
                 highlighting ? Store.YES : Store.NO,
-                Field.Index.ANALYZED,
+                withNorms ? Field.Index.ANALYZED : Field.Index.ANALYZED_NO_NORMS,
                 highlighting ? TermVector.WITH_OFFSETS : TermVector.NO);
         executor.execute(
                 new ParsingTask(parser, value, metadata, maxFieldLength));
