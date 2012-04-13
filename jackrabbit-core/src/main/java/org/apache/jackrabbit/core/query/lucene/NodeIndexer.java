@@ -449,7 +449,7 @@ public class NodeIndexer {
                             Metadata.CONTENT_ENCODING, encoding.getString());
                 }
 
-                doc.add(createFulltextField(internalValue, metadata));
+                doc.add(createFulltextField(internalValue, metadata, false));
             }
         } catch (Throwable t) {
             // TODO: How to recover from a transient indexing failure?
@@ -844,12 +844,25 @@ public class NodeIndexer {
      * @param value the binary value
      * @param metadata document metatadata
      * @return a lucene field.
+     * @deprecated use {@link #createFulltextField(InternalValue, Metadata, boolean)} instead.
      */
     protected Fieldable createFulltextField(
             InternalValue value, Metadata metadata) {
-        return new LazyTextExtractorField(
-                parser, value, metadata, executor,
-                supportHighlighting, getMaxExtractLength());
+        return createFulltextField(value, metadata, true);
+    }
+
+    /**
+     * Creates a fulltext field for the reader <code>value</code>.
+     *
+     * @param value the binary value
+     * @param metadata document metatadata
+     * @param withNorms if norm information should be added for this value
+     * @return a lucene field.
+     */
+    protected Fieldable createFulltextField(
+            InternalValue value, Metadata metadata, boolean withNorms) {
+        return new LazyTextExtractorField(parser, value, metadata, executor,
+                supportHighlighting, getMaxExtractLength(), withNorms);
     }
 
     /**
