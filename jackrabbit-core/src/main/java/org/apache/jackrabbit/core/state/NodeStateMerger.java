@@ -39,6 +39,7 @@ import java.util.Set;
  * on different <code>NodeState</code> instances representing the same node.
  * <p/>
  * See http://issues.apache.org/jira/browse/JCR-584.
+ * See also http://issues.apache.org/jira/browse/JCR-3290.
  */
 class NodeStateMerger {
 
@@ -113,8 +114,8 @@ class NodeStateMerger {
                     ArrayList<ChildNodeEntry> removed = new ArrayList<ChildNodeEntry>();
 
                     for (ChildNodeEntry cne : state.getAddedChildNodeEntries()) {
-
-                        if (context.isAdded(cne.getId()) || context.isModified(cne.getId())) {
+                        // locally added or moved?
+                        if (context.isAdded(cne.getId()) || (context.isModified(cne.getId()) && isParent(state, cne, context))) {
                             // a new child node entry has been added to this state;
                             // check for name collisions with other state
                             if (overlayedState.hasChildNodeEntry(cne.getName())) {
@@ -346,6 +347,14 @@ class NodeStateMerger {
         return false;
     }
 
+    private static boolean isParent(NodeState state, ChildNodeEntry entry, MergeContext context) {
+        try {
+            return state.getId().equals(context.getNodeState(entry.getId()).getParentId());
+        } catch (ItemStateException e) {
+            return false;
+        }
+    }
+    
     private static boolean isAutoCreated(ChildNodeEntry cne, EffectiveNodeType ent) {
         for (QNodeDefinition def : ent.getAutoCreateNodeDefs()) {
             if (def.getName().equals(cne.getName())) {
@@ -374,6 +383,7 @@ class NodeStateMerger {
         boolean isDeleted(ItemId id);
         boolean isModified(ItemId id);
         boolean allowsSameNameSiblings(NodeId id);
+        NodeState getNodeState(NodeId id) throws ItemStateException;
         EffectiveNodeType getEffectiveNodeType(Name ntName) throws NoSuchNodeTypeException;
     }
 }
