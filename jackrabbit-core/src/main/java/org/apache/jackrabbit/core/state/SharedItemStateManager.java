@@ -647,7 +647,7 @@ public class SharedItemStateManager
                                             return ntReg.getEffectiveNodeType(ntName);
                                         }
 
-                                        protected NodeState getNodeState(NodeId id)
+                                        public NodeState getNodeState(NodeId id)
                                                 throws ItemStateException {
                                             if (local.has(id)) {
                                                 return (NodeState) local.get(id);
@@ -1318,7 +1318,7 @@ public class SharedItemStateManager
                 if (parentId == null && oldParentId == null) {
                     // The root node can be ignored
 
-                } else if (!parentId.equals(oldParentId)) {
+                } else if (parentId != null && !parentId.equals(oldParentId)) {
 
                     // This node has been moved, check whether the parent has been modified aswell
                     if (changeLog.has(parentId)) {
@@ -1403,7 +1403,7 @@ public class SharedItemStateManager
             if (sharedSet.contains(expectedParent)) {
                 return;
             }
-            String message = "Child node has another parent id " + parentId + ", expected " + expectedParent;
+            String message = "Child node " + childState.getId() + " has another parent id " + parentId + ", expected " + expectedParent;
             log.error(message);
             throw new ItemStateException(message);
         }
