@@ -550,7 +550,9 @@ public class BatchedItemOperations extends ItemValidator {
             srcNameIndex = 1;
         }
 
+        stateMgr.store(target);
         if (renameOnly) {
+            stateMgr.store(srcParent);
             // change child node entry
             destParent.renameChildNodeEntry(srcPath.getName(), srcNameIndex,
                     destPath.getName());
@@ -564,6 +566,9 @@ public class BatchedItemOperations extends ItemValidator {
                 throw new UnsupportedRepositoryOperationException(msg);
             }
 
+            stateMgr.store(srcParent);
+            stateMgr.store(destParent);
+
             // do move:
             // 1. remove child node entry from old parent
             if (srcParent.removeChildNodeEntry(target.getNodeId())) {
@@ -574,14 +579,6 @@ public class BatchedItemOperations extends ItemValidator {
             }
         }
 
-        // store states
-        stateMgr.store(target);
-        if (renameOnly) {
-            stateMgr.store(srcParent);
-        } else {
-            stateMgr.store(destParent);
-            stateMgr.store(srcParent);
-        }
         return target.getNodeId();
     }
 

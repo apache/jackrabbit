@@ -20,6 +20,7 @@ import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 import org.apache.jackrabbit.core.ConcurrencyTest;
+import org.apache.jackrabbit.core.ConcurrentAddMoveRemoveTest;
 import org.apache.jackrabbit.core.ConcurrentCheckinMixedTransactionTest;
 import org.apache.jackrabbit.core.ConcurrentLoginTest;
 import org.apache.jackrabbit.core.ConcurrentNodeModificationTest;
@@ -54,6 +55,7 @@ public class DailyIntegrationTest extends TestCase {
         suite.addTestSuite(ConcurrentVersioningTest.class);
         suite.addTestSuite(ConcurrentVersioningWithTransactionsTest.class);
         suite.addTestSuite(ConcurrentCheckinMixedTransactionTest.class);
+        suite.addTestSuite(ConcurrentAddMoveRemoveTest.class);
         suite.addTestSuite(LockTest.class);
         suite.addTestSuite(ReadVersionsWhileModified.class);
         suite.addTestSuite(ConcurrentLockingTest.class);
