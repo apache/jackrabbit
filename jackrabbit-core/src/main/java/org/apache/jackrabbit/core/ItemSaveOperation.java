@@ -712,13 +712,16 @@ class ItemSaveOperation implements SessionWriteOperation<Object> {
      * definitively remove each one
      */
     private void removeTransientItems(
-            SessionItemStateManager sism, Iterable<ItemState> states) {
+            SessionItemStateManager sism, Iterable<ItemState> states) throws StaleItemStateException {
         for (ItemState transientState : states) {
             ItemState persistentState = transientState.getOverlayedState();
             // remove persistent state
             // this will indirectly (through stateDestroyed listener method)
             // permanently invalidate all Item instances wrapping it
             assert persistentState != null;
+            if (transientState.getModCount() != persistentState.getModCount()) {
+                throw new StaleItemStateException(transientState.getId() + " has been modified externally");
+            }
             sism.destroy(persistentState);
         }
     }
