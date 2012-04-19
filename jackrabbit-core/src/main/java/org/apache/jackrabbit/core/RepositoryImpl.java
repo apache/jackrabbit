@@ -2062,8 +2062,7 @@ public class RepositoryImpl extends AbstractRepository
             if (Boolean.getBoolean("org.apache.jackrabbit.version.recovery")) {
                 RepositoryChecker checker = new RepositoryChecker(
                         persistMgr, context.getInternalVersionManager());
-                checker.check(ROOT_NODE_ID, true);
-                checker.fix();
+                checker.check(ROOT_NODE_ID, true, true);
             }
         }
 
