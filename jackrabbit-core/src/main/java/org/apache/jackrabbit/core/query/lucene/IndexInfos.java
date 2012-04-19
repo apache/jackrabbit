@@ -19,11 +19,13 @@ package org.apache.jackrabbit.core.query.lucene;
 import java.io.BufferedInputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.BufferedOutputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -98,13 +100,25 @@ class IndexInfos implements Cloneable {
     IndexInfos(Directory dir, String baseName) throws IOException {
         this.directory = dir;
         this.name = baseName;
-        long gen = getCurrentGeneration(getFileNames(dir, baseName), baseName);
-        if (gen == -1) {
+        long gens[] = getGenerations(getFileNames(dir, baseName), baseName);
+        if (gens.length == 0) {
             // write initial infos
             write();
         } else {
-            this.generation = gen;
-            read();
+            // read most recent generation
+            for (int i = gens.length - 1; i >= 0; i--) {
+                try {
+                    this.generation = gens[i];
+                    read();
+                    break;
+                } catch (EOFException e) {
+                    String fileName = getFileName(gens[i]);
+                    log.warn("deleting invalid index infos file: " + fileName);
+                    dir.deleteFile(fileName);
+                    // reset generation
+                    this.generation = 0;
+                }
+            }
         }
     }
 
@@ -378,22 +392,18 @@ class IndexInfos implements Cloneable {
     }
 
     /**
-     * Returns the most current generation of the given files.
+     * Returns the generations fo the given files in ascending order.
      *
-     * @param fileNames the file names from where to obtain the generation.
+     * @param fileNames the file names from where to obtain the generations.
      * @param base the base name.
-     * @return the most current generation.
+     * @return the generations in ascending order.
      */
-    private static long getCurrentGeneration(String[] fileNames, String base) {
-        long max = -1;
-        int i = 0;
-        while (i < fileNames.length) {
-            long gen = generationFromFileName(fileNames[i], base);
-            if (gen > max) {
-                max = gen;
-            }
-            i++;
+    private static long[] getGenerations(String[] fileNames, String base) {
+        long[] gens = new long[fileNames.length];
+        for (int i = 0; i < fileNames.length; i++) {
+            gens[i] = generationFromFileName(fileNames[i], base);
         }
-        return max;
+        Arrays.sort(gens);
+        return gens;
     }
 }

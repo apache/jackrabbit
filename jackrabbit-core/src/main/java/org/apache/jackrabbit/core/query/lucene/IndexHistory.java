@@ -84,8 +84,12 @@ class IndexHistory {
                     } else {
                         continue;
                     }
-                    IndexInfos infos = new IndexInfos(dir, INDEXES, gen);
-                    indexInfosMap.put(gen, infos);
+                    try {
+                        IndexInfos infos = new IndexInfos(dir, INDEXES, gen);
+                        indexInfosMap.put(gen, infos);
+                    } catch (IOException e) {
+                        log.warn("ignoring invalid index infos file: " + name);
+                    }
                 }
             }
         }
