@@ -72,8 +72,20 @@ class RepositoryChecker {
 
     private final InternalVersionManagerImpl versionManager;
 
-    public RepositoryChecker(
-            PersistenceManager workspace,
+    // maximum size of changelog when running in "fixImmediately" mode
+    private final static long CHUNKSIZE = 256;
+
+    // number of nodes affected by pending changes
+    private long dirtyNodes = 0;
+
+    // total nodes checked, with problems
+    private long totalNodes = 0;
+    private long brokenNodes = 0;
+
+    // start time
+    private long startTime;
+
+    public RepositoryChecker(PersistenceManager workspace,
             InternalVersionManagerImpl versionManager) {
         this.workspace = workspace;
         this.workspaceChanges = new ChangeLog();
@@ -81,17 +93,41 @@ class RepositoryChecker {
         this.versionManager = versionManager;
     }
 
-    public void check(NodeId id, boolean recurse)
+    public void check(NodeId id, boolean recurse, boolean fixImmediately)
             throws RepositoryException {
+
+        log.info("Starting RepositoryChecker");
+
+        startTime = System.currentTimeMillis();
+
+        internalCheck(id, recurse, fixImmediately);
+
+        if (fixImmediately) {
+            internalFix(true);
+        }
+
+        log.info("RepositoryChecker finished; checked " + totalNodes
+                + " nodes in " + (System.currentTimeMillis() - startTime)
+                + "ms, problems found: " + brokenNodes);
+    }
+
+    private void internalCheck(NodeId id, boolean recurse,
+            boolean fixImmediately) throws RepositoryException {
         try {
             log.debug("Checking consistency of node {}", id);
+            totalNodes += 1;
+
             NodeState state = workspace.load(id);
             checkVersionHistory(state);
+
+            if (fixImmediately && dirtyNodes > CHUNKSIZE) {
+                internalFix(false);
+            }
 
             if (recurse) {
                 for (ChildNodeEntry child : state.getChildNodeEntries()) {
                     if (!SYSTEM_ROOT_NODE_ID.equals(child.getId())) {
-                        check(child.getId(), recurse);
+                        internalCheck(child.getId(), recurse, fixImmediately);
                     }
                 }
             }
@@ -100,26 +136,38 @@ class RepositoryChecker {
         }
     }
 
-    private void fix(PersistenceManager pm, ChangeLog changes, String store)
-            throws RepositoryException {
+    private void fix(PersistenceManager pm, ChangeLog changes, String store,
+            boolean verbose) throws RepositoryException {
         if (changes.hasUpdates()) {
-            log.warn("Fixing " + store + " inconsistencies");
+            if (log.isWarnEnabled()) {
+                log.warn("Fixing " + store + " inconsistencies: "
+                        + changes.toString());
+            }
             try {
                 pm.store(changes);
+                changes.reset();
             } catch (ItemStateException e) {
-                String message = "Failed to fix " + store + " inconsistencies (aborting)";
+                String message = "Failed to fix " + store
+                        + " inconsistencies (aborting)";
                 log.error(message, e);
                 throw new RepositoryException(message, e);
             }
         } else {
-            log.info("No " + store + "  inconsistencies found");
+            if (verbose) {
+                log.info("No " + store + " inconsistencies found");
+            }
         }
     }
 
     public void fix() throws RepositoryException {
-        fix(workspace, workspaceChanges, "workspace");
+        internalFix(true);
+    }
+
+    private void internalFix(boolean verbose) throws RepositoryException {
+        fix(workspace, workspaceChanges, "workspace", verbose);
         fix(versionManager.getPersistenceManager(), vworkspaceChanges,
-                "versioning workspace");
+                "versioning workspace", verbose);
+        dirtyNodes = 0;
     }
 
     private void checkVersionHistory(NodeState node) {
@@ -212,6 +260,10 @@ class RepositoryChecker {
 
     // un-versions the node, and potentially moves the version history away
     private void removeVersionHistoryReferences(NodeState node,  NodeId vhid) {
+
+        dirtyNodes += 1;
+        brokenNodes += 1;
+
         NodeState modified =
             new NodeState(node, NodeState.STATUS_EXISTING_MODIFIED, true);
 
