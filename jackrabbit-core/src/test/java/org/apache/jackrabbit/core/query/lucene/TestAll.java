@@ -45,6 +45,7 @@ public class TestAll extends TestCase {
         suite.addTestSuite(SQL2IndexingAggregateTest.class);
         suite.addTestSuite(SQL2IndexingAggregateTest2.class);
         suite.addTestSuite(LazyTextExtractorFieldTest.class);
+        suite.addTestSuite(IndexInfosTest.class);
 
         return suite;
     }
