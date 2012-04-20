@@ -1,4 +1,4 @@
-Release Notes -- Apache Jackrabbit -- Version 2.2.11
+Release Notes -- Apache Jackrabbit -- Version 2.2.12
 
 Introduction
 ------------
@@ -7,25 +7,35 @@ This is Apache Jackrabbit(TM) 2.2, a fully compliant implementation of the
 Content Repository for Java(TM) Technology API, version 2.0 (JCR 2.0) as
 specified in the Java Specification Request 283 (JSR 283).
 
-Apache Jackrabbit 2.2.11 is patch release that contains fixes and
+Apache Jackrabbit 2.2.12 is patch release that contains fixes and
 improvements over previous 2.2.x releases. This release is backwards
 compatible with all earlier 2.x releases.
 
 Changes in this release
 -----------------------
 
+New Features
+
+  [JCR-3255] - Access cluster node id
+
 Improvements
 
-  [JCR-3107] Speed up hierarchy cache initialization
-  [JCR-3167] Make Jackrabbit compile on Java 7
+  [JCR-3066] - Use only one scheduler for repository tasks
+  [JCR-3146] - Text extraction may congest thread pool in the repository
+  [JCR-3286] - InternalVersionManagerBase.calculateCheckinVersionName will fail with NPE upon empty predecessors property
 
 Bug fixes
 
-  [JCR-3148] Using transactions still leads to memory leak
-  [JCR-3174] Destination URI should be normalized
-  [JCR-3175] InputContextImpl: cannot upload file larger than 2GB
-  [JCR-3210] NPE in spi2dav when server does not send all headers
-  [JCR-3223] Disallow unregistering of node types still (possibly) in use
+  [JCR-3158] - Deadlock in DBCP when accessing node
+  [JCR-3254] - make max size of CachingEntryCollector's cache configurable
+  [JCR-3259] - augment logging information around CachingEntryCollector
+  [JCR-3262] - Oracle JDBC Class Cast Exception
+  [JCR-3266] - JCR-SQL2 query with multiple columns in result only returns last column when using Row.getValues()
+  [JCR-3289] - Remove operation right after move operation causes missing child inconsistency
+  [JCR-3290] - Concurrent add and move can cause inconsistency
+  [JCR-3291] - Stack overflow in multi-session test with moves
+  [JCR-3292] - Workspace move in concurrent environment causes inconsistencies
+  [JCR-3298] - jackrabbit-core RepositoryChecker.fix() can fail with OOM
 
 For more detailed information about all the changes in this and other
 Jackrabbit releases, please see the Jackrabbit issue tracker at
