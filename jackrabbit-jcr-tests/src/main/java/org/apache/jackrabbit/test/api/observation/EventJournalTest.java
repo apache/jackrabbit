@@ -21,6 +21,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import javax.jcr.Node;
+import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.observation.Event;
@@ -36,6 +37,7 @@ public class EventJournalTest extends AbstractObservationTest {
     private EventJournal journal;
 
     protected void setUp() throws Exception {
+        checkSupportedOption(Repository.OPTION_JOURNALED_OBSERVATION_SUPPORTED);
         super.setUp();
         journal = obsMgr.getEventJournal();
     }
