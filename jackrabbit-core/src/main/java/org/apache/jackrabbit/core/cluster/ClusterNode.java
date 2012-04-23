@@ -892,7 +892,17 @@ public class ClusterNode implements Runnable,
             }
         }
         try {
-            listener.externalUpdate(record.getChanges(), record.getEvents(),
+            List<EventState> eventStates = record.getEvents();
+
+            String path = getFirstUserId(eventStates)
+                    + "@" + workspace
+                    + ":" + EventState.getCommonPath(eventStates, null);
+
+            updateCount.compareAndSet(Integer.MAX_VALUE, 0);
+            auditLogger.info("[{}] {} {}", new Object[]{updateCount.incrementAndGet(), 
+                    record.getRevision(), path});
+
+            listener.externalUpdate(record.getChanges(), eventStates,
                     record.getTimestamp(), record.getUserData());
         } catch (RepositoryException e) {
             String msg = "Unable to deliver update events: " + e.getMessage();
@@ -1089,5 +1099,12 @@ public class ClusterNode implements Runnable,
                 record.cancelUpdate();
             }
         }
+    }
+
+    private String getFirstUserId(List<EventState> eventStates) {
+        if (eventStates == null || eventStates.isEmpty()) {
+            return "";
+        }
+        return eventStates.get(0).getUserId();
     }
 }

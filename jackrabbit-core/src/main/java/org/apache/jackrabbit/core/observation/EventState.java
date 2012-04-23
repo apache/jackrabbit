@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.core.observation;
 
+import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeManagerImpl;
 import org.apache.jackrabbit.core.id.ItemId;
 import org.apache.jackrabbit.core.id.PropertyId;
@@ -24,15 +25,24 @@ import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.commons.conversion.CachingPathResolver;
+import org.apache.jackrabbit.spi.commons.conversion.IllegalNameException;
+import org.apache.jackrabbit.spi.commons.conversion.NameResolver;
+import org.apache.jackrabbit.spi.commons.conversion.ParsingPathResolver;
+import org.apache.jackrabbit.spi.commons.conversion.PathResolver;
+import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
+
 import javax.jcr.observation.Event;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
+import javax.jcr.NamespaceException;
 import javax.jcr.Session;
 import javax.jcr.RepositoryException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
 import javax.jcr.nodetype.NodeType;
 
+import java.util.List;
 import java.util.Set;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -50,6 +60,11 @@ public class EventState {
      * The logger instance for this class.
      */
     private static final Logger log = LoggerFactory.getLogger(EventState.class);
+
+    /**
+     * The caching path resolver.
+     */
+    private static CachingPathResolver cachingPathResolver;
 
     /**
      * The key <code>srcAbsPath</code> in the info map.
@@ -864,5 +879,84 @@ public class EventState {
      */
     private static InternalValue createValue(Path path) {
         return InternalValue.create(path);
+    }
+
+    /**
+     * Get the longest common path of all event state paths.
+     *
+     * @param events The list of EventState
+     * @param session The associated session; it can be null
+     * @return the longest common path
+     */
+    public static String getCommonPath(List<EventState> events, SessionImpl session) {
+        String common = null;
+        try {
+            for (int i = 0; i < events.size(); i++) {
+                EventState state = events.get(i);
+                Path parentPath = state.getParentPath();
+                String s;
+                if (session == null) {
+                    s = getJCRPath(parentPath);
+                } else {
+                    s = session.getJCRPath(parentPath);
+                }
+
+                if (common == null) {
+                    common = s;
+                } else if (!common.equals(s)) {
+
+                    // Assign the shorter path to common.
+                    if (s.length() < common.length()) {
+                        String temp = common;
+                        common = s;
+                        s = temp;
+                    }
+
+                    // Find the real common.
+                    while (!s.startsWith(common)) {
+                        int idx = s.lastIndexOf('/');
+                        if (idx < 0) {
+                            break;
+                        }
+                        common = s.substring(0, idx + 1);
+                    }
+                }
+            }
+        } catch (NamespaceException e) {
+            log.debug("Problem in retrieving JCR path", e);
+        }
+        return common;
+    }
+
+    private static String getJCRPath(Path path) {
+ 
+        setupCachingPathResolver();
+
+        String jcrPath;
+        try {
+            jcrPath = cachingPathResolver.getJCRPath(path);
+        } catch (NamespaceException e) {
+            jcrPath = "";
+            log.debug("Problem in retrieving JCR path", e);
+        }
+        return jcrPath;
+    }
+
+    private static void setupCachingPathResolver() {
+        if (cachingPathResolver != null) {
+            return;
+        }
+
+        PathResolver pathResolver = new ParsingPathResolver(PathFactoryImpl.getInstance(), new NameResolver() {
+            public Name getQName(String name) throws IllegalNameException, NamespaceException {
+                return null;
+            }
+
+            public String getJCRName(Name name) throws NamespaceException {
+                return name.getLocalName();
+            }
+        });
+
+        cachingPathResolver = new CachingPathResolver(pathResolver);
     }
 }

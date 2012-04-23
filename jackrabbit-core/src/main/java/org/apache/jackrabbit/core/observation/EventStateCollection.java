@@ -794,35 +794,6 @@ public final class EventStateCollection {
      * @return the longest common path
      */
     public String getCommonPath() {
-        String common = null;
-        try {
-            for (int i = 0; i < events.size(); i++) {
-                EventState state = events.get(i);
-                String s = session.getJCRPath(state.getParentPath());
-                if (common == null) {
-                    common = s;
-                } else if (!common.equals(s)) {
-
-                    // Assign the shorter path to common.
-                    if (s.length() < common.length()) {
-                        String temp = common;
-                        common = s;
-                        s = temp;
-                    }
-
-                    // Find the real common.
-                    while (!s.startsWith(common)) {
-                        int idx = s.lastIndexOf('/');
-                        if (idx < 0) {
-                            break;
-                        }
-                        common = s.substring(0, idx + 1);
-                    }
-                }
-            }
-        } catch (NamespaceException e) {
-            // ignore
-        }
-        return common;
+        return EventState.getCommonPath(events, session);
     }
 }
