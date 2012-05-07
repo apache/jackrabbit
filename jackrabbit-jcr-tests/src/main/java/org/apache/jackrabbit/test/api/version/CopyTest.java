@@ -23,8 +23,6 @@ import javax.jcr.version.VersionHistory;
 import javax.jcr.version.VersionManager;
 import javax.jcr.version.Version;
 
-import org.apache.jackrabbit.test.api.version.simple.AbstractVersionTest;
-
 /**
  * <code>CopyTest</code> checks if full versionable nodes are copied correctly:
  *

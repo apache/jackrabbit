@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.test.api.version.simple;
 
 import javax.jcr.Node;
+import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
 import javax.jcr.nodetype.NodeType;
@@ -42,6 +43,8 @@ public class AbstractVersionTest extends AbstractJCRTest {
 
     protected void setUp() throws Exception {
         super.setUp();
+
+        super.checkSupportedOption(Repository.OPTION_SIMPLE_VERSIONING_SUPPORTED);
 
         NodeTypeManager ntMgr = superuser.getWorkspace().getNodeTypeManager();
 
