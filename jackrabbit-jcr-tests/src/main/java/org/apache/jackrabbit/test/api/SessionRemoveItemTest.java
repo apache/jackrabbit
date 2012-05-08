@@ -75,6 +75,7 @@ public class SessionRemoveItemTest extends AbstractJCRTest {
 
     public void testRemoveItem3() throws RepositoryException {
         adminSession.removeItem(nPath);
+        readOnlySession.refresh(false); // see JCR-3302
 
         // node must still exist for another session.
         assertTrue(readOnlySession.nodeExists(nPath));
