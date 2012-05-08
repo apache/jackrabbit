@@ -35,7 +35,7 @@ import javax.jcr.lock.LockException;
 
 /**
  * <code>NodeTest</code> contains all test cases for the
- * <code>javax.jcr.Node</code> that are related to writing, modifing or deleting
+ * <code>javax.jcr.Node</code> that are related to writing, modifying or deleting
  * nodes (level 2 of the specification).
  *
  * @test
@@ -49,7 +49,7 @@ public class NodeTest extends AbstractJCRTest {
 
     /**
      * to be able to test the update(String) and getCorrespondingNodePath(String)
-     * methods we need an addtional workspace
+     * methods we need an additional workspace
      */
     public void setUp() throws Exception {
         super.setUp();
@@ -202,7 +202,7 @@ public class NodeTest extends AbstractJCRTest {
             testNode.update(workspaceName);
             fail("Calling Node.update() on modified node should throw InvalidItemStateException");
         } catch (InvalidItemStateException e) {
-            // ok , works as expected
+            // ok, works as expected
         }
     }
 
@@ -255,7 +255,7 @@ public class NodeTest extends AbstractJCRTest {
 
         // check if property is still there
         assertTrue("Node got property removed after Node.update() eventhough node has no clone", testNode.hasProperty(propertyName1));
-        // check if node did not get childs suddenly
+        // check if node did not get children suddenly
         assertFalse("Node has children assigned after Node.update() eventhough node has no clone", testNode.hasNodes());
     }
 
@@ -304,7 +304,7 @@ public class NodeTest extends AbstractJCRTest {
         // call the update method on test node in default workspace
         defaultTestNode.update(workspaceName);
 
-        // ok first check if node has no longer propertis
+        // ok first check if node has no longer properties
         assertFalse("Node updated with Node.update() should have property removed", defaultTestNode.hasProperty(propertyName1));
         // ok check if the child has been added
         assertTrue("Node updated with Node.update() should have received childrens", defaultTestNode.hasNode(nodeName2));
@@ -457,7 +457,7 @@ public class NodeTest extends AbstractJCRTest {
     /**
      * Creates a new node using {@link Node#addNode(String)} , saves using
      * {@link javax.jcr.Node#save()} on parent node. Uses a second session to
-     * verify if the node has been safed.
+     * verify if the node has been saved.
      */
     public void testAddNodeParentSave() throws RepositoryException {
         // get default workspace test root node using superuser session
@@ -481,7 +481,7 @@ public class NodeTest extends AbstractJCRTest {
     /**
      * Creates a new node using {@link Node#addNode(String)} , saves using
      * {@link javax.jcr.Session#save()}. Uses a second session to verify if the
-     * node has been safed.
+     * node has been saved.
      */
     public void testAddNodeSessionSave() throws RepositoryException {
         // get default workspace test root node using superuser session
@@ -603,7 +603,7 @@ public class NodeTest extends AbstractJCRTest {
             defaultRootNode.getNode(nodeName1);
             fail("Permanently removed node should no longer be adressable using Parent Node's getNode() method");
         } catch (PathNotFoundException e) {
-            // ok , works as expected
+            // ok, works as expected
         }
     }
 
@@ -647,8 +647,6 @@ public class NodeTest extends AbstractJCRTest {
      */
     public void testRemoveNodeLockedItself()
             throws LockException, NotExecutableException, RepositoryException {
-
-        Session session = testRootNode.getSession();
 
         if (!isSupported(Repository.OPTION_LOCKING_SUPPORTED)) {
             throw new NotExecutableException("Locking is not supported.");
@@ -729,7 +727,7 @@ public class NodeTest extends AbstractJCRTest {
     }
 
     /**
-     * Tests object identity, meaning two nodes objects accuired through the
+     * Tests object identity, meaning two nodes objects acquired through the
      * same session must have the same properties and states.
      * <p>
      * Prerequisites: <ul> <li><code>javax.jcr.tck.nodetype</code> must allow
@@ -782,7 +780,7 @@ public class NodeTest extends AbstractJCRTest {
         Node testNode1 = testRootNode.addNode(nodeName1, testNodeType);
         testRootNode.getSession().save();
 
-        // accuire the same node with a different session
+        // acquire the same node with a different session
         Session session = getHelper().getReadOnlySession();
         try {
             Node testNode2 = (Node) session.getItem(testNode1.getPath());
@@ -798,7 +796,7 @@ public class NodeTest extends AbstractJCRTest {
     }
 
     /**
-     * Checks if {@link Node#isModified()} works correcty for unmodified and
+     * Checks if {@link Node#isModified()} works correctly for unmodified and
      * modified nodes.
      */
     public void testIsModified() throws RepositoryException {
@@ -812,14 +810,14 @@ public class NodeTest extends AbstractJCRTest {
 
         assertFalse("Unmodified node should return false on Node.isModified()", testNode.isModified());
 
-        // check if modified properties are recognised
+        // check if modified properties are recognized
         testNode.setProperty(propertyName1, "test");
 
         assertTrue("Modified node should return true on Node.isModified()", testNode.isModified());
 
         defaultRootNode.save();
 
-        // check if modified child nodes are recognised
+        // check if modified child nodes are recognized
         testNode.addNode(nodeName2, testNodeType);
 
         assertTrue("Modified node should return true on Node.isModified()", testNode.isModified());
