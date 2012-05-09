@@ -72,6 +72,9 @@ public abstract class AbstractLoginModule implements LoginModule {
      * login.
      *
      * @see #isPreAuthenticated(Credentials)
+     * @deprecated For security reasons this configuration option has been
+     * deprecated and will no longer be supported in a subsequent release.
+     * See also <a href="https://issues.apache.org/jira/browse/JCR-3293">JCR-3293</a>
      */
     private static final String PRE_AUTHENTICATED_ATTRIBUTE_OPTION = "trust_credentials_attribute";
 
@@ -87,6 +90,9 @@ public abstract class AbstractLoginModule implements LoginModule {
      * has already been authenticated outside of this LoginModule.
      *
      * @see #getPreAuthAttributeName()
+     * @deprecated For security reasons the support for the preAuth attribute
+     * has been deprecated and will no longer be available in a subsequent release.
+     * See also <a href="https://issues.apache.org/jira/browse/JCR-3293">JCR-3293</a>
      */
     private String preAuthAttributeName;
 
@@ -747,6 +753,9 @@ public abstract class AbstractLoginModule implements LoginModule {
      * returns <code>null</code>.
      *
      * @see #isPreAuthenticated(Credentials)
+     * @deprecated For security reasons the support for the preAuth attribute
+     * has been deprecated and will no longer be available in a subsequent release.
+     * See also <a href="https://issues.apache.org/jira/browse/JCR-3293">JCR-3293</a>
      */
     protected final String getPreAuthAttributeName() {
         return preAuthAttributeName;
@@ -768,11 +777,20 @@ public abstract class AbstractLoginModule implements LoginModule {
      * @param creds The Credentials to check
      *
      * @see #getPreAuthAttributeName()
+     * @deprecated For security reasons the support for the preAuth attribute
+     * has been deprecated and will no longer be available in a subsequent release.
+     * See also <a href="https://issues.apache.org/jira/browse/JCR-3293">JCR-3293</a>
      */
     protected boolean isPreAuthenticated(final Credentials creds) {
         final String preAuthAttrName = getPreAuthAttributeName();
-        return preAuthAttrName != null
+        boolean isPreAuth = preAuthAttrName != null
             && (creds instanceof SimpleCredentials)
             && ((SimpleCredentials) creds).getAttribute(preAuthAttrName) != null;
+        if (isPreAuth) {
+            log.warn("Usage of deprecated 'trust_credentials_attribute' option. " +
+                    "Please note that for security reasons this feature will not" +
+                    "be supported in future releases.");
+        }
+        return isPreAuth;
     }
 }
