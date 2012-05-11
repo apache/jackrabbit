@@ -235,7 +235,7 @@ public class SessionTest extends AbstractJCRTest {
         // save only moved node
         try {
             destParentNode.save();
-            fail("Saving only moved node after a Session.move() operation should throw ContstraintViolationException");
+            fail("Saving only moved node after a Session.move() operation should throw ConstraintViolationException");
         } catch (ConstraintViolationException e) {
             // ok try to save the source
         }
@@ -401,11 +401,11 @@ public class SessionTest extends AbstractJCRTest {
      * Tries to create and save a node using {@link javax.jcr.Session#save()}
      * with an mandatory property that is not set on saving time.
      * <p>
-     * Prerequisites: <ul> <li><code>javax.jcr.tck.SessionTest.testSaveContstraintViolationException.nodetype2</code>
+     * Prerequisites: <ul> <li><code>javax.jcr.tck.SessionTest.testSaveConstraintViolationException.nodetype2</code>
      * must reference a nodetype that has one at least one property that is
      * mandatory but not autocreated</li> </ul>
      */
-    public void testSaveContstraintViolationException() throws RepositoryException {
+    public void testSaveConstraintViolationException() throws RepositoryException {
         // get default workspace test root node using superuser session
         Node defaultRootNode = (Node) superuser.getItem(testRootNode.getPath());
 
