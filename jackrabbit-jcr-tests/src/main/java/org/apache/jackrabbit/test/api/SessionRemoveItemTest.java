@@ -83,6 +83,8 @@ public class SessionRemoveItemTest extends AbstractJCRTest {
 
     public void testRemoveItem4() throws RepositoryException {
         try {
+            readOnlySession.refresh(false); // see JCR-3302
+
             readOnlySession.removeItem(nPath);
             readOnlySession.save();
             fail("A read-only session must not be allowed to remove an item");
