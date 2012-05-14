@@ -18,9 +18,11 @@ package org.apache.jackrabbit.test.api.version;
 
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
+import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.version.VersionManager;
 
+import org.apache.jackrabbit.test.NotExecutableException;
 /**
  * <code>MergeActivityTest</code> contains tests dealing with merging activities
  *
@@ -75,7 +77,9 @@ public class MergeActivityTest extends AbstractMergeTest {
     /**
      * initialize a versionable node on default and second workspace
      */
-    protected void initNodes() throws RepositoryException {
+    protected void initNodes() throws RepositoryException, NotExecutableException {
+
+        checkSupportedOption(Repository.OPTION_ACTIVITIES_SUPPORTED);
 
         VersionManager versionManager = testRootNode.getSession().getWorkspace().getVersionManager();
 
