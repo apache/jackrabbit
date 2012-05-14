@@ -25,6 +25,7 @@ import javax.jcr.nodetype.NodeType;
 import javax.jcr.nodetype.NodeTypeManager;
 
 import org.apache.jackrabbit.test.AbstractJCRTest;
+import org.apache.jackrabbit.test.NotExecutableException;
 
 /**
  * <code>AbstractMergeTest</code> is the abstract base class for all merge
@@ -136,5 +137,5 @@ public abstract class AbstractMergeTest extends AbstractJCRTest {
     }
 
     // initialize nodes
-    abstract void initNodes() throws RepositoryException;
+    abstract void initNodes() throws RepositoryException, NotExecutableException;
 }
