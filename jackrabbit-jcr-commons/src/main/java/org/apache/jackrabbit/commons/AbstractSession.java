@@ -374,26 +374,32 @@ public abstract class AbstractSession implements Session {
      * <p>
      * The default implementation:
      * <ul>
-     * <li>Throws a {@link PathNotFoundException} if the given path
-     *     does not start with a slash.
      * <li>Returns the root node if the given path is "/"
-     * <li>Calls {@link Node#getNode(String)} on the root node with the
-     *     part of the given path after the first slash
-     * <li>Calls {@link Node#getProperty(String)} similarly in case the
-     *     above call fails with a {@link PathNotFoundException}
+     * <li>Delegates to {@link Node#getNodeByIdentifier(String)} for identifier
+     * paths
+     * <li>Throws a {@link PathNotFoundException} if the given path does not
+     * start with a slash.
+     * <li>Calls {@link Node#getNode(String)} on the root node with the part of
+     * the given path after the first slash
+     * <li>Calls {@link Node#getProperty(String)} similarly in case the above
+     * call fails with a {@link PathNotFoundException}
      * </ul>
-     *
+     * 
      * @see Session#getItem(String)
-     * @param absPath absolute path
+     * @param absPath
+     *            absolute path
      * @return the node or property with the given path
-     * @throws PathNotFoundException if the given path is invalid or not found
-     * @throws RepositoryException if another error occurs
+     * @throws PathNotFoundException
+     *             if the given path is invalid or not found
+     * @throws RepositoryException
+     *             if another error occurs
      */
-    public Item getItem(String absPath)
-            throws PathNotFoundException, RepositoryException {
+    public Item getItem(String absPath) throws PathNotFoundException, RepositoryException {
         Node root = getRootNode();
         if (absPath.equals("/")) {
             return root;
+        } else if (absPath.startsWith("[") && absPath.endsWith("]")) {
+            return getNodeByIdentifier(absPath.substring(1, absPath.length() - 1));
         } else {
             String relPath = toRelativePath(absPath);
             if (root.hasNode(relPath)) {
