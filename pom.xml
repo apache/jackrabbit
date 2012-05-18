@@ -82,6 +82,7 @@
             <exclude>test/**/.*/**</exclude>
             <exclude>test/**/*.log</exclude>
             <exclude>.git/**</exclude>
+            <exclude>.gitignore</exclude>
           </excludes>
         </configuration>
       </plugin>
