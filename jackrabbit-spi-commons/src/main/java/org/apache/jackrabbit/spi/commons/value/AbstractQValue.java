@@ -20,7 +20,6 @@ import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.util.ISO8601;
-import org.apache.commons.io.IOUtils;
 
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
@@ -33,7 +32,11 @@ import java.math.BigDecimal;
 import java.net.URI;
 import java.io.InputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.io.Serializable;
+import java.io.StringWriter;
+import java.io.Writer;
 
 /**
  * <code>AbstractQValue</code>...
@@ -336,13 +339,23 @@ public abstract class AbstractQValue implements QValue, Serializable {
      */
     public String getString() throws RepositoryException {
         if (type == PropertyType.BINARY) {
-            InputStream stream = getStream();
             try {
-                return IOUtils.toString(stream, "UTF-8");
+                InputStream stream = getStream();
+                try {
+                    Reader reader = new InputStreamReader(stream, "UTF-8");
+                    Writer writer = new StringWriter();
+                    char[] buffer = new char[1024];
+                    int n = reader.read(buffer);
+                    while (n != -1) {
+                        writer.write(buffer, 0, n);
+                        n = reader.read(buffer);
+                    }
+                    return writer.toString();
+                } finally {
+                    stream.close();
+                }
             } catch (IOException e) {
                 throw new RepositoryException("conversion from stream to string failed", e);
-            } finally {
-                IOUtils.closeQuietly(stream);
             }
         } else if (type == PropertyType.DATE) {
             return (String) val;

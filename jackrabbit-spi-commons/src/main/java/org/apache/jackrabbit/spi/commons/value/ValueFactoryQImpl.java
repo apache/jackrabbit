@@ -30,7 +30,6 @@ import javax.jcr.Value;
 import javax.jcr.ValueFactory;
 import javax.jcr.ValueFormatException;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.spi.commons.conversion.IllegalNameException;
 import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
@@ -153,15 +152,16 @@ public class ValueFactoryQImpl implements ValueFactory {
      */
     public Value createValue(InputStream value) {
         try {
-            QValue qvalue = qfactory.create(value);
-            return new QValueValue(qvalue, resolver);
+            try {
+                QValue qvalue = qfactory.create(value);
+                return new QValueValue(qvalue, resolver);
+            } finally {
+                value.close(); // JCR-2903
+            }
         } catch (IOException ex) {
             throw new RuntimeException(ex);
         } catch (RepositoryException ex) {
             throw new RuntimeException(ex);
-        } finally {
-            // JCR-2903
-            IOUtils.closeQuietly(value);
         }
     }
 
@@ -206,15 +206,16 @@ public class ValueFactoryQImpl implements ValueFactory {
     public Binary createBinary(InputStream stream) throws RepositoryException {
         // TODO review/optimize/refactor
         try {
-            QValue qvalue = qfactory.create(stream);
-            return qvalue.getBinary();
+            try {
+                QValue qvalue = qfactory.create(stream);
+                return qvalue.getBinary();
+            } finally {
+                stream.close(); // JCR-2903
+            }
         } catch (IOException ex) {
             throw new RuntimeException(ex);
         } catch (RepositoryException ex) {
             throw new RuntimeException(ex);
-        } finally {
-            // JCR-2903
-            IOUtils.closeQuietly(stream);
         }
     }
 
@@ -240,4 +241,5 @@ public class ValueFactoryQImpl implements ValueFactory {
         QValue qvalue = qfactory.create(value.getUUID(), weak ? PropertyType.WEAKREFERENCE : PropertyType.REFERENCE);
         return new QValueValue(qvalue, resolver);
     }
+
 }
