@@ -51,7 +51,6 @@ import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
 import org.apache.commons.collections.map.ReferenceMap;
-import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.commons.AbstractSession;
 import org.apache.jackrabbit.jcr2spi.config.CacheBehaviour;
 import org.apache.jackrabbit.jcr2spi.config.RepositoryConfig;
@@ -410,8 +409,7 @@ public class SessionImpl extends AbstractSession
         } catch (ParserConfigurationException e) {
             throw new RepositoryException("SAX parser configuration error", e);
         } finally {
-            // JCR-2903
-            IOUtils.closeQuietly(in);
+            in.close(); // JCR-2903
         }
     }
 

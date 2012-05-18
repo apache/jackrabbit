@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.jcr2spi;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.jcr2spi.config.CacheBehaviour;
 import org.apache.jackrabbit.jcr2spi.config.RepositoryConfig;
 import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyManager;
@@ -344,8 +343,7 @@ public class WorkspaceImpl implements Workspace, ManagerProvider {
             // run the import
             wspManager.execute(WorkspaceImport.create(parentState, in, uuidBehavior));
         } finally {
-            // JCR-2903
-            IOUtils.closeQuietly(in);
+            in. close(); // JCR-2903
         }
     }
 
