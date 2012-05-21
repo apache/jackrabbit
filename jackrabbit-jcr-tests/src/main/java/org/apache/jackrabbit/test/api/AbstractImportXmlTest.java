@@ -96,7 +96,7 @@ abstract class AbstractImportXmlTest extends AbstractJCRTest {
 
     // names for namespace import
     protected final String TEST_PREFIX = "docview";
-    protected final String TEST_URI = "www.apache.org/jackrabbit/test/namespaceImportTest";
+    protected final String TEST_URI = "http://www.apache.org/jackrabbit/test/namespaceImportTest";
     protected final String XML_NS = "xmlns";
 
     // xml document related names
