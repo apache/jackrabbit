@@ -67,7 +67,7 @@ public class OrderByMultiTypeTest extends AbstractOrderByTest {
             checkResultOrder(result, new String[]{nodeName2, nodeName3, nodeName1});
         }
 
-        String xpath = "/" + testRoot + "/*[@" + jcrPrimaryType + "='" + testNodeType +
+        String xpath = "/" + jcrRoot + testRoot + "/*[@" + jcrPrimaryType + "='" + testNodeType +
                 "'] order by @" + propertyName2 + ", @" + propertyName1;
         q = superuser.getWorkspace().getQueryManager().createQuery(xpath, qsXPATH);
         result = q.execute();
