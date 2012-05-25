@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.test.api.version;
 
 import javax.jcr.Node;
+import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.Workspace;
@@ -70,6 +71,8 @@ public abstract class AbstractMergeTest extends AbstractJCRTest {
      */
     protected void setUp() throws Exception {
         super.setUp();
+
+        super.checkSupportedOption(Repository.OPTION_VERSIONING_SUPPORTED);
 
         NodeTypeManager ntm = superuser.getWorkspace().getNodeTypeManager();
 

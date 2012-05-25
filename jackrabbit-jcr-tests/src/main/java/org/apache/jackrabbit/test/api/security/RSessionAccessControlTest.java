@@ -23,13 +23,12 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.Value;
 
-import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.apache.jackrabbit.test.RepositoryStub;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /** <code>RSessionAccessControlTest</code>... */
-public class RSessionAccessControlTest extends AbstractJCRTest {
+public class RSessionAccessControlTest extends AbstractAccessControlTest {
 
     private static Logger log = LoggerFactory.getLogger(RSessionAccessControlTest.class);
 

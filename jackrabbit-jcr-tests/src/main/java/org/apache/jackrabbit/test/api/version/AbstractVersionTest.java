@@ -23,6 +23,7 @@ import javax.jcr.nodetype.NodeTypeManager;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
 import javax.jcr.nodetype.NodeType;
 import javax.jcr.Node;
+import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.version.VersionHistory;
 
@@ -42,6 +43,8 @@ public class AbstractVersionTest extends AbstractJCRTest {
 
     protected void setUp() throws Exception {
         super.setUp();
+
+        super.checkSupportedOption(Repository.OPTION_VERSIONING_SUPPORTED);
 
         NodeTypeManager ntMgr = superuser.getWorkspace().getNodeTypeManager();
 
