@@ -145,7 +145,7 @@ public class QueryStatImpl implements QueryStatCore {
     }
 
     public QueryStatDto[] getPopularQueries() {
-        QueryStatDtoImpl[] top = new QueryStatDtoImpl[0];
+        QueryStatDtoImpl[] top;
         int size = 0;
         int maxSize = 0;
         synchronized (popularQueries) {
