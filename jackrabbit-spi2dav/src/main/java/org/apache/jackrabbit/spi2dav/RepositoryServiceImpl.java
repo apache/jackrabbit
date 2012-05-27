@@ -339,6 +339,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         if (maximumHttpConnections > 0) {
             HttpConnectionManagerParams connectionParams = connectionManager.getParams();
             connectionParams.setDefaultMaxConnectionsPerHost(maximumHttpConnections);
+            connectionParams.setMaxTotalConnections(maximumHttpConnections);
         }
 
         // This configuration of the clients cache assumes that the level of
