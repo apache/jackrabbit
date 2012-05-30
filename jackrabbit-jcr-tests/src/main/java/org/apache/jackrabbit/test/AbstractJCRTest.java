@@ -589,18 +589,51 @@ public abstract class AbstractJCRTest extends JUnitTest {
     }
 
     /**
-     * Returns the local name for the given <code>name</code>.
-     *
-     * @param name the name.
+     * Returns the local name for the given <code>jcrName</code>.
+     * 
+     * @param jcrName
+     *            the name.
      * @return the local name part.
      */
-    protected static String getLocalName(String name) {
-        int idx = name.indexOf(':');
+    protected static String getLocalName(String jcrName) {
+        int idx = jcrName.indexOf(':');
         if (idx != -1) {
-            return name.substring(idx + 1);
+            return jcrName.substring(idx + 1);
         } else {
-            return name;
+            return jcrName;
         }
+    }
+
+    /**
+     * Returns the prefix for the given <code>jcrName</code>.
+     * 
+     * @param jcrName
+     *            the name.
+     * @return the prefix part (empty string when not prefixed)
+     */
+    protected static String getPrefix(String jcrName) {
+        int idx = jcrName.indexOf(':');
+        if (idx != -1) {
+            return jcrName.substring(0, idx);
+        } else {
+            return "";
+        }
+    }
+
+    /**
+     * Returns the expanded name for the given <code>jcrName</code>.
+     * 
+     * @param jcrName
+     *            the name.
+     * @return the expanded name representation
+     * @throws RepositoryException
+     * @throws NamespaceException
+     */
+    protected static String getQualifiedName(Session session, String jcrName) throws RepositoryException {
+        String prefix = getPrefix(jcrName);
+        String namespace = session.getNamespaceURI(prefix);
+        String localname = getLocalName(jcrName);
+        return (!namespace.isEmpty() ? "{" + namespace + "}" : "") + localname;
     }
 
     /**

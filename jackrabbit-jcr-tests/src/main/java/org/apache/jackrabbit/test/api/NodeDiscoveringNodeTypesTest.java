@@ -66,7 +66,7 @@ public class NodeDiscoveringNodeTypesTest extends AbstractJCRTest {
     }
 
     /**
-     * Releases the session aquired in {@link #setUp()}.
+     * Releases the session acquired in {@link #setUp()}.
      */
     protected void tearDown() throws Exception {
         if (session != null) {
@@ -103,7 +103,7 @@ public class NodeDiscoveringNodeTypesTest extends AbstractJCRTest {
 
     /**
      * Test if getMixinNodeType returns the node types according to the property
-     * "jcr:mixinTypes". Therefor a node with mixin types is located recursively
+     * "jcr:mixinTypes". Therefore a node with mixin types is located recursively
      * in the entire repository. A NotExecutableException is thrown when no such
      * node is found.
      */
@@ -165,22 +165,29 @@ public class NodeDiscoveringNodeTypesTest extends AbstractJCRTest {
                 "nodeTypeName is the name of the primary node type",
                 testRootNode.isNodeType(nodeTypeName));
 
+        String expNodeTypeName = getQualifiedName(testRootNode.getSession(), nodeTypeName);
+        assertTrue("isNodeType(String expNodeTypeName) must return true if "
+                + "expNodeTypeName is the name of the primary node type", testRootNode.isNodeType(expNodeTypeName));
+
         // test with mixin node's name
         // (if such a node is available)
         Node nodeWithMixin = locateNodeWithMixinNodeTypes(testRootNode);
         if (nodeWithMixin != null) {
             NodeType types[] = nodeWithMixin.getMixinNodeTypes();
             nodeTypeName = types[0].getName();
-            assertTrue("isNodeType(String nodeTypeName) must return true if " +
-                    "nodeTypeName is the name of one of the " +
-                    "mixin node types",
-                    nodeWithMixin.isNodeType(nodeTypeName));
+            expNodeTypeName = getQualifiedName(testRootNode.getSession(), nodeTypeName);
+            assertTrue("isNodeType(String nodeTypeName) must return true if " + "nodeTypeName is the name of one of the "
+                    + "mixin node types", nodeWithMixin.isNodeType(nodeTypeName));
+            assertTrue("isNodeType(String expNodeTypeName) must return true if " + "expNodeTypeName is the name of one of the "
+                    + "mixin node types", nodeWithMixin.isNodeType(expNodeTypeName));
         }
 
         // test with the name of predefined supertype "nt:base"
         assertTrue("isNodeType(String nodeTypeName) must return true if " +
                 "nodeTypeName is the name of a node type of a supertype",
                 testRootNode.isNodeType(ntBase));
+        assertTrue("isNodeType(String nodeTypeName) must return true if "
+                + "nodeTypeName is the name of a node type of a supertype", testRootNode.isNodeType(NodeType.NT_BASE));
     }
 
     //-----------------------< internal >---------------------------------------
