@@ -62,7 +62,7 @@ public class GetQueryTest extends AbstractQOMTest {
             String lang = q.getLanguage();
             checkResult(q.execute(), new Node[]{n});
 
-            Node stored = q.storeAsNode(testRoot + "/" + nodeName1);
+            Node stored = q.storeAsNode(testRoot + "/storedQuery");
             q = qm.getQuery(stored);
             assertEquals("language of stored query does not match", lang, q.getLanguage());
             checkResult(q.execute(), new Node[]{n});
