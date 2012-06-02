@@ -27,19 +27,16 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.jackrabbit.commons.repository.ProxyRepository;
-import org.apache.jackrabbit.commons.repository.RepositoryFactory;
 
 /**
  * Abstract base class for servlets that make a repository available in
  * the servlet context. This class handles the initialization and cleanup
  * tasks of setting up and clearing the configured repository attribute,
  * while a subclass only needs to implement the abstract
- * {@link #getRepositoryFactory()} method that returns a factory for
- * retrieving the actual content repository.
+ * {@link #getRepository()} method that returns the actual content repository.
  * <p>
  * The {@link Repository} instance bound to the servlet context is actually
- * a {@link ProxyRepository} that uses the given {@link RepositoryFactory}
- * for late binding of the underlying content repository.
+ * a {@link ProxyRepository} for late binding of the underlying content repository.
  * <p>
  * The default name of the repository attribute is
  * "<code>javax.jcr.Repository</code>", but it can be changed by specifying
@@ -67,11 +64,10 @@ import org.apache.jackrabbit.commons.repository.RepositoryFactory;
 public abstract class AbstractRepositoryServlet extends HttpServlet {
 
     /**
-     * Binds a {@link ProxyRepository} with the factory returned by
-     * {@link #getRepositoryFactory()} in the configured servlet
-     * context attribute.
+     * Binds a {@link ProxyRepository} with the repository returned by
+     * {@link #getRepository()} in the configured servlet context attribute.
      *
-     * @throws ServletException if the factory could not be retrieved
+     * @throws ServletException
      */
     public void init() throws ServletException {
         getServletContext().setAttribute(

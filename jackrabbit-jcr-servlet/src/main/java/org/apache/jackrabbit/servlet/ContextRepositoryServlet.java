@@ -93,12 +93,12 @@ public class ContextRepositoryServlet extends AbstractRepositoryServlet {
         } else if (repository != null) {
             throw new RepositoryException(
                     "Invalid repository: Attribute " + name
-                    + " in servet context " + otherContext.getServletContextName()
+                    + " in servlet context " + otherContext.getServletContextName()
                     + " is an instance of " + repository.getClass().getName());
         } else {
             throw new RepositoryException(
                     "Repository not found: Attribute " + name
-                    + " does not exist in servet context "
+                    + " does not exist in servlet context "
                     + otherContext.getServletContextName());
         }
     }
