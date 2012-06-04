@@ -45,12 +45,12 @@ public class DefaultDavProperty<T> extends AbstractDavProperty<T> {
      * @param name the name of the property
      * @param value the value of the property
      * @param namespace the namespace of the property
-     * @param isProtected A value of true, defines this property to be protected.
+     * @param isInvisibleInAllprop A value of true, defines this property to be protected.
      * It will not be returned in a {@link org.apache.jackrabbit.webdav.DavConstants#PROPFIND_ALL_PROP DAV:allprop}
      * PROPFIND request and cannot be set/removed with a PROPPATCH request.
      */
-    public DefaultDavProperty(String name, T value, Namespace namespace, boolean isProtected) {
-        super(DavPropertyName.create(name, namespace), isProtected);
+    public DefaultDavProperty(String name, T value, Namespace namespace, boolean isInvisibleInAllprop) {
+        super(DavPropertyName.create(name, namespace), isInvisibleInAllprop);
         this.value = value;
     }
 
@@ -73,12 +73,12 @@ public class DefaultDavProperty<T> extends AbstractDavProperty<T> {
      *
      * @param name the name of the property
      * @param value the value of the property
-     * @param isProtected A value of true, defines this property to be protected.
+     * @param isInvisibleInAllprop A value of true, defines this property to be protected.
      * It will not be returned in a {@link org.apache.jackrabbit.webdav.DavConstants#PROPFIND_ALL_PROP DAV:allprop}
      * PROPFIND request and cannot be set/removed with a PROPPATCH request.
      */
-    public DefaultDavProperty(DavPropertyName name, T value, boolean isProtected) {
-        super(name, isProtected);
+    public DefaultDavProperty(DavPropertyName name, T value, boolean isInvisibleInAllprop) {
+        super(name, isInvisibleInAllprop);
         this.value = value;
     }
 
