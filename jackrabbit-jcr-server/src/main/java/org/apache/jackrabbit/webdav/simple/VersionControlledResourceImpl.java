@@ -330,7 +330,7 @@ public class VersionControlledResourceImpl extends DeltaVResourceImpl
                     properties.add(new HrefProperty(VERSION_HISTORY, vhHref, true));
 
                     // DAV:auto-version property: there is no auto version, explicit CHECKOUT is required.
-                    properties.add(new DefaultDavProperty(AUTO_VERSION, null, false));
+                    properties.add(new DefaultDavProperty(AUTO_VERSION, null, true));
 
                     // baseVersion -> used for DAV:checked-out or DAV:checked-in
                     String baseVHref = getLocatorFromNode(n.getBaseVersion()).getHref(false);
@@ -342,7 +342,7 @@ public class VersionControlledResourceImpl extends DeltaVResourceImpl
                             for (int i = 0; i < pv.length; i++) {
                                 predecessors[i] = n.getSession().getNodeByIdentifier(pv[i].getString());
                             }
-                            properties.add(getHrefProperty(VersionResource.PREDECESSOR_SET, predecessors, false, false));
+                            properties.add(getHrefProperty(VersionResource.PREDECESSOR_SET, predecessors, true, false));
                         }
                         // DAV:checked-out property (protected)
                         properties.add(new HrefProperty(CHECKED_OUT, baseVHref, true));
