@@ -196,7 +196,7 @@ class TreeComparator extends Assert {
             try {
                 n = nt.addNode(name);
                 n.addMixin(t.getName());
-                // try saving, because some exceptions are trown only at save time
+                // try saving, because some exceptions are thrown only at save time
                 session.save();
             } catch (RepositoryException e) {
                 sc.log("Cannot create node with mixin node type: " + e);
