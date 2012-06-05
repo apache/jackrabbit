@@ -268,22 +268,27 @@ abstract class AbstractImportXmlTest extends AbstractJCRTest {
         serialize(document);
         BufferedInputStream bin = new BufferedInputStream(new FileInputStream(file));
 
-        ContentHandler handler;
-        if (withWorkspace) {
-            handler = workspace.getImportContentHandler(absPath, uuidBehaviour);
-        } else {
-            handler = session.getImportContentHandler(absPath, uuidBehaviour);
+        try {
+            ContentHandler handler;
+            if (withWorkspace) {
+                handler = workspace.getImportContentHandler(absPath, uuidBehaviour);
+            } else {
+                handler = session.getImportContentHandler(absPath, uuidBehaviour);
+            }
+
+            XMLReader reader = XMLReaderFactory.createXMLReader();
+            reader.setFeature("http://xml.org/sax/features/namespaces", true);
+            reader.setFeature("http://xml.org/sax/features/namespace-prefixes", false);
+            
+            reader.setContentHandler(handler);
+            reader.parse(new InputSource(bin));
+
+            if (!withWorkspace) {
+                session.save();
+            }
         }
-
-        XMLReader reader = XMLReaderFactory.createXMLReader();
-        reader.setFeature("http://xml.org/sax/features/namespaces", true);
-        reader.setFeature("http://xml.org/sax/features/namespace-prefixes", false);
-
-        reader.setContentHandler(handler);
-        reader.parse(new InputSource(bin));
-
-        if (!withWorkspace) {
-            session.save();
+        finally {
+            bin.close();
         }
     }
 
