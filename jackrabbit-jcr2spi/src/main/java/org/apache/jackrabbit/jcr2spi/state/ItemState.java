@@ -207,7 +207,12 @@ public abstract class ItemState {
      * @throws RepositoryException
      */
     public NodeState getParent() throws ItemNotFoundException, RepositoryException {
-        return getHierarchyEntry().getParent().getNodeState();
+        // safeguard against root node's null parent
+        NodeEntry parent = getHierarchyEntry().getParent();
+        if (parent != null) {
+            return getHierarchyEntry().getParent().getNodeState();
+        }
+        return null;
     }
 
     /**
