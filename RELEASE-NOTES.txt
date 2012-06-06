@@ -1,4 +1,4 @@
-Release Notes -- Apache Jackrabbit -- Version 2.4.1
+Release Notes -- Apache Jackrabbit -- Version 2.4.2
 
 Introduction
 ------------
@@ -8,9 +8,39 @@ Content Repository for Java(TM) Technology API, version 2.0 (JCR 2.0) as
 specified in the Java Specification Request 283 (JSR 283).
 
 
-Apache Jackrabbit 2.4.1 is patch release that contains fixes and
-improvements over Jackrabbit 2.4.0. This release is fully compatible
+Apache Jackrabbit 2.4.2 is patch release that contains fixes and
+improvements over Jackrabbit 2.4.1. This release is fully compatible
 with earlier 2.x.x releases.
+
+Changes since Jackrabbit 2.4.1
+------------------------------
+
+New features
+
+  [JCR-3233] Provide callback for consistency checker
+
+Improvements
+
+  [JCR-3286] InternalVersionManagerBase.calculateCheckinVersionName will fail with NPE upon empty predecessors property
+
+Bug fixes
+
+  [JCR-2662] JCR unit tests for journaled observation do not check capabilities and require implementation, contrary to JCR 2.0 specification
+  [JCR-3050] NullPointerException on removing a node acquired from search result
+  [JCR-3234] QueryStat getPopularQueries doesn't set the proper position
+  [JCR-3262] Oracle JDBC Class Cast Exception
+  [JCR-3272] EventConsumer.canRead() should rely on AccessManager.isGranted()
+  [JCR-3289] Remove operation right after move operation causes missing child inconsistency
+  [JCR-3290] Concurrent add and move can cause inconsistency
+  [JCR-3291] Stack overflow in multi-session test with moves
+  [JCR-3292] Workspace move in concurrent environment causes inconsistencies
+  [JCR-3298] jackrabbit-core RepositoryChecker.fix() can fail with OOM
+  [JCR-3300] tests should consistently check for repository support and fail with NotExecutableException when the repo does not support the feature
+  [JCR-3303] ClusterNode's stopDelay should default to something other zero
+  [JCR-3307] JCR test org.apache.jackrabbit.test.api.version.MergeActivityTest doesn't check whether the repository supports activities
+  [JCR-3317] Set the MaxTotalConnections on ConnectionManager to prevent bottleneck
+  [JCR-3329] incorrect WebDAV PROPFIND response for version-controlled resources
+
 
 Changes since Jackrabbit 2.4.0
 ------------------------------
