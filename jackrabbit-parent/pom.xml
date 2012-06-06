@@ -34,7 +34,7 @@
   <groupId>org.apache.jackrabbit</groupId>
   <artifactId>jackrabbit-parent</artifactId>
   <name>Jackrabbit Parent POM</name>
-  <version>2.4.2-SNAPSHOT</version>
+  <version>2.4.2</version>
   <packaging>pom</packaging>
 
   <issueManagement>
@@ -902,8 +902,8 @@
   </developers>
 
   <scm>
-    <connection>scm:svn:http://svn.apache.org/repos/asf/maven/pom/branches/2.4/jackrabbit-parent</connection>
-    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/maven/pom/branches/2.4/jackrabbit-parent</developerConnection>
-    <url>http://svn.apache.org/viewvc/maven/pom/branches/2.4/jackrabbit-parent</url>
+    <connection>scm:svn:http://svn.apache.org/repos/asf/maven/pom/tags/2.4.2/jackrabbit-parent</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/maven/pom/tags/2.4.2/jackrabbit-parent</developerConnection>
+    <url>http://svn.apache.org/viewvc/maven/pom/tags/2.4.2/jackrabbit-parent</url>
   </scm>
 </project>
