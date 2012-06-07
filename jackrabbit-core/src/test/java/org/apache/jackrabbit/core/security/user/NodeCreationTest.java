@@ -140,7 +140,7 @@ public class NodeCreationTest extends AbstractUserTest {
         m.put("zh",     "/z/zh/zh");
         m.put("zHzh",   "/z/zH/zHzh");
         m.put("z_Hz",   "/z/z_/z_Hz");
-        m.put("zürich", "/z/zü/zürich");
+        m.put("z\u00cfrich", "/z/z\u00cf/z\u00cfrich");
 
         for (String uid : m.keySet()) {
             u = (UserImpl) uMgr.createUser(uid, uid);
@@ -171,7 +171,7 @@ public class NodeCreationTest extends AbstractUserTest {
         m.put("zH",     "/z/zH/zHH/zH");
         m.put("zHzh",   "/z/zH/zHz/zHzh");
         m.put("z_Hz",   "/z/z_/z_H/z_Hz");
-        m.put("zürich", "/z/zü/zür/zürich");
+        m.put("z\u00cfrich", "/z/z\u00cf/z\u00cfr/z\u00cfrich");
 
         for (String uid : m.keySet()) {
             u = (UserImpl) uMgr.createUser(uid, uid);
