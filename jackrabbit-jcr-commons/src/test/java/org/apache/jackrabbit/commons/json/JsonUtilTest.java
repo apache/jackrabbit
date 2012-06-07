@@ -16,11 +16,10 @@
  */
 package org.apache.jackrabbit.commons.json;
 
-import junit.framework.TestCase;
-
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
+
+import junit.framework.TestCase;
 
 /**
  * <code>JSONUtilTest</code>...
@@ -28,29 +27,32 @@ import java.util.Map;
 public class JsonUtilTest extends TestCase {
 
     public void testGetJsonString() {
-        Map m = new HashMap();
-        m.put("abc", "\"abc\"");
-        m.put("a \"b\" c", "\"a \\\"b\\\" c\"");
-        m.put("a\tb\rc\nd\fe\b", "\"a\\tb\\rc\\nd\\fe\\b\"");
-        m.put("\\abc", "\"\\\\abc\"");
-        m.put("abc", "\"abc\"");
+        char DQ = '"';
+
+        Map<String, String> m = new HashMap<String, String>();
+        m.put("abc", "abc");
+        m.put("a \"b\" c", "a \\\"b\\\" c");
+        m.put("a\tb\rc\nd\fe\b", "a\\tb\\rc\\nd\\fe\\b");
+        m.put("\\abc", "\\\\abc");
+        m.put("abc", "abc");
 
         // non-printable ascii other than those treated (\t,\r,\n)
-        m.put(String.valueOf((char) 7), "\"\\u0007\"");
-        m.put(String.valueOf((char) 30), "\"\\u001e\"");
+        m.put(String.valueOf((char) 7), "\\u0007");
+        m.put(String.valueOf((char) 30), "\\u001e");
 
-        // chinese
-        m.put("\u4e00a\u4e8cb\u4e09c", "\"\u4e00a\u4e8cb\u4e09c\"");
+        /* chinese */
+        m.put("\u4e00a\u4e8cb\u4e09c", "\u4e00a\u4e8cb\u4e09c");
         /* arabic */
-        m.put("\u062c\u062f\u064a\u062f", "\"\u062c\u062f\u064a\u062f\"");
-        /* Сaзb?c */
-        m.put("\u00d1a\u00e7b\u0416c", "\"\u00d1a\u00e7b\u0416c\"");
-        // вишь
-        // m.put("вишь", "\"\u00e2\u00e8\u00f8\u00fc\"");
+        m.put("\u062c\u062f\u064a\u062f", "\u062c\u062f\u064a\u062f");
+        /* U+00D1 a U+00E7 b U+0416 c */
+        m.put("\u00d1a\u00e7b\u0416c", "\u00d1a\u00e7b\u0416c");
+        /* U+00E2 a U+00E8 b U+00F8 c U+00FC d */
+        m.put("\u00e2a\u00e8b\u00f8c\u00fcd", "\u00e2a\u00e8b\u00f8c\u00fcd");
 
-        for (Iterator it = m.keySet().iterator(); it.hasNext();) {
-            String key = it.next().toString();
-            assertEquals(m.get(key).toString(), JsonUtil.getJsonString(key));
+        for (Map.Entry<String, String> t : m.entrySet()) {
+            String input = t.getKey();
+            String output = DQ + t.getValue() + DQ;
+            assertEquals(output, JsonUtil.getJsonString(input));
         }
     }
 }
