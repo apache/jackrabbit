@@ -55,6 +55,10 @@ public class PropertyIteratorAdapter extends RangeIteratorDecorator
         super(new RangeIteratorAdapter(iterator));
     }
 
+    public PropertyIteratorAdapter(Iterator iterator, long size) {
+        super(new RangeIteratorAdapter(iterator, size));
+    }
+
     /**
      * Creates an iterator for the given collection.
      *

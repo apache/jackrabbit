@@ -55,6 +55,10 @@ public class NodeIteratorAdapter extends RangeIteratorDecorator
         super(new RangeIteratorAdapter(iterator));
     }
 
+    public NodeIteratorAdapter(Iterator iterator, long size) {
+        super(new RangeIteratorAdapter(iterator, size));
+    }
+
     /**
      * Creates an iterator for the given collection.
      *
