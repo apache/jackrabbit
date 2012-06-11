@@ -151,8 +151,8 @@ class CachingEntryCollector extends EntryCollector {
             // ancestor node instead of the parent and remember the entries.
             entries.setNextId(nextId);
             cache.put(node.getNodeId(), entries);
-            
-            log.debug("Update cache for node with ID {0}: {1}", node, entries);
+
+            log.debug("Update cache for node {}: {}", node, entries);
         } // else: not access controlled -> ignore.
         return entries;
     }
