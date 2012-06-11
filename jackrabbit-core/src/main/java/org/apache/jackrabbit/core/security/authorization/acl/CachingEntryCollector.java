@@ -152,8 +152,8 @@ class CachingEntryCollector extends EntryCollector {
             // build a new cacheEntry and add it to the cache
             CacheEntry ce = new CacheEntry(entries, nextId);
             cache.put(node.getNodeId(), ce);
-            
-            log.debug("Update cache for node with ID {0}: {1}", node, ce);
+
+            log.debug("Update cache for node {}: {}", node, ce);
         } // else: not access controlled -> ignore.
         return entries;
     }
