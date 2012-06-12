@@ -346,9 +346,8 @@ public class DbDataStore implements DataStore, DatabaseAware {
                 wrapper = new StreamWrapper(in, Integer.MAX_VALUE);
             } else if (STORE_TEMP_FILE.equals(storeStream)) {
                 File temp = moveToTempFile(in);
-                fileInput = new BufferedInputStream(new TempFileInputStream(temp));
                 long length = temp.length();
-                wrapper = new StreamWrapper(fileInput, length);
+                wrapper = new StreamWrapper(new TempFileInputStream(temp), length);
             } else {
                 throw new DataStoreException("Unsupported stream store algorithm: " + storeStream);
             }

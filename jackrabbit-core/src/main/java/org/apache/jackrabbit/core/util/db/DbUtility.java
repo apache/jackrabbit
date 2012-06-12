@@ -71,7 +71,7 @@ public final class DbUtility {
                 logException("failed to close Statement", e);
             } finally {
                 try {
-                    if (con != null) {
+                    if (con != null && !con.isClosed()) {
                         con.close();
                     }
                 } catch (SQLException e) {
