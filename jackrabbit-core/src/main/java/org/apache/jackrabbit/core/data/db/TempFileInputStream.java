@@ -67,7 +67,15 @@ public class TempFileInputStream extends AutoCloseInputStream {
         this.file = file;
     }
 
-    private int closeIfEOF(int read) throws IOException {
+    public File getFile() {
+    	return file;
+    }
+    
+    public void deleteFile() {
+	    file.delete();
+	}
+
+	private int closeIfEOF(int read) throws IOException {
         if (read < 0) {
             close();
         }
@@ -77,7 +85,6 @@ public class TempFileInputStream extends AutoCloseInputStream {
     public void close() throws IOException {
         if (!closed) {
             in.close();
-            file.delete();
             closed = true;
         }
     }
