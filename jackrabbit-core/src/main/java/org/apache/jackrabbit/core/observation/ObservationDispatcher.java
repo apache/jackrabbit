@@ -160,8 +160,9 @@ public final class ObservationDispatcher extends EventDispatcher
                 try {
                     c.consumeEvents(action.getEventStates());
                 } catch (Throwable t) {
-                    log.warn("EventConsumer threw exception: " + t.toString());
-                    log.debug("Stacktrace: ", t);
+                    log.warn("EventConsumer " +
+                            c.getEventListener().getClass().getName() +
+                            " threw exception", t);
                     // move on to the next consumer
                 }
             }
