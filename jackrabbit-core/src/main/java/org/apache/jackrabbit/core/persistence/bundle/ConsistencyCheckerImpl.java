@@ -309,6 +309,8 @@ public class ConsistencyCheckerImpl {
                             log.error(message);
                             missingChildren.add(entry);
                         }
+                    } else {
+                        return;
                     }
                 } else {
                     NodeId cp = childBundle.getParentId();
@@ -333,6 +335,8 @@ public class ConsistencyCheckerImpl {
                                     log.error(message);
                                 }
                             }
+                        } else {
+                            return;
                         }
                     }
                 }
@@ -376,6 +380,8 @@ public class ConsistencyCheckerImpl {
                                 modifications.add(bundle);
                             }
                         }
+                    } else {
+                        return;
                     }
                 } else {
                     boolean found = false;
@@ -410,6 +416,8 @@ public class ConsistencyCheckerImpl {
                                         + "'");
                                 modifications.add(parentBundle);
                             }
+                        } else {
+                            return;
                         }
                     }
 
