@@ -222,6 +222,7 @@ public class ConsistencyCheckerImpl {
 
         // look at the node's children
         Collection<NodePropBundle.ChildNodeEntry> missingChildren = new ArrayList<NodePropBundle.ChildNodeEntry>();
+        Collection<NodePropBundle.ChildNodeEntry> disconnectedChildren = new ArrayList<NodePropBundle.ChildNodeEntry>();
         for (NodePropBundle.ChildNodeEntry entry : bundle.getChildNodeEntries()) {
 
             final NodeId childNodeId = entry.getId();
@@ -261,7 +262,7 @@ public class ConsistencyCheckerImpl {
                     }
                 } else {
                     NodeId cp = childBundle.getParentId();
-                    if (cp == null || !cp.equals(id)) {
+                    if (!id.equals(cp)) {
                         // double check whether the child entry is still there
                         bundle = pm.loadBundle(id);
                         if (bundle != null) {
@@ -273,14 +274,10 @@ public class ConsistencyCheckerImpl {
                                 }
                             }
                             if (stillThere) {
-                                if (cp == null) {
-                                    message = "ChildNode has invalid parent id: <null>";
-                                    log.error(message);
-                                } else if (!cp.equals(id)) {
-                                    message = "ChildNode has invalid parent id: '" + cp
-                                            + "' (instead of '" + id + "')";
-                                    log.error(message);
-                                }
+                                // indeed we have a disconnected child
+                                message = "ChildNode has invalid parent id: '" + cp + "' (instead of '" + id + "')";
+                                log.error(message);
+                                disconnectedChildren.add(entry);
                             }
                         } else {
                             return;
@@ -297,8 +294,11 @@ public class ConsistencyCheckerImpl {
             }
         }
         // remove child node entry (if fixing is enabled)
-        if (fix && !missingChildren.isEmpty()) {
+        if (fix && (!missingChildren.isEmpty() || !disconnectedChildren.isEmpty())) {
             for (NodePropBundle.ChildNodeEntry entry : missingChildren) {
+                bundle.getChildNodeEntries().remove(entry);
+            }
+            for (NodePropBundle.ChildNodeEntry entry : disconnectedChildren) {
                 bundle.getChildNodeEntries().remove(entry);
             }
             fixBundle(bundle);
