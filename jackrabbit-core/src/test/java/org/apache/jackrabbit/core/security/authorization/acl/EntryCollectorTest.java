@@ -16,6 +16,25 @@
  */
 package org.apache.jackrabbit.core.security.authorization.acl;
 
+import java.security.Principal;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.UUID;
+
+import javax.jcr.AccessDeniedException;
+import javax.jcr.Node;
+import javax.jcr.NodeIterator;
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
+import javax.jcr.security.AccessControlEntry;
+import javax.jcr.security.AccessControlList;
+import javax.jcr.security.AccessControlManager;
+import javax.jcr.security.AccessControlPolicy;
+import javax.jcr.security.AccessControlPolicyIterator;
+import javax.jcr.security.Privilege;
+
 import org.apache.jackrabbit.api.JackrabbitSession;
 import org.apache.jackrabbit.api.security.JackrabbitAccessControlList;
 import org.apache.jackrabbit.api.security.JackrabbitAccessControlManager;
@@ -25,24 +44,6 @@ import org.apache.jackrabbit.api.security.user.UserManager;
 import org.apache.jackrabbit.core.security.TestPrincipal;
 import org.apache.jackrabbit.test.NotExecutableException;
 import org.apache.jackrabbit.test.api.security.AbstractAccessControlTest;
-
-import javax.jcr.AccessDeniedException;
-import javax.jcr.Node;
-import javax.jcr.Property;
-import javax.jcr.RepositoryException;
-import javax.jcr.Session;
-import javax.jcr.security.AccessControlEntry;
-import javax.jcr.security.AccessControlList;
-import javax.jcr.security.AccessControlManager;
-import javax.jcr.security.AccessControlPolicy;
-import javax.jcr.security.AccessControlPolicyIterator;
-import javax.jcr.security.Privilege;
-import java.security.Principal;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.UUID;
 
 /**
  * <code>EntryCollectorTest</code>...
@@ -362,6 +363,120 @@ public class EntryCollectorTest extends AbstractAccessControlTest {
         } finally {
             superuser2.logout();
         }
-        
     }
+
+    static interface TestInvokation {
+        public void runTest() throws Exception;
+    }
+
+    private void runTestUnderLoad(TestInvokation ti) throws Exception {
+
+        JcrTestThread t[] = new JcrTestThread[4];
+
+        for (int i = 0; i < t.length; i++) {
+            t[i] = new JcrTestThread();
+        }
+
+        try {
+            for (int i = 0; i < t.length; i++) {
+                t[i].start();
+            }
+            ti.runTest();
+        }
+        finally {
+            for (int i = 0; i < t.length; i++) {
+                t[i].stopMe();
+                t[i].join();
+                Throwable th = t[i].getLastExc();
+                if (th != null) {
+                    fail("failure in load thread: " + th);
+                }
+            }
+        }
+    }
+
+    public void testCacheUnderLoad() throws Exception {
+        runTestUnderLoad(new TestInvokation() {
+            public void runTest() throws Exception {
+                testCache();
+            }
+        });
+    }
+
+    public void testEntriesAreCachedUnderLoad() throws Exception {
+        runTestUnderLoad(new TestInvokation() {
+            public void runTest() throws Exception {
+                testEntriesAreCached();
+            }
+        });
+    }
+
+    public void testPermissionsUnderLoad() throws Exception {
+        runTestUnderLoad(new TestInvokation() {
+            public void runTest() throws Exception {
+                testPermissions();
+            }
+        });
+    }
+
+    /**
+     * Test code that that walks the repository.
+     */
+    private class JcrTestThread extends Thread {
+
+        private boolean stopme = false;
+        private Throwable lastErr;
+
+        @Override
+        public void run() {
+            while (!this.stopme) {
+                Session session = null;
+                try {
+                    session = getHelper().getReadOnlySession();
+                    walk(session.getRootNode());
+                }
+                catch (RepositoryException ex) {
+                    // ignored
+                } catch (Throwable ex) {
+                    lastErr = ex;
+                }
+                finally {
+                    if (session != null) {
+                        session.logout();
+                        session = null;
+                    }
+                }
+            }
+        }
+
+        public void stopMe() {
+            this.stopme = true;
+        }
+
+        public Throwable getLastExc() {
+            return lastErr;
+        }
+
+        private void walk(Node node) {
+            if (stopme) {
+                return;
+            }
+
+            try {
+                if ("/jcr:system".equals(node.getPath())) {
+                    // do not descend into an non-interesting subtree
+                    return;
+                }
+
+                NodeIterator ni = node.getNodes();
+                while (ni.hasNext()) {
+                    walk(ni.nextNode());
+                }
+            } catch (RepositoryException ex) {
+                // ignore
+            } catch (Throwable ex) {
+                lastErr = ex;
+            }
+        }
+   }
 }
