@@ -277,32 +277,63 @@ public class ConsistencyCheckerImpl {
         Collection<NodePropBundle.ChildNodeEntry> missingChildren = new ArrayList<NodePropBundle.ChildNodeEntry>();
         for (NodePropBundle.ChildNodeEntry entry : bundle.getChildNodeEntries()) {
 
+            final NodeId childNodeId = entry.getId();
+
             // skip check for system nodes (root, system root, version storage,
             // node types)
-            if (entry.getId().toString().endsWith("babecafebabe")) {
+            if (childNodeId.toString().endsWith("babecafebabe")) {
                 continue;
             }
 
             try {
                 // analyze child node bundles
-                NodePropBundle child = pm.loadBundle(entry.getId());
+                final NodePropBundle childBundle = pm.loadBundle(childNodeId);
                 String message = null;
-                if (child == null) {
-                    message = "NodeState '" + id
-                            + "' references inexistent child" + " '"
-                            + entry.getName() + "' with id " + "'"
-                            + entry.getId() + "'";
-                    log.error(message);
-                    missingChildren.add(entry);
+                if (childBundle == null) {
+                    // double check whether we still exist and the child entry is still there
+                    bundle = pm.loadBundle(id);
+
+                    if (bundle != null) {
+                        boolean stillThere = false;
+                        for (NodePropBundle.ChildNodeEntry entryRetry : bundle.getChildNodeEntries()) {
+                            if (entryRetry.getId().equals(childNodeId)) {
+                                stillThere = true;
+                                break;
+                            }
+                        }
+                        if (stillThere) {
+                            message = "NodeState '" + id
+                                    + "' references inexistent child" + " '"
+                                    + entry.getName() + "' with id " + "'"
+                                    + childNodeId + "'";
+                            log.error(message);
+                            missingChildren.add(entry);
+                        }
+                    }
                 } else {
-                    NodeId cp = child.getParentId();
-                    if (cp == null) {
-                        message = "ChildNode has invalid parent id: <null>";
-                        log.error(message);
-                    } else if (!cp.equals(id)) {
-                        message = "ChildNode has invalid parent id: '" + cp
-                                + "' (instead of '" + id + "')";
-                        log.error(message);
+                    NodeId cp = childBundle.getParentId();
+                    if (cp == null || !cp.equals(id)) {
+                        // double check whether the child entry is still there
+                        bundle = pm.loadBundle(id);
+                        if (bundle != null) {
+                            boolean stillThere = false;
+                            for (NodePropBundle.ChildNodeEntry entryRetry : bundle.getChildNodeEntries()) {
+                                if (entryRetry.getId().equals(childNodeId)) {
+                                    stillThere = true;
+                                    break;
+                                }
+                            }
+                            if (stillThere) {
+                                if (cp == null) {
+                                    message = "ChildNode has invalid parent id: <null>";
+                                    log.error(message);
+                                } else if (!cp.equals(id)) {
+                                    message = "ChildNode has invalid parent id: '" + cp
+                                            + "' (instead of '" + id + "')";
+                                    log.error(message);
+                                }
+                            }
+                        }
                     }
                 }
                 if (message != null) {
@@ -330,21 +361,26 @@ public class ConsistencyCheckerImpl {
                 NodePropBundle parentBundle = pm.loadBundle(parentId);
 
                 if (parentBundle == null) {
-                    String message = "NodeState '" + id
-                            + "' references inexistent parent id '" + parentId
-                            + "'";
-                    log.error(message);
-                    addMessage(reports, id, message);
-                    orphaned.add(id);
-                    if (lostNFoundId != null) {
-                        bundle.setParentId(lostNFoundId);
-                        modifications.add(bundle);
+                    // double check whether we still exist and the parent is still the same
+                    bundle = pm.loadBundle(id);
+                    if (bundle != null) {
+                        if (parentId.equals(bundle.getParentId())) {
+                            String message = "NodeState '" + id
+                                    + "' references inexistent parent id '" + parentId
+                                    + "'";
+                            log.error(message);
+                            addMessage(reports, id, message);
+                            orphaned.add(id);
+                            if (lostNFoundId != null) {
+                                bundle.setParentId(lostNFoundId);
+                                modifications.add(bundle);
+                            }
+                        }
                     }
                 } else {
                     boolean found = false;
 
-                    for (NodePropBundle.ChildNodeEntry entry : parentBundle
-                            .getChildNodeEntries()) {
+                    for (NodePropBundle.ChildNodeEntry entry : parentBundle.getChildNodeEntries()) {
                         if (entry.getId().equals(id)) {
                             found = true;
                             break;
@@ -352,24 +388,31 @@ public class ConsistencyCheckerImpl {
                     }
 
                     if (!found) {
-                        String message = "NodeState '" + id
-                                + "' is not referenced by its parent node '"
-                                + parentId + "'";
-                        log.error(message);
-                        addMessage(reports, id, message);
+                        // double check whether we still exist and the parent is still the same
+                        bundle = pm.loadBundle(id);
+                        if (bundle != null) {
+                            if (parentId.equals(bundle.getParentId())) {
+                                String message = "NodeState '" + id
+                                        + "' is not referenced by its parent node '"
+                                        + parentId + "'";
+                                log.error(message);
+                                addMessage(reports, id, message);
 
-                        int l = (int) System.currentTimeMillis();
-                        int r = new Random().nextInt();
-                        int n = l + r;
-                        String nodeName = Integer.toHexString(n);
-                        parentBundle.addChildNodeEntry(
-                                NF.create("{}" + nodeName), id);
-                        log.info("NodeState '" + id
-                                + "' adds itself to its parent node '"
-                                + parentId + "' with a new name '" + nodeName
-                                + "'");
-                        modifications.add(parentBundle);
+                                int l = (int) System.currentTimeMillis();
+                                int r = new Random().nextInt();
+                                int n = l + r;
+                                String nodeName = Integer.toHexString(n);
+                                parentBundle.addChildNodeEntry(
+                                        NF.create("{}" + nodeName), id);
+                                log.info("NodeState '" + id
+                                        + "' adds itself to its parent node '"
+                                        + parentId + "' with a new name '" + nodeName
+                                        + "'");
+                                modifications.add(parentBundle);
+                            }
+                        }
                     }
+
                 }
             }
         } catch (ItemStateException e) {
