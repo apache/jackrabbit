@@ -683,7 +683,8 @@ public class ClusterNode implements Runnable,
 
                 log.debug("Stored record '{}' to Journal ({})", recordRevision, journalUpdateSize);
 
-                long updateSize = (Long)update.getAttribute(ATTRIBUTE_UPDATE_SIZE);
+                Object updateSizeValue = update.getAttribute(ATTRIBUTE_UPDATE_SIZE);
+                long updateSize = updateSizeValue != null? (Long)updateSizeValue : 0;
                 updateCount.compareAndSet(Integer.MAX_VALUE, 0);
 
                 auditLogger.info("[{}] {} {} ({})", new Object[]{updateCount.incrementAndGet(), 
