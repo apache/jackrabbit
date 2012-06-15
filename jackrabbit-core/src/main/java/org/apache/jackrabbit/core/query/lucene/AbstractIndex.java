@@ -21,7 +21,6 @@ import java.io.OutputStream;
 import java.io.PrintStream;
 import java.io.StringReader;
 import java.util.ArrayList;
-import java.util.BitSet;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
@@ -307,13 +306,6 @@ abstract class AbstractIndex {
             }
         }
         // if we get here there is no up-to-date read-only reader
-        // capture snapshot of deleted documents
-        BitSet deleted = new BitSet(modifiableReader.maxDoc());
-        for (int i = 0; i < modifiableReader.maxDoc(); i++) {
-            if (modifiableReader.isDeleted(i)) {
-                deleted.set(i);
-            }
-        }
         if (sharedReader == null) {
             // create new shared reader
             IndexReader reader = IndexReader.open(getDirectory(), null, true, termInfosIndexDivisor);
@@ -321,7 +313,8 @@ abstract class AbstractIndex {
                     reader, cache, initCache);
             sharedReader = new SharedIndexReader(cr);
         }
-        readOnlyReader = new ReadOnlyIndexReader(sharedReader, deleted, modCount);
+        readOnlyReader = new ReadOnlyIndexReader(sharedReader, 
+                modifiableReader.getDeletedDocs(), modCount);
         readOnlyReader.acquire();
         return readOnlyReader;
     }
