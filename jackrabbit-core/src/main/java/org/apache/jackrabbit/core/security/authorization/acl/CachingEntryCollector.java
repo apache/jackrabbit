@@ -43,78 +43,51 @@ class CachingEntryCollector extends EntryCollector {
      * nodeID (key). The map only contains an entry if the corresponding Node
      * is access controlled.
      */
-    private final Map<NodeId, Entries> cache;
-    private final Object monitor = new Object();
+    private final EntryCache cache;
 
     /**
      * Create a new instance.
-     *
+     * 
      * @param systemSession A system session.
      * @param rootID The id of the root node.
      * @throws RepositoryException If an error occurs.
      */
-    @SuppressWarnings("unchecked")    
     CachingEntryCollector(SessionImpl systemSession, NodeId rootID) throws RepositoryException {
         super(systemSession, rootID);
-
-        int maxsize = 5000;
-        String propname = "org.apache.jackrabbit.core.security.authorization.acl.CachingEntryCollector.maxsize";
-        try {
-            maxsize = Integer.parseInt(System.getProperty(propname,
-                    Integer.toString(maxsize)));
-        } catch (NumberFormatException ex) {
-            log.error("Parsing system property " + propname + " with value: "
-                    + System.getProperty(propname), ex);
-        }
-
-        log.info("Creating cache with max size of: " + maxsize);
-
-        cache = new GrowingLRUMap(1024, maxsize);
+        cache = new EntryCache();
     }
 
     @Override
     protected void close() {
         super.close();
-        synchronized (monitor) {
-            cache.clear();
-        }
+        cache.clear();
     }
 
     //-----------------------------------------------------< EntryCollector >---
     /**
      * @see EntryCollector#getEntries(org.apache.jackrabbit.core.NodeImpl)
      */
-    @Override    
+    @Override
     protected Entries getEntries(NodeImpl node) throws RepositoryException {
-        Entries entries;
         NodeId nodeId = node.getNodeId();
-        synchronized (monitor) {
-            entries = cache.get(nodeId);
-            if (entries == null) {
-                // fetch entries and update the cache
-                entries = updateCache(node);
-            } else {
-                log.debug("Cache hit for nodeId {}", nodeId);
-            }
+        Entries entries = cache.get(nodeId);
+        if (entries == null) {
+            // fetch entries and update the cache
+            entries = updateCache(node);
         }
         return entries;
     }
-    
+
     /**
      * @see EntryCollector#getEntries(org.apache.jackrabbit.core.id.NodeId)
      */
     @Override
     protected Entries getEntries(NodeId nodeId) throws RepositoryException {
-        Entries entries;
-        synchronized (monitor) {
-            entries = cache.get(nodeId);
-            if (entries == null) {
-                // fetch entries and update the cache
-                NodeImpl n = getNodeById(nodeId);
-                entries = updateCache(n);
-            } else {
-                log.debug("Cache hit for nodeId {}", nodeId);
-            }
+        Entries entries = cache.get(nodeId);
+        if (entries == null) {
+            // fetch entries and update the cache
+            NodeImpl n = getNodeById(nodeId);
+            entries = updateCache(n);
         }
         return entries;
     }
@@ -122,7 +95,7 @@ class CachingEntryCollector extends EntryCollector {
     /**
      * Read the entries defined for the specified node and update the cache
      * accordingly.
-     *
+     * 
      * @param node The target node
      * @return The list of entries present on the specified node or an empty list.
      * @throws RepositoryException If an error occurs.
@@ -130,31 +103,51 @@ class CachingEntryCollector extends EntryCollector {
     private Entries updateCache(NodeImpl node) throws RepositoryException {
         Entries entries = super.getEntries(node);
         if (!entries.isEmpty()) {
-            // find the next access control ancestor in the hierarchy
-            // 'null' indicates that there is no ac-controlled ancestor.
-            NodeId nextId = null;
-            NodeImpl n = node;            
-            while (nextId == null && !rootID.equals(n.getNodeId())) {
-                if (cache.containsKey(n.getNodeId())) {
-                    nextId = n.getNodeId();
-                } else if (cache.containsKey(n.getParentId())) {
-                    nextId = n.getParentId();
-                } else {
-                    n = (NodeImpl) n.getParent();
-                    if (hasEntries(n)) {
-                        nextId = n.getNodeId();
-                    } // else: not access controlled -> test next ancestors
-                }
-            }
-
             // adjust the 'nextId' to point to the next access controlled
             // ancestor node instead of the parent and remember the entries.
-            entries.setNextId(nextId);
+            entries.setNextId(getNextID(node));
             cache.put(node.getNodeId(), entries);
-
-            log.debug("Update cache for node {}: {}", node, entries);
         } // else: not access controlled -> ignore.
         return entries;
+    }
+
+    /**
+     * Find the next access control ancestor in the hierarchy 'null' indicates
+     * that there is no ac-controlled ancestor.
+     *
+     * @param node The target node for which the cache needs to be updated.
+     * @return The NodeId of the next access controlled ancestor in the hierarchy
+     * or null
+     */
+    private NodeId getNextID(NodeImpl node) throws RepositoryException {
+        NodeImpl n = node;
+        NodeId nextId = null;
+        while (nextId == null && !isRootId(n.getNodeId())) {
+            NodeId parentId = n.getParentId();
+            if (cache.containsKey(parentId)) {
+                nextId = parentId;
+            } else {
+                NodeImpl parent = (NodeImpl) n.getParent();
+                if (hasEntries(parent)) {
+                    nextId = parentId;
+                } else {
+                    // try next ancestor
+                    n = parent;
+                }
+            }
+        }
+        return nextId;
+    }
+
+    /**
+     * Returns {@code true} if the specified {@code nodeId} is the ID of the
+     * root node; false otherwise.
+     *
+     * @param nodeId The identifier of the node to be tested.
+     * @return {@code true} if the given id is the identifier of the root node.
+     */
+    private boolean isRootId(NodeId nodeId) {
+        return rootID.equals(nodeId);
     }
 
     /**
@@ -172,7 +165,7 @@ class CachingEntryCollector extends EntryCollector {
             return aclNode.hasNodes();
         }
 
-        // no acl defined here
+        // no ACL defined here
         return false;
     }
 
@@ -190,36 +183,134 @@ class CachingEntryCollector extends EntryCollector {
             }
             NodeId nodeId = (NodeId) key;
             int type = modifications.getType(nodeId);
-            synchronized (monitor) {
-                if ((type & POLICY_ADDED) == POLICY_ADDED) {
-                    // clear the complete cache since the nextAcNodeId may
-                    // have changed due to the added acl.
-                    log.debug("Policy added, clearing the cache");
-                    cache.clear();
-                    break; // no need for further processing.
-                } else if ((type & POLICY_REMOVED) == POLICY_REMOVED) {
-                    // clear the entry and change the entries having a nextID
-                    // pointing to this node.
-                    Entries ce = cache.remove(nodeId);
-                    if (ce != null) {
-                        NodeId nextId = ce.getNextId();
-                        for (Entries entry : cache.values()) {
-                            if (nodeId.equals(entry.getNextId())) {
-                                entry.setNextId(nextId);
-                            }
-                        }
-                    }
-                } else if ((type & POLICY_MODIFIED) == POLICY_MODIFIED) {
-                    // simply clear the cache entry -> reload upon next access.
-                    cache.remove(nodeId);
-                } else if ((type & MOVE) == MOVE) {
-                    // some sort of move operation that may affect the cache
-                    log.debug("Move operation, clearing the cache");
-                    cache.clear();
-                    break; // no need for further processing.
-                }
+            if ((type & POLICY_ADDED) == POLICY_ADDED) {
+                // clear the complete cache since the nextAcNodeId may
+                // have changed due to the added ACL.
+                log.debug("Policy added, clearing the cache");
+                cache.clear();
+                break; // no need for further processing.
+            } else if ((type & POLICY_REMOVED) == POLICY_REMOVED) {
+                // clear the entry and change the entries having a nextID
+                // pointing to this node.
+                cache.remove(nodeId, true);
+            } else if ((type & POLICY_MODIFIED) == POLICY_MODIFIED) {
+                // simply clear the cache entry -> reload upon next access.
+                cache.remove(nodeId, false);
+            } else if ((type & MOVE) == MOVE) {
+                // some sort of move operation that may affect the cache
+                log.debug("Move operation, clearing the cache");
+                cache.clear();
+                break; // no need for further processing.
             }
         }
         super.notifyListeners(modifications);
+    }
+
+    //--------------------------------------------------------------------------
+    /**
+     * A cache to lookup the ACEs defined on a given (access controlled)
+     * node. The internal map uses the ID of the node as key while the value
+     * consists of {@Entries} objects that not only provide the ACEs defined
+     * for that node but also the ID of the next access controlled parent node.
+     */
+    private class EntryCache {
+
+        private final Map<NodeId, Entries> cache;
+        private Entries rootEntries;
+
+        @SuppressWarnings("unchecked")
+        public EntryCache() {
+            int maxsize = 5000;
+            String propname = "org.apache.jackrabbit.core.security.authorization.acl.CachingEntryCollector.maxsize";
+            try {
+                maxsize = Integer.parseInt(System.getProperty(propname, Integer.toString(maxsize)));
+            } catch (NumberFormatException ex) {
+                log.debug("Parsing system property " + propname + " with value: " + System.getProperty(propname), ex);
+            }
+
+            log.info("Creating cache with max size of: " + maxsize);
+
+            cache = new GrowingLRUMap(1024, maxsize);
+        }
+
+        public boolean containsKey(NodeId id) {
+            if (isRootId(id)) {
+                return rootEntries != null;
+            } else {
+                synchronized (cache) {
+                    return cache.containsKey(id);
+                }
+            }
+        }
+
+        public void clear() {
+            rootEntries = null;
+            synchronized (cache) {
+                cache.clear();
+            }
+        }
+
+        public Entries get(NodeId id) {
+            Entries result;
+
+            if (isRootId(id)) {
+                result = rootEntries;
+            } else {
+                synchronized (cache) {
+                    result = cache.get(id);
+                }
+            }
+
+            if (result != null) {
+                log.debug("Cache hit for nodeId {}", id);
+            } else {
+                log.debug("Cache miss for nodeId {}", id);
+            }
+
+            return result;
+        }
+
+        public void put(NodeId id, Entries entries) {
+            log.debug("Updating cache for nodeId {}", id);
+
+            // fail early on potential cache corruption
+            if (id.equals(entries.getNextId())) {
+                throw new IllegalArgumentException("Trying to update cache entry for " + id + " with a circular reference");
+            }
+
+            if (isRootId(id)) {
+                rootEntries = entries;
+            } else {
+                synchronized (cache) {
+                    cache.put(id, entries);
+                }
+            }
+        }
+
+        public void remove(NodeId id, boolean adjustNextIds) {
+            log.debug("Removing nodeId {} from cache", id);
+            Entries result;
+            synchronized (cache) {
+                if (isRootId(id)) {
+                    result = rootEntries;
+                    rootEntries = null;
+                } else {
+                    result = cache.remove(id);
+                }
+
+                if (adjustNextIds && result != null) {
+                    NodeId nextId = result.getNextId();
+                    for (Entries entry : cache.values()) {
+                        if (id.equals(entry.getNextId())) {
+                            // fail early on potential cache corruption
+                            if (id.equals(nextId)) {
+                                throw new IllegalArgumentException("Trying to update cache entry for " + id + " with a circular reference");
+                            }
+                            entry.setNextId(nextId);
+                        }
+                    }
+                }
+            }
+        }
     }
 }
