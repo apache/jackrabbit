@@ -22,6 +22,7 @@ import org.apache.lucene.index.TermPositions;
 
 import java.io.IOException;
 import java.util.BitSet;
+import java.util.Collection;
 import java.util.Map;
 
 /**
@@ -36,7 +37,7 @@ class ReadOnlyIndexReader extends RefCountingIndexReader {
      * The deleted documents as initially read from the IndexReader passed
      * in the constructor of this class.
      */
-    private final BitSet deleted;
+    private BitSet deleted;
 
     /**
      * The version of the index reader from where the deleted BitSet was
@@ -93,10 +94,14 @@ class ReadOnlyIndexReader extends RefCountingIndexReader {
      *               info.
      */
     void updateDeletedDocs(CommittableIndexReader reader) {
-        int maxDoc = reader.maxDoc();
-        for (int i = 0; i < maxDoc; i++) {
-            if (reader.isDeleted(i)) {
-                deleted.set(i);
+        Collection<Integer> deletes = reader.getDeletedSince(deletedDocsVersion);
+        if (deletes == null) {
+            // full update needed
+            this.deleted = reader.getDeletedDocs();
+        } else {
+            // incremental update
+            for (Integer d : deletes) {
+                deleted.set(d);
             }
         }
         deletedDocsVersion = reader.getModificationCount();

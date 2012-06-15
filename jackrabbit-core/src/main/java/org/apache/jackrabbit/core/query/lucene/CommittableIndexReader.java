@@ -16,17 +16,28 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.BitSet;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
+
+import org.apache.lucene.index.CorruptIndexException;
 import org.apache.lucene.index.FilterIndexReader;
 import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.index.CorruptIndexException;
-
-import java.io.IOException;
 
 /**
  * Wraps an <code>IndexReader</code> and allows to commit changes without
  * closing the reader.
  */
 class CommittableIndexReader extends FilterIndexReader {
+
+    /**
+     * The maximum size of the delete history.
+     */
+    private static final int DELETE_HISTORY_SIZE = 1000;
 
     /**
      * A modification count on this index reader. Initialized with
@@ -36,6 +47,16 @@ class CommittableIndexReader extends FilterIndexReader {
     private volatile long modCount;
 
     /**
+     * The history of the most recent deletes.
+     */
+    private final List<Integer> deleteHistory = new LinkedList<Integer>();
+
+    /**
+    * The deleted docs for this index reader.
+    */
+    private final BitSet deletedDocs = new BitSet();
+
+    /**
      * Creates a new <code>CommittableIndexReader</code> based on <code>in</code>.
      *
      * @param in the <code>IndexReader</code> to wrap.
@@ -43,6 +64,12 @@ class CommittableIndexReader extends FilterIndexReader {
     CommittableIndexReader(IndexReader in) {
         super(in);
         modCount = in.getVersion();
+        int maxDocs = in.maxDoc();
+        for (int i = 0; i < maxDocs; i++) {
+            if (in.isDeleted(i)) {
+                deletedDocs.set(i);
+            }
+        }
     }
 
     //------------------------< FilterIndexReader >-----------------------------
@@ -55,6 +82,11 @@ class CommittableIndexReader extends FilterIndexReader {
     protected void doDelete(int n) throws CorruptIndexException, IOException {
         super.doDelete(n);
         modCount++;
+        if (deleteHistory.size() >= DELETE_HISTORY_SIZE) {
+            deleteHistory.remove(0);
+        }
+        deleteHistory.add(n);
+        deletedDocs.set(n);
     }
 
     //------------------------< additional methods >----------------------------
@@ -64,5 +96,45 @@ class CommittableIndexReader extends FilterIndexReader {
      */
     long getModificationCount() {
         return modCount;
+    }
+
+    /**
+     * Returns the document numbers of deleted nodes since the given
+     * <code>modCount</code>.
+     *
+     * @param modCount a modification count.
+     * @return document numbers of deleted nodes or <code>null</code> if this
+     *         index reader cannot provide those document number. e.g. modCount
+     *         is too far back in the past.
+     * @throws IllegalArgumentException if <code>modCount</code> is larger than
+     *                                  {@link #getModificationCount()}.
+     */
+    Collection<Integer> getDeletedSince(long modCount)
+            throws IllegalArgumentException {
+        if (modCount > this.modCount) {
+            throw new IllegalArgumentException("modCount: "
+                    + modCount + " > " + this.modCount);
+        }
+        if (modCount == this.modCount) {
+            return Collections.emptyList();
+        }
+        long num = this.modCount - modCount;
+        if (num > deleteHistory.size()) {
+            return null;
+        }
+        List<Integer> deletes = new ArrayList<Integer>((int) num);
+        for (Integer d : deleteHistory.subList((int) (deleteHistory.size() - num),
+                deleteHistory.size())) {
+            deletes.add(d);
+        }
+        return deletes;
+    }
+
+    /**
+     * Returns a copy of the deleted documents BitSet.
+     * @return the deleted documents of this index reader.
+     */
+    BitSet getDeletedDocs() {
+        return (BitSet) deletedDocs.clone();
     }
 }
