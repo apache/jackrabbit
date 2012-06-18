@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -44,6 +45,7 @@ import org.apache.jackrabbit.core.persistence.util.BLOBStore;
 import org.apache.jackrabbit.core.persistence.util.BundleBinding;
 import org.apache.jackrabbit.core.persistence.util.ErrorHandling;
 import org.apache.jackrabbit.core.persistence.util.FileSystemBLOBStore;
+import org.apache.jackrabbit.core.persistence.util.NodeInfo;
 import org.apache.jackrabbit.core.persistence.util.NodePropBundle;
 import org.apache.jackrabbit.core.persistence.util.Serializer;
 import org.apache.jackrabbit.core.state.ItemStateException;
@@ -495,6 +497,18 @@ public class InMemBundlePersistenceManager extends AbstractBundlePersistenceMana
         // ignore after and count parameters.
         List<NodeId> result = new ArrayList<NodeId>();
         result.addAll(bundleStore.keySet());
+        return result;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public Map<NodeId, NodeInfo> getAllNodeInfos(NodeId after, int maxCount) throws ItemStateException, RepositoryException {
+        List<NodeId> nodeIds = getAllNodeIds(after, maxCount);
+        Map<NodeId, NodeInfo> result = new LinkedHashMap<NodeId, NodeInfo>(nodeIds.size());
+        for (NodeId nodeId : nodeIds) {
+            result.put(nodeId, new NodeInfo(loadBundle(nodeId)));
+        }
         return result;
     }
 
