@@ -73,9 +73,12 @@ public class QueryStatImpl implements QueryStatCore {
         public synchronized void setMaxSize(int maxSize) {
             if (maxSize < this.maxSize) {
                 // shrink the queue
-                int delta = this.maxSize - maxSize;
+                int delta = super.size() - maxSize;
                 for (int i = 0; i < delta; i++) {
-                    poll();
+                    E t = poll();
+                    if (t == null) {
+                        break;
+                    }
                 }
             }
             this.maxSize = maxSize;
@@ -165,7 +168,7 @@ public class QueryStatImpl implements QueryStatCore {
     }
 
     public int getPopularQueriesQueueSize() {
-        return popularQueries.getMaxSize();
+        return popularQueries.getMaxSize() / POPULAR_QUEUE_MULTIPLIER;
     }
 
     public void setPopularQueriesQueueSize(int size) {
