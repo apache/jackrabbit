@@ -37,6 +37,7 @@ public class TestAll extends TestCase {
 
         suite.addTestSuite(RepositoryStatisticsImplTest.class);
         suite.addTestSuite(TimeSeriesRecorderTest.class);
+        suite.addTestSuite(QueryStatCoreTest.class);
 
         return suite;
     }

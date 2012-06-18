@@ -97,8 +97,8 @@ public class QueryStatDtoImpl implements QueryStatDto {
     @Override
     public String toString() {
         return "QueryStat [creationTime=" + creationTime + ", duration="
-                + durationMs + ", language=" + language + ", statement="
-                + statement + "]";
+                + durationMs + ", position " + position + ", language="
+                + language + ", statement=" + statement + "]";
     }
 
     public int getOccurrenceCount() {
