@@ -26,7 +26,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.jcr.RepositoryException;
 import javax.sql.DataSource;
@@ -43,6 +45,7 @@ import org.apache.jackrabbit.core.persistence.util.BLOBStore;
 import org.apache.jackrabbit.core.persistence.util.BundleBinding;
 import org.apache.jackrabbit.core.persistence.util.ErrorHandling;
 import org.apache.jackrabbit.core.persistence.util.FileSystemBLOBStore;
+import org.apache.jackrabbit.core.persistence.util.NodeInfo;
 import org.apache.jackrabbit.core.persistence.util.NodePropBundle;
 import org.apache.jackrabbit.core.persistence.util.Serializer;
 import org.apache.jackrabbit.core.state.ChangeLog;
@@ -141,6 +144,8 @@ public class BundleDbPersistenceManager
     protected String bundleDeleteSQL;
     protected String bundleSelectAllIdsFromSQL;
     protected String bundleSelectAllIdsSQL;
+    protected String bundleSelectAllBundlesFromSQL;
+    protected String bundleSelectAllBundlesSQL;
 
     // SQL statements for NodeReference management
     protected String nodeReferenceInsertSQL;
@@ -821,6 +826,58 @@ public class BundleDbPersistenceManager
     /**
      * {@inheritDoc}
      */
+    public synchronized Map<NodeId, NodeInfo> getAllNodeInfos(NodeId bigger, int maxCount) throws ItemStateException {
+        ResultSet rs = null;
+        try {
+            String sql = bundleSelectAllBundlesSQL;
+            NodeId lowId = null;
+            Object[] keys = new Object[0];
+            if (bigger != null) {
+                sql = bundleSelectAllBundlesFromSQL;
+                lowId = bigger;
+                keys = getKey(bigger);
+            }
+            if (getStorageModel() == SM_LONGLONG_KEYS && maxCount > 0) {
+                // get some more rows, in case the first row is smaller
+                // only required for SM_LONGLONG_KEYS
+                // probability is very low to get get the wrong first key, < 1 : 2^64
+                // see also bundleSelectAllIdsFrom SQL statement
+                maxCount += 10;
+            }
+            rs = conHelper.exec(sql, keys, false, maxCount);
+            Map<NodeId, NodeInfo> result = new LinkedHashMap<NodeId, NodeInfo>(maxCount);
+            while ((maxCount == 0 || result.size() < maxCount) && rs.next()) {
+                NodeId current;
+                if (getStorageModel() == SM_BINARY_KEYS) {
+                    current = new NodeId(rs.getBytes(1));
+                } else {
+                    long high = rs.getLong(1);
+                    long low = rs.getLong(2);
+                    current = new NodeId(high, low);
+                }
+                if (getStorageModel() == SM_LONGLONG_KEYS && lowId != null) {
+                    // skip the keys that are smaller or equal (see above, maxCount += 10)
+                    if (current.compareTo(lowId) <= 0) {
+                        continue;
+                    }
+                }
+                NodePropBundle bundle = readBundle(current, rs, getStorageModel() == SM_LONGLONG_KEYS ? 3 : 2);
+                NodeInfo nodeInfo = new NodeInfo(bundle);
+                result.put(nodeInfo.getId(), nodeInfo);
+            }
+            return result;
+        } catch (SQLException e) {
+            String msg = "getAllNodeIds failed.";
+            log.error(msg, e);
+            throw new ItemStateException(msg, e);
+        } finally {
+            DbUtility.close(rs);
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     @Override
     protected NodePropBundle loadBundle(NodeId id) throws ItemStateException {
         try {
@@ -1060,6 +1117,8 @@ public class BundleDbPersistenceManager
 
             bundleSelectAllIdsSQL = "select NODE_ID from " + schemaObjectPrefix + "BUNDLE ORDER BY NODE_ID";
             bundleSelectAllIdsFromSQL = "select NODE_ID from " + schemaObjectPrefix + "BUNDLE WHERE NODE_ID > ? ORDER BY NODE_ID";
+            bundleSelectAllBundlesSQL = "select NODE_ID, BUNDLE_DATA from " + schemaObjectPrefix + "BUNDLE ORDER BY NODE_ID";
+            bundleSelectAllBundlesFromSQL = "select NODE_ID, BUNDLE_DATA from " + schemaObjectPrefix + "BUNDLE WHERE NODE_ID > ? ORDER BY NODE_ID";
         } else {
             bundleInsertSQL = "insert into " + schemaObjectPrefix + "BUNDLE (BUNDLE_DATA, NODE_ID_HI, NODE_ID_LO) values (?, ?, ?)";
             bundleUpdateSQL = "update " + schemaObjectPrefix + "BUNDLE set BUNDLE_DATA = ? where NODE_ID_HI = ? and NODE_ID_LO = ?";
@@ -1083,6 +1142,16 @@ public class BundleDbPersistenceManager
                 "select NODE_ID_HI, NODE_ID_LO from " + schemaObjectPrefix + "BUNDLE"
                 + " WHERE (NODE_ID_HI >= ?) AND (? IS NOT NULL)"
                 + " ORDER BY NODE_ID_HI, NODE_ID_LO";
+
+            bundleSelectAllBundlesSQL = "select NODE_ID_HI, NODE_ID_LO, BUNDLE_DATA from " + schemaObjectPrefix
+                    + "BUNDLE ORDER BY NODE_ID_HI, NODE_ID_LO";
+            // need to use HI and LO parameters
+            // this is not the exact statement, but not all databases support WHERE (NODE_ID_HI, NODE_ID_LOW) >= (?, ?)
+            bundleSelectAllBundlesFromSQL =
+                    "select NODE_ID_HI, NODE_ID_LO, BUNDLE_DATA from " + schemaObjectPrefix + "BUNDLE"
+                            + " WHERE (NODE_ID_HI >= ?) AND (? IS NOT NULL)"
+                            + " ORDER BY NODE_ID_HI, NODE_ID_LO";
+
         }
 
     }

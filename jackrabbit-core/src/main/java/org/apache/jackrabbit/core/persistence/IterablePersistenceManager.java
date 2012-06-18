@@ -17,33 +17,53 @@
 package org.apache.jackrabbit.core.persistence;
 
 import java.util.List;
+import java.util.Map;
 
 import org.apache.jackrabbit.core.id.NodeId;
+import org.apache.jackrabbit.core.persistence.util.NodeInfo;
 import org.apache.jackrabbit.core.state.ItemStateException;
 
 import javax.jcr.RepositoryException;
 
 /**
- * The iterable persistence manager can return the list of node ids that are stored.
+ * The iterable persistence manager can return the list of {@link NodeId}s and
+ * {@link NodeInfo}s that are stored.
  * Possible applications are backup, migration (copying a workspace or repository),
- * and data store garbage collection.
+ * data store garbage collection, and consistency checking.
  */
 public interface IterablePersistenceManager extends PersistenceManager {
 
     /**
      * Get all node ids.
      * A typical application will call this method multiple times, where 'after'
-     * is the last row read. The maxCount parameter defines the maximum number of
+     * is the last row read previously. The maxCount parameter defines the maximum number of
      * node ids returned, 0 meaning no limit. The order of the node ids is specific for the
      * given persistent manager. Items that are added concurrently may not be included.
      *
      * @param after the lower limit, or null for no limit.
      * @param maxCount the maximum number of node ids to return, or 0 for no limit.
-     * @return a list of all bundles.
+     * @return a list of all node ids.
      * @throws ItemStateException if an error while loading occurs.
-     * @throws RepositoryException if a repository exception occurs
+     * @throws RepositoryException if a repository exception occurs.
      */
     List<NodeId> getAllNodeIds(NodeId after, int maxCount)
+            throws ItemStateException, RepositoryException;
+
+
+    /**
+     * Get all {@link NodeInfo}s.
+     * A typical application will call this method multiple time, where 'after'
+     * is the last row read previously. The maxCount parameter defines the maximum number of
+     * node ids returned, 0 meaning no limit. The order of the node ids is specific for the
+     * given persistence manager. Items that are added concurrently may not be included.
+     *
+     * @param after the lower limit, or null for no limit.
+     * @param maxCount the maximum number of node infos to return, or 0 for no limit.
+     * @return a list of all node infos.
+     * @throws ItemStateException if an error while loading occurs.
+     * @throws RepositoryException if a repository exception occurs.
+     */
+    Map<NodeId, NodeInfo> getAllNodeInfos(NodeId after, int maxCount)
             throws ItemStateException, RepositoryException;
 
 }

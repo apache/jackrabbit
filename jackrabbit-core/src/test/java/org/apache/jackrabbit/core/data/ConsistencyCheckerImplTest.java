@@ -29,6 +29,7 @@ import org.apache.jackrabbit.core.persistence.bundle.AbstractBundlePersistenceMa
 import org.apache.jackrabbit.core.persistence.bundle.ConsistencyCheckerImpl;
 import org.apache.jackrabbit.core.persistence.check.ConsistencyChecker;
 import org.apache.jackrabbit.core.persistence.util.BLOBStore;
+import org.apache.jackrabbit.core.persistence.util.NodeInfo;
 import org.apache.jackrabbit.core.persistence.util.NodePropBundle;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.NoSuchItemStateException;
@@ -219,6 +220,20 @@ public class ConsistencyCheckerImplTest extends TestCase {
                 }
             }
             return allNodeIds;
+        }
+
+        public Map<NodeId, NodeInfo> getAllNodeInfos(final NodeId after, final int maxCount) throws ItemStateException, RepositoryException {
+            Map<NodeId, NodeInfo> allNodeInfos = new LinkedHashMap<NodeId, NodeInfo>();
+            boolean add = after == null;
+            for (Map.Entry<NodeId, NodePropBundle> entry : bundles.entrySet()) {
+                if (add) {
+                    allNodeInfos.put(entry.getKey(), new NodeInfo(entry.getValue()));
+                }
+                if (!add) {
+                    add = entry.getKey().equals(after);
+                }
+            }
+            return allNodeInfos;
         }
 
         @Override
