@@ -18,10 +18,8 @@ package org.apache.jackrabbit.core.stats;
 
 import static javax.jcr.query.Query.JCR_SQL2;
 
-import javax.jcr.query.QueryManager;
+import java.util.concurrent.atomic.AtomicLong;
 
-import org.apache.jackrabbit.core.JackrabbitRepositoryStub;
-import org.apache.jackrabbit.core.RepositoryContext;
 import org.apache.jackrabbit.test.AbstractJCRTest;
 
 /**
@@ -30,27 +28,23 @@ import org.apache.jackrabbit.test.AbstractJCRTest;
 public class QueryStatCoreTest extends AbstractJCRTest {
 
     private QueryStatCore queryStat;
-    private QueryManager qm;
+
+    private AtomicLong token = new AtomicLong(System.currentTimeMillis());
 
     protected void setUp() throws Exception {
         super.setUp();
-        RepositoryContext context = JackrabbitRepositoryStub
-                .getRepositoryContext(superuser.getRepository());
-        queryStat = context.getStatManager().getQueryStat();
+        queryStat = new QueryStatImpl();
         queryStat.setEnabled(true);
-
-        qm = superuser.getWorkspace().getQueryManager();
     }
 
     protected void tearDown() throws Exception {
-        qm = null;
         super.tearDown();
     }
 
     private void runRandomQuery() throws Exception {
         String sql = "SELECT * FROM [nt:unstructured] as t where CONTAINS(t, '"
-                + System.currentTimeMillis() + "') ";
-        qm.createQuery(sql, JCR_SQL2).execute();
+                + token.getAndIncrement() + "') ";
+        queryStat.logQuery(JCR_SQL2, sql, 5);
     }
 
     public void testPopularQuery() throws Exception {
