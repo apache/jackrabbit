@@ -20,6 +20,8 @@ import javax.jcr.Node;
 import javax.jcr.Value;
 import javax.jcr.query.Query;
 import javax.jcr.query.QueryResult;
+
+import java.math.BigDecimal;
 import java.util.Calendar;
 
 /**
@@ -136,6 +138,38 @@ public class SimpleQueryTest extends AbstractQueryTest {
         q = superuser.getWorkspace().getQueryManager().createQuery(sql, Query.SQL);
         result = q.execute();
         checkResult(result, 3);
+    }
+
+    public void testBigDecimalField() throws Exception {
+        Node n1 = testRootNode.addNode("node1");
+        n1.setProperty(
+                "value",
+                superuser.getValueFactory().createValue(
+                        new BigDecimal(1.9928375d)));
+        Node n2 = testRootNode.addNode("node2");
+        n2.setProperty("value",
+                superuser.getValueFactory().createValue(new BigDecimal(0.0d)));
+        Node n3 = testRootNode.addNode("node3");
+        n3.setProperty(
+                "value",
+                superuser.getValueFactory().createValue(
+                        new BigDecimal(-1.42982475d)));
+        testRootNode.getSession().save();
+
+        String baseSql2 = "SELECT * FROM [nt:base] WHERE ISCHILDNODE(["
+                + testRoot + "]) AND value";
+        checkResult(qm.createQuery(baseSql2 + " > 0.1", Query.JCR_SQL2)
+                .execute(), new Node[] { n1 });
+        checkResult(
+                qm.createQuery(baseSql2 + " = CAST('0' AS DECIMAL)",
+                        Query.JCR_SQL2).execute(), new Node[] { n2 });
+        checkResult(
+                qm.createQuery(baseSql2 + " = CAST(0 AS DECIMAL)",
+                        Query.JCR_SQL2).execute(), new Node[] { n2 });
+        checkResult(qm.createQuery(baseSql2 + " > -0.1", Query.JCR_SQL2)
+                .execute(), new Node[] { n1, n2 });
+        checkResult(qm.createQuery(baseSql2 + " > -1.5", Query.JCR_SQL2)
+                .execute(), new Node[] { n1, n2, n3 });
     }
 
     public void testLongField() throws Exception {
