@@ -243,4 +243,16 @@ public class ChildAxisQueryTest extends AbstractQueryTest {
         executeSQLQuery(sql, new Node[] {foo});
     }
 
+    /**
+     * JCR-3337
+     */
+    public void testNotIsDescendantNodeQuery() throws Exception {
+        Node foo = testRootNode.addNode("foo");
+        testRootNode.getSession().save();
+        String sql = "SELECT a.* FROM [nt:base] as a WHERE isdescendantnode(a,'"
+                + testRootNode.getPath()
+                + "') and not isdescendantnode(a,'"
+                + foo.getPath() + "')";
+        executeSQL2Query(sql, new Node[] {});
+    }
 }
