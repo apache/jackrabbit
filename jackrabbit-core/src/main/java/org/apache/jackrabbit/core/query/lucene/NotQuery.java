@@ -185,6 +185,10 @@ class NotQuery extends Query {
             if (docNo == NO_MORE_DOCS) {
                 return docNo;
             }
+            if (contextScorer == null) {
+                docNo = NO_MORE_DOCS;
+                return docNo;
+            }
 
             if (docNo == -1) {
                 // get first doc of context scorer
@@ -223,6 +227,10 @@ class NotQuery extends Query {
         @Override
         public int advance(int target) throws IOException {
             if (docNo == NO_MORE_DOCS) {
+                return docNo;
+            }
+            if (contextScorer == null) {
+                docNo = NO_MORE_DOCS;
                 return docNo;
             }
 
