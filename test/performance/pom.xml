@@ -41,13 +41,13 @@
   <modules>
     <module>parent</module>
     <module>base</module>
-    <module>jackrabbit10</module>
+    <!--module>jackrabbit10</module>
     <module>jackrabbit11</module>
     <module>jackrabbit12</module>
     <module>jackrabbit13</module>
     <module>jackrabbit14</module>
     <module>jackrabbit15</module>
-    <module>jackrabbit16</module>
+    <module>jackrabbit16</module-->
     <module>jackrabbit20</module>
     <module>jackrabbit21</module>
     <module>jackrabbit22</module>
