@@ -774,7 +774,9 @@ public abstract class AbstractBundlePersistenceManager implements
         long time = System.nanoTime();
         log.debug("Storing bundle {}", bundle.getId());
         storeBundle(bundle);
-        auditLogger.debug("Stored bundle '{}' to PM ({})", bundle.getId(), bundle.getSize());
+        if (auditLogger.isDebugEnabled()) {
+        	auditLogger.debug("Stored bundle '{}' to PM ({})", bundle.getId(), bundle.getSize());
+        }
         writeDuration.addAndGet(System.nanoTime() - time);
         writeCounter.incrementAndGet();
 
