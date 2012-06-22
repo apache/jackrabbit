@@ -22,6 +22,8 @@ import static org.apache.jackrabbit.spi.commons.name.NameConstants.JCR_UUID;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -46,6 +48,7 @@ import org.apache.jackrabbit.core.persistence.check.ConsistencyChecker;
 import org.apache.jackrabbit.core.persistence.check.ConsistencyReport;
 import org.apache.jackrabbit.core.persistence.util.BLOBStore;
 import org.apache.jackrabbit.core.persistence.util.FileBasedIndex;
+import org.apache.jackrabbit.core.persistence.util.NodeInfo;
 import org.apache.jackrabbit.core.persistence.util.NodePropBundle;
 import org.apache.jackrabbit.core.persistence.util.NodePropBundle.PropertyEntry;
 import org.apache.jackrabbit.core.state.ChangeLog;
@@ -354,6 +357,18 @@ public abstract class AbstractBundlePersistenceManager implements
         } else {
             return state.getParentId();
         }
+    }
+
+    //------------------------------------------< IterablePersistenceManager >--
+
+    @Override
+    public Map<NodeId, NodeInfo> getAllNodeInfos(NodeId after, int maxCount)
+            throws ItemStateException, RepositoryException {
+        Map<NodeId, NodeInfo> infos = new LinkedHashMap<NodeId, NodeInfo>();
+        for (NodeId nodeId : getAllNodeIds(after, maxCount)) {
+            infos.put(nodeId, new NodeInfo(loadBundle(nodeId)));
+        }
+        return infos;
     }
 
     //----------------------------------------------------------------< spi >---

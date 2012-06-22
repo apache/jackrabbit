@@ -222,20 +222,6 @@ public class ConsistencyCheckerImplTest extends TestCase {
             return allNodeIds;
         }
 
-        public Map<NodeId, NodeInfo> getAllNodeInfos(final NodeId after, final int maxCount) throws ItemStateException, RepositoryException {
-            Map<NodeId, NodeInfo> allNodeInfos = new LinkedHashMap<NodeId, NodeInfo>();
-            boolean add = after == null;
-            for (Map.Entry<NodeId, NodePropBundle> entry : bundles.entrySet()) {
-                if (add) {
-                    allNodeInfos.put(entry.getKey(), new NodeInfo(entry.getValue()));
-                }
-                if (!add) {
-                    add = entry.getKey().equals(after);
-                }
-            }
-            return allNodeInfos;
-        }
-
         @Override
         protected NodePropBundle loadBundle(final NodeId id) {
             return bundles.get(id);
