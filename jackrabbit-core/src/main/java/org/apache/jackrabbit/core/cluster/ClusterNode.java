@@ -687,8 +687,10 @@ public class ClusterNode implements Runnable,
                 long updateSize = updateSizeValue != null? (Long)updateSizeValue : 0;
                 updateCount.compareAndSet(Integer.MAX_VALUE, 0);
 
-                auditLogger.info("[{}] {} {} ({})", new Object[]{updateCount.incrementAndGet(), 
+                if (auditLogger.isDebugEnabled()) {
+                	auditLogger.debug("[{}] {} {} ({})", new Object[]{updateCount.incrementAndGet(), 
                         record.getRevision(), path, updateSize});
+                }
 
             } catch (JournalException e) {
                 String msg = "Unable to commit log entry.";
@@ -901,8 +903,10 @@ public class ClusterNode implements Runnable,
                     + ":" + EventState.getCommonPath(eventStates, null);
 
             updateCount.compareAndSet(Integer.MAX_VALUE, 0);
-            auditLogger.info("[{}] {} {}", new Object[]{updateCount.incrementAndGet(), 
+            if (auditLogger.isDebugEnabled()) {
+            	auditLogger.debug("[{}] {} {}", new Object[]{updateCount.incrementAndGet(), 
                     record.getRevision(), path});
+            }
 
             listener.externalUpdate(record.getChanges(), eventStates,
                     record.getTimestamp(), record.getUserData());
