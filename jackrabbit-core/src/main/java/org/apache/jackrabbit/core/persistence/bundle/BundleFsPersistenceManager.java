@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.core.persistence.bundle;
 
-import org.apache.jackrabbit.core.persistence.util.NodeInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.commons.io.IOUtils;
@@ -43,11 +42,7 @@ import java.io.OutputStream;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
-
-import javax.jcr.RepositoryException;
 
 /**
  * This is a generic persistence manager that stores the {@link NodePropBundle}s
@@ -499,18 +494,6 @@ public class BundleFsPersistenceManager extends AbstractBundlePersistenceManager
             log.error(msg);
             throw new ItemStateException(msg, e);
         }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public Map<NodeId, NodeInfo> getAllNodeInfos(NodeId after, int maxCount) throws ItemStateException, RepositoryException {
-        List<NodeId> nodeIds = getAllNodeIds(after, maxCount);
-        Map<NodeId, NodeInfo> result = new LinkedHashMap<NodeId, NodeInfo>(nodeIds.size());
-        for (NodeId nodeId : nodeIds) {
-            result.put(nodeId, new NodeInfo(loadBundle(nodeId)));
-        }
-        return result;
     }
 
     /**

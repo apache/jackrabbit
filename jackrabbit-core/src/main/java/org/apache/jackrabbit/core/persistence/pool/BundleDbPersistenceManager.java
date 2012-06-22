@@ -826,6 +826,7 @@ public class BundleDbPersistenceManager
     /**
      * {@inheritDoc}
      */
+    @Override
     public synchronized Map<NodeId, NodeInfo> getAllNodeInfos(NodeId bigger, int maxCount) throws ItemStateException {
         ResultSet rs = null;
         try {

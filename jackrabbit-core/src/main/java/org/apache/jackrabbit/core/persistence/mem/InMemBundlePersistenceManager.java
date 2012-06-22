@@ -503,18 +503,6 @@ public class InMemBundlePersistenceManager extends AbstractBundlePersistenceMana
     /**
      * {@inheritDoc}
      */
-    public Map<NodeId, NodeInfo> getAllNodeInfos(NodeId after, int maxCount) throws ItemStateException, RepositoryException {
-        List<NodeId> nodeIds = getAllNodeIds(after, maxCount);
-        Map<NodeId, NodeInfo> result = new LinkedHashMap<NodeId, NodeInfo>(nodeIds.size());
-        for (NodeId nodeId : nodeIds) {
-            result.put(nodeId, new NodeInfo(loadBundle(nodeId)));
-        }
-        return result;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
     @Override
     protected NodePropBundle loadBundle(NodeId id) throws ItemStateException {
         if (!bundleStore.containsKey(id)) {
