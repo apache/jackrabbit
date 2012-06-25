@@ -488,11 +488,7 @@ public class JcrUtils {
      */
     public static Node getOrAddNode(Node parent, String name)
             throws RepositoryException {
-        if (parent.hasNode(name)) {
-            return parent.getNode(name);
-        } else {
-            return parent.addNode(name);
-        }
+        return getOrAddNode(parent, name, null);
     }
 
     /**
@@ -506,7 +502,8 @@ public class JcrUtils {
      * @see Node#isNodeType(String)
      * @param parent parent node
      * @param name name of the child node
-     * @param type type of the child node, ignored if the child already exists
+     * @param type type of the child node or {@code null},
+     *             ignored if the child already exists
      * @return the child node
      * @throws RepositoryException if the child node can not be accessed
      *                             or created
@@ -515,8 +512,10 @@ public class JcrUtils {
             throws RepositoryException {
         if (parent.hasNode(name)) {
             return parent.getNode(name);
-        } else {
+        } else if (type != null) {
             return parent.addNode(name, type);
+        } else {
+            return parent.addNode(name);
         }
     }
 
