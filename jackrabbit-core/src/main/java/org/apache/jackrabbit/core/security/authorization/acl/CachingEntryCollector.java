@@ -16,6 +16,12 @@
  */
 package org.apache.jackrabbit.core.security.authorization.acl;
 
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+
+import javax.jcr.RepositoryException;
+
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.cache.GrowingLRUMap;
@@ -23,9 +29,6 @@ import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.security.authorization.AccessControlModifications;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.jcr.RepositoryException;
-import java.util.Map;
 
 /**
  * <code>CachingEntryCollector</code> extends <code>EntryCollector</code> by
@@ -45,9 +48,12 @@ class CachingEntryCollector extends EntryCollector {
      */
     private final EntryCache cache;
 
+    private ConcurrentMap<NodeId, FutureEntries> futures = new ConcurrentHashMap<NodeId, FutureEntries>();
+    private final String strategy;
+
     /**
      * Create a new instance.
-     * 
+     *
      * @param systemSession A system session.
      * @param rootID The id of the root node.
      * @throws RepositoryException If an error occurs.
@@ -55,6 +61,13 @@ class CachingEntryCollector extends EntryCollector {
     CachingEntryCollector(SessionImpl systemSession, NodeId rootID) throws RepositoryException {
         super(systemSession, rootID);
         cache = new EntryCache();
+
+        // for testing purposes, see JCR-2950
+        String propname = "org.apache.jackrabbit.core.security.authorization.acl.CachingEntryCollector.strategy";
+        strategy = System.getProperty(propname, "T");
+        if (!("S".equals(strategy) || "T".equals(strategy) || "P".equals(strategy))) {
+            throw new RepositoryException("Invalid value " + strategy + " specified for system property " + propname);
+        }
     }
 
     @Override
@@ -95,12 +108,12 @@ class CachingEntryCollector extends EntryCollector {
     /**
      * Read the entries defined for the specified node and update the cache
      * accordingly.
-     * 
+     *
      * @param node The target node
      * @return The list of entries present on the specified node or an empty list.
      * @throws RepositoryException If an error occurs.
      */
-    private Entries updateCache(NodeImpl node) throws RepositoryException {
+    private Entries internalUpdateCache(NodeImpl node) throws RepositoryException {
         Entries entries = super.getEntries(node);
         if (!entries.isEmpty()) {
             // adjust the 'nextId' to point to the next access controlled
@@ -109,6 +122,77 @@ class CachingEntryCollector extends EntryCollector {
             cache.put(node.getNodeId(), entries);
         } // else: not access controlled -> ignore.
         return entries;
+    }
+
+    /**
+     * Update cache for the given node id
+     * @param node The target node
+     * @return The list of entries present on the specified node or an empty list.
+     * @throws RepositoryException
+     */
+    private Entries updateCache(NodeImpl node) throws RepositoryException {
+        if ("T".equals(strategy)) {
+            return throttledUpdateCache(node);
+        } else if ("S".equals(strategy)) {
+            return synchronizedUpdateCache(node);
+        } else if ("P".equals(strategy)) {
+            return parallelUpdateCache(node);
+        } else {
+            // panic
+            throw new RuntimeException("invalid value for updateCacheStrategy: " + strategy);
+        }
+    }
+
+    /**
+     * See {@link CachingEntryCollector#updateCache(NodeImpl)} ; this variant runs fully synchronized
+     */
+    synchronized private Entries synchronizedUpdateCache(NodeImpl node) throws RepositoryException {
+        return internalUpdateCache(node);
+    }
+
+    /**
+     * See {@link CachingEntryCollector#updateCache(NodeImpl)} ; this variant runs fully parallel
+     */
+    private Entries parallelUpdateCache(NodeImpl node) throws RepositoryException {
+        return internalUpdateCache(node);
+    }
+
+    /**
+     * See {@link CachingEntryCollector#updateCache(NodeImpl)} ; this variant blocks the current
+     * thread if a concurrent update for the same node id takes place
+     */
+    private Entries throttledUpdateCache(NodeImpl node) throws RepositoryException {
+        NodeId id = node.getNodeId();
+        FutureEntries fe = null;
+        FutureEntries nfe = new FutureEntries();
+        boolean found = true;
+
+        fe = futures.putIfAbsent(id, nfe);
+        if (fe == null) {
+            found = false;
+            fe = nfe;
+        }
+
+        if (found) {
+            // we have found a previous FutureEntries object, so use it
+            return fe.get();
+        } else {
+            // otherwise obtain result and when done notify waiting FutureEntries
+            try {
+                Entries e = internalUpdateCache(node);
+                futures.remove(id);
+                fe.setResult(e);
+                return e;
+            } catch (Throwable problem) {
+                futures.remove(id);
+                fe.setProblem(problem);
+                if (problem instanceof RepositoryException) {
+                    throw (RepositoryException)problem;
+                } else {
+                    throw new RuntimeException(problem);
+                }
+            }
+        }
     }
 
     /**
@@ -153,7 +237,7 @@ class CachingEntryCollector extends EntryCollector {
     /**
      * Evaluates if the given node is access controlled and holds a non-empty
      * rep:policy child node.
-     * 
+     *
      * @param n The node to test.
      * @return true if the specified node is access controlled and holds a
      * non-empty policy child node.
@@ -206,7 +290,46 @@ class CachingEntryCollector extends EntryCollector {
         super.notifyListeners(modifications);
     }
 
-    //--------------------------------------------------------------------------
+    /**
+     * A place holder for a yet to be computed {@link Entries} result 
+     */
+    private class FutureEntries {
+
+        private boolean ready = false;
+        private Entries result = null;
+        private Throwable problem = null;
+
+        synchronized public Entries get() throws RepositoryException {
+            while (!ready) {
+                try {
+                    wait();
+                } catch (InterruptedException e) {
+                }
+            }
+            if (problem != null) {
+                if (problem instanceof RepositoryException) {
+                    throw new RepositoryException(problem);
+                }
+                else {
+                    throw new RuntimeException(problem);
+                }
+            }
+            return result;
+        }
+
+        synchronized public void setResult(Entries e) {
+            result = e;
+            ready = true;
+            notifyAll();
+        }
+
+        synchronized public void setProblem(Throwable t) {
+            problem = t;
+            ready = true;
+            notifyAll();
+        }
+    }
+
     /**
      * A cache to lookup the ACEs defined on a given (access controlled)
      * node. The internal map uses the ID of the node as key while the value
