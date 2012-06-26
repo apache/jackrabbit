@@ -19,7 +19,6 @@ package org.apache.jackrabbit.performance;
 import org.apache.jackrabbit.core.query.lucene.join.QueryEngine;
 import org.testng.annotations.Test;
 
-
 public class PerformanceTest extends AbstractPerformanceTest {
 
     @Test
