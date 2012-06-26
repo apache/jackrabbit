@@ -21,7 +21,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import javax.jcr.NamespaceException;
 import javax.jcr.NodeIterator;
@@ -31,7 +30,6 @@ import javax.jcr.Value;
 import javax.jcr.ValueFactory;
 import javax.jcr.security.AccessControlEntry;
 import javax.jcr.security.AccessControlException;
-import javax.jcr.security.AccessControlManager;
 import javax.jcr.security.Privilege;
 
 import org.apache.jackrabbit.api.JackrabbitWorkspace;
@@ -41,7 +39,6 @@ import org.apache.jackrabbit.api.security.principal.PrincipalManager;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.id.NodeId;
-import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
 import org.apache.jackrabbit.core.security.authorization.AbstractACLTemplate;
 import org.apache.jackrabbit.core.security.authorization.AccessControlEntryImpl;
 import org.apache.jackrabbit.core.security.authorization.PrivilegeBits;
@@ -145,7 +142,7 @@ class ACLTemplate extends AbstractACLTemplate {
      */
     ACLTemplate(NodeImpl aclNode, String path) throws RepositoryException {
         super(path, (aclNode != null) ? aclNode.getSession().getValueFactory() : null);
-        if (aclNode == null || !NT_REP_ACL.equals(((NodeTypeImpl)aclNode.getPrimaryNodeType()).getQName())) {
+        if (aclNode == null || !NT_REP_ACL.equals(aclNode.getPrimaryNodeTypeName())) {
             throw new IllegalArgumentException("Node must be of type 'rep:ACL'");
         }
         SessionImpl sImpl = (SessionImpl) aclNode.getSession();
@@ -179,9 +176,8 @@ class ACLTemplate extends AbstractACLTemplate {
                     restrictions = Collections.singletonMap(jcrRepGlob, aceNode.getProperty(P_GLOB).getValue());
                 }
                 // create a new ACEImpl (omitting validation check)
-                Entry ace = new Entry(princ, privilegeMgr.getBits(privNames),
-                        NT_REP_GRANT_ACE.equals(((NodeTypeImpl) aceNode.getPrimaryNodeType()).getQName()),
-                        restrictions);
+                boolean isAllow = NT_REP_GRANT_ACE.equals(aceNode.getPrimaryNodeTypeName());
+                Entry ace = new Entry(princ, privilegeMgr.getBits(privNames), isAllow, restrictions);
                 // add the entry omitting any validation.
                 entries.add(ace);
             } catch (RepositoryException e) {

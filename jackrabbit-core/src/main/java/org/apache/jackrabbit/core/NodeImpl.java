@@ -595,8 +595,7 @@ public class NodeImpl extends ItemImpl implements Node, JackrabbitNode {
     protected void removeChildNode(NodeId childId) throws RepositoryException {
         // modify the state of 'this', i.e. the parent node
         NodeState thisState = (NodeState) getOrCreateTransientItemState();
-        ChildNodeEntry entry =
-                thisState.getChildNodeEntry(childId);
+        ChildNodeEntry entry = thisState.getChildNodeEntry(childId);
         if (entry == null) {
             String msg = "failed to remove child " + childId + " of " + this;
             log.debug(msg);
@@ -923,9 +922,6 @@ public class NodeImpl extends ItemImpl implements Node, JackrabbitNode {
      *         otherwise <code>false</code>
      */
     public boolean isNodeType(Name ntName) throws RepositoryException {
-        // check state of this instance
-        sanityCheck();
-
         // first do trivial checks without using type hierarchy
         Name primary = data.getNodeState().getNodeTypeName();
         if (ntName.equals(primary)) {
@@ -1357,6 +1353,33 @@ public class NodeImpl extends ItemImpl implements Node, JackrabbitNode {
      */
     public NodeId getNodeId() {
         return (NodeId) id;
+    }
+
+    /**
+     * Returns the name of the primary node type as exposed on the node state
+     * without retrieving the node type.
+     *
+     * @return the name of the primary node type.
+     */
+    public Name getPrimaryNodeTypeName() {
+        return data.getNodeState().getNodeTypeName();
+    }
+
+    /**
+     * Test if the given node is access controlled. The node is access
+     * controlled if it is of node type
+     * {@link org.apache.jackrabbit.core.security.authorization.AccessControlConstants#NT_REP_ACCESS_CONTROLLABLE "rep:AccessControllable"}
+     * and if it has a child node named
+     * {@link org.apache.jackrabbit.core.security.authorization.AccessControlConstants#N_POLICY}.
+     *
+     * @param node the node to be tested
+     * @return <code>true</code> if the node is access controlled and has a
+     * rep:policy child; <code>false</code> otherwise.
+     * @throws RepositoryException if an error occurs
+     */
+    public boolean isAccessControllable() throws RepositoryException {
+        return data.getNodeState().hasChildNodeEntry(NameConstants.REP_POLICY, 1)
+                    && isNodeType(NameConstants.REP_ACCESS_CONTROLLABLE);
     }
 
     /**
@@ -2268,6 +2291,9 @@ public class NodeImpl extends ItemImpl implements Node, JackrabbitNode {
      * {@inheritDoc}
      */
     public boolean isNodeType(String nodeTypeName) throws RepositoryException {
+        // check state of this instance
+        sanityCheck();
+
         try {
             return isNodeType(sessionContext.getQName(nodeTypeName));
         } catch (NameException e) {
