@@ -68,6 +68,8 @@ class CachingEntryCollector extends EntryCollector {
         if (!("S".equals(strategy) || "T".equals(strategy) || "P".equals(strategy))) {
             throw new RepositoryException("Invalid value " + strategy + " specified for system property " + propname);
         }
+
+        log.info("Cache Update Strategy: " + strategy);
     }
 
     @Override
@@ -309,8 +311,7 @@ class CachingEntryCollector extends EntryCollector {
             if (problem != null) {
                 if (problem instanceof RepositoryException) {
                     throw new RepositoryException(problem);
-                }
-                else {
+                } else {
                     throw new RuntimeException(problem);
                 }
             }
@@ -340,6 +341,7 @@ class CachingEntryCollector extends EntryCollector {
 
         private final Map<NodeId, Entries> cache;
         private Entries rootEntries;
+        private boolean specialCaseRoot = true;
 
         @SuppressWarnings("unchecked")
         public EntryCache() {
@@ -354,10 +356,15 @@ class CachingEntryCollector extends EntryCollector {
             log.info("Creating cache with max size of: " + maxsize);
 
             cache = new GrowingLRUMap(1024, maxsize);
+
+            String propsrname = "org.apache.jackrabbit.core.security.authorization.acl.CachingEntryCollector.scroot";
+            specialCaseRoot = Boolean.parseBoolean(System.getProperty(propsrname, "true"));
+
+            log.info("Root is special-cased: " + specialCaseRoot);
         }
 
         public boolean containsKey(NodeId id) {
-            if (isRootId(id)) {
+            if (specialCaseRoot && isRootId(id)) {
                 return rootEntries != null;
             } else {
                 synchronized (cache) {
@@ -376,7 +383,7 @@ class CachingEntryCollector extends EntryCollector {
         public Entries get(NodeId id) {
             Entries result;
 
-            if (isRootId(id)) {
+            if (specialCaseRoot && isRootId(id)) {
                 result = rootEntries;
             } else {
                 synchronized (cache) {
@@ -401,7 +408,7 @@ class CachingEntryCollector extends EntryCollector {
                 throw new IllegalArgumentException("Trying to update cache entry for " + id + " with a circular reference");
             }
 
-            if (isRootId(id)) {
+            if (specialCaseRoot && isRootId(id)) {
                 rootEntries = entries;
             } else {
                 synchronized (cache) {
@@ -414,7 +421,7 @@ class CachingEntryCollector extends EntryCollector {
             log.debug("Removing nodeId {} from cache", id);
             Entries result;
             synchronized (cache) {
-                if (isRootId(id)) {
+                if (specialCaseRoot && isRootId(id)) {
                     result = rootEntries;
                     rootEntries = null;
                 } else {
