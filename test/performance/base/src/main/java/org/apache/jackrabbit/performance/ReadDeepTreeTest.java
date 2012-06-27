@@ -35,7 +35,7 @@ public class ReadDeepTreeTest extends AbstractDeepTreeTest {
 
     @Override
     protected void runTest() throws Exception {
-        randomRead(testSession, allPaths, cnt);
+        randomRead(testSession, allPaths, cnt, true);
     }
 
     @Override

@@ -32,23 +32,29 @@ public class ConcurrentReadDeepTreeTest extends AbstractDeepTreeTest {
         super.beforeSuite();
 
         for (int i = 0; i < bgReaders; i++) {
-            addBackgroundJob(new RandomRead());
+            addBackgroundJob(new RandomRead(loginReader()));
         }
     }
 
     @Override
     protected void runTest() throws Exception {
-        RandomRead randomRead = new RandomRead();
+        Session testSession = getRepository().login();
+        RandomRead randomRead = new RandomRead(testSession);
         randomRead.run();
+        testSession.logout();
     }
 
     private class RandomRead implements Runnable {
 
-        private final Session testSession = loginReader();
+        private final Session testSession;
+
+        private RandomRead(Session testSession) {
+            this.testSession = testSession;
+        }
 
         public void run() {
             try {
-                randomRead(testSession, allPaths, cnt);
+                randomRead(testSession, allPaths, cnt, true);
             } catch (RepositoryException e) {
                 throw new RuntimeException(e);
             }

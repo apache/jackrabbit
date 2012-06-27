@@ -76,7 +76,7 @@ public abstract class AbstractDeepTreeTest extends AbstractTest {
         adminSession.logout();
     }
 
-    protected static void randomRead(Session testSession, List<String> allPaths, int cnt) throws RepositoryException {
+    protected static void randomRead(Session testSession, List<String> allPaths, int cnt, boolean doReport) throws RepositoryException {
         int nodeCnt = 0;
         int propertyCnt = 0;
         int noAccess = 0;
@@ -98,6 +98,8 @@ public abstract class AbstractDeepTreeTest extends AbstractTest {
             }
         }
         long end = System.currentTimeMillis();
-        System.out.println("Reading " + (cnt-noAccess) + " (Nodes: "+ nodeCnt +"; Properties: "+propertyCnt+") completed in " + (end - start));
+        if (doReport) {
+            System.out.println("Reading " + (cnt-noAccess) + " (Nodes: "+ nodeCnt +"; Properties: "+propertyCnt+") completed in " + (end - start));
+        }
     }
 }
