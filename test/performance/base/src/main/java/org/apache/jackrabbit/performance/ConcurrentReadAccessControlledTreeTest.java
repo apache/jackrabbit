@@ -77,23 +77,30 @@ public class ConcurrentReadAccessControlledTreeTest extends AbstractDeepTreeTest
         visitor.visit(testRoot);
 
         for (int i = 0; i < bgReaders; i++) {
-            addBackgroundJob(new RandomRead());
+            addBackgroundJob(new RandomRead(loginReader(), false));
         }
     }
 
     @Override
     protected void runTest() throws Exception {
-        RandomRead randomRead = new RandomRead();
+        Session testSession = getRepository().login();
+        RandomRead randomRead = new RandomRead(testSession, true);
         randomRead.run();
+        testSession.logout();
     }
 
     private class RandomRead implements Runnable {
 
-        private final Session testSession = loginReader();
+        private final Session testSession;
+        private final boolean doReport;
 
+        private RandomRead(Session testSession, boolean doReport) {
+            this.testSession = testSession;
+            this.doReport = doReport;
+        }
         public void run() {
             try {
-                randomRead(testSession, allPaths, cnt);
+                randomRead(testSession, allPaths, cnt, doReport);
             } catch (RepositoryException e) {
                 throw new RuntimeException(e);
             }
