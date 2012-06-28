@@ -121,7 +121,7 @@ class BLOBInDataStore extends BLOBFileValue {
         DataRecord rec = store.addRecord(in);
         DataIdentifier identifier = rec.getIdentifier();
         if (auditLogger.isDebugEnabled()) {
-            auditLogger.debug("Stored {} to DataStore ({})", identifier, rec.getLength());
+            auditLogger.debug("{} ({})", identifier, rec.getLength());
         }
         return new BLOBInDataStore(store, identifier);
     }
