@@ -790,7 +790,7 @@ public abstract class AbstractBundlePersistenceManager implements
         log.debug("Storing bundle {}", bundle.getId());
         storeBundle(bundle);
         if (auditLogger.isDebugEnabled()) {
-        	auditLogger.debug("Stored bundle '{}' to PM ({})", bundle.getId(), bundle.getSize());
+        	auditLogger.debug("{} ({})", bundle.getId(), bundle.getSize());
         }
         writeDuration.addAndGet(System.nanoTime() - time);
         writeCounter.incrementAndGet();
