@@ -27,6 +27,7 @@ import EDU.oswego.cs.dl.util.concurrent.SynchronousChannel;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Iterator;
+import javax.jcr.Binary;
 import javax.jcr.Credentials;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
@@ -46,6 +47,7 @@ public class GarbageCollectorTest extends AbstractJCRTest implements ScanEventLi
         final Session session = getHelper().getReadWriteSession();
 
         final DataStoreGarbageCollector gc = ((SessionImpl) session).createDataStoreGarbageCollector();
+        gc.setPersistenceManagerScan(false);
         final Exception[] ex = new Exception[1];
         gc.setMarkEventListener(new MarkEventListener() {
             boolean closed;
@@ -114,6 +116,7 @@ public class GarbageCollectorTest extends AbstractJCRTest implements ScanEventLi
         }.start();
         assertEquals("x", sync.take());
         DataStoreGarbageCollector gc = ((SessionImpl) session).createDataStoreGarbageCollector();
+        gc.setPersistenceManagerScan(false);
         gc.mark();
         gc.sweep();
         sync.put("deleted");
@@ -137,9 +140,11 @@ public class GarbageCollectorTest extends AbstractJCRTest implements ScanEventLi
 
         root.addNode("node1");
         Node node2 = root.addNode("node2");
-        Node n = node2.addNode("nodeWithBlob");
+        Node n = node2.addNode("nodeWithBlob").addNode("sub");
         ValueFactory vf = session.getValueFactory();
-        n.setProperty("test", vf.createBinary(new RandomInputStream(10, 1000)));
+        Binary b = vf.createBinary(new RandomInputStream(20, 1000));
+        n.setProperty("test", b);
+        session.save();
         n = node2.addNode("nodeWithTemporaryBlob");
         n.setProperty("test", vf.createBinary(new RandomInputStream(11, 1000)));
         session.save();
@@ -148,6 +153,9 @@ public class GarbageCollectorTest extends AbstractJCRTest implements ScanEventLi
         session.save();
 
         GarbageCollector gc = ((SessionImpl)session).createDataStoreGarbageCollector();
+        gc.getDataStore().clearInUse();
+        gc.setPersistenceManagerScan(false);
+        gc.setMarkEventListener(this);
 
         if (gc.getDataStore() instanceof FileDataStore) {
             // make sure the file is old (access time resolution is 2 seconds)
@@ -158,12 +166,18 @@ public class GarbageCollectorTest extends AbstractJCRTest implements ScanEventLi
         gc.mark();
         int count = listIdentifiers(gc);
         LOG.debug("stop scanning; currently " + count + " identifiers");
-        gc.stopScan();
         LOG.debug("deleting...");
         gc.getDataStore().clearInUse();
         assertTrue(gc.sweep() > 0);
         int count2 = listIdentifiers(gc);
         assertEquals(count - 1, count2);
+
+        // verify the node was moved, and that the binary is still there
+        n = root.getNode("node1").getNode("nodeWithBlob").getNode("sub");
+        b = n.getProperty("test").getValue().getBinary();
+        InputStream in = b.getStream();
+        InputStream in2 = new RandomInputStream(20, 1000);
+        verifyInputStream(in, in2);
 
         deleteMyNodes();
 
@@ -173,6 +187,8 @@ public class GarbageCollectorTest extends AbstractJCRTest implements ScanEventLi
     private void runGC(Session session, boolean all) throws Exception {
         GarbageCollector gc = ((SessionImpl)session).createDataStoreGarbageCollector();
         gc.setMarkEventListener(this);
+        gc.setPersistenceManagerScan(false);
+
         if (gc.getDataStore() instanceof FileDataStore) {
             // make sure the file is old (access time resolution is 2 seconds)
             Thread.sleep(2000);
@@ -219,6 +235,14 @@ public class GarbageCollectorTest extends AbstractJCRTest implements ScanEventLi
 
         InputStream in = n.getProperty("test").getBinary().getStream();
         InputStream in2 = new RandomInputStream(10, 1000);
+        verifyInputStream(in, in2);
+
+        deleteMyNodes();
+
+        s2.logout();
+    }
+
+    private void verifyInputStream(InputStream in, InputStream in2) throws IOException {
         while (true) {
             int a = in.read();
             int b = in2.read();
@@ -228,9 +252,6 @@ public class GarbageCollectorTest extends AbstractJCRTest implements ScanEventLi
             }
         }
 
-        deleteMyNodes();
-
-        s2.logout();
     }
 
     public void afterScanning(Node n) throws RepositoryException {
