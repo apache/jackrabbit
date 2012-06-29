@@ -382,7 +382,7 @@ public class InMemBundlePersistenceManager extends AbstractBundlePersistenceMana
         }
         super.init(context);
         // initialize mem stores
-        bundleStore = new HashMap<NodeId, byte[]>(initialCapacity, loadFactor);
+        bundleStore = new LinkedHashMap<NodeId, byte[]>(initialCapacity, loadFactor);
         refsStore = new HashMap<NodeId, byte[]>(initialCapacity, loadFactor);
 
         // Choose a FileSystem for the BlobStore based on whether data is persistent or not 
@@ -492,9 +492,19 @@ public class InMemBundlePersistenceManager extends AbstractBundlePersistenceMana
      * {@inheritDoc}
      */
     public List<NodeId> getAllNodeIds(NodeId after, int maxCount) throws ItemStateException, RepositoryException {
-        // ignore after and count parameters.
-        List<NodeId> result = new ArrayList<NodeId>();
-        result.addAll(bundleStore.keySet());
+        final List<NodeId> result = new ArrayList<NodeId>();
+        boolean add = after == null;
+        int count = 0;
+        for (NodeId nodeId : bundleStore.keySet()) {
+            if (add) {
+                result.add(nodeId);
+                if (++count == maxCount) {
+                    break;
+                }
+            } else {
+                add = nodeId.equals(after);
+            }
+        }
         return result;
     }
 
