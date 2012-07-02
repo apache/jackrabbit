@@ -35,7 +35,7 @@ import org.apache.jackrabbit.core.security.principal.EveryonePrincipal;
  */
 public class ConcurrentReadAccessControlledTreeTest extends AbstractDeepTreeTest {
 
-    private int bgReaders = 50;
+    private int bgReaders = 20;
     private int cnt = 10000;
 
     @Override
