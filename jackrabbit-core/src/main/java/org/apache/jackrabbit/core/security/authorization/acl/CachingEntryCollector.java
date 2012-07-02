@@ -50,6 +50,7 @@ class CachingEntryCollector extends EntryCollector {
 
     private ConcurrentMap<NodeId, FutureEntries> futures = new ConcurrentHashMap<NodeId, FutureEntries>();
     private final String strategy;
+    private final boolean cacheNoAcl;
 
     /**
      * Create a new instance.
@@ -70,6 +71,11 @@ class CachingEntryCollector extends EntryCollector {
         }
 
         log.info("Cache Update Strategy: " + strategy);
+
+        propname = "org.apache.jackrabbit.core.security.authorization.acl.CachingEntryCollector.cacheNoACL";
+        cacheNoAcl = Boolean.parseBoolean(System.getProperty(propname, "false"));
+
+        log.info("Caching entries with no ACLs: " + cacheNoAcl);
     }
 
     @Override
@@ -117,7 +123,7 @@ class CachingEntryCollector extends EntryCollector {
      */
     private Entries internalUpdateCache(NodeImpl node) throws RepositoryException {
         Entries entries = super.getEntries(node);
-        if (!entries.isEmpty()) {
+        if (cacheNoAcl || !entries.isEmpty()) {
             // adjust the 'nextId' to point to the next access controlled
             // ancestor node instead of the parent and remember the entries.
             entries.setNextId(getNextID(node));
