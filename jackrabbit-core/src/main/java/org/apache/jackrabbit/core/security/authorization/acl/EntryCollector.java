@@ -139,7 +139,7 @@ public class EntryCollector extends AccessControlObserver implements AccessContr
             NodeImpl root = (NodeImpl) systemSession.getRootNode();
             if (ACLProvider.isRepoAccessControlled(root)) {
                 NodeImpl aclNode = root.getNode(N_REPO_POLICY);
-                filterEntries(filter, new ACLTemplate(aclNode).getEntries(), userAces, groupAces);
+                filterEntries(filter, new ACLTemplate(aclNode, null).getEntries(), userAces, groupAces);
             }
         } else {
             filterEntries(filter, getEntries(node).getACEs(), userAces, groupAces);
@@ -189,7 +189,7 @@ public class EntryCollector extends AccessControlObserver implements AccessContr
         if (ACLProvider.isAccessControlled(node)) {
             // collect the aces of that node.
             NodeImpl aclNode = node.getNode(N_POLICY);
-            aces = new ACLTemplate(aclNode).getEntries();
+            aces = new ACLTemplate(aclNode, node.getPath()).getEntries();
         } else {
             // not access controlled
             aces = Collections.emptyList();

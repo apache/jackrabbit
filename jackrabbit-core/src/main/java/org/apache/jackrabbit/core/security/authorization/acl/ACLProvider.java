@@ -354,19 +354,15 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
     }
 
     /**
-     * Test if the given node is access controlled. The node is access
-     * controlled if it is of node type
-     * {@link AccessControlConstants#NT_REP_ACCESS_CONTROLLABLE "rep:AccessControllable"}
-     * and if it has a child node named
-     * {@link AccessControlConstants#N_POLICY}.
+     * Test if the given node is access controlled.
      *
      * @param node the node to be tested
-     * @return <code>true</code> if the node is access controlled and has a
-     * rep:policy child; <code>false</code> otherwise.
+     * @return <code>true</code> if the node is access controlled.
      * @throws RepositoryException if an error occurs
+     * @see org.apache.jackrabbit.core.NodeImpl#isAccessControllable()
      */
     static boolean isAccessControlled(NodeImpl node) throws RepositoryException {
-        return node.hasNode(N_POLICY) && node.isNodeType(NT_REP_ACCESS_CONTROLLABLE);
+        return node.isAccessControllable();
     }
 
 
