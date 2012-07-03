@@ -418,6 +418,7 @@ public class GarbageCollector implements DataStoreGarbageCollector {
 
         void stop() throws RepositoryException {
             manager.removeEventListener(this);
+            session.logout();
         }
 
         public void onEvent(EventIterator events) {
