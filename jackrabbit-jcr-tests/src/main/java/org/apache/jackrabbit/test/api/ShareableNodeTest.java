@@ -152,8 +152,9 @@ public class ShareableNodeTest extends AbstractJCRTest {
         Node b2 = shared[1];
 
         // verify paths of nodes b1/b2 in shared set
-        assertEquals("/testroot/a1/b1", b1.getPath());
-        assertEquals("/testroot/a2/b2", b2.getPath());
+        String testRootNodePath = testRootNode.getPath();
+        assertEquals(testRootNodePath + "/a1/b1", b1.getPath());
+        assertEquals(testRootNodePath + "/a2/b2", b2.getPath());
     }
 
     /**
