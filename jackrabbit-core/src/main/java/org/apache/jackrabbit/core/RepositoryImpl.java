@@ -1391,7 +1391,7 @@ public class RepositoryImpl extends AbstractRepository
         PersistenceManager pm = vm.getPersistenceManager();
         pmList.add(pm);
         String[] wspNames = getWorkspaceNames();
-        Session[] sessions = new Session[wspNames.length];
+        SessionImpl[] sessions = new SessionImpl[wspNames.length];
         for (int i = 0; i < wspNames.length; i++) {
             String wspName = wspNames[i];
             WorkspaceInfo wspInfo = getWorkspaceInfo(wspName);

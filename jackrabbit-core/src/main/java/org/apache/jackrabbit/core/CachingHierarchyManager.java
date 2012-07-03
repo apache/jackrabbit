@@ -97,6 +97,16 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
     private boolean consistencyCheckEnabled;
 
     /**
+     * Log interval for item state exceptions.
+     */
+    private static final int ITEM_STATE_EXCEPTION_LOG_INTERVAL_MILLIS = 60 * 1000;
+
+    /**
+     * Last time-stamp item state exception was logged with a stacktrace. 
+     */
+    private long itemStateExceptionLogTimestamp = 0;
+
+    /**
      * Create a new instance of this class.
      *
      * @param rootNodeId   root node id
@@ -151,8 +161,9 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
         try {
             return resolvePath(elements, element.getDepth() + 1, entry.getId(), typesAllowed);
         } catch (ItemStateException e) {
-            String msg = "failed to retrieve state of intermediary node";
-            log.debug(msg);
+            String msg = "failed to retrieve state of intermediary node for entry: " 
+                    + entry.getId() + ", path: " + path.getString();
+            logItemStateException(msg, e);
             throw new RepositoryException(msg, e);
         }
     }
@@ -829,6 +840,22 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
             String msg = "PathMap element and cached element count don't match (" +
                 counter.count + " != " + elementsInCache + ")";
             throw new IllegalStateException(msg);
+        }
+    }
+
+    /**
+     * Helper method to log item state exception with stack trace every so often.
+     * 
+     * @param logMessage log message
+     * @param e item state exception
+     */
+    private void logItemStateException(String logMessage, ItemStateException e) {
+        long now = System.currentTimeMillis();
+        if ((now - itemStateExceptionLogTimestamp) >= ITEM_STATE_EXCEPTION_LOG_INTERVAL_MILLIS) {
+            itemStateExceptionLogTimestamp = now;
+            log.debug(logMessage, e);
+        } else {
+            log.debug(logMessage);
         }
     }
 
