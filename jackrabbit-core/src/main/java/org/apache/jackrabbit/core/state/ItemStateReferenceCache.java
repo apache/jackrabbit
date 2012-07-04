@@ -172,10 +172,11 @@ public class ItemStateReferenceCache implements ItemStateCache {
         ItemId id = state.getId();
         Map<ItemId, ItemState> segment = getSegment(id);
         synchronized (segment) {
-            if (segment.containsKey(id)) {
+            ItemState s = segment.put(id, state);
+            // overwriting the same instance is OK
+            if (s != null && s != state) {
                 log.warn("overwriting cached entry " + id);
             }
-            segment.put(id, state);
         }
     }
 
