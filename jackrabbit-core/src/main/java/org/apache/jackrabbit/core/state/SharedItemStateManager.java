@@ -787,6 +787,17 @@ public class SharedItemStateManager
 
             ISMLocking.ReadLock readLock = null;
             try {
+                // make sure new item states are present/referenced in cache
+                // we do this before the lock is downgraded to a read lock
+                // because then other threads will be able to read from
+                // this SISM again and potentially read an added item state
+                // before the ones here are put into the cache (via
+                // shared.persisted()). See JCR-3345
+                for (ItemState state : shared.addedStates()) {
+                    state.setStatus(ItemState.STATUS_EXISTING);
+                    cache.cache(state);
+                }
+
                 // downgrade to read lock
                 readLock = writeLock.downgrade();
                 writeLock = null;
