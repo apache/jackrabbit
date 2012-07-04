@@ -18,6 +18,7 @@ package org.apache.jackrabbit.core.query.lucene;
 
 import org.apache.jackrabbit.core.SessionImpl;
 
+import javax.jcr.ItemNotFoundException;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import java.io.IOException;
@@ -99,6 +100,8 @@ public class ChildNodesQueryHits extends AbstractQueryHits {
             try {
                 Node parent = session.getNodeById(nextParent.getNodeId());
                 childHits = new NodeTraversingQueryHits(parent, false, 1);
+            } catch (ItemNotFoundException e) {
+                // access denied to node, will just skip it
             } catch (RepositoryException e) {
                 throw Util.createIOException(e);
             }
