@@ -1079,8 +1079,7 @@ public class ShareableNodeTest extends AbstractJCRTest {
     }
 
     /**
-     * Remove mix:shareable from a shareable node. This is unsupported in
-     * Jackrabbit (6.13.22).
+     * Remove mix:shareable from a shareable node.
      */
     public void testRemoveMixin() throws Exception {
         // setup parent node and first child
@@ -1090,15 +1089,65 @@ public class ShareableNodeTest extends AbstractJCRTest {
 
         // add mixin
         ensureMixinType(b, mixShareable);
-        b.save();
+        b.getSession().save();
 
+        // Removing the mixin will either succeed or will fail with a
+        // ConstraintViolationException
+        // (per Section 14.15 of JSR-283 specification)
         try {
             // remove mixin
             b.removeMixin(mixShareable);
-            b.save();
-            fail("Removing mix:shareable should fail.");
+            b.getSession().save();
+            // If this happens, then b shouldn't be shareable anymore ...
+            assertFalse(b.isNodeType(mixShareable));
+        } catch (ConstraintViolationException e) {
+            // one possible outcome if removing 'mix:shareable' isn't supported
         } catch (UnsupportedRepositoryOperationException e) {
-            // expected
+            // also possible if the implementation doesn't support this
+            // capability
+        }
+    }
+
+    /**
+     * Remove mix:shareable from a shareable node that has 2 nodes in the shared set. 
+     */
+    public void testRemoveMixinFromSharedNode() throws Exception {
+        // setup parent nodes and first child
+        Node a1 = testRootNode.addNode("a1");
+        Node a2 = testRootNode.addNode("a2");
+        Node b1 = a1.addNode("b1");
+        testRootNode.getSession().save();
+
+        // add mixin
+        ensureMixinType(b1, mixShareable);
+        b1.getSession().save();
+
+        // clone
+        Workspace workspace = b1.getSession().getWorkspace();
+        workspace.clone(workspace.getName(), b1.getPath(), a2.getPath() + "/b2", false);
+
+        Node[] shared = getSharedSet(b1);
+        assertEquals(2, shared.length);
+        b1 = shared[0];
+        Node b2 = shared[1];
+        assertTrue(b2.isSame(b1));
+
+        // Removing the mixin will either succeed or will fail with a
+        // ConstraintViolationException
+        // (per Section 14.15 of JSR-283 specification)
+        try {
+            // remove mixin
+            b1.removeMixin(mixShareable);
+            b1.getSession().save();
+            // If this happens, then b1 shouldn't be shareable anymore
+            // ...
+            assertFalse(b1.isNodeType(mixShareable));
+            assertFalse(b2.isSame(b1));
+        } catch (ConstraintViolationException e) {
+            // one possible outcome if removing 'mix:shareable' isn't supported
+        } catch (UnsupportedRepositoryOperationException e) {
+            // also possible if the implementation doesn't support this
+            // capability
         }
     }
 
