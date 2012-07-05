@@ -69,7 +69,7 @@ public class SQLPathTest extends AbstractQueryTest {
 
     /**
      * Tests if &lt;somepath>/% returns the descendants of &lt;somepath>.
-     * @throws NotExecutableException 
+     * @throws NotExecutableException
      */
     public void testDescendantTestRoot() throws RepositoryException, NotExecutableException {
         String sql = getStatement(testRoot + "/%");
@@ -79,7 +79,7 @@ public class SQLPathTest extends AbstractQueryTest {
     /**
      * Tests if &lt;somepath>/% returns no nodes if node at &lt;somepath>
      * is a leaf.
-     * @throws NotExecutableException 
+     * @throws NotExecutableException
      */
     public void testDescendantLeaf() throws RepositoryException, NotExecutableException {
         // find leaf
@@ -95,7 +95,7 @@ public class SQLPathTest extends AbstractQueryTest {
      * Tests if &lt;somepath>/%/&lt;nodename> OR &lt;somepath>/&lt;nodename>
      * returns nodes with name &lt;nodename> which are descendants of
      * node at <code>testroot</code>.
-     * @throws NotExecutableException 
+     * @throws NotExecutableException
      */
     public void testDescendantSelfTestRoot() throws RepositoryException, NotExecutableException {
         // get first node which is two levels deeper than node at testroot
@@ -124,11 +124,14 @@ public class SQLPathTest extends AbstractQueryTest {
 
     /**
      * Tests if /% AND NOT /%/% returns the child nodes of the root node.
-     * @throws NotExecutableException 
+     * @throws NotExecutableException
      */
     public void testChildAxisRoot() throws RepositoryException, NotExecutableException {
         String sql = getStatement("/%");
-        sql += " AND NOT " + jcrPath + " LIKE '/%/%'";
+        // need to exclude the root node explicitly (using jcr:path <> '/')
+        // as the specification allows to not return it even if using jcr:path LIKE '/%'
+        // see also JCR specification, section 8.5.2.2 ("Pseudo-property jcr:path")
+        sql += " AND NOT " + jcrPath + " LIKE '/%/%' AND " + jcrPath + " <> '/'";
         Node[] nodes = toArray(session.getRootNode().getNodes());
         executeSqlQuery(session, sql, nodes);
     }
@@ -136,7 +139,7 @@ public class SQLPathTest extends AbstractQueryTest {
     /**
      * Tests if &lt;somepath>/% AND NOT &lt;somepath>/%/% returns the child
      * nodes of node at &lt;somepath>.
-     * @throws NotExecutableException 
+     * @throws NotExecutableException
      */
     public void testChildAxisTestRoot() throws RepositoryException, NotExecutableException {
         String sql = getStatement(testRoot + "/%");
@@ -148,7 +151,7 @@ public class SQLPathTest extends AbstractQueryTest {
     /**
      * Tests if &lt;somepath>/% AND NOT &lt;somepath>/%/% returns no nodes
      * if the node at &lt;somepath> is a leaf.
-     * @throws NotExecutableException 
+     * @throws NotExecutableException
      */
     public void testChildAxisLeaf() throws RepositoryException, NotExecutableException {
         // find leaf
@@ -179,7 +182,7 @@ public class SQLPathTest extends AbstractQueryTest {
      * @return descendants of <code>node</code>.
      * @throws RepositoryException if an error occurs.
      */
-    private Node[] getDescendants(final Node node) throws RepositoryException {
+    private static Node[] getDescendants(final Node node) throws RepositoryException {
         final List<Node> descendants = new ArrayList<Node>();
 
         node.accept(new TraversingItemVisitor.Default() {
