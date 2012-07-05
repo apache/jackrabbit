@@ -139,6 +139,12 @@ class NotQuery extends Query {
         public Scorer scorer(IndexReader reader, boolean scoreDocsInOrder,
                 boolean topScorer) throws IOException {
             contextScorer = context.weight(searcher).scorer(reader, scoreDocsInOrder, topScorer);
+            if (contextScorer == null) {
+                // context query does not match any node
+                // the inverse is to match all nodes
+                return new MatchAllDocsQuery().createWeight(searcher).scorer(
+                        reader, scoreDocsInOrder, topScorer);
+            }
             return new NotQueryScorer(reader);
         }
 
@@ -185,10 +191,6 @@ class NotQuery extends Query {
             if (docNo == NO_MORE_DOCS) {
                 return docNo;
             }
-            if (contextScorer == null) {
-                docNo = NO_MORE_DOCS;
-                return docNo;
-            }
 
             if (docNo == -1) {
                 // get first doc of context scorer
@@ -227,10 +229,6 @@ class NotQuery extends Query {
         @Override
         public int advance(int target) throws IOException {
             if (docNo == NO_MORE_DOCS) {
-                return docNo;
-            }
-            if (contextScorer == null) {
-                docNo = NO_MORE_DOCS;
                 return docNo;
             }
 

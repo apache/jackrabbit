@@ -253,6 +253,6 @@ public class ChildAxisQueryTest extends AbstractQueryTest {
                 + testRootNode.getPath()
                 + "') and not isdescendantnode(a,'"
                 + foo.getPath() + "')";
-        executeSQL2Query(sql, new Node[] {});
+        executeSQL2Query(sql, new Node[] {foo});
     }
 }
