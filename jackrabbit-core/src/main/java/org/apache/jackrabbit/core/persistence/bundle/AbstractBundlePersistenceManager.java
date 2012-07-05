@@ -118,6 +118,14 @@ public abstract class AbstractBundlePersistenceManager implements
     private static final NodePropBundle MISSING =
         new NodePropBundle(NodeId.randomId());
 
+    /**
+     * The size estimate for the MISSING NodePropBundle. The sum of:
+     * - ConcurrentCache.E: 32 bytes
+     * - LinkedHashMap.Entry: 64 bytes
+     * - NodeId: 32 bytes
+     */
+    private static final long MISSING_SIZE_ESTIMATE = 128;
+
     /** the index for namespaces */
     private StringIndex nsIndex;
 
@@ -762,7 +770,7 @@ public abstract class AbstractBundlePersistenceManager implements
             bundle.markOld();
             bundles.put(id, bundle, bundle.getSize());
         } else {
-            bundles.put(id, MISSING, 16);
+            bundles.put(id, MISSING, MISSING_SIZE_ESTIMATE);
         }
         return bundle;
     }
@@ -776,7 +784,7 @@ public abstract class AbstractBundlePersistenceManager implements
     private void deleteBundle(NodePropBundle bundle) throws ItemStateException {
         destroyBundle(bundle);
         bundle.removeAllProperties(getBlobStore());
-        bundles.put(bundle.getId(), MISSING, 16);
+        bundles.put(bundle.getId(), MISSING, MISSING_SIZE_ESTIMATE);
     }
 
     /**
