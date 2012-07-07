@@ -894,8 +894,9 @@ public class BundleDbPersistenceManager
                 rs.close();
             }
         } catch (SQLException e) {
-            String msg = "failed to read bundle: " + id + ": " + e;
+        	String msg = "failed to read bundle (stacktrace on DEBUG log level): " + id + ": " + e; 
             log.error(msg);
+            log.debug("failed to read bundle: " + id, e);
             throw new ItemStateException(msg, e);
         }
     }
