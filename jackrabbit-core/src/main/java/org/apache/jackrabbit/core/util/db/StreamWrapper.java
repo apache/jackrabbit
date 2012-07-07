@@ -85,7 +85,7 @@ public class StreamWrapper {
 	    		TempFileInputStream tempFileInputStream = (TempFileInputStream) stream;
 	    		// Close it if it is not already closed ...
 	    		tempFileInputStream.close();
-    			stream = new TempFileInputStream(tempFileInputStream.getFile());
+    			stream = new TempFileInputStream(tempFileInputStream.getFile(), true);
     			return true;
     		} catch (Exception e) {
     			log.warn("Failed to create a new TempFileInputStream", e);
