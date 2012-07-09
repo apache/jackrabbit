@@ -159,14 +159,12 @@ public abstract class AbstractQueryTest extends AbstractJCRTest {
      */
     protected Query createQuery(Session session, String statement, String language) throws RepositoryException, NotExecutableException {
         log.println("Creating query: " + statement);
-        
+
         // check for unsupported query languages early
         if (! isSupportedLanguage(language) && !Query.JCR_SQL2.equals(language)) {
             throw new NotExecutableException("Repository does not support " + language + " query syntax");
         }
-        else {
-            return session.getWorkspace().getQueryManager().createQuery(statement, language);
-        }
+        return session.getWorkspace().getQueryManager().createQuery(statement, language);
     }
 
     /**
@@ -308,13 +306,13 @@ public abstract class AbstractQueryTest extends AbstractJCRTest {
      * the specified <code>nodes</code>.
      * @param session the session to use for the query.
      * @param xpath the xpath query.
-     * @param nodes the expected result nodes.
-     * @throws NotExecutableException 
+     * @param expectedNodes the expected nodes.
+     * @throws NotExecutableException
      */
-    protected void executeXPathQuery(Session session, String xpath, Node[] nodes)
+    protected void executeXPathQuery(Session session, String xpath, Node[] expectedNodes)
             throws RepositoryException, NotExecutableException {
         QueryResult res = createQuery(session, xpath, qsXPATH).execute();
-        checkResult(res, nodes);
+        checkResult(res, expectedNodes, null);
     }
 
     /**
@@ -322,41 +320,80 @@ public abstract class AbstractQueryTest extends AbstractJCRTest {
      * the specified <code>nodes</code>.
      * @param session the session to use for the query.
      * @param sql the sql query.
-     * @param nodes the expected result nodes.
-     * @throws NotExecutableException 
+     * @param expectedNodes the expected nodes.
+     * @throws NotExecutableException
      */
-    protected void executeSqlQuery(Session session, String sql, Node[] nodes)
+    protected void executeSqlQuery(Session session, String sql, Node[] expectedNodes)
+            throws RepositoryException, NotExecutableException {
+    		executeSqlQuery(session, sql, expectedNodes, null);
+    }
+
+    /**
+     * Executes the <code>sql</code> query and checks the results against
+     * the specified <code>nodes</code>.
+     * @param session the session to use for the query.
+     * @param sql the sql query.
+     * @param requiredNodes the nodes that need to be in the result set
+     * 		(null if no node is required).
+     * @param optionalNodes the nodes that may be in the result set
+     * 		(null if no node is optional).
+     * @throws NotExecutableException
+     */
+    protected void executeSqlQuery(Session session, String sql, Node[] requiredNodes, Node[] optionalNodes)
             throws RepositoryException, NotExecutableException {
         QueryResult res = createQuery(session, sql, qsSQL).execute();
-        checkResult(res, nodes);
+        checkResult(res, requiredNodes, optionalNodes);
     }
 
     /**
      * Checks if the result set contains exactly the <code>nodes</code>.
      * @param result the query result.
-     * @param nodes the expected nodes in the result set.
+     * @param expectedNodes the expected nodes.
      */
-    protected void checkResult(QueryResult result, Node[] nodes)
+    protected void checkResult(QueryResult result, Node[] expectedNodes)
+    			throws RepositoryException {
+    		checkResult(result, expectedNodes, null);
+	}
+
+    /**
+     * Checks if the result set contains exactly the <code>nodes</code>.
+     * @param result the query result.
+     * @param requiredNodes the nodes that need to be in the result set
+     * 		(null if no node is required).
+     * @param optionalNodes the nodes that may be in the result set
+     * 		(null if no node is optional).
+     */
+    protected void checkResult(QueryResult result, Node[] requiredNodes, Node[] optionalNodes)
             throws RepositoryException {
         // collect paths
-        Set<String> expectedPaths = new HashSet<String>();
-        for (int i = 0; i < nodes.length; i++) {
-            expectedPaths.add(nodes[i].getPath());
-        }
+        Set<String> requiredPaths = getPathSet(requiredNodes);
+        Set<String> optionalPaths = getPathSet(optionalNodes);
         Set<String> resultPaths = new HashSet<String>();
         for (NodeIterator it = result.getNodes(); it.hasNext();) {
             resultPaths.add(it.nextNode().getPath());
         }
-        // check if all expected are in result
-        for (Iterator<String> it = expectedPaths.iterator(); it.hasNext();) {
+        // check if all required nodes are in result
+        for (Iterator<String> it = requiredPaths.iterator(); it.hasNext();) {
             String path = it.next();
             assertTrue(path + " is not part of the result set", resultPaths.contains(path));
         }
         // check result does not contain more than expected
         for (Iterator<String> it = resultPaths.iterator(); it.hasNext();) {
             String path = it.next();
-            assertTrue(path + " is not expected to be part of the result set", expectedPaths.contains(path));
+            if (!optionalPaths.contains(path)) {
+            		assertTrue(path + " is not expected to be part of the result set", requiredPaths.contains(path));
+            }
         }
+    }
+
+    private static HashSet<String> getPathSet(Node[] nodes) throws RepositoryException {
+    		HashSet<String> paths = new HashSet<String>();
+    		if (nodes != null) {
+    	        for (int i = 0; i < nodes.length; i++) {
+    	        		paths.add(nodes[i].getPath());
+        		}
+    		}
+    		return paths;
     }
 
     /**
@@ -383,9 +420,7 @@ public abstract class AbstractQueryTest extends AbstractJCRTest {
         if (!needsEscaping) {
             return identifier;
         }
-        else {
-            return '"' + identifier + '"';
-        }
+        return '"' + identifier + '"';
     }
 
     /**
