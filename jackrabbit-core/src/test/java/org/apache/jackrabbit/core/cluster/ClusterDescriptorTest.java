@@ -18,29 +18,20 @@ package org.apache.jackrabbit.core.cluster;
 
 import java.io.File;
 import java.io.IOException;
-import javax.jcr.RepositoryException;
-import javax.jcr.Session;
-import javax.jcr.SimpleCredentials;
 import org.apache.commons.io.FileUtils;
 import org.apache.jackrabbit.core.RepositoryImpl;
 import org.apache.jackrabbit.core.config.RepositoryConfig;
 import org.apache.jackrabbit.test.JUnitTest;
-import org.h2.tools.Server;
 
 /**
  * Tests clustering with a database.
  */
 public class ClusterDescriptorTest extends JUnitTest {
 
-    Server server1, server2;
-    RepositoryImpl rep1, rep2;
+    private RepositoryImpl rep1, rep2;
 
     public void setUp() throws Exception {
         deleteAll();
-        server1 = Server.createTcpServer("-tcpPort", "9001", "-baseDir",
-                "./target/descriptorClusterTest/db1", "-tcpAllowOthers").start();
-        server2 = Server.createTcpServer("-tcpPort", "9002", "-baseDir",
-                "./target/descriptorClusterTest/db2", "-tcpAllowOthers").start();
         FileUtils.copyFile(
                 new File("./src/test/resources/org/apache/jackrabbit/core/cluster/repository-h2.xml"),
                 new File("./target/descriptorClusterTest/node1/repository.xml"));
@@ -55,18 +46,16 @@ public class ClusterDescriptorTest extends JUnitTest {
     }
 
     public void tearDown() throws Exception {
-        rep1.shutdown();
-        rep2.shutdown();
-        server1.stop();
-        server2.stop();
+    		rep1.shutdown();
+	    rep2.shutdown();
         deleteAll();
     }
 
-    private void deleteAll() throws IOException {
+    private static void deleteAll() throws IOException {
         FileUtils.deleteDirectory(new File("./target/descriptorClusterTest"));
     }
 
-    public void testRepositoryDescriptor() throws RepositoryException {
+    public void testRepositoryDescriptor() {
         String clusterId1 =  rep1.getDescriptor(RepositoryImpl.JACKRABBIT_CLUSTER_ID);
         String clusterId2 =  rep2.getDescriptor(RepositoryImpl.JACKRABBIT_CLUSTER_ID);
 

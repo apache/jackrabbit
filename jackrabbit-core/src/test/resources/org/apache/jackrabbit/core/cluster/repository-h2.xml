@@ -28,7 +28,7 @@
         (e.g. registered namespaces, custom node types, etc.)
     -->
     <FileSystem class="org.apache.jackrabbit.core.fs.db.DbFileSystem">
-        <param name="url" value="jdbc:h2:tcp://localhost:9001,localhost:9002/db"/>
+        <param name="url" value="jdbc:h2:${rep.home}/../db"/>
         <param name="schemaObjectPrefix" value="fs_"/>
         <param name="user" value="sa"/>
         <param name="password" value="sa"/>
@@ -38,7 +38,7 @@
         data store configuration
     -->
     <DataStore class="org.apache.jackrabbit.core.data.db.DbDataStore">
-        <param name="url" value="jdbc:h2:tcp://localhost:9001,localhost:9002/db"/>
+        <param name="url" value="jdbc:h2:${rep.home}/../db"/>
         <param name="schemaObjectPrefix" value="datastore_"/>
         <param name="user" value="sa"/>
         <param name="password" value="sa"/>
@@ -103,7 +103,7 @@
             class: FQN of class implementing the PersistenceManager interface
         -->
         <PersistenceManager class="org.apache.jackrabbit.core.persistence.pool.H2PersistenceManager">
-            <param name="url" value="jdbc:h2:tcp://localhost:9001,localhost:9002/db"/>
+            <param name="url" value="jdbc:h2:${rep.home}/../db"/>
             <param name="schemaObjectPrefix" value="ws_${wsp.name}_"/>
             <param name="user" value="sa"/>
             <param name="password" value="sa"/>
@@ -138,7 +138,7 @@
             implementations.
         -->
         <PersistenceManager class="org.apache.jackrabbit.core.persistence.pool.H2PersistenceManager">
-            <param name="url" value="jdbc:h2:tcp://localhost:9001,localhost:9002/db"/>
+            <param name="url" value="jdbc:h2:${rep.home}/../db"/>
             <param name="schemaObjectPrefix" value="version_"/>
             <param name="user" value="sa"/>
             <param name="password" value="sa"/>
@@ -160,7 +160,7 @@
     <Cluster>
         <Journal class="org.apache.jackrabbit.core.journal.DatabaseJournal">
             <param name="driver" value="org.h2.Driver" />
-            <param name="url" value="jdbc:h2:tcp://localhost:9001,localhost:9002/db"/>
+            <param name="url" value="jdbc:h2:${rep.home}/../db"/>
             <param name="schemaObjectPrefix" value="journal_"/>
             <param name="databaseType" value="h2"/>
             <param name="user" value="sa"/>

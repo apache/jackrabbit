@@ -38,7 +38,6 @@ import org.apache.jackrabbit.commons.JcrUtils;
 import org.apache.jackrabbit.core.RepositoryImpl;
 import org.apache.jackrabbit.core.config.RepositoryConfig;
 import org.apache.jackrabbit.test.JUnitTest;
-import org.h2.tools.Server;
 
 /**
  * Test for JCR3162
@@ -48,9 +47,6 @@ public class DbClusterTestJCR3162 extends JUnitTest {
     private static final SimpleCredentials ADMIN = new SimpleCredentials(
             "admin", "admin".toCharArray());
 
-    private Server server1;
-    private Server server2;
-
     private RepositoryImpl rep1;
     private RepositoryImpl rep2;
 
@@ -59,10 +55,6 @@ public class DbClusterTestJCR3162 extends JUnitTest {
 
     public void setUp() throws Exception {
         deleteAll();
-        server1 = Server.createTcpServer("-tcpPort", "9001", "-baseDir",
-                "./target/dbClusterTest/db1", "-tcpAllowOthers").start();
-        server2 = Server.createTcpServer("-tcpPort", "9002", "-baseDir",
-                "./target/dbClusterTest/db2", "-tcpAllowOthers").start();
         FileUtils
                 .copyFile(
                         new File(
@@ -89,13 +81,11 @@ public class DbClusterTestJCR3162 extends JUnitTest {
                 rep2.shutdown();
             }
         } finally {
-            server1.stop();
-            server2.stop();
             deleteAll();
         }
     }
 
-    private void deleteAll() throws IOException {
+    private static void deleteAll() throws IOException {
         FileUtils.deleteDirectory(new File("./target/dbClusterTest"));
     }
 
@@ -133,8 +123,7 @@ public class DbClusterTestJCR3162 extends JUnitTest {
         Connection con = null;
         try {
             con = DriverManager.getConnection(
-                    "jdbc:h2:tcp://localhost:9001,localhost:9002/db", "sa",
-                    "sa");
+                    "jdbc:h2:./target/dbClusterTest/db", "sa", "sa");
             PreparedStatement prep = con
                     .prepareStatement("update JOURNAL_LOCAL_REVISIONS set REVISION_ID=0 where JOURNAL_ID=?");
             prep.setString(1, clusterId2);

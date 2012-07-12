@@ -25,21 +25,15 @@ import org.apache.commons.io.FileUtils;
 import org.apache.jackrabbit.core.RepositoryImpl;
 import org.apache.jackrabbit.core.config.RepositoryConfig;
 import org.apache.jackrabbit.test.JUnitTest;
-import org.h2.tools.Server;
 
 /**
  * Tests clustering with a database.
  */
 public class DbClusterTest extends JUnitTest {
 
-    Server server1, server2;
-
     public void setUp() throws Exception {
         deleteAll();
-        server1 = Server.createTcpServer("-tcpPort", "9001", "-baseDir",
-                "./target/dbClusterTest/db1", "-tcpAllowOthers").start();
-        server2 = Server.createTcpServer("-tcpPort", "9002", "-baseDir",
-                "./target/dbClusterTest/db2", "-tcpAllowOthers").start();
+
         FileUtils.copyFile(
                 new File("./src/test/resources/org/apache/jackrabbit/core/cluster/repository-h2.xml"),
                 new File("./target/dbClusterTest/node1/repository.xml"));
@@ -49,12 +43,10 @@ public class DbClusterTest extends JUnitTest {
     }
 
     public void tearDown() throws Exception {
-        server1.stop();
-        server2.stop();
         deleteAll();
     }
 
-    private void deleteAll() throws IOException {
+    private static void deleteAll() throws IOException {
         FileUtils.deleteDirectory(new File("./target/dbClusterTest"));
     }
 
@@ -65,12 +57,14 @@ public class DbClusterTest extends JUnitTest {
                 new File("./target/dbClusterTest/node2")));
         Session s1 = rep1.login(new SimpleCredentials("admin", "admin".toCharArray()));
         Session s2 = rep2.login(new SimpleCredentials("admin", "admin".toCharArray()));
+
         s1.getRootNode().addNode("test1");
         s2.getRootNode().addNode("test2");
         s1.save();
         s2.save();
         s1.refresh(true);
         s2.refresh(true);
+
         s1.getRootNode().getNode("test2");
         s2.getRootNode().getNode("test1");
         rep1.shutdown();
