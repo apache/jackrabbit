@@ -106,6 +106,8 @@ org.apache.jackrabbit.test.api.ShareableNodeTest#testGetName
 org.apache.jackrabbit.test.api.ShareableNodeTest#testGetNode
 org.apache.jackrabbit.test.api.ShareableNodeTest#testGetNodes
 org.apache.jackrabbit.test.api.ShareableNodeTest#testGetNodesByPattern
+org.apache.jackrabbit.test.api.ShareableNodeTest#testMoveShareableNode<!--JCR-3381-->
+org.apache.jackrabbit.test.api.ShareableNodeTest#testTransientMoveShareableNode<!--JCR-3381-->
 org.apache.jackrabbit.test.api.lock.OpenScopedLockTest#testLockExpiration
 org.apache.jackrabbit.test.api.lock.SessionScopedLockTest#testLockExpiration
 org.apache.jackrabbit.test.api.observation.NodeReorderTest#testNodeReorderMove
