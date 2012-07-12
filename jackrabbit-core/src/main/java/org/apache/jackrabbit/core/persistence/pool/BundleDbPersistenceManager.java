@@ -501,7 +501,7 @@ public class BundleDbPersistenceManager
             }
             failures++;
             log.error("Failed to persist ChangeLog (stacktrace on DEBUG log level), blockOnConnectionLoss = "
-                    + blockOnConnectionLoss, lastException);
+                    + blockOnConnectionLoss + ": " + lastException);
             log.debug("Failed to persist ChangeLog", lastException);
             if (blockOnConnectionLoss || failures <= 1) { // if we're going to try again
                 try {
@@ -885,13 +885,15 @@ public class BundleDbPersistenceManager
             ResultSet rs =
                 conHelper.exec(bundleSelectSQL, getKey(id), false, 0);
             try {
-                if (rs.next()) {
+                if (rs != null && rs.next()) {
                     return readBundle(id, rs, 1);
                 } else {
                     return null;
                 }
             } finally {
-                rs.close();
+            	if (rs != null) {
+            		rs.close();
+            	}
             }
         } catch (SQLException e) {
         	String msg = "failed to read bundle (stacktrace on DEBUG log level): " + id + ": " + e; 
