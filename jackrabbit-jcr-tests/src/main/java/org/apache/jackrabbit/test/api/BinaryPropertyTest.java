@@ -395,7 +395,7 @@ public class BinaryPropertyTest extends AbstractPropertyTest {
         } finally {
             binary.dispose();
         }
-        long bytes = PropertyUtil.countBytes(prop.getValue());
+        long bytes = PropertyUtil.countBytes(val);
         if (bytes != -1) {
             assertEquals("Binary.getSize() returns wrong number of bytes.",
                     bytes, length);
