@@ -1218,10 +1218,10 @@ public class ShareableNodeTest extends AbstractJCRTest {
     }
 
     /**
-     * Move a node in a shared set. This is unsupported in Jackrabbit.
+     * Move a node in a shared set.
      */
     public void testMoveShareableNode() throws Exception {
-        // setup parent nodes and first childs
+        // setup parent nodes and first children
         Node a1 = testRootNode.addNode("a1");
         Node a2 = testRootNode.addNode("a2");
         Node b = a1.addNode("b");
@@ -1229,26 +1229,24 @@ public class ShareableNodeTest extends AbstractJCRTest {
 
         // add mixin
         ensureMixinType(b, mixShareable);
-        b.save();
+        b.getSession().save();
 
         // move
         Workspace workspace = b.getSession().getWorkspace();
 
-        try {
-            // move shareable node
-            workspace.move(b.getPath(), a2.getPath() + "/b");
-            fail("Moving a mix:shareable should fail.");
-        } catch (UnsupportedRepositoryOperationException e) {
-            // expected
-        }
+        // move shareable node
+        String newPath = a2.getPath() + "/b";
+        workspace.move(b.getPath(), newPath);
+        // move was performed using the workspace, so refresh the session
+        b.getSession().refresh(false);
+        assertEquals(newPath, b.getPath());
     }
 
     /**
-     * Transiently move a node in a shared set. This is unsupported in
-     * Jackrabbit.
+     * Transiently move a node in a shared set.
      */
     public void testTransientMoveShareableNode() throws Exception {
-        // setup parent nodes and first childs
+        // setup parent nodes and first children
         Node a1 = testRootNode.addNode("a1");
         Node a2 = testRootNode.addNode("a2");
         Node b = a1.addNode("b");
@@ -1256,19 +1254,16 @@ public class ShareableNodeTest extends AbstractJCRTest {
 
         // add mixin
         ensureMixinType(b, mixShareable);
-        b.save();
+        b.getSession().save();
 
         // move
         Session session = superuser;
 
-        try {
-            // move shareable node
-            session.move(b.getPath(), a2.getPath() + "/b");
-            session.save();
-            fail("Moving a mix:shareable should fail.");
-        } catch (UnsupportedRepositoryOperationException e) {
-            // expected
-        }
+        // move shareable node
+        String newPath = a2.getPath() + "/b";
+        session.move(b.getPath(), newPath);
+        session.save();
+        assertEquals(newPath, b.getPath());
     }
 
     //----------------------------------------------------- implementation tests
