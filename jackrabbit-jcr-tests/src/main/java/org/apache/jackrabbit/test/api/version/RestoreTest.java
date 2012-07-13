@@ -974,7 +974,7 @@ public class RestoreTest extends AbstractVersionTest {
 
         // create V1.1 of child
         child1.checkout();
-        Version v11Child = child1.checkin();
+        child1.checkin();
 
         // V2 of versionable node has child1
         versionableNode.checkout();
@@ -1018,14 +1018,14 @@ public class RestoreTest extends AbstractVersionTest {
         ensureMixinType(child1, mixVersionable);
         versionableNode.getSession().save();
         // create v1.0 of child
-        Version v1Child = child1.checkin();
+        Version v1Child = versionManager.checkin(child1.getPath());
 
         // V1 of versionable node has child1
         String v1 = versionManager.checkin(versionableNode.getPath()).getName();
 
         // create V1.1 of child
         versionManager.checkout(child1.getPath());
-        Version v11Child = versionManager.checkin(child1.getPath());
+        versionManager.checkin(child1.getPath());
 
         // V2 of versionable node has child1
         versionManager.checkout(versionableNode.getPath());
@@ -1041,10 +1041,15 @@ public class RestoreTest extends AbstractVersionTest {
         child1 = versionableNode.getNode(nodeName4);
         assertEquals("restore must restore child node version 1.0.", v1Child.getName(), versionManager.getBaseVersion(child1.getPath()).getName());
 
-        // restore V2 via name. child should be 1.1
+        // JSR283 is more clear about restoring versionable OPV=VERSION nodes
+        // and states that an existing one is not restored when the parent
+        // is restored (see 15.7.5 Chained Versions on Restore)
+
+        // New JSR283 version:
+        // restore V2 via name. child should still be be 1.0
         versionManager.restore(versionableNode.getPath(), v2, true);
         child1 = versionableNode.getNode(nodeName4);
-        assertEquals("Node.restore('foo') must restore child node version 1.1.", v11Child.getName(), versionManager.getBaseVersion(child1.getPath()).getName());
+        assertEquals("Node.restore('foo') must not restore child node and keep version 1.0.", v1Child.getName(), versionManager.getBaseVersion(child1.getPath()).getName());
     }
 
     /**
