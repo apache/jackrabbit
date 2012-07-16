@@ -22,6 +22,7 @@ import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
+import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermEnum;
 import org.apache.lucene.store.Directory;
@@ -61,21 +62,28 @@ public class ChainedTermEnumTest extends TestCase {
     protected TermEnum createTermEnum(String prefix, int numTerms)
             throws IOException {
         Directory dir = new RAMDirectory();
-        IndexWriter writer = new IndexWriter(dir, new StandardAnalyzer(Version.LUCENE_24),
-                true, IndexWriter.MaxFieldLength.UNLIMITED);
-        for (int i = 0; i < numTerms; i++) {
-            Document doc = new Document();
-            doc.add(new Field("field", true, prefix + i, Field.Store.NO,
-                    Field.Index.NOT_ANALYZED_NO_NORMS, Field.TermVector.NO));
-            writer.addDocument(doc);
+        IndexWriter writer = new IndexWriter(dir, new IndexWriterConfig(
+                Version.LUCENE_36, new StandardAnalyzer(Version.LUCENE_36)));
+        try {
+            for (int i = 0; i < numTerms; i++) {
+                Document doc = new Document();
+                doc.add(new Field("field", true, prefix + i, Field.Store.NO,
+                        Field.Index.NOT_ANALYZED_NO_NORMS, Field.TermVector.NO));
+                writer.addDocument(doc);
+            }
+        } finally {
+            writer.close();
         }
-        writer.close();
-        IndexReader reader = IndexReader.open(dir, false);
-        TermEnum terms = reader.terms();
-        if (terms.term() == null) {
-            // position at first term
-            terms.next();
+        IndexReader reader = IndexReader.open(dir);
+        try {
+            TermEnum terms = reader.terms();
+            if (terms.term() == null) {
+                // position at first term
+                terms.next();
+            }
+            return terms;
+        } finally {
+            reader.close();
         }
-        return terms;
     }
 }
