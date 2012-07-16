@@ -31,6 +31,7 @@ import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.FieldSelector;
 import org.apache.lucene.index.CorruptIndexException;
+import org.apache.lucene.index.FieldInfos;
 import org.apache.lucene.index.FilterIndexReader;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.Term;
@@ -38,6 +39,7 @@ import org.apache.lucene.index.TermDocs;
 import org.apache.lucene.index.TermEnum;
 import org.apache.lucene.store.IndexInput;
 import org.apache.lucene.store.IndexOutput;
+import org.apache.lucene.util.ReaderUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -250,6 +252,16 @@ class CachingIndexReader extends FilterIndexReader {
     }
 
     //--------------------< FilterIndexReader overwrites >----------------------
+
+    @Override
+    public IndexReader[] getSequentialSubReaders() {
+        return null;
+    }
+
+    @Override
+    public FieldInfos getFieldInfos() {
+        return ReaderUtil.getMergedFieldInfos(in);
+    }
 
     /**
      * Uses the {@link #docNumber2id} cache for document lookups that are only

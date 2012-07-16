@@ -51,11 +51,6 @@ public final class CachingMultiIndexReader
     private final DocNumberCache cache;
 
     /**
-     * Doc number starts for each sub reader
-     */
-    private int[] starts;
-
-    /**
      * Reference count. Every time close is called refCount is decremented. If
      * refCount drops to zero the underlying readers are closed as well.
      */
@@ -72,15 +67,10 @@ public final class CachingMultiIndexReader
         super(subReaders);
         this.cache = cache;
         this.subReaders = subReaders;
-        starts = new int[subReaders.length + 1];
-        int maxDoc = 0;
         for (int i = 0; i < subReaders.length; i++) {
-            starts[i] = maxDoc;
-            maxDoc += subReaders[i].maxDoc();
             OffsetReader offsetReader = new OffsetReader(subReaders[i], starts[i]);
             readersByCreationTick.put(subReaders[i].getCreationTick(), offsetReader);
         }
-        starts[subReaders.length] = maxDoc;
     }
 
     /**
@@ -211,34 +201,6 @@ public final class CachingMultiIndexReader
             return r.offset + docId.getDocNumber();
         }
         return -1;
-    }
-
-    /**
-     * Returns the reader index for document <code>n</code>.
-     * Implementation copied from lucene MultiReader class.
-     *
-     * @param n document number.
-     * @return the reader index.
-     */
-    private int readerIndex(int n) {
-        int lo = 0;                                      // search starts array
-        int hi = subReaders.length - 1;                  // for first element less
-
-        while (hi >= lo) {
-            int mid = (lo + hi) >> 1;
-            int midValue = starts[mid];
-            if (n < midValue) {
-                hi = mid - 1;
-            } else if (n > midValue) {
-                lo = mid + 1;
-            } else {                                      // found a match
-                while (mid + 1 < subReaders.length && starts[mid + 1] == midValue) {
-                    mid++;                                  // scan to last match
-                }
-                return mid;
-            }
-        }
-        return hi;
     }
 
     //-----------------------< OffsetTermDocs >---------------------------------

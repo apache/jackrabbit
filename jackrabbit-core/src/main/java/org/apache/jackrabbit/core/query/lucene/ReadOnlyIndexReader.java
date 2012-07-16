@@ -16,9 +16,12 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
+import org.apache.lucene.index.FieldInfos;
+import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermDocs;
 import org.apache.lucene.index.TermPositions;
+import org.apache.lucene.util.ReaderUtil;
 
 import java.io.IOException;
 import java.util.BitSet;
@@ -176,7 +179,12 @@ class ReadOnlyIndexReader extends RefCountingIndexReader {
      * @exception UnsupportedOperationException always
      */
     @Override
-    protected void doCommit(Map<String,String> commitUserData) throws IOException { 
+    protected void doCommit(Map<String, String> commitUserData) throws IOException {
+        if (!hasChanges) {
+            // change in behavior: IndexReader does not check for hasChanges
+            // before calling doCommit();
+            return;
+        }
         throw new UnsupportedOperationException("IndexReader is read-only");
     }
 
@@ -220,6 +228,16 @@ class ReadOnlyIndexReader extends RefCountingIndexReader {
      */
     public TermPositions termPositions() throws IOException {
         return new FilteredTermPositions(super.termPositions());
+    }
+
+    @Override
+    public String toString() {
+      final StringBuilder buffer = new StringBuilder("ReadOnlyIndexReader(");
+      buffer.append(in);
+      buffer.append(',');
+      buffer.append(deletedDocsVersion);
+      buffer.append(')');
+      return buffer.toString();
     }
 
     //----------------------< FilteredTermDocs >--------------------------------

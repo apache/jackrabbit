@@ -16,8 +16,10 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
+import org.apache.lucene.index.FieldInfos;
 import org.apache.lucene.index.FilterIndexReader;
 import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.util.ReaderUtil;
 
 import java.io.IOException;
 
@@ -48,7 +50,7 @@ public class RefCountingIndexReader
     /**
      * @return the current reference count value.
      */
-    public synchronized int getRefCount() {
+    public synchronized int getRefCountJr() {
         return refCount;
     }
 
@@ -64,6 +66,16 @@ public class RefCountingIndexReader
     }
 
     //-----------------------< FilterIndexReader >--------------------------
+
+    @Override
+    public IndexReader[] getSequentialSubReaders() {
+        return null;
+    }
+
+    @Override
+    public FieldInfos getFieldInfos() {
+        return ReaderUtil.getMergedFieldInfos(in);
+    }
 
     protected void doClose() throws IOException {
         Util.closeOrRelease(in);

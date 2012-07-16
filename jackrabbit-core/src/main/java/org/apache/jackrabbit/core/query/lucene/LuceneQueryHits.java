@@ -49,7 +49,7 @@ public class LuceneQueryHits implements QueryHits {
         this.reader = reader;
         // We rely on Scorer#nextDoc() and Scorer#advance(int) so enable
         // scoreDocsInOrder
-        this.scorer = query.weight(searcher).scorer(reader, true, false);
+        this.scorer = query.createWeight(searcher).scorer(reader, true, false);
     }
 
     /**

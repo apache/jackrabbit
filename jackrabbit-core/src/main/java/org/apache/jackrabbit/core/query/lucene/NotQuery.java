@@ -143,7 +143,7 @@ class NotQuery extends Query {
                 // context query does not match any node
                 // the inverse is to match all nodes
                 return new MatchAllDocsQuery().createWeight(searcher).scorer(
-                        reader, scoreDocsInOrder, topScorer);
+                        reader, scoreDocsInOrder, false);
             }
             return new NotQueryScorer(reader);
         }

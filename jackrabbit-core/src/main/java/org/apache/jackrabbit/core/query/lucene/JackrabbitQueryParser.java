@@ -141,11 +141,19 @@ public class JackrabbitQueryParser extends QueryParser {
      */
     protected Query getFieldQuery(String field, String queryText)
             throws ParseException {
+        return getFieldQuery(field, queryText, true);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    protected Query getFieldQuery(String field, String queryText, boolean quoted)
+            throws ParseException {
         if (queryText.startsWith("~")) {
             // synonym query
             return getSynonymQuery(field, queryText.substring(1));
         } else {
-            return super.getFieldQuery(field, queryText);
+            return super.getFieldQuery(field, queryText, quoted);
         }
     }
 

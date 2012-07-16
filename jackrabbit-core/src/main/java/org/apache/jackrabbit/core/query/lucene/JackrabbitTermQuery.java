@@ -40,7 +40,11 @@ public class JackrabbitTermQuery extends TermQuery {
     }
 
     public Weight createWeight(Searcher searcher) throws IOException {
-        return new JackrabbitTermWeight(searcher, super.createWeight(searcher));
+        // use a FilterSearcher to prevent per segment searches
+        // done by lucene. we handle that on our own
+        // see instanceof check in lucene TermWeight constructor
+        return new JackrabbitTermWeight(searcher,
+                super.createWeight(new FilterSearcher(searcher)));
     }
 
     /**
