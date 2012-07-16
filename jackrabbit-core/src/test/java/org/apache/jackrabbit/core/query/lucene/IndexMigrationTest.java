@@ -50,7 +50,7 @@ public class IndexMigrationTest extends TestCase {
         DirectoryManager dirMgr = new RAMDirectoryManager();
 
         PersistentIndex idx = new PersistentIndex("index",
-                new StandardAnalyzer(Version.LUCENE_24), Similarity.getDefault(),
+                new StandardAnalyzer(Version.LUCENE_36), Similarity.getDefault(),
                 new DocNumberCache(100),
                 new IndexingQueue(new IndexingQueueStore(new RAMDirectory())),
                 dirMgr, 0);

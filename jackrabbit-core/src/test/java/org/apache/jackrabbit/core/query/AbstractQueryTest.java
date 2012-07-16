@@ -214,7 +214,7 @@ public class AbstractQueryTest extends AbstractJCRTest {
         // check if all expected are in result
         for (Iterator<String> it = expectedPaths.iterator(); it.hasNext();) {
             String path = it.next();
-            assertTrue(path + " is not part of the result set "+ expectedPaths, resultPaths.contains(path));
+            assertTrue(path + " is not part of the result set "+ resultPaths, resultPaths.contains(path));
         }
         // check result does not contain more than expected
         for (Iterator<String> it = resultPaths.iterator(); it.hasNext();) {
@@ -251,6 +251,7 @@ public class AbstractQueryTest extends AbstractJCRTest {
      */
     protected QueryResult executeQuery(String statement)
             throws RepositoryException {
+        getSearchIndex().flush();
         if (statement.trim().toLowerCase().startsWith("select")) {
             return qm.createQuery(statement, Query.SQL).execute();
         } else {
