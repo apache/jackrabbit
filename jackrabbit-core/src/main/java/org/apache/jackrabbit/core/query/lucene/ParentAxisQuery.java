@@ -190,7 +190,7 @@ class ParentAxisQuery extends Query {
          */
         public Scorer scorer(IndexReader reader, boolean scoreDocsInOrder,
                 boolean topScorer) throws IOException {
-            contextScorer = contextQuery.weight(searcher).scorer(reader, scoreDocsInOrder, topScorer);
+            contextScorer = contextQuery.weight(searcher).scorer(reader, scoreDocsInOrder, false);
             HierarchyResolver resolver = (HierarchyResolver) reader;
             return new ParentAxisScorer(searcher.getSimilarity(),
                     reader, searcher, resolver);

@@ -21,6 +21,8 @@ import java.io.Reader;
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.document.AbstractField;
+import org.apache.lucene.document.Field.TermVector;
+import org.apache.lucene.index.FieldInfo.IndexOptions;
 
 /**
  * <code>IDField</code> implements a lucene field for the id of a node.
@@ -37,7 +39,8 @@ public class IDField extends AbstractField {
         this.isStored = true;
         this.isTokenized = false;
         this.omitNorms = true;
-        this.omitTermFreqAndPositions = true;
+        setIndexOptions(IndexOptions.DOCS_ONLY);
+        setStoreTermVector(TermVector.NO);
     }
 
     public String stringValue() {
@@ -45,10 +48,6 @@ public class IDField extends AbstractField {
     }
 
     public Reader readerValue() {
-        return null;
-    }
-
-    public byte[] binaryValue() {
         return null;
     }
 

@@ -137,4 +137,14 @@ class CommittableIndexReader extends FilterIndexReader {
     BitSet getDeletedDocs() {
         return (BitSet) deletedDocs.clone();
     }
+
+    @Override
+    public String toString() {
+      final StringBuilder buffer = new StringBuilder("CommittableIndexReader(");
+      buffer.append(in);
+      buffer.append(',');
+      buffer.append(modCount);
+      buffer.append(')');
+      return buffer.toString();
+    }
 }

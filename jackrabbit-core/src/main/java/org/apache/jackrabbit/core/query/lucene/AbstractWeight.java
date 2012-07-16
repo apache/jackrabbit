@@ -77,7 +77,7 @@ abstract class AbstractWeight extends Weight {
             starts[readers.length] = maxDoc;
             Scorer[] scorers = new Scorer[readers.length];
             for (int i = 0; i < readers.length; i++) {
-                scorers[i] = scorer(readers[i], scoreDocsInOrder, topScorer);
+                scorers[i] = scorer(readers[i], scoreDocsInOrder, false);
             }
 
             return new MultiScorer(searcher.getSimilarity(), scorers, starts);

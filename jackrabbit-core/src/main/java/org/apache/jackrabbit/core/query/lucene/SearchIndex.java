@@ -82,6 +82,7 @@ import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
 import org.apache.jackrabbit.spi.commons.query.DefaultQueryNodeFactory;
 import org.apache.jackrabbit.spi.commons.query.qom.OrderingImpl;
 import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.analysis.LimitTokenCountAnalyzer;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.tokenattributes.PayloadAttribute;
 import org.apache.lucene.analysis.tokenattributes.TermAttribute;
@@ -898,7 +899,7 @@ public class SearchIndex extends AbstractQueryHandler {
      * @return the analyzer in use for indexing.
      */
     public Analyzer getTextAnalyzer() {
-        return analyzer;
+        return new LimitTokenCountAnalyzer(analyzer, getMaxFieldLength());
     }
 
     /**
@@ -1743,22 +1744,9 @@ public class SearchIndex extends AbstractQueryHandler {
          */
         private final CachingMultiIndexReader[] subReaders;
 
-        /**
-         * Doc number starts for each sub reader
-         */
-        private int[] starts;
-
         public CombinedIndexReader(CachingMultiIndexReader[] indexReaders) {
             super(indexReaders);
             this.subReaders = indexReaders;
-            this.starts = new int[subReaders.length + 1];
-
-            int maxDoc = 0;
-            for (int i = 0; i < subReaders.length; i++) {
-                starts[i] = maxDoc;
-                maxDoc += subReaders[i].maxDoc();
-            }
-            starts[subReaders.length] = maxDoc;
         }
 
         /**
@@ -1789,36 +1777,6 @@ public class SearchIndex extends AbstractQueryHandler {
             for (CachingMultiIndexReader subReader : subReaders) {
                 subReader.release();
             }
-        }
-
-        //---------------------------< internal >-------------------------------
-
-        /**
-         * Returns the reader index for document <code>n</code>.
-         * Implementation copied from lucene MultiReader class.
-         *
-         * @param n document number.
-         * @return the reader index.
-         */
-        private int readerIndex(int n) {
-            int lo = 0;                                      // search starts array
-            int hi = subReaders.length - 1;                  // for first element less
-
-            while (hi >= lo) {
-                int mid = (lo + hi) >> 1;
-                int midValue = starts[mid];
-                if (n < midValue) {
-                    hi = mid - 1;
-                } else if (n > midValue) {
-                    lo = mid + 1;
-                } else {                                      // found a match
-                    while (mid + 1 < subReaders.length && starts[mid + 1] == midValue) {
-                        mid++;                                  // scan to last match
-                    }
-                    return mid;
-                }
-            }
-            return hi;
         }
 
         public boolean equals(Object obj) {

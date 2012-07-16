@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.core.query.lucene;
 
 import org.apache.lucene.util.PriorityQueue;
+import org.apache.lucene.util.ReaderUtil;
 import org.apache.lucene.util.Version;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.Term;
@@ -154,7 +155,7 @@ public final class MoreLikeThis {
      * Default analyzer to parse source doc with.
      * @see #getAnalyzer
      */
-    public static final Analyzer DEFAULT_ANALYZER = new StandardAnalyzer(Version.LUCENE_24);
+    public static final Analyzer DEFAULT_ANALYZER = new StandardAnalyzer(Version.LUCENE_36);
 
     /**
      * Ignore terms with less than this frequency in the source doc.
@@ -506,7 +507,7 @@ public final class MoreLikeThis {
     public Query like(int docNum) throws IOException {
         if (fieldNames == null) {
             // gather list of valid fields from lucene
-            Collection<String> fields = ir.getFieldNames(IndexReader.FieldOption.INDEXED);
+            Collection<String> fields = ReaderUtil.getIndexedFields(ir);
             fieldNames = fields.toArray(new String[fields.size()]);
         }
 
@@ -521,7 +522,7 @@ public final class MoreLikeThis {
     public Query like(File f) throws IOException {
         if (fieldNames == null) {
             // gather list of valid fields from lucene
-            Collection<String> fields = ir.getFieldNames(IndexReader.FieldOption.INDEXED);
+            Collection<String> fields = ReaderUtil.getIndexedFields(ir);
             fieldNames = fields.toArray(new String[fields.size()]);
         }
 

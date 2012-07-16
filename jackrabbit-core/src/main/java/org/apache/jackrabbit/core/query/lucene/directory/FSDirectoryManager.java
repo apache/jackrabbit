@@ -152,7 +152,7 @@ public class FSDirectoryManager implements DirectoryManager {
 
         @Override
         public String[] listAll() throws IOException {
-            File[] files = directory.getFile().listFiles(FILTER);
+            File[] files = directory.getDirectory().listFiles(FILTER);
             if (files == null) {
                 return null;
             }
@@ -196,7 +196,7 @@ public class FSDirectoryManager implements DirectoryManager {
         @Override
         public IndexInput openInput(String name) throws IOException {
             IndexInput in = directory.openInput(name);
-            return new IndexInputLogWrapper(in);
+            return new IndexInputLogWrapper(name, in);
         }
 
         @Override
@@ -208,7 +208,7 @@ public class FSDirectoryManager implements DirectoryManager {
         public IndexInput openInput(String name, int bufferSize)
                 throws IOException {
             IndexInput in = directory.openInput(name, bufferSize);
-            return new IndexInputLogWrapper(in);
+            return new IndexInputLogWrapper(name, in);
         }
 
         @Override
@@ -222,7 +222,7 @@ public class FSDirectoryManager implements DirectoryManager {
         }
 
         @Override
-        public void setLockFactory(LockFactory lockFactory) {
+        public void setLockFactory(LockFactory lockFactory) throws IOException {
             directory.setLockFactory(lockFactory);
         }
 
@@ -249,7 +249,8 @@ public class FSDirectoryManager implements DirectoryManager {
 
         private IndexInput in;
 
-        IndexInputLogWrapper(IndexInput in) {
+        IndexInputLogWrapper(String name, IndexInput in) {
+            super(name);
             this.in = in;
         }
 

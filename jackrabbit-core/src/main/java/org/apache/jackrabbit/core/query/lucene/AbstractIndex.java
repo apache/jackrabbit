@@ -35,10 +35,14 @@ import org.apache.lucene.document.Fieldable;
 import org.apache.lucene.index.IndexDeletionPolicy;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
+import org.apache.lucene.index.IndexWriterConfig;
+import org.apache.lucene.index.LogByteSizeMergePolicy;
+import org.apache.lucene.index.LogMergePolicy;
 import org.apache.lucene.index.Payload;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.Similarity;
 import org.apache.lucene.store.Directory;
+import org.apache.lucene.util.Version;
 import org.apache.tika.io.IOExceptionWithCause;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -85,9 +89,6 @@ abstract class AbstractIndex {
 
     /** Compound file flag */
     private boolean useCompoundFile = true;
-
-    /** maxFieldLength config parameter */
-    private int maxFieldLength = SearchIndex.DEFAULT_MAX_FIELD_LENGTH;
 
     /** termInfosIndexDivisor config parameter */
     private int termInfosIndexDivisor = SearchIndex.DEFAULT_TERM_INFOS_INDEX_DIVISOR;
@@ -142,8 +143,7 @@ abstract class AbstractIndex {
         this.isExisting = IndexReader.indexExists(directory);
 
         if (!isExisting) {
-            indexWriter = new IndexWriter(directory, analyzer,
-                    IndexWriter.MaxFieldLength.LIMITED);
+            indexWriter = new IndexWriter(directory, new IndexWriterConfig(Version.LUCENE_36, analyzer));
             // immediately close, now that index has been created
             indexWriter.close();
             indexWriter = null;
@@ -291,7 +291,7 @@ abstract class AbstractIndex {
                 return readOnlyReader;
             } else {
                 // reader outdated
-                if (readOnlyReader.getRefCount() == 1) {
+                if (readOnlyReader.getRefCountJr() == 1) {
                     // not in use, except by this index
                     // update the reader
                     readOnlyReader.updateDeletedDocs(modifiableReader);
@@ -308,7 +308,7 @@ abstract class AbstractIndex {
         // if we get here there is no up-to-date read-only reader
         if (sharedReader == null) {
             // create new shared reader
-            IndexReader reader = IndexReader.open(getDirectory(), null, true, termInfosIndexDivisor);
+            IndexReader reader = IndexReader.open(getDirectory(), termInfosIndexDivisor);
             CachingIndexReader cr = new CachingIndexReader(
                     reader, cache, initCache);
             sharedReader = new SharedIndexReader(cr);
@@ -345,10 +345,14 @@ abstract class AbstractIndex {
             indexReader = null;
         }
         if (indexWriter == null) {
-            indexWriter = new IndexWriter(getDirectory(), analyzer,
-                    new IndexWriter.MaxFieldLength(maxFieldLength));
-            indexWriter.setSimilarity(similarity);
-            indexWriter.setUseCompoundFile(useCompoundFile);
+            IndexWriterConfig config = new IndexWriterConfig(Version.LUCENE_36, analyzer);
+            config.setSimilarity(similarity);
+            LogMergePolicy mergePolicy = new LogByteSizeMergePolicy();
+            mergePolicy.setUseCompoundFile(useCompoundFile);
+            mergePolicy.setNoCFSRatio(1.0);
+            config.setMergePolicy(mergePolicy);
+
+            indexWriter = new IndexWriter(getDirectory(), config);
             indexWriter.setInfoStream(STREAM_LOGGER);
         }
         return indexWriter;
@@ -381,7 +385,7 @@ abstract class AbstractIndex {
         // optimize if requested
         if (optimize) {
             IndexWriter writer = getIndexWriter();
-            writer.optimize();
+            writer.forceMerge(1, true);
             writer.close();
             indexWriter = null;
         }
@@ -528,23 +532,10 @@ abstract class AbstractIndex {
     //-------------------------< properties >-----------------------------------
 
     /**
-     * The lucene index writer property: useCompountFile
+     * Whether the index writer should use the compound file format
      */
     void setUseCompoundFile(boolean b) {
         useCompoundFile = b;
-        if (indexWriter != null) {
-            indexWriter.setUseCompoundFile(b);
-        }
-    }
-
-    /**
-     * The lucene index writer property: maxFieldLength
-     */
-    void setMaxFieldLength(int maxFieldLength) {
-        this.maxFieldLength = maxFieldLength;
-        if (indexWriter != null) {
-            indexWriter.setMaxFieldLength(maxFieldLength);
-        }
     }
 
     /**
@@ -571,7 +562,7 @@ abstract class AbstractIndex {
      * @param f a lucene field.
      * @return the index parameter on <code>f</code>.
      */
-    private Field.Index getIndexParameter(Fieldable f) {
+    private static Field.Index getIndexParameter(Fieldable f) {
         if (!f.isIndexed()) {
             return Field.Index.NO;
         } else if (f.isTokenized()) {
@@ -587,7 +578,7 @@ abstract class AbstractIndex {
      * @param f a lucene field.
      * @return the term vector parameter on <code>f</code>.
      */
-    private Field.TermVector getTermVectorParameter(Fieldable f) {
+    private static Field.TermVector getTermVectorParameter(Fieldable f) {
         if (f.isStorePositionWithTermVector() && f.isStoreOffsetWithTermVector()) {
             return Field.TermVector.WITH_POSITIONS_OFFSETS;
         } else if (f.isStorePositionWithTermVector()) {

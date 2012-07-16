@@ -44,6 +44,7 @@ import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.Fieldable;
+import org.apache.lucene.index.FieldInfo;
 import org.apache.tika.metadata.Metadata;
 import org.apache.tika.parser.Parser;
 import org.slf4j.Logger;
@@ -220,7 +221,7 @@ public class NodeIndexer {
                 Field parent = new Field(FieldNames.PARENT, false, "",
                         Field.Store.YES, Field.Index.NOT_ANALYZED_NO_NORMS,
                         Field.TermVector.NO);
-                parent.setOmitTermFreqAndPositions(true);
+                parent.setIndexOptions(FieldInfo.IndexOptions.DOCS_ONLY);
                 doc.add(parent);
                 addNodeName(doc, "", "");
             } else if (node.getSharedSet().isEmpty()) {
@@ -999,7 +1000,7 @@ public class NodeIndexer {
         Field parentField = new Field(FieldNames.PARENT, false,
                 parentId.toString(), Field.Store.YES,
                 Field.Index.NOT_ANALYZED_NO_NORMS, Field.TermVector.NO);
-        parentField.setOmitTermFreqAndPositions(true);
+        parentField.setIndexOptions(FieldInfo.IndexOptions.DOCS_ONLY);
         doc.add(parentField);
         NodeState parent = (NodeState) stateProvider.getItemState(parentId);
         ChildNodeEntry child = parent.getChildNodeEntry(node.getNodeId());

@@ -65,7 +65,7 @@ class MultiScorer extends Scorer {
     @Override
     public int nextDoc() throws IOException {
         while (currentDoc != NO_MORE_DOCS) {
-            if (scorers[currentScorer].nextDoc() != NO_MORE_DOCS) {
+            if (scorers[currentScorer] != null && scorers[currentScorer].nextDoc() != NO_MORE_DOCS) {
                 currentDoc = scorers[currentScorer].docID() + starts[currentScorer];
                 return currentDoc;
             } else if (++currentScorer < scorers.length) {

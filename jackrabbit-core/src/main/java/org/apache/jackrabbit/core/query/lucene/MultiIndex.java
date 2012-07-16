@@ -287,7 +287,6 @@ public class MultiIndex {
                     handler.getTextAnalyzer(), handler.getSimilarity(),
                     cache, indexingQueue, directoryManager,
                     handler.getMaxHistoryAge());
-            index.setMaxFieldLength(handler.getMaxFieldLength());
             index.setUseCompoundFile(handler.getUseCompoundFile());
             index.setTermInfosIndexDivisor(handler.getTermInfosIndexDivisor());
             indexes.add(index);
@@ -601,7 +600,6 @@ public class MultiIndex {
             }
             throw e;
         }
-        index.setMaxFieldLength(handler.getMaxFieldLength());
         index.setUseCompoundFile(handler.getUseCompoundFile());
         index.setTermInfosIndexDivisor(handler.getTermInfosIndexDivisor());
 
@@ -1108,7 +1106,6 @@ public class MultiIndex {
         volatileIndex = new VolatileIndex(handler.getTextAnalyzer(),
                 handler.getSimilarity(), indexingQueue);
         volatileIndex.setUseCompoundFile(handler.getUseCompoundFile());
-        volatileIndex.setMaxFieldLength(handler.getMaxFieldLength());
         volatileIndex.setBufferSize(handler.getBufferSize());
     }
 

@@ -23,7 +23,7 @@ import java.util.Collections;
 
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.TokenStream;
-import org.apache.lucene.analysis.standard.StandardAnalyzer;
+import org.apache.lucene.analysis.standard.ClassicAnalyzer;
 import org.apache.lucene.util.Version;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,8 +42,8 @@ public class JackrabbitAnalyzer extends Analyzer {
     private static Logger log =
             LoggerFactory.getLogger(JackrabbitAnalyzer.class);
 
-    private static final Analyzer DEFAULT_ANALYZER =
-            new StandardAnalyzer(Version.LUCENE_24, Collections.emptySet());
+    private static final Analyzer DEFAULT_ANALYZER = new ClassicAnalyzer(
+            Version.LUCENE_36, Collections.emptySet());
 
     /**
      * Returns a new instance of the named Lucene {@link Analyzer} class,
@@ -74,7 +74,7 @@ public class JackrabbitAnalyzer extends Analyzer {
             Class<?>[] types = constructor.getParameterTypes();
             if (types.length == 1 && types[0] == Version.class) {
                 try {
-                    return (Analyzer) constructor.newInstance(Version.LUCENE_24);
+                    return (Analyzer) constructor.newInstance(Version.LUCENE_36);
                 } catch (Exception e) {
                     cause = e;
                 }
@@ -132,7 +132,7 @@ public class JackrabbitAnalyzer extends Analyzer {
      * Reader. If the fieldName (property) is configured to have a different
      * analyzer than the default, this analyzer is used for tokenization
      */
-    public TokenStream tokenStream(String fieldName, Reader reader) {
+    public final TokenStream tokenStream(String fieldName, Reader reader) {
         if (indexingConfig != null) {
             Analyzer propertyAnalyzer = indexingConfig.getPropertyAnalyzer(fieldName);
             if (propertyAnalyzer != null) {
@@ -143,7 +143,7 @@ public class JackrabbitAnalyzer extends Analyzer {
     }
 
     @Override
-    public TokenStream reusableTokenStream(String fieldName, Reader reader)
+    public final TokenStream reusableTokenStream(String fieldName, Reader reader)
             throws IOException {
         if (indexingConfig != null) {
             Analyzer propertyAnalyzer = indexingConfig.getPropertyAnalyzer(fieldName);

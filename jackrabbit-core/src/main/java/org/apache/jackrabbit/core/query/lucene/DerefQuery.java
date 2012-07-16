@@ -205,9 +205,9 @@ class DerefQuery extends Query {
         @Override
         public Scorer scorer(IndexReader reader, boolean scoreDocsInOrder,
                 boolean topScorer) throws IOException {
-            contextScorer = contextQuery.weight(searcher).scorer(reader, scoreDocsInOrder, topScorer);
+            contextScorer = contextQuery.weight(searcher).scorer(reader, scoreDocsInOrder, false);
             if (nameTest != null) {
-                nameTestScorer = new NameQuery(nameTest, version, nsMappings).weight(searcher).scorer(reader, scoreDocsInOrder, topScorer);
+                nameTestScorer = new NameQuery(nameTest, version, nsMappings).weight(searcher).scorer(reader, scoreDocsInOrder, false);
             }
             return new DerefScorer(searcher.getSimilarity(), reader);
         }

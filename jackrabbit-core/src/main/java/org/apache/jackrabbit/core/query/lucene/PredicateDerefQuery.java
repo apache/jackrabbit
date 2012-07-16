@@ -202,9 +202,9 @@ public class PredicateDerefQuery extends Query {
          */
         public Scorer scorer(IndexReader reader, boolean scoreDocsInOrder,
                 boolean topScorer) throws IOException {
-            subQueryScorer = subQuery.weight(searcher).scorer(reader, scoreDocsInOrder, topScorer);
+            subQueryScorer = subQuery.weight(searcher).scorer(reader, scoreDocsInOrder, false);
             if (nameTest != null) {
-                nameTestScorer = new NameQuery(nameTest, version, nsMappings).weight(searcher).scorer(reader, scoreDocsInOrder, topScorer);
+                nameTestScorer = new NameQuery(nameTest, version, nsMappings).weight(searcher).scorer(reader, scoreDocsInOrder, false);
             }
             return new DerefScorer(searcher.getSimilarity(), reader);
         }

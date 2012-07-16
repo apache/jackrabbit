@@ -33,13 +33,20 @@ import org.apache.lucene.document.Field;
 import org.apache.lucene.document.FieldSelector;
 import org.apache.lucene.document.Fieldable;
 import org.apache.lucene.index.CorruptIndexException;
+import org.apache.lucene.index.FieldInfos;
 import org.apache.lucene.index.FilterIndexReader;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
+import org.apache.lucene.index.IndexWriterConfig;
+import org.apache.lucene.index.KeepOnlyLastCommitDeletionPolicy;
+import org.apache.lucene.index.LogByteSizeMergePolicy;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermEnum;
 import org.apache.lucene.index.TermPositions;
+import org.apache.lucene.index.UpgradeIndexMergePolicy;
 import org.apache.lucene.store.Directory;
+import org.apache.lucene.util.ReaderUtil;
+import org.apache.lucene.util.Version;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -102,21 +109,23 @@ public class IndexMigration {
         // if we get here then the index must be migrated
         log.debug("Index requires migration {}", indexDir);
 
-        String migrationName = index.getName() + "_v2.3";
+        String migrationName = index.getName() + "_v36";
         if (directoryManager.hasDirectory(migrationName)) {
             directoryManager.delete(migrationName);
         }
 
         Directory migrationDir = directoryManager.getDirectory(migrationName);
+        final IndexWriterConfig c = new IndexWriterConfig(Version.LUCENE_36, new JackrabbitAnalyzer());
+        c.setMergePolicy(new UpgradeIndexMergePolicy(new LogByteSizeMergePolicy()));
+        c.setIndexDeletionPolicy(new KeepOnlyLastCommitDeletionPolicy()); 
         try {
-            IndexWriter writer = new IndexWriter(migrationDir, new JackrabbitAnalyzer(),
-                    IndexWriter.MaxFieldLength.UNLIMITED);
+            IndexWriter writer = new IndexWriter(migrationDir, c);
             try {
-                IndexReader r = new MigrationIndexReader(
-                        IndexReader.open(index.getDirectory(), true),
+                IndexReader r = new MigrationIndexReader(IndexReader.open(index.getDirectory()),
                         oldSeparatorChar);
                 try {
-                    writer.addIndexes(new IndexReader[]{r});
+                    writer.addIndexes(r);
+                    writer.forceMerge(1);
                     writer.close();
                 } finally {
                     r.close();
@@ -129,8 +138,7 @@ public class IndexMigration {
         }
         directoryManager.delete(index.getName());
         if (!directoryManager.rename(migrationName, index.getName())) {
-            throw new IOException("failed to move migrated directory " +
-                    migrationDir);
+            throw new IOException("failed to move migrated directory " + migrationDir);
         }
         log.info("Migrated " + index.getName());
     }
@@ -150,6 +158,17 @@ public class IndexMigration {
             this.oldSepChar = oldSepChar;
         }
 
+        @Override
+        public IndexReader[] getSequentialSubReaders() {
+            return null;
+        }
+
+        @Override
+        public FieldInfos getFieldInfos() {
+            return ReaderUtil.getMergedFieldInfos(in);
+        }
+
+        @Override
         public Document document(int n, FieldSelector fieldSelector)
                 throws CorruptIndexException, IOException {
             Document doc = super.document(n, fieldSelector);
@@ -167,12 +186,10 @@ public class IndexMigration {
             return doc;
         }
 
+        @Override
         public TermEnum terms() throws IOException {
             List<TermEnum> enums = new ArrayList<TermEnum>();
-            List<String> fieldNames = new ArrayList<String>();
-            for (Object obj : in.getFieldNames(FieldOption.ALL)) {
-                fieldNames.add((String) obj);
-            }
+            List<String> fieldNames = new ArrayList<String>(ReaderUtil.getIndexedFields(in));
             Collections.sort(fieldNames);
             for (String fieldName : fieldNames) {
                 if (fieldName.equals(FieldNames.PROPERTIES)) {
@@ -184,6 +201,7 @@ public class IndexMigration {
             return new MigrationTermEnum(new ChainedTermEnum(enums), oldSepChar);
         }
 
+        @Override
         public TermPositions termPositions() throws IOException {
             return new MigrationTermPositions(in.termPositions(), oldSepChar);
         }

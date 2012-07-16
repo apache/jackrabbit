@@ -19,6 +19,7 @@ package org.apache.jackrabbit.core.query.lucene;
 import java.util.Collection;
 
 import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.util.ReaderUtil;
 
 /**
  * This class indicates the lucene index format that is used.
@@ -102,8 +103,7 @@ public class IndexFormatVersion {
      * index reader.
      */
     public static IndexFormatVersion getVersion(IndexReader indexReader) {
-        Collection<String> fields = indexReader.getFieldNames(
-                IndexReader.FieldOption.ALL);
+        Collection<String> fields = ReaderUtil.getIndexedFields(indexReader);
         if (fields.contains(FieldNames.LOCAL_NAME) || indexReader.numDocs() == 0) {
             return IndexFormatVersion.V3;
         } else if (fields.contains(FieldNames.PROPERTIES_SET)) {
