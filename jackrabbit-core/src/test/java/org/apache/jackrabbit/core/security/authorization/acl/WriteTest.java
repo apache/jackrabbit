@@ -26,6 +26,7 @@ import org.apache.jackrabbit.core.security.authorization.PrivilegeRegistry;
 import org.apache.jackrabbit.core.security.principal.EveryonePrincipal;
 import org.apache.jackrabbit.core.security.TestPrincipal;
 import org.apache.jackrabbit.test.NotExecutableException;
+import org.apache.jackrabbit.util.Text;
 
 import javax.jcr.AccessDeniedException;
 import javax.jcr.Node;
@@ -529,5 +530,27 @@ public class WriteTest extends AbstractWriteTest {
             acMgr.setPolicy(tmpl.getPath(), tmpl);
             superuser.save();
         }
+    }
+
+    public void testReorderPolicyNode() throws RepositoryException, NotExecutableException {
+        Session testSession = getTestSession();
+        Node n = testSession.getNode(path);
+        try {
+            if (!n.getPrimaryNodeType().hasOrderableChildNodes()) {
+                throw new NotExecutableException("Reordering child nodes is not supported..");
+            }
+
+            n.orderBefore(Text.getName(childNPath), Text.getName(childNPath2));
+            testSession.save();
+            fail("test session must not be allowed to reorder nodes.");
+        } catch (AccessDeniedException e) {
+            // success.
+        }
+
+        // grant all privileges
+        givePrivileges(path, privilegesFromNames(new String[] {Privilege.JCR_ALL}), getRestrictions(superuser, path));
+
+        n.orderBefore("rep:policy", Text.getName(childNPath2));
+        testSession.save();
     }
 }
