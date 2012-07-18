@@ -699,6 +699,13 @@ abstract class InternalVersionManagerBase implements InternalVersionManager {
     protected String calculateCheckinVersionName(InternalVersionHistoryImpl history,
                                                  NodeStateEx node, boolean simple)
             throws RepositoryException {
+
+        if (history == null) {
+            String message = "Node " + node.getNodeId() + " has no version history";
+            log.error(message);
+            throw new VersionException(message);
+        }
+
         InternalVersion best = null;
         if (simple) {
             // 1. in simple versioning just take the 'head' version
@@ -721,12 +728,24 @@ abstract class InternalVersionManagerBase implements InternalVersionManager {
 
             for (InternalValue value: values) {
                 InternalVersion pred = history.getVersion(value.getNodeId());
+                if (pred == null) {
+                    String message = "Could not instantiate InternalVersion for nodeId " + value.getNodeId() + " (VHR + " + history.getId() + ", node " + node.getNodeId() + ")";
+                    log.error(message);
+                    throw new VersionException(message);
+                }
                 if (best == null
                         || pred.getName().getLocalName().length() < best.getName().getLocalName().length()) {
                     best = pred;
                 }
             }
         }
+
+        if (best == null) {
+            String message = "Could not find 'best' predecessor node for " + node.getNodeId();
+            log.error(message);
+            throw new VersionException(message);
+        }
+
         // 2. generate version name (assume no namespaces in version names)
         String versionName = best.getName().getLocalName();
         int pos = versionName.lastIndexOf('.');
