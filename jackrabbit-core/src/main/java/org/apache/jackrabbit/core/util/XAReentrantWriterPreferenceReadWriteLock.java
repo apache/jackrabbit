@@ -14,20 +14,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.core.journal;
+package org.apache.jackrabbit.core.util;
 
 import static org.apache.jackrabbit.core.TransactionContext.getCurrentThreadId;
 import static org.apache.jackrabbit.core.TransactionContext.isSameThreadId;
 import EDU.oswego.cs.dl.util.concurrent.ReentrantWriterPreferenceReadWriteLock;
 
 /**
- * A reentrant read-write lock used by the Journal for synchronization. 
+ * A reentrant read-write lock for synchronization. 
  * Unlike a normal reentrant lock, this one allows the lock
  * to be re-entered not just by a thread that's already holding the lock but
  * by any thread within the same transaction.
  */
-public class JournalLock extends ReentrantWriterPreferenceReadWriteLock {
-    
+public class XAReentrantWriterPreferenceReadWriteLock extends ReentrantWriterPreferenceReadWriteLock{
+	
 	private Object activeWriter;
     
     /**
