@@ -22,7 +22,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -37,14 +36,12 @@ import javax.jcr.lock.Lock;
 import javax.jcr.lock.LockException;
 import javax.jcr.observation.Event;
 import javax.jcr.observation.EventIterator;
-import javax.transaction.xa.Xid;
 
 import org.apache.commons.collections.map.LinkedMap;
 import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.SessionListener;
-import org.apache.jackrabbit.core.TransactionContext;
 import org.apache.jackrabbit.core.WorkspaceImpl;
 import org.apache.jackrabbit.core.cluster.ClusterOperation;
 import org.apache.jackrabbit.core.cluster.LockEventChannel;
@@ -61,6 +58,7 @@ import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.core.state.UpdatableItemStateManager;
+import org.apache.jackrabbit.core.util.XAReentrantLock;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
@@ -68,8 +66,6 @@ import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.spi.commons.name.PathMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import EDU.oswego.cs.dl.util.concurrent.ReentrantLock;
 
 /**
  * Provides the functionality needed for locking and unlocking nodes.
@@ -93,73 +89,10 @@ public class LockManagerImpl
     private final PathMap<LockInfo> lockMap = new PathMap<LockInfo>();
 
     /**
-     * Thread aware lock to path map.
+     * XA/Thread aware lock to path map.
      */
-    private final ReentrantLock lockMapLock = new ReentrantLock();
+    private final XAReentrantLock lockMapLock = new XAReentrantLock();
     
-    /**
-     * Xid aware lock to path map.
-     */
-    private final ReentrantLock xidlockMapLock = new ReentrantLock(){
-
-    	/**
-    	 * The active Xid of this {@link ReentrantLock}
-    	 */
-        private Xid activeXid;
-
-        /**
-         * Check if the given Xid comes from the same globalTX
-         * @param otherXid
-         * @return true if same globalTX otherwise false
-         */
-        boolean isSameGlobalTx(Xid otherXid) {
-    	    return (activeXid == otherXid) || Arrays.equals(activeXid.getGlobalTransactionId(), otherXid.getGlobalTransactionId());
-    	}
-        
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public void acquire() throws InterruptedException {
-            if (Thread.interrupted()) {
-                throw new InterruptedException();
-            }
-            Xid currentXid = TransactionContext.getCurrentXid();
-            synchronized(this) {
-                if (currentXid == activeXid || (activeXid != null && isSameGlobalTx(currentXid))) { 
-                    ++holds_;
-                } else {
-                    try {  
-                        while (activeXid != null) {
-                            wait(); 
-                        }
-                        activeXid = currentXid;
-                        holds_ = 1;
-                    } catch (InterruptedException ex) {
-                        notify();
-                        throw ex;
-                    }
-                }
-            }
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public synchronized void release()  {
-            Xid currentXid = TransactionContext.getCurrentXid();
-            if (activeXid != null && !isSameGlobalTx(currentXid)) {
-                throw new Error("Illegal Lock usage"); 
-            }
-
-            if (--holds_ == 0) {
-                activeXid = null;
-                notify(); 
-            }
-        }
-    };
-
     /**
      * The periodically invoked lock timeout handler.
      */
@@ -868,11 +801,7 @@ public class LockManagerImpl
     private void acquire() {
         for (;;) {
             try {
-            	if (TransactionContext.getCurrentXid() == null) {
-            		lockMapLock.acquire();
-            	} else {
-            		xidlockMapLock.acquire();
-            	}
+           		lockMapLock.acquire();
                 break;
             } catch (InterruptedException e) {
                 // ignore
@@ -884,11 +813,7 @@ public class LockManagerImpl
      * Release lock on the lock map.
      */
     private void release() {
-    	if (TransactionContext.getCurrentXid() == null) {
-    		lockMapLock.release();
-    	} else {
-    		xidlockMapLock.release();
-    	}
+   		lockMapLock.release();
     }
 
     /**
