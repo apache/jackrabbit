@@ -134,7 +134,7 @@ public class EntryCollector extends AccessControlObserver implements AccessContr
             }
             next = getParentId(next);
         }
-        
+
         List<AccessControlEntry> entries = new ArrayList<AccessControlEntry>(userAces.size() + groupAces.size());
         entries.addAll(userAces);
         entries.addAll(groupAces);
@@ -156,7 +156,7 @@ public class EntryCollector extends AccessControlObserver implements AccessContr
         if (ACLProvider.isAccessControlled(node)) {
             // collect the aces of that node.
             NodeImpl aclNode = node.getNode(N_POLICY);
-            entries = new ACLTemplate(aclNode, privilegeRegistry).getEntries();
+            entries = new ACLTemplate(aclNode, node.getPath(), privilegeRegistry).getEntries();
         } else {
             // not access controlled
             entries = Collections.emptyList();
