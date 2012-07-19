@@ -38,7 +38,6 @@ import org.apache.jackrabbit.api.security.principal.PrincipalManager;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.id.NodeId;
-import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
 import org.apache.jackrabbit.core.security.authorization.AbstractACLTemplate;
 import org.apache.jackrabbit.core.security.authorization.AccessControlEntryImpl;
 import org.apache.jackrabbit.core.security.authorization.Permission;
@@ -127,9 +126,9 @@ class ACLTemplate extends AbstractACLTemplate {
      * @param privilegeRegistry registry
      * @throws RepositoryException if an error occurs
      */
-    ACLTemplate(NodeImpl aclNode, PrivilegeRegistry privilegeRegistry) throws RepositoryException {
-        super((aclNode != null) ? aclNode.getParent().getPath() : null, (aclNode != null) ? aclNode.getSession().getValueFactory() : null);
-        if (aclNode == null || !NT_REP_ACL.equals(((NodeTypeImpl)aclNode.getPrimaryNodeType()).getQName())) {
+    ACLTemplate(NodeImpl aclNode, String path, PrivilegeRegistry privilegeRegistry) throws RepositoryException {
+        super(path, (aclNode != null) ? aclNode.getSession().getValueFactory() : null);
+        if (aclNode == null || !NT_REP_ACL.equals(aclNode.getPrimaryNodeTypeName())) {
             throw new IllegalArgumentException("Node must be of type 'rep:ACL'");
         }
         SessionImpl sImpl = (SessionImpl) aclNode.getSession();
@@ -164,11 +163,8 @@ class ACLTemplate extends AbstractACLTemplate {
                     restrictions = Collections.singletonMap(jcrRepGlob, aceNode.getProperty(P_GLOB).getValue());
                 }
                 // create a new ACEImpl (omitting validation check)
-                Entry ace = createEntry(
-                        princ,
-                        privs,
-                        NT_REP_GRANT_ACE.equals(((NodeTypeImpl) aceNode.getPrimaryNodeType()).getQName()),
-                        restrictions);
+                boolean isAllow = NT_REP_GRANT_ACE.equals(aceNode.getPrimaryNodeTypeName());
+                Entry ace = createEntry(princ, privs, isAllow, restrictions);
                 // add the entry
                 internalAdd(ace);
             } catch (RepositoryException e) {

@@ -87,8 +87,8 @@ public class ACLEditor extends ProtectedItemModifier implements AccessControlEdi
      * @return the control list
      * @throws RepositoryException if an error occurs
      */
-    ACLTemplate getACL(NodeImpl aclNode) throws RepositoryException {
-        return new ACLTemplate(aclNode, privilegeRegistry);
+    ACLTemplate getACL(NodeImpl aclNode, String path) throws RepositoryException {
+        return new ACLTemplate(aclNode, path, privilegeRegistry);
     }
 
     //------------------------------------------------< AccessControlEditor >---
@@ -102,7 +102,7 @@ public class ACLEditor extends ProtectedItemModifier implements AccessControlEdi
         if (aclNode == null) {
             return new AccessControlPolicy[0];
         } else {
-            return new AccessControlPolicy[] {getACL(aclNode)};
+            return new AccessControlPolicy[] {getACL(aclNode, nodePath)};
         }
     }
 
