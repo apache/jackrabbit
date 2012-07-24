@@ -377,13 +377,6 @@ public final class PrivilegeRegistry implements PrivilegeEventListener {
                 perm |= Permission.ADD_NODE;
             }
 
-            // modify_child_node_collection permission is granted through
-            // privileges on the parent
-            if ((parentPrivs & ADD_CHILD_NODES) == ADD_CHILD_NODES &&
-                    (parentPrivs & REMOVE_CHILD_NODES) == REMOVE_CHILD_NODES) {
-                perm |= Permission.MODIFY_CHILD_NODE_COLLECTION;
-            }
-
             /*
              remove_node is
              allowed: only if remove_child_nodes privilege is present on
@@ -402,6 +395,13 @@ public final class PrivilegeRegistry implements PrivilegeEventListener {
                     perm |= Permission.REMOVE_NODE;
                 }
             }
+        }
+
+        // modify_child_node_collection permission is granted through
+        // privileges on the parent
+        if ((parentPrivs & ADD_CHILD_NODES) == ADD_CHILD_NODES &&
+                (parentPrivs & REMOVE_CHILD_NODES) == REMOVE_CHILD_NODES) {
+            perm |= Permission.MODIFY_CHILD_NODE_COLLECTION;
         }
 
         // the remaining (special) permissions are simply defined on the node
