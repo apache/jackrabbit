@@ -123,7 +123,7 @@ class CachingEntryCollector extends EntryCollector {
      */
     private Entries internalUpdateCache(NodeImpl node) throws RepositoryException {
         Entries entries = super.getEntries(node);
-        if (cacheNoAcl || !entries.isEmpty()) {
+        if (cacheNoAcl || (isRootId(node.getNodeId()) && cache.specialCasesRoot()) || !entries.isEmpty()) {
             // adjust the 'nextId' to point to the next access controlled
             // ancestor node instead of the parent and remember the entries.
             entries.setNextId(getNextID(node));
@@ -367,6 +367,10 @@ class CachingEntryCollector extends EntryCollector {
             specialCaseRoot = Boolean.parseBoolean(System.getProperty(propsrname, "true"));
 
             log.info("Root is special-cased: " + specialCaseRoot);
+        }
+
+        public boolean specialCasesRoot() {
+            return specialCaseRoot;
         }
 
         public boolean containsKey(NodeId id) {
