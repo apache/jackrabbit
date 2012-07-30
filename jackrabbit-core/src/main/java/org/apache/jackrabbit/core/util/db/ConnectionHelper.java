@@ -22,6 +22,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -80,7 +81,7 @@ public class ConnectionHelper {
 
     protected final DataSource dataSource;
 
-    private Map<String, Connection> batchConnectionMap = Collections.synchronizedMap(new HashMap<String, Connection>());
+    private Map<Object, Connection> batchConnectionMap = Collections.synchronizedMap(new HashMap<Object, Connection>());
 
     /**
      * The default fetchSize is '0'. This means the fetchSize Hint will be ignored 
@@ -448,7 +449,7 @@ public class ConnectionHelper {
      */
     private Connection getTransactionAwareBatchConnection() {
     	Object threadId = TransactionContext.getCurrentThreadId();
-       	return batchConnectionMap.get(threadIdToString(threadId));
+       	return batchConnectionMap.get(threadIdToObject(threadId));
 	}
 
     /**
@@ -460,7 +461,7 @@ public class ConnectionHelper {
      */
 	private void setTransactionAwareBatchConnection(Connection batchConnection) {
     	Object threadId = TransactionContext.getCurrentThreadId();
-    	batchConnectionMap.put(threadIdToString(threadId), batchConnection);
+    	batchConnectionMap.put(threadIdToObject(threadId), batchConnection);
 	}
 
     /**
@@ -468,7 +469,7 @@ public class ConnectionHelper {
      */
 	private void removeTransactionAwareBatchConnection() {
     	Object threadId = TransactionContext.getCurrentThreadId();
-    	batchConnectionMap.remove(threadIdToString(threadId));
+    	batchConnectionMap.remove(threadIdToObject(threadId));
 	}
 	
     /**
@@ -477,22 +478,9 @@ public class ConnectionHelper {
      * @param threadId
      * @return String
      */
-    private String threadIdToString(Object threadId) {
+    private Object threadIdToObject(Object threadId) {
     	if (threadId instanceof byte[]) {
-    		byte[] gtrid = (byte[]) threadId;
-    		int hexVal;
-    		StringBuffer sb = new StringBuffer(512);
-    		sb.append(" gtrid(" + gtrid.length + ")={0x");
-    		for (int i=0; i< gtrid.length; i++) {
-    			hexVal = gtrid[i]&0xFF;
-    			if ( hexVal < 0x10 ) {
-    				sb.append("0" + Integer.toHexString(gtrid[i]&0xFF));
-    			} else {
-    				sb.append(Integer.toHexString(gtrid[i]&0xFF));
-    			}
-    		}
-    		sb.append("}");
-    		return sb.toString();
+    		return new XidWrapper((byte[]) threadId);
     	} else {
     		return threadId.toString();
     	}
@@ -616,5 +604,30 @@ public class ConnectionHelper {
 		        }
 		    }
 		}
+    }
+    
+    /**
+     * Wrapper around a global transaction id (byte[]) 
+     * that handles hashCode and equals in a proper way.
+     */
+    private class XidWrapper {
+    	private byte[] gtid;
+    	
+    	public XidWrapper(byte[] gtid) {
+    		this.gtid = gtid;
+    	}
+
+        @Override
+        public boolean equals(Object other) {
+            if (!(other instanceof XidWrapper)) {
+                return false;
+            }
+            return TransactionContext.isSameThreadId(gtid, ((XidWrapper)other).gtid);
+        }
+
+        @Override
+        public int hashCode() {
+            return Arrays.hashCode(gtid);
+        }
     }
 }
