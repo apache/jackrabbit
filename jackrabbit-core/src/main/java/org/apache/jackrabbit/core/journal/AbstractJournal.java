@@ -30,7 +30,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import EDU.oswego.cs.dl.util.concurrent.ReadWriteLock;
-import EDU.oswego.cs.dl.util.concurrent.ReentrantWriterPreferenceReadWriteLock;
 
 /**
  * Base journal implementation.
@@ -71,7 +70,7 @@ public abstract class AbstractJournal implements Journal {
      * Journal lock, allowing multiple readers (synchronizing their contents)
      * but only one writer (appending a new entry).
      */
-    private final ReadWriteLock rwLock = new ReentrantWriterPreferenceReadWriteLock();
+    private final ReadWriteLock rwLock = new JournalLock();
 
     /**
      * The path of the local revision file on disk. Configurable through the repository.xml.
