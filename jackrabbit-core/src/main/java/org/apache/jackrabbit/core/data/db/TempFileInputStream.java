@@ -39,6 +39,7 @@ public class TempFileInputStream extends AutoCloseInputStream {
 
     private final File file;
     private boolean closed;
+    private boolean delayedResourceCleanup = true;
 
     /**
      * Copy the data to a file and close the input stream afterwards.
@@ -57,17 +58,28 @@ public class TempFileInputStream extends AutoCloseInputStream {
 
     /**
      * Construct a new temporary file input stream.
-     * The file is deleted if the input stream is closed or fully read.
+     * The file is deleted if the input stream is closed or fully read and 
+     * delayedResourceCleanup was set to true. Otherwise you must call {@link #deleteFile()}.
      * Deleting is only attempted once.
      *
      * @param file the temporary file
+     * @param delayedResourceCleanup
      */
-    public TempFileInputStream(File file) throws FileNotFoundException {
+    public TempFileInputStream(File file, boolean delayedResourceCleanup) throws FileNotFoundException {
         super(new BufferedInputStream(new FileInputStream(file)));
         this.file = file;
+        this.delayedResourceCleanup = delayedResourceCleanup;
     }
 
-    private int closeIfEOF(int read) throws IOException {
+    public File getFile() {
+    	return file;
+    }
+    
+    public void deleteFile() {
+	    file.delete();
+	}
+
+	private int closeIfEOF(int read) throws IOException {
         if (read < 0) {
             close();
         }
@@ -77,7 +89,9 @@ public class TempFileInputStream extends AutoCloseInputStream {
     public void close() throws IOException {
         if (!closed) {
             in.close();
-            file.delete();
+            if (!delayedResourceCleanup) {
+            	deleteFile();
+            }
             closed = true;
         }
     }

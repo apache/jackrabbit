@@ -346,9 +346,8 @@ public class DbDataStore implements DataStore, DatabaseAware {
                 wrapper = new StreamWrapper(in, Integer.MAX_VALUE);
             } else if (STORE_TEMP_FILE.equals(storeStream)) {
                 File temp = moveToTempFile(in);
-                fileInput = new BufferedInputStream(new TempFileInputStream(temp));
                 long length = temp.length();
-                wrapper = new StreamWrapper(fileInput, length);
+                wrapper = new StreamWrapper(new TempFileInputStream(temp, true), length);
             } else {
                 throw new DataStoreException("Unsupported stream store algorithm: " + storeStream);
             }
@@ -579,7 +578,7 @@ public class DbDataStore implements DataStore, DatabaseAware {
             } else if (copyWhenReading) {
                 // If we copy while reading, create a temp file and close the stream
                 File temp = moveToTempFile(stream);
-                stream = new BufferedInputStream(new TempFileInputStream(temp));
+                stream = new BufferedInputStream(new TempFileInputStream(temp, false));
                 DbUtility.close(rs);
             } else {
                 stream = new BufferedInputStream(stream);

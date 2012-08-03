@@ -278,7 +278,7 @@ public class ConnectionHelper {
      * @throws SQLException on error
      */
     public final void exec(final String sql, final Object... params) throws SQLException {
-        new RetryManager<Void>() {
+        new RetryManager<Void>(params) {
 
             @Override
             protected Void call() throws SQLException {
@@ -316,7 +316,7 @@ public class ConnectionHelper {
      * @throws SQLException on error
      */
     public final int update(final String sql, final Object... params) throws SQLException {
-        return new RetryManager<Integer>() {
+        return new RetryManager<Integer>(params) {
 
             @Override
             protected Integer call() throws SQLException {
@@ -363,11 +363,11 @@ public class ConnectionHelper {
      */
     public final ResultSet exec(final String sql, final Object[] params, final boolean returnGeneratedKeys,
             final int maxRows) throws SQLException {
-        return new RetryManager<ResultSet>() {
+        return new RetryManager<ResultSet>(params) {
 
             @Override
             protected ResultSet call() throws SQLException {
-                return reallyExec(sql, params, returnGeneratedKeys, maxRows);
+            	return reallyExec(sql, params, returnGeneratedKeys, maxRows);
             }
 
         }.doTry();
@@ -463,7 +463,6 @@ public class ConnectionHelper {
     protected PreparedStatement execute(PreparedStatement stmt, Object[] params) throws SQLException {
         for (int i = 0; params != null && i < params.length; i++) {
             Object p = params[i];
-            // FIXME: what about already consumed input streams when in a retry?
             if (p instanceof StreamWrapper) {
                 StreamWrapper wrapper = (StreamWrapper) p;
                 stmt.setBinaryStream(i + 1, wrapper.getStream(), (int) wrapper.getSize());
@@ -471,17 +470,39 @@ public class ConnectionHelper {
                 stmt.setObject(i + 1, p);
             }
         }
-        stmt.execute();
+        try {
+        	stmt.execute();
+        } catch (SQLException e) {
+        	//Reset Stream for retry ...
+            for (int i = 0; params != null && i < params.length; i++) {
+                Object p = params[i];
+                if (p instanceof StreamWrapper) {
+                    StreamWrapper wrapper = (StreamWrapper) p;
+                    if(!wrapper.resetStream()) {
+                    	wrapper.cleanupResources();
+                    	throw new RuntimeException("Unable to reset the Stream.");
+                    }
+                }
+            }
+        	throw e;
+        }
         return stmt;
     }
 
     /**
      * This class encapsulates the logic to retry a method invocation if it threw an SQLException.
+     * The RetryManager must cleanup the Params it will get.
      *
      * @param <T> the return type of the method which is retried if it failed
      */
     public abstract class RetryManager<T> {
 
+    	private Object[] params;
+    	
+    	public RetryManager(Object[] params) {
+    		this.params = params;
+    	}
+    	
         public final T doTry() throws SQLException {
             if (inBatchMode()) {
                 return call();
@@ -491,7 +512,9 @@ public class ConnectionHelper {
                 SQLException lastException = null;
                 while (!sleepInterrupted && (blockOnConnectionLoss || failures <= RETRIES)) {
                     try {
-                        return call();
+                    	T object = call(); 
+                        cleanupParamResources();
+                        return object;
                     } catch (SQLException e) {
                         lastException = e;
                     }
@@ -508,10 +531,26 @@ public class ConnectionHelper {
                         }
                     }
                 }
+                cleanupParamResources();
                 throw lastException;
             }
         }
 
         protected abstract T call() throws SQLException;
+
+		/**
+		 * Cleans up the Parameter resources that are not automatically closed or deleted.
+		 *
+		 * @param params
+		 */
+		protected void cleanupParamResources() {
+		    for (int i = 0; params != null && i < params.length; i++) {
+		        Object p = params[i];
+		        if (p instanceof StreamWrapper) {
+		            StreamWrapper wrapper = (StreamWrapper) p;
+		            wrapper.cleanupResources();
+		        }
+		    }
+		}
     }
 }

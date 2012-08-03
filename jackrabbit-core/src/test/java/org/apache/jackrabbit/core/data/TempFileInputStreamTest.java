@@ -33,7 +33,7 @@ public class TempFileInputStreamTest extends JUnitTest {
     public void testReadPastEOF() throws IOException {
         File temp = File.createTempFile("test", null);
         TempFileInputStream.writeToFileAndClose(new ByteArrayInputStream(new byte[1]), temp);
-        TempFileInputStream in = new TempFileInputStream(temp);
+        TempFileInputStream in = new TempFileInputStream(temp, false);
         assertEquals(0, in.read());
         assertEquals(-1, in.read());
         assertEquals(-1, in.read());
@@ -44,7 +44,7 @@ public class TempFileInputStreamTest extends JUnitTest {
     public void testMarkReset() throws IOException {
         File temp = File.createTempFile("test", null);
         TempFileInputStream.writeToFileAndClose(new ByteArrayInputStream(new byte[10]), temp);
-        InputStream in = new BufferedInputStream(new TempFileInputStream(temp));
+        InputStream in = new BufferedInputStream(new TempFileInputStream(temp, false));
         in.mark(100);
         for (int i = 0; i < 10; i++) {
             assertEquals(0, in.read());
