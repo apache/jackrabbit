@@ -22,9 +22,14 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.sql.DataSource;
+import javax.transaction.xa.Xid;
 
+import org.apache.jackrabbit.core.TransactionContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -77,7 +82,8 @@ public class ConnectionHelper {
     protected final DataSource dataSource;
 
     private ThreadLocal<Connection> batchConnectionTl = new ThreadLocal<Connection>();
-    
+    private Map<String, Connection> xaBatchConnectionMap = Collections.synchronizedMap(new HashMap<String, Connection>());
+
     /**
      * The default fetchSize is '0'. This means the fetchSize Hint will be ignored 
      */
@@ -166,12 +172,11 @@ public class ConnectionHelper {
      * Returns true if we are currently in a batch mode, false otherwise.
      * @return true if the current thread is running in batch mode, false otherwise.
      */
-    protected boolean inBatchMode()
-    {
-      return batchConnectionTl.get() != null;
+    protected boolean inBatchMode() {
+    	return getTransactionAwareBatchConnection() != null;
     }
 
-    /**
+	/**
      * The default implementation returns the {@code extraNameCharacters} provided by the databases metadata.
      *
      * @return the additional characters for identifiers supported by the db
@@ -233,18 +238,18 @@ public class ConnectionHelper {
         try {
             batchConnection = getConnection();
             batchConnection.setAutoCommit(false);
-            batchConnectionTl.set(batchConnection);
+            setTransactionAwareBatchConnection(batchConnection);
         } catch (SQLException e) {
             // Strive for failure atomicity
             if (batchConnection != null) {
                 DbUtility.close(batchConnection, null, null);
             }
-            batchConnectionTl.remove();
+            removeTransactionAwareBatchConnection();
             throw e;
         }
     }
 
-    /**
+	/**
      * This method always ends the <i>batch mode</i>.
      *
      * @param commit whether the changes in the batch should be committed or rolled back
@@ -257,13 +262,13 @@ public class ConnectionHelper {
         }
         try {
             if (commit) {
-                batchConnectionTl.get().commit();
+            	getTransactionAwareBatchConnection().commit();
             } else {
-                batchConnectionTl.get().rollback();
+            	getTransactionAwareBatchConnection().rollback();
             }
         } finally {
-            DbUtility.close(batchConnectionTl.get(), null, null);
-            batchConnectionTl.set(null);
+            DbUtility.close(getTransactionAwareBatchConnection(), null, null);
+            removeTransactionAwareBatchConnection();
         }
     }
 
@@ -423,7 +428,7 @@ public class ConnectionHelper {
      */
     protected final Connection getConnection() throws SQLException {
         if (inBatchMode()) {
-            return batchConnectionTl.get();
+            return getTransactionAwareBatchConnection();
         } else {
             Connection con = dataSource.getConnection();
             // JCR-1013: Setter may fail unnecessarily on a managed connection
@@ -435,6 +440,70 @@ public class ConnectionHelper {
     }
 
     /**
+     * Returns the Batch Connection. In XA Environment it is stored
+     * in a Cache-Map based on the current Xid. In Non-XA Environment a ThreadLocal is used.
+     * 
+     * @return Connection
+     */
+    private Connection getTransactionAwareBatchConnection() {
+    	Xid currentXid = TransactionContext.getCurrentXid();
+    	if (currentXid != null) {
+           	return xaBatchConnectionMap.get(xidtoString(currentXid.getGlobalTransactionId()));
+    	} else {
+    		return batchConnectionTl.get();
+    	}
+	}
+
+    /**
+     * Setter for the Batch Connection. In XA Environment it will be stored
+     * in a Cache-Map based on the current Xid. In Non-XA Environment a ThreadLocal is used.
+     * 
+     * @param batchConnection
+     */
+	private void setTransactionAwareBatchConnection(Connection batchConnection) {
+    	Xid currentXid = TransactionContext.getCurrentXid();
+    	if (currentXid != null) {
+       		xaBatchConnectionMap.put(xidtoString(currentXid.getGlobalTransactionId()), batchConnection);
+    	} else {
+    		batchConnectionTl.set(batchConnection);
+    	}
+	}
+
+    /**
+     * Removes the Batch Connection. In XA Environment it will be stored
+     * in a Cache-Map based on the current Xid. In Non-XA Environment a ThreadLocal is used.
+     */
+	private void removeTransactionAwareBatchConnection() {
+    	Xid currentXid = TransactionContext.getCurrentXid();
+    	if (currentXid != null) {
+       		xaBatchConnectionMap.remove(xidtoString(currentXid.getGlobalTransactionId()));
+    	} else {
+    		batchConnectionTl.remove();
+    	}
+	}
+	
+    /**
+     * Creates a comparable String from the given GlobalTransactionId byte[]
+     * 
+     * @param gtrid
+     * @return String
+     */
+    private String xidtoString(byte[] gtrid) {
+        int hexVal;
+        StringBuffer sb = new StringBuffer(512);
+        sb.append(" gtrid(" + gtrid.length + ")={0x");
+        for (int i=0; i<gtrid.length; i++) {
+           hexVal = gtrid[i]&0xFF;
+           if ( hexVal < 0x10 )
+              sb.append("0" + Integer.toHexString(gtrid[i]&0xFF));
+           else
+              sb.append(Integer.toHexString(gtrid[i]&0xFF));
+           }
+        sb.append("}");
+        return sb.toString();
+    }
+
+	/**
      * Closes the given resources given the {@code batchMode} state.
      *
      * @param con the {@code Connection} obtained through the {@link #getConnection()} method
