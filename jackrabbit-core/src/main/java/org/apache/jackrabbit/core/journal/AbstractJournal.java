@@ -326,9 +326,13 @@ public abstract class AbstractJournal implements Journal {
      *                   successful
      */
     public void unlock(boolean successful) {
-        doUnlock(successful);
-
-        rwLock.writeLock().release();
+    	try {
+    		doUnlock(successful);
+    	} finally {
+    		//Should not happen that a RuntimeException will be thrown in subCode, but it's safer
+    		//to release the rwLock in finally block.
+            rwLock.writeLock().release();
+    	}
     }
 
     /**
