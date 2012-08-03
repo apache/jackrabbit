@@ -1,4 +1,4 @@
-Release Notes -- Apache Jackrabbit -- Version 2.5.0
+Release Notes -- Apache Jackrabbit -- Version 2.5.1
 
 Introduction
 ------------
@@ -10,6 +10,74 @@ specified in the Java Specification Request 283 (JSR 283).
 Apache Jackrabbit 2.5 is an unstable series of releases cut directly from
 Jackrabbit trunk, with a focus on new features and other improvements.
 For production use we recommend the latest stable 2.4 release.
+
+
+Changes in Jackrabbit 2.5.1
+---------------------------
+
+Improvements
+
+  [JCR-3242] - Update to Lucene 3.6
+  [JCR-3263] - Consistency checker performance improvements
+  [JCR-3265] - Consistency checker should double check for false positives
+  [JCR-3269] - Consistency checker should fix 'disconnected' nodes
+  [JCR-3319] - Improve performance of repository updates - tweak index 'deletes' creation
+  [JCR-3327] - Upgrade to Java SE 6
+  [JCR-3330] - upgrade httpclient 3 dependency to final release 3.1
+  [JCR-3331] - various tests do not compile with source==1.6
+  [JCR-3332] - Add constructor with size argument to Node- and PropertyIteratorAdapter
+  [JCR-3339] - Log stack trace with warn message in ObservationDispatcher
+  [JCR-3350] - Easy-to-use utility class for adding ACEs to nodes
+  [JCR-3351] - Add performance test setup for jr2.6
+  [JCR-3352] - Minor improvements for collecting ACEs
+  [JCR-3356] - performance tests
+  [JCR-3358] - Allow null type in JcrUtils.getOrAddNode(parent, name, type)
+  [JCR-3362] - Use a basic form for audit logs
+  [JCR-3365] - Provide get property and get node utility methods in JcrUtils
+  [JCR-3369] - Garbage collector improvements
+  [JCR-3370] - TCK test for shareable node paths assumes work area
+  [JCR-3371] - TCK test for shareable nodes incorrectly assumes the 'mix:shareable' mixin cannot be removed
+  [JCR-3376] - TCK: SQLPathTest.testChildAxisRoot expects root node not in result
+  [JCR-3386] - Adjust some default values of the BasicDataSource in the ConnectionFactory
+  [JCR-3392] - Combine the XA aware (Reentrant) LockImpls to prevent duplicate code
+  [JCR-3393] - InternalVersionManagerBase.calculateCheckinVersionName may fail with NPE on broken versioning persistence
+
+Bug fixes
+
+  [JCR-2666] - JCR TCK Test for Restoring Version Tests That Versionable Child Is also Restored, contrary to JCR 2.0 specification
+  [JCR-3267] - Consistency checker needs to run multiple times to fix all problems
+  [JCR-3313] - JCR TCK Test for expanding column names is too restrictive
+  [JCR-3318] - BLOB not stored and no exception thrown
+  [JCR-3321] - TCK: Strange XPath query in OrderByMultiTypeTest.testMultipleOrder
+  [JCR-3324] - TCK: GetQueryTest.testGetQuery() unnecessarily uses a same name sibling
+  [JCR-3325] - check-release script fails to compute hashes on Cygwin (conf'd to text mode)
+  [JCR-3326] - missing test configuration for org.apache.jackrabbit.test.api.version.RestoreTest.testRestoreNameJcr2()
+  [JCR-3328] - leaking temp files
+  [JCR-3329] - incorrect WebDAV PROPFIND response for version-controlled resources
+  [JCR-3334] - incorrect logging template in CachingEntryCollector
+  [JCR-3337] - Negated descendant node query with no results throws NPE
+  [JCR-3343] - ClusterNode's updateCommited method throws NPE
+  [JCR-3345] - ACL evaluation may return non-fresh results
+  [JCR-3346] - JMX Popular Queries size issue
+  [JCR-3349] - The BatchMode of the ConnectionHelper doesn't work in XA Environment
+  [JCR-3353] - A DeadLock can occur if an Exception is thrown while unlocking the Journal
+  [JCR-3354] - The ReadWriteLock in AbstractJournal can create a Deadlock in XA Environment
+  [JCR-3355] - Unable to create performance tests using JCR 2.0 API
+  [JCR-3363] - DataStore garbage collection: test case GarbageCollectorTest.testGC() is too lenient
+  [JCR-3367] - InMemBundlePersistenceManager#getAllNodeIds is not implemented correctly
+  [JCR-3373] - ChildNodesQueryHits may throw IOException when the session has limited access
+  [JCR-3374] - Size estimate for AbstractBundlePersistenceManager.MISSING is too low
+  [JCR-3377] - DataStore Temp-Files will not be deleted as side effect of JCR-3318
+  [JCR-3378] - The ConnectionHelper can return a closed Connection in BatchMode
+  [JCR-3379] - XA concurrent transactions - NullPointerException
+  [JCR-3380] - TCK tests for shareable nodes assume moving shareable nodes is not supported
+  [JCR-3383] - Unclosed Resources in ConnectionHelper if ResultSet is null
+  [JCR-3384] - TCK: BinaryPropertyTest.testGetLengthJcr2() fails with a multi-valued binary property
+  [JCR-3385] - DbClusterTest fails when port is already in use
+  [JCR-3387] - On heavy load we see occasional SQLException: closed statement: next
+  [JCR-3390] - Reordering policy node fails with AccessDeniedException
+  [JCR-3399] - Shared ISM does not release the internal Writelock if something unexpectedly is happening in externalUpdate
+
 
 Changes in Jackrabbit 2.5.0
 ---------------------------
