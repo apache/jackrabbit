@@ -1502,18 +1502,18 @@ public class SharedItemStateManager
         boolean holdingWriteLock = false;
 
         ISMLocking.WriteLock wLock = null;
-        try {
-            wLock = acquireWriteLock(external);
-            holdingWriteLock = true;
-
-            doExternalUpdate(external);
-        } catch (ItemStateException e) {
-            String msg = "Unable to acquire write lock.";
-            log.error(msg);
-        }
-
         ISMLocking.ReadLock rLock = null;
         try {
+	        try {
+	            wLock = acquireWriteLock(external);
+	            holdingWriteLock = true;
+	
+	            doExternalUpdate(external);
+	        } catch (ItemStateException e) {
+	            String msg = "Unable to acquire write lock.";
+	            log.error(msg);
+	        }
+
             if (wLock != null) {
                 rLock = wLock.downgrade();
                 holdingWriteLock = false;
