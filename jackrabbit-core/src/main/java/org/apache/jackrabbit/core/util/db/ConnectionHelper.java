@@ -399,6 +399,7 @@ public class ConnectionHelper {
             }
             // Don't wrap null
             if (rs == null) {
+            	closeResources(con, stmt, rs);
                 return null;
             }
             if (inBatchMode()) {
@@ -494,7 +495,7 @@ public class ConnectionHelper {
                     } catch (SQLException e) {
                         lastException = e;
                     }
-                    log.error("Failed to execute SQL (stacktrace on DEBUG log level)", lastException);
+                    log.error("Failed to execute SQL (stacktrace on DEBUG log level): " + lastException);
                     log.debug("Failed to execute SQL", lastException);
                     failures++;
                     if (blockOnConnectionLoss || failures <= RETRIES) { // if we're going to try again
