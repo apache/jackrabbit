@@ -60,8 +60,9 @@ public class AuthorizableImplTest extends AbstractUserTest {
             protectedUserProps.add(resolver.getJCRName(UserConstants.P_PASSWORD));
             protectedUserProps.add(resolver.getJCRName(UserConstants.P_IMPERSONATORS));
             protectedUserProps.add(resolver.getJCRName(UserConstants.P_PRINCIPAL_NAME));
+            protectedUserProps.add(resolver.getJCRName(UserConstants.P_DISABLED));
 
-            protectedUserProps.add(resolver.getJCRName(UserConstants.P_MEMBERS));
+            protectedGroupProps.add(resolver.getJCRName(UserConstants.P_MEMBERS));
             protectedGroupProps.add(resolver.getJCRName(UserConstants.P_PRINCIPAL_NAME));
         } else {
             throw new NotExecutableException();

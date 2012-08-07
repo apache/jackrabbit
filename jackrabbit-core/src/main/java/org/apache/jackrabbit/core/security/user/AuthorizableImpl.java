@@ -430,7 +430,9 @@ abstract class AuthorizableImpl implements Authorizable, UserConstants {
         Name pName = getSession().getQName(propertyName);
         return P_PRINCIPAL_NAME.equals(pName)
                 || P_MEMBERS.equals(pName)
-                || P_IMPERSONATORS.equals(pName) || P_PASSWORD.equals(pName);
+                || P_IMPERSONATORS.equals(pName)
+                || P_DISABLED.equals(pName)
+                || P_PASSWORD.equals(pName);
     }
 
     /**
