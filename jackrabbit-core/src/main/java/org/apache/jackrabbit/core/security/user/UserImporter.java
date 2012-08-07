@@ -266,7 +266,7 @@ public class UserImporter implements ProtectedPropertyImporter, ProtectedNodeImp
 
                 Value v = protectedPropInfo.getValues(PropertyType.STRING, resolver)[0];
                 String pw = v.getString();
-                ((User) a).changePassword(pw);
+                userManager.setPassword(parent, pw, false);
 
                 /*
                  Execute authorizable actions for a NEW user at this point after

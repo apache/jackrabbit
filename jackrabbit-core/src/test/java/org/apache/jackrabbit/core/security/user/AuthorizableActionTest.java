@@ -230,7 +230,27 @@ public class AuthorizableActionTest extends AbstractUserTest {
         }
     }
 
-    public void testPasswordValidationActionIgnoresHashedPwString() throws Exception {
+    public void testPasswordValidationActionIgnoresHashedPwStringOnCreate() throws Exception {
+        User u = null;
+
+        try {
+            PasswordValidationAction pwAction = new PasswordValidationAction();
+            pwAction.setConstraint("^.*(?=.{8,})(?=.*[a-z])(?=.*[A-Z]).*");
+            setActions(pwAction);
+
+            String uid = getTestPrincipal().getName();
+            String hashed = PasswordUtility.buildPasswordHash("DWkej32H");
+            u = impl.createUser(uid, hashed);
+
+        } finally {
+            if (u != null) {
+                u.remove();
+            }
+            save(superuser);
+        }
+    }
+
+    public void testPasswordValidationActionOnChange() throws Exception {
         User u = null;
 
         try {
@@ -238,12 +258,16 @@ public class AuthorizableActionTest extends AbstractUserTest {
             u = impl.createUser(uid, buildPassword(uid));
 
             PasswordValidationAction pwAction = new PasswordValidationAction();
-            pwAction.setConstraint("^.*(?=.{8,})(?=.*[a-z])(?=.*[A-Z]).*");
+            pwAction.setConstraint("abc");
             setActions(pwAction);
 
-            String hashed = ((UserImpl) u).buildPasswordValue("DWkej32H");
+            String hashed = PasswordUtility.buildPasswordHash("abc");
             u.changePassword(hashed);
 
+            fail("Password change must always enforce password validation.");
+
+        } catch (ConstraintViolationException e) {
+            // success
         } finally {
             if (u != null) {
                 u.remove();
