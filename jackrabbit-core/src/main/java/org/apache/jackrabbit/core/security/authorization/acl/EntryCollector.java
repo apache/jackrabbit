@@ -36,7 +36,6 @@ import javax.jcr.observation.Event;
 import javax.jcr.observation.EventIterator;
 import javax.jcr.observation.EventListener;
 import javax.jcr.observation.ObservationManager;
-import javax.jcr.security.AccessControlEntry;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -130,16 +129,16 @@ public class EntryCollector extends AccessControlObserver implements AccessContr
      * @return
      * @throws RepositoryException
      */
-    protected List<AccessControlEntry> collectEntries(NodeImpl node, EntryFilter filter) throws RepositoryException {
-        LinkedList<AccessControlEntry> userAces = new LinkedList<AccessControlEntry>();
-        LinkedList<AccessControlEntry> groupAces = new LinkedList<AccessControlEntry>();
+    protected List<Entry> collectEntries(NodeImpl node, EntryFilter filter) throws RepositoryException {
+        LinkedList<Entry> userAces = new LinkedList<Entry>();
+        LinkedList<Entry> groupAces = new LinkedList<Entry>();
 
         if (node == null) {
             // repository level permissions
             NodeImpl root = (NodeImpl) systemSession.getRootNode();
             if (ACLProvider.isRepoAccessControlled(root)) {
                 NodeImpl aclNode = root.getNode(N_REPO_POLICY);
-                filterEntries(filter, new ACLTemplate(aclNode, null).getEntries(), userAces, groupAces);
+                filterEntries(filter, Entry.readEntries(aclNode, null), userAces, groupAces);
             }
         } else {
             filterEntries(filter, getEntries(node).getACEs(), userAces, groupAces);
@@ -151,7 +150,7 @@ public class EntryCollector extends AccessControlObserver implements AccessContr
             }
         }
 
-        List<AccessControlEntry> entries = new ArrayList<AccessControlEntry>(userAces.size() + groupAces.size());
+        List<Entry> entries = new ArrayList<Entry>(userAces.size() + groupAces.size());
         entries.addAll(userAces);
         entries.addAll(groupAces);
 
@@ -167,9 +166,9 @@ public class EntryCollector extends AccessControlObserver implements AccessContr
      * @param groupAces
      */
     @SuppressWarnings("unchecked")
-    private static void filterEntries(EntryFilter filter, List<AccessControlEntry> aces,
-                                      LinkedList<AccessControlEntry> userAces,
-                                      LinkedList<AccessControlEntry> groupAces) {
+    private static void filterEntries(EntryFilter filter, List<Entry> aces,
+                                      LinkedList<Entry> userAces,
+                                      LinkedList<Entry> groupAces) {
         if (!aces.isEmpty() && filter != null) {
             filter.filterEntries(aces, userAces, groupAces);
         }
@@ -185,11 +184,11 @@ public class EntryCollector extends AccessControlObserver implements AccessContr
      * @throws RepositoryException
      */
     protected Entries getEntries(NodeImpl node) throws RepositoryException {
-        List<AccessControlEntry> aces;
+        List<Entry> aces;
         if (ACLProvider.isAccessControlled(node)) {
             // collect the aces of that node.
             NodeImpl aclNode = node.getNode(N_POLICY);
-            aces = new ACLTemplate(aclNode, node.getPath()).getEntries();
+            aces = Entry.readEntries(aclNode, node.getPath());
         } else {
             // not access controlled
             aces = Collections.emptyList();
@@ -438,15 +437,15 @@ public class EntryCollector extends AccessControlObserver implements AccessContr
      */
     static class Entries {
 
-        private final List<AccessControlEntry> aces;
+        private final List<Entry> aces;
         private NodeId nextId;
 
-        Entries(List<AccessControlEntry> aces, NodeId nextId) {
+        Entries(List<Entry> aces, NodeId nextId) {
             this.aces = aces;
             this.nextId = nextId;
         }
 
-        List<AccessControlEntry> getACEs() {
+        List<Entry> getACEs() {
             return aces;
         }
 

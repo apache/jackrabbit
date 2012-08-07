@@ -16,113 +16,87 @@
  */
 package org.apache.jackrabbit.core.security.authorization.acl;
 
-import org.apache.jackrabbit.api.JackrabbitWorkspace;
-import org.apache.jackrabbit.api.security.JackrabbitAccessControlEntry;
-import org.apache.jackrabbit.api.security.authorization.PrivilegeManager;
-import org.apache.jackrabbit.core.NodeImpl;
-import org.apache.jackrabbit.core.SessionImpl;
-import org.apache.jackrabbit.core.id.NodeId;
-import org.apache.jackrabbit.core.security.authorization.AbstractEntryTest;
-import org.apache.jackrabbit.test.NotExecutableException;
-
-import javax.jcr.RepositoryException;
-import javax.jcr.Value;
-import javax.jcr.security.AccessControlPolicy;
-import javax.jcr.security.AccessControlPolicyIterator;
-import javax.jcr.security.Privilege;
 import java.security.Principal;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import javax.jcr.AccessDeniedException;
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
+import javax.jcr.Value;
+import javax.jcr.security.AccessControlManager;
+import javax.jcr.security.Privilege;
+
+import org.apache.jackrabbit.api.security.JackrabbitAccessControlList;
+import org.apache.jackrabbit.core.NodeImpl;
+import org.apache.jackrabbit.core.id.NodeId;
+import org.apache.jackrabbit.core.security.authorization.AbstractEvaluationTest;
+import org.apache.jackrabbit.test.NotExecutableException;
 
 /**
  * <code>EntryTest</code>...
  */
-public class EntryTest extends AbstractEntryTest {
+public class EntryTest extends AbstractEvaluationTest {
 
-    private ACLTemplate acl;
+    private String testPath;
+    private JackrabbitAccessControlList acl;
 
-    @Override
     protected void setUp() throws Exception {
         super.setUp();
-
-        SessionImpl s = (SessionImpl) superuser;
-        PrivilegeManager privMgr = ((JackrabbitWorkspace) superuser.getWorkspace()).getPrivilegeManager();
-
-        acl = new ACLTemplate(testPath, s.getPrincipalManager(), privMgr, s.getValueFactory(), s);
+        testPath = testRootNode.getPath();
     }
 
     @Override
-    protected JackrabbitAccessControlEntry createEntry(Principal principal, Privilege[] privileges, boolean isAllow)
-            throws RepositoryException {
-        return acl.createEntry(principal, privileges, isAllow, Collections.<String, Value>emptyMap());
-    }
-
-    @Override
-    protected JackrabbitAccessControlEntry createEntry(Principal principal, Privilege[] privileges, boolean isAllow, Map<String, Value> restrictions) throws RepositoryException {
-        return acl.createEntry(principal, privileges, isAllow, restrictions);
-    }
-
-    @Override
-    protected JackrabbitAccessControlEntry createEntryFromBase(JackrabbitAccessControlEntry base, Privilege[] privileges, boolean isAllow) throws RepositoryException, NotExecutableException {
-        if (base instanceof ACLTemplate.Entry) {
-            return acl.createEntry((ACLTemplate.Entry) base, privileges, isAllow);
-        } else {
-            throw new NotExecutableException();
+    protected void tearDown() throws Exception {
+        try {
+            acMgr.removePolicy(testPath, acl);
+            superuser.save();
+        } finally {
+            super.tearDown();
         }
     }
 
     @Override
-    protected Map<String, Value> getTestRestrictions() throws RepositoryException {
-        String restrName = ((SessionImpl) superuser).getJCRName(ACLTemplate.P_GLOB);
-        return Collections.singletonMap(restrName, superuser.getValueFactory().createValue("/.*"));        
+    protected boolean isExecutable() {
+        return EvaluationUtil.isExecutable(acMgr);
+    }
+
+    @Override
+    protected JackrabbitAccessControlList getPolicy(AccessControlManager acM, String path, Principal principal) throws RepositoryException, AccessDeniedException, NotExecutableException {
+        return EvaluationUtil.getPolicy(acM, path, principal);
+    }
+
+    @Override
+    protected Map<String, Value> getRestrictions(Session s, String path) {
+        return Collections.emptyMap();
     }
 
     public void testIsLocal() throws NotExecutableException, RepositoryException {
-        ACLTemplate.Entry entry = (ACLTemplate.Entry) createEntry(new String[] {Privilege.JCR_READ}, true);
+        acl = getPolicy(acMgr, testPath, testUser.getPrincipal());
+        modifyPrivileges(testPath, Privilege.JCR_READ, true);
 
+        NodeImpl aclNode = (NodeImpl) superuser.getNode(acl.getPath() + "/rep:policy");
+        List<Entry> entries = Entry.readEntries(aclNode, testRootNode.getPath());
+        assertTrue(!entries.isEmpty());
+        assertEquals(1, entries.size());
+
+        Entry entry = entries.iterator().next();
         // false since acl has been created from path only -> no id
-        assertFalse(entry.isLocal(((NodeImpl) testRootNode).getNodeId()));
+        assertTrue(entry.isLocal(((NodeImpl) testRootNode).getNodeId()));
         // false since internal id is null -> will never match.
         assertFalse(entry.isLocal(NodeId.randomId()));
     }
 
-    public void testIsLocal2()  throws NotExecutableException, RepositoryException {
-        String path = testRootNode.getPath();
-        AccessControlPolicy[] acls = acMgr.getPolicies(path);
-        if (acls.length == 0) {
-            AccessControlPolicyIterator it = acMgr.getApplicablePolicies(path);
-            if (!it.hasNext()) {
-                throw new NotExecutableException();
-            }
-            acMgr.setPolicy(path, it.nextAccessControlPolicy());
-            acls = acMgr.getPolicies(path);
-        }
-
-        assertTrue(acls[0] instanceof ACLTemplate);
-
-        ACLTemplate acl = (ACLTemplate) acls[0];
-        assertEquals(path, acl.getPath());
-
-        ACLTemplate.Entry entry = acl.createEntry(testPrincipal, new Privilege[] {acMgr.privilegeFromName(Privilege.JCR_READ)}, true, Collections.<String,Value>emptyMap());
-
-        // node is must be present + must match to testrootnodes id.
-        assertTrue(entry.isLocal(((NodeImpl) testRootNode).getNodeId()));
-        // but not to a random id.
-        assertFalse(entry.isLocal(NodeId.randomId()));
-    }
-
-    public void testRestrictions() throws RepositoryException {
+    public void testRestrictions() throws RepositoryException, NotExecutableException {
         // test if restrictions with expanded name are properly resolved
         Map<String, Value> restrictions = new HashMap<String,Value>();
         restrictions.put(ACLTemplate.P_GLOB.toString(), superuser.getValueFactory().createValue("*/test"));
 
-        Privilege[] privs = new Privilege[] {acMgr.privilegeFromName(Privilege.JCR_ALL)};
-        ACLTemplate.Entry ace = acl.createEntry(testPrincipal, privs, true, restrictions);
-
-        Value v = ace.getRestriction(ACLTemplate.P_GLOB.toString());
-        Value v2 = ace.getRestriction(((SessionImpl) superuser).getJCRName(ACLTemplate.P_GLOB));
-        assertEquals(v, v2);
+        acl = getPolicy(acMgr, testPath, testUser.getPrincipal());
+        acl.addEntry(testUser.getPrincipal(), new Privilege[] {acMgr.privilegeFromName(Privilege.JCR_ALL)}, true, restrictions);
+        acMgr.setPolicy(testPath, acl);
+        superuser.save();
 
         Map<String, Boolean> toMatch = new HashMap<String, Boolean>();
         toMatch.put(acl.getPath(), false);
@@ -132,8 +106,14 @@ public class EntryTest extends AbstractEntryTest {
         toMatch.put(acl.getPath() + "/something/test", true);
         toMatch.put(acl.getPath() + "de/test", true);
 
+        NodeImpl aclNode = (NodeImpl) superuser.getNode(acl.getPath() + "/rep:policy");
+        List<Entry> entries = Entry.readEntries(aclNode, testRootNode.getPath());
+        assertTrue(!entries.isEmpty());
+        assertEquals(1, entries.size());
+
+        Entry entry = entries.iterator().next();
         for (String str : toMatch.keySet()) {
-            assertEquals("Path to match : " + str, toMatch.get(str).booleanValue(), ace.matches(str));
+            assertEquals("Path to match : " + str, toMatch.get(str).booleanValue(), entry.matches(str));
         }
     }
 }

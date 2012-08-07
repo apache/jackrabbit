@@ -457,9 +457,10 @@ public abstract class AbstractRepositoryOperationTest extends AbstractEvaluation
             assertNotNull(aces);
             assertEquals(2, aces.length);
 
-            // change the policy
+            // change the policy: removing the second entry in the access control list
             acl = (AccessControlList) acMgr.getPolicies(null)[0];
-            acl.removeAccessControlEntry(aces[0]);
+            AccessControlEntry toRemove = acl.getAccessControlEntries()[1];
+            acl.removeAccessControlEntry(toRemove);
             acMgr.setPolicy(null, acl);
             superuser.save();
 

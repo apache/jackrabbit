@@ -24,8 +24,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.jcr.RepositoryException;
-import javax.jcr.security.AccessControlEntry;
-import java.security.acl.Group;
 import java.util.Collection;
 import java.util.List;
 
@@ -71,16 +69,16 @@ class EntryFilterImpl implements EntryFilter {
      * @param resultLists
      * @see EntryFilter#filterEntries(java.util.List, java.util.List[])
      */
-    public void filterEntries(List<AccessControlEntry> entries, List<AccessControlEntry>... resultLists) {
+    public void filterEntries(List<Entry> entries, List<Entry>... resultLists) {
         if (resultLists.length == 2) {
-            List<AccessControlEntry> userAces = resultLists[0];
-            List<AccessControlEntry> groupAces = resultLists[1];
+            List<Entry> userAces = resultLists[0];
+            List<Entry> groupAces = resultLists[1];
 
             int uInsertIndex = userAces.size();
             int gInsertIndex = groupAces.size();
 
             // first collect aces present on the given aclNode.
-            for (AccessControlEntry ace : entries) {
+            for (Entry ace : entries) {
                 // only process ace if 'principalName' is contained in the given set
                 if (matches(ace)) {
                     // add it to the proper list (e.g. separated by principals)
@@ -88,7 +86,7 @@ class EntryFilterImpl implements EntryFilter {
                      * NOTE: access control entries must be collected in reverse
                      * order in order to assert proper evaluation.
                      */
-                    if (ace.getPrincipal() instanceof Group) {
+                    if (ace.isGroupEntry()) {
                         groupAces.add(gInsertIndex, ace);
                     } else {
                         userAces.add(uInsertIndex, ace);
@@ -100,9 +98,8 @@ class EntryFilterImpl implements EntryFilter {
         }
     }
 
-    private boolean matches(AccessControlEntry ace) {
-        if (principalNames == null || principalNames.contains(ace.getPrincipal().getName())) {
-            ACLTemplate.Entry entry = (ACLTemplate.Entry) ace;
+    private boolean matches(Entry entry) {
+        if (principalNames == null || principalNames.contains(entry.getPrincipalName())) {
             if (!entry.hasRestrictions()) {
                 // short cut: there is no glob-restriction -> the entry matches
                 // because it is either defined on the node or inherited.
