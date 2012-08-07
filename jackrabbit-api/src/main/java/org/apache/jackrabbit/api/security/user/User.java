@@ -76,7 +76,7 @@ public interface User extends Authorizable {
      *
      * @param reason String describing the reason for disable this user or
      * <code>null</code> if the user account should be enabled again.
-     * @throws RepositoryException
+     * @throws RepositoryException If an error occurs.
      */
     void disable(String reason) throws RepositoryException;
 
@@ -86,7 +86,7 @@ public interface User extends Authorizable {
      *
      * @return <code>true</code> if this user is disabled, <code>false</code>
      * otherwise.
-     * @throws RepositoryException
+     * @throws RepositoryException If an error occurs.
      */
     boolean isDisabled() throws RepositoryException;
 
@@ -96,7 +96,7 @@ public interface User extends Authorizable {
      * 
      * @return The reason specified upon disabling this user or <code>null</code>
      * if this user is not disabled.
-     * @throws RepositoryException
+     * @throws RepositoryException If an error occurs.
      */
     String getDisabledReason() throws RepositoryException;
 }

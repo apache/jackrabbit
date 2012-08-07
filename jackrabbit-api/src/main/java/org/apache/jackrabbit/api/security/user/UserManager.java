@@ -68,9 +68,9 @@ public interface UserManager {
     Authorizable getAuthorizable(String id) throws RepositoryException;
 
     /**
-     * Get the Authorizable by its main Principal.
+     * Get the Authorizable by its Principal.
      *
-     * @param principal
+     * @param principal The principal of the authorizable to retrieve.
      * @return Authorizable or <code>null</code>, if not present.
      * @throws RepositoryException If an error occurs.
      */
@@ -100,7 +100,7 @@ public interface UserManager {
      * {@link Authorizable#getProperty(String)} will be searched for a match.
      *
      * @param relPath A relative property path or name.
-     * @param value
+     * @param value A string value to match.
      * @return All <code>Authorizable</code>s that have a property with the given
      * name exactly matching the given value.
      * @throws RepositoryException If an error occurs.
@@ -121,7 +121,7 @@ public interface UserManager {
      * {@link Authorizable#getProperty(String)} will be searched for a match.
      *
      * @param relPath A relative property path or name.
-     * @param value
+     * @param value A string value to match.
      * @param searchType Any of the following constants:
      * <ul>
      * <li>{@link #SEARCH_TYPE_AUTHORIZABLE}</li>
@@ -149,7 +149,7 @@ public interface UserManager {
      * the specified userID is equal to the principal name and the intermediate
      * path is <code>null</code>.
      *
-     * @param userID The id of the new user.
+     * @param userID The ID of the new user.
      * @param password The initial password of this user.
      * @return The new <code>User</code>.
      * @throws AuthorizableExistsException in case the given userID is already
@@ -165,10 +165,12 @@ public interface UserManager {
      * Except for the <code>intermediatePath</code>, neither of the specified
      * parameters can be <code>null</code>.
      *
-     * @param userID
-     * @param password
-     * @param principal
-     * @param intermediatePath
+     * @param userID The ID of the new user.
+     * @param password The initial password of the new user.
+     * @param principal The principal of the new user.
+     * @param intermediatePath An optional intermediate path used to create the
+     * new user. If the intermediate path is <code>null</code> an internal,
+     * implementation specific structure will be used.
      * @return The new <code>User</code>.
      * @throws AuthorizableExistsException in case the given userID is already
      * in use or another Authorizable with the same principal name exists.
@@ -185,7 +187,7 @@ public interface UserManager {
      * groupID is the name of the <code>Principal</code> the intermediate path
      * is <code>null</code>.
      *
-     * @param groupID The id of the new group; must not be <code>null</code>.
+     * @param groupID The ID of the new group; must not be <code>null</code>.
      * @return The new <code>Group</code>.
      * @throws AuthorizableExistsException in case the given groupID is already
      * in use or another {@link Authorizable} with the same
@@ -212,8 +214,10 @@ public interface UserManager {
      * Same as {@link #createGroup(String, Principal, String)} where the
      * name of the specified principal is used to create the group's ID. 
      *
-     * @param principal
-     * @param intermediatePath
+     * @param principal The principal associated with the new group.
+     * @param intermediatePath An optional intermediate path used to create the
+     * new group. If the intermediate path is <code>null</code> an internal,
+     * implementation specific structure will be used.
      * @return The new <code>Group</code>.
      * @throws AuthorizableExistsException in case the given principal is
      * already in use with another Authorizable.
@@ -227,8 +231,11 @@ public interface UserManager {
      * is not able to deal with the <code>intermediatePath</code> this parameter
      * should be ignored.
      *
-     * @param principal
-     * @param intermediatePath
+     * @param groupID The ID of the new group.
+     * @param principal The principal of the new group.
+     * @param intermediatePath An optional intermediate path used to create the
+     * new group. If the intermediate path is <code>null</code> an internal,
+     * implementation specific structure will be used.
      * @return The new <code>Group</code>.
      * @throws AuthorizableExistsException in case the given principal is already
      * in use with another Authorizable.
