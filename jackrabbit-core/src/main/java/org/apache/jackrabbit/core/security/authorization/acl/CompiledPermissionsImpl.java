@@ -39,7 +39,6 @@ import org.apache.jackrabbit.util.Text;
 
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.RepositoryException;
-import javax.jcr.security.AccessControlEntry;
 import java.security.Principal;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -92,7 +91,7 @@ class CompiledPermissionsImpl extends AbstractCompiledPermissions implements Acc
         // retrieve all ACEs at path or at the direct ancestor of path that
         // apply for the principal names.
         NodeImpl n = ACLProvider.getNode(node, isAcItem);
-        Iterator<AccessControlEntry> entries = entryCollector.collectEntries(n, filter).iterator();
+        Iterator<Entry> entries = entryCollector.collectEntries(n, filter).iterator();
 
         /*
         Calculate privileges and permissions:
@@ -112,7 +111,7 @@ class CompiledPermissionsImpl extends AbstractCompiledPermissions implements Acc
         NodeId nodeId = (node == null) ? null : node.getNodeId();
 
         while (entries.hasNext()) {
-            ACLTemplate.Entry ace = (ACLTemplate.Entry) entries.next();
+            Entry ace = entries.next();
             /*
             Determine if the ACE also takes effect on the parent:
             Some permissions (e.g. add-node or removal) must be determined
@@ -261,8 +260,7 @@ class CompiledPermissionsImpl extends AbstractCompiledPermissions implements Acc
                      (see special treatment of remove, create or ac-specific
                       permissions).
                      */
-                    for (AccessControlEntry accessControlEntry : entryCollector.collectEntries(node, filter)) {
-                        ACLTemplate.Entry ace = (ACLTemplate.Entry) accessControlEntry;
+                    for (Entry ace : entryCollector.collectEntries(node, filter)) {
                         if (ace.getPrivilegeBits().includesRead()) {
                             canRead = ace.isAllow();
                             break;

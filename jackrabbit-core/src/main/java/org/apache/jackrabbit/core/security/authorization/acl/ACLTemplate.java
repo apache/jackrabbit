@@ -38,12 +38,10 @@ import org.apache.jackrabbit.api.security.authorization.PrivilegeManager;
 import org.apache.jackrabbit.api.security.principal.PrincipalManager;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.SessionImpl;
-import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.security.authorization.AbstractACLTemplate;
 import org.apache.jackrabbit.core.security.authorization.AccessControlEntryImpl;
 import org.apache.jackrabbit.core.security.authorization.PrivilegeBits;
 import org.apache.jackrabbit.core.security.authorization.PrivilegeManagerImpl;
-import org.apache.jackrabbit.core.security.authorization.GlobPattern;
 import org.apache.jackrabbit.core.security.principal.PrincipalImpl;
 import org.apache.jackrabbit.core.security.principal.UnknownPrincipal;
 import org.apache.jackrabbit.core.value.InternalValue;
@@ -87,15 +85,7 @@ class ACLTemplate extends AbstractACLTemplate {
     private final NameResolver resolver;
 
     /**
-     * The id of the access controlled node or <code>null</code> if this
-     * ACLTemplate isn't created for an existing access controlled node.
-     * Used for the Entry#isLocal(NodeId) call only in order to avoid calls
-     * to {@link javax.jcr.Node#getPath()}.
-     */
-    private final NodeId id;
-
-    /**
-     *
+     * Namespace sensitive name of the REP_GLOB property in standard JCR form.
      */
     private final String jcrRepGlob;
 
@@ -116,20 +106,8 @@ class ACLTemplate extends AbstractACLTemplate {
         this.principalMgr = principalMgr;
         this.privilegeMgr = (PrivilegeManagerImpl) privilegeMgr;
         this.resolver = resolver;
-        this.id = null;
 
         jcrRepGlob = resolver.getJCRName(P_GLOB);
-    }
-
-    /**
-     * Create a {@link ACLTemplate} that is used to edit an existing ACL
-     * node.
-     *
-     * @param aclNode node
-     * @throws RepositoryException if an error occurs
-     */
-    ACLTemplate(NodeImpl aclNode) throws RepositoryException {
-        this(aclNode, ((aclNode != null) ? aclNode.getParent().getPath() : null));
     }
 
     /**
@@ -150,7 +128,6 @@ class ACLTemplate extends AbstractACLTemplate {
         privilegeMgr = (PrivilegeManagerImpl) ((JackrabbitWorkspace) sImpl.getWorkspace()).getPrivilegeManager();
 
         this.resolver = sImpl;
-        this.id = aclNode.getParentId();
         jcrRepGlob = sImpl.getJCRName(P_GLOB);
 
         // load the entries:
@@ -422,61 +399,22 @@ class ACLTemplate extends AbstractACLTemplate {
      */
     class Entry extends AccessControlEntryImpl {
 
-        private final GlobPattern pattern;
-
         private Entry(Principal principal, PrivilegeBits privilegeBits, boolean allow, Map<String,Value> restrictions)
                 throws RepositoryException {
             super(principal, privilegeBits, allow, restrictions);
-            pattern = calculatePattern();
         }
 
         private Entry(Principal principal, Privilege[] privileges, boolean allow, Map<String,Value> restrictions)
                 throws RepositoryException {
             super(principal, privileges, allow, restrictions);
-            pattern = calculatePattern();
         }
 
         private Entry(Entry base, PrivilegeBits newPrivilegeBits, boolean isAllow) throws RepositoryException {
             super(base, newPrivilegeBits, isAllow);
-            pattern = calculatePattern();
         }
 
         private Entry(Entry base, Privilege[] newPrivileges, boolean isAllow) throws RepositoryException {
             super(base, newPrivileges, isAllow);
-            pattern = calculatePattern();
-        }
-
-        private GlobPattern calculatePattern() throws RepositoryException {
-            if (path == null) {
-                return null; // no pattern for repo-level aces.
-            } else {
-                GlobPattern p;
-                Value glob = getRestrictions().get(P_GLOB);
-                if (glob != null) {
-                    p = GlobPattern.create(path, glob.getString());
-                } else {
-                    p = GlobPattern.create(path);
-                }
-                return p;
-            }
-        }
-        
-        /**
-         * @param nodeId
-         * @return <code>true</code> if this entry is defined on the node
-         * at <code>nodeId</code>
-         */
-        boolean isLocal(NodeId nodeId) {
-            return id != null && id.equals(nodeId);
-        }
-
-        /**
-         * 
-         * @param jcrPath
-         * @return
-         */
-        boolean matches(String jcrPath) {
-            return pattern != null && pattern.matches(jcrPath);
         }
 
         @Override

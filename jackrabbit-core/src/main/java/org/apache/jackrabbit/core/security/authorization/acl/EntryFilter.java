@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.core.security.authorization.acl;
 
-import javax.jcr.security.AccessControlEntry;
 import java.util.List;
 
 /**
@@ -24,6 +23,6 @@ import java.util.List;
  */
 public interface EntryFilter {
 
-    void filterEntries(List<AccessControlEntry> entries, List<AccessControlEntry>... resultLists);
+    void filterEntries(List<Entry> entries, List<Entry>... resultLists);
 
 }

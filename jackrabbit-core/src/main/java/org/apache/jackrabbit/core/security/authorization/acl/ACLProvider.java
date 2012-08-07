@@ -43,14 +43,12 @@ import javax.jcr.Session;
 import javax.jcr.query.Query;
 import javax.jcr.query.QueryManager;
 import javax.jcr.query.QueryResult;
-import javax.jcr.security.AccessControlEntry;
 import javax.jcr.security.AccessControlList;
 import javax.jcr.security.AccessControlManager;
 import javax.jcr.security.AccessControlPolicy;
 import javax.jcr.security.Privilege;
 import java.security.Principal;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -137,9 +135,7 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
             targetNode = (NodeImpl) session.getRootNode();
             if (isRepoAccessControlled(targetNode)) {
                 if (permissions.grants(targetNode.getPrimaryPath(), Permission.READ_AC)) {
-                    // retrieve the entries for the access controlled node
-                    List<AccessControlEntry> entries = entryCollector.collectEntries(null, new EntryFilterImpl(null, (NodeId) null, session));
-                    acls.add(new UnmodifiableAccessControlList(entries));
+                    acls.add(getACL(targetNode, N_REPO_POLICY, null));
                 } else {
                     throw new AccessDeniedException("Access denied at " + targetNode.getPath());
                 }
@@ -204,15 +200,13 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
 
             if (N_POLICY.equals(aclName) && isAccessControlled(accessControlledNode)) {
                 if (permissions.canRead(aclNode.getPrimaryPath(), aclNode.getNodeId())) {
-                    List<AccessControlEntry> aces = entryCollector.getEntries(accessControlledNode).getACEs();
-                    acls.add(new UnmodifiableAccessControlList(aces, accessControlledNode.getPath(), Collections.<String, Integer>emptyMap()));
+                    acls.add(getACL(accessControlledNode, N_POLICY, accessControlledNode.getPath()));
                 } else {
                     throw new AccessDeniedException("Access denied at " + Text.getRelativeParent(aclNode.getPath(), 1));
                 }
             } else if (N_REPO_POLICY.equals(aclName) && isRepoAccessControlled(accessControlledNode)) {
                 if (permissions.canRead(aclNode.getPrimaryPath(), aclNode.getNodeId())) {
-                    List<AccessControlEntry> aces = entryCollector.collectEntries(null, new EntryFilterImpl(null, (NodeId) null, session));
-                    acls.add(new UnmodifiableAccessControlList(aces));
+                    acls.add(getACL(accessControlledNode, N_REPO_POLICY, null));
                 } else {
                     throw new AccessDeniedException("Access denied at " + Text.getRelativeParent(aclNode.getPath(), 1));
                 }
@@ -290,9 +284,7 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
         // it to the list
         if (isAccessControlled(node)) {
             if (permissions.grants(node.getPrimaryPath(), Permission.READ_AC)) {
-                // retrieve the entries for the access controlled node
-                List<AccessControlEntry> aces = entryCollector.getEntries(node).getACEs();
-                acls.add(new UnmodifiableAccessControlList(aces, node.getPath(), Collections.<String, Integer>emptyMap()));
+                acls.add(getACL(node, N_POLICY, node.getPath()));
             } else {
                 throw new AccessDeniedException("Access denied at " + node.getPath());
             }
@@ -302,6 +294,14 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
             NodeImpl parentNode = (NodeImpl) node.getParent();
             collectAcls(parentNode, permissions, acls);
         }
+    }
+
+    private AccessControlList getACL(NodeImpl accessControlledNode, Name policyName, String path) throws RepositoryException {
+        // collect the aces of that node.
+        NodeImpl aclNode = accessControlledNode.getNode(policyName);
+        AccessControlList acl = new ACLTemplate(aclNode, path);
+
+        return new UnmodifiableAccessControlList(acl);
     }
 
     /**

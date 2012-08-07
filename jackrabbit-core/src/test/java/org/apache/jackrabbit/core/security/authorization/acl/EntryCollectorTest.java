@@ -28,7 +28,6 @@ import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-import javax.jcr.security.AccessControlEntry;
 import javax.jcr.security.AccessControlList;
 import javax.jcr.security.AccessControlManager;
 import javax.jcr.security.AccessControlPolicy;
@@ -239,48 +238,6 @@ public class EntryCollectorTest extends AbstractAccessControlTest {
         return names;
     }
 
-    public void testEntriesAreCached() throws Exception {
-        modifyPrivileges(path, testGroup.getPrincipal(), privilegesFromName(Privilege.JCR_READ), true);
-        AccessControlPolicy[] plcs = acMgr.getEffectivePolicies(path);
-        AccessControlPolicy[] plcs2 = acMgr.getEffectivePolicies(childNPath);
-
-        // ACEs must be the same on path and childPath as the entries are
-        // obtained from the cache
-        assertTrue(Arrays.equals(plcs, plcs2));
-        assertEquals(plcs.length, plcs2.length);
-        for (int i = 0; i < plcs.length; i++) {
-            if (plcs[i] instanceof AccessControlList) {
-                assertTrue(plcs2[i] instanceof AccessControlList);
-
-                AccessControlEntry[] aces = ((AccessControlList) plcs[0]).getAccessControlEntries();
-                AccessControlEntry[] aces2 = ((AccessControlList) plcs2[0]).getAccessControlEntries();
-                for (int j = 0; j < aces.length; j++) {
-                    assertTrue(aces[j] == aces2[j]);
-                }
-            } else {
-                assertEquals(plcs[i].getClass(), plcs2[i].getClass());
-            }
-        }
-
-
-        // retrieve effective policies for path again
-        // -> test if aces are retrieved from the cache and thus refer to the same objects.
-        AccessControlPolicy[] plcs3 = acMgr.getEffectivePolicies(path);
-        for (int i = 0; i < plcs.length; i++) {
-            if (plcs[i] instanceof AccessControlList) {
-                assertTrue(plcs3[i] instanceof AccessControlList);
-
-                AccessControlEntry[] aces = ((AccessControlList) plcs[0]).getAccessControlEntries();
-                AccessControlEntry[] aces3 = ((AccessControlList) plcs3[0]).getAccessControlEntries();
-                for (int j = 0; j < aces.length; j++) {
-                    assertTrue(aces[j] == aces3[j]);
-                }
-            } else {
-                assertEquals(plcs[i].getClass(), plcs2[i].getClass());
-            }
-        }
-    }
-
     public void testPermissions() throws Exception {
         Session superuser2 = getHelper().getSuperuserSession();
         try {
@@ -399,14 +356,6 @@ public class EntryCollectorTest extends AbstractAccessControlTest {
         runTestUnderLoad(new TestInvokation() {
             public void runTest() throws Exception {
                 testCache();
-            }
-        });
-    }
-
-    public void testEntriesAreCachedUnderLoad() throws Exception {
-        runTestUnderLoad(new TestInvokation() {
-            public void runTest() throws Exception {
-                testEntriesAreCached();
             }
         });
     }

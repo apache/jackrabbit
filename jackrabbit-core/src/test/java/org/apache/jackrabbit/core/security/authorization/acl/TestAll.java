@@ -38,6 +38,7 @@ public class TestAll extends TestCase {
         TestSuite suite = new ConcurrentTestSuite("security.authorization.acl tests");
 
         suite.addTestSuite(ACLTemplateTest.class);
+        suite.addTestSuite(ACLTemplateEntryTest.class);
         suite.addTestSuite(EntryTest.class);
         suite.addTestSuite(EntryCollectorTest.class);
 
