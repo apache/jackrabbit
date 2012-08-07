@@ -202,7 +202,7 @@ class GroupImpl extends AuthorizableImpl implements Group {
      */
     private MembershipProvider getMembershipProvider(NodeImpl node) throws RepositoryException {
         MembershipProvider msp;
-        if (userManager.getGroupMembershipSplitSize() > 0) {
+        if (userManager.hasMemberSplitSize()) {
             if (node.hasNode(N_MEMBERS) || !node.hasProperty(P_MEMBERS)) {
                 msp = new NodeBasedMembershipProvider(node);
             } else {
@@ -214,7 +214,7 @@ class GroupImpl extends AuthorizableImpl implements Group {
 
         if (node.hasProperty(P_MEMBERS) && node.hasNode(N_MEMBERS)) {
             log.warn("Found members node and members property on node {}. Ignoring {} members", node,
-                    userManager.getGroupMembershipSplitSize() > 0 ? "property" : "node");
+                    userManager.hasMemberSplitSize() ? "property" : "node");
         }
 
         return msp;
@@ -267,7 +267,7 @@ class GroupImpl extends AuthorizableImpl implements Group {
 
     static PropertySequence getPropertySequence(Node nMembers, UserManagerImpl userManager) throws RepositoryException {
         Comparator<String> order = Rank.comparableComparator();
-        int maxChildren = userManager.getGroupMembershipSplitSize();
+        int maxChildren = userManager.getMemberSplitSize();
         int minChildren = maxChildren / 2;
 
         TreeManager treeManager = new BTreeManager(nMembers, minChildren, maxChildren, order,

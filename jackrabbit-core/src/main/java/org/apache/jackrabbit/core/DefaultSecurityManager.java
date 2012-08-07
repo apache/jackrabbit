@@ -462,12 +462,6 @@ public class DefaultSecurityManager implements JackrabbitSecurityManager {
      */
     protected UserManagerImpl createUserManager(SessionImpl session) throws RepositoryException {
         UserManagerConfig umc = getConfig().getUserManagerConfig();
-        Properties params = (umc == null) ? null : umc.getParameters();
-
-        // since users are stored in and retrieved from a dedicated workspace
-        // only the system session assigned with that workspace will get the
-        // system user manager (special implementation that asserts the existence
-        // of the admin user).
         UserManagerImpl um;
         if (umc != null) {
             Class<?>[] paramTypes = new Class[] {
@@ -476,12 +470,9 @@ public class DefaultSecurityManager implements JackrabbitSecurityManager {
                     Properties.class,
                     MembershipCache.class};
             um = (UserManagerImpl) umc.getUserManager(UserManagerImpl.class,
-                    paramTypes, session, adminId, params, getMembershipCache(session));
-            // TODO: should we make sure the implementation doesn't allow
-            // TODO: to change the autosave behavior? since the user manager
-            // TODO: writes to a separate workspace this would cause troubles.
+                    paramTypes, session, adminId, umc.getParameters(), getMembershipCache(session));
         } else {
-            um = new UserManagerImpl(session, adminId, params, getMembershipCache(session));
+            um = new UserManagerImpl(session, adminId, null, getMembershipCache(session));
         }
 
         if (umc != null && !(session instanceof SystemSession)) {

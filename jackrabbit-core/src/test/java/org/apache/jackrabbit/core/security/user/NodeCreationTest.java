@@ -38,7 +38,7 @@ import java.util.Map;
 import java.util.Properties;
 
 /**
- * <code>IdResolverTest</code>...
+ * <code>NodeCreationTest</code>...
  */
 public class NodeCreationTest extends AbstractUserTest {
 

@@ -219,8 +219,6 @@ public class UserPerWorkspaceSecurityManager extends DefaultSecurityManager {
     @Override
     protected UserManagerImpl createUserManager(SessionImpl session) throws RepositoryException {
         UserManagerConfig umc = getConfig().getUserManagerConfig();
-        Properties params = (umc == null) ? null : umc.getParameters();
-
         UserManagerImpl umgr;
         // in contrast to the DefaultSecurityManager users are not retrieved
         // from a dedicated workspace: the system session of each workspace must
@@ -232,9 +230,9 @@ public class UserPerWorkspaceSecurityManager extends DefaultSecurityManager {
                     Properties.class,
                     MembershipCache.class};
             umgr = (UserPerWorkspaceUserManager) umc.getUserManager(UserPerWorkspaceUserManager.class,
-                    paramTypes, session, adminId, params, getMembershipCache(session));
+                    paramTypes, session, adminId, umc.getParameters(), getMembershipCache(session));
         } else {
-            umgr = new UserPerWorkspaceUserManager(session, adminId, params, getMembershipCache(session));
+            umgr = new UserPerWorkspaceUserManager(session, adminId, null, getMembershipCache(session));
         }
 
         if (umc != null && !(session instanceof SystemSession)) {

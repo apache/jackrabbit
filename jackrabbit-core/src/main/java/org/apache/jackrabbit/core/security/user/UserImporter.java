@@ -440,7 +440,7 @@ public class UserImporter implements ProtectedPropertyImporter, ProtectedNodeImp
                         log.info("ImportBehavior.BESTEFFORT: Found " + nonExisting.size() + " entries of rep:members pointing to non-existing authorizables. Adding to rep:members.");
                         final NodeImpl groupNode = ((AuthorizableImpl) gr).getNode();
 
-                        if (userManager.getGroupMembershipSplitSize() > 0) {
+                        if (userManager.hasMemberSplitSize()) {
                             userManager.performProtectedOperation((SessionImpl) session, new SessionWriteOperation<Object>() {
                                 public Boolean perform(SessionContext context) throws RepositoryException {
                                     NodeImpl nMembers = (groupNode.hasNode(UserConstants.N_MEMBERS)

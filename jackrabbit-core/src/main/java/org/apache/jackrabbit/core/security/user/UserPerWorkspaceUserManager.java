@@ -117,6 +117,7 @@ public class UserPerWorkspaceUserManager extends UserManagerImpl {
      * @return The path of the node.
      * @throws RepositoryException If an error occurs while retrieving the path.
      */
+    @Override
     String getPath(Node authorizableNode) throws RepositoryException {
         return authorizableNode.getPath();
     }
