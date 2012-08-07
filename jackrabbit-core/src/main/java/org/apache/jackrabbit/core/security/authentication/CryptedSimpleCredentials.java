@@ -17,17 +17,14 @@
 package org.apache.jackrabbit.core.security.authentication;
 
 import org.apache.jackrabbit.core.security.SecurityConstants;
-import org.apache.jackrabbit.util.Text;
+import org.apache.jackrabbit.core.security.user.PasswordUtility;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.jcr.Credentials;
-import javax.jcr.RepositoryException;
 import javax.jcr.SimpleCredentials;
 import java.io.UnsupportedEncodingException;
 import java.security.NoSuchAlgorithmException;
-import java.security.MessageDigest;
-import java.security.SecureRandom;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -38,9 +35,6 @@ import java.util.Map;
 public class CryptedSimpleCredentials implements Credentials {
 
     private static final Logger log = LoggerFactory.getLogger(CryptedSimpleCredentials.class);
-
-    private final String algorithm;
-    private final String salt;
 
     private final String hashedPassword;
     private final String userId;
@@ -68,9 +62,7 @@ public class CryptedSimpleCredentials implements Credentials {
             throw new IllegalArgumentException();
         }
         String password = new String(pwd);
-        algorithm = SecurityConstants.DEFAULT_DIGEST;
-        salt = null; // backwards compatibility.
-        hashedPassword = generateHash(password, algorithm, salt);
+        hashedPassword = PasswordUtility.buildPasswordHash(password);
 
         String[] attNames = credentials.getAttributeNames();
         attributes = new HashMap<String, Object>(attNames.length);
@@ -85,8 +77,7 @@ public class CryptedSimpleCredentials implements Credentials {
      * In contrast to {@link CryptedSimpleCredentials(SimpleCredentials)} that
      * expects the password to be plain text this constructor expects the
      * password to be already crypted. However, it performs a simple validation
-     * and calls {@link Text#digest} using the
-     * {@link SecurityConstants#DEFAULT_DIGEST default digest} in case the
+     * and calls {@link PasswordUtility#buildPasswordHash(String)} in case the
      * given password is found to be plain text.
      *
      * @param userId
@@ -102,17 +93,11 @@ public class CryptedSimpleCredentials implements Credentials {
             throw new IllegalArgumentException("Password may not be null.");
         }
         this.userId = userId;
-        String algo =  extractAlgorithm(hashedPassword);
-        if (algo == null) {
+        if (PasswordUtility.isPlainTextPassword(hashedPassword)) {
             // password is plain text (including those starting with {invalidAlgorithm})
-            log.debug("Plain text password -> Using " + SecurityConstants.DEFAULT_DIGEST + " to create digest.");
-            algorithm = SecurityConstants.DEFAULT_DIGEST;
-            salt = generateSalt();
-            this.hashedPassword = generateHash(hashedPassword, algorithm, salt);
+            log.warn("Plain text password -> Using default algorithm to create digest.");
+            this.hashedPassword = PasswordUtility.buildPasswordHash(hashedPassword);
         } else {
-            // password is already hashed and started with {validAlgorithm}
-            algorithm = algo;
-            salt = extractSalt(hashedPassword, algorithm);
             this.hashedPassword = hashedPassword;
         }
         attributes = Collections.emptyMap();
@@ -131,7 +116,7 @@ public class CryptedSimpleCredentials implements Credentials {
     }
 
     public String getAlgorithm() {
-        return algorithm;
+        return PasswordUtility.extractAlgorithm(hashedPassword);
     }
 
     public String getPassword() {
@@ -162,114 +147,10 @@ public class CryptedSimpleCredentials implements Credentials {
 
         if (getUserID().equalsIgnoreCase(credentials.getUserID())) {
             // crypt the password retrieved from the given simple credentials
-            // and test if it is equal to the cryptedPassword field.
-            return hashedPassword.equals(generateHash(String.valueOf(credentials.getPassword()), algorithm, salt));
+            // and test if it is equal to the password hash defined with this
+            // CryptedSimpleCredentials instance.
+            return PasswordUtility.isSame(hashedPassword, String.valueOf(credentials.getPassword()));
         }
         return false;
-    }
-
-    /**
-     * Creates a hash of the specified password if it is found to be plain text.
-     *
-     * @param password
-     * @return
-     * @throws javax.jcr.RepositoryException
-     */
-    public static String buildPasswordHash(String password) throws RepositoryException {
-        try {
-            return new CryptedSimpleCredentials("_", password).getPassword();
-        } catch (NoSuchAlgorithmException e) {
-            throw new RepositoryException(e);
-        } catch (UnsupportedEncodingException e) {
-            throw new RepositoryException(e);
-        }
-    }
-
-    /**
-     * @param pwd Plain text password
-     * @param algorithm The algorithm to be used for the digest.
-     * @param salt The salt to be used for the digest.
-     * @return Digest of the given password with leading algorithm and optionally
-     * salt information.
-     * @throws NoSuchAlgorithmException
-     * @throws UnsupportedEncodingException
-     */
-    private static String generateHash(String pwd, String algorithm, String salt)
-            throws NoSuchAlgorithmException, UnsupportedEncodingException {
-
-        StringBuilder password = new StringBuilder();
-        password.append("{").append(algorithm).append("}");
-        if (salt != null && salt.length() > 0) {
-            password.append(salt).append("-");
-            StringBuilder data = new StringBuilder();
-            data.append(salt).append(pwd);
-            password.append(Text.digest(algorithm, data.toString().getBytes("UTF-8")));
-        } else {
-            password.append(Text.digest(algorithm, pwd.getBytes("UTF-8")));            
-        }
-        return password.toString();
-    }
-
-    /**
-     * Extract the algorithm from the given crypted password string. Returns the
-     * algorithm or <code>null</code> if the given string doesn't have a
-     * leading <code>{algorithm}</code> such as created by {@link #generateHash(String, String, String)
-     * or if the extracted string doesn't represent an available algorithm.
-     *
-     * @param hashedPwd
-     * @return The algorithm or <code>null</code> if the given string doesn't have a
-     * leading <code>{algorith}</code> such as created by {@link #crypt(String, String)
-     * or if the extracted string isn't an available algorithm. 
-     */
-    private static String extractAlgorithm(String hashedPwd) {
-        int end = hashedPwd.indexOf('}');
-        if (hashedPwd.startsWith("{") && end > 0) {
-            String algorithm = hashedPwd.substring(1, end);
-            try {
-                MessageDigest.getInstance(algorithm);
-                return algorithm;
-            } catch (NoSuchAlgorithmException e) {
-                log.debug("Invalid algorithm detected " + algorithm);
-            }
-        }
-
-        // not starting with {} or invalid algorithm
-        return null;
-    }
-
-    /**
-     * Extract the salt from the password hash.
-     *
-     * @param hashedPwd
-     * @param algorithm
-     * @return salt or <code>null</code>
-     */
-    private static String extractSalt(String hashedPwd, String algorithm) {
-        int start = algorithm.length()+2;
-        int end = hashedPwd.indexOf('-', start);
-        if (end > -1) {
-            return hashedPwd.substring(start, end);
-        }
-
-        // no salt 
-        return null;
-    }
-
-    /**
-     * Generate a new random salt for password digest.
-     *
-     * @return a new random salt.
-     */
-    private static String generateSalt() {
-        SecureRandom random = new SecureRandom();
-        byte salt[] = new byte[8];
-        random.nextBytes(salt);
-
-        StringBuffer res = new StringBuffer(salt.length * 2);
-        for (byte b : salt) {
-            res.append(Text.hexTable[(b >> 4) & 15]);
-            res.append(Text.hexTable[b & 15]);
-        }
-        return res.toString();
     }
 }

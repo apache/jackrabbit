@@ -51,6 +51,7 @@ import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.version.VersionException;
 import java.io.UnsupportedEncodingException;
+import java.security.NoSuchAlgorithmException;
 import java.security.Principal;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -154,6 +155,12 @@ import java.util.UUID;
  * instead of the default multi valued property {@link UserConstants#P_MEMBERS}.
  * Its value determines the maximum number of member properties until additional
  * intermediate nodes are inserted. Valid parameter values are integers &gt; 4.</li>
+ * <li>{@link #PARAM_PASSWORD_HASH_ALGORITHM}: Optional parameter to configure
+ * the algorithm used for password hash generation. The default value is
+ * {@link PasswordUtility#DEFAULT_ALGORITHM}.</li>
+ * <li>{@link #PARAM_PASSWORD_HASH_ITERATIONS}: Optional parameter to configure
+ * the number of iterations used for password hash generations. The default
+ * value is {@link PasswordUtility#DEFAULT_ITERATIONS}.</li>
  * </ul>
  *
  * <h4>Authorizable Actions</h4>
@@ -240,6 +247,18 @@ public class UserManagerImpl extends ProtectedItemModifier
      * record group members.
      */
     public static final String PARAM_GROUP_MEMBERSHIP_SPLIT_SIZE = "groupMembershipSplitSize";
+
+    /**
+     * Configuration parameter to change the default algorithm used to generate
+     * password hashes. The default value is {@link PasswordUtility#DEFAULT_ALGORITHM}.
+     */
+    public static final String PARAM_PASSWORD_HASH_ALGORITHM = "passwordHashAlgorithm";
+
+    /**
+     * Configuration parameter to change the number of iterations used for
+     * password hash generation. The default value is {@link PasswordUtility#DEFAULT_ITERATIONS}.
+     */
+    public static final String PARAM_PASSWORD_HASH_ITERATIONS = "passwordHashIterations";
 
     private static final Logger log = LoggerFactory.getLogger(UserManagerImpl.class);
 
@@ -550,15 +569,14 @@ public class UserManagerImpl extends ProtectedItemModifier
                            Principal principal, String intermediatePath)
             throws AuthorizableExistsException, RepositoryException {
         checkValidID(userID);
-        if (password == null) {
-            throw new IllegalArgumentException("Cannot create user: null password.");
-        }
+
+        // NOTE: password validation during setPassword and onCreate.
         // NOTE: principal validation during setPrincipal call.
 
         try {
             NodeImpl userNode = (NodeImpl) nodeCreator.createUserNode(userID, intermediatePath);
             setPrincipal(userNode, principal);
-            setProperty(userNode, P_PASSWORD, getValue(UserImpl.buildPasswordValue(password)), true);
+            setPassword(userNode, password, true);
 
             User user = createUser(userNode);
             onCreate(user, password);
@@ -704,6 +722,39 @@ public class UserManagerImpl extends ProtectedItemModifier
             throw new RepositoryException("rep:principalName can only be set once on a new node.");
         }
         setProperty(node, P_PRINCIPAL_NAME, getValue(principal.getName()), true);
+    }
+
+    /**
+     * Generate a password value from the specified string and set the
+     * {@link UserConstants#P_PASSWORD} property to the given user node.
+     *
+     * @param userNode A user node.
+     * @param password The password value.
+     * @param forceHash If <code>true</code> the specified password string will
+     * always be hashed; otherwise the hash will only be generated if it appears
+     * to be a {@link PasswordUtility#isPlainTextPassword(String) plain text} password.
+     * @throws RepositoryException If an exception occurs.
+     */
+    void setPassword(NodeImpl userNode, String password, boolean forceHash) throws RepositoryException {
+        if (password == null) {
+            throw new IllegalArgumentException("Password may not be null.");
+        }
+        String pwHash;
+        if (forceHash || PasswordUtility.isPlainTextPassword(password)) {
+            try {
+                String algorithm = config.getConfigValue(PARAM_PASSWORD_HASH_ALGORITHM, PasswordUtility.DEFAULT_ALGORITHM);
+                int iterations = config.getConfigValue(PARAM_PASSWORD_HASH_ITERATIONS, PasswordUtility.DEFAULT_ITERATIONS);
+                pwHash = PasswordUtility.buildPasswordHash(password, algorithm, PasswordUtility.DEFAULT_SALT_SIZE, iterations);
+            } catch (NoSuchAlgorithmException e) {
+                throw new RepositoryException(e);
+            } catch (UnsupportedEncodingException e) {
+                throw new RepositoryException(e);
+            }
+        } else {
+            pwHash = password;
+        }
+        Value v = getSession().getValueFactory().createValue(pwHash);
+        setProperty(userNode, P_PASSWORD, getValue(pwHash), userNode.isNew());
     }
 
     void setProtectedProperty(NodeImpl node, Name propName, Value value) throws RepositoryException, LockException, ConstraintViolationException, ItemExistsException, VersionException {
