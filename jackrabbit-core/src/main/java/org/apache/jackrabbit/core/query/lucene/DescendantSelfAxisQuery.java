@@ -517,7 +517,7 @@ class DescendantSelfAxisQuery extends Query implements JackrabbitQuery {
                 return currentDoc;
             }
 
-            currentDoc = subScorer.nextDoc();
+            currentDoc = subScorer.advance(target);
             if (currentDoc == NO_MORE_DOCS) {
                 return NO_MORE_DOCS;
             } else {
