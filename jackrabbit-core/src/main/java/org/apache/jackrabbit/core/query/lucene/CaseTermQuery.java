@@ -47,6 +47,7 @@ abstract class CaseTermQuery extends MultiTermQuery implements TransformConstant
     CaseTermQuery(Term term, int transform) {
         this.term = term;
         this.transform = transform;
+        setRewriteMethod(CONSTANT_SCORE_FILTER_REWRITE);
     }
 
     /**

@@ -72,6 +72,7 @@ public class TestAll extends TestCase {
         suite.addTestSuite(LimitedAccessQueryTest.class);
         suite.addTestSuite(SQL2OffsetLimitTest.class);
         suite.addTestSuite(SQL2OrderByTest.class);
+        suite.addTestSuite(DescendantSelfAxisTest.class);
 
         return suite;
     }
