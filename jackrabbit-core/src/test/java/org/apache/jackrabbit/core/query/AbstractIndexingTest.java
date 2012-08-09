@@ -60,6 +60,6 @@ public class AbstractIndexingTest extends AbstractQueryTest {
      */
     protected void waitForTextExtractionTasksToFinish() throws Exception {
         TestHelper.waitForTextExtractionTasksToFinish(session);
-        getSearchIndex().flush();
+        flushSearchIndex();
     }
 }

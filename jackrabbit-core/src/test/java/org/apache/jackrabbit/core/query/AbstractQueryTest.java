@@ -143,7 +143,7 @@ public class AbstractQueryTest extends AbstractJCRTest {
      */
     protected void executeXPathQuery(String xpath, Node[] nodes)
             throws RepositoryException {
-        getSearchIndex().flush();
+        flushSearchIndex();
         QueryResult res = qm.createQuery(xpath, Query.XPATH).execute();
         checkResult(res, nodes);
     }
@@ -158,7 +158,7 @@ public class AbstractQueryTest extends AbstractJCRTest {
      */
     protected void executeSQLQuery(String sql, Node[] nodes)
             throws RepositoryException {
-        getSearchIndex().flush();
+        flushSearchIndex();
         QueryResult res = qm.createQuery(sql, Query.SQL).execute();
         checkResult(res, nodes);
     }
@@ -251,7 +251,7 @@ public class AbstractQueryTest extends AbstractJCRTest {
      */
     protected QueryResult executeQuery(String statement)
             throws RepositoryException {
-        getSearchIndex().flush();
+        flushSearchIndex();
         if (statement.trim().toLowerCase().startsWith("select")) {
             return qm.createQuery(statement, Query.SQL).execute();
         } else {
@@ -266,9 +266,16 @@ public class AbstractQueryTest extends AbstractJCRTest {
 
     protected void executeSQL2Query(String statement, Node[] nodes)
             throws RepositoryException {
-        getSearchIndex().flush();
+        flushSearchIndex();
         QueryResult res = qm.createQuery(statement, JCR_SQL2).execute();
         checkResult(res, nodes);
+    }
+
+    protected void flushSearchIndex() throws RepositoryException {
+        SearchIndex si = getSearchIndex();
+        if (si != null) {
+            si.flush();
+        }
     }
 
     /**
@@ -277,6 +284,9 @@ public class AbstractQueryTest extends AbstractJCRTest {
      * @return the query handler inside the {@link #qm query manager}.
      */
     protected SearchIndex getSearchIndex() {
-        return (SearchIndex) ((QueryManagerImpl) qm).getQueryHandler();
+        if (qm instanceof QueryManagerImpl) {
+            return (SearchIndex) ((QueryManagerImpl) qm).getQueryHandler();
+        }
+        return null;
     }
 }

@@ -360,7 +360,7 @@ public class FulltextQueryTest extends AbstractQueryTest {
             stream.close();
         }
         testRootNode.save();
-        getSearchIndex().flush();
+        flushSearchIndex();
 
         for (String statement : statements) {
             assertContainsQuery(statement, true);
