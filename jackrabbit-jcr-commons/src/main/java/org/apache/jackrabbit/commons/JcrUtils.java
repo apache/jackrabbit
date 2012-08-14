@@ -668,7 +668,7 @@ public class JcrUtils {
      * @return stream for reading the file contents
      * @throws RepositoryException if the file can not be accessed
      */
-    public InputStream readFile(Node node) throws RepositoryException {
+    public static InputStream readFile(Node node) throws RepositoryException {
         if (node.hasProperty(Property.JCR_DATA)) {
             Property data = node.getProperty(Property.JCR_DATA);
             final Binary binary = data.getBinary();
@@ -698,7 +698,7 @@ public class JcrUtils {
      * @throws RepositoryException if the file can not be accessed
      * @throws IOException if the file can not be read or written
      */
-    public void readFile(Node node, OutputStream output)
+    public static void readFile(Node node, OutputStream output)
             throws RepositoryException, IOException {
         InputStream input = readFile(node);
         try {
@@ -723,7 +723,7 @@ public class JcrUtils {
      * @return last modified date, or <code>null</code> if not available
      * @throws RepositoryException if the last modified date can not be accessed
      */
-    public Calendar getLastModified(Node node) throws RepositoryException {
+    public static Calendar getLastModified(Node node) throws RepositoryException {
         if (node.hasProperty(Property.JCR_LAST_MODIFIED)) {
             return node.getProperty(Property.JCR_LAST_MODIFIED).getDate();
         } else if (node.hasNode(Node.JCR_CONTENT)) {
@@ -743,7 +743,7 @@ public class JcrUtils {
      * @param date modified date
      * @throws RepositoryException if the last modified date can not be set
      */
-    public void setLastModified(Node node, Calendar date) throws RepositoryException {
+    public static void setLastModified(Node node, Calendar date) throws RepositoryException {
         if (node.hasNode(Node.JCR_CONTENT)) {
             setLastModified(node.getNode(Node.JCR_CONTENT), date);
         } else {
