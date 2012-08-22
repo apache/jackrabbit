@@ -131,13 +131,13 @@ public class XPathQueryEvaluator implements XPathQueryBuilder.ConditionVisitor {
         String repPrincipal = session.getJCRName(UserConstants.P_PRINCIPAL_NAME);
 
         xPath.append('(')
-                .append("jcr:like(")
+                .append("jcr:like(@")
                 .append(repPrincipal)
                 .append(",'")
                 .append(condition.getPattern())
                 .append("')")
                 .append(" or ")
-                .append("jcr:like(fn:name(.),'")
+                .append("jcr:like(fn:name(),'")
                 .append(escape(condition.getPattern()))
                 .append("')")
                 .append(')');
