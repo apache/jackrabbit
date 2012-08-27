@@ -402,7 +402,7 @@ public class CompactNodeTypeDefReader<T, N> {
         try {
             pd.setName(currentToken);
         } catch (RepositoryException e) {
-            lexer.fail("Invalid property name '" + currentToken + "': " + e.getMessage());
+            lexer.fail("Invalid property name '" + currentToken, e);
         }
         nextToken();
         doPropertyType(pd);
@@ -454,7 +454,7 @@ public class CompactNodeTypeDefReader<T, N> {
                 lexer.fail("Unkown property type '" + currentToken + "' specified");
             }
         } catch (RepositoryException e) {
-            lexer.fail("Error setting property type of " + pd.getName() + " to " + currentToken);
+            lexer.fail("Error setting property type of " + pd.getName() + " to " + currentToken, e);
         }
         nextToken();
         if (!currentTokenEquals(Lexer.END_TYPE)) {
@@ -507,7 +507,7 @@ public class CompactNodeTypeDefReader<T, N> {
                 nextToken();
             }
         } catch (RepositoryException e) {
-            lexer.fail("Error setting property attribute of " + pd.getName() + " to " + currentToken);
+            lexer.fail("Error setting property attribute of " + pd.getName() + " to " + currentToken, e);
         }
     }
 
@@ -549,7 +549,7 @@ public class CompactNodeTypeDefReader<T, N> {
         try {
             pd.setAvailableQueryOperators(queryOps.toArray(new String[queryOps.size()]));
         } catch (RepositoryException e) {
-            lexer.fail("Error query operators for " + pd.getName() + " to " + currentToken);
+            lexer.fail("Error query operators for " + pd.getName() + " to " + currentToken, e);
         }
     }
 
@@ -571,7 +571,7 @@ public class CompactNodeTypeDefReader<T, N> {
             try {
                 pd.addDefaultValues(currentToken);
             } catch (RepositoryException e) {
-                lexer.fail("Error adding default value for " + pd.getName() + " to " + currentToken + ": " + e.getMessage());
+                lexer.fail("Error adding default value for " + pd.getName() + " to " + currentToken, e);
             }
             nextToken();
         } while (currentTokenEquals(Lexer.LIST_DELIMITER));
@@ -595,7 +595,7 @@ public class CompactNodeTypeDefReader<T, N> {
             try {
                 pd.addValueConstraint(currentToken);
             } catch (RepositoryException e) {
-                lexer.fail("Error adding value constraint for " + pd.getName() + " to " + currentToken + ": " + e.getMessage());
+                lexer.fail("Error adding value constraint for " + pd.getName() + " to " + currentToken, e);
             }
             nextToken();
         } while (currentTokenEquals(Lexer.LIST_DELIMITER));
@@ -615,7 +615,7 @@ public class CompactNodeTypeDefReader<T, N> {
         try {
             nd.setName(currentToken);
         } catch (RepositoryException e) {
-            lexer.fail("Invalid child node name '" + currentToken + "': " + e.getMessage());
+            lexer.fail("Invalid child node name '" + currentToken, e);
         }
         nextToken();
         doChildNodeRequiredTypes(nd);
@@ -641,7 +641,7 @@ public class CompactNodeTypeDefReader<T, N> {
             try {
                 nd.addRequiredPrimaryType(currentToken);
             } catch (RepositoryException e) {
-                lexer.fail("Error setting required primary type of " + nd.getName() + " to " + currentToken + ": " + e.getMessage());
+                lexer.fail("Error setting required primary type of " + nd.getName() + " to " + currentToken, e);
             }
             nextToken();
         } while (currentTokenEquals(Lexer.LIST_DELIMITER));
@@ -664,7 +664,7 @@ public class CompactNodeTypeDefReader<T, N> {
         try {
             nd.setDefaultPrimaryType(currentToken);
         } catch (RepositoryException e) {
-            lexer.fail("Error setting default primary type of " + nd.getName() + " to " + currentToken + ": " + e.getMessage());
+            lexer.fail("Error setting default primary type of " + nd.getName() + " to " + currentToken, e);
         }
         nextToken();
     }
@@ -708,7 +708,7 @@ public class CompactNodeTypeDefReader<T, N> {
                 nextToken();
             }
         } catch (RepositoryException e) {
-            lexer.fail("Error setting child node attribute of " + nd.getName() + " to " + currentToken);
+            lexer.fail("Error setting child node attribute of " + nd.getName() + " to " + currentToken, e);
         }
     }
 
