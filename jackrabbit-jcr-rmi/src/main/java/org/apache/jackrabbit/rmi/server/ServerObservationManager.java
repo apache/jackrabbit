@@ -53,7 +53,7 @@ public class ServerObservationManager extends ServerObject implements
     /**
      * The map of event listener proxies indexed by the unique identifier.
      */
-    private Map proxyMap;
+	private Map<Long, ServerEventListenerProxy> proxyMap;
 
     /**
      * The queue to which event listener proxies post events to be reported
@@ -84,11 +84,11 @@ public class ServerObservationManager extends ServerObject implements
         ServerEventListenerProxy proxy;
         synchronized (this) {
             if (proxyMap == null) {
-                proxyMap = new HashMap();
+                proxyMap = new HashMap<Long, ServerEventListenerProxy>();
             }
 
-            Long id = new Long(listenerId);
-            proxy = (ServerEventListenerProxy) proxyMap.get(id);
+            Long id = Long.valueOf(listenerId);
+            proxy = proxyMap.get(id);
             if (proxy == null) {
                 proxy = new ServerEventListenerProxy(getFactory(), listenerId,
                     getQueue());

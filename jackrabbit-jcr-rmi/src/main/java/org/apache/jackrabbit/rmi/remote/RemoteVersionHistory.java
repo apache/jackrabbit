@@ -46,15 +46,28 @@ public interface RemoteVersionHistory extends RemoteNode {
 
     /**
      * Remote version of the
-     * {@link javax.jcr.version.VersionHistory#getVersionableUUID() VersionHistory.getVersionableUUID()}
+     * {@link javax.jcr.version.VersionHistory#getVersionableUUID()}  VersionHistory.getVersionableUUID()}
      * method.
      *
-     * @return the UUID of the versionable node for which this is the version history.
+     * @return the uuid of the versionable node
+     * @throws RepositoryException if an error occurs.
+     * @throws RemoteException on RMI errors
+     * @deprecated As of JCR 2.0, {@link #getVersionableIdentifier} should be
+     *             used instead.
+     */
+    String getVersionableUUID() throws RepositoryException, RemoteException;
+
+    /**
+     * Remote version of the
+     * {@link javax.jcr.version.VersionHistory#getVersionableIdentifier()}  VersionHistory.getVersionableIdentifier()}
+     * method.
+     *
+     * @return the identifier of the versionable node
      * @throws RepositoryException if an error occurs.
      * @throws RemoteException on RMI errors
      */
-//    String getVersionableUUID() throws RepositoryException, RemoteException;
-
+    String getVersionableIdentifier() throws RepositoryException, RemoteException;
+	
     /**
      * Remote version of the
      * {@link javax.jcr.version.VersionHistory#getRootVersion() VersionHistory.getRootVersion()}
@@ -68,6 +81,17 @@ public interface RemoteVersionHistory extends RemoteNode {
 
     /**
      * Remote version of the
+     * {@link javax.jcr.version.VersionHistory#getAllLinearVersions() VersionHistory.getAllLinearVersions()}
+     * method.
+     *
+     * @return linear remote versions
+     * @throws RepositoryException if an error occurs.
+     * @throws RemoteException on RMI errors
+     */
+    RemoteIterator getAllLinearVersions() throws RepositoryException, RemoteException;
+
+    /**
+     * Remote version of the
      * {@link javax.jcr.version.VersionHistory#getAllVersions() VersionHistory.getAllVersions()}
      * method.
      *
@@ -76,6 +100,28 @@ public interface RemoteVersionHistory extends RemoteNode {
      * @throws RemoteException on RMI errors
      */
     RemoteIterator getAllVersions() throws RepositoryException, RemoteException;
+
+    /**
+     * Remote version of the
+     * {@link javax.jcr.version.VersionHistory#getAllLinearFrozenNodes() VersionHistory.getAllLinearFrozenNodes()}
+     * method.
+     *
+     * @return linear remote frozen nodes
+     * @throws RepositoryException if an error occurs.
+     * @throws RemoteException on RMI errors
+     */
+    RemoteIterator getAllLinearFrozenNodes() throws RepositoryException, RemoteException;
+
+    /**
+     * Remote version of the
+     * {@link javax.jcr.version.VersionHistory#getAllFrozenNodes() VersionHistory.getAllFrozenNodes()}
+     * method.
+     *
+     * @return remote frozen nodes
+     * @throws RepositoryException if an error occurs.
+     * @throws RemoteException on RMI errors
+     */
+    RemoteIterator getAllFrozenNodes() throws RepositoryException, RemoteException;
 
     /**
      * Remote version of the
@@ -194,17 +240,5 @@ public interface RemoteVersionHistory extends RemoteNode {
      */
     void removeVersion(String versionName)
             throws RepositoryException, RemoteException;
-
-
-    /**
-     * Remote version of the
-     * {@link javax.jcr.version.VersionHistory#getVersionableUUID()}  VersionHistory.getVersionableUUID()}
-     * method.
-     *
-     * @return the uuid of the versionable node
-     * @throws RepositoryException if another error occurs.
-     * @throws RemoteException on RMI errors
-     */
-    String getVersionableUUID() throws RepositoryException, RemoteException;
 
 }

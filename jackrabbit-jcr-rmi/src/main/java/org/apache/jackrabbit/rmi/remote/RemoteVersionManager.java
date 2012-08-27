@@ -23,69 +23,87 @@ import javax.jcr.RepositoryException;
 
 public interface RemoteVersionManager extends Remote {
 
-//    void cancelMerge(String absPath, Version version)
-//        throws RepositoryException, RemoteException;
+    /**
+     * Remote version of the
+     * {@link javax.jcr.version.VersionManager#checkin(String) VersionManager.checkin(String)}
+     * method.
+     *
+     * @param absPath an absolute path.
+     * @return the created version.
+     * @throws RepositoryException on repository errors
+     * @throws RemoteException on RMI errors
+     */
+    RemoteVersion checkin(String absPath) throws RepositoryException, RemoteException;
 
-    RemoteVersion checkin(String absPath)
-        throws RepositoryException, RemoteException;
-
+    /**
+     * Remote version of the
+     * {@link javax.jcr.version.VersionManager#checkout(String) VersionManager.checkout(String)}
+     * method.
+     *
+     * @param absPath an absolute path.
+     * @throws RepositoryException on repository errors
+     * @throws RemoteException on RMI errors
+     */
     void checkout(String absPath) throws RepositoryException, RemoteException;
 
-    RemoteVersion checkpoint(String absPath)
-        throws RepositoryException, RemoteException;
+    /**
+     * Remote version of the
+     * {@link javax.jcr.version.VersionManager#checkpoint(String) VersionManager.checkpoint(String)}
+     * method.
+     *
+     * @param absPath an absolute path.
+     * @return the created version.
+     * @throws RepositoryException on repository errors
+     * @throws RemoteException on RMI errors
+     */
+    RemoteVersion checkpoint(String absPath) throws RepositoryException, RemoteException;
 
-    RemoteNode createActivity(String title)
-        throws RepositoryException, RemoteException;
+    /**
+     * Remote version of the
+     * {@link javax.jcr.version.VersionManager#isCheckedOut(String) VersionManager.isCheckedOut(String)}
+     * method.
+     *
+     * @param absPath an absolute path.
+     * @return a boolean
+     * @throws RepositoryException on repository errors
+     * @throws RemoteException on RMI errors
+     */
+    boolean isCheckedOut(String absPath) throws RepositoryException, RemoteException;
 
-    RemoteNode createConfiguration(String absPath)
-        throws RepositoryException, RemoteException;
+    RemoteVersionHistory getVersionHistory(String absPath) throws RepositoryException, RemoteException;
 
-//    void doneMerge(String absPath, Version version)
-//        throws RepositoryException, RemoteException;
+    RemoteVersion getBaseVersion(String absPath) throws RepositoryException, RemoteException;
+
+    void restore(String[] versionIdentifiers, boolean removeExisting) throws RepositoryException, RemoteException;
+
+    void restore(String absPath, String versionName, boolean removeExisting) throws RepositoryException, RemoteException;
+
+    void restore(String versionIdentifier, boolean removeExisting) throws RepositoryException, RemoteException;
+
+    void restoreVI(String absPath, String versionIdentifier, boolean removeExisting) throws RepositoryException, RemoteException;
+
+    void restoreByLabel(String absPath, String versionLabel, boolean removeExisting) throws RepositoryException, RemoteException;
+
+    RemoteIterator merge(String absPath, String srcWorkspace, boolean bestEffort)
+            throws RepositoryException, RemoteException;
+
+    RemoteIterator merge(String absPath, String srcWorkspace, boolean bestEffort, boolean isShallow)
+            throws RepositoryException, RemoteException;
+
+    void doneMerge(String absPath, String versionIdentifier) throws RepositoryException, RemoteException;
+    
+    void cancelMerge(String absPath, String versionIdentifier) throws RepositoryException, RemoteException;
+
+    RemoteNode createConfiguration(String absPath) throws RepositoryException, RemoteException;
+
+    RemoteNode setActivity(String activityNodeIdentifier) throws RepositoryException, RemoteException;
 
     RemoteNode getActivity() throws RepositoryException, RemoteException;
 
-    RemoteVersion getBaseVersion(String absPath)
-        throws RepositoryException, RemoteException;
+    RemoteNode createActivity(String title) throws RepositoryException, RemoteException;
 
-    RemoteVersionHistory getVersionHistory(String absPath)
-        throws RepositoryException, RemoteException;
+    void removeActivity(String activityNodeIdentifier) throws RepositoryException, RemoteException;
 
-    boolean isCheckedOut(String absPath)
-        throws RepositoryException, RemoteException;
-
-//    NodeIterator merge(Node activityNode)
-//        throws RepositoryException, RemoteException;
-
-    RemoteIterator merge(
-        String absPath, String srcWorkspace, boolean bestEffort)
-        throws RepositoryException, RemoteException;
-
-    RemoteIterator merge(
-        String absPath, String srcWorkspace, boolean bestEffort,
-        boolean isShallow)
-        throws RepositoryException, RemoteException;
-
-//    void removeActivity(Node activityNode)
-//        throws RepositoryException, RemoteException;
-
-//    void restore(Version[] versions, boolean removeExisting)
-//        throws RepositoryException, RemoteException;
-
-//    void restore(Version version, boolean removeExisting)
-//        throws RepositoryException, RemoteException;
-
-    void restore(
-        String absPath, String versionName, boolean removeExisting)
-        throws RepositoryException, RemoteException;
-
-//    void restore(String absPath, Version version, boolean removeExisting)
-//        throws RepositoryException, RemoteException;
-
-    void restoreByLabel(
-        String absPath, String versionLabel, boolean removeExisting)
-        throws RepositoryException, RemoteException;
-
-//    Node setActivity(Node activity) throws RepositoryException, RemoteException;
+    RemoteIterator merge(String activityNodeIdentifier) throws RepositoryException, RemoteException;
 
 }

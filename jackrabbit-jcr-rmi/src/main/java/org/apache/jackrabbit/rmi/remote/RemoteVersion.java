@@ -21,7 +21,6 @@ import java.util.Calendar;
 
 import javax.jcr.RepositoryException;
 
-
 /**
  * Remote version of the JCR {@link javax.jcr.version.Version Version} interface.
  * Used by the {@link org.apache.jackrabbit.rmi.server.ServerVersion ServerVersion}
@@ -52,7 +51,7 @@ public interface RemoteVersion extends RemoteNode {
      * @throws RepositoryException on repository errors
      * @throws RemoteException on RMI errors
      */
-//     RemoteVersionHistory getContainingHistory() throws RepositoryException;
+     RemoteVersionHistory getContainingHistory() throws RepositoryException, RemoteException;
 
     /**
      * Remote version of the
@@ -66,6 +65,18 @@ public interface RemoteVersion extends RemoteNode {
 
     /**
      * Remote version of the
+     * {@link javax.jcr.version.Version#getLinearSuccessor() Version.getLinearSuccessor()} method.
+     *
+     * @return a <code>RemoteVersion</code> or <code>null</code> if no linear
+     *         successor exists.
+     * @throws RepositoryException on repository errors
+     * @throws RemoteException on RMI errors
+     * @see RemoteVersionHistory#getAllLinearVersions
+     */
+    RemoteVersion getLinearSuccessor() throws RepositoryException, RemoteException;
+
+    /**
+     * Remote version of the
      * {@link javax.jcr.version.Version#getSuccessors() Version.getSuccessors()} method.
      *
      * @return a <code>RemoteVersion</code> array.
@@ -73,6 +84,18 @@ public interface RemoteVersion extends RemoteNode {
      * @throws RemoteException on RMI errors
      */
     RemoteVersion[] getSuccessors() throws RepositoryException, RemoteException;
+
+    /**
+     * Remote version of the
+     * {@link javax.jcr.version.Version#getLinearPredecessor() Version.getLinearPredecessor()} method.
+     *
+     * @return a <code>RemoteVersion</code> or <code>null</code> if no linear
+     *         predecessor exists.
+     * @throws RepositoryException on repository errors
+     * @throws RemoteException on RMI errors
+     * @see RemoteVersionHistory#getAllLinearVersions
+     */
+    RemoteVersion getLinearPredecessor() throws RepositoryException, RemoteException;
 
     /**
      * Remote version of the
@@ -86,14 +109,11 @@ public interface RemoteVersion extends RemoteNode {
 
     /**
      * Remote version of the
-     * {@link javax.jcr.version.Version#getContainingHistory()} Version.getContainingHistory()} method.
+     * {@link javax.jcr.version.Version#getFrozenNode() Version.getFrozenNode()} method.
      *
-     * @return a <code>RemoteVersionHistory</code>.
+     * @return a <code>RemoteNode</code> object.
      * @throws RepositoryException on repository errors
      * @throws RemoteException on RMI errors
      */
-    RemoteVersionHistory getContainingHistory() throws RepositoryException, RemoteException;
-
-
-
+    RemoteNode getFrozenNode() throws RepositoryException, RemoteException;
 }

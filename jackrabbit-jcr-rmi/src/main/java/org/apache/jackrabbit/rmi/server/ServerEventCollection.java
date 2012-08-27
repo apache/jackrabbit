@@ -17,6 +17,10 @@
 package org.apache.jackrabbit.rmi.server;
 
 import java.rmi.RemoteException;
+import java.util.Map;
+
+import javax.jcr.RepositoryException;
+import javax.jcr.observation.Event;
 
 import org.apache.jackrabbit.rmi.remote.RemoteEventCollection;
 
@@ -77,14 +81,8 @@ public class ServerEventCollection extends ServerObject implements
      */
     public static class ServerEvent extends ServerObject implements RemoteEvent {
 
-        /** Event type */
-        private final int type;
-
-        /** Item path */
-        private final String path;
-
-        /** User identifier */
-        private final String userID;
+        /** The adapted local event. */
+        private Event event;
 
         /**
          * Creates an instance of this class.
@@ -94,28 +92,46 @@ public class ServerEventCollection extends ServerObject implements
          * @param factory remote adapter factory
          * @throws RemoteException on RMI errors
          */
-        ServerEvent(
-                int type, String path, String userId, RemoteAdapterFactory factory)
+        ServerEvent(Event event, RemoteAdapterFactory factory)
                 throws RemoteException {
             super(factory);
-            this.type = type;
-            this.path = path;
-            this.userID = userId;
+            this.event = event;
         }
 
         /** {@inheritDoc} */
-        public String getPath() {
-            return path;
+        public String getPath() throws RepositoryException {
+            return event.getPath();
         }
 
         /** {@inheritDoc} */
         public int getType() {
-            return type;
+            return event.getType();
         }
 
         /** {@inheritDoc} */
         public String getUserID() {
-            return userID;
+            return event.getUserID();
         }
+
+        /** {@inheritDoc} */
+		public String getIdentifier() throws RepositoryException,
+				RemoteException {
+			return event.getIdentifier();
+		}
+
+        /** {@inheritDoc} */
+		public Map getInfo() throws RepositoryException, RemoteException {
+			return event.getInfo();
+		}
+
+        /** {@inheritDoc} */
+		public String getUserData() throws RepositoryException, RemoteException {
+			return event.getUserData();
+		}
+
+        /** {@inheritDoc} */
+		public long getDate() throws RepositoryException, RemoteException {
+			return event.getDate();
+		}
     }
 }

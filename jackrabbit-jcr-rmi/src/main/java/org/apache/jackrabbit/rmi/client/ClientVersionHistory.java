@@ -128,8 +128,8 @@ public class ClientVersionHistory extends ClientNode implements VersionHistory {
     public boolean hasVersionLabel(Version version, String label)
             throws VersionException, RepositoryException {
         try {
-            String versionUUID = version.getUUID();
-            return remote.hasVersionLabel(versionUUID, label);
+            String versionIdentifier = version.getIdentifier();
+            return remote.hasVersionLabel(versionIdentifier, label);
         } catch (RemoteException ex) {
             throw new RemoteRepositoryException(ex);
         }
@@ -149,8 +149,8 @@ public class ClientVersionHistory extends ClientNode implements VersionHistory {
     public String[] getVersionLabels(Version version)
             throws VersionException, RepositoryException {
         try {
-            String versionUUID = version.getUUID();
-            return remote.getVersionLabels(versionUUID);
+            String versionIdentifier = version.getIdentifier();
+            return remote.getVersionLabels(versionIdentifier);
         } catch (RemoteException ex) {
             throw new RemoteRepositoryException(ex);
         }
@@ -167,7 +167,10 @@ public class ClientVersionHistory extends ClientNode implements VersionHistory {
         }
     }
 
-    /** {@inheritDoc} */
+    /** {@inheritDoc}
+     * @deprecated As of JCR 2.0, {@link #getVersionableIdentifier} should be
+     *             used instead.
+     */
     public String getVersionableUUID() throws RepositoryException {
         try {
             return remote.getVersionableUUID();
@@ -176,19 +179,39 @@ public class ClientVersionHistory extends ClientNode implements VersionHistory {
         }
     }
 
+    /** {@inheritDoc} */
     public NodeIterator getAllFrozenNodes() throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("TODO: JCR-3206");
+        try {
+            return getFactory().getNodeIterator(getSession(), remote.getAllFrozenNodes());
+        } catch (RemoteException ex) {
+            throw new RemoteRepositoryException(ex);
+        }
     }
 
+    /** {@inheritDoc} */
     public NodeIterator getAllLinearFrozenNodes() throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("TODO: JCR-3206");
+        try {
+            return getFactory().getNodeIterator(getSession(), remote.getAllLinearFrozenNodes());
+        } catch (RemoteException ex) {
+            throw new RemoteRepositoryException(ex);
+        }
     }
 
+    /** {@inheritDoc} */
     public VersionIterator getAllLinearVersions() throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("TODO: JCR-3206");
+        try {
+            return getFactory().getVersionIterator(getSession(), remote.getAllLinearVersions());
+        } catch (RemoteException ex) {
+            throw new RemoteRepositoryException(ex);
+        }
     }
 
+    /** {@inheritDoc} */
     public String getVersionableIdentifier() throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("TODO: JCR-3206");
+        try {
+            return remote.getVersionableIdentifier();
+        } catch (RemoteException ex) {
+            throw new RemoteRepositoryException(ex);
+        }
     }
 }

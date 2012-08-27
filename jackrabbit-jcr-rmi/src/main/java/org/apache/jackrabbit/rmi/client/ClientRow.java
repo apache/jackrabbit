@@ -20,7 +20,7 @@ import java.rmi.RemoteException;
 
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
-import javax.jcr.UnsupportedRepositoryOperationException;
+import javax.jcr.Session;
 import javax.jcr.Value;
 import javax.jcr.query.Row;
 
@@ -34,7 +34,10 @@ import org.apache.jackrabbit.rmi.remote.RemoteRow;
  * @see javax.jcr.query.Row Row
  * @see org.apache.jackrabbit.rmi.remote.RemoteRow
  */
-public class ClientRow implements Row {
+public class ClientRow extends ClientObject implements Row {
+
+    /** Current session. */
+    private Session session;
 
     /** The remote query row. */
     private RemoteRow remote;
@@ -44,7 +47,10 @@ public class ClientRow implements Row {
      *
      * @param remote remote query row
      */
-    public ClientRow(RemoteRow remote) {
+    public ClientRow(Session session, RemoteRow remote,
+            LocalAdapterFactory factory) {
+        super(factory);
+        this.session = session;
         this.remote = remote;
     }
 
@@ -66,28 +72,58 @@ public class ClientRow implements Row {
         }
     }
 
+    /** {@inheritDoc} */
     public Node getNode() throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("TODO: JCR-3206");
+        try {
+            return getFactory().getNode(session, remote.getNode());
+        } catch (RemoteException ex) {
+            throw new RemoteRepositoryException(ex);
+        }
     }
 
+    /** {@inheritDoc} */
     public Node getNode(String selectorName) throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("TODO: JCR-3206");
+        try {
+            return getFactory().getNode(session, remote.getNode(selectorName));
+        } catch (RemoteException ex) {
+            throw new RemoteRepositoryException(ex);
+        }
     }
 
+    /** {@inheritDoc} */
     public String getPath() throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("TODO: JCR-3206");
+        try {
+            return remote.getPath();
+        } catch (RemoteException ex) {
+            throw new RemoteRepositoryException(ex);
+        }
     }
 
+    /** {@inheritDoc} */
     public String getPath(String selectorName) throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("TODO: JCR-3206");
+        try {
+            return remote.getPath(selectorName);
+        } catch (RemoteException ex) {
+            throw new RemoteRepositoryException(ex);
+        }
     }
 
+    /** {@inheritDoc} */
     public double getScore() throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("TODO: JCR-3206");
+        try {
+            return remote.getScore();
+        } catch (RemoteException ex) {
+            throw new RemoteRepositoryException(ex);
+        }
     }
 
+    /** {@inheritDoc} */
     public double getScore(String selectorName) throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("TODO: JCR-3206");
+        try {
+            return remote.getScore(selectorName);
+        } catch (RemoteException ex) {
+            throw new RemoteRepositoryException(ex);
+        }
     }
 
 }

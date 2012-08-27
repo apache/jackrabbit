@@ -20,6 +20,7 @@ import java.rmi.Remote;
 import java.rmi.RemoteException;
 
 import javax.jcr.RepositoryException;
+import javax.jcr.Value;
 
 /**
  * Remote version of the JCR {@link javax.jcr.query.Query Query} interface.
@@ -44,6 +45,22 @@ public interface RemoteQuery extends Remote {
      */
     RemoteQueryResult execute() throws RepositoryException, RemoteException;
 
+    /**
+     * @see javax.jcr.query.Query#setLimit()
+     *
+     * @param limit a <code>long</code>
+     * @throws RemoteException on RMI errors
+     */
+    void setLimit(long limit) throws RemoteException;
+    
+    /**
+     * @see javax.jcr.query.Query#setOffset()
+     *
+     * @param offset a <code>long</code>
+     * @throws RemoteException on RMI errors
+     */
+    void setOffset(long offset) throws RemoteException;
+    
     /**
      * @see javax.jcr.query.Query#getStatement()
      *
@@ -79,4 +96,22 @@ public interface RemoteQuery extends Remote {
      */
     RemoteNode storeAsNode(String absPath) throws RepositoryException, RemoteException;
 
+    /**
+     * @see javax.jcr.query.Query#bindValue(String, Value)
+     *
+     * @param varName name of variable in query
+     * @param value   value to bind
+     * @throws RepositoryException on repository errors
+     * @throws RemoteException on RMI errors
+     */
+    void bindValue(String varName, Value value) throws RepositoryException, RemoteException;
+    
+    /**
+     * @see javax.jcr.query.Query#getBindVariableNames()
+     *
+     * @return the names of the bind variables in this query.
+     * @throws RepositoryException on repository errors
+     * @throws RemoteException on RMI errors
+     */
+    public String[] getBindVariableNames() throws RepositoryException, RemoteException;
 }

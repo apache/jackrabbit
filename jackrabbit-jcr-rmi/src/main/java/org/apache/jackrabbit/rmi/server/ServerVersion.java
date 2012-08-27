@@ -22,6 +22,7 @@ import java.util.Calendar;
 import javax.jcr.RepositoryException;
 import javax.jcr.version.Version;
 
+import org.apache.jackrabbit.rmi.remote.RemoteNode;
 import org.apache.jackrabbit.rmi.remote.RemoteVersion;
 import org.apache.jackrabbit.rmi.remote.RemoteVersionHistory;
 
@@ -76,15 +77,14 @@ public class ServerVersion extends ServerNode implements RemoteVersion {
         }
     }
 
-//  This is only available after 0.16.2
-//    /** {@inheritDoc} */
-//    public RemoteVersionHistory getContainingHistory() throws RepositoryException {
-//        try {
-//            return getFactory().getRemoteVersionHistory(version.getContainingHistory());
-//        } catch (RepositoryException ex) {
-//            throw getRepositoryException(ex);
-//        }
-//    }
+    /** {@inheritDoc} */
+    public RemoteVersionHistory getContainingHistory() throws RepositoryException, RemoteException {
+        try {
+            return getFactory().getRemoteVersionHistory(version.getContainingHistory());
+        } catch (RepositoryException ex) {
+            throw getRepositoryException(ex);
+        }
+    }
 
     /** {@inheritDoc} */
     public Calendar getCreated() throws RepositoryException {
@@ -96,6 +96,21 @@ public class ServerVersion extends ServerNode implements RemoteVersion {
     }
 
     /** {@inheritDoc} */
+    public RemoteVersion getLinearSuccessor() throws RepositoryException,
+    		RemoteException {
+        try {
+            Version linearSuccessor = version.getLinearSuccessor();
+            if (linearSuccessor == null) {
+                return null;
+            } else {
+                return getFactory().getRemoteVersion(linearSuccessor);
+            }
+        } catch (RepositoryException ex) {
+            throw getRepositoryException(ex);
+        }
+    }
+    
+    /** {@inheritDoc} */
     public RemoteVersion[] getSuccessors() throws RepositoryException, RemoteException {
         try {
             return getRemoteVersionArray(version.getSuccessors());
@@ -104,6 +119,21 @@ public class ServerVersion extends ServerNode implements RemoteVersion {
         }
     }
 
+    /** {@inheritDoc} */
+    public RemoteVersion getLinearPredecessor() throws RepositoryException,
+    		RemoteException {
+        try {
+            Version linearPredecessor = version.getLinearPredecessor();
+            if (linearPredecessor == null) {
+                return null;
+            } else {
+                return getFactory().getRemoteVersion(linearPredecessor);
+            }
+        } catch (RepositoryException ex) {
+            throw getRepositoryException(ex);
+        }
+    }
+    
     /** {@inheritDoc} */
     public RemoteVersion[] getPredecessors() throws RepositoryException, RemoteException {
         try {
@@ -114,9 +144,10 @@ public class ServerVersion extends ServerNode implements RemoteVersion {
     }
 
     /** {@inheritDoc} */
-    public RemoteVersionHistory getContainingHistory() throws RepositoryException, RemoteException {
+    public RemoteNode getFrozenNode() throws RepositoryException,
+    		RemoteException {
         try {
-            return getFactory().getRemoteVersionHistory(version.getContainingHistory());
+            return getFactory().getRemoteNode(version.getFrozenNode());
         } catch (RepositoryException ex) {
             throw getRepositoryException(ex);
         }

@@ -18,6 +18,9 @@ package org.apache.jackrabbit.rmi.remote;
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;
+import java.util.Map;
+
+import javax.jcr.RepositoryException;
 
 /**
  * The <code>RemoteEventCollection</code> class serves as a container for
@@ -52,28 +55,75 @@ public interface RemoteEventCollection extends Remote {
      */
     public static interface RemoteEvent extends Remote {
         /**
-         * Returns the event type.
+         * Remote version of the
+         * {@link javax.jcr.Event#getType() Event.getType()} method.
          *
-         * @return event type
+         * @return the type of this event.
          * @throws RemoteException on RMI errors
          */
         int getType() throws RemoteException;
 
         /**
-         * Returns the absolute path of the underlying item.
+         * Remote version of the
+         * {@link javax.jcr.Event#getPath() Event.getPath()} method.
          *
-         * @return item path
+         * @return the absolute path associated with this event or
+         *         <code>null</code>.
+         * @throws RepositoryException on repository errors
          * @throws RemoteException on RMI errors
          */
-        String getPath() throws RemoteException;
+        String getPath() throws RepositoryException, RemoteException;
 
         /**
-         * Returns the userID of the session causing this event.
+         * Remote version of the
+         * {@link javax.jcr.Event#getUserID() Event.getUserID()} method.
          *
-         * @return user identifier
+         * @return the user ID.
          * @throws RemoteException on RMI errors
          */
         String getUserID() throws RemoteException;
+        
+        /**
+         * Remote version of the
+         * {@link javax.jcr.Event#getIdentifier() Event.getIdentifier()} method.
+         *
+         * @return the identifier associated with this event or <code>null</code>.
+         * @throws RepositoryException on repository errors
+         * @throws RemoteException on RMI errors
+         */
+        String getIdentifier() throws RepositoryException, RemoteException;
+        
+        /**
+         * Remote version of the
+         * {@link javax.jcr.Event#getInfo() Event.getInfo()} method.
+         *
+         * @return A <code>Map</code> containing parameter information for instances
+     *         of a <code>NODE_MOVED</code> event.
+         * @throws RepositoryException on repository errors
+         * @throws RemoteException on RMI errors
+         */
+        Map getInfo() throws RepositoryException, RemoteException;
+        
+        /**
+         * Remote version of the
+         * {@link javax.jcr.Event#getUserData() Event.getUserData()} method.
+         *
+         * @return The user data string.
+         * @throws RepositoryException on repository errors
+         * @throws RemoteException on RMI errors
+         */
+        String getUserData() throws RepositoryException, RemoteException;
+        
+        /**
+         * Remote version of the
+         * {@link javax.jcr.Event#getDate() Event.getDate()} method.
+         *
+         * @return the date when the change was persisted that caused this event.
+         * @throws RepositoryException on repository errors
+         * @throws RemoteException on RMI errors
+         */
+        long getDate() throws RepositoryException, RemoteException;
+        
     }
 
 }

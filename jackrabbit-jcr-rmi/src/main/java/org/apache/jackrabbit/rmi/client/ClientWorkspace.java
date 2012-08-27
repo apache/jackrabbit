@@ -24,7 +24,6 @@ import java.rmi.RemoteException;
 import javax.jcr.NamespaceRegistry;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.Workspace;
 import javax.jcr.lock.LockManager;
 import javax.jcr.nodetype.NodeTypeManager;
@@ -240,8 +239,7 @@ public class ClientWorkspace extends ClientObject implements Workspace {
     /** {@inheritDoc} */
     public void restore(Version[] versions, boolean removeExisting)
             throws RepositoryException {
-        // TODO Auto-generated method stub
-        throw new UnsupportedRepositoryOperationException();
+        getVersionManager().restore(versions, removeExisting);
     }
 
     public void createWorkspace(String name) throws RepositoryException {

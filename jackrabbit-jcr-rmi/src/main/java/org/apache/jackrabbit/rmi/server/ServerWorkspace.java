@@ -229,7 +229,7 @@ public class ServerWorkspace extends ServerObject implements RemoteWorkspace {
             if (remoteVersionManager == null) {
                 VersionManager versionManager = workspace.getVersionManager();
                 remoteVersionManager =
-                    getFactory().getRemoteVersionManager(versionManager);
+                    getFactory().getRemoteVersionManager(workspace.getSession(), versionManager);
             }
             return remoteVersionManager;
         } catch (RepositoryException ex) {
