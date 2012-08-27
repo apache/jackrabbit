@@ -21,7 +21,6 @@ import java.rmi.RemoteException;
 import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.query.QueryResult;
 import javax.jcr.query.RowIterator;
 
@@ -71,7 +70,7 @@ public class ClientQueryResult extends ClientObject implements QueryResult {
     /** {@inheritDoc} */
     public RowIterator getRows() throws RepositoryException {
         try {
-            return getFactory().getRowIterator(remote.getRows());
+            return getFactory().getRowIterator(session, remote.getRows());
         } catch (RemoteException ex) {
             throw new RemoteRepositoryException(ex);
         }
@@ -86,8 +85,13 @@ public class ClientQueryResult extends ClientObject implements QueryResult {
         }
     }
 
+    /** {@inheritDoc} */
     public String[] getSelectorNames() throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("TODO: JCR-3206");
+        try {
+            return remote.getSelectorNames();
+        } catch (RemoteException ex) {
+            throw new RemoteRepositoryException(ex);
+        }
     }
 
 }

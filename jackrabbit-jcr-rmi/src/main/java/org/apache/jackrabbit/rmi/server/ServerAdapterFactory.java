@@ -30,7 +30,6 @@ import javax.jcr.NodeIterator;
 import javax.jcr.Property;
 import javax.jcr.PropertyIterator;
 import javax.jcr.Repository;
-import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.Workspace;
 import javax.jcr.lock.Lock;
@@ -102,9 +101,9 @@ import org.apache.jackrabbit.rmi.server.principal.ServerPrincipal;
 import org.apache.jackrabbit.rmi.server.principal.ServerPrincipalIterator;
 import org.apache.jackrabbit.rmi.server.security.ServerAccessControlEntry;
 import org.apache.jackrabbit.rmi.server.security.ServerAccessControlList;
-import org.apache.jackrabbit.rmi.server.security.ServerAccessControlPolicyIterator;
 import org.apache.jackrabbit.rmi.server.security.ServerAccessControlManager;
 import org.apache.jackrabbit.rmi.server.security.ServerAccessControlPolicy;
+import org.apache.jackrabbit.rmi.server.security.ServerAccessControlPolicyIterator;
 import org.apache.jackrabbit.rmi.server.security.ServerPrivilege;
 
 /**
@@ -351,18 +350,13 @@ public class ServerAdapterFactory implements RemoteAdapterFactory {
             EventIterator events) throws RemoteException {
         RemoteEventCollection.RemoteEvent[] remoteEvents;
         if (events != null) {
-            List eventList = new ArrayList();
-            while (events.hasNext()) {
-                try {
-                    Event event = events.nextEvent();
-                    eventList.add(new ServerEventCollection.ServerEvent(
-                        event.getType(), event.getPath(), event.getUserID(),
-                        this));
-                } catch (RepositoryException re) {
-                    throw new RemoteException(re.getMessage(), re);
-                }
-            }
-            remoteEvents = (RemoteEventCollection.RemoteEvent[]) eventList.toArray(new RemoteEventCollection.RemoteEvent[eventList.size()]);
+			List<ServerEventCollection.ServerEvent> eventList = new ArrayList<ServerEventCollection.ServerEvent>();
+			while (events.hasNext()) {
+				Event event = events.nextEvent();
+				eventList
+						.add(new ServerEventCollection.ServerEvent(event, this));
+			}
+            remoteEvents = eventList.toArray(new RemoteEventCollection.RemoteEvent[eventList.size()]);
         } else {
             remoteEvents = new RemoteEventCollection.RemoteEvent[0]; // for
             // safety
@@ -450,9 +444,9 @@ public class ServerAdapterFactory implements RemoteAdapterFactory {
         return new ServerLockManager(lockManager, this);
     }
 
-    public RemoteVersionManager getRemoteVersionManager(
+    public RemoteVersionManager getRemoteVersionManager(Session session,
             VersionManager versionManager) throws RemoteException {
-        return new ServerVersionManager(versionManager, this);
+        return new ServerVersionManager(session, versionManager, this);
     }
 
     /**

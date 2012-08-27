@@ -285,10 +285,11 @@ public interface LocalAdapterFactory {
     /**
      * Factory method for creating a local adapter for a remote query row.
      *
+     * @param session current session
      * @param remote remote query row
      * @return local query row adapter
      */
-    Row getRow(RemoteRow remote);
+    Row getRow(Session session, RemoteRow remote);
 
     /**
      * Factory method for creating a local adapter for a remote node iterator.
@@ -329,10 +330,11 @@ public interface LocalAdapterFactory {
     /**
      * Factory method for creating a local adapter for a remote row iterator.
      *
+     * @param session current session
      * @param remote remote row iterator
      * @return local row iterator adapter
      */
-    RowIterator getRowIterator(RemoteIterator remote);
+    RowIterator getRowIterator(Session session, RemoteIterator remote);
 
     LockManager getLockManager(Session session, RemoteLockManager lockManager);
 

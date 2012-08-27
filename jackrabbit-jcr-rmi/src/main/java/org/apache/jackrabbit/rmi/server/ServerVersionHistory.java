@@ -56,6 +56,16 @@ public class ServerVersionHistory extends ServerNode
     }
 
     /** {@inheritDoc} */
+    public String getVersionableIdentifier() throws RepositoryException,
+    		RemoteException {
+        try {
+            return versionHistory.getVersionableIdentifier();
+        } catch (RepositoryException ex) {
+            throw getRepositoryException(ex);
+        }
+    }
+    
+    /** {@inheritDoc} */
     public RemoteVersion getRootVersion()
             throws RepositoryException, RemoteException {
         try {
@@ -65,6 +75,17 @@ public class ServerVersionHistory extends ServerNode
         }
     }
 
+    /** {@inheritDoc} */
+    public RemoteIterator getAllLinearVersions() throws RepositoryException,
+    		RemoteException {
+        try {
+            return getFactory().getRemoteVersionIterator(
+                    versionHistory.getAllLinearVersions());
+        } catch (RepositoryException ex) {
+            throw getRepositoryException(ex);
+        }
+    }
+    
     /** {@inheritDoc} */
     public RemoteIterator getAllVersions()
             throws RepositoryException, RemoteException {
@@ -76,6 +97,28 @@ public class ServerVersionHistory extends ServerNode
         }
     }
 
+    /** {@inheritDoc} */
+    public RemoteIterator getAllLinearFrozenNodes() throws RepositoryException,
+    		RemoteException {
+        try {
+            return getFactory().getRemoteNodeIterator(
+                    versionHistory.getAllLinearFrozenNodes());
+        } catch (RepositoryException ex) {
+            throw getRepositoryException(ex);
+        }
+    }
+    
+    /** {@inheritDoc} */
+    public RemoteIterator getAllFrozenNodes() throws RepositoryException,
+    		RemoteException {
+        try {
+            return getFactory().getRemoteNodeIterator(
+                    versionHistory.getAllFrozenNodes());
+        } catch (RepositoryException ex) {
+            throw getRepositoryException(ex);
+        }
+    }
+    
     /** {@inheritDoc} */
     public RemoteVersion getVersion(String versionName)
         throws RepositoryException, RemoteException {

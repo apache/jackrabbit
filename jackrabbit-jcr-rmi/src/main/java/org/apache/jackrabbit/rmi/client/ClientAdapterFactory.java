@@ -30,11 +30,11 @@ import javax.jcr.Session;
 import javax.jcr.Workspace;
 import javax.jcr.lock.Lock;
 import javax.jcr.lock.LockManager;
+import javax.jcr.nodetype.ItemDefinition;
+import javax.jcr.nodetype.NodeDefinition;
 import javax.jcr.nodetype.NodeType;
 import javax.jcr.nodetype.NodeTypeIterator;
 import javax.jcr.nodetype.NodeTypeManager;
-import javax.jcr.nodetype.ItemDefinition;
-import javax.jcr.nodetype.NodeDefinition;
 import javax.jcr.nodetype.PropertyDefinition;
 import javax.jcr.observation.ObservationManager;
 import javax.jcr.query.Query;
@@ -301,8 +301,8 @@ public class ClientAdapterFactory implements LocalAdapterFactory {
      *
      * {@inheritDoc}
      */
-    public Row getRow(RemoteRow remote) {
-        return new ClientRow(remote);
+    public Row getRow(Session session, RemoteRow remote) {
+        return new ClientRow(session, remote, this);
     }
 
     /**
@@ -344,8 +344,8 @@ public class ClientAdapterFactory implements LocalAdapterFactory {
      * Creates and returns a {@link ClientRowIterator} instance.
      * {@inheritDoc}
      */
-    public RowIterator getRowIterator(RemoteIterator remote) {
-        return new ClientRowIterator(remote, this);
+    public RowIterator getRowIterator(Session session, RemoteIterator remote) {
+        return new ClientRowIterator(session, remote, this);
     }
 
     public LockManager getLockManager(

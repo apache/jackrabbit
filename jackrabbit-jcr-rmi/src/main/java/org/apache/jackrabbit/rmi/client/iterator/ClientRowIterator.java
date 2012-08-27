@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.rmi.client.iterator;
 
+import javax.jcr.Session;
 import javax.jcr.query.Row;
 import javax.jcr.query.RowIterator;
 
@@ -28,15 +29,19 @@ import org.apache.jackrabbit.rmi.remote.RemoteRow;
  */
 public class ClientRowIterator extends ClientIterator implements RowIterator {
 
+    /** Current session. */
+    private Session session;
+
     /**
      * Creates a ClientRowIterator instance.
      *
      * @param iterator      remote iterator
      * @param factory       local adapter factory
      */
-    public ClientRowIterator(
+    public ClientRowIterator(Session session,
             RemoteIterator iterator, LocalAdapterFactory factory) {
         super(iterator, factory);
+        this.session = session;
     }
 
     /**
@@ -47,7 +52,7 @@ public class ClientRowIterator extends ClientIterator implements RowIterator {
      * @see ClientIterator#getObject(Object)
      */
     protected Object getObject(Object remote) {
-        return getFactory().getRow((RemoteRow) remote);
+        return getFactory().getRow(session, (RemoteRow) remote);
     }
 
     /**

@@ -22,11 +22,12 @@ import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.version.Version;
 import javax.jcr.version.VersionHistory;
 import javax.jcr.version.VersionManager;
 
+import org.apache.jackrabbit.rmi.remote.RemoteIterator;
+import org.apache.jackrabbit.rmi.remote.RemoteNode;
 import org.apache.jackrabbit.rmi.remote.RemoteVersionManager;
 
 public class ClientVersionManager extends ClientObject
@@ -48,7 +49,11 @@ public class ClientVersionManager extends ClientObject
     /** {@inheritDoc} */
     public void cancelMerge(String absPath, Version version)
             throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("TODO: JCR-3206");
+        try {
+            remote.cancelMerge(absPath, version.getIdentifier());
+        } catch (RemoteException e) {
+            throw new RemoteRepositoryException(e);
+        }
     }
 
     /** {@inheritDoc} */
@@ -102,13 +107,22 @@ public class ClientVersionManager extends ClientObject
     /** {@inheritDoc} */
     public void doneMerge(String absPath, Version version)
             throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("TODO: JCR-3206");
+        try {
+            remote.doneMerge(absPath, version.getIdentifier());
+        } catch (RemoteException e) {
+            throw new RemoteRepositoryException(e);
+        }
     }
 
     /** {@inheritDoc} */
     public Node getActivity() throws RepositoryException {
         try {
-            return getFactory().getNode(session, remote.getActivity());
+            RemoteNode activity = remote.getActivity();
+            if (activity == null) {
+                return null;
+            } else {
+                return getFactory().getNode(session, activity);
+            }
         } catch (RemoteException e) {
             throw new RemoteRepositoryException(e);
         }
@@ -146,7 +160,12 @@ public class ClientVersionManager extends ClientObject
 
     /** {@inheritDoc} */
     public NodeIterator merge(Node activityNode) throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("TODO: JCR-3206");
+        try {
+            RemoteIterator iterator = remote.merge(activityNode.getIdentifier());
+            return getFactory().getNodeIterator(session, iterator);
+        } catch (RemoteException e) {
+            throw new RemoteRepositoryException(e);
+        }
     }
 
     /** {@inheritDoc} */
@@ -175,19 +194,35 @@ public class ClientVersionManager extends ClientObject
 
     /** {@inheritDoc} */
     public void removeActivity(Node activityNode) throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("TODO: JCR-3206");
+        try {
+            remote.removeActivity(activityNode.getIdentifier());
+        } catch (RemoteException e) {
+            throw new RemoteRepositoryException(e);
+        }
     }
 
     /** {@inheritDoc} */
     public void restore(Version[] versions, boolean removeExisting)
             throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("TODO: JCR-3206");
+        try {
+            String[] versionIdentifiers = new String[versions.length];
+            for (int i = 0; i < versions.length; i++) {
+                versionIdentifiers[i] = versions[i].getIdentifier();
+            }
+            remote.restore(versionIdentifiers, removeExisting);
+        } catch (RemoteException e) {
+            throw new RemoteRepositoryException(e);
+        }
     }
 
     /** {@inheritDoc} */
     public void restore(Version version, boolean removeExisting)
             throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("TODO: JCR-3206");
+        try {
+            remote.restore(version.getIdentifier(), removeExisting);
+        } catch (RemoteException e) {
+            throw new RemoteRepositoryException(e);
+        }
     }
 
     /** {@inheritDoc} */
@@ -204,7 +239,11 @@ public class ClientVersionManager extends ClientObject
     /** {@inheritDoc} */
     public void restore(String absPath, Version version, boolean removeExisting)
             throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("TODO: JCR-3206");
+        try {
+            remote.restoreVI(absPath, version.getIdentifier(), removeExisting);
+        } catch (RemoteException e) {
+            throw new RemoteRepositoryException(e);
+        }
     }
 
     /** {@inheritDoc} */
@@ -220,7 +259,21 @@ public class ClientVersionManager extends ClientObject
 
     /** {@inheritDoc} */
     public Node setActivity(Node activity) throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("TODO: JCR-3206");
+        try {
+            RemoteNode remoteActivity;
+            if (activity == null) {
+                remoteActivity = remote.setActivity(null);
+            } else {
+                remoteActivity = remote.setActivity(activity.getIdentifier());
+            }
+            if (remoteActivity == null) {
+                return null;
+            } else {
+                return getFactory().getNode(session, remoteActivity);
+            }
+        } catch (RemoteException e) {
+            throw new RemoteRepositoryException(e);
+        }
     }
 
 }

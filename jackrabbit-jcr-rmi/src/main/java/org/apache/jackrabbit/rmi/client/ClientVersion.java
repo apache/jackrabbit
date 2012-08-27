@@ -22,7 +22,6 @@ import java.util.Calendar;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.version.Version;
 import javax.jcr.version.VersionHistory;
 
@@ -114,15 +113,40 @@ public class ClientVersion extends ClientNode implements Version {
         }
    }
 
+    /** {@inheritDoc} */
     public Node getFrozenNode() throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("TODO: JCR-3206");
+        try {
+            return getFactory().getNode(getSession(), remote.getFrozenNode());
+        } catch (RemoteException ex) {
+            throw new RemoteRepositoryException(ex);
+        }
     }
 
+    /** {@inheritDoc} */
     public Version getLinearPredecessor() throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("TODO: JCR-3206");
+        try {
+            RemoteVersion linearPredecessor = remote.getLinearPredecessor();
+            if (linearPredecessor == null) {
+                return null;
+            } else {
+                return getFactory().getVersion(getSession(), linearPredecessor);
+            }
+        } catch (RemoteException ex) {
+            throw new RemoteRepositoryException(ex);
+        }
     }
 
+    /** {@inheritDoc} */
     public Version getLinearSuccessor() throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("TODO: JCR-3206");
+        try {
+            RemoteVersion linearSuccessor = remote.getLinearSuccessor();
+            if (linearSuccessor == null) {
+                return null;
+            } else {
+                return getFactory().getVersion(getSession(), linearSuccessor);
+            }
+        } catch (RemoteException ex) {
+            throw new RemoteRepositoryException(ex);
+        }
     }
 }

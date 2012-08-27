@@ -18,7 +18,10 @@ package org.apache.jackrabbit.rmi.server;
 
 import java.rmi.RemoteException;
 
+import javax.jcr.Node;
 import javax.jcr.RepositoryException;
+import javax.jcr.Session;
+import javax.jcr.version.Version;
 import javax.jcr.version.VersionManager;
 
 import org.apache.jackrabbit.rmi.remote.RemoteIterator;
@@ -30,12 +33,15 @@ import org.apache.jackrabbit.rmi.remote.RemoteVersionManager;
 public class ServerVersionManager extends ServerObject
         implements RemoteVersionManager {
 
+    private final Session session;    
+    
     private final VersionManager manager;
-
-    public ServerVersionManager(
+    
+    public ServerVersionManager(Session session,
             VersionManager manager, RemoteAdapterFactory factory)
             throws RemoteException {
         super(factory);
+        this.session = session;
         this.manager = manager;
     }
 
@@ -87,7 +93,12 @@ public class ServerVersionManager extends ServerObject
     public RemoteNode getActivity()
             throws RepositoryException, RemoteException {
         try {
-            return getFactory().getRemoteNode(manager.getActivity());
+            Node activity = manager.getActivity();
+            if (activity == null) {
+                return null;
+            } else {
+                return getFactory().getRemoteNode(activity);
+            }
         } catch (RepositoryException e) {
             throw getRepositoryException(e);
         }
@@ -164,12 +175,104 @@ public class ServerVersionManager extends ServerObject
         }
     }
 
-	public void cancelMerge(String absPath, RemoteVersion version)
-			throws RepositoryException, RemoteException {
-	}
+    public void cancelMerge(String absPath, String versionIdentifier)
+            throws RepositoryException, RemoteException {
+        try {
+            Version version = (Version) session.getNodeByIdentifier(versionIdentifier);
+            manager.cancelMerge(absPath, version);
+        } catch (RepositoryException e) {
+            throw getRepositoryException(e);
+        }
+    }
 
-	public void doneMerge(String absPath, RemoteVersion version)
-			throws RepositoryException, RemoteException {
-	}
+    public void doneMerge(String absPath, String versionIdentifier)
+            throws RepositoryException, RemoteException {
+        try {
+            Version version = (Version) session.getNodeByIdentifier(versionIdentifier);
+            manager.doneMerge(absPath, version);
+        } catch (RepositoryException e) {
+            throw getRepositoryException(e);
+        }
+    }
+
+    @Override
+    public void restore(String[] versionIdentifiers, boolean removeExisting)
+            throws RepositoryException, RemoteException {
+        try {
+            Version[] versions = new Version[versionIdentifiers.length];
+            for (int i = 0; i < versions.length; i++) {
+                Version version = (Version) session.getNodeByIdentifier(versionIdentifiers[i]);
+                versions[i] = version;
+            }
+            manager.restore(versions, removeExisting);
+        } catch (RepositoryException e) {
+            throw getRepositoryException(e);
+        }
+    }
+
+    @Override
+    public void restore(String versionIdentifier, boolean removeExisting)
+            throws RepositoryException, RemoteException {
+        try {
+            Version version = (Version) session.getNodeByIdentifier(versionIdentifier);
+            manager.restore(version, removeExisting);
+        } catch (RepositoryException e) {
+            throw getRepositoryException(e);
+        }
+    }
+
+    @Override
+    public RemoteNode setActivity(String activityNodeIdentifier)
+            throws RepositoryException, RemoteException {
+        try {
+            Node newActivityNode;
+            if (activityNodeIdentifier == null) {
+                newActivityNode = null;
+            } else {
+                newActivityNode = session.getNodeByIdentifier(activityNodeIdentifier);
+            }
+            Node oldActivityNode = manager.setActivity(newActivityNode);
+            if (oldActivityNode == null) {
+                return null;
+            } else {
+                return getFactory().getRemoteNode(oldActivityNode);
+            }
+        } catch (RepositoryException e) {
+            throw getRepositoryException(e);
+        }
+    }
+
+    @Override
+    public void removeActivity(String activityNodeIdentifier)
+            throws RepositoryException, RemoteException {
+        try {
+            Node activityNode = session.getNodeByIdentifier(activityNodeIdentifier);
+            manager.removeActivity(activityNode);
+        } catch (RepositoryException e) {
+            throw getRepositoryException(e);
+        }
+    }
+
+    @Override
+    public RemoteIterator merge(String activityNodeIdentifier)
+            throws RepositoryException, RemoteException {
+        try {
+            Node activityNode = session.getNodeByIdentifier(activityNodeIdentifier);
+            return getFactory().getRemoteNodeIterator(manager.merge(activityNode));
+        } catch (RepositoryException e) {
+            throw getRepositoryException(e);
+        }
+    }
+
+    @Override
+    public void restoreVI(String absPath, String versionIdentifier,
+            boolean removeExisting) throws RepositoryException, RemoteException {
+        try {
+            Version version = (Version) session.getNodeByIdentifier(versionIdentifier);
+            manager.restore(absPath, version, removeExisting);
+        } catch (RepositoryException e) {
+            throw getRepositoryException(e);
+        }
+    }
 
 }

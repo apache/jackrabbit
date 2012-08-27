@@ -61,4 +61,12 @@ public interface RemoteQueryResult extends Remote {
      */
     RemoteIterator getNodes() throws RepositoryException, RemoteException;
 
+    /**
+     * @see javax.jcr.query.QueryResult#getSelectorNames()
+     *
+     * @return a <code>String</code> array holding the selector names.
+     * @throws RepositoryException on repository errors
+     * @throws RemoteException on RMI errors
+     */
+    public String[] getSelectorNames() throws RepositoryException, RemoteException;
 }

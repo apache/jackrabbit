@@ -22,11 +22,12 @@ import java.util.Map;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.observation.Event;
 import javax.jcr.observation.EventIterator;
 import javax.jcr.observation.EventListener;
 
+import org.apache.jackrabbit.rmi.client.RemoteRepositoryException;
+import org.apache.jackrabbit.rmi.client.RemoteRuntimeException;
 import org.apache.jackrabbit.rmi.iterator.ArrayEventIterator;
 import org.apache.jackrabbit.rmi.remote.RemoteEventCollection;
 import org.apache.jackrabbit.rmi.remote.RemoteObservationManager;
@@ -261,15 +262,9 @@ public class ClientEventPoll extends Thread {
      */
     private static class JCREvent implements Event {
 
-        /** The event type */
-        private final int type;
-
-        /** The path of the repository item underlying the event */
-        private final String path;
-
-        /** The user id of the session originating the event */
-        private final String userID;
-
+    	/** The adapted remote event. */
+    	private final RemoteEventCollection.RemoteEvent remote;
+    	
         /**
          * Creates an instance of this class from the contents of the given
          * <code>remoteEvent</code>.
@@ -280,40 +275,70 @@ public class ClientEventPoll extends Thread {
          * @throws RemoteException if an RMI error occurrs.
          */
         private JCREvent(RemoteEventCollection.RemoteEvent remoteEvent) throws RemoteException {
-            type = remoteEvent.getType();
-            path = remoteEvent.getPath();
-            userID = remoteEvent.getUserID();
+            remote = remoteEvent;
         }
 
         /** {@inheritDoc} */
         public int getType() {
-            return type;
+            try {
+                return remote.getType();
+            } catch (RemoteException ex) {
+                throw new RemoteRuntimeException(ex);
+            }
         }
 
         /** {@inheritDoc} */
-        public String getPath() {
-            return path;
+        public String getPath() throws RepositoryException {
+            try {
+                return remote.getPath();
+            } catch (RemoteException ex) {
+                throw new RemoteRepositoryException(ex);
+            }
         }
 
         /** {@inheritDoc} */
         public String getUserID() {
-            return userID;
+            try {
+                return remote.getUserID();
+            } catch (RemoteException ex) {
+                throw new RemoteRuntimeException(ex);
+            }
         }
 
+        /** {@inheritDoc} */
         public long getDate() throws RepositoryException {
-            throw new UnsupportedRepositoryOperationException("TODO: JCR-3206");
+            try {
+                return remote.getDate();
+            } catch (RemoteException ex) {
+                throw new RemoteRepositoryException(ex);
+            }
         }
 
+        /** {@inheritDoc} */
         public String getIdentifier() throws RepositoryException {
-            throw new UnsupportedRepositoryOperationException("TODO: JCR-3206");
+            try {
+                return remote.getIdentifier();
+            } catch (RemoteException ex) {
+                throw new RemoteRepositoryException(ex);
+            }
         }
 
+        /** {@inheritDoc} */
         public Map getInfo() throws RepositoryException {
-            throw new UnsupportedRepositoryOperationException("TODO: JCR-3206");
+            try {
+                return remote.getInfo();
+            } catch (RemoteException ex) {
+                throw new RemoteRepositoryException(ex);
+            }
         }
 
+        /** {@inheritDoc} */
         public String getUserData() throws RepositoryException {
-            throw new UnsupportedRepositoryOperationException("TODO: JCR-3206");
+            try {
+                return remote.getUserData();
+            } catch (RemoteException ex) {
+                throw new RemoteRepositoryException(ex);
+            }
         }
     }
 }

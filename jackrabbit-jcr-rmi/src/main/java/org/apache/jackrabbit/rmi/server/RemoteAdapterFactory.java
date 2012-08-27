@@ -380,7 +380,7 @@ public interface RemoteAdapterFactory {
     RemoteLockManager getRemoteLockManager(LockManager lockManager)
         throws RemoteException;
 
-    RemoteVersionManager getRemoteVersionManager(VersionManager versionManager)
+    RemoteVersionManager getRemoteVersionManager(Session session, VersionManager versionManager)
         throws RemoteException;
 
     /**

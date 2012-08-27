@@ -21,7 +21,6 @@ import java.rmi.RemoteException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.Node;
-import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.Value;
 import javax.jcr.query.Query;
 import javax.jcr.query.QueryResult;
@@ -107,19 +106,38 @@ public class ClientQuery extends ClientObject implements Query {
     /** {@inheritDoc} */
     public void bindValue(String varName, Value value)
             throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("TODO: JCR-3206");
+        try {
+            remote.bindValue(varName, value);
+        } catch (RemoteException ex) {
+            throw new RemoteRepositoryException(ex);
+        }
     }
 
+    /** {@inheritDoc} */
     public String[] getBindVariableNames() throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("TODO: JCR-3206");
+        try {
+            return remote.getBindVariableNames();
+        } catch (RemoteException ex) {
+            throw new RemoteRepositoryException(ex);
+        }
     }
 
+    /** {@inheritDoc} */
     public void setLimit(long limit) {
-        throw new RuntimeException("TODO: JCR-3206");
+        try {
+            remote.setLimit(limit);
+        } catch (RemoteException ex) {
+            throw new RemoteRuntimeException(ex);
+        }
     }
 
+    /** {@inheritDoc} */
     public void setOffset(long offset) {
-        throw new RuntimeException("TODO: JCR-3206");
+        try {
+            remote.setOffset(offset);
+        } catch (RemoteException ex) {
+            throw new RemoteRuntimeException(ex);
+        }
     }
 
 }
