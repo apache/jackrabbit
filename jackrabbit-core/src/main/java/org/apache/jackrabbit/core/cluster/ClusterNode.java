@@ -590,7 +590,7 @@ public class ClusterNode implements Runnable,
         /**
          * {@inheritDoc}
          */
-        public void updateCreated(Update update) {
+        public void updateCreated(Update update) throws ClusterException {
             if (status != STARTED) {
                 log.info("not started: update create ignored.");
                 return;
@@ -599,11 +599,12 @@ public class ClusterNode implements Runnable,
                 Record record = producer.append();
                 update.setAttribute(ATTRIBUTE_RECORD, record);
             } catch (JournalException e) {
-                String msg = "Unable to create log entry.";
-                log.error(msg, e);
+                String msg = "Unable to create log entry: " + e.getMessage();
+                throw new ClusterException(msg, e);
             } catch (Throwable e) {
-                String msg = "Unexpected error while creating log entry.";
-                log.error(msg, e);
+                String msg = "Unexpected error while creating log entry: "
+                        + e.getMessage();
+                throw new ClusterException(msg, e);
             }
         }
 
