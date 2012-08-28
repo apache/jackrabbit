@@ -27,6 +27,7 @@ import javax.jcr.RepositoryException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
 
 import org.apache.jackrabbit.core.RepositoryImpl;
+import org.apache.jackrabbit.core.cluster.ClusterException;
 import org.apache.jackrabbit.core.cluster.UpdateEventChannel;
 import org.apache.jackrabbit.core.id.ItemId;
 import org.apache.jackrabbit.core.id.NodeId;
@@ -567,7 +568,11 @@ public class SharedItemStateManager
             virtualNodeReferences = new ChangeLog[virtualProviders.length];
 
             // let listener know about change
-            eventChannel.updateCreated(this);
+            try {
+                eventChannel.updateCreated(this);
+            } catch (ClusterException e) {
+                throw new ItemStateException(e.getMessage(), e);
+            }
 
             try {
                 writeLock = acquireWriteLock(local);

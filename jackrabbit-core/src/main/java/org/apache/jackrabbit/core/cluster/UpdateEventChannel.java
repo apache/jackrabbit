@@ -25,8 +25,9 @@ public interface UpdateEventChannel {
      * Called when an a update operation has been created.
      *
      * @param update update operation
+     * @throws ClusterException if an error occurs writing to the event channel.
      */
-    void updateCreated(Update update);
+    void updateCreated(Update update) throws ClusterException;
 
     /**
      * Called when an a update operation has been prepared.
