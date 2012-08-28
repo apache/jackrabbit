@@ -666,10 +666,6 @@ public class ClusterNode implements Runnable,
          * {@inheritDoc}
          */
         public void updateCommitted(Update update, String path) {
-            if (status != STARTED) {
-                log.info("not started: update commit ignored.");
-                return;
-            }
             Record record = (Record) update.getAttribute(ATTRIBUTE_RECORD);
             if (record == null) {
                 String msg = "No record prepared.";
@@ -706,10 +702,6 @@ public class ClusterNode implements Runnable,
          * {@inheritDoc}
          */
         public void updateCancelled(Update update) {
-            if (status != STARTED) {
-                log.info("not started: update cancel ignored.");
-                return;
-            }
             Record record = (Record) update.getAttribute(ATTRIBUTE_RECORD);
             if (record != null) {
                 record.cancelUpdate();
