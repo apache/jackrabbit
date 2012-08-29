@@ -529,12 +529,14 @@ class DescendantSelfAxisQuery extends Query implements JackrabbitQuery {
         private void collectContextHits() throws IOException {
             if (!contextHitsCalculated) {
                 long time = System.currentTimeMillis();
-                contextScorer.score(new AbstractHitCollector() {
-                    @Override
-                    protected void collect(int doc, float score) {
-                        contextHits.set(doc);
-                    }
-                }); // find all
+                if (contextScorer != null) {
+                    contextScorer.score(new AbstractHitCollector() {
+                        @Override
+                        protected void collect(int doc, float score) {
+                            contextHits.set(doc);
+                        }
+                    }); // find all
+                }
                 contextHitsCalculated = true;
                 time = System.currentTimeMillis() - time;
                 if (log.isDebugEnabled()) {
