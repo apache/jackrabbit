@@ -668,8 +668,11 @@ public class ClusterNode implements Runnable,
         public void updateCommitted(Update update, String path) {
             Record record = (Record) update.getAttribute(ATTRIBUTE_RECORD);
             if (record == null) {
-                String msg = "No record prepared.";
-                log.warn(msg);
+                if (status == STARTED) {
+                    log.warn("No record prepared.");
+                } else {
+                    log.info("not started: update commit ignored.");
+                }
                 return;
             }
             try {
