@@ -1,4 +1,4 @@
-Release Notes -- Apache Jackrabbit -- Version 2.4.2
+Release Notes -- Apache Jackrabbit -- Version 2.4.3
 
 Introduction
 ------------
@@ -8,9 +8,39 @@ Content Repository for Java(TM) Technology API, version 2.0 (JCR 2.0) as
 specified in the Java Specification Request 283 (JSR 283).
 
 
-Apache Jackrabbit 2.4.2 is patch release that contains fixes and
-improvements over Jackrabbit 2.4.1. This release is fully compatible
+Apache Jackrabbit 2.4.3 is patch release that contains fixes and
+improvements over Jackrabbit 2.4.2. This release is fully compatible
 with earlier 2.x.x releases.
+
+Changes since Jackrabbit 2.4.2
+
+Improvements
+
+  [JCR-3265] - Consistency checker should double check for false positives
+  [JCR-3269] - Consistency checker should fix 'disconnected' nodes
+  [JCR-3369] - Garbage collector improvements
+  [JCR-3393] - InternalVersionManagerBase.calculateCheckinVersionName may fail with NPE on broken versioning persistence
+  [JCR-3352] - Minor improvements for collecting ACEs
+
+Bug fixes
+
+  [JCR-3267] - Consistency checker needs to run multiple times to fix all problems
+  [JCR-3318] - BLOB not stored and no exception thrown
+  [JCR-3334] - incorrect logging template in CachingEntryCollector
+  [JCR-3349] - The BatchMode of the ConnectionHelper doesn't work in XA Environment
+  [JCR-3353] - A DeadLock can occur if an Exception is thrown while unlocking the Journal
+  [JCR-3354] - The ReadWriteLock in AbstractJournal can create a Deadlock in XA Environment
+  [JCR-3367] - InMemBundlePersistenceManager#getAllNodeIds is not implemented correctly
+  [JCR-3377] - DataStore Temp-Files will not be deleted as side effect of JCR-3318
+  [JCR-3378] - The ConnectionHelper can return a closed Connection in BatchMode
+  [JCR-3379] - XA concurrent transactions - NullPointerException
+  [JCR-3383] - Unclosed Resources in ConnectionHelper if ResultSet is null
+  [JCR-3387] - On heavy load we see occasional SQLException: closed statement: next
+  [JCR-3390] - Reordering policy node fails with AccessDeniedException
+  [JCR-3399] - Shared ISM does not release the internal Writelock if something unexpectedly is happening in externalUpdate
+  [JCR-3401] - Wrong results when querying with a DescendantSelfAxisQuery
+  [JCR-3417] - Failed Journal lock not propagated
+
 
 Changes since Jackrabbit 2.4.1
 ------------------------------
