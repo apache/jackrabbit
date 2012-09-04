@@ -799,8 +799,15 @@ public class SharedItemStateManager
                 // before the ones here are put into the cache (via
                 // shared.persisted()). See JCR-3345
                 for (ItemState state : shared.addedStates()) {
-                    state.setStatus(ItemState.STATUS_EXISTING);
-                    cache.cache(state);
+                    // there is one exception though. it is possible that the
+                    // shared ChangeLog contains the an item both as removed and
+                    // added. For those items we don't update the cache here,
+                    // because that would lead to WARN messages in the
+                    // ItemStateReferenceCache. See JCR-3419
+                    if (!shared.deleted(state.getId())) {
+                        state.setStatus(ItemState.STATUS_EXISTING);
+                        cache.cache(state);
+                    }
                 }
 
                 // downgrade to read lock

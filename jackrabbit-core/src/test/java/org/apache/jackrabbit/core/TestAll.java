@@ -74,12 +74,10 @@ public class TestAll extends TestCase {
         }
 
         suite.addTestSuite(UserPerWorkspaceSecurityManagerTest.class);
-
         suite.addTestSuite(OverlappingNodeAddTest.class);
-
         suite.addTestSuite(NPEandCMETest.class);
-
         suite.addTestSuite(ConsistencyCheck.class);
+        suite.addTestSuite(RemoveAddNodeWithUUIDTest.class);
 
         return suite;
     }
