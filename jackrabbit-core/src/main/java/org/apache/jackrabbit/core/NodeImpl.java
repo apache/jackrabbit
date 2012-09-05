@@ -1366,14 +1366,13 @@ public class NodeImpl extends ItemImpl implements Node, JackrabbitNode {
     }
 
     /**
-     * Test if the given node is access controlled. The node is access
-     * controlled if it is of node type
+     * Test if this node is access controlled. The node is access controlled if
+     * it is of node type
      * {@link org.apache.jackrabbit.core.security.authorization.AccessControlConstants#NT_REP_ACCESS_CONTROLLABLE "rep:AccessControllable"}
      * and if it has a child node named
      * {@link org.apache.jackrabbit.core.security.authorization.AccessControlConstants#N_POLICY}.
      *
-     * @param node the node to be tested
-     * @return <code>true</code> if the node is access controlled and has a
+     * @return <code>true</code> if this node is access controlled and has a
      * rep:policy child; <code>false</code> otherwise.
      * @throws RepositoryException if an error occurs
      */
