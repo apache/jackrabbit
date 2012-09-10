@@ -425,17 +425,33 @@ public class NodeImpl extends ItemImpl implements Node, JackrabbitNode {
             [...create block...]
 
         */
+        PropertyId propId = new PropertyId(getNodeId(), name);
         try {
-            PropertyId propId = new PropertyId(getNodeId(), name);
             return (PropertyImpl) itemMgr.getItem(propId);
         } catch (AccessDeniedException ade) {
             throw new ItemNotFoundException(name.toString());
         } catch (ItemNotFoundException e) {
-            // does not exist yet:
-            // find definition for the specified property and create property
+            // does not exist yet or has been removed transiently:
+            // find definition for the specified property and (re-)create property
             PropertyDefinitionImpl def = getApplicablePropertyDefinition(
                     name, type, multiValued, exactTypeMatch);
-            PropertyImpl prop = createChildProperty(name, type, def);
+            PropertyImpl prop;
+            if (stateMgr.hasTransientItemStateInAttic(propId)) {
+                // remove from attic
+                try {
+                    stateMgr.disposeTransientItemStateInAttic(stateMgr.getAttic().getItemState(propId));
+                } catch (ItemStateException ise) {
+                    // shouldn't happen because we checked if it is in the attic
+                    throw new RepositoryException(ise);
+                }
+                prop = (PropertyImpl) itemMgr.getItem(propId);
+                PropertyState state = (PropertyState) prop.getOrCreateTransientItemState();
+                state.setMultiValued(multiValued);
+                state.setType(type);
+                getNodeState().addPropertyName(name);
+            } else {
+                prop = createChildProperty(name, type, def);
+            }
             status.set(CREATED);
             return prop;
         }
