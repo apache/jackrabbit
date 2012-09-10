@@ -78,6 +78,7 @@ public class TestAll extends TestCase {
         suite.addTestSuite(NPEandCMETest.class);
         suite.addTestSuite(ConsistencyCheck.class);
         suite.addTestSuite(RemoveAddNodeWithUUIDTest.class);
+        suite.addTestSuite(ReplacePropertyWhileOthersReadTest.class);
 
         return suite;
     }
