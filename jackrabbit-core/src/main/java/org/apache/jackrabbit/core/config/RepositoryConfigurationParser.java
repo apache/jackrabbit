@@ -203,6 +203,10 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
      */
     protected final ConnectionFactory connectionFactory;
 
+    protected BeanFactory beanFactory = new SimpleBeanFactory();
+
+    protected BeanConfigVisitor configVisitor = new NoOpConfigVisitor();
+
     /**
      * Element specifying the class of principals used to retrieve the userID
      * in the 'class' attribute.
@@ -355,6 +359,8 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
     protected BeanConfig parseBeanConfig(Element parent, String name) throws ConfigurationException {
         BeanConfig cfg = super.parseBeanConfig(parent, name);
         cfg.setConnectionFactory(connectionFactory);
+        cfg.setInstanceFactory(beanFactory);
+        configVisitor.visit(cfg);
         return cfg;
     }
 
@@ -365,6 +371,8 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
     protected BeanConfig parseBeanConfig(Element element) throws ConfigurationException {
         BeanConfig cfg = super.parseBeanConfig(element);
         cfg.setConnectionFactory(connectionFactory);
+        cfg.setInstanceFactory(beanFactory);
+        configVisitor.visit(cfg);
         return cfg;
     }
 
@@ -724,8 +732,7 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
                     if (IMPORT_PNI_ELEMENT.equals(child.getNodeName()) ||
                             IMPORT_PPI_ELEMENT.equals(child.getNodeName()) ||
                             IMPORT_PII_ELEMENT.equals(child.getNodeName())) {
-                        String className = getAttribute((Element) child, CLASS_ATTRIBUTE);
-                        BeanConfig bc = new BeanConfig(className, parseParameters((Element) child));
+                        BeanConfig bc = parseBeanConfig((Element) child);
                         bc.setValidate(false);
                         protectedItemImporters.add(bc);
                     } // else: some other entry -> ignore.
@@ -1085,4 +1092,12 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
         };
     }
 
+
+    public void setBeanFactory(BeanFactory beanFactory) {
+        this.beanFactory = beanFactory;
+    }
+
+    public void setConfigVisitor(BeanConfigVisitor configVisitor) {
+        this.configVisitor = configVisitor;
+    }
 }

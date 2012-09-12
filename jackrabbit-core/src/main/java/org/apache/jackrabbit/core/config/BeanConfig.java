@@ -68,6 +68,11 @@ public class BeanConfig {
         BeanConfig.class.getClassLoader();
 
     /**
+     * Factory to create instance from Bean className
+     */
+    private BeanFactory instanceFactory = new SimpleBeanFactory();
+
+    /**
      * The current class loader used by this instance to create instances of
      * configured classes.
      */
@@ -148,6 +153,14 @@ public class BeanConfig {
     }
 
     /**
+     *
+     * @param instanceFactory the {@link BeanFactory} to use to create bean instance
+     */
+    public void setInstanceFactory(BeanFactory instanceFactory) {
+        this.instanceFactory = instanceFactory;
+    }
+
+    /**
      * Returns the class name of the configured bean.
      *
      * @return class name of the bean
@@ -174,59 +187,35 @@ public class BeanConfig {
     @SuppressWarnings("unchecked")
     public <T> T newInstance(Class<T> klass) throws ConfigurationException {
         String cname = getClassName();
-        try {
-            Class<?> objectClass = Class.forName(cname, true, getClassLoader());
-            if (!klass.isAssignableFrom(objectClass)) {
+        // Instantiate the object using the default constructor
+        Object instance = instanceFactory.newInstance(klass,this);
+        Class<?> objectClass = instance.getClass();
+
+        // Set all configured bean properties
+        Map<String, Method> setters = getSetters(objectClass);
+        Enumeration<?> enumeration = properties.propertyNames();
+        while (enumeration.hasMoreElements()) {
+            String name = enumeration.nextElement().toString();
+            Method setter = setters.get(name);
+            if (setter != null) {
+                if (setter.getAnnotation(Deprecated.class) != null) {
+                    log.warn("Parameter {} of {} has been deprecated",
+                            name, cname);
+                }
+                String value = properties.getProperty(name);
+                setProperty(instance, name, setter, value);
+            } else if (validate) {
                 throw new ConfigurationException(
                         "Configured class " + cname
-                        + " does not implement " + klass.getName()
-                        + ". Please fix the repository configuration.");
+                        + " does not contain a property named " + name);
             }
-            if (objectClass.getAnnotation(Deprecated.class) != null) {
-                log.warn("{} has been deprecated", cname);
-            }
-
-            // Instantiate the object using the default constructor
-            Object instance = objectClass.newInstance();
-
-            // Set all configured bean properties
-            Map<String, Method> setters = getSetters(objectClass);
-            Enumeration<?> enumeration = properties.propertyNames();
-            while (enumeration.hasMoreElements()) {
-                String name = enumeration.nextElement().toString();
-                Method setter = setters.get(name);
-                if (setter != null) {
-                    if (setter.getAnnotation(Deprecated.class) != null) {
-                        log.warn("Parameter {} of {} has been deprecated",
-                                name, cname);
-                    }
-                    String value = properties.getProperty(name);
-                    setProperty(instance, name, setter, value);
-                } else if (validate) {
-                    throw new ConfigurationException(
-                            "Configured class " + cname
-                            + " does not contain a property named " + name);
-                }
-            }
-
-            if (instance instanceof DatabaseAware) {
-                ((DatabaseAware) instance).setConnectionFactory(connectionFactory);
-            }
-
-            return (T) instance;
-        } catch (ClassNotFoundException e) {
-            throw new ConfigurationException(
-                    "Configured bean implementation class " + cname
-                    + " was not found.", e);
-        } catch (InstantiationException e) {
-            throw new ConfigurationException(
-                    "Configured bean implementation class " + cname
-                    + " can not be instantiated.", e);
-        } catch (IllegalAccessException e) {
-            throw new ConfigurationException(
-                    "Configured bean implementation class " + cname
-                    + " is protected.", e);
         }
+
+        if (instance instanceof DatabaseAware) {
+            ((DatabaseAware) instance).setConnectionFactory(connectionFactory);
+        }
+
+        return (T) instance;
     }
 
     private Map<String, Method> getSetters(Class<?> klass) {

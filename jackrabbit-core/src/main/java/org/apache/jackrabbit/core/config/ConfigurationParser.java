@@ -109,13 +109,7 @@ public class ConfigurationParser {
         // Bean configuration element
         Element element = getElement(parent, name);
 
-        // Bean implementation class
-        String className = getAttribute(element, CLASS_ATTRIBUTE);
-
-        // Bean properties
-        Properties properties = parseParameters(element);
-
-        return new BeanConfig(className, properties);
+        return parseBeanConfig(element);
     }
 
     /**
