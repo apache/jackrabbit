@@ -198,7 +198,7 @@ public class WildcardQuery extends Query implements Transformable {
             this.tvf = tvf;
             this.pattern = pattern;
             this.transform = transform;
-            setRewriteMethod(CONSTANT_SCORE_FILTER_REWRITE);
+            setRewriteMethod(CONSTANT_SCORE_BOOLEAN_QUERY_REWRITE);
         }
 
         @Override

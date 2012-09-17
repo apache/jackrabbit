@@ -239,6 +239,34 @@ public class ExcerptTest extends AbstractQueryTest {
         checkExcerpt(content, expectedExcerpt, jTest);
     }
 
+    /**
+     * test for https://issues.apache.org/jira/browse/JCR-3428
+     * 
+     * when given an incomplete fulltext search token, the excerpt should
+     * highlight the entire matching token
+     * 
+     */
+    public void testEagerMatch() throws RepositoryException {
+        checkExcerpt("lorem ipsum dolor sit amet",
+                "lorem <strong>ipsum</strong> dolor sit amet", "ipsu*");
+    }
+
+    /**
+     * @see #testEagerMatch()
+     */
+    public void testEagerMatch2() throws RepositoryException {
+        checkExcerpt("lorem ipsum dolor sit amet",
+                "<strong>lorem</strong> <strong>ipsum</strong> dolor sit amet",
+                "lorem ipsu*");
+    }
+
+    /**
+     * @see #testEagerMatch()
+     */
+    public void testEagerMatch3() throws RepositoryException {
+        checkExcerpt("lorem ipsum dolor sit amet",
+                "lorem <strong>ipsum</strong> <strong>dolor</strong> sit amet", "ipsu* dolor");
+    }
 
     private void checkExcerpt(String text, String fragmentText, String terms)
             throws RepositoryException {
