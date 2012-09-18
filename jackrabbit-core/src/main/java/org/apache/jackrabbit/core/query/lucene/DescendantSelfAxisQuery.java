@@ -471,9 +471,14 @@ class DescendantSelfAxisQuery extends Query implements JackrabbitQuery {
             }
 
             collectContextHits();
-            currentDoc = subScorer.nextDoc();
             if (contextHits.isEmpty()) {
                 currentDoc = NO_MORE_DOCS;
+            } else {
+                if (subScorer != null) {
+                    currentDoc = subScorer.nextDoc();
+                } else {
+                    currentDoc = NO_MORE_DOCS;
+                }
             }
             while (currentDoc != NO_MORE_DOCS) {
                 if (isValid(currentDoc)) {
@@ -505,7 +510,9 @@ class DescendantSelfAxisQuery extends Query implements JackrabbitQuery {
             // optimize in the case of an advance to finish.
             // see https://issues.apache.org/jira/browse/JCR-3082
             if (target == NO_MORE_DOCS) {
-                subScorer.advance(target);
+                if (subScorer != null) {
+                    subScorer.advance(target);
+                }
                 currentDoc = NO_MORE_DOCS;
                 return currentDoc;
             }
@@ -522,12 +529,14 @@ class DescendantSelfAxisQuery extends Query implements JackrabbitQuery {
         private void collectContextHits() throws IOException {
             if (!contextHitsCalculated) {
                 long time = System.currentTimeMillis();
-                contextScorer.score(new AbstractHitCollector() {
-                    @Override
-                    protected void collect(int doc, float score) {
-                        contextHits.set(doc);
-                    }
-                }); // find all
+                if (contextScorer != null) {
+                    contextScorer.score(new AbstractHitCollector() {
+                        @Override
+                        protected void collect(int doc, float score) {
+                            contextHits.set(doc);
+                        }
+                    }); // find all
+                }
                 contextHitsCalculated = true;
                 time = System.currentTimeMillis() - time;
                 if (log.isDebugEnabled()) {
