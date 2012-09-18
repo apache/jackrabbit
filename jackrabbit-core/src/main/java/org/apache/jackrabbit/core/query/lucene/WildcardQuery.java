@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
+import org.apache.jackrabbit.core.query.lucene.WildcardTermEnum.TermValueFactory;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermEnum;
@@ -65,7 +66,7 @@ public class WildcardQuery extends Query implements Transformable {
     /**
      * Creates a term value for a given string.
      */
-    private final WildcardTermEnum.TermValueFactory tvf;
+    private final TermValueFactory tvf;
 
     /**
      * The wildcard pattern.
@@ -144,23 +145,9 @@ public class WildcardQuery extends Query implements Transformable {
      */
     @Override
     public Query rewrite(IndexReader reader) throws IOException {
-        Query stdWildcardQuery = new MultiTermQuery() {
-            protected FilteredTermEnum getEnum(IndexReader reader) throws IOException {
-                return new WildcardTermEnum(reader, field, tvf, pattern, transform);
-            }
-
-            /** Prints a user-readable version of this query. */
-            @Override
-            public String toString(String field) {
-                StringBuffer buffer = new StringBuffer();
-                buffer.append(field);
-                buffer.append(':');
-                buffer.append(ToStringUtils.boost(getBoost()));
-                return buffer.toString();
-            }
-        };
         try {
-            multiTermQuery = stdWildcardQuery.rewrite(reader);
+            multiTermQuery = new StdWildcardQuery(field, tvf, pattern,
+                    transform).rewrite(reader);
             return multiTermQuery;
         } catch (BooleanQuery.TooManyClauses e) {
             // MultiTermQuery not possible
@@ -195,6 +182,39 @@ public class WildcardQuery extends Query implements Transformable {
     public void extractTerms(Set<Term> terms) {
         if (multiTermQuery != null) {
             multiTermQuery.extractTerms(terms);
+        }
+    }
+
+    private static class StdWildcardQuery extends MultiTermQuery {
+
+        private final String field;
+        private final TermValueFactory tvf;
+        private final String pattern;
+        private final int transform;
+
+        public StdWildcardQuery(String field, TermValueFactory tvf,
+                String pattern, int transform) {
+            this.field = field;
+            this.tvf = tvf;
+            this.pattern = pattern;
+            this.transform = transform;
+            setRewriteMethod(SCORING_BOOLEAN_QUERY_REWRITE);
+        }
+
+        @Override
+        protected FilteredTermEnum getEnum(IndexReader reader)
+                throws IOException {
+            return new WildcardTermEnum(reader, field, tvf, pattern, transform);
+        }
+
+        /** Prints a user-readable version of this query. */
+        @Override
+        public String toString(String field) {
+            StringBuffer buffer = new StringBuffer();
+            buffer.append(field);
+            buffer.append(':');
+            buffer.append(ToStringUtils.boost(getBoost()));
+            return buffer.toString();
         }
     }
 
