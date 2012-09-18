@@ -41,6 +41,7 @@ public class TestAll extends TestCase {
         suite.addTestSuite(VersionEventsTest.class);
         suite.addTestSuite(MoveInPlaceTest.class);
         suite.addTestSuite(ShareableNodesTest.class);
+        suite.addTestSuite(WarningOnSaveWithNotificationThreadTest.class);
 
         return suite;
     }

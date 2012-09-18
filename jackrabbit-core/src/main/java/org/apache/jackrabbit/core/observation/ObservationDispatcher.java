@@ -205,6 +205,16 @@ public final class ObservationDispatcher extends EventDispatcher
      * registered {@link javax.jcr.observation.EventListener}s.
      */
     void dispatchEvents(EventStateCollection events) {
+        // JCR-3426: log warning when changes are done
+        // with the notification thread
+        if (Thread.currentThread() == notificationThread) {
+            log.warn("Save call with event notification thread detected. This " +
+                    "may lead to a growing event queue. Enable debug log to " +
+                    "see the stack trace with the class calling save().");
+            if (log.isDebugEnabled()) {
+                log.debug("Stack trace:", new Exception());
+            }
+        }
         // notify synchronous listeners
         Set<EventConsumer> synchronous = getSynchronousConsumers();
         if (log.isDebugEnabled()) {
