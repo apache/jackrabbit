@@ -31,7 +31,7 @@ import org.apache.jackrabbit.core.ConcurrentVersioningWithTransactionsTest;
 import org.apache.jackrabbit.core.LockTest;
 import org.apache.jackrabbit.core.ReadVersionsWhileModified;
 import org.apache.jackrabbit.core.integration.ConcurrentQueriesWithUpdatesTest;
-import org.apache.jackrabbit.core.query.LargeResultSetTest;
+import org.apache.jackrabbit.core.query.lucene.LargeResultSetTest;
 import org.apache.jackrabbit.core.lock.ConcurrentLockingTest;
 import org.apache.jackrabbit.core.lock.ConcurrentLockingWithTransactionsTest;
 
