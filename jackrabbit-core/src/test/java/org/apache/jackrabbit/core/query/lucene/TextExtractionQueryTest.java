@@ -16,7 +16,12 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStreamWriter;
+import java.util.Calendar;
 
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
@@ -33,6 +38,23 @@ public class TextExtractionQueryTest extends AbstractIndexingTest {
         assertFileContains("test.txt", "text/plain",
                 "AE502DBEA2C411DEBD340AD156D89593");
         assertFileContains("test.rtf", "text/rtf", "quick brown fox");
+    }
+
+    public void testNtFile() throws RepositoryException, IOException {
+        Node file = testRootNode.addNode(nodeName1, "nt:file");
+        Node resource = file.addNode("jcr:content", "nt:resource");
+        resource.setProperty("jcr:encoding", "UTF-8");
+        resource.setProperty("jcr:mimeType", "text/plain");
+        ByteArrayOutputStream data = new ByteArrayOutputStream();
+        OutputStreamWriter writer = new OutputStreamWriter(data, "UTF-8");
+        writer.write("The quick brown fox jumps over the lazy dog.");
+        writer.close();
+        resource.setProperty("jcr:data", new ByteArrayInputStream(data.toByteArray()));
+        resource.setProperty("jcr:lastModified", Calendar.getInstance());
+
+        testRootNode.save();
+        String xpath = testPath + "/*[jcr:contains(jcr:content, 'lazy')]";
+        executeXPathQuery(xpath, new Node[]{file});
     }
 
     private void assertFileContains(String name, String type,
