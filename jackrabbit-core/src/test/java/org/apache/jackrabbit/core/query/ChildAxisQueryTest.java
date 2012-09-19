@@ -16,14 +16,14 @@
  */
 package org.apache.jackrabbit.core.query;
 
-import javax.jcr.Node;
-import javax.jcr.RepositoryException;
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.util.Calendar;
+
+import javax.jcr.Node;
+import javax.jcr.RepositoryException;
 
 /**
  * <code>ChildAxisQueryTest</code> tests queries with a child axis in their

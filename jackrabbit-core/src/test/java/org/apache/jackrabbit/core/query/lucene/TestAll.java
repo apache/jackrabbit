@@ -16,10 +16,12 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
-import org.apache.jackrabbit.test.ConcurrentTestSuite;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
+
+import org.apache.jackrabbit.core.query.lucene.hits.ArrayHitsTest;
+import org.apache.jackrabbit.test.ConcurrentTestSuite;
 
 /**
  * Test suite that includes all testcases for the Search module.
@@ -46,6 +48,10 @@ public class TestAll extends TestCase {
         suite.addTestSuite(SQL2IndexingAggregateTest2.class);
         suite.addTestSuite(LazyTextExtractorFieldTest.class);
         suite.addTestSuite(IndexInfosTest.class);
+        suite.addTestSuite(IndexingRuleTest.class);
+        suite.addTestSuite(TextExtractionQueryTest.class);
+        suite.addTestSuite(ArrayHitsTest.class);
+        suite.addTestSuite(IndexFormatVersionTest.class);
 
         return suite;
     }

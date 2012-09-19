@@ -14,21 +14,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.core.query;
+package org.apache.jackrabbit.core.query.lucene;
 
-import javax.jcr.RepositoryException;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
+import javax.jcr.RepositoryException;
 import javax.jcr.query.Query;
-import javax.jcr.query.RowIterator;
 import javax.jcr.query.QueryResult;
+import javax.jcr.query.RowIterator;
 
-import org.apache.jackrabbit.core.query.lucene.SearchIndex;
+import org.apache.jackrabbit.core.query.AbstractIndexingTest;
+import org.apache.jackrabbit.core.query.QueryImpl;
 
 /**
  * <code>LargeResultSetTest</code>...
+ * 
+ * TODO what does this test actually do?
  */
-public class LargeResultSetTest extends AbstractQueryTest {
+public class LargeResultSetTest extends AbstractIndexingTest {
 
     public void testResultSet() throws RepositoryException {
         createNodes(testRootNode, 10, 5, 0);

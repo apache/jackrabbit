@@ -17,9 +17,12 @@
 package org.apache.jackrabbit.core.query;
 
 import javax.jcr.Node;
+import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.query.QueryManager;
 
 import org.apache.jackrabbit.core.TestHelper;
+import org.apache.jackrabbit.core.query.lucene.SearchIndex;
 
 /**
  * <code>AbstractIndexingTest</code> is a base class for all indexing
@@ -61,5 +64,38 @@ public class AbstractIndexingTest extends AbstractQueryTest {
     protected void waitForTextExtractionTasksToFinish() throws Exception {
         TestHelper.waitForTextExtractionTasksToFinish(session);
         flushSearchIndex();
+    }
+
+    protected void flushSearchIndex() throws RepositoryException {
+        SearchIndex si = getSearchIndex();
+        if (si != null) {
+            si.flush();
+        }
+    }
+
+    /**
+     * Returns a reference to the underlying search index.
+     * 
+     * @return the query handler inside the {@link #qm query manager}.
+     */
+    protected SearchIndex getSearchIndex() {
+        if (qm instanceof QueryManagerImpl) {
+            return (SearchIndex) ((QueryManagerImpl) qm).getQueryHandler();
+        }
+        return null;
+    }
+
+    /**
+     * Returns a reference to the session's search index.
+     * 
+     * @return the session's query handler.
+     */
+    protected static SearchIndex getSearchIndex(Session session)
+            throws RepositoryException {
+        QueryManager qm = session.getWorkspace().getQueryManager();
+        if (qm instanceof QueryManagerImpl) {
+            return (SearchIndex) ((QueryManagerImpl) qm).getQueryHandler();
+        }
+        return null;
     }
 }

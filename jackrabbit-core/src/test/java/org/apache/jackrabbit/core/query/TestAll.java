@@ -16,12 +16,11 @@
  */
 package org.apache.jackrabbit.core.query;
 
-import org.apache.jackrabbit.core.query.lucene.hits.ArrayHitsTest;
-import org.apache.jackrabbit.test.ConcurrentTestSuite;
-
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
+
+import org.apache.jackrabbit.test.ConcurrentTestSuite;
 
 /**
  * Test suite that includes all testcases for the Search module.
@@ -56,10 +55,7 @@ public class TestAll extends TestCase {
         suite.addTestSuite(FnNameQueryTest.class);
         suite.addTestSuite(PathQueryNodeTest.class);
         suite.addTestSuite(SynonymProviderTest.class);
-        suite.addTestSuite(ArrayHitsTest.class);
         suite.addTestSuite(ExcerptTest.class);
-        suite.addTestSuite(IndexFormatVersionTest.class);
-        suite.addTestSuite(IndexingRuleTest.class);
         suite.addTestSuite(ShareableNodeTest.class);
         suite.addTestSuite(ParentNodeTest.class);
         suite.addTestSuite(SimilarQueryTest.class);

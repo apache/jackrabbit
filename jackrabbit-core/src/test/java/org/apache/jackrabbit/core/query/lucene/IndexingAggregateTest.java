@@ -20,6 +20,8 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Node;
 import javax.jcr.query.Query;
 
+import org.apache.jackrabbit.core.query.AbstractIndexingTest;
+
 import java.io.ByteArrayOutputStream;
 import java.io.Writer;
 import java.io.OutputStreamWriter;
@@ -30,7 +32,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 
-import org.apache.jackrabbit.core.query.AbstractIndexingTest;
 
 /**
  * <code>IndexingAggregateTest</code> checks if the nt:file nt:resource
