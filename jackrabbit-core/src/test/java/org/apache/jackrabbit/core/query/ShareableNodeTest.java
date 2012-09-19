@@ -16,12 +16,10 @@
  */
 package org.apache.jackrabbit.core.query;
 
-import javax.jcr.RepositoryException;
 import javax.jcr.Node;
-import javax.jcr.Workspace;
 import javax.jcr.NodeIterator;
-
-import org.apache.jackrabbit.core.NodeImpl;
+import javax.jcr.RepositoryException;
+import javax.jcr.Workspace;
 
 /**
  * <code>ShareableNodeTest</code> performs query tests with shareable nodes.

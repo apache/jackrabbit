@@ -14,21 +14,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.core.query;
-
-import org.apache.jackrabbit.test.AbstractJCRTest;
-import org.apache.jackrabbit.core.query.lucene.IndexFormatVersion;
-import org.apache.jackrabbit.core.query.lucene.SearchIndex;
+package org.apache.jackrabbit.core.query.lucene;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-import javax.jcr.query.QueryManager;
+
+import org.apache.jackrabbit.core.query.AbstractIndexingTest;
 
 /**
  * <code>IndexFormatVersionTest</code> checks if the various index format
  * versions are correctly read from the index.
  */
-public class IndexFormatVersionTest extends AbstractJCRTest {
+public class IndexFormatVersionTest extends AbstractIndexingTest {
 
     public void testVersionOne() throws RepositoryException {
         checkIndexFormatVersion("index-format-v1", IndexFormatVersion.V1);
@@ -47,9 +44,7 @@ public class IndexFormatVersionTest extends AbstractJCRTest {
             throws RepositoryException {
         Session session = getHelper().getSuperuserSession(wspName);
         try {
-            QueryManager qm = session.getWorkspace().getQueryManager();
-            QueryHandler handler = ((QueryManagerImpl) qm).getQueryHandler();
-            SearchIndex index = (SearchIndex) handler;
+            SearchIndex index = getSearchIndex(session);
             assertEquals("Wrong index format", version.getVersion(),
                     index.getIndexFormatVersion().getVersion());
         } finally {

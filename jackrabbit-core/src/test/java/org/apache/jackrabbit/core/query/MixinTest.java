@@ -23,8 +23,8 @@ import java.util.Calendar;
 
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
+import javax.jcr.nodetype.NodeTypeManager;
 
-import org.apache.jackrabbit.api.JackrabbitNodeTypeManager;
 import org.apache.jackrabbit.commons.cnd.CndImporter;
 
 /**
@@ -36,8 +36,7 @@ public class MixinTest extends AbstractQueryTest {
     protected void setUp() throws Exception {
         super.setUp();
 
-        JackrabbitNodeTypeManager manager = (JackrabbitNodeTypeManager)
-            superuser.getWorkspace().getNodeTypeManager();
+        NodeTypeManager manager = superuser.getWorkspace().getNodeTypeManager();
         if (!manager.hasNodeType("test:mimeType")) {
             String cnd =
                 "<test='http://www.apache.org/jackrabbit/test'>\n"

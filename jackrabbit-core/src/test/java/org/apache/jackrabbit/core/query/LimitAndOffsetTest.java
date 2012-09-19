@@ -32,7 +32,7 @@ public class LimitAndOffsetTest extends AbstractQueryTest {
     private Node node2;
     private Node node3;
 
-    private QueryImpl query;
+    private Query query;
 
     protected void setUp() throws Exception {
         super.setUp();
@@ -57,10 +57,10 @@ public class LimitAndOffsetTest extends AbstractQueryTest {
         super.tearDown();
     }
 
-    private QueryImpl createXPathQuery(String xpath)
+    private Query createXPathQuery(String xpath)
             throws InvalidQueryException, RepositoryException {
         QueryManager queryManager = superuser.getWorkspace().getQueryManager();
-        return (QueryImpl) queryManager.createQuery(xpath, Query.XPATH);
+        return queryManager.createQuery(xpath, Query.XPATH);
     }
 
     protected void checkResult(QueryResult result, Node[] expectedNodes) throws RepositoryException {
@@ -136,7 +136,9 @@ public class LimitAndOffsetTest extends AbstractQueryTest {
         QueryResult result = query.execute();
         NodeIterator nodes = result.getNodes();
         assertEquals(2, nodes.getSize());
-        assertEquals(3, ((QueryResultImpl) result).getTotalSize());
+        if (isJackrabbitImpl) {
+            assertEquals(3, ((QueryResultImpl) result).getTotalSize());
+        }
 
         // JCR-2684: offset higher than total result => size == 0
         query.setOffset(10);
@@ -144,14 +146,18 @@ public class LimitAndOffsetTest extends AbstractQueryTest {
         nodes = result.getNodes();
         assertFalse(nodes.hasNext());
         assertEquals(0, nodes.getSize());
-        assertEquals(3, ((QueryResultImpl) result).getTotalSize());
+        if (isJackrabbitImpl) {
+            assertEquals(3, ((QueryResultImpl) result).getTotalSize());
+        }
 
         query.setOffset(1);
         query.setLimit(1);
         result = query.execute();
         nodes = result.getNodes();
         assertEquals(1, nodes.getSize());
-        assertEquals(3, ((QueryResultImpl) result).getTotalSize());
+        if (isJackrabbitImpl) {
+            assertEquals(3, ((QueryResultImpl) result).getTotalSize());
+        }
     }
 
 }

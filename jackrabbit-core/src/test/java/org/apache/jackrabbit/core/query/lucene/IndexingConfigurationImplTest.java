@@ -27,7 +27,7 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
 import org.apache.jackrabbit.core.id.NodeId;
-import org.apache.jackrabbit.core.query.AbstractQueryTest;
+import org.apache.jackrabbit.core.query.AbstractIndexingTest;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
@@ -38,7 +38,7 @@ import org.xml.sax.SAXException;
 /**
  * <code>IndexingConfigurationImplTest</code>...
  */
-public class IndexingConfigurationImplTest extends AbstractQueryTest {
+public class IndexingConfigurationImplTest extends AbstractIndexingTest {
 
     private static final Name FOO = NameFactoryImpl.getInstance().create("", "foo");
 
@@ -49,7 +49,7 @@ public class IndexingConfigurationImplTest extends AbstractQueryTest {
         super.setUp();
         Node n = testRootNode.addNode(nodeName1, ntUnstructured);
         n.addMixin(mixReferenceable);
-        superuser.save();
+        session.save();
         nState = (NodeState) getSearchIndex().getContext().getItemStateManager().getItemState(
                 new NodeId(n.getIdentifier()));
     }
@@ -75,7 +75,7 @@ public class IndexingConfigurationImplTest extends AbstractQueryTest {
     public void testAddNodeTypeToRegistry() throws Exception {
         IndexingConfiguration config = createConfig("config4");
         // add node type
-        NodeTypeManager ntMgr = superuser.getWorkspace().getNodeTypeManager();
+        NodeTypeManager ntMgr = session.getWorkspace().getNodeTypeManager();
         String baseName = "indexingTextNodeType";
         int i = 0;
         String nt;
@@ -89,7 +89,7 @@ public class IndexingConfigurationImplTest extends AbstractQueryTest {
         ntMgr.registerNodeType(ntTemplate, false);
         // create node
         Node n = testRootNode.addNode(nodeName2, nt);
-        superuser.save();
+        session.save();
         // get state
         NodeState state = (NodeState) getSearchIndex().getContext().getItemStateManager().getItemState(
                 new NodeId(n.getIdentifier()));

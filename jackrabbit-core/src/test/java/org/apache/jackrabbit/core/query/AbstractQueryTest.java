@@ -38,7 +38,6 @@ import javax.jcr.query.qom.QueryObjectModelFactory;
 
 import org.apache.jackrabbit.commons.JcrUtils;
 import org.apache.jackrabbit.commons.iterator.NodeIteratorAdapter;
-import org.apache.jackrabbit.core.query.lucene.SearchIndex;
 import org.apache.jackrabbit.test.AbstractJCRTest;
 
 /**
@@ -50,8 +49,17 @@ public class AbstractQueryTest extends AbstractJCRTest {
 
     protected QueryObjectModelFactory qomFactory;
 
+    /**
+     * true if this is a Jackrabbit JCR implementation
+     */
+    boolean isJackrabbitImpl = true;
+    private static final String DESCRIPTOR_NAME = "jcr.repository.name";
+    private static final String DESCRIPTOR_VALUE = "Jackrabbit";
+
     protected void setUp() throws Exception {
         super.setUp();
+        isJackrabbitImpl = DESCRIPTOR_VALUE.equals(getHelper().getRepository()
+                .getDescriptor(DESCRIPTOR_NAME));
         qm = superuser.getWorkspace().getQueryManager();
         qomFactory = qm.getQOMFactory();
     }
@@ -143,7 +151,6 @@ public class AbstractQueryTest extends AbstractJCRTest {
      */
     protected void executeXPathQuery(String xpath, Node[] nodes)
             throws RepositoryException {
-        flushSearchIndex();
         QueryResult res = qm.createQuery(xpath, Query.XPATH).execute();
         checkResult(res, nodes);
     }
@@ -158,7 +165,6 @@ public class AbstractQueryTest extends AbstractJCRTest {
      */
     protected void executeSQLQuery(String sql, Node[] nodes)
             throws RepositoryException {
-        flushSearchIndex();
         QueryResult res = qm.createQuery(sql, Query.SQL).execute();
         checkResult(res, nodes);
     }
@@ -251,7 +257,6 @@ public class AbstractQueryTest extends AbstractJCRTest {
      */
     protected QueryResult executeQuery(String statement)
             throws RepositoryException {
-        flushSearchIndex();
         if (statement.trim().toLowerCase().startsWith("select")) {
             return qm.createQuery(statement, Query.SQL).execute();
         } else {
@@ -266,27 +271,7 @@ public class AbstractQueryTest extends AbstractJCRTest {
 
     protected void executeSQL2Query(String statement, Node[] nodes)
             throws RepositoryException {
-        flushSearchIndex();
         QueryResult res = qm.createQuery(statement, JCR_SQL2).execute();
         checkResult(res, nodes);
-    }
-
-    protected void flushSearchIndex() throws RepositoryException {
-        SearchIndex si = getSearchIndex();
-        if (si != null) {
-            si.flush();
-        }
-    }
-
-    /**
-     * Returns a reference to the underlying search index.
-     *
-     * @return the query handler inside the {@link #qm query manager}.
-     */
-    protected SearchIndex getSearchIndex() {
-        if (qm instanceof QueryManagerImpl) {
-            return (SearchIndex) ((QueryManagerImpl) qm).getQueryHandler();
-        }
-        return null;
     }
 }
