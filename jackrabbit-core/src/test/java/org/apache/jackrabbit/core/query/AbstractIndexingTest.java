@@ -20,6 +20,7 @@ import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.query.QueryManager;
+import javax.jcr.query.QueryResult;
 
 import org.apache.jackrabbit.core.TestHelper;
 import org.apache.jackrabbit.core.query.lucene.SearchIndex;
@@ -97,5 +98,29 @@ public class AbstractIndexingTest extends AbstractQueryTest {
             return (SearchIndex) ((QueryManagerImpl) qm).getQueryHandler();
         }
         return null;
+    }
+
+    protected QueryResult executeQuery(String statement)
+            throws RepositoryException {
+        flushSearchIndex();
+        return super.executeQuery(statement);
+    }
+
+    protected void executeXPathQuery(String xpath, Node[] nodes)
+            throws RepositoryException {
+        flushSearchIndex();
+        super.executeXPathQuery(xpath, nodes);
+    }
+
+    protected void executeSQLQuery(String sql, Node[] nodes)
+            throws RepositoryException {
+        flushSearchIndex();
+        super.executeSQLQuery(sql, nodes);
+    }
+
+    protected void executeSQL2Query(String statement, Node[] nodes)
+            throws RepositoryException {
+        flushSearchIndex();
+        super.executeSQL2Query(statement, nodes);
     }
 }
