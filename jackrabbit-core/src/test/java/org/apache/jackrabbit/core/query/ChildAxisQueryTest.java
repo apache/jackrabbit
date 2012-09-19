@@ -16,12 +16,6 @@
  */
 package org.apache.jackrabbit.core.query;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.util.Calendar;
-
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 
@@ -182,23 +176,6 @@ public class ChildAxisQueryTest extends AbstractQueryTest {
         executeXPathQuery(base + nodeName1 + "/" + nodeName2 + ", 'franz')" +
                 " and " + nodeName1 + "/" + nodeName2 + "/" + nodeName3 + "/@" + propertyName2 + " = 1]",
                 new Node[]{testRootNode});
-    }
-
-    public void testNtFile() throws RepositoryException, IOException {
-        Node file = testRootNode.addNode(nodeName1, "nt:file");
-        Node resource = file.addNode("jcr:content", "nt:resource");
-        resource.setProperty("jcr:encoding", "UTF-8");
-        resource.setProperty("jcr:mimeType", "text/plain");
-        ByteArrayOutputStream data = new ByteArrayOutputStream();
-        OutputStreamWriter writer = new OutputStreamWriter(data, "UTF-8");
-        writer.write("The quick brown fox jumps over the lazy dog.");
-        writer.close();
-        resource.setProperty("jcr:data", new ByteArrayInputStream(data.toByteArray()));
-        resource.setProperty("jcr:lastModified", Calendar.getInstance());
-
-        testRootNode.save();
-        String xpath = testPath + "/*[jcr:contains(jcr:content, 'lazy')]";
-        executeXPathQuery(xpath, new Node[]{file});
     }
 
     public void testStarNameTest() throws RepositoryException {
