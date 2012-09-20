@@ -164,7 +164,7 @@ public class OrderByTest extends AbstractQueryTest {
         n1.addNode("a").addNode("b"); // no property
         Node n2 = testRootNode.addNode("node2");
         n2.addNode("a").addNode("b").addNode("c").setProperty("prop", "a");
-        Node n3 = testRootNode.addNode("node2");
+        Node n3 = testRootNode.addNode("node3");
         n3.addNode("a").addNode("b").addNode("c").setProperty("prop", "b");
         testRootNode.save();
 
