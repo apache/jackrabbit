@@ -14,10 +14,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.core.query;
+package org.apache.jackrabbit.core.query.lucene;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Node;
+
+import org.apache.jackrabbit.core.query.AbstractQueryTest;
 
 /**
  * <code>SynonymProviderTest</code> contains test cases for the
