@@ -19,7 +19,9 @@ package org.apache.jackrabbit.commons.cnd;
 import java.io.IOException;
 import java.io.Reader;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.jcr.NamespaceRegistry;
 import javax.jcr.RepositoryException;
@@ -27,14 +29,18 @@ import javax.jcr.Session;
 import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.ValueFactory;
 import javax.jcr.Workspace;
+import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.InvalidNodeTypeDefinitionException;
 import javax.jcr.nodetype.NodeDefinitionTemplate;
 import javax.jcr.nodetype.NodeType;
+import javax.jcr.nodetype.NodeTypeDefinition;
 import javax.jcr.nodetype.NodeTypeExistsException;
 import javax.jcr.nodetype.NodeTypeIterator;
 import javax.jcr.nodetype.NodeTypeManager;
 import javax.jcr.nodetype.NodeTypeTemplate;
 import javax.jcr.nodetype.PropertyDefinitionTemplate;
+
+import static org.apache.jackrabbit.JcrConstants.NT_BASE;
 
 /**
  * Utility class for importing compact node type definitions.
@@ -141,26 +147,52 @@ public final class CndImporter {
             CompactNodeTypeDefReader<NodeTypeTemplate, NamespaceRegistry> cndReader =
                 new CompactNodeTypeDefReader<NodeTypeTemplate, NamespaceRegistry>(cnd, systemId, factory);
 
-            List<NodeTypeTemplate> ntts = cndReader.getNodeTypeDefinitions();
-
-            NodeTypeIterator registered;
-            if (reregisterExisting) {
-                registered = nodeTypeManager.registerNodeTypes(ntts.toArray(new NodeTypeTemplate[ntts.size()]), true);
-            } else {
-                List<NodeTypeTemplate> toRegister = new ArrayList<NodeTypeTemplate>(ntts.size());
-                for (NodeTypeTemplate ntt : ntts) {
-                    if (!nodeTypeManager.hasNodeType(ntt.getName())) {
-                        toRegister.add(ntt);
-                    }
-                }
-
-                registered = nodeTypeManager.registerNodeTypes(toRegister.toArray(new NodeTypeTemplate[toRegister.size()]), true);
+            Map<String, NodeTypeTemplate> templates = new HashMap<String, NodeTypeTemplate>();
+            for (NodeTypeTemplate template : cndReader.getNodeTypeDefinitions()) {
+                templates.put(template.getName(), template);
             }
 
+            List<NodeTypeTemplate> toRegister = new ArrayList<NodeTypeTemplate>(templates.size());
+            for (NodeTypeTemplate ntt : templates.values()) {
+                if (reregisterExisting || !nodeTypeManager.hasNodeType(ntt.getName())) {
+                    ensureNtBase(ntt, templates, nodeTypeManager);
+                    toRegister.add(ntt);
+                }
+            }
+            NodeTypeIterator registered = nodeTypeManager.registerNodeTypes(
+                    toRegister.toArray(new NodeTypeTemplate[toRegister.size()]), true);
             return toArray(registered);
         }
         finally {
             cnd.close();
+        }
+    }
+
+    private static void ensureNtBase(NodeTypeTemplate ntt, Map<String, NodeTypeTemplate> templates,
+            NodeTypeManager nodeTypeManager) throws RepositoryException {
+        if (!ntt.isMixin() && !NT_BASE.equals(ntt.getName())) {
+            String[] supertypes = ntt.getDeclaredSupertypeNames();
+            if (supertypes.length == 0) {
+                ntt.setDeclaredSuperTypeNames(new String[] {NT_BASE});
+            } else {
+                // Check whether we need to add the implicit "nt:base" supertype
+                boolean needsNtBase = true;
+                for (String name : supertypes) {
+                    NodeTypeDefinition std = templates.get(name);
+                    if (std == null) {
+                        std = nodeTypeManager.getNodeType(name);
+                    }
+                    if (std != null && !std.isMixin()) {
+                        needsNtBase = false;
+                    }
+                }
+                if (needsNtBase) {
+                    String[] withNtBase = new String[supertypes.length + 1];
+                    withNtBase[0] = NT_BASE;
+                    System.arraycopy(supertypes, 0, withNtBase, 1, supertypes.length);
+                    ntt.setDeclaredSuperTypeNames(withNtBase);
+                }
+            }
         }
     }
 
