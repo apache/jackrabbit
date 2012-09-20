@@ -19,9 +19,7 @@ package org.apache.jackrabbit.core.query;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
-import javax.jcr.query.InvalidQueryException;
 import javax.jcr.query.Query;
-import javax.jcr.query.QueryManager;
 import javax.jcr.query.QueryResult;
 
 import org.apache.jackrabbit.core.query.lucene.QueryResultImpl;
@@ -39,14 +37,15 @@ public class LimitAndOffsetTest extends AbstractQueryTest {
 
         node1 = testRootNode.addNode("foo");
         node1.setProperty("name", "1");
-        node2 = testRootNode.addNode("foo");
+        node2 = testRootNode.addNode("bar");
         node2.setProperty("name", "2");
-        node3 = testRootNode.addNode("foo");
+        node3 = testRootNode.addNode("baz");
         node3.setProperty("name", "3");
 
-        testRootNode.save();
+        testRootNode.getSession().save();
 
-        query = createXPathQuery("/jcr:root" + testRoot + "/* order by @name");
+        query = qm.createQuery("/jcr:root" + testRoot + "/* order by @name",
+                Query.XPATH);
     }
 
     protected void tearDown() throws Exception {
@@ -55,12 +54,6 @@ public class LimitAndOffsetTest extends AbstractQueryTest {
         node3 = null;
         query = null;
         super.tearDown();
-    }
-
-    private Query createXPathQuery(String xpath)
-            throws InvalidQueryException, RepositoryException {
-        QueryManager queryManager = superuser.getWorkspace().getQueryManager();
-        return queryManager.createQuery(xpath, Query.XPATH);
     }
 
     protected void checkResult(QueryResult result, Node[] expectedNodes) throws RepositoryException {
