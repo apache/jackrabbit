@@ -52,6 +52,7 @@ public class TestAll extends TestCase {
         suite.addTestSuite(TextExtractionQueryTest.class);
         suite.addTestSuite(ArrayHitsTest.class);
         suite.addTestSuite(IndexFormatVersionTest.class);
+        suite.addTestSuite(SynonymProviderTest.class);
 
         return suite;
     }

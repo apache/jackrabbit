@@ -54,7 +54,6 @@ public class TestAll extends TestCase {
         suite.addTestSuite(QueryResultTest.class);
         suite.addTestSuite(FnNameQueryTest.class);
         suite.addTestSuite(PathQueryNodeTest.class);
-        suite.addTestSuite(SynonymProviderTest.class);
         suite.addTestSuite(ExcerptTest.class);
         suite.addTestSuite(ShareableNodeTest.class);
         suite.addTestSuite(ParentNodeTest.class);
