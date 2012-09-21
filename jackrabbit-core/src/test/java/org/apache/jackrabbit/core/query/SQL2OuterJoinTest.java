@@ -48,7 +48,7 @@ public class SQL2OuterJoinTest extends AbstractQueryTest {
             StringBuilder defs = new StringBuilder();
             defs.append("[test:SamplePage]\n");
             defs.append("  - n1prop1\n");
-            defs.append("  + node2\n");
+            defs.append("  + * (nt:base) = nt:unstructured \n");
             defs.append("[test:SampleContent]\n");
             defs.append("  - n2prop1");
             Reader cndReader = new InputStreamReader(new ByteArrayInputStream(
@@ -58,10 +58,8 @@ public class SQL2OuterJoinTest extends AbstractQueryTest {
 
         Node n1 = testRootNode.addNode("node1", "test:SamplePage");
         n1.setProperty("n1prop1", "page1");
-
         n2 = n1.addNode("node2", "test:SampleContent");
         n2.setProperty("n2prop1", "content1");
-
         testRootNode.getSession().save();
     }
 
