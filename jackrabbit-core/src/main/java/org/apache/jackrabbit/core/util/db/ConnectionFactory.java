@@ -30,6 +30,7 @@ import javax.sql.DataSource;
 
 import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.commons.dbcp.DelegatingConnection;
+import org.apache.commons.pool.impl.GenericObjectPool;
 import org.apache.jackrabbit.core.config.DataSourceConfig;
 import org.apache.jackrabbit.core.config.DataSourceConfig.DataSourceDefinition;
 import org.apache.jackrabbit.util.Base64;
@@ -335,12 +336,16 @@ public final class ConnectionFactory {
         ds.setDefaultAutoCommit(true);
         ds.setTestOnBorrow(false);
         ds.setTestWhileIdle(true);
-        ds.setTimeBetweenEvictionRunsMillis(1000);
+        ds.setTimeBetweenEvictionRunsMillis(600000); // 10 Minutes
+        ds.setMinEvictableIdleTimeMillis(60000); // 1 Minute
         ds.setMaxActive(-1); // unlimited
+        ds.setMaxIdle(GenericObjectPool.DEFAULT_MAX_IDLE + 10);
         ds.setValidationQuery(guessValidationQuery(url));
+        ds.setValidationQueryTimeout(3);
         ds.setAccessToUnderlyingConnectionAllowed(true);
         ds.setPoolPreparedStatements(true);
         ds.setMaxOpenPreparedStatements(-1); // unlimited
+        log.info("Gruss von DVT");
         return ds;
     }
 

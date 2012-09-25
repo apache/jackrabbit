@@ -151,7 +151,7 @@ public class ConnectionFactoryTest extends TestCase {
         assertTrue(ds.getDefaultAutoCommit());
         assertFalse(ds.getTestOnBorrow());
         assertTrue(ds.getTestWhileIdle());
-        assertEquals(1000, ds.getTimeBetweenEvictionRunsMillis());
+        assertEquals(600000, ds.getTimeBetweenEvictionRunsMillis());
         assertTrue(ds.isPoolPreparedStatements());
         assertEquals(-1, ds.getMaxOpenPreparedStatements());
     }
