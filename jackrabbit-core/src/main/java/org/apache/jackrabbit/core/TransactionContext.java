@@ -308,21 +308,21 @@ public class TransactionContext {
      * Returns the {@link Xid} bind to the {@link #CURRENT_XID} ThreadLocal
      * @return current Xid or null
      */
-    public static Xid getCurrentXid() {
+    private static Xid getCurrentXid() {
         return CURRENT_XID.get();
     }
 
     /**
      * Returns the current thread identifier. The identifier is either the
-     * current thread instance or the global transaction identifier when
-     * running under a transaction.
+     * current thread instance or the global transaction identifier wrapped 
+     * in a {@link XidWrapper}, when running under a transaction.
      *
      * @return current thread identifier
      */
     public static Object getCurrentThreadId() {
         Xid xid = TransactionContext.getCurrentXid();
         if (xid != null) {
-            return xid.getGlobalTransactionId();
+            return new XidWrapper(xid.getGlobalTransactionId());
         } else {
             return Thread.currentThread();
         }
@@ -336,10 +336,35 @@ public class TransactionContext {
     public static boolean isSameThreadId(Object a, Object b) {
         if (a == b) {
             return true;
-        } else if (a instanceof byte[] && b instanceof byte[]) {
-            return Arrays.equals((byte[]) a, (byte[]) b);
+        } else if (a != null) {
+        	return a.equals(b);
         } else {
             return false;
+        }
+    }
+    
+    /**
+     * Wrapper around a global transaction id (byte[]) 
+     * that handles hashCode and equals in a proper way.
+     */
+    private static class XidWrapper {
+    	private byte[] gtid;
+    	
+    	public XidWrapper(byte[] gtid) {
+    		this.gtid = gtid;
+    	}
+
+        @Override
+        public boolean equals(Object other) {
+            if (!(other instanceof XidWrapper)) {
+                return false;
+            }
+            return Arrays.equals((byte[]) gtid, ((XidWrapper)other).gtid);
+        }
+
+        @Override
+        public int hashCode() {
+            return Arrays.hashCode(gtid);
         }
     }
 
