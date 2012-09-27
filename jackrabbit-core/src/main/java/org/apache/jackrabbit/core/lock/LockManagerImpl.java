@@ -16,16 +16,32 @@
  */
 package org.apache.jackrabbit.core.lock;
 
-import EDU.oswego.cs.dl.util.concurrent.ReentrantLock;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
+
+import javax.jcr.ItemNotFoundException;
+import javax.jcr.PropertyType;
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
+import javax.jcr.Workspace;
+import javax.jcr.lock.Lock;
+import javax.jcr.lock.LockException;
+import javax.jcr.observation.Event;
+import javax.jcr.observation.EventIterator;
+
 import org.apache.commons.collections.map.LinkedMap;
 import org.apache.commons.io.IOUtils;
-import org.apache.jackrabbit.core.id.ItemId;
-import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.NodeImpl;
-import org.apache.jackrabbit.core.id.PropertyId;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.SessionListener;
-import org.apache.jackrabbit.core.TransactionContext;
 import org.apache.jackrabbit.core.WorkspaceImpl;
 import org.apache.jackrabbit.core.cluster.ClusterOperation;
 import org.apache.jackrabbit.core.cluster.LockEventChannel;
@@ -33,42 +49,23 @@ import org.apache.jackrabbit.core.cluster.LockEventListener;
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.fs.FileSystemException;
 import org.apache.jackrabbit.core.fs.FileSystemResource;
+import org.apache.jackrabbit.core.id.ItemId;
+import org.apache.jackrabbit.core.id.NodeId;
+import org.apache.jackrabbit.core.id.PropertyId;
 import org.apache.jackrabbit.core.observation.EventImpl;
 import org.apache.jackrabbit.core.observation.SynchronousEventListener;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.PropertyState;
 import org.apache.jackrabbit.core.state.UpdatableItemStateManager;
+import org.apache.jackrabbit.core.util.XAReentrantLock;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.spi.commons.name.PathMap;
-import javax.jcr.Workspace;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.jcr.ItemNotFoundException;
-import javax.jcr.PropertyType;
-import javax.jcr.RepositoryException;
-import javax.jcr.Session;
-import javax.jcr.lock.Lock;
-import javax.jcr.lock.LockException;
-import javax.jcr.observation.Event;
-import javax.jcr.observation.EventIterator;
-import javax.transaction.xa.Xid;
-
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Provides the functionality needed for locking and unlocking nodes.
@@ -92,67 +89,10 @@ public class LockManagerImpl
     private final PathMap<LockInfo> lockMap = new PathMap<LockInfo>();
 
     /**
-     * Thread aware lock to path map.
+     * XA/Thread aware lock to path map.
      */
-    private final ReentrantLock lockMapLock = new ReentrantLock();
+    private final XAReentrantLock lockMapLock = new XAReentrantLock();
     
-    /**
-     * Xid aware lock to path map.
-     */
-    private final ReentrantLock xidlockMapLock = new ReentrantLock(){
-
-    	/**
-    	 * The actice Xid of this {@link ReentrantLock}
-    	 */
-        private Xid activeXid;
-
-        /**
-         * Check if the given Xid comes from the same globalTX
-         * @param otherXid
-         * @return true if same globalTX otherwise false
-         */
-        boolean isSameGlobalTx(Xid otherXid) {
-    	    return (activeXid == otherXid) || Arrays.equals(activeXid.getGlobalTransactionId(), otherXid.getGlobalTransactionId());
-    	}
-        
-        /**
-         * {@inheritDoc}
-         */
-        public void acquire() throws InterruptedException {
-        	if (Thread.interrupted()) throw new InterruptedException();
-        	Xid currentXid = TransactionContext.getCurrentXid();
-            synchronized(this) {
-            	if (currentXid == activeXid || (activeXid != null && isSameGlobalTx(currentXid))) { 
-                ++holds_;
-            	} else {
-            		try {  
-            			while (activeXid != null) 
-            				wait(); 
-            			activeXid = currentXid;
-            			holds_ = 1;
-            		} catch (InterruptedException ex) {
-            			notify();
-            			throw ex;
-            		}
-            	}
-            }
-        }
-        
-        /**
-         * {@inheritDoc}
-         */
-        public synchronized void release()  {
-        	Xid currentXid = TransactionContext.getCurrentXid();
-            if (activeXid != null && !isSameGlobalTx(currentXid))
-                throw new Error("Illegal Lock usage"); 
-
-              if (--holds_ == 0) {
-                activeXid = null;
-                notify(); 
-              }
-        }
-    };
-
     /**
      * The periodically invoked lock timeout handler.
      */
@@ -226,26 +166,31 @@ public class LockManagerImpl
      *      JSR 283: Locking
      */
     private class TimeoutHandler implements Runnable {
+        private final TimeoutHandlerVisitor visitor = new TimeoutHandlerVisitor();
+
         public void run() {
-            lockMap.traverse(new PathMap.ElementVisitor<LockInfo>() {
-                public void elementVisited(PathMap.Element<LockInfo> element) {
-                    LockInfo info = element.get();
-                    if (info != null && info.isLive() && info.isExpired()) {
-                        NodeId id = info.getId();
-                        SessionImpl holder = info.getLockHolder();
-                        if (holder == null) {
-                            info.setLockHolder(sysSession);
-                            holder = sysSession;
-                        }
-                        try {
-                            // FIXME: This session access is not thread-safe!
-                            unlock(holder.getNodeById(id));
-                        } catch (RepositoryException e) {
-                            log.warn("Unable to expire the lock " + id, e);
-                        }
-                    }
+            lockMap.traverse(visitor, false);
+        }
+    }
+
+    private class TimeoutHandlerVisitor implements
+            PathMap.ElementVisitor<LockInfo> {
+        public void elementVisited(PathMap.Element<LockInfo> element) {
+            LockInfo info = element.get();
+            if (info != null && info.isLive() && info.isExpired()) {
+                NodeId id = info.getId();
+                SessionImpl holder = info.getLockHolder();
+                if (holder == null) {
+                    info.setLockHolder(sysSession);
+                    holder = sysSession;
                 }
-            }, false);
+                try {
+                    // FIXME: This session access is not thread-safe!
+                    unlock(holder.getNodeById(id));
+                } catch (RepositoryException e) {
+                    log.warn("Unable to expire the lock " + id, e);
+                }
+            }
         }
     }
 
@@ -787,10 +732,8 @@ public class LockManagerImpl
             PathMap.Element<LockInfo> element = lockMap.map(path, true);
             if (element != null) {
                 LockInfo info = element.get();
-                if (info != null) {
-                    if (info.isLockHolder(session)) {
-                        // nothing to do
-                    } else if (info.getLockHolder() == null) {
+                if (info != null && !info.isLockHolder(session)) {
+                    if (info.getLockHolder() == null) {
                         info.setLockHolder(session);
                         if (info instanceof InternalLockInfo) {
                             session.addListener((InternalLockInfo) info);
@@ -828,9 +771,7 @@ public class LockManagerImpl
                 if (info != null) {
                     if (info.isLockHolder(session)) {
                         info.setLockHolder(null);
-                    } else if (info.getLockHolder() == null) {
-                        // nothing to do
-                    } else {
+                    } else if (info.getLockHolder() != null) {
                         String msg = "Cannot remove lock token: lock held by other session.";
                         log.warn(msg);
                         info.throwLockException(msg, session);
@@ -848,7 +789,7 @@ public class LockManagerImpl
 
     /**
      * Return the path of an item given its id. This method will lookup the
-     * item inside the systme session.
+     * item inside the system session.
      */
     private Path getPath(SessionImpl session, ItemId id) throws RepositoryException {
         return session.getHierarchyManager().getPath(id);
@@ -860,11 +801,7 @@ public class LockManagerImpl
     private void acquire() {
         for (;;) {
             try {
-            	if (TransactionContext.getCurrentXid() == null) {
-            		lockMapLock.acquire();
-            	} else {
-            		xidlockMapLock.acquire();
-            	}
+           		lockMapLock.acquire();
                 break;
             } catch (InterruptedException e) {
                 // ignore
@@ -876,11 +813,7 @@ public class LockManagerImpl
      * Release lock on the lock map.
      */
     private void release() {
-    	if (TransactionContext.getCurrentXid() == null) {
-    		lockMapLock.release();
-    	} else {
-    		xidlockMapLock.release();
-    	}
+   		lockMapLock.release();
     }
 
     /**
@@ -1030,7 +963,7 @@ public class LockManagerImpl
     /**
      * Internal event class that holds old and new paths for moved nodes
      */
-    private class HierarchyEvent {
+    private static class HierarchyEvent {
 
         /**
          * ID recorded in event
