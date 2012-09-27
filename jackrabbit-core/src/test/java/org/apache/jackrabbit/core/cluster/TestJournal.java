@@ -16,31 +16,23 @@
  */
 package org.apache.jackrabbit.core.cluster;
 
-import junit.framework.TestCase;
-import junit.framework.Test;
-import junit.framework.TestSuite;
+import org.apache.jackrabbit.core.journal.JournalException;
+import org.apache.jackrabbit.core.journal.MemoryJournal;
 
 /**
- * Collects all test classes setting up test data in the workspace. This test
- * data is specific to Jackrabbit and will probably not work in other
- * implementations.
- */
-public class TestAll extends TestCase {
+* <code>TestJournal</code> extends the MemoryJournal with a static hook to
+* refuse lock acquisition.
+*/
+public final class TestJournal extends MemoryJournal {
 
-    /**
-     * Returns a <code>Test</code> suite that executes all tests inside this
-     * package.
-     *
-     * @return a <code>Test</code> suite that executes all tests inside this
-     *         package.
-     */
-    public static Test suite() {
-        TestSuite suite = new TestSuite();
+    static boolean refuseLock = false;
 
-        suite.addTestSuite(ClusterRecordTest.class);
-        suite.addTestSuite(DbClusterTest.class);
-        suite.addTestSuite(FailUpdateOnJournalExceptionTest.class);
-
-        return suite;
+    @Override
+    protected void doLock() throws JournalException {
+        if (refuseLock) {
+            throw new JournalException("lock refused");
+        } else {
+            super.doLock();
+        }
     }
 }
