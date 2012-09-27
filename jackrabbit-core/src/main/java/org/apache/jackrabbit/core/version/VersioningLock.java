@@ -16,10 +16,9 @@
  */
 package org.apache.jackrabbit.core.version;
 
-import static org.apache.jackrabbit.core.TransactionContext.getCurrentThreadId;
-import static org.apache.jackrabbit.core.TransactionContext.isSameThreadId;
+import org.apache.jackrabbit.core.util.XAReentrantWriterPreferenceReadWriteLock;
+
 import EDU.oswego.cs.dl.util.concurrent.ReadWriteLock;
-import EDU.oswego.cs.dl.util.concurrent.ReentrantWriterPreferenceReadWriteLock;
 import EDU.oswego.cs.dl.util.concurrent.Sync;
 
 /**
@@ -33,7 +32,7 @@ public class VersioningLock {
     /**
      * The internal read-write lock.
      */
-    private final ReadWriteLock rwLock = new XAAwareRWLock();
+    private final XAReentrantWriterPreferenceReadWriteLock rwLock = new XAReentrantWriterPreferenceReadWriteLock();
 
     public ReadLock acquireReadLock() throws InterruptedException {
     	return new ReadLock(rwLock.readLock());
@@ -78,111 +77,5 @@ public class VersioningLock {
             readLock.release();
         }
 
-    }
-
-    /**
-     * XA concerning ReentrantWriterPreferenceReadWriteLock
-     */
-    private static final class XAAwareRWLock
-            extends ReentrantWriterPreferenceReadWriteLock {
-
-    	private Object activeWriter;
-
-        /**
-         * {@inheritDoc}
-         */
-        protected boolean allowReader() {
-            Object currentId = getCurrentThreadId();
-            return (activeWriter == null && waitingWriters_ == 0) || isSameThreadId(activeWriter, currentId);
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        protected synchronized boolean startWrite() {
-        	Object currentId = getCurrentThreadId();
-            if (activeWriter != null && isSameThreadId(activeWriter, currentId)) { // already held; re-acquire
-            	++writeHolds_;
-                return true;
-            } else if (writeHolds_ == 0) {
-            	if (activeReaders_ == 0 || (readers_.size() == 1 && readers_.get(currentId) != null)) {
-            		activeWriter = currentId;
-            		writeHolds_ = 1;
-            		return true;
-            	} else {
-            		return false;
-            	}
-            } else {
-            	return false;
-            }
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        protected synchronized Signaller endWrite() {
-            --writeHolds_;
-            if (writeHolds_ > 0) {  // still being held
-            	return null;
-            } else {
-            	activeWriter = null;
-                if (waitingReaders_ > 0 && allowReader()) {
-                    return readerLock_;
-                } else if (waitingWriters_ > 0) {
-                    return writerLock_;
-                } else {
-                    return null;
-                }
-            }
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-    	@SuppressWarnings("unchecked")
-    	protected synchronized boolean startRead() {
-    		Object currentId = getCurrentThreadId();
-    	    Object c = readers_.get(currentId);
-    	    if (c != null) { // already held -- just increment hold count
-    	    	readers_.put(currentId, new Integer(((Integer)(c)).intValue()+1));
-    	    	++activeReaders_;
-    	    	return true;
-    	    } else if (allowReader()) {
-    	    	readers_.put(currentId, IONE);
-    	    	++activeReaders_;
-    	    	return true;
-    	    } else {
-    	    	return false;
-    	    }
-    	}
-
-        /**
-         * {@inheritDoc}
-         */
-    	@SuppressWarnings("unchecked")
-    	protected synchronized Signaller endRead() {
-    		Object currentId = getCurrentThreadId();
-    	    Object c = readers_.get(currentId);
-    	    if (c == null) {
-    	    	throw new IllegalStateException();
-    	    }
-    	    --activeReaders_;
-    	    if (c != IONE) { // more than one hold; decrement count
-    	    	int h = ((Integer)(c)).intValue()-1;
-    	    	Integer ih = (h == 1)? IONE : new Integer(h);
-    	    	readers_.put(currentId, ih);
-    	    	return null;
-    	    } else {
-    	    	readers_.remove(currentId);
-    	    
-    	    	if (writeHolds_ > 0) { // a write lock is still held
-    	    		return null;
-    	    	} else if (activeReaders_ == 0 && waitingWriters_ > 0) {
-    	    		return writerLock_;
-    	    	} else  {
-    	    		return null;
-    	    	}
-    	    }
-    	}
     }
 }
