@@ -27,7 +27,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import javax.sql.DataSource;
-import javax.transaction.xa.Xid;
 
 import org.apache.jackrabbit.core.TransactionContext;
 import org.slf4j.Logger;
@@ -81,8 +80,7 @@ public class ConnectionHelper {
 
     protected final DataSource dataSource;
 
-    private ThreadLocal<Connection> batchConnectionTl = new ThreadLocal<Connection>();
-    private Map<String, Connection> xaBatchConnectionMap = Collections.synchronizedMap(new HashMap<String, Connection>());
+    private Map<String, Connection> batchConnectionMap = Collections.synchronizedMap(new HashMap<String, Connection>());
 
     /**
      * The default fetchSize is '0'. This means the fetchSize Hint will be ignored 
@@ -170,7 +168,8 @@ public class ConnectionHelper {
 
     /**
      * Returns true if we are currently in a batch mode, false otherwise.
-     * @return true if the current thread is running in batch mode, false otherwise.
+     * 
+     * @return true if the current thread or the active transaction is running in batch mode, false otherwise.
      */
     protected boolean inBatchMode() {
     	return getTransactionAwareBatchConnection() != null;
@@ -240,11 +239,11 @@ public class ConnectionHelper {
             batchConnection.setAutoCommit(false);
             setTransactionAwareBatchConnection(batchConnection);
         } catch (SQLException e) {
+            removeTransactionAwareBatchConnection();
             // Strive for failure atomicity
             if (batchConnection != null) {
                 DbUtility.close(batchConnection, null, null);
             }
-            removeTransactionAwareBatchConnection();
             throw e;
         }
     }
@@ -260,15 +259,18 @@ public class ConnectionHelper {
         if (!inBatchMode()) {
             throw new SQLException("not in batch mode");
         }
+        Connection batchConnection = getTransactionAwareBatchConnection(); 
         try {
             if (commit) {
-            	getTransactionAwareBatchConnection().commit();
+            	batchConnection.commit();
             } else {
-            	getTransactionAwareBatchConnection().rollback();
+            	batchConnection.rollback();
             }
         } finally {
-            DbUtility.close(getTransactionAwareBatchConnection(), null, null);
             removeTransactionAwareBatchConnection();
+            if (batchConnection != null) {
+            	DbUtility.close(batchConnection, null, null);
+            }
         }
     }
 
@@ -440,67 +442,60 @@ public class ConnectionHelper {
     }
 
     /**
-     * Returns the Batch Connection. In XA Environment it is stored
-     * in a Cache-Map based on the current Xid. In Non-XA Environment a ThreadLocal is used.
+     * Returns the Batch Connection.
      * 
      * @return Connection
      */
     private Connection getTransactionAwareBatchConnection() {
-    	Xid currentXid = TransactionContext.getCurrentXid();
-    	if (currentXid != null) {
-           	return xaBatchConnectionMap.get(xidtoString(currentXid.getGlobalTransactionId()));
-    	} else {
-    		return batchConnectionTl.get();
-    	}
+    	Object threadId = TransactionContext.getCurrentThreadId();
+       	return batchConnectionMap.get(threadIdToString(threadId));
 	}
 
     /**
-     * Setter for the Batch Connection. In XA Environment it will be stored
-     * in a Cache-Map based on the current Xid. In Non-XA Environment a ThreadLocal is used.
+     * Stores the given Connection to the batchConnectionMap.
+     * If we are running in a XA Environment the globalTransactionId will be used as Key.
+     * In Non-XA Environment the ThreadName is used.
      * 
      * @param batchConnection
      */
 	private void setTransactionAwareBatchConnection(Connection batchConnection) {
-    	Xid currentXid = TransactionContext.getCurrentXid();
-    	if (currentXid != null) {
-       		xaBatchConnectionMap.put(xidtoString(currentXid.getGlobalTransactionId()), batchConnection);
-    	} else {
-    		batchConnectionTl.set(batchConnection);
-    	}
+    	Object threadId = TransactionContext.getCurrentThreadId();
+    	batchConnectionMap.put(threadIdToString(threadId), batchConnection);
 	}
 
     /**
-     * Removes the Batch Connection. In XA Environment it will be stored
-     * in a Cache-Map based on the current Xid. In Non-XA Environment a ThreadLocal is used.
+     * Removes the Batch Connection from the batchConnectionMap
      */
 	private void removeTransactionAwareBatchConnection() {
-    	Xid currentXid = TransactionContext.getCurrentXid();
-    	if (currentXid != null) {
-       		xaBatchConnectionMap.remove(xidtoString(currentXid.getGlobalTransactionId()));
-    	} else {
-    		batchConnectionTl.remove();
-    	}
+    	Object threadId = TransactionContext.getCurrentThreadId();
+    	batchConnectionMap.remove(threadIdToString(threadId));
 	}
 	
     /**
-     * Creates a comparable String from the given GlobalTransactionId byte[]
+     * Creates a comparable String from the given threadId
      * 
-     * @param gtrid
+     * @param threadId
      * @return String
      */
-    private String xidtoString(byte[] gtrid) {
-        int hexVal;
-        StringBuffer sb = new StringBuffer(512);
-        sb.append(" gtrid(" + gtrid.length + ")={0x");
-        for (int i=0; i<gtrid.length; i++) {
-           hexVal = gtrid[i]&0xFF;
-           if ( hexVal < 0x10 )
-              sb.append("0" + Integer.toHexString(gtrid[i]&0xFF));
-           else
-              sb.append(Integer.toHexString(gtrid[i]&0xFF));
-           }
-        sb.append("}");
-        return sb.toString();
+    private String threadIdToString(Object threadId) {
+    	if (threadId instanceof byte[]) {
+    		byte[] gtrid = (byte[]) threadId;
+    		int hexVal;
+    		StringBuffer sb = new StringBuffer(512);
+    		sb.append(" gtrid(" + gtrid.length + ")={0x");
+    		for (int i=0; i< gtrid.length; i++) {
+    			hexVal = gtrid[i]&0xFF;
+    			if ( hexVal < 0x10 ) {
+    				sb.append("0" + Integer.toHexString(gtrid[i]&0xFF));
+    			} else {
+    				sb.append(Integer.toHexString(gtrid[i]&0xFF));
+    			}
+    		}
+    		sb.append("}");
+    		return sb.toString();
+    	} else {
+    		return threadId.toString();
+    	}
     }
 
 	/**
