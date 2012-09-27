@@ -258,7 +258,7 @@ public class ConnectionHelper {
      */
     public final void endBatch(boolean commit) throws SQLException {
         if (!inBatchMode()) {
-            throw new IllegalStateException("not in batch mode");
+            throw new SQLException("not in batch mode");
         }
         try {
             if (commit) {
