@@ -22,6 +22,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -449,7 +450,7 @@ public class ConnectionHelper {
      */
     private Connection getTransactionAwareBatchConnection() {
     	Object threadId = TransactionContext.getCurrentThreadId();
-       	return batchConnectionMap.get(threadId);
+       	return batchConnectionMap.get(threadIdToObject(threadId));
 	}
 
     /**
@@ -461,7 +462,7 @@ public class ConnectionHelper {
      */
 	private void setTransactionAwareBatchConnection(Connection batchConnection) {
     	Object threadId = TransactionContext.getCurrentThreadId();
-    	batchConnectionMap.put(threadId, batchConnection);
+    	batchConnectionMap.put(threadIdToObject(threadId), batchConnection);
 	}
 
     /**
@@ -469,9 +470,23 @@ public class ConnectionHelper {
      */
 	private void removeTransactionAwareBatchConnection() {
     	Object threadId = TransactionContext.getCurrentThreadId();
-    	batchConnectionMap.remove(threadId);
+    	batchConnectionMap.remove(threadIdToObject(threadId));
 	}
 	
+    /**
+     * Creates a comparable String from the given threadId
+     * 
+     * @param threadId
+     * @return String
+     */
+    private Object threadIdToObject(Object threadId) {
+    	if (threadId instanceof byte[]) {
+    		return new XidWrapper((byte[]) threadId);
+    	} else {
+    		return threadId.toString();
+    	}
+    }
+
 	/**
      * Closes the given resources given the {@code batchMode} state.
      *
@@ -551,5 +566,30 @@ public class ConnectionHelper {
         }
 
         protected abstract T call() throws SQLException;
+    }
+    
+    /**
+     * Wrapper around a global transaction id (byte[]) 
+     * that handles hashCode and equals in a proper way.
+     */
+    private class XidWrapper {
+    	private byte[] gtid;
+    	
+    	public XidWrapper(byte[] gtid) {
+    		this.gtid = gtid;
+    	}
+
+        @Override
+        public boolean equals(Object other) {
+            if (!(other instanceof XidWrapper)) {
+                return false;
+            }
+            return TransactionContext.isSameThreadId(gtid, ((XidWrapper)other).gtid);
+        }
+
+        @Override
+        public int hashCode() {
+            return Arrays.hashCode(gtid);
+        }
     }
 }
