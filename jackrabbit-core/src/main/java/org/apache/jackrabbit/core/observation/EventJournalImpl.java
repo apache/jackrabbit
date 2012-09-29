@@ -135,7 +135,7 @@ public class EventJournalImpl implements EventJournal {
         // get skip map for this journal
         SortedMap<Long, Long> skipMap = getSkipMap();
         synchronized (skipMap) {
-            SortedMap<Long, Long> head = skipMap.headMap(new Long(time));
+            SortedMap<Long, Long> head = skipMap.headMap(new Long(date));
             if (!head.isEmpty()) {
                 eventBundleBuffer.clear();
                 lastRevision = head.get(head.lastKey());
@@ -409,7 +409,6 @@ public class EventJournalImpl implements EventJournal {
          * @param eventStates the {@link EventState}s that belong to this bundle.
          * @param timestamp the timestamp when the events were created.
          * @param userData the user data associated with this event.
-         * @param filter the event filter.
          */
         private EventBundle(
                 List<EventState> eventStates, long timestamp, String userData) {
