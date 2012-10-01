@@ -33,7 +33,7 @@
 
   <artifactId>jackrabbit-parent</artifactId>
   <name>Jackrabbit Parent POM</name>
-  <version>2.2.13-SNAPSHOT</version>
+  <version>2.2.13</version>
   <packaging>pom</packaging>
   <issueManagement>
     <system>Jira</system>
@@ -329,8 +329,8 @@
   </dependencyManagement>
 
   <scm>
-    <connection>scm:svn:http://svn.apache.org/repos/asf/jackrabbit/parent/branches/2.2</connection>
-    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/jackrabbit/parent/branches/2.2</developerConnection>
-    <url>http://svn.apache.org/viewvc/jackrabbit/parent/branches/2.2</url>
+    <connection>scm:svn:http://svn.apache.org/repos/asf/jackrabbit/parent/tags/2.2.13</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/jackrabbit/parent/tags/2.2.13</developerConnection>
+    <url>http://svn.apache.org/viewvc/jackrabbit/parent/tags/2.2.13</url>
   </scm>
 </project>
