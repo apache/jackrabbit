@@ -425,8 +425,13 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
                         }
                         PathQueryNode relPath = tmp.getRelativePath();
                         LocationStepQueryNode[] steps = relPath.getPathSteps();
-                        
-                        tmpRelPath.addLast(steps[steps.length-1].getNameTest());
+
+                        Name nameTest = steps[steps.length-1].getNameTest();
+                        if (nameTest==null) {
+                        	// see LocationStepQueryNode javadoc on when getNameTest()==null: when it was a star (asterisk)
+                        	nameTest = RelationQueryNode.STAR_NAME_TEST;
+                        }
+						tmpRelPath.addLast(nameTest);
                     }
                 }
                 break;
@@ -956,7 +961,7 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
                     }
                     if (queryNode.getType() == QueryNode.TYPE_PATH) {
                         PathQueryNode pathNode = (PathQueryNode) queryNode;
-                        
+
                         pathNode.addPathStep(createDerefQueryNode(node, descendant, pathNode));
                     } else if (queryNode.getType() == QueryNode.TYPE_RELATION) {
                         RelationQueryNode relNode = (RelationQueryNode) queryNode;
