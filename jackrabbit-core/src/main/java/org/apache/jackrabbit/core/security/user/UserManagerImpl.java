@@ -396,7 +396,7 @@ public class UserManagerImpl extends ProtectedItemModifier
      */
     public int getMemberSplitSize() {
         int splitSize = config.getConfigValue(PARAM_GROUP_MEMBERSHIP_SPLIT_SIZE, 0);
-        if (splitSize < 4) {
+        if (splitSize != 0 && splitSize < 4) {
             log.warn("Invalid value {} for {}. Expected integer >= 4", splitSize, PARAM_GROUP_MEMBERSHIP_SPLIT_SIZE);
             splitSize = 0;
         }
