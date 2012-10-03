@@ -348,7 +348,7 @@ class QueryFormat implements QueryNodeVisitor, QueryConstants {
             PathQueryNode relPath = node.getRelativePath();
             if (relPath == null) {
                 propPath.append(".");
-            } else if (relPath.getNumOperands() > 0 && relPath.getPathSteps()[0].getNameTest().equals(XPathQueryBuilder.FN_POSITION_FULL)) {
+            } else if (relPath.getNumOperands() > 0 && XPathQueryBuilder.FN_POSITION_FULL.equals(relPath.getPathSteps()[0].getNameTest())) {
                 propPath.append(resolver.getJCRName(XPathQueryBuilder.FN_POSITION_FULL));
             } else {
                 LocationStepQueryNode[] steps = relPath.getPathSteps();

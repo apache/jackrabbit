@@ -67,6 +67,14 @@ public class QueryFormatTest extends TestCase {
         checkStatement("//element(*, foo)[foo/*/@bar = 'bla']");
     }
 
+    public void testStarNameAtBeginningOfPredicate() throws Exception {
+        checkStatement("//element(*, foo)[*/*/@bar = 'bla']");
+    }
+
+    public void testChildStarName() throws Exception {
+        checkStatement("//programs//*[*/@sunday]");
+    }
+
     public void testRepSimilar() throws Exception {
         checkStatement("//element(*, foo)[rep:similar(foo, '/some/path')]");
     }
