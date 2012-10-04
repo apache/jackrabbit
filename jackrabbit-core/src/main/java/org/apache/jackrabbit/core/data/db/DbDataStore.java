@@ -533,7 +533,7 @@ public class DbDataStore implements DataStore, DatabaseAware {
             // SELECT LENGTH, LAST_MODIFIED FROM DATASTORE WHERE ID = ?
             rs = conHelper.query(selectMetaSQL, id);
             if (!rs.next()) {
-                throw new DataStoreException("Record not found: " + identifier);
+                return null;
             }
             long length = rs.getLong(1);
             long lastModified = rs.getLong(2);
