@@ -607,7 +607,7 @@ public class RepositoryImpl extends AbstractRepository
      * Returns the system search manager or <code>null</code> if none is
      * configured.
      */
-    private SearchManager getSystemSearchManager(String wspName)
+    protected SearchManager getSystemSearchManager(String wspName)
             throws RepositoryException {
         if (systemSearchMgr == null) {
             if (repConfig.isSearchEnabled()) {
