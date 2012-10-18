@@ -341,11 +341,15 @@ public final class ConnectionFactory {
         ds.setMaxActive(-1); // unlimited
         ds.setMaxIdle(GenericObjectPool.DEFAULT_MAX_IDLE + 10);
         ds.setValidationQuery(guessValidationQuery(url));
-        ds.setValidationQueryTimeout(3);
         ds.setAccessToUnderlyingConnectionAllowed(true);
         ds.setPoolPreparedStatements(true);
         ds.setMaxOpenPreparedStatements(-1); // unlimited
-        log.info("Gruss von DVT");
+        try {
+            // JCR-3445 At the moment the PostgreSQL driver doesn't implement this method...
+            ds.setValidationQueryTimeout(3);
+        } catch (Exception e) {
+            log.info("Unable to set the validation query timeout on the datasource: " + e.getMessage());
+        }
         return ds;
     }
 
