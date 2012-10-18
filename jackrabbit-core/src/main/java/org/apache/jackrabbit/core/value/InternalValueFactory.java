@@ -25,6 +25,8 @@ import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.commons.value.AbstractQValueFactory;
 
 import javax.jcr.RepositoryException;
+
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -84,7 +86,11 @@ public final class InternalValueFactory extends AbstractQValueFactory {
     }
 
     public QValue create(byte[] value) throws RepositoryException {
-        return InternalValue.create(value);
+        if (store == null) {
+            return InternalValue.create(value);
+        } else {
+            return InternalValue.create(new ByteArrayInputStream(value), store);
+        }
     }
 
     public QValue create(InputStream value) throws RepositoryException, IOException {
@@ -97,7 +103,11 @@ public final class InternalValueFactory extends AbstractQValueFactory {
 
     public QValue create(File value) throws RepositoryException, IOException {
         InputStream in = new FileInputStream(value);
-        return InternalValue.createTemporary(in);
+        if (store == null) {
+            return InternalValue.createTemporary(in);
+        } else {
+            return InternalValue.create(in, store);
+        }
     }
 
     protected QValue createReference(String ref, boolean weak) {
