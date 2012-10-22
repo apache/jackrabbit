@@ -228,7 +228,9 @@ public class SharedFieldCache {
         ValueIndex ret = lookup(reader, field, prefix);
         if (ret == null) {
             final int maxDocs = reader.maxDoc();
-            ComparableArray[] retArray = new ComparableArray[maxDocs];
+            Comparable<?>[] retArray = new Comparable<?>[maxDocs];
+            Map<Integer, Integer> positions = new HashMap<Integer, Integer>();
+            boolean usingSimpleComparable = true;
             int setValues = 0;
             if (maxDocs > 0) {
                 IndexFormatVersion version = IndexFormatVersion.getVersion(reader);
@@ -268,11 +270,34 @@ public class SharedFieldCache {
                             setValues++;
                             Comparable<?> v = getValue(value, type);
                             int doc = termDocs.doc();
-                            ComparableArray ca = retArray[doc];
+                            Comparable<?> ca = retArray[doc];
                             if (ca == null) {
-                                retArray[doc] = new ComparableArray(v, termPosition);
+                                if (usingSimpleComparable) {
+                                    // put simple value on the queue
+                                    positions.put(doc, termPosition);
+                                    retArray[doc] = v;
+                                } else {
+                                    retArray[doc] = new ComparableArray(v,
+                                            termPosition);
+                                }
                             } else {
-                                retArray[doc] = ca.insert(v, termPosition);
+                                if (ca instanceof ComparableArray) {
+                                    ((ComparableArray) ca).insert(v,
+                                            termPosition);
+                                } else {
+                                    // transform all of the existing values from
+                                    // Comparable to ComparableArray
+                                    for (int pos : positions.keySet()) {
+                                        retArray[pos] = new ComparableArray(
+                                                retArray[pos],
+                                                positions.get(pos));
+                                    }
+                                    positions = null;
+                                    usingSimpleComparable = false;
+                                    ComparableArray caNew = (ComparableArray) retArray[doc];
+                                    retArray[doc] = caNew.insert(v,
+                                            termPosition);
+                                }
                             }
                         }
                     } while (termEnum.next());
