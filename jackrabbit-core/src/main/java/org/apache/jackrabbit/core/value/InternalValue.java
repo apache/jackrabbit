@@ -25,7 +25,6 @@ import java.math.BigDecimal;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Calendar;
-import java.util.TimeZone;
 
 import javax.jcr.Binary;
 import javax.jcr.PropertyType;
@@ -324,9 +323,7 @@ public class InternalValue extends AbstractQValue {
      * @return the created value
      */
     public static InternalValue createDate(String value) {
-        InternalValue iv = new InternalValue(Calendar.getInstance(TimeZone.getTimeZone("GMT+00:00")));
-        iv.val = value;
-        return iv;
+        return new InternalValue(value, PropertyType.DATE);
     }
 
     /**
@@ -643,23 +640,8 @@ public class InternalValue extends AbstractQValue {
         }
     }
 
-    /**
-     * Store a value in the data store. This will store temporary files or in-memory objects
-     * in the data store.
-     *
-     * @param dataStore the data store
-     * @throws RepositoryException
-     */
-    public void store(DataStore dataStore) throws RepositoryException {
-        assert dataStore != null;
-        assert type == PropertyType.BINARY;
-        BLOBFileValue v = (BLOBFileValue) val;
-        if (v instanceof BLOBInDataStore) {
-            // already in the data store, OK
-            return;
-        }
-        // store it in the data store
-        val = BLOBInDataStore.getInstance(dataStore, getStream());
+    public boolean isInDataStore() {
+        return val instanceof BLOBInDataStore;
     }
 
     //-------------------------------------------------------------< QValue >---
