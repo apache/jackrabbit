@@ -30,7 +30,6 @@ import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.jackrabbit.core.data.DataStore;
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.persistence.util.NodePropBundle.ChildNodeEntry;
@@ -208,27 +207,20 @@ class BundleWriter {
                 case PropertyType.BINARY:
                     try {
                         long size = val.getLength();
-                        DataStore dataStore = binding.dataStore;
-                        if (dataStore != null) {
-                            int maxMemorySize = dataStore.getMinRecordLength() - 1;
-                            if (size < maxMemorySize) {
-                                writeSmallBinary(val, state, i);
-                            } else {
-                                out.writeInt(BundleBinding.BINARY_IN_DATA_STORE);
-                                val.store(dataStore);
-                                writeString(val.toString());
-                            }
-                            break;
-                        }
-                        // special handling required for binary value:
-                        // spool binary value to file in blob store
-                        if (size < 0) {
+                        if (val.isInDataStore()) {
+                            out.writeInt(BundleBinding.BINARY_IN_DATA_STORE);
+                            writeString(val.toString());
+                        } else if (binding.dataStore != null) {
+                            writeSmallBinary(val, state, i);
+                        } else if (size < 0) {
                             log.warn("Blob has negative size. Potential loss of data. "
                                     + "id={} idx={}", state.getId(), String.valueOf(i));
                             out.writeInt(0);
                             values[i] = InternalValue.create(new byte[0]);
                             val.discard();
                         } else if (size > binding.getMinBlobSize()) {
+                            // special handling required for binary value:
+                            // spool binary value to file in blob store
                             out.writeInt(BundleBinding.BINARY_IN_BLOB_STORE);
                             String blobId = state.getBlobId(i);
                             if (blobId == null) {
