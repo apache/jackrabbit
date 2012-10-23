@@ -42,7 +42,7 @@ public abstract class AbstractQValue implements QValue, Serializable {
 
     private static final long serialVersionUID = 6976433831974695272L;
 
-    protected Object val;
+    protected final Object val;
     protected final int type;
 
     /**
@@ -57,7 +57,7 @@ public abstract class AbstractQValue implements QValue, Serializable {
         if (value == null) {
             throw new IllegalArgumentException("null value");
         }
-        val = value;
+        this.val = value;
         this.type = type;
     }
 
@@ -74,10 +74,13 @@ public abstract class AbstractQValue implements QValue, Serializable {
         if (value == null) {
             throw new IllegalArgumentException("null value");
         }
-        if (!(type == PropertyType.STRING || type == PropertyType.REFERENCE || type == PropertyType.WEAKREFERENCE)) {
+        if (!(type == PropertyType.STRING
+                || type == PropertyType.DATE // JCR-3083
+                || type == PropertyType.REFERENCE
+                || type == PropertyType.WEAKREFERENCE)) {
             throw new IllegalArgumentException();
         }
-        val = value;
+        this.val = value;
         this.type = type;
     }
 
