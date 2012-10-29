@@ -37,7 +37,8 @@ public class TestAll extends TestCase {
 
         suite.addTestSuite(AbstractPrincipalProviderTest.class);
         suite.addTestSuite(EveryonePrincipalTest.class);
-        
+        suite.addTestSuite(PrincipalManagerTest.class);
+
         return suite;
     }
 }
