@@ -28,6 +28,7 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
 import org.apache.jackrabbit.api.security.principal.ItemBasedPrincipal;
+import org.apache.jackrabbit.api.security.principal.JackrabbitPrincipal;
 import org.apache.jackrabbit.api.security.principal.PrincipalIterator;
 import org.apache.jackrabbit.api.security.principal.PrincipalManager;
 
@@ -211,7 +212,7 @@ public class PrincipalManagerImpl implements PrincipalManager {
      * due to the fact, that the principal provider is not bound to a particular
      * Session object.
      */
-    private class CheckedGroup implements Group {
+    private class CheckedGroup implements Group, JackrabbitPrincipal {
 
         final Group delegatee;
         private final PrincipalProvider provider;
@@ -258,7 +259,7 @@ public class PrincipalManagerImpl implements PrincipalManager {
 
         @Override
         public boolean equals(Object obj) {
-            return delegatee.equals(obj);
+            return delegatee.equals(obj instanceof CheckedGroup ? ((CheckedGroup) obj).delegatee : obj);
         }
     }
 
