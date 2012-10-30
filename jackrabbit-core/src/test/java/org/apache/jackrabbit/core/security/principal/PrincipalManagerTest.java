@@ -39,32 +39,26 @@ public class PrincipalManagerTest extends AbstractJCRTest {
 
     private static class CustomPrincipalProvider extends AbstractPrincipalProvider {
 
-        @Override
         protected Principal providePrincipal(String principalName) {
             return TESTGROUP_NAME.equals(principalName) ? TESTGROUP : null;
         }
 
-        @Override
         public PrincipalIterator findPrincipals(String simpleFilter) {
             throw new UnsupportedOperationException();
         }
 
-        @Override
         public PrincipalIterator findPrincipals(String simpleFilter, int searchType) {
             throw new UnsupportedOperationException();
         }
 
-        @Override
         public PrincipalIterator getPrincipals(int searchType) {
             throw new UnsupportedOperationException();
         }
 
-        @Override
         public PrincipalIterator getGroupMembership(Principal principal) {
             throw new UnsupportedOperationException();
         }
 
-        @Override
         public boolean canReadPrincipal(Session session, Principal principalToRead) {
             return true;
         }
