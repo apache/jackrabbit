@@ -437,24 +437,31 @@ public class DatabaseJournal extends AbstractJournal implements DatabaseAware {
 
     /**
      * Synchronize contents from journal. May be overridden by subclasses.
-     * Override to do it in batchMode, since some databases (PSQL) when
+     * Do the initial sync in batchMode, since some databases (PSQL) when
      * not in transactional mode, load all results in memory which causes
-     * out of memory.
+     * out of memory. See JCR-2832
      *
      * @param startRevision start point (exclusive)
+     * @param startup indicates if the cluster node is syncing on startup 
+     *        or does a normal sync.
      * @throws JournalException if an error occurs
      */
     @Override
-    protected void doSync(long startRevision) throws JournalException {
-        try {
-            startBatch();
+    protected void doSync(long startRevision, boolean startup) throws JournalException {
+        if (!startup) {
+            // if the cluster node is not starting do a normal sync
+            doSync(startRevision);
+        } else {
             try {
-                super.doSync(startRevision);
-            } finally {
-                endBatch(true);
+                startBatch();
+                try {
+                    doSync(startRevision);
+                } finally {
+                    endBatch(true);
+                }
+            } catch (SQLException e) {
+                throw new JournalException("Couldn't sync the cluster node", e);
             }
-        } catch (SQLException e) {
-            throw new JournalException("Couldn't sync the cluster node", e);
         }
     }
 
