@@ -274,7 +274,7 @@ public class ClusterNode implements Runnable,
      */
     public synchronized void start() throws ClusterException {
         if (status == NONE) {
-            sync();
+            syncOnStartup();
 
             if (!disableAutoSync) {
                 Thread t = new Thread(this, "ClusterNode-" + clusterNodeId);
@@ -315,12 +315,14 @@ public class ClusterNode implements Runnable,
         }
     }
 
-    /**
+    /** 
      * Synchronize contents from journal.
-     *
+     * 
+     * @param startup indicates if the cluster node is syncing on startup 
+     *        or does a normal sync.
      * @throws ClusterException if an error occurs
      */
-    public void sync() throws ClusterException {
+    private void internalSync(boolean startup) throws ClusterException {
         int count = syncCount.get();
 
         try {
@@ -335,13 +337,32 @@ public class ClusterNode implements Runnable,
             // while we were waiting to acquire the syncLock.
             if (count == syncCount.get()) {
                 syncCount.incrementAndGet();
-                journal.sync();
+                journal.sync(startup);
             }
         } catch (JournalException e) {
             throw new ClusterException(e.getMessage(), e.getCause());
         } finally {
             syncLock.release();
         }
+
+    }
+
+    /**
+     * Synchronize contents from journal.
+     *
+     * @throws ClusterException if an error occurs
+     */
+    public void sync() throws ClusterException {
+        internalSync(false);
+    }
+
+    /**
+     * Synchronize contents from journal when a {@link ClusterNode} starts up.
+     *
+     * @throws ClusterException if an error occurs
+     */
+    public void syncOnStartup() throws ClusterException {
+        internalSync(true);
     }
 
     /**

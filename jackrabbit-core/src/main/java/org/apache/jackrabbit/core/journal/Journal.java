@@ -54,10 +54,15 @@ public interface Journal {
      * revision with the revisions of all registered consumers and invoke
      * their {@link RecordConsumer#consume} method when their identifier
      * matches the one found in the records.
+     * The startup flag allow for a separate treatment of the initial sync
+     * when the cluster nodes starts up. This might be needed for example
+     * when there are a lot of old revisions in a database.
      *
+     * @param startup indicates if the cluster node is syncing on startup 
+     *        or does a normal sync.
      * @throws JournalException if an error occurs
      */
-    void sync() throws JournalException;
+    void sync(boolean startup) throws JournalException;
 
     /**
      * Return the record producer for a given identifier.

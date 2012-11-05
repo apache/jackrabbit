@@ -177,22 +177,25 @@ public abstract class AbstractJournal implements Journal {
         return minimalRevision;
     }
 
+    
     /**
      * {@inheritDoc}
      */
-    public void sync() throws JournalException {
+    public void sync(boolean startup) throws JournalException {
         for (;;) {
             if (internalVersionManager != null) {
                 VersioningLock.ReadLock lock =
                         internalVersionManager.acquireReadLock();
                 try {
-                    internalSync();
+                    internalSync(startup);
                 } finally {
                     lock.release();
                 }
             } else {
-                internalSync();
+                internalSync(startup);
             }
+            // startup sync already done, don't do it again
+            startup = false;
             if (syncAgainOnNewRecords()) {
                 // sync again if there are more records available
                 RecordIterator it = getRecords(getMinimalRevision());
@@ -208,7 +211,7 @@ public abstract class AbstractJournal implements Journal {
         }
     }
 
-    private void internalSync() throws JournalException {
+    private void internalSync(boolean startup) throws JournalException {
         try {
             rwLock.readLock().acquire();
         } catch (InterruptedException e) {
@@ -216,13 +219,21 @@ public abstract class AbstractJournal implements Journal {
             throw new JournalException(msg, e);
         }
         try {
-            doSync(getMinimalRevision());
+            doSync(getMinimalRevision(), startup);
         } finally {
             rwLock.readLock().release();
         }
     }
 
+
+    protected void doSync(long startRevision, boolean startup) throws JournalException {
+        // by default ignore startup parameter for backwards compatibility
+        // only needed for persistence backend that need special treatment on startup.
+        doSync(startRevision);
+    }
+    
     /**
+     * 
      * Synchronize contents from journal. May be overridden by subclasses.
      *
      * @param startRevision start point (exclusive)
@@ -241,16 +252,13 @@ public abstract class AbstractJournal implements Journal {
                 } else {
                     RecordConsumer consumer = getConsumer(record.getProducerId());
                     if (consumer != null) {
-                        try {
-                            consumer.consume(record);
-                        } catch (IllegalStateException e) {
-                            log.error("Could not synchronize to revision: " + record.getRevision() + " due illegal state of RecordConsumer.");
-                            return;
-                        }
+                        consumer.consume(record);
                     }
                 }
                 stopRevision = record.getRevision();
             }
+        } catch (IllegalStateException e) {
+            log.error("Could not synchronize to revision: " + (stopRevision + 1) + " due illegal state of RecordConsumer.");
         } finally {
             iterator.close();
         }
@@ -259,7 +267,7 @@ public abstract class AbstractJournal implements Journal {
             for (RecordConsumer consumer : consumers.values()) {
                 consumer.setRevision(stopRevision);
             }
-            log.info("Synchronized to revision: " + stopRevision);
+            log.info("Synchronized from revision " + startRevision + " to revision: " + stopRevision);
         }
     }
     
