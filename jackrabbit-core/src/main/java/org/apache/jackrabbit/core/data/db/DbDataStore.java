@@ -21,6 +21,7 @@ import org.apache.jackrabbit.core.data.DataIdentifier;
 import org.apache.jackrabbit.core.data.DataRecord;
 import org.apache.jackrabbit.core.data.DataStore;
 import org.apache.jackrabbit.core.data.DataStoreException;
+import org.apache.jackrabbit.core.data.MultiDataStoreAware;
 import org.apache.jackrabbit.core.util.db.CheckSchemaOperation;
 import org.apache.jackrabbit.core.util.db.ConnectionFactory;
 import org.apache.jackrabbit.core.util.db.ConnectionHelper;
@@ -97,7 +98,7 @@ import javax.sql.DataSource;
  * The tablePrefix can be used to specify a schema and / or catalog name:
  * &lt;param name="tablePrefix" value="ds.">
  */
-public class DbDataStore implements DataStore, DatabaseAware {
+public class DbDataStore implements DataStore, DatabaseAware, MultiDataStoreAware {
 
     /**
      * The default value for the minimum object size.
@@ -469,6 +470,14 @@ public class DbDataStore implements DataStore, DatabaseAware {
         TempFileInputStream.writeToFileAndClose(in, temp);
         return temp;
     }
+
+    public synchronized void deleteRecord(DataIdentifier identifier) throws DataStoreException {
+    	try {
+            conHelper.exec(deleteSQL, identifier.toString());
+    	} catch (Exception e) {
+    		throw convert("Can not delete record", e);
+    	}
+	}
 
     public synchronized int deleteAllOlderThan(long min) throws DataStoreException {
         try {

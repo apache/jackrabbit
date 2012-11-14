@@ -59,7 +59,7 @@ import org.slf4j.LoggerFactory;
  * This implementation relies on the underlying file system to support
  * atomic O(1) move operations with {@link File#renameTo(File)}.
  */
-public class FileDataStore implements DataStore {
+public class FileDataStore implements DataStore, MultiDataStoreAware {
 
     /**
      * Logger instance
@@ -292,6 +292,18 @@ public class FileDataStore implements DataStore {
         minModifiedDate = before;
     }
 
+    public void deleteRecord(DataIdentifier identifier)
+			throws DataStoreException {
+        File file = getFile(identifier);
+        synchronized (this) {
+            if (file.exists()) {
+                if (!file.delete()) {
+                    log.warn("Failed to delete file " + file.getAbsolutePath());
+                }
+            }
+        }
+	}
+
     public int deleteAllOlderThan(long min) {
         return deleteOlderRecursive(directory, min);
     }
@@ -455,5 +467,4 @@ public class FileDataStore implements DataStore {
             }
         }
     }
-
 }
