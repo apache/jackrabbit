@@ -20,6 +20,8 @@ import org.apache.commons.io.FileUtils;
 import org.apache.jackrabbit.core.cluster.ClusterNode;
 import org.apache.jackrabbit.core.data.DataStore;
 import org.apache.jackrabbit.core.data.DataStoreFactory;
+import org.apache.jackrabbit.core.data.MultiDataStore;
+import org.apache.jackrabbit.core.data.MultiDataStoreAware;
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.fs.FileSystemException;
 import org.apache.jackrabbit.core.fs.FileSystemFactory;
@@ -38,9 +40,15 @@ import org.apache.jackrabbit.core.util.RepositoryLockMechanism;
 import org.apache.jackrabbit.core.util.RepositoryLockMechanismFactory;
 import org.apache.jackrabbit.core.util.db.ConnectionFactory;
 import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
+import org.w3c.dom.Attr;
+import org.w3c.dom.DOMException;
+import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import org.w3c.dom.TypeInfo;
+import org.w3c.dom.UserDataHandler;
 import org.xml.sax.InputSource;
 
 import java.io.File;
@@ -179,6 +187,12 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
 
     /** Name of the clustered configuration attribute. */
     public static final String CLUSTERED_ATTRIBUTE = "clustered";
+
+    /** Name of the primary DataStore class attribute. */
+    public static final String PRIMARY_DATASTORE_ATTRIBUTE = "primary";
+
+    /** Name of the archive DataStore class attribute. */
+    public static final String ARCHIVE_DATASTORE_ATTRIBUTE = "archive";
 
     /** Default synchronization delay, in milliseconds. */
     public static final String DEFAULT_SYNC_DELAY = "5000";
@@ -973,6 +987,19 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
      *     ...
      *   &lt;/DataStore&gt;
      * </pre>
+     * Its also possible to configure a multi data store. The configuration uses following format:
+     * <pre>
+     *   &lt;DataStore class="org.apache.jackrabbit.core.data.MultiDataStore"&gt;
+     *     &lt;param name="primary" value="org.apache.jackrabbit.core.data.db.XXDataStore"&gt;
+     *         &lt;param name="..." value="..."&gt;
+     *         ...
+     *     &lt;/param&gt;
+     *     &lt;param name="archive" value="org.apache.jackrabbit.core.data.db.XXDataStore"&gt;
+     *         &lt;param name="..." value="..."&gt;
+     *         ...
+     *     &lt;/param&gt;
+     *   &lt;/DataStore&gt;
+     * </pre>
      * <p/>
      * <code>DataStore</code> is a {@link #parseBeanConfig(Element,String) bean configuration}
      * element.
@@ -992,9 +1019,50 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
                     Node child = children.item(i);
                     if (child.getNodeType() == Node.ELEMENT_NODE
                             && DATA_STORE_ELEMENT.equals(child.getNodeName())) {
-                        BeanConfig bc =
-                            parseBeanConfig(parent, DATA_STORE_ELEMENT);
+                        BeanConfig bc = 
+                        		parseBeanConfig(parent, DATA_STORE_ELEMENT);
+                        bc.setValidate(false);
                         DataStore store = bc.newInstance(DataStore.class);
+                        if (store instanceof MultiDataStore) {
+                        	DataStore primary = null;
+                        	DataStore archive = null;
+                        	NodeList subParamNodes = child.getChildNodes();
+                            for (int x = 0; x < subParamNodes.getLength(); x++) {
+                                Node paramNode = subParamNodes.item(x);
+                                if (paramNode.getNodeType() == Node.ELEMENT_NODE 
+                                		&& (PRIMARY_DATASTORE_ATTRIBUTE.equals(paramNode.getAttributes().getNamedItem("name").getNodeValue())
+                                		|| ARCHIVE_DATASTORE_ATTRIBUTE.equals(paramNode.getAttributes().getNamedItem("name").getNodeValue()))) {
+                                    final ElementImpl datastoreElement = new ElementImpl(DATA_STORE_ELEMENT, Node.ELEMENT_NODE, paramNode.getAttributes(), paramNode.getChildNodes());
+                                	ElementImpl parent = new ElementImpl("parent", Node.ELEMENT_NODE, null, new NodeList() {
+										
+										@Override
+										public Node item(int index) {
+											return datastoreElement;
+										}
+										
+										@Override
+										public int getLength() {
+											return 1;
+										}
+									});
+                                	DataStore subDataStore = getDataStoreFactory(parent, directory).getDataStore();
+                                	if (!MultiDataStoreAware.class.isAssignableFrom(subDataStore.getClass())) {
+                                		throw new ConfigurationException("Only MultiDataStoreAware datastore's can be used within a MultiDataStore.");
+                                	}
+                                	String type = getAttribute((Element) paramNode, NAME_ATTRIBUTE);
+                                	if (PRIMARY_DATASTORE_ATTRIBUTE.equals(type)) {
+                                        primary = subDataStore;
+                                	} else if (ARCHIVE_DATASTORE_ATTRIBUTE.equals(type)) {
+                                        archive = subDataStore;
+                                	}
+                                }
+                            }
+                            if (primary == null || archive == null) {
+                        		throw new ConfigurationException("A MultiDataStore must have configured a primary and archive datastore");
+                            }
+                        	((MultiDataStore) store).setPrimaryDataStore(primary);
+                        	((MultiDataStore) store).setArchiveDataStore(archive);
+                        }
                         store.init(directory);
                         return store;
                     }
@@ -1099,5 +1167,306 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
 
     public void setConfigVisitor(BeanConfigVisitor configVisitor) {
         this.configVisitor = configVisitor;
+    }
+    
+    private class ElementImpl implements org.w3c.dom.Element {
+
+    	private String nodeName;
+    	private short nodeType;
+    	private NodeList childNodes;
+    	private NamedNodeMap params;
+    	
+    	public ElementImpl(String nodeName, short nodeType, NamedNodeMap params, NodeList nodeList) {
+    		this.nodeName = nodeName;
+    		this.nodeType = nodeType;
+    		this.childNodes = nodeList;
+    		this.params = params;
+    	}
+    	
+		@Override
+		public Node appendChild(Node newChild) throws DOMException {
+			return null;
+		}
+
+		@Override
+		public Node cloneNode(boolean deep) {
+			return null;
+		}
+
+		@Override
+		public short compareDocumentPosition(Node other) throws DOMException {
+			return 0;
+		}
+
+		@Override
+		public NamedNodeMap getAttributes() {
+			return null;
+		}
+
+		@Override
+		public String getBaseURI() {
+			return null;
+		}
+
+		@Override
+		public NodeList getChildNodes() {
+			return childNodes;
+		}
+
+		@Override
+		public Object getFeature(String feature, String version) {
+			return null;
+		}
+
+		@Override
+		public Node getFirstChild() {
+			return null;
+		}
+
+		@Override
+		public Node getLastChild() {
+			return null;
+		}
+
+		@Override
+		public String getLocalName() {
+			return null;
+		}
+
+		@Override
+		public String getNamespaceURI() {
+			return null;
+		}
+
+		@Override
+		public Node getNextSibling() {
+			return null;
+		}
+
+		@Override
+		public String getNodeName() {
+			return nodeName;
+		}
+
+		@Override
+		public short getNodeType() {
+			return nodeType;
+		}
+
+		@Override
+		public String getNodeValue() throws DOMException {
+			return null;
+		}
+
+		@Override
+		public Document getOwnerDocument() {
+			return null;
+		}
+
+		@Override
+		public Node getParentNode() {
+			return null;
+		}
+
+		@Override
+		public String getPrefix() {
+			return null;
+		}
+
+		@Override
+		public Node getPreviousSibling() {
+			return null;
+		}
+
+		@Override
+		public String getTextContent() throws DOMException {
+			return null;
+		}
+
+		@Override
+		public Object getUserData(String key) {
+			return null;
+		}
+
+		@Override
+		public boolean hasAttributes() {
+			return false;
+		}
+
+		@Override
+		public boolean hasChildNodes() {
+			return false;
+		}
+
+		@Override
+		public Node insertBefore(Node newChild, Node refChild)
+				throws DOMException {
+			return null;
+		}
+
+		@Override
+		public boolean isDefaultNamespace(String namespaceURI) {
+			return false;
+		}
+
+		@Override
+		public boolean isEqualNode(Node arg) {
+			return false;
+		}
+
+		@Override
+		public boolean isSameNode(Node other) {
+			return false;
+		}
+
+		@Override
+		public boolean isSupported(String feature, String version) {
+			return false;
+		}
+
+		@Override
+		public String lookupNamespaceURI(String prefix) {
+			return null;
+		}
+
+		@Override
+		public String lookupPrefix(String namespaceURI) {
+			return null;
+		}
+
+		@Override
+		public void normalize() {
+		}
+
+		@Override
+		public Node removeChild(Node oldChild) throws DOMException {
+			return null;
+		}
+
+		@Override
+		public Node replaceChild(Node newChild, Node oldChild)
+				throws DOMException {
+			return null;
+		}
+
+		@Override
+		public void setNodeValue(String nodeValue) throws DOMException {
+		}
+
+		@Override
+		public void setPrefix(String prefix) throws DOMException {
+		}
+
+		@Override
+		public void setTextContent(String textContent) throws DOMException {
+		}
+
+		@Override
+		public Object setUserData(String key, Object data,
+				UserDataHandler handler) {
+			return null;
+		}
+
+		@Override
+		public String getAttribute(String name) {
+			return null;
+		}
+
+		@Override
+		public String getAttributeNS(String namespaceURI, String localName)
+				throws DOMException {
+			return null;
+		}
+
+		@Override
+		public Attr getAttributeNode(String name) {
+			return (Attr) params.getNamedItem(VALUE_ATTRIBUTE);
+		}
+
+		@Override
+		public Attr getAttributeNodeNS(String namespaceURI, String localName)
+				throws DOMException {
+			return null;
+		}
+
+		@Override
+		public NodeList getElementsByTagName(String name) {
+			return null;
+		}
+
+		@Override
+		public NodeList getElementsByTagNameNS(String namespaceURI,
+				String localName) throws DOMException {
+			return null;
+		}
+
+		@Override
+		public TypeInfo getSchemaTypeInfo() {
+			return null;
+		}
+
+		@Override
+		public String getTagName() {
+			return null;
+		}
+
+		@Override
+		public boolean hasAttribute(String name) {
+			return false;
+		}
+
+		@Override
+		public boolean hasAttributeNS(String namespaceURI, String localName)
+				throws DOMException {
+			return false;
+		}
+
+		@Override
+		public void removeAttribute(String name) throws DOMException {
+		}
+
+		@Override
+		public void removeAttributeNS(String namespaceURI, String localName)
+				throws DOMException {
+		}
+
+		@Override
+		public Attr removeAttributeNode(Attr oldAttr) throws DOMException {
+			return null;
+		}
+
+		@Override
+		public void setAttribute(String name, String value) throws DOMException {
+		}
+
+		@Override
+		public void setAttributeNS(String namespaceURI, String qualifiedName,
+				String value) throws DOMException {
+		}
+
+		@Override
+		public Attr setAttributeNode(Attr newAttr) throws DOMException {
+			return null;
+		}
+
+		@Override
+		public Attr setAttributeNodeNS(Attr newAttr) throws DOMException {
+			return null;
+		}
+
+		@Override
+		public void setIdAttribute(String name, boolean isId)
+				throws DOMException {
+		}
+
+		@Override
+		public void setIdAttributeNS(String namespaceURI, String localName,
+				boolean isId) throws DOMException {
+		}
+
+		@Override
+		public void setIdAttributeNode(Attr idAttr, boolean isId)
+				throws DOMException {
+		}
     }
 }
