@@ -18,8 +18,8 @@
   -->
 
 <!ENTITY % repository-elements
-         PUBLIC "-//The Apache Software Foundation//DTD Jackrabbit 2.4 Elements//EN"
-         "http://jackrabbit.apache.org/dtd/repository-2.4-elements.dtd">
+         PUBLIC "-//The Apache Software Foundation//DTD Jackrabbit 2.6 Elements//EN"
+         "http://jackrabbit.apache.org/dtd/repository-2.6-elements.dtd">
 %repository-elements;
 
 <!--
