@@ -36,6 +36,7 @@ import javax.naming.InitialContext;
 import javax.naming.NamingException;
 
 import org.apache.jackrabbit.rmi.client.ClientAdapterFactory;
+import org.apache.jackrabbit.rmi.client.LocalAdapterFactory;
 import org.apache.jackrabbit.rmi.client.SafeClientRepository;
 import org.apache.jackrabbit.rmi.remote.RemoteRepository;
 
@@ -74,36 +75,43 @@ public class RmiRepositoryFactory implements RepositoryFactory {
         }
     }
 
-    private Repository getUrlRepository(final URL url) throws RepositoryException {
-    	return new SafeClientRepository(new ClientAdapterFactory()) {
-			
-			@Override
-			protected RemoteRepository getRemoteRepository() throws RemoteException {
-		        try {
-		            InputStream stream = url.openStream();
-		            try {
-		                Object remote = new ObjectInputStream(stream).readObject();
-		                if (remote instanceof RemoteRepository) {
-		                    return (RemoteRepository) remote;
-		                } else {
-		                    throw new RemoteException(
-		                            "The resource at URL " + url
-		                            + " is not a remote repository stub: "
-		                            + remote);
-		                }
-		            } finally {
-		                stream.close();
-		            }
-		        } catch (ClassNotFoundException e) {
-		            throw new RemoteException(
-		                    "The resource at URL " + url
-		                    + " requires a class that is not available", e);
-		        } catch (IOException e) {
-		            throw new RemoteException(
-		                    "Failed to read the resource at URL " + url, e);
-		        }
-			}
-		};
+    private Repository getUrlRepository(final URL url)
+            throws RepositoryException {
+        return new SafeClientRepositoryUrl(url, new ClientAdapterFactory());
+    }
+
+    private static class SafeClientRepositoryUrl extends SafeClientRepository {
+
+        private final URL url;
+
+        public SafeClientRepositoryUrl(URL url, LocalAdapterFactory factory) {
+            super(factory);
+            this.url = url;
+        }
+
+        @Override
+        protected RemoteRepository getRemoteRepository() throws RemoteException {
+            try {
+                InputStream stream = url.openStream();
+                try {
+                    Object remote = new ObjectInputStream(stream).readObject();
+                    if (remote instanceof RemoteRepository) {
+                        return (RemoteRepository) remote;
+                    } else {
+                        throw new RemoteException("The resource at URL " + url
+                                + " is not a remote repository stub: " + remote);
+                    }
+                } finally {
+                    stream.close();
+                }
+            } catch (ClassNotFoundException e) {
+                throw new RemoteException("The resource at URL " + url
+                        + " requires a class that is not available", e);
+            } catch (IOException e) {
+                throw new RemoteException("Failed to read the resource at URL "
+                        + url, e);
+            }
+        }
     }
 
     @SuppressWarnings("rawtypes")
