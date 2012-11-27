@@ -181,6 +181,9 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
     /** Name of the syncDelay configuration attribute. */
     public static final String SYNC_DELAY_ATTRIBUTE = "syncDelay";
 
+    /** Name of the stopDelay configuration attribute. */
+    public static final String STOP_DELAY_ATTRIBUTE = "stopDelay";
+
     /** Name of the default search index implementation class. */
     public static final String DEFAULT_QUERY_HANDLER =
         "org.apache.jackrabbit.core.query.lucene.SearchIndex";
@@ -196,6 +199,12 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
 
     /** Default synchronization delay, in milliseconds. */
     public static final String DEFAULT_SYNC_DELAY = "5000";
+
+    /**
+     * Default stop delay, in milliseconds or -1 if the default is derived
+     * from the sync delay.
+     */
+    public static final String DEFAULT_STOP_DELAY = "-1";
 
     /** Name of the workspace specific security configuration element */
     private static final String WSP_SECURITY_ELEMENT = "WorkspaceSecurity";
@@ -885,9 +894,11 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
 
                 long syncDelay = Long.parseLong(replaceVariables(getAttribute(
                         element, SYNC_DELAY_ATTRIBUTE, DEFAULT_SYNC_DELAY)));
+                long stopDelay = Long.parseLong(replaceVariables(getAttribute(
+                        element, STOP_DELAY_ATTRIBUTE, "-1")));
 
                 JournalFactory jf = getJournalFactory(element, home, id);
-                return new ClusterConfig(id, syncDelay, jf);
+                return new ClusterConfig(id, syncDelay, stopDelay, jf);
             }
         }
         return null;

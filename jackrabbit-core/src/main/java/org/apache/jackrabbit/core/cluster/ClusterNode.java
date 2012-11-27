@@ -224,7 +224,7 @@ public class ClusterNode implements Runnable,
         ClusterConfig cc = clusterContext.getClusterConfig();
         clusterNodeId = cc.getId();
         syncDelay = cc.getSyncDelay();
-        stopDelay = syncDelay * 2;
+        stopDelay = cc.getStopDelay();
 
         try {
             journal = cc.getJournal(clusterContext.getNamespaceResolver());
