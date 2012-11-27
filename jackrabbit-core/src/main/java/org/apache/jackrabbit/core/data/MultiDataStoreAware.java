@@ -20,18 +20,20 @@ import org.apache.jackrabbit.core.data.MultiDataStore.MoveDataTask;
 
 /**
  * To use a DataStore within a MultiDataStore it must implement this
- * MultiDataStoreAware Interface. It extends a DataStore to delete a
- * single DataRecord.
+ * MultiDataStoreAware Interface. It extends a DataStore to delete a single
+ * DataRecord.
  */
 public interface MultiDataStoreAware {
 
-	/**
-     * Deletes a single DataRecord based on the given identifier. Delete
-     * will only be used by the {@link MoveDataTask}.
-     *  
-     * @param identifier data identifier
-     * @throws DataStoreException if the data store could not be accessed,
-     *                     or if the given identifier is invalid
+    /**
+     * Deletes a single DataRecord based on the given identifier. Delete will
+     * only be used by the {@link MoveDataTask}.
+     * 
+     * @param identifier
+     *            data identifier
+     * @throws DataStoreException
+     *             if the data store could not be accessed, or if the given
+     *             identifier is invalid
      */
     void deleteRecord(DataIdentifier identifier) throws DataStoreException;
 
