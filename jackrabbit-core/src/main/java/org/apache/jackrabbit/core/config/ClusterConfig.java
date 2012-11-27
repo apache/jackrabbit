@@ -38,6 +38,11 @@ public class ClusterConfig implements JournalFactory {
     private final long syncDelay;
 
     /**
+     * Stop delay.
+     */
+    private final long stopDelay;
+
+    /**
      * Journal factory.
      */
     private final JournalFactory jf;
@@ -50,8 +55,22 @@ public class ClusterConfig implements JournalFactory {
      * @param jf journal factory
      */
     public ClusterConfig(String id, long syncDelay, JournalFactory jf) {
+        this(id, syncDelay, -1, jf);
+    }
+
+    /**
+     * Creates a new cluster configuration.
+     *
+     * @param id custom cluster node id
+     * @param syncDelay syncDelay, in milliseconds
+     * @param stopDelay stopDelay in milliseconds
+     * @param jf journal factory
+     */
+    public ClusterConfig(String id, long syncDelay,
+                         long stopDelay, JournalFactory jf) {
         this.id = id;
         this.syncDelay = syncDelay;
+        this.stopDelay = stopDelay < 0 ? syncDelay * 10 : stopDelay;
         this.jf = jf;
     }
 
@@ -71,6 +90,13 @@ public class ClusterConfig implements JournalFactory {
      */
     public long getSyncDelay() {
         return syncDelay;
+    }
+
+    /**
+     * @return stopDelay the stopDelay configuration attribute value.
+     */
+    public long getStopDelay() {
+        return stopDelay;
     }
 
     /**
