@@ -109,7 +109,9 @@ public class BitSetENTCacheImpl implements EffectiveNodeTypeCache {
         if (contains(key)) {
             return key;
         }
-        Iterator<Key> iter = sortedKeys.iterator();
+        // clone TreeSet first to prevent ConcurrentModificationException
+        TreeSet<Key> keys = (TreeSet<Key>) sortedKeys.clone();
+        Iterator<Key> iter = keys.iterator();
         while (iter.hasNext()) {
             Key k = iter.next();
             if (key.contains(k)) {
