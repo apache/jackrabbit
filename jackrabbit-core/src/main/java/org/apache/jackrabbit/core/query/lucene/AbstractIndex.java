@@ -207,14 +207,15 @@ abstract class AbstractIndex {
             });
         }
 
-        try {
-            latch.await();
-        } catch (InterruptedException e) {
-            throw new IOExceptionWithCause(
-                    "Wait for background indexing tasks was interrupted", e);
-        } finally {
-            invalidateSharedReader();
+        for (;;) {
+            try {
+                latch.await();
+                break;
+            } catch (InterruptedException e) {
+                // retry
+            }
         }
+        invalidateSharedReader();
 
         if (!exceptions.isEmpty()) {
             throw new IOExceptionWithCause(
