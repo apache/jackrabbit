@@ -279,7 +279,7 @@ public class ConsistencyCheck {
             while (ancestorId != null && !documentIds.contains(ancestorId)) {
                 try {
                     NodeState n = (NodeState) stateMgr.getItemState(ancestorId);
-                    log.info("Reparing missing node " + getPath(n));
+                    log.info("Reparing missing node " + getPath(n) + " (" + ancestorId + ")");
                     Document d = index.createDocument(n);
                     index.addDocument(d);
                     documentIds.add(n.getNodeId());
