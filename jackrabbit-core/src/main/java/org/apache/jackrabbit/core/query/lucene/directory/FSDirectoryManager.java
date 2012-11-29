@@ -25,6 +25,7 @@ import org.apache.lucene.store.IndexOutput;
 import org.apache.lucene.store.Lock;
 import org.apache.lucene.store.LockFactory;
 import org.apache.lucene.store.NativeFSLockFactory;
+import org.apache.lucene.store.SimpleFSDirectory;
 
 import java.io.File;
 import java.io.FileFilter;
@@ -41,11 +42,14 @@ public class FSDirectoryManager implements DirectoryManager {
      */
     private File baseDir;
 
+    private boolean useSimpleFSDirectory;
+
     /**
      * {@inheritDoc}
      */
     public void init(SearchIndex handler) throws IOException {
         baseDir = new File(handler.getPath());
+        useSimpleFSDirectory = handler.isUseSimpleFSDirectory();
     }
 
     /**
@@ -66,7 +70,7 @@ public class FSDirectoryManager implements DirectoryManager {
         } else {
             dir = new File(baseDir, name);
         }
-        return new FSDir(dir);
+        return new FSDir(dir, useSimpleFSDirectory);
     }
 
     /**
@@ -140,14 +144,18 @@ public class FSDirectoryManager implements DirectoryManager {
 
         private final FSDirectory directory;
 
-        public FSDir(File dir) throws IOException {
+        public FSDir(File dir, boolean simpleFS) throws IOException {
             if (!dir.mkdirs()) {
                 if (!dir.isDirectory()) {
                     throw new IOException("Unable to create directory: '" + dir + "'");
                 }
             }
-            directory = FSDirectory.open(dir,
-                    new NativeFSLockFactory(dir));
+            LockFactory lockFactory = new NativeFSLockFactory(dir);
+            if (simpleFS) {
+                directory = new SimpleFSDirectory(dir, lockFactory);
+            } else {
+                directory = FSDirectory.open(dir, lockFactory);
+            }
         }
 
         @Override
