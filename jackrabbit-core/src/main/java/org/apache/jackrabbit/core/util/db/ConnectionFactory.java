@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.core.util.db;
 
 import java.sql.Connection;
+import java.sql.Driver;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -316,17 +317,23 @@ public final class ConnectionFactory {
         created.add(ds);
 
         if (driverClass != null) {
+        	Driver instance = null;
             try {
                 // Workaround for Apache Derby:
                 // The JDBC specification recommends the Class.forName
                 // method without the .newInstance() method call,
                 // but it is required after a Derby 'shutdown'
-                driverClass.newInstance();
+                instance = (Driver) driverClass.newInstance();
             } catch (Throwable e) {
                 // Ignore exceptions as there's no requirement for
                 // a JDBC driver class to have a public default constructor
             }
-
+            if (instance != null) {
+                if (instance.jdbcCompliant()) {
+                	// JCR-3445 At the moment the PostgreSQL isn't compliant because it doesn't implement this method...                	
+                    ds.setValidationQueryTimeout(3);
+                }
+            }
             ds.setDriverClassName(driverClass.getName());
         }
 
@@ -344,12 +351,6 @@ public final class ConnectionFactory {
         ds.setAccessToUnderlyingConnectionAllowed(true);
         ds.setPoolPreparedStatements(true);
         ds.setMaxOpenPreparedStatements(-1); // unlimited
-        try {
-            // JCR-3445 At the moment the PostgreSQL driver doesn't implement this method...
-            ds.setValidationQueryTimeout(3);
-        } catch (Exception e) {
-            log.info("Unable to set the validation query timeout on the datasource: " + e.getMessage());
-        }
         return ds;
     }
 
