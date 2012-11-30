@@ -32,6 +32,7 @@ public class TestAll extends TestCase {
     public static Test suite() {
         TestSuite suite = new TestSuite("org.apache.jackrabbit.spi.commons.nodetype tests");
 
+        suite.addTestSuite(NodeTypeDefDiffTest.class);
         suite.addTestSuite(NodeDefinitionTemplateImplTest.class);
         suite.addTestSuite(PropertyDefinitionTemplateImplTest.class);
 

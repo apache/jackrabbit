@@ -602,11 +602,14 @@ public class NodeTypeDefDiff {
                 // no need to check defaultPrimaryType (TRIVIAL change)
 
                 if (type == TRIVIAL) {
-                    List<Name> l1 = Arrays.asList(getOldDef().getRequiredPrimaryTypes());
-                    List<Name> l2 = Arrays.asList(getNewDef().getRequiredPrimaryTypes());
-                    if (!l1.equals(l2)) {
+                    Set<Name> s1 = new HashSet<Name>(Arrays.asList(getOldDef().getRequiredPrimaryTypes()));
+                    Set<Name> s2 = new HashSet<Name>(Arrays.asList(getNewDef().getRequiredPrimaryTypes()));
+                    // normalize sets by removing nt:base (adding/removing nt:base is irrelevant for the diff)
+                    s1.remove(NameConstants.NT_BASE);
+                    s2.remove(NameConstants.NT_BASE);
+                    if (!s1.equals(s2)) {
                         // requiredPrimaryTypes have been modified
-                        if (l1.containsAll(l2)) {
+                        if (s1.containsAll(s2)) {
                             // old list is a superset of new list
                             // => removed requiredPrimaryType (TRIVIAL change)
                             type = TRIVIAL;
@@ -628,16 +631,12 @@ public class NodeTypeDefDiff {
 
         Name declaringNodeType;
         Name name;
-        int requiredType;
         boolean definesResidual;
-        boolean isMultiple;
 
         QPropertyDefinitionId(QPropertyDefinition def) {
             declaringNodeType = def.getDeclaringNodeType();
             name = def.getName();
-            requiredType = def.getRequiredType();
             definesResidual = def.definesResidual();
-            isMultiple = def.isMultiple();
         }
 
         //---------------------------------------< java.lang.Object overrides >
@@ -650,9 +649,7 @@ public class NodeTypeDefDiff {
                 QPropertyDefinitionId other = (QPropertyDefinitionId) obj;
                 return declaringNodeType.equals(other.declaringNodeType)
                         && name.equals(other.name)
-                        && requiredType == other.requiredType
-                        && definesResidual == other.definesResidual
-                        && isMultiple == other.isMultiple;
+                        && definesResidual == other.definesResidual;
             }
             return false;
         }
@@ -663,8 +660,6 @@ public class NodeTypeDefDiff {
             h = 37 * h + declaringNodeType.hashCode();
             h = 37 * h + name.hashCode();
             h = 37 * h + (definesResidual ? 11 : 43);
-            h = 37 * h + (isMultiple ? 11 : 43);
-            h = 37 * h + requiredType;
             return h;
         }
     }
@@ -676,16 +671,10 @@ public class NodeTypeDefDiff {
 
         Name declaringNodeType;
         Name name;
-        Name[] requiredPrimaryTypes;
 
         QNodeDefinitionId(QNodeDefinition def) {
             declaringNodeType = def.getDeclaringNodeType();
             name = def.getName();
-            requiredPrimaryTypes = def.getRequiredPrimaryTypes();
-            if (requiredPrimaryTypes == null || requiredPrimaryTypes.length == 0) {
-                requiredPrimaryTypes = new Name[]{NameConstants.NT_BASE};
-            }
-            Arrays.sort(requiredPrimaryTypes);
         }
 
         //---------------------------------------< java.lang.Object overrides >
@@ -697,8 +686,7 @@ public class NodeTypeDefDiff {
             if (obj instanceof QNodeDefinitionId) {
                 QNodeDefinitionId other = (QNodeDefinitionId) obj;
                 return declaringNodeType.equals(other.declaringNodeType)
-                        && name.equals(other.name)
-                        && Arrays.equals(requiredPrimaryTypes, other.requiredPrimaryTypes);
+                        && name.equals(other.name);
             }
             return false;
         }
@@ -708,9 +696,6 @@ public class NodeTypeDefDiff {
             int h = 17;
             h = 37 * h + declaringNodeType.hashCode();
             h = 37 * h + name.hashCode();
-            for (int i = 0; i < requiredPrimaryTypes.length; i++) {
-                h = 37 * h + requiredPrimaryTypes[i].hashCode();
-            }
             return h;
         }
     }
