@@ -22,7 +22,7 @@ import javax.jcr.RepositoryException;
 import javax.jcr.query.Query;
 import javax.jcr.query.QueryResult;
 
-import org.apache.jackrabbit.core.query.lucene.QueryResultImpl;
+import org.apache.jackrabbit.api.query.JackrabbitQueryResult;
 
 public class LimitAndOffsetTest extends AbstractQueryTest {
 
@@ -129,8 +129,8 @@ public class LimitAndOffsetTest extends AbstractQueryTest {
         QueryResult result = query.execute();
         NodeIterator nodes = result.getNodes();
         assertEquals(2, nodes.getSize());
-        if (isJackrabbitImpl) {
-            assertEquals(3, ((QueryResultImpl) result).getTotalSize());
+        if (result instanceof JackrabbitQueryResult) {
+            assertEquals(3, ((JackrabbitQueryResult) result).getTotalSize());
         }
 
         // JCR-2684: offset higher than total result => size == 0
@@ -139,8 +139,8 @@ public class LimitAndOffsetTest extends AbstractQueryTest {
         nodes = result.getNodes();
         assertFalse(nodes.hasNext());
         assertEquals(0, nodes.getSize());
-        if (isJackrabbitImpl) {
-            assertEquals(3, ((QueryResultImpl) result).getTotalSize());
+        if (result instanceof JackrabbitQueryResult) {
+            assertEquals(3, ((JackrabbitQueryResult) result).getTotalSize());
         }
 
         query.setOffset(1);
@@ -148,8 +148,8 @@ public class LimitAndOffsetTest extends AbstractQueryTest {
         result = query.execute();
         nodes = result.getNodes();
         assertEquals(1, nodes.getSize());
-        if (isJackrabbitImpl) {
-            assertEquals(3, ((QueryResultImpl) result).getTotalSize());
+        if (result instanceof JackrabbitQueryResult) {
+            assertEquals(3, ((JackrabbitQueryResult) result).getTotalSize());
         }
     }
 

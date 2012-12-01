@@ -26,9 +26,9 @@ import java.util.NoSuchElementException;
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
-import javax.jcr.query.QueryResult;
 import javax.jcr.query.RowIterator;
 
+import org.apache.jackrabbit.api.query.JackrabbitQueryResult;
 import org.apache.jackrabbit.core.session.SessionContext;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.commons.query.qom.ColumnImpl;
@@ -38,7 +38,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Implements the <code>QueryResult</code> interface.
  */
-public abstract class QueryResultImpl implements QueryResult {
+public abstract class QueryResultImpl implements JackrabbitQueryResult {
 
     /**
      * The logger instance for this class
@@ -364,10 +364,12 @@ public abstract class QueryResultImpl implements QueryResult {
 
     /**
      * Returns the total number of hits. This is the number of results you
-     * will get get if you don't set any limit or offset. Keep in mind that this
-     * number may get smaller if nodes are found in the result set which the
-     * current session has no permission to access. This method may return
+     * will get get if you don't set any limit or offset. This method may return
      * <code>-1</code> if the total size is unknown.
+     * <p>
+     * Keep in mind that this number may get smaller if nodes are found in
+     * the result set which the current session has no permission to access.
+     * FIXME: This might be a security problem.
      *
      * @return the total number of hits.
      */
