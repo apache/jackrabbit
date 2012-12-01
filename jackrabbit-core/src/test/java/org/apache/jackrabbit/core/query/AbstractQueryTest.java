@@ -49,17 +49,8 @@ public class AbstractQueryTest extends AbstractJCRTest {
 
     protected QueryObjectModelFactory qomFactory;
 
-    /**
-     * true if this is a Jackrabbit JCR implementation
-     */
-    boolean isJackrabbitImpl = true;
-    private static final String DESCRIPTOR_NAME = "jcr.repository.name";
-    private static final String DESCRIPTOR_VALUE = "Jackrabbit";
-
     protected void setUp() throws Exception {
         super.setUp();
-        isJackrabbitImpl = DESCRIPTOR_VALUE.equals(getHelper().getRepository()
-                .getDescriptor(DESCRIPTOR_NAME));
         qm = superuser.getWorkspace().getQueryManager();
         qomFactory = qm.getQOMFactory();
     }
