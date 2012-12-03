@@ -46,6 +46,7 @@ import org.apache.lucene.document.Field;
 import org.apache.lucene.document.Fieldable;
 import org.apache.lucene.index.FieldInfo;
 import org.apache.tika.metadata.Metadata;
+import org.apache.tika.mime.MediaType;
 import org.apache.tika.parser.Parser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -96,6 +97,11 @@ public class NodeIndexer {
      * for full text indexing.
      */
     private final Parser parser;
+
+    /**
+     * The media types supported by the parser used.
+     */
+    private Set<MediaType> supportedMediaTypes;
 
     /**
      * The indexing configuration or <code>null</code> if none is available.
@@ -421,7 +427,7 @@ public class NodeIndexer {
      * <p/>
      * This implementation checks if this {@link #node} is of type nt:resource
      * and if that is the case, tries to extract text from the binary property
-     * using the {@link #extractor}.
+     * using the {@link #parser}.
      *
      * @param doc           The document to which to add the field
      * @param fieldName     The name of the field to add
@@ -439,7 +445,7 @@ public class NodeIndexer {
             }
 
             InternalValue type = getValue(NameConstants.JCR_MIMETYPE);
-            if (type != null) {
+            if (type != null && isSupportedMediaType(type.getString())) {
                 Metadata metadata = new Metadata();
                 metadata.set(Metadata.CONTENT_TYPE, type.getString());
 
@@ -654,7 +660,7 @@ public class NodeIndexer {
      * @param doc           The document to which to add the field
      * @param fieldName     The name of the field to add
      * @param internalValue The value for the field to add to the document.
-     * @deprecated Use {@link #addStringValue(Document, String, Object, boolean)
+     * @deprecated Use {@link #addStringValue(Document, String, String, boolean)
      *             addStringValue(Document, String, Object, boolean)} instead.
      */
     protected void addStringValue(Document doc, String fieldName, String internalValue) {
@@ -692,7 +698,7 @@ public class NodeIndexer {
      *                           tokenized and added to the node scope fulltext
      *                           index.
      * @param boost              the boost value for this string field.
-     * @deprecated use {@link #addStringValue(Document, String, Object, boolean, boolean, float, boolean)} instead.
+     * @deprecated use {@link #addStringValue(Document, String, String, boolean, boolean, float, boolean)} instead.
      */
     protected void addStringValue(Document doc, String fieldName,
                                   String internalValue, boolean tokenized,
@@ -914,6 +920,20 @@ public class NodeIndexer {
         } else {
             return indexingConfig.useInExcerpt(node, propertyName);
         }
+    }
+
+    /**
+     * Returns <code>true</code> if the provided type is among the types
+     * supported by the Tika parser we are using.
+     *
+     * @param type  the type to check.
+     * @return whether the type is supported by the Tika parser we are using.
+     */
+    protected boolean isSupportedMediaType(final String type) {
+        if (supportedMediaTypes == null) {
+            supportedMediaTypes = parser.getSupportedTypes(null);
+        }
+        return supportedMediaTypes.contains(MediaType.parse(type));
     }
 
     /**
