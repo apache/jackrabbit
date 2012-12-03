@@ -37,7 +37,7 @@ public class TextExtractionQueryTest extends AbstractIndexingTest {
     public void testFileContains() throws Exception {
         assertFileContains("test.txt", "text/plain",
                 "AE502DBEA2C411DEBD340AD156D89593");
-        assertFileContains("test.rtf", "text/rtf", "quick brown fox");
+        assertFileContains("test.rtf", "application/rtf", "quick brown fox");
     }
 
     public void testNtFile() throws RepositoryException, IOException {
