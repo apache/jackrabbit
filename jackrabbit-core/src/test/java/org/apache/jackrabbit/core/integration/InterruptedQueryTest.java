@@ -29,25 +29,27 @@ import javax.jcr.SimpleCredentials;
 import javax.jcr.query.Query;
 import javax.jcr.query.QueryManager;
 
-import junit.framework.TestCase;
-
 import org.apache.commons.io.FileUtils;
 import org.apache.jackrabbit.core.RepositoryImpl;
 import org.apache.jackrabbit.core.config.RepositoryConfig;
 import org.apache.lucene.util.Constants;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Test;
 
 /**
  * @see <a href="https://issues.apache.org/jira/browse/JCR-3469">JCR-3469</a>
  */
-public class InterruptedQueryTest extends TestCase {
+public class InterruptedQueryTest {
 
     private RepositoryImpl repo;
 
     private Session session;
     
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
+    @Before
+    public void setUp() throws Exception {
         if (Constants.WINDOWS) {
             return;
         }
@@ -59,8 +61,8 @@ public class InterruptedQueryTest extends TestCase {
         session = repo.login(new SimpleCredentials("admin", "admin".toCharArray()));
     }
 
-    @Override
-    protected void tearDown() throws Exception {
+    @After
+    public void tearDown() throws Exception {
         if (session != null) {
             session.logout();
         }
@@ -68,9 +70,10 @@ public class InterruptedQueryTest extends TestCase {
             repo.shutdown();
         }
         deleteAll();
-        super.tearDown();
     }
 
+    @Test
+    @Ignore
     public void testQuery() throws Exception {
         if (Constants.WINDOWS) {
             return;
@@ -105,7 +108,7 @@ public class InterruptedQueryTest extends TestCase {
         stop.set(true);
         t.join();
         if (!exceptions.isEmpty()) {
-            fail(exceptions.get(0).toString());
+            Assert.fail(exceptions.get(0).toString());
         }
     }
 
