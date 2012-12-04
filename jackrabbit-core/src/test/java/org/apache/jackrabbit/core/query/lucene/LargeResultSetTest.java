@@ -24,7 +24,6 @@ import javax.jcr.query.QueryResult;
 import javax.jcr.query.RowIterator;
 
 import org.apache.jackrabbit.core.query.AbstractIndexingTest;
-import org.apache.jackrabbit.core.query.QueryImpl;
 
 /**
  * <code>LargeResultSetTest</code>...
@@ -34,8 +33,8 @@ import org.apache.jackrabbit.core.query.QueryImpl;
 public class LargeResultSetTest extends AbstractIndexingTest {
 
     public void testResultSet() throws RepositoryException {
-        createNodes(testRootNode, 10, 5, 0);
-        superuser.save();
+        int count = createNodes(testRootNode, 10, 5, 0);
+        session.save();
 
         SearchIndex index = getSearchIndex();
         int resultFetchSize = index.getResultFetchSize();
@@ -43,30 +42,47 @@ public class LargeResultSetTest extends AbstractIndexingTest {
             String stmt = testPath + "//*[@" + jcrPrimaryType + "] order by @jcr:score descending";
 
             // with result fetch size Integer.MAX_VALUE
-            readResult(executeQuery(stmt));
+            readResult(executeQuery(stmt), count);
 
             // with result fetch size 100
             index.setResultFetchSize(100);
-            readResult(executeQuery(stmt));
+            readResult(executeQuery(stmt), count);
 
             // with 100 limit
-            QueryImpl query = (QueryImpl) qm.createQuery(stmt, Query.XPATH);
+            Query query = qm.createQuery(stmt, Query.XPATH);
             query.setLimit(100);
-            readResult(query.execute());
+            readResult(query.execute(), 100);
         } finally {
             index.setResultFetchSize(resultFetchSize);
         }
-
-        for (NodeIterator it = testRootNode.getNodes(); it.hasNext(); ) {
-            it.nextNode().remove();
-            superuser.save();
-        }
     }
 
-    private void readResult(QueryResult result) throws RepositoryException {
+    protected void tearDown() throws Exception {
+        int count = 0;
+        for (NodeIterator it = testRootNode.getNodes(); it.hasNext();) {
+            it.nextNode().remove();
+            count++;
+            if (count % 10000 == 0) {
+                session.save();
+            }
+        }
+        session.save();
+        super.tearDown();
+    }
+
+    /*
+     * use default ws
+     */
+    protected String getWorkspaceName() {
+        return null;
+    }
+
+    private void readResult(QueryResult result, int count) throws RepositoryException {
         for (RowIterator rows = result.getRows(); rows.hasNext(); ) {
             rows.nextRow();
+            count--;
         }
+        assertEquals(0, count);
     }
 
     private int createNodes(Node n, int nodesPerLevel, int levels, int count)
@@ -76,7 +92,7 @@ public class LargeResultSetTest extends AbstractIndexingTest {
             Node child = n.addNode("node" + i);
             count++;
             if (count % 10000 == 0) {
-                superuser.save();
+                session.save();
             }
             if (levels > 0) {
                 count = createNodes(child, nodesPerLevel, levels, count);
