@@ -18,6 +18,7 @@ package org.apache.jackrabbit.core.integration;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InterruptedIOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -34,9 +35,7 @@ import org.apache.jackrabbit.core.RepositoryImpl;
 import org.apache.jackrabbit.core.config.RepositoryConfig;
 import org.apache.lucene.util.Constants;
 import org.junit.After;
-import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -73,7 +72,6 @@ public class InterruptedQueryTest {
     }
 
     @Test
-    @Ignore
     public void testQuery() throws Exception {
         if (Constants.WINDOWS) {
             return;
@@ -95,7 +93,20 @@ public class InterruptedQueryTest {
                         String stmt = "//*[@jcr:primaryType='nt:unstructured']";
                         qm.createQuery(stmt, Query.XPATH).execute();
                     } catch (RepositoryException e) {
-                        exceptions.add(e);
+                        if (Constants.SUN_OS) {
+                            // on Solaris it's OK when the root cause
+                            // of the exception is an InterruptedIOException
+                            // the underlying file is not closed
+                            Throwable t = e;
+                            while (t.getCause() != null) {
+                                t = t.getCause();
+                            }
+                            if (!(t instanceof InterruptedIOException)) {
+                                exceptions.add(e);
+                            }
+                        } else {
+                            exceptions.add(e);
+                        }
                     }
                 }
             }
@@ -108,7 +119,7 @@ public class InterruptedQueryTest {
         stop.set(true);
         t.join();
         if (!exceptions.isEmpty()) {
-            Assert.fail(exceptions.get(0).toString());
+            throw exceptions.get(0);
         }
     }
 
