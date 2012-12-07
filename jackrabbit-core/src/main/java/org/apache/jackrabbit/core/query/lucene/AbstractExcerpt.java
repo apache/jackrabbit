@@ -40,6 +40,7 @@ import org.apache.lucene.index.TermPositionVector;
 import org.apache.lucene.index.TermVectorOffsetInfo;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
+import org.apache.lucene.search.PhraseQuery;
 import org.apache.lucene.search.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -199,7 +200,15 @@ public abstract class AbstractExcerpt implements HighlightingExcerptProvider {
         q.extractTerms(extractedTerms);
         Set<Term> filteredTerms = filterRelevantTerms(extractedTerms);
         if (!filteredTerms.isEmpty()) {
-            relevantTerms.add(filteredTerms.toArray(new Term[] {}));
+            if (q instanceof PhraseQuery) {
+                // inline the terms, basically a 'must all' condition
+                relevantTerms.add(filteredTerms.toArray(new Term[] {}));
+            } else {
+                // each possible term gets a new slot
+                for (Term t : filteredTerms) {
+                    relevantTerms.add(new Term[] { t });
+                }
+            }
         }
     }
 
