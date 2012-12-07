@@ -343,7 +343,7 @@ public class FulltextQueryTest extends AbstractQueryTest {
         assertFileContains(
                 "test.txt", "text/plain", "AE502DBEA2C411DEBD340AD156D89593");
         assertFileContains(
-                "test.rtf", "text/rtf", "quick brown fox");
+                "test.rtf", "application/rtf", "quick brown fox");
     }
 
     private void assertFileContains(
