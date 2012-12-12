@@ -50,8 +50,10 @@ public class SetValueVersionExceptionTest extends AbstractJCRTest {
     private Property property;
     private Property multiProperty;
 
-    private Value value;
-    private Value values[];
+    private Value initialValue;
+    private Value[] initialValues;
+    private Value modifiedValue;
+    private Value[] modifiedValues;
 
     /**
      * Sets up the fixture for the test cases.
@@ -60,8 +62,10 @@ public class SetValueVersionExceptionTest extends AbstractJCRTest {
         super.setUp();
         session = getHelper().getReadOnlySession();
 
-        value = session.getValueFactory().createValue("abc");
-        values = new Value[] {value};
+        initialValue = session.getValueFactory().createValue("abc");
+        modifiedValue = session.getValueFactory().createValue("def");
+        initialValues = new Value[] {initialValue};
+        modifiedValues = new Value[] {initialValue, modifiedValue};
 
         if (!isSupported(Repository.OPTION_VERSIONING_SUPPORTED)) {
             throw new NotExecutableException("Versioning is not supported.");
@@ -72,8 +76,8 @@ public class SetValueVersionExceptionTest extends AbstractJCRTest {
         // or try to make it versionable if it is not
         ensureMixinType(node, mixVersionable);
 
-        property = node.setProperty(propertyName1, value);
-        multiProperty = node.setProperty(propertyName2, values);
+        property = node.setProperty(propertyName1, initialValue);
+        multiProperty = node.setProperty(propertyName2, initialValues);
 
         testRootNode.getSession().save();
 
@@ -85,6 +89,7 @@ public class SetValueVersionExceptionTest extends AbstractJCRTest {
      */
     protected void tearDown() throws Exception {
         try {
+            superuser.refresh(false);
             node.checkout();
         } finally {
             if (session != null) {
@@ -94,8 +99,10 @@ public class SetValueVersionExceptionTest extends AbstractJCRTest {
             node = null;
             property = null;
             multiProperty = null;
-            value = null;
-            values = null;
+            initialValue = null;
+            initialValues = null;
+            modifiedValue = null;
+            modifiedValues = null;
             super.tearDown();
         }
     }
@@ -106,7 +113,7 @@ public class SetValueVersionExceptionTest extends AbstractJCRTest {
      */
     public void testValue() throws RepositoryException {
         try {
-            property.setValue(value);
+            property.setValue(modifiedValue);
             node.save();
             fail("Property.setValue(Value) must throw a VersionException " +
                  "immediately or on save if the parent node of this property " +
@@ -123,7 +130,7 @@ public class SetValueVersionExceptionTest extends AbstractJCRTest {
      */
     public void testValueArray() throws RepositoryException {
         try {
-            multiProperty.setValue(values);
+            multiProperty.setValue(modifiedValues);
             node.save();
             fail("Property.setValue(Value[]) must throw a VersionException " +
                  "immediately or on save if the parent node of this property " +
@@ -140,7 +147,7 @@ public class SetValueVersionExceptionTest extends AbstractJCRTest {
      */
     public void testString() throws RepositoryException {
         try {
-            property.setValue("abc");
+            property.setValue(modifiedValue.getString());
             node.save();
             fail("Property.setValue(String) must throw a VersionException " +
                  "immediately or on save if the parent node of this property " +
@@ -157,7 +164,7 @@ public class SetValueVersionExceptionTest extends AbstractJCRTest {
      */
     public void testStringArray() throws RepositoryException {
         try {
-            String values[] = new String[] {"abc"};
+            String values[] = new String[0];
             multiProperty.setValue(values);
             node.save();
             fail("Property.setValue(String[]) must throw a VersionException " +
@@ -296,7 +303,7 @@ public class SetValueVersionExceptionTest extends AbstractJCRTest {
         node.checkin();
 
         try {
-            property.setValue(referenceableNode);
+            property.setValue(node);
             node.save();
             fail("Property.setValue(Node) must throw a VersionException " +
                  "immediately or on save if the parent node of this property " +
@@ -306,6 +313,7 @@ public class SetValueVersionExceptionTest extends AbstractJCRTest {
             // success
         }
 
+        superuser.refresh(false);
         node.checkout();
     }
 }
