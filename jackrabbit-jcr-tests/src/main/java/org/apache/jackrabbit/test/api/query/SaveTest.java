@@ -160,6 +160,7 @@ public class SaveTest extends AbstractJCRTest {
         testRootNode.addNode(nodeName1, testNodeType);
         try {
             query.storeAsNode(testRoot + "/" + nodeName1 + "/" + nodeName2);
+            superuser.save();
             fail("Query.storeAsNode() must throw ConstraintViolationException, parent node does not allow child nodes.");
         } catch (ConstraintViolationException e) {
             // expected behaviour
