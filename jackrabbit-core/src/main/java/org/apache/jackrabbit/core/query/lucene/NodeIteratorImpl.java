@@ -179,6 +179,7 @@ class NodeIteratorImpl implements NodeIterator {
      */
     protected void fetchNext() {
         try {
+            next = null; // reset
             sessionContext.getSessionState().perform(new FetchNext());
         } catch (RepositoryException e) {
             log.warn("Failed to fetch next node", e);
@@ -188,7 +189,6 @@ class NodeIteratorImpl implements NodeIterator {
     private class FetchNext implements SessionOperation<Object> {
 
         public Object perform(SessionContext context) {
-            next = null; // reset
 
             ItemManager itemMgr = context.getItemManager();
             while (next == null && scoreNodes.hasNext()) {
