@@ -39,7 +39,9 @@ public class SessionSaveOperation implements SessionWriteOperation<Object> {
         } else {
             id = context.getItemStateManager().getIdOfRootTransientNodeState();
         }
-        context.getItemManager().getItem(id).save();
+        if (id != null) {
+            context.getItemManager().getItem(id).save();
+        }
         return this;
     }
 
