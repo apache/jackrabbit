@@ -61,7 +61,9 @@ public class SessionSaveOperation implements SessionWriteOperation<Object> {
                 LOG.debug("Saving changes under " + path);
             }
         }
-        context.getItemManager().getItem(id).save();
+        if (id != null) {
+            context.getItemManager().getItem(id).save();
+        }
         return this;
     }
 
