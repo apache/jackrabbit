@@ -21,19 +21,32 @@ import org.slf4j.LoggerFactory;
 import org.apache.jackrabbit.spi.ItemId;
 
 import java.util.Map;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 
 /**
  * <code>IdURICache</code>...
  */
 class IdURICache {
-
+    private final static int CACHESIZE = 10000;
+    
     private static Logger log = LoggerFactory.getLogger(IdURICache.class);
 
     private final String workspaceUri;
 
-    private Map<ItemId, String> idToUriCache = new HashMap<ItemId, String>();
-    private Map<String, ItemId> uriToIdCache = new HashMap<String, ItemId>();
+    private Map<ItemId, String> idToUriCache = new LinkedHashMap<ItemId, String>(CACHESIZE, 1) {
+
+      @Override
+      protected boolean removeEldestEntry(Map.Entry<ItemId, String> eldest) {
+        return this.size() > CACHESIZE;
+      }
+    };
+    private Map<String, ItemId> uriToIdCache = new LinkedHashMap<String, ItemId>(CACHESIZE, 1) {
+
+      @Override
+      protected boolean removeEldestEntry(Map.Entry<String, ItemId> eldest) {
+        return this.size() > CACHESIZE;
+      }
+    };
 
     IdURICache(String workspaceUri) {
         this.workspaceUri = workspaceUri;
