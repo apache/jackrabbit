@@ -77,113 +77,99 @@ public class RmiRepositoryFactory implements RepositoryFactory {
 
     private Repository getUrlRepository(final URL url)
             throws RepositoryException {
-        return new SafeClientRepositoryUrl(url, new ClientAdapterFactory());
+        return new RmiSafeClientRepository(new ClientAdapterFactory()) {
+
+            @Override
+            protected RemoteRepository getRemoteRepository() throws RemoteException {
+                try {
+                    InputStream stream = url.openStream();
+                    try {
+                        Object remote = new ObjectInputStream(stream).readObject();
+                        if (remote instanceof RemoteRepository) {
+                            return (RemoteRepository) remote;
+                        } else {
+                            throw new RemoteException("The resource at URL " + url
+                                    + " is not a remote repository stub: " + remote);
+                        }
+                    } finally {
+                        if (stream != null) {
+                            stream.close();
+                        }
+                    }
+                } catch (ClassNotFoundException e) {
+                    throw new RemoteException("The resource at URL " + url
+                            + " requires a class that is not available", e);
+                } catch (IOException e) {
+                    throw new RemoteException("Failed to read the resource at URL "
+                            + url, e);
+                }
+            }
+        };
     }
 
     @SuppressWarnings("rawtypes")
     private Repository getJndiRepository(final String name,
             final Hashtable environment) throws RepositoryException {
-        return new SafeClientRepositoryJndi(name, environment,
-                new ClientAdapterFactory());
+        return new RmiSafeClientRepository(new ClientAdapterFactory()) {
+
+            @Override
+            protected RemoteRepository getRemoteRepository() throws RemoteException {
+                try {
+                    Object value = new InitialContext(environment).lookup(name);
+                    if (value instanceof RemoteRepository) {
+                        return (RemoteRepository) value;
+                    } else {
+                        throw new RemoteException("The JNDI resource " + name
+                                + " is not a remote repository stub: " + value);
+                    }
+                } catch (NamingException e) {
+                    throw new RemoteException(
+                            "Failed to look up the JNDI resource " + name, e);
+                }
+            }
+        };
     }
 
     private Repository getRmiRepository(final String name)
             throws RepositoryException {
-        return new SafeClientRepositoryName(name, new ClientAdapterFactory());
-    }
+        return new RmiSafeClientRepository(new ClientAdapterFactory()) {
 
-    private static class SafeClientRepositoryUrl extends SafeClientRepository {
-
-        private final URL url;
-
-        public SafeClientRepositoryUrl(URL url, LocalAdapterFactory factory) {
-            super(factory);
-            this.url = url;
-        }
-
-        @Override
-        protected RemoteRepository getRemoteRepository() throws RemoteException {
-            try {
-                InputStream stream = url.openStream();
+            @Override
+            protected RemoteRepository getRemoteRepository() throws RemoteException {
                 try {
-                    Object remote = new ObjectInputStream(stream).readObject();
-                    if (remote instanceof RemoteRepository) {
-                        return (RemoteRepository) remote;
+                    Object value = Naming.lookup(name);
+                    if (value instanceof RemoteRepository) {
+                        return (RemoteRepository) value;
                     } else {
-                        throw new RemoteException("The resource at URL " + url
-                                + " is not a remote repository stub: " + remote);
+                        throw new RemoteException("The RMI resource " + name
+                                + " is not a remote repository stub: " + value);
                     }
-                } finally {
-                    stream.close();
+                } catch (NotBoundException e) {
+                    throw new RemoteException(
+                            "RMI resource " + name + " not found", e);
+                } catch (MalformedURLException e) {
+                    throw new RemoteException("Invalid RMI name: " + name, e);
+                } catch (RemoteException e) {
+                    throw new RemoteException("Failed to look up the RMI resource "
+                            + name, e);
                 }
-            } catch (ClassNotFoundException e) {
-                throw new RemoteException("The resource at URL " + url
-                        + " requires a class that is not available", e);
-            } catch (IOException e) {
-                throw new RemoteException("Failed to read the resource at URL "
-                        + url, e);
             }
-        }
+        };
     }
 
-    @SuppressWarnings("rawtypes")
-    private static class SafeClientRepositoryJndi extends SafeClientRepository {
+    /**
+     * Basic SafeClientRepository for the different lookup types of a rmi repository
+     */
+    private static class RmiSafeClientRepository extends SafeClientRepository {
 
-        private final String name;
-        private final Hashtable environment;
-
-        public SafeClientRepositoryJndi(String name, Hashtable environment,
-                LocalAdapterFactory factory) {
+        public RmiSafeClientRepository(LocalAdapterFactory factory) {
             super(factory);
-            this.name = name;
-            this.environment = environment;
         }
 
         @Override
         protected RemoteRepository getRemoteRepository() throws RemoteException {
-            try {
-                Object value = new InitialContext(environment).lookup(name);
-                if (value instanceof RemoteRepository) {
-                    return (RemoteRepository) value;
-                } else {
-                    throw new RemoteException("The JNDI resource " + name
-                            + " is not a remote repository stub: " + value);
-                }
-            } catch (NamingException e) {
-                throw new RemoteException(
-                        "Failed to look up the JNDI resource " + name, e);
-            }
-        }
-    }
-
-    private static class SafeClientRepositoryName extends SafeClientRepository {
-
-        private final String name;
-
-        public SafeClientRepositoryName(String name, LocalAdapterFactory factory) {
-            super(factory);
-            this.name = name;
+            return null;
         }
 
-        @Override
-        protected RemoteRepository getRemoteRepository() throws RemoteException {
-            try {
-                Object value = Naming.lookup(name);
-                if (value instanceof RemoteRepository) {
-                    return (RemoteRepository) value;
-                } else {
-                    throw new RemoteException("The RMI resource " + name
-                            + " is not a remote repository stub: " + value);
-                }
-            } catch (NotBoundException e) {
-                throw new RemoteException(
-                        "RMI resource " + name + " not found", e);
-            } catch (MalformedURLException e) {
-                throw new RemoteException("Invalid RMI name: " + name, e);
-            } catch (RemoteException e) {
-                throw new RemoteException("Failed to look up the RMI resource "
-                        + name, e);
-            }
-        }
     }
 }

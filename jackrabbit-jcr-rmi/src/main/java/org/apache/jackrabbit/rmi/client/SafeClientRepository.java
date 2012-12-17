@@ -53,7 +53,7 @@ public abstract class SafeClientRepository extends ClientObject
     public SafeClientRepository(LocalAdapterFactory factory) {
         super(factory);
         try {
-            remote = getRemoteRepository();
+            remote = getRemoteRepository(true);
         } catch (RemoteException e) {
             remote = new BrokenRemoteRepository(e);
         }
@@ -68,13 +68,34 @@ public abstract class SafeClientRepository extends ClientObject
     protected abstract RemoteRepository getRemoteRepository()
             throws RemoteException;
 
+    /**
+     * Method to obtain the remote remote repository.
+     * If initialize is true and a RepositoryException will be thrown no {@link BrokenRemoteRepository}
+     * will be created. 
+     *
+     * @return remote repository
+     * @throws RemoteException if the remote repository could not be accessed
+     */
+    protected RemoteRepository getRemoteRepository(boolean initialize)
+            throws RemoteException {
+        if (initialize) {
+            try {
+                return getRemoteRepository();
+            } catch (RemoteException e) {
+                throw new RemoteRuntimeException(e);
+            }
+        } else {
+            return getRemoteRepository();
+        }
+    }
+
     /** {@inheritDoc} */
     public synchronized String getDescriptor(String name) {
         try {
             return remote.getDescriptor(name);
         } catch (RemoteException e1) {
             try {
-                remote = getRemoteRepository();
+                remote = getRemoteRepository(false);
                 return remote.getDescriptor(name);
             } catch (RemoteException e2) {
                 remote = new BrokenRemoteRepository(e2);
@@ -89,7 +110,7 @@ public abstract class SafeClientRepository extends ClientObject
             return remote.getDescriptorKeys();
         } catch (RemoteException e1) {
             try {
-                remote = getRemoteRepository();
+                remote = getRemoteRepository(false);
                 return remote.getDescriptorKeys();
             } catch (RemoteException e2) {
                 remote = new BrokenRemoteRepository(e2);
@@ -105,7 +126,7 @@ public abstract class SafeClientRepository extends ClientObject
             return remote.login(credentials, workspace);
         } catch (RemoteException e1) {
             try {
-                remote = getRemoteRepository();
+                remote = getRemoteRepository(false);
                 return remote.login(credentials, workspace);
             } catch (RemoteException e2) {
                 remote = new BrokenRemoteRepository(e2);
@@ -142,7 +163,7 @@ public abstract class SafeClientRepository extends ClientObject
             return remote.getDescriptorValue(key);
         } catch (RemoteException e1) {
             try {
-                remote = getRemoteRepository();
+                remote = getRemoteRepository(false);
                 return remote.getDescriptorValue(key);
             } catch (RemoteException e2) {
                 remote = new BrokenRemoteRepository(e2);
@@ -157,7 +178,7 @@ public abstract class SafeClientRepository extends ClientObject
             return remote.getDescriptorValues(key);
         } catch (RemoteException e1) {
             try {
-                remote = getRemoteRepository();
+                remote = getRemoteRepository(false);
                 return remote.getDescriptorValues(key);
             } catch (RemoteException e2) {
                 remote = new BrokenRemoteRepository(e2);
@@ -172,7 +193,7 @@ public abstract class SafeClientRepository extends ClientObject
             return remote.isSingleValueDescriptor(key);
         } catch (RemoteException e1) {
             try {
-                remote = getRemoteRepository();
+                remote = getRemoteRepository(false);
                 return remote.isSingleValueDescriptor(key);
             } catch (RemoteException e2) {
                 remote = new BrokenRemoteRepository(e2);
@@ -187,7 +208,7 @@ public abstract class SafeClientRepository extends ClientObject
             return remote.isStandardDescriptor(key);
         } catch (RemoteException e1) {
             try {
-                remote = getRemoteRepository();
+                remote = getRemoteRepository(false);
                 return remote.isStandardDescriptor(key);
             } catch (RemoteException e2) {
                 remote = new BrokenRemoteRepository(e2);
