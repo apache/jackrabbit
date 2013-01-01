@@ -110,9 +110,6 @@ public class GCEventListenerTest extends AbstractJCRTest implements MarkEventLis
         }
     }
 
-    public void afterScanning(Node n) throws RepositoryException {
-    }
-
     public void beforeScanning(Node n) throws RepositoryException {
         String s = getNodeName(n);
         if (s != null) {
