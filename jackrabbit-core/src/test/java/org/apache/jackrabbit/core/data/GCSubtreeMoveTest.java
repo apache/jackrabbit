@@ -172,7 +172,7 @@ public class GCSubtreeMoveTest extends TestCase {
 
     private GarbageCollector setupGarbageCollector() {
         try {
-            return ((SessionImpl) sessionGarbageCollector).createDataStoreGarbageCollector();        
+            return ((SessionImpl) sessionGarbageCollector).createDataStoreGarbageCollector();
         } catch (RepositoryException e) {
             failWithException(e);
         }

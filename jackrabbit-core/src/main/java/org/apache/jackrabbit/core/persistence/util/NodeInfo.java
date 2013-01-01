@@ -31,7 +31,7 @@ import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.spi.Name;
 
 /**
- * Holds purely structural information about a node. Used by the consistency checker.
+ * Holds structural information about a node. Used by the consistency checker and garbage collector.
  */
 public final class NodeInfo {
 
@@ -68,6 +68,11 @@ public final class NodeInfo {
     private boolean isReferenceable;
 
     /**
+     * Whether this node has blob properties in data storage
+     */
+    private boolean hasBlobsInDataStore;
+
+    /**
      * Create a new NodeInfo object from a bundle
      *
      * @param bundle the node bundle
@@ -96,6 +101,15 @@ public final class NodeInfo {
                     values.add(getNodeId(value.getNodeId()));
                 }
                 references.put(entry.getName(), values);
+            }
+            else if (entry.getType() == PropertyType.BINARY) {
+                for (InternalValue internalValue : entry.getValues()) {
+                    if (internalValue.isInDataStore()) {
+                        hasBlobsInDataStore = true;
+                        break;
+                    }
+                }
+
             }
         }
 
@@ -138,6 +152,13 @@ public final class NodeInfo {
      */
     public boolean isReferenceable() {
         return isReferenceable;
+    }
+
+    /**
+     * @return whether the node has blob properties that are inside the data storage
+     */
+    public boolean hasBlobsInDataStore() {
+        return hasBlobsInDataStore;
     }
 
     /**

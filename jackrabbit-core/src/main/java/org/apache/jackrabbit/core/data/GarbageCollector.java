@@ -23,6 +23,7 @@ import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.id.PropertyId;
 import org.apache.jackrabbit.core.observation.SynchronousEventListener;
 import org.apache.jackrabbit.core.persistence.IterablePersistenceManager;
+import org.apache.jackrabbit.core.persistence.util.NodeInfo;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.NoSuchItemStateException;
 import org.apache.jackrabbit.core.state.NodeState;
@@ -33,6 +34,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -78,6 +80,11 @@ public class GarbageCollector implements DataStoreGarbageCollector {
 
     /** logger instance */
     static final Logger LOG = LoggerFactory.getLogger(GarbageCollector.class);
+
+    /**
+     * The number of nodes to fetch at once from the persistence manager. Defaults to 8kb
+     */
+    private static final int NODESATONCE = Integer.getInteger("org.apache.jackrabbit.garbagecollector.nodesatonce", 1024 * 8);
 
     private MarkEventListener callback;
 
@@ -136,22 +143,8 @@ public class GarbageCollector implements DataStoreGarbageCollector {
         this.testDelay = testDelay;
     }
 
-    /**
-     * @deprecated use setMarkEventListener().
-     */
-    public void setScanEventListener(ScanEventListener callback) {
-        setMarkEventListener(callback);
-    }
-
     public void setMarkEventListener(MarkEventListener callback) {
         this.callback = callback;
-    }
-
-    /**
-     * @deprecated use mark().
-     */
-    public void scan() throws RepositoryException {
-        mark();
     }
 
     public void mark() throws RepositoryException {
@@ -196,39 +189,40 @@ public class GarbageCollector implements DataStoreGarbageCollector {
         return persistenceManagerScan;
     }
 
-    /**
-     * @deprecated use isPersistenceManagerScan().
-     */
-    public boolean getPersistenceManagerScan() {
-        return isPersistenceManagerScan();
-    }
-
     private void scanPersistenceManagers() throws RepositoryException, ItemStateException {
         for (IterablePersistenceManager pm : pmList) {
-            for (NodeId id : pm.getAllNodeIds(null, 0)) {
-                if (callback != null) {
-                    callback.beforeScanning(null);
-                }
-                try {
-                    NodeState state = pm.load(id);
-                    Set<Name> propertyNames = state.getPropertyNames();
-                    for (Name name : propertyNames) {
-                        PropertyId pid = new PropertyId(id, name);
-                        PropertyState ps = pm.load(pid);
-                        if (ps.getType() == PropertyType.BINARY) {
-                            for (InternalValue v : ps.getValues()) {
-                                // getLength will update the last modified date
-                                // if the persistence manager scan is running
-                                v.getLength();
+            Map<NodeId,NodeInfo> batch = pm.getAllNodeInfos(null, NODESATONCE);
+            while (!batch.isEmpty()) {
+                NodeId lastId = null;
+                for (NodeInfo info : batch.values()) {
+                    lastId = info.getId();
+                    if (callback != null) {
+                        callback.beforeScanning(null);
+                    }
+                    if (info.hasBlobsInDataStore()) {
+                        try {
+                            NodeState state = pm.load(info.getId());
+                            Set<Name> propertyNames = state.getPropertyNames();
+                            for (Name name : propertyNames) {
+                                PropertyId pid = new PropertyId(info.getId(), name);
+                                PropertyState ps = pm.load(pid);
+                                if (ps.getType() == PropertyType.BINARY) {
+                                    for (InternalValue v : ps.getValues()) {
+                                        // getLength will update the last modified date
+                                        // if the persistence manager scan is running
+                                        v.getLength();
+                                    }
+                                }
                             }
+                        } catch (NoSuchItemStateException ignored) {
+                            // the node may have been deleted in the meantime
                         }
                     }
-                } catch (NoSuchItemStateException e) {
-                    // the node may have been deleted or moved in the meantime
-                    // ignore it
                 }
+                batch = pm.getAllNodeInfos(lastId, NODESATONCE);
             }
         }
+        NodeInfo.clearPool();
     }
 
     /**
@@ -242,13 +236,6 @@ public class GarbageCollector implements DataStoreGarbageCollector {
             listeners.clear();
         }
         checkObservationException();
-    }
-
-    /**
-     * @deprecated use sweep().
-     */
-    public int deleteUnused() throws RepositoryException {
-        return sweep();
     }
 
     public int sweep() throws RepositoryException {
