@@ -16,27 +16,41 @@
  */
 package org.apache.jackrabbit.spi2dav;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
+import org.apache.jackrabbit.spi.ItemId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.jackrabbit.spi.ItemId;
-
-import java.util.Map;
-import java.util.HashMap;
 
 /**
  * <code>IdURICache</code>...
  */
 class IdURICache {
-
     private static Logger log = LoggerFactory.getLogger(IdURICache.class);
 
-    private final String workspaceUri;
+    /**
+     * @see <a href="https://issues.apache.org/jira/browse/JCR-3305">JCR-3305</a>: limit cache size
+     */
+    private static final int CACHESIZE = 10000;
 
-    private Map<ItemId, String> idToUriCache = new HashMap<ItemId, String>();
-    private Map<String, ItemId> uriToIdCache = new HashMap<String, ItemId>();
+    private final String workspaceUri;
+    private Map<ItemId, String> idToUriCache;
+    private Map<String, ItemId> uriToIdCache;
 
     IdURICache(String workspaceUri) {
         this.workspaceUri = workspaceUri;
+        idToUriCache = new LinkedHashMap<ItemId, String>(CACHESIZE, 1) {
+            @Override
+            protected boolean removeEldestEntry(Map.Entry<ItemId, String> eldest) {
+                return this.size() > CACHESIZE;
+            }
+        };
+        uriToIdCache = new LinkedHashMap<String, ItemId>(CACHESIZE, 1) {
+            @Override
+            protected boolean removeEldestEntry(Map.Entry<String, ItemId> eldest) {
+                return this.size() > CACHESIZE;
+            }
+        };
     }
 
     public ItemId getItemId(String uri) {
