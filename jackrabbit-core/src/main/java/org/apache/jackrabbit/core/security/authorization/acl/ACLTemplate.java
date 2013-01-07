@@ -115,7 +115,7 @@ class ACLTemplate extends AbstractACLTemplate {
      * node.
      *
      * @param aclNode node
-     * @param path The path as exposed by "@link JackrabbitAccessControlList#getPath()}
+     * @param path The path as exposed by {@link JackrabbitAccessControlList#getPath()}
      * @throws RepositoryException if an error occurs
      */
     ACLTemplate(NodeImpl aclNode, String path) throws RepositoryException {
