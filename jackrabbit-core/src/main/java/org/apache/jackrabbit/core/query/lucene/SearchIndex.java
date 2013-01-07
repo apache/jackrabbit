@@ -471,6 +471,14 @@ public class SearchIndex extends AbstractQueryHandler {
     private DirectoryManager directoryManager;
 
     /**
+     * Flat that indicates whether the {@link DirectoryManager} should
+     * use the <code>SimpleFSDirectory</code> instead of letting Lucene
+     * automatically pick an implementation based on the platform we are
+     * running on.
+     */
+    private boolean useSimpleFSDirectory = false;
+
+    /**
      * The termInfosIndexDivisor.
      */
     private int termInfosIndexDivisor = DEFAULT_TERM_INFOS_INDEX_DIVISOR;
@@ -2418,6 +2426,26 @@ public class SearchIndex extends AbstractQueryHandler {
      */
     public void setDirectoryManagerClass(String className) {
         this.directoryManagerClass = className;
+    }
+
+    /**
+     * If set <code>true</code> will indicate to the {@link DirectoryManager}
+     * to use the <code>SimpleFSDirectory</code>.
+     *
+     * @param useSimpleFSDirectory whether to use <code>SimpleFSDirectory</code>
+     *                             or automatically pick an implementation based
+     *                             on the current platform.
+     */
+    public void setUseSimpleFSDirectory(boolean useSimpleFSDirectory) {
+        this.useSimpleFSDirectory = useSimpleFSDirectory;
+    }
+
+    /**
+     * @return <code>true</code> if the {@link DirectoryManager} should use
+     * the <code>SimpleFSDirectory</code>.
+     */
+    public boolean isUseSimpleFSDirectory() {
+        return useSimpleFSDirectory;
     }
 
     /**

@@ -296,8 +296,7 @@ public abstract class QueryResultImpl implements QueryResult {
             // update numResults
             numResults = result.getSize();
         } catch (IOException e) {
-            log.error("Exception while executing query: ", e);
-            // todo throw?
+            throw new RepositoryException(e);
         } finally {
             if (result != null) {
                 try {
