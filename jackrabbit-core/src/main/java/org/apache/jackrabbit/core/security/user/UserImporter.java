@@ -552,8 +552,8 @@ public class UserImporter implements ProtectedPropertyImporter, ProtectedNodeImp
         String repMembers = resolver.getJCRName(UserConstants.NT_REP_MEMBERS);
         if (repMembers.equals(protectedParent.getPrimaryNodeType().getName())) {
             NodeImpl groupNode = protectedParent;
-            while(groupNode.getDepth() != 0 &&
-                  repMembers.equals(groupNode.getPrimaryNodeType().getName())) {
+            while (groupNode.getDepth() != 0 &&
+                    repMembers.equals(groupNode.getPrimaryNodeType().getName())) {
 
                 groupNode = (NodeImpl) groupNode.getParent();
             }
@@ -561,13 +561,11 @@ public class UserImporter implements ProtectedPropertyImporter, ProtectedNodeImp
             if (auth == null) {
                 log.debug("Cannot handle protected node " + protectedParent + ". It nor one of its parents represent a valid Authorizable.");
                 return false;
-            }
-            else {
+            } else {
                 currentMembership = new Membership(auth.getID());
                 return true;
             }
-        }
-        else {
+        } else {
             return false;
         }
     }
@@ -593,8 +591,7 @@ public class UserImporter implements ProtectedPropertyImporter, ProtectedNodeImp
                     currentMembership.addMember(name, id);
                 }
             }
-        }
-        else {
+        } else {
             log.warn("{} is not of type {}", childInfo.getName(), UserConstants.NT_REP_MEMBERS);
         }
     }
