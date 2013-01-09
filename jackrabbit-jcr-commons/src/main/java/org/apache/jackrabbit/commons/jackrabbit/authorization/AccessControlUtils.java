@@ -56,6 +56,24 @@ public class AccessControlUtils {
     }
 
     /**
+     * Retrieves the names of the specified privileges.
+     *
+     * @param privileges One or more privileges.
+     * @return The names of the specified privileges.
+     */
+    public static String[] namesFromPrivileges(Privilege... privileges) {
+        if (privileges == null || privileges.length == 0) {
+            return new String[0];
+        } else {
+            String[] names = new String[privileges.length];
+            for (int i = 0; i < privileges.length; i++) {
+                names[i] = privileges[i].getName();
+            }
+            return names;
+        }
+    }
+
+    /**
      * Utility that combines {@link AccessControlManager#getApplicablePolicies(String)}
      * and {@link AccessControlManager#getPolicies(String)} to retrieve
      * a modifiable {@code JackrabbitAccessControlList} for the given path.<br>
