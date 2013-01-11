@@ -47,10 +47,22 @@ public class AccessControlUtils {
      * contains an unknown/invalid privilege name.
      */
     public static Privilege[] privilegesFromNames(Session session, String... privilegeNames) throws RepositoryException {
-        AccessControlManager acMgr = session.getAccessControlManager();
+        return privilegesFromNames(session.getAccessControlManager(), privilegeNames);
+    }
+
+    /**
+     * Retrieves the {@link Privilege}s from the specified privilege names.
+     *
+     * @param accessControlManager The access control manager.
+     * @param privilegeNames The privilege names.
+     * @return An array of privileges.
+     * @throws RepositoryException If an error occurs or if {@code privilegeNames}
+     * contains an unknown/invalid privilege name.
+     */
+    public static Privilege[] privilegesFromNames(AccessControlManager accessControlManager, String... privilegeNames) throws RepositoryException {
         Set<Privilege> privileges = new HashSet<Privilege>(privilegeNames.length);
         for (String privName : privilegeNames) {
-            privileges.add(acMgr.privilegeFromName(privName));
+            privileges.add(accessControlManager.privilegeFromName(privName));
         }
         return privileges.toArray(new Privilege[privileges.size()]);
     }
