@@ -142,6 +142,9 @@ public class JCAManagedConnectionFactory
      */
     public Object createConnectionFactory(ConnectionManager cm)
             throws ResourceException {
+        // JCR-3491 Start the Repository immediatly in JCA Environment. 
+        // If this Instance is in a Cluster it would not get any changes till someone performs a first login 
+        createRepository();
         JCARepositoryHandle handle = new JCARepositoryHandle(this, cm);
         log("Created repository handle (" + handle + ")");
         return handle;
@@ -192,22 +195,36 @@ public class JCAManagedConnectionFactory
                 }
             }
         }
-
         return null;
+    }
+
+    /**
+     * Create/startup the repository.
+     */
+    @SuppressWarnings("deprecation")
+    private void createRepository() throws ResourceException {
+        if (repository == null) {
+            try {
+                JCARepositoryManager mgr = JCARepositoryManager.getInstance();
+                repository = mgr.createRepository(parameters);
+                log("Created repository (" + repository + ")");
+            } catch (RepositoryException e) {
+                log("Failed to create repository", e);
+                ResourceException exception = new ResourceException(
+                        "Failed to create repository: " + e.getMessage());
+                exception.setLinkedException(e);
+                throw exception;
+            }
+        }
     }
 
     /**
      * Return the repository, automatically creating it if needed.
      */
-    public synchronized Repository getRepository() throws RepositoryException {
-        if (repository == null) {
-            JCARepositoryManager mgr = JCARepositoryManager.getInstance();
-            repository = mgr.createRepository(parameters);
-            log("Created repository (" + repository + ")");
-        }
+    public Repository getRepository() throws RepositoryException {
         return repository;
     }
-
+    
     /**
      * Log a message.
      */
