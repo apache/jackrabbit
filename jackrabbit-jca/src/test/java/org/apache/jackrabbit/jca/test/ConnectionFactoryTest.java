@@ -67,6 +67,9 @@ public final class ConnectionFactoryTest
         // Check if not same
         assertNotSame(cri1, cri2);
 
+        // Create the connection factory
+        mcf.createConnectionFactory();
+
         // Allocate connections
         ManagedConnection mc1 = mcf.createManagedConnection(null, cri1);
         ManagedConnection mc2 = mcf.createManagedConnection(null, cri2);
