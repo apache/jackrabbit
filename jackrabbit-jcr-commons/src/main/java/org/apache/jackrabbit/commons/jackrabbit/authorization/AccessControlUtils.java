@@ -102,9 +102,27 @@ public class AccessControlUtils {
      */
     public static JackrabbitAccessControlList getAccessControlList(Session session, String absPath) throws RepositoryException {
         AccessControlManager acMgr = session.getAccessControlManager();
+        return getAccessControlList(acMgr, absPath);
+    }
 
+    /**
+     * Utility that combines {@link AccessControlManager#getApplicablePolicies(String)}
+     * and {@link AccessControlManager#getPolicies(String)} to retrieve
+     * a modifiable {@code JackrabbitAccessControlList} for the given path.<br>
+     *
+     * Note that the policy must be {@link AccessControlManager#setPolicy(String,
+     * javax.jcr.security.AccessControlPolicy) reapplied}
+     * and the changes must be saved in order to make the AC modifications take
+     * effect.
+     *
+     * @param accessControlManager The {@code AccessControlManager} .
+     * @param absPath The absolute path of the target node.
+     * @return A modifiable access control list or null if there is none.
+     * @throws RepositoryException If an error occurs.
+     */
+    public static JackrabbitAccessControlList getAccessControlList(AccessControlManager accessControlManager, String absPath) throws RepositoryException {
         // try applicable (new) ACLs
-        AccessControlPolicyIterator itr = acMgr.getApplicablePolicies(absPath);
+        AccessControlPolicyIterator itr = accessControlManager.getApplicablePolicies(absPath);
         while (itr.hasNext()) {
             AccessControlPolicy policy = itr.nextAccessControlPolicy();
             if (policy instanceof JackrabbitAccessControlList) {
@@ -113,7 +131,7 @@ public class AccessControlUtils {
         }
 
         // try if there is an acl that has been set before
-        AccessControlPolicy[] pcls = acMgr.getPolicies(absPath);
+        AccessControlPolicy[] pcls = accessControlManager.getPolicies(absPath);
         for (AccessControlPolicy policy : pcls) {
             if (policy instanceof JackrabbitAccessControlList) {
                 return (JackrabbitAccessControlList) policy;
