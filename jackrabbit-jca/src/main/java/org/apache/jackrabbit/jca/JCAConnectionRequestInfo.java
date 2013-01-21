@@ -152,16 +152,16 @@ public final class JCAConnectionRequestInfo implements ConnectionRequestInfo {
             return false;
         }
 
-        Map m1 = getAttributeMap(o1);
-        Map m2 = getAttributeMap(o2);
+        Map<String, Object> m1 = getAttributeMap(o1);
+        Map<String, Object> m2 = getAttributeMap(o2);
         return m1.equals(m2);
     }
 
     /**
      * Return the credentials attributes.
      */
-    private Map getAttributeMap(SimpleCredentials creds) {
-        HashMap map = new HashMap();
+    private Map<String, Object> getAttributeMap(SimpleCredentials creds) {
+        HashMap<String, Object> map = new HashMap<String, Object>();
         String[] keys = creds.getAttributeNames();
 
         for (int i = 0; i < keys.length; i++) {
@@ -189,7 +189,7 @@ public final class JCAConnectionRequestInfo implements ConnectionRequestInfo {
     private int computeSimpleCredsHashCode(SimpleCredentials c) {
         String userID = c.getUserID();
         char[] password = c.getPassword();
-        Map m = getAttributeMap(c);
+        Map<String, Object> m = getAttributeMap(c);
         final int prime = 31;
         int result = 1;
         result = prime * result + ((userID == null) ? 0 : userID.hashCode());
@@ -198,5 +198,10 @@ public final class JCAConnectionRequestInfo implements ConnectionRequestInfo {
         }
         result = prime * result + ((m == null) ? 0 : m.hashCode());
         return result;
+    }
+    
+    @Override
+    public String toString() {
+        return "workspace (" + workspace + ") creds (" + creds + ")";
     }
 }
