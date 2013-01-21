@@ -27,10 +27,14 @@ import javax.resource.spi.LocalTransaction;
 import javax.resource.spi.ManagedConnection;
 import javax.resource.spi.ManagedConnectionMetaData;
 import javax.security.auth.Subject;
+import javax.transaction.xa.XAException;
 import javax.transaction.xa.XAResource;
+import javax.transaction.xa.Xid;
+
 import java.io.PrintWriter;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * This class implements the managed connection for
@@ -38,6 +42,112 @@ import java.util.LinkedList;
  */
 public class JCAManagedConnection
         implements ManagedConnection, ManagedConnectionMetaData {
+
+    /**
+     * The LocalTransactionAdapter wraps the internal XAResource and uses the XA Method's to
+     * fulfill the LocalTransaction calls.
+     */
+    private static class LocalTransactionAdapter implements javax.resource.spi.LocalTransaction {
+
+        /**
+         * Internal {@link Xid} implementation.
+         */
+        class XidImpl implements Xid {
+        
+            private final byte[] globalTxId;
+        
+            public XidImpl(byte[] globalTxId) {
+                this.globalTxId = globalTxId;
+            }
+        
+            /**
+             * {@inheritDoc}
+             */
+            public int getFormatId() {
+                return 0;
+            }
+        
+            /**
+             * {@inheritDoc}
+             */
+            public byte[] getBranchQualifier() {
+                return new byte[0];
+            }
+        
+            /**
+             * {@inheritDoc}
+             */
+            public byte[] getGlobalTransactionId() {
+                return globalTxId;
+            }
+        }
+
+        /**
+         * Global static counter for the internal Xid's
+         */
+        private static AtomicInteger globalCounter = new AtomicInteger();
+
+        private XAResource resource;
+        private Xid xid;
+
+        public LocalTransactionAdapter(XAResource xaResource) {
+            this.resource = xaResource;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void begin() throws ResourceException {
+            try {
+                this.xid = new XidImpl(intToByteArray(globalCounter.getAndIncrement()));
+                resource.start(xid, XAResource.TMNOFLAGS);
+            } catch (XAException e) {
+                throw new ResourceException(e.getMessage());
+            }
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void commit() throws ResourceException {
+            try {
+                resource.end(xid, XAResource.TMSUCCESS);
+                resource.commit(xid, true);
+            } catch (XAException e) {
+                throw new ResourceException(e.getMessage());
+            }
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void rollback() throws ResourceException {
+            try {
+                resource.end(xid, XAResource.TMFAIL);
+                resource.rollback(xid);
+            } catch (XAException e) {
+                throw new ResourceException(e.getMessage());
+            }
+        }
+        
+        /**
+         * Converts the given int (global transaction id) to a byte[]
+         * 
+         * @param value
+         * @return byte[]
+         */
+        private static byte[] intToByteArray(int value) {
+            byte[] b = new byte[4];
+            for (int i = 0; i < 4; i++) {
+                int offset = (b.length - 1 - i) * 8;
+                b[i] = (byte) ((value >>> offset) & 0xFF);
+            }
+            return b;
+        }
+    }
 
     /**
      * Managed connection factory.
@@ -74,6 +184,8 @@ public class JCAManagedConnection
      */
     private PrintWriter logWriter;
 
+    private LocalTransactionAdapter localTransactionAdapter;
+
     /**
      * Construct the managed connection.
      */
@@ -86,10 +198,11 @@ public class JCAManagedConnection
         this.listeners = new LinkedList<ConnectionEventListener>();
         this.handles = new LinkedList<JCASessionHandle>();
         if (this.mcf.getBindSessionToTransaction().booleanValue()) {
-            this.xaResource =  new TransactionBoundXAResource(this, (XAResource) session);
+            this.xaResource = new TransactionBoundXAResource(this, (XAResource) session);
         } else {
             this.xaResource = (XAResource) session;
         }
+        this.localTransactionAdapter = new LocalTransactionAdapter(xaResource);
     }
 
     /**
@@ -204,7 +317,7 @@ public class JCAManagedConnection
      */
     public LocalTransaction getLocalTransaction()
             throws ResourceException {
-        throw new UnsupportedOperationException("Local transaction is not supported");
+        return localTransactionAdapter;
     }
 
     /**
