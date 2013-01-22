@@ -320,7 +320,7 @@ public class DbDataStore implements DataStore, DatabaseAware, MultiDataStoreAwar
                     // SELECT LENGTH, LAST_MODIFIED FROM DATASTORE WHERE ID=?
                     rs = conHelper.query(selectMetaSQL, tempId);
                     boolean hasNext = rs.next();
-                    rs.close();
+                    DbUtility.close(rs);
                     rs = null;
                     if (hasNext) {
                         // re-try in the very, very unlikely event that the row already exists
@@ -446,6 +446,8 @@ public class DbDataStore implements DataStore, DatabaseAware, MultiDataStoreAwar
                     log.error(msg);
                     throw new DataStoreException(msg);
                 }
+                DbUtility.close(rs);
+                rs = null;
                 touch(identifier, lastModified);
                 // row already exists
                 conHelper.exec(deleteSQL, tempId);
@@ -546,6 +548,8 @@ public class DbDataStore implements DataStore, DatabaseAware, MultiDataStoreAwar
             }
             long length = rs.getLong(1);
             long lastModified = rs.getLong(2);
+            DbUtility.close(rs);
+            rs = null;
             touch(identifier, lastModified);
             return new DbDataRecord(this, identifier, length, lastModified);
         } catch (Exception e) {
