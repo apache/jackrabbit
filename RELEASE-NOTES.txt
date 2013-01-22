@@ -1,4 +1,4 @@
-Release Notes -- Apache Jackrabbit -- Version 2.5.2
+Release Notes -- Apache Jackrabbit -- Version 2.5.3
 
 Introduction
 ------------
@@ -10,6 +10,53 @@ specified in the Java Specification Request 283 (JSR 283).
 Apache Jackrabbit 2.5 is an unstable series of releases cut directly from
 Jackrabbit trunk, with a focus on new features and other improvements.
 For production use we recommend the latest stable 2.4 release.
+
+Changes in Jackrabbit 2.5.3
+---------------------------
+
+New features
+
+  [JCR-3389] Implement a MultiDataStore
+  [JCR-3443] Normalize String properties when ordering query results
+
+Improvements
+
+  [JCR-3429] Make query tests (more) independent
+  [JCR-3442] Allow (override) access of the system search manager to ...
+  [JCR-3454] The RmiRepositoryFactory should handle auto reconnect
+  [JCR-3463] Configurable stopDelay
+  [JCR-3467] ConsistencyCheck.MissingAncestor#repair() should also log UUID
+  [JCR-3474] Add JackrabbitQueryResult.getTotalSize()
+  [JCR-3479] Remove logback log config from jr-core tests jar
+  [JCR-3480] Extend SaveTest#testConstraintViolationException to cover ...
+  [JCR-3490] More efficient node traversal during garbage collection
+
+Bug fixes
+
+  [JCR-861]  Connector should support LocalTransaction as well as ...
+  [JCR-3425] XAAwareRWLock implementation fails with IllegalStateException ...
+  [JCR-3430] CNDImporter should handle implied nt:base
+  [JCR-3434] EventJournal#skipTo() broken
+  [JCR-3435] NPE on parsing XPath query with child axis and star name at ...
+  [JCR-3437] The DbDataStore does not implement getRecordIfStored as ...
+  [JCR-3439] PrincipalManagerImpl.CheckedGroup should implement ...
+  [JCR-3440] Deadlock on LOCAL_REVISION table in clustering environment
+  [JCR-3445] PostgreSQL error with setValidationQueryTimeout
+  [JCR-3447] InternalValueFactory should use the DataStore whenever available
+  [JCR-3450] Reduce memory usage of SharedFieldCache.ValueIndex
+  [JCR-3452] Modified property and child node definition are rejected
+  [JCR-3459] RmiRepositoryFactory regression, invalid stream header
+  [JCR-3466] NPE in SingletonTokenStream
+  [JCR-3468] ConcurrentModificationException in BitSetENTCacheImpl
+  [JCR-3469] Thread interrupt may result in closed index files
+  [JCR-3472] LargeResultSetTest: queries don't return anything
+  [JCR-3476] NodeIndexer attempts to extract binary property even when ...
+  [JCR-3478] Partial search terms matching fails when there is a lot of ...
+  [JCR-3482] SetValueVersionExceptionTest makes assumption about ...
+  [JCR-3483] Result set iterator causes infinite loop when used after ...
+  [JCR-3485] The Datastore garbage collector does not work with a ...
+  [JCR-3486] Potential null pointer exception in session save operation
+  [JCR-3491] Start the Repository immediatly in JCA Environment
 
 Changes in Jackrabbit 2.5.2
 ---------------------------
