@@ -580,6 +580,9 @@ public class MultiDataStore implements DataStore {
                                 ((MultiDataStoreAware) primaryDataStore).deleteRecord(identifier);
                                 moved++;
                             }
+                            if (moved % 100 == 0) {
+                                log.debug("Moving DataRecord's... ({})", moved);
+                            }
                         } catch (DataStoreException e) {
                             log.error("Failed to move DataRecord. DataIdentifier: " + identifier, e);
                         } finally {
