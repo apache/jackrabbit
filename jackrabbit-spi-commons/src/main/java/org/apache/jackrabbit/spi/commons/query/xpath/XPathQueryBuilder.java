@@ -85,6 +85,11 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
     static final Name FN_UPPER_CASE = NAME_FACTORY.create(NS_FN_URI, "upper-case");
 
     /**
+     * Name for 'rep:normalize'
+     */
+    static final Name REP_NORMALIZE = NAME_FACTORY.create(Name.NS_REP_URI, "normalize");
+
+    /**
      * Name for 'not' as defined in XPath 1.0 (no prefix)
      */
     static final Name FN_NOT_10 = NAME_FACTORY.create("", "not");
@@ -1009,7 +1014,18 @@ public class XPathQueryBuilder implements XPathVisitor, XPathTreeConstants {
                         exceptions.add(new InvalidQueryException("Unsupported location for fn:upper-case()"));
                     }
                 } else {
-                    exceptions.add(new InvalidQueryException("Unsupported location for fn:upper-case()"));
+                    exceptions.add(new InvalidQueryException("Wrong number of argument for fn:upper-case()"));
+                }
+            } else if (REP_NORMALIZE.equals(funName)) {
+                if (node.jjtGetNumChildren() == 2) {
+                    if (queryNode.getType() == QueryNode.TYPE_ORDER) {
+                        ((OrderQueryNode) queryNode).setFunction(REP_NORMALIZE.getLocalName());
+                        node.childrenAccept(this, queryNode);
+                    } else {
+                        exceptions.add(new InvalidQueryException("Unsupported location for rep:normalize()"));
+                    }
+                } else {
+                    exceptions.add(new InvalidQueryException("Wrong number of argument for rep:normalize()"));
                 }
             } else if (REP_SIMILAR.equals(funName)) {
                 if (node.jjtGetNumChildren() == 3) {
