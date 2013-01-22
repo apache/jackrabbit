@@ -1166,6 +1166,8 @@ public class SearchIndex extends AbstractQueryHandler {
                     sortFields.add(new SortField(orderProps[i].getString(), new UpperCaseSortComparator(scs), !orderSpecs[i]));
                 } else if ("lower-case".equals(orderFuncs[i])) {
                     sortFields.add(new SortField(orderProps[i].getString(), new LowerCaseSortComparator(scs), !orderSpecs[i]));
+                } else if ("normalize".equals(orderFuncs[i])) {
+                    sortFields.add(new SortField(orderProps[i].getString(), new NormalizeSortComparator(scs), !orderSpecs[i]));
                 } else {
                     sortFields.add(new SortField(orderProps[i].getString(), scs, !orderSpecs[i]));
                 }
