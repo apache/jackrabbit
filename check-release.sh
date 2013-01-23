@@ -112,7 +112,7 @@ unzip -q "$WORKDIR/$VERSION/jackrabbit-$VERSION-src.zip" -d "$ZIPTAG"
 ZIPTAGDIR="$ZIPTAG/jackrabbit-$VERSION"
 
 echo "[INFO] Comparing sources, please wait..."
-DIFFOUT=`diff -r "$SVNTAGDIR" "$ZIPTAGDIR"`
+DIFFOUT=`diff -b -r "$SVNTAGDIR" "$ZIPTAGDIR"`
 if [ -n "$DIFFOUT" ]
 then
   echo "[ERROR] Found some differences!"
