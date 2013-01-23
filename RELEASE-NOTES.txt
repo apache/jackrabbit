@@ -34,6 +34,7 @@ Improvements
 Bug fixes
 
   [JCR-861]  Connector should support LocalTransaction as well as ...
+  [JCR-3305] spi2davex.RepositoryServiceImpl -> idUriCache raises until ...
   [JCR-3425] XAAwareRWLock implementation fails with IllegalStateException ...
   [JCR-3430] CNDImporter should handle implied nt:base
   [JCR-3434] EventJournal#skipTo() broken
@@ -45,6 +46,7 @@ Bug fixes
   [JCR-3447] InternalValueFactory should use the DataStore whenever available
   [JCR-3450] Reduce memory usage of SharedFieldCache.ValueIndex
   [JCR-3452] Modified property and child node definition are rejected
+  [JCR-3455] Events should be dispatched after the global cluster lock is ...
   [JCR-3459] RmiRepositoryFactory regression, invalid stream header
   [JCR-3466] NPE in SingletonTokenStream
   [JCR-3468] ConcurrentModificationException in BitSetENTCacheImpl
