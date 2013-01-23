@@ -37,8 +37,7 @@ echo "[INFO] -------------------------------------------------------------------
 echo "[INFO] "
 echo "[INFO] Downloading release candidate, please wait..."
 
-#if svn --quiet export "$STAGING" "$WORKDIR"; then
-if cp -r ../jackrabbit-dev/$VERSION $WORKDIR; then
+if svn --quiet export "$STAGING" "$WORKDIR/$VERSION"; then
   echo "[INFO] Release downloaded."
 else
   echo "[ERROR] Unable to download release from $STAGING"
