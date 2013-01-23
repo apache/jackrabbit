@@ -17,33 +17,35 @@
 ##    limitations under the License.
 ## 
 
-USERNAME=${1}
-VERSION=${2}
-SHA=${3}
+VERSION="$1"
+SHA="$2"
 
-if [ -z "$USERNAME" -o -z "$VERSION" -o -z "$SHA" ]
+if [ -z "$VERSION" -o -z "$SHA" ]
 then
- echo "Usage: $0 <username> <version-number> <checksum> [temp-directory]"
+ echo "Usage: $0 <version-number> <checksum> [temp-directory]"
  exit
 fi
 
-STAGING="http://people.apache.org/~$USERNAME/jackrabbit/$VERSION/"
+STAGING="https://dist.apache.org/repos/dist/dev/jackrabbit/$VERSION/"
 
 WORKDIR=${4:-target/jackrabbit-staging-`date +%s`}
-mkdir $WORKDIR -p -v
+mkdir -p "$WORKDIR"
 
 echo "[INFO] ------------------------------------------------------------------------"
-echo "[INFO] DOWNLOAD STAGED REPOSITORY                                              "
+echo "[INFO] DOWNLOAD RELEASE CANDIDATE                                              "
 echo "[INFO] ------------------------------------------------------------------------"
 echo "[INFO] "
+echo "[INFO] Downloading release candidate, please wait..."
 
-if [ `wget --help | grep "no-check-certificate" | wc -l` -eq 1 ]
-then
-  CHECK_SSL=--no-check-certificate
+#if svn --quiet export "$STAGING" "$WORKDIR"; then
+if cp -r ../jackrabbit-dev/$VERSION $WORKDIR; then
+  echo "[INFO] Release downloaded."
+else
+  echo "[ERROR] Unable to download release from $STAGING"
+  exit 1
 fi
 
-wget $CHECK_SSL --wait 1 -nv -r -np "--reject=html,txt" -P "$WORKDIR" -nH "--cut-dirs=3" --ignore-length "${STAGING}"
-
+echo "[INFO] "
 echo "[INFO] ------------------------------------------------------------------------"
 echo "[INFO] CHECK SIGNATURES AND DIGESTS                                            "
 echo "[INFO] ------------------------------------------------------------------------"
@@ -51,57 +53,76 @@ echo "[INFO] "
 
 ## 1. check sha from release email against src.zip.sha file
 
-downloaded_sha=$(cat `find $WORKDIR -type f | grep jackrabbit-$VERSION-src.zip.sha`)
-if [ "$SHA" = "$downloaded_sha" ]; then echo "[INFO] Step 1. Release checksum matches provided checksum."; else echo "[ERROR] Step 1. Release checksum does not match provided checksum!"; fi
+downloaded_sha=$(cat `find "$WORKDIR" -type f | grep "jackrabbit-$VERSION-src.zip.sha"`)
+echo "[INFO] Step 1. Check release cheksum"
+if [ "$SHA" = "$downloaded_sha" ]; then
+  echo "[INFO] Release checksum matches provided checksum."
+else
+  echo "[ERROR] Release checksum does not match provided checksum!"
+  exit 1
+fi
 echo "[INFO] "
 
 ## 2. check signatures on the artifacts
 echo "[INFO] Step 2. Check individual files"
 
-for f in `find ${WORKDIR} -type f | grep '\.\(zip\|rar\|jar\|war\)$'`
+for f in `find "${WORKDIR}" -type f | grep '\.\(zip\|rar\|jar\|war\)$'`
 do
- echo "[INFO] $f"
- gpg --verify $f.asc 2>/dev/null
- if [ "$?" = "0" ]; then CHKSUM="GOOD"; else CHKSUM="BAD!!!!!!!!"; fi
- if [ ! -f "$f.asc" ]; then CHKSUM="----"; fi
- echo "gpg:  ${CHKSUM}"
+  n=`basename "$f"`
+  if [ ! -f "$f.asc" ]; then
+    echo "[ERROR] $n.asc NOT FOUND"
+    exit 1
+  elif gpg --verify "$f.asc" 2>/dev/null; then
+    echo "[INFO] $n.asc is OK"
+  else
+    echo "[ERROR] $n.asc is NOT OK"
+    exit 1
+  fi
 
- for hash in md5 sha1
- do
-   tp=`echo $hash | cut -c 1-3`
-   if [ ! -f "$f.$tp" ]
-   then
-     CHKSUM="----"
-   else
-     A="`cat $f.$tp 2>/dev/null`"
-     B="`openssl $hash $f 2>/dev/null | sed 's/.*= *//' `"
-     if [ "$A" = "$B" ]; then CHKSUM="GOOD (`cat $f.$tp`)"; else CHKSUM="BAD!! : $A not equal to $B"; fi
-   fi
-   echo "$tp : ${CHKSUM}"
- done
+  for hash in md5 sha1
+  do
+    tp=`echo $hash | cut -c 1-3`
+    if [ ! -f "$f.$tp" ]; then
+      echo "[ERROR] $n.$tp NOT FOUND"
+      exit 1
+    else
+      A="`cat "$f.$tp" 2>/dev/null`"
+      B="`openssl "$hash" "$f" 2>/dev/null | sed 's/.*= *//' `"
+      if [ "$A" = "$B" ]; then
+        echo "[INFO] $n.$tp is OK"
+      else
+        echo "[ERROR] $n.$tp is NOT OK"
+        exit 1
+      fi
+    fi
+  done
 done
 
 ## 3. check tag contents vs src archive contents
 echo "[INFO] "
-echo "[INFO] Step 3. Check SVN Tag for version $VERSION with src zip file contents"
+echo "[INFO] Step 3. Compare svn tag with src zip file contents"
 
-echo "[INFO] doing svn checkout, please wait..."
+echo "[INFO] Doing svn checkout, please wait..."
 SVNTAGDIR="$WORKDIR/tag-svn/jackrabbit-$VERSION"
-svn --quiet export http://svn.apache.org/repos/asf/jackrabbit/tags/$VERSION $SVNTAGDIR
+svn --quiet export "http://svn.apache.org/repos/asf/jackrabbit/tags/$VERSION" "$SVNTAGDIR"
+rm "$SVNTAGDIR/.gitignore"
 
-echo "[INFO] unzipping src zip file, please wait..."
+echo "[INFO] Unzipping src zip file, please wait..."
 ZIPTAG="$WORKDIR/tag-zip"
-unzip -q $WORKDIR/jackrabbit-$VERSION-src.zip -d $ZIPTAG
+unzip -q "$WORKDIR/$VERSION/jackrabbit-$VERSION-src.zip" -d "$ZIPTAG"
 ZIPTAGDIR="$ZIPTAG/jackrabbit-$VERSION"
 
-DIFFOUT=`diff -r $SVNTAGDIR $ZIPTAGDIR`
+echo "[INFO] Comparing sources, please wait..."
+DIFFOUT=`diff -r "$SVNTAGDIR" "$ZIPTAGDIR"`
 if [ -n "$DIFFOUT" ]
 then
- echo "[ERROR] Found some differences!"
- echo "$DIFFOUT"
+  echo "[ERROR] Found some differences!"
+  echo "$DIFFOUT"
+  exit 1
 else
- echo "[INFO] No differences found."
+  echo "[INFO] No differences found."
 fi
+echo "[INFO] "
 
 ## 4. run the build with the pedantic profile to have the rat licence check enabled
 
@@ -109,7 +130,18 @@ echo "[INFO] -------------------------------------------------------------------
 echo "[INFO] RUNNING MAVEN BUILD                                                     "
 echo "[INFO] ------------------------------------------------------------------------"
 echo "[INFO] "
+echo "[INFO] Running maven build, please wait..."
 
 cd "$ZIPTAGDIR"
-mvn package -Ppedantic
+if mvn package -Ppedantic > ../maven-output.txt; then
+  echo "[INFO] Maven build OK"
+else
+  echo "[ERROR] Maven build NOT OK"
+  exit 1
+fi
 
+echo "[INFO] "
+echo "[INFO] ------------------------------------------------------------------------"
+echo "[INFO] ALL CHECKS OK                                                           "
+echo "[INFO] ------------------------------------------------------------------------"
+exit 0
