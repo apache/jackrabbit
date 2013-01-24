@@ -101,15 +101,20 @@ public class WebdavRequestImpl implements WebdavRequest, DavConstants {
      *
      * @param httpRequest
      * @param factory
+     * @param createAbsoluteURI defines if we must create a absolute URI. if false a absolute path will be created
      */
-    public WebdavRequestImpl(HttpServletRequest httpRequest, DavLocatorFactory factory) {
+    public WebdavRequestImpl(HttpServletRequest httpRequest, DavLocatorFactory factory, boolean createAbsoluteURI) {
         this.httpRequest = httpRequest;
         this.factory = factory;
         this.ifHeader = new IfHeader(httpRequest);
 
-        String host = getHeader("Host");
-        String scheme = getScheme();
-        hrefPrefix = scheme + "://" + host + getContextPath();
+        if (createAbsoluteURI)  {
+            String host = getHeader("Host");
+            String scheme = getScheme();
+            hrefPrefix = scheme + "://" + host + getContextPath();
+        } else {
+            hrefPrefix = getContextPath();
+        }
     }
 
     /**
