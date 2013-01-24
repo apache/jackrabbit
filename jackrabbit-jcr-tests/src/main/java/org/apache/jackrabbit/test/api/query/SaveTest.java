@@ -212,7 +212,7 @@ public class SaveTest extends AbstractJCRTest {
         checkNtQuery();
         Query query = superuser.getWorkspace().getQueryManager().createQuery(statement, Query.XPATH);
         try {
-            query.storeAsNode(testRoot + "/invalid[path");
+            query.storeAsNode(testRoot + "/invalid[42]");
             fail("Query.storeAsNode() must throw RepositoryException on malformed path.");
         } catch (RepositoryException e) {
             // expected behaviour
