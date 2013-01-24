@@ -98,6 +98,13 @@ public class WebdavRequestImpl implements WebdavRequest, DavConstants {
 
     /**
      * Creates a new <code>DavServletRequest</code> with the given parameters.
+     */
+    public WebdavRequestImpl(HttpServletRequest httpRequest, DavLocatorFactory factory) {
+        this(httpRequest, factory, true);
+    }
+
+    /**
+     * Creates a new <code>DavServletRequest</code> with the given parameters.
      *
      * @param httpRequest
      * @param factory
