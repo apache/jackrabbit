@@ -836,14 +836,14 @@ public class SharedItemStateManager
 
                 for (ItemState state : shared.modifiedStates()) {
                     try {
-                        state.copy(loadItemState(state.getId()), false);
+                        state.copy(loadItemState(state.getId()), true);
                     } catch (ItemStateException e) {
                         state.discard();
                     }
                 }
                 for (ItemState state : shared.deletedStates()) {
                     try {
-                        state.copy(loadItemState(state.getId()), false);
+                        state.copy(loadItemState(state.getId()), true);
                     } catch (ItemStateException e) {
                         state.discard();
                     }
