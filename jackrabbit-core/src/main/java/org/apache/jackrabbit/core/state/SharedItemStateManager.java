@@ -18,6 +18,7 @@ package org.apache.jackrabbit.core.state;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -680,14 +681,21 @@ public class SharedItemStateManager
 
                     shared.modified(state.getOverlayedState());
                 }
-                for (ItemState state : local.deletedStates()) {
-                    state.connect(getItemState(state.getId()));
-                    if (state.isStale()) {
-                        String msg = state.getId() + " has been modified externally";
-                        log.debug(msg);
-                        throw new StaleItemStateException(msg);
+                Iterator<ItemState> deleted = local.deletedStates().iterator();
+                while (deleted.hasNext()) {
+                    ItemState state = deleted.next();
+                    try {
+                        state.connect(getItemState(state.getId()));
+                        if (state.isStale()) {
+                            String msg = state.getId() + " has been modified externally";
+                            log.debug(msg);
+                            throw new StaleItemStateException(msg);
+                        }
+                        shared.deleted(state.getOverlayedState());
+                    } catch (NoSuchItemStateException e) {
+                        // item state was already deleted externally
+                        deleted.remove();
                     }
-                    shared.deleted(state.getOverlayedState());
                 }
                 for (ItemState state : local.addedStates()) {
                     if (state.isNode() && state.getStatus() != ItemState.STATUS_NEW) {
