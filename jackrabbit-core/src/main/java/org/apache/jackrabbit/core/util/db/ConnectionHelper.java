@@ -235,7 +235,7 @@ public class ConnectionHelper {
         }
         Connection batchConnection = null;
         try {
-            batchConnection = getConnection();
+            batchConnection = getConnection(false);
             batchConnection.setAutoCommit(false);
             setTransactionAwareBatchConnection(batchConnection);
         } catch (SQLException e) {
@@ -299,8 +299,9 @@ public class ConnectionHelper {
     void reallyExec(String sql, Object... params) throws SQLException {
         Connection con = null;
         Statement stmt = null;
+        boolean inBatchMode = inBatchMode();
         try {
-            con = getConnection();
+            con = getConnection(inBatchMode);
             if (params == null || params.length == 0) {
                 stmt = con.createStatement();
                 stmt.execute(sql);
@@ -310,7 +311,7 @@ public class ConnectionHelper {
                 execute(p, params);
             }
         } finally {
-            closeResources(con, stmt, null);
+            closeResources(con, stmt, null, inBatchMode);
         }
     }
 
@@ -336,12 +337,13 @@ public class ConnectionHelper {
     int reallyUpdate(String sql, Object... params) throws SQLException {
         Connection con = null;
         PreparedStatement stmt = null;
+        boolean inBatchMode = inBatchMode();
         try {
-            con = getConnection();
+            con = getConnection(inBatchMode);
             stmt = con.prepareStatement(sql);
             return execute(stmt, params).getUpdateCount();
         } finally {
-            closeResources(con, stmt, null);
+            closeResources(con, stmt, null, inBatchMode);
         }
     }
 
@@ -385,8 +387,9 @@ public class ConnectionHelper {
         Connection con = null;
         PreparedStatement stmt = null;
         ResultSet rs = null;
+        boolean inBatchMode = inBatchMode();
         try {
-            con = getConnection();
+            con = getConnection(inBatchMode);
             if (returnGeneratedKeys) {
                 stmt = con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
             } else {
@@ -406,16 +409,16 @@ public class ConnectionHelper {
             }
             // Don't wrap null
             if (rs == null) {
-            	closeResources(con, stmt, rs);
+            	closeResources(con, stmt, rs, inBatchMode);
                 return null;
             }
-            if (inBatchMode()) {
+            if (inBatchMode) {
                 return ResultSetWrapper.newInstance(null, stmt, rs);
             } else {
                 return ResultSetWrapper.newInstance(con, stmt, rs);
             }
         } catch (SQLException e) {
-            closeResources(con, stmt, rs);
+            closeResources(con, stmt, rs, inBatchMode);
             throw e;
         }
     }
@@ -425,11 +428,12 @@ public class ConnectionHelper {
      * by a call to {@link #closeResources(Connection, Statement, ResultSet)} which also takes the {@code
      * batchMode} state into account.
      *
+     * @param inBatchMode indicates if we are in a batchMode
      * @return a {@code Connection} to use, based on the batch mode state
      * @throws SQLException on error
      */
-    protected final Connection getConnection() throws SQLException {
-        if (inBatchMode()) {
+    protected final Connection getConnection(boolean inBatchMode) throws SQLException {
+        if (inBatchMode) {
             return getTransactionAwareBatchConnection();
         } else {
             Connection con = dataSource.getConnection();
@@ -477,9 +481,10 @@ public class ConnectionHelper {
      * @param con the {@code Connection} obtained through the {@link #getConnection()} method
      * @param stmt a {@code Statement}
      * @param rs a {@code ResultSet}
+     * @param inBatchMode indicates if we are in a batchMode
      */
-    protected final void closeResources(Connection con, Statement stmt, ResultSet rs) {
-        if (inBatchMode()) {
+    protected final void closeResources(Connection con, Statement stmt, ResultSet rs, boolean inBatchMode) {
+        if (inBatchMode) {
             DbUtility.close(null, stmt, rs);
         } else {
             DbUtility.close(con, stmt, rs);
