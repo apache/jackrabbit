@@ -17,9 +17,13 @@
 package org.apache.jackrabbit.core.persistence.check;
 
 /**
- * An item reported inside a {@link ConsistencyChecker.Report}.
+ * An item reported inside a {@link ConsistencyReport}.
  */
 public interface ReportItem {
+
+    public enum Type {
+        ORPHANED, DISCONNECTED, ABANDONED, MISSING, ERROR
+    }
 
     /**
      * @return node id to which the message applies
@@ -30,4 +34,10 @@ public interface ReportItem {
      * @return message
      */
     public String getMessage();
+
+    /**
+     * @return the type of inconsistency
+     */
+    public Type getType();
+
 }
