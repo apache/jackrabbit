@@ -278,7 +278,7 @@ public class ConsistencyCheckerImpl {
                             if (childNodeEntry != null) {
                                 String message = "NodeState '" + id + "' references inexistent child '" + childNodeId + "'";
                                 log.error(message);
-                                addMessage(reports, childNodeId, message, ReportItem.Type.MISSING);
+                                addMessage(reports, id, message, ReportItem.Type.MISSING);
                                 missingChildren.add(childNodeEntry);
                             }
                         } else {
