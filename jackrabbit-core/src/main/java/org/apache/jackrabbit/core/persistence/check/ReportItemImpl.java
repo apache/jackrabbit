@@ -20,10 +20,12 @@ public class ReportItemImpl implements ReportItem {
 
     private final String nodeId;
     private final String message;
+    private final Type type;
 
-    public ReportItemImpl(String nodeId, String message) {
+    public ReportItemImpl(String nodeId, String message, Type type) {
         this.nodeId = nodeId;
         this.message = message;
+        this.type = type;
     }
 
     public String getNodeId() {
@@ -35,7 +37,12 @@ public class ReportItemImpl implements ReportItem {
     }
 
     @Override
+    public Type getType() {
+        return type;
+    }
+
+    @Override
     public String toString() {
-        return nodeId + " -- " + message;
+        return type + ": " + nodeId + " -- " + message;
     }
 }
