@@ -134,6 +134,13 @@ abstract public class AbstractWebdavServlet extends HttpServlet implements DavCo
      */
     public static final String INIT_PARAM_CSRF_PROTECTION = "csrf-protection";
 
+    /** 
+     * Name of the 'createAbsoluteURI' init parameter that defines whether hrefs
+     * should be created with a absolute URI or as absolute Path (ContextPath). 
+     * The value should be 'true' or 'false'. The default value if not set is true.
+     */
+    public final static String INIT_PARAM_CREATE_ABSOLUTE_URI = "createAbsoluteURI";
+
 
     /**
      * Header value as specified in the {@link #INIT_PARAM_AUTHENTICATE_HEADER} parameter.
@@ -144,6 +151,11 @@ abstract public class AbstractWebdavServlet extends HttpServlet implements DavCo
      * CSRF protection utility
      */
     private CSRFUtil csrfUtil;
+
+    /**
+     * Create per default absolute URI hrefs
+     */
+    private boolean createAbsoluteURI = true;
 
     @Override
     public void init() throws ServletException {
@@ -160,6 +172,13 @@ abstract public class AbstractWebdavServlet extends HttpServlet implements DavCo
         String csrfParam = getInitParameter(INIT_PARAM_CSRF_PROTECTION);
         csrfUtil = new CSRFUtil(csrfParam);
         log.info(INIT_PARAM_CSRF_PROTECTION + " = " + csrfParam);
+
+        //create absolute URI hrefs..
+        String param = getInitParameter(INIT_PARAM_CREATE_ABSOLUTE_URI);
+        if (param != null) {
+            createAbsoluteURI = Boolean.parseBoolean(param);
+        }
+        log.info(INIT_PARAM_CREATE_ABSOLUTE_URI + " = " + createAbsoluteURI);
     }
 
     /**
@@ -226,6 +245,15 @@ abstract public class AbstractWebdavServlet extends HttpServlet implements DavCo
     }
 
     /**
+     * Returns if a absolute URI should be created for hrefs.
+     * 
+     * @return absolute URI hrefs
+     */
+    protected boolean isCreateAbsoluteURI() {
+        return createAbsoluteURI;
+    }
+    
+    /**
      * Service the given request.
      *
      * @param request
@@ -237,7 +265,7 @@ abstract public class AbstractWebdavServlet extends HttpServlet implements DavCo
     protected void service(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        WebdavRequest webdavRequest = new WebdavRequestImpl(request, getLocatorFactory());
+        WebdavRequest webdavRequest = new WebdavRequestImpl(request, getLocatorFactory(), isCreateAbsoluteURI());
         // DeltaV requires 'Cache-Control' header for all methods except 'VERSION-CONTROL' and 'REPORT'.
         int methodCode = DavMethods.getMethodCode(request.getMethod());
         boolean noCache = DavMethods.isDeltaVMethod(webdavRequest) && !(DavMethods.DAV_VERSION_CONTROL == methodCode || DavMethods.DAV_REPORT == methodCode);
