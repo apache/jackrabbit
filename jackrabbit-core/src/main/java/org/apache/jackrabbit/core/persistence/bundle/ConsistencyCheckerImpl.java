@@ -257,7 +257,6 @@ public class ConsistencyCheckerImpl {
                 NodePropBundle childBundle = null;
                 NodeInfo childNodeInfo = infos.get(childNodeId);
 
-                String message = null;
                 // does the child exist?
                 if (childNodeInfo == null) {
                     // try to load the bundle
@@ -277,8 +276,9 @@ public class ConsistencyCheckerImpl {
                                 }
                             }
                             if (childNodeEntry != null) {
-                                message = "NodeState '" + id + "' references inexistent child '" + childNodeId + "'";
+                                String message = "NodeState '" + id + "' references inexistent child '" + childNodeId + "'";
                                 log.error(message);
+                                addMessage(reports, childNodeId, message, ReportItem.Type.MISSING);
                                 missingChildren.add(childNodeEntry);
                             }
                         } else {
@@ -313,8 +313,9 @@ public class ConsistencyCheckerImpl {
                                 }
                                 if (childNodeEntry != null) {
                                     // indeed we have a disconnected child
-                                    message = "ChildNode has invalid parent id: '" + cp + "' (instead of '" + id + "')";
+                                    String message = "Node has invalid parent id: '" + cp + "' (instead of '" + id + "')";
                                     log.error(message);
+                                    addMessage(reports, childNodeId, message, ReportItem.Type.DISCONNECTED);
                                     disconnectedChildren.add(childNodeEntry);
                                 }
                             } else {
@@ -324,13 +325,10 @@ public class ConsistencyCheckerImpl {
                         }
                     }
                 }
-                if (message != null) {
-                    addMessage(reports, id, message);
-                }
             } catch (ItemStateException e) {
                 // problem already logged (loadBundle called with
                 // logDetailedErrors=true)
-                addMessage(reports, id, e.getMessage());
+                addMessage(reports, id, e.getMessage(), ReportItem.Type.ERROR);
             }
         }
         // remove child node entry (if fixing is enabled)
@@ -367,7 +365,7 @@ public class ConsistencyCheckerImpl {
                                 // indeed we have an orphaned node
                                 String message = "NodeState '" + id + "' references inexistent parent id '" + parentId + "'";
                                 log.error(message);
-                                addMessage(reports, id, message);
+                                addMessage(reports, id, message, ReportItem.Type.ORPHANED);
                                 if (fix && lostNFoundId != null) {
                                     // add a child to lost+found
                                     NodePropBundle lfBundle = pm.loadBundle(lostNFoundId);
@@ -425,7 +423,7 @@ public class ConsistencyCheckerImpl {
                                         + "' is not referenced by its parent node '"
                                         + parentId + "'";
                                 log.error(message);
-                                addMessage(reports, id, message);
+                                addMessage(reports, id, message, ReportItem.Type.ABANDONED);
                                 if (fix) {
                                     int l = (int) System.currentTimeMillis();
                                     int r = new Random().nextInt();
@@ -450,7 +448,7 @@ public class ConsistencyCheckerImpl {
             String message = "Error reading node '" + parentId
                     + "' (parent of '" + id + "'): " + e;
             log.error(message);
-            addMessage(reports, id, message);
+            addMessage(reports, id, message, ReportItem.Type.ERROR);
         }
     }
 
@@ -459,21 +457,18 @@ public class ConsistencyCheckerImpl {
      */
     private boolean isVirtualNode(NodeId id) {
         String s = id.toString();
-        if ("cafebabe-cafe-babe-cafe-babecafebabe".equals(s)) {
-            // root node isn't virtual
-            return false;
-        }
-        else {
-            // all other system nodes are
-            return s.endsWith("babecafebabe");
-        }
+        return !isRoot(s) && s.endsWith("babecafebabe");
+    }
+
+    private boolean isRoot(String id) {
+        return "cafebabe-cafe-babe-cafe-babecafebabe".equals(id);
     }
 
 
-    private void addMessage(Set<ReportItem> reports, NodeId id, String message) {
+    private void addMessage(Set<ReportItem> reports, NodeId id, String message, ReportItem.Type type) {
 
         if (reports != null || listener != null) {
-            ReportItem ri = new ReportItemImpl(id.toString(), message);
+            ReportItem ri = new ReportItemImpl(id.toString(), message, type);
 
             if (reports != null) {
                 reports.add(ri);
@@ -520,4 +515,5 @@ public class ConsistencyCheckerImpl {
             log.error(pm + ": Error storing fixed bundle: " + e);
         }
     }
+
 }
