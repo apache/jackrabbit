@@ -16,8 +16,8 @@
  */
 package org.apache.jackrabbit.test.api;
 
-import java.util.Arrays;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
@@ -58,12 +58,16 @@ public class NodeMixinUtil {
     public static String getNotAssignedMixinName(Session session, Node node) throws RepositoryException {
         NodeTypeManager manager = session.getWorkspace().getNodeTypeManager();
         NodeTypeIterator mixins = manager.getMixinNodeTypes();
-        List<NodeType> existingMixins = Arrays.asList(node.getMixinNodeTypes());
+
+        Set<String> existingMixins = new HashSet<String>();
+        for (NodeType nt : node.getMixinNodeTypes()) {
+            existingMixins.add(nt.getName());
+        }
 
         while (mixins.hasNext()) {
-            NodeType nt = mixins.nextNodeType();
-            if (!existingMixins.contains(nt)) {
-                return nt.getName();
+            String ntName = mixins.nextNodeType().getName();
+            if (!existingMixins.contains(ntName)) {
+                return ntName;
             }
         }
         return null;
