@@ -174,7 +174,10 @@ abstract public class AbstractWebdavServlet extends HttpServlet implements DavCo
         log.info(INIT_PARAM_CSRF_PROTECTION + " = " + csrfParam);
 
         //create absolute URI hrefs..
-        createAbsoluteURI = Boolean.parseBoolean(getInitParameter(INIT_PARAM_CREATE_ABSOLUTE_URI));
+        String param = getInitParameter(INIT_PARAM_CREATE_ABSOLUTE_URI);
+        if (param != null) {
+            createAbsoluteURI = Boolean.parseBoolean(param);
+        }
         log.info(INIT_PARAM_CREATE_ABSOLUTE_URI + " = " + createAbsoluteURI);
     }
 
