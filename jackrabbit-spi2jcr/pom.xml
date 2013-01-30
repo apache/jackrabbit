@@ -60,6 +60,8 @@
                 org.apache.jackrabbit.test.api.observation.NodeReorderTest#testNodeReorderMove
                 org.apache.jackrabbit.test.api.version.simple
                 org.apache.jackrabbit.test.api.LifecycleTest
+org.apache.jackrabbit.test.api.query.qom.EquiJoinConditionTest#testRightOuterJoin1<!--JCR-3493, JCR-3498-->
+org.apache.jackrabbit.test.api.query.qom.EquiJoinConditionTest#testLeftOuterJoin2<!--JCR-3493, JCR-3498-->
               </value>
             </property>
           </systemProperties>
