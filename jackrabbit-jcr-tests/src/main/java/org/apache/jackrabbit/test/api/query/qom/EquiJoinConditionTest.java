@@ -63,7 +63,7 @@ public class EquiJoinConditionTest extends AbstractJoinTest {
         JoinCondition c = qf.equiJoinCondition(
                 LEFT, propertyName1, RIGHT, propertyName2);
         QueryObjectModel qom = createQuery(QueryObjectModelConstants.JCR_JOIN_TYPE_RIGHT_OUTER, c);
-        checkQOM(qom, new Node[][]{{n1, n2}, {n2, n2}});
+        checkQOM(qom, new Node[][]{{null, n1}, {n1, n2}, {n2, n2}});
     }
 
     public void testRightOuterJoin2() throws RepositoryException {
@@ -85,6 +85,6 @@ public class EquiJoinConditionTest extends AbstractJoinTest {
         JoinCondition c = qf.equiJoinCondition(
                 LEFT, propertyName2, RIGHT, propertyName1);
         QueryObjectModel qom = createQuery(QueryObjectModelConstants.JCR_JOIN_TYPE_LEFT_OUTER, c);
-        checkQOM(qom, new Node[][]{{n2, n1}, {n2, n2}});
+        checkQOM(qom, new Node[][]{{n1, null}, {n2, n1}, {n2, n2}});
     }
 }
