@@ -96,6 +96,8 @@
                            No notification about changes to registered namespace(s) -->                        
                       org.apache.jackrabbit.jcr2spi.name.NamespaceRegistryTest#testReRegisteredNamespace
                       org.apache.jackrabbit.jcr2spi.name.NamespaceRegistryTest#testReRegisteredNamespaceVisibility
+org.apache.jackrabbit.test.api.query.qom.EquiJoinConditionTest#testRightOuterJoin1<!--JCR-3493, JCR-3498-->
+org.apache.jackrabbit.test.api.query.qom.EquiJoinConditionTest#testLeftOuterJoin2<!--JCR-3493, JCR-3498-->
                   </value>
                 </property>
                 <property>
