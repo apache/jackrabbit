@@ -786,6 +786,29 @@ abstract class InternalVersionManagerBase implements InternalVersionManager {
     }
 
     /**
+     * Removes the specified history from the storage
+     *
+     * @param history the version history to remove
+     * @throws VersionException
+     * @throws RepositoryException
+     */
+    public void internalRemoveVersionHistory(InternalVersionHistoryImpl history)
+            throws VersionException, RepositoryException {
+        String versionableUuid = history.getVersionableId().toString();
+        WriteOperation operation = startWriteOperation();
+        try {
+            NodeStateEx parent = getParentNode(getHistoryRoot(), versionableUuid, null);
+            parent.removeNode(history.node.getName());
+            parent.store();
+            operation.save();
+        } catch (ItemStateException e) {
+            log.error("Error while storing: " + e.toString());
+        } finally {
+            operation.close();
+        }
+    }
+
+    /**
      * Set version label on the specified version.
      *
      * @param history version history

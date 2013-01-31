@@ -92,6 +92,15 @@ public interface InternalVersionManager {
             throws RepositoryException;
 
     /**
+     * Removes the specified version history from storage.
+     *
+     * @param session the session that performs the remove
+     * @param history the version history to remove
+     * @throws RepositoryException if an error occurs
+     */
+    void removeVersionHistory(Session session, InternalVersionHistory history) throws RepositoryException;
+
+    /**
      * Sets the version <code>label</code> to the given <code>version</code>.
      * If the label is already assigned to another version, a VersionException is
      * thrown unless <code>move</code> is <code>true</code>. If <code>version</code>

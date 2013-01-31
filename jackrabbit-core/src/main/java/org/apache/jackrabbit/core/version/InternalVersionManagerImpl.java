@@ -448,6 +448,21 @@ public class InternalVersionManagerImpl extends InternalVersionManagerBase
      * This method must not be synchronized since it could cause deadlocks with
      * item-reading listeners in the observation thread.
      */
+    public void removeVersionHistory(Session session, final InternalVersionHistory history) throws RepositoryException {
+        escFactory.doSourced((SessionImpl) session, new SourcedTarget() {
+            public Object run() throws RepositoryException {
+                internalRemoveVersionHistory((InternalVersionHistoryImpl) history);
+                return null;
+            }
+        });
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p/>
+     * This method must not be synchronized since it could cause deadlocks with
+     * item-reading listeners in the observation thread.
+     */
     public InternalVersion setVersionLabel(Session session,
                                            final InternalVersionHistory history,
                                            final Name version, final Name label,
