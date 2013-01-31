@@ -455,7 +455,7 @@ public class ConsistencyCheckerImpl {
     /**
      * @return whether the id is for a virtual node (not needing checking)
      */
-    private boolean isVirtualNode(NodeId id) {
+    protected boolean isVirtualNode(NodeId id) {
         String s = id.toString();
         return !isRoot(s) && s.endsWith("babecafebabe");
     }

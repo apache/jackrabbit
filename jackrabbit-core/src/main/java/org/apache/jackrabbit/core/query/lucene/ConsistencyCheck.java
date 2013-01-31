@@ -16,17 +16,26 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
+import org.apache.jackrabbit.core.HierarchyManager;
+import org.apache.jackrabbit.core.persistence.IterablePersistenceManager;
+import org.apache.jackrabbit.core.persistence.PersistenceManager;
+import org.apache.jackrabbit.core.persistence.check.ConsistencyChecker;
 import org.apache.jackrabbit.core.state.ItemStateManager;
+import org.apache.jackrabbit.core.state.NoSuchItemStateException;
 import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.ChildNodeEntry;
 import org.apache.jackrabbit.core.id.NodeId;
+import org.apache.jackrabbit.spi.Path;
 import org.apache.lucene.document.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.jcr.ItemNotFoundException;
 import javax.jcr.RepositoryException;
 import java.io.IOException;
+import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Set;
@@ -52,9 +61,33 @@ public class ConsistencyCheck {
     private static final Logger log = LoggerFactory.getLogger(ConsistencyCheck.class);
 
     /**
+     * The number of nodes to fetch at once from the persistence manager. Defaults to 8kb
+     */
+    private static final int NODESATONCE = Integer.getInteger("org.apache.jackrabbit.checker.nodesatonce", 1024 * 8);
+
+    /**
+     * Whether to check whether all the nodes that are in the repository are indexed.
+     * When false only the check is made whether all nodes in the index are also in the repository.
+     */
+    private static final boolean CHECKREVERSE = Boolean.getBoolean("org.apache.jackrabbit.checker.index.reverse");
+
+
+    private final SearchIndex handler;
+
+    /**
      * The ItemStateManager of the workspace.
      */
     private final ItemStateManager stateMgr;
+
+    /**
+     * The PersistenceManager of the workspace.
+     */
+    private IterablePersistenceManager pm;
+
+    /**
+     * The bundle consistency checker
+     */
+    private ConsistencyChecker checker;
 
     /**
      * The index to check.
@@ -67,6 +100,11 @@ public class ConsistencyCheck {
     private Set<NodeId> documentIds;
 
     /**
+     * Paths of nodes that are not be indexed
+     */
+    private Set<Path> excludedPaths;
+
+    /**
      * List of all errors.
      */
     private final List<ConsistencyCheckError> errors =
@@ -75,21 +113,47 @@ public class ConsistencyCheck {
     /**
      * Private constructor.
      */
-    private ConsistencyCheck(MultiIndex index, ItemStateManager mgr) {
+    private ConsistencyCheck(MultiIndex index, SearchIndex handler, Set<NodeId> excludedIds) {
         this.index = index;
-        this.stateMgr = mgr;
+        this.handler = handler;
+
+        final HierarchyManager hierarchyManager = handler.getContext().getHierarchyManager();
+        excludedPaths = new HashSet<Path>(excludedIds.size());
+        for (NodeId excludedId : excludedIds) {
+            try {
+                final Path path = hierarchyManager.getPath(excludedId);
+                excludedPaths.add(path);
+            } catch (ItemNotFoundException e) {
+                log.warn("Excluded node does not exist");
+            } catch (RepositoryException e) {
+                log.error("Failed to get excluded path", e);
+            }
+        }
+
+        this.stateMgr = handler.getContext().getItemStateManager();
+        final PersistenceManager pm = handler.getContext().getPersistenceManager();
+        if (pm instanceof IterablePersistenceManager) {
+            this.pm = (IterablePersistenceManager) pm;
+        }
+        if (pm instanceof ConsistencyChecker) {
+            this.checker = (ConsistencyChecker) pm;
+        }
     }
 
     /**
      * Runs the consistency check on <code>index</code>.
      *
+     *
+     *
      * @param index the index to check.
-     * @param mgr   the ItemStateManager from where to load content.
+     * @param handler the QueryHandler to use.
+     * @param excludedIds the set of node ids that are not indexed
      * @return the consistency check with the results.
      * @throws IOException if an error occurs while checking.
      */
-    static ConsistencyCheck run(MultiIndex index, ItemStateManager mgr) throws IOException {
-        ConsistencyCheck check = new ConsistencyCheck(index, mgr);
+    static ConsistencyCheck run(MultiIndex index, SearchIndex handler, final Set<NodeId> excludedIds)
+            throws IOException {
+        ConsistencyCheck check = new ConsistencyCheck(index, handler, excludedIds);
         check.run();
         return check;
     }
@@ -118,7 +182,7 @@ public class ConsistencyCheck {
                 }
             } catch (Exception e) {
                 if (ignoreFailure) {
-                    log.warn("Exception while reparing: " + e);
+                    log.warn("Exception while repairing: " + e);
                 } else {
                     if (!(e instanceof IOException)) {
                         e = new IOException(e.getMessage());
@@ -146,6 +210,13 @@ public class ConsistencyCheck {
      * @throws IOException if an error occurs while running the check.
      */
     private void run() throws IOException {
+        log.info("Checking index of workspace " + handler.getContext().getWorkspace());
+        checkIndexToItems();
+        checkItemsToIndex();
+    }
+
+    private void checkIndexToItems() throws IOException {
+        log.info("Checking index consistency");
         // Ids of multiple nodes in the index
         Set<NodeId> multipleEntries = new HashSet<NodeId>();
         // collect all documents ids
@@ -210,6 +281,92 @@ public class ConsistencyCheck {
         } finally {
             reader.release();
         }
+    }
+
+    private void checkItemsToIndex() {
+        if (!CHECKREVERSE) {
+            return;
+        }
+        if (pm == null) {
+            log.warn("Cannot run reverse index check with this PersistenceManager");
+            return;
+        }
+        log.info("Checking index completeness");
+        try {
+            int count = 0;
+            List<NodeId> batch = pm.getAllNodeIds(null, NODESATONCE);
+            while (!batch.isEmpty()) {
+                NodeId lastId = null;
+                for (NodeId nodeId : batch) {
+                    lastId = nodeId;
+
+                    count++;
+                    if (count % 1000 == 0) {
+                        log.info(pm + ": checked " + count + " node ids...");
+                    }
+
+                    checkNode(nodeId);
+
+                }
+                batch = pm.getAllNodeIds(lastId, NODESATONCE);
+            }
+        } catch (ItemStateException e) {
+            log.error("Exception while loading items to check", e);
+        } catch (RepositoryException e) {
+            log.error("Exception while loading items to check", e);
+        }
+
+    }
+
+    private void checkNode(final NodeId nodeId) {
+        try {
+            if (!documentIds.contains(nodeId) && !isExcluded(nodeId)) {
+                NodeState nodeState = getNodeState(nodeId);
+                if (nodeState != null && !isBrokenNode(nodeId, nodeState)) {
+                    errors.add(new NodeAdded(nodeId));
+                }
+            }
+        } catch (ItemStateException e) {
+            log.error("Failed to check node: " + nodeId, e);
+        }
+    }
+
+    private boolean isExcluded(NodeId id) {
+        try {
+            final HierarchyManager hierarchyManager = handler.getContext().getHierarchyManager();
+            final Path path = hierarchyManager.getPath(id);
+            for (Path excludedPath : excludedPaths) {
+                if (excludedPath.isEquivalentTo(path) || excludedPath.isAncestorOf(path)) {
+                    return true;
+                }
+            }
+        } catch (RepositoryException ignored) {
+        }
+        return false;
+    }
+
+    private NodeState getNodeState(NodeId nodeId) throws ItemStateException {
+        try {
+            return (NodeState) stateMgr.getItemState(nodeId);
+        } catch (NoSuchItemStateException e) {
+            return null;
+        }
+    }
+
+    private boolean isBrokenNode(final NodeId nodeId, final NodeState nodeState) throws ItemStateException {
+        final NodeId parentId = nodeState.getParentId();
+        if (parentId != null) {
+            final NodeState parentState = getNodeState(parentId);
+            if (parentState == null) {
+                log.warn("Node missing from index is orphaned node: " + nodeId);
+                return true;
+            }
+            if (!parentState.hasChildNodeEntry(nodeId)) {
+                log.warn("Node missing from index is abandoned node: " + nodeId);
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
@@ -364,7 +521,7 @@ public class ConsistencyCheck {
     private class NodeDeleted extends ConsistencyCheckError {
 
         NodeDeleted(NodeId id) {
-            super("Node " + id + " does not longer exist.", id);
+            super("Node " + id + " no longer exists.", id);
         }
 
         /**
@@ -383,5 +540,32 @@ public class ConsistencyCheck {
             log.info("Removing deleted node from index: " + id);
             index.removeDocument(id);
         }
+    }
+
+    private class NodeAdded extends ConsistencyCheckError {
+
+        NodeAdded(final NodeId id) {
+            super("Node " + id + " is missing.", id);
+        }
+
+        @Override
+        public boolean repairable() {
+            return true;
+        }
+
+        @Override
+        void repair() throws IOException {
+            try {
+                NodeState nodeState = (NodeState) stateMgr.getItemState(id);
+                final Iterator<NodeId> remove = Collections.<NodeId>emptyList().iterator();
+                final Iterator<NodeState> add = Collections.singletonList(nodeState).iterator();
+                handler.updateNodes(remove, add);
+            } catch (RepositoryException e) {
+                throw new IOException(e.toString());
+            } catch (ItemStateException e) {
+                throw new IOException(e.toString());
+            }
+        }
+
     }
 }
