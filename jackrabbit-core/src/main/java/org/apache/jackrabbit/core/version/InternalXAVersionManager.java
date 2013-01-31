@@ -255,6 +255,18 @@ public class InternalXAVersionManager extends InternalVersionManagerBase
     /**
      * {@inheritDoc}
      */
+    public void removeVersionHistory(Session session, InternalVersionHistory history)
+            throws RepositoryException {
+        if (isInXA()) {
+            internalRemoveVersionHistory((InternalVersionHistoryImpl) history);
+        } else {
+            vMgr.removeVersionHistory(session, history);
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     public InternalVersion setVersionLabel(Session session,
                                            InternalVersionHistory history,
                                            Name version,
