@@ -42,7 +42,6 @@ public class SearchIndexConsistencyCheckTest extends AbstractJCRTest {
     @Override
     protected void setUp() throws Exception {
         super.setUp();
-        System.setProperty("org.apache.jackrabbit.checker.index.reverse", "true");
     }
 
     public void testIndexMissesNode() throws Exception {
@@ -70,6 +69,8 @@ public class SearchIndexConsistencyCheckTest extends AbstractJCRTest {
         consistencyCheck.repair(false);
 
         assertTrue("Index was not repaired properly", searchIndexContainsNode(searchIndex, fooId));
+
+        assertTrue("Consistency check still reports errors", searchIndex.runConsistencyCheck().getErrors().isEmpty());
     }
 
     public void testIndexContainsUnknownNode() throws Exception {
@@ -96,6 +97,8 @@ public class SearchIndexConsistencyCheckTest extends AbstractJCRTest {
         consistencyCheck.repair(false);
 
         assertFalse("Index was not repaired properly", searchIndexContainsNode(searchIndex, nodeId));
+
+        assertTrue("Consistency check still reports errors", searchIndex.runConsistencyCheck().getErrors().isEmpty());
     }
 
     private boolean searchIndexContainsNode(SearchIndex searchIndex, NodeId nodeId) throws IOException {

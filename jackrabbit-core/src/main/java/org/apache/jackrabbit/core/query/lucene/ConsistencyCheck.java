@@ -35,9 +35,11 @@ import javax.jcr.ItemNotFoundException;
 import javax.jcr.RepositoryException;
 import java.io.IOException;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Map;
 import java.util.Set;
 import java.util.HashSet;
 
@@ -65,12 +67,6 @@ public class ConsistencyCheck {
      */
     private static final int NODESATONCE = Integer.getInteger("org.apache.jackrabbit.checker.nodesatonce", 1024 * 8);
 
-    /**
-     * Whether to check whether all the nodes that are in the repository are indexed.
-     * When false only the check is made whether all nodes in the index are also in the repository.
-     */
-    private static final boolean CHECKREVERSE = Boolean.getBoolean("org.apache.jackrabbit.checker.index.reverse");
-
 
     private final SearchIndex handler;
 
@@ -95,9 +91,9 @@ public class ConsistencyCheck {
     private final MultiIndex index;
 
     /**
-     * All the document ids within the index.
+     * All the node ids and whether they were found in the index.
      */
-    private Set<NodeId> documentIds;
+    private Map<NodeId, Boolean> nodeIds;
 
     /**
      * Paths of nodes that are not be indexed
@@ -211,16 +207,46 @@ public class ConsistencyCheck {
      */
     private void run() throws IOException {
         log.info("Checking index of workspace " + handler.getContext().getWorkspace());
-        checkIndexToItems();
-        checkItemsToIndex();
+        loadNodes();
+        if (nodeIds != null) {
+            checkIndexConsistency();
+            checkIndexCompleteness();
+        }
     }
 
-    private void checkIndexToItems() throws IOException {
+    private void loadNodes() {
+        log.info("Loading nodes");
+        try {
+            int count = 0;
+            Map<NodeId, Boolean> nodeIds = new HashMap<NodeId, Boolean>();
+            List<NodeId> batch = pm.getAllNodeIds(null, NODESATONCE);
+            while (!batch.isEmpty()) {
+                NodeId lastId = null;
+                for (NodeId nodeId : batch) {
+                    lastId = nodeId;
+
+                    count++;
+                    if (count % 1000 == 0) {
+                        log.info(pm + ": loaded " + count + " node ids...");
+                    }
+
+                    nodeIds.put(nodeId, Boolean.FALSE);
+
+                }
+                batch = pm.getAllNodeIds(lastId, NODESATONCE);
+            }
+            this.nodeIds = nodeIds;
+        } catch (ItemStateException e) {
+            log.error("Exception while loading items to check", e);
+        } catch (RepositoryException e) {
+            log.error("Exception while loading items to check", e);
+        }
+    }
+
+    private void checkIndexConsistency() throws IOException {
         log.info("Checking index consistency");
         // Ids of multiple nodes in the index
         Set<NodeId> multipleEntries = new HashSet<NodeId>();
-        // collect all documents ids
-        documentIds = new HashSet<NodeId>();
         CachingMultiIndexReader reader = index.getIndexReader();
         try {
             for (int i = 0; i < reader.maxDoc(); i++) {
@@ -233,8 +259,10 @@ public class ConsistencyCheck {
                 }
                 Document d = reader.document(i, FieldSelectors.UUID);
                 NodeId id = new NodeId(d.get(FieldNames.UUID));
-                if (stateMgr.hasItemState(id)) {
-                    if (!documentIds.add(id)) {
+                Boolean alreadyIndexed = nodeIds.put(id, Boolean.TRUE);
+                boolean nodeExists = alreadyIndexed != null;
+                if (nodeExists) {
+                    if (alreadyIndexed) {
                         multipleEntries.add(id);
                     }
                 } else {
@@ -268,11 +296,15 @@ public class ConsistencyCheck {
                 if (parentUUIDString.length() > 0) {
                     parentId = new NodeId(parentUUIDString);
                 }
-                if (parentId == null || documentIds.contains(parentId)) {
+
+                boolean parentExists = parentId != null && nodeIds.containsKey(parentId);
+                boolean parentIndexed = parentExists && nodeIds.get(parentId);
+                if (parentId == null || parentIndexed) {
                     continue;
                 }
+
                 // parent is missing
-                if (stateMgr.hasItemState(parentId)) {
+                if (parentExists) {
                     errors.add(new MissingAncestor(id, parentId));
                 } else {
                     errors.add(new UnknownParent(id, parentId));
@@ -281,53 +313,31 @@ public class ConsistencyCheck {
         } finally {
             reader.release();
         }
+
     }
 
-    private void checkItemsToIndex() {
-        if (!CHECKREVERSE) {
-            return;
-        }
-        if (pm == null) {
-            log.warn("Cannot run reverse index check with this PersistenceManager");
-            return;
-        }
+    private void checkIndexCompleteness() {
         log.info("Checking index completeness");
-        try {
-            int count = 0;
-            List<NodeId> batch = pm.getAllNodeIds(null, NODESATONCE);
-            while (!batch.isEmpty()) {
-                NodeId lastId = null;
-                for (NodeId nodeId : batch) {
-                    lastId = nodeId;
-
-                    count++;
-                    if (count % 1000 == 0) {
-                        log.info(pm + ": checked " + count + " node ids...");
+        int i = 0;
+        int size = nodeIds.size();
+        for (Map.Entry<NodeId, Boolean> entry : nodeIds.entrySet()) {
+            // check whether all nodes in the repository are indexed
+            NodeId nodeId = entry.getKey();
+            boolean indexed = entry.getValue();
+            try {
+                if (++i > 10 && i % (size / 10) == 0) {
+                    long progress = Math.round((100.0 * (float) i) / (float) size);
+                    log.info("progress: " + progress + "%");
+                }
+                if (!indexed && !isExcluded(nodeId)) {
+                    NodeState nodeState = getNodeState(nodeId);
+                    if (nodeState != null && !isBrokenNode(nodeId, nodeState)) {
+                        errors.add(new NodeAdded(nodeId));
                     }
-
-                    checkNode(nodeId);
-
                 }
-                batch = pm.getAllNodeIds(lastId, NODESATONCE);
+            } catch (ItemStateException e) {
+                log.error("Failed to check node: " + nodeId, e);
             }
-        } catch (ItemStateException e) {
-            log.error("Exception while loading items to check", e);
-        } catch (RepositoryException e) {
-            log.error("Exception while loading items to check", e);
-        }
-
-    }
-
-    private void checkNode(final NodeId nodeId) {
-        try {
-            if (!documentIds.contains(nodeId) && !isExcluded(nodeId)) {
-                NodeState nodeState = getNodeState(nodeId);
-                if (nodeState != null && !isBrokenNode(nodeId, nodeState)) {
-                    errors.add(new NodeAdded(nodeId));
-                }
-            }
-        } catch (ItemStateException e) {
-            log.error("Failed to check node: " + nodeId, e);
         }
     }
 
@@ -379,7 +389,7 @@ public class ConsistencyCheck {
     private String getPath(NodeState node) {
         // remember as fallback
         String uuid = node.getNodeId().toString();
-        StringBuffer path = new StringBuffer();
+        StringBuilder path = new StringBuilder();
         List<ChildNodeEntry> elements = new ArrayList<ChildNodeEntry>();
         try {
             while (node.getParentId() != null) {
@@ -433,13 +443,13 @@ public class ConsistencyCheck {
          */
         public void repair() throws IOException {
             NodeId ancestorId = parentId;
-            while (ancestorId != null && !documentIds.contains(ancestorId)) {
+            while (ancestorId != null && nodeIds.containsKey(ancestorId) && nodeIds.get(ancestorId)) {
                 try {
                     NodeState n = (NodeState) stateMgr.getItemState(ancestorId);
                     log.info("Reparing missing node " + getPath(n) + " (" + ancestorId + ")");
                     Document d = index.createDocument(n);
                     index.addDocument(d);
-                    documentIds.add(n.getNodeId());
+                    nodeIds.put(n.getNodeId(), Boolean.TRUE);
                     ancestorId = n.getParentId();
                 } catch (ItemStateException e) {
                     throw new IOException(e.toString());
@@ -506,7 +516,7 @@ public class ConsistencyCheck {
                 log.info("Re-indexing duplicate node occurrences in index: " + getPath(node));
                 Document d = index.createDocument(node);
                 index.addDocument(d);
-                documentIds.add(node.getNodeId());
+                nodeIds.put(node.getNodeId(), Boolean.TRUE);
             } catch (ItemStateException e) {
                 throw new IOException(e.toString());
             } catch (RepositoryException e) {
