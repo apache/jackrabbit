@@ -81,11 +81,6 @@ public class ConsistencyCheck {
     private IterablePersistenceManager pm;
 
     /**
-     * The bundle consistency checker
-     */
-    private ConsistencyChecker checker;
-
-    /**
      * The index to check.
      */
     private final MultiIndex index;
@@ -130,9 +125,6 @@ public class ConsistencyCheck {
         final PersistenceManager pm = handler.getContext().getPersistenceManager();
         if (pm instanceof IterablePersistenceManager) {
             this.pm = (IterablePersistenceManager) pm;
-        }
-        if (pm instanceof ConsistencyChecker) {
-            this.checker = (ConsistencyChecker) pm;
         }
     }
 
