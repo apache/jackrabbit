@@ -47,12 +47,13 @@ import java.util.HashSet;
  * Implements a consistency check on the search index. Currently the following
  * checks are implemented:
  * <ul>
- * <li>Does not node exist in the ItemStateManager? If it does not exist
+ * <li>Does the node exist in the ItemStateManager? If it does not exist
  * anymore the node is deleted from the index.</li>
  * <li>Is the parent of a node also present in the index? If it is not present it
  * will be indexed.</li>
  * <li>Is a node indexed multiple times? If that is the case, all occurrences
  * in the index for such a node are removed, and the node is re-indexed.</li>
+ * <li>Is a node missing from the index? If so, it is added.</li>
  * </ul>
  */
 public class ConsistencyCheck {
