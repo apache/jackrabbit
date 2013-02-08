@@ -57,13 +57,11 @@ public final class Permission {
 
     public static final int PRIVILEGE_MNGMT = WORKSPACE_MNGMT << 1;
 
-    public static final int REMOVE_VERSION = PRIVILEGE_MNGMT << 1;
-
     public static final int ALL = (READ | SET_PROPERTY | ADD_NODE | REMOVE_NODE
             | REMOVE_PROPERTY | READ_AC | MODIFY_AC | NODE_TYPE_MNGMT
             | VERSION_MNGMT | LOCK_MNGMT | LIFECYCLE_MNGMT | RETENTION_MNGMT
             | MODIFY_CHILD_NODE_COLLECTION | NODE_TYPE_DEF_MNGMT | NAMESPACE_MNGMT
-            | WORKSPACE_MNGMT | PRIVILEGE_MNGMT | REMOVE_VERSION);
+            | WORKSPACE_MNGMT | PRIVILEGE_MNGMT);
 
     /**
      * Returns those bits from <code>permissions</code> that are not present in
