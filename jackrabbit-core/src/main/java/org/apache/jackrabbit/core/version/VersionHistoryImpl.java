@@ -258,7 +258,6 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
             RepositoryException {
         try {
             // check permissions
-            checkRemoveVersionPermission();
             checkVersionManagementPermission();
             sessionContext.getSessionImpl().getInternalVersionManager().removeVersion(
                     getSession(),
@@ -275,7 +274,6 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
      * @throws RepositoryException if an error occurs.
      */
     public void removeVersionHistory() throws RepositoryException {
-        checkRemoveVersionPermission();
         checkVersionManagementPermission();
         InternalVersionManager internalVersionManager =
                 sessionContext.getSessionImpl().getInternalVersionManager();
@@ -328,10 +326,6 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
         } catch (ItemNotFoundException e) {
             // ignore.
         }
-    }
-
-    private void checkRemoveVersionPermission() throws RepositoryException {
-        sessionContext.getAccessManager().checkRepositoryPermission(Permission.REMOVE_VERSION);
     }
 
     /**
