@@ -774,8 +774,7 @@ public class MultiIndex {
      * @throws IOException if an error occurs while running the check.
      */
     ConsistencyCheck runConsistencyCheck() throws IOException {
-        return ConsistencyCheck.run(this,
-                handler.getContext().getItemStateManager());
+        return ConsistencyCheck.run(this, handler, excludedIDs);
     }
 
     /**

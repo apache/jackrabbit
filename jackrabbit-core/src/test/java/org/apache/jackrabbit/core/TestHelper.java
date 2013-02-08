@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.core;
 
+import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
 import javax.jcr.Repository;
@@ -25,6 +26,9 @@ import javax.jcr.Session;
 import org.apache.jackrabbit.core.persistence.PersistenceManager;
 import org.apache.jackrabbit.core.persistence.check.ConsistencyChecker;
 import org.apache.jackrabbit.core.persistence.check.ConsistencyReport;
+import org.apache.jackrabbit.core.query.QueryHandler;
+import org.apache.jackrabbit.core.query.lucene.ConsistencyCheck;
+import org.apache.jackrabbit.core.query.lucene.SearchIndex;
 import org.apache.jackrabbit.test.NotExecutableException;
 
 /**
@@ -74,6 +78,21 @@ public class TestHelper {
         }
     }
 
+    public static ConsistencyCheck checkIndexConsistency(Session session) throws RepositoryException, NotExecutableException, IOException {
+        Repository r = session.getRepository();
+        if (!(r instanceof RepositoryImpl)) {
+            throw new NotExecutableException();
+        }
+        RepositoryImpl ri = (RepositoryImpl) r;
+        final String workspaceName = session.getWorkspace().getName();
+        QueryHandler qh = ri.getSearchManager(workspaceName).getQueryHandler();
+        if (!(qh instanceof SearchIndex)) {
+            throw new NotExecutableException("No search index");
+        }
+        SearchIndex si = (SearchIndex) qh;
+        return si.runConsistencyCheck();
+    }
+
     /**
      * Runs a consistency check on the versioning store used by the specified session.
      *
@@ -113,5 +132,14 @@ public class TestHelper {
         while (jtp.getPendingLowPriorityTaskCount() != 0) {
             TimeUnit.MILLISECONDS.sleep(100);
         }
+    }
+
+    public static SearchManager getSearchManager(Session session) throws NotExecutableException, RepositoryException {
+        Repository r = session.getRepository();
+        if (!(r instanceof RepositoryImpl)) {
+            throw new NotExecutableException();
+        }
+        RepositoryImpl ri = (RepositoryImpl) r;
+        return ri.getSearchManager(session.getWorkspace().getName());
     }
 }
