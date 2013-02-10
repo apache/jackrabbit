@@ -17,6 +17,8 @@
 package org.apache.jackrabbit.core.query.lucene;
 
 import org.apache.jackrabbit.core.HierarchyManager;
+import org.apache.jackrabbit.core.cluster.ClusterException;
+import org.apache.jackrabbit.core.cluster.ClusterNode;
 import org.apache.jackrabbit.core.persistence.IterablePersistenceManager;
 import org.apache.jackrabbit.core.persistence.PersistenceManager;
 import org.apache.jackrabbit.core.state.ItemState;
@@ -108,7 +110,6 @@ public class ConsistencyCheck {
     private ConsistencyCheck(MultiIndex index, SearchIndex handler, Set<NodeId> excludedIds) {
         this.index = index;
         this.handler = handler;
-
         final HierarchyManager hierarchyManager = handler.getContext().getHierarchyManager();
         excludedPaths = new HashSet<Path>(excludedIds.size());
         for (NodeId excludedId : excludedIds) {
@@ -207,6 +208,34 @@ public class ConsistencyCheck {
         }
     }
 
+    public void doubleCheckErrors() {
+        if (!errors.isEmpty()) {
+            log.info("Double checking errors");
+            final ClusterNode clusterNode = handler.getContext().getClusterNode();
+            if (clusterNode != null) {
+                try {
+                    clusterNode.sync();
+                } catch (ClusterException e) {
+                    log.error("Could not sync cluster node for double checking errors");
+                }
+            }
+            final Iterator<ConsistencyCheckError> iterator = errors.iterator();
+            while (iterator.hasNext()) {
+                try {
+                    final ConsistencyCheckError error = iterator.next();
+                    if (!error.doubleCheck(handler, stateMgr)) {
+                        log.info("False positive: " + error.toString());
+                        iterator.remove();
+                    }
+                } catch (RepositoryException e) {
+                    log.error("Failed to double check consistency error", e);
+                } catch (IOException e) {
+                    log.error("Failed to double check consistency error", e);
+                }
+            }
+        }
+    }
+
     private void loadNodes() {
         log.info("Loading nodes");
         try {
@@ -285,12 +314,10 @@ public class ConsistencyCheck {
                 Document d = reader.document(i, FieldSelectors.UUID_AND_PARENT);
                 NodeId id = new NodeId(d.get(FieldNames.UUID));
                 String parent = d.get(FieldNames.PARENT);
-                NodeId parentId;
-                if (parent != null && !parent.isEmpty()) {
-                    parentId = new NodeId(parent);
-                } else {
+                if (parent == null || parent.isEmpty()) {
                     continue;
                 }
+                final NodeId parentId = new NodeId(parent);
 
                 boolean parentExists = nodeIds.containsKey(parentId);
                 boolean parentIndexed = parentExists && nodeIds.get(parentId);
@@ -462,6 +489,23 @@ public class ConsistencyCheck {
                 }
             }
         }
+
+        @Override
+        boolean doubleCheck(SearchIndex handler, ItemStateManager stateManager)
+                throws RepositoryException, IOException {
+            final List<Document> documents = handler.getNodeDocuments(id);
+            for (Document document : documents) {
+                final String parent = document.get(FieldNames.PARENT);
+                if (parent != null && !parent.isEmpty()) {
+                    final NodeId parentId = new NodeId(parent);
+                    if (handler.getNodeDocuments(parentId).isEmpty()) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+
+        }
     }
 
     /**
@@ -469,8 +513,11 @@ public class ConsistencyCheck {
      */
     private static class UnknownParent extends ConsistencyCheckError {
 
+        private NodeId parentId;
+
         private UnknownParent(NodeId id, NodeId parentId) {
             super("Node " + id + " has unknown parent: " + parentId, id);
+            this.parentId = parentId;
         }
 
         /**
@@ -487,6 +534,22 @@ public class ConsistencyCheck {
         public void repair() throws IOException {
             log.warn("Unknown parent for " + id + " cannot be repaired");
         }
+
+        @Override
+        boolean doubleCheck(SearchIndex handler, ItemStateManager stateManager)
+                throws IOException, RepositoryException {
+            final List<Document> documents = handler.getNodeDocuments(id);
+            for (Document document : documents) {
+                final String parent = document.get(FieldNames.PARENT);
+                if (parent != null && !parent.isEmpty()) {
+                    final NodeId parentId = new NodeId(parent);
+                    if (parentId.equals(this.parentId) && !stateManager.hasItemState(parentId)) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
     }
 
     /**
@@ -494,8 +557,11 @@ public class ConsistencyCheck {
      */
     private class WrongParent extends ConsistencyCheckError {
 
+        private NodeId indexedParentId;
+
         private WrongParent(NodeId id, NodeId indexedParentId, NodeId actualParentId) {
             super("Node " + id + " has wrong parent: " + indexedParentId + ", should be : " + actualParentId, id);
+            this.indexedParentId = indexedParentId;
         }
 
         @Override
@@ -522,6 +588,22 @@ public class ConsistencyCheck {
             } catch (RepositoryException e) {
                 throw new IOException(e.toString());
             }
+        }
+
+        @Override
+        boolean doubleCheck(final SearchIndex handler, final ItemStateManager stateManager)
+                throws RepositoryException, IOException {
+            final List<Document> documents = handler.getNodeDocuments(id);
+            for (Document document : documents) {
+                final String parent = document.get(FieldNames.PARENT);
+                if (parent != null && !parent.isEmpty()) {
+                    final NodeId parentId = new NodeId(parent);
+                    if (parentId.equals(indexedParentId) && !stateManager.hasItemState(parentId)) {
+                        return true;
+                    }
+                }
+            }
+            return false;
         }
 
     }
@@ -566,6 +648,12 @@ public class ConsistencyCheck {
                 throw new IOException(e.toString());
             }
         }
+
+        @Override
+        boolean doubleCheck(SearchIndex handler, ItemStateManager stateManager)
+                throws RepositoryException, IOException {
+            return handler.getNodeDocuments(id).size() > 1;
+        }
     }
 
     /**
@@ -592,6 +680,18 @@ public class ConsistencyCheck {
         public void repair() throws IOException {
             log.info("Removing deleted node from index: " + id);
             index.removeDocument(id);
+        }
+
+        @Override
+        boolean doubleCheck(SearchIndex handler, ItemStateManager stateManager)
+                throws RepositoryException, IOException {
+            final List<Document> documents = handler.getNodeDocuments(id);
+            if (!documents.isEmpty()) {
+                if (!stateManager.hasItemState(id)) {
+                    return true;
+                }
+            }
+            return false;
         }
     }
 
@@ -621,6 +721,18 @@ public class ConsistencyCheck {
             } catch (ItemStateException e) {
                 throw new IOException(e.toString());
             }
+        }
+
+        @Override
+        boolean doubleCheck(SearchIndex handler, ItemStateManager stateManager)
+                throws RepositoryException, IOException {
+            final List<Document> documents = handler.getNodeDocuments(id);
+            if (documents.isEmpty()) {
+                if (stateManager.hasItemState(id)) {
+                    return true;
+                }
+            }
+            return false;
         }
 
     }

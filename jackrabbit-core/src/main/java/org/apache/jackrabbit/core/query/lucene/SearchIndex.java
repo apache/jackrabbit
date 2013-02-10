@@ -758,6 +758,32 @@ public class SearchIndex extends AbstractQueryHandler {
         return ids;
     }
 
+    List<Document> getNodeDocuments(NodeId id) throws RepositoryException, IOException {
+        final List<Integer> docIds = new ArrayList<Integer>(1);
+        final List<Document> docs = new ArrayList<Document>();
+        final IndexReader reader = getIndexReader();
+        try {
+            IndexSearcher searcher = new IndexSearcher(reader);
+            try {
+                Query q = new TermQuery(new Term(FieldNames.UUID, id.toString()));
+                searcher.search(q, new AbstractHitCollector() {
+                    @Override
+                    protected void collect(final int doc, final float score) {
+                        docIds.add(doc);
+                    }
+                });
+                for (Integer docId : docIds) {
+                    docs.add(reader.document(docId, FieldSelectors.UUID_AND_PARENT));
+                }
+            } finally {
+                searcher.close();
+            }
+        } finally {
+            Util.closeOrRelease(reader);
+        }
+        return docs;
+    }
+
     /**
      * This method returns the QueryNodeFactory used to parse Queries. This method
      * may be overridden to provide a customized QueryNodeFactory
