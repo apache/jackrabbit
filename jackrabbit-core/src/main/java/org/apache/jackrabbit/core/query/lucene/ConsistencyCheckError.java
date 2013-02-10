@@ -17,8 +17,11 @@
 package org.apache.jackrabbit.core.query.lucene;
 
 import org.apache.jackrabbit.core.id.NodeId;
+import org.apache.jackrabbit.core.state.ItemStateManager;
 
 import java.io.IOException;
+
+import javax.jcr.RepositoryException;
 
 /**
  * Common base class for errors detected during the consistency check.
@@ -59,4 +62,14 @@ public abstract class ConsistencyCheckError {
      * @throws IOException if an error occurs while repairing.
      */
     abstract void repair() throws IOException;
+
+    /**
+     * Double check the error. Used to rule out false positives in live environments.
+     *
+     * @return <code>true</code> if the error was verified to still exist, else <code>false</code>.
+     * @throws RepositoryException
+     * @throws IOException
+     */
+    abstract boolean doubleCheck(SearchIndex handler, ItemStateManager stateManager)
+            throws RepositoryException, IOException;
 }
