@@ -19,7 +19,7 @@ package org.apache.jackrabbit.core.query.lucene;
 import org.apache.jackrabbit.core.HierarchyManager;
 import org.apache.jackrabbit.core.persistence.IterablePersistenceManager;
 import org.apache.jackrabbit.core.persistence.PersistenceManager;
-import org.apache.jackrabbit.core.persistence.check.ConsistencyChecker;
+import org.apache.jackrabbit.core.state.ItemState;
 import org.apache.jackrabbit.core.state.ItemStateManager;
 import org.apache.jackrabbit.core.state.NoSuchItemStateException;
 import org.apache.jackrabbit.core.state.NodeState;
@@ -284,23 +284,34 @@ public class ConsistencyCheck {
                 }
                 Document d = reader.document(i, FieldSelectors.UUID_AND_PARENT);
                 NodeId id = new NodeId(d.get(FieldNames.UUID));
-                String parentUUIDString = d.get(FieldNames.PARENT);
-                NodeId parentId = null;
-                if (parentUUIDString.length() > 0) {
-                    parentId = new NodeId(parentUUIDString);
-                }
-
-                boolean parentExists = parentId != null && nodeIds.containsKey(parentId);
-                boolean parentIndexed = parentExists && nodeIds.get(parentId);
-                if (parentId == null || parentIndexed) {
+                String parent = d.get(FieldNames.PARENT);
+                NodeId parentId;
+                if (parent != null && !parent.isEmpty()) {
+                    parentId = new NodeId(parent);
+                } else {
                     continue;
                 }
 
-                // parent is missing
+                boolean parentExists = nodeIds.containsKey(parentId);
+                boolean parentIndexed = parentExists && nodeIds.get(parentId);
+                if (parentIndexed) {
+                    continue;
+                }
+
+                // parent is missing from index
                 if (parentExists) {
                     errors.add(new MissingAncestor(id, parentId));
                 } else {
-                    errors.add(new UnknownParent(id, parentId));
+                    try {
+                        final ItemState itemState = stateMgr.getItemState(id);
+                        if (parentId.equals(itemState.getParentId())) {
+                            // orphaned node
+                            errors.add(new UnknownParent(id, parentId));
+                        } else {
+                            errors.add(new WrongParent(id, parentId, itemState.getParentId()));
+                        }
+                    } catch (ItemStateException ignored) {
+                    }
                 }
             }
         } finally {
@@ -439,7 +450,7 @@ public class ConsistencyCheck {
             while (ancestorId != null && nodeIds.containsKey(ancestorId) && nodeIds.get(ancestorId)) {
                 try {
                     NodeState n = (NodeState) stateMgr.getItemState(ancestorId);
-                    log.info("Reparing missing node " + getPath(n) + " (" + ancestorId + ")");
+                    log.info("Repairing missing node " + getPath(n) + " (" + ancestorId + ")");
                     Document d = index.createDocument(n);
                     index.addDocument(d);
                     nodeIds.put(n.getNodeId(), Boolean.TRUE);
@@ -454,7 +465,7 @@ public class ConsistencyCheck {
     }
 
     /**
-     * The parent of a node is not available through the ItemStateManager.
+     * The parent of a node is not in the repository
      */
     private static class UnknownParent extends ConsistencyCheckError {
 
@@ -476,6 +487,43 @@ public class ConsistencyCheck {
         public void repair() throws IOException {
             log.warn("Unknown parent for " + id + " cannot be repaired");
         }
+    }
+
+    /**
+     * The parent as indexed does not correspond with the actual parent in the repository
+     */
+    private class WrongParent extends ConsistencyCheckError {
+
+        private WrongParent(NodeId id, NodeId indexedParentId, NodeId actualParentId) {
+            super("Node " + id + " has wrong parent: " + indexedParentId + ", should be : " + actualParentId, id);
+        }
+
+        @Override
+        public boolean repairable() {
+            return true;
+        }
+
+        /**
+         * Reindex node.
+         */
+        @Override
+        void repair() throws IOException {
+            index.removeAllDocuments(id);
+            try {
+                NodeState node = (NodeState) stateMgr.getItemState(id);
+                log.info("Re-indexing node with wrong parent in index: " + getPath(node));
+                Document d = index.createDocument(node);
+                index.addDocument(d);
+                nodeIds.put(node.getNodeId(), Boolean.TRUE);
+            } catch (NoSuchItemStateException e) {
+                log.info("Not re-indexing node with wrong parent because node no longer exists");
+            } catch (ItemStateException e) {
+                throw new IOException(e.toString());
+            } catch (RepositoryException e) {
+                throw new IOException(e.toString());
+            }
+        }
+
     }
 
     /**
@@ -510,6 +558,8 @@ public class ConsistencyCheck {
                 Document d = index.createDocument(node);
                 index.addDocument(d);
                 nodeIds.put(node.getNodeId(), Boolean.TRUE);
+            } catch (NoSuchItemStateException e) {
+                log.info("Not re-indexing node with multiple occurrences because node no longer exists");
             } catch (ItemStateException e) {
                 throw new IOException(e.toString());
             } catch (RepositoryException e) {
@@ -560,11 +610,14 @@ public class ConsistencyCheck {
         void repair() throws IOException {
             try {
                 NodeState nodeState = (NodeState) stateMgr.getItemState(id);
+                log.info("Adding missing node to index: " + getPath(nodeState));
                 final Iterator<NodeId> remove = Collections.<NodeId>emptyList().iterator();
                 final Iterator<NodeState> add = Collections.singletonList(nodeState).iterator();
                 handler.updateNodes(remove, add);
             } catch (RepositoryException e) {
                 throw new IOException(e.toString());
+            } catch (NoSuchItemStateException e) {
+                log.info("Not adding missing node because node no longer exists");
             } catch (ItemStateException e) {
                 throw new IOException(e.toString());
             }
