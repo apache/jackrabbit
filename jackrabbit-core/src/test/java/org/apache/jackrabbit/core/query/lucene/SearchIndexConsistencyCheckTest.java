@@ -18,6 +18,7 @@ package org.apache.jackrabbit.core.query.lucene;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -98,6 +99,71 @@ public class SearchIndexConsistencyCheckTest extends AbstractJCRTest {
 
         assertFalse("Index was not repaired properly", searchIndexContainsNode(searchIndex, nodeId));
 
+        assertTrue("Consistency check still reports errors", searchIndex.runConsistencyCheck().getErrors().isEmpty());
+    }
+
+    public void testIndexMissesAncestor() throws Exception {
+        Session s = getHelper().getSuperuserSession();
+        SearchManager searchManager = TestHelper.getSearchManager(s);
+        SearchIndex searchIndex = (SearchIndex) searchManager.getQueryHandler();
+
+        Node foo = testRootNode.addNode("foo");
+        Node bar = foo.addNode("bar");
+        testRootNode.getSession().save();
+        NodeId fooId = new NodeId(foo.getIdentifier());
+        NodeId barId = new NodeId(bar.getIdentifier());
+
+        Iterator<NodeId> remove = Collections.singletonList(fooId).iterator();
+        Iterator<NodeState> add = Collections.<NodeState>emptyList().iterator();
+
+        searchIndex.updateNodes(remove, add);
+
+        ConsistencyCheck consistencyCheck = searchIndex.runConsistencyCheck();
+        List<ConsistencyCheckError> errors = consistencyCheck.getErrors();
+
+        assertEquals("Expected 2 index consistency errors", 2, errors.size());
+
+        assertEquals("Different node was reported to have missing parent", errors.get(0).id, barId);
+        assertEquals("Different node was reported to be missing", errors.get(1).id, fooId);
+
+        consistencyCheck.repair(false);
+
+        assertTrue("Index was not repaired properly", searchIndexContainsNode(searchIndex, fooId));
+
+        assertTrue("Consistency check still reports errors", searchIndex.runConsistencyCheck().getErrors().isEmpty());
+    }
+
+    public void testIndexContainsMultipleEntries() throws Exception {
+        Session s = getHelper().getSuperuserSession();
+        SearchManager searchManager = TestHelper.getSearchManager(s);
+        SearchIndex searchIndex = (SearchIndex) searchManager.getQueryHandler();
+
+        Node foo = testRootNode.addNode("foo");
+        testRootNode.getSession().save();
+        NodeId fooId = new NodeId(foo.getIdentifier());
+
+        NodeState nodeState = new NodeState(fooId, null, null, 1, false);
+        Iterator<NodeId> remove = Collections.<NodeId>emptyList().iterator();
+        Iterator<NodeState> add = Arrays.asList(nodeState).iterator();
+
+        searchIndex.updateNodes(remove, add);
+
+        searchIndex.flush();
+
+        remove = Collections.<NodeId>emptyList().iterator();
+        add = Arrays.asList(nodeState).iterator();
+
+        searchIndex.updateNodes(remove, add);
+
+        ConsistencyCheck consistencyCheck = searchIndex.runConsistencyCheck();
+        List<ConsistencyCheckError> errors = consistencyCheck.getErrors();
+
+        assertEquals("Expected 1 index consistency error", 1, errors.size());
+        assertEquals("Different node was reported to be duplicate", errors.get(0).id, fooId);
+
+        consistencyCheck.repair(false);
+
+        assertTrue("Index was not repaired properly", searchIndexContainsNode(searchIndex, fooId));
         assertTrue("Consistency check still reports errors", searchIndex.runConsistencyCheck().getErrors().isEmpty());
     }
 
