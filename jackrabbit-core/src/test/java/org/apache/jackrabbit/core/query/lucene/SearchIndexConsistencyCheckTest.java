@@ -24,6 +24,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import javax.jcr.Node;
+import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
 import org.apache.jackrabbit.core.SearchManager;
@@ -39,6 +40,8 @@ import org.apache.lucene.search.Query;
 import org.apache.lucene.search.TermQuery;
 
 public class SearchIndexConsistencyCheckTest extends AbstractJCRTest {
+
+    private boolean keepRunning;
 
     @Override
     protected void setUp() throws Exception {
@@ -62,7 +65,7 @@ public class SearchIndexConsistencyCheckTest extends AbstractJCRTest {
 
         ConsistencyCheck consistencyCheck = searchIndex.runConsistencyCheck();
         List<ConsistencyCheckError> errors = consistencyCheck.getErrors();
-        assertEquals("Expected 1 index consistencey error", 1, errors.size());
+        assertEquals("Expected 1 index consistency error", 1, errors.size());
 
         ConsistencyCheckError error = errors.iterator().next();
         assertEquals("Different node was reported to be missing", error.id, fooId);
@@ -72,6 +75,36 @@ public class SearchIndexConsistencyCheckTest extends AbstractJCRTest {
         assertTrue("Index was not repaired properly", searchIndexContainsNode(searchIndex, fooId));
 
         assertTrue("Consistency check still reports errors", searchIndex.runConsistencyCheck().getErrors().isEmpty());
+    }
+
+    public void testMissingNodeDoubleCheck() throws Exception {
+        Session s = getHelper().getSuperuserSession();
+        SearchManager searchManager = TestHelper.getSearchManager(s);
+        SearchIndex searchIndex = (SearchIndex) searchManager.getQueryHandler();
+
+        Node foo = testRootNode.addNode("foo");
+        testRootNode.getSession().save();
+        NodeId fooId = new NodeId(foo.getIdentifier());
+
+        Iterator<NodeId> remove = Collections.singletonList(fooId).iterator();
+        Iterator<NodeState> add = Collections.<NodeState>emptyList().iterator();
+
+        searchIndex.updateNodes(remove, add);
+
+        ConsistencyCheck consistencyCheck = searchIndex.runConsistencyCheck();
+        List<ConsistencyCheckError> errors = consistencyCheck.getErrors();
+        assertEquals("Expected 1 index consistency error", 1, errors.size());
+
+        // now add foo to the index again so that double check finds a false positive
+        remove = Collections.<NodeId>emptyList().iterator();
+        add = Collections.singletonList(new NodeState(fooId, null, null, 1, false)).iterator();
+
+        searchIndex.updateNodes(remove, add);
+
+        consistencyCheck.doubleCheckErrors();
+
+        assertTrue("Consistency double check of missing node failed", consistencyCheck.getErrors().isEmpty());
+
     }
 
     public void testIndexContainsUnknownNode() throws Exception {
@@ -100,6 +133,35 @@ public class SearchIndexConsistencyCheckTest extends AbstractJCRTest {
         assertFalse("Index was not repaired properly", searchIndexContainsNode(searchIndex, nodeId));
 
         assertTrue("Consistency check still reports errors", searchIndex.runConsistencyCheck().getErrors().isEmpty());
+    }
+
+    public void testUnknownNodeDoubleCheck() throws Exception {
+
+        Session s = getHelper().getSuperuserSession();
+        SearchManager searchManager = TestHelper.getSearchManager(s);
+        SearchIndex searchIndex = (SearchIndex) searchManager.getQueryHandler();
+
+        NodeId nodeId = new NodeId(0, 0);
+        NodeState nodeState = new NodeState(nodeId, null, null, 1, false);
+
+        Iterator<NodeId> remove = Collections.<NodeId>emptyList().iterator();
+        Iterator<NodeState> add = Collections.singletonList(nodeState).iterator();
+
+        searchIndex.updateNodes(remove, add);
+
+        ConsistencyCheck consistencyCheck = searchIndex.runConsistencyCheck();
+        List<ConsistencyCheckError> errors = consistencyCheck.getErrors();
+        assertEquals("Expected 1 index consistency error", 1, errors.size());
+
+        // now remove the unknown node from the index again so that double check finds a false positive
+        remove = Collections.singletonList(nodeId).iterator();
+        add = Collections.<NodeState>emptyList().iterator();
+
+        searchIndex.updateNodes(remove, add);
+
+        consistencyCheck.doubleCheckErrors();
+
+        assertTrue("Consistency double check of deleted node failed", consistencyCheck.getErrors().isEmpty());
     }
 
     public void testIndexMissesAncestor() throws Exception {
@@ -131,6 +193,37 @@ public class SearchIndexConsistencyCheckTest extends AbstractJCRTest {
         assertTrue("Index was not repaired properly", searchIndexContainsNode(searchIndex, fooId));
 
         assertTrue("Consistency check still reports errors", searchIndex.runConsistencyCheck().getErrors().isEmpty());
+    }
+
+    public void testMissingAncestorDoubleCheck() throws Exception {
+
+        Session s = getHelper().getSuperuserSession();
+        SearchManager searchManager = TestHelper.getSearchManager(s);
+        SearchIndex searchIndex = (SearchIndex) searchManager.getQueryHandler();
+
+        Node foo = testRootNode.addNode("foo");
+        foo.addNode("bar");
+        testRootNode.getSession().save();
+        NodeId fooId = new NodeId(foo.getIdentifier());
+
+        Iterator<NodeId> remove = Collections.singletonList(fooId).iterator();
+        Iterator<NodeState> add = Collections.<NodeState>emptyList().iterator();
+
+        searchIndex.updateNodes(remove, add);
+
+        ConsistencyCheck consistencyCheck = searchIndex.runConsistencyCheck();
+        List<ConsistencyCheckError> errors = consistencyCheck.getErrors();
+
+        assertEquals("Expected 2 index consistency errors", 2, errors.size());
+
+        remove = Collections.<NodeId>emptyList().iterator();
+        add = Collections.singletonList(new NodeState(fooId, null, null, 1, true)).iterator();
+
+        searchIndex.updateNodes(remove, add);
+
+        consistencyCheck.doubleCheckErrors();
+
+        assertTrue("Consistency double check of missing ancestor failed", consistencyCheck.getErrors().isEmpty());
     }
 
     public void testIndexContainsMultipleEntries() throws Exception {
@@ -165,6 +258,47 @@ public class SearchIndexConsistencyCheckTest extends AbstractJCRTest {
 
         assertTrue("Index was not repaired properly", searchIndexContainsNode(searchIndex, fooId));
         assertTrue("Consistency check still reports errors", searchIndex.runConsistencyCheck().getErrors().isEmpty());
+    }
+
+    /**
+     * Stress test on the double check mechanism
+     */
+    public void testDoubleCheckStressTest() throws Exception {
+        Thread t = new Thread(new Runnable() {
+            private Session s = getHelper().getReadWriteSession();
+            @Override
+            public void run() {
+                while (keepRunning) {
+                    try {
+                        Node foo = s.getRootNode().getNode(testPath).addNode("foo");
+                        s.save();
+                        foo.remove();
+                        s.save();
+                    } catch (RepositoryException e) {
+                        System.out.println(e);
+                    }
+                }
+            }
+        });
+
+        Session s = getHelper().getSuperuserSession();
+        SearchManager searchManager = TestHelper.getSearchManager(s);
+        SearchIndex searchIndex = (SearchIndex) searchManager.getQueryHandler();
+
+        keepRunning = true;
+        try {
+            t.start();
+            Thread.sleep(100);
+            for (int i = 100; i > 0; i--) {
+                final ConsistencyCheck consistencyCheck = searchIndex.runConsistencyCheck();
+                consistencyCheck.doubleCheckErrors();
+                final List<ConsistencyCheckError> errors = consistencyCheck.getErrors();
+                assertTrue(errors.isEmpty());
+            }
+        } finally {
+            keepRunning = false;
+        }
+
     }
 
     private boolean searchIndexContainsNode(SearchIndex searchIndex, NodeId nodeId) throws IOException {
