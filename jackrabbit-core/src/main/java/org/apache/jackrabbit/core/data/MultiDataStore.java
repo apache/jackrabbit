@@ -475,6 +475,7 @@ public class MultiDataStore implements DataStore {
                     ((LocalFileSystem) identifiersToDeleteFile.getFileSystem()).getPath(),
                     identifiersToDeleteFile.getPath());
             writer = new BufferedWriter(new FileWriter(identifierFile, true));
+            writer.write(identifier.toString());
             return true;
         } catch (Exception e) {
             log.warn("I/O error while saving DataIdentifier (stacktrace on DEBUG log level) to '"
@@ -557,7 +558,8 @@ public class MultiDataStore implements DataStore {
         protected void moveOutdatedData() {
             try {
                 long now = System.currentTimeMillis();
-                long maxAgeMilli = 1000 * 60 * 60 * 24 * maxAge;
+                long maxAgeMilli = 1000L * 60 * 60 * 24 * maxAge;
+                log.debug("Collecting all Identifiers from PrimaryDataStore...");
                 Iterator<DataIdentifier> allIdentifiers = primaryDataStore.getAllIdentifiers();
                 int moved = 0;
                 while (allIdentifiers.hasNext()) {
