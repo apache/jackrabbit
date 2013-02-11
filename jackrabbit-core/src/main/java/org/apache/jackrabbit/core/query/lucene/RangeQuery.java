@@ -22,6 +22,7 @@ import org.apache.lucene.index.TermDocs;
 import org.apache.lucene.index.TermEnum;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.Explanation;
+import org.apache.lucene.search.MultiTermQuery;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.Scorer;
 import org.apache.lucene.search.Searcher;
@@ -148,8 +149,11 @@ public class RangeQuery extends Query implements Transformable {
      */
     public Query rewrite(IndexReader reader) throws IOException {
         if (transform == TRANSFORM_NONE) {
-            Query stdRangeQueryImpl
-                    = new TermRangeQuery(lowerTerm.field(), lowerTerm.text(), upperTerm.text(), inclusive, inclusive);
+            TermRangeQuery stdRangeQueryImpl = new TermRangeQuery(
+                    lowerTerm.field(), lowerTerm.text(), upperTerm.text(),
+                    inclusive, inclusive);
+            stdRangeQueryImpl
+                    .setRewriteMethod(MultiTermQuery.CONSTANT_SCORE_BOOLEAN_QUERY_REWRITE);
             try {
                 stdRangeQuery = stdRangeQueryImpl.rewrite(reader);
                 return stdRangeQuery;
