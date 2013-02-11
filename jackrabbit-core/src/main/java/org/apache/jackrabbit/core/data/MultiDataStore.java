@@ -557,7 +557,7 @@ public class MultiDataStore implements DataStore {
         protected void moveOutdatedData() {
             try {
                 long now = System.currentTimeMillis();
-                long maxAgeMilli = 1000 * 60 * 60 * 24 * maxAge;
+                long maxAgeMilli = 1000L * 60 * 60 * 24 * maxAge;
                 Iterator<DataIdentifier> allIdentifiers = primaryDataStore.getAllIdentifiers();
                 int moved = 0;
                 while (allIdentifiers.hasNext()) {
