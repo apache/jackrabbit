@@ -281,9 +281,9 @@ public class ConsistencyCheck {
                 }
                 Document d = reader.document(i, FieldSelectors.UUID);
                 NodeId id = new NodeId(d.get(FieldNames.UUID));
-                Boolean alreadyIndexed = nodeIds.put(id, Boolean.TRUE);
-                boolean nodeExists = alreadyIndexed != null;
+                boolean nodeExists = nodeIds.containsKey(id);
                 if (nodeExists) {
+                    Boolean alreadyIndexed = nodeIds.put(id, Boolean.TRUE);
                     if (alreadyIndexed) {
                         multipleEntries.add(id);
                     }
