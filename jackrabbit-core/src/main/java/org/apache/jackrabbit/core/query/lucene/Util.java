@@ -257,6 +257,9 @@ public class Util {
      * consistent
      */
     public static int compare(Comparable<?>[] c1, Comparable<?>[] c2) {
+        if(c1 == null && c2 == null){
+            return 0;
+        }
         if (c1 == null) {
             return -1;
         }
@@ -280,6 +283,9 @@ public class Util {
      * consistent
      */
     public static int compare(Value[] a, Value[] b) throws RepositoryException {
+        if(a == null && b == null){
+            return 0;
+        }
         if (a == null) {
             return -1;
         }
