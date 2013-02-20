@@ -89,6 +89,7 @@ import org.apache.jackrabbit.core.observation.ObservationDispatcher;
 import org.apache.jackrabbit.core.persistence.IterablePersistenceManager;
 import org.apache.jackrabbit.core.persistence.PMContext;
 import org.apache.jackrabbit.core.persistence.PersistenceManager;
+import org.apache.jackrabbit.core.persistence.check.ConsistencyChecker;
 import org.apache.jackrabbit.core.retention.RetentionRegistry;
 import org.apache.jackrabbit.core.retention.RetentionRegistryImpl;
 import org.apache.jackrabbit.core.security.JackrabbitSecurityManager;
@@ -2041,6 +2042,9 @@ public class RepositoryImpl extends AbstractRepository
                     updateChannel = clusterNode.createUpdateChannel(getName());
                     itemStateMgr.setEventChannel(updateChannel);
                     updateChannel.setListener(this);
+                    if (persistMgr instanceof ConsistencyChecker) {
+                        ((ConsistencyChecker) persistMgr).setEventChannel(updateChannel);
+                    }
                 }
             } catch (ItemStateException ise) {
                 String msg = "failed to instantiate shared item state manager";

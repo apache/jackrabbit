@@ -34,6 +34,7 @@ import org.apache.jackrabbit.api.stats.RepositoryStatistics;
 import org.apache.jackrabbit.core.cache.Cache;
 import org.apache.jackrabbit.core.cache.CacheAccessListener;
 import org.apache.jackrabbit.core.cache.ConcurrentCache;
+import org.apache.jackrabbit.core.cluster.UpdateEventChannel;
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.fs.FileSystemResource;
 import org.apache.jackrabbit.core.id.ItemId;
@@ -171,9 +172,11 @@ public abstract class AbstractBundlePersistenceManager implements
     /** Duration of bundle read operations. */
     private AtomicLong cacheMissDuration;
 
-    
     /** Counter of bundle cache size. */
     private AtomicLong cacheSizeCounter;
+
+    /** The update event channel to use by the consistency checker when fixing inconsistencies */
+    private UpdateEventChannel eventChannel;
 
     /**
      * Returns the size of the bundle cache in megabytes.
@@ -817,11 +820,19 @@ public abstract class AbstractBundlePersistenceManager implements
      */
     public void checkConsistency(String[] uuids, boolean recursive, boolean fix) {
         try {
-            ConsistencyCheckerImpl cs = new ConsistencyCheckerImpl(this, null);
-            cs.check(uuids, recursive, fix, null);
+            ConsistencyCheckerImpl checker = new ConsistencyCheckerImpl(this, null, null, eventChannel);
+            checker.check(uuids, recursive);
+            checker.doubleCheckErrors();
+            if (fix) {
+                checker.repair();
+            }
         } catch (RepositoryException ex) {
             log.error("While running consistency check.", ex);
         }
+    }
+
+    public void setEventChannel(UpdateEventChannel eventChannel) {
+        this.eventChannel = eventChannel;
     }
 
     /**
@@ -830,8 +841,13 @@ public abstract class AbstractBundlePersistenceManager implements
     public ConsistencyReport check(String[] uuids, boolean recursive,
             boolean fix, String lostNFoundId, ConsistencyCheckListener listener)
             throws RepositoryException {
-        ConsistencyCheckerImpl cs = new ConsistencyCheckerImpl(this, listener);
-        return cs.check(uuids, recursive, fix, lostNFoundId);
+        ConsistencyCheckerImpl checker = new ConsistencyCheckerImpl(this, listener, lostNFoundId, eventChannel);
+        checker.check(uuids, recursive);
+        checker.doubleCheckErrors();
+        if (fix) {
+            checker.repair();
+        }
+        return checker.getReport();
     }
 
     /**
