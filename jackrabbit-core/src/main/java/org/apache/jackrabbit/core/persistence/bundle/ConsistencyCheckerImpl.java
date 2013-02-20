@@ -168,6 +168,7 @@ public class ConsistencyCheckerImpl {
                 if (changes.hasUpdates()) {
                     eventChannel.updatePrepared(update);
                     for (NodePropBundle bundle : bundles.values()) {
+                        bundle.setModCount((short) (bundle.getModCount()+1));
                         storeBundle(bundle);
                     }
                     update.setAttribute(ATTRIBUTE_UPDATE_SIZE, changes.getUpdateSize());
