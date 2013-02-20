@@ -17,9 +17,10 @@
 package org.apache.jackrabbit.core.persistence.bundle;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -27,15 +28,22 @@ import java.util.Set;
 
 import javax.jcr.RepositoryException;
 
+import org.apache.jackrabbit.core.cluster.ClusterException;
+import org.apache.jackrabbit.core.cluster.Update;
+import org.apache.jackrabbit.core.cluster.UpdateEventChannel;
 import org.apache.jackrabbit.core.id.NodeId;
+import org.apache.jackrabbit.core.observation.EventState;
 import org.apache.jackrabbit.core.persistence.check.ConsistencyCheckListener;
 import org.apache.jackrabbit.core.persistence.check.ConsistencyReport;
 import org.apache.jackrabbit.core.persistence.check.ConsistencyReportImpl;
 import org.apache.jackrabbit.core.persistence.check.ReportItem;
-import org.apache.jackrabbit.core.persistence.check.ReportItemImpl;
 import org.apache.jackrabbit.core.persistence.util.NodeInfo;
 import org.apache.jackrabbit.core.persistence.util.NodePropBundle;
+import org.apache.jackrabbit.core.state.ChangeLog;
+import org.apache.jackrabbit.core.state.DummyUpdateEventChannel;
+import org.apache.jackrabbit.core.state.ItemState;
 import org.apache.jackrabbit.core.state.ItemStateException;
+import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.spi.NameFactory;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
@@ -46,12 +54,6 @@ public class ConsistencyCheckerImpl {
 
     /** the default logger */
     private static Logger log = LoggerFactory.getLogger(ConsistencyCheckerImpl.class);
-
-    private final AbstractBundlePersistenceManager pm;
-
-    private final ConsistencyCheckListener listener;
-
-    private static final NameFactory NF = NameFactoryImpl.getInstance();
 
     /**
      * The number of nodes to fetch at once from the persistence manager. Defaults to 8kb
@@ -64,49 +66,157 @@ public class ConsistencyCheckerImpl {
      */
     private static final boolean CHECKAFTERLOADING = Boolean.getBoolean("org.apache.jackrabbit.checker.checkafterloading");
 
-    public ConsistencyCheckerImpl(AbstractBundlePersistenceManager pm,
-            ConsistencyCheckListener listener) {
+    /**
+     * Attribute name used to store the size of the update.
+     */
+    private static final String ATTRIBUTE_UPDATE_SIZE = "updateSize";
+
+    private static final NameFactory NF = NameFactoryImpl.getInstance();
+
+    private final AbstractBundlePersistenceManager pm;
+    private final ConsistencyCheckListener listener;
+    private NodeId lostNFoundId;
+    private UpdateEventChannel eventChannel = new DummyUpdateEventChannel();
+    private Map<NodeId, NodePropBundle> bundles;
+    private final List<ConsistencyCheckerError> errors = new ArrayList<ConsistencyCheckerError>();
+    private int nodeCount;
+    private long elapsedTime;
+
+    public ConsistencyCheckerImpl(AbstractBundlePersistenceManager pm, ConsistencyCheckListener listener,
+                                  String lostNFoundId, final UpdateEventChannel eventChannel) {
         this.pm = pm;
         this.listener = listener;
+        if (lostNFoundId != null) {
+            this.lostNFoundId = new NodeId(lostNFoundId);
+        }
+        if (eventChannel != null) {
+            this.eventChannel = eventChannel;
+        }
     }
 
-    public ConsistencyReport check(String[] uuids, boolean recursive,
-            boolean fix, String lostNFoundId) throws RepositoryException {
-        Set<ReportItem> reports = new HashSet<ReportItem>();
-
+    /**
+     * Check the database for inconsistencies.
+     *
+     * @param uuids a list of node identifiers to check or {@code null} in order to check all nodes
+     * @param recursive  whether to recursively check the subtrees below the nodes identified by the provided uuids
+     * @throws RepositoryException
+     */
+    public void check(String[] uuids, boolean recursive) throws RepositoryException {
         long tstart = System.currentTimeMillis();
-        int total = internalCheckConsistency(uuids, recursive, fix, reports, lostNFoundId);
-        long elapsed = System.currentTimeMillis() - tstart;
-
-        return new ConsistencyReportImpl(total, elapsed, reports);
+        nodeCount = internalCheckConsistency(uuids, recursive);
+        elapsedTime = System.currentTimeMillis() - tstart;
     }
 
-    private int internalCheckConsistency(String[] uuids, boolean recursive,
-            boolean fix, Set<ReportItem> reports, String lostNFoundId)
-            throws RepositoryException {
-        int count = 0;
-
-        NodeId lostNFound = null;
-        if (fix) {
-            if (lostNFoundId != null) {
-                // do we have a "lost+found" node?
+    /**
+     * Do a double check on the errors found during {@link #check}.
+     * Removes all false positives from the report.
+     */
+    public void doubleCheckErrors() {
+        if (!errors.isEmpty()) {
+            final Iterator<ConsistencyCheckerError> errorIterator = errors.iterator();
+            while (errorIterator.hasNext()) {
+                final ConsistencyCheckerError error = errorIterator.next();
                 try {
-                    NodeId tmpid = new NodeId(lostNFoundId);
-                    NodePropBundle lfBundle = pm.loadBundle(tmpid);
-                    if (lfBundle == null) {
-                        error(lostNFoundId, "Specified 'lost+found' node does not exist");
-                    } else if (!NameConstants.NT_UNSTRUCTURED.equals(lfBundle .getNodeTypeName())) {
-                        error(lostNFoundId, "Specified 'lost+found' node is not of type nt:unstructured");
-                    } else {
-                        lostNFound = lfBundle.getId();
+                    if (!error.doubleCheck()) {
+                        info(null, "False positive: " + error);
+                        errorIterator.remove();
                     }
-                } catch (Exception ex) {
-                    error(lostNFoundId, "finding 'lost+found' folder", ex);
+                } catch (ItemStateException e) {
+                    error(null, "Failed to double check error: " + error, e);
                 }
-            } else {
-                log.info("No 'lost+found' node specified: orphans cannot be fixed");
             }
         }
+    }
+
+    /**
+     * Return the report of a consistency {@link #check} / {@link #doubleCheckErrors()} / {@link #repair}
+     */
+    public ConsistencyReport getReport() {
+        final Set<ReportItem> reportItems = new HashSet<ReportItem>();
+        for (ConsistencyCheckerError error : errors) {
+            reportItems.add(error.getReportItem());
+        }
+        return new ConsistencyReportImpl(nodeCount, elapsedTime, reportItems);
+    }
+
+    /**
+     * Repair any errors found during a {@link #check}. Should be run after a {#check} and
+     * (if needed) {@link #doubleCheckErrors}.
+     *
+     * @throws RepositoryException
+     */
+    public void repair() throws RepositoryException {
+        checkLostNFound();
+        bundles = new HashMap<NodeId, NodePropBundle>();
+        if (hasRepairableErrors()) {
+            boolean successful = false;
+            final CheckerUpdate update = new CheckerUpdate();
+            try {
+                eventChannel.updateCreated(update);
+                for (ConsistencyCheckerError error : errors) {
+                    if (error.isRepairable()) {
+                        try {
+                            error.repair(update.getChanges());
+                            info(null, "Repairing " + error);
+                        } catch (ItemStateException e) {
+                            error(null, "Failed to repair error: " + error, e);
+                        }
+                    }
+                }
+
+                final ChangeLog changes = update.getChanges();
+                if (changes.hasUpdates()) {
+                    eventChannel.updatePrepared(update);
+                    for (NodePropBundle bundle : bundles.values()) {
+                        storeBundle(bundle);
+                    }
+                    update.setAttribute(ATTRIBUTE_UPDATE_SIZE, changes.getUpdateSize());
+                    successful = true;
+                }
+            } catch (ClusterException e) {
+                throw new RepositoryException("Cannot create update", e);
+            } finally {
+                if (successful) {
+                    eventChannel.updateCommitted(update, "checker@");
+                } else {
+                    eventChannel.updateCancelled(update);
+                }
+            }
+        }
+    }
+
+    private boolean hasRepairableErrors() {
+        for (ConsistencyCheckerError error : errors) {
+            if (error.isRepairable()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void checkLostNFound() {
+        if (lostNFoundId != null) {
+            // do we have a "lost+found" node?
+            try {
+                NodePropBundle lfBundle = pm.loadBundle(lostNFoundId);
+                if (lfBundle == null) {
+                    error(lostNFoundId.toString(), "Specified 'lost+found' node does not exist");
+                    lostNFoundId = null;
+                } else if (!NameConstants.NT_UNSTRUCTURED.equals(lfBundle .getNodeTypeName())) {
+                    error(lostNFoundId.toString(), "Specified 'lost+found' node is not of type nt:unstructured");
+                    lostNFoundId = null;
+                }
+            } catch (Exception ex) {
+                error(lostNFoundId.toString(), "finding 'lost+found' folder", ex);
+                lostNFoundId = null;
+            }
+        } else {
+            info(null, "No 'lost+found' node specified: orphans cannot be fixed");
+        }
+    }
+
+    private int internalCheckConsistency(String[] uuids, boolean recursive) throws RepositoryException {
+        int count = 0;
 
         if (uuids == null) {
             try {
@@ -128,7 +238,7 @@ public class ConsistencyCheckerImpl {
                         if (!CHECKAFTERLOADING) {
                             // check immediately
                             NodeInfo nodeInfo = entry.getValue();
-                            checkBundleConsistency(id, nodeInfo, fix, lostNFound, reports, batch);
+                            checkBundleConsistency(id, nodeInfo, batch);
                         }
                     }
 
@@ -142,7 +252,7 @@ public class ConsistencyCheckerImpl {
                 if (CHECKAFTERLOADING) {
                     // check info
                     for (Map.Entry<NodeId, NodeInfo> entry : allInfos.entrySet()) {
-                        checkBundleConsistency(entry.getKey(), entry.getValue(), fix, lostNFound, reports, allInfos);
+                        checkBundleConsistency(entry.getKey(), entry.getValue(), allInfos);
                     }
                 }
             } catch (ItemStateException ex) {
@@ -159,13 +269,11 @@ public class ConsistencyCheckerImpl {
 
             List<NodeId> idList = new ArrayList<NodeId>(uuids.length);
             // convert uuid string array to list of UUID objects
-            for (int i = 0; i < uuids.length; i++) {
+            for (final String uuid : uuids) {
                 try {
-                    idList.add(new NodeId(uuids[i]));
+                    idList.add(new NodeId(uuid));
                 } catch (IllegalArgumentException e) {
-                    error(uuids[i],
-                            "Invalid id for consistency check, skipping: '"
-                                    + uuids[i] + "': " + e);
+                    error(uuid, "Invalid id for consistency check, skipping: '" + uuid + "': " + e);
                 }
             }
 
@@ -179,16 +287,13 @@ public class ConsistencyCheckerImpl {
 
                     if (bundle == null) {
                         if (!isVirtualNode(id)) {
-                            error(id.toString(), "No bundle found for id '"
-                                    + id + "'");
+                            error(id.toString(), "No bundle found for id '" + id + "'");
                         }
                     } else {
-                        checkBundleConsistency(id, new NodeInfo(bundle), fix, lostNFound,
-                                reports, Collections.<NodeId, NodeInfo>emptyMap());
+                        checkBundleConsistency(id, new NodeInfo(bundle), Collections.<NodeId, NodeInfo>emptyMap());
 
                         if (recursive) {
-                            for (NodePropBundle.ChildNodeEntry entry : bundle
-                                    .getChildNodeEntries()) {
+                            for (NodePropBundle.ChildNodeEntry entry : bundle.getChildNodeEntries()) {
                                 idList.add(entry.getId());
                             }
                         }
@@ -220,14 +325,9 @@ public class ConsistencyCheckerImpl {
      *
      * @param id node id for the bundle to check
      * @param nodeInfo the node info for the node to check
-     * @param fix if <code>true</code>, repair things that can be repaired
-     * {@linkplain org.apache.jackrabbit.core.persistence.util.NodePropBundle bundles} here
      * @param infos all the {@link NodeInfo}s loaded in the current batch
      */
-    private void checkBundleConsistency(NodeId id, NodeInfo nodeInfo,
-                                        boolean fix, NodeId lostNFoundId,
-                                        Set<ReportItem> reports, Map<NodeId, NodeInfo> infos) {
-        // log.info(name + ": checking bundle '" + id + "'");
+    private void checkBundleConsistency(NodeId id, NodeInfo nodeInfo, Map<NodeId, NodeInfo> infos) {
 
         // skip all virtual nodes
         if (isVirtualNode(id)) {
@@ -238,217 +338,49 @@ public class ConsistencyCheckerImpl {
             listener.startCheck(id.toString());
         }
 
-        // look at the node's children
-        Collection<NodePropBundle.ChildNodeEntry> missingChildren = new ArrayList<NodePropBundle.ChildNodeEntry>();
-        Collection<NodePropBundle.ChildNodeEntry> disconnectedChildren = new ArrayList<NodePropBundle.ChildNodeEntry>();
-
-        NodePropBundle bundle = null;
-
+        // check the children
         for (final NodeId childNodeId : nodeInfo.getChildren()) {
 
-            // skip check for system nodes (root, system root, version storage,
-            // node types)
+            // skip check for system nodes (root, system root, version storage, node types)
             if (childNodeId.toString().endsWith("babecafebabe")) {
                 continue;
             }
 
-            try {
-                // analyze child node bundles
-                NodePropBundle childBundle = null;
-                NodeInfo childNodeInfo = infos.get(childNodeId);
+            NodeInfo childNodeInfo = infos.get(childNodeId);
 
-                // does the child exist?
-                if (childNodeInfo == null) {
-                    // try to load the bundle
-                    childBundle = pm.loadBundle(childNodeId);
-                    if (childBundle == null) {
-                        // the child indeed does not exist
-                        // double check whether we still exist and the child entry is still there
-                        if (bundle == null) {
-                            bundle = pm.loadBundle(id);
-                        }
-                        if (bundle != null) {
-                            NodePropBundle.ChildNodeEntry childNodeEntry = null;
-                            for (NodePropBundle.ChildNodeEntry entry : bundle.getChildNodeEntries()) {
-                                if (entry.getId().equals(childNodeId)) {
-                                    childNodeEntry = entry;
-                                    break;
-                                }
-                            }
-                            if (childNodeEntry != null) {
-                                String message = "NodeState '" + id + "' references inexistent child '" + childNodeId + "'";
-                                log.error(message);
-                                addMessage(reports, id, message, ReportItem.Type.MISSING);
-                                missingChildren.add(childNodeEntry);
-                            }
-                        } else {
-                            return;
-                        }
-                    } else {
-                        // exists after all
-                        childNodeInfo = new NodeInfo(childBundle);
-                    }
+            if (childNodeInfo == null) {
+                addError(new MissingChild(id, childNodeId));
+            } else {
+                if (!id.equals(childNodeInfo.getParentId())) {
+                    addError(new DisconnectedChild(id, childNodeId, childNodeInfo.getParentId()));
                 }
-                if (childNodeInfo != null) {
-                    // if the child exists does it reference the current node as its parent?
-                    NodeId cp = childNodeInfo.getParentId();
-                    if (!id.equals(cp)) {
-                        // double check whether the child still has a different parent
-                        if (childBundle == null) {
-                            childBundle = pm.loadBundle(childNodeId);
-                        }
-                        if (childBundle != null && !childBundle.getParentId().equals(id)) {
-                            // double check if we still exist
-                            if (bundle == null) {
-                                bundle = pm.loadBundle(id);
-                            }
-                            if (bundle != null) {
-                                // double check if the child node entry is still there
-                                NodePropBundle.ChildNodeEntry childNodeEntry = null;
-                                for (NodePropBundle.ChildNodeEntry entry : bundle.getChildNodeEntries()) {
-                                    if (entry.getId().equals(childNodeId)) {
-                                        childNodeEntry = entry;
-                                        break;
-                                    }
-                                }
-                                if (childNodeEntry != null) {
-                                    // indeed we have a disconnected child
-                                    String message = "Node has invalid parent id: '" + cp + "' (instead of '" + id + "')";
-                                    log.error(message);
-                                    addMessage(reports, childNodeId, message, ReportItem.Type.DISCONNECTED);
-                                    disconnectedChildren.add(childNodeEntry);
-                                }
-                            } else {
-                                return;
-                            }
-
-                        }
-                    }
-                }
-            } catch (ItemStateException e) {
-                // problem already logged (loadBundle called with
-                // logDetailedErrors=true)
-                addMessage(reports, id, e.getMessage(), ReportItem.Type.ERROR);
             }
         }
-        // remove child node entry (if fixing is enabled)
-        if (fix && (!missingChildren.isEmpty() || !disconnectedChildren.isEmpty())) {
-            for (NodePropBundle.ChildNodeEntry entry : missingChildren) {
-                bundle.getChildNodeEntries().remove(entry);
-            }
-            for (NodePropBundle.ChildNodeEntry entry : disconnectedChildren) {
-                bundle.getChildNodeEntries().remove(entry);
-            }
-            fixBundle(bundle);
-        }
 
-        // check parent reference
+        // check the parent
         NodeId parentId = nodeInfo.getParentId();
-        try {
-            // skip root nodes (that point to itself)
-            if (parentId != null && !id.toString().endsWith("babecafebabe")) {
-                NodePropBundle parentBundle = null;
-                NodeInfo parentInfo = infos.get(parentId);
+        // skip root nodes (that point to itself)
+        if (parentId != null && !id.toString().endsWith("babecafebabe")) {
+            NodeInfo parentInfo = infos.get(parentId);
 
-                // does the parent exist?
-                if (parentInfo == null) {
-                    // try to load the bundle
-                    parentBundle = pm.loadBundle(parentId);
-                    if (parentBundle == null) {
-                        // indeed the parent doesn't exist
-                        // double check whether we still exist and the parent is still the same\
-                        if (bundle == null) {
-                            bundle = pm.loadBundle(id);
-                        }
-                        if (bundle != null) {
-                            if (parentId.equals(bundle.getParentId())) {
-                                // indeed we have an orphaned node
-                                String message = "NodeState '" + id + "' references inexistent parent id '" + parentId + "'";
-                                log.error(message);
-                                addMessage(reports, id, message, ReportItem.Type.ORPHANED);
-                                if (fix && lostNFoundId != null) {
-                                    // add a child to lost+found
-                                    NodePropBundle lfBundle = pm.loadBundle(lostNFoundId);
-                                    lfBundle.markOld();
-                                    String nodeName = id + "-" + System.currentTimeMillis();
-                                    lfBundle.addChildNodeEntry(NF.create("", nodeName), id);
-                                    pm.storeBundle(lfBundle);
-                                    pm.evictBundle(lostNFoundId);
+            if (parentInfo == null) {
+                addError(new OrphanedNode(id, parentId));
+            } else {
+                // if the parent exists, does it have a child node entry for us?
+                boolean found = false;
 
-                                    // set lost+found parent
-                                    bundle.setParentId(lostNFoundId);
-                                    fixBundle(bundle);
-                                }
-                            }
-                        } else {
-                            return;
-                        }
-                    } else {
-                        // parent exists after all
-                        parentInfo = new NodeInfo(parentBundle);
+                for (NodeId childNodeId : parentInfo.getChildren()) {
+                    if (childNodeId.equals(id)){
+                        found = true;
+                        break;
                     }
                 }
-                if (parentInfo != null) {
-                    // if the parent exists, does it have a child node entry for us?
-                    boolean found = false;
 
-                    for (NodeId childNodeId : parentInfo.getChildren()) {
-                        if (childNodeId.equals(id)){
-                            found = true;
-                            break;
-                        }
-                    }
-
-                    if (!found && parentBundle == null) {
-                        // double check the parent
-                        parentBundle = pm.loadBundle(parentId);
-                        if (parentBundle != null) {
-                            for (NodePropBundle.ChildNodeEntry entry : parentBundle.getChildNodeEntries()) {
-                                if (entry.getId().equals(id)) {
-                                    found = true;
-                                    break;
-                                }
-                            }
-                        }
-                    }
-                    if (!found) {
-                        // double check whether we still exist and the parent id is still the same
-                        if (bundle == null) {
-                            bundle = pm.loadBundle(id);
-                        }
-                        if (bundle != null) {
-                            if (parentId.equals(bundle.getParentId())) {
-                                // indeed we have an abandoned node
-                                String message = "NodeState '" + id
-                                        + "' is not referenced by its parent node '"
-                                        + parentId + "'";
-                                log.error(message);
-                                addMessage(reports, id, message, ReportItem.Type.ABANDONED);
-                                if (fix) {
-                                    int l = (int) System.currentTimeMillis();
-                                    int r = new Random().nextInt();
-                                    int n = l + r;
-                                    String nodeName = Integer.toHexString(n);
-                                    parentBundle.addChildNodeEntry(NF.create("{}" + nodeName), id);
-                                    log.info("NodeState '" + id
-                                            + "' adds itself to its parent node '"
-                                            + parentId + "' with a new name '" + nodeName
-                                            + "'");
-                                    fixBundle(parentBundle);
-                                }
-                            }
-                        } else {
-                            return;
-                        }
-                    }
-
+                if (!found) {
+                    addError(new AbandonedNode(id, parentId));
                 }
+
             }
-        } catch (ItemStateException e) {
-            String message = "Error reading node '" + parentId
-                    + "' (parent of '" + id + "'): " + e;
-            log.error(message);
-            addMessage(reports, id, message, ReportItem.Type.ERROR);
         }
     }
 
@@ -464,19 +396,11 @@ public class ConsistencyCheckerImpl {
         return "cafebabe-cafe-babe-cafe-babecafebabe".equals(id);
     }
 
-
-    private void addMessage(Set<ReportItem> reports, NodeId id, String message, ReportItem.Type type) {
-
-        if (reports != null || listener != null) {
-            ReportItem ri = new ReportItemImpl(id.toString(), message, type);
-
-            if (reports != null) {
-                reports.add(ri);
-            }
-            if (listener != null) {
-                listener.report(ri);
-            }
+    private void addError(ConsistencyCheckerError error) {
+        if (listener != null) {
+            listener.report(error.getReportItem());
         }
+        errors.add(error);
     }
 
     private void info(String id, String message) {
@@ -505,9 +429,8 @@ public class ConsistencyCheckerImpl {
         }
     }
 
-    private void fixBundle(NodePropBundle bundle) {
+    private void storeBundle(NodePropBundle bundle) {
         try {
-            log.info(pm + ": Fixing bundle '" + bundle.getId() + "'");
             bundle.markOld(); // use UPDATE instead of INSERT
             pm.storeBundle(bundle);
             pm.evictBundle(bundle.getId());
@@ -516,4 +439,264 @@ public class ConsistencyCheckerImpl {
         }
     }
 
+    private NodePropBundle getBundle(NodeId nodeId) throws ItemStateException {
+        if (bundles.containsKey(nodeId)) {
+            return bundles.get(nodeId);
+        }
+        return pm.loadBundle(nodeId);
+    }
+
+    private void saveBundle(NodePropBundle bundle) {
+        bundles.put(bundle.getId(), bundle);
+    }
+
+    private class MissingChild extends ConsistencyCheckerError {
+
+        private final NodeId childNodeId;
+
+        private MissingChild(final NodeId nodeId, final NodeId childNodeId) {
+            super(nodeId, "NodeState '" + nodeId + "' references inexistent child '" + childNodeId + "'");
+            this.childNodeId = childNodeId;
+        }
+
+        @Override
+        ReportItem.Type getType() {
+            return ReportItem.Type.MISSING;
+        }
+
+        @Override
+        boolean isRepairable() {
+            return true;
+        }
+
+        @Override
+        void doRepair(final ChangeLog changes) throws ItemStateException {
+            final NodePropBundle bundle = getBundle(nodeId);
+            final Iterator<NodePropBundle.ChildNodeEntry> entryIterator = bundle.getChildNodeEntries().iterator();
+            while (entryIterator.hasNext()) {
+                final NodePropBundle.ChildNodeEntry childNodeEntry = entryIterator.next();
+                if (childNodeEntry.getId().equals(childNodeId)) {
+                    entryIterator.remove();
+                    saveBundle(bundle);
+                    changes.modified(new NodeState(nodeId, null, null, ItemState.STATUS_EXISTING, false));
+                }
+            }
+        }
+
+        @Override
+        boolean doubleCheck() throws ItemStateException {
+            final NodePropBundle childBundle = pm.loadBundle(childNodeId);
+            if (childBundle == null) {
+                final NodePropBundle bundle = pm.loadBundle(nodeId);
+                if (bundle != null) {
+                    for (NodePropBundle.ChildNodeEntry entry : bundle.getChildNodeEntries()) {
+                        if (entry.getId().equals(childNodeId)) {
+                            return true;
+                        }
+                    }
+                }
+            }
+            return false;
+        }
+    }
+
+    private class DisconnectedChild extends ConsistencyCheckerError {
+
+        private final NodeId childNodeId;
+
+        DisconnectedChild(final NodeId nodeId, final NodeId childNodeId, final NodeId invalidParentId) {
+            super(nodeId, "Node has invalid parent id: '" + invalidParentId + "' (instead of '" + nodeId + "')");
+            this.childNodeId = childNodeId;
+        }
+
+        @Override
+        ReportItem.Type getType() {
+            return ReportItem.Type.DISCONNECTED;
+        }
+
+        @Override
+        boolean isRepairable() {
+            return true;
+        }
+
+        @Override
+        void doRepair(final ChangeLog changes) throws ItemStateException {
+            NodePropBundle bundle = getBundle(nodeId);
+            final Iterator<NodePropBundle.ChildNodeEntry> entryIterator = bundle.getChildNodeEntries().iterator();
+            while (entryIterator.hasNext()) {
+                final NodePropBundle.ChildNodeEntry childNodeEntry = entryIterator.next();
+                if (childNodeEntry.getId().equals(childNodeId)) {
+                    entryIterator.remove();
+                    saveBundle(bundle);
+                    changes.modified(new NodeState(nodeId, null, null, ItemState.STATUS_EXISTING, false));
+                    break;
+                }
+            }
+        }
+
+        @Override
+        boolean doubleCheck() throws ItemStateException {
+            final NodePropBundle childBundle = pm.loadBundle(childNodeId);
+            if (childBundle != null && !childBundle.getParentId().equals(nodeId)) {
+                final NodePropBundle bundle = pm.loadBundle(nodeId);
+                if (bundle != null) {
+                    // double check if the child node entry is still there
+                    for (NodePropBundle.ChildNodeEntry entry : bundle.getChildNodeEntries()) {
+                        if (entry.getId().equals(childNodeId)) {
+                            return true;
+                        }
+                    }
+                }
+            }
+            return false;
+        }
+    }
+
+    private class OrphanedNode extends ConsistencyCheckerError {
+
+        private final NodeId parentNodeId;
+
+        OrphanedNode(final NodeId nodeId, final NodeId parentNodeId) {
+            super(nodeId, "NodeState '" + nodeId + "' references inexistent parent id '" + parentNodeId + "'");
+            this.parentNodeId = parentNodeId;
+        }
+
+        @Override
+        ReportItem.Type getType() {
+            return ReportItem.Type.ORPHANED;
+        }
+
+        @Override
+        boolean isRepairable() {
+            return lostNFoundId != null;
+        }
+
+        @Override
+        void doRepair(final ChangeLog changes) throws ItemStateException {
+            if (lostNFoundId != null) {
+                final NodePropBundle bundle = getBundle(nodeId);
+                final NodePropBundle lfBundle = getBundle(lostNFoundId);
+
+                final String nodeName = nodeId + "-" + System.currentTimeMillis();
+                lfBundle.addChildNodeEntry(NF.create("", nodeName), nodeId);
+                bundle.setParentId(lostNFoundId);
+
+                saveBundle(bundle);
+                saveBundle(lfBundle);
+
+                changes.modified(new NodeState(lostNFoundId, null, null, ItemState.STATUS_EXISTING, false));
+                changes.modified(new NodeState(nodeId, null, null, ItemState.STATUS_EXISTING, false));
+            }
+        }
+
+        @Override
+        boolean doubleCheck() throws ItemStateException {
+            final NodePropBundle parentBundle = pm.loadBundle(parentNodeId);
+            if (parentBundle == null) {
+                final NodePropBundle bundle = pm.loadBundle(nodeId);
+                if (bundle != null) {
+                    if (parentNodeId.equals(bundle.getParentId())) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+    }
+
+    private class AbandonedNode extends ConsistencyCheckerError {
+
+        private final NodeId nodeId;
+        private final NodeId parentNodeId;
+
+        AbandonedNode(final NodeId nodeId, final NodeId parentNodeId) {
+            super(nodeId, "NodeState '" + nodeId + "' is not referenced by its parent node '" + parentNodeId + "'");
+            this.nodeId = nodeId;
+            this.parentNodeId = parentNodeId;
+        }
+
+        @Override
+        ReportItem.Type getType() {
+            return ReportItem.Type.ABANDONED;
+        }
+
+        @Override
+        boolean isRepairable() {
+            return true;
+        }
+
+        @Override
+        void doRepair(final ChangeLog changes) throws ItemStateException {
+            final NodePropBundle parentBundle = getBundle(parentNodeId);
+
+            final String nodeName = createNodeName();
+            parentBundle.addChildNodeEntry(NF.create("{}" + nodeName), nodeId);
+
+            saveBundle(parentBundle);
+            changes.modified(new NodeState(parentNodeId, null, null, ItemState.STATUS_EXISTING, false));
+        }
+
+        private String createNodeName() {
+            int l = (int) System.currentTimeMillis();
+            int r = new Random().nextInt();
+            int n = l + r;
+            return Integer.toHexString(n);
+        }
+
+        @Override
+        boolean doubleCheck() throws ItemStateException {
+            final NodePropBundle parentBundle = pm.loadBundle(parentNodeId);
+            if (parentBundle != null) {
+                for (NodePropBundle.ChildNodeEntry entry : parentBundle.getChildNodeEntries()) {
+                    if (entry.getId().equals(nodeId)) {
+                        return false;
+                    }
+                }
+            }
+            final NodePropBundle bundle = pm.loadBundle(nodeId);
+            if (bundle != null) {
+                if (parentNodeId.equals(bundle.getParentId())) {
+                    return true;
+                }
+            }
+            return false;
+        }
+    }
+
+    private class CheckerUpdate implements Update {
+
+        private final Map<String, Object> attributes = new HashMap<String, Object>();
+        private final ChangeLog changeLog = new ChangeLog();
+        private final long timestamp = System.currentTimeMillis();
+
+        @Override
+        public void setAttribute(final String name, final Object value) {
+            attributes.put(name, value);
+        }
+
+        @Override
+        public Object getAttribute(final String name) {
+            return attributes.get(name);
+        }
+
+        @Override
+        public ChangeLog getChanges() {
+            return changeLog;
+        }
+
+        @Override
+        public List<EventState> getEvents() {
+            return Collections.emptyList();
+        }
+
+        @Override
+        public long getTimestamp() {
+            return timestamp;
+        }
+
+        @Override
+        public String getUserData() {
+            return null;
+        }
+    }
 }

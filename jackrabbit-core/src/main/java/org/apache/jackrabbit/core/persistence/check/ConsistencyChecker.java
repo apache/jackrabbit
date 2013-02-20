@@ -18,15 +18,24 @@ package org.apache.jackrabbit.core.persistence.check;
 
 import javax.jcr.RepositoryException;
 
+import org.apache.jackrabbit.core.cluster.UpdateEventChannel;
+
 /**
  * Optional interface for Persistence Managers. Allows running consistency
- * checks similar to the base one (see @link
- * {@link PersistenceManager#checkConsistency(String[], boolean, boolean)} but
- * providing a result that can be acted upon.
+ * checks similar to the base one (see
+ * {@link org.apache.jackrabbit.core.persistence.bundle.AbstractBundlePersistenceManager#checkConsistency(String[], boolean, boolean)})
+ * but providing a result that can be acted upon.
  * <p>
  * <em>Beware: this interface is designed for unit tests only.</em>
  */
 public interface ConsistencyChecker {
+
+    /**
+     * Set the update event channel. Needed to inform the cluster of any changes made during repairs.
+     *
+     * @param eventChannel the update event channel
+     */
+    public void setEventChannel(UpdateEventChannel eventChannel);
 
     /**
      * Perform a consistency check of the data. An example are non-existent

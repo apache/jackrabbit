@@ -24,7 +24,7 @@ import org.apache.jackrabbit.core.cluster.UpdateEventListener;
  * Package-private utility class used as a sentinel by the
  * {@link SharedItemStateManager} class.
  */
-class DummyUpdateEventChannel implements UpdateEventChannel {
+public class DummyUpdateEventChannel implements UpdateEventChannel {
 
     public void updatePrepared(Update update) {}
 

@@ -40,4 +40,8 @@ public interface ReportItem {
      */
     public Type getType();
 
+    /**
+     * @return whether this error was repaired
+     */
+    public boolean isRepaired();
 }
