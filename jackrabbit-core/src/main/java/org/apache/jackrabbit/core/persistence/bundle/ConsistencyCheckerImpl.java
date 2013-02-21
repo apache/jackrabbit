@@ -44,6 +44,7 @@ import org.apache.jackrabbit.core.state.DummyUpdateEventChannel;
 import org.apache.jackrabbit.core.state.ItemState;
 import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.NodeState;
+import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.NameFactory;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
@@ -52,7 +53,6 @@ import org.slf4j.LoggerFactory;
 
 public class ConsistencyCheckerImpl {
 
-    /** the default logger */
     private static Logger log = LoggerFactory.getLogger(ConsistencyCheckerImpl.class);
 
     /**
@@ -61,24 +61,16 @@ public class ConsistencyCheckerImpl {
     private static final int NODESATONCE = Integer.getInteger("org.apache.jackrabbit.checker.nodesatonce", 1024 * 8);
 
     /**
-     * Whether to load all node infos before checking or to check nodes as they are loaded.
-     * The former is magnitudes faster but requires more memory.
-     */
-    private static final boolean CHECKAFTERLOADING = Boolean.getBoolean("org.apache.jackrabbit.checker.checkafterloading");
-
-    /**
      * Attribute name used to store the size of the update.
      */
     private static final String ATTRIBUTE_UPDATE_SIZE = "updateSize";
-
-    private static final NameFactory NF = NameFactoryImpl.getInstance();
 
     private final AbstractBundlePersistenceManager pm;
     private final ConsistencyCheckListener listener;
     private NodeId lostNFoundId;
     private UpdateEventChannel eventChannel = new DummyUpdateEventChannel();
     private Map<NodeId, NodePropBundle> bundles;
-    private final List<ConsistencyCheckerError> errors = new ArrayList<ConsistencyCheckerError>();
+    private List<ConsistencyCheckerError> errors;
     private int nodeCount;
     private long elapsedTime;
 
@@ -102,6 +94,7 @@ public class ConsistencyCheckerImpl {
      * @throws RepositoryException
      */
     public void check(String[] uuids, boolean recursive) throws RepositoryException {
+        errors = new ArrayList<ConsistencyCheckerError>();
         long tstart = System.currentTimeMillis();
         nodeCount = internalCheckConsistency(uuids, recursive);
         elapsedTime = System.currentTimeMillis() - tstart;
@@ -112,7 +105,7 @@ public class ConsistencyCheckerImpl {
      * Removes all false positives from the report.
      */
     public void doubleCheckErrors() {
-        if (!errors.isEmpty()) {
+        if (hasErrors()) {
             final Iterator<ConsistencyCheckerError> errorIterator = errors.iterator();
             while (errorIterator.hasNext()) {
                 final ConsistencyCheckerError error = errorIterator.next();
@@ -133,8 +126,10 @@ public class ConsistencyCheckerImpl {
      */
     public ConsistencyReport getReport() {
         final Set<ReportItem> reportItems = new HashSet<ReportItem>();
-        for (ConsistencyCheckerError error : errors) {
-            reportItems.add(error.getReportItem());
+        if (hasErrors()) {
+            for (ConsistencyCheckerError error : errors) {
+                reportItems.add(error.getReportItem());
+            }
         }
         return new ConsistencyReportImpl(nodeCount, elapsedTime, reportItems);
     }
@@ -168,7 +163,6 @@ public class ConsistencyCheckerImpl {
                 if (changes.hasUpdates()) {
                     eventChannel.updatePrepared(update);
                     for (NodePropBundle bundle : bundles.values()) {
-                        bundle.setModCount((short) (bundle.getModCount()+1));
                         storeBundle(bundle);
                     }
                     update.setAttribute(ATTRIBUTE_UPDATE_SIZE, changes.getUpdateSize());
@@ -186,10 +180,16 @@ public class ConsistencyCheckerImpl {
         }
     }
 
+    private boolean hasErrors() {
+        return errors != null && !errors.isEmpty();
+    }
+
     private boolean hasRepairableErrors() {
-        for (ConsistencyCheckerError error : errors) {
-            if (error.isRepairable()) {
-                return true;
+        if (hasErrors()) {
+            for (ConsistencyCheckerError error : errors) {
+                if (error.isRepairable()) {
+                    return true;
+                }
             }
         }
         return false;
@@ -220,6 +220,7 @@ public class ConsistencyCheckerImpl {
         int count = 0;
 
         if (uuids == null) {
+            // check all nodes
             try {
                 Map<NodeId, NodeInfo> batch = pm.getAllNodeInfos(null, NODESATONCE);
                 Map<NodeId, NodeInfo> allInfos = batch;
@@ -228,48 +229,33 @@ public class ConsistencyCheckerImpl {
                     NodeId lastId = null;
 
                     for (Map.Entry<NodeId, NodeInfo> entry : batch.entrySet()) {
-                        NodeId id = entry.getKey();
-                        lastId = id;
+                        lastId = entry.getKey();
 
                         count++;
                         if (count % 1000 == 0) {
                             log.info(pm + ": loaded " + count + " infos...");
                         }
 
-                        if (!CHECKAFTERLOADING) {
-                            // check immediately
-                            NodeInfo nodeInfo = entry.getValue();
-                            checkBundleConsistency(id, nodeInfo, batch);
-                        }
                     }
 
                     batch = pm.getAllNodeInfos(lastId, NODESATONCE);
 
-                    if (CHECKAFTERLOADING) {
-                        allInfos.putAll(batch);
-                    }
+                    allInfos.putAll(batch);
                 }
 
-                if (CHECKAFTERLOADING) {
-                    // check info
-                    for (Map.Entry<NodeId, NodeInfo> entry : allInfos.entrySet()) {
-                        checkBundleConsistency(entry.getKey(), entry.getValue(), allInfos);
-                    }
+                for (Map.Entry<NodeId, NodeInfo> entry : allInfos.entrySet()) {
+                    checkBundleConsistency(entry.getKey(), entry.getValue(), allInfos);
                 }
-            } catch (ItemStateException ex) {
-                throw new RepositoryException("getting nodeIds", ex);
+
+            } catch (ItemStateException e) {
+                throw new RepositoryException("Error loading nodes", e);
+            } finally {
+                NodeInfo.clearPool();
             }
         } else {
             // check only given uuids, handle recursive flag
 
-            // 1) convert uuid array to modifiable list
-            // 2) for each uuid do
-            // a) load node bundle
-            // b) check bundle, store any bundle-to-be-modified in collection
-            // c) if recursive, add child uuids to list of uuids
-
             List<NodeId> idList = new ArrayList<NodeId>(uuids.length);
-            // convert uuid string array to list of UUID objects
             for (final String uuid : uuids) {
                 try {
                     idList.add(new NodeId(uuid));
@@ -278,14 +264,10 @@ public class ConsistencyCheckerImpl {
                 }
             }
 
-            // iterate over UUIDs (including ones that are newly added inside
-            // the loop!)
             for (int i = 0; i < idList.size(); i++) {
                 NodeId id = idList.get(i);
                 try {
-                    // load the node from the database
-                    NodePropBundle bundle = pm.loadBundle(id);
-
+                    final NodePropBundle bundle = pm.loadBundle(id);
                     if (bundle == null) {
                         if (!isVirtualNode(id)) {
                             error(id.toString(), "No bundle found for id '" + id + "'");
@@ -301,21 +283,16 @@ public class ConsistencyCheckerImpl {
 
                         count++;
                         if (count % 1000 == 0 && listener == null) {
-                            log.info(pm + ": checked " + count + "/"
-                                    + idList.size() + " bundles...");
+                            log.info(pm + ": checked " + count + "/" + idList.size() + " bundles...");
                         }
                     }
-                } catch (ItemStateException e) {
-                    // problem already logged (loadBundle called with
-                    // logDetailedErrors=true)
+                } catch (ItemStateException ignored) {
+                    // problem already logged
                 }
             }
         }
 
         log.info(pm + ": checked " + count + " bundles.");
-
-        // clear the NodeId pool
-        NodeInfo.clearPool();
 
         return count;
     }
@@ -324,77 +301,72 @@ public class ConsistencyCheckerImpl {
      * Checks a single bundle for inconsistencies, ie. inexistent child nodes, inexistent parents, and other
      * structural inconsistencies.
      *
-     * @param id node id for the bundle to check
+     * @param nodeId node id for the bundle to check
      * @param nodeInfo the node info for the node to check
      * @param infos all the {@link NodeInfo}s loaded in the current batch
      */
-    private void checkBundleConsistency(NodeId id, NodeInfo nodeInfo, Map<NodeId, NodeInfo> infos) {
+    private void checkBundleConsistency(NodeId nodeId, NodeInfo nodeInfo, Map<NodeId, NodeInfo> infos) {
 
         // skip all virtual nodes
-        if (isVirtualNode(id)) {
+        if (!isRoot(nodeId) && isVirtualNode(nodeId)) {
             return;
         }
 
         if (listener != null) {
-            listener.startCheck(id.toString());
+            listener.startCheck(nodeId.toString());
         }
 
         // check the children
         for (final NodeId childNodeId : nodeInfo.getChildren()) {
 
-            // skip check for system nodes (root, system root, version storage, node types)
-            if (childNodeId.toString().endsWith("babecafebabe")) {
+            if (isVirtualNode(childNodeId)) {
                 continue;
             }
 
             NodeInfo childNodeInfo = infos.get(childNodeId);
 
             if (childNodeInfo == null) {
-                addError(new MissingChild(id, childNodeId));
+                addError(new MissingChild(nodeId, childNodeId));
             } else {
-                if (!id.equals(childNodeInfo.getParentId())) {
-                    addError(new DisconnectedChild(id, childNodeId, childNodeInfo.getParentId()));
+                if (!nodeId.equals(childNodeInfo.getParentId())) {
+                    addError(new DisconnectedChild(nodeId, childNodeId, childNodeInfo.getParentId()));
                 }
             }
         }
 
         // check the parent
         NodeId parentId = nodeInfo.getParentId();
-        // skip root nodes (that point to itself)
-        if (parentId != null && !id.toString().endsWith("babecafebabe")) {
+        // skip root nodes
+        if (parentId != null && !isRoot(nodeId)) {
             NodeInfo parentInfo = infos.get(parentId);
 
             if (parentInfo == null) {
-                addError(new OrphanedNode(id, parentId));
+                addError(new OrphanedNode(nodeId, parentId));
             } else {
                 // if the parent exists, does it have a child node entry for us?
                 boolean found = false;
 
                 for (NodeId childNodeId : parentInfo.getChildren()) {
-                    if (childNodeId.equals(id)){
+                    if (childNodeId.equals(nodeId)){
                         found = true;
                         break;
                     }
                 }
 
                 if (!found) {
-                    addError(new AbandonedNode(id, parentId));
+                    addError(new AbandonedNode(nodeId, parentId));
                 }
 
             }
         }
     }
 
-    /**
-     * @return whether the id is for a virtual node (not needing checking)
-     */
-    protected boolean isVirtualNode(NodeId id) {
-        String s = id.toString();
-        return !isRoot(s) && s.endsWith("babecafebabe");
+    protected boolean isVirtualNode(NodeId nodeId) {
+        return nodeId.toString().endsWith("babecafebabe");
     }
 
-    private boolean isRoot(String id) {
-        return "cafebabe-cafe-babe-cafe-babecafebabe".equals(id);
+    private boolean isRoot(NodeId nodeId) {
+        return "cafebabe-cafe-babe-cafe-babecafebabe".equals(nodeId.toString());
     }
 
     private void addError(ConsistencyCheckerError error) {
@@ -432,7 +404,8 @@ public class ConsistencyCheckerImpl {
 
     private void storeBundle(NodePropBundle bundle) {
         try {
-            bundle.markOld(); // use UPDATE instead of INSERT
+            bundle.markOld();
+            bundle.setModCount((short) (bundle.getModCount()+1));
             pm.storeBundle(bundle);
             pm.evictBundle(bundle.getId());
         } catch (ItemStateException e) {
@@ -451,6 +424,12 @@ public class ConsistencyCheckerImpl {
         bundles.put(bundle.getId(), bundle);
     }
 
+    /**
+     * A missing child is when the node referred to by a child node entry
+     * does not exist.
+     *
+     * This type of error is repaired by removing the corrupted child node entry.
+     */
     private class MissingChild extends ConsistencyCheckerError {
 
         private final NodeId childNodeId;
@@ -501,6 +480,12 @@ public class ConsistencyCheckerImpl {
         }
     }
 
+    /**
+     * A disconnected child is when a child node entry refers to a node
+     * that exists, but that node actually has a different parent.
+     *
+     * This type of error is repaired by removing the corrupted child node entry.
+     */
     private class DisconnectedChild extends ConsistencyCheckerError {
 
         private final NodeId childNodeId;
@@ -553,6 +538,12 @@ public class ConsistencyCheckerImpl {
         }
     }
 
+    /**
+     * An orphaned node is a node whose parent does not exist.
+     *
+     * This type of error is repaired by reattaching the orphan to
+     * a special purpose 'lost and found' node.
+     */
     private class OrphanedNode extends ConsistencyCheckerError {
 
         private final NodeId parentNodeId;
@@ -579,7 +570,8 @@ public class ConsistencyCheckerImpl {
                 final NodePropBundle lfBundle = getBundle(lostNFoundId);
 
                 final String nodeName = nodeId + "-" + System.currentTimeMillis();
-                lfBundle.addChildNodeEntry(NF.create("", nodeName), nodeId);
+                final NameFactory nameFactory = NameFactoryImpl.getInstance();
+                lfBundle.addChildNodeEntry(nameFactory.create("", nodeName), nodeId);
                 bundle.setParentId(lostNFoundId);
 
                 saveBundle(bundle);
@@ -605,6 +597,14 @@ public class ConsistencyCheckerImpl {
         }
     }
 
+    /**
+     * An abandoned node is a node that points to an existing node
+     * as its parent, but that parent node does not have a corresponding
+     * child node entry for the child.
+     *
+     * This type of error is repaired by adding the missing child node entry
+     * to the parent.
+     */
     private class AbandonedNode extends ConsistencyCheckerError {
 
         private final NodeId nodeId;
@@ -630,18 +630,17 @@ public class ConsistencyCheckerImpl {
         void doRepair(final ChangeLog changes) throws ItemStateException {
             final NodePropBundle parentBundle = getBundle(parentNodeId);
 
-            final String nodeName = createNodeName();
-            parentBundle.addChildNodeEntry(NF.create("{}" + nodeName), nodeId);
+            parentBundle.addChildNodeEntry(createNodeName(), nodeId);
 
             saveBundle(parentBundle);
             changes.modified(new NodeState(parentNodeId, null, null, ItemState.STATUS_EXISTING, false));
         }
 
-        private String createNodeName() {
-            int l = (int) System.currentTimeMillis();
-            int r = new Random().nextInt();
-            int n = l + r;
-            return Integer.toHexString(n);
+        private Name createNodeName() {
+            int n = (int) System.currentTimeMillis() + new Random().nextInt();
+            final String localName = Integer.toHexString(n);
+            final NameFactory nameFactory = NameFactoryImpl.getInstance();
+            return nameFactory.create("{}" + localName);
         }
 
         @Override
