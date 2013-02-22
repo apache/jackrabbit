@@ -18,6 +18,8 @@ package org.apache.jackrabbit.test.api;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Arrays;
+import java.util.List;
 
 import javax.jcr.Node;
 import javax.jcr.Property;
@@ -403,31 +405,38 @@ public class SetValueConstraintViolationExceptionTest extends AbstractJCRTest {
                     "testable value constraints has been found");
         }
 
-        String constraints[] = propDef.getValueConstraints();
-        String nodeTypeSatisfied = constraints[0];
+        String valueConstraints[] = propDef.getValueConstraints();
+        if (valueConstraints == null || valueConstraints.length == 0) {
+            throw new NotExecutableException("No reference property def with "
+                    + "testable value constraints has been found");
+        }
+        List<String> constraints = Arrays.asList(valueConstraints);
+        String nodeTypeSatisfied = constraints.get(0);
         String nodeTypeNotSatisfied = null;
 
         NodeTypeManager manager = superuser.getWorkspace().getNodeTypeManager();
         NodeTypeIterator types = manager.getAllNodeTypes();
 
         // find a NodeType which is not satisfying the constraints
-        findNodeTypeNotSatisfied:
-            while (types.hasNext()) {
-                NodeType type = types.nextNodeType();
-                String name = type.getName();
-                for (int i = 0; i < constraints.length; i++) {
-                    if (name.equals(constraints[i]) || ntFrozenNode.equals(name)) {
-                        continue findNodeTypeNotSatisfied;
-                    }
-                    nodeTypeNotSatisfied = name;
-                    break findNodeTypeNotSatisfied;
-                }
+        while (types.hasNext()) {
+            NodeType type = types.nextNodeType();
+            String name = type.getName();
+            if (constraints.contains(name) || ntFrozenNode.equals(name)) {
+                continue;
             }
+            if (type.getChildNodeDefinitions() != null
+                    && type.getChildNodeDefinitions().length > 0) {
+                continue;
+            }
+            nodeTypeNotSatisfied = name;
+            break;
+        }
 
         if (nodeTypeNotSatisfied == null) {
             throw new NotExecutableException("No reference property def with " +
                     "testable value constraints has been found");
         }
+        System.out.println("nodeTypeNotSatisfied " + nodeTypeNotSatisfied);
 
         // create a sub node of testRootNode of type propDef.getDeclaringNodeType()
         // and add a property with constraints to this node
@@ -775,29 +784,35 @@ public class SetValueConstraintViolationExceptionTest extends AbstractJCRTest {
                     "testable value constraints has been found");
         }
 
-        String constraints[] = propDef.getValueConstraints();
-        String nodeTypeSatisfied = constraints[0];
+        String valueConstraints[] = propDef.getValueConstraints();
+        if (valueConstraints == null || valueConstraints.length == 0) {
+            throw new NotExecutableException("No reference property def with "
+                    + "testable value constraints has been found");
+        }
+        List<String> constraints = Arrays.asList(valueConstraints);
+        String nodeTypeSatisfied = constraints.get(0);
         String nodeTypeNotSatisfied = null;
 
         NodeTypeManager manager = superuser.getWorkspace().getNodeTypeManager();
         NodeTypeIterator types = manager.getAllNodeTypes();
 
         // find a NodeType which is not satisfying the constraints
-        findNodeTypeNotSatisfied:
-            while (types.hasNext()) {
-                NodeType type = types.nextNodeType();
-                String name = type.getName();
-                for (int i = 0; i < constraints.length; i++) {
-                    if (name.equals(constraints[i]) || ntFrozenNode.equals(name)) {
-                        continue findNodeTypeNotSatisfied;
-                    }
-                    nodeTypeNotSatisfied = name;
-                    break findNodeTypeNotSatisfied;
-                }
+        while (types.hasNext()) {
+            NodeType type = types.nextNodeType();
+            String name = type.getName();
+            if (constraints.contains(name) || ntFrozenNode.equals(name)) {
+                continue;
             }
+            if (type.getChildNodeDefinitions() != null
+                    && type.getChildNodeDefinitions().length > 0) {
+                continue;
+            }
+            nodeTypeNotSatisfied = name;
+            break;
+        }
 
         if (nodeTypeNotSatisfied == null) {
-            throw new NotExecutableException("No multiple reference property def with " +
+            throw new NotExecutableException("No reference property def with " +
                     "testable value constraints has been found");
         }
 
