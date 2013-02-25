@@ -436,7 +436,6 @@ public class SetValueConstraintViolationExceptionTest extends AbstractJCRTest {
             throw new NotExecutableException("No reference property def with " +
                     "testable value constraints has been found");
         }
-        System.out.println("nodeTypeNotSatisfied " + nodeTypeNotSatisfied);
 
         // create a sub node of testRootNode of type propDef.getDeclaringNodeType()
         // and add a property with constraints to this node
