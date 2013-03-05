@@ -218,18 +218,23 @@ public class CanAddChildNodeCallWithNodeTypeTest extends AbstractJCRTest {
     public void testResidualAndLegalType()
             throws NotExecutableException, RepositoryException {
 
-        NodeDefinition nodeDef = NodeTypeUtil.locateChildNodeDef(session, false, false, true);
+        String type = null;
+        NodeType nodeType = null;
 
-        if (nodeDef == null) {
-            throw new NotExecutableException("No testable residual child node def.");
+        for (NodeDefinition nodeDef : NodeTypeUtil.locateAllChildNodeDef(
+                session, false, false, true)) {
+            for (NodeType nt : nodeDef.getRequiredPrimaryTypes()) {
+                if (!nt.isAbstract()) {
+                    nodeType = nodeDef.getDeclaringNodeType();
+                    type = nt.getName();
+                }
+            }
+        }
+        if (nodeType == null || type == null) {
+            throw new NotExecutableException(
+                    "No testable residual child node def.");
         }
 
-        String type = nodeDef.getRequiredPrimaryTypes()[0].getName();
-        if (type.equals(ntBase)) {
-            // nt:base is abstract and can never be added, upgrade for check below
-            type = ntUnstructured;
-        }
-        NodeType nodeType = nodeDef.getDeclaringNodeType();
         String undefinedName = NodeTypeUtil.getUndefinedChildNodeName(nodeType);
 
         assertTrue("NodeType.canAddChildNode(String childNodeName, String nodeTypeName) " +
