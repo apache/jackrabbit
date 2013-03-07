@@ -51,7 +51,7 @@ public abstract class AbstractJCRTest extends JUnitTest {
     /**
      * Pool of helper objects to access repository transparently
      */
-    private static final RepositoryHelperPool HELPER_POOL = new RepositoryHelperPoolImpl();
+    private static final RepositoryHelperPool HELPER_POOL = RepositoryHelperPoolImpl.getInstance();
 
     /**
      * Namespace URI for jcr prefix.
