@@ -31,6 +31,16 @@ public interface RepositoryHelperPool {
     public RepositoryHelper borrowHelper() throws InterruptedException;
 
     /**
+     * Borrows all available repository helper instances. Waits until one
+     * becomes available.
+     *
+     * @return a repository helper.
+     * @throws InterruptedException if this thread is interrupted while waiting
+     *                              for a repository helper.
+     */
+    public RepositoryHelper[] borrowHelpers() throws InterruptedException;
+
+    /**
      * Returns the given repository helper to the pool.
      *
      * @param helper the repository helper to return.
