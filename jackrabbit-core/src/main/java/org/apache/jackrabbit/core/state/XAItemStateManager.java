@@ -89,7 +89,7 @@ public class XAItemStateManager extends LocalItemStateManager implements Interna
      * @param factory        event state collection factory
      * @param attributeName  the attribute name, if {@code null} then a default name is used
      */
-    private XAItemStateManager(SharedItemStateManager sharedStateMgr,
+    protected XAItemStateManager(SharedItemStateManager sharedStateMgr,
                               EventStateCollectionFactory factory,
                               String attributeName,
                               ItemStateCacheFactory cacheFactory) {
