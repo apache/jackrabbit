@@ -40,11 +40,14 @@ import org.apache.jackrabbit.webdav.property.DavPropertyNameSet;
 import org.apache.jackrabbit.webdav.property.DavPropertySet;
 import org.apache.jackrabbit.webdav.version.report.ReportInfo;
 import org.apache.jackrabbit.webdav.xml.DomUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.RepositoryException;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -53,13 +56,20 @@ import java.util.Map;
  */
 class URIResolverImpl implements URIResolver {
 
+    private static Logger log = LoggerFactory.getLogger(URIResolverImpl.class);
+
+    /**
+     * @see <a href="https://issues.apache.org/jira/browse/JCR-3305">JCR-3305</a>: limit cache size
+     */
+    private static final int CACHESIZE = 10000;
+
     private final URI repositoryUri;
     private final RepositoryServiceImpl service;
     private final Document domFactory;
 
     // TODO: to-be-fixed. uri/id-caches don't get updated
     // for each workspace a separate idUri-cache is created
-    private final Map<String, IdURICache> idURICaches = new HashMap<String, IdURICache>();
+    private final Map<String, IdPathCache> idPathCaches = new HashMap<String, IdPathCache>();
 
     URIResolverImpl(URI repositoryUri, RepositoryServiceImpl service, Document domFactory) {
         this.repositoryUri = repositoryUri;
@@ -67,13 +77,14 @@ class URIResolverImpl implements URIResolver {
         this.domFactory = domFactory;
     }
 
-    private IdURICache getCache(String workspaceName) {
-        if (idURICaches.containsKey(workspaceName)) {
-            return idURICaches.get(workspaceName);
+    private IdPathCache getCache(String workspaceName) {
+        IdPathCache cache = idPathCaches.get(workspaceName);
+        if (cache != null) {
+            return cache;
         } else {
-            IdURICache c = new IdURICache(getWorkspaceUri(workspaceName));
-            idURICaches.put(workspaceName, c);
-            return c;
+            IdPathCache emptyCache = new IdPathCache(CACHESIZE);
+            idPathCaches.put(workspaceName, emptyCache);
+            return emptyCache;
         }
     }
 
@@ -95,10 +106,10 @@ class URIResolverImpl implements URIResolver {
 
     String getItemUri(ItemId itemId, String workspaceName, SessionInfo sessionInfo)
             throws RepositoryException {
-        IdURICache cache = getCache(workspaceName);
+        IdPathCache cache = getCache(workspaceName);
         // check if uri is available from cache
         if (cache.containsItemId(itemId)) {
-            return cache.getUri(itemId);
+            return getUri(cache.getPath(itemId));
         } else {
             StringBuffer uriBuffer = new StringBuffer();
 
@@ -110,7 +121,7 @@ class URIResolverImpl implements URIResolver {
                 ItemId uuidId = (path == null) ? itemId : service.getIdFactory().createNodeId(uniqueID);
                 if (path != null && cache.containsItemId(uuidId)) {
                     // append uri of parent node, that is already cached
-                    uriBuffer.append(cache.getUri(uuidId));
+                    uriBuffer.append(getUri(cache.getPath(uuidId)));
                 } else {
                     // try to request locate-by-uuid report to build the uri
                     ReportInfo rInfo = new ReportInfo(JcrRemotingConstants.REPORT_LOCATE_BY_UUID, ItemResourceConstants.NAMESPACE);
@@ -126,7 +137,7 @@ class URIResolverImpl implements URIResolver {
                         MultiStatus ms = rm.getResponseBodyAsMultiStatus();
                         if (ms.getResponses().length == 1) {
                             uriBuffer.append(ms.getResponses()[0].getHref());
-                            cache.add(ms.getResponses()[0].getHref(), uuidId);
+                            cache.add(getPath(ms.getResponses()[0].getHref()), uuidId);
                         } else {
                             throw new ItemNotFoundException("Cannot identify item with uniqueID " + uniqueID);
                         }
@@ -155,7 +166,7 @@ class URIResolverImpl implements URIResolver {
             }
             String itemUri = uriBuffer.toString();
             if (!cache.containsItemId(itemId)) {
-                cache.add(itemUri, itemId);
+                cache.add(getPath(itemUri), itemId);
             }
             return itemUri;
         }
@@ -163,7 +174,7 @@ class URIResolverImpl implements URIResolver {
 
     NodeId buildNodeId(NodeId parentId, MultiStatusResponse response,
                        String workspaceName, NamePathResolver resolver) throws RepositoryException {
-        IdURICache cache = getCache(workspaceName);
+        IdPathCache cache = getCache(workspaceName);
         
         NodeId nodeId;
         DavPropertySet propSet = response.getProperties(DavServletResponse.SC_OK);
@@ -181,15 +192,16 @@ class URIResolverImpl implements URIResolver {
             }
         }
         // cache
-        cache.add(response.getHref(), nodeId);
+        cache.add(getPath(response.getHref()), nodeId);
         return nodeId;
     }
 
     PropertyId buildPropertyId(NodeId parentId, MultiStatusResponse response,
                                String workspaceName, NamePathResolver resolver) throws RepositoryException {
-        IdURICache cache = getCache(workspaceName);
-        if (cache.containsUri(response.getHref())) {
-            ItemId id = cache.getItemId(response.getHref());
+        IdPathCache cache = getCache(workspaceName);
+        String path = getPath(response.getHref());
+        if (cache.containsPath(path)) {
+            ItemId id = cache.getItemId(path);
             if (!id.denotesNode()) {
                 return (PropertyId) id;
             }
@@ -200,22 +212,15 @@ class URIResolverImpl implements URIResolver {
             Name name = resolver.getQName(propSet.get(JcrRemotingConstants.JCR_NAME_LN, ItemResourceConstants.NAMESPACE).getValue().toString());
             PropertyId propertyId = service.getIdFactory().createPropertyId(parentId, name);
 
-            cache.add(response.getHref(), propertyId);
+            cache.add(getPath(response.getHref()), propertyId);
             return propertyId;
         } catch (NameException e) {
             throw new RepositoryException(e);
         }
     }
 
-    void clearCacheEntries(ItemId itemId, SessionInfo sessionInfo) {
-        IdURICache cache = getCache(sessionInfo.getWorkspaceName());
-        if (cache.containsItemId(itemId)) {
-            cache.remove(itemId);
-        }
-    }
-
     void clearCacheEntries(SessionInfo sessionInfo) {
-        IdURICache cache = getCache(sessionInfo.getWorkspaceName());
+        IdPathCache cache = getCache(sessionInfo.getWorkspaceName());
         cache.clear();
     }
 
@@ -233,10 +238,11 @@ class URIResolverImpl implements URIResolver {
     }
 
     private NodeId getNodeId(String uri, SessionInfo sessionInfo, boolean nodeIsGone) throws RepositoryException {
-        IdURICache cache = getCache(sessionInfo.getWorkspaceName());
-        if (cache.containsUri(uri)) {
+        IdPathCache cache = getCache(sessionInfo.getWorkspaceName());
+        String path = getPath(uri);
+        if (cache.containsPath(path)) {
             // id has been accessed before and is cached
-            ItemId id = cache.getItemId(uri);
+            ItemId id = cache.getItemId(path);
             if (id.denotesNode()) {
                 return (NodeId) id;
             }
@@ -281,6 +287,32 @@ class URIResolverImpl implements URIResolver {
         }
     }
 
+    /**
+     * @param uri the uri to be parsed
+     * @return the path (trailing slash removed) extracted from the given uri or <code>null</code> if the uri could not
+     *         be parsed.
+     */
+    private String getPath(String uri) {
+        try {
+            String path = new java.net.URI(uri).getPath();
+            if (path.endsWith("/") && ! "/".equals(path)) {
+                return path.substring(0, path.length() - 1);
+            }
+            return path;
+        } catch (URISyntaxException e) {
+            log.warn("Failed to parse the URI = {}", uri);
+        }
+        return null;
+    }
+
+    private String getUri(String path) {
+        String baseUri = getRepositoryUri();
+        if (baseUri.endsWith("/")) {
+            return baseUri.substring(0, baseUri.length() - 1) + Text.escapePath(path);
+        }
+        return baseUri + Text.escapePath(path);
+    }
+
     //-------------------------------------------------------< URI resolver >---
     /**
      * @inheritDoc
@@ -319,9 +351,10 @@ class URIResolverImpl implements URIResolver {
      * @inheritDoc
      */
     public PropertyId getPropertyId(String uri, SessionInfo sessionInfo) throws RepositoryException {
-        IdURICache cache = getCache(sessionInfo.getWorkspaceName());
-        if (cache.containsUri(uri)) {
-            ItemId id = cache.getItemId(uri);
+        IdPathCache cache = getCache(sessionInfo.getWorkspaceName());
+        String path = getPath(uri);
+        if (cache.containsPath(path)) {
+            ItemId id = cache.getItemId(path);
             if (!id.denotesNode()) {
                 return (PropertyId) id;
             }
@@ -337,7 +370,7 @@ class URIResolverImpl implements URIResolver {
         try {
             Name name = service.getNamePathResolver(sessionInfo).getQName(propName);
             PropertyId propertyId = service.getIdFactory().createPropertyId(parentId, name);
-            cache.add(uri, propertyId);
+            cache.add(getPath(uri), propertyId);
 
             return propertyId;
         } catch (NameException e) {
