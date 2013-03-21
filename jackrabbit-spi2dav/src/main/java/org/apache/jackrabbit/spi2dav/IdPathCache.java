@@ -23,33 +23,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * <code>IdPathCache</code> ...
+ * The <code>IdPathCache</code> maintains a bidirectional LRU cache from itemId to its path.
  */
 class IdPathCache {
 
     private static Logger log = LoggerFactory.getLogger(IdPathCache.class);
 
-    /**
-     * @see <a href="https://issues.apache.org/jira/browse/JCR-3305">JCR-3305</a>: limit cache size
-     */
-    private static final int CACHESIZE = 10000;
+    private LRUCache<ItemId, String> idToPathCache;
+    private LRUCache<String, ItemId> pathToIdCache;
 
-    private Map<ItemId, String> idToPathCache;
-    private Map<String, ItemId> pathToIdCache;
-
-    public IdPathCache() {
-        idToPathCache = new LinkedHashMap<ItemId, String>(CACHESIZE, 1) {
-            @Override
-            protected boolean removeEldestEntry(Map.Entry<ItemId, String> eldest) {
-                return this.size() > CACHESIZE;
-            }
-        };
-        pathToIdCache = new LinkedHashMap<String, ItemId>(CACHESIZE, 1) {
-            @Override
-            protected boolean removeEldestEntry(Map.Entry<String, ItemId> eldest) {
-                return this.size() > CACHESIZE;
-            }
-        };
+    public IdPathCache(int limit) {
+        idToPathCache = new LRUCache<ItemId, String>(limit);
+        pathToIdCache = new LRUCache<String, ItemId>(limit);
     }
 
     public ItemId getItemId(String path) {
@@ -93,5 +78,20 @@ class IdPathCache {
     public void clear() {
         idToPathCache.clear();
         pathToIdCache.clear();
+    }
+
+    private class LRUCache<K, V> extends LinkedHashMap<K, V> {
+
+        private final int limit;
+
+        public LRUCache(int limit) {
+            super(16, 0.75f, true);
+            this.limit = limit;
+        }
+
+        @Override
+        protected boolean removeEldestEntry(Map.Entry<K,V> eldest) {
+            return size() > limit;
+        }
     }
 }

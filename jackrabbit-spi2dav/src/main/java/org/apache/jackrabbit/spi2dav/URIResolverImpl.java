@@ -58,6 +58,11 @@ class URIResolverImpl implements URIResolver {
 
     private static Logger log = LoggerFactory.getLogger(URIResolverImpl.class);
 
+    /**
+     * @see <a href="https://issues.apache.org/jira/browse/JCR-3305">JCR-3305</a>: limit cache size
+     */
+    private static final int CACHESIZE = 10000;
+
     private final URI repositoryUri;
     private final RepositoryServiceImpl service;
     private final Document domFactory;
@@ -77,7 +82,7 @@ class URIResolverImpl implements URIResolver {
         if (cache != null) {
             return cache;
         } else {
-            IdPathCache emptyCache = new IdPathCache();
+            IdPathCache emptyCache = new IdPathCache(CACHESIZE);
             idPathCaches.put(workspaceName, emptyCache);
             return emptyCache;
         }
