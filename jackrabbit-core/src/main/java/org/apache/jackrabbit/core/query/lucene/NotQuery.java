@@ -177,6 +177,8 @@ class NotQuery extends Query {
          */
         private int contextNo = -1;
 
+        private boolean firstTime = true;
+
         /**
          * Creates a new scorer
          * @param reader
@@ -192,7 +194,8 @@ class NotQuery extends Query {
                 return docNo;
             }
 
-            if (docNo == -1) {
+            if (firstTime) {
+                firstTime = false;
                 // get first doc of context scorer
                 int docId = contextScorer.nextDoc();
                 if (docId != NO_MORE_DOCS) {
