@@ -168,6 +168,8 @@ class NotQuery extends Query {
          */
         private int contextNo = -1;
 
+        private boolean firstTime = true;
+
         /**
          * Creates a new scorer
          * @param reader
@@ -181,7 +183,8 @@ class NotQuery extends Query {
          * {@inheritDoc}
          */
         public boolean next() throws IOException {
-            if (docNo == -1) {
+            if (firstTime) {
+                firstTime = false;
                 // get first doc of context scorer
                 if (contextScorer.next()) {
                     contextNo = contextScorer.doc();
