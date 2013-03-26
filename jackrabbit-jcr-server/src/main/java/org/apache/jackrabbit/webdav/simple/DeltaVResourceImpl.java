@@ -22,6 +22,7 @@ import javax.jcr.Item;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Property;
+import javax.xml.parsers.ParserConfigurationException;
 
 import org.apache.jackrabbit.JcrConstants;
 import org.apache.jackrabbit.webdav.DavCompliance;
@@ -44,8 +45,10 @@ import org.apache.jackrabbit.webdav.version.report.Report;
 import org.apache.jackrabbit.webdav.version.report.ReportInfo;
 import org.apache.jackrabbit.webdav.version.report.ReportType;
 import org.apache.jackrabbit.webdav.version.report.SupportedReportSetProperty;
+import org.apache.jackrabbit.webdav.xml.DomUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.w3c.dom.Element;
 
 /**
  * The <code>DeltaVResourceImpl</code> encapsulates the functionality common to all
@@ -117,12 +120,17 @@ public class DeltaVResourceImpl extends DavResourceImpl implements DeltaVResourc
             throw new DavException(DavServletResponse.SC_NOT_FOUND);
         }
 
-        if (supportedReports.isSupportedReport(reportInfo)) {
-            Report report = ReportType.getType(reportInfo).createReport(this, reportInfo);
-            return report;
-        } else {
-            throw new DavException(DavServletResponse.SC_UNPROCESSABLE_ENTITY, "Unknown report "+ reportInfo.getReportName() +"requested.");
+        if (!supportedReports.isSupportedReport(reportInfo)) {
+            Element condition = null;
+            try {
+                condition = DomUtil.createDocument().createElementNS("DAV:", "supported-report");
+            } catch (ParserConfigurationException ex) {
+                // we don't care THAT much
+            }
+            throw new DavException(DavServletResponse.SC_CONFLICT,
+                    "Unknown report '" + reportInfo.getReportName() + "' requested.", null, condition);
         }
+        return ReportType.getType(reportInfo).createReport(this, reportInfo);
     }
 
     /**
