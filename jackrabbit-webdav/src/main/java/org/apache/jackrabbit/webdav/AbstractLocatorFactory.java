@@ -231,10 +231,10 @@ public abstract class AbstractLocatorFactory implements DavLocatorFactory {
                 buf.append(EncodeUtil.escapePath(resourcePath));
             }
             int length = buf.length();
-            if (length > 0 && buf.charAt(length - 1) != '/') {
+            if (length == 0 || (length > 0 && buf.charAt(length - 1) != '/')) {
                 buf.append("/");
             }
-            href = buf.toString();
+            this.href = buf.toString();
         }
 
         /**
