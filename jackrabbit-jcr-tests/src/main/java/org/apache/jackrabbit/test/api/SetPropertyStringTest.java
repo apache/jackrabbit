@@ -307,25 +307,6 @@ public class SetPropertyStringTest extends AbstractJCRTest {
     }
 
     /**
-     * Tests if <code>Node.setProperty(String, String[])</code> throws a {@link
-     * javax.jcr.ValueFormatException} when trying to set an existing
-     * single-valued property to a multi-value
-     */
-    public void testSetSingleStringArrayValueFormatException() throws Exception {
-        // prerequisite: existing single-valued STRING property
-        if (!testNode.hasProperty(propertyName1)) {
-            testNode.setProperty(propertyName1, s1);
-            testNode.getParent().save();
-        }
-
-        try {
-            testNode.setProperty(propertyName1, sArray1);
-            fail("setProperty(singleValueProperty, String[]) not throwing a ValueFormatException");
-        } catch (ValueFormatException success) {
-        }
-    }
-
-    /**
      * Tests if removing a <code>String[]</code> property with
      * <code>Node.setProperty(String, null)</code> works with
      * <code>Session.save()</code>
@@ -418,25 +399,6 @@ public class SetPropertyStringTest extends AbstractJCRTest {
         assertEquals("Modifying properties with Node.setProperty(String, String[], int) and parentNode.save() not working",
                 Arrays.asList(vArray2),
                 Arrays.asList(testNode.getProperty(propertyName2).getValues()));
-    }
-
-    /**
-     * Tests if <code>Node.setProperty(String, String[], int)</code> throws a
-     * {@link javax.jcr.ValueFormatException} when trying to set an existing
-     * single-value property to a multi-value
-     */
-    public void testSetSingleStringArrayValueFormatExceptionWithPropertyType() throws Exception {
-        // prerequisite: existing single-valued STRING property
-        if (!testNode.hasProperty(propertyName1)) {
-            testNode.setProperty(propertyName1, s1);
-            testNode.getParent().save();
-        }
-
-        try {
-            testNode.setProperty(propertyName1, sArray1, PropertyType.STRING);
-            fail("setProperty(singleValueProperty, String[], int) not throwing a ValueFormatException");
-        } catch (ValueFormatException success) {
-        }
     }
 
     /**
