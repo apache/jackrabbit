@@ -313,6 +313,9 @@ public class MultiDataStore implements DataStore {
         return archiveDataStore.getAllIdentifiers();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public void init(String homeDir) throws RepositoryException {
         if (delayedDelete) {
             // First initialize the identifiersToDeleteFile
@@ -337,7 +340,8 @@ public class MultiDataStore implements DataStore {
                         && (identifiersToDeleteFile.lastModified() + (delayedDeleteSleep * 1000)) < System
                                 .currentTimeMillis()) {
                     deleteDelayedIdentifiersTaskThread = new Thread(
-                            new DeleteDelayedIdentifiersTask(),
+                            //Start immediately ...
+                            new DeleteDelayedIdentifiersTask(0L),
                             "Jackrabbit-MultiDataStore-DeleteDelayedIdentifiersTaskThread");
                     deleteDelayedIdentifiersTaskThread.setDaemon(true);
                     deleteDelayedIdentifiersTaskThread.start();
@@ -361,6 +365,9 @@ public class MultiDataStore implements DataStore {
         return primaryDataStore.getMinRecordLength();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public void close() throws DataStoreException {
         DataStoreException lastException = null;
         // 1. close the primary data store
@@ -403,6 +410,9 @@ public class MultiDataStore implements DataStore {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public void clearInUse() {
         archiveDataStore.clearInUse();
     }
@@ -539,7 +549,7 @@ public class MultiDataStore implements DataStore {
                             log.warn("The DeleteDelayedIdentifiersTask-Thread is already running.");
                         } else {
                             deleteDelayedIdentifiersTaskThread = new Thread(
-                                    new DeleteDelayedIdentifiersTask(),
+                                    new DeleteDelayedIdentifiersTask(delayedDeleteSleep),
                                     "Jackrabbit-MultiDataStore-DeleteDelayedIdentifiersTaskThread");
                             deleteDelayedIdentifiersTaskThread.setDaemon(true);
                             deleteDelayedIdentifiersTaskThread.start();
@@ -615,6 +625,15 @@ public class MultiDataStore implements DataStore {
     public class DeleteDelayedIdentifiersTask implements Runnable {
 
         boolean run = true;
+        private long sleepTime = 0L;
+        
+        /**
+         * Constructor
+         * @param sleep how long this DeleteDelayedIdentifiersTask should sleep in seconds.
+         */
+        public DeleteDelayedIdentifiersTask(long sleep) {
+            this.sleepTime = (sleep * 1000L);
+        }
 
         @Override
         public void run() {
@@ -623,6 +642,14 @@ public class MultiDataStore implements DataStore {
                 return;
             }
             while (run && !Thread.currentThread().isInterrupted()) {
+                if (sleepTime > 0) {
+                    try {
+                        Thread.sleep(sleepTime);
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                    }
+                }
+                log.info("Start to delete DataRecords from the primary data store.");
                 BufferedReader reader = null;
                 ArrayList<DataIdentifier> problemIdentifiers = new ArrayList<DataIdentifier>();
                 try {
