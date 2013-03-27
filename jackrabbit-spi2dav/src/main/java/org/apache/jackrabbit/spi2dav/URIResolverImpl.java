@@ -45,6 +45,7 @@ import org.w3c.dom.Document;
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.RepositoryException;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -125,8 +126,9 @@ class URIResolverImpl implements URIResolver {
 
                         MultiStatus ms = rm.getResponseBodyAsMultiStatus();
                         if (ms.getResponses().length == 1) {
-                            uriBuffer.append(ms.getResponses()[0].getHref());
-                            cache.add(ms.getResponses()[0].getHref(), uuidId);
+                            String absoluteUri = resolve(wspUri, ms.getResponses()[0].getHref());
+                            uriBuffer.append(absoluteUri);
+                            cache.add(absoluteUri, uuidId);
                         } else {
                             throw new ItemNotFoundException("Cannot identify item with uniqueID " + uniqueID);
                         }
@@ -135,6 +137,8 @@ class URIResolverImpl implements URIResolver {
                         throw new RepositoryException(e.getMessage());
                     } catch (DavException e) {
                         throw ExceptionConverter.generate(e);
+                    } catch (URISyntaxException e) {
+                        throw new RepositoryException(e.getMessage());
                     } finally {
                         if (rm != null) {
                             rm.releaseConnection();
@@ -159,6 +163,15 @@ class URIResolverImpl implements URIResolver {
             }
             return itemUri;
         }
+    }
+
+    /**
+     * Resolve the given href obtained from multistatus against base URI
+     */
+    private static String resolve(String wspUri, String href) throws URISyntaxException {
+        java.net.URI base = new java.net.URI(wspUri);
+        java.net.URI rel = new java.net.URI(href);
+        return base.resolve(rel).toASCIIString();
     }
 
     NodeId buildNodeId(NodeId parentId, MultiStatusResponse response,

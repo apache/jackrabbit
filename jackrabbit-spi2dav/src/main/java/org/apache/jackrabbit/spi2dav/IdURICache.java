@@ -57,7 +57,7 @@ class IdURICache {
 
     public void add(String uri, ItemId itemId) {
         if (!uri.startsWith(workspaceUri)) {
-            throw new IllegalArgumentException("Workspace missmatch.");
+            throw new IllegalArgumentException("Workspace mismatch: '" + uri + "' not under '" + workspaceUri + "'");
         }
         String cleanUri = getCleanUri(uri);
         uriToIdCache.put(cleanUri, itemId);
