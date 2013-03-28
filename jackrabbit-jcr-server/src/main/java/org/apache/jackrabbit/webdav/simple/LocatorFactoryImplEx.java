@@ -51,7 +51,7 @@ public class LocatorFactoryImplEx extends AbstractLocatorFactory {
             String repositoryPath = resourcePath.substring(wspPath.length());
             return (repositoryPath.length() == 0) ? "/" : repositoryPath;
         } else {
-            throw new IllegalArgumentException("Unexpected format of resource path.");
+            throw new IllegalArgumentException("Unexpected format of resource path: " + resourcePath + " (workspace: " + wspPath + ")");
         }
     }
 
