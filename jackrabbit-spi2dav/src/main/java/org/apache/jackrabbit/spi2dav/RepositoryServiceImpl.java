@@ -1656,7 +1656,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         CheckinMethod method = new CheckinMethod(uri);
         execute(method, sessionInfo);
         Header rh = method.getResponseHeader(DeltaVConstants.HEADER_LOCATION);
-        return uriResolver.getNodeId(rh.getValue(), sessionInfo);
+        return uriResolver.getNodeId(resolve(uri, rh.getValue()), sessionInfo);
     }
 
     /**
