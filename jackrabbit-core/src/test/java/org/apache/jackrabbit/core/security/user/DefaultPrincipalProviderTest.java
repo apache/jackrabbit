@@ -16,6 +16,12 @@
  */
 package org.apache.jackrabbit.core.security.user;
 
+import java.security.Principal;
+import java.util.Properties;
+import java.util.Set;
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
+
 import org.apache.jackrabbit.api.security.principal.PrincipalIterator;
 import org.apache.jackrabbit.api.security.user.AbstractUserTest;
 import org.apache.jackrabbit.api.security.user.Authorizable;
@@ -26,12 +32,6 @@ import org.apache.jackrabbit.core.security.principal.DefaultPrincipalProvider;
 import org.apache.jackrabbit.core.security.principal.EveryonePrincipal;
 import org.apache.jackrabbit.core.security.principal.PrincipalProvider;
 import org.apache.jackrabbit.test.NotExecutableException;
-
-import javax.jcr.RepositoryException;
-import javax.jcr.Session;
-import java.security.Principal;
-import java.util.Properties;
-import java.util.Set;
 
 /**
  * <code>DefaultPrincipalProviderTest</code>...
@@ -225,6 +225,39 @@ public class DefaultPrincipalProviderTest extends AbstractUserTest {
                 g.remove();
                 save(superuser);
             }
+        }
+    }
+
+    /**
+     * Test for: Principal assiocated with Group does not update members
+     * @see <a href=https://issues.apache.org/jira/browse/JCR-3552>JCR-3552</a>
+     */
+    public void testGroupMembership() throws Exception {
+        Group g = null;
+        User u = null;
+        Principal up = getTestPrincipal();
+        try {
+            // create a group and user, add the user to the group and assert membership
+            g = userMgr.createGroup(getTestPrincipal());
+            u = userMgr.createUser(up.getName(), buildPassword(up));
+            save(superuser);
+            g.addMember(u);
+            save(superuser);
+
+            Principal groupPrincipal = principalProvider.getPrincipal(g.getPrincipal().getName());
+            assertTrue(groupPrincipal instanceof java.security.acl.Group);
+            assertTrue(((java.security.acl.Group) groupPrincipal).isMember(u.getPrincipal()));
+
+            // remove the user from the group and assert the user is no longer a member of the group
+            g.removeMember(u);
+            save(superuser);
+
+            groupPrincipal = principalProvider.getPrincipal(g.getPrincipal().getName());
+            assertFalse(((java.security.acl.Group) groupPrincipal).isMember(u.getPrincipal()));
+        } finally {
+            if (null != g) { g.remove(); }
+            if (null != u) { u.remove(); }
+            save(superuser);
         }
     }
 }
