@@ -137,8 +137,6 @@ class URIResolverImpl implements URIResolver {
                         throw new RepositoryException(e.getMessage());
                     } catch (DavException e) {
                         throw ExceptionConverter.generate(e);
-                    } catch (URISyntaxException e) {
-                        throw new RepositoryException(e.getMessage());
                     } finally {
                         if (rm != null) {
                             rm.releaseConnection();
@@ -168,16 +166,21 @@ class URIResolverImpl implements URIResolver {
     /**
      * Resolve the given href obtained from multistatus against base URI
      */
-    private static String resolve(String wspUri, String href) throws URISyntaxException {
-        java.net.URI base = new java.net.URI(wspUri);
-        java.net.URI rel = new java.net.URI(href);
-        return base.resolve(rel).toASCIIString();
+    private static String resolve(String wspUri, String href) throws RepositoryException {
+        try {
+            java.net.URI base = new java.net.URI(wspUri);
+            java.net.URI rel = new java.net.URI(href);
+            return base.resolve(rel).toString();
+        }
+        catch (URISyntaxException ex) {
+            throw new RepositoryException(ex);
+        }
     }
 
-    NodeId buildNodeId(NodeId parentId, MultiStatusResponse response,
+    protected NodeId buildNodeId(NodeId parentId, String baseUri, MultiStatusResponse response,
                        String workspaceName, NamePathResolver resolver) throws RepositoryException {
         IdURICache cache = getCache(workspaceName);
-        
+
         NodeId nodeId;
         DavPropertySet propSet = response.getProperties(DavServletResponse.SC_OK);
 
@@ -194,7 +197,7 @@ class URIResolverImpl implements URIResolver {
             }
         }
         // cache
-        cache.add(response.getHref(), nodeId);
+        cache.add(resolve(baseUri, response.getHref()), nodeId);
         return nodeId;
     }
 
@@ -246,6 +249,7 @@ class URIResolverImpl implements URIResolver {
     }
 
     private NodeId getNodeId(String uri, SessionInfo sessionInfo, boolean nodeIsGone) throws RepositoryException {
+
         IdURICache cache = getCache(sessionInfo.getWorkspaceName());
         if (cache.containsUri(uri)) {
             // id has been accessed before and is cached
@@ -281,7 +285,7 @@ class URIResolverImpl implements URIResolver {
             if (responses.length != 1) {
                 throw new ItemNotFoundException("Unable to retrieve the node with id " + uri);
             }
-            return buildNodeId(parentId, responses[0], sessionInfo.getWorkspaceName(), service.getNamePathResolver(sessionInfo));
+            return buildNodeId(parentId, uri, responses[0], sessionInfo.getWorkspaceName(), service.getNamePathResolver(sessionInfo));
 
         } catch (IOException e) {
             throw new RepositoryException(e);
