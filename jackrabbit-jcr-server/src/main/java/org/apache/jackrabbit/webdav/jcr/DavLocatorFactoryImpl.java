@@ -62,7 +62,7 @@ public class DavLocatorFactoryImpl extends AbstractLocatorFactory {
                 return (repositoryPath.length() == 0) ? ItemResourceConstants.ROOT_ITEM_PATH : repositoryPath;
             } else {
                 log.error("Unexpected format of resource path.");
-                throw new IllegalArgumentException("Unexpected format of resource path.");
+                throw new IllegalArgumentException("Unexpected format of resource path: " + resourcePath + " (workspace: " + wspPath + ")");
             }
         }
     }
