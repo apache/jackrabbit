@@ -1018,10 +1018,13 @@ public class JcrUtils {
     }
 
     /**
-     * Creates or gets the {@link javax.jcr.Node Node} at the given Path. In
-     * case it has to create the Node all non-existent intermediate
+     * Creates or gets the {@link javax.jcr.Node node} at the given path. In
+     * case it has to create the node, nodes for all non-existent intermediate
      * path-elements will be created with the given intermediate node type and
      * the returned node will be created with the given nodeType.
+     * <b>Note</b>: When the given path contains parent elements this method might
+     * create multiple nodes at leaf position (e.g "a/../b" will create the
+     * child nodes "a" and "b" on the current node).
      *
      * <p>
      * If the node name points to an existing node, the node name will be
@@ -1055,12 +1058,13 @@ public class JcrUtils {
     }
 
     /**
-     * Creates or gets the {@link javax.jcr.Node Node} at the given path
-     * relative to the baseNode. In case it has to create the Node all
-     * non-existent intermediate path-elements will be created with the given
+     * Creates or gets the {@link javax.jcr.Node node} at the given path
+     * relative to the baseNode. In case it has to create the node, nodes for
+     * all non-existent intermediate path-elements will be created with the given
      * intermediate node type and the returned node will be created with the
-     * given nodeType.
-     *
+     * given nodeType. <b>Note</b>: When the given path contains parent elements
+     * this method might create multiple nodes at leaf position (e.g "a/../b"
+     * will create the child nodes "a" and "b" on the current node).
      * <p>
      * If the parameter <code>createUniqueLeaf</code> is set, it will not get
      * an existing node but rather try to create a unique node by appending a
