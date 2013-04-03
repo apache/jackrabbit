@@ -667,6 +667,11 @@ public class ItemManager implements ItemStateListener {
         AbstractNodeData data = retrieveItem(id, parentId);
         if (data == null) {
             data = (AbstractNodeData) getItemData(id, null, permissionCheck);
+        } else if (permissionCheck && !canRead(data, id)) {
+            // item exists but read-perm has been revoked in the mean time.
+            // -> remove from cache
+            evictItems(id);
+            throw new AccessDeniedException("cannot read item " + data.getId());
         }
         if (!data.getParentId().equals(parentId)) {
             // verify that parent actually appears in the shared set
