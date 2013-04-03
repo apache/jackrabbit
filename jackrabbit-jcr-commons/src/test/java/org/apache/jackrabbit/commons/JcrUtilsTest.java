@@ -16,8 +16,10 @@
  */
 package org.apache.jackrabbit.commons;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Hashtable;
+import java.util.Iterator;
 import java.util.Map;
 
 import javax.jcr.PropertyType;
@@ -75,5 +77,20 @@ public class JcrUtilsTest extends MockCase {
                 PropertyType.TYPENAME_BOOLEAN.toLowerCase()));
         assertEquals(PropertyType.DATE, JcrUtils.getPropertyType(
                 PropertyType.TYPENAME_DATE.toUpperCase()));
+    }
+
+    public void testIn() {
+        Iterable<String> iterable = JcrUtils.in(Arrays.asList("A").iterator());
+        Iterator<String> iterator = iterable.iterator();
+        assertNotNull(iterator);
+        assertTrue(iterator.hasNext());
+        assertEquals("A", iterator.next());
+        assertFalse(iterator.hasNext());
+
+        try {
+            iterable.iterator();
+            fail("Second execution of Iterable.iterator() should throw an exception");
+        } catch (IllegalStateException expected) {
+        }
     }
 }
