@@ -53,10 +53,6 @@ import javax.jcr.query.QueryResult;
 import javax.jcr.query.Row;
 import javax.jcr.query.RowIterator;
 
-import org.apache.jackrabbit.commons.iterator.NodeIterable;
-import org.apache.jackrabbit.commons.iterator.PropertyIterable;
-import org.apache.jackrabbit.commons.iterator.RowIterable;
-
 /**
  * Collection of static utility methods for use with the JCR API.
  *
@@ -260,217 +256,468 @@ public class JcrUtils {
     }
 
     /**
-     * Calls {@link Node#getSharedSet()} on the given node and returns
-     * the resulting {@link NodeIterator} as an {@link Iterable<Node>} instance
-     * for use in a Java 5 for-each loop.
+     * Returns an {@link Iterable<Node>} over the shared set of the given node.
+     * <p>
+     * The first iterator is acquired directly during this method call to
+     * allow a possible {@link RepositoryException} to be thrown as-is.
+     * Further iterators are acquired lazily when needed, with possible
+     * {@link RepositoryException}s wrapped into {@link RuntimeException}s.
      *
-     * @see NodeIterable
+     * @see Node#getSharedSet()
      * @param node shared node
      * @return nodes in the shared set
      * @throws RepositoryException if the {@link Node#getSharedSet()} call fails
      */
-    public static Iterable<Node> getSharedSet(Node node)
+    public static Iterable<Node> getSharedSet(final Node node)
             throws RepositoryException {
-        return new NodeIterable(node.getSharedSet());
+        final NodeIterator iterator = node.getSharedSet();
+        return new Iterable<Node>() {
+            private boolean first = true;
+            @Override @SuppressWarnings("unchecked")
+            public synchronized Iterator<Node> iterator() {
+                if (first) {
+                    first = false;
+                    return iterator;
+                } else {
+                    try {
+                        return node.getSharedSet();
+                    } catch (RepositoryException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+            }
+        };
     }
 
     /**
-     * Calls {@link Node#getNodes()} on the given node and returns the
-     * resulting {@link NodeIterator} as an {@link Iterable<Node>} instance
-     * for use in a Java 5 for-each loop.
+     * Returns an {@link Iterable<Node>} over the children of the given node.
+     * <p>
+     * The first iterator is acquired directly during this method call to
+     * allow a possible {@link RepositoryException} to be thrown as-is.
+     * Further iterators are acquired lazily when needed, with possible
+     * {@link RepositoryException}s wrapped into {@link RuntimeException}s.
      *
-     * @see NodeIterable
+     * @see Node#getNodes()
      * @param node parent node
      * @return child nodes
      * @throws RepositoryException if the {@link Node#getNodes()} call fails
      */
-    public static Iterable<Node> getChildNodes(Node node)
+    public static Iterable<Node> getChildNodes(final Node node)
             throws RepositoryException {
-        return new NodeIterable(node.getNodes());
+        final NodeIterator iterator = node.getNodes();
+        return new Iterable<Node>() {
+            private boolean first = true;
+            @Override @SuppressWarnings("unchecked")
+            public synchronized Iterator<Node> iterator() {
+                if (first) {
+                    first = false;
+                    return iterator;
+                } else {
+                    try {
+                        return node.getNodes();
+                    } catch (RepositoryException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+            }
+        };
     }
 
     /**
-     * Calls {@link Node#getNodes(String)} on the given node with the given
-     * name pattern and returns the resulting {@link NodeIterator} as an
-     * {@link Iterable<Node>} instance for use in a Java 5 for-each loop.
+     * Returns an {@link Iterable<Node>} over those children of the given node
+     * that match the given name pattern.
+     * <p>
+     * The first iterator is acquired directly during this method call to
+     * allow a possible {@link RepositoryException} to be thrown as-is.
+     * Further iterators are acquired lazily when needed, with possible
+     * {@link RepositoryException}s wrapped into {@link RuntimeException}s.
      *
-     * @see NodeIterable
+     * @see Node#getNodes(String)
      * @param node parent node
      * @param pattern node name pattern
      * @return matching child nodes
      * @throws RepositoryException
      *         if the {@link Node#getNodes(String)} call fails
      */
-    public static Iterable<Node> getChildNodes(Node node, String pattern)
-            throws RepositoryException {
-        return new NodeIterable(node.getNodes(pattern));
+    public static Iterable<Node> getChildNodes(
+            final Node node, final String pattern) throws RepositoryException {
+        final NodeIterator iterator = node.getNodes(pattern);
+        return new Iterable<Node>() {
+            private boolean first = true;
+            @Override @SuppressWarnings("unchecked")
+            public synchronized Iterator<Node> iterator() {
+                if (first) {
+                    first = false;
+                    return iterator;
+                } else {
+                    try {
+                        return node.getNodes(pattern);
+                    } catch (RepositoryException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+            }
+        };
     }
 
     /**
-     * Calls {@link Node#getNodes(String[])} on the given node with the given
-     * name globs and returns the resulting {@link NodeIterator} as an
-     * {@link Iterable<Node>} instance for use in a Java 5 for-each loop.
+     * Returns an {@link Iterable<Node>} over those children of the given node
+     * that match the given name patterns.
+     * <p>
+     * The first iterator is acquired directly during this method call to
+     * allow a possible {@link RepositoryException} to be thrown as-is.
+     * Further iterators are acquired lazily when needed, with possible
+     * {@link RepositoryException}s wrapped into {@link RuntimeException}s.
      *
-     * @see NodeIterable
+     * @see Node#getNodes(String[])
      * @param node parent node
      * @param globs node name pattern
      * @return matching child nodes
      * @throws RepositoryException
      *         if the {@link Node#getNodes(String[])} call fails
      */
-    public static Iterable<Node> getChildNodes(Node node, String[] globs)
-            throws RepositoryException {
-        return new NodeIterable(node.getNodes(globs));
+    public static Iterable<Node> getChildNodes(
+            final Node node, final String[] globs) throws RepositoryException {
+        final NodeIterator iterator = node.getNodes(globs);
+        return new Iterable<Node>() {
+            private boolean first = true;
+            @Override @SuppressWarnings("unchecked")
+            public synchronized Iterator<Node> iterator() {
+                if (first) {
+                    first = false;
+                    return iterator;
+                } else {
+                    try {
+                        return node.getNodes(globs);
+                    } catch (RepositoryException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+            }
+        };
     }
 
     /**
-     * Calls {@link Node#getProperties()} on the given node and returns the
-     * resulting {@link NodeIterator} as an {@link Iterable<Node>} instance
-     * for use in a Java 5 for-each loop.
+     * Returns an {@link Iterable<Node>} over the properties of the given node.
+     * <p>
+     * The first iterator is acquired directly during this method call to
+     * allow a possible {@link RepositoryException} to be thrown as-is.
+     * Further iterators are acquired lazily when needed, with possible
+     * {@link RepositoryException}s wrapped into {@link RuntimeException}s.
      *
-     * @see PropertyIterable
+     * @see Node#getProperties()
      * @param node node
      * @return properties of the node
      * @throws RepositoryException
      *         if the {@link Node#getProperties()} call fails
      */
-    public static Iterable<Property> getProperties(Node node)
+    public static Iterable<Property> getProperties(final Node node)
             throws RepositoryException {
-        return new PropertyIterable(node.getProperties());
+        final PropertyIterator iterator = node.getProperties();
+        return new Iterable<Property>() {
+            private boolean first = true;
+            @Override @SuppressWarnings("unchecked")
+            public synchronized Iterator<Property> iterator() {
+                if (first) {
+                    first = false;
+                    return iterator;
+                } else {
+                    try {
+                        return node.getProperties();
+                    } catch (RepositoryException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+            }
+        };
     }
 
     /**
-     * Calls {@link Node#getProperties(String)} on the given node with the
-     * given name pattern and returns the resulting {@link PropertyIterator}
-     * as an {@link Iterable<Property>} instance for use in a Java 5
-     * for-each loop.
+     * Returns an {@link Iterable<Node>} over those properties of the
+     * given node that match the given name pattern.
+     * <p>
+     * The first iterator is acquired directly during this method call to
+     * allow a possible {@link RepositoryException} to be thrown as-is.
+     * Further iterators are acquired lazily when needed, with possible
+     * {@link RepositoryException}s wrapped into {@link RuntimeException}s.
      *
-     * @see PropertyIterable
+     * @see Node#getProperties(String)
      * @param node node
      * @param pattern property name pattern
      * @return matching properties of the node
      * @throws RepositoryException
      *         if the {@link Node#getProperties(String)} call fails
      */
-    public static Iterable<Property> getProperties(Node node, String pattern)
-            throws RepositoryException {
-        return new PropertyIterable(node.getProperties(pattern));
+    public static Iterable<Property> getProperties(
+            final Node node, final String pattern) throws RepositoryException {
+        final PropertyIterator iterator = node.getProperties(pattern);
+        return new Iterable<Property>() {
+            private boolean first = true;
+            @Override @SuppressWarnings("unchecked")
+            public synchronized Iterator<Property> iterator() {
+                if (first) {
+                    first = false;
+                    return iterator;
+                } else {
+                    try {
+                        return node.getProperties(pattern);
+                    } catch (RepositoryException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+            }
+        };
     }
 
     /**
-     * Calls {@link Node#getProperties(String[])} on the given node with the
-     * given name globs and returns the resulting {@link PropertyIterator}
-     * as an {@link Iterable<Property>} instance for use in a Java 5
-     * for-each loop.
+     * Returns an {@link Iterable<Node>} over those properties of the
+     * given node that match the given name patterns.
+     * <p>
+     * The first iterator is acquired directly during this method call to
+     * allow a possible {@link RepositoryException} to be thrown as-is.
+     * Further iterators are acquired lazily when needed, with possible
+     * {@link RepositoryException}s wrapped into {@link RuntimeException}s.
      *
-     * @see PropertyIterable
+     * @see Node#getProperties(String[])
      * @param node node
      * @param globs property name globs
      * @return matching properties of the node
      * @throws RepositoryException
      *         if the {@link Node#getProperties(String[])} call fails
      */
-    public static Iterable<Property> getProperties(Node node, String[] globs)
-            throws RepositoryException {
-        return new PropertyIterable(node.getProperties(globs));
+    public static Iterable<Property> getProperties(
+            final Node node, final String[] globs) throws RepositoryException {
+        final PropertyIterator iterator = node.getProperties(globs);
+        return new Iterable<Property>() {
+            private boolean first = true;
+            @Override @SuppressWarnings("unchecked")
+            public synchronized Iterator<Property> iterator() {
+                if (first) {
+                    first = false;
+                    return iterator;
+                } else {
+                    try {
+                        return node.getProperties(globs);
+                    } catch (RepositoryException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+            }
+        };
     }
 
     /**
-     * Calls {@link Node#getReferences()} on the given node and returns the
-     * resulting {@link PropertyIterator} as an {@link Iterable<Property>}
-     * instance for use in a Java 5 for-each loop.
+     * Returns an {@link Iterable<Node>} over references to the given node.
+     * <p>
+     * The first iterator is acquired directly during this method call to
+     * allow a possible {@link RepositoryException} to be thrown as-is.
+     * Further iterators are acquired lazily when needed, with possible
+     * {@link RepositoryException}s wrapped into {@link RuntimeException}s.
      *
-     * @see PropertyIterable
+     * @see Node#getReferences()
      * @param node reference target
      * @return references that point to the given node
      * @throws RepositoryException
      *         if the {@link Node#getReferences()} call fails
      */
-    public static Iterable<Property> getReferences(Node node)
+    public static Iterable<Property> getReferences(final Node node)
             throws RepositoryException {
-        return new PropertyIterable(node.getReferences());
+        final PropertyIterator iterator = node.getReferences();
+        return new Iterable<Property>() {
+            private boolean first = true;
+            @Override @SuppressWarnings("unchecked")
+            public synchronized Iterator<Property> iterator() {
+                if (first) {
+                    first = false;
+                    return iterator;
+                } else {
+                    try {
+                        return node.getReferences();
+                    } catch (RepositoryException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+            }
+        };
     }
 
     /**
-     * Calls {@link Node#getReferences(String)} on the given node and returns
-     * the resulting {@link PropertyIterator} as an {@link Iterable<Property>}
-     * instance for use in a Java 5 for-each loop.
+     * Returns an {@link Iterable<Node>} over those references to the
+     * given node that have the given name.
+     * <p>
+     * The first iterator is acquired directly during this method call to
+     * allow a possible {@link RepositoryException} to be thrown as-is.
+     * Further iterators are acquired lazily when needed, with possible
+     * {@link RepositoryException}s wrapped into {@link RuntimeException}s.
      *
-     * @see PropertyIterable
+     * @see Node#getReferences(String)
      * @param node reference target
      * @param name reference property name
      * @return references with the given name that point to the given node
      * @throws RepositoryException
      *         if the {@link Node#getReferences(String)} call fails
      */
-    public static Iterable<Property> getReferences(Node node, String name)
-            throws RepositoryException {
-        return new PropertyIterable(node.getReferences(name));
+    public static Iterable<Property> getReferences(
+            final Node node, final String name) throws RepositoryException {
+        final PropertyIterator iterator = node.getReferences(name);
+        return new Iterable<Property>() {
+            private boolean first = true;
+            @Override @SuppressWarnings("unchecked")
+            public synchronized Iterator<Property> iterator() {
+                if (first) {
+                    first = false;
+                    return iterator;
+                } else {
+                    try {
+                        return node.getReferences(name);
+                    } catch (RepositoryException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+            }
+        };
     }
 
     /**
-     * Calls {@link Node#getWeakReferences()} on the given node and returns the
-     * resulting {@link PropertyIterator} as an {@link Iterable<Property>}
-     * instance for use in a Java 5 for-each loop.
+     * Returns an {@link Iterable<Node>} over weak references to the given node.
+     * <p>
+     * The first iterator is acquired directly during this method call to
+     * allow a possible {@link RepositoryException} to be thrown as-is.
+     * Further iterators are acquired lazily when needed, with possible
+     * {@link RepositoryException}s wrapped into {@link RuntimeException}s.
      *
-     * @see PropertyIterable
+     * @see Node#getWeakReferences()
      * @param node reference target
      * @return weak references that point to the given node
      * @throws RepositoryException
      *         if the {@link Node#getWeakReferences()} call fails
      */
-    public static Iterable<Property> getWeakReferences(Node node)
+    public static Iterable<Property> getWeakReferences(final Node node)
             throws RepositoryException {
-        return new PropertyIterable(node.getWeakReferences());
+        final PropertyIterator iterator = node.getWeakReferences();
+        return new Iterable<Property>() {
+            private boolean first = true;
+            @Override @SuppressWarnings("unchecked")
+            public synchronized Iterator<Property> iterator() {
+                if (first) {
+                    first = false;
+                    return iterator;
+                } else {
+                    try {
+                        return node.getWeakReferences();
+                    } catch (RepositoryException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+            }
+        };
     }
 
     /**
-     * Calls {@link Node#getReferences(String)} on the given node and returns
-     * the resulting {@link PropertyIterator} as an {@link Iterable<Property>}
-     * instance for use in a Java 5 for-each loop.
+     * Returns an {@link Iterable<Node>} over those weak references to the
+     * given node that have the given name.
+     * <p>
+     * The first iterator is acquired directly during this method call to
+     * allow a possible {@link RepositoryException} to be thrown as-is.
+     * Further iterators are acquired lazily when needed, with possible
+     * {@link RepositoryException}s wrapped into {@link RuntimeException}s.
      *
-     * @see PropertyIterable
+     * @see Node#getWeakReferences(String)
      * @param node reference target
      * @param name reference property name
      * @return weak references with the given name that point to the given node
      * @throws RepositoryException
      *         if the {@link Node#getWeakReferences(String)} call fails
      */
-    public static Iterable<Property> getWeakReferences(Node node, String name)
-            throws RepositoryException {
-        return new PropertyIterable(node.getWeakReferences(name));
+    public static Iterable<Property> getWeakReferences(
+            final Node node, final String name) throws RepositoryException {
+        final PropertyIterator iterator = node.getWeakReferences(name);
+        return new Iterable<Property>() {
+            private boolean first = true;
+            @Override @SuppressWarnings("unchecked")
+            public synchronized Iterator<Property> iterator() {
+                if (first) {
+                    first = false;
+                    return iterator;
+                } else {
+                    try {
+                        return node.getWeakReferences(name);
+                    } catch (RepositoryException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+            }
+        };
     }
 
     /**
-     * Calls {@link QueryResult#getNodes()} on the given query result and
-     * returns the resulting {@link NodeIterator} as an {@link Iterable<Node>}
-     * instance for use in a Java 5 for-each loop.
+     * Returns an {@link Iterable<Node>} over nodes in the given query result.
+     * <p>
+     * The first iterator is acquired directly during this method call to
+     * allow a possible {@link RepositoryException} to be thrown as-is.
+     * Further iterators are acquired lazily when needed, with possible
+     * {@link RepositoryException}s wrapped into {@link RuntimeException}s.
      *
-     * @see NodeIterable
+     * @see QueryResult#getNodes()
      * @param result query result
      * @return nodes in the query result
      * @throws RepositoryException
      *         if the {@link QueryResult#getNodes()} call fails
      */
-    public static Iterable<Node> getNodes(QueryResult result)
+    public static Iterable<Node> getNodes(final QueryResult result)
             throws RepositoryException {
-        return new NodeIterable(result.getNodes());
+        final NodeIterator iterator = result.getNodes();
+        return new Iterable<Node>() {
+            private boolean first = true;
+            @Override @SuppressWarnings("unchecked")
+            public synchronized Iterator<Node> iterator() {
+                if (first) {
+                    first = false;
+                    return iterator;
+                } else {
+                    try {
+                        return result.getNodes();
+                    } catch (RepositoryException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+            }
+        };
     }
 
     /**
-     * Calls {@link QueryResult#getRows()} on the given query result and
-     * returns the resulting {@link RowIterator} as an {@link Iterable<Row>}
-     * instance for use in a Java 5 for-each loop.
+     * Returns an {@link Iterable<Row>} over nodes in the given query result.
+     * <p>
+     * The first iterator is acquired directly during this method call to
+     * allow a possible {@link RepositoryException} to be thrown as-is.
+     * Further iterators are acquired lazily when needed, with possible
+     * {@link RepositoryException}s wrapped into {@link RuntimeException}s.
      *
-     * @see RowIterable
+     * @see QueryResult#getRows()
      * @param result query result
      * @return rows in the query result
      * @throws RepositoryException
      *         if the {@link QueryResult#getRows()} call fails
      */
-    public static Iterable<Row> getRows(QueryResult result)
+    public static Iterable<Row> getRows(final QueryResult result)
             throws RepositoryException {
-        return new RowIterable(result.getRows());
+        final RowIterator iterator = result.getRows();
+        return new Iterable<Row>() {
+            private boolean first = true;
+            @Override @SuppressWarnings("unchecked")
+            public synchronized Iterator<Row> iterator() {
+                if (first) {
+                    first = false;
+                    return iterator;
+                } else {
+                    try {
+                        return result.getRows();
+                    } catch (RepositoryException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+            }
+        };
     }
 
     /**
