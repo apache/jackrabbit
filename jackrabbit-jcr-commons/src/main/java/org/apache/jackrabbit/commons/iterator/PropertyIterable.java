@@ -21,13 +21,17 @@ import java.util.Iterator;
 import javax.jcr.Property;
 import javax.jcr.PropertyIterator;
 
+import org.apache.jackrabbit.commons.JcrUtils;
+
 /**
  * Adapter class that adapts a {@link PropertyIterator} instance to an
  * {@link Iterable<Property>} instance that always returns the same underlying
  * iterator.
  *
  * @since Apache Jackrabbit 2.0
+ * @deprecated - Use {@link JcrUtils#in(PropertyIterator)} instead
  */
+@Deprecated
 public class PropertyIterable implements Iterable<Property> {
 
     /**

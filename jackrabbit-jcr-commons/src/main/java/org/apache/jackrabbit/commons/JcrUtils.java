@@ -49,9 +49,17 @@ import javax.jcr.RepositoryFactory;
 import javax.jcr.Session;
 import javax.jcr.Value;
 import javax.jcr.nodetype.NodeType;
+import javax.jcr.nodetype.NodeTypeIterator;
+import javax.jcr.observation.Event;
+import javax.jcr.observation.EventIterator;
+import javax.jcr.observation.EventListener;
+import javax.jcr.observation.EventListenerIterator;
 import javax.jcr.query.QueryResult;
 import javax.jcr.query.Row;
 import javax.jcr.query.RowIterator;
+import javax.jcr.security.AccessControlPolicyIterator;
+import javax.jcr.version.Version;
+import javax.jcr.version.VersionIterator;
 
 /**
  * Collection of static utility methods for use with the JCR API.
@@ -718,6 +726,188 @@ public class JcrUtils {
                 }
             }
         };
+    }
+
+    /**
+     * Transform any type of {@link Iterator} into an {@link Iterable}
+     * <strong>for single use</strong> in a Java 5 for-each loop.
+     * <p>
+     * <strong>While general purpose <code>Iterables</code> tend to be reusable,
+     * this wrapper <code>Iterable</code> consumes the argument
+     * <code>Iterator</code>, leaving it in a non-reusable state. The returned
+     * <code>Iterable</code> will throw an <code>IllegalStateException</code> if
+     * its <code>iterator()</code> method is invoked a second time.</strong>
+     *
+     * @param iterator
+     *            The input <code>Iterator</code>
+     * @return The wrapping <code>Iterable</code>
+     */
+    public static <I> Iterable<I> in(final Iterator<I> iterator) {
+        return new Iterable<I>() {
+            private boolean stale = false;
+
+            @Override
+            public synchronized Iterator<I> iterator() {
+                if (stale) {
+                    throw new IllegalStateException("Cannot reuse Iterable intended for single use");
+                }
+
+                stale = true;
+                return iterator;
+            }
+        };
+    }
+
+    /**
+     * Transform an {@link AccessControlPolicyIterator} into an {@link Iterable}
+     * <strong>for single use</strong> in a Java 5 for-each loop.
+     * <p>
+     * <strong>While general purpose <code>Iterables</code> tend to be reusable,
+     * this wrapper <code>Iterable</code> consumes the argument
+     * <code>Iterator</code>, leaving it in a non-reusable state. The returned
+     * <code>Iterable</code> will throw an <code>IllegalStateException</code> if
+     * its <code>iterator()</code> method is invoked a second time.</strong>
+     *
+     * @param iterator
+     *            The input <code>Iterator</code>
+     * @return The wrapping <code>Iterable</code>
+     */
+    @SuppressWarnings("unchecked")
+    public static Iterable<AccessControlPolicyIterator> in(AccessControlPolicyIterator iterator) {
+        return in((Iterator<AccessControlPolicyIterator>) iterator);
+    }
+
+    /**
+     * Transform an {@link EventIterator} into an {@link Iterable}
+     * <strong>for single use</strong> in a Java 5 for-each loop.
+     * <p>
+     * <strong>While general purpose <code>Iterables</code> tend to be reusable,
+     * this wrapper <code>Iterable</code> consumes the argument
+     * <code>Iterator</code>, leaving it in a non-reusable state. The returned
+     * <code>Iterable</code> will throw an <code>IllegalStateException</code> if
+     * its <code>iterator()</code> method is invoked a second time.</strong>
+     *
+     * @param iterator
+     *            The input <code>Iterator</code>
+     * @return The wrapping <code>Iterable</code>
+     */
+    @SuppressWarnings("unchecked")
+    public static Iterable<Event> in(EventIterator iterator) {
+        return in((Iterator<Event>) iterator);
+    }
+
+    /**
+     * Transform an {@link EventListenerIterator} into an {@link Iterable}
+     * <strong>for single use</strong> in a Java 5 for-each loop.
+     * <p>
+     * <strong>While general purpose <code>Iterables</code> tend to be reusable,
+     * this wrapper <code>Iterable</code> consumes the argument
+     * <code>Iterator</code>, leaving it in a non-reusable state. The returned
+     * <code>Iterable</code> will throw an <code>IllegalStateException</code> if
+     * its <code>iterator()</code> method is invoked a second time.</strong>
+     *
+     * @param iterator
+     *            The input <code>Iterator</code>
+     * @return The wrapping <code>Iterable</code>
+     */
+    @SuppressWarnings("unchecked")
+    public static Iterable<EventListener> in(EventListenerIterator iterator) {
+        return in((Iterator<EventListener>) iterator);
+    }
+
+    /**
+     * Transform an {@link NodeIterator} into an {@link Iterable}
+     * <strong>for single use</strong> in a Java 5 for-each loop.
+     * <p>
+     * <strong>While general purpose <code>Iterables</code> tend to be reusable,
+     * this wrapper <code>Iterable</code> consumes the argument
+     * <code>Iterator</code>, leaving it in a non-reusable state. The returned
+     * <code>Iterable</code> will throw an <code>IllegalStateException</code> if
+     * its <code>iterator()</code> method is invoked a second time.</strong>
+     *
+     * @param iterator
+     *            The input <code>Iterator</code>
+     * @return The wrapping <code>Iterable</code>
+     */
+    @SuppressWarnings("unchecked")
+    public static Iterable<Node> in(NodeIterator iterator) {
+        return in((Iterator<Node>) iterator);
+    }
+
+    /**
+     * Transform an {@link NodeTypeIterator} into an {@link Iterable}
+     * <strong>for single use</strong> in a Java 5 for-each loop.
+     * <p>
+     * <strong>While general purpose <code>Iterables</code> tend to be reusable,
+     * this wrapper <code>Iterable</code> consumes the argument
+     * <code>Iterator</code>, leaving it in a non-reusable state. The returned
+     * <code>Iterable</code> will throw an <code>IllegalStateException</code> if
+     * its <code>iterator()</code> method is invoked a second time.</strong>
+     *
+     * @param iterator
+     *            The input <code>Iterator</code>
+     * @return The wrapping <code>Iterable</code>
+     */
+    @SuppressWarnings("unchecked")
+    public static Iterable<NodeType> in(NodeTypeIterator iterator) {
+        return in((Iterator<NodeType>) iterator);
+    }
+
+    /**
+     * Transform an {@link PropertyIterator} into an {@link Iterable}
+     * <strong>for single use</strong> in a Java 5 for-each loop.
+     * <p>
+     * <strong>While general purpose <code>Iterables</code> tend to be reusable,
+     * this wrapper <code>Iterable</code> consumes the argument
+     * <code>Iterator</code>, leaving it in a non-reusable state. The returned
+     * <code>Iterable</code> will throw an <code>IllegalStateException</code> if
+     * its <code>iterator()</code> method is invoked a second time.</strong>
+     *
+     * @param iterator
+     *            The input <code>Iterator</code>
+     * @return The wrapping <code>Iterable</code>
+     */
+    @SuppressWarnings("unchecked")
+    public static Iterable<Property> in(PropertyIterator iterator) {
+        return in((Iterator<Property>) iterator);
+    }
+
+    /**
+     * Transform an {@link RowIterator} into an {@link Iterable}
+     * <strong>for single use</strong> in a Java 5 for-each loop.
+     * <p>
+     * <strong>While general purpose <code>Iterables</code> tend to be reusable,
+     * this wrapper <code>Iterable</code> consumes the argument
+     * <code>Iterator</code>, leaving it in a non-reusable state. The returned
+     * <code>Iterable</code> will throw an <code>IllegalStateException</code> if
+     * its <code>iterator()</code> method is invoked a second time.</strong>
+     *
+     * @param iterator
+     *            The input <code>Iterator</code>
+     * @return The wrapping <code>Iterable</code>
+     */
+    @SuppressWarnings("unchecked")
+    public static Iterable<Row> in(RowIterator iterator) {
+        return in((Iterator<Row>) iterator);
+    }
+
+    /**
+     * Transform an {@link VersionIterator} into an {@link Iterable}
+     * <strong>for single use</strong> in a Java 5 for-each loop.
+     * <p>
+     * <strong>While general purpose <code>Iterables</code> tend to be reusable,
+     * this wrapper <code>Iterable</code> consumes the argument
+     * <code>Iterator</code>, leaving it in a non-reusable state. The returned
+     * <code>Iterable</code> will throw an <code>IllegalStateException</code> if
+     * its <code>iterator()</code> method is invoked a second time.</strong>
+     *
+     * @param iterator
+     *            The input <code>Iterator</code>
+     * @return The wrapping <code>Iterable</code>
+     */
+    @SuppressWarnings("unchecked")
+    public static Iterable<Version> in(VersionIterator iterator) {
+        return in((Iterator<Version>) iterator);
     }
 
     /**

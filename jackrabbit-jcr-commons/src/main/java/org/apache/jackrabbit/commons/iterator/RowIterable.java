@@ -21,13 +21,17 @@ import java.util.Iterator;
 import javax.jcr.query.Row;
 import javax.jcr.query.RowIterator;
 
+import org.apache.jackrabbit.commons.JcrUtils;
+
 /**
  * Adapter class that adapts a {@link RowIterator} instance to an
  * {@link Iterable<Row>} instance that always returns the same underlying
  * iterator.
  *
  * @since Apache Jackrabbit 2.0
+ * @deprecated - Use {@link JcrUtils#in(RowIterator)} instead
  */
+@Deprecated
 public class RowIterable implements Iterable<Row> {
 
     /**
