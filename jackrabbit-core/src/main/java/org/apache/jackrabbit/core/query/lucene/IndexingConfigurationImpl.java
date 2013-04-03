@@ -185,7 +185,11 @@ public class IndexingConfigurationImpl
             }
 
         }
-        aggregateRules = idxAggregates.toArray(new AggregateRule[idxAggregates.size()]);
+        if (idxAggregates.isEmpty()) {
+            aggregateRules = null;
+        } else {
+            aggregateRules = idxAggregates.toArray(new AggregateRule[idxAggregates.size()]);
+        }
     }
 
     /**
