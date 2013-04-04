@@ -72,7 +72,7 @@ public class RepositoryStubImpl extends RepositoryStub {
                     }
                 });
             } catch (Exception e) {
-                throw new RepositoryStubException(e.toString());
+                throw new RepositoryStubException(e);
             }
         }
         return repository;

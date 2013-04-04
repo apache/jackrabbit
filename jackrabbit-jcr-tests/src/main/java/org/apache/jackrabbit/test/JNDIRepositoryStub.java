@@ -59,9 +59,10 @@ public class JNDIRepositoryStub extends RepositoryStub {
 
             } catch (ClassCastException e) {
                 // ClassCastException may be thrown by ProtableRemoteObject.narrow()
-                throw new RepositoryStubException("Object cannot be narrowed to javax.jcr.Repository: " + e);
+                throw new RepositoryStubException(
+                        "Object cannot be narrowed to javax.jcr.Repository", e);
             } catch (NamingException e) {
-                throw new RepositoryStubException(e.getMessage());
+                throw new RepositoryStubException(e);
             }
         }
         return repository;
