@@ -665,7 +665,8 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
             node.setPropertyValues(NameConstants.JCR_FROZENMIXINTYPES, PropertyType.NAME, ivalues);
         }
 
-        parent.store();
+        parent.store(false);
+        pNode.store(true);
         return pNode;
     }
 

@@ -710,8 +710,21 @@ public class NodeStateEx {
      * @throws RepositoryException if an error occurs
      */
     public void store() throws RepositoryException {
+        store(true);
+    }
+
+    /**
+     * Stores the persistent state and depending on the <code>recursively</code>
+     * flag also stores the modified child nodes recursively.
+     *
+     *
+     * @param recursively whether to store the nodes recursively or just this
+     *                    single node.
+     * @throws RepositoryException if an error occurs
+     */
+    public void store(boolean recursively) throws RepositoryException {
         try {
-            store(nodeState);
+            store(nodeState, recursively);
         } catch (ItemStateException e) {
             throw new RepositoryException(e);
         }
@@ -723,7 +736,7 @@ public class NodeStateEx {
      * @param state node state to store
      * @throws ItemStateException if an error occurs
      */
-    private void store(NodeState state)
+    private void store(NodeState state, boolean recursively)
             throws ItemStateException {
 
         if (state.getStatus() != ItemState.STATUS_EXISTING) {
@@ -735,10 +748,12 @@ public class NodeStateEx {
                     stateMgr.store(pstate);
                 }
             }
-            // now store all child node entries
-            for (ChildNodeEntry entry : state.getChildNodeEntries()) {
-                NodeState nstate = (NodeState) stateMgr.getItemState(entry.getId());
-                store(nstate);
+            if (recursively) {
+                // now store all child node entries
+                for (ChildNodeEntry entry : state.getChildNodeEntries()) {
+                    NodeState nstate = (NodeState) stateMgr.getItemState(entry.getId());
+                    store(nstate, true);
+                }
             }
             // and store itself
             stateMgr.store(state);

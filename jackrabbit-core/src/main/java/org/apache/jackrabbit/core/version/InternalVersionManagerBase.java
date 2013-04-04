@@ -576,7 +576,8 @@ abstract class InternalVersionManagerBase implements InternalVersionManager {
                 n = childn;
             } else if (interNT != null) {
                 childn = n.addNode(name, interNT, null, false);
-                n.store();
+                n.store(false);
+                childn.store(true);
                 n = childn;
             } else {
                 return null;
