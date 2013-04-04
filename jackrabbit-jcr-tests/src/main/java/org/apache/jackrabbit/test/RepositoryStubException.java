@@ -24,4 +24,13 @@ public class RepositoryStubException extends Exception {
     public RepositoryStubException(String msg) {
         super(msg);
     }
+
+    public RepositoryStubException(Throwable cause) {
+        super(cause);
+    }
+
+    public RepositoryStubException(String message, Throwable cause) {
+        super(message, cause);
+    }
+
 }

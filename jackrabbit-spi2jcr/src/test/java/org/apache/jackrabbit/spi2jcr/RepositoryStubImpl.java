@@ -63,9 +63,7 @@ public class RepositoryStubImpl extends JackrabbitRepositoryStub {
                     }
                 });
             } catch (RepositoryException e) {
-                RepositoryStubException ex = new RepositoryStubException(e.getMessage());
-                ex.initCause(e);
-                throw ex;
+                throw new RepositoryStubException(e);
             }
         }
         return repo;
