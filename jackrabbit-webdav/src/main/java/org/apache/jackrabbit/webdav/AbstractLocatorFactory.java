@@ -88,6 +88,10 @@ public abstract class AbstractLocatorFactory implements DavLocatorFactory {
             throw new IllegalArgumentException("Request handle must not be null.");
         }
 
+        if (prefix == null || prefix.length() == 0) {
+            throw new IllegalArgumentException("Prefix must be an absolute URI.");
+        }
+
         // build prefix string and remove all prefixes from the given href.
         StringBuffer b = new StringBuffer("");
         if (prefix != null && prefix.length() > 0) {
