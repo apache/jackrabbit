@@ -88,6 +88,7 @@ public class WebdavRequestImpl implements WebdavRequest, DavConstants {
     private final DavLocatorFactory factory;
     private final IfHeader ifHeader;
     private final String hrefPrefix;
+    private final String uriPrefix;
 
     private DavSession session;
 
@@ -115,13 +116,10 @@ public class WebdavRequestImpl implements WebdavRequest, DavConstants {
         this.factory = factory;
         this.ifHeader = new IfHeader(httpRequest);
 
-        if (createAbsoluteURI)  {
-            String host = getHeader("Host");
-            String scheme = getScheme();
-            hrefPrefix = scheme + "://" + host + getContextPath();
-        } else {
-            hrefPrefix = getContextPath();
-        }
+        String host = getHeader("Host");
+        String scheme = getScheme();
+        this.uriPrefix = scheme + "://" + host + getContextPath();
+        this.hrefPrefix = createAbsoluteURI ? this.uriPrefix : getContextPath();
     }
 
     /**
@@ -167,7 +165,7 @@ public class WebdavRequestImpl implements WebdavRequest, DavConstants {
         if (path.startsWith(ctx)) {
             path = path.substring(ctx.length());
         }
-        return factory.createResourceLocator(hrefPrefix, path);
+        return factory.createResourceLocator(uriPrefix, path);
     }
 
     /**
@@ -223,7 +221,7 @@ public class WebdavRequestImpl implements WebdavRequest, DavConstants {
                 throw new DavException(DavServletResponse.SC_FORBIDDEN);
             }
         }
-        return factory.createResourceLocator(hrefPrefix, ref);
+        return factory.createResourceLocator(uriPrefix, ref);
     }
 
     /**
@@ -233,7 +231,7 @@ public class WebdavRequestImpl implements WebdavRequest, DavConstants {
      */
     public DavResourceLocator getMemberLocator(String segment) {
         String path = (this.getRequestLocator().getHref(true) + segment).substring(hrefPrefix.length());
-        return factory.createResourceLocator(hrefPrefix, path);
+        return factory.createResourceLocator(uriPrefix, path);
     }
 
     /**
