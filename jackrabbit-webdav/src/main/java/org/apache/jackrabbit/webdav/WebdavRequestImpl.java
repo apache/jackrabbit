@@ -221,7 +221,7 @@ public class WebdavRequestImpl implements WebdavRequest, DavConstants {
                 throw new DavException(DavServletResponse.SC_FORBIDDEN);
             }
         }
-        return factory.createResourceLocator(hrefPrefix, ref);
+        return factory.createResourceLocator(uriPrefix, ref);
     }
 
     /**
@@ -231,7 +231,7 @@ public class WebdavRequestImpl implements WebdavRequest, DavConstants {
      */
     public DavResourceLocator getMemberLocator(String segment) {
         String path = (this.getRequestLocator().getHref(true) + segment).substring(hrefPrefix.length());
-        return factory.createResourceLocator(hrefPrefix, path);
+        return factory.createResourceLocator(uriPrefix, path);
     }
 
     /**
