@@ -47,7 +47,7 @@ public class PathParser {
 
     /**
      * Parses <code>jcrPath</code> into a <code>Path</code> object using
-     * <code>resolver</code> to convert prefixes into namespace URI's. If
+     * <code>resolver</code> to convert prefixes into namespace URIs. If
      * resolver is <code>null</code> this method only checks the format of the
      * passed String and returns <code>null</code>.
      *
@@ -66,7 +66,7 @@ public class PathParser {
 
     /**
      * Parses <code>jcrPath</code> into a <code>Path</code> object using
-     * <code>resolver</code> to convert prefixes into namespace URI's. If the
+     * <code>resolver</code> to convert prefixes into namespace URIs. If the
      * specified <code>jcrPath</code> is an identifier based absolute path
      * beginning with an identifier segment the specified
      * <code>IdentifierResolver</code> will be used to resolve it to an
@@ -94,7 +94,7 @@ public class PathParser {
 
     /**
      * Parses <code>jcrPath</code> into a <code>Path</code> object using
-     * <code>resolver</code> to convert prefixes into namespace URI's. If the
+     * <code>resolver</code> to convert prefixes into namespace URIs. If the
      * specified <code>jcrPath</code> is an identifier based absolute path
      * beginning with an identifier segment the specified
      * <code>IdentifierResolver</code> will be used to resolve it to an
@@ -132,7 +132,7 @@ public class PathParser {
      * @param parent   the parent path
      * @param jcrPath  the JCR path
      * @param resolver the namespace resolver to get prefixes for namespace
-     *                 URI's.
+     *                 URIs.
      * @param factory
      * @return the <code>Path</code> object.
      * @throws MalformedPathException If the <code>jcrPath</code> is malformed.
@@ -262,6 +262,10 @@ public class PathParser {
                     if (state == STATE_PREFIX_START && c != EOF) {
                         throw new MalformedPathException("'" + jcrPath + "' is not a valid path. double slash '//' not allowed.");
                     }
+                    if (state == STATE_URI && c == EOF) {
+                        // this handles the case where URI state was entered but the end of the segment was reached (JCR-3562)
+                        state = STATE_URI_END;
+                    }
                     if (state == STATE_PREFIX
                             || state == STATE_NAME
                             || state == STATE_INDEX_END
@@ -289,7 +293,7 @@ public class PathParser {
                         index = Path.INDEX_UNDEFINED;
                     } else if (state == STATE_IDENTIFIER) {
                         if (c == EOF) {
-                            // eof identifier reached                            
+                            // eof identifier reached
                             if (jcrPath.charAt(pos - 2) != ']') {
                                 throw new MalformedPathException("'" + jcrPath + "' is not a valid path: Unterminated identifier segment.");
                             }
@@ -414,7 +418,7 @@ public class PathParser {
                         state = STATE_URI_END;
                     }
                     break;
-                
+
                 default:
                     if (state == STATE_PREFIX_START || state == STATE_DOT || state == STATE_DOTDOT) {
                         state = STATE_PREFIX;
