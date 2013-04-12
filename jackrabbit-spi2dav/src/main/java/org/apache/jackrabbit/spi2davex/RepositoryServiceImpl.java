@@ -16,6 +16,18 @@
  */
 package org.apache.jackrabbit.spi2davex;
 
+import java.io.IOException;
+import java.io.StringWriter;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import javax.jcr.Credentials;
+import javax.jcr.ItemNotFoundException;
+import javax.jcr.PropertyType;
+import javax.jcr.RepositoryException;
+
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpException;
 import org.apache.commons.httpclient.HttpMethod;
@@ -65,18 +77,6 @@ import org.apache.jackrabbit.webdav.property.DavPropertyNameSet;
 import org.apache.jackrabbit.webdav.property.DavPropertySet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.jcr.Credentials;
-import javax.jcr.ItemNotFoundException;
-import javax.jcr.PropertyType;
-import javax.jcr.RepositoryException;
-import java.io.IOException;
-import java.io.StringWriter;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
 
 /**
  * <code>RepositoryServiceImpl</code>...
@@ -934,9 +934,15 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
                     str = value.getString();
                     break;
                 case PropertyType.DOUBLE:
-                    str = value.getString();
-                    if (str.indexOf('.') == -1) {
-                        str += ".0";
+                    double d = value.getDouble();
+                    if (Double.isNaN(d) || Double.isInfinite(d)) {
+                    // JSON cannot specifically handle this property type...
+                        str = null;
+                    } else {
+                        str = value.getString();
+                        if (str.indexOf('.') == -1) {
+                            str += ".0";
+                        }
                     }
                     break;
                 default:
