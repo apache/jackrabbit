@@ -92,8 +92,6 @@
                       org.apache.jackrabbit.jcr2spi.IsSameTest#testIsSameProperty3
                       org.apache.jackrabbit.jcr2spi.IsSameTest#testIsSameProperty4
                       org.apache.jackrabbit.jcr2spi.IsSameTest#testIsSameNode7
-                      <!-- JCR-3551 -->
-                      org.apache.jackrabbit.test.api.SetPropertyDoubleTest#testEdgeCases
                       <!-- Known, general issue of the Jcr2Spi - SPI setup.
                            No notification about changes to registered namespace(s) -->                        
                       org.apache.jackrabbit.jcr2spi.name.NamespaceRegistryTest#testReRegisteredNamespace
