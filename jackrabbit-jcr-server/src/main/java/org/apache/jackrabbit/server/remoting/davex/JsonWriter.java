@@ -16,6 +16,9 @@
  */
 package org.apache.jackrabbit.server.remoting.davex;
 
+import java.io.IOException;
+import java.io.Writer;
+import java.util.Collection;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.Property;
@@ -23,9 +26,6 @@ import javax.jcr.PropertyIterator;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
-import java.io.Writer;
-import java.io.IOException;
-import java.util.Collection;
 
 import org.apache.jackrabbit.JcrConstants;
 import org.apache.jackrabbit.commons.json.JsonUtil;
@@ -188,11 +188,11 @@ class JsonWriter {
             }
         } else {
             boolean isMultiple = p.isMultiple();
-            if (requiresTypeInfo(type) || (isMultiple && p.getValues().length == 0)) {
+            if (requiresTypeInfo(p) || (isMultiple && p.getValues().length == 0)) {
                 /* special property types that have no correspondence in JSON
                    are transported as String. the type is transported with an
                    extra key-value pair, the key having a leading ':' the value
-                   reflects the type. 
+                   reflects the type.
                    the same applies for multivalued properties consisting of an
                    empty array -> property type guessing would not be possible.
                  */
@@ -208,8 +208,8 @@ class JsonWriter {
         }
     }
 
-    private static boolean requiresTypeInfo(int type) {
-        switch (type) {
+    private static boolean requiresTypeInfo(Property p) throws RepositoryException {
+        switch (p.getType()) {
             case PropertyType.NAME:
             case PropertyType.PATH:
             case PropertyType.REFERENCE:
@@ -218,6 +218,22 @@ class JsonWriter {
             case PropertyType.URI:
             case PropertyType.DECIMAL:
                 return true;
+            case PropertyType.DOUBLE:
+                /* Double.NaN, Double.POSITIVE_INFINITY and Double.NEGATIVE_INFINITY
+                   are not defined in JSON, so they have to be serialized as type-hinted strings.
+                 */
+                if (p.isMultiple()) {
+                    for (Value val : p.getValues()) {
+                        double doubleValue = val.getDouble();
+                        if (Double.isInfinite(doubleValue) || Double.isNaN(doubleValue)) {
+                            return true;
+                        }
+                    }
+                    return false;
+                } else {
+                    double doubleValue = p.getDouble();
+                    return Double.isInfinite(doubleValue) || Double.isNaN(doubleValue);
+                }
             default:
                 // any other property type
                 return false;
@@ -290,8 +306,15 @@ class JsonWriter {
 
             case PropertyType.BOOLEAN:
             case PropertyType.LONG:
-            case PropertyType.DOUBLE:
                 writer.write(v.getString());
+                break;
+            case PropertyType.DOUBLE:
+                double d = v.getDouble();
+                String str = v.getString();
+                if (Double.isNaN(d) || Double.isInfinite(d)) {
+                    str = JsonUtil.getJsonString(str);
+                }
+                writer.write(str);
                 break;
 
             default:
