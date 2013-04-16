@@ -131,4 +131,17 @@ public class SetPropertyDoubleTest extends AbstractJCRTest {
                 testNode.hasProperty(propertyName1));
     }
 
+    /**
+     * Tests that in infinity and NaN values can be persisted and round-tripped.
+     */
+    public void testEdgeCases() throws Exception {
+        double tests[] = { Double.NaN, Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY };
+        String path = testNode.getPath();
+
+        for (double v : tests) {
+            testNode.setProperty(propertyName1, v);
+            testRootNode.getSession().save();
+            assertEquals("Round-trip of " + v, v, superuser.getNode(path).getProperty(propertyName1).getDouble());
+        }
+    }
 }
