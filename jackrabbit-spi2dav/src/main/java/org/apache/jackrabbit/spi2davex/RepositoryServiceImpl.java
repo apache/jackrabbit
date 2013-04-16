@@ -798,9 +798,15 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
                     str = value.getString();
                     break;
                 case PropertyType.DOUBLE:
-                    str = value.getString();
-                    if (str.indexOf('.') == -1) {
-                        str += ".0";
+                    double d = value.getDouble();
+                    if (Double.isNaN(d) || Double.isInfinite(d)) {
+                        // JSON cannot specifically handle this property type...
+                        str = null;
+                    } else {
+                        str = value.getString();
+                        if (str.indexOf('.') == -1) {
+                            str += ".0";
+                        }
                     }
                     break;
                 default:
