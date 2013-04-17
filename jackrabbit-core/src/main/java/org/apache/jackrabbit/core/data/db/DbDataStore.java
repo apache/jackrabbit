@@ -514,6 +514,7 @@ public class DbDataStore implements DataStore, DatabaseAware, MultiDataStoreAwar
                     list.add(identifier);
                 }
             }
+            log.debug("Found " + list.size() + " identifiers.");
             return list.iterator();
         } catch (Exception e) {
             throw convert("Can not read records", e);
