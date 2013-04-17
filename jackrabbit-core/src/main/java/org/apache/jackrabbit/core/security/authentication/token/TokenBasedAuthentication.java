@@ -304,7 +304,7 @@ public class TokenBasedAuthentication implements Authentication {
      * specified user in the current workspace or if an error occurs while
      * creating the token node.
      */
-    public synchronized static Credentials createToken(User user, SimpleCredentials credentials,
+    public static Credentials createToken(User user, SimpleCredentials credentials,
                                                        long tokenExpiration, Session session) throws RepositoryException {
         String workspaceName = session.getWorkspace().getName();
         if (user == null) {
@@ -320,11 +320,16 @@ public class TokenBasedAuthentication implements Authentication {
         if (userPath != null && session.nodeExists(userPath)) {
             Node userNode = session.getNode(userPath);
             Node tokenParent;
-            if (userNode.hasNode(TOKENS_NODE_NAME)) {
-                tokenParent = userNode.getNode(TOKENS_NODE_NAME);
-            } else {
-                tokenParent = userNode.addNode(TOKENS_NODE_NAME, TOKENS_NT_NAME);
+            if (!userNode.hasNode(TOKENS_NODE_NAME)) {
+                userNode.addNode(TOKENS_NODE_NAME, TOKENS_NT_NAME);
+                try {
+                    session.save();
+                } catch (RepositoryException e) {
+                    // may happen when .tokens node is created concurrently
+                    session.refresh(false);
+                }
             }
+            tokenParent = userNode.getNode(TOKENS_NODE_NAME);
 
             long creationTime = new Date().getTime();
             long expirationTime = creationTime + tokenExpiration;
