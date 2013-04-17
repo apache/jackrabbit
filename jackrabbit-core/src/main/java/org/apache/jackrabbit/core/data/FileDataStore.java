@@ -381,6 +381,7 @@ public class FileDataStore implements DataStore, MultiDataStoreAware {
                 identifiers.add(id);
             }
         }
+        log.debug("Found " + identifiers.size() + " identifiers.");
         return identifiers.iterator();
     }
 
