@@ -251,6 +251,9 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     private boolean remoteServerProvidesNodeTypes = false;
     private boolean remoteServerProvidesNoLocalFlag = false;
 
+    /* DAV conformance levels */
+    private Set<String> remoteDavComplianceClasses = null;
+
     /**
      * Same as {@link #RepositoryServiceImpl(String, IdFactory, NameFactory, PathFactory, QValueFactory, int, int)}
      * using {@link ItemInfoCacheImpl#DEFAULT_CACHE_SIZE)} as size for the item
@@ -1460,6 +1463,9 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     public void move(SessionInfo sessionInfo, NodeId srcNodeId, NodeId destParentNodeId, Name destName) throws RepositoryException {
         String uri = getItemUri(srcNodeId, sessionInfo);
         String destUri = getItemUri(destParentNodeId, destName, sessionInfo);
+        if (isDavClass3(sessionInfo)) {
+            destUri = obtainAbsolutePathFromUri(destUri);
+        }
         MoveMethod method = new MoveMethod(uri, destUri, false);
         execute(method, sessionInfo);
         // need to clear the cache as the move may have affected nodes with uuid.
@@ -1472,6 +1478,9 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     public void copy(SessionInfo sessionInfo, String srcWorkspaceName, NodeId srcNodeId, NodeId destParentNodeId, Name destName) throws RepositoryException {
         String uri = uriResolver.getItemUri(srcNodeId, srcWorkspaceName, sessionInfo);
         String destUri = getItemUri(destParentNodeId, destName, sessionInfo);
+        if (isDavClass3(sessionInfo)) {
+            destUri = obtainAbsolutePathFromUri(destUri);
+        }
         CopyMethod method = new CopyMethod(uri, destUri, false, false);
         execute(method, sessionInfo);
     }
@@ -2768,6 +2777,58 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         return new DefaultDavProperty<List<XmlSerializable>>(localName, val, ItemResourceConstants.NAMESPACE, false);
     }
 
+    private Set<String> getDavComplianceClasses(SessionInfo sessionInfo) throws RepositoryException {
+        if (this.remoteDavComplianceClasses == null) {
+            OptionsMethod method = new OptionsMethod(uriResolver.getWorkspaceUri(sessionInfo.getWorkspaceName()));
+            try {
+                getClient(sessionInfo).executeMethod(method);
+                method.checkSuccess();
+                Header davHeader = method.getResponseHeader("DAV");
+                if (davHeader!= null) {
+                    // TODO: think about coded-URLs containing a comma
+                    String[] classes = davHeader.getValue().split(",");
+                    this.remoteDavComplianceClasses = new HashSet<String>();
+                    for (String c : classes) {
+                        this.remoteDavComplianceClasses.add(c.trim());
+                    }
+                }
+            } catch (IOException e) {
+                throw new RepositoryException(e);
+            } catch (DavException e) {
+                throw ExceptionConverter.generate(e);
+            } finally {
+                method.releaseConnection();
+            }
+        }
+        return this.remoteDavComplianceClasses;
+    }
+
+    private boolean isDavClass3(SessionInfo sessionInfo) {
+        try {
+            return getDavComplianceClasses(sessionInfo).contains("3");
+        }
+        catch (RepositoryException ex) {
+            log.warn("failure to obtain OPTIONS response", ex);
+            return false;
+        }
+    }
+
+    private static String obtainAbsolutePathFromUri(String uri) {
+        try {
+            java.net.URI u = new java.net.URI(uri);
+            StringBuilder sb = new StringBuilder();
+            sb.append(u.getRawPath());
+            if (u.getRawQuery() != null) {
+                sb.append("?" + u.getRawQuery());
+            }
+            return sb.toString();
+        }
+        catch (java.net.URISyntaxException ex) {
+            log.warn("parsing " + uri, ex);
+            return uri;
+        }
+    }
+    
     /**
      * The XML elements and attributes used in serialization
      */
@@ -3127,6 +3188,9 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             checkConsumed();
             String uri = getItemUri(srcNodeId, sessionInfo);
             String destUri = getItemUri(destParentNodeId, destName, sessionInfo);
+            if (isDavClass3(sessionInfo)) {
+                destUri = obtainAbsolutePathFromUri(destUri);
+            }
             MoveMethod method = new MoveMethod(uri, destUri, false);
 
             methods.add(method);
