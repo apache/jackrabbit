@@ -867,7 +867,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     public boolean isGranted(SessionInfo sessionInfo, ItemId itemId, String[] actions) throws RepositoryException {
         ReportMethod method = null;
         try {
-            String uri = getItemUri(itemId, sessionInfo);
+            String uri = obtainAbsolutePathFromUri(getItemUri(itemId, sessionInfo));
             ReportInfo reportInfo = new ReportInfo(JcrRemotingConstants.REPORT_PRIVILEGES, ItemResourceConstants.NAMESPACE);
             reportInfo.setContentElement(DomUtil.hrefToXml(uri, DomUtil.createDocument()));
 
@@ -1797,7 +1797,11 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
 
                 uInfo = new UpdateInfo(uElem);
             } else {
-                uInfo = new UpdateInfo(updateSource, updateType, new DavPropertyNameSet());
+                String tmpUpdateSource[] = new String[updateSource.length];
+                for (int i = 0; i < updateSource.length; i++) {
+                    tmpUpdateSource[i] = obtainAbsolutePathFromUri(updateSource[i]);
+                }
+                uInfo = new UpdateInfo(tmpUpdateSource, updateType, new DavPropertyNameSet());
             }
 
             UpdateMethod method = new UpdateMethod(uri, uInfo);
