@@ -2101,7 +2101,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
                 Element contentElem = DomUtil.getChildElement(entryElem, AtomFeedConstants.N_CONTENT);
                 if (contentElem != null
                         && "application/vnd.apache.jackrabbit.event+xml".equals(contentElem.getAttribute("type"))) {
-                    List<Event> el = buildEventList(contentElem, (SessionInfoImpl) sessionInfo);
+                    List<Event> el = buildEventList(contentElem, (SessionInfoImpl) sessionInfo, rootUri);
                     for (Event e : el) {
                         if (e.getDate() > after && (filter == null || filter.accept(e, false))) {
                             events.add(e);
@@ -2272,7 +2272,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
                         isLocal = Boolean.parseBoolean(value);
                     }
                     bundles.add(new EventBundleImpl(
-                            buildEventList(bundleElement, sessionInfo),
+                            buildEventList(bundleElement, sessionInfo, uri),
                             isLocal));
                 }
                 events = bundles.toArray(new EventBundle[bundles.size()]);
@@ -2291,7 +2291,8 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         }
     }
 
-    private List<Event> buildEventList(Element bundleElement, SessionInfoImpl sessionInfo) throws IllegalNameException, NamespaceException {
+    private List<Event> buildEventList(Element bundleElement, SessionInfoImpl sessionInfo, String baseUri)
+            throws IllegalNameException, NamespaceException, RepositoryException {
         List<Event> events = new ArrayList<Event>();
         ElementIterator eventElementIterator = DomUtil.getChildren(bundleElement, ObservationConstants.N_EVENT);
 
@@ -2324,6 +2325,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             NodeId parentId = null;
 
             if (href != null) {
+                href = resolve(baseUri, href);
                 try {
                     eventPath = uriResolver.getQPath(href, sessionInfo);
                 } catch (RepositoryException e) {
@@ -2334,7 +2336,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
 
                 boolean isForNode = (type == Event.NODE_ADDED
                         || type == Event.NODE_REMOVED || type == Event.NODE_MOVED);
-                
+
                 try {
                     if (isForNode) {
                         eventId = uriResolver.getNodeIdAfterEvent(href,
