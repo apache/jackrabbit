@@ -63,6 +63,13 @@ public class JCAManagedConnectionFactory
     private Boolean bindSessionToTransaction = Boolean.TRUE;
 
     /**
+     * Flag indicating whether the Repository should start
+     * immediately or lazy on first access. Per default true so the Repository will
+     * start immediately if this JCAManagedConnectionFactory will be initialized.
+     */
+    private Boolean startRepositoryImmediately = Boolean.TRUE;
+
+    /**
      * Repository.
      */
     private transient Repository repository;
@@ -142,9 +149,9 @@ public class JCAManagedConnectionFactory
      */
     public Object createConnectionFactory(ConnectionManager cm)
             throws ResourceException {
-        // JCR-3491 Start the Repository immediatly in JCA Environment. 
-        // If this Instance is in a Cluster it would not get any changes till someone performs a first login 
-        createRepository();
+    	if (startRepositoryImmediately) {
+    		createRepository();
+    	}
         JCARepositoryHandle handle = new JCARepositoryHandle(this, cm);
         log("Created repository handle (" + handle + ")");
         return handle;
@@ -221,7 +228,17 @@ public class JCAManagedConnectionFactory
     /**
      * Return the repository, automatically creating it if needed.
      */
-    public Repository getRepository() throws RepositoryException {
+    @SuppressWarnings("deprecation")
+	public Repository getRepository() throws RepositoryException {
+    	if (repository == null) {
+    		synchronized (this) {
+    			try {
+    				createRepository();
+    			} catch (ResourceException e) {
+    				throw (RepositoryException) e.getLinkedException();
+    			}
+			}
+    	}
         return repository;
     }
     
@@ -286,6 +303,14 @@ public class JCAManagedConnectionFactory
 
     public void setBindSessionToTransaction(Boolean bindSessionToTransaction) {
         this.bindSessionToTransaction = bindSessionToTransaction;
+    }
+
+    public Boolean getStartRepositoryImmediately() {
+        return startRepositoryImmediately;
+    }
+
+    public void setStartRepositoryImmediately(Boolean startRepositoryImmediately) {
+        this.startRepositoryImmediately = startRepositoryImmediately;
     }
 
 }
