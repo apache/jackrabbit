@@ -1786,8 +1786,9 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     private void update(String uri, Path relPath, String[] updateSource, int updateType, boolean removeExisting, SessionInfo sessionInfo) throws RepositoryException {
         try {
             UpdateInfo uInfo;
+            String tmpUpdateSource[] = obtainAbsolutePathsFromUris(updateSource);
             if (removeExisting || relPath != null) {
-                Element uElem = UpdateInfo.createUpdateElement(updateSource, updateType, DomUtil.createDocument());
+                Element uElem = UpdateInfo.createUpdateElement(tmpUpdateSource, updateType, DomUtil.createDocument());
                 if (removeExisting) {
                     DomUtil.addChildElement(uElem, JcrRemotingConstants.XML_REMOVEEXISTING, ItemResourceConstants.NAMESPACE);
                 }
@@ -1797,10 +1798,6 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
 
                 uInfo = new UpdateInfo(uElem);
             } else {
-                String tmpUpdateSource[] = new String[updateSource.length];
-                for (int i = 0; i < updateSource.length; i++) {
-                    tmpUpdateSource[i] = obtainAbsolutePathFromUri(updateSource[i]);
-                }
                 uInfo = new UpdateInfo(tmpUpdateSource, updateType, new DavPropertyNameSet());
             }
 
@@ -1828,20 +1825,21 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     public Iterator<NodeId> merge(SessionInfo sessionInfo, NodeId nodeId, String srcWorkspaceName, boolean bestEffort, boolean isShallow) throws NoSuchWorkspaceException, AccessDeniedException, MergeException, LockException, InvalidItemStateException, RepositoryException {
         try {
             Document doc = DomUtil.createDocument();
-            String wspHref = uriResolver.getWorkspaceUri(srcWorkspaceName);
-            Element mElem = MergeInfo.createMergeElement(new String[] {wspHref}, !bestEffort, false, doc);
+            String wspHref = obtainAbsolutePathFromUri(uriResolver.getWorkspaceUri(srcWorkspaceName));
+            Element mElem = MergeInfo.createMergeElement(new String[] { wspHref }, !bestEffort, false, doc);
             if (isShallow) {
                 mElem.appendChild(DomUtil.depthToXml(false, doc));
             }
             MergeInfo mInfo = new MergeInfo(mElem);
 
-            MergeMethod method = new MergeMethod(getItemUri(nodeId, sessionInfo), mInfo);
+            String uri = getItemUri(nodeId, sessionInfo);
+            MergeMethod method = new MergeMethod(uri, mInfo);
             execute(method, sessionInfo);
 
             MultiStatusResponse[] resps = method.getResponseBodyAsMultiStatus().getResponses();
             List<NodeId> failedIds = new ArrayList<NodeId>(resps.length);
             for (MultiStatusResponse resp : resps) {
-                String href = resp.getHref();
+                String href = resolve(uri, resp.getHref());
                 failedIds.add(uriResolver.getNodeId(href, sessionInfo));
             }
             return failedIds.iterator();
@@ -2834,7 +2832,20 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             return uri;
         }
     }
-    
+
+    private static String[] obtainAbsolutePathsFromUris(String[] uris) {
+        if (uris == null) {
+            return null;
+        } else {
+            String result[] = new String[uris.length];
+
+            for (int i = 0; i < result.length; i++) {
+                result[i] = obtainAbsolutePathFromUri(uris[i]);
+            }
+            return result;
+        }
+    }
+
     /**
      * The XML elements and attributes used in serialization
      */
