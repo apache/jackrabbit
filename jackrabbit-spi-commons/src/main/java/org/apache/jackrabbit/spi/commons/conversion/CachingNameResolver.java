@@ -90,6 +90,9 @@ public class CachingNameResolver implements NameResolver {
      * @throws NamespaceException if the namespace URI can not be resolved
      */
     public String getJCRName(Name name) throws NamespaceException {
+        if (name.getNamespaceURI().length() == 0) {
+            return name.getLocalName();
+        }
         String jcrName = (String) cache.get(name);
         if (jcrName == null) {
             jcrName = resolver.getJCRName(name);
