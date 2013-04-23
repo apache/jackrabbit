@@ -737,7 +737,12 @@ public class UserManagerImpl extends ProtectedItemModifier
      */
     void setPassword(NodeImpl userNode, String password, boolean forceHash) throws RepositoryException {
         if (password == null) {
-            throw new IllegalArgumentException("Password may not be null.");
+            if (userNode.isNew()) {
+                // allow creation of system-only users with 'null' passwords that cannot login
+                return;
+            } else {
+                throw new IllegalArgumentException("Password may not be null.");
+            }
         }
         String pwHash;
         if (forceHash || PasswordUtility.isPlainTextPassword(password)) {

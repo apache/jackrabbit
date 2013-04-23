@@ -16,14 +16,14 @@
  */
 package org.apache.jackrabbit.api.security.user;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.apache.jackrabbit.test.NotExecutableException;
-
-import javax.jcr.RepositoryException;
 import java.security.Principal;
 import java.util.ArrayList;
 import java.util.List;
+import javax.jcr.RepositoryException;
+
+import org.apache.jackrabbit.test.NotExecutableException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <code>UserManagerCreateGroupTest</code>...
@@ -151,16 +151,15 @@ public class UserManagerCreateUserTest extends AbstractUserTest {
         }
     }
 
-    public void testCreateUserWithNullPassword() throws RepositoryException {
-        try {
-            Principal p = getTestPrincipal();
-            User user = createUser(p.getName(), null);
-            createdUsers.add(user);
-
-            fail("A User cannot be built with 'null' password");
-        } catch (Exception e) {
-            // ok
-        }
+    /**
+     * Test for changed behavior that allows creating of users with 'null' password.
+     *
+     * @since Jackrabbit 2.7
+     */
+    public void testCreateUserWithNullPassword() throws RepositoryException, NotExecutableException {
+        Principal p = getTestPrincipal();
+        User user = createUser(p.getName(), null);
+        createdUsers.add(user);
     }
 
     public void testCreateUserWithEmptyPassword() throws RepositoryException, NotExecutableException {
