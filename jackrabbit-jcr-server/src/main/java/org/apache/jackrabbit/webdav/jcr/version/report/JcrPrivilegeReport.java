@@ -95,6 +95,7 @@ public class JcrPrivilegeReport extends AbstractJcrReport {
         // immediately build the final multistatus element
         Element hrefElem = info.getContentElement(DavConstants.XML_HREF, DavConstants.NAMESPACE);
         String href = DomUtil.getTextTrim(hrefElem);
+        href = obtainAbsolutePathFromUri(href); // TODO: we should check whether the authority component matches
         DavResourceLocator resourceLoc = resource.getLocator();
         DavResourceLocator loc = resourceLoc.getFactory().createResourceLocator(resourceLoc.getPrefix(), href);
         // immediately build the final multistatus element
@@ -130,5 +131,21 @@ public class JcrPrivilegeReport extends AbstractJcrReport {
         }
         resp.add(new CurrentUserPrivilegeSetProperty(currentPrivs.toArray(new Privilege[currentPrivs.size()])));
         ms.addResponse(resp);
+    }
+
+    private static String obtainAbsolutePathFromUri(String uri) {
+        try {
+            java.net.URI u = new java.net.URI(uri);
+            StringBuilder sb = new StringBuilder();
+            sb.append(u.getRawPath());
+            if (u.getRawQuery() != null) {
+                sb.append("?" + u.getRawQuery());
+            }
+            return sb.toString();
+        }
+        catch (java.net.URISyntaxException ex) {
+            log.warn("parsing " + uri, ex);
+            return uri;
+        }
     }
 }
