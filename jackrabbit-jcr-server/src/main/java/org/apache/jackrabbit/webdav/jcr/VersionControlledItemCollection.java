@@ -418,7 +418,8 @@ public class VersionControlledItemCollection extends DefaultItemCollection
                 node.restoreByLabel(labels[0], removeExisting);
 
             } else if (updateInfo.getWorkspaceHref() != null) {
-                String workspaceName = getLocatorFromHref(updateInfo.getWorkspaceHref()).getWorkspaceName();
+                String href = obtainAbsolutePathFromUri(updateInfo.getWorkspaceHref());
+                String workspaceName = getLocatorFromHref(href).getWorkspaceName();
                 node.update(workspaceName);
             } else {
                 throw new DavException(DavServletResponse.SC_BAD_REQUEST, "Invalid update request body.");
@@ -673,5 +674,21 @@ public class VersionControlledItemCollection extends DefaultItemCollection
 
     private VersionManager getVersionManager() throws RepositoryException {
         return getRepositorySession().getWorkspace().getVersionManager();
+    }
+
+    private static String obtainAbsolutePathFromUri(String uri) {
+        try {
+            java.net.URI u = new java.net.URI(uri);
+            StringBuilder sb = new StringBuilder();
+            sb.append(u.getRawPath());
+            if (u.getRawQuery() != null) {
+                sb.append("?" + u.getRawQuery());
+            }
+            return sb.toString();
+        }
+        catch (java.net.URISyntaxException ex) {
+            log.warn("parsing " + uri, ex);
+            return uri;
+        }
     }
 }
