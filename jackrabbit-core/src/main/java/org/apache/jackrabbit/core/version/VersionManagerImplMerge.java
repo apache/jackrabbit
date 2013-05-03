@@ -92,7 +92,8 @@ abstract public class VersionManagerImplMerge extends VersionManagerImplRestore 
         if (shallow) {
             // If <code>isShallow</code> is <code>true</code> and this node is not
             // versionable, then this method returns and no changes are made.
-            if (!state.getEffectiveNodeType().includesNodeType(NameConstants.MIX_VERSIONABLE)) {
+            if (!state.getEffectiveNodeType().includesNodeType(
+                    NameConstants.MIX_SIMPLE_VERSIONABLE)) {
                 return;
             }
         }
