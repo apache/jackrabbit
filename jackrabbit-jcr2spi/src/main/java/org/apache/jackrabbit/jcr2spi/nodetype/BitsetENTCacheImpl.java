@@ -438,8 +438,8 @@ class BitsetENTCacheImpl implements EffectiveNodeTypeCache {
                         long h1 = w1 >>> 32;
                         long h2 = w2 >>> 32;
                         if (h1 == h2) {
-                            h1 = w1 & 0x0ffffL;
-                            h2 = w2 & 0x0ffffL;
+                            h1 = w1 & 0x0ffffffffL;
+                            h2 = w2 & 0x0ffffffffL;
                         }
                         return Long.signum(h2 - h1);
                     }
