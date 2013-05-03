@@ -1615,7 +1615,7 @@ public class RepositoryImpl extends AbstractRepository
      * representing the same named workspace, i.e. the same physical
      * storage.
      */
-    protected class WorkspaceInfo implements UpdateEventListener {
+    public class WorkspaceInfo implements UpdateEventListener {
 
         /**
          * workspace configuration (passed in constructor)
@@ -1801,7 +1801,7 @@ public class RepositoryImpl extends AbstractRepository
          * @throws RepositoryException if the persistence manager could not be
          * instantiated/initialized
          */
-        protected PersistenceManager getPersistenceManager()
+        public PersistenceManager getPersistenceManager()
                 throws RepositoryException {
             if (!isInitialized()) {
                 throw new IllegalStateException("workspace '" + getName()
