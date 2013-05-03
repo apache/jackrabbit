@@ -1802,7 +1802,7 @@ public class RepositoryImpl extends AbstractRepository
          * @throws RepositoryException if the persistence manager could not be
          * instantiated/initialized
          */
-        protected PersistenceManager getPersistenceManager()
+        public PersistenceManager getPersistenceManager()
                 throws RepositoryException {
             if (!isInitialized()) {
                 throw new IllegalStateException("workspace '" + getName()
