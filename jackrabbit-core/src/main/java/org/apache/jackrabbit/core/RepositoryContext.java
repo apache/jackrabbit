@@ -20,8 +20,10 @@ import java.io.File;
 import java.io.IOException;
 import java.util.concurrent.ScheduledExecutorService;
 
+import javax.jcr.NoSuchWorkspaceException;
 import javax.jcr.RepositoryException;
 
+import org.apache.jackrabbit.core.RepositoryImpl.WorkspaceInfo;
 import org.apache.jackrabbit.core.cluster.ClusterNode;
 import org.apache.jackrabbit.core.config.RepositoryConfig;
 import org.apache.jackrabbit.core.data.DataStore;
@@ -166,6 +168,10 @@ public class RepositoryContext {
     public static RepositoryContext install(File dir)
             throws RepositoryException, IOException {
         return create(RepositoryConfig.install(dir));
+    }
+
+    public RepositoryConfig getRepositoryConfig() {
+        return repository.getConfig();
     }
 
     /**
@@ -363,6 +369,21 @@ public class RepositoryContext {
     void setWorkspaceManager(WorkspaceManager workspaceManager) {
         assert workspaceManager != null;
         this.workspaceManager = workspaceManager;
+    }
+
+    /**
+     * Returns the {@link WorkspaceInfo} for the named workspace.
+     *
+     * @param workspaceName The name of the workspace whose {@link WorkspaceInfo}
+     *                      is to be returned. This must not be <code>null</code>.
+     * @return The {@link WorkspaceInfo} for the named workspace. This will
+     *         never be <code>null</code>.
+     * @throws NoSuchWorkspaceException If the named workspace does not exist.
+     * @throws RepositoryException If this repository has been shut down.
+     */
+    public WorkspaceInfo getWorkspaceInfo(String workspaceName)
+            throws NoSuchWorkspaceException, RepositoryException {
+        return repository.getWorkspaceInfo(workspaceName);
     }
 
     /**

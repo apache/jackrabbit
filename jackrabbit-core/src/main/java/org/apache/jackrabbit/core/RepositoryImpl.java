@@ -1616,7 +1616,7 @@ public class RepositoryImpl extends AbstractRepository
      * representing the same named workspace, i.e. the same physical
      * storage.
      */
-    protected class WorkspaceInfo implements UpdateEventListener {
+    public class WorkspaceInfo implements UpdateEventListener {
 
         /**
          * workspace configuration (passed in constructor)
