@@ -438,7 +438,8 @@ public class BatchedItemOperations extends ItemValidator {
             for (int i = 0; i < values.length; i++) {
                 NodeId adjusted = refTracker.getMappedId(values[i].getNodeId());
                 if (adjusted != null) {
-                    newVals[i] = InternalValue.create(adjusted);
+                    boolean weak = prop.getType() == PropertyType.WEAKREFERENCE;
+                    newVals[i] = InternalValue.create(adjusted, weak);
                     modified = true;
                 } else {
                     // reference doesn't need adjusting, just copy old value
