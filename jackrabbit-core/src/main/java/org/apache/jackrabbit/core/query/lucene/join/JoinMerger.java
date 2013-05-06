@@ -230,7 +230,11 @@ abstract class JoinMerger {
 
             List<Row> rows = new ArrayList<Row>();
             for (Row leftRow : new RowIterable(leftRows)) {
-                for (String value : getLeftValues(leftRow)) {
+                Set<String> leftValues = getLeftValues(leftRow);
+                if(leftValues.isEmpty()){
+                    leftValues.add(null);
+                }
+                for (String value : leftValues) {
                     List<Row> matchingRows = map.get(value);
                     if (matchingRows != null) {
                         for (Row rightRow : matchingRows) {
