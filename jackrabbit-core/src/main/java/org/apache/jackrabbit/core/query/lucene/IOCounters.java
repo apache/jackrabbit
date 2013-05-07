@@ -19,11 +19,16 @@ package org.apache.jackrabbit.core.query.lucene;
 import java.util.Map;
 import java.util.WeakHashMap;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * <code>IOCounters</code> provides a basic mechanism to track I/O during query
  * execution.
  */
 public class IOCounters {
+
+    private static final Logger log = LoggerFactory.getLogger(IOCounters.class);
 
     private static final Map<Thread, Long> counts =
         new WeakHashMap<Thread, Long>();
@@ -39,7 +44,11 @@ public class IOCounters {
     /**
      * Increments the read count caused by the current thread.
      */
-    public static synchronized void incrRead() {
-        counts.put(Thread.currentThread(), getReads() + 1);
+    public static void incrRead() {
+        if (log.isDebugEnabled()) {
+            synchronized (IOCounters.class) {
+                counts.put(Thread.currentThread(), getReads() + 1);
+            }
+        }
     }
 }
