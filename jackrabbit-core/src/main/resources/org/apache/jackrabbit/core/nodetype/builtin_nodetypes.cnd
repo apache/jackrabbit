@@ -603,7 +603,7 @@
   - rep:impersonators (STRING) protected multiple
 
 [rep:User] > rep:Authorizable, rep:Impersonatable
-  - rep:password (STRING) protected mandatory
+  - rep:password (STRING) protected
   - rep:disabled (STRING) protected
 
 [rep:Group] > rep:Authorizable
