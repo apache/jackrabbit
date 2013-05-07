@@ -161,11 +161,11 @@ Subject: [VOTE] Release Apache Jackrabbit ${project.version}
 
 A candidate for the Jackrabbit ${project.version} release is available at:
 
-    http://people.apache.org/~${username}/jackrabbit/${project.version}/
+    https://dist.apache.org/repos/dist/dev/jackrabbit/${project.version}/
 
 The release candidate is a zip archive of the sources in:
 
-    http://svn.apache.org/repos/asf/jackrabbit/tags/${project.version}/
+    https://svn.apache.org/repos/asf/jackrabbit/tags/${project.version}/
 
 The SHA1 checksum of the archive is ${checksum}.
 
@@ -175,7 +175,7 @@ A staged Maven repository is available for review at:
 
 The command for running automated checks against this release candidate is:
 
-    $ sh check-release.sh ${username} ${project.version} ${checksum}
+    $ sh check-release.sh ${project.version} ${checksum}
 
 Please vote on releasing this package as Apache Jackrabbit ${project.version}.
 The vote is open for the next 72 hours and passes if a majority of at
@@ -190,9 +190,12 @@ The release candidate has been prepared in:
 
     ${basedir}/target/${project.version}
 
-Please deploy it to people.apache.org like this:
+Please deploy it to https://dist.apache.org/repos/dist/dev/jackrabbit/:
 
-    scp -r ${basedir}/target/${project.version} people.apache.org:public_html/jackrabbit/
+    cd /path/to/jackrabbit-dev
+    mv ${basedir}/target/${project.version} ${project.version}
+    svn add ${project.version}
+    svn commit -m 'Apache Jackrabbit ${project.version} release candidate' ${project.version}
 
 A release vote template has been generated for you:
 
