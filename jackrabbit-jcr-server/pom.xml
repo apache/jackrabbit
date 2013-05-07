@@ -49,7 +49,7 @@
       <plugin>
         <groupId>org.apache.felix</groupId>
         <artifactId>maven-scr-plugin</artifactId>
-        <version>1.7.2</version>
+        <version>1.12.0</version>
         <executions>
             <execution>
               <id>generate-scr-scrdescriptor</id>
@@ -63,6 +63,14 @@
             </configuration>
           </execution>
         </executions>
+        <!-- See https://issues.apache.org/jira/browse/FELIX-2492 -->
+        <dependencies>
+          <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+            <version>${slf4j.api.version}</version>
+          </dependency>
+        </dependencies>
       </plugin>
       <plugin>
         <groupId>org.apache.felix</groupId>
@@ -200,7 +208,7 @@
     <dependency>
       <groupId>org.apache.felix</groupId>
       <artifactId>org.apache.felix.scr.annotations</artifactId>
-      <version>1.6.0</version>
+      <version>1.9.2</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
