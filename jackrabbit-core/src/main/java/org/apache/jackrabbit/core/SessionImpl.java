@@ -952,6 +952,8 @@ public class SessionImpl extends AbstractSession
             // notify listeners that session is about to be closed
             notifyLoggingOut();
 
+            context.getPrivilegeManager().dispose();
+            context.getNodeTypeManager().dispose();
             // dispose session item state manager
             context.getItemStateManager().dispose();
             // dispose item manager

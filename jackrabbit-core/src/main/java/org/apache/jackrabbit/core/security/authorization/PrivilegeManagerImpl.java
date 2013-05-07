@@ -77,6 +77,13 @@ public final class PrivilegeManagerImpl implements PrivilegeManager, PrivilegeRe
         registry.addListener(this);
     }
 
+    /**
+     * Disposes this privilege manager
+     */
+    public void dispose() {
+        registry.removeListener(this);
+    }
+
     //---------------------------------------------------< PrivilegeManager >---
     /**
      * @see PrivilegeManager#getRegisteredPrivileges()
