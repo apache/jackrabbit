@@ -88,7 +88,7 @@ public class SessionContext implements NamePathResolver {
     /**
      * Privilege manager of this session.
      */
-    private final PrivilegeManager privilegeManager;
+    private final PrivilegeManagerImpl privilegeManager;
 
     /**
      * The namespace registry exposed for this session context that includes
@@ -246,7 +246,7 @@ public class SessionContext implements NamePathResolver {
      *
      * @return the privilege manager.
      */
-    public PrivilegeManager getPrivilegeManager() {
+    public PrivilegeManagerImpl getPrivilegeManager() {
         return privilegeManager;
     }
 
