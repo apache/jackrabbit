@@ -26,7 +26,7 @@
   <parent>
     <groupId>org.apache.jackrabbit</groupId>
     <artifactId>jackrabbit-parent</artifactId>
-    <version>2.6.1-SNAPSHOT</version>
+    <version>2.6.1</version>
     <relativePath>../jackrabbit-parent/pom.xml</relativePath>
   </parent>
   <artifactId>jackrabbit-core</artifactId>
@@ -114,6 +114,8 @@ org.apache.jackrabbit.test.api.lock.SessionScopedLockTest#testLockExpiration
 org.apache.jackrabbit.test.api.observation.NodeReorderTest#testNodeReorderMove
 org.apache.jackrabbit.core.data.ConcurrentGcTest#testDatabases
 org.apache.jackrabbit.core.data.GarbageCollectorTest#testCloseSessionWhileRunningGc
+org.apache.jackrabbit.test.api.query.qom.EquiJoinConditionTest#testRightOuterJoin1<!--JCR-3493, JCR-3498-->
+org.apache.jackrabbit.test.api.query.qom.EquiJoinConditionTest#testLeftOuterJoin2<!--JCR-3493, JCR-3498-->
               </value>
             </property>
             <property>
@@ -238,28 +240,28 @@ org.apache.jackrabbit.core.data.GarbageCollectorTest#testCloseSessionWhileRunnin
     <dependency>
       <groupId>org.apache.jackrabbit</groupId>
       <artifactId>jackrabbit-api</artifactId>
-      <version>2.6.1-SNAPSHOT</version>
+      <version>2.6.1</version>
     </dependency>
     <dependency>
       <groupId>org.apache.jackrabbit</groupId>
       <artifactId>jackrabbit-jcr-commons</artifactId>
-      <version>2.6.1-SNAPSHOT</version>
+      <version>2.6.1</version>
     </dependency>
     <dependency>
       <groupId>org.apache.jackrabbit</groupId>
       <artifactId>jackrabbit-spi-commons</artifactId>
-      <version>2.6.1-SNAPSHOT</version>
+      <version>2.6.1</version>
     </dependency>
     <dependency>
       <groupId>org.apache.jackrabbit</groupId>
       <artifactId>jackrabbit-spi</artifactId>
-      <version>2.6.1-SNAPSHOT</version>
+      <version>2.6.1</version>
       <classifier />
     </dependency>
       <dependency>
       <groupId>org.apache.jackrabbit</groupId>
       <artifactId>jackrabbit-spi</artifactId>
-      <version>2.6.1-SNAPSHOT</version>
+      <version>2.6.1</version>
       <classifier>tests</classifier>
       <scope>test</scope>
     </dependency>
@@ -282,7 +284,7 @@ org.apache.jackrabbit.core.data.GarbageCollectorTest#testCloseSessionWhileRunnin
     <dependency>
       <groupId>org.apache.jackrabbit</groupId>
       <artifactId>jackrabbit-jcr-tests</artifactId>
-      <version>2.6.1-SNAPSHOT</version>
+      <version>2.6.1</version>
       <optional>true</optional>
     </dependency>
     <dependency>
