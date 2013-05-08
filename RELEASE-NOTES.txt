@@ -1,4 +1,4 @@
-Release Notes -- Apache Jackrabbit -- Version 2.6.0
+Release Notes -- Apache Jackrabbit -- Version 2.6.1
 
 Introduction
 ------------
@@ -7,9 +7,51 @@ This is Apache Jackrabbit(TM) 2.6, a fully compliant implementation of the
 Content Repository for Java(TM) Technology API, version 2.0 (JCR 2.0) as
 specified in the Java Specification Request 283 (JSR 283).
 
-Apache Jackrabbit 2.6 is an incremental feature release based on and
-compatible with earlier stable Jackrabbit 2.x releases. Jackrabbit 2.6.x
+Apache Jackrabbit 2.6.1 is a patch release that contains fixes and
+improvements over Jackrabbit 2.6. Jackrabbit 2.6.x
 releases are considered stable and targeted for production use.
+
+Changes since Jackrabbit 2.6.0
+------------------------------
+
+Improvements
+
+  [JCR-3495] - Unregister from PrivilegeRegistry and NodeTypeRegistry on Session.logout()
+  [JCR-3513] - Slower range query execution
+  [JCR-3516] - Search index consistency check should report and fix wrong parent relation
+  [JCR-3517] - Search index consistency check should be able to double check its reported issues
+  [JCR-3519] - Disable IOCounters based on log level
+  [JCR-3535] - Davex remoting should support absolute path hrefs
+  [JCR-3553] - improve error logging for unexpected path formats
+  [JCR-3566] - add TCK test for NaN and infinity double property values
+  [JCR-3577] - Allow creation of users with 'null' password
+  [JCR-3587] - RepositoryImpl should expose the collection of PersistenceManager instances in use
+
+Bug Fixes
+
+  [JCR-3276] - JCA Adpater not handling transaction suspension correctly
+  [JCR-3382] - ItemManager.getNode does not do a permission check when the item data is in the item manager cache
+  [JCR-3498] - OUTER JOIN behavior is improperly excluding some values
+  [JCR-3512] - DelayedDelete in MultiDatastore does not work correctly
+  [JCR-3518] - Build fails on Mac OS + JDK 7
+  [JCR-3521] - IllegalArgumentException thrown on a box running java7 with a sorted query
+  [JCR-3523] - Workspace.copy changes WeakReferences to References
+  [JCR-3539] - NotQuery#advance (and for older versions skipTo) violates Lucene advance contract in case a Filter is used
+  [JCR-3540] - locator for RootCollection generates a broken href when using absolutePath setting
+  [JCR-3545] - unknown REPORT should cause status code 409/DAV:supported-report
+  [JCR-3546] - header fields values such as "Location" need to be resolved against the request uri
+  [JCR-3549] - URIResolverImpl needs to handle absolute paths in addition to absolute URIs
+  [JCR-3551] - DavEx cannot handle Double.NaN properties
+  [JCR-3552] - Principal associated with Group does not update members
+  [JCR-3554] - RepositoryService.getReferences needs to deal with absolute paths in hrefs
+  [JCR-3562] - Adding a child node named {foo fails but bar} works
+  [JCR-3578] - use absolute paths in DeltaV request bodies, and resolve hrefs in responses properly
+  [JCR-3570] - Make immediately Repository start configureable in JCAManagedConnectionFactory
+  [JCR-3576] - handle absolute paths in observation response bodies
+  [JCR-3580] - JcrPrivilegeReport needs to deal with both absolute paths and absolute URIs in payloads
+  [JCR-3581] - Incorrect bitwise arithmetic in BitsetENTCacheImpl.BitsetKey.compareTo implementation - wrong bit mask value used  
+  [JCR-3583] - UPDATE method needs to deal with both absolute paths and absolute URIs in payloads
+
 
 Changes since Jackrabbit 2.4.0
 ------------------------------
