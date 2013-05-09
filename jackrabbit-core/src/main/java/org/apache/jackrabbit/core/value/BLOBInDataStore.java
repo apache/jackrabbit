@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.core.value;
 
+import org.apache.jackrabbit.api.ReferenceBinary;
 import org.apache.jackrabbit.core.data.DataIdentifier;
 import org.apache.jackrabbit.core.data.DataRecord;
 import org.apache.jackrabbit.core.data.DataStore;
@@ -30,7 +31,7 @@ import javax.jcr.RepositoryException;
 /**
  * Represents binary data which is stored in the data store.
  */
-class BLOBInDataStore extends BLOBFileValue {
+class BLOBInDataStore extends BLOBFileValue implements ReferenceBinary {
 
     private final DataStore store;
     private final DataIdentifier identifier;
@@ -101,6 +102,11 @@ class BLOBInDataStore extends BLOBFileValue {
 
     public InputStream getStream() throws RepositoryException {
         return getDataRecord().getStream();
+    }
+
+    @Override
+    public String getReference() {
+        return identifier.getReference();
     }
 
     public String toString() {

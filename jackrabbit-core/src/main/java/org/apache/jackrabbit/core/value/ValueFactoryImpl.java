@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.core.value;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.jackrabbit.api.ReferenceBinary;
 import org.apache.jackrabbit.core.data.DataIdentifier;
 import org.apache.jackrabbit.core.data.DataStore;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
@@ -106,6 +107,14 @@ public class ValueFactoryImpl extends ValueFactoryQImpl {
                 }
             } else if (binary instanceof BLOBFileValue) {
                 return new BinaryValueImpl(((BLOBFileValue) binary).copy());
+            } else if (binary instanceof ReferenceBinary) {
+                String reference = ((ReferenceBinary) binary).getReference();
+                DataIdentifier identifier = store.getIdentifierFromReference(reference);
+                if (identifier != null) {
+                    InternalValue value = InternalValue.getInternalValue(
+                            identifier, store, false);
+                    return new BinaryValueImpl(value.getBLOBFileValue());
+                }
             }
             return createValue(binary.getStream());
         } catch (RepositoryException e) {

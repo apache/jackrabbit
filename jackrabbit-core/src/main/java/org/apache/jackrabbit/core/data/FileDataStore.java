@@ -59,7 +59,8 @@ import org.slf4j.LoggerFactory;
  * This implementation relies on the underlying file system to support
  * atomic O(1) move operations with {@link File#renameTo(File)}.
  */
-public class FileDataStore implements DataStore, MultiDataStoreAware {
+public class FileDataStore extends AbstractDataStore
+        implements MultiDataStoreAware {
 
     /**
      * Logger instance
@@ -207,7 +208,8 @@ public class FileDataStore implements DataStore, MultiDataStoreAware {
             } finally {
                 output.close();
             }
-            DataIdentifier identifier = new DataIdentifier(digest.digest());
+            DataIdentifier identifier =
+                    createIdentifier(encodeHexString(digest.digest()));
             File file;
 
             synchronized (this) {

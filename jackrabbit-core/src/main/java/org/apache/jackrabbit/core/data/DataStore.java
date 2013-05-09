@@ -109,6 +109,15 @@ public interface DataStore {
     Iterator<DataIdentifier> getAllIdentifiers() throws DataStoreException;
 
     /**
+     * Returns the identifier that matches the given binary reference.
+     * If the reference is invalid, returns {@code null}.
+     *
+     * @param reference binary reference
+     * @return matching identifier, or {@code null}
+     */
+    DataIdentifier getIdentifierFromReference(String reference);
+
+    /**
      * Initialized the data store
      *
      * @param homeDir the home directory of the repository
