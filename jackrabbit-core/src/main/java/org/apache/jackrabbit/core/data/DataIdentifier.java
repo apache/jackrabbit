@@ -23,7 +23,7 @@ import java.io.Serializable;
  * All identifiers must be serializable and implement the standard
  * object equality and hash code methods.
  */
-public final class DataIdentifier implements Serializable {
+public class DataIdentifier implements Serializable {
 
     /**
      * Serial version UID.
@@ -31,14 +31,25 @@ public final class DataIdentifier implements Serializable {
     private static final long serialVersionUID = -9197191401131100016L;
 
     /**
-     * Array of hexadecimal digits.
-     */
-    private static final char[] HEX = "0123456789abcdef".toCharArray();
-
-    /**
      * Data identifier.
      */
     private final String identifier;
+
+    /**
+     * Binary reference, or {@code null}.
+     */
+    private final String reference;
+
+    /**
+     * Creates a data identifier from the given string.
+     *
+     * @param identifier data identifier
+     * @param reference binary reference, or {@code null}
+     */
+    public DataIdentifier(String identifier, String reference) {
+        this.identifier = identifier;
+        this.reference = reference;
+    }
 
     /**
      * Creates a data identifier from the given string.
@@ -46,22 +57,17 @@ public final class DataIdentifier implements Serializable {
      * @param identifier data identifier
      */
     public DataIdentifier(String identifier) {
-        this.identifier = identifier;
+        this(identifier, null);
     }
 
     /**
-     * Creates a data identifier from the hexadecimal string
-     * representation of the given bytes.
+     * Returns a secure reference to the identified binary, or {@code null}
+     * if no such reference is available.
      *
-     * @param identifier data identifier
+     * @return binary reference, or {@code null}
      */
-    public DataIdentifier(byte[] identifier) {
-        char[] buffer = new char[identifier.length * 2];
-        for (int i = 0; i < identifier.length; i++) {
-            buffer[2 * i] = HEX[(identifier[i] >> 4) & 0x0f];
-            buffer[2 * i + 1] = HEX[identifier[i] & 0x0f];
-        }
-        this.identifier = new String(buffer);
+    public String getReference() {
+        return reference;
     }
 
     //-------------------------------------------------------------< Object >

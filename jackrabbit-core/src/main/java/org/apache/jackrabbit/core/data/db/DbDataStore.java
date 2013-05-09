@@ -17,9 +17,9 @@
 package org.apache.jackrabbit.core.data.db;
 
 import org.apache.commons.io.input.CountingInputStream;
+import org.apache.jackrabbit.core.data.AbstractDataStore;
 import org.apache.jackrabbit.core.data.DataIdentifier;
 import org.apache.jackrabbit.core.data.DataRecord;
-import org.apache.jackrabbit.core.data.DataStore;
 import org.apache.jackrabbit.core.data.DataStoreException;
 import org.apache.jackrabbit.core.data.MultiDataStoreAware;
 import org.apache.jackrabbit.core.util.db.CheckSchemaOperation;
@@ -98,7 +98,8 @@ import javax.sql.DataSource;
  * The tablePrefix can be used to specify a schema and / or catalog name:
  * &lt;param name="tablePrefix" value="ds.">
  */
-public class DbDataStore implements DataStore, DatabaseAware, MultiDataStoreAware {
+public class DbDataStore extends AbstractDataStore
+        implements DatabaseAware, MultiDataStoreAware {
 
     /**
      * The default value for the minimum object size.
@@ -355,7 +356,8 @@ public class DbDataStore implements DataStore, DatabaseAware, MultiDataStoreAwar
             // UPDATE DATASTORE SET DATA=? WHERE ID=?
             conHelper.exec(updateDataSQL, wrapper, tempId);
             long length = in.getByteCount();
-            DataIdentifier identifier = new DataIdentifier(digest.digest());
+            DataIdentifier identifier =
+                    createIdentifier(encodeHexString(digest.digest()));
             usesIdentifier(identifier);
             String id = identifier.toString();
             long newModified;
