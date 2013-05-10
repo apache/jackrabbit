@@ -61,6 +61,16 @@ public class DataIdentifier implements Serializable {
     }
 
     /**
+     * Creates a data identifier from the hexadecimal string
+     * representation of the given bytes.
+     *
+     * @param identifier data identifier
+     */
+    public DataIdentifier(byte[] identifier) {
+        this(AbstractDataStore.encodeHexString(identifier), null);
+    }
+
+    /**
      * Returns a secure reference to the identified binary, or {@code null}
      * if no such reference is available.
      *
