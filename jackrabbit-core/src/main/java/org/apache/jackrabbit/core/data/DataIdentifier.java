@@ -36,48 +36,12 @@ public class DataIdentifier implements Serializable {
     private final String identifier;
 
     /**
-     * Binary reference, or {@code null}.
-     */
-    private final String reference;
-
-    /**
-     * Creates a data identifier from the given string.
-     *
-     * @param identifier data identifier
-     * @param reference binary reference, or {@code null}
-     */
-    public DataIdentifier(String identifier, String reference) {
-        this.identifier = identifier;
-        this.reference = reference;
-    }
-
-    /**
      * Creates a data identifier from the given string.
      *
      * @param identifier data identifier
      */
     public DataIdentifier(String identifier) {
-        this(identifier, null);
-    }
-
-    /**
-     * Creates a data identifier from the hexadecimal string
-     * representation of the given bytes.
-     *
-     * @param identifier data identifier
-     */
-    public DataIdentifier(byte[] identifier) {
-        this(AbstractDataStore.encodeHexString(identifier), null);
-    }
-
-    /**
-     * Returns a secure reference to the identified binary, or {@code null}
-     * if no such reference is available.
-     *
-     * @return binary reference, or {@code null}
-     */
-    public String getReference() {
-        return reference;
+        this.identifier  = identifier;
     }
 
     //-------------------------------------------------------------< Object >

@@ -40,7 +40,7 @@ public class DbDataRecord extends AbstractDataRecord {
      * @param lastModified
      */
     public DbDataRecord(DbDataStore store, DataIdentifier identifier, long length, long lastModified) {
-        super(identifier);
+        super(store, identifier);
         this.store = store;
         this.length = length;
         this.lastModified = lastModified;

@@ -158,7 +158,7 @@ public class FileDataStore extends AbstractDataStore
                 }
             }
             usesIdentifier(identifier);
-            return new FileDataRecord(identifier, file);
+            return new FileDataRecord(this, identifier, file);
         }
     }
 
@@ -209,7 +209,7 @@ public class FileDataStore extends AbstractDataStore
                 output.close();
             }
             DataIdentifier identifier =
-                    createIdentifier(encodeHexString(digest.digest()));
+                    new DataIdentifier(encodeHexString(digest.digest()));
             File file;
 
             synchronized (this) {
@@ -247,7 +247,7 @@ public class FileDataStore extends AbstractDataStore
             // this will also make sure that
             // tempId is not garbage collected until here
             inUse.remove(tempId);
-            return new FileDataRecord(identifier, file);
+            return new FileDataRecord(this, identifier, file);
         } catch (NoSuchAlgorithmException e) {
             throw new DataStoreException(DIGEST + " not available", e);
         } catch (IOException e) {
