@@ -357,7 +357,7 @@ public class DbDataStore extends AbstractDataStore
             conHelper.exec(updateDataSQL, wrapper, tempId);
             long length = in.getByteCount();
             DataIdentifier identifier =
-                    createIdentifier(encodeHexString(digest.digest()));
+                    new DataIdentifier(encodeHexString(digest.digest()));
             usesIdentifier(identifier);
             String id = identifier.toString();
             long newModified;

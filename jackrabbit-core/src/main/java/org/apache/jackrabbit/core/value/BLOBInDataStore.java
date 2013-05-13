@@ -106,7 +106,12 @@ class BLOBInDataStore extends BLOBFileValue implements ReferenceBinary {
 
     @Override
     public String getReference() {
-        return identifier.getReference();
+        try {
+            return getDataRecord().getReference();
+        } catch (DataStoreException e) {
+            log.warn("Unable to access the reference to " + identifier, e);
+            return null;
+        }
     }
 
     public String toString() {

@@ -26,6 +26,11 @@ package org.apache.jackrabbit.core.data;
 public abstract class AbstractDataRecord implements DataRecord {
 
     /**
+     * The data store that contains this record.
+     */
+    private final AbstractDataStore store;
+
+    /**
      * The binary identifier;
      */
     private final DataIdentifier identifier;
@@ -35,7 +40,9 @@ public abstract class AbstractDataRecord implements DataRecord {
      *
      * @param identifier data identifier
      */
-    public AbstractDataRecord(DataIdentifier identifier) {
+    public AbstractDataRecord(
+            AbstractDataStore store, DataIdentifier identifier) {
+        this.store = store;
         this.identifier = identifier;
     }
 
@@ -46,6 +53,10 @@ public abstract class AbstractDataRecord implements DataRecord {
      */
     public DataIdentifier getIdentifier() {
         return identifier;
+    }
+
+    public String getReference() {
+        return store.getReferenceFromIdentifier(identifier);
     }
 
     /**

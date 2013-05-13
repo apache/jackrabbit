@@ -52,14 +52,12 @@ public abstract class AbstractDataStore implements DataStore {
 
     @Override
     public DataIdentifier getIdentifierFromReference(String reference) {
-        if (secret != null) {
-            int colon = reference.indexOf(':');
-            if (colon != -1) {
-                String identifier = reference.substring(0, colon);
-                String signature = reference.substring(colon + 1);
-                if (signature.equals(sign(identifier))) {
-                    return new DataIdentifier(identifier, reference);
-                }
+        int colon = reference.indexOf(':');
+        if (colon != -1) {
+            DataIdentifier identifier =
+                    new DataIdentifier(reference.substring(0, colon));
+            if (reference.equals(getReferenceFromIdentifier(identifier))) {
+                return identifier;
             }
         }
         return null;
@@ -67,27 +65,21 @@ public abstract class AbstractDataStore implements DataStore {
 
     //---------------------------------------------------------< protected >--
 
-    protected DataIdentifier createIdentifier(final String identifier) {
+    protected String getReferenceFromIdentifier(DataIdentifier identifier) {
         if (secret != null) {
-            return new DataIdentifier(identifier) {
-                public String getReference() {
-                    return identifier + ':' + sign(identifier);
-                }
-            };
-        } else {
-            return new DataIdentifier(identifier);
-        }
-    }
+            try {
+                String id = identifier.toString();
 
-    private String sign(String identifier) {
-        try {
-            Mac mac = Mac.getInstance(ALGORITHM);
-            mac.init(new SecretKeySpec(secret.getBytes("UTF-8"), ALGORITHM));
-            return encodeHexString(mac.doFinal(identifier.getBytes("UTF-8")));
-        } catch (Exception e) {
-            // TODO: log a warning about this exception
-            return null;
+                Mac mac = Mac.getInstance(ALGORITHM);
+                mac.init(new SecretKeySpec(secret.getBytes("UTF-8"), ALGORITHM));
+                byte[] hash = mac.doFinal(id.getBytes("UTF-8"));
+
+                return id + ':' + encodeHexString(hash);
+            } catch (Exception e) {
+                // TODO: log a warning about this exception
+            }
         }
+        return null;
     }
 
 }
