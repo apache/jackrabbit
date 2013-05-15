@@ -56,7 +56,7 @@ public class GarbageCollectorTest extends AbstractJCRTest implements ScanEventLi
                 closeTest();
             }
 
-            private void closeTest() throws RepositoryException {
+            private void closeTest() {
                 if (closed) {
                     ex[0] = new Exception("Scanning after the session is closed");
                 }
@@ -183,6 +183,35 @@ public class GarbageCollectorTest extends AbstractJCRTest implements ScanEventLi
 
         gc.close();
     }
+    
+    /**
+     *  Test to validate that two  GC cannot run simulatenously. one 
+     *  exits throwing exception  
+     */
+    public void testSimulatenousRunGC() throws Exception {
+        Node root = testRootNode;
+        Session session = root.getSession();
+
+        GCThread gct1 = new GCThread(session);
+        GCThread gct2 = new GCThread(session);
+        Thread gcThread1 = new Thread(gct1, "Datastore Garbage Collector 1");
+        Thread gcThread2 = new Thread(gct2, "Datastore Garbage Collector 2");
+        // run simulatensou gc
+        gcThread1.start();
+        gcThread2.start();
+        Thread.sleep(100);
+        
+        gct1.setStop(true);
+        gct2.setStop(true);
+        
+        // allow them to complete
+        gcThread1.join();
+        gcThread2.join();
+
+        // only one should throw error
+        int count = (gct1.getException() == null ? 0 : 1) + (gct2.getException() == null ? 0 : 1);
+        assertEquals("only one gc should throw exception ", 1, count);
+    }
 
     private void runGC(Session session, boolean all) throws Exception {
         GarbageCollector gc = ((SessionImpl)session).createDataStoreGarbageCollector();
@@ -202,7 +231,7 @@ public class GarbageCollectorTest extends AbstractJCRTest implements ScanEventLi
         gc.close();
     }
 
-    private int listIdentifiers(GarbageCollector gc) throws DataStoreException {
+    private static int listIdentifiers(GarbageCollector gc) throws DataStoreException {
         LOG.debug("identifiers:");
         int count = 0;
         Iterator<DataIdentifier> it = gc.getDataStore().getAllIdentifiers();
@@ -242,7 +271,7 @@ public class GarbageCollectorTest extends AbstractJCRTest implements ScanEventLi
         s2.logout();
     }
 
-    private void verifyInputStream(InputStream in, InputStream in2) throws IOException {
+    private static void verifyInputStream(InputStream in, InputStream in2) throws IOException {
         while (true) {
             int a = in.read();
             int b = in2.read();
