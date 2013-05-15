@@ -18,6 +18,7 @@ package org.apache.jackrabbit.core.data;
 
 import org.apache.jackrabbit.api.management.DataStoreGarbageCollector;
 import org.apache.jackrabbit.api.management.MarkEventListener;
+import org.apache.jackrabbit.core.RepositoryContext;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.id.PropertyId;
@@ -103,6 +104,8 @@ public class GarbageCollector implements DataStoreGarbageCollector {
     private final SessionImpl[] sessionList;
 
     private final AtomicBoolean closed = new AtomicBoolean();
+    
+    private final RepositoryContext context;
 
     private boolean persistenceManagerScan;
 
@@ -112,14 +115,17 @@ public class GarbageCollector implements DataStoreGarbageCollector {
      * Create a new garbage collector.
      * This method is usually not called by the application, it is called
      * by SessionImpl.createDataStoreGarbageCollector().
-     *
+     * 
+     * @param context repository context
      * @param dataStore the data store to be garbage-collected
      * @param list the persistence managers
      * @param sessionList the sessions to access the workspaces
      */
-    public GarbageCollector(
+    
+    public GarbageCollector(RepositoryContext context, 
             DataStore dataStore, IterablePersistenceManager[] list,
             SessionImpl[] sessionList) {
+        this.context = context;
         this.store = dataStore;
         this.pmList = list;
         this.persistenceManagerScan = list != null;
@@ -226,9 +232,13 @@ public class GarbageCollector implements DataStoreGarbageCollector {
     }
 
     /**
-     * Stop the observation listener if any are installed.
+     * Reset modifiedDateOnAccess to 0 and stop the observation 
+     * listener if any are installed.
      */
     public void stopScan() throws RepositoryException {
+         // reset updateModifiedDateOnAccess to OL
+        store.updateModifiedDateOnAccess(0L);
+        
         if (listeners.size() > 0) {
             for (Listener listener : listeners) {
                 listener.stop();
@@ -236,6 +246,7 @@ public class GarbageCollector implements DataStoreGarbageCollector {
             listeners.clear();
         }
         checkObservationException();
+        context.setGcRunning(false);
     }
 
     public int sweep() throws RepositoryException {
@@ -335,7 +346,7 @@ public class GarbageCollector implements DataStoreGarbageCollector {
          */
     }
 
-    private void checkLengths(long... lengths) throws RepositoryException {
+    private static void checkLengths(long... lengths) throws RepositoryException {
         for (long length : lengths) {
             if (length == -1) {
                 throw new RepositoryException("mark failed to access a property");

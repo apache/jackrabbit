@@ -1423,7 +1423,14 @@ public class RepositoryImpl extends AbstractRepository
             }
             ipmList[i] = (IterablePersistenceManager) pm;
         }
-        return new GarbageCollector(context.getDataStore(), ipmList, sessions);
+        GarbageCollector gc = new GarbageCollector(context, context.getDataStore(), ipmList, sessions);
+        synchronized (this) {
+            if (context.isGcRunning()) {
+                throw new RepositoryException("Cannot create GC. GC already running");
+            }
+            context.setGcRunning(true);
+        }
+        return gc;
     }
 
     //-----------------------------------------------------------< Repository >

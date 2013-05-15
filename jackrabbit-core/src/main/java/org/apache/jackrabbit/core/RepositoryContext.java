@@ -124,6 +124,12 @@ public class RepositoryContext {
      * The Statistics manager, handles statistics
      */
     private StatManager statManager;
+    
+    /**
+     *  flag to indicate if GC is running
+     */
+    
+    private boolean gcRunning;
 
     /**
      * Creates a component context for the given repository.
@@ -449,5 +455,23 @@ public class RepositoryContext {
     public StatManager getStatManager() {
         return statManager;
     }
+
+    /**
+     * 
+     * @return gcRunning status
+     */
+    public boolean isGcRunning() {
+        return gcRunning;
+    }
+
+    /**
+     * set gcRunnign status
+     * @param gcRunning
+     */
+    public synchronized void setGcRunning(boolean gcRunning) {
+        this.gcRunning = gcRunning;
+    }
+    
+    
 
 }
