@@ -247,7 +247,7 @@ public abstract class AbstractJournal implements Journal {
             while (iterator.hasNext()) {
                 Record record = iterator.nextRecord();
                 if (record.getJournalId().equals(id)) {
-                    log.info("Record with revision '" + record.getRevision()
+                    log.debug("Record with revision '" + record.getRevision()
                             + "' created by this journal, skipped.");
                 } else {
                     RecordConsumer consumer = getConsumer(record.getProducerId());
@@ -267,7 +267,7 @@ public abstract class AbstractJournal implements Journal {
             for (RecordConsumer consumer : consumers.values()) {
                 consumer.setRevision(stopRevision);
             }
-            log.info("Synchronized from revision " + startRevision + " to revision: " + stopRevision);
+            log.debug("Synchronized from revision " + startRevision + " to revision: " + stopRevision);
         }
     }
     
