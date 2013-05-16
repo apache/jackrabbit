@@ -933,7 +933,7 @@ public class ItemManager implements ItemStateListener {
             }
             ItemId id = data.getId();
             if (itemCache.containsKey(id)) {
-                log.warn("overwriting cached item " + id);
+                log.debug("overwriting cached item " + id);
             }
             if (log.isDebugEnabled()) {
                 log.debug("caching item " + id);
@@ -1261,7 +1261,7 @@ public class ItemManager implements ItemStateListener {
             }
             Object old = map.put(data.getPrimaryParentId(), data);
             if (old != null) {
-                log.warn("overwriting cached item: " + old);
+                log.debug("overwriting cached item: " + old);
             }
         }
 
