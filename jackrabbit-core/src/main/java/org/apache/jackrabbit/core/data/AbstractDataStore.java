@@ -37,7 +37,17 @@ public abstract class AbstractDataStore implements DataStore {
 
     //---------------------------------------------------------< DataStore >--
 
-    @Override
+    public DataRecord getRecord(DataIdentifier identifier)
+            throws DataStoreException {
+        DataRecord record = getRecordIfStored(identifier);
+        if (record != null) {
+            return record;
+        } else {
+            throw new DataStoreException(
+                    "Record " + identifier + " does not exist");
+        }
+    }
+
     public DataIdentifier getIdentifierFromReference(String reference) {
         int colon = reference.indexOf(':');
         if (colon != -1) {

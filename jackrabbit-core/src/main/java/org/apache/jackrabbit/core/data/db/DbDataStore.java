@@ -562,14 +562,6 @@ public class DbDataStore extends AbstractDataStore
         }
     }
 
-    public DataRecord getRecord(DataIdentifier identifier) throws DataStoreException {
-        DataRecord record = getRecordIfStored(identifier);
-        if (record == null) {
-            throw new DataStoreException("Record not found: " + identifier);
-        }
-        return record;
-    }
-
     /**
      * Open the input stream. This method sets those fields of the caller
      * that need to be closed once the input stream is read.
