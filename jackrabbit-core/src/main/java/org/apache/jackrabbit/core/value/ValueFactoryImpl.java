@@ -19,6 +19,7 @@ package org.apache.jackrabbit.core.value;
 import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.api.ReferenceBinary;
 import org.apache.jackrabbit.core.data.DataIdentifier;
+import org.apache.jackrabbit.core.data.DataRecord;
 import org.apache.jackrabbit.core.data.DataStore;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.spi.commons.value.ValueFactoryQImpl;
@@ -109,11 +110,10 @@ public class ValueFactoryImpl extends ValueFactoryQImpl {
                 return new BinaryValueImpl(((BLOBFileValue) binary).copy());
             } else if (binary instanceof ReferenceBinary) {
                 String reference = ((ReferenceBinary) binary).getReference();
-                DataIdentifier identifier = store.getIdentifierFromReference(reference);
-                if (identifier != null) {
-                    InternalValue value = InternalValue.getInternalValue(
-                            identifier, store, false);
-                    return new BinaryValueImpl(value.getBLOBFileValue());
+                DataRecord record = store.getRecordFromReference(reference);
+                if (record != null) {
+                    return new BinaryValueImpl(BLOBInDataStore.getInstance(
+                            store, record.getIdentifier()));
                 }
             }
             return createValue(binary.getStream());
