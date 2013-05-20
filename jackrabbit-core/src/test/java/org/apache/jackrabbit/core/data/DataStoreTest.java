@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.core.data;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.core.data.db.DbDataStore;
 import org.apache.jackrabbit.test.JUnitTest;
 
@@ -25,6 +26,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.security.SecureRandom;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -99,6 +101,53 @@ public class DataStoreTest extends JUnitTest {
         } catch (Throwable t) {
             t.printStackTrace();
             throw new Error(t);
+        }
+    }
+
+    public void testReference() throws Exception {
+        byte[] data = new byte[12345];
+        new Random(12345).nextBytes(data);
+        String reference;
+
+        FileDataStore store = new FileDataStore();
+        store.init(testDir + "/reference");
+        try {
+            DataRecord record = store.addRecord(new ByteArrayInputStream(data));
+            reference = record.getReference();
+
+            DataIdentifier identifier = store.getIdentifierFromReference(reference);
+            record = store.getRecord(identifier);
+            assertEquals(data.length, record.getLength());
+            InputStream stream = record.getStream();
+            try {
+                for (int i = 0; i < data.length; i++) {
+                    assertEquals(data[i] & 0xff, stream.read());
+                }
+                assertEquals(-1, stream.read());
+            } finally {
+                stream.close();
+            }
+        } finally {
+            store.close();
+        }
+
+        store = new FileDataStore();
+        store.init(testDir + "/reference");
+        try {
+            DataIdentifier identifier = store.getIdentifierFromReference(reference);
+            DataRecord record = store.getRecord(identifier);
+            assertEquals(data.length, record.getLength());
+            InputStream stream = record.getStream();
+            try {
+                for (int i = 0; i < data.length; i++) {
+                    assertEquals(data[i] & 0xff, stream.read());
+                }
+                assertEquals(-1, stream.read());
+            } finally {
+                stream.close();
+            }
+        } finally {
+            store.close();
         }
     }
 
