@@ -133,23 +133,16 @@ public class FileDataStore extends AbstractDataStore
         directory.mkdirs();
     }
 
-    public DataRecord getRecordIfStored(DataIdentifier identifier) throws DataStoreException {
-        return getRecord(identifier, true);
-    }
-
     /**
      * Get a data record for the given identifier.
-     * This method only checks if the file exists if the verify flag is set.
-     * If the verify flag is set and the file doesn't exist, the method returns null.
      *
      * @param identifier the identifier
-     * @param verify whether to check if the file exists
      * @return the data record or null
      */
-    private DataRecord getRecord(DataIdentifier identifier, boolean verify) throws DataStoreException {
+    public DataRecord getRecordIfStored(DataIdentifier identifier) throws DataStoreException {
         File file = getFile(identifier);
         synchronized (this) {
-            if (verify && !file.exists()) {
+            if (!file.exists()) {
                 return null;
             }
             if (minModifiedDate != 0) {
@@ -161,19 +154,6 @@ public class FileDataStore extends AbstractDataStore
             usesIdentifier(identifier);
             return new FileDataRecord(this, identifier, file);
         }
-    }
-
-    /**
-     * Returns the record with the given identifier. Note that this method
-     * performs no sanity checks on the given identifier. It is up to the
-     * caller to ensure that only identifiers of previously created data
-     * records are used.
-     *
-     * @param identifier data identifier
-     * @return identified data record
-     */
-    public DataRecord getRecord(DataIdentifier identifier) throws DataStoreException {
-        return getRecord(identifier, false);
     }
 
     private void usesIdentifier(DataIdentifier identifier) {
