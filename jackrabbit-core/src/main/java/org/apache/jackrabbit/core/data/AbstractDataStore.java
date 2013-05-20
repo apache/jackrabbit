@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.core.data;
 
+import java.security.SecureRandom;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
@@ -28,27 +29,13 @@ public abstract class AbstractDataStore implements DataStore {
      */
     private static final char[] HEX = "0123456789abcdef".toCharArray();
 
-    private String secret;
-
-    public void setSecret(String secret) {
-        this.secret = secret;
-    }
-
     /**
-     * Returns the hex encoding of the given bytes.
-     *
-     * @param value value to be encoded
-     * @return encoded value
+     * Cached copy of the reference key of this data store. Initialized in
+     * {@link #getReferenceKey()} when the key is first accessed.
      */
-    protected static String encodeHexString(byte[] value) {
-        char[] buffer = new char[value.length * 2];
-        for (int i = 0; i < value.length; i++) {
-            buffer[2 * i] = HEX[(value[i] >> 4) & 0x0f];
-            buffer[2 * i + 1] = HEX[value[i] & 0x0f];
-        }
-        return new String(buffer);
-    }
+    private byte[] referenceKey = null;
 
+    //---------------------------------------------------------< DataStore >--
 
     @Override
     public DataIdentifier getIdentifierFromReference(String reference) {
@@ -65,21 +52,70 @@ public abstract class AbstractDataStore implements DataStore {
 
     //---------------------------------------------------------< protected >--
 
+    /**
+     * Returns the hex encoding of the given bytes.
+     *
+     * @param value value to be encoded
+     * @return encoded value
+     */
+    protected static String encodeHexString(byte[] value) {
+        char[] buffer = new char[value.length * 2];
+        for (int i = 0; i < value.length; i++) {
+            buffer[2 * i] = HEX[(value[i] >> 4) & 0x0f];
+            buffer[2 * i + 1] = HEX[value[i] & 0x0f];
+        }
+        return new String(buffer);
+    }
+
     protected String getReferenceFromIdentifier(DataIdentifier identifier) {
-        if (secret != null) {
-            try {
-                String id = identifier.toString();
+        try {
+            String id = identifier.toString();
 
-                Mac mac = Mac.getInstance(ALGORITHM);
-                mac.init(new SecretKeySpec(secret.getBytes("UTF-8"), ALGORITHM));
-                byte[] hash = mac.doFinal(id.getBytes("UTF-8"));
+            Mac mac = Mac.getInstance(ALGORITHM);
+            mac.init(new SecretKeySpec(getReferenceKey(), ALGORITHM));
+            byte[] hash = mac.doFinal(id.getBytes("UTF-8"));
 
-                return id + ':' + encodeHexString(hash);
-            } catch (Exception e) {
-                // TODO: log a warning about this exception
-            }
+            return id + ':' + encodeHexString(hash);
+        } catch (Exception e) {
+            // TODO: log a warning about this exception
         }
         return null;
+    }
+
+    /**
+     * Returns the reference key of this data store. If one does not already
+     * exist, it is automatically created in an implementation-specific way.
+     * The default implementation simply creates a temporary random key that's
+     * valid only until the data store gets restarted. Subclasses can override
+     * and/or decorate this method to support a more persistent reference key.
+     * <p>
+     * This method is called only once during the lifetime of a data store
+     * instance and the return value is cached in memory, so it's no problem
+     * if the implementation is slow.
+     *
+     * @return reference key
+     * @throws DataStoreException if the key is not available
+     */
+    protected byte[] getOrCreateReferenceKey() throws DataStoreException {
+        byte[] referenceKeyValue = new byte[256];
+        new SecureRandom().nextBytes(referenceKeyValue);
+        return referenceKeyValue;
+    }
+
+    //-----------------------------------------------------------< private >--
+
+    /**
+     * Returns the reference key of this data store. Synchronized to
+     * control concurrent access to the cached {@link #referenceKey} value.
+     *
+     * @return reference key
+     * @throws DataStoreException if the key is not available
+     */
+    private synchronized byte[] getReferenceKey() throws DataStoreException {
+        if (referenceKey == null) {
+            referenceKey = getOrCreateReferenceKey();
+        }
+        return referenceKey;
     }
 
 }
