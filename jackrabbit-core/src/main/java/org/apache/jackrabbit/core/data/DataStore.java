@@ -40,8 +40,10 @@ public interface DataStore {
      * 
      * @param identifier data identifier
      * @return the record if found, and null if not
+     * @throws DataStoreException if the data store could not be accessed
      */
-    DataRecord getRecordIfStored(DataIdentifier identifier) throws DataStoreException;
+    DataRecord getRecordIfStored(DataIdentifier identifier)
+            throws DataStoreException;
 
     /**
      * Returns the identified data record. The given identifier should be
@@ -56,6 +58,18 @@ public interface DataStore {
      *                     or if the given identifier is invalid
      */
     DataRecord getRecord(DataIdentifier identifier) throws DataStoreException;
+
+    /**
+     * Returns the record that matches the given binary reference.
+     * Returns {@code null} if the reference is invalid, for example if it
+     * points to a record that does not exist.
+     *
+     * @param reference binary reference
+     * @return matching record, or {@code null}
+     * @throws DataStoreException if the data store could not be accessed
+     */
+    DataRecord getRecordFromReference(String reference)
+        throws DataStoreException;
 
     /**
      * Creates a new data record. The given binary stream is consumed and
@@ -107,15 +121,6 @@ public interface DataStore {
      * @throws DataStoreException if the list could not be read
      */
     Iterator<DataIdentifier> getAllIdentifiers() throws DataStoreException;
-
-    /**
-     * Returns the identifier that matches the given binary reference.
-     * If the reference is invalid, returns {@code null}.
-     *
-     * @param reference binary reference
-     * @return matching identifier, or {@code null}
-     */
-    DataIdentifier getIdentifierFromReference(String reference);
 
     /**
      * Initialized the data store

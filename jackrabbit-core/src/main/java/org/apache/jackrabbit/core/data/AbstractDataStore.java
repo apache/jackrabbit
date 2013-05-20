@@ -48,13 +48,16 @@ public abstract class AbstractDataStore implements DataStore {
         }
     }
 
-    public DataIdentifier getIdentifierFromReference(String reference) {
-        int colon = reference.indexOf(':');
-        if (colon != -1) {
-            DataIdentifier identifier =
-                    new DataIdentifier(reference.substring(0, colon));
-            if (reference.equals(getReferenceFromIdentifier(identifier))) {
-                return identifier;
+    public DataRecord getRecordFromReference(String reference)
+            throws DataStoreException {
+        if (reference != null) {
+            int colon = reference.indexOf(':');
+            if (colon != -1) {
+                DataIdentifier identifier =
+                        new DataIdentifier(reference.substring(0, colon));
+                if (reference.equals(getReferenceFromIdentifier(identifier))) {
+                    return getRecordIfStored(identifier);
+                }
             }
         }
         return null;

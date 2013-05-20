@@ -313,13 +313,13 @@ public class MultiDataStore implements DataStore {
         return archiveDataStore.getAllIdentifiers();
     }
 
-    @Override
-    public DataIdentifier getIdentifierFromReference(String reference) {
-        DataIdentifier identifier = primaryDataStore.getIdentifierFromReference(reference);
-        if (identifier == null) {
-            identifier = archiveDataStore.getIdentifierFromReference(reference);
+    public DataRecord getRecordFromReference(String reference)
+            throws DataStoreException {
+        DataRecord record = primaryDataStore.getRecordFromReference(reference);
+        if (record == null) {
+            record = archiveDataStore.getRecordFromReference(reference);
         }
-        return identifier;
+        return record;
     }
 
     /**
