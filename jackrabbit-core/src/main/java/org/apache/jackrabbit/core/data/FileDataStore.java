@@ -34,6 +34,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.WeakHashMap;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -59,7 +60,8 @@ import org.slf4j.LoggerFactory;
  * This implementation relies on the underlying file system to support
  * atomic O(1) move operations with {@link File#renameTo(File)}.
  */
-public class FileDataStore implements DataStore, MultiDataStoreAware {
+public class FileDataStore extends AbstractDataStore
+        implements MultiDataStoreAware {
 
     /**
      * Logger instance
@@ -131,23 +133,16 @@ public class FileDataStore implements DataStore, MultiDataStoreAware {
         directory.mkdirs();
     }
 
-    public DataRecord getRecordIfStored(DataIdentifier identifier) throws DataStoreException {
-        return getRecord(identifier, true);
-    }
-
     /**
      * Get a data record for the given identifier.
-     * This method only checks if the file exists if the verify flag is set.
-     * If the verify flag is set and the file doesn't exist, the method returns null.
      *
      * @param identifier the identifier
-     * @param verify whether to check if the file exists
      * @return the data record or null
      */
-    private DataRecord getRecord(DataIdentifier identifier, boolean verify) throws DataStoreException {
+    public DataRecord getRecordIfStored(DataIdentifier identifier) throws DataStoreException {
         File file = getFile(identifier);
         synchronized (this) {
-            if (verify && !file.exists()) {
+            if (!file.exists()) {
                 return null;
             }
             if (minModifiedDate != 0) {
@@ -157,21 +152,8 @@ public class FileDataStore implements DataStore, MultiDataStoreAware {
                 }
             }
             usesIdentifier(identifier);
-            return new FileDataRecord(identifier, file);
+            return new FileDataRecord(this, identifier, file);
         }
-    }
-
-    /**
-     * Returns the record with the given identifier. Note that this method
-     * performs no sanity checks on the given identifier. It is up to the
-     * caller to ensure that only identifiers of previously created data
-     * records are used.
-     *
-     * @param identifier data identifier
-     * @return identified data record
-     */
-    public DataRecord getRecord(DataIdentifier identifier) throws DataStoreException {
-        return getRecord(identifier, false);
     }
 
     private void usesIdentifier(DataIdentifier identifier) {
@@ -207,7 +189,8 @@ public class FileDataStore implements DataStore, MultiDataStoreAware {
             } finally {
                 output.close();
             }
-            DataIdentifier identifier = new DataIdentifier(digest.digest());
+            DataIdentifier identifier =
+                    new DataIdentifier(encodeHexString(digest.digest()));
             File file;
 
             synchronized (this) {
@@ -245,7 +228,7 @@ public class FileDataStore implements DataStore, MultiDataStoreAware {
             // this will also make sure that
             // tempId is not garbage collected until here
             inUse.remove(tempId);
-            return new FileDataRecord(identifier, file);
+            return new FileDataRecord(this, identifier, file);
         } catch (NoSuchAlgorithmException e) {
             throw new DataStoreException(DIGEST + " not available", e);
         } catch (IOException e) {
@@ -305,7 +288,13 @@ public class FileDataStore implements DataStore, MultiDataStoreAware {
 	}
 
     public int deleteAllOlderThan(long min) {
-        return deleteOlderRecursive(directory, min);
+        int count = 0;
+        for (File file : directory.listFiles()) {
+            if (file.isDirectory()) { // skip top-level files
+                count += deleteOlderRecursive(file, min);
+            }
+        }
+        return count;
     }
 
     private int deleteOlderRecursive(File file, long min) {
@@ -346,11 +335,9 @@ public class FileDataStore implements DataStore, MultiDataStoreAware {
             // JCR-1396: FileDataStore Garbage Collector and empty directories
             // Automatic removal of empty directories (but not the root!)
             synchronized (this) {
-                if (file != directory) {
-                    list = file.listFiles();
-                    if (list != null && list.length == 0) {
-                        file.delete();
-                    }
+                list = file.listFiles();
+                if (list != null && list.length == 0) {
+                    file.delete();
                 }
             }
         }
@@ -372,14 +359,16 @@ public class FileDataStore implements DataStore, MultiDataStoreAware {
 
     public Iterator<DataIdentifier> getAllIdentifiers() {
         ArrayList<File> files = new ArrayList<File>();
-        listRecursive(files, directory);
+        for (File file : directory.listFiles()) {
+            if (file.isDirectory()) { // skip top-level files
+                listRecursive(files, file);
+            }
+        }
+
         ArrayList<DataIdentifier> identifiers = new ArrayList<DataIdentifier>();
         for (File f: files) {
             String name = f.getName();
-            if (!name.startsWith(TMP)) {
-                DataIdentifier id = new DataIdentifier(name);
-                identifiers.add(id);
-            }
+            identifiers.add(new DataIdentifier(name));
         }
         log.debug("Found " + identifiers.size() + " identifiers.");
         return identifiers.iterator();
@@ -423,6 +412,27 @@ public class FileDataStore implements DataStore, MultiDataStoreAware {
     public void close() {
         // nothing to do
     }
+
+    //---------------------------------------------------------< protected >--
+
+    @Override
+    protected byte[] getOrCreateReferenceKey() throws DataStoreException {
+        File file = new File(directory, "reference.key");
+        try {
+            if (file.exists()) {
+                return FileUtils.readFileToByteArray(file);
+            } else {
+                byte[] key = super.getOrCreateReferenceKey();
+                FileUtils.writeByteArrayToFile(file, key);
+                return key;
+            }
+        } catch (IOException e) {
+            throw new DataStoreException(
+                    "Unable to access reference key file " + file.getPath(), e);
+        }
+    }
+
+    //-----------------------------------------------------------< private >--
 
     /**
      * Get the last modified date of a file.

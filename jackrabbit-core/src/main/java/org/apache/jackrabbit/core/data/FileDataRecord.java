@@ -36,8 +36,9 @@ public class FileDataRecord extends AbstractDataRecord {
      * @param identifier data identifier
      * @param file file that contains the binary stream
      */
-    public FileDataRecord(DataIdentifier identifier, File file) {
-        super(identifier);
+    public FileDataRecord(
+            AbstractDataStore store, DataIdentifier identifier, File file) {
+        super(store, identifier);
         assert file.isFile();
         this.file = file;
     }

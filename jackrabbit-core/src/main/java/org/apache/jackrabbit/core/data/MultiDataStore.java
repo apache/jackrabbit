@@ -313,6 +313,15 @@ public class MultiDataStore implements DataStore {
         return archiveDataStore.getAllIdentifiers();
     }
 
+    public DataRecord getRecordFromReference(String reference)
+            throws DataStoreException {
+        DataRecord record = primaryDataStore.getRecordFromReference(reference);
+        if (record == null) {
+            record = archiveDataStore.getRecordFromReference(reference);
+        }
+        return record;
+    }
+
     /**
      * {@inheritDoc}
      */
@@ -709,4 +718,5 @@ public class MultiDataStore implements DataStore {
             }
         }
     }
+
 }
