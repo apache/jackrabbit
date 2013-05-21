@@ -148,9 +148,5 @@ public class LimitAndOffsetTest extends AbstractQueryTest {
         result = query.execute();
         nodes = result.getNodes();
         assertEquals(1, nodes.getSize());
-        if (result instanceof JackrabbitQueryResult) {
-            assertEquals(3, ((JackrabbitQueryResult) result).getTotalSize());
-        }
     }
-
 }
