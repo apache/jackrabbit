@@ -1,4 +1,4 @@
-Release Notes -- Apache Jackrabbit -- Version 2.6.1
+Release Notes -- Apache Jackrabbit -- Version 2.6.2
 
 Introduction
 ------------
@@ -7,9 +7,28 @@ This is Apache Jackrabbit(TM) 2.6, a fully compliant implementation of the
 Content Repository for Java(TM) Technology API, version 2.0 (JCR 2.0) as
 specified in the Java Specification Request 283 (JSR 283).
 
-Apache Jackrabbit 2.6.1 is a patch release that contains fixes and
-improvements over Jackrabbit 2.6. Jackrabbit 2.6.x
-releases are considered stable and targeted for production use.
+Apache Jackrabbit 2.6.2 is a patch release that contains fixes and
+improvements over Jackrabbit 2.6. Jackrabbit 2.6.x releases are
+considered stable and targeted for production use.
+
+Changes since Jackrabbit 2.6.1
+------------------------------
+
+New features
+
+  [JCR-3534] Efficient copying of binaries across repositories with the ...
+  [JCR-3550] Methods for determining type of array of values
+
+Improvements
+
+  [JCR-3402] getSize() returning too many often -1
+  [JCR-3531] Borrow all available RepositoryHelpers
+  [JCR-3596] Reduce level for 'overwriting cached item' log messages in ...
+
+Bug fixes
+
+  [JCR-3543] TCK does not allow a property to be re-bound to a different ...
+  [JCR-3595] AbstractJournal logging is too verbose
 
 Changes since Jackrabbit 2.6.0
 ------------------------------
