@@ -31,6 +31,14 @@ public interface DataRecord {
     DataIdentifier getIdentifier();
 
     /**
+     * Returns a secure reference to this binary, or {@code null} if no such
+     * reference is available.
+     *
+     * @return binary reference, or {@code null}
+     */
+    String getReference();
+
+    /**
      * Returns the length of the binary stream in this record.
      *
      * @return length of the binary stream

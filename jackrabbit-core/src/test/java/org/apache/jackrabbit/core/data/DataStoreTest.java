@@ -102,6 +102,49 @@ public class DataStoreTest extends JUnitTest {
         }
     }
 
+    public void testReference() throws Exception {
+        byte[] data = new byte[12345];
+        new Random(12345).nextBytes(data);
+        String reference;
+
+        FileDataStore store = new FileDataStore();
+        store.init(testDir + "/reference");
+        try {
+            DataRecord record = store.addRecord(new ByteArrayInputStream(data));
+            reference = record.getReference();
+
+            assertReference(data, reference, store);
+        } finally {
+            store.close();
+        }
+
+        store = new FileDataStore();
+        store.init(testDir + "/reference");
+        try {
+            assertReference(data, reference, store);
+        } finally {
+            store.close();
+        }
+    }
+
+    private void assertReference(
+            byte[] expected, String reference, DataStore store)
+            throws Exception {
+        DataRecord record = store.getRecordFromReference(reference);
+        assertNotNull(record);
+        assertEquals(expected.length, record.getLength());
+
+        InputStream stream = record.getStream();
+        try {
+            for (int i = 0; i < expected.length; i++) {
+                assertEquals(expected[i] & 0xff, stream.read());
+            }
+            assertEquals(-1, stream.read());
+        } finally {
+            stream.close();
+        }
+    }
+
     private void shutdownDatabase(String url) {
         if (url.startsWith("jdbc:derby:") || url.startsWith("jdbc:hsqldb:")) {
             try {

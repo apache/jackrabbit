@@ -23,17 +23,12 @@ import java.io.Serializable;
  * All identifiers must be serializable and implement the standard
  * object equality and hash code methods.
  */
-public final class DataIdentifier implements Serializable {
+public class DataIdentifier implements Serializable {
 
     /**
      * Serial version UID.
      */
     private static final long serialVersionUID = -9197191401131100016L;
-
-    /**
-     * Array of hexadecimal digits.
-     */
-    private static final char[] HEX = "0123456789abcdef".toCharArray();
 
     /**
      * Data identifier.
@@ -46,22 +41,7 @@ public final class DataIdentifier implements Serializable {
      * @param identifier data identifier
      */
     public DataIdentifier(String identifier) {
-        this.identifier = identifier;
-    }
-
-    /**
-     * Creates a data identifier from the hexadecimal string
-     * representation of the given bytes.
-     *
-     * @param identifier data identifier
-     */
-    public DataIdentifier(byte[] identifier) {
-        char[] buffer = new char[identifier.length * 2];
-        for (int i = 0; i < identifier.length; i++) {
-            buffer[2 * i] = HEX[(identifier[i] >> 4) & 0x0f];
-            buffer[2 * i + 1] = HEX[identifier[i] & 0x0f];
-        }
-        this.identifier = new String(buffer);
+        this.identifier  = identifier;
     }
 
     //-------------------------------------------------------------< Object >

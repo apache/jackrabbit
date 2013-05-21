@@ -30,7 +30,9 @@
     <!--
         data store configuration
     -->
-	<DataStore class="org.apache.jackrabbit.core.data.FileDataStore"/>
+    <DataStore class="org.apache.jackrabbit.core.data.FileDataStore">
+        <param name="secret" value="a very well kept secret"/>
+    </DataStore>
     <!--
         sample database data store configuration
         <DataStore class="org.apache.jackrabbit.core.data.db.DbDataStore">
