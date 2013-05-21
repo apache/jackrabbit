@@ -21,7 +21,6 @@ import java.util.LinkedList;
 import java.util.Properties;
 import java.util.Map;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.io.InputStream;
 import java.io.IOException;
 
@@ -33,9 +32,18 @@ public class RepositoryHelperPoolImpl implements RepositoryHelperPool {
 
     private static final String PROP_FILE = "repositoryHelperPool.properties";
 
-    private List helpers = new LinkedList();
+    private List<RepositoryHelper> helpers = new LinkedList<RepositoryHelper>();
 
-    public RepositoryHelperPoolImpl() {
+    private static RepositoryHelperPool POOL = null;
+
+    public synchronized static RepositoryHelperPool getInstance() {
+        if (POOL == null) {
+            POOL = new RepositoryHelperPoolImpl();
+        }
+        return POOL;
+    }
+
+    private RepositoryHelperPoolImpl() {
         InputStream in = RepositoryHelperPoolImpl.class.getClassLoader().getResourceAsStream(PROP_FILE);
         if (in != null) {
             try {
@@ -43,9 +51,8 @@ public class RepositoryHelperPoolImpl implements RepositoryHelperPool {
                 props.load(in);
                 for (int i = 0;; i++) {
                     String prefix = "helper." + i + ".";
-                    Map helperProp = new HashMap();
-                    for (Iterator it = props.entrySet().iterator(); it.hasNext(); ) {
-                        Map.Entry entry = (Map.Entry) it.next();
+                    Map<String, Object> helperProp = new HashMap<String, Object>();
+                    for (Map.Entry<Object, Object> entry : props.entrySet()) {
                         String key = (String) entry.getKey();
                         if (key.startsWith(prefix)) {
                             helperProp.put(key.substring(prefix.length()), entry.getValue());
@@ -81,7 +88,18 @@ public class RepositoryHelperPoolImpl implements RepositoryHelperPool {
         while (helpers.isEmpty()) {
             wait();
         }
-        return (RepositoryHelper) helpers.remove(0);
+        return helpers.remove(0);
+    }
+
+    public synchronized RepositoryHelper[] borrowHelpers() throws InterruptedException {
+        while (helpers.isEmpty()) {
+            wait();
+        }
+        try {
+            return helpers.toArray(new RepositoryHelper[helpers.size()]);
+        } finally {
+            helpers.clear();
+        }
     }
 
     public synchronized void returnHelper(RepositoryHelper helper) {
