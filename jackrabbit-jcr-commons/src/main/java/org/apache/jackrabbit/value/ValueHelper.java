@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.value;
 
+import static javax.jcr.PropertyType.UNDEFINED;
+
 import org.apache.jackrabbit.util.Base64;
 import org.apache.jackrabbit.util.Text;
 import org.apache.jackrabbit.util.TransientFileFactory;
@@ -818,4 +820,29 @@ public class ValueHelper {
             return convert(value, type, factory);
         }
     }
+
+    /**
+     * Determine the {@link javax.jcr.PropertyType} of the passed values if all are of
+     * the same type.
+     *
+     * @param values array of values of the same type
+     * @return  {@link javax.jcr.PropertyType#UNDEFINED} if {@code values} is empty,
+     *          {@code values[0].getType()} otherwise.
+     * @throws javax.jcr.ValueFormatException  if not all {@code values} are of the same type
+     */
+    public static int getType(Value[] values) throws ValueFormatException {
+        int type = UNDEFINED;
+        for (Value value : values) {
+            if (value != null) {
+                if (type == UNDEFINED) {
+                    type = value.getType();
+                } else if (value.getType() != type) {
+                    throw new ValueFormatException(
+                            "All values of a multi-valued property must be of the same type");
+                }
+            }
+        }
+        return type;
+    }
+
 }
