@@ -36,7 +36,6 @@ import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NodeType;
 import javax.jcr.nodetype.PropertyDefinition;
 import javax.jcr.retention.RetentionManager;
-import javax.jcr.retention.RetentionPolicy;
 
 import java.util.StringTokenizer;
 import java.util.Random;
@@ -239,6 +238,11 @@ public abstract class AbstractJCRTest extends JUnitTest {
     protected String testNodeType;
 
     /**
+     * The node type name for the test root node.
+     */
+    protected String testNodeTypeTestRoot;
+
+    /**
      * A node type that does not allow any child nodes, such as nt:base.
      */
     protected String testNodeTypeNoChildren;
@@ -309,6 +313,10 @@ public abstract class AbstractJCRTest extends JUnitTest {
         // cut off '/' to build testPath
         testPath = testRoot.substring(1);
         testNodeType = getProperty(RepositoryStub.PROP_NODETYPE);
+        testNodeTypeTestRoot = getProperty(RepositoryStub.PROP_NODETYPETESTROOT);
+        if (testNodeTypeTestRoot == null) {
+            testNodeTypeTestRoot = testNodeType; // backwards compatibility
+        }
         testNodeTypeNoChildren = getProperty(RepositoryStub.PROP_NODETYPENOCHILDREN);
         // setup node names
         nodeName1 = getProperty(RepositoryStub.PROP_NODE_NAME1);
@@ -840,29 +848,28 @@ public abstract class AbstractJCRTest extends JUnitTest {
         s.refresh(false);
         Node root = s.getRootNode();
         Node testRootNode;
-        
-        RetentionManager rm;
-        try {
-            rm = s.getRetentionManager();
-        } catch (UnsupportedRepositoryOperationException ex) {
-            rm = null;
-        }
-        
+
         if (root.hasNode(testPath)) {
+            RetentionManager rm;
+            try {
+                rm = s.getRetentionManager();
+            } catch (UnsupportedRepositoryOperationException e) {
+                rm = null;
+            }
+
             // clean test root
             testRootNode = root.getNode(testPath);
-            for (NodeIterator children = testRootNode.getNodes(); children.hasNext();) {
+            NodeIterator children = testRootNode.getNodes();
+            while (children.hasNext()) {
                 Node child = children.nextNode();
 
                 // Remove retention policy if needed
-                if (rm != null) {
-                    RetentionPolicy pol = rm.getRetentionPolicy(child.getPath());
-                    if (pol != null) {
-                        rm.removeRetentionPolicy(child.getPath());
-                        s.save();
-                    }
+                String childPath = child.getPath();
+                if (rm != null && rm.getRetentionPolicy(childPath) != null) {
+                    rm.removeRetentionPolicy(childPath);
+                    s.save();
                 }
-                
+
                 NodeDefinition nodeDef = child.getDefinition();
                 if (!nodeDef.isMandatory() && !nodeDef.isProtected()) {
                     // try to remove child
@@ -882,7 +889,7 @@ public abstract class AbstractJCRTest extends JUnitTest {
                 if (currentNode.hasNode(name)) {
                     currentNode = currentNode.getNode(name);
                 } else {
-                    currentNode = currentNode.addNode(name, testNodeType);
+                    currentNode = currentNode.addNode(name, testNodeTypeTestRoot);
                 }
             }
             testRootNode = currentNode;

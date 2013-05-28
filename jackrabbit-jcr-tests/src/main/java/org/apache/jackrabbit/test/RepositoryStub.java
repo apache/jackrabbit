@@ -62,6 +62,8 @@ public abstract class RepositoryStub {
 
     public static final String PROP_NODETYPE = "nodetype";
 
+    public static final String PROP_NODETYPETESTROOT = "nodetypetestroot";
+
     public static final String PROP_NODETYPENOCHILDREN = "nodetypenochildren";
 
     public static final String PROP_TESTROOT = "testroot";
