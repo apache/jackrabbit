@@ -157,7 +157,7 @@ public class SaveTest extends AbstractJCRTest {
     public void testConstraintViolationException() throws RepositoryException, NotExecutableException {
         checkNtQuery();
         Query query = superuser.getWorkspace().getQueryManager().createQuery(statement, Query.XPATH);
-        testRootNode.addNode(nodeName1, testNodeType);
+        testRootNode.addNode(nodeName1, testNodeTypeNoChildren);
         try {
             query.storeAsNode(testRoot + "/" + nodeName1 + "/" + nodeName2);
             superuser.save();
