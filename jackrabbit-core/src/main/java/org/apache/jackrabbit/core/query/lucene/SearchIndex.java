@@ -1628,7 +1628,7 @@ public class SearchIndex extends AbstractQueryHandler {
         if (!clean) {
             p = PATH_FACTORY.create(elements);
         }
-        return p;
+        return p.getNormalizedPath();
     }
 
     /**
