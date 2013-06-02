@@ -48,7 +48,9 @@ public class NodeMixinUtil {
 
         while (mixins.hasNext()) {
             String name = mixins.nextNodeType().getName();
-            if (node.canAddMixin(name) && !mixShareable.equals(name)) {
+            if (node.canAddMixin(name)
+                    && !node.isNodeType(name)
+                    && !mixShareable.equals(name)) {
                 return name;
             }
         }
