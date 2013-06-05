@@ -51,6 +51,8 @@
     <module>create20</module>
     <module>create21</module>
     <module>create22</module>
+    <module>create24</module>
+    <module>create26</module>
   </modules>
 
   <build>
