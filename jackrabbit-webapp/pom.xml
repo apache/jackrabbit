@@ -35,7 +35,8 @@
   <description>Web application that hosts and serves a Jackrabbit content repository</description>
 
   <properties>
-    <tomcat.version>6.0.29</tomcat.version>
+    <oak.version>0.8</oak.version>
+    <tomcat.version>7.0.40</tomcat.version>
   </properties>
 
   <dependencies>
@@ -78,12 +79,22 @@
       <version>${project.version}</version>
     </dependency>
     <dependency>
+      <groupId>org.apache.jackrabbit</groupId>
+      <artifactId>oak-jcr</artifactId>
+      <version>${oak.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.jackrabbit</groupId>
+      <artifactId>oak-upgrade</artifactId>
+      <version>${oak.version}</version>
+    </dependency>
+    <dependency>
       <groupId>ch.qos.logback</groupId>
       <artifactId>logback-classic</artifactId>
     </dependency>
     <dependency>
       <groupId>org.apache.tomcat</groupId>
-      <artifactId>servlet-api</artifactId>
+      <artifactId>tomcat-servlet-api</artifactId>
       <version>${tomcat.version}</version>
       <scope>provided</scope>
     </dependency>
@@ -95,19 +106,19 @@
     </dependency>
     <dependency>
       <groupId>org.apache.tomcat</groupId>
-      <artifactId>catalina</artifactId>
+      <artifactId>tomcat-catalina</artifactId>
       <version>${tomcat.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.tomcat</groupId>
-      <artifactId>coyote</artifactId>
+      <artifactId>tomcat-coyote</artifactId>
       <version>${tomcat.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.tomcat</groupId>
-      <artifactId>jasper</artifactId>
+      <artifactId>tomcat-jasper</artifactId>
       <version>${tomcat.version}</version>
       <scope>test</scope>
     </dependency>
@@ -201,10 +212,8 @@
         <plugin>
           <artifactId>maven-failsafe-plugin</artifactId>
           <configuration>
-            <workingDirectory>${project.build.directory}</workingDirectory>
             <systemPropertyVariables>
-              <webapp.directory>${project.build.directory}/${project.artifactId}-${project.version}</webapp.directory>
-              <default.webxml>${basedir}/src/test/resources/default-web.xml</default.webxml>
+              <derby.stream.error.file>target/derby.log</derby.stream.error.file>
             </systemPropertyVariables>
           </configuration>
         </plugin>
