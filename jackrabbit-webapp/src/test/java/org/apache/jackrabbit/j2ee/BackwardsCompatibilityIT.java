@@ -43,6 +43,7 @@ import junit.framework.TestCase;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+import org.apache.derby.jdbc.EmbeddedDriver;
 import org.apache.jackrabbit.core.RepositoryImpl;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.config.RepositoryConfig;
@@ -62,6 +63,10 @@ public class BackwardsCompatibilityIT extends TestCase {
      */
     private static final Logger log =
         LoggerFactory.getLogger(BackwardsCompatibilityIT.class);
+
+    /** Force loading of the Derby JDBC driver also in Java 5 environments. */
+    @SuppressWarnings("unused")
+    private static final Class<?> driver = EmbeddedDriver.class;
 
     public void testBackwardsCompatibility() throws Exception {
         File target = new File("target/backwards-compatibility-test");
