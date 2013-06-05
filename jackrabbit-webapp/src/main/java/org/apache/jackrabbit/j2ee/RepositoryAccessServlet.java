@@ -59,6 +59,11 @@ public class RepositoryAccessServlet extends HttpServlet {
     private final static String CTX_PARAM_THIS = "repository.access.servlet";
 
     /**
+     * Ugly hack to override the bootstrap file location in the test cases
+     */
+    static String bootstrapOverride = null;
+
+    /**
      * the bootstrap config
      */
     private BootstrapConfig config;
@@ -122,7 +127,10 @@ public class RepositoryAccessServlet extends HttpServlet {
         if (config == null) {
             // check if there is a loadable bootstrap config
             Properties bootstrapProps = new Properties();
-            String bstrp = getServletConfig().getInitParameter(INIT_PARAM_BOOTSTRAP_CONFIG);
+            String bstrp = bootstrapOverride;
+            if (bstrp == null) {
+                bstrp = getServletConfig().getInitParameter(INIT_PARAM_BOOTSTRAP_CONFIG);
+            }
             if (bstrp != null) {
                 // check if it's a web-resource
                 InputStream in = getServletContext().getResourceAsStream(bstrp);

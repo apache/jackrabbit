@@ -16,16 +16,14 @@
  */
 package org.apache.jackrabbit.j2ee;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 
 import junit.framework.TestCase;
 
-import org.apache.catalina.Engine;
-import org.apache.catalina.Host;
-import org.apache.catalina.connector.Connector;
-import org.apache.catalina.core.StandardContext;
-import org.apache.catalina.startup.Embedded;
+import org.apache.catalina.startup.Tomcat;
+import org.apache.commons.io.FileUtils;
 import org.slf4j.bridge.SLF4JBridgeHandler;
 
 import com.gargoylesoftware.htmlunit.WebClient;
@@ -36,42 +34,47 @@ import com.gargoylesoftware.htmlunit.html.HtmlPage;
 
 public class TomcatIT extends TestCase {
 
+    static {
+        SLF4JBridgeHandler.install();
+    }
+
     private URL url;
 
-    private Embedded tomcat;
+    private Tomcat tomcat;
 
     private WebClient client;
 
     protected void setUp() throws Exception {
-        SLF4JBridgeHandler.install();
+        File war = null;
+        for (File f : new File("target").listFiles()) {
+            if (f.isDirectory() && new File(f, "WEB-INF/web.xml").isFile()) {
+                war = f;
+                break;
+            }
+        }
+        assertNotNull(war);
+
+        File bootstrap = new File("target", "bootstrap.properties");
+        bootstrap.delete();
+        RepositoryAccessServlet.bootstrapOverride = bootstrap.getPath();
+        RepositoryStartupServlet.bootstrapOverride = bootstrap.getPath();
+
+        File baseDir = new File("target", "tomcat");
+        FileUtils.deleteQuietly(baseDir);
+
+        File repoDir = new File("target", "repository");
+        FileUtils.deleteQuietly(repoDir);
 
         url = new URL("http://localhost:12856/");
 
-        tomcat = new Embedded();
-        tomcat.setCatalinaBase("tomcat");
-        tomcat.setCatalinaHome("tomcat");
+        tomcat = new Tomcat();
+        tomcat.setSilent(true);
+        tomcat.setBaseDir(baseDir.getPath());
+        tomcat.setHostname(url.getHost());
+        tomcat.setPort(url.getPort());
 
-        Engine engine = tomcat.createEngine();
-        engine.setName("localengine");
-        engine.setDefaultHost(url.getHost());
+        tomcat.addWebapp("", war.getAbsolutePath());
 
-        Host host = tomcat.createHost(url.getHost(), "webapps");
-        host.setAutoDeploy(false);
-        engine.addChild(host);
-
-        String webapp = System.getProperty("webapp.directory");
-        StandardContext context =
-            (StandardContext) tomcat.createContext("", webapp);
-        context.setDefaultWebXml(System.getProperty("default.webxml"));
-        host.addChild(context);
-
-        tomcat.addEngine(engine);
-
-        Connector connector =
-            tomcat.createConnector(url.getHost(), url.getPort(), false);
-        tomcat.addConnector(connector);
-
-        tomcat.setAwait(true);
         tomcat.start();
 
         client = new WebClient();
@@ -93,7 +96,7 @@ public class TomcatIT extends TestCase {
             for (HtmlInput mode : form.getInputsByName("mode")) {
                 if ("new".equals(mode.getValueAttribute())) {
                     for (HtmlInput home : form.getInputsByName("repository_home")) {
-                        home.setValueAttribute("repository");
+                        home.setValueAttribute("target/repository");
                         for (HtmlElement submit : form.getElementsByAttribute("input", "type", "submit")) {
                             return submit.click();
                         }

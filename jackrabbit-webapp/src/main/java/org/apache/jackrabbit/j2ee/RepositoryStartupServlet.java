@@ -163,6 +163,11 @@ public class RepositoryStartupServlet extends AbstractRepositoryServlet {
     public final static String INIT_PARAM_BOOTSTRAP_CONFIG = "bootstrap-config";
 
     /**
+     * Ugly hack to override the bootstrap file location in the test cases
+     */
+    static String bootstrapOverride = null;
+
+    /**
      * the registered repository
      */
     private Repository repository;
@@ -324,7 +329,10 @@ public class RepositoryStartupServlet extends AbstractRepositoryServlet {
     private boolean configure() throws ServletException {
         // check if there is a loadable bootstrap config
         Properties bootstrapProps = new Properties();
-        String bstrp = getServletConfig().getInitParameter(INIT_PARAM_BOOTSTRAP_CONFIG);
+        String bstrp = bootstrapOverride;
+        if (bstrp == null) {
+            bstrp = getServletConfig().getInitParameter(INIT_PARAM_BOOTSTRAP_CONFIG);
+        }
         if (bstrp != null) {
             // check if it's a web-resource
             InputStream in = getServletContext().getResourceAsStream(bstrp);

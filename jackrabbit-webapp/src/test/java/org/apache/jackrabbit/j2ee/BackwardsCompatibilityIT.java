@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.core.integration;
+package org.apache.jackrabbit.j2ee;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -47,13 +47,13 @@ import org.apache.jackrabbit.core.config.RepositoryConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class BackwardsCompatibilityTest extends TestCase {
+public class BackwardsCompatibilityIT extends TestCase {
 
     /**
      * Logger instance
      */
     private static final Logger log =
-        LoggerFactory.getLogger(BackwardsCompatibilityTest.class);
+        LoggerFactory.getLogger(BackwardsCompatibilityIT.class);
 
     public void testBackwardsCompatibility() throws Exception {
         File target = new File("target/backwards-compatibility-test");
@@ -109,6 +109,7 @@ public class BackwardsCompatibilityTest extends TestCase {
         assertUsers(session);
     }
 
+    @SuppressWarnings("deprecation")
     private Node assertVersionable(Node test) throws RepositoryException {
         assertTrue(test.hasNode("versionable"));
         Node versionable = test.getNode("versionable");
@@ -130,6 +131,7 @@ public class BackwardsCompatibilityTest extends TestCase {
         return versionable;
     }
 
+    @SuppressWarnings("deprecation")
     private void assertProperties(Node test, Node versionable)
             throws RepositoryException, PathNotFoundException,
             ValueFormatException, IOException {
@@ -163,6 +165,7 @@ public class BackwardsCompatibilityTest extends TestCase {
         }
     }
 
+    @SuppressWarnings("deprecation")
     private void assertVersionableCopy(Node test, Node versionable)
             throws RepositoryException, IOException {
         test.getSession().getWorkspace().copy(
