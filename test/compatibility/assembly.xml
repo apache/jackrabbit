@@ -64,5 +64,13 @@
       <directory>create22/target/repository</directory>
       <outputDirectory></outputDirectory>
     </fileSet>
+    <fileSet>
+      <directory>create24/target/repository</directory>
+      <outputDirectory></outputDirectory>
+    </fileSet>
+    <fileSet>
+      <directory>create26/target/repository</directory>
+      <outputDirectory></outputDirectory>
+    </fileSet>
   </fileSets>
 </assembly>
