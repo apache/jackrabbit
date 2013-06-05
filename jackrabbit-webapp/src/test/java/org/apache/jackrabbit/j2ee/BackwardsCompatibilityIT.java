@@ -30,6 +30,7 @@ import java.util.zip.ZipFile;
 
 import javax.jcr.Node;
 import javax.jcr.PathNotFoundException;
+import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.SimpleCredentials;
@@ -43,7 +44,14 @@ import junit.framework.TestCase;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.core.RepositoryImpl;
+import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.config.RepositoryConfig;
+import org.apache.jackrabbit.mk.core.MicroKernelImpl;
+import org.apache.jackrabbit.oak.Oak;
+import org.apache.jackrabbit.oak.jcr.Jcr;
+import org.apache.jackrabbit.oak.kernel.KernelNodeStore;
+import org.apache.jackrabbit.oak.spi.state.NodeStore;
+import org.apache.jackrabbit.oak.upgrade.RepositoryUpgrade;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -66,12 +74,17 @@ public class BackwardsCompatibilityIT extends TestCase {
         for (File dir : target.listFiles()) {
             if (dir.isDirectory()) {
                 log.info("Testing backwards compatibility with {}", dir);
-                assertRepository(dir);
+                checkJackrabbitRepository(dir);
+
+                NodeStore store = new KernelNodeStore(new MicroKernelImpl());
+                RepositoryUpgrade.copy(dir, store);
+                checkRepositoryContent(
+                        new Jcr(new Oak(store)).createRepository());
             }
         }
     }
 
-    private void assertRepository(File directory) throws Exception {
+    private void checkJackrabbitRepository(File directory) throws Exception {
         File configuration = new File(directory, "repository.xml");
 
         try {
@@ -79,13 +92,7 @@ public class BackwardsCompatibilityIT extends TestCase {
                     configuration.getPath(), directory.getPath());
             RepositoryImpl repository = RepositoryImpl.create(config);
             try {
-                Session session = repository.login(
-                        new SimpleCredentials("admin", "admin".toCharArray()));
-                try {
-                    assertTestData(session);
-                } finally {
-                    session.logout();
-                }
+                checkRepositoryContent(repository);
             } finally {
                 repository.shutdown();
             }
@@ -93,6 +100,17 @@ public class BackwardsCompatibilityIT extends TestCase {
             String message = "Unable to access repository " + directory;
             log.error(message, e);
             fail(message);
+        }
+    }
+
+    private void checkRepositoryContent(Repository repository)
+            throws Exception {
+        Session session = repository.login(
+                new SimpleCredentials("admin", "admin".toCharArray()));
+        try {
+            assertTestData(session);
+        } finally {
+            session.logout();
         }
     }
 
@@ -104,7 +122,10 @@ public class BackwardsCompatibilityIT extends TestCase {
 
         Node versionable = assertVersionable(test);
         assertProperties(test, versionable);
-        assertVersionableCopy(test, versionable);
+        if (session instanceof SessionImpl) {
+            // FIXME: Not yet supported by Oak
+            assertVersionableCopy(test, versionable);
+        }
         assertLock(test);
         assertUsers(session);
     }
