@@ -80,13 +80,11 @@ public class NodeTypeDefDiffTest extends TestCase {
         // change a property def isMultiple from false to true and requiredType STRING to UNDEFINED
         // remove nt:folder from a node def's requiredPrimaryType constraint
         NodeTypeDefDiff nodeTypeDefDiff = NodeTypeDefDiff.create(oldDef.build(), newDef.build());
-        System.out.println(nodeTypeDefDiff);
         assertTrue(nodeTypeDefDiff.isTrivial());
 
         // change a property def isMultiple from true to false and requiredType UNDEFINED to STRING
         // add nt:folder to a node def's requiredPrimaryType constraint
         nodeTypeDefDiff = NodeTypeDefDiff.create(newDef.build(), oldDef.build());
-        System.out.println(nodeTypeDefDiff);
         assertTrue(nodeTypeDefDiff.isMajor());
     }
 }
