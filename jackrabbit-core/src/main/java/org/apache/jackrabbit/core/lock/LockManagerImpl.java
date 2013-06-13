@@ -185,10 +185,12 @@ public class LockManagerImpl
                     holder = sysSession;
                 }
                 try {
-                    // FIXME: This session access is not thread-safe!
+                    acquire();
                     unlock(holder.getNodeById(id));
                 } catch (RepositoryException e) {
                     log.warn("Unable to expire the lock " + id, e);
+                } finally {
+                    release();
                 }
             }
         }
