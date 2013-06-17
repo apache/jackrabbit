@@ -176,9 +176,8 @@ public class ListenerTracker {
             }
             @Override
             public long getEventDeliveriesPerHour() {
-                long hours = TimeUnit.MILLISECONDS.toHours(
-                        currentTimeMillis() - startTime);
-                return getEventDeliveries() / Math.max(hours, 1);
+                return TimeUnit.HOURS.toMillis(getEventDeliveries())
+                        / Math.max(currentTimeMillis() - startTime, 1);
             }
             @Override
             public long getMicrosecondsPerEventDelivery() {
@@ -191,9 +190,8 @@ public class ListenerTracker {
             }
             @Override
             public long getEventsDeliveredPerHour() {
-                long hours = TimeUnit.MILLISECONDS.toHours(
-                        currentTimeMillis() - startTime);
-                return getEventsDelivered() / Math.max(hours, 1);
+                return TimeUnit.HOURS.toMillis(getEventsDelivered())
+                        / Math.max(currentTimeMillis() - startTime, 1);
             }
             @Override
             public long getMicrosecondsPerEventDelivered() {
