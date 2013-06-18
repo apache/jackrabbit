@@ -228,6 +228,34 @@ public class ListenerTracker {
 
     @Override
     public String toString() {
+        StringBuilder builder = new StringBuilder();
+        if (absPath != null) {
+            builder.append(absPath);
+        }
+        if (isDeep) {
+            builder.append("//*");
+        } else {
+            builder.append("/*");
+        }
+        builder.append('[');
+        builder.append(Integer.toBinaryString(eventTypes));
+        builder.append('b');
+        if (uuid != null) {
+            for (String id : uuid) {
+                builder.append(", ");
+                builder.append(id);
+            }
+        }
+        if (nodeTypeName != null) {
+            for (String name : nodeTypeName) {
+                builder.append(", ");
+                builder.append(name);
+            }
+        }
+        if (noLocal) {
+            builder.append(", local");
+        }
+        builder.append(']');
         return listener.getClass().getSimpleName();
     }
 
