@@ -79,6 +79,27 @@ class EventTracker implements Event {
         return false;
     }
 
+    @Override
+    public String toString() {
+        return event.toString();
+    }
+
+    @Override
+    public int hashCode() {
+        return event.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        if (this == other) {
+            return true;
+        } else if (other instanceof EventTracker) {
+            return event.equals(other);
+        } else {
+            return false;
+        }
+    }
+
     //---------------------------------------------------------< Event >--
 
     @Override
