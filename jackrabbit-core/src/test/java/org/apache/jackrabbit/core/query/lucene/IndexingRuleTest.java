@@ -95,6 +95,8 @@ public class IndexingRuleTest extends AbstractIndexingTest {
         Node node = testRootNode.addNode(nodeName1, NT_UNSTRUCTURED);
         node.setProperty("rule", "excerpt");
         node.setProperty("title", "Apache Jackrabbit");
+        // the value below is for testing https://issues.apache.org/jira/browse/JCR-3610
+        node.setProperty("foo", "<some>markup</some>");
         node.setProperty("text", "Jackrabbit is a JCR implementation");
         testRootNode.save();
         String stmt = "/jcr:root" + testRootNode.getPath() +
