@@ -1645,16 +1645,21 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             log.debug("No lock present on node " + saveGetIdString(nodeId, sessionInfo));
             return null;
         }
-        if (activeLock.isDeep() && parentId != null) {
-            // try if lock is inherited
+
+        NodeId holder = null;
+        String lockroot = activeLock.getLockroot();
+        if (activeLock.getLockroot() != null) {
+            holder = uriResolver.getNodeId(lockroot, sessionInfo);
+        }
+
+        if (activeLock.isDeep() && holder == null && parentId != null) {
+            // deep lock, parent known, but holder is not
             LockInfo pLockInfo = getLockInfo(sessionInfo, parentId);
             if (pLockInfo != null) {
                 return pLockInfo;
             }
         }
-        // no deep lock or parentID == null or lock is not present on parent
-        // -> nodeID is lockHolding Id.
-        return new LockInfoImpl(activeLock, nodeId, ((SessionInfoImpl)sessionInfo).getAllLockTokens());
+        return new LockInfoImpl(activeLock, holder == null ? nodeId : holder, ((SessionInfoImpl)sessionInfo).getAllLockTokens());
     }
 
     /**

@@ -104,7 +104,7 @@ public interface DavConstants {
     public static final String XML_OWNER = "owner";
     /**
      * The <code>lockroot</code> XML element
-     * @see <a href="http://www.webdav.org/specs/rfc4918.html#ELEMENT_lockroot">RFC 4818</a>
+     * @see <a href="http://www.webdav.org/specs/rfc4918.html#ELEMENT_lockroot">RFC 4918</a>
      */
     public static final String XML_LOCKROOT = "lockroot";
 
