@@ -54,6 +54,7 @@ import org.apache.jackrabbit.server.io.IOUtil;
 import org.apache.jackrabbit.util.Text;
 import org.apache.jackrabbit.webdav.DavCompliance;
 import org.apache.jackrabbit.webdav.DavException;
+import org.apache.jackrabbit.webdav.DavLocatorFactory;
 import org.apache.jackrabbit.webdav.DavResource;
 import org.apache.jackrabbit.webdav.DavResourceFactory;
 import org.apache.jackrabbit.webdav.DavResourceIterator;
@@ -626,6 +627,12 @@ public class DefaultItemCollection extends AbstractItemResource
                 } else if (((Node) item).isLocked()) {
                     Lock jcrLock = ((Node) item).getLock();
                     lock = new JcrActiveLock(jcrLock);
+                    DavResourceLocator locator = super.getLocator();
+                    String lockroot = locator
+                            .getFactory()
+                            .createResourceLocator(locator.getPrefix(), locator.getWorkspacePath(), jcrLock.getNode().getPath(),
+                                    false).getHref(false);
+                    lock.setLockroot(lockroot);
                 }
             } catch (AccessDeniedException e) {
                 log.error("Error while accessing resource lock: "+e.getMessage());

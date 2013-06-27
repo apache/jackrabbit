@@ -653,6 +653,11 @@ public class DavResourceImpl implements DavResource, BindableResource, JcrConsta
                     Lock jcrLock = node.getLock();
                     if (jcrLock != null && jcrLock.isLive()) {
                         lock = new JcrActiveLock(jcrLock);
+                        String lockroot = locator
+                                .getFactory()
+                                .createResourceLocator(locator.getPrefix(), locator.getWorkspacePath(),
+                                        jcrLock.getNode().getPath(), false).getHref(false);
+                        lock.setLockroot(lockroot);
                     }
                 }
             } catch (RepositoryException e) {
