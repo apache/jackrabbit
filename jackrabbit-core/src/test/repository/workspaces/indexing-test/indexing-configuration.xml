@@ -34,6 +34,7 @@
 
     <index-rule nodeType="nt:unstructured" condition="@rule='excerpt'">
         <property useInExcerpt="false">title</property>
+        <property>foo</property><!-- needed to test JCR-3610 -->
         <property>text</property>
     </index-rule>
 

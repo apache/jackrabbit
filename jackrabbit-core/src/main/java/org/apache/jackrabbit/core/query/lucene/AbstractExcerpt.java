@@ -118,24 +118,6 @@ public abstract class AbstractExcerpt implements HighlightingExcerptProvider {
                 }
                 text.append(separator);
                 text.append(fields[i].stringValue());
-                // this is a hack! in general multiple fields with the same
-                // name are handled properly, that is, offset and position is
-                // calculated correctly. there is one case however where
-                // the offset gets wrong:
-                // if a term text ends with characters that are considered noise
-                // then the offset of the next field will be off by the number
-                // of noise characters.
-                // therefore we delete noise characters at the end of the text.
-                // this process is required for all but the last field
-                if (i < fields.length - 1) {
-                    for (int j = text.length() - 1; j >= 0; j--) {
-                        if (Character.isLetterOrDigit(text.charAt(j))) {
-                            break;
-                        } else {
-                            text.deleteCharAt(j);
-                        }
-                    }
-                }
                 separator = " ";
             }
             TermFreqVector tfv = reader.getTermFreqVector(
