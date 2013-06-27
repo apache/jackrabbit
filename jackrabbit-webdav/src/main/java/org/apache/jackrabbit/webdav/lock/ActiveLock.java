@@ -96,7 +96,7 @@ public interface ActiveLock extends XmlSerializable {
      * Returns the lockroot.
      *
      * @return lockroot
-     * @see <a href="http://www.webdav.org/specs/rfc4918.html#ELEMENT_lockroot">RFC 4818</a>
+     * @see <a href="http://www.webdav.org/specs/rfc4918.html#ELEMENT_lockroot">RFC 4918</a>
      */
     public String getLockroot();
 
@@ -104,7 +104,7 @@ public interface ActiveLock extends XmlSerializable {
      * Set the lockroot.
      *
      * @param lockroot
-     * @see <a href="http://www.webdav.org/specs/rfc4918.html#ELEMENT_lockroot">RFC 4818</a>
+     * @see <a href="http://www.webdav.org/specs/rfc4918.html#ELEMENT_lockroot">RFC 4918</a>
      */
     public void setLockroot(String lockroot);
 

@@ -27,7 +27,7 @@ import org.w3c.dom.Element;
 public abstract class AbstractActiveLock implements ActiveLock, DavConstants {
 
     private String lockroot;
-    
+
     /**
      * @see ActiveLock#getLockroot()
      */
@@ -44,7 +44,7 @@ public abstract class AbstractActiveLock implements ActiveLock, DavConstants {
 
     /**
      * Returns the default Xml representation of the 'activelock' element
-     * as defined by RFC 2518.
+     * as defined by RFC 4918.
      *
      * @return Xml representation
      * @param document
