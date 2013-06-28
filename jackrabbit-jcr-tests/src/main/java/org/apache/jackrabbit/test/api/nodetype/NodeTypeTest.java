@@ -21,9 +21,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
-import org.apache.jackrabbit.test.AbstractJCRTest;
-import org.apache.jackrabbit.test.NotExecutableException;
-
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
@@ -35,6 +32,11 @@ import javax.jcr.nodetype.NodeTypeIterator;
 import javax.jcr.nodetype.NodeTypeManager;
 import javax.jcr.nodetype.PropertyDefinition;
 
+import org.apache.jackrabbit.test.AbstractJCRTest;
+import org.apache.jackrabbit.test.NotExecutableException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * Tests if the node type hierarchy is correctly mapped to the methods
  * defined in {@link NodeType}.
@@ -45,6 +47,8 @@ import javax.jcr.nodetype.PropertyDefinition;
  * @keywords level1
  */
 public class NodeTypeTest extends AbstractJCRTest {
+
+    private static Logger log = LoggerFactory.getLogger(NodeTypeTest.class);
 
     /**
      * The session we use for the tests
@@ -286,6 +290,35 @@ public class NodeTypeTest extends AbstractJCRTest {
                 assertTrue("isNodeType(String nodeTypeName) must return true if " +
                         "NodeType is a subtype of nodeTypeName",
                         type.isNodeType(ntBase));
+            }
+        }
+    }
+
+    /**
+     * Like {@link #testIsNodeType()}, but using qualified names
+     */
+    public void testIsNodeTypeQName() throws RepositoryException {
+
+        // find a primary node type but not "nt:base"
+        NodeTypeIterator types = manager.getPrimaryNodeTypes();
+        while (types.hasNext()) {
+            NodeType type = types.nextNodeType();
+            String typename = type.getName();
+            String ns = session.getNamespaceURI(AbstractJCRTest.getPrefix(typename));
+            if (ns.length() != 0 && !ns.contains(":")) {
+                log.warn("Node type '" + typename + "' has invalid namespace '" + ns
+                        + "', thus skipping testIsNodeTypeQName() for this type");
+            } else {
+                String qn = AbstractJCRTest.getQualifiedName(session, typename);
+                assertTrue("isNodeType(String nodeTypeName) must return true if " + "NodeType is nodeTypeName",
+                        type.isNodeType(qn));
+            }
+            if (type.isMixin()) {
+                assertFalse("isNodeType(String nodeTypeName) must return " + "false if NodeType is not a subtype of "
+                        + "nodeTypeName", type.isNodeType(NodeType.NT_BASE));
+            } else {
+                assertTrue("isNodeType(String nodeTypeName) must return true if " + "NodeType is a subtype of nodeTypeName",
+                        type.isNodeType(NodeType.NT_BASE));
             }
         }
     }
