@@ -15,8 +15,8 @@
  * limitations under the License.
  */
 
-<testns3 = "test-namespace3">
-<testns4 = "test-namespace4">
+<testns3 = "http://ns.example.org/test-namespace3">
+<testns4 = "http://ns.example.org/test-namespace4">
 
 [testns3:emptyNodeType] > nt:base 
 

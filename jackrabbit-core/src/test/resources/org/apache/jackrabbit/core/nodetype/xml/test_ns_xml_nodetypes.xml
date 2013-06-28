@@ -17,8 +17,8 @@
  * limitations under the License.
  */
  -->
-<nodeTypes xmlns:testns1="test-namespace1"
-           xmlns:testns2="test-namespace2"
+<nodeTypes xmlns:testns1="http://ns.example.org/test-namespace1"
+           xmlns:testns2="http://ns.example.org/test-namespace2"
            xmlns:nt="http://www.jcp.org/jcr/nt/1.0">
 
   <nodeType name="testns2:emptyNodeType"

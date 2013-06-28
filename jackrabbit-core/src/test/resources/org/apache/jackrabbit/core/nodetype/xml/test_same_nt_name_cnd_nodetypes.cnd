@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-<testns6 = "test-namespace6">
+<testns6 = "http://ns.example.org/test-namespace6">
 
 [testns6:sameNodeType] > nt:base
 

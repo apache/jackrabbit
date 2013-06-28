@@ -17,7 +17,7 @@
  * limitations under the License.
  */
  -->
-<nodeTypes xmlns:testns5="test-namespace5"
+<nodeTypes xmlns:testns5="http://ns.example.org/test-namespace5"
            xmlns:nt="http://www.jcp.org/jcr/nt/1.0">
 
   <nodeType name="testns5:sameNodeType"
