@@ -641,7 +641,7 @@ public abstract class AbstractJCRTest extends JUnitTest {
         String prefix = getPrefix(jcrName);
         String namespace = session.getNamespaceURI(prefix);
         String localname = getLocalName(jcrName);
-        return (namespace.length() > 0 ? "{" + namespace + "}" : "") + localname;
+        return (namespace.length() > 0 ? "{" + namespace + "}" : "{}") + localname;
     }
 
     /**
