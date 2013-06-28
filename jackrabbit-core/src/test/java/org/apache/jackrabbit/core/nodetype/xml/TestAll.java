@@ -248,7 +248,7 @@ public class TestAll extends AbstractJCRTest {
     /** Test for namespace registration on node type import. */
     public void testImportXMLNodeTypes() throws Exception {
         try {
-            superuser.getNamespacePrefix("test-namespace2");
+            superuser.getNamespacePrefix("http://ns.example.org/test-namespace2");
             // Ignore test case, node type and namespace already registered
         } catch (NamespaceException e1) {
             // Namespace testns2 not yet registered
@@ -258,7 +258,7 @@ public class TestAll extends AbstractJCRTest {
                     TestAll.class.getResourceAsStream(TEST_NS_XML_NODETYPES),
                     JackrabbitNodeTypeManager.TEXT_XML);
             try {
-                superuser.getNamespacePrefix("test-namespace2");
+                superuser.getNamespacePrefix("http://ns.example.org/test-namespace2");
             } catch (NamespaceException e2) {
                 fail("xml test2 namespace not registered");
             }
@@ -286,14 +286,14 @@ public class TestAll extends AbstractJCRTest {
     /** Test for namespace registration on node type import. */
     public void testImportCNDNodeTypes() throws Exception {
         try {
-            superuser.getNamespacePrefix("test-namespace3");
+            superuser.getNamespacePrefix("http://ns.example.org/test-namespace3");
             // Ignore test case, node type and namespace already registered
         } catch (NamespaceException e1) {
             Reader cnd = new InputStreamReader(TestAll.class.getResourceAsStream(TEST_NS_CND_NODETYPES));
             CndImporter.registerNodeTypes(cnd, superuser);
             cnd.close();
             try {
-                superuser.getNamespacePrefix("test-namespace3");
+                superuser.getNamespacePrefix("http://ns.example.org/test-namespace3");
             } catch (NamespaceException e2) {
                 fail("cnd test3 namespace not registered");
             }
