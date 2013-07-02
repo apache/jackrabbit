@@ -104,6 +104,25 @@ public class ListenerTracker {
         // do nothing
     }
 
+    /**
+     * Called just before the {@link EventListener#onEvent(EventIterator)}
+     * method is called. The default implementation of this method does
+     * nothing, but subclasses can override it to add custom processing.
+     */
+    protected void beforeEventDelivery() {
+        // do nothing
+    }
+
+    /**
+     * Called just after the {@link EventListener#onEvent(EventIterator)}
+     * method has been called (even if the call threw an exception). The
+     * default implementation of this method does nothing, but subclasses
+     * can override it to add custom processing.
+     */
+    protected void afterEventDelivery() {
+        // do nothing
+    }
+
     public EventListener getTrackedListener() {
         return new EventListener() {
             @Override
@@ -111,6 +130,7 @@ public class ListenerTracker {
                 eventDeliveries.incrementAndGet();
                 long start = nanoTime();
                 try {
+                    beforeEventDelivery();
                     listener.onEvent(new EventIteratorAdapter(events) {
                         @Override
                         public Object next() {
@@ -128,6 +148,7 @@ public class ListenerTracker {
                         }
                     });
                 } finally {
+                    afterEventDelivery();
                     eventDeliveryTime.addAndGet(nanoTime() - start);
                 }
             }
