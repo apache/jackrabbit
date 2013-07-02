@@ -164,8 +164,10 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
             String msg = "failed to retrieve state of intermediary node for entry: " 
                     + entry.getId() + ", path: " + path.getString();
             logItemStateException(msg, e);
-            throw new RepositoryException(msg, e);
+            log.debug(msg);
         }
+        // JCR-3617: fall back to super class in case of ItemStateException
+        return super.resolvePath(path, typesAllowed);
     }
 
     /**
