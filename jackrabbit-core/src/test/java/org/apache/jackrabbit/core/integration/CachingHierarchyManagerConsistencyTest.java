@@ -47,10 +47,6 @@ public class CachingHierarchyManagerConsistencyTest extends AbstractJCRTest {
     private static final String TEST_PATH = "/my/test/path";
 
     public void testObservation() throws Exception {
-        if (true) {
-            // currently disabled
-            return;
-        }
         final List<Exception> exceptions = new ArrayList<Exception>();
         Thread writer = new Thread(new Runnable() {
             public void run() {
