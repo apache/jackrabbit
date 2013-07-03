@@ -164,8 +164,12 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
             String msg = "failed to retrieve state of intermediary node for entry: " 
                     + entry.getId() + ", path: " + path.getString();
             logItemStateException(msg, e);
-            throw new RepositoryException(msg, e);
+            log.debug(msg);
+            // probably stale cache entry -> evict
+            evictAll(entry.getId(), true);
         }
+        // JCR-3617: fall back to super class in case of ItemStateException
+        return super.resolvePath(path, typesAllowed);
     }
 
     /**
@@ -562,7 +566,7 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
             PathMap.Element<LRUEntry> element = pathCache.put(path);
             if (element.get() != null) {
                 if (!id.equals(((LRUEntry) element.get()).getId())) {
-                    log.warn("overwriting PathMap.Element");
+                    log.debug("overwriting PathMap.Element");
                 }
             }
             LRUEntry entry = (LRUEntry) idCache.get(id);
