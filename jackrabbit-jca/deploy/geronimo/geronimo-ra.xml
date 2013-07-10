@@ -39,13 +39,13 @@
       <connection-definition>
         <connectionfactory-interface>javax.jcr.Repository</connectionfactory-interface>
         <connectiondefinition-instance>
-          <name>crx</name>
-          <config-property-setting name="RepositoryURI">jndi:///?org.apache.jackrabbit.repository.jndi.name=crx&amp;java.naming.factory.initial=com.day.util.jndi.provider.MemoryInitialContextFactory&amp;java.naming.provider.url=http://jcr.day.com</config-property-setting>
+          <name>jackrabbit</name>
+          <config-property-setting name="RepositoryURI">jcr-jackrabbit://jackrabbit</config-property-setting>
           <connectionmanager>
             <local-transaction/>
             <single-pool>
               <max-size>10</max-size>
-              <min-size>2</min-size>
+              <min-size>0</min-size>
               <match-one/>
             </single-pool>
           </connectionmanager>
