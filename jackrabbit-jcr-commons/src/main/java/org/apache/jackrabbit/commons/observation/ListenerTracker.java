@@ -277,7 +277,7 @@ public class ListenerTracker {
             builder.append(", local");
         }
         builder.append(']');
-        return listener.getClass().getSimpleName();
+        return builder.toString();
     }
 
     //-----------------------------------------------------------< private >--
