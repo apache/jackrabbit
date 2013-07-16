@@ -40,16 +40,18 @@ public class MixinTest extends AbstractObservationTest {
 
         EventResult propertyAddedListener = new EventResult(log);
         addEventListener(propertyAddedListener, new String[]{mixReferenceable}, Event.PROPERTY_ADDED);
+        try {
+            testRootNode.getNode(nodeName1).setProperty(propertyName1, "test");
+            testRootNode.getNode(nodeName2).setProperty(propertyName1, "test");
+            testRootNode.getNode(nodeName3).setProperty(propertyName1, "test");
+            testRootNode.save();
 
-        testRootNode.getNode(nodeName1).setProperty(propertyName1, "test");
-        testRootNode.getNode(nodeName2).setProperty(propertyName1, "test");
-        testRootNode.getNode(nodeName3).setProperty(propertyName1, "test");
-        testRootNode.save();
-
-        removeEventListener(propertyAddedListener);
-        Event[] added = propertyAddedListener.getEvents(DEFAULT_WAIT_TIMEOUT);
-        checkPropertyAdded(added, new String[]{nodeName1 + "/" + propertyName1,
-                                               nodeName3 + "/" + propertyName1});
+            Event[] added = propertyAddedListener.getEvents(DEFAULT_WAIT_TIMEOUT);
+            checkPropertyAdded(added, new String[]{nodeName1 + "/" + propertyName1,
+                                                   nodeName3 + "/" + propertyName1});
+        } finally {
+            removeEventListener(propertyAddedListener);
+        }
     }
 
     /**
@@ -63,17 +65,19 @@ public class MixinTest extends AbstractObservationTest {
 
         EventResult propertyAddedListener = new EventResult(log);
         addEventListener(propertyAddedListener, new String[]{mixReferenceable, mixLockable}, Event.PROPERTY_ADDED);
+        try {
+            testRootNode.getNode(nodeName1).setProperty(propertyName1, "test");
+            testRootNode.getNode(nodeName2).setProperty(propertyName1, "test");
+            testRootNode.getNode(nodeName3).setProperty(propertyName1, "test");
+            testRootNode.save();
 
-        testRootNode.getNode(nodeName1).setProperty(propertyName1, "test");
-        testRootNode.getNode(nodeName2).setProperty(propertyName1, "test");
-        testRootNode.getNode(nodeName3).setProperty(propertyName1, "test");
-        testRootNode.save();
-
-        removeEventListener(propertyAddedListener);
-        Event[] added = propertyAddedListener.getEvents(DEFAULT_WAIT_TIMEOUT);
-        checkPropertyAdded(added, new String[]{nodeName1 + "/" + propertyName1,
-                                               nodeName2 + "/" + propertyName1,
-                                               nodeName3 + "/" + propertyName1});
+            Event[] added = propertyAddedListener.getEvents(DEFAULT_WAIT_TIMEOUT);
+            checkPropertyAdded(added, new String[]{nodeName1 + "/" + propertyName1,
+                                                   nodeName2 + "/" + propertyName1,
+                                                   nodeName3 + "/" + propertyName1});
+        } finally {
+            removeEventListener(propertyAddedListener);
+        }
     }
 
     /**
@@ -91,16 +95,18 @@ public class MixinTest extends AbstractObservationTest {
 
         EventResult propertyAddedListener = new EventResult(log);
         addEventListener(propertyAddedListener, new String[]{mixReferenceable}, Event.PROPERTY_ADDED);
+        try {
+            node1.setProperty(propertyName1, "test");
+            node2.setProperty(propertyName1, "test");
+            node3.setProperty(propertyName1, "test");
+            testRootNode.save();
 
-        node1.setProperty(propertyName1, "test");
-        node2.setProperty(propertyName1, "test");
-        node3.setProperty(propertyName1, "test");
-        testRootNode.save();
-
-        removeEventListener(propertyAddedListener);
-        Event[] added = propertyAddedListener.getEvents(DEFAULT_WAIT_TIMEOUT);
-        checkPropertyAdded(added, new String[]{nodeName1 + "/" + propertyName1,
-                                               nodeName3 + "/" + propertyName1});
+            Event[] added = propertyAddedListener.getEvents(DEFAULT_WAIT_TIMEOUT);
+            checkPropertyAdded(added, new String[]{nodeName1 + "/" + propertyName1,
+                                                   nodeName3 + "/" + propertyName1});
+        } finally {
+            removeEventListener(propertyAddedListener);
+        }
     }
 
     /**
@@ -117,13 +123,15 @@ public class MixinTest extends AbstractObservationTest {
         EventResult propertyAddedListener = new EventResult(log);
         // mix:versionable is derived from mix:referenceable
         addEventListener(propertyAddedListener, new String[]{mixReferenceable}, Event.PROPERTY_ADDED);
+        try {
+            node1.setProperty(propertyName1, "test");
+            testRootNode.save();
 
-        node1.setProperty(propertyName1, "test");
-        testRootNode.save();
-
-        removeEventListener(propertyAddedListener);
-        Event[] added = propertyAddedListener.getEvents(DEFAULT_WAIT_TIMEOUT);
-        checkPropertyAdded(added, new String[]{nodeName1 + "/" + propertyName1});
+            Event[] added = propertyAddedListener.getEvents(DEFAULT_WAIT_TIMEOUT);
+            checkPropertyAdded(added, new String[]{nodeName1 + "/" + propertyName1});
+        } finally {
+            removeEventListener(propertyAddedListener);
+        }
     }
 
     /**
