@@ -64,11 +64,10 @@ public class BackwardsCompatibilityIT extends TestCase {
     private static final Logger log =
         LoggerFactory.getLogger(BackwardsCompatibilityIT.class);
 
-    /** Force loading of the Derby JDBC driver also in Java 5 environments. */
-    @SuppressWarnings("unused")
-    private static final Class<?> driver = EmbeddedDriver.class;
-
     public void testBackwardsCompatibility() throws Exception {
+        // Force loading of the Derby JDBC driver
+        new EmbeddedDriver();
+
         File target = new File("target/backwards-compatibility-test");
         FileUtils.deleteDirectory(target);
         target.mkdirs();
