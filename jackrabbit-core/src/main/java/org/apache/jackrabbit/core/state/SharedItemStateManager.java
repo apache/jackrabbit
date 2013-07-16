@@ -750,7 +750,7 @@ public class SharedItemStateManager
                 eventChannel.updatePrepared(this);
 
                 if (VALIDATE_HIERARCHY) {
-                    log.info("Validating change-set hierarchy");
+                    log.debug("Validating change-set hierarchy");
                     try {
                         validateHierarchy(local);
                     } catch (ItemStateException e) {
