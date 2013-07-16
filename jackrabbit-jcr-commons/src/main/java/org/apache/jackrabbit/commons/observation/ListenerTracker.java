@@ -274,7 +274,7 @@ public class ListenerTracker {
             }
         }
         if (noLocal) {
-            builder.append(", local");
+            builder.append(", no local");
         }
         builder.append(']');
         return builder.toString();
