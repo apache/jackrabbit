@@ -53,7 +53,9 @@ public class RepositoryStubImpl extends JackrabbitRepositoryStub {
         if (connector == null) {
             connector = new SocketConnector();
             connector.setHost("localhost");
-            connector.setPort(0);
+            String pvalue = System.getProperty("org.apache.jackrabbit.jcr2dav.RepositoryStubImpl.port", "0");
+            int port = pvalue.equals("") ? 0 : Integer.parseInt(pvalue);
+            connector.setPort(port);
         }
 
         if (server == null) {

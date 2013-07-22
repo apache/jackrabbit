@@ -48,6 +48,10 @@
                   <value>true</value>
                 </property>
                 <property>
+                  <name>org.apache.jackrabbit.jcr2dav.RepositoryStubImpl.port</name>
+                  <value>${org.apache.jackrabbit.jcr2dav.RepositoryStubImpl.port}</value>
+                </property>
+                <property>
                   <name>known.issues</name>
                   <value>
                       <!--
