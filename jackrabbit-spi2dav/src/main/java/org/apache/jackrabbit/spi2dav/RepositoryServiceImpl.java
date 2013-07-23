@@ -324,7 +324,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         this.itemInfoCacheSize = itemInfoCacheSize;
 
         try {
-            URI repositoryUri = new URI((uri.endsWith("/")) ? uri : uri+"/", true);
+            URI repositoryUri = computeRepositoryUri(uri);
             hostConfig = new HostConfiguration();
             hostConfig.setHost(repositoryUri);
 
@@ -2655,6 +2655,26 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
                  method.releaseConnection();
              }
          }
+    }
+
+    /**
+     * Compute the repository URI (while dealing with trailing / and port number
+     * defaulting)
+     */
+    public static URI computeRepositoryUri(String uri) throws URIException {
+        URI repositoryUri = new URI((uri.endsWith("/")) ? uri : uri + "/", true);
+        // workaround for JCR-3228: normalize default port numbers because of
+        // the weak URI matching code elsewhere (the remote server is unlikely
+        // to include the port number in URIs when it's the default for the
+        // protocol)
+        boolean useDefaultPort = ("http".equalsIgnoreCase(repositoryUri.getScheme()) && repositoryUri.getPort() == 80)
+                || (("https".equalsIgnoreCase(repositoryUri.getScheme()) && repositoryUri.getPort() == 443));
+        if (useDefaultPort) {
+            repositoryUri = new URI(repositoryUri.getScheme(), repositoryUri.getUserinfo(), repositoryUri.getHost(), -1,
+                    repositoryUri.getPath(), repositoryUri.getQuery(), repositoryUri.getFragment());
+        }
+
+        return repositoryUri;
     }
 
     /**
