@@ -406,9 +406,22 @@ public class NodeTypeTest extends AbstractJCRTest {
 
         }
 
+        Node skippedFolder = null;
         NodeIterator nodes = node.getNodes();
         while (nodes.hasNext()) {
-            Node returnedNode = locateNodeWithPrimaryItem(nodes.nextNode());
+            Node testNode = nodes.nextNode();
+            if (testNode.getPath().equals("/jcr:system")) {
+                skippedFolder = testNode;
+            } else {
+                Node returnedNode = locateNodeWithPrimaryItem(testNode);
+                if (returnedNode != null) {
+                    return returnedNode;
+                }
+            }
+        }
+        // check jcr:system if we skipped it before
+        if (skippedFolder != null) {
+            Node returnedNode = locateNodeWithPrimaryItem(skippedFolder);
             if (returnedNode != null) {
                 return returnedNode;
             }
