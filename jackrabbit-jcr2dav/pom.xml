@@ -32,6 +32,10 @@
   <artifactId>jackrabbit-jcr2dav</artifactId>
   <name>Jackrabbit JCR to WebDAV</name>
 
+  <properties>
+    <org.apache.jackrabbit.jcr2dav.RepositoryStubImpl.port>0</org.apache.jackrabbit.jcr2dav.RepositoryStubImpl.port>
+  </properties>
+
   <profiles>
     <profile>
       <id>integrationTesting</id>
