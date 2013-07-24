@@ -167,7 +167,7 @@ public class DirListingExportHandler implements IOHandler, PropertyHandler {
                             writer.print("/");
                         }
                         writer.print("\">");
-                        writer.print(label);
+                        writer.print(Text.encodeIllegalXMLCharacters(label));
                         writer.print("</a></li>");
                     }
                 }
@@ -227,7 +227,7 @@ public class DirListingExportHandler implements IOHandler, PropertyHandler {
                     writer.print("<li><a href=\"");
                     writer.print(child.getHref());
                     writer.print("\">");
-                    writer.print(label);
+                    writer.print(Text.encodeIllegalXMLCharacters(label));
                     writer.print("</a></li>");
                 }
                 writer.print("</ul><hr size=\"1\"><em>Powered by <a href=\"");
