@@ -16,19 +16,19 @@
  */
 package org.apache.jackrabbit.test.api;
 
+import javax.jcr.InvalidItemStateException;
+import javax.jcr.ItemExistsException;
+import javax.jcr.Node;
+import javax.jcr.PathNotFoundException;
+import javax.jcr.Repository;
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
+import javax.jcr.Value;
+import javax.jcr.lock.LockException;
+import javax.jcr.nodetype.ConstraintViolationException;
+
 import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.apache.jackrabbit.test.NotExecutableException;
-
-import javax.jcr.nodetype.ConstraintViolationException;
-import javax.jcr.RepositoryException;
-import javax.jcr.Node;
-import javax.jcr.ItemExistsException;
-import javax.jcr.PathNotFoundException;
-import javax.jcr.Session;
-import javax.jcr.InvalidItemStateException;
-import javax.jcr.Value;
-import javax.jcr.Repository;
-import javax.jcr.lock.LockException;
 
 /**
  * <code>SessionTest</code> contains all test cases for the
@@ -678,13 +678,14 @@ public class SessionTest extends AbstractJCRTest {
     public void testHasCapability() throws RepositoryException {
         Session roSession = getHelper().getReadOnlySession();
         try {
-            Node root = roSession.getRootNode();
+            Node testRoot = roSession.getNode(testRootNode.getPath());
             Object[] args = new Object[] { "foo" };
-            if (!roSession.hasCapability("addNode",  root, args)) {
+            if (!roSession.hasCapability("addNode",  testRoot, args)) {
                 // if hasCapability() returns false, the actual method call
                 // is expected to fail
                 try {
-                    root.addNode("foo");
+                    testRoot.addNode("foo");
+                    roSession.save();
                     fail("Node.addNode() should fail according to Session.hasCapability()");
                 } catch (RepositoryException e) {
                     // expected 
