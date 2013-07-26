@@ -26,6 +26,7 @@ import org.apache.jackrabbit.spi.QValue;
 import javax.jcr.RepositoryException;
 import javax.jcr.UnsupportedRepositoryOperationException;
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.Collections;
 import java.util.HashMap;
@@ -193,7 +194,7 @@ public class EventImpl implements Event, Serializable {
             .append("itemId: ").append(itemId).append(", ")
             .append("parentId: ").append(parentId).append(", ")
             .append("primaryNodeTypeName: ").append(primaryNodeTypeName).append(", ")
-            .append("mixinTypeNames: ").append(mixinTypeNames).append(", ")
+            .append("mixinTypeNames: ").append(Arrays.toString(mixinTypeNames)).append(", ")
             .append("userId").append(userId)
             .append("]")
             .toString();

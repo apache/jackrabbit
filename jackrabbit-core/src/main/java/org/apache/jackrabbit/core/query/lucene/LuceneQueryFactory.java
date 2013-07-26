@@ -306,7 +306,7 @@ public class LuceneQueryFactory {
     /**
      * Creates a lucene query for the given QOM full text search.
      *
-     * @param constraint the full text search constraint.
+     * @param fts the full text search constraint.
      * @return the lucene query for the given constraint.
      * @throws RepositoryException if an error occurs while creating the query.
      */

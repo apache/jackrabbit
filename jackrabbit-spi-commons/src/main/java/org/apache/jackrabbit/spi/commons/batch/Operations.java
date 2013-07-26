@@ -229,7 +229,7 @@ public final class Operations {
 
         @Override
         public String toString() {
-            return "AddProperty[" + parentId + ", " + propertyName + ", " + values + "]";
+            return "AddProperty[" + parentId + ", " + propertyName + ", " + Arrays.toString(values) + "]";
         }
 
         @Override
@@ -546,7 +546,7 @@ public final class Operations {
 
         @Override
         public String toString() {
-            return "SetMixins[" + nodeId + ", " + mixinNodeTypeNames + "]";
+            return "SetMixins[" + nodeId + ", " + Arrays.toString(mixinNodeTypeNames) + "]";
         }
 
         @Override
@@ -715,7 +715,7 @@ public final class Operations {
 
         @Override
         public String toString() {
-            return "SetValue[" + propertyId + ", " + values + "]";
+            return "SetValue[" + propertyId + ", " + Arrays.toString(values) + "]";
         }
 
         @Override
