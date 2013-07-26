@@ -154,7 +154,7 @@ public class NodeTypeDefinitionImpl implements NodeTypeDefinition {
             } catch (NamespaceException e) {
                 // should never get here
                 log.error("invalid node type name: " + stNames[i], e);
-                dstn[i] = stNames.toString();
+                dstn[i] = stNames[i].toString();
             }
         }
         return dstn;
