@@ -18,8 +18,11 @@ package org.apache.jackrabbit.jcr2spi.lock;
 
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
+import javax.jcr.Session;
 import javax.jcr.lock.Lock;
 import javax.jcr.lock.LockException;
+import javax.jcr.lock.LockManager;
+import javax.jcr.nodetype.NodeType;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -214,6 +217,66 @@ public class OpenScopedLockTest extends AbstractLockTest {
 
             // and rethrow
             throw e;
+        }
+    }
+
+    public void testIsLockedWhileAnotherLockIsPresent() throws Exception {
+
+        Session s = lockedNode.getSession();
+        LockManager lm = s.getWorkspace().getLockManager();
+
+        String l2token = null;
+        String l2path = null;
+
+        String path = lockedNode.getPath();
+        String lockToken = lock.getLockToken();
+        assertTrue(lm.isLocked(path));
+        assertTrue(lm.holdsLock(path));
+        lm.removeLockToken(lockToken);
+
+        Session anotherSession = null;
+        try {
+            // check lock is seen by new session
+            anotherSession = getHelper().getSuperuserSession();
+            LockManager anotherLockManager = anotherSession.getWorkspace().getLockManager();
+            assertTrue(anotherLockManager.isLocked(path));
+            assertTrue(anotherLockManager.holdsLock(path));
+
+            // create a second lock
+            Node l2node = anotherSession.getNode(path).getParent().addNode("second-lock");
+            l2node.addMixin(NodeType.MIX_LOCKABLE);
+            anotherSession.save();
+            l2path = l2node.getPath();
+
+            Lock l2 = anotherLockManager.lock(l2path, false, false, Long.MAX_VALUE, "foobar");
+            l2token = l2.getLockToken();
+            assertNotNull(l2token);
+            anotherSession.save();
+
+            anotherSession.refresh(false);
+            assertTrue(anotherLockManager.isLocked(path));
+            assertTrue(anotherLockManager.holdsLock(path));
+
+            // try to unlock the lock obtained from the other session
+            anotherLockManager.addLockToken(lockToken);
+            anotherLockManager.unlock(path);
+            anotherSession.save();
+
+            // unlock "my" lock
+            anotherLockManager.unlock(l2path);
+            anotherSession.save();
+            l2path = null;
+        }
+        finally {
+            if (anotherSession != null) {
+                anotherSession.logout();
+            }
+            if (l2path != null && l2token != null) {
+                superuser.refresh(false);
+                LockManager sulm = superuser.getWorkspace().getLockManager();
+                sulm.addLockToken(l2token);
+                sulm.unlock(l2path);
+            }
         }
     }
 }
