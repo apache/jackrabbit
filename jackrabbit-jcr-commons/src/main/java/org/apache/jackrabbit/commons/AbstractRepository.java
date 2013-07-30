@@ -17,9 +17,12 @@
 package org.apache.jackrabbit.commons;
 
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import javax.jcr.Credentials;
+import javax.jcr.LoginException;
+import javax.jcr.NoSuchWorkspaceException;
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
@@ -98,6 +101,24 @@ public abstract class AbstractRepository implements Repository {
      */
     public boolean isStandardDescriptor(String key) {
         return STANDARD_KEYS.contains(key);
+    }
+
+    /**
+     * This implementation directly delegates to {@link #login(javax.jcr.Credentials, String)}
+     * not supporting any attributes.
+     *
+     * @param credentials the credentials of the user
+     * @param workspaceName the name of a workspace
+     * @param attributes implementation-specific session attributes
+     * @return a valid session for the user to access the repository.
+     * @throws javax.jcr.LoginException
+     * @throws javax.jcr.NoSuchWorkspaceException
+     * @throws RepositoryException
+     */
+    public Session login(
+            Credentials credentials, String workspaceName, Map<String, Object> attributes)
+            throws LoginException, NoSuchWorkspaceException, RepositoryException {
+        return login(credentials, workspaceName);
     }
 
     /**
