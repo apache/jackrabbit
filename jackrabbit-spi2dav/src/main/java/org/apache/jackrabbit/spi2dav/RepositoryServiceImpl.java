@@ -1516,8 +1516,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         try {
             String uri = getItemUri(nodeId, sessionInfo);
             method = new PropFindMethod(uri, nameSet, DEPTH_0);
-            // TODO: not correct. pass tokens in order avoid new session to be created TOBEFIXED
-            initMethod(method, sessionInfo, true);
+            initMethod(method, sessionInfo, false);
 
             getClient(sessionInfo).executeMethod(method);
             method.checkSuccess();
