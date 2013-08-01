@@ -265,7 +265,11 @@ class InternalFrozenNodeImpl extends InternalFreezeImpl
                 // ignore frozen properties
                 if (!propName.equals(NameConstants.JCR_PRIMARYTYPE)
                         && !propName.equals(NameConstants.JCR_MIXINTYPES)
-                        && !propName.equals(NameConstants.JCR_UUID)) {
+                        && !propName.equals(NameConstants.JCR_UUID)
+                        // JCR-3635: should never occur in normal content...
+                        && !propName.equals(NameConstants.JCR_FROZENPRIMARYTYPE)
+                        && !propName.equals(NameConstants.JCR_FROZENMIXINTYPES)
+                        && !propName.equals(NameConstants.JCR_FROZENUUID)) {
                     node.copyFrom(prop);
                 }
             }
