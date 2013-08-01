@@ -33,6 +33,7 @@ public class TestAll extends TestCase {
     public static Test suite() {
         TestSuite suite = new TestSuite("Version tests");
         suite.addTestSuite(CheckinRemoveVersionTest.class);
+        suite.addTestSuite(CopyFrozenUuidTest.class);
         suite.addTestSuite(InternalVersionHistoryImplTest.class);
         suite.addTestSuite(RemoveVersionLabelTest.class);
         suite.addTestSuite(RestoreTest.class);
