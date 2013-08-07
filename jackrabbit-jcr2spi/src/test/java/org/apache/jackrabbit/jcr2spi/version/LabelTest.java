@@ -27,7 +27,7 @@ import org.apache.jackrabbit.test.api.version.VersionLabelTest;
 public class LabelTest extends VersionLabelTest {
 
     public void testRemovedLabel2() throws RepositoryException {
-        vHistory.addVersionLabel(rootVersion.getName(), versionLabel, false);
+        vHistory.addVersionLabel(version.getName(), versionLabel, false);
         vHistory.removeVersionLabel(versionLabel);
 
         List<String> labels = Arrays.asList(vHistory.getVersionLabels());
@@ -35,15 +35,15 @@ public class LabelTest extends VersionLabelTest {
     }
 
     public void testRemovedLabel3() throws RepositoryException {
-        vHistory.addVersionLabel(rootVersion.getName(), versionLabel, false);
+        vHistory.addVersionLabel(version.getName(), versionLabel, false);
         vHistory.removeVersionLabel(versionLabel);
 
-        List<String> labels = Arrays.asList(vHistory.getVersionLabels(rootVersion));
+        List<String> labels = Arrays.asList(vHistory.getVersionLabels(version));
         assertFalse("VersionHistory.getVersionLabels(Version) must not return a removed label.",labels.contains(versionLabel));
     }
 
     public void testMoveLabel2() throws RepositoryException {
-        vHistory.addVersionLabel(rootVersion.getName(), versionLabel, false);
+        vHistory.addVersionLabel(version.getName(), versionLabel, false);
 
         versionableNode.checkout();
         Version v = versionableNode.checkin();
@@ -57,10 +57,10 @@ public class LabelTest extends VersionLabelTest {
         versionableNode.checkout();
         Version v = versionableNode.checkin();
 
-        vHistory.addVersionLabel(rootVersion.getName(), versionLabel, false);
+        vHistory.addVersionLabel(version.getName(), versionLabel, false);
         vHistory.addVersionLabel(v.getName(), versionLabel, true);
 
-        List<String> labels = Arrays.asList(vHistory.getVersionLabels(rootVersion));
+        List<String> labels = Arrays.asList(vHistory.getVersionLabels(version));
         assertFalse(labels.contains(versionLabel));
     }
 
@@ -68,7 +68,7 @@ public class LabelTest extends VersionLabelTest {
         versionableNode.checkout();
         Version v = versionableNode.checkin();
 
-        vHistory.addVersionLabel(rootVersion.getName(), versionLabel, false);
+        vHistory.addVersionLabel(version.getName(), versionLabel, false);
         vHistory.addVersionLabel(v.getName(), versionLabel, true);
 
         Version v2 = vHistory.getVersionByLabel(versionLabel);
