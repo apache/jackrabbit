@@ -52,7 +52,7 @@ public class VersionLabelTest extends AbstractVersionTest {
     protected String versionLabel2 = "bar";
 
     protected VersionHistory vHistory;
-    protected Version rootVersion;
+    protected Version version;
 
     /**
      * JCR Name jcr:versionLabels using the namespace resolver of the current session.
@@ -65,7 +65,9 @@ public class VersionLabelTest extends AbstractVersionTest {
         jcrVersionLabels = superuser.getNamespacePrefix(NS_JCR_URI) + ":versionLabels";
 
         vHistory = versionableNode.getSession().getWorkspace().getVersionManager().getVersionHistory(versionableNode.getPath());
-        rootVersion = vHistory.getRootVersion();
+        VersionManager vMgr = superuser.getWorkspace().getVersionManager();
+        vMgr.checkpoint(versionableNode.getPath());
+        version = vMgr.getBaseVersion(versionableNode.getPath());
 
         if (vHistory.hasVersionLabel(versionLabel)) {
             fail("Version label '" + versionLabel + "' is already present in this version history. Label test cannot be performed.");
@@ -85,7 +87,7 @@ public class VersionLabelTest extends AbstractVersionTest {
             // ignore
         }
         vHistory = null;
-        rootVersion = null;
+        version = null;
         super.tearDown();
     }
 
@@ -98,7 +100,7 @@ public class VersionLabelTest extends AbstractVersionTest {
      */
     public void testAddVersionLabel() throws RepositoryException {
         int initialLength = vHistory.getVersionLabels().length;
-        vHistory.addVersionLabel(rootVersion.getName(), versionLabel, false);
+        vHistory.addVersionLabel(version.getName(), versionLabel, false);
         String[] labels = vHistory.getVersionLabels();
 
         assertEquals("A version label that has been successfully added must increes the total number of version labels available in the history.", initialLength + 1, labels.length);
@@ -113,7 +115,7 @@ public class VersionLabelTest extends AbstractVersionTest {
      * @see VersionHistory#addVersionLabel(String, String, boolean)
      */
     public void testAddVersionLabel2() throws RepositoryException {
-        vHistory.addVersionLabel(rootVersion.getName(), versionLabel, false);
+        vHistory.addVersionLabel(version.getName(), versionLabel, false);
         String[] labels = vHistory.getVersionLabels();
         boolean found = false;
         for (int i = 0; i < labels.length; i++) {
@@ -135,13 +137,13 @@ public class VersionLabelTest extends AbstractVersionTest {
      */
     @SuppressWarnings("deprecation")
     public void testAddVersionCheckVersionLabelsNode() throws RepositoryException {
-        vHistory.addVersionLabel(rootVersion.getName(), versionLabel, false);
+        vHistory.addVersionLabel(version.getName(), versionLabel, false);
 
         // get jcr:versionLabels node
         vHistory = versionableNode.getVersionHistory();
         Node versionLabelNode = vHistory.getNode(jcrVersionLabels);
 
-        assertTrue("The version label that has been successfully added must be present in the node '" + jcrVersionLabels + "'.", versionLabelNode.getProperty(versionLabel).getString().equals(rootVersion.getUUID()));
+        assertTrue("The version label that has been successfully added must be present in the node '" + jcrVersionLabels + "'.", versionLabelNode.getProperty(versionLabel).getString().equals(version.getUUID()));
     }
 
     /**
@@ -153,13 +155,13 @@ public class VersionLabelTest extends AbstractVersionTest {
      * @see VersionHistory#addVersionLabel(String, String, boolean)
      */
     public void testAddVersionCheckVersionLabelsNodeJcr2() throws RepositoryException {
-        vHistory.addVersionLabel(rootVersion.getName(), versionLabel, false);
+        vHistory.addVersionLabel(version.getName(), versionLabel, false);
 
         // get jcr:versionLabels node
         vHistory = versionableNode.getSession().getWorkspace().getVersionManager().getVersionHistory(versionableNode.getPath());
         Node versionLabelNode = vHistory.getNode(jcrVersionLabels);
 
-        assertTrue("The version label that has been successfully added must be present in the node '" + jcrVersionLabels + "'.", versionLabelNode.getProperty(versionLabel).getString().equals(rootVersion.getUUID()));
+        assertTrue("The version label that has been successfully added must be present in the node '" + jcrVersionLabels + "'.", versionLabelNode.getProperty(versionLabel).getString().equals(version.getUUID()));
     }
 
     /**
@@ -170,7 +172,7 @@ public class VersionLabelTest extends AbstractVersionTest {
      * @see VersionHistory#hasVersionLabel(String)
      */
     public void testHasVersionLabel() throws RepositoryException {
-        vHistory.addVersionLabel(rootVersion.getName(), versionLabel, false);
+        vHistory.addVersionLabel(version.getName(), versionLabel, false);
         assertTrue("VersionHistory.hasVersionLabel(String) must return true if the label has been sucessfully added.", vHistory.hasVersionLabel(versionLabel));
     }
 
@@ -182,8 +184,8 @@ public class VersionLabelTest extends AbstractVersionTest {
      * @see VersionHistory#hasVersionLabel(javax.jcr.version.Version, String)
      */
     public void testHasVersionLabelForVersion() throws RepositoryException {
-        vHistory.addVersionLabel(rootVersion.getName(), versionLabel, false);
-        assertTrue("VersionHistory.hasVersionLabel(Version, String) must return true if the label has been sucessfully added.", vHistory.hasVersionLabel(rootVersion, versionLabel));
+        vHistory.addVersionLabel(version.getName(), versionLabel, false);
+        assertTrue("VersionHistory.hasVersionLabel(Version, String) must return true if the label has been sucessfully added.", vHistory.hasVersionLabel(version, versionLabel));
     }
 
     /**
@@ -193,8 +195,8 @@ public class VersionLabelTest extends AbstractVersionTest {
      */
     public void testAddMultipleVersionLabels() throws RepositoryException {
         try {
-            vHistory.addVersionLabel(rootVersion.getName(), versionLabel, false);
-            vHistory.addVersionLabel(rootVersion.getName(), versionLabel2, false);
+            vHistory.addVersionLabel(version.getName(), versionLabel, false);
+            vHistory.addVersionLabel(version.getName(), versionLabel2, false);
         } catch (VersionException e) {
             fail("Adding multiple distict version labels to a version must be allowed.");
         }
@@ -208,7 +210,7 @@ public class VersionLabelTest extends AbstractVersionTest {
      */
     @SuppressWarnings("deprecation")
     public void testAddDuplicateVersionLabel() throws RepositoryException {
-        vHistory.addVersionLabel(rootVersion.getName(), versionLabel, false);
+        vHistory.addVersionLabel(version.getName(), versionLabel, false);
         try {
             versionableNode.checkout();
             Version v = versionableNode.checkin();
@@ -227,7 +229,7 @@ public class VersionLabelTest extends AbstractVersionTest {
      * @throws RepositoryException
      */
     public void testAddDuplicateVersionLabelJcr2() throws RepositoryException {
-        vHistory.addVersionLabel(rootVersion.getName(), versionLabel, false);
+        vHistory.addVersionLabel(version.getName(), versionLabel, false);
         try {
             VersionManager versionManager = versionableNode.getSession().getWorkspace().getVersionManager();
             String path = versionableNode.getPath();
@@ -249,7 +251,7 @@ public class VersionLabelTest extends AbstractVersionTest {
      */
     @SuppressWarnings("deprecation")
     public void testMoveLabel() throws RepositoryException {
-        vHistory.addVersionLabel(rootVersion.getName(), versionLabel, false);
+        vHistory.addVersionLabel(version.getName(), versionLabel, false);
         try {
             versionableNode.checkout();
             Version v = versionableNode.checkin();
@@ -271,7 +273,7 @@ public class VersionLabelTest extends AbstractVersionTest {
      * @see VersionHistory#addVersionLabel(String, String, boolean)  with boolan flag equals true.
      */
     public void testMoveLabelJcr2() throws RepositoryException {
-        vHistory.addVersionLabel(rootVersion.getName(), versionLabel, false);
+        vHistory.addVersionLabel(version.getName(), versionLabel, false);
         try {
             VersionManager versionManager = versionableNode.getSession().getWorkspace().getVersionManager();
             String path = versionableNode.getPath();
@@ -314,7 +316,7 @@ public class VersionLabelTest extends AbstractVersionTest {
      */
     public void testRemoveLabel() throws RepositoryException {
 
-        vHistory.addVersionLabel(rootVersion.getName(), versionLabel, false);
+        vHistory.addVersionLabel(version.getName(), versionLabel, false);
         vHistory.removeVersionLabel(versionLabel);
 
         assertFalse("VersionHistory.removeLabel(String) must remove the version label if it exists (has successfully been added before).", vHistory.hasVersionLabel(versionLabel));
@@ -328,10 +330,10 @@ public class VersionLabelTest extends AbstractVersionTest {
      * @see VersionHistory#getVersionByLabel(String)
      */
     public void testGetVersionByLabel() throws RepositoryException {
-        vHistory.addVersionLabel(rootVersion.getName(), versionLabel, true);
+        vHistory.addVersionLabel(version.getName(), versionLabel, true);
         Version v = vHistory.getVersionByLabel(versionLabel);
 
-        assertTrue("VersionHistory.getVersionByLabel(String) must retrieve the particular version that was specified in addVersionLabel call.", v.isSame(rootVersion));
+        assertTrue("VersionHistory.getVersionByLabel(String) must retrieve the particular version that was specified in addVersionLabel call.", v.isSame(version));
     }
 
     /**
@@ -349,7 +351,7 @@ public class VersionLabelTest extends AbstractVersionTest {
 
         vHistory.addVersionLabel(v.getName(), versionLabel, false);
         testLabels.add(versionLabel);
-        vHistory.addVersionLabel(rootVersion.getName(), versionLabel2, false);
+        vHistory.addVersionLabel(version.getName(), versionLabel2, false);
         testLabels.add(versionLabel2);
 
         String[] labels = vHistory.getVersionLabels();
@@ -381,7 +383,7 @@ public class VersionLabelTest extends AbstractVersionTest {
 
         vHistory.addVersionLabel(v.getName(), versionLabel, false);
         testLabels.add(versionLabel);
-        vHistory.addVersionLabel(rootVersion.getName(), versionLabel2, false);
+        vHistory.addVersionLabel(version.getName(), versionLabel2, false);
         testLabels.add(versionLabel2);
 
         String[] labels = vHistory.getVersionLabels();
@@ -406,9 +408,9 @@ public class VersionLabelTest extends AbstractVersionTest {
     @SuppressWarnings("deprecation")
     public void testGetVersionLabelsForVersion() throws RepositoryException {
 
-        Set<String> testLabels = new HashSet<String>(Arrays.asList(vHistory.getVersionLabels(rootVersion)));
+        Set<String> testLabels = new HashSet<String>(Arrays.asList(vHistory.getVersionLabels(version)));
 
-        vHistory.addVersionLabel(rootVersion.getName(), versionLabel, false);
+        vHistory.addVersionLabel(version.getName(), versionLabel, false);
         testLabels.add(versionLabel);
 
         // add a version label to another version (not added to the testLabel set)
@@ -416,7 +418,7 @@ public class VersionLabelTest extends AbstractVersionTest {
         Version v = versionableNode.checkin();
         vHistory.addVersionLabel(v.getName(), versionLabel2, false);
 
-        String[] labels = vHistory.getVersionLabels(rootVersion);
+        String[] labels = vHistory.getVersionLabels(version);
         for (int i = 0; i < labels.length; i++) {
             String l = labels[i];
             if (!testLabels.contains(l)) {
@@ -437,9 +439,9 @@ public class VersionLabelTest extends AbstractVersionTest {
      */
     public void testGetVersionLabelsForVersionJcr2() throws RepositoryException {
 
-        Set<String> testLabels = new HashSet<String>(Arrays.asList(vHistory.getVersionLabels(rootVersion)));
+        Set<String> testLabels = new HashSet<String>(Arrays.asList(vHistory.getVersionLabels(version)));
 
-        vHistory.addVersionLabel(rootVersion.getName(), versionLabel, false);
+        vHistory.addVersionLabel(version.getName(), versionLabel, false);
         testLabels.add(versionLabel);
 
         // add a version label to another version (not added to the testLabel set)
@@ -449,7 +451,7 @@ public class VersionLabelTest extends AbstractVersionTest {
         Version v = versionManager.checkin(path);
         vHistory.addVersionLabel(v.getName(), versionLabel2, false);
 
-        String[] labels = vHistory.getVersionLabels(rootVersion);
+        String[] labels = vHistory.getVersionLabels(version);
         for (int i = 0; i < labels.length; i++) {
             String l = labels[i];
             if (!testLabels.contains(l)) {
