@@ -45,7 +45,7 @@ public class SessionMoveVersionExceptionTest extends AbstractVersionTest {
         try {
             // try to move the sub node this should throw an VersionException
             // either instantly or upon save()
-            superuser.move(movingNode.getPath(), nonVersionableNode.getPath());
+            superuser.move(movingNode.getPath(), nonVersionableNode.getPath() + "/" + nodeName1);
             superuser.save();
             fail("Moving a node using Session.move() where parent node is " +
                     "versionable and checked in should throw a VersionException!");

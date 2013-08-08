@@ -43,8 +43,8 @@ public class WorkspaceMoveVersionExceptionTest extends AbstractVersionTest {
         // check the parent node in
         versionableNode.checkin();
         try {
-            // try to move the sub node this should throw an VersionException either instantly or upon save()
-            superuser.getWorkspace().move(movingNode.getPath(), nonVersionableNode.getPath());
+            // try to move the sub node this should throw an VersionException
+            superuser.getWorkspace().move(movingNode.getPath(), nonVersionableNode.getPath() + "/" + nodeName1);
             fail("Moving a node using Workspace.move() where parent node is " +
                     "versionable and checked in should throw a VersionException!");
         } catch (VersionException e) {
@@ -62,7 +62,7 @@ public class WorkspaceMoveVersionExceptionTest extends AbstractVersionTest {
         versionableNode.checkin();
 
         try {
-            // try to move the sub node this should throw an VersionException either instantly or upon save()
+            // try to move the sub node this should throw an VersionException
             superuser.getWorkspace().move(nonVersionableNode.getPath(), versionableNode.getPath() + "/" + nodeName1);
             fail("Moving a node using Workspace.move() where destination parent " +
                     "node is versionable and checked in should throw a VersionException!");
