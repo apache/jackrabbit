@@ -205,6 +205,11 @@ public abstract class AbstractEntryTest extends AbstractAccessControlTest {
             public Value getRestriction(String restrictionName) {
                 return null;
             }
+
+            public Value[] getRestrictions(String restrictionName) throws RepositoryException {
+                return null;
+            }
+
             public Principal getPrincipal() {
                 return testPrincipal;
             }
@@ -288,6 +293,11 @@ public abstract class AbstractEntryTest extends AbstractAccessControlTest {
             public Value getRestriction(String restrictionName) {
                 return null;
             }
+
+            public Value[] getRestrictions(String restrictionName) throws RepositoryException {
+                return null;
+            }
+
             public Principal getPrincipal() {
                 return testPrincipal;
             }

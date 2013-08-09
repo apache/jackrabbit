@@ -18,6 +18,7 @@ package org.apache.jackrabbit.api.security;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
+import javax.jcr.ValueFormatException;
 import javax.jcr.security.AccessControlEntry;
 
 /**
@@ -43,13 +44,35 @@ public interface JackrabbitAccessControlEntry extends AccessControlEntry {
 
     /**
      * Return the value of the restriction with the specified name or
-     * <code>null</code> if no such restriction exists.
+     * <code>null</code> if no such restriction exists. In case the restriction
+     * with the specified name contains multiple value this method will call
+     * {@code ValueFormatException}.
      *
      * @param restrictionName The of the restriction as obtained through
      * {@link #getRestrictionNames()}.
      * @return value of the restriction with the specified name or
-     * <code>null</code> if no such restriction exists
+     * <code>null</code> if no such restriction exists.
+     * @throws ValueFormatException If the restriction with the specified name
+     * contains multiple values.
      * @throws RepositoryException if an error occurs.
+     * @see {@link #getRestrictions(String)}
      */
-    Value getRestriction(String restrictionName) throws RepositoryException;
+    Value getRestriction(String restrictionName) throws ValueFormatException, RepositoryException;
+
+    /**
+     * Return the values of the restriction with the specified name or
+     * <code>null</code> if no such restriction exists. For restrictions that
+     * contain just a single value this method is expected to return an array
+     * with a single element even if the underlying implementation stored the
+     * restriction in single-value JCR property.
+     *
+     * @param restrictionName The of the restriction as obtained through
+     * {@link #getRestrictionNames()}.
+     * @return the values of the restriction with the specified name as an array
+     * or <code>null</code> if no such restriction exists. The array may contain
+     * zero, one or multiple values.
+     * @throws RepositoryException if an error occurs.
+     * @see {@link #getRestriction(String)}
+     */
+    Value[] getRestrictions(String restrictionName) throws RepositoryException;
 }

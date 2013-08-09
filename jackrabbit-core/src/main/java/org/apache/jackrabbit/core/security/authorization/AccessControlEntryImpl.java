@@ -23,6 +23,7 @@ import org.apache.jackrabbit.value.ValueHelper;
 
 import javax.jcr.NamespaceException;
 import javax.jcr.RepositoryException;
+import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.Value;
 import javax.jcr.ValueFactory;
 import javax.jcr.security.AccessControlException;
@@ -297,6 +298,13 @@ public abstract class AccessControlEntryImpl implements JackrabbitAccessControlE
      */
     public Value getRestriction(String restrictionName) throws RepositoryException {
         return getRestriction(getResolver().getQName(restrictionName));
+    }
+
+    /**
+     * @see org.apache.jackrabbit.api.security.JackrabbitAccessControlEntry#getRestrictions(String)
+     */
+    public Value[] getRestrictions(String restrictionName) throws RepositoryException {
+        throw new UnsupportedRepositoryOperationException("Not implemented. Please use Jackrabbit OAK to get support for multi-valued restrictions.");
     }
 
     //-------------------------------------------------------------< Object >---
