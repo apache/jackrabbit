@@ -284,7 +284,7 @@ public class Jcr2spiRepositoryFactory implements RepositoryFactory {
                     return CacheBehaviour.OBSERVATION;
                 }
                 else {
-                    log.error("Invalid valid for CacheBehaviour: {}", PARAM_CACHE_BEHAVIOR, cacheBehaviour);
+                    log.error("Invalid valid for CacheBehaviour: {} {}", PARAM_CACHE_BEHAVIOR, cacheBehaviour);
                     throw new RepositoryException("Invalid value for CacheBehaviour: " + cacheBehaviour);
                 }
             }

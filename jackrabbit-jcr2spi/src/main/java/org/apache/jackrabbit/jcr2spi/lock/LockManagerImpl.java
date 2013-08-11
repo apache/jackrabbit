@@ -309,7 +309,7 @@ public class LockManagerImpl implements LockStateManager, SessionListener {
             // error occurred.
             // for this case, assume that no lock exists and delegate final
             // validation to the spi-implementation.
-            log.warn("Error while accessing lock holding NodeState", e.getMessage());
+            log.warn("Error while accessing lock holding NodeState: {}", e.getMessage());
             return null;
         }
     }
@@ -597,7 +597,7 @@ public class LockManagerImpl implements LockStateManager, SessionListener {
                     PropertyState ps = lockHoldingState.getPropertyState(NameConstants.JCR_LOCKISDEEP);
                     ps.addListener(this);
                 } catch (RepositoryException e) {
-                    log.warn("Unable to retrieve jcr:isDeep property after lock creation.", e.getMessage());
+                    log.warn("Unable to retrieve jcr:isDeep property after lock creation. {}", e.getMessage());
                 }
             }
         }
@@ -833,7 +833,7 @@ public class LockManagerImpl implements LockStateManager, SessionListener {
                     lockState.reloadLockInfo();
                 } catch (RepositoryException e) {
                     // may occur if session has been logged out. rather throw?
-                    log.warn("Unable to determine lock status.", e.getMessage());
+                    log.warn("Unable to determine lock status. {}", e.getMessage());
                 }
             } // else: nothing to do.
         }

@@ -1001,7 +1001,7 @@ public class RepositoryImpl extends AbstractRepository
             AccessControlContext acc = AccessController.getContext();
             subject = Subject.getSubject(acc);
         } catch (SecurityException e) {
-            log.warn("Can't check for preauthentication. Reason:", e.getMessage());
+            log.warn("Can't check for preauthentication. Reason: {}", e.getMessage());
         }
         if (subject == null) {
             log.debug("No preauthenticated subject found -> return null.");

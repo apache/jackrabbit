@@ -278,7 +278,7 @@ public class UserAccessControlProvider extends AbstractAccessControlProvider
             }
         } catch (RepositoryException e) {
             // should never get here
-            log.error("Internal error while retrieving user principal", e.getMessage());
+            log.error("Internal error while retrieving user principal: {}", e.getMessage());
         }
         // none of the principals in the set is assigned to a User.
         return null;
@@ -291,7 +291,7 @@ public class UserAccessControlProvider extends AbstractAccessControlProvider
                 String path = principal.getPath();
                 userNode = (NodeImpl) session.getNode(path);
             } catch (RepositoryException e) {
-                log.warn("Error while retrieving user node.", e.getMessage());
+                log.warn("Error while retrieving user node. {}", e.getMessage());
             }
         }
         return userNode;
@@ -343,7 +343,7 @@ public class UserAccessControlProvider extends AbstractAccessControlProvider
             }
         } catch (RepositoryException e) {
             // should never get here
-            log.error("Error while initializing user/group administrators", e.getMessage());
+            log.error("Error while initializing user/group administrators: ()", e.getMessage());
         }
         return null;
     }
@@ -527,7 +527,7 @@ public class UserAccessControlProvider extends AbstractAccessControlProvider
             try {
                 observationMgr.removeEventListener(this);
             } catch (RepositoryException e) {
-                log.error("Internal error: ", e.getMessage());
+                log.error("Internal error: {}", e.getMessage());
             }
             super.close();
         }
@@ -592,7 +592,7 @@ public class UserAccessControlProvider extends AbstractAccessControlProvider
                     } // else: not interested.
                 } catch (RepositoryException e) {
                     // should never get here
-                    log.warn("Internal error ", e.getMessage());
+                    log.warn("Internal error: {}", e.getMessage());
                     clearCache();
                 }
             }

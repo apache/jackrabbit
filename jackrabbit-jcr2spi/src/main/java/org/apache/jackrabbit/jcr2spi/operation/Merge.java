@@ -91,7 +91,7 @@ public class Merge extends AbstractOperation {
                     vhe.invalidate(true);
                 }
             } catch (RepositoryException e) {
-                log.warn("Error while retrieving VersionHistory entry:", e.getMessage());
+                log.warn("Error while retrieving VersionHistory entry: {}", e.getMessage());
             }
             nodeState.getHierarchyEntry().invalidate(true);
         }

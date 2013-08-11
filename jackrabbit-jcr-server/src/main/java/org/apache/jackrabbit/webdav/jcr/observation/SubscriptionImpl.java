@@ -520,19 +520,19 @@ public class SubscriptionImpl implements Subscription, ObservationConstants, Eve
                 try {
                     DomUtil.addChildElement(eventElem, XML_EVENTUSERDATA, NAMESPACE, event.getUserData());
                 } catch (RepositoryException e) {
-                    log.error("Internal error while retrieving event user data.", e.getMessage());
+                    log.error("Internal error while retrieving event user data. {}", e.getMessage());
                 }
                 // time stamp
                 try {
                     DomUtil.addChildElement(eventElem, XML_EVENTDATE, NAMESPACE, String.valueOf(event.getDate()));
                 } catch (RepositoryException e) {
-                    log.error("Internal error while retrieving event date.", e.getMessage());
+                    log.error("Internal error while retrieving event date. {}", e.getMessage());
                 }
                 // identifier
                 try {
                     DomUtil.addChildElement(eventElem, XML_EVENTIDENTIFIER, NAMESPACE, event.getIdentifier());
                 } catch (RepositoryException e) {
-                    log.error("Internal error while retrieving event identifier.", e.getMessage());
+                    log.error("Internal error while retrieving event identifier. {}", e.getMessage());
                 }
                 // info
                 Element info = DomUtil.addChildElement(eventElem, XML_EVENTINFO, NAMESPACE);
@@ -548,7 +548,7 @@ public class SubscriptionImpl implements Subscription, ObservationConstants, Eve
                         }
                     }
                 } catch (RepositoryException e) {
-                    log.error("Internal error while retrieving event info.", e.getMessage());
+                    log.error("Internal error while retrieving event info. {}", e.getMessage());
                 }
             }
             return bundle;

@@ -158,7 +158,7 @@ class ACLTemplate extends AbstractACLTemplate {
                 // add the entry omitting any validation.
                 entries.add(ace);
             } catch (RepositoryException e) {
-                log.debug("Failed to build ACE from content.", e.getMessage());
+                log.debug("Failed to build ACE from content. {}", e.getMessage());
             }
         }
     }

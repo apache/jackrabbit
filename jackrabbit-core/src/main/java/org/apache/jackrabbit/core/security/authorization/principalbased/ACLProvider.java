@@ -205,7 +205,7 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
             Query q = qm.createQuery(stmt.toString(), Query.XPATH);
             result = q.execute();
         } catch (RepositoryException e) {
-            log.error("Unexpected error while searching effective policies.", e.getMessage());
+            log.error("Unexpected error while searching effective policies. {}", e.getMessage());
             throw new UnsupportedOperationException("Retrieve effective policies at absPath '" +jcrPath+ "' not supported.", e);
         }
 
@@ -267,7 +267,7 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
                 return new ACLEditor((SessionImpl) editingSession, session.getQPath(acRoot.getPath()));
             } catch (RepositoryException e) {
                 // should never get here
-                log.error("Internal error: ", e.getMessage());
+                log.error("Internal error: {}", e.getMessage());
             }
         }
 
@@ -522,7 +522,7 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
                 }
             } catch (RepositoryException e) {
                 // should never get here
-                log.warn("Internal error: ", e.getMessage());
+                log.warn("Internal error: {}", e.getMessage());
             }
         }
     }

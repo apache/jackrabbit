@@ -188,7 +188,7 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
             Query q = qm.createQuery(stmt.toString(), Query.XPATH);
             result = q.execute();
         } catch (RepositoryException e) {
-            log.error("Unexpected error while searching effective policies.", e.getMessage());            
+            log.error("Unexpected error while searching effective policies. {}", e.getMessage());            
             throw new UnsupportedOperationException("Retrieve effective policies for set of principals not supported.", e);
         }
 

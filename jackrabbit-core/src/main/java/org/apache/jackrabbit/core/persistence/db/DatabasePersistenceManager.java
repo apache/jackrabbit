@@ -898,7 +898,7 @@ public abstract class DatabasePersistenceManager extends AbstractPersistenceMana
                     // no more trials, re-throw
                     throw se;
                 }
-                log.warn("execute failed, about to reconnect...", se.getMessage());
+                log.warn("execute failed, about to reconnect... {}", se.getMessage());
 
                 // try to reconnect
                 if (reestablishConnection()) {

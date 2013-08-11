@@ -210,7 +210,7 @@ class EntriesCache extends AccessControlObserver implements AccessControlConstan
 
             } catch (RepositoryException e) {
                 // should never get here
-                log.warn("Internal error: ", e.getMessage());
+                log.warn("Internal error: {}", e.getMessage());
             }
 
         }

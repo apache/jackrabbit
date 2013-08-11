@@ -1656,7 +1656,7 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
                         log.warn("Reverting didn't restore the correct index.");
                     }
                 } catch (RepositoryException e) {
-                    log.warn("Unable to calculate index.", e.getMessage());
+                    log.warn("Unable to calculate index. {}", e.getMessage());
                 }
             }
             revertInfo = null;

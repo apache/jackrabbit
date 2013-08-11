@@ -97,7 +97,7 @@ public class JcrActiveLock extends AbstractActiveLock implements ActiveLock, Dav
             return LockTokenMapper.getDavLocktoken(lock);
         } catch (RepositoryException e) {
             // should never get here
-            log.warn("Unexpected error while retrieving node identifier for building a DAV specific lock token.",
+            log.warn("Unexpected error while retrieving node identifier for building a DAV specific lock token. {}",
                     e.getMessage());
             return null;
         }
