@@ -160,7 +160,7 @@ public class DefaultLoginModule extends AbstractLoginModule {
                 tokenExpiration = Long.parseLong(options.get(PARAM_TOKEN_EXPIRATION).toString());
                 log.debug("- Token expiration -> '" + tokenExpiration + "'");
             } catch (NumberFormatException e) {
-                log.warn("Unabled to parse token expiration: ", e.getMessage());
+                log.warn("Unabled to parse token expiration: {}", e.getMessage());
             }
         }
     }
@@ -192,7 +192,7 @@ public class DefaultLoginModule extends AbstractLoginModule {
             }
         } catch (RepositoryException e) {
             // should not get here
-            log.warn("Error while retrieving principal.", e.getMessage());
+            log.warn("Error while retrieving principal. {}", e.getMessage());
         }
         return principal;
     }

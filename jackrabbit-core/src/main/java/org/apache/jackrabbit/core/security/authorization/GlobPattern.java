@@ -121,7 +121,7 @@ public final class GlobPattern {
             // TODO: missing proper impl
             return matches(itemToMatch.getPath());
         } catch (RepositoryException e) {
-            log.error("Unable to determine match.", e.getMessage());
+            log.error("Unable to determine match. {}", e.getMessage());
             return false;
         }
     }

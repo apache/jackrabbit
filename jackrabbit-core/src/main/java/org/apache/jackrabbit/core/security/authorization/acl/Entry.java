@@ -105,7 +105,7 @@ class Entry implements AccessControlConstants {
                 Entry ace = new Entry(nodeId, principalName, isGroupEntry, privilegeMgr.getBits(privNames), isAllow, path, globValue);
                 entries.add(ace);
             } catch (RepositoryException e) {
-                log.debug("Failed to build ACE from content.", e.getMessage());
+                log.debug("Failed to build ACE from content. {}", e.getMessage());
             }
         }
 

@@ -1352,13 +1352,13 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
                 return qvs;
             }
         } catch (SAXException e) {
-            log.warn("Internal error: ", e.getMessage());
+            log.warn("Internal error: {}", e.getMessage());
             throw new RepositoryException(e);
         } catch (IOException e) {
-            log.warn("Internal error: ", e.getMessage());
+            log.warn("Internal error: {}", e.getMessage());
             throw new RepositoryException(e);
         } catch (ParserConfigurationException e) {
-            log.warn("Internal error: ", e.getMessage());
+            log.warn("Internal error: {}", e.getMessage());
             throw new RepositoryException(e);
         }
     }
@@ -2332,7 +2332,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
                     eventPath = uriResolver.getQPath(href, sessionInfo);
                 } catch (RepositoryException e) {
                     // should not occur
-                    log.error("Internal error while building Event", e.getMessage());
+                    log.error("Internal error while building Event: ()", e.getMessage());
                     continue;
                 }
 
@@ -2356,7 +2356,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
                                             eventPath.getAncestor(1)),
                                     eventPath.getName());
                         } catch (RepositoryException e1) {
-                            log.warn("Unable to build event itemId: ",
+                            log.warn("Unable to build event itemId: {}",
                                     e.getMessage());
                         }
                     }
@@ -2366,7 +2366,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
                 try {
                     parentId = uriResolver.getNodeId(parentHref, sessionInfo);
                 } catch (RepositoryException e) {
-                    log.warn("Unable to build event parentId: ", e.getMessage());
+                    log.warn("Unable to build event parentId: {}", e.getMessage());
                 }
                 
             }

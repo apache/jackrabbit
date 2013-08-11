@@ -114,7 +114,7 @@ public class EventImpl
                 }
                 info.put(n, qv);
             } catch (RepositoryException e) {
-                log.error("Internal Error: ", e.getMessage());
+                log.error("Internal Error: {}", e.getMessage());
             }
         }
         return info;

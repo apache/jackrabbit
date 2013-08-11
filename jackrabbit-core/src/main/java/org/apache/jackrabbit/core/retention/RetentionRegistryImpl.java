@@ -344,7 +344,7 @@ public class RetentionRegistryImpl implements RetentionRegistry, SynchronousEven
                 // else: not interested in any other property -> ignore.
 
             } catch (RepositoryException e) {
-                log.warn("Internal error while processing event.", e.getMessage());
+                log.warn("Internal error while processing event. {}", e.getMessage());
                 // ignore.
             }
         }

@@ -437,7 +437,7 @@ public class Util {
             try {
                 return value.getLength();
             } catch (RepositoryException e) {
-                log.warn("Unable to determine length of value.", e.getMessage());
+                log.warn("Unable to determine length of value. {}", e.getMessage());
                 return -1;
             }
         }
