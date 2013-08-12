@@ -669,9 +669,7 @@ public class LuceneQueryFactory {
 
     protected Query getNodeLocalNameQuery(int transform, String operator,
             StaticOperand right) throws RepositoryException {
-        if (transform != TRANSFORM_NONE
-                || (!JCR_OPERATOR_EQUAL_TO.equals(operator) && !JCR_OPERATOR_LIKE
-                        .equals(operator))) {
+        if (!JCR_OPERATOR_EQUAL_TO.equals(operator) && !JCR_OPERATOR_LIKE.equals(operator)) {
             throw new UnsupportedRepositoryOperationException();
         }
         String name = evaluator.getValue(right).getString();
