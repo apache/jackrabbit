@@ -22,7 +22,7 @@ import org.apache.jackrabbit.commons.JcrUtils;
 
 /**
  * Test case for Node LocalName queries with JCR_SQL2
- * 
+ *
  * Inspired by <a
  * href="https://issues.apache.org/jira/browse/JCR-2956">JCR-2956</a>
  */
@@ -116,6 +116,24 @@ public class SQL2NodeLocalNameTest extends AbstractQueryTest {
     public void testLowerName() throws Exception {
         checkResult(
                 executeSQL2Query("SELECT * FROM [nt:base] as NODE WHERE LOWER(name(NODE)) like 'sql2nodelocalnametest%'"),
+                2);
+    }
+
+    /**
+     * test for JCR-3398
+     */
+    public void testLowerLocalNameOrContains() throws Exception {
+        checkResult(
+                executeSQL2Query("SELECT * FROM [nt:base] as NODE WHERE LOWER(localname(NODE)) like 'sql2nodelocalnametest%' OR contains(NODE.*, 'sql2nodelocalnametest')"),
+                2);
+    }
+
+    /**
+     * test for JCR-3398
+     */
+    public void testUpperLocalNameOrContains() throws Exception {
+        checkResult(
+                executeSQL2Query("SELECT * FROM [nt:base] as NODE WHERE UPPER(localname(NODE)) like 'SQL2NODELOCALNAMETEST%' OR contains(NODE.*, 'SQL2NODELOCALNAMETEST')"),
                 2);
     }
 }
