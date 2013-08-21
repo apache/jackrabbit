@@ -185,12 +185,13 @@ public class LockManagerImpl
                     holder = sysSession;
                 }
                 try {
-                    acquire();
+                	acquire();
+                    // FIXME: This session access is not thread-safe!
                     unlock(holder.getNodeById(id));
                 } catch (RepositoryException e) {
                     log.warn("Unable to expire the lock " + id, e);
                 } finally {
-                    release();
+                	release();
                 }
             }
         }
@@ -653,12 +654,17 @@ public class LockManagerImpl
     public void checkLock(Path path, Session session)
             throws LockException, RepositoryException {
 
-        PathMap.Element<LockInfo> element = lockMap.map(path, false);
-        LockInfo info = element.get();
-        if (info != null) {
-            if (element.hasPath(path) || info.isDeep()) {
-                checkLock(info, session);
+        acquire();
+        try {
+            PathMap.Element<LockInfo> element = lockMap.map(path, false);
+            LockInfo info = element.get();
+            if (info != null) {
+                if (element.hasPath(path) || info.isDeep()) {
+                    checkLock(info, session);
+                }
             }
+        } finally {
+            release();
         }
     }
 
@@ -687,18 +693,23 @@ public class LockManagerImpl
      */
     public void checkUnlock(Session session, NodeImpl node)
             throws LockException, RepositoryException {
-
-        // check whether node is locked by this session
-        PathMap.Element<LockInfo> element =
-            lockMap.map(getPath((SessionImpl) session, node.getId()), true);
-        if (element == null) {
-            throw new LockException("Node not locked: " + node);
+        acquire();
+        
+        try {
+            // check whether node is locked by this session
+            PathMap.Element<LockInfo> element =
+                lockMap.map(getPath((SessionImpl) session, node.getId()), true);
+            if (element == null) {
+                throw new LockException("Node not locked: " + node);
+            }
+            LockInfo info = element.get();
+            if (info == null) {
+                throw new LockException("Node not locked: " + node);
+            }
+            checkUnlock(info, session);
+        } finally {
+            release();
         }
-        LockInfo info = element.get();
-        if (info == null) {
-            throw new LockException("Node not locked: " + node);
-        }
-        checkUnlock(info, session);
     }
 
     /**
@@ -727,6 +738,8 @@ public class LockManagerImpl
      */
     public void addLockToken(SessionImpl session, String lt) throws LockException, RepositoryException {
         try {
+            acquire();
+            
             NodeId id = LockInfo.parseLockToken(lt);
 
             NodeImpl node = (NodeImpl) sysSession.getItemManager().getItem(id);
@@ -753,6 +766,8 @@ public class LockManagerImpl
             String msg = "Bad lock token: " + e.getMessage();
             log.warn(msg);
             throw new LockException(msg);
+        } finally {
+            release();
         }
     }
 
@@ -763,6 +778,8 @@ public class LockManagerImpl
             throws LockException, RepositoryException {
 
         try {
+            acquire();
+            
             NodeId id = LockInfo.parseLockToken(lt);
 
             NodeImpl node = (NodeImpl) sysSession.getItemManager().getItem(id);
@@ -786,6 +803,8 @@ public class LockManagerImpl
             String msg = "Bad lock token: " + e.getMessage();
             log.warn(msg);
             throw new LockException(msg);
+        } finally {
+            release();
         }
     }
 
@@ -1064,7 +1083,8 @@ public class LockManagerImpl
      * add and remove operations on nodes with the same UUID into a move
      * operation.
      */
-    private Iterator<HierarchyEvent> consolidateEvents(EventIterator events) {
+    @SuppressWarnings("unchecked")
+	private Iterator<HierarchyEvent> consolidateEvents(EventIterator events) {
         LinkedMap eventMap = new LinkedMap();
 
         while (events.hasNext()) {
