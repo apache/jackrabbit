@@ -226,7 +226,7 @@ public class SessionState {
                         readDuration.addAndGet(time);
                     }
 
-                    log.debug("Performed {} in {}us", operation, time);
+                    log.debug("Performed {} in {}ns", operation, time);
                 }
             } finally {
                 isWriteOperation = wasWriteOperation;
