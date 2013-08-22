@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.core.persistence.util;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -23,11 +25,27 @@ import java.io.OutputStream;
 import org.apache.jackrabbit.core.data.DataStore;
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.util.StringIndex;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * This Class implements efficient serialization methods for item states.
  */
 public class BundleBinding {
+
+    private static boolean VERIFY_BUNDLES = Boolean.getBoolean("jackrabbit.verifyBundles");
+
+    private static boolean ALLOW_BROKEN_BUNDLES = Boolean.getBoolean("jackrabbit.allowBrokenBundleWrites");
+    
+    private static Logger log = LoggerFactory.getLogger(BundleBinding.class);
+    
+    static {
+        if (VERIFY_BUNDLES) {
+            log.warn("Please note reading and writing bundles is slightly slower " + 
+                    "because the system property \"jackrabbit.verifyBundles\" is enabled. " + 
+                    "See JCR-3652.");
+        }
+    }
 
     static final int BINARY_IN_BLOB_STORE = -1;
 
@@ -149,6 +167,9 @@ public class BundleBinding {
      */
     public NodePropBundle readBundle(InputStream in, NodeId id)
             throws IOException {
+        if (VERIFY_BUNDLES) {
+            return new BundleReaderSlower(this, in).readBundle(id);
+        }
         return new BundleReader(this, in).readBundle(id);
     }
 
@@ -161,7 +182,53 @@ public class BundleBinding {
      */
     public void writeBundle(OutputStream out, NodePropBundle bundle)
             throws IOException {
+        if (VERIFY_BUNDLES) {
+            writeBundleSlower(out, bundle);
+            return;
+        }
         new BundleWriter(this, out).writeBundle(bundle);
+    }
+    
+    private void writeBundleSlower(OutputStream out, NodePropBundle bundle)
+            throws IOException {
+        byte[] data;
+        IOException lastError = null;
+        for (int i = 0; i < 5; i++) {
+            ByteArrayOutputStream buff = new ByteArrayOutputStream();
+            if (i < 3) {
+                new BundleWriter(this, buff).writeBundle(bundle);
+            } else {
+                log.warn("Corrupt bundle: writing slower, i = " + i);
+                new BundleWriterSlower(this, buff).writeBundle(bundle);
+            }
+            data = buff.toByteArray();
+            NodeId id = bundle.getId();
+            try {
+                ByteArrayInputStream in = new ByteArrayInputStream(data);
+                new BundleReaderSlower(this, in).readBundleNormal(id);            
+            } catch (IOException e) {
+                lastError = e;
+                log.warn("Corrupt bundle: could not read the bundle I wrote", e);
+                ByteArrayInputStream in = new ByteArrayInputStream(data);
+                try {
+                    new BundleReader(this, in).readBundle(id);            
+                    log.warn("Corrupt bundle: can fix error while reading");
+                    if (i == 4 && ALLOW_BROKEN_BUNDLES) {
+                        log.warn("Corrupt bundle: writing broken one");
+                        break;
+                    }
+                } catch (IOException e2) {
+                    lastError = e2;
+                    log.warn("Corrupt bundle: could not read even when trying harder", e2);
+                }
+                continue;
+            }
+            out.write(data);
+            return;
+        }
+        String msg = "Corrupt bundle: could not write a correct bundle, giving up: " + bundle;
+        log.error(msg);
+        throw new IOException(msg, lastError);
     }
 
 }
