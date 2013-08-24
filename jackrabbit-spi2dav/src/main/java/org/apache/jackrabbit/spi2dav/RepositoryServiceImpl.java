@@ -429,14 +429,14 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
 
             String sessionIdentifier = ((SessionInfoImpl) sessionInfo)
                     .getSessionIdentifier();
-            linkHeaderField.append("<" + sessionIdentifier + ">; rel=\""
-                    + JcrRemotingConstants.RELATION_REMOTE_SESSION_ID + "\"");
+            linkHeaderField.append("<").append(sessionIdentifier).append(">; rel=\"")
+                    .append(JcrRemotingConstants.RELATION_REMOTE_SESSION_ID).append("\"");
 
             String userdata = ((SessionInfoImpl) sessionInfo).getUserData();
             if (userdata != null && ! isReadAccess) {
                 String escaped = Text.escape(userdata);
-                linkHeaderField.append((", <data:," + escaped + ">; rel=\""
-                        + JcrRemotingConstants.RELATION_USER_DATA + "\""));
+                linkHeaderField.append(", <data:,").append(escaped).append(">; rel=\"")
+                    .append(JcrRemotingConstants.RELATION_USER_DATA).append("\"");
             }
 
             method.addRequestHeader("Link", linkHeaderField.toString());
@@ -2847,7 +2847,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             StringBuilder sb = new StringBuilder();
             sb.append(u.getRawPath());
             if (u.getRawQuery() != null) {
-                sb.append("?" + u.getRawQuery());
+                sb.append("?").append(u.getRawQuery());
             }
             return sb.toString();
         }
