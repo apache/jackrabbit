@@ -682,7 +682,7 @@ public class VersionControlledItemCollection extends DefaultItemCollection
             StringBuilder sb = new StringBuilder();
             sb.append(u.getRawPath());
             if (u.getRawQuery() != null) {
-                sb.append("?" + u.getRawQuery());
+                sb.append("?").append(u.getRawQuery());
             }
             return sb.toString();
         }
