@@ -28,6 +28,7 @@ import org.apache.jackrabbit.spi.commons.conversion.NameResolver;
 import org.apache.jackrabbit.test.NotExecutableException;
 import org.apache.jackrabbit.value.StringValue;
 
+import javax.jcr.Node;
 import javax.jcr.Property;
 import javax.jcr.PropertyIterator;
 import javax.jcr.RangeIterator;
@@ -42,6 +43,7 @@ import java.util.Iterator;
 import java.util.HashSet;
 import java.util.Set;
 import java.security.Principal;
+import java.util.UUID;
 
 /**
  * <code>AuthorizableImplTest</code>...
@@ -430,5 +432,44 @@ public class AuthorizableImplTest extends AbstractUserTest {
             // ok.
         }
 
+    }
+
+    /**
+     * this is a very specialized test for JCR-3654
+     * @throws Exception
+     */
+    public void testMembershipCacheTraversal() throws Exception {
+        UserManager uMgr = getUserManager(superuser);
+        //uMgr.autoSave(true);
+        User u = uMgr.createUser("any_principal" + UUID.randomUUID(), "foobar");
+
+        // create group with mixin properties
+        GroupImpl gr = (GroupImpl) uMgr.createGroup("any_group" + UUID.randomUUID());
+        for (int i=0; i<100; i++) {
+            User testUser = uMgr.createUser("any_principal" + UUID.randomUUID(), "foobar");
+            gr.addMember(testUser);
+        }
+
+        gr.addMember(u);
+        NodeImpl n = gr.getNode();
+        n.addMixin("mix:title");
+        superuser.save();
+
+        // removing the authorizable node forces a traversal to collect the memberships
+        //u = (User) uMgr.getAuthorizable(u.getID());
+        //superuser.getNode(u.getPath()).remove();
+        u.remove();
+        Iterator<Group> grp = u.declaredMemberOf();
+        assertTrue("User need to be member of group", grp.hasNext());
+        Group result = grp.next();
+        assertEquals("User needs to be member of group", gr.getID(), result.getID());
+
+        Iterator<Authorizable> auths = gr.getDeclaredMembers();
+        int i = 0;
+        while (auths.hasNext()) {
+            auths.next();
+            i++;
+        }
+        assertEquals("Group needs to have 100 members", 100, i);
     }
 }

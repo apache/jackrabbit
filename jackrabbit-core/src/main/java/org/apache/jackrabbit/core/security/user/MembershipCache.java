@@ -16,36 +16,36 @@
  */
 package org.apache.jackrabbit.core.security.user;
 
-import org.apache.jackrabbit.core.cache.GrowingLRUMap;
-import org.apache.jackrabbit.core.NodeImpl;
-import org.apache.jackrabbit.core.PropertyImpl;
-import org.apache.jackrabbit.core.SessionImpl;
-import org.apache.jackrabbit.core.SessionListener;
-import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
-import org.apache.jackrabbit.core.observation.SynchronousEventListener;
-import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.spi.commons.name.NameConstants;
-import org.apache.jackrabbit.util.Text;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.jcr.AccessDeniedException;
-import javax.jcr.ItemNotFoundException;
-import javax.jcr.ItemVisitor;
-import javax.jcr.Node;
-import javax.jcr.Property;
-import javax.jcr.PropertyIterator;
-import javax.jcr.RepositoryException;
-import javax.jcr.Session;
-import javax.jcr.Value;
-import javax.jcr.observation.Event;
-import javax.jcr.observation.EventIterator;
-import javax.jcr.util.TraversingItemVisitor;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+
+import javax.jcr.AccessDeniedException;
+import javax.jcr.ItemNotFoundException;
+import javax.jcr.Node;
+import javax.jcr.NodeIterator;
+import javax.jcr.Property;
+import javax.jcr.PropertyIterator;
+import javax.jcr.PropertyType;
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
+import javax.jcr.Value;
+import javax.jcr.observation.Event;
+import javax.jcr.observation.EventIterator;
+
+import org.apache.jackrabbit.core.NodeImpl;
+import org.apache.jackrabbit.core.PropertyImpl;
+import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.SessionListener;
+import org.apache.jackrabbit.core.cache.GrowingLRUMap;
+import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
+import org.apache.jackrabbit.core.observation.SynchronousEventListener;
+import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.util.Text;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <code>MembershipCache</code>...
@@ -221,9 +221,12 @@ public class MembershipCache implements UserConstants, SynchronousEventListener,
 
     //------------------------------------------------------------< private >---
     /**
-     * @param authorizableNodeIdentifier
-     * @return
-     * @throws RepositoryException
+     * Collects the groups where the given authorizable is a declared member of. If the information is not cached, it
+     * is collected from the repository.
+     *
+     * @param authorizableNodeIdentifier Identifier of the authorizable node
+     * @return the collection of groups where the authorizable is a declared member of
+     * @throws RepositoryException if an error occurs
      */
     private Collection<String> declaredMemberOf(String authorizableNodeIdentifier) throws RepositoryException {
         Collection<String> groupNodeIds = cache.get(authorizableNodeIdentifier);
@@ -246,10 +249,12 @@ public class MembershipCache implements UserConstants, SynchronousEventListener,
     }
 
     /**
-     * 
-     * @param authorizableNodeIdentifier
-     * @param groupNodeIds
-     * @throws RepositoryException
+     * Collects the groups where the given authorizable is a member of by recursively fetching the declared memberships
+     * via {@link #declaredMemberOf(String)} (cached).
+     *
+     * @param authorizableNodeIdentifier Identifier of the authorizable node
+     * @param groupNodeIds Map to receive the node ids of the groups
+     * @throws RepositoryException if an error occurs
      */
     private void memberOf(String authorizableNodeIdentifier, Collection<String> groupNodeIds) throws RepositoryException {
         Collection<String> declared = declaredMemberOf(authorizableNodeIdentifier);
@@ -261,11 +266,13 @@ public class MembershipCache implements UserConstants, SynchronousEventListener,
     }
 
     /**
-     * 
-     * @param authorizableNodeIdentifier
-     * @param groupNodeIds
-     * @param session
-     * @throws RepositoryException
+     * Collects the groups where the given authorizable is a member of by recursively fetching the declared memberships
+     * by reading the relations from the repository (uncached!).
+     *
+     * @param authorizableNodeIdentifier Identifier of the authorizable node
+     * @param groupNodeIds Map to receive the node ids of the groups
+     * @param session the session to read from
+     * @throws RepositoryException if an error occurs
      */
     private void memberOf(String authorizableNodeIdentifier, Collection<String> groupNodeIds, Session session) throws RepositoryException {
         Collection<String> declared = collectDeclaredMembership(authorizableNodeIdentifier, session);
@@ -277,11 +284,14 @@ public class MembershipCache implements UserConstants, SynchronousEventListener,
     }
 
     /**
-     * 
-     * @param authorizableNodeIdentifier
-     * @param session
-     * @return
-     * @throws RepositoryException
+     * Collects the declared memberships for the given authorizable by resolving the week references to the authorizable.
+     * If the lookup fails, <code>null</code> is returned. This most likely the case if the authorizable does not exit (yet)
+     * in the  session that is used for the lookup.
+     *
+     * @param authorizableNodeIdentifier Identifier of the authorizable node
+     * @param session the session to read from
+     * @return a collection of group node ids or <code>null</code> if the lookup failed.
+     * @throws RepositoryException if an error occurs
      */
     private Collection<String> collectDeclaredMembershipFromReferences(String authorizableNodeIdentifier,
                                                                        Session session) throws RepositoryException {
@@ -316,7 +326,7 @@ public class MembershipCache implements UserConstants, SynchronousEventListener,
                 } else {
                     // weak-ref property 'rep:members' that doesn't reside under an
                     // group node -> doesn't represent a valid group member.
-                    log.debug("Invalid member reference to '" + this + "' -> Not included in membership set.");
+                    log.debug("Invalid member reference to '{}' -> Not included in membership set.", this);
                 }
             } catch (ItemNotFoundException e) {
                 // group node doesn't exist  -> -> ignore exception
@@ -331,6 +341,14 @@ public class MembershipCache implements UserConstants, SynchronousEventListener,
         return select(pIds, nIds);
     }
 
+    /**
+     * Collects the declared memberships for the given authorizable by traversing the groups structure.
+     *
+     * @param authorizableNodeIdentifier Identifier of the authorizable node
+     * @param session the session to read from
+     * @return a collection of group node ids.
+     * @throws RepositoryException if an error occurs
+     */
     private Collection<String> collectDeclaredMembershipFromTraversal(
             final String authorizableNodeIdentifier, Session session) throws RepositoryException {
 
@@ -340,42 +358,86 @@ public class MembershipCache implements UserConstants, SynchronousEventListener,
         // workaround for failure of Node#getWeakReferences
         // traverse the tree below groups-path and collect membership manually.
         log.info("Traversing groups tree to collect membership.");
-        ItemVisitor visitor = new TraversingItemVisitor.Default() {
-            @Override
-            protected void entering(Property property, int level) throws RepositoryException {
-                PropertyImpl pMember = (PropertyImpl) property;
-                NodeImpl nGroup = (NodeImpl) pMember.getParent();
-                if (P_MEMBERS.equals(pMember.getQName()) && nGroup.isNodeType(NT_REP_GROUP)) {
-                    // Found membership information in members property
-                    for (Value value : property.getValues()) {
-                        String v = value.getString();
-                        if (v.equals(authorizableNodeIdentifier)) {
-                            pIds.add(nGroup.getIdentifier());
-                        }
-                    }
-                } else {
-                    // Found membership information in members node
-                    while (nGroup.isNodeType(NT_REP_MEMBERS)) {
-                        nGroup = (NodeImpl) nGroup.getParent();
-                    }
-
-                    if (nGroup.isNodeType(NT_REP_GROUP) && !NameConstants.JCR_UUID.equals(pMember.getQName())) {
-                        String v = pMember.getString();
-                        if (v.equals(authorizableNodeIdentifier)) {
-                            nIds.add(nGroup.getIdentifier());
-                        }
-                    }
-                }
-            }
-        };
-
         if (session.nodeExists(groupsPath)) {
             Node groupsNode = session.getNode(groupsPath);
-            visitor.visit(groupsNode);
+            traverseAndCollect(authorizableNodeIdentifier, pIds, nIds, (NodeImpl) groupsNode);
         } // else: no groups exist -> nothing to do.
 
         // Based on the user's setting return either of the found membership information
         return select(pIds, nIds);
+    }
+
+    /**
+     * traverses the groups structure to find the groups of which the given authorizable is member of.
+     *
+     * @param authorizableNodeIdentifier Identifier of the authorizable node
+     * @param pIds output set to update of group node ids that were found via the property memberships
+     * @param nIds output set to update of group node ids that were found via the node memberships
+     * @param node the node to traverse
+     * @throws RepositoryException if an error occurs
+     */
+    private void traverseAndCollect(String authorizableNodeIdentifier, Set<String> pIds, Set<String> nIds, NodeImpl node)
+            throws RepositoryException {
+        if (node.isNodeType(NT_REP_GROUP)) {
+            String groupId = node.getIdentifier();
+            if (node.hasProperty(P_MEMBERS)) {
+                for (Value value : node.getProperty(P_MEMBERS).getValues()) {
+                    String v = value.getString();
+                    if (v.equals(authorizableNodeIdentifier)) {
+                        pIds.add(groupId);
+                    }
+                }
+            }
+            NodeIterator iter = node.getNodes();
+            while (iter.hasNext()) {
+                NodeImpl child = (NodeImpl) iter.nextNode();
+                if (child.isNodeType(NT_REP_MEMBERS)) {
+                    isMemberOfNodeBaseMembershipGroup(authorizableNodeIdentifier, groupId, nIds, child);
+                }
+            }
+        } else {
+            NodeIterator iter = node.getNodes();
+            while (iter.hasNext()) {
+                NodeImpl child = (NodeImpl) iter.nextNode();
+                traverseAndCollect(authorizableNodeIdentifier, pIds, nIds, child);
+            }
+        }
+    }
+
+    /**
+     * traverses the group structure of a node-based group to check if the given authorizable is member of this group.
+     *
+     * @param authorizableNodeIdentifier Identifier of the authorizable node
+     * @param groupId if of the group
+     * @param nIds output set to update of group node ids that were found via the node memberships
+     * @param node the node to traverse
+     * @throws RepositoryException if an error occurs
+     */
+    private void isMemberOfNodeBaseMembershipGroup(String authorizableNodeIdentifier, String groupId, Set<String> nIds,
+                                                   NodeImpl node)
+            throws RepositoryException {
+        PropertyIterator pIter = node.getProperties();
+        while (pIter.hasNext()) {
+            PropertyImpl p = (PropertyImpl) pIter.nextProperty();
+            if (p.getType() == PropertyType.WEAKREFERENCE) {
+                Value[] values = p.isMultiple()
+                        ? p.getValues()
+                        : new Value[]{p.getValue()};
+                for (Value v: values) {
+                    if (v.getString().equals(authorizableNodeIdentifier)) {
+                        nIds.add(groupId);
+                        return;
+                    }
+                }
+            }
+        }
+        NodeIterator iter = node.getNodes();
+        while (iter.hasNext()) {
+            NodeImpl child = (NodeImpl) iter.nextNode();
+            if (child.isNodeType(NT_REP_MEMBERS)) {
+                isMemberOfNodeBaseMembershipGroup(authorizableNodeIdentifier, groupId, nIds, child);
+            }
+        }
     }
 
     /**
@@ -384,9 +446,9 @@ public class MembershipCache implements UserConstants, SynchronousEventListener,
      * information. If both sets are non empty, the one configured in the
      * settings will take precedence and an warning is logged.
      *
-     * @param pIds
-     * @param nIds
-     * @return
+     * @param pIds the set of group node ids retrieved through membership properties
+     * @param nIds the set of group node ids retrieved through membership nodes
+     * @return the selected set.
      */
     private Set<String> select(Set<String> pIds, Set<String> nIds) {
         Set<String> result;
@@ -405,8 +467,7 @@ public class MembershipCache implements UserConstants, SynchronousEventListener,
         }
 
         if (!pIds.isEmpty() && !nIds.isEmpty()) {
-            log.warn("Found members node and members property. Ignoring {} members",
-                    useMembersNode ? "property" : "node");
+            log.warn("Found members node and members property. Ignoring {} members", useMembersNode ? "property" : "node");
         }
 
         return result;
@@ -425,9 +486,13 @@ public class MembershipCache implements UserConstants, SynchronousEventListener,
         }
     }
 
-    private static PropertyIterator getMembershipReferences(String authorizableNodeIdentifier,
-                                                            Session session) {
-
+    /**
+     * Returns the membership references for the given authorizable.
+     * @param authorizableNodeIdentifier Identifier of the authorizable node
+     * @param session session to read from
+     * @return the property iterator or <code>null</code>
+     */
+    private static PropertyIterator getMembershipReferences(String authorizableNodeIdentifier, Session session) {
         PropertyIterator refs = null;
         try {
             refs = session.getNodeByIdentifier(authorizableNodeIdentifier).getWeakReferences(null);
