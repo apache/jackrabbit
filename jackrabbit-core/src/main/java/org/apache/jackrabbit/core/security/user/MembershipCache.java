@@ -57,6 +57,16 @@ public class MembershipCache implements UserConstants, SynchronousEventListener,
      */
     private static final Logger log = LoggerFactory.getLogger(MembershipCache.class);
 
+    /**
+     * The initial size of this cache (TODO: make configurable)
+     */
+    private static final int MAX_INITIAL_CACHE_SIZE = 1024;
+
+    /**
+     * The maximum size of this cache (TODO: make configurable)
+     */
+    private static final int MAX_CACHE_SIZE = 5000;
+
     private final SessionImpl systemSession;
     private final String groupsPath;
     private final boolean useMembersNode;
@@ -70,7 +80,7 @@ public class MembershipCache implements UserConstants, SynchronousEventListener,
         this.useMembersNode = useMembersNode;
 
         pMembers = systemSession.getJCRName(UserManagerImpl.P_MEMBERS);
-        cache = new GrowingLRUMap(1024, 5000);
+        cache = new GrowingLRUMap(MAX_INITIAL_CACHE_SIZE, MAX_CACHE_SIZE);
 
         String[] ntNames = new String[] {
                 systemSession.getJCRName(UserConstants.NT_REP_GROUP),
@@ -87,6 +97,7 @@ public class MembershipCache implements UserConstants, SynchronousEventListener,
         // make sure the membership cache is informed if the system session is
         // logged out in order to stop listening to events.
         systemSession.addListener(this);
+        log.debug("Membership cache initialized. Max Size = {}", MAX_CACHE_SIZE);
     }
 
 
@@ -135,6 +146,7 @@ public class MembershipCache implements UserConstants, SynchronousEventListener,
             synchronized (cache) {
                 cache.clear();
             }
+            log.debug("Membership cache cleared because of observation event.");
         }
     }
 
@@ -184,6 +196,14 @@ public class MembershipCache implements UserConstants, SynchronousEventListener,
     }
 
     /**
+     * Returns the size of the membership cache
+     * @return the size
+     */
+    synchronized int getSize() {
+        return cache.size();
+    }
+
+    /**
      * Collects the declared memberships for the specified identifier of an
      * authorizable using the specified session.
      * 
@@ -195,9 +215,30 @@ public class MembershipCache implements UserConstants, SynchronousEventListener,
      * @throws RepositoryException If an error occurs.
      */
     Collection<String> collectDeclaredMembership(String authorizableNodeIdentifier, Session session) throws RepositoryException {
+        final long t0 = System.nanoTime();
+
         Collection<String> groupNodeIds = collectDeclaredMembershipFromReferences(authorizableNodeIdentifier, session);
+
+        final long t1 = System.nanoTime();
+        if (log.isDebugEnabled()) {
+            log.debug("  collected {} groups for {} via references in {}us", new Object[]{
+                    groupNodeIds == null ? -1 : groupNodeIds.size(),
+                    authorizableNodeIdentifier,
+                    (t1-t0) / 1000
+            });
+        }
+
         if (groupNodeIds == null) {
             groupNodeIds = collectDeclaredMembershipFromTraversal(authorizableNodeIdentifier, session);
+
+            final long t2 = System.nanoTime();
+            if (log.isDebugEnabled()) {
+                log.debug("  collected {} groups for {} via traversal in {}us", new Object[]{
+                        groupNodeIds == null ? -1 : groupNodeIds.size(),
+                        authorizableNodeIdentifier,
+                        (t2-t1) / 1000
+                });
+            }
         }
         return groupNodeIds;
     }
@@ -229,8 +270,13 @@ public class MembershipCache implements UserConstants, SynchronousEventListener,
      * @throws RepositoryException if an error occurs
      */
     private Collection<String> declaredMemberOf(String authorizableNodeIdentifier) throws RepositoryException {
+        final long t0 = System.nanoTime();
+
         Collection<String> groupNodeIds = cache.get(authorizableNodeIdentifier);
+
+        boolean wasCached = true;
         if (groupNodeIds == null) {
+            wasCached = false;
             // retrieve a new session with system-subject in order to avoid
             // concurrent read operations using the system session of this workspace.
             Session session = getSession();
@@ -244,6 +290,17 @@ public class MembershipCache implements UserConstants, SynchronousEventListener,
                     session.logout();
                 }
             }
+        }
+
+        if (log.isDebugEnabled()) {
+            final long t1 = System.nanoTime();
+            log.debug("Membership cache {} {} declared memberships of {} in {}us. cache size = {}", new Object[]{
+                    wasCached ? "returns" : "collected",
+                    groupNodeIds.size(),
+                    authorizableNodeIdentifier,
+                    (t1-t0) / 1000,
+                    cache.size()
+            });
         }
         return groupNodeIds;
     }
