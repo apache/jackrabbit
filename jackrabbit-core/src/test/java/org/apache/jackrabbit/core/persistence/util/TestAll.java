@@ -27,6 +27,8 @@ public class TestAll extends TestCase {
 
         suite.addTestSuite(HashMapIndexTest.class);
         suite.addTestSuite(BundleBindingTest.class);
+        suite.addTestSuite(NodeCorruptionTest.class);
+        suite.addTestSuite(BundleBindingRandomizedTest.class);
 
         return suite;
     }

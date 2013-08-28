@@ -184,7 +184,9 @@ class BundleWriter {
         InternalValue[] values = state.getValues();
 
         int type = state.getType();
-        assert 0 <= type && type <= 0x0f;
+        if (type < 0 || type > 0xf) {
+            throw new IOException("Illegal property type " + type);
+        }
         if (state.isMultiValued()) {
             int len = values.length + 1;
             if (len < 0x0f) {
@@ -194,7 +196,11 @@ class BundleWriter {
                 writeVarInt(len - 0x0f);
             }
         } else {
-            assert values.length == 1;
+            if (values.length != 1) {
+                throw new IOException(
+                        "Single values property with " + values.length + " values: " + 
+                        state.getName());
+            }
             out.writeByte(type);
         }
 
@@ -203,7 +209,7 @@ class BundleWriter {
         // values
         for (int i = 0; i < values.length; i++) {
             InternalValue val = values[i];
-            switch (state.getType()) {
+            switch (type) {
                 case PropertyType.BINARY:
                     try {
                         long size = val.getLength();
@@ -324,9 +330,13 @@ class BundleWriter {
                         throw new IOException("Unexpected error while writing DATE value.");
                     }
                     break;
-                default:
+                case PropertyType.STRING:
+                case PropertyType.PATH:
+                case PropertyType.URI:
                     writeString(val.toString());
                     break;
+                default:
+                    throw new IOException("Inknown property type: " + type);
             }
         }
     }
@@ -449,6 +459,9 @@ class BundleWriter {
             }
 
             String local = name.getLocalName();
+            if (local.length() == 0) {
+                throw new IOException("Attempt to write an empty local name: " + name);
+            }
             byte[] bytes = local.getBytes("UTF-8");
             int len = Math.min(bytes.length - 1, 0x0f);
 

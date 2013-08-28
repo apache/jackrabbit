@@ -434,6 +434,7 @@ public class NodePropBundle {
 
     //--------------------------------------------------------------< Object >
 
+    @Override
     public String toString() {
         StringBuilder builder = new StringBuilder();
         builder.append(id);
@@ -459,20 +460,27 @@ public class NodePropBundle {
         return builder.toString();
     }
 
+    @Override
     public boolean equals(Object object) {
         if (object instanceof NodePropBundle) {
             NodePropBundle that = (NodePropBundle) object;
-            return id.equals(that.id)
-                && parentId.equals(that.parentId)
-                && nodeTypeName.equals(that.nodeTypeName)
-                && mixinTypeNames.equals(that.mixinTypeNames)
+            return equalNullSafe(id, that.id)
+                && equalNullSafe(parentId, that.parentId)
+                && equalNullSafe(nodeTypeName, that.nodeTypeName)
+                && equalNullSafe(mixinTypeNames, that.mixinTypeNames)
                 && isReferenceable == that.isReferenceable
-                && sharedSet.equals(that.sharedSet)
-                && properties.equals(that.properties)
-                && childNodeEntries.equals(that.childNodeEntries);
-        } else {
-            return false;
+                && equalNullSafe(sharedSet, that.sharedSet)
+                && equalNullSafe(properties, that.properties)
+                && equalNullSafe(childNodeEntries, that.childNodeEntries);
         }
+        return false;
+    }
+    
+    private static boolean equalNullSafe(Object a, Object b) {
+        if (a == null || b == null) {
+            return a == b;
+        }
+        return a.equals(b);
     }
 
     //-----------------------------------------------------< ChildNodeEntry >---
@@ -590,6 +598,9 @@ public class NodePropBundle {
             values = state.getValues();
             type = state.getType();
             multiValued = state.isMultiValued();
+            if (!multiValued && values.length != 1) {
+                throw new IllegalArgumentException("Non-multi-valued property with values.length " + values.length);
+            }
             modCount = state.getModCount();
             if (type == PropertyType.BINARY) {
                 blobIds = new String[values.length];

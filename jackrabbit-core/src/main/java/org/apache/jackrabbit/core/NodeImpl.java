@@ -2043,6 +2043,18 @@ public class NodeImpl extends ItemImpl implements Node, JackrabbitNode {
                     removeChildProperty(name);
                 }
                 throw e; // rethrow
+            } catch (RuntimeException e) {
+                if (status.get(CREATED)) {
+                    // setting value failed, get rid of newly created property
+                    removeChildProperty(name);
+                }
+                throw e; // rethrow
+            } catch (Error e) {
+                if (status.get(CREATED)) {
+                    // setting value failed, get rid of newly created property
+                    removeChildProperty(name);
+                }
+                throw e; // rethrow
             }
             return property;
         }
@@ -2836,7 +2848,13 @@ public class NodeImpl extends ItemImpl implements Node, JackrabbitNode {
             PropertyId id = new PropertyId(state.getNodeId(), JCR_ISCHECKEDOUT);
             PropertyState ps =
                 (PropertyState) sessionContext.getItemStateManager().getItemState(id);
-            return ps.getValues()[0].getBoolean();
+            InternalValue[] values = ps.getValues();
+            if (values == null || values.length != 1) {
+                // the property is not fully set, or it is a multi-valued property
+                // in which case it's probably not mix:versionable
+                return true;
+            }
+            return values[0].getBoolean();
         } catch (ItemStateException e) {
             throw new RepositoryException(e);
         }
