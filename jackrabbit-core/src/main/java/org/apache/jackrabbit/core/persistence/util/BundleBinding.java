@@ -43,7 +43,7 @@ public class BundleBinding {
         if (VERIFY_BUNDLES) {
             log.warn("Please note reading and writing bundles is slightly slower " + 
                     "because the system property \"jackrabbit.verifyBundles\" is enabled. " + 
-                    "See JCR-3652.");
+                    "See JCR-3652 (patch JCR-3652-b.patch is applied).");
         }
     }
 
