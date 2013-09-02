@@ -19,7 +19,6 @@ package org.apache.jackrabbit.core.security.user;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 
 import javax.jcr.AccessDeniedException;
@@ -39,7 +38,7 @@ import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.PropertyImpl;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.SessionListener;
-import org.apache.jackrabbit.core.cache.GrowingLRUMap;
+import org.apache.jackrabbit.core.cache.ConcurrentCache;
 import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
 import org.apache.jackrabbit.core.observation.SynchronousEventListener;
 import org.apache.jackrabbit.spi.Name;
@@ -58,11 +57,6 @@ public class MembershipCache implements UserConstants, SynchronousEventListener,
     private static final Logger log = LoggerFactory.getLogger(MembershipCache.class);
 
     /**
-     * The initial size of this cache (TODO: make configurable)
-     */
-    private static final int MAX_INITIAL_CACHE_SIZE = 1024;
-
-    /**
      * The maximum size of this cache (TODO: make configurable)
      */
     private static final int MAX_CACHE_SIZE = 5000;
@@ -71,7 +65,7 @@ public class MembershipCache implements UserConstants, SynchronousEventListener,
     private final String groupsPath;
     private final boolean useMembersNode;
     private final String pMembers;
-    private final Map<String, Collection<String>> cache;
+    private final ConcurrentCache<String, Collection<String>> cache;
 
     @SuppressWarnings("unchecked")
     MembershipCache(SessionImpl systemSession, String groupsPath, boolean useMembersNode) throws RepositoryException {
@@ -80,7 +74,8 @@ public class MembershipCache implements UserConstants, SynchronousEventListener,
         this.useMembersNode = useMembersNode;
 
         pMembers = systemSession.getJCRName(UserManagerImpl.P_MEMBERS);
-        cache = new GrowingLRUMap(MAX_INITIAL_CACHE_SIZE, MAX_CACHE_SIZE);
+        cache = new ConcurrentCache<String, Collection<String>>("MembershipCache", 16);
+        cache.setMaxMemorySize(MAX_CACHE_SIZE);
 
         String[] ntNames = new String[] {
                 systemSession.getJCRName(UserConstants.NT_REP_GROUP),
@@ -143,9 +138,7 @@ public class MembershipCache implements UserConstants, SynchronousEventListener,
         }
 
         if (clear) {
-            synchronized (cache) {
-                cache.clear();
-            }
+            cache.clear();
             log.debug("Membership cache cleared because of observation event.");
         }
     }
@@ -178,7 +171,7 @@ public class MembershipCache implements UserConstants, SynchronousEventListener,
      * authorizable in question is declared member of.
      * @throws RepositoryException If an error occurs.
      */
-    synchronized Collection<String> getDeclaredMemberOf(String authorizableNodeIdentifier) throws RepositoryException {
+    Collection<String> getDeclaredMemberOf(String authorizableNodeIdentifier) throws RepositoryException {
         return declaredMemberOf(authorizableNodeIdentifier);
     }
 
@@ -189,7 +182,7 @@ public class MembershipCache implements UserConstants, SynchronousEventListener,
      * authorizable in question is a direct or indirect member of.
      * @throws RepositoryException If an error occurs.
      */
-    synchronized Collection<String> getMemberOf(String authorizableNodeIdentifier) throws RepositoryException {
+    Collection<String> getMemberOf(String authorizableNodeIdentifier) throws RepositoryException {
         Set<String> groupNodeIds = new HashSet<String>();
         memberOf(authorizableNodeIdentifier, groupNodeIds);
         return Collections.unmodifiableCollection(groupNodeIds);
@@ -199,8 +192,15 @@ public class MembershipCache implements UserConstants, SynchronousEventListener,
      * Returns the size of the membership cache
      * @return the size
      */
-    synchronized int getSize() {
-        return cache.size();
+    int getSize() {
+        return (int) cache.getElementCount();
+    }
+
+    /**
+     * For testing purposes only.
+     */
+    void clear() {
+        cache.clear();
     }
 
     /**
@@ -282,7 +282,7 @@ public class MembershipCache implements UserConstants, SynchronousEventListener,
             Session session = getSession();
             try {
                 groupNodeIds = collectDeclaredMembership(authorizableNodeIdentifier, session);
-                cache.put(authorizableNodeIdentifier, Collections.unmodifiableCollection(groupNodeIds));
+                cache.put(authorizableNodeIdentifier, Collections.unmodifiableCollection(groupNodeIds), 1);
             }
             finally {
                 // release session if it isn't the original system session
@@ -299,7 +299,7 @@ public class MembershipCache implements UserConstants, SynchronousEventListener,
                     groupNodeIds.size(),
                     authorizableNodeIdentifier,
                     (t1-t0) / 1000,
-                    cache.size()
+                    cache.getElementCount()
             });
         }
         return groupNodeIds;
