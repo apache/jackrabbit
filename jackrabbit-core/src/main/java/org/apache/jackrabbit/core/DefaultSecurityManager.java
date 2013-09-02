@@ -49,6 +49,7 @@ import org.apache.jackrabbit.core.security.AccessManager;
 import org.apache.jackrabbit.core.security.DefaultAccessManager;
 import org.apache.jackrabbit.core.security.JackrabbitSecurityManager;
 import org.apache.jackrabbit.core.security.SecurityConstants;
+import org.apache.jackrabbit.core.security.SystemPrincipal;
 import org.apache.jackrabbit.core.security.authentication.AuthContext;
 import org.apache.jackrabbit.core.security.authentication.AuthContextProvider;
 import org.apache.jackrabbit.core.security.authorization.AccessControlProvider;
@@ -336,11 +337,15 @@ public class DefaultSecurityManager implements JackrabbitSecurityManager {
     public String getUserID(Subject subject, String workspaceName) throws RepositoryException {
         checkInitialized();
 
-        /* shortcut if the subject contains the AdminPrincipal in which case
-           the userID is already known. */
+        // shortcut if the subject contains the AdminPrincipal or
+        // SystemPrincipal in which cases the userID is already known.
         if (!subject.getPrincipals(AdminPrincipal.class).isEmpty()) {
             return adminId;
+        } else if (!subject.getPrincipals(SystemPrincipal.class).isEmpty()) {
+            // system session does not have a userId
+            return null;
         }
+
         /* if there is a configure principal class that should be used to
            determine the UserID -> try this one. */
         Class cl = getConfig().getUserIdClass();
