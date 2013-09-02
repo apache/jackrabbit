@@ -22,7 +22,9 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
 import java.lang.ref.WeakReference;
+import java.nio.charset.Charset;
 import java.security.DigestOutputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -323,7 +325,11 @@ public abstract class CachingDataStore extends AbstractDataStore implements Mult
 
     @Override
     protected byte[] getOrCreateReferenceKey() throws DataStoreException {
-        return secret.getBytes();
+        try {
+            return secret.getBytes("UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            throw new DataStoreException(e);
+        }
     }
 
     /**

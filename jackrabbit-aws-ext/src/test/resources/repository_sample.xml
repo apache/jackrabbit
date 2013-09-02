@@ -1,132 +1,124 @@
-<?xml version="1.0" encoding="ISO-8859-1"?>
-<!-- Licensed to the Apache Software Foundation (ASF) under one or more contributor
-    license agreements. See the NOTICE file distributed with this work for additional
-    information regarding copyright ownership. The ASF licenses this file to
-    You under the Apache License, Version 2.0 (the "License"); you may not use
-    this file except in compliance with the License. You may obtain a copy of
-    the License at http://www.apache.org/licenses/LICENSE-2.0 Unless required
-    by applicable law or agreed to in writing, software distributed under the
-    License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS
-    OF ANY KIND, either express or implied. See the License for the specific
-    language governing permissions and limitations under the License. -->
+<?xml version="1.0"?>
+<!--
+   Licensed to the Apache Software Foundation (ASF) under one or more
+   contributor license agreements.  See the NOTICE file distributed with
+   this work for additional information regarding copyright ownership.
+   The ASF licenses this file to You under the Apache License, Version 2.0
+   (the "License"); you may not use this file except in compliance with
+   the License.  You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+  -->
+<!DOCTYPE Repository PUBLIC "-//The Apache Software Foundation//DTD Jackrabbit 1.6//EN"
+                            "http://jackrabbit.apache.org/dtd/repository-1.6.dtd">
+<!-- Example Repository Configuration File -->
 <Repository>
     <!--
-    virtual file system where the repository stores global state
-    (e.g. registered namespaces, custom node types, etc.)
-    -->
-    <!--
-    <FileSystem class="com.day.jackrabbit.fs.cq.CQFileSystem">
-        <param name="path" value="${rep.home}/repStore.dat"/>
-        <param name="autoRepair" value="false"/>
-    </FileSystem>
+        virtual file system where the repository stores global state
+        (e.g. registered namespaces, custom node types, etc.)
     -->
     <FileSystem class="org.apache.jackrabbit.core.fs.local.LocalFileSystem">
         <param name="path" value="${rep.home}/repository"/>
     </FileSystem>
 
     <!--
-    large binary objects are stored in the data store.
+        data store configuration
     -->
-    <DataStore class="org.apache.jackrabbit.aws.ext.ds.S3DataStore">
+	<!--
+    <DataStore class="org.apache.jackrabbit.core.data.FileDataStore"/>
+	-->
+	<DataStore class="org.apache.jackrabbit.aws.ext.ds.S3DataStore">
 		<param name="config" value="${rep.home}/aws.properties"/>
         <param name="secret" value="123456789"/>
 	</DataStore>
+    <!--
+        sample database data store configuration
+        <DataStore class="org.apache.jackrabbit.core.data.db.DbDataStore">
+            <param name="url" value="jdbc:h2:~/test"/>
+            <param name="user" value="sa"/>
+            <param name="password" value="sa"/>
+        </DataStore>
+    -->
+    
+    <!--
+        repository lock mechanism configuration
+    <RepositoryLockMechanism class="org.apache.jackrabbit.core.util.CooperativeFileLock"/>
+    -->
 
     <!--
-    security configuration
+        security configuration
     -->
-    <Security appName="com.day.crx">
+    <Security appName="Jackrabbit">
         <!--
             security manager:
             class: FQN of class implementing the JackrabbitSecurityManager interface
         -->
-        <!--SecurityManager class="com.day.crx.core.CRXSecurityManager" workspaceName="" -->
-        <SecurityManager class="com.day.crx.core.CRXSecurityManager">
-            <!--
-            optional user manager configuration
-            -->
-            <UserManager class="org.apache.jackrabbit.core.security.user.UserPerWorkspaceUserManager">
-                <param name="usersPath" value="/home/users"/>
-                <param name="groupsPath" value="/home/groups"/>
-                <param name="defaultDepth" value="1"/>
-                <param name="autoExpandTree" value="true"/>
-                <AuthorizableAction class="org.apache.jackrabbit.core.security.user.action.AccessControlAction">
-                  <param name="groupPrivilegeNames" value="jcr:read"/>
-                  <param name="userPrivilegeNames" value="jcr:all"/>
-                </AuthorizableAction>
-                <!--AuthorizableAction class="com.day.crx.core.ntlm.NTLMAuthorizableAction"/>-->
-            </UserManager>
-
-            <!--
-            optional workspace access manager configuration
-           -->
+        <SecurityManager class="org.apache.jackrabbit.core.DefaultSecurityManager" workspaceName="security">
+            <!-- <param name="config" value="${rep.home}/security.xml"/> -->
         </SecurityManager>
+
         <!--
-        access manager:
-        class: FQN of class implementing the AccessManager interface
+            access manager:
+            class: FQN of class implementing the AccessManager interface
         -->
-        <AccessManager class="org.apache.jackrabbit.core.security.DefaultAccessManager"></AccessManager>
-        <!--
-        Use LoginModule authenticating against repository itself
-        -->
-        <LoginModule class="com.day.crx.core.CRXLoginModule">
-            <param name="anonymousId" value="anonymous"/>
-            <param name="adminId" value="admin"/>
-            <param name="disableNTLMAuth" value="true"/>
-            <param name="tokenExpiration" value="43200000"/>
-            <!-- param name="trust_credentials_attribute" value="d5b9167e95dad6e7d3b5d6fa8df48af8"/ -->
+        <AccessManager class="org.apache.jackrabbit.core.security.DefaultAccessManager">
+            <!-- <param name="config" value="${rep.home}/access.xml"/> -->
+        </AccessManager>
+
+        <LoginModule class="org.apache.jackrabbit.core.security.authentication.DefaultLoginModule">
+           <!-- 
+              anonymous user name ('anonymous' is the default value)
+            -->
+           <param name="anonymousId" value="anonymous"/>
+           <!--
+              administrator user id (default value if param is missing is 'admin')
+            -->
+           <param name="adminId" value="admin"/>
+           <!--
+              optional parameter 'principalProvider'.
+              the value refers to the class name of the PrincipalProvider implementation.
+           -->
+           <!-- <param name="principalProvider" value="..."/> -->
         </LoginModule>
     </Security>
 
     <!--
-    location of workspaces root directory and name of default workspace
+        location of workspaces root directory and name of default workspace
     -->
-    <Workspaces rootPath="${rep.home}/workspaces" defaultWorkspace="crx.default" maxIdleTime="5"/>
+    <Workspaces rootPath="${rep.home}/workspaces" defaultWorkspace="default" maxIdleTime="2"/>
     <!--
-    workspace configuration template:
-    used to create the initial workspace if there's no workspace yet
+        workspace configuration template:
+        used to create the initial workspace if there's no workspace yet
     -->
-    <Workspace name="${wsp.name}" simpleLocking="true">
+    <Workspace name="${wsp.name}">
         <!--
-        virtual file system of the workspace:
-        class: FQN of class implementing FileSystem interface
+            virtual file system of the workspace:
+            class: FQN of class implementing the FileSystem interface
         -->
         <FileSystem class="org.apache.jackrabbit.core.fs.local.LocalFileSystem">
             <param name="path" value="${wsp.home}"/>
         </FileSystem>
-
         <!--
-        persistence manager of the workspace:
-        class: FQN of class implementing PersistenceManager interface
+            persistence manager of the workspace:
+            class: FQN of class implementing the PersistenceManager interface
         -->
-        <PersistenceManager class="com.day.crx.persistence.tar.TarPersistenceManager"/>
-
+        <PersistenceManager class="org.apache.jackrabbit.core.persistence.pool.DerbyPersistenceManager">
+          <param name="url" value="jdbc:derby:${wsp.home}/db;create=true"/>
+          <param name="schemaObjectPrefix" value="${wsp.name}_"/>
+        </PersistenceManager>
         <!--
-        Search index and the file system it uses.
+            Search index and the file system it uses.
+            class: FQN of class implementing the QueryHandler interface
         -->
-        <SearchIndex class="com.day.crx.query.lucene.LuceneHandler">
+        <SearchIndex class="org.apache.jackrabbit.core.query.lucene.SearchIndex">
             <param name="path" value="${wsp.home}/index"/>
-            <param name="resultFetchSize" value="50"/>
         </SearchIndex>
-
-        <!--
-        Workspace security configuration
-        -->
-        <WorkspaceSecurity>
-            <AccessControlProvider class="org.apache.jackrabbit.core.security.authorization.acl.ACLProvider">
-                <param name="omit-default-permission" value="true"/>
-            </AccessControlProvider>
-        </WorkspaceSecurity>
-
-        <!--
-        XML Import configuration of the workspace
-        -->
-        <Import>
-            <ProtectedItemImporter class="org.apache.jackrabbit.core.xml.AccessControlImporter"/>
-            <ProtectedItemImporter class="org.apache.jackrabbit.core.security.user.UserImporter">
-                <param name="importBehavior" value="besteffort"/>
-            </ProtectedItemImporter>
-        </Import>
     </Workspace>
 
     <!--
@@ -134,48 +126,37 @@
     -->
     <Versioning rootPath="${rep.home}/version">
         <!--
-            Configures the filesystem to use for versioning of the respective
+            Configures the filesystem to use for versioning for the respective
             persistence manager
         -->
         <FileSystem class="org.apache.jackrabbit.core.fs.local.LocalFileSystem">
-            <param name="path" value="${rep.home}/version"/>
+            <param name="path" value="${rep.home}/version" />
         </FileSystem>
 
         <!--
-            Configures the persistence manager to use for the versioning.
-            Please note, that the current versioning implementation is based on
+            Configures the persistence manager to be used for persisting version state.
+            Please note that the current versioning implementation is based on
             a 'normal' persistence manager, but this could change in future
             implementations.
         -->
-        <PersistenceManager class="com.day.crx.persistence.tar.TarPersistenceManager"/>
-
+        <PersistenceManager class="org.apache.jackrabbit.core.persistence.pool.DerbyPersistenceManager">
+          <param name="url" value="jdbc:derby:${rep.home}/version/db;create=true"/>
+          <param name="schemaObjectPrefix" value="version_"/>
+        </PersistenceManager>
     </Versioning>
 
     <!--
-        Enable searching the /jcr:system subtree
+        Search index for content that is shared repository wide
+        (/jcr:system tree, contains mainly versions)
     -->
-    <SearchIndex class="com.day.crx.query.lucene.LuceneHandler">
+    <SearchIndex class="org.apache.jackrabbit.core.query.lucene.SearchIndex">
         <param name="path" value="${rep.home}/repository/index"/>
     </SearchIndex>
-
+    
     <!--
-        Cluster configuration.
+        Run with a cluster journal
     -->
-    <Cluster>
-        <Journal class="com.day.crx.persistence.tar.TarJournal"/>
+    <Cluster id="node1">
+        <Journal class="org.apache.jackrabbit.core.journal.MemoryJournal"/>
     </Cluster>
-
-    <!--
-        Configures extension modules
-    -->
-    <Modules>
-        <!--
-           Sample configuration of an EventLoggerModule requiring configuration
-           <Module class="com.day.crx.eventlogger.EventLoggerModule">
-               <param name="workspaces" value="crx.default"/>
-               <param name="logWorkspace" value="crx.logger"/>
-               <param name="logPath" value="/logger"/>
-           </Module>
-        -->
-    </Modules>
 </Repository>

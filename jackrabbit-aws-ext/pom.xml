@@ -37,11 +37,6 @@
             <artifactId>jcr</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.day.crx</groupId>
-            <artifactId>crx-api</artifactId>
-            <version>1.4.0</version>
-        </dependency>
-        <dependency>
             <groupId>org.apache.jackrabbit</groupId>
             <artifactId>jackrabbit-jcr-commons</artifactId>
             <version>${project.version}</version>

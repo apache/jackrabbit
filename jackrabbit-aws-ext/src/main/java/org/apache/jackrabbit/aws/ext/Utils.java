@@ -57,7 +57,6 @@ public class Utils {
         }
     }
 
-    public static final String USER_AGENT_APPLICATION = "CRX/2.0";
 
     public static AmazonS3Client openService(Properties prop) throws IOException, AmazonServiceException {
         AWSCredentials credentials = new BasicAWSCredentials(prop.getProperty(S3Constants.ACCESS_KEY),
