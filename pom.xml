@@ -54,6 +54,7 @@
     <module>jackrabbit-spi2dav</module>
     <module>jackrabbit-jcr2dav</module>
     <module>jackrabbit-jcr-client</module>
+    <module>jackrabbit-aws-ext</module>
     <module>jackrabbit-bundle</module>
     <module>jackrabbit-standalone</module>
   </modules>
