@@ -94,6 +94,11 @@ public class LockManagerImpl
     private final XAReentrantLock lockMapLock = new XAReentrantLock();
     
     /**
+     * XA/Thread aware lock for lock properties
+     */
+    private XAReentrantLock lockPropertiesLock = new XAReentrantLock();
+
+    /**
      * The periodically invoked lock timeout handler.
      */
     private final ScheduledFuture<?> timeoutHandler;
@@ -185,13 +190,11 @@ public class LockManagerImpl
                     holder = sysSession;
                 }
                 try {
-                	acquire();
                     // FIXME: This session access is not thread-safe!
+                    log.debug("Try to unlock expired lock. NodeId {0}", id);
                     unlock(holder.getNodeById(id));
                 } catch (RepositoryException e) {
-                    log.warn("Unable to expire the lock " + id, e);
-                } finally {
-                	release();
+                    log.warn("Unable to expire the lock. NodeId " + id, e);
                 }
             }
         }
@@ -221,7 +224,7 @@ public class LockManagerImpl
     }
 
     /**
-     * Reapply a lock given a lock token that was read from the locks file
+     * Reaply a lock given a lock token that was read from the locks file
      *
      * @param lockTokenLine lock token to apply
      */
@@ -239,6 +242,8 @@ public class LockManagerImpl
         }
 
         try {
+        	acquire();
+        	
             NodeId id = LockInfo.parseLockToken(parts[0]);
             NodeImpl node = (NodeImpl) sysSession.getItemManager().getItem(id);
             Path path = getPath(sysSession, id);
@@ -253,6 +258,8 @@ public class LockManagerImpl
         } catch (RepositoryException e) {
             log.warn("Unable to recreate lock '" + token + "': " + e.getMessage());
             log.debug("Root cause: ", e);
+        } finally {
+        	release();
         }
     }
 
@@ -838,6 +845,27 @@ public class LockManagerImpl
     }
 
     /**
+     * Acquire lock for modifying lock properties
+     */
+    private void acquireLockPropertiesLock() {
+        for (;;) {
+            try {
+                lockPropertiesLock.acquire();
+                break;
+            } catch (InterruptedException e) {
+                // ignore
+            }
+        }
+    }
+
+    /**
+     * Release lock on the lockPropertiesLock.
+     */
+    private void releaseLockPropertiesLock() {
+        lockPropertiesLock.release();
+    }
+
+    /**
      * Start an update operation. This will acquire the lock on the lock map
      * and disable saving the lock map file.
      */
@@ -878,7 +906,9 @@ public class LockManagerImpl
         WorkspaceImpl wsp = (WorkspaceImpl) editingSession.getWorkspace();
         UpdatableItemStateManager stateMgr = wsp.getItemStateManager();
 
-        synchronized (stateMgr) {
+        try {
+            acquireLockPropertiesLock();
+
             if (stateMgr.inEditMode()) {
                 throw new RepositoryException("Unable to write lock properties.");
             }
@@ -927,6 +957,8 @@ public class LockManagerImpl
                     }
                 }
             }
+        } finally {
+            releaseLockPropertiesLock();
         }
     }
 
@@ -942,7 +974,9 @@ public class LockManagerImpl
         WorkspaceImpl wsp = (WorkspaceImpl) editingSession.getWorkspace();
         UpdatableItemStateManager stateMgr = wsp.getItemStateManager();
 
-        synchronized (stateMgr) {
+        try {
+            acquireLockPropertiesLock();
+            
             try {
                 // add properties to content
                 NodeId nodeId = node.getNodeId();
@@ -976,6 +1010,8 @@ public class LockManagerImpl
                     stateMgr.cancel();
                 }
             }
+        } finally {
+            releaseLockPropertiesLock();
         }
     }
 
@@ -1136,6 +1172,8 @@ public class LockManagerImpl
         for (int i = 0; i < infos.size(); i++) {
             LockInfo info = infos.get(i);
             try {
+            	acquire();
+            	
                 NodeImpl node = (NodeImpl) sysSession.getItemManager().getItem(
                         info.getId());
                 lockMap.put(node.getPrimaryPath(), info);
@@ -1144,6 +1182,8 @@ public class LockManagerImpl
                 if (!info.isSessionScoped()) {
                     needsSave = true;
                 }
+            } finally {
+            	release();
             }
         }
 
