@@ -225,8 +225,8 @@ public class ConsistencyCheckerImpl {
                 Map<NodeId, NodeInfo> batch = pm.getAllNodeInfos(null, NODESATONCE);
                 Map<NodeId, NodeInfo> allInfos = batch;
 
+                NodeId lastId = null;
                 while (!batch.isEmpty()) {
-                    NodeId lastId = null;
 
                     for (Map.Entry<NodeId, NodeInfo> entry : batch.entrySet()) {
                         lastId = entry.getKey();
@@ -243,8 +243,13 @@ public class ConsistencyCheckerImpl {
                     allInfos.putAll(batch);
                 }
 
-                for (Map.Entry<NodeId, NodeInfo> entry : allInfos.entrySet()) {
-                    checkBundleConsistency(entry.getKey(), entry.getValue(), allInfos);
+                if (pm.exists(lastId)) {
+                    for (Map.Entry<NodeId, NodeInfo> entry : allInfos.entrySet()) {
+                        checkBundleConsistency(entry.getKey(), entry.getValue(), allInfos);
+                    }
+                } else {
+                    log.info("Failed to read all nodes, starting over");
+                    internalCheckConsistency(uuids, recursive);
                 }
 
             } catch (ItemStateException e) {
