@@ -242,8 +242,8 @@ public class ConsistencyCheck {
             int count = 0;
             Map<NodeId, Boolean> nodeIds = new HashMap<NodeId, Boolean>();
             List<NodeId> batch = pm.getAllNodeIds(null, NODESATONCE);
+            NodeId lastId = null;
             while (!batch.isEmpty()) {
-                NodeId lastId = null;
                 for (NodeId nodeId : batch) {
                     lastId = nodeId;
 
@@ -257,7 +257,12 @@ public class ConsistencyCheck {
                 }
                 batch = pm.getAllNodeIds(lastId, NODESATONCE);
             }
-            this.nodeIds = nodeIds;
+            if (pm.exists(lastId)) {
+                this.nodeIds = nodeIds;
+            } else {
+                log.info("Failed to read all nodes, starting over");
+                loadNodes();
+            }
         } catch (ItemStateException e) {
             log.error("Exception while loading items to check", e);
         } catch (RepositoryException e) {
