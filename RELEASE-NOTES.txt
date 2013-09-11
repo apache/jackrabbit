@@ -1,4 +1,4 @@
-Release Notes -- Apache Jackrabbit -- Version 2.7.0
+Release Notes -- Apache Jackrabbit -- Version 2.7.1
 
 Introduction
 ------------
@@ -10,6 +10,57 @@ specified in the Java Specification Request 283 (JSR 283).
 Apache Jackrabbit 2.7 is an unstable series of releases cut directly from
 Jackrabbit trunk, with a focus on new features and other improvements.
 For production use we recommend the latest stable 2.6 release.
+
+Changes in Jackrabbit 2.7.1
+---------------------------
+
+New features
+
+  [JCR-3534] Efficient copying of binaries across repositories with the same data store
+  [JCR-3634] New method: JackrabbitRepository.login(Credentials, Map<String, Object>)
+  [JCR-3637] JackrabbitAccessControlEntry: Add support for multi-valued restrictions
+  [JCR-3652] Bundle serialization broken
+
+Improvements
+
+  [JCR-2029] JCR Remoting: Use DAV:lockroot to expose the lock-holding node
+  [JCR-3322] add TCK coverage of isNodeType(expandedName)
+  [JCR-3408] Query tests should avoid casting to QueryManagerImpl
+  [JCR-3591] Upgrade to latest Logback
+  [JCR-3596] Reduce level for 'overwriting cached item' log messages in ItemManager
+  [JCR-3616] unit tests should use valid namespace names
+  [JCR-3620] JCA deployment descriptor for Apache Geronimo
+  [JCR-3625] make port number for webdav integration tests configurable
+  [JCR-3626] NodeTypeTest.getPrimaryItemName can get ssssslllllloooowwwww
+  [JCR-3628] Embed cause in org.apache.jackrabbit.core.SessionImpl#getNodeByIdentifier while rethrowing IllegalArgumentException
+
+Bug fixes
+
+  [JCR-3228] WebDav/DavEx remoting throws workspace mismatch exceptions when running on port 80
+  [JCR-3398] LOWER operand with nested LOCALNAME operand does not work with SQL2
+  [JCR-3498] OUTER JOIN behavior is improperly excluding some values
+  [JCR-3547] Datastore GC doesn't reset updateModifiedDateOnAccess on datastore
+  [JCR-3595] AbstractJournal logging is too verbose
+  [JCR-3601] AbstractJCRTest.cleanUpTestRoot() does not properly set testNodeType
+  [JCR-3603] Index aggreate with property include does not speed up order by
+  [JCR-3604] NodeMixinUtil.getAddableMixinName() can return mixins already inherited by the node
+  [JCR-3605] Possible Deadlock during TimeoutHandler is running
+  [JCR-3610] html excerpt broken when one of the indexed properties contains markup
+  [JCR-3617] Inconsistent CachingHierarchyManager under concurrent access
+  [JCR-3621] Race condition in MixinTest between event delivery and unregistering the observation listener
+  [JCR-3629] [jcr2spi]RepositoryException lost in org.apache.jackrabbit.jcr2spi.ItemManagerImpl while querying on remote nodes exposed by jackrabbit-spi
+  [JCR-3630] XSS in DirListingExportHandler
+  [JCR-3631] SessionTest#hasCapability: missing save call
+  [JCR-3633] If header field sent with PROPFIND (for lock discovery)
+  [JCR-3635] Manually specified jcr:frozenUuid overwriting the one assigned by the VersionManager when versioning node
+  [JCR-3639] VersionLabelTest adds label to root version
+  [JCR-3642] Ambiguous exception expectation in SessionMoveVersionExceptionTest and WorkspaceMoveVersionExceptionTest
+  [JCR-3645] LockManagerImpl do not prevent the internal PathMap in all relevant Methods
+  [JCR-3653] SessionState logs nano seconds but writes 'us'
+  [JCR-3654] Error MembershipCache if a group node contains MV property
+  [JCR-3655] Better Locking inside LockManagerImpl
+  [JCR-3656] improve error handling when shared node support is missing
+  [JCR-3658] MembershipCache not consistently synchronized
 
 Changes in Jackrabbit 2.7.0
 ---------------------------
