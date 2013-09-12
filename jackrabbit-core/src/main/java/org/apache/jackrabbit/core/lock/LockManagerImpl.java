@@ -191,7 +191,7 @@ public class LockManagerImpl
                 }
                 try {
                     // FIXME: This session access is not thread-safe!
-                    log.debug("Try to unlock expired lock. NodeId {0}", id);
+                    log.debug("Try to unlock expired lock. NodeId {}", id);
                     unlock(holder.getNodeById(id));
                 } catch (RepositoryException e) {
                     log.warn("Unable to expire the lock. NodeId " + id, e);
