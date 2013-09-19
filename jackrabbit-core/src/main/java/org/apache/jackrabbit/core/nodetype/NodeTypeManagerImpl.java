@@ -126,6 +126,13 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager
     }
 
     /**
+     * Disposes this node type manager.
+     */
+    public void dispose() {
+        context.getNodeTypeRegistry().removeListener(this);
+    }
+
+    /**
      * @return the root node definition
      */
     public NodeDefinitionImpl getRootNodeDefinition() {

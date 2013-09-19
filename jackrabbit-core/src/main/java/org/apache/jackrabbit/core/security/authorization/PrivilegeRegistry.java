@@ -665,6 +665,15 @@ public final class PrivilegeRegistry implements PrivilegeEventListener {
         listeners.put(listener,listener);
     }
 
+    /**
+     * Removes a privilege registration listener.
+     *
+     * @param listener
+     */
+    public void removeListener(Listener listener) {
+        listeners.remove(listener);
+    }
+
     //---------------------------------------------< privilege registration >---
     /**
      * Register the specified custom privilege definitions.
