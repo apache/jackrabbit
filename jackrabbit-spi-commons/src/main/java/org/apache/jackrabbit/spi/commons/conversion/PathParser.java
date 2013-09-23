@@ -255,7 +255,6 @@ public class PathParser {
             pos++;
             // special check for whitespace
             if (c != ' ' && Character.isWhitespace(c)) {
-                rawCharacter = c;
                 c = '\t';
             }
             switch (c) {
