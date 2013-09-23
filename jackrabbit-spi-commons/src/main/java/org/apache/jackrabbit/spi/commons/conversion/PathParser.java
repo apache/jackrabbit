@@ -251,9 +251,11 @@ public class PathParser {
 
         while (pos <= len) {
             char c = pos == len ? EOF : jcrPath.charAt(pos);
+            char rawCharacter = c;
             pos++;
             // special check for whitespace
             if (c != ' ' && Character.isWhitespace(c)) {
+                rawCharacter = c;
                 c = '\t';
             }
             switch (c) {
@@ -394,7 +396,9 @@ public class PathParser {
 
                 case '\t':
                     if (state != STATE_IDENTIFIER) {
-                        throw new MalformedPathException("'" + jcrPath + "' is not a valid path. Whitespace not a allowed in name.");
+                        String message = String.format("'%s' is not a valid path. Whitespace other than SP (U+0020) not a allowed in a name, but U+%04x was found at position %d.",
+                                            jcrPath, (long) rawCharacter, pos - 1);
+                        throw new MalformedPathException(message);
                     }
                 case '*':
                 case '|':

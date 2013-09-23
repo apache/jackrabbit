@@ -259,6 +259,7 @@ public class PathParserTest extends TestCase {
         paths.add("/:");
         paths.add("/*");
         paths.add("//");
+        paths.add("foo\u3000bar"); // non-ASCII whitespace
 
         for (String jcrPath : paths) {
             try {
@@ -382,9 +383,9 @@ public class PathParserTest extends TestCase {
             } catch (MalformedPathException e) {
                 // ok
             }
-        }       
+        }
     }
-    
+
     public void testIdentifierCheckFormat() throws RepositoryException {
         DummyIdentifierResolver idResolver = new DummyIdentifierResolver();
         List<String> valid = idResolver.getValidIdentifiers();
