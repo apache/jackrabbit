@@ -205,7 +205,7 @@
     The Import element configures how protected items are imported into a
     workspace.
 -->
-<!ELEMENT Import (ProtectedNodeImporter|ProtectedPropertyImporter)*>
+<!ELEMENT Import (ProtectedItemImporter|ProtectedNodeImporter|ProtectedPropertyImporter)*>
 
 <!--
     The ProtectedNodeImporter element configures an importer for protected
