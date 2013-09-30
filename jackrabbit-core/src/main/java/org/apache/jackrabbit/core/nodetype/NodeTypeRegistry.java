@@ -237,7 +237,7 @@ public class NodeTypeRegistry implements NodeTypeEventListener {
         synchronized (this) {
 
             // validate and register new node type definitions
-            internalRegister(ntDefs);
+            internalRegister(ntDefs, external);
             // persist new node type definitions
             for (QNodeTypeDefinition ntDef: ntDefs) {
                 customNTDefs.add(ntDef);
@@ -775,7 +775,7 @@ public class NodeTypeRegistry implements NodeTypeEventListener {
             loadBuiltInNodeTypeDefs(builtInNTDefs);
 
             // register built-in node types
-            internalRegister(builtInNTDefs.all(), true);
+            internalRegister(builtInNTDefs.all(), false, true);
         } catch (InvalidNodeTypeDefException intde) {
             String error =
                     "internal error: invalid built-in node type definition stored in "
@@ -792,7 +792,7 @@ public class NodeTypeRegistry implements NodeTypeEventListener {
 
         // validate & register custom node types
         try {
-            internalRegister(customNTDefs.all());
+            internalRegister(customNTDefs.all(), false);
         } catch (InvalidNodeTypeDefException intde) {
             String error =
                     "internal error: invalid custom node type definition stored in "
@@ -1269,13 +1269,13 @@ public class NodeTypeRegistry implements NodeTypeEventListener {
      * @throws RepositoryException if an error occurs
      * @see #registerNodeType
      */
-    private void internalRegister(Collection<QNodeTypeDefinition> ntDefs)
+    private void internalRegister(Collection<QNodeTypeDefinition> ntDefs, boolean external)
             throws InvalidNodeTypeDefException, RepositoryException {
-        internalRegister(ntDefs, false);
+        internalRegister(ntDefs, external, false);
     }
 
     /**
-     * Same as {@link #internalRegister(java.util.Collection)} except for the
+     * Same as {@link #internalRegister(java.util.Collection, boolean)} except for the
      * additional <code>lenient</code> parameter which governs whether
      * validation can be lenient (e.g. for built-in node types) or has to be
      * strict (such as in the case of custom node types). This differentiation
@@ -1284,7 +1284,7 @@ public class NodeTypeRegistry implements NodeTypeEventListener {
      * that can be exposed in a property definition because it is
      * system-generated (such as jcr:primaryType in nt:base).
      */
-    private void internalRegister(Collection<QNodeTypeDefinition> ntDefs, boolean lenient)
+    private void internalRegister(Collection<QNodeTypeDefinition> ntDefs, boolean external, boolean lenient)
             throws InvalidNodeTypeDefException, RepositoryException {
 
         // need a list/collection that can be modified
@@ -1297,11 +1297,8 @@ public class NodeTypeRegistry implements NodeTypeEventListener {
         // and do some preliminary checks
         for (QNodeTypeDefinition ntd : defs) {
             Name name = ntd.getName();
-            if (name != null && tmpNTDefCache.containsKey(name)) {
-                String msg = name + " already exists";
-                if (tmpNTDefCache.containsKey(name)) {
-                    msg += " locally";
-                }
+            if (!external && name != null && tmpNTDefCache.containsKey(name)) {
+                String msg = name + " already exists locally";
                 log.debug(msg);
                 throw new InvalidNodeTypeDefException(msg);
             }
