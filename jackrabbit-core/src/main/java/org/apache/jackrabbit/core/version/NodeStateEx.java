@@ -279,6 +279,7 @@ public class NodeStateEx {
                     nodeState.setStatus(ItemState.STATUS_EXISTING_MODIFIED);
                 }
                 propState.setType(type);
+                propState.setMultiValued(multiple);
                 propState.setValues(values);
                 return propState;
             } catch (ItemStateException e) {
