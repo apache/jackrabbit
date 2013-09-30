@@ -430,11 +430,12 @@ class ChildAxisQuery extends Query implements JackrabbitQuery {
 
             calculateChildren();
             nextDoc = hits.skipTo(target);
-            while (nextDoc > -1 && !indexIsValid(nextDoc)) {
-                nextDoc();
-            }
             if (nextDoc < 0) {
                 nextDoc = NO_MORE_DOCS;
+            }
+
+            while (nextDoc != NO_MORE_DOCS && !indexIsValid(nextDoc)) {
+                nextDoc();
             }
             return nextDoc;
         }
