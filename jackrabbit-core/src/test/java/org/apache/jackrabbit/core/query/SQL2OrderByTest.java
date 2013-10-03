@@ -20,6 +20,8 @@ import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.query.QueryResult;
+import javax.jcr.query.Row;
+import javax.jcr.query.RowIterator;
 
 import org.apache.jackrabbit.commons.JcrUtils;
 
@@ -68,9 +70,21 @@ public class SQL2OrderByTest extends AbstractQueryTest {
         testRootNode.getSession().save();
 
         QueryResult qr = executeSQL2Query("SELECT * FROM [nt:base] WHERE ISCHILDNODE(["
-                + testRoot + "]) ORDER BY [jcr:score]");
-        checkSeq(qr, new Node[] { n1, n2, n3 });
+                + testRoot + "]) ORDER BY SCORE()");
+        RowIterator rows = qr.getRows();
 
+        long size = rows.getSize();
+        assertTrue(size == 3 || size == -1);
+        size = 0;
+
+        double score = Double.MIN_VALUE;
+        while (rows.hasNext()) {
+            double nextScore = rows.nextRow().getScore();
+            assertTrue(nextScore >= score);
+            score = nextScore;
+            size++;
+        }
+        assertEquals(3, size);
     }
 
     /**
