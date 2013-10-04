@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.test.api;
 
+import java.text.Normalizer;
+
 import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.apache.jackrabbit.test.NotExecutableException;
 
@@ -262,6 +264,63 @@ public class AddNodeTest extends AbstractJCRTest {
             fail("Calling Node.save() on a newly created node should throw RepositoryException");
         } catch (RepositoryException e) {
             // ok, works as expected.
+        }
+    }
+
+    /**
+     * Tests the behavior with respect to case-sensitivity
+     */
+    public void testSimilarNodeNamesUpperLower() throws RepositoryException {
+
+        internalTestSimilarNodeNames("Test-a", "Test-A");
+    }
+
+    /**
+     * Tests the behavior with respect to Unicode normalization
+     */
+    public void testSimilarNodeNamesNfcNfd() throws RepositoryException {
+
+        String precomposed = "Test-\u00e4"; // a umlaut
+        String decomposed = Normalizer.normalize(precomposed, Normalizer.Form.NFD);
+        assertFalse(precomposed.equals(decomposed)); // sanity check
+        internalTestSimilarNodeNames(precomposed, decomposed);
+    }
+
+    /**
+     * Tests behavior for creation of "similarly" named nodes
+     * @throws RepositoryException 
+     */
+    private void internalTestSimilarNodeNames(String name1, String name2) throws RepositoryException {
+
+        Node n1 = null, n2 = null;
+        Session s = testRootNode.getSession();
+
+        try {
+            n1 = testRootNode.addNode(name1);
+            assertEquals(name1, n1.getName());
+            s.save();
+
+            assertFalse(testRootNode.hasNode(name2));
+        } catch (ConstraintViolationException e) {
+            // accepted
+        }
+        try {
+            n2 = testRootNode.addNode(name2);
+            assertEquals(name2, n2.getName());
+            s.save();
+        } catch (ConstraintViolationException e) {
+            // accepted
+        }
+
+        // If both nodes have been created, do further checks
+        if (n1 != null && n2 != null) {
+            assertFalse(n1.isSame(n2));
+            assertFalse(n1.getIdentifier().equals(n2.getIdentifier()));
+            String n2path = n2.getPath();
+            n1.remove();
+            s.save();
+            Node n3 = s.getNode(n2path);
+            assertTrue(n3.isSame(n2));
         }
     }
 }
