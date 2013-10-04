@@ -373,7 +373,7 @@ public abstract class QueryResultImpl implements JackrabbitQueryResult {
      * @throws RepositoryException if an error occurs while checking access
      *                             rights.
      */
-    private boolean isAccessGranted(ScoreNode[] nodes)
+    protected boolean isAccessGranted(ScoreNode[] nodes)
             throws RepositoryException {
         for (ScoreNode node : nodes) {
             try {
