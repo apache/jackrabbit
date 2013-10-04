@@ -92,6 +92,7 @@ import org.apache.jackrabbit.core.query.QueryManagerImpl;
 import org.apache.jackrabbit.core.security.AccessManager;
 import org.apache.jackrabbit.core.security.authorization.Permission;
 import org.apache.jackrabbit.core.session.AddNodeOperation;
+import org.apache.jackrabbit.core.session.NodeNameNormalizer;
 import org.apache.jackrabbit.core.session.SessionContext;
 import org.apache.jackrabbit.core.session.SessionOperation;
 import org.apache.jackrabbit.core.session.SessionWriteOperation;
@@ -1282,6 +1283,9 @@ public class NodeImpl extends ItemImpl implements Node, JackrabbitNode {
         if (nt == null) {
             nt = (NodeTypeImpl) def.getDefaultPrimaryType();
         }
+
+        // check the new name
+        NodeNameNormalizer.check(nodeName);
 
         // check for name collisions
         NodeState thisState = data.getNodeState();
