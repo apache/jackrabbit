@@ -57,20 +57,25 @@ public class MembershipCache implements UserConstants, SynchronousEventListener,
      */
     private static final Logger log = LoggerFactory.getLogger(MembershipCache.class);
 
+    /**
+     * The maximum size of this cache
+     */
+    private static final int MAX_CACHE_SIZE =
+            Integer.getInteger("org.apache.jackrabbit.MembershipCache", 5000);
+
     private final SessionImpl systemSession;
     private final String groupsPath;
     private final boolean useMembersNode;
     private final String pMembers;
     private final Map<String, Collection<String>> cache;
 
-    @SuppressWarnings("unchecked")
     MembershipCache(SessionImpl systemSession, String groupsPath, boolean useMembersNode) throws RepositoryException {
         this.systemSession = systemSession;
         this.groupsPath = (groupsPath == null) ? UserConstants.GROUPS_PATH : groupsPath;
         this.useMembersNode = useMembersNode;
 
         pMembers = systemSession.getJCRName(UserManagerImpl.P_MEMBERS);
-        cache = new GrowingLRUMap(1024, 5000);
+        cache = new GrowingLRUMap(1024, MAX_CACHE_SIZE);
 
         String[] ntNames = new String[] {
                 systemSession.getJCRName(UserConstants.NT_REP_GROUP),
