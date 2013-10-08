@@ -1,4 +1,4 @@
-Release Notes -- Apache Jackrabbit -- Version 2.4.4
+Release Notes -- Apache Jackrabbit -- Version 2.4.5
 
 Introduction
 ------------
@@ -7,10 +7,43 @@ This is Apache Jackrabbit(TM) 2.4, a fully compliant implementation of the
 Content Repository for Java(TM) Technology API, version 2.0 (JCR 2.0) as
 specified in the Java Specification Request 283 (JSR 283).
 
+Apache Jackrabbit 2.4.5 is patch release that contains fixes and
+improvements over Jackrabbit 2.4.4. This release also contains a security fix.
+Jackrabbit 2.4.x releases are considered stable and targeted for production
+use.
 
-Apache Jackrabbit 2.4.4 is patch release that contains fixes and
-improvements over Jackrabbit 2.4.3. This release is fully compatible
-with earlier 2.x.x releases.
+Security advisory (JCR-3630)
+----------------------------
+
+As reported by Noel Dunne and Lars Krapf, there was a cross-site scripting 
+(XSS) vulnerability in the jackrabbit-jcr-server component, used for providing
+WebDAV access to the repository. This release fixes the issue.
+
+Changes since Jackrabbit 2.4.4
+------------------------------
+
+Improvements
+
+  [JCR-2029] JCR Remoting: Use DAV:lockroot to expose the lock-holding node
+  [JCR-3209] lock token validity
+  [JCR-3495] Unregister from PrivilegeRegistry and NodeTypeRegistry on ...
+  [JCR-3625] make port number for webdav integration tests configurable
+  [JCR-3626] NodeTypeTest.getPrimaryItemName can get ssssslllllloooowwwww
+
+Bug fixes
+
+  [JCR-3228] WebDav/DavEx remoting throws workspace mismatch exceptions ...
+  [JCR-3552] Principal associated with Group does not update members
+  [JCR-3617] Inconsistent CachingHierarchyManager under concurrent access
+  [JCR-3630] XSS in DirListingExportHandler
+  [JCR-3633] If header field sent with PROPFIND (for lock discovery)
+  [JCR-3635] Manually specified jcr:frozenUuid overwriting the one ...
+  [JCR-3652] Bundle serialization broken
+  [JCR-3654] Error MembershipCache if a group node contains MV property
+  [JCR-3656] improve error handling when shared node support is missing
+  [JCR-3658] MembershipCache not consistently synchronized
+  [JCR-3671] Config DTD doesn't allow ProtectedItemImporter
+  [JCR-3678] MembershipCache max size is hard coded to 5000
 
 Changes since Jackrabbit 2.4.3
 ------------------------------
