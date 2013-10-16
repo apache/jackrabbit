@@ -29,6 +29,7 @@ import java.util.GregorianCalendar;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 
+import org.apache.commons.io.IOExceptionWithCause;
 import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.value.InternalValue;
@@ -244,7 +245,7 @@ class BundleWriter {
                                     String msg = "Error while storing blob. id="
                                             + state.getId() + " idx=" + i + " size=" + size;
                                     log.error(msg, e);
-                                    throw new IOException(msg);
+                                    throw new IOExceptionWithCause(msg, e);
                                 }
                                 try {
                                     // replace value instance with value
@@ -275,47 +276,42 @@ class BundleWriter {
                         String msg = "Error while storing blob. id="
                             + state.getId() + " idx=" + i + " value=" + val;
                         log.error(msg, e);
-                        throw new IOException(msg);
+                        throw new IOExceptionWithCause(msg, e);
                     }
                     break;
                 case PropertyType.DOUBLE:
                     try {
                         out.writeDouble(val.getDouble());
                     } catch (RepositoryException e) {
-                        // should never occur
-                        throw new IOException("Unexpected error while writing DOUBLE value.");
+                        throw convertToIOException(type, e);
                     }
                     break;
                 case PropertyType.DECIMAL:
                     try {
                         writeDecimal(val.getDecimal());
                     } catch (RepositoryException e) {
-                        // should never occur
-                        throw new IOException("Unexpected error while writing DECIMAL value.");
+                        throw convertToIOException(type, e);
                     }
                     break;
                 case PropertyType.LONG:
                     try {
                         writeVarLong(val.getLong());
                     } catch (RepositoryException e) {
-                        // should never occur
-                        throw new IOException("Unexpected error while writing LONG value.");
+                        throw convertToIOException(type, e);
                     }
                     break;
                 case PropertyType.BOOLEAN:
                     try {
                         out.writeBoolean(val.getBoolean());
                     } catch (RepositoryException e) {
-                        // should never occur
-                        throw new IOException("Unexpected error while writing BOOLEAN value.");
+                        throw convertToIOException(type, e);
                     }
                     break;
                 case PropertyType.NAME:
                     try {
                         writeName(val.getName());
                     } catch (RepositoryException e) {
-                        // should never occur
-                        throw new IOException("Unexpected error while writing NAME value.");
+                        throw convertToIOException(type, e);
                     }
                     break;
                 case PropertyType.WEAKREFERENCE:
@@ -326,8 +322,7 @@ class BundleWriter {
                     try {
                         writeDate(val.getCalendar());
                     } catch (RepositoryException e) {
-                        // should never occur
-                        throw new IOException("Unexpected error while writing DATE value.");
+                        throw convertToIOException(type, e);
                     }
                     break;
                 case PropertyType.STRING:
@@ -339,6 +334,13 @@ class BundleWriter {
                     throw new IOException("Inknown property type: " + type);
             }
         }
+    }
+    
+    private static IOException convertToIOException(int propertyType, Exception e) {
+        String typeName = PropertyType.nameFromValue(propertyType);
+        String message = "Unexpected error for property type "+ typeName +" value.";
+        log.error(message, e);
+        return new IOExceptionWithCause(message, e);
     }
 
     /**
@@ -370,7 +372,7 @@ class BundleWriter {
             String msg = "Error while storing blob. id="
                     + state.getId() + " idx=" + i + " value=" + value;
             log.error(msg, e);
-            throw new IOException(msg);
+            throw new IOExceptionWithCause(msg, e);
         }
     }
 
