@@ -103,4 +103,52 @@ public class MoveTest extends AbstractJCRTest {
         assertEquals(testRootNode.getPath() + "/" + nodeName2, now);
     }
 
+    /**
+     * Test reordering same-name-siblings using move
+     */
+    public void testReorderSameNameSiblingsUsingMove() throws RepositoryException {
+        Session session = testRootNode.getSession();
+        for (NodeIterator it = testRootNode.getNodes(); it.hasNext();) {
+            it.nextNode().remove();
+            session.save();
+        }
+        Node node1 = testRootNode.addNode(nodeName1);
+        Node node2 = testRootNode.addNode(nodeName1);
+        String path = node1.getPath();
+
+        // re-order the nodes using move
+        session.move(path, path);
+
+        assertEquals(path + "[2]", node1.getPath());
+        assertEquals(path, node2.getPath());
+    }
+
+    /**
+     * Verify paths of same name siblings are correct after a (reordering) move
+     * Issue JCR-1880
+     */
+    public void testGetPathDoesNotInfluencePathsAfterMove() throws RepositoryException {
+        doTestMoveWithGetPath(false);
+        doTestMoveWithGetPath(true);
+    }
+
+    private void doTestMoveWithGetPath(boolean index) throws RepositoryException {
+        Session session = testRootNode.getSession();
+        for (NodeIterator it = testRootNode.getNodes(); it.hasNext();) {
+            it.nextNode().remove();
+            session.save();
+        }
+        String testPath = testRootNode.getPath();
+        Node a = testRootNode.addNode("a");
+        Node b = a.addNode("b");
+        session.save();
+        session.move(testPath + "/a/b", testPath + "/a");
+        if (index) {
+            b.getPath();
+        }
+        session.move(testPath + "/a", testPath + "/a");
+        assertEquals(testPath + "/a[2]", a.getPath());
+        assertEquals(testPath + "/a", b.getPath());
+    }
+
 }

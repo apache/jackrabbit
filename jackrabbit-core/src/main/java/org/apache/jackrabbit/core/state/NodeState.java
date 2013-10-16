@@ -16,16 +16,16 @@
  */
 package org.apache.jackrabbit.core.state;
 
-import org.apache.jackrabbit.core.id.ItemId;
-import org.apache.jackrabbit.core.id.NodeId;
-import org.apache.jackrabbit.spi.Name;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+
+import org.apache.jackrabbit.core.id.ItemId;
+import org.apache.jackrabbit.core.id.NodeId;
+import org.apache.jackrabbit.spi.Name;
 
 /**
  * <code>NodeState</code> represents the state of a <code>Node</code>.
@@ -372,8 +372,12 @@ public class NodeState extends ItemState {
             }
         }
         if (oldEntry != null) {
-            notifyNodeAdded(newEntry);
-            notifyNodeRemoved(oldEntry);
+            if (oldEntry.getName().equals(newName)) {
+                notifyNodesReplaced();
+            } else {
+                notifyNodeAdded(newEntry);
+                notifyNodeRemoved(oldEntry);
+            }
             return true;
         }
         return false;
