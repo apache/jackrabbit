@@ -18,6 +18,7 @@ package org.apache.jackrabbit.core.persistence.util;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.apache.commons.io.IOExceptionWithCause;
 import org.apache.commons.io.input.CountingInputStream;
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.id.PropertyId;
@@ -338,7 +339,8 @@ class BundleReader {
         String[] blobIds = new String[count];
         for (int i = 0; i < count; i++) {
             InternalValue val;
-            switch (entry.getType()) {
+            int type = entry.getType();
+            switch (type) {
                 case PropertyType.BINARY:
                     int size = in.readInt();
                     if (size == BundleBinding.BINARY_IN_DATA_STORE) {
@@ -360,7 +362,7 @@ class BundleReader {
                                 throw e;
                             }
                         } catch (Exception e) {
-                            throw new IOException("Unable to create property value: " + e.toString());
+                            throw new IOExceptionWithCause("Unable to create property value: " + e.toString(), e);
                         }
                     } else {
                         // short values into memory
