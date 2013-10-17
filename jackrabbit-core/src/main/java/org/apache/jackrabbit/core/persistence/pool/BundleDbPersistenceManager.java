@@ -928,7 +928,7 @@ public class BundleDbPersistenceManager
             } finally {
                 in.close();
             }
-        } catch (IOException e) {
+        } catch (Exception e) {
             SQLException exception =
                 new SQLException("Failed to parse bundle " + id);
             exception.initCause(e);
