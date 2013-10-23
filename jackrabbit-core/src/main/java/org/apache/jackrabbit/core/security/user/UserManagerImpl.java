@@ -1153,6 +1153,17 @@ public class UserManagerImpl extends ProtectedItemModifier
         }
     }
 
+    //--------------------------------------------------------------------------
+    public static boolean includesAdmin(NodeImpl node) throws RepositoryException {
+        UserManager uMgr = ((SessionImpl) node.getSession()).getUserManager();
+        if (uMgr instanceof UserManagerImpl) {
+            UserManagerImpl uMgrImpl = (UserManagerImpl) uMgr;
+            AuthorizableImpl admin = (AuthorizableImpl) uMgrImpl.getAuthorizable(uMgrImpl.adminId);
+            return Text.isDescendantOrEqual(node.getPath(), admin.getNode().getPath());
+        }
+        return false;
+    }
+
     //------------------------------------------------------< inner classes >---
     /**
      * Inner class

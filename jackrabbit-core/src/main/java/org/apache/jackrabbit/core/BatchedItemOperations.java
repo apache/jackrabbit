@@ -43,6 +43,7 @@ import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.retention.RetentionRegistry;
 import org.apache.jackrabbit.core.security.AccessManager;
 import org.apache.jackrabbit.core.security.authorization.Permission;
+import org.apache.jackrabbit.core.security.user.UserManagerImpl;
 import org.apache.jackrabbit.core.session.SessionContext;
 import org.apache.jackrabbit.core.state.ChildNodeEntry;
 import org.apache.jackrabbit.core.state.ItemState;
@@ -932,6 +933,10 @@ public class BatchedItemOperations extends ItemValidator {
             if (retentionReg.hasEffectiveRetention(targetPath, true)) {
                 throw new RepositoryException("Unable to perform removal. Node is affected by a retention.");
             }
+        }
+
+        if (UserManagerImpl.includesAdmin(context.getSessionImpl().getItemManager().getNode(targetPath))) {
+            throw new RepositoryException("Attempt to remove/move the admin user.");
         }
     }
 
