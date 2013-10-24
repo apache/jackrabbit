@@ -190,10 +190,6 @@ public class SessionMoveOperation implements SessionWriteOperation<Object> {
             NodeState destParentState =
                 (NodeState) destParentNode.getOrCreateTransientItemState();
 
-            // Create the transient parent nodes of the target node to prevent 
-            // conflicting and/or cyclic moves. See JCR-3921
-            createTransientParentStates(destParentNode);
-            
             // do move:
             // 1. remove child node entry from old parent
             if (srcParentState.removeChildNodeEntry(targetId)) {
@@ -207,12 +203,6 @@ public class SessionMoveOperation implements SessionWriteOperation<Object> {
         return this;
     }
 
-    private void createTransientParentStates(NodeImpl node) throws RepositoryException {
-        while (node.getParentId() != null) {
-            node.getOrCreateTransientItemState();
-            node = (NodeImpl) node.getParent();
-        }
-    }
 
     //--------------------------------------------------------------< Object >
 

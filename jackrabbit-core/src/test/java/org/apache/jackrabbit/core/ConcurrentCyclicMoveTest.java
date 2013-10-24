@@ -22,7 +22,6 @@ import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
-import org.apache.jackrabbit.core.state.StaleItemStateException;
 import org.apache.jackrabbit.test.AbstractJCRTest;
 
 public class ConcurrentCyclicMoveTest extends AbstractJCRTest {
@@ -45,24 +44,23 @@ public class ConcurrentCyclicMoveTest extends AbstractJCRTest {
         // results in /b/a/aa
         session1.move(testRootPath + "/a", testRootPath + "/b/a");
         assertEquals(testRootPath + "/b/a/aa", session1.getNodeByIdentifier(aaId).getPath());
-        
+
         // results in a/aa/b
         session2.move(testRootPath + "/b", testRootPath + "/a/aa/b");
         assertEquals(testRootPath + "/a/aa/b", session2.getNodeByIdentifier(bId).getPath());
 
         session1.save();
 
-        // path should not have changed after save.
-        assertEquals(testRootPath + "/a/aa/b", session2.getNodeByIdentifier(bId).getPath());
+        try {
+            session2.getNodeByIdentifier(bId).getPath();
+            fail("It should not be possible to access a cyclic path");
+        } catch (InvalidItemStateException expected) {
+        }
 
         try {
             session2.save();
             fail("Save should have failed. Possible cyclic persistent path created.");
-        } catch (InvalidItemStateException e) {
-            // expect is a ex caused by a StaleItemStateException with "has been modified externally"
-            if (!(e.getCause() instanceof StaleItemStateException)) {
-                throw e;
-            }
+        } catch (InvalidItemStateException expected) {
         }
     }
 
