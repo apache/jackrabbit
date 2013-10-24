@@ -17,9 +17,11 @@
 package org.apache.jackrabbit.core;
 
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
+import javax.jcr.InvalidItemStateException;
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.RepositoryException;
 
@@ -255,10 +257,12 @@ public class HierarchyManagerImpl implements HierarchyManager {
      * either return cached responses or add response to cache. On exit,
      * <code>builder</code> contains the path of <code>state</code>.
      *
-     * @param builder builder currently being used
-     * @param state   item to find path of
+     * @param builder  builder currently being used
+     * @param state    item to find path of
+     * @param detector path cycle detector
      */
-    protected void buildPath(PathBuilder builder, ItemState state)
+    protected void buildPath(
+            PathBuilder builder, ItemState state, CycleDetector detector)
             throws ItemStateException, RepositoryException {
 
         // shortcut
@@ -273,11 +277,14 @@ public class HierarchyManagerImpl implements HierarchyManager {
                     + ": orphaned item";
             log.debug(msg);
             throw new ItemNotFoundException(msg);
+        } else if (detector.checkCycle(parentId)) {
+            throw new InvalidItemStateException(
+                    "Path cycle detected: " + parentId);
         }
 
         NodeState parent = (NodeState) getItemState(parentId);
         // recursively build path of parent
-        buildPath(builder, parent);
+        buildPath(builder, parent, detector);
 
         if (state.isNode()) {
             NodeState nodeState = (NodeState) state;
@@ -392,7 +399,7 @@ public class HierarchyManagerImpl implements HierarchyManager {
         PathBuilder builder = new PathBuilder();
 
         try {
-            buildPath(builder, getItemState(id));
+            buildPath(builder, getItemState(id), new CycleDetector());
             return builder.getPath();
         } catch (NoSuchItemStateException nsise) {
             String msg = "failed to build path of " + id;
@@ -644,4 +651,37 @@ public class HierarchyManagerImpl implements HierarchyManager {
             throw new RepositoryException(msg, ise);
         }
     }
+
+    /**
+     * Utility class used to detect path cycles with as little overhead
+     * as possible. The {@link #checkCycle(ItemId)} method is called for
+     * each path element as the
+     * {@link HierarchyManagerImpl#buildPath(PathBuilder, ItemState, CycleDetector)}
+     * method walks up the hierarchy. At first, during the first fifteen
+     * path elements, the detector does nothing in order to avoid
+     * introducing any unnecessary overhead to normal paths that seldom
+     * are deeper than that. After that initial threshold all item
+     * identifiers along the path are tracked, and a cycle is reported
+     * if an identifier is encountered that already occurred along the
+     * same path.
+     */
+    protected static class CycleDetector {
+
+        private int count = 0;
+
+        private Set<ItemId> ids;
+
+        boolean checkCycle(ItemId id) throws InvalidItemStateException {
+            if (count++ >= 15) {
+                if (ids == null) {
+                    ids = new HashSet<ItemId>();
+                } else {
+                    return !ids.add(id);
+                }
+            }
+            return false;
+        }
+
+    }
+
 }

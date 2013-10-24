@@ -191,7 +191,8 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
      * being used. If no mapping is found, the item is cached instead after
      * the base implementation has been invoked.
      */
-    protected void buildPath(PathBuilder builder, ItemState state)
+    protected void buildPath(
+            PathBuilder builder, ItemState state, CycleDetector detector)
             throws ItemStateException, RepositoryException {
 
         if (state.isNode()) {
@@ -211,7 +212,7 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
             }
         }
 
-        super.buildPath(builder, state);
+        super.buildPath(builder, state, detector);
 
         if (state.isNode()) {
             try {
