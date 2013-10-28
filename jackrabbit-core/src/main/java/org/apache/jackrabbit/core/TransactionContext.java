@@ -144,6 +144,9 @@ public class TransactionContext {
             } catch (TransactionException e) {
                 txe = e;
                 break;
+            } catch (Exception e) {
+                txe = new TransactionException("Error while preparing resource " + resources, e);
+                break;
             }
         }
 
@@ -187,7 +190,7 @@ public class TransactionContext {
             if (txe != null) {
                 try {
                     resource.rollback(this);
-                } catch (TransactionException e) {
+                } catch (Exception e) {
                     log.warn("Unable to rollback changes on " + resource, e);
                 }
             } else {
@@ -196,6 +199,8 @@ public class TransactionContext {
                     heuristicCommit = true;
                 } catch (TransactionException e) {
                     txe = e;
+                } catch (Exception e) {
+                    txe = new TransactionException("Error while committing resource " + resource, e);
                 }
             }
         }
@@ -234,7 +239,7 @@ public class TransactionContext {
             InternalXAResource resource = resources[i];
             try {
                 resource.rollback(this);
-            } catch (TransactionException e) {
+            } catch (Exception e) {
                 log.warn("Unable to rollback changes on " + resource, e);
                 errors++;
             }
