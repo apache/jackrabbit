@@ -16,28 +16,24 @@
  */
 package org.apache.jackrabbit.core.security.authentication;
 
-import org.apache.jackrabbit.api.security.authentication.token.TokenCredentials;
-import org.apache.jackrabbit.api.security.principal.ItemBasedPrincipal;
-import org.apache.jackrabbit.api.security.user.Authorizable;
-import org.apache.jackrabbit.api.security.user.User;
-import org.apache.jackrabbit.api.security.user.UserManager;
-import org.apache.jackrabbit.core.NodeImpl;
-import org.apache.jackrabbit.core.SessionImpl;
-import org.apache.jackrabbit.core.security.authentication.token.TokenBasedAuthentication;
-import org.apache.jackrabbit.core.security.user.UserImpl;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import java.security.Principal;
+import java.util.Map;
 import javax.jcr.Credentials;
-import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.security.auth.Subject;
 import javax.security.auth.callback.CallbackHandler;
 import javax.security.auth.login.FailedLoginException;
 import javax.security.auth.login.LoginException;
-import java.security.Principal;
-import java.util.Map;
+
+import org.apache.jackrabbit.api.security.authentication.token.TokenCredentials;
+import org.apache.jackrabbit.api.security.user.Authorizable;
+import org.apache.jackrabbit.api.security.user.User;
+import org.apache.jackrabbit.api.security.user.UserManager;
+import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.security.authentication.token.TokenBasedAuthentication;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * The <code>DefaultLoginModule</code> authenticates Credentials related to
@@ -229,20 +225,7 @@ public class DefaultLoginModule extends AbstractLoginModule {
             // special token based login
             tokenCredentials = ((TokenCredentials) credentials);
             try {
-                Node n = TokenBasedAuthentication.getTokenNode(tokenCredentials, session);
-                final NodeImpl userNode = (NodeImpl) n.getParent().getParent();
-                final String principalName = userNode.getProperty(UserImpl.P_PRINCIPAL_NAME).getString();
-                if (userNode.isNodeType(UserImpl.NT_REP_USER)) {
-                    Authorizable a = userManager.getAuthorizable(new ItemBasedPrincipal() {
-                        public String getPath() throws RepositoryException {
-                            return userNode.getPath();
-                        }
-                        public String getName() {
-                            return principalName;
-                        }
-                    });
-                    return a.getID();
-                }
+                return TokenBasedAuthentication.getUserId(tokenCredentials, session);
             } catch (RepositoryException e) {
                 if (log.isDebugEnabled()) {
                     log.warn("Failed to retrieve UserID from token-based credentials", e);
