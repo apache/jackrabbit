@@ -98,6 +98,17 @@ public abstract class AbstractACLTemplate implements JackrabbitAccessControlList
     }
 
     /**
+     * @see org.apache.jackrabbit.api.security.JackrabbitAccessControlList#addEntry(Principal, Privilege[], boolean, Map, Map)
+     */
+    public boolean addEntry(Principal principal, Privilege[] privileges, boolean isAllow, Map<String, Value> restrictions, Map<String, Value[]> mvRestrictions) throws AccessControlException, RepositoryException {
+        if (mvRestrictions == null || mvRestrictions.isEmpty()) {
+            return addEntry(principal, privileges, isAllow, restrictions);
+        } else {
+            throw new UnsupportedRepositoryOperationException("Not implemented. Please use Jackrabbit OAK to get support for multi-valued restrictions.");
+        }
+    }
+
+    /**
      * @see org.apache.jackrabbit.api.security.JackrabbitAccessControlList#size()
      */
     public int size() {

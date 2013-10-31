@@ -171,6 +171,10 @@ public class UnmodifiableAccessControlList implements JackrabbitAccessControlLis
         throw new AccessControlException("Unmodifiable ACL. Use AccessControlManager#getPolicy or #getApplicablePolicies in order to obtain an modifiable ACL.");
     }
 
+    public boolean addEntry(Principal principal, Privilege[] privileges, boolean isAllow, Map<String, Value> restrictions, Map<String, Value[]> mvRestrictions) throws AccessControlException, RepositoryException {
+        throw new AccessControlException("Unmodifiable ACL. Use AccessControlManager#getPolicy or #getApplicablePolicies in order to obtain an modifiable ACL.");
+    }
+
     /**
      * @see org.apache.jackrabbit.api.security.JackrabbitAccessControlList#orderBefore(AccessControlEntry, AccessControlEntry)
      */

@@ -16,16 +16,16 @@
  */
 package org.apache.jackrabbit.api.security;
 
+import java.security.Principal;
+import java.util.Map;
 import javax.jcr.RepositoryException;
-import javax.jcr.Value;
 import javax.jcr.UnsupportedRepositoryOperationException;
+import javax.jcr.Value;
+import javax.jcr.security.AccessControlEntry;
 import javax.jcr.security.AccessControlException;
 import javax.jcr.security.AccessControlList;
 import javax.jcr.security.AccessControlPolicy;
 import javax.jcr.security.Privilege;
-import javax.jcr.security.AccessControlEntry;
-import java.security.Principal;
-import java.util.Map;
 
 /**
  * <code>JackrabbitAccessControlList</code> is an extension of the <code>AccessControlList</code>.
@@ -115,6 +115,39 @@ public interface JackrabbitAccessControlList extends JackrabbitAccessControlPoli
      */
     boolean addEntry(Principal principal, Privilege[] privileges,
                      boolean isAllow, Map<String, Value> restrictions)
+            throws AccessControlException, RepositoryException;
+
+    /**
+     * Adds an access control entry to this policy consisting of the specified
+     * <code>principal</code>, the specified <code>privileges</code>, the
+     * <code>isAllow</code> flag and an optional map containing additional
+     * restrictions.
+     * <p/>
+     * This method returns <code>true</code> if this policy was modified,
+     * <code>false</code> otherwise.
+     * <p/>
+     * An <code>AccessControlException</code> is thrown if any of the specified
+     * parameters is invalid or if some other access control related exception occurs.
+     *
+     * @param principal the principal to add the entry for
+     * @param privileges the privileges to add
+     * @param isAllow if <code>true</code> if this is a positive (allow) entry
+     * @param restrictions A map of additional restrictions used to narrow the
+     * effect of the entry to be created. The map must map JCR names to a single
+     * {@link javax.jcr.Value} object.
+     * @param restrictions A map of additional multivalued restrictions used to narrow the
+     * effect of the entry to be created. The map must map JCR names to a
+     * {@link javax.jcr.Value} array.
+     * @return true if this policy has changed by incorporating the given entry;
+     * false otherwise.
+     * @throws AccessControlException If any of the given parameter is invalid
+     * or cannot be handled by the implementation.
+     * @throws RepositoryException If another error occurs.
+     * @see AccessControlList#addAccessControlEntry(Principal, Privilege[])
+     */
+    boolean addEntry(Principal principal, Privilege[] privileges,
+                     boolean isAllow, Map<String, Value> restrictions,
+                     Map<String, Value[]> mvRestrictions)
             throws AccessControlException, RepositoryException;
 
     /**
