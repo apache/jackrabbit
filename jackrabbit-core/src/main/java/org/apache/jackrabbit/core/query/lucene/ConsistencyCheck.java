@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.core.query.lucene;
 
 import org.apache.jackrabbit.core.HierarchyManager;
+import org.apache.jackrabbit.core.RepositoryImpl;
 import org.apache.jackrabbit.core.cluster.ClusterException;
 import org.apache.jackrabbit.core.cluster.ClusterNode;
 import org.apache.jackrabbit.core.persistence.IterablePersistenceManager;
@@ -35,6 +36,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.RepositoryException;
+
 import java.io.IOException;
 import java.util.Collections;
 import java.util.HashMap;
@@ -318,6 +320,9 @@ public class ConsistencyCheck {
                 }
                 Document d = reader.document(i, FieldSelectors.UUID_AND_PARENT);
                 NodeId id = new NodeId(d.get(FieldNames.UUID));
+                if (!nodeIds.containsKey(id)) {
+                    continue; // this node was already marked for deletion
+                }
                 String parent = d.get(FieldNames.PARENT);
                 if (parent == null || parent.isEmpty()) {
                     continue;
@@ -328,6 +333,9 @@ public class ConsistencyCheck {
                 boolean parentIndexed = parentExists && nodeIds.get(parentId);
                 if (parentIndexed) {
                     continue;
+                } else if (id.equals(RepositoryImpl.SYSTEM_ROOT_NODE_ID)
+                        && parentId.equals(RepositoryImpl.ROOT_NODE_ID)) {
+                    continue; // special case for the /jcr:system node
                 }
 
                 // parent is missing from index
