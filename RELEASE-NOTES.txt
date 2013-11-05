@@ -1,4 +1,4 @@
-Release Notes -- Apache Jackrabbit -- Version 2.7.1
+Release Notes -- Apache Jackrabbit -- Version 2.7.2
 
 Introduction
 ------------
@@ -10,6 +10,31 @@ specified in the Java Specification Request 283 (JSR 283).
 Apache Jackrabbit 2.7 is an unstable series of releases cut directly from
 Jackrabbit trunk, with a focus on new features and other improvements.
 For production use we recommend the latest stable 2.6 release.
+
+Changes in Jackrabbit 2.7.2
+---------------------------
+
+New features
+
+  [JCR-3641] AccessControl: provide ability to create JackrabbitAccessControlEntry with multi-valued restrictions
+
+Improvements
+
+  [JCR-3675] test cases for "similarly" named nodes, diagnostics for names not in NFC
+  [JCR-3686] Prevent removal/move of admin node
+  [JCR-3687] Backport improvements made to token based auth in OAK
+
+Bug fixes
+
+  [JCR-1880] Same name sibling: Jackrabbit behaves differently when calling Node.getPath()
+  [JCR-3364] Moving of nodes requires read access to all parent nodes of the destination node
+  [JCR-3582] Unable to create nodes with whitespace chars != ASCII SP
+  [JCR-3671] Config DTD doesn't allow ProtectedItemImporter
+  [JCR-3673] ChildAxisQuery#advance method results in IllegalArgumentException through #indexIsValid method
+  [JCR-3674] Unwarranted errors logged about nodetype registrations in a clustered environment
+  [JCR-3677] Invalid SQL2OrderByTest.testOrderByScore test case
+  [JCR-3678] MembershipCache max size is hard coded to 5000
+  [JCR-3682] Better Exception Handling in TransactionContext to handle unchecked exceptions
 
 Changes in Jackrabbit 2.7.1
 ---------------------------
