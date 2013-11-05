@@ -72,7 +72,6 @@ public class ConsistencyCheck {
      */
     private static final int NODESATONCE = Integer.getInteger("org.apache.jackrabbit.checker.nodesatonce", 1024 * 8);
 
-
     private final SearchIndex handler;
 
     /**
@@ -174,7 +173,7 @@ public class ConsistencyCheck {
                 }
             } catch (Exception e) {
                 if (ignoreFailure) {
-                    log.warn("Exception while repairing: " + e);
+                    log.warn("Exception while repairing: " + error, e);
                 } else {
                     if (!(e instanceof IOException)) {
                         e = new IOException(e.getMessage());
