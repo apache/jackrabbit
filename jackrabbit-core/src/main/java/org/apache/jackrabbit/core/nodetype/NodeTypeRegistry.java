@@ -429,40 +429,11 @@ public class NodeTypeRegistry implements NodeTypeEventListener {
                 return getEffectiveNodeType(name);
             }
 
-            if (!diff.isTrivial()) {
-
-                // TODO Implement checkForConflictingContent()
-                // make sure existing content would not conflict
-                // with new node type definition
-                //checkForConflictingContent(ntd);
-                //
-                // unregister old node type definition
-                //internalUnregister(name);
-                // register new definition
-                //EffectiveNodeType entNew = internalRegister(ntd);
-                //
-                // persist modified node type definitions
-                //customNTDefs.remove(name);
-                //customNTDefs.add(ntd);
-                //persistCustomNodeTypeDefs(customNTDefs);
-                //
-                // notify listeners
-                //notifyReRegistered(name);
-                //return entNew;
-
-                String message =
-                    "The following node type change contains non-trivial changes."
-                    + "Up until now only trivial changes are supported."
-                    + " (see javadoc for "
-                    + NodeTypeDefDiff.class.getName()
-                    + "):\n" + diff.toString();
-                throw new RepositoryException(message);
-            }
+            // make sure existing content would not conflict
+            // with new node type definition
+            checkForConflictingContent(ntd, diff);
 
             /**
-             * the change is trivial and has no effect on current content
-             * (e.g. that would be the case when non-mandatory properties had
-             * been added);
              * re-register node type definition and update caches &
              * notify listeners on re-registration
              */
@@ -949,20 +920,37 @@ public class NodeTypeRegistry implements NodeTypeEventListener {
      * the above checks/actions are absolutely necessary in order to
      * guarantee integrity of repository content.
      *
+     *
      * @param ntd The node type definition replacing the former node type
      *            definition of the same name.
+     * @param diff
      * @throws RepositoryException If there is conflicting content or if the
      *                             check failed for some other reason.
      */
-    protected void checkForConflictingContent(QNodeTypeDefinition ntd)
+    protected void checkForConflictingContent(QNodeTypeDefinition ntd, final NodeTypeDefDiff diff)
             throws RepositoryException {
-        /**
-         * collect names of node types that have dependencies on the given
-         * node type
-         */
-        //Set dependentNTs = getDependentNodeTypes(ntd.getName());
 
-        throw new RepositoryException("not yet implemented");
+        if (!diff.isTrivial()) {
+            /**
+             * collect names of node types that have dependencies on the given
+             * node type
+             */
+            //Set dependentNTs = getDependentNodeTypes(ntd.getName());
+
+            String message =
+                    "The following node type change contains non-trivial changes."
+                            + "Up until now only trivial changes are supported."
+                            + " (see javadoc for "
+                            + NodeTypeDefDiff.class.getName()
+                            + "):\n" + diff.toString();
+            throw new RepositoryException(message);
+        }
+
+        /**
+         * the change is trivial and has no effect on current content
+         * (e.g. that would be the case when non-mandatory properties had
+         * been added);
+         */
     }
 
     /**
