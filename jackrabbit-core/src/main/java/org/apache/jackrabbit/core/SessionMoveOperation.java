@@ -128,12 +128,16 @@ public class SessionMoveOperation implements SessionWriteOperation<Object> {
             // no name collision, fall through
         }
 
+        // verify that the targetNode can be removed
+        int options = ItemValidator.CHECK_HOLD | ItemValidator.CHECK_RETENTION;
+        context.getItemValidator().checkRemove(targetNode, options, Permission.NONE);
+
         // verify for both source and destination parent nodes that
         // - they are checked-out
         // - are not protected neither by node type constraints nor by retention/hold
-        int options = ItemValidator.CHECK_CHECKED_OUT | ItemValidator.CHECK_LOCK |
+        options = ItemValidator.CHECK_CHECKED_OUT | ItemValidator.CHECK_LOCK |
         ItemValidator.CHECK_CONSTRAINTS | ItemValidator.CHECK_HOLD | ItemValidator.CHECK_RETENTION;
-        context.getItemValidator().checkRemove(srcParentNode, options, Permission.NONE);
+        context.getItemValidator().checkModify(srcParentNode, options, Permission.NONE);
         context.getItemValidator().checkModify(destParentNode, options, Permission.NONE);
 
         // check constraints

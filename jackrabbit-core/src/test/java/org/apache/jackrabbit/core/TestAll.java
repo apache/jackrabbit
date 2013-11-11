@@ -79,6 +79,7 @@ public class TestAll extends TestCase {
         suite.addTestSuite(ConsistencyCheck.class);
         suite.addTestSuite(RemoveAddNodeWithUUIDTest.class);
         suite.addTestSuite(ReplacePropertyWhileOthersReadTest.class);
+        suite.addTestSuite(MoveAtRootTest.class);
 
         return suite;
     }
