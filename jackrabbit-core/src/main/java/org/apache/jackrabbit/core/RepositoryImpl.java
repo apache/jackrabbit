@@ -468,7 +468,31 @@ public class RepositoryImpl extends AbstractRepository
         // manager has been added to the repository context, since the
         // initialisation code may invoke code that depends on the presence
         // of a security manager. It would be better if this was not the case.
-        securityMgr.init(this, getSystemSession(workspaceName));
+        SystemSession systemSession = getSystemSession(workspaceName);
+        securityMgr.init(this, systemSession);
+
+        // initial security specific repository descriptors that are defined
+        // by JackrabbitRepository
+        ValueFactory vf = ValueFactoryImpl.getInstance();
+        boolean hasUserMgt;
+        try {
+            securityMgr.getUserManager(systemSession);
+            hasUserMgt = true;
+        } catch (RepositoryException e) {
+            hasUserMgt = false;
+        }
+        setDescriptor(JackrabbitRepository.OPTION_USER_MANAGEMENT_SUPPORTED, vf.createValue(hasUserMgt));
+
+        boolean hasPrincipalMgt;
+        try {
+            securityMgr.getPrincipalManager(systemSession);
+            hasPrincipalMgt = true;
+        } catch (RepositoryException e) {
+            hasPrincipalMgt = false;
+        }
+        setDescriptor(JackrabbitRepository.OPTION_PRINCIPAL_MANAGEMENT_SUPPORTED, vf.createValue(hasPrincipalMgt));
+        setDescriptor(JackrabbitRepository.OPTION_PRIVILEGE_MANAGEMENT_SUPPORTED, vf.createValue(true));
+
     }
 
     /**
@@ -1179,7 +1203,7 @@ public class RepositoryImpl extends AbstractRepository
      * <ul>
      * <li>Sets standard descriptors</li>
      * <li>{@link #getCustomRepositoryDescriptors()} is called
-     * afterwards in order to add custom/overwrite standard repository decriptors.</li>
+     * afterwards in order to add custom/overwrite standard repository descriptors.</li>
      * </ul>
      *
      * @throws RepositoryException

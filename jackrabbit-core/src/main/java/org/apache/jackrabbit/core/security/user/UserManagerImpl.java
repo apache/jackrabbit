@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.core.security.user;
 
+import org.apache.jackrabbit.api.JackrabbitRepository;
 import org.apache.jackrabbit.api.security.principal.ItemBasedPrincipal;
 import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.jackrabbit.api.security.user.AuthorizableExistsException;
@@ -1155,11 +1156,14 @@ public class UserManagerImpl extends ProtectedItemModifier
 
     //--------------------------------------------------------------------------
     public static boolean includesAdmin(NodeImpl node) throws RepositoryException {
-        UserManager uMgr = ((SessionImpl) node.getSession()).getUserManager();
-        if (uMgr instanceof UserManagerImpl) {
-            UserManagerImpl uMgrImpl = (UserManagerImpl) uMgr;
-            AuthorizableImpl admin = (AuthorizableImpl) uMgrImpl.getAuthorizable(uMgrImpl.adminId);
-            return Text.isDescendantOrEqual(node.getPath(), admin.getNode().getPath());
+        SessionImpl s = (SessionImpl) node.getSession();
+        if (s.getRepository().getDescriptorValue(JackrabbitRepository.OPTION_USER_MANAGEMENT_SUPPORTED).getBoolean()) {
+            UserManager uMgr = s.getUserManager();
+            if (uMgr instanceof UserManagerImpl) {
+                UserManagerImpl uMgrImpl = (UserManagerImpl) uMgr;
+                AuthorizableImpl admin = (AuthorizableImpl) uMgrImpl.getAuthorizable(uMgrImpl.adminId);
+                return Text.isDescendantOrEqual(node.getPath(), admin.getNode().getPath());
+            }
         }
         return false;
     }
