@@ -1,4 +1,4 @@
-Release Notes -- Apache Jackrabbit -- Version 2.6.4
+Release Notes -- Apache Jackrabbit -- Version 2.6.5
 
 Introduction
 ------------
@@ -7,10 +7,24 @@ This is Apache Jackrabbit(TM) 2.6, a fully compliant implementation of the
 Content Repository for Java(TM) Technology API, version 2.0 (JCR 2.0) as
 specified in the Java Specification Request 283 (JSR 283).
 
-Apache Jackrabbit 2.6.4 is a patch release that contains fixes and
+Apache Jackrabbit 2.6.5 is a patch release that contains fixes and
 improvements over Jackrabbit 2.6. This release also contains a security fix
 for Jackrabbit 2.6.2 and earlier. Jackrabbit 2.6.x releases are considered
 stable and targeted for production use.
+
+Changes since Jackrabbit 2.6.4
+------------------------------
+
+Improvements
+
+  [JCR-3690] Allow Node Type Registry subclasses to check for ...
+
+Bug fixes
+
+  [JCR-1880] Same name sibling: Jackrabbit behaves differently when ...
+  [JCR-3364] Moving of nodes requires read access to all parent nodes ...
+  [JCR-3654] Error MembershipCache if a group node contains MV property
+  [JCR-3682] Better Exception Handling in TransactionContext to handle ...
 
 Changes since Jackrabbit 2.6.3
 ------------------------------
