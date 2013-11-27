@@ -59,9 +59,9 @@ public abstract class ConsistencyCheckError {
 
     /**
      * Executes the repair operation.
-     * @throws IOException if an error occurs while repairing.
+     * @throws Exception if an error occurs while repairing.
      */
-    abstract void repair() throws IOException;
+    abstract void repair() throws Exception;
 
     /**
      * Double check the error. Used to rule out false positives in live environments.
