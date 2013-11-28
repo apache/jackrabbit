@@ -25,6 +25,7 @@ Changes since Jackrabbit 2.4.5
 Bug fixes
 
   [JCR-3364] Moving of nodes requires read access to all parent nodes of the destination node
+  [JCR-3603] Index aggreate with property include does not speed up order by
 
 Changes since Jackrabbit 2.4.4
 ------------------------------
