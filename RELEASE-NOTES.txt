@@ -1,4 +1,4 @@
-Release Notes -- Apache Jackrabbit -- Version 2.4.5
+Release Notes -- Apache Jackrabbit -- Version 2.4.6
 
 Introduction
 ------------
@@ -7,17 +7,24 @@ This is Apache Jackrabbit(TM) 2.4, a fully compliant implementation of the
 Content Repository for Java(TM) Technology API, version 2.0 (JCR 2.0) as
 specified in the Java Specification Request 283 (JSR 283).
 
-Apache Jackrabbit 2.4.5 is patch release that contains fixes and
-improvements over Jackrabbit 2.4.4. This release also contains a security fix.
-Jackrabbit 2.4.x releases are considered stable and targeted for production
-use.
+Apache Jackrabbit 2.4.6 is patch release that contains fixes and
+improvements over Jackrabbit 2.4.5. This release also contains a security fix
+for Jackrabbit 2.4.4 and earlier. Jackrabbit 2.4.x releases are considered
+stable and targeted for production use.
 
 Security advisory (JCR-3630)
 ----------------------------
 
 As reported by Noel Dunne and Lars Krapf, there was a cross-site scripting 
 (XSS) vulnerability in the jackrabbit-jcr-server component, used for providing
-WebDAV access to the repository. This release fixes the issue.
+WebDAV access to the repository. This release includes the fix for the issue.
+
+Changes since Jackrabbit 2.4.5
+------------------------------
+
+Bug fixes
+
+  [JCR-3364] Moving of nodes requires read access to all parent nodes of the destination node
 
 Changes since Jackrabbit 2.4.4
 ------------------------------
