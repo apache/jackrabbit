@@ -33,7 +33,6 @@ import org.apache.jackrabbit.core.nodetype.EffectiveNodeType;
 import org.apache.jackrabbit.core.nodetype.NodeTypeConflictException;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.security.authorization.Permission;
-import org.apache.jackrabbit.core.security.user.UserManagerImpl;
 import org.apache.jackrabbit.core.session.SessionContext;
 import org.apache.jackrabbit.core.session.SessionOperation;
 import org.apache.jackrabbit.core.state.NodeState;
@@ -302,10 +301,6 @@ public class ItemValidator {
             if (hasRetention(item, isRemoval)) {
                 throw new RepositoryException("Unable to perform operation. Node is affected by a retention.");
             }
-        }
-
-        if (isRemoval && item.isNode() && UserManagerImpl.includesAdmin((NodeImpl) item)) {
-            throw new RepositoryException("Attempt to remove/move the admin user.");
         }
     }
 
