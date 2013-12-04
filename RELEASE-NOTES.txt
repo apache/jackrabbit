@@ -1,4 +1,4 @@
-Release Notes -- Apache Jackrabbit -- Version 2.7.2
+Release Notes -- Apache Jackrabbit -- Version 2.7.3
 
 Introduction
 ------------
@@ -10,6 +10,20 @@ specified in the Java Specification Request 283 (JSR 283).
 Apache Jackrabbit 2.7 is an unstable series of releases cut directly from
 Jackrabbit trunk, with a focus on new features and other improvements.
 For production use we recommend the latest stable 2.6 release.
+
+Changes in Jackrabbit 2.7.3
+---------------------------
+
+Improvements
+
+  [JCR-3690] Allow Node Type Registry subclasses to check for conflicting content
+
+Bug fixes
+
+  [JCR-3691] Search index consistency check logs unnecessary warnings for repairable errors
+  [JCR-3692] MoveAtRootTest fails and is not included in test suite
+  [JCR-3697] UserManager not supported error when trying to remove Node in 2.7.2
+  [JCR-3702] NPE if user w/o read permission on admin user node removes any node
 
 Changes in Jackrabbit 2.7.2
 ---------------------------
