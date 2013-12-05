@@ -34,7 +34,7 @@ public class SimpleSecurityManagerTest extends TestCase {
     @Override
     public void setUp() throws RepositoryException {
         String file = "src/test/resources/org/apache/jackrabbit/core/security/simple/simple_repository.xml";
-        RepositoryConfig config = RepositoryConfig.create(file, "jackrabbit-core/target/simple_repository");
+        RepositoryConfig config = RepositoryConfig.create(file, "target/simple_repository");
         repository = RepositoryImpl.create(config);
     }
 
