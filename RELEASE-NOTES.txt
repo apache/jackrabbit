@@ -15,6 +15,10 @@ stable and targeted for production use.
 Changes since Jackrabbit 2.6.5
 ------------------------------
 
+Improvements
+
+  [JCR-3628] Embed cause in org.apache.jackrabbit.core.SessionImpl ...
+
 Changes since Jackrabbit 2.6.4
 ------------------------------
 
