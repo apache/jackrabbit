@@ -1,4 +1,4 @@
-Release Notes -- Apache Jackrabbit -- Version 2.6.5
+Release Notes -- Apache Jackrabbit -- Version 2.6.6
 
 Introduction
 ------------
@@ -7,10 +7,13 @@ This is Apache Jackrabbit(TM) 2.6, a fully compliant implementation of the
 Content Repository for Java(TM) Technology API, version 2.0 (JCR 2.0) as
 specified in the Java Specification Request 283 (JSR 283).
 
-Apache Jackrabbit 2.6.5 is a patch release that contains fixes and
+Apache Jackrabbit 2.6.6 is a patch release that contains fixes and
 improvements over Jackrabbit 2.6. This release also contains a security fix
 for Jackrabbit 2.6.2 and earlier. Jackrabbit 2.6.x releases are considered
 stable and targeted for production use.
+
+Changes since Jackrabbit 2.6.5
+------------------------------
 
 Changes since Jackrabbit 2.6.4
 ------------------------------
