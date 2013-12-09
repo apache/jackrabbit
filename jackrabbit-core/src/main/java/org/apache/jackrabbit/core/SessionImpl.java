@@ -1097,7 +1097,7 @@ public class SessionImpl extends AbstractSession
         try {
             nodeId = NodeId.valueOf(id);
         } catch (IllegalArgumentException iae) {
-            throw new RepositoryException("invalid identifier: " + id);
+            throw new RepositoryException("invalid identifier: " + id,iae);
         }
         return getNodeById(nodeId);
     }
