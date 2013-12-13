@@ -63,24 +63,27 @@ public interface ItemManager {
      *
      * @param path path to the node to be checked
      * @return true if the specified item exists
+     * @throws RepositoryException
      */
-    public boolean nodeExists(Path path);
+    public boolean nodeExists(Path path) throws RepositoryException;
 
     /**
      * Checks if the property with the given path exists.
      *
      * @param path path to the property to be checked
      * @return true if the specified item exists
+     * @throws RepositoryException
      */
-    public boolean propertyExists(Path path);
+    public boolean propertyExists(Path path) throws RepositoryException;
 
     /**
      * Checks if the item for given HierarchyEntry exists.
      *
      * @param hierarchyEntry
      * @return true if the specified item exists
+      @throws RepositoryException
      */
-    public boolean itemExists(HierarchyEntry hierarchyEntry);
+    public boolean itemExists(HierarchyEntry hierarchyEntry) throws RepositoryException;
 
     /**
      *
