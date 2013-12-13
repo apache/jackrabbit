@@ -104,7 +104,7 @@ public class ItemManagerImpl implements Dumpable, ItemManager, ItemStateCreation
     /**
      * @see ItemManager#nodeExists(Path)
      */
-    public boolean nodeExists(Path path) {
+    public boolean nodeExists(Path path) throws RepositoryException {
         try {
             // session-sanity & permissions are checked upon itemExists(ItemState)
             NodeState nodeState = hierMgr.getNodeState(path);
@@ -113,15 +113,13 @@ public class ItemManagerImpl implements Dumpable, ItemManager, ItemStateCreation
             return false;
         } catch (ItemNotFoundException infe) {
             return false;
-        } catch (RepositoryException re) {
-            return false;
         }
     }
 
     /**
      * @see ItemManager#propertyExists(Path)
      */
-    public boolean propertyExists(Path path) {
+    public boolean propertyExists(Path path) throws RepositoryException {
         try {
             // session-sanity & permissions are checked upon itemExists(ItemState)
             PropertyState propState = hierMgr.getPropertyState(path);
@@ -130,22 +128,18 @@ public class ItemManagerImpl implements Dumpable, ItemManager, ItemStateCreation
             return false;
         } catch (ItemNotFoundException infe) {
             return false;
-        } catch (RepositoryException re) {
-            return false;
         }
     }
 
     /**
      * @see ItemManager#itemExists(HierarchyEntry)
      */
-    public boolean itemExists(HierarchyEntry hierarchyEntry) {
+    public boolean itemExists(HierarchyEntry hierarchyEntry) throws RepositoryException {
         try {
             // session-sanity & permissions are checked upon itemExists(ItemState)
             ItemState state = hierarchyEntry.getItemState();
             return itemExists(state);
         } catch (ItemNotFoundException e) {
-            return false;
-        } catch (RepositoryException e) {
             return false;
         }
     }

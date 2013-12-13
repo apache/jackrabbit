@@ -219,9 +219,17 @@ public class LazyItemIterator implements NodeIterator, PropertyIterator, Version
             pos++;
             HierarchyEntry entry = iter.next();
             // check if item exists but don't build Item instance.
-            while (!itemMgr.itemExists(entry)) {
-                log.debug("Ignoring nonexistent item " + entry);
-                entry = iter.next();
+            boolean itemExists = false;
+            while(!itemExists){
+                try{
+                    itemExists = itemMgr.itemExists(entry);
+                }catch(RepositoryException e){
+                    log.warn("Failed to check that item {} exists",entry,e);
+                }
+                if(!itemExists){
+                    log.debug("Ignoring nonexistent item {}", entry);
+                    entry = iter.next();
+                }
             }
         }
         // fetch final item (the one to be returned on next())
