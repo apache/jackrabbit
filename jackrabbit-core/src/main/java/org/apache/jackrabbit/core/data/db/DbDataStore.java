@@ -553,7 +553,7 @@ public class DbDataStore extends AbstractDataStore
             long lastModified = rs.getLong(2);
             DbUtility.close(rs);
             rs = null;
-            touch(identifier, lastModified);
+            lastModified = touch(identifier, lastModified);
             return new DbDataRecord(this, identifier, length, lastModified);
         } catch (Exception e) {
             throw convert("Can not read identifier " + identifier, e);
