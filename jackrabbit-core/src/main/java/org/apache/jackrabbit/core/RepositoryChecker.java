@@ -23,6 +23,7 @@ import static org.apache.jackrabbit.spi.commons.name.NameConstants.JCR_PREDECESS
 import static org.apache.jackrabbit.spi.commons.name.NameConstants.JCR_ROOTVERSION;
 import static org.apache.jackrabbit.spi.commons.name.NameConstants.JCR_VERSIONHISTORY;
 import static org.apache.jackrabbit.spi.commons.name.NameConstants.MIX_VERSIONABLE;
+import static org.apache.jackrabbit.spi.commons.name.NameConstants.MIX_REFERENCEABLE;
 
 import java.util.Calendar;
 import java.util.HashSet;
@@ -180,7 +181,7 @@ class RepositoryChecker {
 
         try {
             String type = isVersioned ? "in-use" : "candidate";
-            
+
             log.debug("Checking " + type + " version history of node {}", nid);
 
             String intro = "Removing references to an inconsistent " + type
@@ -197,7 +198,7 @@ class RepositoryChecker {
             message = intro + " (getting the InternalVersionHistory)";
 
             InternalVersionHistory vh = null;
-            
+
             try {
                 vh = versionManager.getVersionHistoryOfNode(nid);
             }
@@ -215,7 +216,7 @@ class RepositoryChecker {
                 }
             } else { 
                 vhid = vh.getId();
-                
+
                 // additional checks, see JCR-3101
 
                 message = intro + " (getting the version names failed)";
@@ -269,6 +270,8 @@ class RepositoryChecker {
 
         Set<Name> mixins = new HashSet<Name>(node.getMixinTypeNames());
         if (mixins.remove(MIX_VERSIONABLE)) {
+            // we are keeping jcr:uuid, so we need to make sure the type info stays valid
+            mixins.add(MIX_REFERENCEABLE);
             modified.setMixinTypeNames(mixins);
         }
 
@@ -278,29 +281,29 @@ class RepositoryChecker {
         removeProperty(modified, JCR_ISCHECKEDOUT);
 
         workspaceChanges.modified(modified);
-        
+
         if (vhid != null) {
             // attempt to rename the version history, so it doesn't interfere with
             // a future attempt to put the node under version control again 
             // (see JCR-3115)
-            
+
             log.info("trying to rename version history of node " + node.getId());
 
             NameFactory nf = NameFactoryImpl.getInstance();
-            
+
             // Name of VHR in parent folder is ID of versionable node
             Name vhrname = nf.create(Name.NS_DEFAULT_URI, node.getId().toString());
 
             try {
                 NodeState vhrState = versionManager.getPersistenceManager().load(vhid);
                 NodeState vhrParentState = versionManager.getPersistenceManager().load(vhrState.getParentId());
-                
+
                 if (vhrParentState.hasChildNodeEntry(vhrname)) {
                     NodeState modifiedParent = (NodeState) vworkspaceChanges.get(vhrState.getParentId());
                     if (modifiedParent == null) {
                         modifiedParent = new NodeState(vhrParentState, NodeState.STATUS_EXISTING_MODIFIED, true);
                     }
-                    
+
                     Calendar now = Calendar.getInstance();
                     String appendme = " (disconnected by RepositoryChecker on "
                             + ISO8601.format(now) + ")";
