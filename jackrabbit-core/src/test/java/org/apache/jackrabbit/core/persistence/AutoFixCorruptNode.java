@@ -103,17 +103,17 @@ public class AutoFixCorruptNode extends TestCase {
             test.addMixin("mix:referenceable");
 
             String lost = test.getIdentifier();
-            
+
             Node lnf = root.addNode("lost+found");
             lnf.addMixin("mix:referenceable");
             String lnfid = lnf.getIdentifier();
-            
+
             s.save();
 
             Node brokenNode = parent;
             UUID destroy = UUID.fromString(brokenNode.getIdentifier());
             s.logout();
-            
+
             destroyBundle(destroy, "workspaces/default");
 
             s = openSession(rep, false);
@@ -123,12 +123,12 @@ public class AutoFixCorruptNode extends TestCase {
             // now retry with lost+found functionality
             ConsistencyReport report2 = TestHelper.checkConsistency(s, true, lnfid);
             assertTrue("Report should have reported broken nodes", !report2.getItems().isEmpty());
-            
+
             s.logout();
-            
+
             s = openSession(rep, false);
             Node q = s.getNodeByIdentifier(lost);
-            
+
             // check the node was moved
             assertEquals(lnfid, q.getParent().getIdentifier());
         } finally {
@@ -162,14 +162,14 @@ public class AutoFixCorruptNode extends TestCase {
             String vhrRootVersionId = vhr.getNode("jcr:rootVersion").getIdentifier();
             UUID destroy = UUID.fromString(brokenNode.getIdentifier());
             s.logout();
-            
+
             destroyBundle(destroy, "version");
 
             s = openSession(rep, false);
 
             ConsistencyReport report = TestHelper.checkVersionStoreConsistency(s, false, null);
             assertTrue("Report should have reported broken nodes", !report.getItems().isEmpty());
-            
+
             try {
                 test = s.getRootNode().getNode("test");
                 vhr = s.getWorkspace().getVersionManager()
@@ -188,31 +188,31 @@ public class AutoFixCorruptNode extends TestCase {
             test = s.getRootNode().getNode("test");
             // versioning should be disabled now
             assertFalse(test.isNodeType("mix:versionable"));
-            
+
             try {
                 // try to enable versioning again
                 test.addMixin("mix:versionable");
                 s.save();
-                
+
                 fail("enabling versioning succeeded unexpectedly");
             }
             catch (Exception e) {
                 // we expect this to fail
             }
-            
+
             s.logout();
-            
+
             // now redo after running fixup on versioning storage
             s = openSession(rep, false);
 
             report = TestHelper.checkVersionStoreConsistency(s, true, null);
             assertTrue("Report should have reported broken nodes", !report.getItems().isEmpty());
             int reportitems = report.getItems().size();
-            
+
             // problems should now be fixed
             report = TestHelper.checkVersionStoreConsistency(s, false, null);
             assertTrue("Some problems should have been fixed but are not: " + report, report.getItems().size() < reportitems);
-            
+
             // get a fresh session
             s.logout();
             s = openSession(rep, false);
@@ -220,11 +220,11 @@ public class AutoFixCorruptNode extends TestCase {
             test = s.getRootNode().getNode("test");
             // versioning should be disabled now
             assertFalse(test.isNodeType("mix:versionable"));
-            
+
             // try to enable versioning again
             test.addMixin("mix:versionable");
             s.save();
-            
+
             Node oldRootVersion = s.getNodeByIdentifier(vhrRootVersionId);
             try {
                 String path = oldRootVersion.getPath();
@@ -233,7 +233,7 @@ public class AutoFixCorruptNode extends TestCase {
             catch (ItemNotFoundException ex) {
                 // orphaned
             }
-            
+
             Node newRootVersion = s.getWorkspace().getVersionManager()
                     .getVersionHistory(test.getPath()).getRootVersion();
             assertFalse(
@@ -262,7 +262,8 @@ public class AutoFixCorruptNode extends TestCase {
             Node root = s.getRootNode();
 
             // add nodes /test and /test/missing
-            Node test = root.addNode("test");
+            Node test = root.addNode("test", "nt:file");
+            test.addNode("jcr:content", "nt:unstructured");
             test.addMixin("mix:versionable");
 
             s.save();
@@ -274,17 +275,17 @@ public class AutoFixCorruptNode extends TestCase {
 
             Node brokenNode = vhr.getNode("jcr:rootVersion");
             String vhrId = vhr.getIdentifier();
-            
+
             UUID destroy = UUID.fromString(brokenNode.getIdentifier());
             s.logout();
-            
+
             destroyBundle(destroy, "version");
 
             s = openSession(rep, false);
 
             ConsistencyReport report = TestHelper.checkVersionStoreConsistency(s, false, null);
             assertTrue("Report should have reported broken nodes", !report.getItems().isEmpty());
-            
+
             try {
                 test = s.getRootNode().getNode("test");
                 vhr = s.getWorkspace().getVersionManager()
@@ -303,39 +304,42 @@ public class AutoFixCorruptNode extends TestCase {
             test = s.getRootNode().getNode("test");
             // versioning should be disabled now
             assertFalse(test.isNodeType("mix:versionable"));
-            
+
             try {
                 // try to enable versioning again
                 test.addMixin("mix:versionable");
                 s.save();
-                
+
                 fail("enabling versioning succeeded unexpectedly");
             }
             catch (Exception e) {
                 // we expect this to fail
             }
-            
+
             s.logout();
-            
+
             // now redo after running fixup on versioning storage
             s = openSession(rep, false);
 
             report = TestHelper.checkVersionStoreConsistency(s, true, null);
             assertTrue("Report should have reported broken nodes", !report.getItems().isEmpty());
             int reportitems = report.getItems().size();
-            
+
             // problems should now be fixed
             report = TestHelper.checkVersionStoreConsistency(s, false, null);
             assertTrue("Some problems should have been fixed but are not: " + report, report.getItems().size() < reportitems);
-            
+
             test = s.getRootNode().getNode("test");
             // versioning should be disabled now
             assertFalse(test.isNodeType("mix:versionable"));
-            
+            // jcr:uuid property should still be present
+            assertTrue(test.hasProperty("jcr:uuid"));
+            // ...and have a proper definition
+            assertNotNull(test.getProperty("jcr:uuid").getDefinition().getName());
             // try to enable versioning again
             test.addMixin("mix:versionable");
             s.save();
-            
+
             Node oldVHR = s.getNodeByIdentifier(vhrId);
             Node newVHR = s.getWorkspace().getVersionManager().getVersionHistory(test.getPath());
 
@@ -345,11 +349,11 @@ public class AutoFixCorruptNode extends TestCase {
 
             // name should be same plus suffix
             assertTrue(oldVHR.getName().startsWith(newVHR.getName()));
-            
+
             // try a checkout / checkin
             s.getWorkspace().getVersionManager().checkout(test.getPath());
             s.getWorkspace().getVersionManager().checkin(test.getPath());
-            
+
         } finally {
             s.logout();
             System.setProperty("org.apache.jackrabbit.version.recovery",
@@ -384,23 +388,23 @@ public class AutoFixCorruptNode extends TestCase {
 
             Node brokenNode = vhr.getNode("jcr:rootVersion");
             String vhrId = vhr.getIdentifier();
-            
+
             UUID destroy = UUID.fromString(brokenNode.getIdentifier());
 
             // disable versioning
             test.removeMixin("mix:versionable");
             s.save();
-            
+
             s.logout();
-            
-            
+
+
             destroyBundle(destroy, "version");
 
             s = openSession(rep, false);
 
             ConsistencyReport report = TestHelper.checkVersionStoreConsistency(s, false, null);
             assertTrue("Report should have reported broken nodes", !report.getItems().isEmpty());
-            
+
             s.logout();
 
             System.setProperty("org.apache.jackrabbit.version.recovery", "true");
@@ -413,7 +417,7 @@ public class AutoFixCorruptNode extends TestCase {
             test = s.getRootNode().getNode("test");
             // versioning should still be disabled
             assertFalse(test.isNodeType("mix:versionable"));
-            
+
             // try to enable versioning again
             test.addMixin("mix:versionable");
             s.save();
@@ -427,7 +431,7 @@ public class AutoFixCorruptNode extends TestCase {
 
             // name should be same plus suffix
             assertTrue(oldVHR.getName().startsWith(newVHR.getName()));
-            
+
             // try a checkout / checkin
             s.getWorkspace().getVersionManager().checkout(test.getPath());
             s.getWorkspace().getVersionManager().checkin(test.getPath());
