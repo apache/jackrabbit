@@ -35,6 +35,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -86,6 +87,12 @@ public class GarbageCollector implements DataStoreGarbageCollector {
      * The number of nodes to fetch at once from the persistence manager. Defaults to 8kb
      */
     private static final int NODESATONCE = Integer.getInteger("org.apache.jackrabbit.garbagecollector.nodesatonce", 1024 * 8);
+
+    /**
+     * Set this System Property to true to speed up the node traversing in a binary focused repository.
+     * See JCR-3708
+     */
+    private static final boolean NODE_ID_SCAN = Boolean.getBoolean("org.apache.jackrabbit.garbagecollector.node_id.scan");
 
     private MarkEventListener callback;
 
@@ -169,7 +176,11 @@ public class GarbageCollector implements DataStoreGarbageCollector {
             }
         } else {
             try {
-                scanPersistenceManagers();
+                if (!NODE_ID_SCAN) {
+                    scanPersistenceManagersByNodeInfos();
+                } else {
+                    scanPersistenceManagersByNodeIds();
+                }
             } catch (ItemStateException e) {
                 throw new RepositoryException(e);
             }
@@ -195,12 +206,19 @@ public class GarbageCollector implements DataStoreGarbageCollector {
         return persistenceManagerScan;
     }
 
-    private void scanPersistenceManagers() throws RepositoryException, ItemStateException {
+    private void scanPersistenceManagersByNodeInfos() throws RepositoryException, ItemStateException {
+        int pmCount = 0;
         for (IterablePersistenceManager pm : pmList) {
+            pmCount++;
+            int count = 0;
             Map<NodeId,NodeInfo> batch = pm.getAllNodeInfos(null, NODESATONCE);
             while (!batch.isEmpty()) {
                 NodeId lastId = null;
                 for (NodeInfo info : batch.values()) {
+                    count++;
+                    if (count % 1000 == 0) {
+                        LOG.debug(pm.toString() + " ("+pmCount + "/" + pmList.length + "): analyzed " + count + " nodes...");
+                    }
                     lastId = info.getId();
                     if (callback != null) {
                         callback.beforeScanning(null);
@@ -229,6 +247,43 @@ public class GarbageCollector implements DataStoreGarbageCollector {
             }
         }
         NodeInfo.clearPool();
+    }
+
+    private void scanPersistenceManagersByNodeIds() throws RepositoryException, ItemStateException {
+        int pmCount = 0;
+        for (IterablePersistenceManager pm : pmList) {
+            pmCount++;
+            List<NodeId> allNodeIds = pm.getAllNodeIds(null, 0);
+            int overAllCount = allNodeIds.size();
+            int count = 0;
+            for (NodeId id : allNodeIds) {
+                count++;
+                if (count % 1000 == 0) {
+                    LOG.debug(pm.toString() + " ("+pmCount + "/" + pmList.length + "): analyzed " + count + " nodes [" + overAllCount + "]...");
+                }
+                if (callback != null) {
+                    callback.beforeScanning(null);
+                }
+                try {
+                    NodeState state = pm.load(id);
+                    Set<Name> propertyNames = state.getPropertyNames();
+                    for (Name name : propertyNames) {
+                        PropertyId pid = new PropertyId(id, name);
+                        PropertyState ps = pm.load(pid);
+                        if (ps.getType() == PropertyType.BINARY) {
+                            for (InternalValue v : ps.getValues()) {
+                                // getLength will update the last modified date
+                                // if the persistence manager scan is running
+                                v.getLength();
+                            }
+                        }
+                    }
+                } catch (NoSuchItemStateException e) {
+                    // the node may have been deleted or moved in the meantime
+                    // ignore it
+                }
+            }
+        }
     }
 
     /**
