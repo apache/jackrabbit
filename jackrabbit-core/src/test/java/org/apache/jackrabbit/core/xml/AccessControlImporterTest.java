@@ -45,6 +45,7 @@ import javax.jcr.security.AccessControlPolicyIterator;
 import javax.jcr.security.Privilege;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
 import java.util.Collections;
@@ -469,6 +470,33 @@ public class AccessControlImporterTest extends AbstractJCRTest {
 
             if(entry instanceof JackrabbitAccessControlEntry) {
                 assertTrue(((JackrabbitAccessControlEntry) entry).isAllow());
+            }
+        } finally {
+            superuser.refresh(false);
+        }
+    }
+
+    /**
+     * Imports a resource-based ACL containing a single entry.
+     *
+     * @throws Exception
+     */
+    public void testImportACLUnknownFail() throws Exception {
+        try {
+            NodeImpl target = (NodeImpl) testRootNode.addNode(nodeName1);
+            target.addMixin("rep:AccessControllable");
+
+            InputStream in = new ByteArrayInputStream(XML_POLICY_TREE_4.getBytes("UTF-8"));
+            PseudoConfig config = new PseudoConfig();
+            ((AccessControlImporter) config.getProtectedItemImporters().get(0)).setImportBehavior("default");
+            SessionImporter importer = new SessionImporter(target, sImpl,
+                    ImportUUIDBehavior.IMPORT_UUID_COLLISION_THROW, config);
+            ImportHandler ih = new ImportHandler(importer, sImpl);
+            try {
+                new ParsingContentHandler(ih).parse(in);
+                fail("importing unknown principal should fail based on configuration.");
+            } catch (Exception e) {
+                // ok
             }
         } finally {
             superuser.refresh(false);

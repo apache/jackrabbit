@@ -78,6 +78,17 @@ import java.util.Set;
 public class ACLProvider extends AbstractAccessControlProvider implements AccessControlConstants {
 
     /**
+     * Constant for the name of the configuration option {@code allow-unknown-principals}.
+     * The option is a flag indicating whether access control entries with principals not known to the system
+     * can be added to an ACL. the default is {@code false}.
+     * <p/>
+     * Please note that the current implementation does only check principal existence when adding a new access
+     * control entry, but does not validate all ACEs when removing a principal. So even if this flag is {@code false},
+     * it's possible to create an ACL with a unknown principal.
+     */
+    public static final String PARAM_ALLOW_UNKNOWN_PRINCIPALS = "allow-unknown-principals";
+
+    /**
      * the default logger
      */
     private static final Logger log = LoggerFactory.getLogger(ACLProvider.class);
@@ -94,6 +105,11 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
      */
     private EntryCollector entryCollector;
 
+    /**
+     * controls if unknown principals are allowed in ACLs
+     */
+    private boolean allowUnknownPrincipals;
+
     //----------------------------------------------< AccessControlProvider >---
     /**
      * @see org.apache.jackrabbit.core.security.authorization.AccessControlProvider#init(Session, Map)
@@ -101,12 +117,13 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
     @Override
     public void init(Session systemSession, Map configuration) throws RepositoryException {
         super.init(systemSession, configuration);
+        allowUnknownPrincipals = "true".equals(configuration.get(PARAM_ALLOW_UNKNOWN_PRINCIPALS));
 
         // make sure the workspace of the given systemSession has a
         // minimal protection on the root node.
         NodeImpl root = (NodeImpl) session.getRootNode();
         rootNodeId = root.getNodeId();
-        ACLEditor systemEditor = new ACLEditor(session, this);
+        ACLEditor systemEditor = new ACLEditor(session, this, allowUnknownPrincipals);
 
         // TODO: replace by configurable default policy (see JCR-2331)
         boolean initializedWithDefaults = !configuration.containsKey(PARAM_OMIT_DEFAULT_PERMISSIONS);
@@ -221,7 +238,7 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
      */
     public AccessControlEditor getEditor(Session session) {
         checkInitialized();
-        return new ACLEditor(session, this);
+        return new ACLEditor(session, this, allowUnknownPrincipals);
     }
 
     /**
@@ -299,7 +316,7 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
     private AccessControlList getACL(NodeImpl accessControlledNode, Name policyName, String path) throws RepositoryException {
         // collect the aces of that node.
         NodeImpl aclNode = accessControlledNode.getNode(policyName);
-        AccessControlList acl = new ACLTemplate(aclNode, path);
+        AccessControlList acl = new ACLTemplate(aclNode, path, allowUnknownPrincipals);
 
         return new UnmodifiableAccessControlList(acl);
     }

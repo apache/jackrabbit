@@ -68,8 +68,9 @@ public class ACLEditor extends ProtectedItemModifier implements AccessControlEdi
      */
     private final SessionImpl session;
     private final AccessControlUtils utils;
+    private final boolean allowUnknownPrincipals;
 
-    ACLEditor(Session editingSession, AccessControlUtils utils) {
+    ACLEditor(Session editingSession, AccessControlUtils utils, boolean allowUnknownPrincipals) {
         super(Permission.MODIFY_AC);
         if (editingSession instanceof SessionImpl) {
             session = ((SessionImpl) editingSession);
@@ -77,6 +78,7 @@ public class ACLEditor extends ProtectedItemModifier implements AccessControlEdi
             throw new IllegalArgumentException("org.apache.jackrabbit.core.SessionImpl expected. Found " + editingSession.getClass());
         }
         this.utils = utils;
+        this.allowUnknownPrincipals = allowUnknownPrincipals;
     }
 
     /**
@@ -87,7 +89,7 @@ public class ACLEditor extends ProtectedItemModifier implements AccessControlEdi
      * @throws RepositoryException if an error occurs
      */
     ACLTemplate getACL(NodeImpl aclNode, String path) throws RepositoryException {
-        return new ACLTemplate(aclNode, path);
+        return new ACLTemplate(aclNode, path, allowUnknownPrincipals);
     }
 
     //------------------------------------------------< AccessControlEditor >---
@@ -151,7 +153,7 @@ public class ACLEditor extends ProtectedItemModifier implements AccessControlEdi
                 PrivilegeManager privMgr = ((JackrabbitWorkspace) session.getWorkspace()).getPrivilegeManager();
                 if (controlledNode.isNodeType(mixin) || controlledNode.canAddMixin(mixin)) {
                     acl = new ACLTemplate(nodePath, session.getPrincipalManager(),
-                            privMgr, session.getValueFactory(), session);
+                            privMgr, session.getValueFactory(), session, allowUnknownPrincipals);
                 } else {
                     log.warn("Node {} cannot be made access controllable.", nodePath);
                 }

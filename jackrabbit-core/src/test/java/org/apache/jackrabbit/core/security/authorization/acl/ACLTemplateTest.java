@@ -56,7 +56,7 @@ public class ACLTemplateTest extends AbstractACLTemplateTest {
     @Override
     protected JackrabbitAccessControlList createEmptyTemplate(String path) throws RepositoryException {
         SessionImpl sImpl = (SessionImpl) superuser;
-        return new ACLTemplate(path, principalMgr, privilegeMgr, sImpl.getValueFactory(), sImpl);
+        return new ACLTemplate(path, principalMgr, privilegeMgr, sImpl.getValueFactory(), sImpl, false);
     }
 
     @Override

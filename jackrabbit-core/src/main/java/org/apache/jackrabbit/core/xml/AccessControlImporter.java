@@ -44,6 +44,7 @@ import org.apache.jackrabbit.api.JackrabbitSession;
 import org.apache.jackrabbit.api.security.JackrabbitAccessControlList;
 import org.apache.jackrabbit.api.security.JackrabbitAccessControlManager;
 import org.apache.jackrabbit.core.NodeImpl;
+import org.apache.jackrabbit.core.security.principal.PrincipalImpl;
 import org.apache.jackrabbit.core.util.ReferenceChangeTracker;
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.security.authorization.AccessControlConstants;
@@ -88,6 +89,9 @@ public class AccessControlImporter extends DefaultProtectedNodeImporter {
     private boolean principalbased = false;
 
     private boolean initialized = false;
+
+    // keep best-effort for backward compatibility reasons
+    private ImportBehavior importBehavior = ImportBehavior.BEST_EFFORT;
 
     /**
      * the ACL for non-principal based
@@ -367,8 +371,13 @@ public class AccessControlImporter extends DefaultProtectedNodeImporter {
                 String pName = values[0].getString();
                 principal = session.getPrincipalManager().getPrincipal(pName);
                 if (principal == null) {
-                    // create "fake" principal
-                    principal = new UnknownPrincipal(pName);
+                    if (importBehavior == ImportBehavior.BEST_EFFORT) {
+                        // create "fake" principal that is always accepted in ACLTemplate.checkValidEntry()
+                        principal = new UnknownPrincipal(pName);
+                    } else {
+                        // create "fake" principal. this is checked again in ACLTemplate.checkValidEntry()
+                        principal = new PrincipalImpl(pName);
+                    }
                 }
             } else if (AccessControlConstants.P_PRIVILEGES.equals(name)) {
                 Value[] values = pInfo.getValues(PropertyType.NAME, resolver);
@@ -428,5 +437,55 @@ public class AccessControlImporter extends DefaultProtectedNodeImporter {
 
         // could not apply the ACE. No suitable ACL found.
         throw new ConstraintViolationException("Cannot handle childInfo " + childInfo + "; No policy found to apply the ACE.");        
+    }
+
+    //---------------------------------------------------------< BeanConfig >---
+    /**
+     * @return human readable representation of the <code>importBehavior</code> value.
+     */
+    public String getImportBehavior() {
+        return importBehavior.getString();
+    }
+
+    /**
+     *
+     * @param importBehaviorStr
+     */
+    public void setImportBehavior(String importBehaviorStr) {
+        this.importBehavior = ImportBehavior.fromString(importBehaviorStr);
+    }
+
+
+    public static enum ImportBehavior {
+
+        /**
+         * Default behavior that does not try to prevent errors or incompatibilities between the content
+         * and the ACL manager (eg. does not try to fix missing principals)
+         */
+        DEFAULT("default"),
+
+        /**
+         * Tries to minimize errors by adapting the content and bypassing validation checks (e.g. allows adding
+         * ACEs with missing principals, even if ACL manager would not allow this).
+         */
+        BEST_EFFORT("bestEffort");
+
+        private final String value;
+
+        ImportBehavior(String value) {
+            this.value = value;
+        }
+
+        public static ImportBehavior fromString(String str) {
+            if (str.equals("bestEffort")) {
+                return BEST_EFFORT;
+            } else {
+                return ImportBehavior.valueOf(str.toUpperCase());
+            }
+        }
+
+        public String getString() {
+            return value;
+        }
     }
 }
