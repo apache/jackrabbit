@@ -90,6 +90,11 @@ class ACLTemplate extends AbstractACLTemplate {
     private final String jcrRepGlob;
 
     /**
+     * controls if unknown principals can be used in access control entries.
+     */
+    private final boolean allowUnknownPrincipals;
+
+    /**
      * Construct a new empty {@link ACLTemplate}.
      *
      * @param path path
@@ -101,11 +106,12 @@ class ACLTemplate extends AbstractACLTemplate {
      */
     ACLTemplate(String path, PrincipalManager principalMgr, 
                 PrivilegeManager privilegeMgr, ValueFactory valueFactory,
-                NamePathResolver resolver) throws NamespaceException {
+                NamePathResolver resolver, boolean allowUnknownPrincipals) throws NamespaceException {
         super(path, valueFactory);
         this.principalMgr = principalMgr;
         this.privilegeMgr = (PrivilegeManagerImpl) privilegeMgr;
         this.resolver = resolver;
+        this.allowUnknownPrincipals = allowUnknownPrincipals;
 
         jcrRepGlob = resolver.getJCRName(P_GLOB);
     }
@@ -118,7 +124,7 @@ class ACLTemplate extends AbstractACLTemplate {
      * @param path The path as exposed by {@link JackrabbitAccessControlList#getPath()}
      * @throws RepositoryException if an error occurs
      */
-    ACLTemplate(NodeImpl aclNode, String path) throws RepositoryException {
+    ACLTemplate(NodeImpl aclNode, String path, boolean allowUnknownPrincipals) throws RepositoryException {
         super(path, (aclNode != null) ? aclNode.getSession().getValueFactory() : null);
         if (aclNode == null || !NT_REP_ACL.equals(aclNode.getPrimaryNodeTypeName())) {
             throw new IllegalArgumentException("Node must be of type 'rep:ACL'");
@@ -126,6 +132,7 @@ class ACLTemplate extends AbstractACLTemplate {
         SessionImpl sImpl = (SessionImpl) aclNode.getSession();
         principalMgr = sImpl.getPrincipalManager();
         privilegeMgr = (PrivilegeManagerImpl) ((JackrabbitWorkspace) sImpl.getWorkspace()).getPrivilegeManager();
+        this.allowUnknownPrincipals = allowUnknownPrincipals;
 
         this.resolver = sImpl;
         jcrRepGlob = sImpl.getJCRName(P_GLOB);
@@ -293,7 +300,10 @@ class ACLTemplate extends AbstractACLTemplate {
         if (principal instanceof UnknownPrincipal) {
             log.debug("Consider fallback principal as valid: {}", principal.getName());
         } else if (!principalMgr.hasPrincipal(principal.getName())) {
-            throw new AccessControlException("Principal " + principal.getName() + " does not exist.");
+            if (!allowUnknownPrincipals) {
+                throw new AccessControlException("Principal " + principal.getName() + " does not exist.");
+            }
+            log.debug("Consider fallback principal as valid: {}", principal.getName());
         }
 
         if (path == null && restrictions != null && !restrictions.isEmpty()) {

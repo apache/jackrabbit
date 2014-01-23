@@ -45,7 +45,7 @@ public class ACLTemplateEntryTest extends AbstractEntryTest {
         SessionImpl s = (SessionImpl) superuser;
         PrivilegeManager privMgr = ((JackrabbitWorkspace) superuser.getWorkspace()).getPrivilegeManager();
 
-        acl = new ACLTemplate(testPath, s.getPrincipalManager(), privMgr, s.getValueFactory(), s);
+        acl = new ACLTemplate(testPath, s.getPrincipalManager(), privMgr, s.getValueFactory(), s, false);
     }
 
     @Override
