@@ -14,20 +14,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.core.stats;
+package org.apache.jackrabbit.stats;
 
-import java.util.Comparator;
+import org.apache.jackrabbit.api.stats.QueryStat;
 
 /**
- * QueryStatDto comparator by occurrence count
- * 
- * used by the popular queries queue
+ * Extends external facing {@link QueryStat} with some internal operations
  * 
  */
-public class QueryStatDtoOccurrenceComparator implements
-        Comparator<QueryStatDtoImpl> {
-    public int compare(QueryStatDtoImpl o1, QueryStatDtoImpl o2) {
-        return new Integer(o1.getOccurrenceCount()).compareTo(o2
-                .getOccurrenceCount());
-    }
+public interface QueryStatCore extends QueryStat {
+
+    /**
+     * Logs the call of each query ran on the repository.
+     * 
+     * @param language
+     *            the query language, see
+     *            {@link org.apache.jackrabbit.spi.commons.name.NameConstants#JCR_LANGUAGE}
+     * @param statement
+     *            the query
+     * @param durationMs
+     *            time in ms
+     */
+    void logQuery(final String language, final String statement, long durationMs);
+
 }

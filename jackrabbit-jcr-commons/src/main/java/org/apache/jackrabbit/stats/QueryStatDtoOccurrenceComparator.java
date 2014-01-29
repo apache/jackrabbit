@@ -14,18 +14,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.core.stats;
+package org.apache.jackrabbit.stats;
 
 import java.util.Comparator;
 
-import org.apache.jackrabbit.api.stats.QueryStatDto;
-
 /**
- * QueryStatDto comparator by duration
+ * QueryStatDto comparator by occurrence count
+ * 
+ * used by the popular queries queue
  * 
  */
-public class QueryStatDtoComparator implements Comparator<QueryStatDto> {
-    public int compare(QueryStatDto o1, QueryStatDto o2) {
-        return new Long(o1.getDuration()).compareTo(o2.getDuration());
+public class QueryStatDtoOccurrenceComparator implements
+        Comparator<QueryStatDtoImpl> {
+    public int compare(QueryStatDtoImpl o1, QueryStatDtoImpl o2) {
+        return new Integer(o1.getOccurrenceCount()).compareTo(o2
+                .getOccurrenceCount());
     }
 }

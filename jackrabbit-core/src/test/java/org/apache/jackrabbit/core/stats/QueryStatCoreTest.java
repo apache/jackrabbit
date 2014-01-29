@@ -20,6 +20,8 @@ import static javax.jcr.query.Query.JCR_SQL2;
 
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.apache.jackrabbit.stats.QueryStatCore;
+import org.apache.jackrabbit.stats.QueryStatImpl;
 import org.apache.jackrabbit.test.AbstractJCRTest;
 
 /**
