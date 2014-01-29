@@ -18,6 +18,8 @@ package org.apache.jackrabbit.core.stats;
 
 import static java.lang.Boolean.getBoolean;
 
+import org.apache.jackrabbit.stats.QueryStatCore;
+import org.apache.jackrabbit.stats.QueryStatImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -14,27 +14,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.core.stats;
+package org.apache.jackrabbit.stats;
 
-import org.apache.jackrabbit.api.stats.QueryStat;
+import java.util.Comparator;
+
+import org.apache.jackrabbit.api.stats.QueryStatDto;
 
 /**
- * Extends external facing {@link QueryStat} with some internal operations
+ * QueryStatDto comparator by duration
  * 
  */
-public interface QueryStatCore extends QueryStat {
-
-    /**
-     * Logs the call of each query ran on the repository.
-     * 
-     * @param language
-     *            the query language, see
-     *            {@link org.apache.jackrabbit.spi.commons.name.NameConstants#JCR_LANGUAGE}
-     * @param statement
-     *            the query
-     * @param durationMs
-     *            time in ms
-     */
-    void logQuery(final String language, final String statement, long durationMs);
-
+public class QueryStatDtoComparator implements Comparator<QueryStatDto> {
+    public int compare(QueryStatDto o1, QueryStatDto o2) {
+        return new Long(o1.getDuration()).compareTo(o2.getDuration());
+    }
 }

@@ -27,7 +27,7 @@ import javax.jcr.Session;
 
 import org.apache.jackrabbit.core.WorkspaceManager;
 import org.apache.jackrabbit.core.observation.ObservationDispatcher;
-import org.apache.jackrabbit.core.stats.RepositoryStatisticsImpl;
+import org.apache.jackrabbit.stats.RepositoryStatisticsImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

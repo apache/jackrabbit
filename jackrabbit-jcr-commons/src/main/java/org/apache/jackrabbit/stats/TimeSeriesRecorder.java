@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.core.stats;
+package org.apache.jackrabbit.stats;
 
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -27,7 +27,7 @@ import org.apache.jackrabbit.api.stats.RepositoryStatistics.Type;
  * exposes the collected time series through the {@link TimeSeries}
  * interface.
  */
-class TimeSeriesRecorder implements TimeSeries {
+public class TimeSeriesRecorder implements TimeSeries {
 
     /** Value */
     private final AtomicLong counter = new AtomicLong();

@@ -34,7 +34,7 @@ import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
 import org.apache.jackrabbit.core.security.JackrabbitSecurityManager;
 import org.apache.jackrabbit.core.security.authorization.PrivilegeRegistry;
 import org.apache.jackrabbit.core.state.ItemStateCacheFactory;
-import org.apache.jackrabbit.core.stats.RepositoryStatisticsImpl;
+import org.apache.jackrabbit.stats.RepositoryStatisticsImpl;
 import org.apache.jackrabbit.core.stats.StatManager;
 import org.apache.jackrabbit.core.version.InternalVersionManagerImpl;
 

@@ -35,8 +35,6 @@ public class TestAll extends TestCase {
     public static Test suite() {
         TestSuite suite = new TestSuite("Stats tests");
 
-        suite.addTestSuite(RepositoryStatisticsImplTest.class);
-        suite.addTestSuite(TimeSeriesRecorderTest.class);
         suite.addTestSuite(QueryStatCoreTest.class);
 
         return suite;

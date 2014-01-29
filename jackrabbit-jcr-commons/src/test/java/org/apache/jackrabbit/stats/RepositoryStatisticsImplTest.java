@@ -14,13 +14,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.core.stats;
+package org.apache.jackrabbit.stats;
 
 import java.util.Iterator;
 import java.util.Map.Entry;
 
 import junit.framework.TestCase;
-
 import org.apache.jackrabbit.api.stats.TimeSeries;
 
 public class RepositoryStatisticsImplTest extends TestCase {

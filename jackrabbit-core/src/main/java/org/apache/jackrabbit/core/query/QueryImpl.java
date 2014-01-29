@@ -36,7 +36,7 @@ import javax.jcr.version.VersionException;
 import org.apache.jackrabbit.api.stats.RepositoryStatistics.Type;
 import org.apache.jackrabbit.core.session.SessionContext;
 import org.apache.jackrabbit.core.session.SessionOperation;
-import org.apache.jackrabbit.core.stats.RepositoryStatisticsImpl;
+import org.apache.jackrabbit.stats.RepositoryStatisticsImpl;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.commons.conversion.NameException;
 import org.slf4j.Logger;
