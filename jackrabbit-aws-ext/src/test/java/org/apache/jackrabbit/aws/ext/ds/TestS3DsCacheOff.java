@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.aws.ext.ds;
 
+import org.apache.jackrabbit.core.data.CachingDataStore;
+
 /**
  * Test {@link CachingDataStore} with S3Backend and local cache Off. It requires
  * to pass aws config file via system property. For e.g.

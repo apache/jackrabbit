@@ -16,11 +16,11 @@
  */
 package org.apache.jackrabbit.core.lock;
 
-import org.apache.jackrabbit.core.TransactionException;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.WorkspaceImpl;
 import org.apache.jackrabbit.core.id.NodeId;
+import org.apache.jackrabbit.data.core.TransactionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

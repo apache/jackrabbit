@@ -27,6 +27,7 @@
     <artifactId>jackrabbit-aws-ext</artifactId>
     <name>Jackrabbit AWS Extension</name>
     <description>Jackrabbit extenstion to Amazon Webservices</description>
+    <packaging>bundle</packaging>
 
     <!-- ====================================================================== -->
     <!-- D E P E N D E N C I E S -->
@@ -48,7 +49,7 @@
         </dependency>
         <dependency>
             <groupId>org.apache.jackrabbit</groupId>
-            <artifactId>jackrabbit-core</artifactId>
+            <artifactId>jackrabbit-data</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
@@ -83,6 +84,20 @@
                     <includes>
                         <include>**/aws/**/TestAll.java</include>
                     </includes>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+                <extensions>true</extensions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.rat</groupId>
+                <artifactId>apache-rat-plugin</artifactId>
+                <configuration>
+                    <excludes>
+                        <exclude>.checkstyle</exclude>
+                    </excludes>
                 </configuration>
             </plugin>
         </plugins>

@@ -32,6 +32,7 @@ import javax.jcr.RepositoryException;
 import junit.framework.TestCase;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.jackrabbit.core.data.CachingDataStore;
 import org.apache.jackrabbit.core.data.DataIdentifier;
 import org.apache.jackrabbit.core.data.DataRecord;
 import org.apache.jackrabbit.core.data.DataStore;

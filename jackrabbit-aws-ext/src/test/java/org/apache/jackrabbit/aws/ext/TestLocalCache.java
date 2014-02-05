@@ -27,6 +27,7 @@ import java.util.Random;
 import junit.framework.TestCase;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.jackrabbit.core.data.LocalCache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.util.Properties;
 
 import org.apache.jackrabbit.aws.ext.Utils;
+import org.apache.jackrabbit.core.data.CachingDataStore;
 
 /**
  * Test {@link CachingDataStore} with S3Backend and local cache on. It requires

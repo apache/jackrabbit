@@ -16,19 +16,21 @@
  */
 package org.apache.jackrabbit.aws.ext.ds;
 
+import org.apache.jackrabbit.core.data.Backend;
+import org.apache.jackrabbit.core.data.CachingDataStore;
+
 /**
  * A caching data store that uses the in-memory backend.
  */
 public class InMemoryDataStore extends CachingDataStore {
 
     @Override
-    Backend createBackend() {
+    protected Backend createBackend() {
         return new InMemoryBackend();
     }
 
     @Override
-    String getMarkerFile() {
+    protected String getMarkerFile() {
         return "mem.init.done";
     }
-
 }

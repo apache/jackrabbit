@@ -16,8 +16,8 @@
  */
 package org.apache.jackrabbit.core.util;
 
-import static org.apache.jackrabbit.core.TransactionContext.getCurrentThreadId;
-import static org.apache.jackrabbit.core.TransactionContext.isSameThreadId;
+import static org.apache.jackrabbit.data.core.TransactionContext.getCurrentThreadId;
+import static org.apache.jackrabbit.data.core.TransactionContext.isSameThreadId;
 import EDU.oswego.cs.dl.util.concurrent.ReentrantWriterPreferenceReadWriteLock;
 
 /**

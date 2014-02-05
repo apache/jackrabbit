@@ -26,15 +26,15 @@ import javax.jcr.ReferentialIntegrityException;
 
 import org.apache.commons.collections.Predicate;
 import org.apache.commons.collections.iterators.FilterIterator;
-import org.apache.jackrabbit.core.InternalXAResource;
-import org.apache.jackrabbit.core.TransactionContext;
-import org.apache.jackrabbit.core.TransactionException;
 import org.apache.jackrabbit.core.id.ItemId;
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.id.PropertyId;
 import org.apache.jackrabbit.core.observation.EventStateCollectionFactory;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.core.virtual.VirtualItemStateProvider;
+import org.apache.jackrabbit.data.core.InternalXAResource;
+import org.apache.jackrabbit.data.core.TransactionContext;
+import org.apache.jackrabbit.data.core.TransactionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
