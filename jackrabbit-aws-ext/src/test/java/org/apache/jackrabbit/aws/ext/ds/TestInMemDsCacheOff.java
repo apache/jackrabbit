@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.aws.ext.ds;
 
+import org.apache.jackrabbit.core.data.CachingDataStore;
+
 /**
  * Test {@link CachingDataStore} with InMemoryBackend and local cache off.
  */

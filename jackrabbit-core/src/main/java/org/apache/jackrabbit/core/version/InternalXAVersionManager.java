@@ -24,10 +24,7 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.version.VersionException;
 
-import org.apache.jackrabbit.core.InternalXAResource;
 import org.apache.jackrabbit.core.SessionImpl;
-import org.apache.jackrabbit.core.TransactionContext;
-import org.apache.jackrabbit.core.TransactionException;
 import org.apache.jackrabbit.core.id.ItemId;
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
@@ -45,6 +42,9 @@ import org.apache.jackrabbit.core.state.XAItemStateManager;
 import org.apache.jackrabbit.core.virtual.VirtualItemStateProvider;
 import org.apache.jackrabbit.core.virtual.VirtualNodeState;
 import org.apache.jackrabbit.core.virtual.VirtualPropertyState;
+import org.apache.jackrabbit.data.core.InternalXAResource;
+import org.apache.jackrabbit.data.core.TransactionContext;
+import org.apache.jackrabbit.data.core.TransactionException;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 

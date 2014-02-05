@@ -32,6 +32,8 @@ import java.util.concurrent.ThreadPoolExecutor;
 
 import org.apache.jackrabbit.aws.ext.S3Constants;
 import org.apache.jackrabbit.aws.ext.Utils;
+import org.apache.jackrabbit.core.data.Backend;
+import org.apache.jackrabbit.core.data.CachingDataStore;
 import org.apache.jackrabbit.core.data.DataIdentifier;
 import org.apache.jackrabbit.core.data.DataStoreException;
 import org.slf4j.Logger;
@@ -340,7 +342,7 @@ public class S3Backend implements Backend {
             for (S3ObjectSummary s3ObjSumm : prevObjectListing.getObjectSummaries()) {
                 DataIdentifier identifier = new DataIdentifier(
                     getIdentifierName(s3ObjSumm.getKey()));
-                if (!store.inUse.containsKey(identifier)
+                if (!store.isInUse(identifier)
                     && s3ObjSumm.getLastModified().getTime() < min) {
                     LOG.info("add id :" + s3ObjSumm.getKey()
                         + " to delete lists");

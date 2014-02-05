@@ -19,6 +19,7 @@ package org.apache.jackrabbit.core.data;
 import org.apache.jackrabbit.api.management.DataStoreGarbageCollector;
 import org.apache.jackrabbit.api.management.MarkEventListener;
 import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.gc.GarbageCollector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

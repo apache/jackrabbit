@@ -35,6 +35,7 @@ import org.apache.jackrabbit.api.JackrabbitRepositoryFactory;
 import org.apache.jackrabbit.api.management.MarkEventListener;
 import org.apache.jackrabbit.core.RepositoryFactoryImpl;
 import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.gc.GarbageCollector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -16,8 +16,8 @@
  */
 package org.apache.jackrabbit.core.state;
 
-import static org.apache.jackrabbit.core.TransactionContext.getCurrentThreadId;
-import static org.apache.jackrabbit.core.TransactionContext.isSameThreadId;
+import static org.apache.jackrabbit.data.core.TransactionContext.getCurrentThreadId;
+import static org.apache.jackrabbit.data.core.TransactionContext.isSameThreadId;
 
 import java.util.Collections;
 import java.util.HashMap;

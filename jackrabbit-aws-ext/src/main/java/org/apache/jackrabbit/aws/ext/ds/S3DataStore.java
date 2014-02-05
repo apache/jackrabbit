@@ -16,6 +16,9 @@
  */
 package org.apache.jackrabbit.aws.ext.ds;
 
+import org.apache.jackrabbit.core.data.Backend;
+import org.apache.jackrabbit.core.data.CachingDataStore;
+
 /**
  * An Amazon S3 data store.
  */

@@ -16,8 +16,10 @@
  */
 package org.apache.jackrabbit.core.util;
 
-import static org.apache.jackrabbit.core.TransactionContext.isSameThreadId;
-import org.apache.jackrabbit.core.TransactionContext;
+import static org.apache.jackrabbit.data.core.TransactionContext.isSameThreadId;
+
+import org.apache.jackrabbit.data.core.TransactionContext;
+
 import EDU.oswego.cs.dl.util.concurrent.ReentrantLock;
 
 /**

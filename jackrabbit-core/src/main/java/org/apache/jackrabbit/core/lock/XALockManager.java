@@ -16,11 +16,11 @@
  */
 package org.apache.jackrabbit.core.lock;
 
-import org.apache.jackrabbit.core.InternalXAResource;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.SessionImpl;
-import org.apache.jackrabbit.core.TransactionContext;
-import org.apache.jackrabbit.core.TransactionException;
+import org.apache.jackrabbit.data.core.InternalXAResource;
+import org.apache.jackrabbit.data.core.TransactionContext;
+import org.apache.jackrabbit.data.core.TransactionException;
 import org.apache.jackrabbit.spi.Path;
 
 import javax.jcr.RepositoryException;

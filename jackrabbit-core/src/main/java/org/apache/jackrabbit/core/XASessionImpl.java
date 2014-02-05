@@ -23,6 +23,8 @@ import org.apache.jackrabbit.core.security.authentication.AuthContext;
 import org.apache.jackrabbit.core.state.XAItemStateManager;
 import org.apache.jackrabbit.core.version.InternalVersionManager;
 import org.apache.jackrabbit.core.version.InternalXAVersionManager;
+import org.apache.jackrabbit.data.core.InternalXAResource;
+import org.apache.jackrabbit.data.core.TransactionContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
