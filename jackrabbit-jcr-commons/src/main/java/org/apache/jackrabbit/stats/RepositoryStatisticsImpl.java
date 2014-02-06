@@ -49,8 +49,10 @@ public class RepositoryStatisticsImpl implements
                 Type.BUNDLE_CACHE_MISS_DURATION, Type.BUNDLE_CACHE_MISS_AVERAGE);
         createAvg(Type.BUNDLE_WRITE_COUNTER, Type.BUNDLE_WRITE_DURATION,
                 Type.BUNDLE_WRITE_AVERAGE);
-        createAvg(Type.QUERY_COUNT, Type.QUERY_DURATION, Type.QUERY_AVERAGE);
-
+        createAvg(Type.QUERY_COUNT, Type.QUERY_DURATION,
+                Type.QUERY_AVERAGE);
+        createAvg(Type.OBSERVATION_EVENT_COUNTER, Type.OBSERVATION_EVENT_DURATION,
+                Type.OBSERVATION_EVENT_AVERAGE);
     }
 
     private void createAvg(Type count, Type duration, Type avgTs) {

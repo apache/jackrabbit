@@ -24,7 +24,7 @@ import org.apache.jackrabbit.api.stats.TimeSeries;
 
 public class RepositoryStatisticsImplTest extends TestCase {
 
-    private static final int DEFAULT_NUMBER_OF_ELEMENTS = 17;
+    private static final int DEFAULT_NUMBER_OF_ELEMENTS = 20;
 
     public void testDefaultIterator() {
         RepositoryStatisticsImpl repositoryStatistics = new RepositoryStatisticsImpl();

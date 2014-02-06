@@ -23,6 +23,11 @@ package org.apache.jackrabbit.api.stats;
  */
 public interface RepositoryStatistics {
 
+    /**
+     * The values of this enum determine the type of the time
+     * series returned by {@link #getTimeSeries(Type)}
+     * and link {@link #getTimeSeries(String, boolean)}.
+     */
     enum Type {
         BUNDLE_READ_COUNTER(true),
         BUNDLE_WRITE_COUNTER(true),
@@ -35,17 +40,87 @@ public interface RepositoryStatistics {
         BUNDLE_CACHE_MISS_AVERAGE(false),
         BUNDLE_COUNTER(true),
         BUNDLE_WS_SIZE_COUNTER(true),
+
+        /**
+         * Number of read accesses through any session.
+         */
         SESSION_READ_COUNTER(true),
+
+        /**
+         * Total time spent reading from sessions in nano seconds.
+         */
         SESSION_READ_DURATION(true),
+
+        /**
+         * Average time spent reading from sessions in nano seconds.
+         * This is the sum of all read durations divided by the number
+         * of reads in the respective time period.
+         */
         SESSION_READ_AVERAGE(false),
+
+        /**
+         * Number of write accesses through any session.
+         */
         SESSION_WRITE_COUNTER(true),
+
+        /**
+         * Total time spent writing to sessions in nano seconds.
+         */
         SESSION_WRITE_DURATION(true),
+
+        /**
+         * Average time spent writing to sessions in nano seconds.
+         * This is the sum of all write durations divided by the number
+         * of writes in the respective time period.
+         */
         SESSION_WRITE_AVERAGE(false),
+
+        /**
+         * Number of calls sessions that have been logged in.
+         */
         SESSION_LOGIN_COUNTER(true),
+
+        /**
+         * Number of currently logged in sessions.
+         */
         SESSION_COUNT(false),
+
+        /**
+         * Number of queries executed.
+         */
         QUERY_COUNT(true),
+
+        /**
+         * Total time spent evaluating queries in milli seconds.
+         */
         QUERY_DURATION(true),
-        QUERY_AVERAGE(true);
+
+        /**
+         * Average time spent evaluating queries in milli seconds.
+         * This is the sum of all query durations divided by the number
+         * of queries in the respective time period.
+         */
+        QUERY_AVERAGE(true),
+
+        /**
+         * Total number of observation {@code Event} instances delivered
+         * to all observation listeners.
+         */
+        OBSERVATION_EVENT_COUNTER(true),
+
+        /**
+         * Total time spent processing observation events by all observation
+         * listeners in nano seconds.
+         */
+        OBSERVATION_EVENT_DURATION(true),
+
+        /**
+         * Average time spent processing observation events by all observation
+         * listeners in nano seconds.
+         * This is the sum of all observation durations divided by the number
+         * of observation events in the respective time period.
+         */
+        OBSERVATION_EVENT_AVERAGE(true);
 
         private final boolean resetValueEachSecond;
 
@@ -56,8 +131,8 @@ public interface RepositoryStatistics {
         public static Type getType(String type) {
             Type realType = null;
             try {
-                realType = Type.valueOf(type);
-            } catch (IllegalArgumentException ignore) {};
+                realType = valueOf(type);
+            } catch (IllegalArgumentException ignore) {}
             return realType;
         }
 
