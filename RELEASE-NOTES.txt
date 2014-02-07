@@ -1,4 +1,4 @@
-Release Notes -- Apache Jackrabbit -- Version 2.7.3
+Release Notes -- Apache Jackrabbit -- Version 2.7.4
 
 Introduction
 ------------
@@ -10,6 +10,24 @@ specified in the Java Specification Request 283 (JSR 283).
 Apache Jackrabbit 2.7 is an unstable series of releases cut directly from
 Jackrabbit trunk, with a focus on new features and other improvements.
 For production use we recommend the latest stable 2.6 release.
+
+Changes in Jackrabbit 2.7.4
+---------------------------
+
+Improvements
+
+  [JCR-3705] Extract data store API and implementations from jackrabbit-core
+  [JCR-3708] More efficient node traversal during garbage collection in binary focused Repository
+  [JCR-3720] Extract stats package from core to make it reusable
+  [JCR-3723] Add support for observation statistics to RepositoryStatistics
+
+Bug fixes
+
+  [JCR-3709] DBDataStore updates 2 times the lastModified Date on touch when GC is running
+  [JCR-3710] occasional test failures in TokenBasedAuthenticationTest
+  [JCR-3711] RepositoryChecker versioning cleanup may leave repaired node in invalid type state
+  [JCR-3718] Inconsistent Principal Validation between API and Import behavior
+  [JCR-3719] ReferenceBinaryTest does not run when running test suite
 
 Changes in Jackrabbit 2.7.3
 ---------------------------
