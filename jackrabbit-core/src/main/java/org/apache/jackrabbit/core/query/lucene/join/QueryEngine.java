@@ -246,7 +246,7 @@ public class QueryEngine {
                 merger.getRightSelectors());
 
         if (leftRows == null || leftRows.isEmpty()) {
-            return merger.merge(new RowIteratorAdapter(leftRows),
+            return merger.merge(new RowIteratorAdapter((leftRows == null) ? Collections.emptySet() : leftRows),
                     new RowIteratorAdapter(new TreeSet<Row>()), null, rightCo);
         }
 
