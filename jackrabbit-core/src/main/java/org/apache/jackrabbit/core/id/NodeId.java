@@ -243,6 +243,21 @@ public class NodeId implements ItemId, Comparable<NodeId> {
 
     //--------------------------------------------------------------< Object >
 
+    final static String[] digits = new String[256];
+    static {
+      for ( int i=0; i<digits.length; ++i ) {
+        digits[i] = String.format("%02x", i);
+      }
+    }
+
+    final static int[] indexes = {
+      0, 1, 2, 3, 4, 5, 6, 7,
+      9, 10, 11, 12,
+      14, 15, 16, 17,
+      19, 20, 21, 22,
+      24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35
+    };
+
     /**
      * Returns the UUID string representation of this identifier.
      *
@@ -250,7 +265,19 @@ public class NodeId implements ItemId, Comparable<NodeId> {
      * @return UUID string
      */
     public String toString() {
-        return new UUID(msb, lsb).toString();
+        //return new UUID(msb, lsb).toString();
+        final char[] retval = new char[36];
+        retval[8] = retval[13] = retval[18] = retval[23] = '-';
+        final byte[] data = getRawBytes();
+        for ( int i=0; i<16; ++i ) {
+          int pos = data[i];
+          if ( pos < 0 )
+            pos += 256;
+          final String v = digits[pos];
+          retval[indexes[i*2]] = v.charAt(0);
+          retval[indexes[i*2 + 1]] = v.charAt(1);
+        }
+        return new String(retval);
     }
 
     /**
