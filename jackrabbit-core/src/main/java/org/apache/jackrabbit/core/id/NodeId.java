@@ -250,7 +250,31 @@ public class NodeId implements ItemId, Comparable<NodeId> {
      * @return UUID string
      */
     public String toString() {
-        return new UUID(msb, lsb).toString();
+        char[] retval = new char[36];
+        hex4(retval, 0, msb >>> 48);
+        hex4(retval, 4, msb >>> 32);
+        retval[8]  = '-';
+        hex4(retval, 9, msb >>> 16);
+        retval[13] = '-';
+        hex4(retval, 14, msb);
+        retval[18] = '-';
+        hex4(retval, 19, lsb >>> 48);
+        retval[23] = '-';
+        hex4(retval, 24, lsb >>> 32);
+        hex4(retval, 28, lsb >>> 16);
+        hex4(retval, 32, lsb);
+        return new String(retval);
+    }
+
+    private static final void hex4(char[] c, int index, long value) {
+        for (int i = 0; i < 4; i++) {
+            long v = (value >>> (12 - i * 4)) & 0xf;
+            if (v < 10) {
+                c[index + i] = (char) (v + '0');
+            } else {
+                c[index + i] = (char) (v - 10 + 'a');
+            }
+        }
     }
 
     /**
