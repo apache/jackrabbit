@@ -125,16 +125,26 @@ public class Installer {
     public int installRepository(HttpServletRequest req)
             throws ServletException, IOException {
         String repHome = req.getParameter("repository_home");
+        String repType = req.getParameter("repository_type");
         String repXml = req.getParameter("repository_xml");
         String mode = req.getParameter("mode");
+
         if (repHome == null || mode == null) {
             return C_INVALID_INPUT;
         }
-        if (repXml == null || repXml.length() == 0) {
-            repXml = repHome + "/repository.xml";
-        }
         File home = new File(repHome);
-        File config = new File(repXml);
+
+        File config;
+        if ("oak".equals(repType)) {
+            config = null;
+            repXml = null;
+        } else if (repXml == null || repXml.length() == 0) {
+            config = new File(home, "repository.xml");
+            repXml = config.getPath();
+        } else {
+            config = new File(repXml);
+        }
+
         if ("new".equals(mode)) {
             // Test internal folder repository existence and not home because home is already created
             // by org.apache.jackrabbit.server.remoting.davex.JcrRemotingServlet
@@ -142,25 +152,28 @@ public class Installer {
                 log.error("Trying to install new repository home '{}' but it already contain a repository", repHome);
                 return C_HOME_EXISTS;
             }
-            if (config.exists()) {
+            if (config != null && config.exists()) {
                 log.error("Trying to install new repository config '{}' but already exists", repXml);
                 return C_CONFIG_EXISTS;
             }
             log.info("Creating new repository home '{}'", repHome);
             home.mkdirs();
-            // install repository xml
-            try {
-                installRepositoryConfig(config);
-            } catch (IOException e) {
-                log.error("Error while installing new repository config '{}': {}", repXml, e.toString());
-                return C_BOOTSTRAP_EXISTS;
+
+            if (config != null) {
+                // install repository xml for Jackrabbit Classic
+                try {
+                    installRepositoryConfig(config);
+                } catch (IOException e) {
+                    log.error("Error while installing new repository config '{}': {}", repXml, e.toString());
+                    return C_BOOTSTRAP_EXISTS;
+                }
             }
         } else {
             if (!home.exists()) {
-                log.error("Trying to use exisintg repository home '{}' but does not exists", repHome);
+                log.error("Trying to use existing repository home '{}' but does not exists", repHome);
                 return C_HOME_MISSING;
             }
-            if (!config.exists()) {
+            if (config != null && !config.exists()) {
                 log.error("Trying to use existing repository config '{}' but does not exists", repXml);
                 return C_CONFIG_MISSING;
             }
@@ -210,7 +223,9 @@ public class Installer {
         Properties props = new Properties();
         props.load(in);
         props.setProperty("repository.home", repHome);
-        props.setProperty("repository.config", repXml);
+        if (repXml != null) {
+            props.setProperty("repository.config", repXml);
+        }
         in.close();
         if (!dest.getParentFile().exists()) {
             dest.getParentFile().mkdirs();

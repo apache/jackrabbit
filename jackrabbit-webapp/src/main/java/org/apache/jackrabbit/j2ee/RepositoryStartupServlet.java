@@ -20,6 +20,10 @@ import org.apache.jackrabbit.api.JackrabbitRepository;
 import org.apache.jackrabbit.commons.repository.RepositoryFactory;
 import org.apache.jackrabbit.core.RepositoryImpl;
 import org.apache.jackrabbit.core.config.RepositoryConfig;
+import org.apache.jackrabbit.oak.jcr.Jcr;
+import org.apache.jackrabbit.oak.plugins.segment.SegmentNodeStore;
+import org.apache.jackrabbit.oak.plugins.segment.SegmentStore;
+import org.apache.jackrabbit.oak.plugins.segment.file.FileStore;
 import org.apache.jackrabbit.rmi.server.RemoteAdapterFactory;
 import org.apache.jackrabbit.rmi.server.ServerAdapterFactory;
 import org.apache.jackrabbit.servlet.AbstractRepositoryServlet;
@@ -166,6 +170,11 @@ public class RepositoryStartupServlet extends AbstractRepositoryServlet {
      * Ugly hack to override the bootstrap file location in the test cases
      */
     static String bootstrapOverride = null;
+
+    /**
+     * the TarMK segment store
+     */
+    private SegmentStore store;
 
     /**
      * the registered repository
@@ -370,8 +379,7 @@ public class RepositoryStartupServlet extends AbstractRepositoryServlet {
         config.init(bootstrapProps);
         config.validate();
         if (!config.isValid()
-                || config.getRepositoryHome() == null
-                || config.getRepositoryConfig() == null) {
+                || config.getRepositoryHome() == null) {
             if (bstrp == null) {
                 log.error("Repository startup configuration is not valid.");
             } else {
@@ -402,25 +410,35 @@ public class RepositoryStartupServlet extends AbstractRepositoryServlet {
                     "Repository configuration failure: " + config.getRepositoryHome(), e);
         }
         String repConfig = config.getRepositoryConfig();
-        InputStream in = getServletContext().getResourceAsStream(repConfig);
-        if (in == null) {
-            try {
-                in = new FileInputStream(new File(repConfig));
-            } catch (FileNotFoundException e) {
-                // fallback to old config
+        if (repConfig != null) { // Jackrabbit Classic
+            InputStream in = getServletContext().getResourceAsStream(repConfig);
+            if (in == null) {
                 try {
-                    in = new FileInputStream(new File(repHome, repConfig));
-                } catch (FileNotFoundException e1) {
-                    throw new ServletExceptionWithCause(
-                            "Repository configuration not found: " + repConfig, e);
+                    in = new FileInputStream(new File(repConfig));
+                } catch (FileNotFoundException e) {
+                    // fallback to old config
+                    try {
+                        in = new FileInputStream(new File(repHome, repConfig));
+                    } catch (FileNotFoundException e1) {
+                        throw new ServletExceptionWithCause(
+                                "Repository configuration not found: " + repConfig, e);
+                    }
                 }
             }
-        }
 
-        try {
-            repository = createRepository(new InputSource(in), repHome);
-        } catch (RepositoryException e) {
-            throw new ServletExceptionWithCause("Error while creating repository", e);
+            try {
+                repository = createRepository(new InputSource(in), repHome);
+            } catch (RepositoryException e) {
+                throw new ServletExceptionWithCause("Error while creating repository", e);
+            }
+        } else { // Jackrabbit Oak
+            try {
+                String model = System.getProperty("sun.arch.data.model", "32");
+                store = new FileStore(repHome, 256*1024*1024, "64".equals(model));
+                repository = new Jcr(new SegmentNodeStore(store)).createRepository();
+            } catch (IOException e) {
+                throw new ServletExceptionWithCause("Error while creating repository", e);
+            }
         }
     }
 
@@ -431,7 +449,10 @@ public class RepositoryStartupServlet extends AbstractRepositoryServlet {
      * <code>nulled</code>.
      */
     private void shutdownRepository() {
-        if (repository instanceof JackrabbitRepository) {
+        if (store != null) {
+            store.close();
+            store = null;
+        } else if (repository instanceof JackrabbitRepository) {
             ((JackrabbitRepository) repository).shutdown();
         }
         repository = null;
