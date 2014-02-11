@@ -594,17 +594,12 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
                 }
             }
 
-            if (parts.isEmpty()) {
-                // only a diff part. no multipart required.
-                method.addParameter(PARAM_DIFF, buf.toString());
-            } else {
-                // other parts are present -> add the diff part
-                addPart(PARAM_DIFF, buf.toString());
-                // ... and create multipart-entity (and set it to method)
-                Part[] partArr = parts.toArray(new Part[parts.size()]);
-                RequestEntity entity = new MultipartRequestEntity(partArr, method.getParams());
-                method.setRequestEntity(entity);
-            }
+            // add the diff part - always do multipart in case the receiving servlet
+            // engine has a form-size restriction (JCR-3726)
+            addPart(PARAM_DIFF, buf.toString());
+            Part[] partArr = parts.toArray(new Part[parts.size()]);
+            RequestEntity entity = new MultipartRequestEntity(partArr, method.getParams());
+            method.setRequestEntity(entity);
 
             HttpClient client = getClient(sessionInfo);
             try {
@@ -626,11 +621,9 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
             method = null;
             isConsumed = true;
             // discard binary parts (JCR-2582)
-            if (parts != null) {
-                for (Part part : parts) {
-                    if (part instanceof BinaryPart) {
-                        ((BinaryPart) part).dispose();
-                    }
+            for (Part part : parts) {
+                if (part instanceof BinaryPart) {
+                    ((BinaryPart) part).dispose();
                 }
             }
         }
