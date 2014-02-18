@@ -304,7 +304,7 @@ public abstract class AccessControlEntryImpl implements JackrabbitAccessControlE
      * @see org.apache.jackrabbit.api.security.JackrabbitAccessControlEntry#getRestrictions(String)
      */
     public Value[] getRestrictions(String restrictionName) throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("Not implemented. Please use Jackrabbit OAK to get support for multi-valued restrictions.");
+        return new Value[] {getRestriction(restrictionName)};
     }
 
     //-------------------------------------------------------------< Object >---
