@@ -627,3 +627,12 @@
   mixin
   - rep:hold (UNDEFINED) protected  multiple IGNORE
   - rep:retentionPolicy (UNDEFINED) protected IGNORE
+
+// -----------------------------------------------------------------------------
+// Token Management (backported from oak)
+// -----------------------------------------------------------------------------
+[rep:Token] > mix:referenceable
+  - rep:token.key (STRING) protected mandatory
+  - rep:token.exp (DATE) protected mandatory
+  - * (UNDEFINED) protected
+  - * (UNDEFINED) multiple protected
