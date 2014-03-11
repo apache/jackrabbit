@@ -220,10 +220,13 @@ public class VersionHistoryTest extends AbstractVersionTest {
     public void testGetAllVersionsJcr2() throws RepositoryException {
         int cnt = 5;
         Map<String, Version> versions = new HashMap<String, Version>();
+        List<String> vnames = new ArrayList<String>();
         Version v = vHistory.getRootVersion();
         versions.put(v.getIdentifier(), v);
+        vnames.add(v.getIdentifier());
         for (int i = 0; i < cnt; i++) {
             v = versionManager.checkin(versionableNode.getPath());
+            vnames.add(v.getIdentifier());
             versions.put(v.getIdentifier(), v);
             versionManager.checkout(versionableNode.getPath());
         }
@@ -235,8 +238,10 @@ public class VersionHistoryTest extends AbstractVersionTest {
                 fail("VersionHistory.getAllVersions() must only contain the root version and versions, that have been created by a Node.checkin() call.");
             }
             versions.remove(v.getIdentifier());
+            // check order of linear version history (see JCR 2.0, 15.1.1.2)
+            assertEquals("versions in a linear version history should be sorted by creation time", vnames.remove(0), v.getIdentifier());
         }
-        assertTrue("VersionHistory.getAllVersions() must contain the root version and all versions that have been created with a Node.checkin() call.", versions.isEmpty());
+        assertTrue("VersionHistory.getAllVersions() must only contain the root version and all versions that have been created with a Node.checkin() call.", versions.isEmpty());
     }
 
     /**
