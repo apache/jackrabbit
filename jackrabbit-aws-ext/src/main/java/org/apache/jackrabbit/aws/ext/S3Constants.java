@@ -21,7 +21,7 @@ package org.apache.jackrabbit.aws.ext;
  * Defined Amazon S3 constants.
  */
 public final class S3Constants {
-    
+
     /**
      * Amazon aws access key.
      */
@@ -41,7 +41,22 @@ public final class S3Constants {
      * Amazon aws S3 region.
      */
     public static final String S3_REGION = "s3Region";
-   
+    
+    /**
+     * Amazon aws S3 region.
+     */
+    public static final String S3_END_POINT = "s3EndPoint";
+
+    /**
+     * Constant to rename keys
+     */
+    public static final String S3_RENAME_KEYS = "s3RenameKeys";
+
+    /**
+     * Constant to rename keys
+     */
+    public static final String S3_WRITE_THREADS = "writeThreads";
+
     /**
      * private constructor so that class cannot initialized from outside.
      */

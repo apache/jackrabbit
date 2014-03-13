@@ -21,11 +21,9 @@ import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
-import org.apache.jackrabbit.aws.ext.ds.TestCaseBase;
-import org.apache.jackrabbit.aws.ext.ds.TestInMemDs;
-import org.apache.jackrabbit.aws.ext.ds.TestInMemDsCacheOff;
 import org.apache.jackrabbit.aws.ext.ds.TestS3Ds;
 import org.apache.jackrabbit.aws.ext.ds.TestS3DsCacheOff;
+import org.apache.jackrabbit.core.data.TestCaseBase;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,9 +42,6 @@ public class TestAll extends TestCase {
      */
     public static Test suite() {
         TestSuite suite = new TestSuite("S3 tests");
-        suite.addTestSuite(TestLocalCache.class);
-        suite.addTestSuite(TestInMemDs.class);
-        suite.addTestSuite(TestInMemDsCacheOff.class);
         String config = System.getProperty(TestCaseBase.CONFIG);
         LOG.info("config= " + config);
         if (config != null && !"".equals(config.trim())) {

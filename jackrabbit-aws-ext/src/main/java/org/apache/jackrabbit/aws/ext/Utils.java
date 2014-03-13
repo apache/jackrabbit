@@ -21,8 +21,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Properties;
 
 import org.slf4j.Logger;
@@ -31,9 +29,8 @@ import org.slf4j.LoggerFactory;
 import com.amazonaws.ClientConfiguration;
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.BasicAWSCredentials;
+import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
-import com.amazonaws.services.s3.model.DeleteObjectsRequest;
-import com.amazonaws.services.s3.model.DeleteObjectsResult;
 import com.amazonaws.services.s3.model.ObjectListing;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 
@@ -42,9 +39,9 @@ import com.amazonaws.services.s3.model.S3ObjectSummary;
  */
 public final class Utils {
 
-    public static final String DEFAULT_CONFIG_FILE = "aws.properties";
-    
     private static final Logger LOG = LoggerFactory.getLogger(Utils.class);
+
+    public static final String DEFAULT_CONFIG_FILE = "aws.properties";
 
     private static final String DELETE_CONFIG_SUFFIX = ";burn";
 
@@ -81,35 +78,15 @@ public final class Utils {
      * Delete S3 bucket. This method first deletes all objects from bucket and
      * then delete empty bucket.
      * 
-     * @param prop properties to configure @link {@link AmazonS3Client} and
-     * delete bucket.
+     * @param bucketName the bucket name.
      */
-    public static void deleteBucket(final Properties prop) throws IOException {
-        AmazonS3Client s3service = openService(prop);
-        String bucketName = prop.getProperty(S3Constants.S3_BUCKET);
-        if (!s3service.doesBucketExist(bucketName)) {
-            return;
-        }
+    public static void deleteBucket(final String bucketName) throws IOException {
+        Properties prop = readConfig(DEFAULT_CONFIG_FILE);
+        AmazonS3 s3service = openService(prop);
         ObjectListing prevObjectListing = s3service.listObjects(bucketName);
         while (true) {
-            List<DeleteObjectsRequest.KeyVersion> deleteList = new ArrayList<DeleteObjectsRequest.KeyVersion>();
             for (S3ObjectSummary s3ObjSumm : prevObjectListing.getObjectSummaries()) {
-                deleteList.add(new DeleteObjectsRequest.KeyVersion(
-                    s3ObjSumm.getKey()));
-            }
-            if (deleteList.size() > 0) {
-                DeleteObjectsRequest delObjsReq = new DeleteObjectsRequest(
-                    bucketName);
-                delObjsReq.setKeys(deleteList);
-                DeleteObjectsResult dobjs = s3service.deleteObjects(delObjsReq);
-                if (dobjs.getDeletedObjects().size() != deleteList.size()) {
-                    throw new IOException(
-                        "Incomplete delete object request. only  "
-                            + dobjs.getDeletedObjects().size() + " out of "
-                            + deleteList.size() + " are deleted");
-                }
-                LOG.info(deleteList.size()
-                        + " records deleted from datastore");
+                s3service.deleteObject(bucketName, s3ObjSumm.getKey());
             }
             if (!prevObjectListing.isTruncated()) {
                 break;
@@ -117,7 +94,6 @@ public final class Utils {
             prevObjectListing = s3service.listNextBatchOfObjects(prevObjectListing);
         }
         s3service.deleteBucket(bucketName);
-        s3service.shutdown();
     }
 
     /**

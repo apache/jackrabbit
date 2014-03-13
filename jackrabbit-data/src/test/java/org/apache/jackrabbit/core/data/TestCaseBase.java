@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.aws.ext.ds;
+package org.apache.jackrabbit.core.data;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -37,7 +37,8 @@ import org.apache.jackrabbit.core.data.DataIdentifier;
 import org.apache.jackrabbit.core.data.DataRecord;
 import org.apache.jackrabbit.core.data.DataStore;
 import org.apache.jackrabbit.core.data.DataStoreException;
-import org.apache.jackrabbit.core.data.RandomInputStream;
+import org.apache.jackrabbit.core.data.LocalCache;
+import org.apache.jackrabbit.core.data.MultiDataStoreAware;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,12 +46,7 @@ import org.slf4j.LoggerFactory;
  * Test base class which covers all scenarios.
  */
 public abstract class TestCaseBase extends TestCase {
-    
-    /**
-     * Constant describing aws properties file path.
-     */
-    public static final String CONFIG = "config";
-    
+
     /**
      * Logger
      */
@@ -60,6 +56,11 @@ public abstract class TestCaseBase extends TestCase {
      * temp directory
      */
     private static final String TEST_DIR = "target/temp";
+
+    /**
+     * Constant describing aws properties file path.
+     */
+    public static final String CONFIG = "config";
 
     /**
      * File path of aws properties.
@@ -78,19 +79,45 @@ public abstract class TestCaseBase extends TestCase {
     protected boolean noCache;
 
     /**
+     * length of record to be added
+     */
+    private int dataLength = 123456;
+
+    /**
+     * datastore directory path
+     */
+    protected String dataStoreDir;
+
+    protected CachingDataStore ds;
+
+    /**
+     * Random number generator to populate data
+     */
+    protected Random randomGen = new Random();
+
+    /**
      * Delete temporary directory.
      */
     @Override
-    protected void setUp() {
-        FileUtils.deleteQuietly(new File(TEST_DIR));
+    protected void setUp() throws Exception {
+        dataStoreDir = TEST_DIR + "-"
+            + String.valueOf(randomGen.nextInt(dataLength));
     }
 
     /**
      * Delete temporary directory.
      */
     @Override
-    protected void tearDown() throws IOException {
-        FileUtils.deleteQuietly(new File(TEST_DIR));
+    protected void tearDown() throws Exception {
+        boolean delSuccessFul = FileUtils.deleteQuietly(new File(dataStoreDir));
+        int retry = 2, count = 0;
+        while (!delSuccessFul && count <= retry) {
+            // try once more
+            delSuccessFul = FileUtils.deleteQuietly(new File(dataStoreDir));
+            count++;
+        }
+        LOG.info("tearDown : directory [" + dataStoreDir + "] deleted ["
+            + delSuccessFul + "]");
     }
 
     /**
@@ -98,7 +125,13 @@ public abstract class TestCaseBase extends TestCase {
      */
     public void testAddRecord() {
         try {
+            long start = System.currentTimeMillis();
+            LOG.info("Testcase: " + this.getClass().getName()
+                + "#addRecord, testDir=" + dataStoreDir);
             doAddRecordTest();
+            LOG.info("Testcase: " + this.getClass().getName()
+                + "#addRecord finished, time taken = ["
+                + (System.currentTimeMillis() - start) + "]ms");
         } catch (Exception e) {
             LOG.error("error:", e);
             fail(e.getMessage());
@@ -110,7 +143,13 @@ public abstract class TestCaseBase extends TestCase {
      */
     public void testGetRecord() {
         try {
+            long start = System.currentTimeMillis();
+            LOG.info("Testcase: " + this.getClass().getName()
+                + "#testGetRecord, testDir=" + dataStoreDir);
             doGetRecordTest();
+            LOG.info("Testcase: " + this.getClass().getName()
+                + "#testGetRecord finished, time taken = ["
+                + (System.currentTimeMillis() - start) + "]ms");
         } catch (Exception e) {
             LOG.error("error:", e);
         }
@@ -121,7 +160,13 @@ public abstract class TestCaseBase extends TestCase {
      */
     public void testGetAllIdentifiers() {
         try {
+            long start = System.currentTimeMillis();
+            LOG.info("Testcase: " + this.getClass().getName()
+                + "#testGetAllIdentifiers, testDir=" + dataStoreDir);
             doGetAllIdentifiersTest();
+            LOG.info("Testcase: " + this.getClass().getName()
+                + "#testGetAllIdentifiers finished, time taken = ["
+                + (System.currentTimeMillis() - start) + "]ms");
         } catch (Exception e) {
             LOG.error("error:", e);
             fail(e.getMessage());
@@ -134,7 +179,13 @@ public abstract class TestCaseBase extends TestCase {
      */
     public void testUpdateLastModifiedOnAccess() {
         try {
+            long start = System.currentTimeMillis();
+            LOG.info("Testcase: " + this.getClass().getName()
+                + "#testUpdateLastModifiedOnAccess, testDir=" + dataStoreDir);
             doUpdateLastModifiedOnAccessTest();
+            LOG.info("Testcase: " + this.getClass().getName()
+                + "#testUpdateLastModifiedOnAccess finished, time taken = ["
+                + (System.currentTimeMillis() - start) + "]ms");
         } catch (Exception e) {
             LOG.error("error:", e);
         }
@@ -146,7 +197,13 @@ public abstract class TestCaseBase extends TestCase {
      */
     public void testDeleteRecord() {
         try {
+            long start = System.currentTimeMillis();
+            LOG.info("Testcase: " + this.getClass().getName()
+                + "#testDeleteRecord, testDir=" + dataStoreDir);
             doDeleteRecordTest();
+            LOG.info("Testcase: " + this.getClass().getName()
+                + "#testDeleteRecord finished, time taken = ["
+                + (System.currentTimeMillis() - start) + "]ms");
         } catch (Exception e) {
             LOG.error("error:", e);
             fail(e.getMessage());
@@ -158,7 +215,13 @@ public abstract class TestCaseBase extends TestCase {
      */
     public void testDeleteAllOlderThan() {
         try {
+            long start = System.currentTimeMillis();
+            LOG.info("Testcase: " + this.getClass().getName()
+                + "#testDeleteAllOlderThan, testDir=" + dataStoreDir);
             doDeleteAllOlderThan();
+            LOG.info("Testcase: " + this.getClass().getName()
+                + "#testDeleteAllOlderThan finished, time taken = ["
+                + (System.currentTimeMillis() - start) + "]ms");
         } catch (Exception e) {
             LOG.error("error:", e);
             fail(e.getMessage());
@@ -170,7 +233,13 @@ public abstract class TestCaseBase extends TestCase {
      */
     public void testReference() {
         try {
+            long start = System.currentTimeMillis();
+            LOG.info("Testcase: " + this.getClass().getName()
+                + "#testReference, testDir=" + dataStoreDir);
             doReferenceTest();
+            LOG.info("Testcase: " + this.getClass().getName()
+                + "#testReference finished, time taken = ["
+                + (System.currentTimeMillis() - start) + "]ms");
         } catch (Exception e) {
             LOG.error("error:", e);
             fail(e.getMessage());
@@ -182,7 +251,13 @@ public abstract class TestCaseBase extends TestCase {
      */
     public void testSingleThread() {
         try {
+            long start = System.currentTimeMillis();
+            LOG.info("Testcase: " + this.getClass().getName()
+                + "#test, testDir=" + dataStoreDir);
             doTestSingleThread();
+            LOG.info("Testcase: " + this.getClass().getName()
+                + "#test finished, time taken = ["
+                + (System.currentTimeMillis() - start) + "]ms");
         } catch (Exception e) {
             LOG.error("error:", e);
             fail(e.getMessage());
@@ -195,34 +270,38 @@ public abstract class TestCaseBase extends TestCase {
      */
     public void testMultiThreaded() {
         try {
+            long start = System.currentTimeMillis();
+            LOG.info("Testcase: " + this.getClass().getName()
+                + "#testMultiThreaded, testDir=" + dataStoreDir);
             doTestMultiThreaded();
+            LOG.info("Testcase: " + this.getClass().getName()
+                + "#testMultiThreaded finished, time taken = ["
+                + (System.currentTimeMillis() - start) + "]ms");
         } catch (Exception e) {
             LOG.error("error:", e);
             fail(e.getMessage());
         }
 
     }
-    
-    private CachingDataStore createDataStore() throws RepositoryException {
-        CachingDataStore ds = memoryBackend
-                ? new InMemoryDataStore()
-                : new S3DataStore();
+
+    protected CachingDataStore createDataStore() throws RepositoryException {
+        ds = new InMemoryDataStore();
         ds.setConfig(config);
         if (noCache) {
             ds.setCacheSize(0);
         }
-        ds.init(TEST_DIR);
+        ds.init(dataStoreDir);
         return ds;
     }
-    
+
     /**
      * Test {@link DataStore#addRecord(InputStream)} and assert length of added
      * record.
      */
     protected void doAddRecordTest() throws Exception {
-        CachingDataStore ds = createDataStore();
-        byte[] data = new byte[12345];
-        new Random(12345).nextBytes(data);
+        ds = createDataStore();
+        byte[] data = new byte[dataLength];
+        randomGen.nextBytes(data);
         DataRecord rec = ds.addRecord(new ByteArrayInputStream(data));
         assertEquals(data.length, rec.getLength());
         assertRecord(data, rec);
@@ -234,9 +313,9 @@ public abstract class TestCaseBase extends TestCase {
      * inputstream.
      */
     protected void doGetRecordTest() throws Exception {
-        CachingDataStore ds = createDataStore();
-        byte[] data = new byte[12345];
-        new Random(12345).nextBytes(data);
+        ds = createDataStore();
+        byte[] data = new byte[dataLength];
+        randomGen.nextBytes(data);
         DataRecord rec = ds.addRecord(new ByteArrayInputStream(data));
         rec = ds.getRecord(rec.getIdentifier());
         assertEquals(data.length, rec.getLength());
@@ -248,17 +327,17 @@ public abstract class TestCaseBase extends TestCase {
      * Test {@link MultiDataStoreAware#deleteRecord(DataIdentifier)}.
      */
     protected void doDeleteRecordTest() throws Exception {
-        CachingDataStore ds = createDataStore();
-        Random random = new Random(12345);
-        byte[] data1 = new byte[12345];
+        ds = createDataStore();
+        Random random = randomGen;
+        byte[] data1 = new byte[dataLength];
         random.nextBytes(data1);
         DataRecord rec1 = ds.addRecord(new ByteArrayInputStream(data1));
 
-        byte[] data2 = new byte[12345];
+        byte[] data2 = new byte[dataLength];
         random.nextBytes(data2);
         DataRecord rec2 = ds.addRecord(new ByteArrayInputStream(data2));
 
-        byte[] data3 = new byte[12345];
+        byte[] data3 = new byte[dataLength];
         random.nextBytes(data3);
         DataRecord rec3 = ds.addRecord(new ByteArrayInputStream(data3));
 
@@ -278,20 +357,20 @@ public abstract class TestCaseBase extends TestCase {
      * are returned.
      */
     protected void doGetAllIdentifiersTest() throws Exception {
-        CachingDataStore ds = createDataStore();
+        ds = createDataStore();
         List<DataIdentifier> list = new ArrayList<DataIdentifier>();
-        Random random = new Random(12345);
-        byte[] data = new byte[12345];
+        Random random = randomGen;
+        byte[] data = new byte[dataLength];
         random.nextBytes(data);
         DataRecord rec = ds.addRecord(new ByteArrayInputStream(data));
         list.add(rec.getIdentifier());
 
-        data = new byte[12345];
+        data = new byte[dataLength];
         random.nextBytes(data);
         rec = ds.addRecord(new ByteArrayInputStream(data));
         list.add(rec.getIdentifier());
 
-        data = new byte[12345];
+        data = new byte[dataLength];
         random.nextBytes(data);
         rec = ds.addRecord(new ByteArrayInputStream(data));
         list.add(rec.getIdentifier());
@@ -309,25 +388,27 @@ public abstract class TestCaseBase extends TestCase {
      * {@link DataStore#updateModifiedDateOnAccess(long)} invocation.
      */
     protected void doUpdateLastModifiedOnAccessTest() throws Exception {
-        CachingDataStore ds = createDataStore();
-        Random random = new Random(12345);
-        byte[] data = new byte[12345];
+        ds = createDataStore();
+        Random random = randomGen;
+        byte[] data = new byte[dataLength];
         random.nextBytes(data);
         DataRecord rec1 = ds.addRecord(new ByteArrayInputStream(data));
 
-        data = new byte[12345];
+        data = new byte[dataLength];
         random.nextBytes(data);
         DataRecord rec2 = ds.addRecord(new ByteArrayInputStream(data));
+        LOG.debug("rec2 timestamp=" + rec2.getLastModified());
 
-        Thread.sleep(1000);
+        Thread.sleep(2000);
         long updateTime = System.currentTimeMillis();
+        LOG.debug("updateTime=" + updateTime);
         ds.updateModifiedDateOnAccess(updateTime);
-        Thread.sleep(1000);
-        data = new byte[12345];
+
+        data = new byte[dataLength];
         random.nextBytes(data);
         DataRecord rec3 = ds.addRecord(new ByteArrayInputStream(data));
 
-        data = new byte[12345];
+        data = new byte[dataLength];
         random.nextBytes(data);
         DataRecord rec4 = ds.addRecord(new ByteArrayInputStream(data));
 
@@ -335,6 +416,7 @@ public abstract class TestCaseBase extends TestCase {
 
         assertEquals("rec1 touched", true,
             ds.getLastModified(rec1.getIdentifier()) > updateTime);
+        LOG.debug("rec2 timestamp=" + rec2.getLastModified());
         assertEquals("rec2 not touched", true,
             ds.getLastModified(rec2.getIdentifier()) < updateTime);
         assertEquals("rec3 touched", true,
@@ -350,25 +432,25 @@ public abstract class TestCaseBase extends TestCase {
      * records older than argument passed.
      */
     protected void doDeleteAllOlderThan() throws Exception {
-        CachingDataStore ds = createDataStore();
-        Random random = new Random(12345);
-        byte[] data = new byte[12345];
+        ds = createDataStore();
+        Random random = randomGen;
+        byte[] data = new byte[dataLength];
         random.nextBytes(data);
         DataRecord rec1 = ds.addRecord(new ByteArrayInputStream(data));
 
-        data = new byte[12345];
+        data = new byte[dataLength];
         random.nextBytes(data);
         DataRecord rec2 = ds.addRecord(new ByteArrayInputStream(data));
-        
+
         Thread.sleep(2000);
         long updateTime = System.currentTimeMillis();
         ds.updateModifiedDateOnAccess(updateTime);
 
-        data = new byte[12345];
+        data = new byte[dataLength];
         random.nextBytes(data);
         DataRecord rec3 = ds.addRecord(new ByteArrayInputStream(data));
 
-        data = new byte[12345];
+        data = new byte[dataLength];
         random.nextBytes(data);
         DataRecord rec4 = ds.addRecord(new ByteArrayInputStream(data));
 
@@ -396,7 +478,6 @@ public abstract class TestCaseBase extends TestCase {
         assertEquals("rec4 touched", true,
             ds.getLastModified(rec4.getIdentifier()) > updateTime);
         ds.close();
-
     }
 
     /**
@@ -404,10 +485,10 @@ public abstract class TestCaseBase extends TestCase {
      * {@link DataStore#getRecordFromReference(String)}
      */
     public void doReferenceTest() throws Exception {
-        CachingDataStore ds = createDataStore();
+        ds = createDataStore();
         ds.setSecret("12345");
-        byte[] data = new byte[12345];
-        new Random(12345).nextBytes(data);
+        byte[] data = new byte[dataLength];
+        randomGen.nextBytes(data);
         String reference;
         DataRecord record = ds.addRecord(new ByteArrayInputStream(data));
         reference = record.getReference();
@@ -419,7 +500,7 @@ public abstract class TestCaseBase extends TestCase {
      * Method to validate mixed scenario use of {@link DataStore}.
      */
     protected void doTestSingleThread() throws Exception {
-        CachingDataStore ds = createDataStore();
+        ds = createDataStore();
         doTestMultiThreaded(ds, 1);
         ds.close();
     }
@@ -429,7 +510,7 @@ public abstract class TestCaseBase extends TestCase {
      * multi-threaded concurrent environment.
      */
     protected void doTestMultiThreaded() throws Exception {
-        CachingDataStore ds = createDataStore();
+        ds = createDataStore();
         doTestMultiThreaded(ds, 4);
         ds.close();
     }
@@ -461,7 +542,6 @@ public abstract class TestCaseBase extends TestCase {
         for (int i = 0; i < threadCount; i++) {
             final int x = i;
             Thread t = new Thread() {
-                @Override
                 public void run() {
                     try {
                         doTest(ds, x);
@@ -485,11 +565,10 @@ public abstract class TestCaseBase extends TestCase {
      * Assert randomly read stream from record.
      */
     void doTest(DataStore ds, int offset) throws Exception {
-        LOG.info(Thread.currentThread().getName() + " started.");
         ArrayList<DataRecord> list = new ArrayList<DataRecord>();
         HashMap<DataRecord, Integer> map = new HashMap<DataRecord, Integer>();
-        for (int i = 0; i < 100; i++) {
-            int size = 100 + i * 10;
+        for (int i = 0; i < 10; i++) {
+            int size = 1000000 - (i * 100);
             RandomInputStream in = new RandomInputStream(size + offset, size);
             DataRecord rec = ds.addRecord(in);
             list.add(rec);
@@ -509,9 +588,7 @@ public abstract class TestCaseBase extends TestCase {
                 in = readInputStreamRandomly(in, random);
             }
             assertEquals(expected, in);
-            in.close();
         }
-        LOG.info(Thread.currentThread().getName() + " finished.");
     }
 
     InputStream readInputStreamRandomly(InputStream in, Random random)
@@ -552,12 +629,17 @@ public abstract class TestCaseBase extends TestCase {
      */
     protected void assertEquals(InputStream a, InputStream b)
             throws IOException {
-        while (true) {
-            int ai = a.read();
-            int bi = b.read();
-            assertEquals(ai, bi);
-            if (ai < 0) {
-                break;
+        try {
+            assertTrue("binary not equal",
+                org.apache.commons.io.IOUtils.contentEquals(a, b));
+        } finally {
+            try {
+                a.close();
+            } catch (Exception ignore) {
+            }
+            try {
+                b.close();
+            } catch (Exception ignore) {
             }
         }
     }
@@ -573,10 +655,9 @@ public abstract class TestCaseBase extends TestCase {
 
         InputStream stream = record.getStream();
         try {
-            for (int i = 0; i < expected.length; i++) {
-                assertEquals(expected[i] & 0xff, stream.read());
-            }
-            assertEquals(-1, stream.read());
+            assertTrue("binary not equal",
+                org.apache.commons.io.IOUtils.contentEquals(
+                    new ByteArrayInputStream(expected), stream));
         } finally {
             stream.close();
         }

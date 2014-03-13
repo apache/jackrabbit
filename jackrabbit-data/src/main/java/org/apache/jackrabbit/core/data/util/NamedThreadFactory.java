@@ -14,25 +14,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.aws.ext.ds;
 
-import org.apache.jackrabbit.core.data.CachingDataStore;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+package org.apache.jackrabbit.core.data.util;
+
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * Test {@link CachingDataStore} with S3Backend and local cache Off. It requires
- * to pass aws config file via system property. For e.g.
- * -Dconfig=/opt/cq/aws.properties. Sample aws properties located at
- * src/test/resources/aws.properties
+ * This class extends {@link ThreadFactory} to creates named threads.
  */
-public class TestS3DsCacheOff extends TestS3Ds {
+public class NamedThreadFactory implements ThreadFactory {
 
-    protected static final Logger LOG = LoggerFactory.getLogger(TestS3DsCacheOff.class);
+    private AtomicInteger threadCount = new AtomicInteger(1);
 
-    public TestS3DsCacheOff() {
-        config = System.getProperty(CONFIG);
-        memoryBackend = false;
-        noCache = true;
+    String threadPrefixName;
+
+    public NamedThreadFactory(String threadPrefixName) {
+        super();
+        this.threadPrefixName = threadPrefixName;
     }
+
+    public Thread newThread(Runnable r) {
+        Thread thread = new Thread(r);
+        thread.setContextClassLoader(getClass().getClassLoader());
+        thread.setName(threadPrefixName + "-" + threadCount.getAndIncrement());
+        return thread;
+    }
+
 }

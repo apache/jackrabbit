@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.apache.jackrabbit.aws.ext.ds;
+package org.apache.jackrabbit.core.data;
 
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
@@ -23,12 +23,13 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
+import org.apache.jackrabbit.core.data.AsyncUploadCallback;
 import org.apache.jackrabbit.core.data.Backend;
 import org.apache.jackrabbit.core.data.CachingDataStore;
 import org.apache.jackrabbit.core.data.DataIdentifier;
@@ -77,28 +78,15 @@ public class InMemoryBackend implements Backend {
     }
 
     @Override
-    public void write(final DataIdentifier identifier, final File file)
-            throws DataStoreException {
-        log("write " + identifier + " " + file.length());
-        byte[] buffer = new byte[(int) file.length()];
-        try {
-            DataInputStream din = new DataInputStream(new FileInputStream(file));
-            din.readFully(buffer);
-            din.close();
-            data.put(identifier, buffer);
-            timeMap.put(identifier, System.currentTimeMillis());
-        } catch (IOException e) {
-            throw new DataStoreException(e);
-        }
+    public void writeAsync(final DataIdentifier identifier, final File file,
+            final AsyncUploadCallback callback) throws DataStoreException {
+        this.write(identifier, file, true, callback);
     }
 
-    /**
-     * Log a message if logging is enabled.
-     * 
-     * @param message the message
-     */
-    private void log(final String message) {
-        // System.out.println(message);
+    @Override
+    public void write(final DataIdentifier identifier, final File file)
+            throws DataStoreException {
+        this.write(identifier, file, false, null);
     }
 
     @Override
@@ -116,9 +104,9 @@ public class InMemoryBackend implements Backend {
     }
 
     @Override
-    public List<DataIdentifier> deleteAllOlderThan(final long min) {
+    public Set<DataIdentifier> deleteAllOlderThan(final long min) {
         log("deleteAllOlderThan " + min);
-        List<DataIdentifier> tobeDeleted = new ArrayList<DataIdentifier>();
+        Set<DataIdentifier> tobeDeleted = new HashSet<DataIdentifier>();
         for (Map.Entry<DataIdentifier, Long> entry : timeMap.entrySet()) {
             DataIdentifier identifier = entry.getKey();
             long timestamp = entry.getValue();
@@ -134,7 +122,8 @@ public class InMemoryBackend implements Backend {
     }
 
     @Override
-    public long getLength(final DataIdentifier identifier) throws DataStoreException {
+    public long getLength(final DataIdentifier identifier)
+            throws DataStoreException {
         try {
             return data.get(identifier).length;
         } catch (Exception e) {
@@ -143,10 +132,49 @@ public class InMemoryBackend implements Backend {
     }
 
     @Override
-    public void touch(final DataIdentifier identifier, final long minModifiedDate)
+    public boolean exists(final DataIdentifier identifier, final boolean touch)
             throws DataStoreException {
-        if (minModifiedDate > 0 && data.containsKey(identifier)) {
+        boolean retVal = data.containsKey(identifier);
+        if (retVal && touch) {
             timeMap.put(identifier, System.currentTimeMillis());
         }
+        return retVal;
+    }
+
+    private void write(final DataIdentifier identifier, final File file,
+            final boolean async, final AsyncUploadCallback callback)
+            throws DataStoreException {
+        log("write " + identifier + " " + file.length());
+        byte[] buffer = new byte[(int) file.length()];
+        try {
+            if (async && callback == null) {
+                throw new IllegalArgumentException(
+                    "callback parameter cannot be null");
+            }
+            DataInputStream din = new DataInputStream(new FileInputStream(file));
+            din.readFully(buffer);
+            din.close();
+            data.put(identifier, buffer);
+            timeMap.put(identifier, System.currentTimeMillis());
+        } catch (IOException e) {
+            if (async) {
+                callback.call(identifier, file,
+                    AsyncUploadCallback.RESULT.ABORTED);
+            }
+            throw new DataStoreException(e);
+        }
+        if (async) {
+            callback.call(identifier, file, AsyncUploadCallback.RESULT.SUCCESS);
+        }
+    }
+
+    /**
+     * Log a message if logging is enabled.
+     * 
+     * @param message
+     *            the message
+     */
+    private void log(final String message) {
+        // System.out.println(message);
     }
 }

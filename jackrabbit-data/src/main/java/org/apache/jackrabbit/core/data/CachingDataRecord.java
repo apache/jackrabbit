@@ -19,6 +19,8 @@ package org.apache.jackrabbit.core.data;
 
 import java.io.InputStream;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * CachingDataRecord which stores reference to {@link CachingDataStore}. This
@@ -26,6 +28,8 @@ import java.io.InputStream;
  * on demand from {@link CachingDataStore}.
  */
 public class CachingDataRecord extends AbstractDataRecord {
+
+    private static final Logger LOG = LoggerFactory.getLogger(CachingDataRecord.class);
 
     private final CachingDataStore store;
 
@@ -39,6 +43,8 @@ public class CachingDataRecord extends AbstractDataRecord {
         try {
             return store.getLastModified(getIdentifier());
         } catch (DataStoreException dse) {
+            LOG.info("exception in getLastModified for identifier ["
+                + getIdentifier() + "]. returning 0.", dse);
             return 0;
         }
     }

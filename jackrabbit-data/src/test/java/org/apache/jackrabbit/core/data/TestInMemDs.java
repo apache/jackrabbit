@@ -14,25 +14,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.aws.ext.ds;
+package org.apache.jackrabbit.core.data;
 
-import org.apache.jackrabbit.core.data.CachingDataStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Test {@link CachingDataStore} with S3Backend and local cache Off. It requires
- * to pass aws config file via system property. For e.g.
- * -Dconfig=/opt/cq/aws.properties. Sample aws properties located at
- * src/test/resources/aws.properties
+ * Test {@link CachingDataStore} with InMemoryBackend and local cache on.
  */
-public class TestS3DsCacheOff extends TestS3Ds {
+public class TestInMemDs extends TestCaseBase {
 
-    protected static final Logger LOG = LoggerFactory.getLogger(TestS3DsCacheOff.class);
+    protected static final Logger LOG = LoggerFactory.getLogger(TestInMemDs.class);
 
-    public TestS3DsCacheOff() {
-        config = System.getProperty(CONFIG);
-        memoryBackend = false;
-        noCache = true;
+    public TestInMemDs() {
+        config = null;
+        memoryBackend = true;
+        noCache = false;
     }
+
 }

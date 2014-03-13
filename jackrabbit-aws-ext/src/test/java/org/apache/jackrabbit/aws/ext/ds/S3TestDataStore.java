@@ -16,16 +16,29 @@
  */
 package org.apache.jackrabbit.aws.ext.ds;
 
-import org.apache.jackrabbit.core.data.CachingDataStore;
+import org.apache.jackrabbit.core.data.Backend;
 
 /**
- * Test {@link CachingDataStore} with InMemoryBackend and local cache off.
+ * This class intialize {@link S3DataStore} with the give bucket. The other
+ * configuration are taken from configuration file. This class is implemented so
+ * that each test case run in its own bucket. It was required as deletions in
+ * bucket are not immediately reflected in the next test case.
  */
-public class TestInMemDsCacheOff extends TestCaseBase {
+public class S3TestDataStore extends S3DataStore {
+    String bucket;
 
-    public TestInMemDsCacheOff() {
-        config = null;
-        memoryBackend = true;
-        noCache = true;
+    public S3TestDataStore() {
+        super();
+    }
+
+    public S3TestDataStore(String bucket) {
+        super();
+        this.bucket = bucket;
+    }
+
+    protected Backend createBackend() {
+        Backend backend = new S3Backend();
+        ((S3Backend) backend).setBucket(bucket);
+        return backend;
     }
 }
