@@ -18,11 +18,12 @@ package org.apache.jackrabbit.api.observation;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.observation.EventListener;
+import javax.jcr.observation.ObservationManager;
 
 /**
  * Jackrabbit specific extensions to {@link javax.jcr.observation.ObservationManager}.
  */
-public interface JackrabbitObservationManager {
+public interface JackrabbitObservationManager extends ObservationManager {
 
     /**
      * Adds an event listener that listens for the events specified
