@@ -14,10 +14,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.aws.ext;
+package org.apache.jackrabbit.core.data;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
@@ -26,8 +27,10 @@ import java.util.Random;
 
 import junit.framework.TestCase;
 
-import org.apache.commons.io.FileUtils;
+import org.apache.jackrabbit.core.data.AsyncUploadCache;
+import org.apache.jackrabbit.core.data.AsyncUploadCacheResult;
 import org.apache.jackrabbit.core.data.LocalCache;
+import org.apache.jackrabbit.core.fs.local.FileUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,21 +43,19 @@ public class TestLocalCache extends TestCase {
 
     private static final String TEMP_DIR = "target/temp";
 
+    private static final String TARGET_DIR = "target";
+
     private static final Logger LOG = LoggerFactory.getLogger(TestLocalCache.class);
 
     @Override
     protected void setUp() {
         try {
             File cachedir = new File(CACHE_DIR);
-            if (cachedir.exists()) {
-                FileUtils.deleteQuietly(cachedir);
-            }
+            if (cachedir.exists()) FileUtil.delete(cachedir);
             cachedir.mkdirs();
 
             File tempdir = new File(TEMP_DIR);
-            if (tempdir.exists()) {
-                FileUtils.deleteQuietly(tempdir);
-            }
+            if (tempdir.exists()) FileUtil.delete(tempdir);
             tempdir.mkdirs();
         } catch (Exception e) {
             LOG.error("error:", e);
@@ -65,14 +66,10 @@ public class TestLocalCache extends TestCase {
     @Override
     protected void tearDown() throws IOException {
         File cachedir = new File(CACHE_DIR);
-        if (cachedir.exists()) {
-            FileUtils.deleteQuietly(cachedir);
-        }
+        if (cachedir.exists()) FileUtil.delete(cachedir);
 
         File tempdir = new File(TEMP_DIR);
-        if (tempdir.exists()) {
-            FileUtils.deleteQuietly(tempdir);
-        }
+        if (tempdir.exists()) FileUtil.delete(tempdir);
     }
 
     /**
@@ -80,8 +77,11 @@ public class TestLocalCache extends TestCase {
      */
     public void testStoreRetrieve() {
         try {
+            AsyncUploadCache pendingFiles = new AsyncUploadCache();
+            pendingFiles.init(TARGET_DIR, CACHE_DIR, 100);
+            pendingFiles.reset();
             LocalCache cache = new LocalCache(CACHE_DIR, TEMP_DIR, 400, 0.95,
-                0.70);
+                0.70, pendingFiles);
             Random random = new Random(12345);
             byte[] data = new byte[100];
             Map<String, byte[]> byteMap = new HashMap<String, byte[]>();
@@ -109,7 +109,6 @@ public class TestLocalCache extends TestCase {
             LOG.error("error:", e);
             fail();
         }
-
     }
 
     /**
@@ -118,9 +117,11 @@ public class TestLocalCache extends TestCase {
      */
     public void testAutoPurge() {
         try {
-
+            AsyncUploadCache pendingFiles = new AsyncUploadCache();
+            pendingFiles.init(TARGET_DIR, CACHE_DIR, 100);
+            pendingFiles.reset();
             LocalCache cache = new LocalCache(CACHE_DIR, TEMP_DIR, 400, 0.95,
-                0.70);
+                0.70, pendingFiles);
             Random random = new Random(12345);
             byte[] data = new byte[100];
             Map<String, byte[]> byteMap = new HashMap<String, byte[]>();
@@ -155,7 +156,6 @@ public class TestLocalCache extends TestCase {
             // storing a4 should purge cache
             cache.store("a4", new ByteArrayInputStream(byteMap.get("a4")));
             Thread.sleep(1000);
-
             assertNull("a1 should be null", cache.getIfStored("a1"));
             assertNull("a2 should be null", cache.getIfStored("a2"));
             assertEquals(new ByteArrayInputStream(byteMap.get("a3")),
@@ -173,7 +173,94 @@ public class TestLocalCache extends TestCase {
             fail();
         }
     }
-    
+
+    /**
+     * Test to verify cache's purging if cache current size exceeds
+     * cachePurgeTrigFactor * size.
+     */
+    public void testAutoPurgeWithPendingUpload() {
+        try {
+            AsyncUploadCache pendingFiles = new AsyncUploadCache();
+            pendingFiles.init(TARGET_DIR, CACHE_DIR, 100);
+            pendingFiles.reset();
+            LocalCache cache = new LocalCache(CACHE_DIR, TEMP_DIR, 400, 0.95,
+                0.70, pendingFiles);
+            Random random = new Random(12345);
+            byte[] data = new byte[125];
+            Map<String, byte[]> byteMap = new HashMap<String, byte[]>();
+            random.nextBytes(data);
+            byteMap.put("a1", data);
+
+            data = new byte[125];
+            random.nextBytes(data);
+            byteMap.put("a2", data);
+
+            data = new byte[125];
+            random.nextBytes(data);
+            byteMap.put("a3", data);
+
+            data = new byte[100];
+            random.nextBytes(data);
+            byteMap.put("a4", data);
+            File tempDir = new File(TEMP_DIR);
+            File f = File.createTempFile("test", "tmp", tempDir);
+            FileOutputStream fos = new FileOutputStream(f);
+            fos.write(byteMap.get("a1"));
+            fos.close();
+            AsyncUploadCacheResult result = cache.store("a1", f, true);
+            assertTrue("should be able to add to pending upload",
+                result.canAsyncUpload());
+
+            f = File.createTempFile("test", "tmp", tempDir);
+            fos = new FileOutputStream(f);
+            fos.write(byteMap.get("a2"));
+            fos.close();
+            result = cache.store("a2", f, true);
+            assertTrue("should be able to add to pending upload",
+                result.canAsyncUpload());
+
+            f = File.createTempFile("test", "tmp", tempDir);
+            fos = new FileOutputStream(f);
+            fos.write(byteMap.get("a3"));
+            fos.close();
+            result = cache.store("a3", f, true);
+            assertTrue("should be able to add to pending upload",
+                result.canAsyncUpload());
+
+            assertEquals(new ByteArrayInputStream(byteMap.get("a1")),
+                cache.getIfStored("a1"));
+            assertEquals(new ByteArrayInputStream(byteMap.get("a2")),
+                cache.getIfStored("a2"));
+            assertEquals(new ByteArrayInputStream(byteMap.get("a3")),
+                cache.getIfStored("a3"));
+
+            data = new byte[90];
+            random.nextBytes(data);
+            byteMap.put("a4", data);
+
+            f = File.createTempFile("test", "tmp", tempDir);
+            fos = new FileOutputStream(f);
+            fos.write(byteMap.get("a4"));
+            fos.close();
+
+            result = cache.store("a4", f, true);
+            assertFalse("should not be able to add to pending upload",
+                result.canAsyncUpload());
+            Thread.sleep(1000);
+
+            assertEquals(new ByteArrayInputStream(byteMap.get("a1")),
+                cache.getIfStored("a1"));
+            assertEquals(new ByteArrayInputStream(byteMap.get("a2")),
+                cache.getIfStored("a2"));
+            assertEquals(new ByteArrayInputStream(byteMap.get("a3")),
+                cache.getIfStored("a3"));
+            assertNull("a4 should be null", cache.getIfStored("a4"));
+        } catch (Exception e) {
+            LOG.error("error:", e);
+            fail();
+        }
+    }
+
     /**
      * Assert two inputstream
      */

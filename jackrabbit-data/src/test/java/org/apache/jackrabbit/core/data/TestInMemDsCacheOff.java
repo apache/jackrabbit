@@ -14,23 +14,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.aws.ext.ds;
+package org.apache.jackrabbit.core.data;
 
-import org.apache.jackrabbit.core.data.Backend;
-import org.apache.jackrabbit.core.data.CachingDataStore;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
- * A caching data store that uses the in-memory backend.
+ * Test {@link CachingDataStore} with InMemoryBackend and local cache off.
  */
-public class InMemoryDataStore extends CachingDataStore {
+public class TestInMemDsCacheOff extends TestCaseBase {
 
-    @Override
-    protected Backend createBackend() {
-        return new InMemoryBackend();
-    }
+    protected static final Logger LOG = LoggerFactory.getLogger(TestInMemDsCacheOff.class);
 
-    @Override
-    protected String getMarkerFile() {
-        return "mem.init.done";
+    public TestInMemDsCacheOff() {
+        config = null;
+        memoryBackend = true;
+        noCache = true;
     }
 }

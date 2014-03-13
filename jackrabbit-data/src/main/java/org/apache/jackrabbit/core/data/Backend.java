@@ -20,9 +20,7 @@ package org.apache.jackrabbit.core.data;
 import java.io.File;
 import java.io.InputStream;
 import java.util.Iterator;
-import java.util.List;
-
-
+import java.util.Set;
 
 /**
  * The interface defines the backend which can be plugged into
@@ -33,9 +31,12 @@ public interface Backend {
     /**
      * This method initialize backend with the configuration.
      * 
-     * @param store {@link CachingDataStore}
-     * @param homeDir path of repository home dir.
-     * @param config path of config property file.
+     * @param store
+     *            {@link CachingDataStore}
+     * @param homeDir
+     *            path of repository home dir.
+     * @param config
+     *            path of config property file.
      * @throws DataStoreException
      */
     void init(CachingDataStore store, String homeDir, String config)
@@ -44,27 +45,33 @@ public interface Backend {
     /**
      * Return inputstream of record identified by identifier.
      * 
-     * @param identifier identifier of record.
+     * @param identifier
+     *            identifier of record.
      * @return inputstream of the record.
-     * @throws DataStoreException if record not found or any error.
+     * @throws DataStoreException
+     *             if record not found or any error.
      */
     InputStream read(DataIdentifier identifier) throws DataStoreException;
 
     /**
      * Return length of record identified by identifier.
      * 
-     * @param identifier identifier of record.
+     * @param identifier
+     *            identifier of record.
      * @return length of the record.
-     * @throws DataStoreException if record not found or any error.
+     * @throws DataStoreException
+     *             if record not found or any error.
      */
     long getLength(DataIdentifier identifier) throws DataStoreException;
 
     /**
      * Return lastModified of record identified by identifier.
      * 
-     * @param identifier identifier of record.
+     * @param identifier
+     *            identifier of record.
      * @return lastModified of the record.
-     * @throws DataStoreException if record not found or any error.
+     * @throws DataStoreException
+     *             if record not found or any error.
      */
     long getLastModified(DataIdentifier identifier) throws DataStoreException;
 
@@ -72,30 +79,54 @@ public interface Backend {
      * Stores file to backend with identifier used as key. If key pre-exists, it
      * updates the timestamp of the key.
      * 
-     * @param identifier key of the file 
-     * @param file file that would be stored in backend.
-     * @throws DataStoreException for any error.
+     * @param identifier
+     *            key of the file
+     * @param file
+     *            file that would be stored in backend.
+     * @throws DataStoreException
+     *             for any error.
      */
     void write(DataIdentifier identifier, File file) throws DataStoreException;
 
     /**
-     * Returns identifiers of all records that exists in backend. 
+     * Write file to backend in asynchronous mode. Backend implmentation may
+     * choose not to write asynchronously but it requires to call
+     * {@link AsyncUploadCallback#call(DataIdentifier, File, com.day.crx.cloud.s3.ds.AsyncUploadCallback.RESULT)}
+     * after upload succeed or failed.
+     * 
+     * @param identifier
+     * @param file
+     * @param callback
+     *            Callback interface to called after upload succeed or failed.
+     * @throws DataStoreException
+     */
+    void writeAsync(DataIdentifier identifier, File file,
+            AsyncUploadCallback callback) throws DataStoreException;
+
+    /**
+     * Returns identifiers of all records that exists in backend.
+     * 
      * @return iterator consisting of all identifiers
      * @throws DataStoreException
      */
     Iterator<DataIdentifier> getAllIdentifiers() throws DataStoreException;
 
     /**
-     * Update timestamp of record identified by identifier if minModifiedDate is
-     * greater than record's lastModified else no op.
+     * This method check the existence of record in backend. Return true if
+     * records exists else false. This method also touch record identified by
+     * identifier if touch is true.
      * 
-     * @throws DataStoreException if record not found.
+     * @param identifier
+     * @throws DataStoreException
      */
-    void touch(DataIdentifier identifier, long minModifiedDate)
+    boolean exists(DataIdentifier identifier, boolean touch)
             throws DataStoreException;
+
     /**
-     * This method check the existence of record in backend. 
-     * @param identifier identifier to be checked. 
+     * This method check the existence of record in backend.
+     * 
+     * @param identifier
+     *            identifier to be checked.
      * @return true if records exists else false.
      * @throws DataStoreException
      */
@@ -103,22 +134,27 @@ public interface Backend {
 
     /**
      * Close backend and release resources like database connection if any.
+     * 
      * @throws DataStoreException
      */
     void close() throws DataStoreException;
 
     /**
      * Delete all records which are older than timestamp.
+     * 
      * @param timestamp
-     * @return list of identifiers which are deleted. 
+     * @return {@link Set} of identifiers which are deleted.
      * @throws DataStoreException
      */
-    List<DataIdentifier> deleteAllOlderThan(long timestamp) throws DataStoreException;
+    Set<DataIdentifier> deleteAllOlderThan(long timestamp)
+            throws DataStoreException;
 
     /**
      * Delete record identified by identifier. No-op if identifier not found.
+     * 
      * @param identifier
      * @throws DataStoreException
      */
     void deleteRecord(DataIdentifier identifier) throws DataStoreException;
 }
+

@@ -40,7 +40,10 @@
         <param name="cacheSize" value="68719476736"/>
         <param name="cachePurgeTrigFactor" value="0.95d"/>
         <param name="cachePurgeResizeFactor" value="0.85d"/>
-	</DataStore>
+        <param name="continueOnAsyncUploadFailure" value="false"/>
+        <param name="concurrentUploadsThreads" value="10"/>
+        <param name="asyncUploadLimit" value="100"/>
+      </DataStore>
     <!--
         sample database data store configuration
         <DataStore class="org.apache.jackrabbit.core.data.db.DbDataStore">

@@ -249,7 +249,13 @@ org.apache.jackrabbit.core.data.GarbageCollectorTest#testCloseSessionWhileRunnin
       <groupId>org.apache.jackrabbit</groupId>
       <artifactId>jackrabbit-data</artifactId>
       <version>${project.version}</version>
-    </dependency>    
+    </dependency>
+    <dependency>
+        <groupId>org.apache.jackrabbit</groupId>
+        <artifactId>jackrabbit-data</artifactId>
+        <version>${project.version}</version>
+        <type>test-jar</type>
+    </dependency>  
     <dependency>
       <groupId>org.apache.jackrabbit</groupId>
       <artifactId>jackrabbit-spi-commons</artifactId>

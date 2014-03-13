@@ -14,19 +14,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.jackrabbit.aws.ext.ds;
 
-import org.apache.jackrabbit.core.data.CachingDataStore;
+package org.apache.jackrabbit.core.data;
+
+import java.io.File;
 
 /**
- * Test {@link CachingDataStore} with InMemoryBackend and local cache on.
+ * This interface defines method which would be called along with status.
  */
-public class TestInMemDs extends TestCaseBase {
+public interface AsyncUploadCallback {
 
-    public TestInMemDs() {
-        config = null;
-        memoryBackend = true;
-        noCache = false;
-    }
+    public void call(DataIdentifier identifier, File file, RESULT result);
 
+    public enum RESULT {
+        /**
+         * Asynchronous upload has succeeded.
+         */
+        SUCCESS,
+        /**
+         * Asynchronous upload has failed.
+         */
+        FAILED,
+        /**
+         * Asynchronous upload has been aborted.
+         */
+        ABORTED
+    };
 }
