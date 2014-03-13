@@ -16,16 +16,18 @@
  */
 package org.apache.jackrabbit.core.observation;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.Set;
+
+import javax.jcr.RepositoryException;
+import javax.jcr.nodetype.NodeType;
+import javax.jcr.observation.Event;
 
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
 import org.apache.jackrabbit.spi.Path;
-
-import javax.jcr.RepositoryException;
-import javax.jcr.nodetype.NodeType;
-import javax.jcr.observation.Event;
 
 /**
  * The <code>EventFilter</code> class implements the filter logic based
@@ -47,9 +49,9 @@ public class EventFilter {
     private final long eventTypes;
 
     /**
-     * Only allow Items with the specified <code>path</code>
+     * Only allow Items with the specified <code>paths</code>
      */
-    private final Path path;
+    private final List<Path> paths;
 
     /**
      * If <code>isDeep</code> is <code>true</code> also Items under <code>absPath</code>
@@ -74,13 +76,19 @@ public class EventFilter {
     private final boolean noLocal;
 
     /**
+     * If <code>noExternal</code> is true this filter will block events from
+     * other cluster nodes.
+     */
+    private final boolean noExternal;
+
+    /**
      * Creates a new <code>EventFilter</code> instance.
      *
      * @param session    the <code>Session</code> that registered the {@link
      *                   javax.jcr.observation.EventListener}.
      * @param eventTypes only allow specified {@link javax.jcr.observation.Event} types.
-     * @param path       only allow {@link javax.jcr.Item} with
-     *                   <code>path</code>.
+     * @param paths      only allow {@link javax.jcr.Item} with a path in
+     *                   <code>paths</code>.
      * @param isDeep     if <code>true</code> also allow events for {@link
      *                   javax.jcr.Item}s below <code>absPath</code>.
      * @param ids        only allow events for {@link javax.jcr.Node}s with
@@ -95,17 +103,19 @@ public class EventFilter {
      */
     EventFilter(SessionImpl session,
                 long eventTypes,
-                Path path,
+                List<Path> paths,
                 boolean isDeep,
                 NodeId[] ids,
                 NodeTypeImpl[] nodeTypes,
-                boolean noLocal) {
+                boolean noLocal,
+                boolean noExternal) {
         this.session = session;
         this.eventTypes = eventTypes;
-        this.path = path;
+        this.paths = paths;
         this.isDeep = isDeep;
         this.ids = ids;
         this.noLocal = noLocal;
+        this.noExternal = noExternal;
         this.nodeTypes = nodeTypes;
     }
 
@@ -130,6 +140,10 @@ public class EventFilter {
         // check for session local changes
         if (noLocal && session.equals(eventState.getSession())) {
             // listener does not wish to get local events
+            return true;
+        }
+
+        if (noExternal && eventState.isExternal()) {
             return true;
         }
 
@@ -166,11 +180,14 @@ public class EventFilter {
             }
         }
 
-        // finally check path
+        // finally check paths
         Path eventPath = eventState.getParentPath();
-        boolean match = eventPath.equals(path);
-        if (!match && isDeep) {
-            match = eventPath.isDescendantOf(path);
+        boolean match = false;
+        for (Path path : paths) {
+            if (eventPath.equals(path) || isDeep && eventPath.isDescendantOf(path)) {
+                match = true;
+                break;
+            }
         }
 
         return !match;
@@ -186,7 +203,7 @@ public class EventFilter {
          * Creates a new <code>BlockAllFilter</code>.
          */
         BlockAllFilter() {
-            super(null, 0, null, true, null, null, true);
+            super(null, 0, Collections.<Path>emptyList(), true, null, null, true, true);
         }
 
         /**

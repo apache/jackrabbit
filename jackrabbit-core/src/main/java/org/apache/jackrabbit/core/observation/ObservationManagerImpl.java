@@ -16,15 +16,10 @@
  */
 package org.apache.jackrabbit.core.observation;
 
-import org.apache.jackrabbit.core.SessionImpl;
-import org.apache.jackrabbit.core.id.NodeId;
-import org.apache.jackrabbit.core.cluster.ClusterNode;
-import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
-import org.apache.jackrabbit.core.nodetype.NodeTypeManagerImpl;
-import org.apache.jackrabbit.spi.commons.conversion.NameException;
-import org.apache.jackrabbit.spi.Path;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 import javax.jcr.AccessDeniedException;
 import javax.jcr.RepositoryException;
@@ -34,12 +29,25 @@ import javax.jcr.observation.EventListener;
 import javax.jcr.observation.EventListenerIterator;
 import javax.jcr.observation.ObservationManager;
 
+import org.apache.jackrabbit.api.observation.JackrabbitEventFilter;
+import org.apache.jackrabbit.api.observation.JackrabbitObservationManager;
+import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.cluster.ClusterNode;
+import org.apache.jackrabbit.core.id.NodeId;
+import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
+import org.apache.jackrabbit.core.nodetype.NodeTypeManagerImpl;
+import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.spi.commons.conversion.NameException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * Each <code>Session</code> instance has its own <code>ObservationManager</code>
  * instance. The class <code>SessionLocalObservationManager</code> implements
  * this behaviour.
  */
-public class ObservationManagerImpl implements ObservationManager, EventStateCollectionFactory {
+public class ObservationManagerImpl implements EventStateCollectionFactory,
+        JackrabbitObservationManager {
 
     /**
      * The logger instance of this class
@@ -110,10 +118,26 @@ public class ObservationManagerImpl implements ObservationManager, EventStateCol
             throws RepositoryException {
 
         // create filter
-        EventFilter filter = createEventFilter(eventTypes, absPath,
-                isDeep, uuid, nodeTypeName, noLocal);
+        EventFilter filter = createEventFilter(eventTypes, Collections.singletonList(absPath),
+                isDeep, uuid, nodeTypeName, noLocal, false);
 
         dispatcher.addConsumer(new EventConsumer(session, listener, filter));
+    }
+
+    @Override
+    public void addEventListener(EventListener listener, JackrabbitEventFilter filter)
+            throws RepositoryException {
+
+        List<String> absPaths = new ArrayList<String>(Arrays.asList(filter.getAdditionalPaths()));
+        if (filter.getAbsPath() != null) {
+            absPaths.add(filter.getAbsPath());
+        }
+
+        EventFilter f = createEventFilter(filter.getEventTypes(), absPaths,
+                filter.getIsDeep(), filter.getIdentifiers(), filter.getNodeTypes(),
+                filter.getNoLocal(), filter.getNoExternal());
+
+        dispatcher.addConsumer(new EventConsumer(session, listener, f));
     }
 
     /**
@@ -172,20 +196,22 @@ public class ObservationManagerImpl implements ObservationManager, EventStateCol
      * Creates a new event filter with the given restrictions.
      *
      * @param eventTypes A combination of one or more event type constants encoded as a bitmask.
-     * @param absPath an absolute path.
+     * @param absPaths absolute paths.
      * @param isDeep a <code>boolean</code>.
      * @param uuid array of UUIDs.
      * @param nodeTypeName array of node type names.
      * @param noLocal a <code>boolean</code>.
+     * @param noExternal a <code>boolean</code>.
      * @return the event filter with the given restrictions.
      * @throws RepositoryException if an error occurs.
      */
     public EventFilter createEventFilter(int eventTypes,
-                                         String absPath,
+                                         List<String> absPaths,
                                          boolean isDeep,
                                          String[] uuid,
                                          String[] nodeTypeName,
-                                         boolean noLocal)
+                                         boolean noLocal,
+                                         boolean noExternal)
             throws RepositoryException {
         // create NodeType instances from names
         NodeTypeImpl[] nodeTypes;
@@ -199,17 +225,20 @@ public class ObservationManagerImpl implements ObservationManager, EventStateCol
             }
         }
 
-        Path path;
-        try {
-            path = session.getQPath(absPath).getNormalizedPath();
-        } catch (NameException e) {
-            String msg = "invalid path syntax: " + absPath;
-            log.debug(msg);
-            throw new RepositoryException(msg, e);
-        }
-        if (!path.isAbsolute()) {
-            throw new RepositoryException("absPath must be absolute");
-        }
+        List<Path> paths = new ArrayList<Path>();
+        for (String absPath : absPaths) {
+            try {
+                Path normalizedPath = session.getQPath(absPath).getNormalizedPath();
+                if (!normalizedPath.isAbsolute()) {
+                    throw new RepositoryException("absPath must be absolute");
+                }
+                paths.add(normalizedPath);
+            } catch (NameException e) {
+                String msg = "invalid path syntax: " + absPath;
+                log.debug(msg);
+                throw new RepositoryException(msg, e);
+
+        }            }
         NodeId[] ids = null;
         if (uuid != null) {
             ids = new NodeId[uuid.length];
@@ -219,7 +248,7 @@ public class ObservationManagerImpl implements ObservationManager, EventStateCol
         }
         // create filter
         return new EventFilter(
-                session, eventTypes, path, isDeep, ids, nodeTypes, noLocal);
+                session, eventTypes, paths, isDeep, ids, nodeTypes, noLocal, noExternal);
     }
 
     /**
@@ -251,7 +280,7 @@ public class ObservationManagerImpl implements ObservationManager, EventStateCol
         }
 
         EventFilter filter = createEventFilter(
-                eventTypes, absPath, isDeep, uuid, nodeTypeName, false);
+                eventTypes, Collections.singletonList(absPath), isDeep, uuid, nodeTypeName, false, false);
         return new EventJournalImpl(
                 filter, clusterNode.getJournal(), clusterNode.getId(), session);
     }
