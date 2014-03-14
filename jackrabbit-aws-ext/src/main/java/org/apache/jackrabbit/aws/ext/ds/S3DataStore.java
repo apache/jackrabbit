@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.aws.ext.ds;
 
+import java.util.Properties;
+
 import org.apache.jackrabbit.core.data.Backend;
 import org.apache.jackrabbit.core.data.CachingDataStore;
 
@@ -23,10 +25,15 @@ import org.apache.jackrabbit.core.data.CachingDataStore;
  * An Amazon S3 data store.
  */
 public class S3DataStore extends CachingDataStore {
+    private Properties properties;
 
     @Override
     protected Backend createBackend() {
-        return new S3Backend();
+        S3Backend backend = new S3Backend();
+        if(properties != null){
+            backend.setProperties(properties);
+        }
+        return backend;
     }
 
     @Override
@@ -34,4 +41,10 @@ public class S3DataStore extends CachingDataStore {
         return "s3.init.done";
     }
 
+    /**
+     * Properties required to configure the S3Backend
+     */
+    public void setProperties(Properties properties) {
+        this.properties = properties;
+    }
 }

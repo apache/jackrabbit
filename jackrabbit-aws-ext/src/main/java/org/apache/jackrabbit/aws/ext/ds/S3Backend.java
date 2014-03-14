@@ -96,7 +96,7 @@ public class S3Backend implements Backend {
 
     private CachingDataStore store;
 
-    private Properties prop;
+    private Properties properties;
 
     private Date startTime;
 
@@ -107,17 +107,22 @@ public class S3Backend implements Backend {
     @Override
     public void init(CachingDataStore store, String homeDir, String config)
             throws DataStoreException {
-        if (config == null) {
+        Properties initProps = null;
+        //Check is configuration is already provided. That takes precedence
+        //over config provided via file based config
+        if(this.properties != null){
+            initProps = this.properties;
+        } else if (config == null) {
             config = Utils.DEFAULT_CONFIG_FILE;
+            try{
+                initProps = Utils.readConfig(config);
+            }catch(IOException e){
+                throw new DataStoreException("Could not initialize S3 from "
+                        + config, e);
+            }
+            this.properties = initProps;
         }
-        Properties properties = null;
-        try{
-            properties = Utils.readConfig(config);
-        }catch(IOException e){
-            throw new DataStoreException("Could not initialize S3 from "
-                    + config, e);
-        }
-        init(store, homeDir, properties);
+        init(store, homeDir, initProps);
     }
 
     public void init(CachingDataStore store, String homeDir, Properties prop)
@@ -128,7 +133,6 @@ public class S3Backend implements Backend {
             startTime = new Date();
             Thread.currentThread().setContextClassLoader(
                 getClass().getClassLoader());
-            this.prop = prop;
             if (LOG.isDebugEnabled()) {
                 LOG.debug("init");
             }
@@ -548,6 +552,16 @@ public class S3Backend implements Backend {
         this.bucket = bucket;
     }
 
+    /**
+     * Properties used to configure the backend. If provided explicitly
+     * before init is invoked then these take precedence
+     *
+     * @param properties  to configure S3Backend
+     */
+    public void setProperties(Properties properties) {
+        this.properties = properties;
+    }
+
     private void write(DataIdentifier identifier, File file,
             boolean asyncUpload, AsyncUploadCallback callback)
             throws DataStoreException {
@@ -650,7 +664,7 @@ public class S3Backend implements Backend {
             ObjectListing prevObjectListing = s3service.listObjects(bucket,
                 KEY_PREFIX);
             List<DeleteObjectsRequest.KeyVersion> deleteList = new ArrayList<DeleteObjectsRequest.KeyVersion>();
-            int nThreads = Integer.parseInt(prop.getProperty("maxConnections"));
+            int nThreads = Integer.parseInt(properties.getProperty("maxConnections"));
             ExecutorService executor = Executors.newFixedThreadPool(nThreads,
                 new NamedThreadFactory("s3-object-rename-worker"));
             boolean taskAdded = false;
