@@ -1,4 +1,4 @@
-Release Notes -- Apache Jackrabbit -- Version 2.7.4
+Release Notes -- Apache Jackrabbit -- Version 2.7.5
 
 Introduction
 ------------
@@ -10,6 +10,34 @@ specified in the Java Specification Request 283 (JSR 283).
 Apache Jackrabbit 2.7 is an unstable series of releases cut directly from
 Jackrabbit trunk, with a focus on new features and other improvements.
 For production use we recommend the latest stable 2.6 release.
+
+Changes in Jackrabbit 2.7.5
+---------------------------
+
+New Features
+
+  [JCR-3745] Add JackrabbitObservationManager with additional methods for registering event listeners
+  [JCR-3747] Implement JackrabbitObservationManager
+
+Improvements
+
+  [JCR-3729] S3 Datastore optimizations
+  [JCR-3730] Use object keys to create partitions in S3 automatically
+  [JCR-3731] Multi-threaded migration of binary files from FileSystem to S3 datastore
+  [JCR-3732] Externalize S3 endpoints
+  [JCR-3733] Asynchronous upload file to S3
+  [JCR-3734] Slow local cache built-up time
+  [JCR-3742] Have DB related dependencies as optional in jackrabbit-data
+  [JCR-3748] Allow configuring S3Backend programatically
+
+Bug fixes
+
+  [JCR-3721] Slow and actively called NodeId.toString()
+  [JCR-3724] Increase the jcr-commons osgi package export versions
+  [JCR-3725] jackrabbit-aws-ext missing from the reactor pom
+  [JCR-3726] DavEx should always use multipart POST to bypass potential form-size restrictions
+  [JCR-3728] AbstractAccessControlEntryImpl: add proper implementation for getRestrictions
+  [JCR-3744] missing test of ordering in VersionHistory for linear version histories
 
 Changes in Jackrabbit 2.7.4
 ---------------------------
