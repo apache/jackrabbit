@@ -18,6 +18,7 @@
 package org.apache.jackrabbit.aws.ext.ds;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -109,12 +110,25 @@ public class S3Backend implements Backend {
         if (config == null) {
             config = Utils.DEFAULT_CONFIG_FILE;
         }
+        Properties properties = null;
+        try{
+            properties = Utils.readConfig(config);
+        }catch(IOException e){
+            throw new DataStoreException("Could not initialize S3 from "
+                    + config, e);
+        }
+        init(store, homeDir, properties);
+    }
+
+    public void init(CachingDataStore store, String homeDir, Properties prop)
+            throws DataStoreException {
+
         ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
         try {
             startTime = new Date();
             Thread.currentThread().setContextClassLoader(
                 getClass().getClassLoader());
-            prop = Utils.readConfig(config);
+            this.prop = prop;
             if (LOG.isDebugEnabled()) {
                 LOG.debug("init");
             }
@@ -187,7 +201,7 @@ public class S3Backend implements Backend {
                 LOG.debug("  error ", e);
             }
             throw new DataStoreException("Could not initialize S3 from "
-                + config, e);
+                + prop, e);
         } finally {
             if (contextClassLoader != null) {
                 Thread.currentThread().setContextClassLoader(contextClassLoader);
