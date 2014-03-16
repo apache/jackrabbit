@@ -173,15 +173,15 @@ public class TokenProvider extends ProtectedItemModifier {
                 return new TokenInfoImpl(tokenNode, token, user.getID());
             } catch (NoSuchAlgorithmException e) {
                 // error while generating login token
-                log.error(error, e.getMessage());
+                log.error(error, e);
             } catch (UnsupportedEncodingException e) {
                 // error while generating login token
-                log.error(error, e.getMessage());
+                log.error(error, e);
             } catch (AccessDeniedException e) {
-                log.warn(error, e.getMessage());
+                log.warn(error, e);
             }
         } else {
-            log.warn("Unable to get/create token store for user " + user.getID());
+            log.warn("Unable to get/create token store for user {}", user.getID());
         }
         return null;
     }
@@ -328,12 +328,12 @@ public class TokenProvider extends ProtectedItemModifier {
                     }
                 }
             } else {
-                log.debug("Cannot create login token: No corresponding node for User " + user.getID() + '.');
+                log.debug("Cannot create login token: No corresponding node for User {}.", user.getID());
             }
         } catch (RepositoryException e) {
             // conflict while creating token store for this user -> refresh and
             // try to get the tree from the updated root.
-            log.debug("Conflict while creating token store -> retrying", e.getMessage());
+            log.debug("Conflict while creating token store -> retrying", e);
             session.refresh(false);
             if (parentPath != null && session.nodeExists(parentPath)) {
                 tokenParent = (NodeImpl) session.getNode(parentPath);
@@ -406,7 +406,7 @@ public class TokenProvider extends ProtectedItemModifier {
                     return true;
                 }
             } catch (RepositoryException e) {
-                log.warn("Error while resetting token expiration", e.getMessage());
+                log.warn("Error while resetting token expiration", e);
             } finally {
                 if (s != null) {
                     s.logout();
