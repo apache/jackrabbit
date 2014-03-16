@@ -328,7 +328,7 @@ public class TokenProvider extends ProtectedItemModifier {
                     }
                 }
             } else {
-                log.debug("Cannot create login token: No corresponding node for User {}.", user.getID());
+                log.debug("Cannot create login token: No user specified. (null)");
             }
         } catch (RepositoryException e) {
             // conflict while creating token store for this user -> refresh and
