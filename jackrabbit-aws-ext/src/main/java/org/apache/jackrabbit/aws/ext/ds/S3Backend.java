@@ -112,8 +112,10 @@ public class S3Backend implements Backend {
         //over config provided via file based config
         if(this.properties != null){
             initProps = this.properties;
-        } else if (config == null) {
-            config = Utils.DEFAULT_CONFIG_FILE;
+        } else {
+            if(config == null){
+                config = Utils.DEFAULT_CONFIG_FILE;
+            }
             try{
                 initProps = Utils.readConfig(config);
             }catch(IOException e){
