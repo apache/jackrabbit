@@ -60,7 +60,6 @@
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
-            <version>1.7.5</version>
         </dependency>
         <!-- Test dependencies -->
         <dependency>
@@ -89,6 +88,12 @@
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
                 <extensions>true</extensions>
+                <configuration>
+                    <instructions>
+                        <Export-Package>org.apache.jackrabbit.aws.ext.ds</Export-Package>
+                        <DynamicImport-Package>sun.io</DynamicImport-Package>
+                    </instructions>
+                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.rat</groupId>
