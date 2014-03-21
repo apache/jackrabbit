@@ -399,11 +399,14 @@ public abstract class TestCaseBase extends TestCase {
         DataRecord rec2 = ds.addRecord(new ByteArrayInputStream(data));
         LOG.debug("rec2 timestamp=" + rec2.getLastModified());
 
-        Thread.sleep(2000);
+        // sleep for some time to ensure that async upload completes in backend.
+        sleep(6000);
         long updateTime = System.currentTimeMillis();
         LOG.debug("updateTime=" + updateTime);
         ds.updateModifiedDateOnAccess(updateTime);
 
+        // sleep to workaround System.currentTimeMillis granularity.
+        sleep(100);
         data = new byte[dataLength];
         random.nextBytes(data);
         DataRecord rec3 = ds.addRecord(new ByteArrayInputStream(data));
@@ -442,10 +445,13 @@ public abstract class TestCaseBase extends TestCase {
         random.nextBytes(data);
         DataRecord rec2 = ds.addRecord(new ByteArrayInputStream(data));
 
-        Thread.sleep(2000);
+        // sleep for some time to ensure that async upload completes in backend.
+        sleep(6000);
         long updateTime = System.currentTimeMillis();
         ds.updateModifiedDateOnAccess(updateTime);
-
+        
+        // sleep to workaround System.currentTimeMillis granularity.
+        sleep(100);
         data = new byte[dataLength];
         random.nextBytes(data);
         DataRecord rec3 = ds.addRecord(new ByteArrayInputStream(data));
@@ -662,5 +668,21 @@ public abstract class TestCaseBase extends TestCase {
             stream.close();
         }
     }
+    
+    /**
+     * Utility method to stop execution for duration time.
+     * 
+     * @param duration
+     *            time in milli seconds
+     */
+    protected void sleep(long duration) {
+        long expected = System.currentTimeMillis() + duration;
+        while (System.currentTimeMillis() < expected) {
+            try {
+                Thread.sleep(1);
+            } catch (InterruptedException ie) {
 
+            }
+        }
+    }
 }
