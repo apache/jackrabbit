@@ -38,6 +38,7 @@ import javax.jcr.PropertyIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.SimpleCredentials;
+import javax.jcr.Value;
 import javax.jcr.ValueFactory;
 
 import org.apache.jackrabbit.api.security.authentication.token.TokenCredentials;
@@ -161,7 +162,7 @@ public class TokenProvider extends ProtectedItemModifier {
 
                 String keyHash = PasswordUtility.buildPasswordHash(getKeyValue(key, user.getID()));
                 setProperty(tokenNode, session.getQName(TOKEN_ATTRIBUTE_KEY), vf.createValue(keyHash));
-                setProperty(tokenNode, session.getQName(TOKEN_ATTRIBUTE_EXPIRY), vf.createValue(createExpirationValue(creationTime)));
+                setProperty(tokenNode, session.getQName(TOKEN_ATTRIBUTE_EXPIRY), createExpirationValue(creationTime, session));
 
                 for (String name : attributes.keySet()) {
                     if (!RESERVED_ATTRIBUTES.contains(name)) {
@@ -186,10 +187,10 @@ public class TokenProvider extends ProtectedItemModifier {
         return null;
     }
 
-    private Calendar createExpirationValue(long creationTime) {
+    private Value createExpirationValue(long creationTime, Session session) throws RepositoryException {
         Calendar cal = Calendar.getInstance();
         cal.setTimeInMillis(createExpirationTime(creationTime, tokenExpiration));
-        return cal;
+        return session.getValueFactory().createValue(cal);
     }
 
     /**
@@ -400,7 +401,7 @@ public class TokenProvider extends ProtectedItemModifier {
             try {
                 if (expirationTime - loginTime <= tokenExpiration / 2) {
                     s = session.createSession(session.getWorkspace().getName());
-                    s.getNode(tokenPath).setProperty(TOKEN_ATTRIBUTE_EXPIRY, createExpirationValue(loginTime));
+                    setProperty((NodeImpl) s.getNode(tokenPath), session.getQName(TOKEN_ATTRIBUTE_EXPIRY), createExpirationValue(loginTime, session));
                     s.save();
                     log.debug("Successfully reset token expiration time.");
                     return true;
