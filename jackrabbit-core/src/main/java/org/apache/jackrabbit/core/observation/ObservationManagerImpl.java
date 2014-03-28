@@ -119,7 +119,7 @@ public class ObservationManagerImpl implements EventStateCollectionFactory,
 
         // create filter
         EventFilter filter = createEventFilter(eventTypes, Collections.singletonList(absPath),
-                isDeep, uuid, nodeTypeName, noLocal, false);
+                isDeep, uuid, nodeTypeName, noLocal, false, false);
 
         dispatcher.addConsumer(new EventConsumer(session, listener, filter));
     }
@@ -135,7 +135,7 @@ public class ObservationManagerImpl implements EventStateCollectionFactory,
 
         EventFilter f = createEventFilter(filter.getEventTypes(), absPaths,
                 filter.getIsDeep(), filter.getIdentifiers(), filter.getNodeTypes(),
-                filter.getNoLocal(), filter.getNoExternal());
+                filter.getNoLocal(), filter.getNoExternal(), filter.getNoInternal());
 
         dispatcher.addConsumer(new EventConsumer(session, listener, f));
     }
@@ -202,6 +202,7 @@ public class ObservationManagerImpl implements EventStateCollectionFactory,
      * @param nodeTypeName array of node type names.
      * @param noLocal a <code>boolean</code>.
      * @param noExternal a <code>boolean</code>.
+     * @param noInternal a <code>boolean</code>.
      * @return the event filter with the given restrictions.
      * @throws RepositoryException if an error occurs.
      */
@@ -211,7 +212,8 @@ public class ObservationManagerImpl implements EventStateCollectionFactory,
                                          String[] uuid,
                                          String[] nodeTypeName,
                                          boolean noLocal,
-                                         boolean noExternal)
+                                         boolean noExternal,
+                                         boolean noInternal)
             throws RepositoryException {
         // create NodeType instances from names
         NodeTypeImpl[] nodeTypes;
@@ -248,7 +250,7 @@ public class ObservationManagerImpl implements EventStateCollectionFactory,
         }
         // create filter
         return new EventFilter(
-                session, eventTypes, paths, isDeep, ids, nodeTypes, noLocal, noExternal);
+                session, eventTypes, paths, isDeep, ids, nodeTypes, noLocal, noExternal, noInternal);
     }
 
     /**
@@ -280,7 +282,7 @@ public class ObservationManagerImpl implements EventStateCollectionFactory,
         }
 
         EventFilter filter = createEventFilter(
-                eventTypes, Collections.singletonList(absPath), isDeep, uuid, nodeTypeName, false, false);
+                eventTypes, Collections.singletonList(absPath), isDeep, uuid, nodeTypeName, false, false, false);
         return new EventJournalImpl(
                 filter, clusterNode.getJournal(), clusterNode.getId(), session);
     }

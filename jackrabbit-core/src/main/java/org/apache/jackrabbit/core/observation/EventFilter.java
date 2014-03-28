@@ -82,6 +82,12 @@ public class EventFilter {
     private final boolean noExternal;
 
     /**
+     * If <code>noInternal</code> is true this filter will block events from
+     * this cluster nodes.
+     */
+    private final boolean noInternal;
+
+    /**
      * Creates a new <code>EventFilter</code> instance.
      *
      * @param session    the <code>Session</code> that registered the {@link
@@ -100,6 +106,10 @@ public class EventFilter {
      * @param noLocal    if <code>true</code> no events are allowed that were
      *                   created from changes related to the <code>Session</code>
      *                   that registered the {@link javax.jcr.observation.EventListener}.
+     * @param noExternal if <code>true</code> no events are allowed that were
+     *                   created from changes on an external cluster node.
+     * @param noInternal if <code>true</code> no events are allowed that were
+     *                   created from changes on the local cluster node.
      */
     EventFilter(SessionImpl session,
                 long eventTypes,
@@ -108,7 +118,8 @@ public class EventFilter {
                 NodeId[] ids,
                 NodeTypeImpl[] nodeTypes,
                 boolean noLocal,
-                boolean noExternal) {
+                boolean noExternal,
+                boolean noInternal) {
         this.session = session;
         this.eventTypes = eventTypes;
         this.paths = paths;
@@ -116,6 +127,7 @@ public class EventFilter {
         this.ids = ids;
         this.noLocal = noLocal;
         this.noExternal = noExternal;
+        this.noInternal = noInternal;
         this.nodeTypes = nodeTypes;
     }
 
@@ -144,6 +156,10 @@ public class EventFilter {
         }
 
         if (noExternal && eventState.isExternal()) {
+            return true;
+        }
+
+        if (noInternal && !eventState.isExternal()) {
             return true;
         }
 
@@ -203,7 +219,7 @@ public class EventFilter {
          * Creates a new <code>BlockAllFilter</code>.
          */
         BlockAllFilter() {
-            super(null, 0, Collections.<Path>emptyList(), true, null, null, true, true);
+            super(null, 0, Collections.<Path>emptyList(), true, null, null, true, true, true);
         }
 
         /**
