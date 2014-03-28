@@ -93,7 +93,7 @@ public class FileDataStore extends AbstractDataStore
      * The minimum modified date. If a file is accessed (read or write) with a modified date
      * older than this value, the modified date is updated to the current time.
      */
-    private long minModifiedDate;
+    private volatile long minModifiedDate;
 
     /**
      * The directory that contains all the data record files. The structure
@@ -141,19 +141,19 @@ public class FileDataStore extends AbstractDataStore
      */
     public DataRecord getRecordIfStored(DataIdentifier identifier) throws DataStoreException {
         File file = getFile(identifier);
-        synchronized (this) {
-            if (!file.exists()) {
-                return null;
-            }
-            if (minModifiedDate != 0) {
-                // only check when running garbage collection
+        if (!file.exists()) {
+            return null;
+        }
+        if (minModifiedDate != 0) {
+            // only check when running garbage collection
+            synchronized (this) {
                 if (getLastModified(file) < minModifiedDate) {
                     setLastModified(file, System.currentTimeMillis() + ACCESS_TIME_RESOLUTION);
                 }
             }
-            usesIdentifier(identifier);
-            return new FileDataRecord(this, identifier, file);
         }
+        usesIdentifier(identifier);
+        return new FileDataRecord(this, identifier, file);
     }
 
     private void usesIdentifier(DataIdentifier identifier) {
