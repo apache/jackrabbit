@@ -72,6 +72,10 @@ import static java.util.Arrays.copyOf;
  * <code>noExternal</code>: if <code>true</code>, then events
  * from external cluster nodes are ignored. Otherwise, they are not ignored.
  * </li>
+ * <li>
+ * <code>noInternal</code>: if <code>true</code>, then events
+ * from this cluster node are ignored. Otherwise, they are not ignored.
+ * </li>
  * </ul>
  * The restrictions are "ANDed" together. In other words, for a particular node to be "listened to" it
  * must meet all the restrictions.
@@ -86,6 +90,7 @@ public class JackrabbitEventFilter {  // TODO extends EventFilter once JCR 2.1 i
     private boolean noLocal;
     private String[] absPaths = new String[]{};
     private boolean noExternal;
+    private boolean noInternal;
 
     /**
      * Sets the <code>eventTypes</code> parameter of the filter.
@@ -254,4 +259,26 @@ public class JackrabbitEventFilter {  // TODO extends EventFilter once JCR 2.1 i
     public boolean getNoExternal() {
         return noExternal;
     }
+
+    /**
+     * Sets the <code>noInternal</code> parameter of the filter.
+     * If left unset, this parameter defaults to <code>false</code>.
+     *
+     * @param noInternal a <code>boolean</code>.
+     * @return This EventFilter object with the <code>noExternal</code> parameter set.
+     */
+    public JackrabbitEventFilter setNoInternal(boolean noInternal) {
+        this.noInternal = noInternal;
+        return this;
+    }
+
+    /**
+     * Returns the <code>noInternal</code> parameter of the filter.
+     *
+     * @return a <code>boolean</code>.
+     */
+    public boolean getNoInternal() {
+        return noInternal;
+    }
+
 }
