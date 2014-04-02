@@ -58,6 +58,7 @@ import org.apache.jackrabbit.spi.commons.conversion.DefaultNamePathResolver;
 import org.apache.jackrabbit.spi.commons.conversion.IllegalNameException;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.util.Text;
+import org.apache.jackrabbit.value.ValueHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.ContentHandler;
@@ -863,7 +864,8 @@ class JsonDiffHandler implements DiffHandler {
 		@Override
 		public Value getValue(int type, NamePathResolver resolver)
 				throws ValueFormatException, RepositoryException {
-			return vf.createValue(value);
+			// We do this for all property types including NAME and PATH types...
+			return ValueHelper.deserialize(value, type, false, vf);
 		}
 
 		@Override
