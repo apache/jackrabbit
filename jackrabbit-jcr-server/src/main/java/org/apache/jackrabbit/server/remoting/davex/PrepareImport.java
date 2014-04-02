@@ -40,16 +40,6 @@ class PrepareImport {
 	private JsopImporter importer;
 	private ValueFactory vf;
 	
-	// variables for holding information about the current property being
-	// prepared for import.
-
-	// Store serialized Value objects.
-	private List<StringValue> currentPropertyValues = new ArrayList<StringValue>();
-	private List<Name> mixinNames = new ArrayList<Name>();
-	private ImportItem item;
-	// private Map<NodeInfo,List<PropInfo>> map = new
-	// HashMap<NodeInfo,List<PropInfo>>();
-
 	private Stack<ImportState> states = new Stack<ImportState>();
 
 	public PrepareImport(Session session, Node parent, ValueFactory valueFactory) {
@@ -153,10 +143,13 @@ class PrepareImport {
 		}
 	}
 
+	
 
+	// ----- private utility methods
+	
 	private PropInfo createPropInfo(ImportMvProp prop) throws IOException{
 		List<StringValue> values = serialize(prop.getValues());
-		Name propName = nameFromString(prop.getName(),"property value");
+		Name propName = nameFromString(prop.getName(),"property name");
 		return new PropInfo(propName,PropertyType.UNDEFINED,values.toArray(new TextValue[values.size()]));
 	}
 
@@ -171,7 +164,7 @@ class PrepareImport {
 			throws IOException {
 		Name mixin = null;
 		for (Value value : prop.getValues()) {
-			mixin = nameFromValue(value);
+			mixin = nameFromValue(value, "property value");
 			state.addMixin(mixin);
 		}
 	}
@@ -190,22 +183,22 @@ class PrepareImport {
 		return name;
 	}
 
-	private Name nameFromValue(Value value) throws IOException {
+	private Name nameFromValue(Value value, String exceptionMsg) throws IOException {
 		Name name = null;
 		try {
 			name = resolver.getQName(value.getString());
+			return name;
 		} catch (IllegalNameException e) {
-			throw new DiffException("Invalide mixin name");
+			throw new DiffException("Invalid "+exceptionMsg, e);
 		} catch (NamespaceException e) {
-			throw new DiffException("Invalide mixin name");
+			throw new DiffException("Invalid "+exceptionMsg, e);
 		} catch (ValueFormatException e) {
-			throw new DiffException("Invalide mixin name");
+			throw new DiffException("Invalid "+exceptionMsg, e);
 		} catch (IllegalStateException e) {
-			throw new DiffException("Invalide mixin name");
+			throw new DiffException("Invalid "+exceptionMsg, e);
 		} catch (RepositoryException e) {
-			throw new DiffException("Invalide mixin name");
+			throw new DiffException("Invalid "+exceptionMsg, e);
 		}
-		return name;
 	}
 
 	/*
@@ -224,7 +217,9 @@ class PrepareImport {
 		}
 
 	}
-
+    /*
+     * Serialize the given list of Values.
+     */
 	private List<StringValue> serialize(List<Value> values) throws IOException {
 		StringValue vl = null;
 		List<StringValue> vls = new ArrayList<StringValue>();
