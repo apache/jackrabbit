@@ -58,6 +58,7 @@ import org.apache.jackrabbit.spi.commons.conversion.DefaultNamePathResolver;
 import org.apache.jackrabbit.spi.commons.conversion.IllegalNameException;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.util.Text;
+import org.apache.jackrabbit.value.ValueHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.ContentHandler;
@@ -721,7 +722,6 @@ class JsonDiffHandler implements DiffHandler {
 		}
 
 		public void array() throws IOException {
-			ImportMvProp prop = new ImportMvProp(key);
 
 			if (!parse.isEmpty()) {
 				if (parse.peek() == ARRAY) {
@@ -863,7 +863,8 @@ class JsonDiffHandler implements DiffHandler {
 		@Override
 		public Value getValue(int type, NamePathResolver resolver)
 				throws ValueFormatException, RepositoryException {
-			return vf.createValue(value);
+			// We do this for all property types including NAME and PATH types...
+			return ValueHelper.deserialize(value, type, false, vf);
 		}
 
 		@Override
@@ -878,135 +879,6 @@ class JsonDiffHandler implements DiffHandler {
 			// do nothing
 		}
 
-	}
-
-	abstract class ImportItem {
-		final String name;
-
-		private ImportItem(String name) throws IOException {
-			if (name == null) {
-				throw new DiffException("Invalid DIFF format: NULL key.");
-			}
-			this.name = name;
-		}
-
-		abstract void createItem(Node parent) throws RepositoryException;
-	}
-
-	final class ImportNode extends ImportItem {
-		String ntName;
-		String uuid;
-
-		List<ImportNode> childN = new ArrayList<ImportNode>();
-		List<ImportItem> childP = new ArrayList<ImportItem>();
-
-		private ImportNode(String name) throws IOException {
-			super(name);
-		}
-
-		void addProp(ImportProp prop) {
-			if (prop.name.equals(JcrConstants.JCR_PRIMARYTYPE)) {
-				try {
-					ntName = (prop.value == null) ? null : prop.value
-							.getString();
-				} catch (RepositoryException e) {
-					// should never get here. Value.getString() should always
-					// succeed.
-					log.error(e.getMessage());
-				}
-			} else if (prop.name.equals(JcrConstants.JCR_UUID)) {
-				try {
-					uuid = (prop.value == null) ? null : prop.value.getString();
-				} catch (RepositoryException e) {
-					// should never get here. Value.getString() should always
-					// succeed.
-					log.error(e.getMessage());
-				}
-			} else {
-				// regular property
-				childP.add(prop);
-			}
-		}
-
-		void addProp(ImportMvProp prop) {
-			childP.add(prop);
-		}
-
-		void addNode(ImportNode node) {
-			childN.add(node);
-		}
-
-		List<ImportNode> getChildNodes() {
-			return childN;
-		}
-
-		List<ImportItem> getChildProps() {
-			return childP;
-		}
-
-		@Override
-		void createItem(Node parent) throws RepositoryException {
-			Node n;
-			if (uuid == null) {
-				n = (ntName == null) ? parent.addNode(name) : parent.addNode(
-						name, ntName);
-			} else {
-				// because we want to serialise the uuid value before
-				// transporting it over the wire to the
-				// persistance layer. Thus we use the ContentHandler...
-				// parent.addNode(name,ntName,uuid) doesn't exist in
-				// the jcr api.
-				n = importNode(parent, name, ntName, uuid);
-			}
-			// create all properties
-			for (ImportItem obj : childP) {
-				obj.createItem(n);
-			}
-			// recursively create all child nodes
-			for (ImportItem obj : childN) {
-				obj.createItem(n);
-			}
-		}
-	}
-
-	final class ImportProp extends ImportItem {
-		private final Value value;
-
-		private ImportProp(String name, Value v) throws IOException {
-			super(name);
-			this.value = v;
-		}
-
-		Value getValue() {
-			return value;
-		}
-
-		@Override
-		void createItem(Node parent) throws RepositoryException {
-			parent.setProperty(name, value);
-		}
-	}
-
-	final class ImportMvProp extends ImportItem {
-		private List<Value> values = new ArrayList<Value>();
-
-		private ImportMvProp(String name) throws IOException {
-			super(name);
-		}
-
-		@Override
-		void createItem(Node parent) throws RepositoryException {
-			Value[] vls = values.toArray(new Value[values.size()]);
-			if (JcrConstants.JCR_MIXINTYPES.equals(name)) {
-				setMixins(parent, vls);
-			} else {
-				parent.setProperty(name, vls);
-			}
-		}
-
-		List<Value> getValues() { // TODO: just for testing. Remove
-			return values;
-		}
 	}
 
 	final class ImportState {
