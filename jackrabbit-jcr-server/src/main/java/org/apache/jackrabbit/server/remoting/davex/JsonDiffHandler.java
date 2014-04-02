@@ -623,7 +623,7 @@ class JsonDiffHandler implements DiffHandler {
 		List<StringValue> currentPropValues;
 
 		// use for parsing
-		private Stack<Integer> st = new Stack<Integer>();
+		private Stack<Integer> parse = new Stack<Integer>();
 		// use for storing nodes to import.
 		private Stack<ImportState> states = new Stack<ImportState>();
 
@@ -680,9 +680,9 @@ class JsonDiffHandler implements DiffHandler {
 
 		public void object() throws IOException {
 
-			if (!st.isEmpty()) {
+			if (!parse.isEmpty()) {
 				// st.peek();
-				if (st.peek() == OBJECT) {
+				if (parse.peek() == OBJECT) {
 					if (!states.empty()) {
 						// process current node first.
 						ImportState current = states.peek();
@@ -696,30 +696,19 @@ class JsonDiffHandler implements DiffHandler {
 							"Invalid DIFF format: A JSONObject may only be contained in JSonObjects.");
 				}
 			}
-			// we are starting a new object. two things must be the case.
-			// First outer-most object or
-			// a nested object
-			// ImportNode n = new ImportNode(key);
-			Name name = null;
-			try {
-				name = resolver.getQName(key);
-			} catch (IllegalNameException iNCause) {
-				throw new DiffException("Illegal node name " + key, iNCause);
-			} catch (NamespaceException nsCause) {
-				throw new DiffException("Illegal node name " + key, nsCause);
-			}
+			
+			Name name = nameFromString(key, "Node name");
+			
 			ImportState is = new ImportState(name);
-			st.push(OBJECT);
+			parse.push(OBJECT);
 			states.push(is);
 		}
 
 		public void endObject() throws IOException {
-			// element on stack must be ImportMvProp since array may only
-			// contain simple values, no arrays/objects are allowed.
-			// ImportItem obj = st.pop();
+			
 			ImportState state = states.peek();
 
-			if (st.peek() != OBJECT) {
+			if (parse.peek() != OBJECT) {
 				throw new DiffException("Invalid DIFF format.");
 			}
 			if (!state.started()) {
@@ -729,58 +718,30 @@ class JsonDiffHandler implements DiffHandler {
 				processNode(state, false, true);
 			}
 			states.pop();
-			/*
-			 * if (st.isEmpty()) { // everything parsed -> start adding all
-			 * nodes and properties try { new
-			 * PrepareImport(session).processNode(obj); //
-			 * obj.createItem(parent); It's now the responsibility of importers
-			 * to create the node being imported // so we defer the creation
-			 * step. } catch (RepositoryException e) {
-			 * log.error(e.getMessage()); throw new
-			 * DiffException(e.getMessage(), e); } }
-			 */
 		}
 
 		public void array() throws IOException {
 			ImportMvProp prop = new ImportMvProp(key);
 
-			// ImportItem obj = st.peek();
-			if (!st.isEmpty()) {
-				if (st.peek() == ARRAY) {
+			if (!parse.isEmpty()) {
+				if (parse.peek() == ARRAY) {
 					throw new DiffException(
 							"Invalid DIFF format: The JSONArray may only contain simple values.");
 				}
-				st.push(ARRAY);
+				parse.push(ARRAY);
 			}
-			/*
-			 * else { ((ImportNode)obj).addProp(prop); currentPropValues }
-			 */
-			// st.push(ARRAY);
-			// st.push(prop);
 		}
 
 		public void endArray() throws IOException {
-			// element on stack must be ImportMvProp since array may only
-			// contain simple values, no arrays/objects are allowed.
-			// ImportItem obj = st.pop();
 			ImportState state = states.peek();
-			if (st.pop() != ARRAY) {
+			if (parse.pop() != ARRAY) {
 				throw new DiffException(
 						"Invalid DIFF format: The JSONArray may only contain simple values.");
 			}
 			Name mixin = null;
 			if (key.equals(JcrConstants.JCR_MIXINTYPES)) {
 				for (StringValue v : currentPropValues) {
-					try {
-						mixin = resolver.getQName(v.getString());
-					} catch (IllegalNameException iNCause) {
-						throw new DiffException("illegal mixin name " + key,
-								iNCause);
-					} catch (NamespaceException nsCause) {
-						throw new DiffException("illegal mixin name " + key,
-								nsCause);
-					}
-
+					mixin = nameFromString(v.getString(), "mixin name");
 					addMixin(state, mixin);
 				}
 			} else { // multi-valued non-jcr:mixin property
@@ -816,6 +777,20 @@ class JsonDiffHandler implements DiffHandler {
 			state.addMixin(mixin);
 		}
 
+// --------------- private methods ---------------
+		
+		private Name nameFromString(String key, String exceptionMsg) throws IOException {
+			Name name = null;
+			try {
+				name = resolver.getQName(key);
+				return name;
+			} catch (IllegalNameException e) {
+				throw new DiffException("Illegal "+exceptionMsg+" " + key, e);
+			} catch (NamespaceException e) {
+				throw new DiffException("Illegal "+exceptionMsg+" " + key, e);
+			}
+		}
+
 		private void addValue(Value v) throws IOException {
 			if (currentPropValues == null) {
 				currentPropValues = new ArrayList<StringValue>();
@@ -836,20 +811,14 @@ class JsonDiffHandler implements DiffHandler {
 			Name name = null;
 			ImportState state = states.peek();
 			addValue(v);
-			if (st.peek() != ARRAY) { // single-valued property
+			if (parse.peek() != ARRAY) { // single-valued property
 				// collect jcr:primaryType and jcr:uuid etc. system properties
 				if (key.equals(JcrConstants.JCR_PRIMARYTYPE)) {
-					try {
-						name = resolver.getQName(currentPropValues.get(0)
-								.getString());
-					} catch (IllegalNameException iNCause) {
-						throw new DiffException("illegal node type name: "
-								+ key, iNCause);
-					} catch (NamespaceException nsCause) {
-						throw new DiffException("illegal node type name: "
-								+ key, nsCause);
-					}
+					
+					name = nameFromString(currentPropValues.get(0)
+								.getString(), "node type name");
 					state.setNodeType(name);
+					
 				} else if (key.equals(JcrConstants.JCR_UUID)) {
 					state.setUUID(currentPropValues.get(0).getString());
 				} else {
@@ -864,28 +833,13 @@ class JsonDiffHandler implements DiffHandler {
 				}
 				currentPropValues.clear();
 			}
-			// ImportItem obj = st.peek();
-			// ((ImportMvProp) obj).values.add(v);
-			// Importer.PropInfo prop =
-			// createPropInfo(currentPropName,currentPropValues,currentMultiStatus);
-
-			/*
-			 * }/* else { ((ImportNode) obj).addProp(new ImportProp(key, v)); }
-			 */
 		}
 
 		private PropInfo createPropInfo(String propName,
 				List<StringValue> propValues) throws IOException {
-			Name name;
-			try {
-				name = resolver.getQName(propName);
-			} catch (IllegalNameException iNCause) {
-				throw new DiffException("illegal property name " + propName,
-						iNCause);
-			} catch (NamespaceException nSCause) {
-				throw new DiffException("illegal property name " + propName,
-						nSCause);
-			}
+			
+			Name name = nameFromString(propName ,"property name");
+			
 
 			return new PropInfo(name, PropertyType.UNDEFINED,
 					propValues.toArray(new TextValue[propValues.size()]));
