@@ -66,6 +66,13 @@ public class JsonDiffHandlerTest extends AbstractJCRTest {
 			+ "\"allow\" : {" + "\"jcr:primaryType\" : \"rep:GrantACE\","
 			+ "\"rep:principalName\" : \"everyone\","
 			+ "\"rep:privileges\" : [\"jcr:write\"]" + "}" + "}" + "}";
+	
+	private static final String REPO_POLICY_NODE = "+rep:repoPolicy : {"
+			+ "\"jcr:primaryType\" : \"rep:ACL\"," + "\"allow\" : {"
+			+ "\"jcr:primaryType\" : \"rep:GrantACE\","
+			+ "\"rep:principalName\" : \"everyone\","
+			+ "\"rep:privileges\" : [\"jcr:write\"]" + "}" + "}";
+
 
 	private SessionImpl sImpl;
 
@@ -111,7 +118,7 @@ public class JsonDiffHandlerTest extends AbstractJCRTest {
             assertEquals(expItemPath, handler.getItemPath(targetPath));
         }
     }
-	/*public void testDiffAddNode() throws Exception {
+	public void testDiffAddNode() throws Exception {
 		JsonDiffHandler handler = new JsonDiffHandler(sImpl, target.getPath(),
 				null);
 
@@ -119,7 +126,7 @@ public class JsonDiffHandlerTest extends AbstractJCRTest {
 		
 		Node n = testRootNode.getNode("allow");
 		assertEquals(n.getName(), "allow");
-	}*/
+	}
 
 	public void testRepPolicyNodeImport() throws Exception {
 		try {
@@ -163,6 +170,31 @@ public class JsonDiffHandlerTest extends AbstractJCRTest {
 			superuser.refresh(false);
 		}
 	}
+	
+	// Test adding a rep:repoPolicy node directly under the root node.
+	public void testRepoPolicyNodeImport() throws Exception{
+		NodeImpl target = (NodeImpl)sImpl.getRootNode();
+		try{
+			 target.addMixin("rep:RepoAccessControllable");
+			 
+			JsonDiffHandler handler = new JsonDiffHandler(sImpl,target.getPath() , null);
+			new DiffParser(handler).parse(REPO_POLICY_NODE);
+			assertTrue(target.hasNode("rep:repoPolicy"));
+			
+			String path = target.getPath();
+			//assertTrue(target.getNode("rep:repoPolicy").getPrimaryNodeType().getName().equals("rep:ACL"));
+			AccessControlManager acM = sImpl.getAccessControlManager();
+			AccessControlPolicy[] policy = acM.getPolicies(null);
+			/*AccessControlPolicy[] ep = acM.getEffectivePolicies(path);
+			AccessControlEntry[] entries = ((JackrabbitAccessControlList)ep[0]).getAccessControlEntries();*/
+			//System.out.println(policy[0].);
+			//assertEquals(1, policy.length);
+			
+		}finally{
+			superuser.refresh(false);
+		}
+	}
+
 
 	
 	// ---------------------------------------------------- < DummySession > ---------------------------------------
