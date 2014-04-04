@@ -96,6 +96,8 @@ class PrepareImport {
 			if(current.started()){
 				processNode(current,false,true);
 			}
+			// pop current state from stack
+			states.pop();
 		}
 	}
 
