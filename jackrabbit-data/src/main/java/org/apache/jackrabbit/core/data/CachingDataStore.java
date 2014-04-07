@@ -35,6 +35,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.WeakHashMap;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -73,6 +74,7 @@ import org.slf4j.LoggerFactory;
  *     &lt;param name="{@link #setContinueOnAsyncUploadFailure(boolean) continueOnAsyncUploadFailure}" value="false"/>
  *     &lt;param name="{@link #setConcurrentUploadsThreads(int) concurrentUploadsThreads}" value="10"/>
  *     &lt;param name="{@link #setAsyncUploadLimit(int) asyncUploadLimit}" value="100"/>
+ *     &lt;param name="{@link #setUploadRetries(int) uploadRetries}" value="3"/>
  * &lt/DataStore>
  */
 public abstract class CachingDataStore extends AbstractDataStore implements
@@ -101,6 +103,15 @@ public abstract class CachingDataStore extends AbstractDataStore implements
      * are garbage collected.
      */
     protected Map<DataIdentifier, WeakReference<DataIdentifier>> inUse = Collections.synchronizedMap(new WeakHashMap<DataIdentifier, WeakReference<DataIdentifier>>());
+    
+    /**
+     * In memory map to hold failed asynchronous upload {@link DataIdentifier}
+     * and its retry count. Once if all retries are exhausted or file is 
+     * successfully uploaded, then corresponding entry is flushed from the map.
+     * As all failed uploads are synchronously uploaded at startup, this map 
+     * is not required to be persisted. 
+     */
+    protected final Map<DataIdentifier, Integer> uploadRetryMap = new ConcurrentHashMap<DataIdentifier, Integer>(5);
 
     protected Backend backend;
 
@@ -145,6 +156,11 @@ public abstract class CachingDataStore extends AbstractDataStore implements
      * The number of bytes in the cache. The default value is 64 GB.
      */
     private long cacheSize = 64L * 1024 * 1024 * 1024;
+    
+    /**
+     * The number of retries for failed upload.
+     */
+    private int uploadRetries = 3;
 
     /**
      * The local file system cache.
@@ -209,12 +225,12 @@ public abstract class CachingDataStore extends AbstractDataStore implements
                 tmpDir = new File(path, "/repository/s3tmp");
                 path = path + "/repository/datastore";
             }
-            LOG.info("path=[" + path + ",] tmpPath= [" + tmpDir.getPath() + "]");
+            LOG.info("path=[{}],  tmpPath=[{}]", path, tmpDir.getPath());
             directory = new File(path);
             mkdirs(directory);
             if (!mkdirs(tmpDir)) {
                 FileUtils.cleanDirectory(tmpDir);
-                LOG.info("tmp = " + tmpDir.getPath() + " cleaned");
+                LOG.info("tmp=[{}] cleaned.", tmpDir.getPath());
             }
 
             asyncWriteCache = new AsyncUploadCache();
@@ -238,24 +254,25 @@ public abstract class CachingDataStore extends AbstractDataStore implements
                                 + markerFile.getAbsolutePath(), e);
                     }
                 } else {
-                    LOG.info("marker file = " + markerFile.getAbsolutePath()
-                        + " exists");
+                    LOG.info("marker file = [{}] exists ",
+                        markerFile.getAbsolutePath());
                 }
             }
             // upload any leftover async uploads to backend during last shutdown
             Set<String> fileList = asyncWriteCache.getAll();
             if (fileList != null && !fileList.isEmpty()) {
                 List<String> errorFiles = new ArrayList<String>();
-                LOG.info("Uploading [" + fileList + "]  and size ["
-                    + fileList.size() + "] from AsyncUploadCache.");
+                LOG.info("Uploading [{}] and size=[{}] from AsyncUploadCache.",
+                    fileList, fileList.size());
                 long totalSize = 0;
                 List<File> files = new ArrayList<File>(fileList.size());
                 for (String fileName : fileList) {
                     File f = new File(path, fileName);
                     if (!f.exists()) {
                         errorFiles.add(fileName);
-                        LOG.error("Cannot upload pending file ["
-                            + f.getAbsolutePath() + "]. File doesn't exist.");
+                        LOG.error(
+                            "Cannot upload pending file [{}]. File doesn't exist.",
+                            f.getAbsolutePath());
                     } else {
                         totalSize += f.length();
                         files.add(new File(homeDir, fileName));
@@ -264,18 +281,22 @@ public abstract class CachingDataStore extends AbstractDataStore implements
                 new FilesUploader(files, totalSize, concurrentUploadsThreads,
                     true).upload();
                 if (!continueOnAsyncUploadFailure && errorFiles.size() > 0) {
-                    LOG.error("Pending uploads of files [" + errorFiles
-                        + "] failed. Files do not exist in Local cache.");
-                    LOG.error("To continue set [continueOnAsyncUploadFailure] to true in Datastore configuration in repository.xml."
-                        + " There would be inconsistent data in repository due the missing files. ");
+                    LOG.error(
+                        "Pending uploads of files [{}] failed. Files do not exist in Local cache.",
+                        errorFiles);
+                    LOG.error("To continue set [continueOnAsyncUploadFailure] "
+                        + "to true in Datastore configuration in "
+                        + "repository.xml. There would be inconsistent data "
+                        + "in repository due the missing files. ");
                     throw new RepositoryException(
                         "Cannot upload async uploads from local cache. Files not found.");
                 } else {
                     if (errorFiles.size() > 0) {
-                        LOG.error("Pending uploads of files ["
-                            + errorFiles
-                            + "] failed. Files do not exist"
-                            + " in Local cache. Continuing as [continueOnAsyncUploadFailure] is set to true.");
+                        LOG.error(
+                            "Pending uploads of files [{}] failed. Files do" +
+                            " not exist in Local cache. Continuing as " +
+                            "[continueOnAsyncUploadFailure] is set to true.",
+                            errorFiles);
                     }
                     LOG.info("Reseting AsyncWrite Cache list.");
                     asyncWriteCache.reset();
@@ -324,10 +345,8 @@ public abstract class CachingDataStore extends AbstractDataStore implements
             long currTime = System.currentTimeMillis();
             DataIdentifier identifier = new DataIdentifier(
                 encodeHexString(digest.digest()));
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("getting SHA1 hash  [" + identifier + "] length ["
-                    + length + "],   in [" + (currTime - startTime) + "] ms.");
-            }
+            LOG.debug("SHA1 of [{}], length =[{}] took [{}]ms ",
+                new Object[] { identifier, length, (currTime - startTime) });
             String fileName = getFileName(identifier);
             AsyncUploadCacheResult result = null;
             synchronized (this) {
@@ -337,10 +356,8 @@ public abstract class CachingDataStore extends AbstractDataStore implements
                     result = cache.store(fileName, temporary, true);
                 }
             }
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("storing  [" + identifier + "] in localCache took ["
-                    + (System.currentTimeMillis() - currTime) + "] ms.");
-            }
+            LOG.debug("storing  [{}] in localCache took [{}] ms", identifier,
+                (System.currentTimeMillis() - currTime));
             if (result != null) {
                 if (result.canAsyncUpload()) {
                     backend.writeAsync(identifier, result.getFile(), this);
@@ -351,11 +368,9 @@ public abstract class CachingDataStore extends AbstractDataStore implements
             // this will also make sure that
             // tempId is not garbage collected until here
             inUse.remove(tempId);
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("write [" + identifier + "] length [" + length
-                    + "],   in [" + (System.currentTimeMillis() - startTime)
-                    + "] ms.");
-            }
+            LOG.debug("addRecord [{}] of length [{}] took [{}]ms.",
+                new Object[] { identifier, length,
+                    (System.currentTimeMillis() - startTime) });
             return new CachingDataRecord(this, identifier);
         } catch (NoSuchAlgorithmException e) {
             throw new DataStoreException(DIGEST + " not available", e);
@@ -427,7 +442,7 @@ public abstract class CachingDataStore extends AbstractDataStore implements
 
     @Override
     public void updateModifiedDateOnAccess(long before) {
-        LOG.info("minModifiedDate set to: " + before);
+        LOG.info("minModifiedDate set to [{}]", before);
         minModifiedDate = before;
     }
 
@@ -483,8 +498,9 @@ public abstract class CachingDataStore extends AbstractDataStore implements
         } catch (IOException e) {
             throw new DataStoreException(e);
         }
-        LOG.info("deleteAllOlderThan  exit. Deleted [" + diSet
-            + "] records. Number of records deleted [" + diSet.size() + "]");
+        LOG.info(
+            "deleteAllOlderThan  exit. Deleted [{}]records. Number of records deleted [{}]",
+            diSet, diSet.size());
         return diSet.size();
     }
 
@@ -517,21 +533,19 @@ public abstract class CachingDataStore extends AbstractDataStore implements
      */
     public long getLastModified(DataIdentifier identifier)
             throws DataStoreException {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("accessed lastModified of identifier:" + identifier);
-        }
         String fileName = getFileName(identifier);
         long lastModified = asyncWriteCache.getLastModified(fileName);
         if (lastModified != 0) {
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("getlastModified of identifier [" + identifier
-                    + "] from AsyncUploadCache = " + lastModified);
-            }
-            return lastModified;
+            LOG.debug(
+                "identifier [{}]'s lastModified retrireved from AsyncUploadCache ",
+                identifier);
 
         } else {
-            return backend.getLastModified(identifier);
+            lastModified =  backend.getLastModified(identifier);
         }
+        LOG.debug("identifier= [{}], lastModified=[{}]", identifier,
+            lastModified);
+        return lastModified;
     }
 
     /**
@@ -575,48 +589,92 @@ public abstract class CachingDataStore extends AbstractDataStore implements
     public Set<String> getPendingUploads() {
         return asyncWriteCache.getAll();
     }
-
-    public void call(DataIdentifier identifier, File file,
-            AsyncUploadCallback.RESULT resultCode) {
+    
+    @Override
+    public void onSuccess(AsyncUploadResult result) {
+        DataIdentifier identifier = result.getIdentifier();
+        File file = result.getFile();
         String fileName = getFileName(identifier);
-        if (AsyncUploadCallback.RESULT.SUCCESS.equals(resultCode)) {
-            try {
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("Upload completed. [" + identifier + "].");
-                }
-                AsyncUploadCacheResult result = asyncWriteCache.remove(fileName);
-                if (result.doRequiresDelete()) {
-                    // added record already marked for delete
-                    deleteRecord(identifier);
-                }
-            } catch (IOException ie) {
-                LOG.warn("Cannot remove pending file upload. Dataidentifer [ "
-                    + identifier + "], file [" + file.getAbsolutePath() + "]",
-                    ie);
-            } catch (DataStoreException dse) {
-                LOG.warn("Cannot remove pending file upload. Dataidentifer [ "
-                    + identifier + "], file [" + file.getAbsolutePath() + "]",
-                    dse);
+        try {
+            LOG.debug("Upload completed for [{}]", identifier);
+            // remove from failed upload map if any.
+            uploadRetryMap.remove(identifier);
+            AsyncUploadCacheResult cachedResult = asyncWriteCache.remove(fileName);
+            if (cachedResult.doRequiresDelete()) {
+                // added record already marked for delete
+                deleteRecord(identifier);
             }
-        } else if (AsyncUploadCallback.RESULT.FAILED.equals(resultCode)) {
-            LOG.error("Async Upload failed. Dataidentifer [ " + identifier
-                + "], file [" + file.getAbsolutePath() + "]");
-        } else if (AsyncUploadCallback.RESULT.ABORTED.equals(resultCode)) {
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("Async Upload Aborted. Dataidentifer [ " + identifier
-                    + "], file [" + file.getAbsolutePath() + "]");
-            }
-            try {
-                asyncWriteCache.remove(fileName);
-                LOG.info("Async Upload Aborted. Dataidentifer [ " + identifier
-                    + "], file [" + file.getAbsolutePath() + "] removed.");
-            } catch (IOException ie) {
-                LOG.warn("Cannot remove pending file upload. Dataidentifer [ "
-                    + identifier + "], file [" + file.getAbsolutePath() + "]",
-                    ie);
-            }
+        } catch (IOException ie) {
+            LOG.warn("Cannot remove pending file upload. Dataidentifer [ "
+                + identifier + "], file [" + file.getAbsolutePath() + "]", ie);
+        } catch (DataStoreException dse) {
+            LOG.warn("Cannot remove pending file upload. Dataidentifer [ "
+                + identifier + "], file [" + file.getAbsolutePath() + "]", dse);
         }
     }
+
+    @Override
+    public void onFailure(AsyncUploadResult result) {
+        DataIdentifier identifier = result.getIdentifier();
+        File file = result.getFile();
+        String fileName = getFileName(identifier);
+        if (result.getException() != null) {
+            LOG.warn("Async Upload failed. Dataidentifer [ " + identifier
+                + "], file [" + file.getAbsolutePath() + "]",
+                result.getException());
+        } else {
+            LOG.warn("Async Upload failed. Dataidentifer [ " + identifier
+                + "], file [" + file.getAbsolutePath() + "]");
+        }
+        // Retry failed upload upto uploadRetries times.
+        try {
+            if (asyncWriteCache.hasEntry(fileName, false)) {
+                synchronized (uploadRetryMap) {
+                    Integer retry = uploadRetryMap.get(identifier);
+                    if (retry == null) {
+                        retry = new Integer(1);
+                    } else {
+                        retry++;
+                    }
+                    if (retry <= uploadRetries) {
+                        uploadRetryMap.put(identifier, retry);
+                        LOG.info(
+                            "Retrying [{}] times failed upload for dataidentifer",
+                            retry, identifier);
+                        try {
+                            backend.writeAsync(identifier, file, this);
+                        } catch (DataStoreException e) {
+                            LOG.warn("exception", e);
+                        }
+                    } else {
+                        LOG.info("Retries [{}] exhausted for  dataidentifer.",
+                            (retry - 1), identifier);
+                        uploadRetryMap.remove(identifier);
+                    }
+                }
+            }
+        } catch (IOException ie) {
+            LOG.warn("Cannot retry failed async file upload. Dataidentifer [ "
+                + identifier + "], file [" + file.getAbsolutePath() + "]", ie);
+        }
+    }
+
+    @Override
+    public void onAbort(AsyncUploadResult result) {
+        DataIdentifier identifier = result.getIdentifier();
+        File file = result.getFile();
+        String fileName = getFileName(identifier);
+        try {
+            asyncWriteCache.remove(fileName);
+            LOG.info(
+                "Async Upload Aborted. Dataidentifer [{}], file [{}] removed from AsyncCache.",
+                identifier, file.getAbsolutePath());
+        } catch (IOException ie) {
+            LOG.warn("Cannot remove pending file upload. Dataidentifer [ "
+                + identifier + "], file [" + file.getAbsolutePath() + "]", ie);
+        }
+    }
+
 
     /**
      * Returns a unique temporary file to be used for creating a new data
@@ -636,44 +694,45 @@ public abstract class CachingDataStore extends AbstractDataStore implements
         for (File f : files) {
             totalSize += f.length();
         }
-        if (concurrentUploadsThreads > 1) {
-            new FilesUploader(files, totalSize, concurrentUploadsThreads, false).upload();
-        } else {
-            uploadFilesInSingleThread(files, totalSize);
+        if (files.size() > 0) {
+            if (concurrentUploadsThreads > 1) {
+                new FilesUploader(files, totalSize, concurrentUploadsThreads,
+                    false).upload();
+            } else {
+                uploadFilesInSingleThread(files, totalSize);
+            }
         }
     }
 
     private void uploadFilesInSingleThread(List<File> files, long totalSize)
             throws RepositoryException {
         long startTime = System.currentTimeMillis();
-        LOG.info("Upload:  {" + files.size() + "} files in single thread.");
+        LOG.info("Upload:  [{}] files in single thread.", files.size());
         long currentCount = 0;
         long currentSize = 0;
         long time = System.currentTimeMillis();
         for (File f : files) {
-            long now = System.currentTimeMillis();
-            if (now > time + 5000) {
-                LOG.info("Uploaded:  {" + currentCount + "}/{" + files.size()
-                    + "} files, {" + currentSize + "}/{" + totalSize
-                    + "} size data");
-                time = now;
-            }
             String name = f.getName();
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("upload file = " + name);
-            }
+            LOG.debug("upload file [{}] ", name);
             if (!name.startsWith(TMP) && !name.endsWith(DS_STORE)
                 && f.length() > 0) {
                 uploadFileToBackEnd(f, false);
             }
             currentSize += f.length();
             currentCount++;
+            long now = System.currentTimeMillis();
+            if (now > time + 5000) {
+                LOG.info("Uploaded:  [{}/{}] files, [{}/{}] size data",
+                    new Object[] { currentCount, files.size(), currentSize,
+                        totalSize });
+                time = now;
+            }
         }
         long endTime = System.currentTimeMillis();
-        LOG.info("Uploaded:  {" + currentCount + "}/{" + files.size()
-            + "} files, {" + currentSize + "}/{" + totalSize
-            + "} size data, time taken {" + ((endTime - startTime) / 1000)
-            + "} sec");
+        LOG.info(
+            "Uploaded:  [{}/{}] files, [{}/{}] size data, time taken = [{}] sec",
+            new Object[] { currentCount, files.size(), currentSize, totalSize,
+                ((endTime - startTime) / 1000) });
     }
 
     /**
@@ -709,9 +768,7 @@ public abstract class CachingDataStore extends AbstractDataStore implements
                 String fileName = getFileName(identifier);
                 asyncWriteCache.remove(fileName);
             }
-            if (LOG.isDebugEnabled()) {
-                LOG.debug(f.getName() + "uploaded.");
-            }
+            LOG.debug("uploaded [{}]", f.getName());
         } catch (IOException ioe) {
             throw new DataStoreException(ioe);
         }
@@ -910,6 +967,14 @@ public abstract class CachingDataStore extends AbstractDataStore implements
             boolean continueOnAsyncUploadFailure) {
         this.continueOnAsyncUploadFailure = continueOnAsyncUploadFailure;
     }
+    
+    public int getUploadRetries() {
+        return uploadRetries;
+    }
+
+    public void setUploadRetries(int uploadRetries) {
+        this.uploadRetries = uploadRetries;
+    }
 
     public Backend getBackend() {
         return backend;
@@ -962,15 +1027,14 @@ public abstract class CachingDataStore extends AbstractDataStore implements
         }
 
         void logProgress() {
-            LOG.info("Uploaded:  {" + currentCount.get() + "}/{" + files.size()
-                + "} files, {" + currentSize.get() + "}/{" + totalSize
-                + "} size data");
+            LOG.info("Uploaded:  [{}/{}] files, [{}/{}] size data",
+                new Object[] { currentCount, files.size(), currentSize,
+                    totalSize });
         }
 
         void upload() throws DataStoreException {
             long startTime = System.currentTimeMillis();
-            LOG.info(" Uploading " + files.size() + " using " + threads
-                + " threads.");
+            LOG.info(" Uploading [{}] using [{}] threads.", files.size(), threads);
             ExecutorService executor = Executors.newFixedThreadPool(threads,
                 new NamedThreadFactory("backend-file-upload-worker"));
             int partitionSize = files.size() / (threads);
@@ -1005,10 +1069,10 @@ public abstract class CachingDataStore extends AbstractDataStore implements
 
             }
             long endTime = System.currentTimeMillis();
-            LOG.info("Uploaded:  {" + currentCount.get() + "}/{" + files.size()
-                + "} files, {" + currentSize.get() + "}/{" + totalSize
-                + "} size data, time taken {" + ((endTime - startTime) / 1000)
-                + "} sec");
+            LOG.info(
+                "Uploaded:  [{}/{}] files, [{}/{}] size data, time taken = [{}] sec",
+                new Object[] { currentCount, files.size(), currentSize,
+                    totalSize, ((endTime - startTime) / 1000) });
             if (isExceptionRaised()) {
                 executor.shutdownNow(); // Cancel currently executing tasks
                 throw exception;
@@ -1044,12 +1108,10 @@ public abstract class CachingDataStore extends AbstractDataStore implements
 
         public void run() {
             long time = System.currentTimeMillis();
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("Thread [ " + Thread.currentThread().getName()
-                    + "]: Uploading files from startIndex[" + startIndex
-                    + "] and endIndex [" + (endIndex - 1)
-                    + "], both inclusive.");
-            }
+            LOG.debug(
+                "Thread [{}] : Uploading files from startIndex [{}] to endIndex [{}] both inclusive.",
+                new Object[] { Thread.currentThread().getName(), startIndex,
+                    (endIndex - 1) });
             int uploadCount = 0;
             long uploadSize = 0;
             try {
@@ -1059,9 +1121,7 @@ public abstract class CachingDataStore extends AbstractDataStore implements
                         break;
                     }
                     String name = f.getName();
-                    if (LOG.isDebugEnabled()) {
-                        LOG.debug("upload file = " + name);
-                    }
+                    LOG.debug("upload file [{}] ",name);
                     if (!name.startsWith(TMP) && !name.endsWith(DS_STORE)
                         && f.length() > 0) {
                         uploadFileToBackEnd(f, updateAsyncCache);

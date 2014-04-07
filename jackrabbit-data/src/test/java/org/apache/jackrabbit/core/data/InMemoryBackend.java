@@ -158,13 +158,12 @@ public class InMemoryBackend implements Backend {
             timeMap.put(identifier, System.currentTimeMillis());
         } catch (IOException e) {
             if (async) {
-                callback.call(identifier, file,
-                    AsyncUploadCallback.RESULT.ABORTED);
+                callback.onAbort(new AsyncUploadResult(identifier, file));
             }
             throw new DataStoreException(e);
         }
         if (async) {
-            callback.call(identifier, file, AsyncUploadCallback.RESULT.SUCCESS);
+            callback.onSuccess(new AsyncUploadResult(identifier, file));
         }
     }
 
