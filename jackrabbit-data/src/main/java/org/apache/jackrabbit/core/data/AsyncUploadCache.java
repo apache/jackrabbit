@@ -93,14 +93,11 @@ public class AsyncUploadCache {
             throws IOException {
         AsyncUploadCacheResult result = new AsyncUploadCacheResult();
         if (asyncUploadMap.entrySet().size() >= asyncUploadLimit) {
-            if (LOG.isInfoEnabled()) {
-                LOG.info("Async write limit [" + asyncUploadLimit
-                    + "] reached. File [" + fileName
-                    + "]  not added to async write cache.");
-            }
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("current set =" + asyncUploadMap.keySet());
-            }
+            LOG.info(
+                "Async write limit [{}]  reached. File [{}] not added to async write cache.",
+                asyncUploadLimit, fileName);
+            LOG.debug("AsyncUploadCache size=[{}] and entries =[{}]",
+                asyncUploadMap.size(), asyncUploadMap.keySet());
             result.setAsyncUpload(false);
         } else {
             long startTime = System.currentTimeMillis();
@@ -109,13 +106,10 @@ public class AsyncUploadCache {
             }
             asyncUploadMap.put(fileName, System.currentTimeMillis());
             serializeAsyncUploadMap();
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("added file [" + fileName
-                    + "] to asyncUploadMap upoad took ["
-                    + ((System.currentTimeMillis() - startTime) / 1000)
-                    + "] sec");
-                LOG.debug("current set =" + asyncUploadMap.keySet());
-            }
+            LOG.debug("added file [{}] to asyncUploadMap upoad took [{}] sec",
+                fileName, ((System.currentTimeMillis() - startTime) / 1000));
+            LOG.debug("AsyncUploadCache size=[{}] and entries =[{}]",
+                asyncUploadMap.size(), asyncUploadMap.keySet());
             result.setAsyncUpload(true);
         }
         return result;
@@ -135,21 +129,15 @@ public class AsyncUploadCache {
         Long retVal = asyncUploadMap.remove(fileName);
         if (retVal != null) {
             serializeAsyncUploadMap();
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("removed file [" + fileName
-                    + "] from asyncUploadMap took ["
-                    + ((System.currentTimeMillis() - startTime) / 1000)
-                    + "] sec");
-                LOG.debug("current set =" + asyncUploadMap.keySet());
-            }
+            LOG.debug("removed file [{}] from asyncUploadMap took [{}] sec",
+                fileName, ((System.currentTimeMillis() - startTime) / 1000));
+            LOG.debug("AsyncUploadCache size=[{}] and entries =[{}]",
+                asyncUploadMap.size(), asyncUploadMap.keySet());
         } else {
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("cannot remove file [" + fileName
-                    + "] from pending upoad took ["
-                    + ((System.currentTimeMillis() - startTime) / 1000)
-                    + "] sec. File not found");
-                LOG.debug("current set =" + asyncUploadMap.keySet());
-            }
+            LOG.debug("cannot removed file [{}] from asyncUploadMap took [{}] sec. File not found.",
+                fileName, ((System.currentTimeMillis() - startTime) / 1000));
+            LOG.debug("AsyncUploadCache size=[{}] and entries =[{}]",
+                asyncUploadMap.size(), asyncUploadMap.keySet());
         }
         AsyncUploadCacheResult result = new AsyncUploadCacheResult();
         result.setRequiresDelete(toBeDeleted.contains(fileName));
@@ -219,7 +207,7 @@ public class AsyncUploadCache {
     public synchronized Set<String> deleteOlderThan(long min)
             throws IOException {
         min = min - 1000;
-        LOG.info("deleteOlderThan min =" + min);
+        LOG.info("deleteOlderThan min [{}]", min);
         Set<String> deleteSet = new HashSet<String>();
         for (Map.Entry<String, Long> entry : asyncUploadMap.entrySet()) {
             if (entry.getValue() < min) {
@@ -227,7 +215,7 @@ public class AsyncUploadCache {
             }
         }
         if (deleteSet.size() > 0) {
-            LOG.info("deleteOlderThan set =" + deleteSet);
+            LOG.debug("deleteOlderThan set [{}]", deleteSet);
             toBeDeleted.addAll(deleteSet);
             serializeToBeDeleted();
         }
@@ -247,8 +235,9 @@ public class AsyncUploadCache {
         this.homeDir = homeDir;
         this.path = path;
         this.asyncUploadLimit = asyncUploadLimit;
-        LOG.info("AsynWriteCache:homeDir [" + homeDir + "], path [" + path
-            + "], asyncUploadLimit [" + asyncUploadLimit + "].");
+        LOG.info(
+            "AsynWriteCache:homeDir=[{}], path=[{}], asyncUploadLimit=[{}].",
+            new Object[] { homeDir, path, asyncUploadLimit });
         pendingUploads = new File(homeDir + "/" + PENDIND_UPLOAD_FILE);
         if (pendingUploads.exists()) {
             deserializeAsyncUploadMap();
