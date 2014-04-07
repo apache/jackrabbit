@@ -62,10 +62,10 @@ public final class Utils {
         AWSCredentials credentials = new BasicAWSCredentials(
             prop.getProperty(S3Constants.ACCESS_KEY),
             prop.getProperty(S3Constants.SECRET_KEY));
-        int connectionTimeOut = Integer.parseInt(prop.getProperty("connectionTimeout"));
-        int socketTimeOut = Integer.parseInt(prop.getProperty("socketTimeout"));
-        int maxConnections = Integer.parseInt(prop.getProperty("maxConnections"));
-        int maxErrorRetry = Integer.parseInt(prop.getProperty("maxErrorRetry"));
+        int connectionTimeOut = Integer.parseInt(prop.getProperty(S3Constants.S3_CONN_TIMEOUT));
+        int socketTimeOut = Integer.parseInt(prop.getProperty(S3Constants.S3_SOCK_TIMEOUT));
+        int maxConnections = Integer.parseInt(prop.getProperty(S3Constants.S3_MAX_CONNS));
+        int maxErrorRetry = Integer.parseInt(prop.getProperty(S3Constants.S3_MAX_ERR_RETRY));
         ClientConfiguration cc = new ClientConfiguration();
         cc.setConnectionTimeout(connectionTimeOut);
         cc.setSocketTimeout(socketTimeOut);
