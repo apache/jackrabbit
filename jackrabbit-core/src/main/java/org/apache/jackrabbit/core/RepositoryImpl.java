@@ -21,10 +21,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.StringReader;
+import java.lang.ref.ReferenceQueue;
 import java.security.AccessControlContext;
 import java.security.AccessController;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -127,6 +129,9 @@ public class RepositoryImpl extends AbstractRepository
         implements javax.jcr.Repository, JackrabbitRepository, SessionListener, WorkspaceListener {
 
     private static Logger log = LoggerFactory.getLogger(RepositoryImpl.class);
+    
+    private ReferenceQueue<Session> phantomSessionQueue = new ReferenceQueue<Session>();
+    private List<SessionGhostReference> phantomList = Collections.synchronizedList(new ArrayList<SessionGhostReference>());
 
     /**
      * hardcoded id of the repository root node
@@ -177,6 +182,9 @@ public class RepositoryImpl extends AbstractRepository
     protected final RepositoryContext context = new RepositoryContext(this);
 
     private final VirtualNodeTypeStateManager virtNTMgr;
+    
+    /** period in seconds for phantom cleanup */
+    protected static int PHANTOM_PERIOD = 60;
 
     /**
      * Security manager
@@ -361,6 +369,7 @@ public class RepositoryImpl extends AbstractRepository
                 wspJanitor.setDaemon(true);
                 wspJanitor.start();
             }
+            context.getExecutor().scheduleAtFixedRate(new RepositorySessionCleaner(this), PHANTOM_PERIOD, PHANTOM_PERIOD, TimeUnit.SECONDS);
 
             succeeded = true;
             log.info("Repository started (" + (System.currentTimeMillis() - t0) + "ms)");
@@ -1000,6 +1009,7 @@ public class RepositoryImpl extends AbstractRepository
             session.addListener(this);
             activeSessions.put(session, session);
         }
+        phantomList.add(new SessionGhostReference(session, phantomSessionQueue));
     }
 
     /**
@@ -1592,6 +1602,16 @@ public class RepositoryImpl extends AbstractRepository
         synchronized (activeSessions) {
             // remove session from active sessions
             activeSessions.remove(session);
+            SessionGhostReference remPhantom = null;
+            for (SessionGhostReference s : phantomList) {
+            	if (session == s.getReferent()) {
+            		remPhantom = s;
+            		break;
+            	}
+            }
+            if (remPhantom != null) {
+            	phantomList.remove(remPhantom);
+            }
         }
     }
 
@@ -2477,4 +2497,17 @@ public class RepositoryImpl extends AbstractRepository
             return vals != null ? vals : new Value[] {val};
         }
     }
+
+    /**
+     * Cleans up phantom references to old sessions.
+     * If the session was not cleanly unclosed then it is closed here.
+     */
+	public void cleanupPhantomSessions() {
+		SessionGhostReference ref = (SessionGhostReference) phantomSessionQueue.poll();
+		while (ref != null) {
+			ref.cleanUp();
+			phantomList.remove(ref);
+            ref = (SessionGhostReference) phantomSessionQueue.poll();
+        }
+	}
 }
