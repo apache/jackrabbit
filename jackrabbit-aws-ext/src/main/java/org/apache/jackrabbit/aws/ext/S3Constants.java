@@ -31,6 +31,26 @@ public final class S3Constants {
      * Amazon aws secret key.
      */
     public static final String SECRET_KEY = "secretKey";
+    
+    /**
+     * Amazon S3 Http connection timeout.
+     */
+    public static final String S3_CONN_TIMEOUT = "connectionTimeout";
+    
+    /**
+     * Amazon S3  socket timeout.
+     */
+    public static final String S3_SOCK_TIMEOUT = "socketTimeout";
+    
+    /**
+     * Amazon S3  maximum connections to be used.
+     */
+    public static final String S3_MAX_CONNS = "maxConnections";
+    
+    /**
+     * Amazon S3  maximum retries.
+     */
+    public static final String S3_MAX_ERR_RETRY = "maxErrorRetry";
 
     /**
      * Amazon aws S3 bucket.
