@@ -36,7 +36,6 @@ import javax.jcr.RepositoryException;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
-import org.apache.jackrabbit.core.data.LazyFileInputStream;
 import org.apache.jackrabbit.util.TransientFileFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -109,9 +108,10 @@ public class LocalCache {
         this.maxSize = size;
         directory = new File(path);
         tmp = new File(tmpPath);
-        LOG.info("cachePurgeTrigFactor = " + cachePurgeTrigFactor + ", cachePurgeResizeFactor = " + cachePurgeResizeFactor
-            + ", cachePurgeTrigFactorSize = " + (cachePurgeTrigFactor * size) + ", cachePurgeResizeFactor = "
-            + (cachePurgeResizeFactor * size));
+        LOG.info(
+            "cachePurgeTrigFactor =[{}], cachePurgeResizeFactor =[{}],  cachePurgeTrigFactorSize =[{}], cachePurgeResizeFactorSize =[{}]",
+            new Object[] { cachePurgeTrigFactor, cachePurgeResizeFactor,
+                (cachePurgeTrigFactor * size), (cachePurgeResizeFactor * size) });
         cache = new LRUCache(size, cachePurgeTrigFactor, cachePurgeResizeFactor);
         this.asyncUploadCache = asyncUploadCache;
 
@@ -151,13 +151,10 @@ public class LocalCache {
                     && (f.getParentFile().exists() || f.getParentFile().mkdirs())
                     && transFile.renameTo(f) && f.exists()) {
                     if (transFile.exists() && transFile.delete()) {
-                        LOG.info("tmp file = " + transFile.getAbsolutePath()
-                            + " not deleted successfully");
+                        LOG.info("tmp file [{}] not deleted successfully", transFile.getAbsolutePath());
                     }
                     transFile = null;
-                    if (LOG.isDebugEnabled()) {
-                        LOG.debug("file [" + fileName + "] added to local cache.");
-                    }
+                    LOG.debug("file [{}] added to local cache.", fileName);
                     cache.put(fileName, f.length());
                 } else {
                     f = transFile;
@@ -223,9 +220,7 @@ public class LocalCache {
                 dest.setLastModified(System.currentTimeMillis());
             }
             cache.put(fileName, dest.length());
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("file [" + fileName + "] added to local cache.");
-            }
+            LOG.debug("file [{}] added to local cache.", fileName);
             result.setFile(dest);
             if (tryForAsyncUpload) {
                 result.setAsyncUpload(asyncUploadCache.add(fileName).canAsyncUpload());
@@ -251,7 +246,9 @@ public class LocalCache {
         // return file in purge mode = true and file present in asyncUploadCache
         // as asyncUploadCache's files will be not be deleted in cache purge.
         if (!f.exists() || (isInPurgeMode() && !asyncUploadCache.hasEntry(fileName, false))) {
-            log("purgeMode true or file doesn't exists: getFileIfStored returned");
+            LOG.debug(
+                "getFileIfStored returned: purgeMode=[{}], file=[{}] exists=[{}]",
+                new Object[] { isInPurgeMode(), fileName, f.exists() });
             return null;
         } else {
             // touch entry in LRU caches
@@ -269,7 +266,7 @@ public class LocalCache {
      */
     public synchronized void delete(String fileName) {
         if (isInPurgeMode()) {
-            log("purgeMode true :delete returned");
+            LOG.debug("purgeMode true :delete returned");
             return;
         }
         fileName = fileName.replace("\\", "/");
@@ -302,7 +299,7 @@ public class LocalCache {
      * unsuccessful delete files.
      */
     public void close() {
-        log("close");
+        LOG.debug("close");
         deleteOldFiles();
     }
 
@@ -315,7 +312,8 @@ public class LocalCache {
       //order is important here
         boolean value = !isInPurgeMode() && (cache.canAdmitFile(length));
         if (!value) {
-            log("cannot admit file of length=" + length + " and currentSizeInBytes=" + cache.currentSizeInBytes);
+            LOG.debug("cannot admit file of length=[{}] and currentSizeInBytes=[{}] ",
+                length, cache.currentSizeInBytes);
         }
         return value;
     }
@@ -349,7 +347,7 @@ public class LocalCache {
                 count++;
             }
         }
-        LOG.info("deleted [" + count + "]/[" + initialSize + "] files");
+        LOG.info("deleted [{}]/[{}] files.", count, initialSize);
     }
 
     /**
@@ -360,10 +358,10 @@ public class LocalCache {
      * @return true if this method deletes file successfuly else return false.
      */
     boolean tryDelete(final String fileName) {
-        log("cache delete " + fileName);
+        LOG.debug("try deleting file [{}]", fileName);
         File f = getFile(fileName);
         if (f.exists() && f.delete()) {
-            log(fileName + "  deleted successfully");
+            LOG.debug("File [{}]  deleted successfully", fileName);
             toBeDeleted.remove(fileName);
             while (true) {
                 f = f.getParentFile();
@@ -375,7 +373,7 @@ public class LocalCache {
             }
             return true;
         } else if (f.exists()) {
-            LOG.info("not able to delete file = " + f.getAbsolutePath());
+            LOG.info("not able to delete file [{}]", f.getAbsolutePath());
             toBeDeleted.add(fileName);
             return false;
         }
@@ -389,10 +387,6 @@ public class LocalCache {
         count = Math.max(1024, count);
         count = Math.min(64 * 1024, count);
         return count;
-    }
-
-    static void log(final String s) {
-        LOG.debug(s);
     }
 
     /**
@@ -433,28 +427,30 @@ public class LocalCache {
                 // not removing file from local cache, if there is in progress
                 // async upload on it.
                 if (asyncUploadCache.hasEntry(fileName, false)) {
-                    LOG.info("AsyncUploadCache upload contains file [" + fileName
-                        + "]. Not removing it from LocalCache.");
+                    LOG.info(
+                        "AsyncUploadCache upload contains file [{}]. Not removing it from LocalCache.",
+                        fileName);
                     return null;
                 }
             } catch (IOException e) {
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("error: ", e);
-                }
+                LOG.debug("error: ", e);
                 return null;
             }
             Long flength = null;
             if (tryDelete(fileName)) {
                 flength = super.remove(key);
                 if (flength != null) {
-                    log("cache entry { " + fileName + "} with size {" + flength + "} removed.");
+                    LOG.debug("cache entry [{}], with size [{}] removed.",
+                        fileName, flength);
                     currentSizeInBytes -= flength.longValue();
                 }
             } else if (!getFile(fileName).exists()) {
                 // second attempt. remove from cache if file doesn't exists
                 flength = super.remove(key);
                 if (flength != null) {
-                    log(" file not exists. cache entry { " + fileName + "} with size {" + flength + "} removed.");
+                    LOG.debug(
+                        "file not exists. cache entry [{}], with size [{}] removed.",
+                        fileName, flength);
                     currentSizeInBytes -= flength.longValue();
                 }
             }
@@ -481,14 +477,15 @@ public class LocalCache {
         synchronized void tryPurge() {
             if (currentSizeInBytes > cachePurgeTrigSize && !isInPurgeMode()) {
                 setPurgeMode(true);
-                LOG.info("currentSizeInBytes[" + cache.currentSizeInBytes + "] exceeds (cachePurgeTrigSize)[" + cache.cachePurgeTrigSize
-                    + "]");
+                LOG.info(
+                    "currentSizeInBytes=[{}]  exceeds cachePurgeTrigSize=[{}]",
+                    cache.currentSizeInBytes, cache.cachePurgeTrigSize);
                 new Thread(new PurgeJob()).start();
             } else {
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("currentSizeInBytes[" + cache.currentSizeInBytes + "] and  (cachePurgeTrigSize)[" + cache.cachePurgeTrigSize
-                        + "], isInPurgeMode =[" + isInPurgeMode() + "]");
-                }
+                LOG.debug(
+                    "currentSizeInBytes=[{}],cachePurgeTrigSize=[{}], isInPurgeMode =[{}]",
+                    new Object[] { cache.currentSizeInBytes,
+                        cache.cachePurgeTrigSize, isInPurgeMode() });
             }
         }
         /**
@@ -537,10 +534,9 @@ public class LocalCache {
                         }
 
                     }
-                    LOG.info(" cache purge job completed: cleaned ["
-                        + (initialSize - cache.size())
-                        + "] files and currentSizeInBytes = [ "
-                        + cache.currentSizeInBytes + "]");
+                    LOG.info(
+                        " cache purge job completed: cleaned [{}] files and currentSizeInBytes = [{}]",
+                        (initialSize - cache.size()), cache.currentSizeInBytes);
                 }
             } catch (Exception e) {
                 LOG.error("error in purge jobs:", e);
@@ -564,9 +560,8 @@ public class LocalCache {
                 allFiles.add(f);
             }
             long t1 = System.currentTimeMillis();
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("Time taken to recursive [" + allFiles.size() + "] took [" + ((t1 - startTime) / 1000) + "]sec");
-            }
+            LOG.debug("Time taken to recursive [{}] took [{}] sec",
+                allFiles.size(), ((t1 - startTime) / 1000));
             Collections.sort(allFiles, new Comparator<File>() {
                 public int compare(File o1, File o2) {
                     long l1 = o1.lastModified(), l2 = o2.lastModified();
@@ -574,9 +569,8 @@ public class LocalCache {
                 }
             });
             long t2 = System.currentTimeMillis();
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("Time taken to sort [" + allFiles.size() + "] took [" + ((t2 - t1) / 1000) + "]sec");
-            }
+            LOG.debug("Time taken to sort [{}] took [{}] sec",
+                allFiles.size(), ((t2 - t1) / 1000));
             String dataStorePath = directory.getAbsolutePath();
             long time = System.currentTimeMillis();
             int count = 0;
@@ -600,12 +594,14 @@ public class LocalCache {
                     }
                 }
             }
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("Processed {" + count + "}/{" + allFiles.size() + "} , currentSizeInBytes = " + cache.currentSizeInBytes
-                    + ",  maxSizeInBytes = " + cache.maxSizeInBytes + ",  cache.filecount = " + cache.size());
-            }
+            LOG.debug(
+                "Processed [{}]/[{}], currentSizeInBytes = [{}], maxSizeInBytes = [{}], cache.filecount = [{}]",
+                new Object[] { count, allFiles.size(),
+                    cache.currentSizeInBytes, cache.maxSizeInBytes,
+                    cache.size() });
             long t3 = System.currentTimeMillis();
-            LOG.info("Time to build cache of  [" + allFiles.size() + "] took [" + ((t3 - startTime) / 1000) + "]sec");
+            LOG.info("Time to build cache of  [{}] files took [{}] sec",
+                allFiles.size(), ((t3 - startTime) / 1000));
         }
     }
 }
