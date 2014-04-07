@@ -1191,6 +1191,12 @@ public class RepositoryImpl extends AbstractRepository
 
         repConfig.getConnectionFactory().close();
 
+        // cleanup ghost references
+        for (SessionGhostReference ref : ghostMap.values()) {
+        	ref.clear();
+        }
+        ghostMap.clear();
+
         // finally release repository lock
         if (repLock != null) {
             try {
