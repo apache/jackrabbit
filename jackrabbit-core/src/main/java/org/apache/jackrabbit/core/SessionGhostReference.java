@@ -4,6 +4,8 @@ import java.lang.ref.PhantomReference;
 import java.lang.ref.Reference;
 import java.lang.ref.ReferenceQueue;
 import java.lang.reflect.Field;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Phantom reference for session objects that provides access to referent object.
@@ -14,6 +16,8 @@ import java.lang.reflect.Field;
  *
  */
 public class SessionGhostReference extends PhantomReference<SessionImpl> {
+
+	private static Logger log = LoggerFactory.getLogger(SessionGhostReference.class);
 
 	/**
 	 * {@inheritDoc}
@@ -45,7 +49,7 @@ public class SessionGhostReference extends PhantomReference<SessionImpl> {
 			return (SessionImpl) reqField.get(this);
 		}
 		catch (Exception e) {
-			e.printStackTrace();
+			log.warn("Unable to get referenced session object: " + e.getMessage());
 		}
 		return null;
 	}

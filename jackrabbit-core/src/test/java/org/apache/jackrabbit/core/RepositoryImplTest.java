@@ -167,12 +167,6 @@ public class RepositoryImplTest extends AbstractJCRTest {
 			logoutCalled = true;
 		}
 
-		@Override
-		public boolean isLive() {
-			// fake always alive session to force logout
-			return true;
-		}
-
     }
     
     /**
