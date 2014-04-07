@@ -14,27 +14,49 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.jackrabbit.core.data;
 
+import java.io.File;
+
 /**
- * This interface defines callback methods to reflect the status of asynchronous
- * upload.
+ * 
+ * The class holds the result of asynchronous upload to {@link Backend}
  */
-public interface AsyncUploadCallback {
+public class AsyncUploadResult {
+    /**
+     * {@link DataIdentifier} on which asynchronous upload is initiated.
+     */
+    private final DataIdentifier identifier;
     
     /**
-     * Callback method for successful asynchronous upload.
+     * {@link File} which is asynchronously uploaded.
      */
-    public void onSuccess(AsyncUploadResult result);
+    private final File file;
     
     /**
-     * Callback method for failed asynchronous upload.
+     * Any {@link Exception} which is raised in asynchronously upload.
      */
-    public void onFailure(AsyncUploadResult result);
+    private Exception exception;
     
-    /**
-     * Callback method for aborted asynchronous upload.
-     */
-    public void onAbort(AsyncUploadResult result);
+    public AsyncUploadResult(DataIdentifier identifier, File file) {
+        super();
+        this.identifier = identifier;
+        this.file = file;
+    }
+
+    public DataIdentifier getIdentifier() {
+        return identifier;
+    }
+
+    public File getFile() {
+        return file;
+    }
+
+    public Exception getException() {
+        return exception;
+    }
+
+    public void setException(Exception exception) {
+        this.exception = exception;
+    }
 }

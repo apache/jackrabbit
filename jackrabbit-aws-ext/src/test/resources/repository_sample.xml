@@ -43,6 +43,7 @@
         <param name="continueOnAsyncUploadFailure" value="false"/>
         <param name="concurrentUploadsThreads" value="10"/>
         <param name="asyncUploadLimit" value="100"/>
+        <param name="uploadRetries" value="3"/>
       </DataStore>
     <!--
         sample database data store configuration
