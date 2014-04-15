@@ -175,6 +175,17 @@ public class ChangeLog {
     }
 
     /**
+     * Return a flag indicating whether a given item state is marked as
+     * added in this log.
+     *
+     * @return <code>true</code> if item state is marked as added in this
+     *         log; <code>false</code> otherwise
+     */
+    public boolean isAdded(ItemId id) {
+        return addedStates.containsKey(id);
+    }
+
+    /**
      * Returns a flag indicating whether a given item state is marked as
      * modified in this log.
      *
