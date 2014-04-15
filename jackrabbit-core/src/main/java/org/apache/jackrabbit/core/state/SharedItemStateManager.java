@@ -1346,7 +1346,7 @@ public class SharedItemStateManager
                 NodeId oldParentId = overlayedState.getParentId();
 
                 // The parent should not be deleted
-                if (parentId != null && changeLog.deleted(parentId)) {
+                if (parentId != null && changeLog.deleted(parentId) && !changeLog.isAdded(parentId)) {
                     String message = "Parent of node with id " + id + " has been deleted";
                     log.error(message);
                     throw new ItemStateException(message);
