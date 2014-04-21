@@ -275,7 +275,7 @@ public abstract class CachingDataStore extends AbstractDataStore implements
                             f.getAbsolutePath());
                     } else {
                         totalSize += f.length();
-                        files.add(new File(homeDir, fileName));
+                        files.add(new File(path, fileName));
                     }
                 }
                 new FilesUploader(files, totalSize, concurrentUploadsThreads,
