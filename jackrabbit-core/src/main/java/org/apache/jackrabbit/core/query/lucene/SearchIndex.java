@@ -33,6 +33,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.query.InvalidQueryException;
 import javax.xml.parsers.DocumentBuilder;
@@ -1552,14 +1553,18 @@ public class SearchIndex extends AbstractQueryHandler {
                                     String value = new String(termAttribute.termBuffer(), 0, termAttribute.termLength());
                                     if (value.startsWith(namePrefix)) {
                                         // extract value
-                                        value = value.substring(namePrefix.length());
+                                        String rawValue = value.substring(namePrefix.length());
                                         // create new named value
                                         Path p = getRelativePath(state, propState);
                                         String path = getNamespaceMappings().translatePath(p);
-                                        value = FieldNames.createNamedValue(path, value);
+                                        value = FieldNames.createNamedValue(path, rawValue);
                                         termAttribute.setTermBuffer(value);
+                                        PropertyMetaData pdm = PropertyMetaData
+                                                .fromByteArray(payloadAttribute
+                                                        .getPayload().getData());
                                         doc.add(new Field(field.name(),
-                                                new SingletonTokenStream(value, (Payload) payloadAttribute.getPayload().clone())));
+                                                new SingletonTokenStream(value,
+                                                        pdm.getPropertyType())));
                                         doc.add(new Field(
                                                 FieldNames.AGGREGATED_NODE_UUID,
                                                 false,
@@ -1567,6 +1572,17 @@ public class SearchIndex extends AbstractQueryHandler {
                                                 Field.Store.NO,
                                                 Field.Index.NOT_ANALYZED_NO_NORMS,
                                                 Field.TermVector.NO));
+                                        if (pdm.getPropertyType() == PropertyType.STRING) {
+                                            // add to fulltext index
+                                            Field ft = new Field(
+                                                    FieldNames.FULLTEXT,
+                                                    false,
+                                                    rawValue,
+                                                    Field.Store.YES,
+                                                    Field.Index.ANALYZED_NO_NORMS,
+                                                    Field.TermVector.NO);
+                                            doc.add(ft);
+                                        }
                                     }
                                 }
                             } finally {
