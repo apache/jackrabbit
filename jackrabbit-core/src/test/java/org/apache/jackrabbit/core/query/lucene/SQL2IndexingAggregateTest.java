@@ -353,4 +353,18 @@ public class SQL2IndexingAggregateTest extends AbstractIndexingTest {
                 + "]) and type = 'testnode' ";
         checkResult(qm.createQuery(sql, JCR_SQL2).execute(), 1);
     }
+
+    public void testAggregatedProperty() throws Exception {
+
+        Node parent = testRootNode.addNode("parent",
+                JcrConstants.NT_UNSTRUCTURED);
+        Node child = parent.addNode("child", JcrConstants.NT_UNSTRUCTURED);
+        child.setProperty("property",
+                "the quick brown fox jumps over the lazy dog.");
+        testRootNode.getSession().save();
+
+        String sql = "SELECT * FROM [nt:unstructured] as u WHERE CONTAINS (u.*, 'dog') ";
+        executeSQL2Query(sql, new Node[] { parent, child });
+    }
+
 }
