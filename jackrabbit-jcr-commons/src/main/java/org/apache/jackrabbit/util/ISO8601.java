@@ -18,6 +18,8 @@ package org.apache.jackrabbit.util;
 
 import java.util.Calendar;
 import java.util.GregorianCalendar;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.TimeZone;
 
 /**
@@ -47,7 +49,31 @@ import java.util.TimeZone;
  */
 public final class ISO8601 {
 
-    private static final TimeZone GMT = TimeZone.getTimeZone("GMT");
+    /**
+     * Flyweight instances of known time zones.
+     */
+    private static final Map<String, TimeZone> TZS =
+            new HashMap<String, TimeZone>();
+
+    static {
+        TimeZone gmt = TimeZone.getTimeZone("GMT");
+        TZS.put("Z", gmt);
+        TZS.put("+00:00", gmt);
+        TZS.put("-00:00", gmt);
+
+        // http://en.wikipedia.org/wiki/List_of_UTC_time_offsets
+        String[] tzs = {
+                "-12:00", "-11:00", "-10:00", "-09:30", "-09:00", "-08:00",
+                "-07:00", "-06:00", "-05:00", "-04:30", "-04:00", "-03:30",
+                "-03:00", "-02:00", "-01:00", "+01:00", "+02:00", "+03:00",
+                "+03:30", "+04:00", "+04:30", "+05:00", "+05:30", "+05:45",
+                "+06:00", "+06:30", "+07:00", "+08:00", "+08:45", "+09:00",
+                "+09:30", "+10:00", "+10:30", "+11:00", "+11:30", "+12:00",
+                "+12:45", "+13:00", "+14:00" };
+        for (String tz : tzs) {
+            TZS.put(tz, TimeZone.getTimeZone("GMT" + tz));
+        }
+    }
 
     /**
      * Parses an ISO8601-compliant date/time string.
@@ -140,9 +166,8 @@ public final class ISO8601 {
             start += 3;
             // time zone designator (Z or +00:00 or -00:00)
             String tzid = text.substring(start);
-            if (tzid.equals("Z")) {
-                tz = GMT;
-            } else {
+            tz = TZS.get(tzid);
+            if (tz == null) {
                 // offset to UTC specified in the format +00:00/-00:00
                 tzid = "GMT" + tzid;
                 tz = TimeZone.getTimeZone(tzid);
