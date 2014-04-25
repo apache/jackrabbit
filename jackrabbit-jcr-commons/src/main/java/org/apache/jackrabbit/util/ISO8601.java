@@ -46,6 +46,9 @@ import java.util.TimeZone;
  * </pre>
  */
 public final class ISO8601 {
+
+    private static final TimeZone GMT = TimeZone.getTimeZone("GMT");
+
     /**
      * Parses an ISO8601-compliant date/time string.
      *
@@ -82,7 +85,7 @@ public final class ISO8601 {
          */
 
         int year, month, day, hour, min, sec, ms;
-        String tzID;
+        TimeZone tz;
         try {
             // year (YYYY)
             year = Integer.parseInt(text.substring(start, start + 4));
@@ -136,25 +139,22 @@ public final class ISO8601 {
             ms = Integer.parseInt(text.substring(start, start + 3));
             start += 3;
             // time zone designator (Z or +00:00 or -00:00)
-            if (text.charAt(start) == '+' || text.charAt(start) == '-') {
-                // offset to UTC specified in the format +00:00/-00:00
-                tzID = "GMT" + text.substring(start);
-            } else if (text.substring(start).equals("Z")) {
-                tzID = "GMT";
+            String tzid = text.substring(start);
+            if (tzid.equals("Z")) {
+                tz = GMT;
             } else {
-                // invalid time zone designator
-                return null;
+                // offset to UTC specified in the format +00:00/-00:00
+                tzid = "GMT" + tzid;
+                tz = TimeZone.getTimeZone(tzid);
+                // verify id of returned time zone (getTimeZone defaults to "GMT")
+                if (!tz.getID().equals(tzid)) {
+                    // invalid time zone
+                    return null;
+                }
             }
         } catch (IndexOutOfBoundsException e) {
             return null;
         } catch (NumberFormatException e) {
-            return null;
-        }
-
-        TimeZone tz = TimeZone.getTimeZone(tzID);
-        // verify id of returned time zone (getTimeZone defaults to "GMT")
-        if (!tz.getID().equals(tzID)) {
-            // invalid time zone
             return null;
         }
 
