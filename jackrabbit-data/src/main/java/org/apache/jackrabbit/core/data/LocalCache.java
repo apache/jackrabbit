@@ -322,7 +322,7 @@ public class LocalCache {
      * Return true if cache is in purge mode else return false.
      */
     synchronized boolean isInPurgeMode() {
-        return purgeMode || maxSize == 0;
+        return purgeMode;
     }
 
     /**
