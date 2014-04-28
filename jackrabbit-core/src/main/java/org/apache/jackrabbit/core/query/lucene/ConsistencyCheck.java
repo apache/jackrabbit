@@ -31,6 +31,9 @@ import org.apache.jackrabbit.core.state.ItemStateException;
 import org.apache.jackrabbit.core.state.ChildNodeEntry;
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
+import org.apache.jackrabbit.spi.commons.name.NameConstants;
+import org.apache.jackrabbit.spi.commons.name.PathBuilder;
 import org.apache.lucene.document.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -101,6 +104,11 @@ public class ConsistencyCheck {
     private Set<Path> excludedPaths;
 
     /**
+     * Paths of nodes that will be excluded from consistency check
+     */
+    private final Set<Path> ignoredPaths = new HashSet<Path>();
+
+    /**
      * List of all errors.
      */
     private final List<ConsistencyCheckError> errors =
@@ -123,6 +131,19 @@ public class ConsistencyCheck {
             } catch (RepositoryException e) {
                 log.error("Failed to get excluded path", e);
             }
+        }
+
+        //JCR-3773: ignore the tree jcr:nodeTypes
+        PathBuilder pathBuilder = new PathBuilder();
+        pathBuilder.addRoot();
+        pathBuilder.addLast(NameConstants.JCR_NODETYPES);
+        try {
+            Path path = pathBuilder.getPath();
+            log.info("consistency check will skip " + path);
+            ignoredPaths.add(path);
+        } catch (MalformedPathException e) {
+            //will never happen
+            log.error("Malformed path", e);
         }
 
         this.stateMgr = handler.getContext().getItemStateManager();
@@ -287,14 +308,16 @@ public class ConsistencyCheck {
                 }
                 Document d = reader.document(i, FieldSelectors.UUID);
                 NodeId id = new NodeId(d.get(FieldNames.UUID));
-                boolean nodeExists = nodeIds.containsKey(id);
-                if (nodeExists) {
-                    Boolean alreadyIndexed = nodeIds.put(id, Boolean.TRUE);
-                    if (alreadyIndexed) {
-                        multipleEntries.add(id);
+                if (!isIgnored(id)) {
+                    boolean nodeExists = nodeIds.containsKey(id);
+                    if (nodeExists) {
+                        Boolean alreadyIndexed = nodeIds.put(id, Boolean.TRUE);
+                        if (alreadyIndexed) {
+                            multipleEntries.add(id);
+                        }
+                    } else {
+                        errors.add(new NodeDeleted(id));
                     }
-                } else {
-                    errors.add(new NodeDeleted(id));
                 }
             }
         } finally {
@@ -319,8 +342,9 @@ public class ConsistencyCheck {
                 }
                 Document d = reader.document(i, FieldSelectors.UUID_AND_PARENT);
                 NodeId id = new NodeId(d.get(FieldNames.UUID));
-                if (!nodeIds.containsKey(id)) {
-                    continue; // this node was already marked for deletion
+                if (!nodeIds.containsKey(id) || isIgnored(id)) {
+                    // this node is ignored or was already marked for deletion
+                    continue;
                 }
                 String parent = d.get(FieldNames.PARENT);
                 if (parent == null || parent.isEmpty()) {
@@ -372,7 +396,7 @@ public class ConsistencyCheck {
                     long progress = Math.round((100.0 * (float) i) / (float) size);
                     log.info("progress: " + progress + "%");
                 }
-                if (!indexed && !isExcluded(nodeId)) {
+                if (!indexed && !isIgnored(nodeId) && !isExcluded(nodeId)) {
                     NodeState nodeState = getNodeState(nodeId);
                     if (nodeState != null && !isBrokenNode(nodeId, nodeState)) {
                         errors.add(new NodeAdded(nodeId));
@@ -389,6 +413,20 @@ public class ConsistencyCheck {
             final HierarchyManager hierarchyManager = handler.getContext().getHierarchyManager();
             final Path path = hierarchyManager.getPath(id);
             for (Path excludedPath : excludedPaths) {
+                if (excludedPath.isEquivalentTo(path) || excludedPath.isAncestorOf(path)) {
+                    return true;
+                }
+            }
+        } catch (RepositoryException ignored) {
+        }
+        return false;
+    }
+
+    private boolean isIgnored(NodeId id) {
+        try {
+            final HierarchyManager hierarchyManager = handler.getContext().getHierarchyManager();
+            final Path path = hierarchyManager.getPath(id);
+            for (Path excludedPath : ignoredPaths) {
                 if (excludedPath.isEquivalentTo(path) || excludedPath.isAncestorOf(path)) {
                     return true;
                 }
