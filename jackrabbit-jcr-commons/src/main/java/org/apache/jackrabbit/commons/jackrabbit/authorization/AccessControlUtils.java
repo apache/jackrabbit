@@ -22,8 +22,10 @@ import java.security.Principal;
 import java.util.HashSet;
 import java.util.Set;
 
+import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.security.AccessControlEntry;
 import javax.jcr.security.AccessControlManager;
 import javax.jcr.security.AccessControlPolicy;
 import javax.jcr.security.AccessControlPolicyIterator;
@@ -222,6 +224,104 @@ public class AccessControlUtils {
         Principal everyone = getEveryonePrincipal(session);
         Privilege[] privileges = privilegesFromNames(session, Privilege.JCR_ALL);
         return addAccessControlEntry(session, absPath, everyone, privileges, false);
+    }
+
+    /**
+     * <b>Allow</b> certain privileges on a given node for a given principal.
+     *
+     * <p>To activate the ACL change, session.save() must be called.</p>
+     *
+     * @param node node to set the resource-based ACL entry on; underlying session is used to write the ACL
+     * @param principalName user or group id for which the ACL entry should apply
+     * @param privileges list of privileges to set by name (see {@link javax.jcr.security.Privilege})
+     * @return {@code true} if the node's ACL was modified and the session has pending changes.
+     * @throws RepositoryException If an unexpected repository error occurs
+     */
+    public static boolean allow(Node node, String principalName, String... privileges) throws RepositoryException {
+        return addAccessControlEntry(
+            node.getSession(),
+            node.getPath(),
+            getPrincipal(node.getSession(), principalName),
+            privileges,
+            true // allow
+        );
+    }
+
+    /**
+     * <b>Deny</b> certain privileges on a node for a given principal.
+     *
+     * <p>To activate the ACL change, session.save() must be called.</p>
+     *
+     * @param node node to set the resource-based ACL entry on; underlying session is used to write the ACL
+     * @param principalName user or group id for which the ACL entry should apply
+     * @param privileges list of privileges to set by name (see {@link javax.jcr.security.Privilege})
+     * @return {@code true} if the node's ACL was modified and the session has pending changes.
+     * @throws RepositoryException If an unexpected repository error occurs
+     */
+    public static boolean deny(Node node, String principalName, String... privileges) throws RepositoryException {
+        return addAccessControlEntry(
+            node.getSession(),
+            node.getPath(),
+            getPrincipal(node.getSession(), principalName),
+            privileges,
+            false // deny
+        );
+    }
+
+    /**
+     * Removes all ACL entries for a principal on a given node.
+     *
+     * <p>To activate the ACL change, session.save() must be called.</p>
+     *
+     * @param node node from which to remove ACL entries; underlying session is used to write the changes
+     * @param principalName user or group id whose entries should be removed; use {@code null} to remove entries for all users
+     * @return {@code true} if the node's ACL had entries that were removed, {@code false} if it did not have any entries
+     * @throws RepositoryException If an unexpected repository error occurs
+     */
+    public static boolean clear(Node node, String principalName) throws RepositoryException {
+        boolean removeAll = (principalName == null);
+        Principal principal = getPrincipal(node.getSession(), principalName);
+        if (principal == null) {
+            return false;
+        }
+
+        AccessControlManager acm = node.getSession().getAccessControlManager();
+        JackrabbitAccessControlList acl = getAccessControlList(acm, node.getPath());
+        if (acl != null) {
+            boolean removedEntries = false;
+            // remove all existing entries for principal
+            for (AccessControlEntry ace : acl.getAccessControlEntries()) {
+                if (removeAll || ace.getPrincipal().equals(principal)) {
+                    removedEntries = true;
+                    acl.removeAccessControlEntry(ace);
+                }
+            }
+            acm.setPolicy(node.getPath(), acl);
+            return removedEntries;
+        }
+
+        return false;
+    }
+
+    /**
+     * Removes all ACL entries for a given node.
+     *
+     * <p>To activate the ACL change, session.save() must be called.</p>
+     *
+     * @param node node from which to remove all ACL entries; underlying session is used to write the changes
+     * @return {@code true} if the node's ACL had entries that were removed, {@code false} if it did not have any entries
+     * @throws RepositoryException If an unexpected repository error occurs
+     */
+    public static boolean clear(Node node) throws RepositoryException {
+        return clear(node, null);
+    }
+
+    private static Principal getPrincipal(Session session, String principalName) throws RepositoryException {
+        if (session instanceof JackrabbitSession) {
+            return ((JackrabbitSession) session).getPrincipalManager().getPrincipal(principalName);
+        } else {
+            throw new UnsupportedOperationException("Failed to retrieve principal: JackrabbitSession expected.");
+        }
     }
 
     private static Principal getEveryonePrincipal(Session session) throws RepositoryException {
