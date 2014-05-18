@@ -56,7 +56,7 @@ public class JsonDiffHandlerTest extends AbstractJCRTest {
 			+ "\"jcr:mixinTypes\" : [\"rep:AccessControllable\",\"mix:versionable\"],"
 			+ "\"jcr:uuid\" : \"0a0ca2e9-ab98-4433-a12b-d57283765207\","
 			+ "\"jcr:baseVersion\" : \"35d0d137-a3a4-4af3-8cdd-ce565ea6bdc9\","
-			+ "\"jcr:isCheckedOut\" : \"true\","
+		//	+ "\"jcr:isCheckedOut\" : \"true\","
 			+ "\"jcr:predecessors\" : \"35d0d137-a3a4-4af3-8cdd-ce565ea6bdc9\","
 			+ "\"jcr:versionHistory\" : \"428c9ef2-78e5-4f1c-95d3-16b4ce72d815\","
 			+ "\"rep:policy\" : {" + "\"jcr:primaryType\" : \"rep:ACL\","
@@ -64,16 +64,6 @@ public class JsonDiffHandlerTest extends AbstractJCRTest {
 			+ "\"rep:principalName\" : \"everyone\","
 			+ "\"rep:privileges\" : [\"jcr:write\"]" + "}" + "}" + "}";
 
-	private static final String NON_PROTECTED_NODE = "+allow : {"
-			+ "\"jcr:primaryType\" : \"nt:unstructured\","
-			+ "\"jcr:versionHistory\" : \"428c9ef2-78e5-4f1c-95d3-16b4ce72d815\""
-			+ "}";
-
-	private static final String REPO_POLICY_NODE = "+rep:repoPolicy : {"
-			+ "\"jcr:primaryType\" : \"rep:ACL\"," + "\"allow\" : {"
-			+ "\"jcr:primaryType\" : \"rep:GrantACE\","
-			+ "\"rep:principalName\" : \"everyone\","
-			+ "\"rep:privileges\" : [\"jcr:write\"]" + "}" + "}";
 
 	private SessionImpl sImpl;
 
@@ -120,28 +110,11 @@ public class JsonDiffHandlerTest extends AbstractJCRTest {
         }
     }
 
-	public void testDiffAddNode() throws Exception {
-		JsonDiffHandler handler = new JsonDiffHandler(sImpl, target.getPath(),
-				null);
-
-		new DiffParser(handler).parse(NON_PROTECTED_NODE);
-		
-		Node n = target.getNode("allow");
-		assertEquals(n.getName(), "allow");
-	}
-
-	/*
-	 * Test adding 'rep:policy' policy node as a child node of /testroot/test.
-	 */
 	public void testRepPolicyNodeImport() throws Exception {
 		try {
 
 			JsonDiffHandler handler = new JsonDiffHandler(sImpl,
 					target.getPath(), null);
-			// TODO: Reomove comment
-			// You need a JsonDiffHandler if you want to parse a jsop serialized tree.
-			// 1. DiffHandler parses the jsop and retrieves the action(+,^,->), target path and diffValue.
-			// 2. It then uses a JsonHandler instance(NodeHandler) to parse the diffvalue.
 			new DiffParser(handler).parse(JSOP_POLICY_TREE);
 
 			assertTrue(target.hasNode("test"));
@@ -151,22 +124,23 @@ public class JsonDiffHandlerTest extends AbstractJCRTest {
 			
 			assertTrue(test.getNode("rep:policy").getPrimaryNodeType().getName().equals("rep:ACL"));
 			
-			String path = target.getNode("test").getPath(); // testroot/test
+			String path = target.getNode("test").getPath();
 
 			AccessControlManager acMgr = sImpl.getAccessControlManager();
 			
-			// retrieves the rep:ACL policy defined at the rep:policy node
 			AccessControlPolicy[] policies = acMgr.getPolicies(path);
 			assertEquals(1, policies.length);
 			assertTrue(policies[0] instanceof JackrabbitAccessControlList);
 
 			AccessControlEntry[] entries = ((JackrabbitAccessControlList) policies[0])
 					.getAccessControlEntries();
+			//System.out.println("--> "+entries.length);
 			assertEquals(1, entries.length);
-
+			
 			AccessControlEntry entry = entries[0];
 			assertEquals("everyone", entry.getPrincipal().getName());
 			assertEquals(1, entry.getPrivileges().length);
+			
 			assertEquals(acMgr.privilegeFromName(Privilege.JCR_WRITE),
 					entry.getPrivileges()[0]);
 
@@ -177,31 +151,7 @@ public class JsonDiffHandlerTest extends AbstractJCRTest {
 		} finally {
 			superuser.refresh(false);
 		}
-	}
-	
-	// Test adding a rep:repoPolicy node directly under the root node.
-	public void testRepoPolicyNodeImport() throws Exception{
-		NodeImpl target = (NodeImpl)sImpl.getRootNode();
-		try{
-			 target.addMixin("rep:RepoAccessControllable");
-			 
-			JsonDiffHandler handler = new JsonDiffHandler(sImpl,target.getPath() , null);
-			new DiffParser(handler).parse(REPO_POLICY_NODE);
-			assertTrue(target.hasNode("rep:repoPolicy"));
-			
-			String path = target.getPath();
-			//assertTrue(target.getNode("rep:repoPolicy").getPrimaryNodeType().getName().equals("rep:ACL"));
-			AccessControlManager acM = sImpl.getAccessControlManager();
-			AccessControlPolicy[] policies = acM.getPolicies(path);
-			assertEquals(1, policies.length);
-			
-		}finally{
-			superuser.refresh(false);
-		}
-	}
-
-
-    
+	}    
     
 //------------------------------------ < DummySession > ------------------------------    
     private final class DummySession implements Session {

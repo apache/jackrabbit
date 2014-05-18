@@ -19,7 +19,6 @@ package org.apache.jackrabbit.server.remoting.davex;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Stack;
@@ -27,7 +26,6 @@ import java.util.Stack;
 import javax.jcr.ImportUUIDBehavior;
 import javax.jcr.Item;
 import javax.jcr.ItemNotFoundException;
-import javax.jcr.NamespaceException;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.PropertyType;
@@ -42,23 +40,8 @@ import org.apache.jackrabbit.JcrConstants;
 import org.apache.jackrabbit.commons.json.JsonHandler;
 import org.apache.jackrabbit.commons.json.JsonParser;
 import org.apache.jackrabbit.commons.webdav.JcrValueType;
-import org.apache.jackrabbit.core.config.ImportConfig;
-import org.apache.jackrabbit.core.id.NodeId;
-import org.apache.jackrabbit.core.security.user.UserImporter.ImportBehavior;
-import org.apache.jackrabbit.core.value.InternalValue;
-import org.apache.jackrabbit.core.xml.AccessControlImporter;
-import org.apache.jackrabbit.core.xml.NodeInfo;
-import org.apache.jackrabbit.core.xml.PropInfo;
-import org.apache.jackrabbit.core.xml.ProtectedNodeImporter;
-import org.apache.jackrabbit.core.xml.PropInfo.MultipleStatus;
-import org.apache.jackrabbit.core.xml.TextValue;
 import org.apache.jackrabbit.server.util.RequestData;
-import org.apache.jackrabbit.spi.Name;
-import org.apache.jackrabbit.spi.commons.conversion.DefaultNamePathResolver;
-import org.apache.jackrabbit.spi.commons.conversion.IllegalNameException;
-import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.util.Text;
-import org.apache.jackrabbit.value.ValueHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.ContentHandler;
@@ -80,7 +63,7 @@ class JsonDiffHandler implements DiffHandler {
 	private final ValueFactory vf;
 	private final String requestItemPath;
 	private final RequestData data;
-	
+
 	JsonDiffHandler(Session session, String requestItemPath, RequestData data)
 			throws RepositoryException {
 		this.session = session;
@@ -357,8 +340,11 @@ class JsonDiffHandler implements DiffHandler {
 			// primary node type
 			String pN = "property";
 			attrs = new AttributesImpl();
+			// <sv:name="jcr:primaryType>
 			attrs.addAttribute(uri, "name", prefix + "name", "CDATA",
 					JcrConstants.JCR_PRIMARYTYPE);
+
+			// <sv:type="Name">
 			attrs.addAttribute(uri, "type", prefix + "type", "CDATA",
 					PropertyType.nameFromValue(PropertyType.NAME));
 			ch.startElement(uri, pN, prefix + pN, attrs);
@@ -611,72 +597,189 @@ class JsonDiffHandler implements DiffHandler {
 	 * child nodes and/or child properties
 	 */
 	private final class NodeHandler implements JsonHandler {
-		
+
 		private Node parent;
 		private String key;
-		private JsopImporter importer;
-		private NamePathResolver resolver;
+		ContentHandler contentHandler;
 		
 		// use for parsing
 		private static final int OBJECT = 0;
 		private static final int ARRAY = 1;
 
-		List<StringValue> currentPropValues;
+		List<String> currentPropValues;
 
-		// use for parsing
+		// Stack of JSON events.
 		private Stack<Integer> parse = new Stack<Integer>();
-		// use for storing nodes to import.
+		
+		// Stack of ImportState items.
 		private Stack<ImportState> states = new Stack<ImportState>();
 
-		private NodeHandler(Node parent, String nodeName) throws IOException {
-			key = nodeName;
-			this.parent = parent;
-			resolver = new DefaultNamePathResolver(session);
-			importer = new ImporterFactory().createImporter(parent, session);
-		}
-		
-		// Import the current node
-		private void processNode(ImportState state, boolean start, boolean end)
+		private NodeHandler(Node parentNode, String nodeName)
 				throws IOException {
-			if (!start && !end) {
-				return;
-			}
-			Name[] mixinNames = null;
-			if (state.getMixinNames() != null) {
-				mixinNames = state.getMixinNames().toArray(
-						new Name[state.getMixinNames().size()]);
-			}
+			key = nodeName;
+			this.parent = parentNode;
+		}
 
-			NodeId id = null;
-			if (state.getUUID() != null) {
-				id = NodeId.valueOf(state.uuid);
-			}
-			if (state.getPropInfos() == null) {
-				state.props = new ArrayList<PropInfo>();
-			}
-			
-			NodeInfo nodeInfo = new NodeInfo(state.nodeName, state.ntName,
-					mixinNames, id);
-			
-			// call Importer
+		private void startImportNode(ImportState state)
+				throws RepositoryException {
+
+			String uri = "http://www.jcp.org/jcr/sv/1.0";
+			String prefix = "sv:";
+
+			final String TYPE_CDATA = "CDATA";
+			char[] val = null;
+
 			try {
-				if (start) {
-					importer.startNode(nodeInfo, state.getPropInfos());
-					// dispose temporary property values
-					for (PropInfo pi : state.props) {
-						pi.dispose();
+
+				AttributesImpl attrSet = new AttributesImpl();
+				String localName = "name";
+				String qName = prefix + localName;
+				attrSet.addAttribute(uri, localName, qName, TYPE_CDATA,
+						state.getName());
+
+				localName = "node";
+				qName = prefix + localName;
+				contentHandler.startElement(uri, localName, qName, attrSet);
+
+				// node's primary type.
+				attrSet = new AttributesImpl();
+				localName = "name";
+				qName = prefix + localName;
+				attrSet.addAttribute(uri, localName, qName, TYPE_CDATA,
+						JcrConstants.JCR_PRIMARYTYPE);
+
+				localName = "type";
+				qName = prefix + localName;
+				attrSet.addAttribute(uri, localName, qName, TYPE_CDATA,
+						PropertyType.nameFromValue(PropertyType.NAME));
+
+				localName = "property";
+				qName = prefix + localName;
+				contentHandler.startElement(uri, localName, qName, attrSet);
+
+				localName = "value";
+				qName = prefix + localName;
+				contentHandler.startElement(uri, localName, qName,
+						new AttributesImpl());
+				val = state.getNodeTypeName().toCharArray();
+				contentHandler.characters(val, 0, val.length);
+
+				contentHandler.endElement(uri, localName, qName);
+
+				localName = "property";
+				qName = prefix + localName;
+				contentHandler.endElement(uri, localName, qName);
+
+				// node's uuid
+				if (state.getUUID() != null) {
+					attrSet = new AttributesImpl();
+					localName = "name";
+					qName = prefix + localName;
+					attrSet.addAttribute(uri, localName, qName, TYPE_CDATA,
+							state.getUUID());
+
+					localName = "type";
+					qName = prefix + localName;
+					attrSet.addAttribute(uri, localName, qName, TYPE_CDATA,
+							PropertyType.nameFromValue(PropertyType.STRING));
+
+					localName = "property";
+					qName = prefix + localName;
+					contentHandler.startElement(uri, localName, qName, attrSet);
+
+					localName = "value";
+					qName = prefix + localName;
+					contentHandler.startElement(uri, localName, qName,
+							new AttributesImpl());
+					val = state.getUUID().toCharArray();
+					contentHandler.characters(val, 0, val.length);
+					contentHandler.endElement(uri, localName, qName);
+
+					localName = "property";
+					qName = prefix + localName;
+					contentHandler.endElement(uri, localName, qName);
+
+				}
+				if (state.getMixinNames().size() > 0) {
+					String[] mixins = state.getMixinNames().toArray(
+							new String[state.getMixinNames().size()]);
+					// sv:name
+					attrSet = new AttributesImpl();
+					localName = "name";
+					qName = prefix + localName;
+					attrSet.addAttribute(uri, localName, qName, TYPE_CDATA,
+							JcrConstants.JCR_MIXINTYPES);
+
+					// sv:type
+					localName = "type";
+					qName = prefix + localName;
+					attrSet.addAttribute(uri, localName, qName, TYPE_CDATA,
+							PropertyType.nameFromValue(PropertyType.NAME));
+
+					// sv:property
+					localName = "property";
+					qName = prefix + localName;
+					contentHandler.startElement(uri, localName, qName, attrSet);
+
+					// sv:value
+					localName = "value";
+					qName = prefix + localName;
+					for (int i = 0; i < mixins.length; i++) {
+						contentHandler.startElement(uri, localName, qName,
+								new AttributesImpl());
+						val = mixins[i].toCharArray();
+						contentHandler.characters(val, 0, val.length);
+						contentHandler.endElement(uri, localName, qName);
 					}
 
+					// </sv:property>
+					localName = "property";
+					qName = prefix + localName;
+					contentHandler.endElement(uri, localName, qName);
 				}
-				if (end) {
-					importer.endNode(nodeInfo);
+
+				// process all properties of the current ImportState
+				for (PropInfo prop : state.getPropInfos()) {
+					importProperty(uri, prefix, TYPE_CDATA, prop);
 				}
-			} catch (RepositoryException reCause) {
-				throw new DiffException(
-						"Repository exception while importing nodeName {} with node type {} "
-								+ nodeInfo.getName()
-								+ nodeInfo.getNodeTypeName(), reCause);
+
+			} catch (SAXException e) {
+				throw new RepositoryException(e);
 			}
+
+		}
+
+		private void importProperty(String uri, String prefix, String type,
+				PropInfo prop) throws SAXException {
+			AttributesImpl attrs = new AttributesImpl();
+
+			String localName = "name";
+			String qName = prefix + localName;
+			attrs.addAttribute(uri, localName, qName, type, prop.getName());
+
+			localName = "type";
+			qName = prefix + localName;
+			attrs.addAttribute(uri, localName, qName, type,
+					PropertyType.nameFromValue(prop.getType()));
+
+			localName = "property";
+			qName = prefix + localName;
+			contentHandler.startElement(uri, localName, qName, attrs);
+
+			localName = "value";
+			qName = prefix + localName;
+			char val[] = null;
+			for (int i = 0; i < prop.values.length; i++) {
+				contentHandler.startElement(uri, localName, qName,
+						new AttributesImpl());
+				val = prop.values[i].toCharArray();
+				contentHandler.characters(val, 0, val.length);
+				contentHandler.endElement(uri, localName, qName);
+			}
+
+			localName = "property";
+			qName = prefix + localName;
+			contentHandler.endElement(uri, localName, qName);
 		}
 
 		public void object() throws IOException {
@@ -687,9 +790,23 @@ class JsonDiffHandler implements DiffHandler {
 					if (!states.empty()) {
 						// process current node first.
 						ImportState current = states.peek();
-						if (!current.started()) {
-							processNode(current, true, false);
-							current.setFlag(true);
+						try {
+							if (contentHandler == null) {
+								if (current.getUUID() != null) {
+									contentHandler = getContentHandler(
+											parent,
+											ImportUUIDBehavior.IMPORT_UUID_COLLISION_THROW);
+								} else {
+									contentHandler = getContentHandler(
+											parent,
+											ImportUUIDBehavior.IMPORT_UUID_CREATE_NEW);
+								}
+								startDocument();
+							}
+							startImportNode(current);
+							current.processed = true;
+						} catch (RepositoryException e) {
+							throw new DiffException(e.getMessage(), e);
 						}
 					}
 				} else {
@@ -697,32 +814,36 @@ class JsonDiffHandler implements DiffHandler {
 							"Invalid DIFF format: A JSONObject may only be contained in JSonObjects.");
 				}
 			}
-			
-			Name name = nameFromString(key, "Node name");
-			
-			ImportState is = new ImportState(name);
+
+			ImportState is = new ImportState(key);
 			parse.push(OBJECT);
 			states.push(is);
 		}
 
 		public void endObject() throws IOException {
-			
-			ImportState state = states.peek();
 
 			if (parse.peek() != OBJECT) {
 				throw new DiffException("Invalid DIFF format.");
 			}
-			if (!state.started()) {
-				processNode(state, true, true);
-				state.setFlag(true);
-			} else {
-				processNode(state, false, true);
+			try {
+				if (!states.empty()) {
+					ImportState state = states.pop();
+					if (!state.processed) {
+						startImportNode(state);
+						state.processed = true;
+					}
+					endImportNode();
+				}
+				if (states.empty()) { // everything has been imported.
+					endDocument();
+				}
+			} catch (RepositoryException e) {
+				throw new DiffException("Repository exception", e); // TODO: exception message?
 			}
-			states.pop();
 		}
 
 		public void array() throws IOException {
-
+			
 			if (!parse.isEmpty()) {
 				if (parse.peek() == ARRAY) {
 					throw new DiffException(
@@ -738,14 +859,13 @@ class JsonDiffHandler implements DiffHandler {
 				throw new DiffException(
 						"Invalid DIFF format: The JSONArray may only contain simple values.");
 			}
-			Name mixin = null;
+
 			if (key.equals(JcrConstants.JCR_MIXINTYPES)) {
-				for (StringValue v : currentPropValues) {
-					mixin = nameFromString(v.getString(), "mixin name");
-					addMixin(state, mixin);
+				for (String v : currentPropValues) {
+					addMixin(state, v);
 				}
-			} else { // multi-valued non-jcr:mixin property
-				PropInfo prop = createPropInfo(key, currentPropValues);
+			} else { // multi-valued non-jcr:mixin property e.g jcr:privileges
+				PropInfo prop = createPropInfo(key, PropertyType.STRING); // TODO: property type? 
 				state.addPropInfo(prop);
 			}
 			currentPropValues.clear();
@@ -773,30 +893,55 @@ class JsonDiffHandler implements DiffHandler {
 			value(vf.createValue(value));
 		}
 
-		private void addMixin(ImportState state, Name mixin) {
+		private void addMixin(ImportState state, String mixin) {
 			state.addMixin(mixin);
 		}
 
-// --------------- private methods ---------------
-		
-		private Name nameFromString(String key, String exceptionMsg) throws IOException {
-			Name name = null;
+		// --------------- private methods ---------------
+
+		private ContentHandler getContentHandler(Node parent, int ib)
+				throws RepositoryException {
+			return parent.getSession().getImportContentHandler(
+					parent.getPath(), ib);
+		}
+
+		private void startDocument() throws IOException {
 			try {
-				name = resolver.getQName(key);
-				return name;
-			} catch (IllegalNameException e) {
-				throw new DiffException("Illegal "+exceptionMsg+" " + key, e);
-			} catch (NamespaceException e) {
-				throw new DiffException("Illegal "+exceptionMsg+" " + key, e);
+				contentHandler.startDocument();
+			} catch (SAXException e) {
+				throw new DiffException("Fail to start import!", e);
 			}
+		}
+
+		private void endImportNode() throws IOException {
+			String uri = "http://www.jcp.org/jcr/sv/1.0";
+			String prefix = "sv:";
+
+			String localName = "node";
+			String qName = prefix + localName;
+			try {
+				contentHandler.endElement(uri, localName, qName);
+			} catch (SAXException e) {
+				throw new DiffException("Fail to end import", e);
+			}
+		}
+
+		private void endDocument() throws IOException {
+			try {
+				contentHandler.endDocument();
+			} catch (SAXException e) {
+				throw new DiffException("Fail to end import", e);
+			}
+			
+			
 		}
 
 		private void addValue(Value v) throws IOException {
 			if (currentPropValues == null) {
-				currentPropValues = new ArrayList<StringValue>();
+				currentPropValues = new ArrayList<String>();
 			}
 			try {
-				currentPropValues.add(new StringValue(v.getString()));
+				currentPropValues.add(v.getString());
 			} catch (ValueFormatException vFCause) {
 				throw new DiffException("illegal property value " + v, vFCause);
 			} catch (IllegalStateException iSCause) {
@@ -807,93 +952,73 @@ class JsonDiffHandler implements DiffHandler {
 		}
 
 		private void value(Value v) throws IOException {
-			// currentPropName = key;
-			Name name = null;
+
 			ImportState state = states.peek();
 			addValue(v);
 			if (parse.peek() != ARRAY) { // single-valued property
-				// collect jcr:primaryType and jcr:uuid etc. system properties
+				// jcr:primaryType
 				if (key.equals(JcrConstants.JCR_PRIMARYTYPE)) {
-					
-					name = nameFromString(currentPropValues.get(0)
-								.getString(), "node type name");
-					state.setNodeType(name);
-					
-				} else if (key.equals(JcrConstants.JCR_UUID)) {
-					state.setUUID(currentPropValues.get(0).getString());
+					state.setNodeType(currentPropValues.get(0));
+
+				} else if (key.equals(JcrConstants.JCR_UUID)) { // jcr:uuid
+					state.setUUID(currentPropValues.get(0));
 				} else {
 					// a single value property which is not a system property.
 					// NOTE: the jcr:mixinTypes property will be collected and
 					// set for the node when this handler
 					// receives an endArray event. This is because
-					// jcr.mixinTypes is a multi-valued property and thus we wait until we
+					// jcr.mixinTypes is a multi-valued property and thus we
+					// wait until we
 					// collect all its values.
-					PropInfo prop = createPropInfo(key, currentPropValues);
+					PropInfo prop = createPropInfo(key, PropertyType.STRING);
 					state.addPropInfo(prop);
 				}
 				currentPropValues.clear();
 			}
 		}
 
-		private PropInfo createPropInfo(String propName,
-				List<StringValue> propValues) throws IOException {
-			
-			Name name = nameFromString(propName ,"property name");
-			
-
-			return new PropInfo(name, PropertyType.UNDEFINED,
-					propValues.toArray(new TextValue[propValues.size()]));
+		private PropInfo createPropInfo(String propName, int propType)
+				throws IOException {
+			return new PropInfo(propName, propType,
+					currentPropValues.toArray(new String[currentPropValues
+							.size()]));
 		}
 	}
 
-	// ----------------------------------------- StringValue
-	private final class StringValue implements TextValue {
+	final class PropInfo {
+		String name;
+		final int type;
+		String values[];
 
-		String value;
-
-		public StringValue(String value) {
-			this.value = value;
+		public PropInfo(String propName, int propType, String vls[]) {
+			name = propName;
+			type = propType;
+			values = vls;
 		}
 
-		public String getString() {
-			return value;
+		public int getType() {
+			return type;
 		}
 
-		// method called by JsopImporter
-		@Override
-		public Value getValue(int type, NamePathResolver resolver)
-				throws ValueFormatException, RepositoryException {
-			// We do this for all property types including NAME and PATH types...
-			return ValueHelper.deserialize(value, type, false, vf);
+		public String getName() {
+			return name;
 		}
-
-		@Override
-		public InternalValue getInternalValue(int type)
-				throws ValueFormatException, RepositoryException {
-			// do nothing
-			return null;
-		}
-
-		@Override
-		public void dispose() {
-			// do nothing
-		}
-
 	}
 
 	final class ImportState {
-		private Name nodeName;
-		private Name ntName;
+		private String nodeName;
+		private String ntName;
 		private String uuid;
-		private List<Name> mixinNames;
-		private List<PropInfo> props;
-		private boolean started = false;
+		private List<String> mixinNames = new ArrayList<String>();;
+		private List<PropInfo> props = new ArrayList<PropInfo>();
 
-		ImportState(Name key) {
+		boolean processed = false;
+
+		ImportState(String key) {
 			this.nodeName = key;
 		}
 
-		public void setNodeType(Name ntName) {
+		public void setNodeType(String ntName) {
 			this.ntName = ntName;
 		}
 
@@ -901,11 +1026,11 @@ class JsonDiffHandler implements DiffHandler {
 			this.uuid = uuid;
 		}
 
-		public Name getName() {
+		public String getName() {
 			return nodeName;
 		}
 
-		public Name getNodeTypeName() {
+		public String getNodeTypeName() {
 			return ntName;
 		}
 
@@ -913,34 +1038,20 @@ class JsonDiffHandler implements DiffHandler {
 			return uuid;
 		}
 
-		public List<Name> getMixinNames() {
+		public List<String> getMixinNames() {
 			return mixinNames;
 		}
 
-		public void addMixin(Name mixinName) {
-			if (mixinNames == null) {
-				mixinNames = new ArrayList<Name>();
-			}
+		public void addMixin(String mixinName) {
 			mixinNames.add(mixinName);
 		}
 
 		public void addPropInfo(PropInfo prop) {
-			if (props == null) {
-				props = new ArrayList<PropInfo>();
-			}
 			props.add(prop);
 		}
 
 		public List<PropInfo> getPropInfos() {
 			return props;
-		}
-
-		public boolean started() {
-			return started;
-		}
-
-		public void setFlag(boolean started) {
-			this.started = started;
 		}
 	}
 }
