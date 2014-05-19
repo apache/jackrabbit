@@ -15,6 +15,7 @@
  * limitations under the License.
  */
 
+// @formatter:off
 package org.apache.jackrabbit.server.remoting.davex;
 
 import java.io.IOException;
@@ -540,7 +541,8 @@ class JsonDiffHandler implements DiffHandler {
             return values.toArray(new Value[values.size()]);
         }
     }
-
+    
+ // @formatter:on
     /**
      * Inner class for parsing a simple json object defining a node and its
      * child nodes and/or child properties
@@ -1004,4 +1006,4 @@ class JsonDiffHandler implements DiffHandler {
 		}
 	}
 
-}
+ }
