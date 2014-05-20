@@ -323,7 +323,7 @@ abstract class TargetImportHandler extends DefaultHandler {
                 } else {
                     if (bufferPos + length > buffer.length) {
                         // reallocate new buffer and spool old buffer contents
-                        char[] newBuffer = new char[buffer.length + BUFFER_INCREMENT];
+                        char[] newBuffer = new char[ bufferPos + length + BUFFER_INCREMENT];
                         System.arraycopy(buffer, 0, newBuffer, 0, bufferPos);
                         buffer = newBuffer;
                     }
