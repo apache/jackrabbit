@@ -386,9 +386,9 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
      * {@inheritDoc}
      */
     public void nodeAdded(NodeState state, Name name, int index, NodeId id) {
-        // Optimization: ignore notifications for nodes that are not in the cache
         synchronized (cacheMonitor) {
             if (idCache.containsKey(state.getNodeId())) {
+                // Optimization: ignore notifications for nodes that are not in the cache
                 try {
                     Path path = PathFactoryImpl.getInstance().create(getPath(state.getNodeId()), name, index, true);
                     nodeAdded(state, path, id);
@@ -405,6 +405,9 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
                 } catch (RepositoryException e) {
                     log.warn("Unable to get path of " + state.getNodeId(), e);
                 }
+            } else if (state.getParentId() == null && idCache.containsKey(id)) {
+                // A top level node was added
+                evictAll(id, true);
             }
         }
     }
@@ -469,9 +472,9 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
      * {@inheritDoc}
      */
     public void nodeRemoved(NodeState state, Name name, int index, NodeId id) {
-        // Optimization: ignore notifications for nodes that are not in the cache
         synchronized (cacheMonitor) {
             if (idCache.containsKey(state.getNodeId())) {
+                // Optimization: ignore notifications for nodes that are not in the cache
                 try {
                     Path path = PathFactoryImpl.getInstance().create(getPath(state.getNodeId()), name, index, true);
                     nodeRemoved(state, path, id);
@@ -488,6 +491,9 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
                 } catch (RepositoryException e) {
                     log.warn("Unable to get path of " + state.getNodeId(), e);
                 }
+            } else if (state.getParentId() == null && idCache.containsKey(id)) {
+                // A top level node was removed
+                evictAll(id, true);
             }
         }
     }

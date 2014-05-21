@@ -62,4 +62,31 @@ public class AddMoveTest extends AbstractJCRTest {
         //}
         assertTrue(consistencyReport.getItems().size() == 0);
     }
+
+    /**
+     * Add a top level node and rename it. Exposes a bug in the {@code CachingHierarchyManager},
+     * reported in JCR-3379.
+     */
+    public void testTopLevelAddMove() throws Exception {
+        Session session = getHelper().getReadWriteSession();
+        session.getRootNode().addNode("foo");
+        session.save();
+        Node fooNode = session.getNode("/foo");
+        assertEquals("/foo", fooNode.getPath());
+        session.move("/foo", "/bar");
+        Node barNode = session.getNode("/bar");
+        assertEquals("/bar", barNode.getPath());
+    }
+
+    /**
+     * Add a top level node and remove it. Exposes a bug in the {@code CachingHierarchyManager},
+     * reported in JCR-3368.
+     */
+    public void testTopLevelAddRemove() throws Exception {
+        Session session = getHelper().getReadWriteSession();
+        session.getRootNode().addNode("foo").addNode("bar");
+        session.save();
+        session.getNode("/foo").remove();
+        assertFalse(session.getRootNode().hasNode("foo/bar"));
+    }
 }
