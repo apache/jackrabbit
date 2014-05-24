@@ -575,12 +575,7 @@ class JsonDiffHandler implements DiffHandler {
             }
             if (st.isEmpty()) {
                 // everything parsed -> start adding all nodes and properties
-                try {
-                    obj.createItem(parent);                    
-                } catch (RepositoryException e) {
-                    log.error(e.getMessage());
-                    throw new DiffException(e.getMessage(), e);
-                }
+                new PrepareImport(session, parent, vf).prepareNode(obj);
             }
         }
 
@@ -636,7 +631,7 @@ class JsonDiffHandler implements DiffHandler {
         }
     }
 
-    private abstract class ImportItem {
+    abstract class ImportItem {
         final String name;
         private ImportItem(String name) throws IOException {
             if (name == null) {
@@ -645,10 +640,13 @@ class JsonDiffHandler implements DiffHandler {
             this.name = name;
         }
 
-        abstract void createItem(Node parent) throws RepositoryException;
+        public String getName() {
+        	return name;
+        }
+        
     }
     
-    private final class ImportNode extends ImportItem {
+    final class ImportNode extends ImportItem {
         private String ntName;
         private String uuid;
 
@@ -659,6 +657,21 @@ class JsonDiffHandler implements DiffHandler {
             super(name);
         }
 
+        public String getNodeTypeName() {
+        	return ntName;
+        }
+        
+        public String getUUID() {
+        	return uuid;
+        }
+        
+        public List<ImportNode> getChildNodes() {
+        	return childN;
+        }
+        public List<ImportItem> getChildProps(){
+        	return childP;
+        }
+        
         void addProp(ImportProp prop) {
             if (prop.name.equals(JcrConstants.JCR_PRIMARYTYPE)) {
                 try {
@@ -688,26 +701,9 @@ class JsonDiffHandler implements DiffHandler {
             childN.add(node);
         }
 
-        @Override
-        void createItem(Node parent) throws RepositoryException {
-            Node n;
-            if (uuid == null) {
-                n = (ntName == null) ? parent.addNode(name) : parent.addNode(name,  ntName);
-            } else {
-                n = importNode(parent, name, ntName, uuid);
-            }
-            // create all properties
-            for (ImportItem obj : childP) {
-                obj.createItem(n);
-            }
-            // recursively create all child nodes
-            for (ImportItem obj : childN) {
-                obj.createItem(n);
-            }
-        }
-    }
+     }
 
-    private final class ImportProp extends ImportItem  {
+    final class ImportProp extends ImportItem  {
         private final Value value;
 
         private ImportProp(String name, Value v) throws IOException {
@@ -715,27 +711,21 @@ class JsonDiffHandler implements DiffHandler {
             this.value = v;
         }
 
-        @Override
-        void createItem(Node parent) throws RepositoryException {
-            parent.setProperty(name, value);
+        public Value getValue(){
+        	return value;
         }
-    }
+     }
 
-    private final class ImportMvProp extends ImportItem  {
+    final class ImportMvProp extends ImportItem  {
         private List<Value> values = new ArrayList<Value>();
 
         private ImportMvProp(String name) throws IOException {
             super(name);
         }
 
-        @Override
-        void createItem(Node parent) throws RepositoryException {
-            Value[] vls = values.toArray(new Value[values.size()]);
-            if (JcrConstants.JCR_MIXINTYPES.equals(name)) {
-                setMixins(parent, vls);
-            } else {
-                parent.setProperty(name, vls);            
-            }
+        public List<Value> getValues() {
+        	return values;
         }
-    }
+        
+     }
 }
