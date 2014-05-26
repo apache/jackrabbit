@@ -43,7 +43,7 @@
     String wspName;
     try {
         rep = RepositoryAccessServlet.getRepository(pageContext.getServletContext());
-        jcrSession = rep.login(new SimpleCredentials("user", "".toCharArray()));
+        jcrSession = rep.login(new SimpleCredentials("admin", "admin".toCharArray()));
         wspName = jcrSession.getWorkspace().getName();
     } catch (Throwable e) {
         %>Error while accessing the repository: <font color="red"><%= Text.encodeIllegalXMLCharacters(e.getMessage()) %></font><br><%
