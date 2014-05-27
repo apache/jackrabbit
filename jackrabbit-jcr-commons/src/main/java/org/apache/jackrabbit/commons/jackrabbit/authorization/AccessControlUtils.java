@@ -232,7 +232,7 @@ public class AccessControlUtils {
      * <p>To activate the ACL change, session.save() must be called.</p>
      *
      * @param node node to set the resource-based ACL entry on; underlying session is used to write the ACL
-     * @param principalName user or group id for which the ACL entry should apply
+     * @param principalName Name of the principal for which the ACL entry should apply
      * @param privileges list of privileges to set by name (see {@link javax.jcr.security.Privilege})
      * @return {@code true} if the node's ACL was modified and the session has pending changes.
      * @throws RepositoryException If an unexpected repository error occurs
@@ -253,7 +253,7 @@ public class AccessControlUtils {
      * <p>To activate the ACL change, session.save() must be called.</p>
      *
      * @param node node to set the resource-based ACL entry on; underlying session is used to write the ACL
-     * @param principalName user or group id for which the ACL entry should apply
+     * @param principalName Name of the principal for which the ACL entry should apply
      * @param privileges list of privileges to set by name (see {@link javax.jcr.security.Privilege})
      * @return {@code true} if the node's ACL was modified and the session has pending changes.
      * @throws RepositoryException If an unexpected repository error occurs
