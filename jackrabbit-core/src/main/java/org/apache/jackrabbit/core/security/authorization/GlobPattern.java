@@ -16,12 +16,12 @@
  */
 package org.apache.jackrabbit.core.security.authorization;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.apache.jackrabbit.util.Text;
-
 import javax.jcr.Item;
 import javax.jcr.RepositoryException;
+
+import org.apache.jackrabbit.util.Text;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <code>GlobPattern</code> defines a simplistic pattern matching. It consists
@@ -64,7 +64,7 @@ public final class GlobPattern {
     private static Logger log = LoggerFactory.getLogger(GlobPattern.class);
 
     private static final char WILDCARD_CHAR = '*';
-    private static final String WILDCARD_STRING = "*";
+    private static final int  MAX_WILDCARD = 20;
 
     private final String nodePath;
     private final String restriction;
@@ -220,7 +220,7 @@ public final class GlobPattern {
             }
             char[] tm = (toMatch.endsWith("/")) ? toMatch.substring(0, toMatch.length()-1).toCharArray() : toMatch.toCharArray();
             // shortcut didn't reveal mismatch -> need to process the internal match method.
-            return matches(patternChars, 0, tm, 0);
+            return matches(patternChars, 0, tm, 0, MAX_WILDCARD);
         }
 
         /**
@@ -232,8 +232,11 @@ public final class GlobPattern {
          * @return <code>true</code> if matches, <code>false</code> otherwise
          */
         private boolean matches(char[] pattern, int pOff,
-                                char[] s, int sOff) {
+                                char[] s, int sOff, int cnt) {
 
+            if (cnt <= 0) {
+                throw new IllegalArgumentException("Illegal glob pattern " + GlobPattern.this);
+            }
             /*
             NOTE: code has been copied (and slightly modified) from
             ChildrenCollectorFilter#internalMatches.
@@ -263,8 +266,9 @@ public final class GlobPattern {
                         return true;
                     }
 
+                    cnt--;
                     while (true) {
-                        if (matches(pattern, pOff, s, sOff)) {
+                        if (matches(pattern, pOff, s, sOff, cnt)) {
                             return true;
                         }
                         if (sOff >= sLength) {
