@@ -144,6 +144,7 @@ public interface JackrabbitAccessControlList extends JackrabbitAccessControlPoli
      * or cannot be handled by the implementation.
      * @throws RepositoryException If another error occurs.
      * @see AccessControlList#addAccessControlEntry(Principal, Privilege[])
+     * @since 2.8
      */
     boolean addEntry(Principal principal, Privilege[] privileges,
                      boolean isAllow, Map<String, Value> restrictions,
