@@ -26,6 +26,7 @@ import java.io.OutputStream;
 import java.io.BufferedOutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -180,6 +181,7 @@ class IndexInfos implements Cloneable {
             } finally {
                 out.close();
             }
+            directory.sync(Collections.singleton(newName));
             lastModified = System.currentTimeMillis();
             success = true;
         } finally {
