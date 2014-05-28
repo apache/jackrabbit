@@ -747,7 +747,11 @@ public class SharedItemStateManager
                 events.createEventStates(rootNodeId, local, SharedItemStateManager.this);
 
                 // let listener know about change
-                eventChannel.updatePrepared(this);
+                try {
+                    eventChannel.updatePrepared(this);
+                } catch (ClusterException e) {
+                    throw new ItemStateException(e.getMessage(), e);
+                }
 
                 if (VALIDATE_HIERARCHY) {
                     log.debug("Validating change-set hierarchy");
