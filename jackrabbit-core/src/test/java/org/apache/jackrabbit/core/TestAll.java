@@ -34,6 +34,7 @@ public class TestAll extends TestCase {
     public static Test suite() {
         TestSuite suite = new ConcurrentTestSuite("Core tests");
 
+        suite.addTestSuite(ReplacePropertyWhileOthersReadTest.class);
         suite.addTestSuite(CachingHierarchyManagerTest.class);
         suite.addTestSuite(ShareableNodeTest.class);
         suite.addTestSuite(MultiWorkspaceShareableNodeTest.class);
@@ -78,7 +79,6 @@ public class TestAll extends TestCase {
         suite.addTestSuite(NPEandCMETest.class);
         suite.addTestSuite(ConsistencyCheck.class);
         suite.addTestSuite(RemoveAddNodeWithUUIDTest.class);
-        suite.addTestSuite(ReplacePropertyWhileOthersReadTest.class);
         suite.addTestSuite(MoveAtRootTest.class);
 
         return suite;
