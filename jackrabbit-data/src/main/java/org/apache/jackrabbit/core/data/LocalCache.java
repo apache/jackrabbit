@@ -572,12 +572,20 @@ public class LocalCache {
             LOG.debug("Time taken to sort [{}] took [{}] sec",
                 allFiles.size(), ((t2 - t1) / 1000));
             String dataStorePath = directory.getAbsolutePath();
+            String tmpPath = tmp.getAbsolutePath();
+            LOG.debug("tmp path [{}]", tmpPath); 
             long time = System.currentTimeMillis();
             int count = 0;
             for (File f : allFiles) {
                 if (f.exists()) {
                     count++;
                     String name = f.getPath();
+                    String filePath = f.getAbsolutePath();
+                    // skipped any temp file
+                    if(filePath.startsWith(tmpPath) ) {
+                        LOG.info    ("tmp file [{}] skipped ", filePath);
+                        continue;
+                    }
                     if (name.startsWith(dataStorePath)) {
                         name = name.substring(dataStorePath.length());
                     }

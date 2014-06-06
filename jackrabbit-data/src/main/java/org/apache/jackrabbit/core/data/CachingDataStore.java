@@ -219,13 +219,10 @@ public abstract class CachingDataStore extends AbstractDataStore implements
         try {
             if (path == null) {
                 path = homeDir + "/repository/datastore";
-                tmpDir = new File(homeDir, "/repository/s3tmp");
-            } else {
-                // cache is moved from 'path' to 'path'/repository/datastore
-                tmpDir = new File(path, "/repository/s3tmp");
-                path = path + "/repository/datastore";
             }
-            LOG.info("path=[{}],  tmpPath=[{}]", path, tmpDir.getPath());
+            // create tmp inside path
+            tmpDir = new File(path, "tmp");
+            LOG.info("path=[{}],  tmpPath=[{}]", path, tmpDir.getAbsolutePath());
             directory = new File(path);
             mkdirs(directory);
             if (!mkdirs(tmpDir)) {
