@@ -33,8 +33,9 @@ public interface UpdateEventChannel {
      * Called when an a update operation has been prepared.
      *
      * @param update update operation
+     * @throws ClusterException if an error occurs writing to the event channel.
      */
-    void updatePrepared(Update update);
+    void updatePrepared(Update update) throws ClusterException;
 
     /**
      * Called when an a update operation has been committed.
