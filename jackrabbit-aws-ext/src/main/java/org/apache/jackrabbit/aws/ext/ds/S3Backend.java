@@ -146,30 +146,19 @@ public class S3Backend implements Backend {
                 bucket = prop.getProperty(S3Constants.S3_BUCKET);
             }
             String region = prop.getProperty(S3Constants.S3_REGION);
+            Region s3Region = null;
             String endpoint = null;
-            if (!s3service.doesBucketExist(bucket)) {
-
-                if (DEFAULT_AWS_BUCKET_REGION.equals(region)) {
-                    s3service.createBucket(bucket, Region.US_Standard);
-                    endpoint = S3 + DOT + AWSDOTCOM;
-                } else if (Region.EU_Ireland.toString().equals(region)) {
-                    s3service.createBucket(bucket, Region.EU_Ireland);
-                    endpoint = "s3-eu-west-1" + DOT + AWSDOTCOM;
-                } else {
-                    s3service.createBucket(bucket, region);
-                    endpoint = S3 + DASH + region + DOT + AWSDOTCOM;
-                }
-                LOG.info("Created bucket [{}] in [{}] ", bucket, region);
+            if (DEFAULT_AWS_BUCKET_REGION.equals(region)) {
+                s3Region =  Region.US_Standard;
+                endpoint = S3 + DOT + AWSDOTCOM;
+            } else if (Region.EU_Ireland.toString().equals(region)) {
+                s3Region = Region.EU_Ireland;
+                endpoint = "s3-eu-west-1" + DOT + AWSDOTCOM;
             } else {
-                LOG.info("Using bucket [{}]", bucket);
-                if (DEFAULT_AWS_BUCKET_REGION.equals(region)) {
-                    endpoint = S3 + DOT + AWSDOTCOM;
-                } else if (Region.EU_Ireland.toString().equals(region)) {
-                    endpoint = "s3-eu-west-1" + DOT + AWSDOTCOM;
-                } else {
-                    endpoint = S3 + DASH + region + DOT + AWSDOTCOM;
-                }
+                s3Region = Region.fromValue(region);
+                endpoint = S3 + DASH + region + DOT + AWSDOTCOM;
             }
+            
             String propEndPoint = prop.getProperty(S3Constants.S3_END_POINT);
             if (propEndPoint != null & !"".equals(propEndPoint)) {
                 endpoint = propEndPoint;
@@ -181,7 +170,12 @@ public class S3Backend implements Backend {
              */
             s3service.setEndpoint(endpoint);
             LOG.info("S3 service endpoint [{}] ", endpoint);
-
+           
+            if (!s3service.doesBucketExist(bucket)) {
+                s3service.createBucket(bucket, s3Region);
+                LOG.info("Created bucket [{}] in [{}] ", bucket, region);
+            }
+           
             int writeThreads = 10;
             String writeThreadsStr = prop.getProperty(S3Constants.S3_WRITE_THREADS);
             if (writeThreadsStr != null) {
