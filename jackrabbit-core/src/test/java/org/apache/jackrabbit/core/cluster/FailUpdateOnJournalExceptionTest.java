@@ -74,6 +74,28 @@ public class FailUpdateOnJournalExceptionTest extends JUnitTest {
         }
     }
 
+    // JCR-3783
+    public void testFailedWrite() throws Exception {
+        Session s = repo.login(new SimpleCredentials("admin", "admin".toCharArray()));
+        Node root = s.getRootNode();
+        root.addNode("foo");
+        s.save();
+        root.addNode("bar");
+        TestJournal.failRecordWrite = true;
+        try {
+            s.save();
+            fail("Session.save() must fail with RepositoryException when Journal write fails.");
+        } catch (RepositoryException e) {
+            // expected
+        } finally {
+            TestJournal.failRecordWrite = false;
+        }
+        // must succeed after refresh
+        s.refresh(false);
+        root.addNode("bar");
+        s.save();
+    }
+
     private static void deleteAll() throws IOException {
         FileUtils.deleteDirectory(getTestDir());
     }

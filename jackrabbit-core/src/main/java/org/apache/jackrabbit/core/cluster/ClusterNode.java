@@ -647,7 +647,7 @@ public class ClusterNode implements Runnable,
         /**
          * {@inheritDoc}
          */
-        public void updatePrepared(Update update) {
+        public void updatePrepared(Update update) throws ClusterException {
             if (status != STARTED) {
                 log.info("not started: update prepare ignored.");
                 return;
@@ -671,12 +671,12 @@ public class ClusterNode implements Runnable,
                 succeeded = true;
             } catch (JournalException e) {
                 String msg = "Unable to create log entry: " + e.getMessage();
-                log.error(msg);
+                throw new ClusterException(msg, e);
             } catch (Throwable e) {
                 String msg = "Unexpected error while preparing log entry.";
-                log.error(msg, e);
+                throw new ClusterException(msg, e);
             } finally {
-                if (!succeeded && record != null) {
+                if (!succeeded) {
                     record.cancelUpdate();
                     update.setAttribute(ATTRIBUTE_RECORD, null);
                 }
