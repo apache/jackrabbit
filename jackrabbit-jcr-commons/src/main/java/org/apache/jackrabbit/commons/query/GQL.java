@@ -48,7 +48,7 @@ import org.apache.jackrabbit.util.Text;
 /**
  * <code>GQL</code> is a simple fulltext query language, which supports field
  * prefixes similar to Lucene or Google queries.
- * <p/>
+ * <p>
  * GQL basically consists of a list of query terms that are optionally prefixed
  * with a property name. E.g.: <code>title:jackrabbit</code>. When a property
  * prefix is omitted, GQL will perform a fulltext search on all indexed
@@ -78,14 +78,14 @@ import org.apache.jackrabbit.util.Text;
  * The following wild cards are allowed: '*', matching any character sequence of
  * length 0..n; '?', matching any single character.</li>
  * </ul>
- * <p/>
+ * <p>
  * <b>Property name</b>
- * <p/>
+ * <p>
  * Instead of a property name you may also specify a relative path to a
  * property. E.g.: <code>"jcr:content/jcr:mimeType":text/plain</code>
- * <p/>
+ * <p>
  * <b>Double quotes</b>
- * <p/>
+ * <p>
  * The property name as well as the value may enclosed in double quotes. For
  * certain use cases this is required. E.g. if you want to search for a phrase:
  * <code>title:"apache jackrabbit"</code>. Similarly you need to enclose the
@@ -93,9 +93,9 @@ import org.apache.jackrabbit.util.Text;
  * otherwise the first colon is interpreted as the separator between the
  * property name and the value. This also means that a value that contains
  * a colon does not need to be enclosed in double quotes.
- * <p/>
+ * <p>
  * <b>Auto prefixes</b>
- * <p/>
+ * <p>
  * When a property, node or node type name does not have a namespace prefix GQL
  * will guess the prefix by looking up item and node type definitions in the
  * node type manager. If it finds a definition with a local name that matches
@@ -104,9 +104,9 @@ import org.apache.jackrabbit.util.Text;
  * of node type <code>nt:file</code>. Similarly you can write:
  * <code>order:lastModified</code> and your result nodes will be sorted by their
  * <code>jcr:lastModified</code> property value.
- * <p/>
+ * <p>
  * <b>Common path prefix</b>
- * <p/>
+ * <p>
  * For certain queries it is useful to specify a common path prefix for the
  * GQL query statement. See {@link #execute(String, Session, String)}. E.g. if
  * you are searching for file nodes with matches in their resource node. The
@@ -116,16 +116,16 @@ import org.apache.jackrabbit.util.Text;
  * where the third parameter is <code>jcr:content</code>. GQL will return
  * <code>nt:file</code> nodes with <code>jcr:content</code> nodes that contain
  * matches for <code>jackrabbit</code>.
- * <p/>
+ * <p>
  * <b>Excerpts</b>
- * <p/>
+ * <p>
  * To get an excerpt for the current row in the result set simply call
  * {@link Row#getValue(String) Row.getValue("rep:excerpt()");}. Please note
  * that this is feature is Jackrabbit specific and will not work with other
  * implementations!
- * <p/>
+ * <p>
  * <b>Parser callbacks</b>
- * <p/>
+ * <p>
  * You can get callbacks for each field and query term pair using the method
  * {@link #parse(String, Session, ParserCallback)}. This may be useful when you
  * want to do some transformation on the GQL before it is actually executed.

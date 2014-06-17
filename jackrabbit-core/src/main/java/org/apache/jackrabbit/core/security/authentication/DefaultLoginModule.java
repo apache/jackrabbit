@@ -46,7 +46,7 @@ import org.slf4j.LoggerFactory;
  * </ul>
  * In both cases the login is successful if the system contains a non-disabled,
  * valid user that matches the given credentials.
- * <p/>
+ * <p>
  * Correspondingly impersonation is delegated to the <code>User</code>'s
  * {@link User#getImpersonation() Impersonation} object.
  *

@@ -243,7 +243,7 @@ public class WorkspaceImpl extends AbstractWorkspace
 
     /**
      * {@inheritDoc}
-     * <p/>
+     * <p>
      * Always throws <code>UnsupportedRepositoryOperationException</code> since
      * removal of workspaces is currently not supported.
      */
@@ -289,17 +289,17 @@ public class WorkspaceImpl extends AbstractWorkspace
      * Creates a new <code>Workspace</code> with the specified
      * <code>name</code>. The new workspace is empty, meaning it contains only
      * root node.
-     * <p/>
+     * <p>
      * The new workspace can be accessed through a <code>login</code>
      * specifying its name.
-     * <p/>
+     * <p>
      * Throws an <code>AccessDeniedException</code> if the session through which
      * this <code>Workspace</code> object was acquired does not have permission
      * to create the new workspace.
-     * <p/>
+     * <p>
      * Throws an <code>UnsupportedRepositoryOperationException</code> if the repository does
      * not support the creation of workspaces.
-     * <p/>
+     * <p>
      * A <code>RepositoryException</code> is thrown if another error occurs.
      *
      * @param name A <code>String</code>, the name of the new workspace.
@@ -910,7 +910,7 @@ public class WorkspaceImpl extends AbstractWorkspace
     //------------------------------------------< EventStateCollectionFactory >
     /**
      * {@inheritDoc}
-     * <p/>
+     * <p>
      * Implemented in this object and forwarded rather than {@link #obsMgr}
      * since creation of the latter is lazy.
      */

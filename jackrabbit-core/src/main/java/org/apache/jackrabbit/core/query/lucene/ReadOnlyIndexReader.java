@@ -89,7 +89,7 @@ class ReadOnlyIndexReader extends RefCountingIndexReader {
      * Updates the deleted documents in this index reader. When this method
      * returns this index reader will have the same documents marked as deleted
      * as the passed <code>reader</code>.
-     * <p/>
+     * <p>
      * This method is not thread-safe! Make sure no other thread is concurrently
      * using this reader at the same time.
      *

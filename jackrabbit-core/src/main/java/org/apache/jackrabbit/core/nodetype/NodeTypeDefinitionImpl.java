@@ -69,7 +69,7 @@ public class NodeTypeDefinitionImpl implements NodeTypeDefinition {
 
     /**
      * Returns the names of the supertypes actually declared in this node type.
-     * <p/>
+     * <p>
      * In implementations that support node type registration, if this
      * <code>NodeTypeDefinition</code> object is actually a newly-created empty
      * <code>NodeTypeTemplate</code>, then this method will return an array
@@ -97,11 +97,11 @@ public class NodeTypeDefinitionImpl implements NodeTypeDefinition {
     /**
      * Returns <code>true</code> if this is an abstract node type; returns
      * <code>false</code> otherwise.
-     * <p/>
+     * <p>
      * An abstract node type is one that cannot be assigned as the primary or
      * mixin type of a node but can be used in the definitions of other node
      * types as a superclass.
-     * <p/>
+     * <p>
      * In implementations that support node type registration, if this
      * <code>NodeTypeDefinition</code> object is actually a newly-created empty
      * <code>NodeTypeTemplate</code>, then this method will return

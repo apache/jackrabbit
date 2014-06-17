@@ -31,7 +31,7 @@ public interface PrincipalProviderRegistry {
      * registry expects the properties to contain a
      * {@link org.apache.jackrabbit.core.config.LoginModuleConfig#PARAM_PRINCIPAL_PROVIDER_CLASS}
      * to be able to create a instance of PrincipalProvider.
-     * <p/>
+     * <p>
      * The Properties will be passed to the instantiated Provider via
      * {@link PrincipalProvider#init(Properties)}
      *

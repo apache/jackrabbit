@@ -772,7 +772,7 @@ public class SessionItemStateManager
 
     /**
      * {@inheritDoc}
-     * <p/>
+     * <p>
      * Notification handler gets called for both transient states that this state manager
      * has created, as well as states that were created by the local state manager
      * we're listening to.
@@ -808,7 +808,7 @@ public class SessionItemStateManager
 
     /**
      * {@inheritDoc}
-     * <p/>
+     * <p>
      * Notification handler gets called for both transient states that this state manager
      * has created, as well as states that were created by the local state manager
      * we're listening to.
@@ -821,7 +821,7 @@ public class SessionItemStateManager
 
     /**
      * {@inheritDoc}
-     * <p/>
+     * <p>
      * Notification handler gets called for both transient states that this state manager
      * has created, as well as states that were created by the local state manager
      * we're listening to.
@@ -847,7 +847,7 @@ public class SessionItemStateManager
 
     /**
      * {@inheritDoc}
-     * <p/>
+     * <p>
      * Notification handler gets called for both transient states that this state manager
      * has created, as well as states that were created by the local state manager
      * we're listening to.
@@ -867,7 +867,7 @@ public class SessionItemStateManager
 
     /**
      * {@inheritDoc}
-     * <p/>
+     * <p>
      * Pass notification to listeners if a transient state was modified
      * or if the local state is not overlayed.
      */
@@ -880,7 +880,7 @@ public class SessionItemStateManager
 
     /**
      * {@inheritDoc}
-     * <p/>
+     * <p>
      * Pass notification to listeners if a transient state was modified
      * or if the local state is not overlayed.
      */
@@ -893,7 +893,7 @@ public class SessionItemStateManager
 
     /**
      * {@inheritDoc}
-     * <p/>
+     * <p>
      * Pass notification to listeners if a transient state was modified
      * or if the local state is not overlayed.
      */
@@ -906,7 +906,7 @@ public class SessionItemStateManager
 
     /**
      * {@inheritDoc}
-     * <p/>
+     * <p>
      * Pass notification to listeners if a transient state was modified
      * or if the local state is not overlayed.
      */

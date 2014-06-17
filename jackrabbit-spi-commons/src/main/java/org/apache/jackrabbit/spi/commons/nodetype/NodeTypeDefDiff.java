@@ -37,11 +37,11 @@ import java.util.Set;
 /**
  * A <code>NodeTypeDefDiff</code> represents the result of the comparison of
  * two node type definitions.
- * <p/>
+ * <p>
  * The result of the comparison can be categorized as one of the following types:
- * <p/>
+ * <p>
  * <b><code>NONE</code></b> indicates that there is no modification at all.
- * <p/>
+ * <p>
  * A <b><code>TRIVIAL</code></b> modification has no impact on the consistency
  * of existing content. The following modifications are considered
  * <code>TRIVIAL</code>:
@@ -63,7 +63,7 @@ import java.util.Set;
  * <li>changing specific property <code>requiredType</code> to <code>undefined</code>
  * <li>changing property <code>multiple</code> flag to <code>true</code>
  * </ul>
- * <p/>
+ * <p>
  * A <b><code>MAJOR</code></b> modification potentially <i>affects</i> the
  * consistency of existing content.
  *

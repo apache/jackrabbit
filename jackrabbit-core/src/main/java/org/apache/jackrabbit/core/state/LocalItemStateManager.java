@@ -444,7 +444,7 @@ public class LocalItemStateManager
 
     /**
      * {@inheritDoc}
-     * <p/>
+     * <p>
      * Notification handler gets called for both local states that this state manager
      * has created, as well as states that were created by the shared state manager
      * we're listening to.
@@ -489,7 +489,7 @@ public class LocalItemStateManager
 
     /**
      * {@inheritDoc}
-     * <p/>
+     * <p>
      * Notification handler gets called for both local states that this state manager
      * has created, as well as states that were created by the shared state manager
      * we're listening to.
@@ -520,7 +520,7 @@ public class LocalItemStateManager
 
     /**
      * {@inheritDoc}
-     * <p/>
+     * <p>
      * Notification handler gets called for both local states that this state manager
      * has created, as well as states that were created by the shared state manager
      * we're listening to.
@@ -545,7 +545,7 @@ public class LocalItemStateManager
 
     /**
      * {@inheritDoc}
-     * <p/>
+     * <p>
      * Notification handler gets called for both local states that this state manager
      * has created, as well as states that were created by the shared state manager
      * we're listening to.
@@ -570,7 +570,7 @@ public class LocalItemStateManager
 
     /**
      * {@inheritDoc}
-     * <p/>
+     * <p>
      * Optimization: shared state manager we're listening to does not deliver node state changes, therefore the state
      * concerned must be a local state.
      */
@@ -580,7 +580,7 @@ public class LocalItemStateManager
 
     /**
      * {@inheritDoc}
-     * <p/>
+     * <p>
      * Optimization: shared state manager we're listening to does not deliver node state changes, therefore the state
      * concerned must be a local state.
      */
@@ -590,7 +590,7 @@ public class LocalItemStateManager
 
     /**
      * {@inheritDoc}
-     * <p/>
+     * <p>
      * Optimization: shared state manager we're listening to does not deliver node state changes, therefore the state
      * concerned must be a local state.
      */
@@ -600,7 +600,7 @@ public class LocalItemStateManager
 
     /**
      * {@inheritDoc}
-     * <p/>
+     * <p>
      * Optimization: shared state manager we're listening to does not deliver node state changes, therefore the state
      * concerned must be a local state.
      */

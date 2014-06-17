@@ -65,7 +65,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Implementation of the {@link javax.jcr.version.VersionManager}.
- * <p/>
+ * <p>
  * This class implements the JCR Version Manager interface but most of the
  * operations are performed in the super classes. this is only cosmetic to
  * avoid huge source files.

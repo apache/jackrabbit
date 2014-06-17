@@ -84,7 +84,7 @@ public class ChildNodeJoin extends AbstractCondition {
 
     /**
      * {@inheritDoc}
-     * <p/>
+     * <p>
      * The outer query hits loop contains the child nodes.
      */
     public ScoreNode[][] getMatchingScoreNodes(ScoreNode child) throws IOException {

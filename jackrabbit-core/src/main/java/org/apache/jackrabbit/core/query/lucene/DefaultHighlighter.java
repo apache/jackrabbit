@@ -36,7 +36,7 @@ import org.apache.lucene.index.TermVectorOffsetInfo;
 /**
  * This is an adapted version of the <code>FulltextHighlighter</code> posted in
  * issue: <a href="http://issues.apache.org/jira/browse/LUCENE-644">LUCENE-644</a>.
- * <p/>
+ * <p>
  * Important: for this highlighter to function properly, field must be stored
  * with token offsets.<br/> Use Field constructor {@link
  * Field#Field(String,String,Field.Store,Field.Index,Field.TermVector)

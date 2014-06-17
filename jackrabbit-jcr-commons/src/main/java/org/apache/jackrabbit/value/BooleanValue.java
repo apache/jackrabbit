@@ -66,7 +66,7 @@ public class BooleanValue extends BaseValue {
 
     /**
      * Indicates whether some other object is "equal to" this one.
-     * <p/>
+     * <p>
      * The result is <code>true</code> if and only if the argument is not
      * <code>null</code> and is a <code>BooleanValue</code> object that
      * represents the same value as this object.

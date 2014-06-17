@@ -303,7 +303,7 @@ public class ObservationManagerImpl implements EventStateCollectionFactory,
 
     /**
      * {@inheritDoc}
-     * <p/>
+     * <p>
      * Creates an <code>EventStateCollection</code> tied to the session
      * which is attached to this <code>ObservationManager</code> instance.
      */

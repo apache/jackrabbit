@@ -317,7 +317,7 @@ abstract public class VersionManagerImplBase {
 
     /**
      * Determines the checked-out status of the given node state.
-     * <p/>
+     * <p>
      * A node is considered <i>checked-out</i> if it is versionable and
      * checked-out, or is non-versionable but its nearest versionable ancestor
      * is checked-out, or is non-versionable and there are no versionable

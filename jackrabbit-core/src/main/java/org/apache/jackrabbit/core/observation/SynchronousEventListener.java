@@ -26,7 +26,7 @@ import javax.jcr.observation.EventListener;
  * the call to {@link javax.jcr.Item#save()} returns. In contrast, a regular
  * {@link javax.jcr.observation.EventListener} might be called after
  * <code>save()</code> returns.
- * <p/>
+ * <p>
  * <b>Important note</b>: an implementation of {@link SynchronousEventListener}
  * <b>must not</b> modify content with the thread that calls {@link
  * #onEvent(EventIterator)} otherwise inconsistencies may occur.

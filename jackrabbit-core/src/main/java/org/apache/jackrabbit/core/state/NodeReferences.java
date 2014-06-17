@@ -43,7 +43,7 @@ public class NodeReferences implements Serializable {
     /**
      * list of PropertyId's (i.e. the id's of the properties that refer to
      * the target node denoted by <code>id.getTargetId()</code>).
-     * <p/>
+     * <p>
      * note that the list can contain duplicate entries because a specific
      * REFERENCE property can contain multiple references (if it's multi-valued)
      * to potentially the same target node.

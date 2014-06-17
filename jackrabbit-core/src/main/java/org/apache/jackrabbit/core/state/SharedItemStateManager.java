@@ -54,7 +54,7 @@ import org.slf4j.LoggerFactory;
  * Shared <code>ItemStateManager</code> (SISM). Caches objects returned from a
  * <code>PersistenceManager</code>. Objects returned by this item state
  * manager are shared among all sessions.
- * <p/>
+ * <p>
  * A shared item state manager operates on a <code>PersistenceManager</code>
  * (PM) that is used to load and store the item states. Additionally, a SISM can
  * have <code>VirtualItemStateProvider</code>s (VISP) that are used to provide
@@ -64,7 +64,7 @@ import org.slf4j.LoggerFactory;
  * SISM during initialization of a workspace. i.e. they are 'mounted' to all
  * workspaces. we assume, that VISP cannot be added dynamically, neither during
  * runtime nor by configuration.
- * <p/>
+ * <p>
  * The states from the VISP are read-only. by the exception for node references.
  * remember that the referrers are stored in a {@link NodeReferences} state,
  * having the ID of the target state.
@@ -89,7 +89,7 @@ import org.slf4j.LoggerFactory;
  *      states of different VISP).
  *      those do currently not occur and are therefore not supported.
  * </ol>
- * <p/>
+ * <p>
  * if VISP are not dynamic, there is not risk that NV-type references can dangle
  * (since a VISP cannot be 'unmounted', leaving eventual references dangling).
  * although multi-workspace-referrers are not explicitly supported, the
@@ -395,7 +395,7 @@ public class SharedItemStateManager
 
     /**
      * {@inheritDoc}
-     * <p/>
+     * <p>
      * Notifications are received for items that this manager created itself or items that are
      * managed by one of the virtual providers.
      */
@@ -409,7 +409,7 @@ public class SharedItemStateManager
 
     /**
      * {@inheritDoc}
-     * <p/>
+     * <p>
      * Notifications are received for items that this manager created itself or items that are
      * managed by one of the virtual providers.
      */
@@ -419,7 +419,7 @@ public class SharedItemStateManager
 
     /**
      * {@inheritDoc}
-     * <p/>
+     * <p>
      * Notifications are received for items that this manager created itself or items that are
      * managed by one of the virtual providers.
      */
@@ -433,7 +433,7 @@ public class SharedItemStateManager
 
     /**
      * {@inheritDoc}
-     * <p/>
+     * <p>
      * Notifications are received for items that this manager created itself or items that are
      * managed by one of the virtual providers.
      */
@@ -1728,7 +1728,7 @@ public class SharedItemStateManager
     /**
      * Makes sure child node entry for mandatory jcr:activities exist.
      * Repositories upgraded from 1.x do not have it.
-     * <p/>
+     * <p>
      * This method assumes that the jcr:system node already exists.
      *
      * @throws ItemStateException if an error occurs while reading or writing to

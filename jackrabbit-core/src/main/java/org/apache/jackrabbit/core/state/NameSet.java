@@ -141,7 +141,7 @@ final class NameSet implements Set<Name>, Cloneable {
 
     /**
      * {@inheritDoc}
-     * <p/>
+     * <p>
      * The returned iterator will throw a {@link UnsupportedOperationException}
      * on {@link Iterator#remove()}.
      */
@@ -272,7 +272,7 @@ final class NameSet implements Set<Name>, Cloneable {
 
     /**
      * Implements a simple <code>HashSet&lt;Name></code> cache.
-     * <p/>
+     * <p>
      * Please note that this cache does not ensures that the sets are immutable!
      * It is the responsibility of the caller to make sure that sets passed to
      * {@link #get} are not modified by multiple threads. Modifying a cached

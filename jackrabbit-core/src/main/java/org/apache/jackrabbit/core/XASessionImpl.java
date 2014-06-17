@@ -192,7 +192,7 @@ public class XASessionImpl extends SessionImpl
 
     /**
      * {@inheritDoc}
-     * <p/>
+     * <p>
      * Two resources belong to the same resource manager if both connections
      * (i.e. sessions) have the same credentials.
      */
@@ -206,7 +206,7 @@ public class XASessionImpl extends SessionImpl
 
     /**
      * {@inheritDoc}
-     * <p/>
+     * <p>
      * If <code>TMNOFLAGS</code> is specified, we create a new transaction
      * context and associate it with this resource.
      * If <code>TMJOIN</code> is specified, this resource should use the
@@ -260,7 +260,7 @@ public class XASessionImpl extends SessionImpl
 
     /**
      * {@inheritDoc}
-     * <p/>
+     * <p>
      * If <code>TMSUCCESS</code> is specified, we disassociate this session
      * from the transaction specified.
      * If <code>TMFAIL</code> is specified, we disassociate this session from
@@ -269,7 +269,7 @@ public class XASessionImpl extends SessionImpl
      * from the transaction specified.
      * All other flags generate an <code>XAException</code> of type
      * <code>XAER_INVAL</code>
-     * <p/>
+     * <p>
      * It is legal for a transaction association to be suspended and then
      * ended (either with <code>TMSUCCESS</code> or <code>TMFAIL</code>)
      * without having been resumed again.
@@ -348,7 +348,7 @@ public class XASessionImpl extends SessionImpl
 
     /**
      * {@inheritDoc}
-     * <p/>
+     * <p>
      * No recovery support yet.
      */
     public Xid[] recover(int flags) throws XAException {
@@ -357,7 +357,7 @@ public class XASessionImpl extends SessionImpl
 
     /**
      * {@inheritDoc}
-     * <p/>
+     * <p>
      * No recovery support yet.
      */
     public void forget(Xid xid) throws XAException {

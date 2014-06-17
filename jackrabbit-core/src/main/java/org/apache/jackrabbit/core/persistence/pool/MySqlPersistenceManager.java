@@ -20,7 +20,7 @@ import org.apache.jackrabbit.core.persistence.PMContext;
 
 /**
  * Extends the {@link BundleDbPersistenceManager} by mysql specific code.
- * <p/>
+ * <p>
  * Configuration:<br>
  * <ul>
  * <li>&lt;param name="{@link #setBundleCacheSize(String) bundleCacheSize}" value="8"/>

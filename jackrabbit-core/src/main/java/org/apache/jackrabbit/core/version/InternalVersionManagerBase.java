@@ -46,7 +46,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Base implementation of the {@link InternalVersionManager} interface.
- * <p/>
+ * <p>
  * All read operations must acquire the read lock before reading, all write
  * operations must acquire the write lock.
  */
@@ -375,7 +375,7 @@ abstract class InternalVersionManagerBase implements InternalVersionManager {
 
     /**
      * Returns the item with the given persistent id. Subclass responsibility.
-     * <p/>
+     * <p>
      * Please note, that the overridden method must acquire the readlock before
      * reading the state manager.
      *
@@ -398,7 +398,7 @@ abstract class InternalVersionManagerBase implements InternalVersionManager {
     /**
      * Checks if there are item references (from outside the version storage)
      * that reference the given node. Subclass responsibility.
-     * <p/>
+     * <p>
      * Please note, that the overridden method must acquire the readlock before
      * reading the state manager.
      *
@@ -413,7 +413,7 @@ abstract class InternalVersionManagerBase implements InternalVersionManager {
 
     /**
      * Returns the node with the given persistent id. Subclass responsibility.
-     * <p/>
+     * <p>
      * Please note, that the overridden method must acquire the readlock before
      * reading the state manager.
      *

@@ -44,7 +44,7 @@ import javax.jcr.Session;
  * <code>LocateCorrespondingNodeReport</code> is used to identify the resource that
  * represents the corresponding node in another workspace.
  *
- * <p/>
+ * <p>
  * The request body must be a 'dcr:locate-corresponding-node' XML element, that
  * contains the href of the source workspace, where the corresponding node should
  * be searched:

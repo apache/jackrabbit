@@ -81,7 +81,7 @@ public class IndexInputStream extends InputStream {
 
     /**
      * {@inheritDoc}
-     * <p/>
+     * <p>
      * Closes the underlying index input.
      */
     public void close() throws IOException {

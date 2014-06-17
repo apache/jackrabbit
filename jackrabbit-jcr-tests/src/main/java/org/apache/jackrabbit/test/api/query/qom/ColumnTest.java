@@ -49,11 +49,11 @@ public class ColumnTest extends AbstractQOMTest {
 
     /**
      * From the spec:
-     * <p/>
+     * <p>
      * If propertyName is not specified, a column is included for each
      * single-valued non-residual property of the node type specified by the
      * nodeType attribute of the selector selectorName.
-     * <p/>
+     * <p>
      * [..] If propertyName is not specified,
      * columnName must not be specified, and the included columns will be
      * named "selectorName.propertyName".
@@ -89,7 +89,7 @@ public class ColumnTest extends AbstractQOMTest {
 
     /**
      * From the spec:
-     * <p/>
+     * <p>
      * If propertyName is specified, columnName is required and used to name
      * the column in the tabular results.
      */

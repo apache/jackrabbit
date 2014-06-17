@@ -303,7 +303,7 @@ public final class EventImpl implements JackrabbitEvent, AdditionalEventInfo, Ev
     /**
      * Returns <code>true</code> if this <code>Event</code> is equal to another
      * object.
-     * <p/>
+     * <p>
      * Two <code>Event</code> instances are equal if their respective
      * <code>EventState</code> instances are equal and both <code>Event</code>
      * instances are intended for the same <code>Session</code> that registerd

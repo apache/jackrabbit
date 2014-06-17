@@ -33,7 +33,7 @@ public class ReorderTest extends AbstractObservationTest {
      * Tests if reordering a child node triggers a {@link javax.jcr.observation.Event#NODE_REMOVED}
      * and a {@link javax.jcr.observation.Event#NODE_ADDED} event with same name siblings. Furthermore
      * a node is removed in the same save scope.
-     * <p/>
+     * <p>
      * Because of the one reorder operation, three nodes change their index. And
      * actually four nodes change their context position. The minimal events
      * that may be triggered only includes one pair of remove/add node events

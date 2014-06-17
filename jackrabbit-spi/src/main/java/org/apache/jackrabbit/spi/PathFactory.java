@@ -131,7 +131,7 @@ public interface PathFactory {
     /**
      * Creates a path element from the given <code>name</code>.
      * The created path element does not contain an explicit index.
-     * <p/>
+     * <p>
      * If the specified name denotes a <i>special</i> path element (either
      * {@link PathFactory#getParentElement()}, {@link PathFactory#getCurrentElement()} or
      * {@link PathFactory#getRootElement()}) then the associated constant is returned.
@@ -145,7 +145,7 @@ public interface PathFactory {
     /**
      * Same as {@link #createElement(Name)} except that an explicit index can be
      * specified.
-     * <p/>
+     * <p>
      * Note that an IllegalArgumentException will be thrown if the specified
      * name denotes a <i>special</i> path element (either
      * {@link PathFactory#getParentElement()}, {@link PathFactory#getCurrentElement()} or

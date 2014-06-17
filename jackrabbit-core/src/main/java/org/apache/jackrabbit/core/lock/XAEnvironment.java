@@ -512,7 +512,7 @@ class XAEnvironment {
 
         /**
          * {@inheritDoc}
-         * <p/>
+         * <p>
          * As long as the XA environment is neither committed nor rolled back,
          * associated lock information is subject to change.
          */

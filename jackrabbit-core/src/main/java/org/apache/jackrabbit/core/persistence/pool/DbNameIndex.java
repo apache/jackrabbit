@@ -27,10 +27,10 @@ import org.apache.jackrabbit.core.util.db.DbUtility;
 /**
  * Implements a {@link StringIndex} that stores and retrieves the names from a
  * table in a database.
- * <p/>
+ * <p>
  * Note that this class is not threadsafe by itself. it needs to be synchronized
  * by the using application.
- * <p/>
+ * <p>
  * Due to a bug with oracle that treats empty strings a null values
  * (see JCR-815), all empty strings are replaced by a ' '. since names never
  * start with a space, this it not problematic yet.

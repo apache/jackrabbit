@@ -140,7 +140,7 @@ public class HierarchyManagerImpl implements HierarchyManager {
     //---------------------------------------------------------< overridables >
     /**
      * Return an item state, given its item id.
-     * <p/>
+     * <p>
      * Low-level hook provided for specialized derived classes.
      *
      * @param id item id
@@ -156,7 +156,7 @@ public class HierarchyManagerImpl implements HierarchyManager {
 
     /**
      * Determines whether an item state for a given item id exists.
-     * <p/>
+     * <p>
      * Low-level hook provided for specialized derived classes.
      *
      * @param id item id
@@ -170,7 +170,7 @@ public class HierarchyManagerImpl implements HierarchyManager {
 
     /**
      * Returns the <code>parentUUID</code> of the given item.
-     * <p/>
+     * <p>
      * Low-level hook provided for specialized derived classes.
      *
      * @param state item state
@@ -215,7 +215,7 @@ public class HierarchyManagerImpl implements HierarchyManager {
     /**
      * Returns the <code>ChildNodeEntry</code> of <code>parent</code> with the
      * specified <code>uuid</code> or <code>null</code> if there's no such entry.
-     * <p/>
+     * <p>
      * Low-level hook provided for specialized derived classes.
      *
      * @param parent node state
@@ -234,7 +234,7 @@ public class HierarchyManagerImpl implements HierarchyManager {
      * Returns the <code>ChildNodeEntry</code> of <code>parent</code> with the
      * specified <code>name</code> and <code>index</code> or <code>null</code>
      * if there's no such entry.
-     * <p/>
+     * <p>
      * Low-level hook provided for specialized derived classes.
      *
      * @param parent node state

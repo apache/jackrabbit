@@ -39,7 +39,7 @@ public interface AccessControlEditor {
      * the <code>AccessControlProvider</code> and are only an external representation.
      * Modification will therefore not take effect, until they are written back to
      * the editor and persisted.
-     * <p/>
+     * <p>
      * Compared to the policy returned by {@link AccessControlProvider#getEffectivePolicies(org.apache.jackrabbit.spi.Path, CompiledPermissions)},
      * the scope of the policies it limited to the Node itself and does
      * not take inherited elements into account.
@@ -85,11 +85,11 @@ public interface AccessControlEditor {
      * <code>AccessControlProvider</code> and is only an external
      * representation. Modification will therefore not take effect, until a
      * modified policy is written back to the editor and persisted.
-     * <p/>
+     * <p>
      * See {@link #getPolicies(String)} for the corresponding method that returns
      * the editable policies that have been set to the node at
      * <code>nodePath</code> before.
-     * <p/>
+     * <p>
      * Compared to the policies returned by {@link AccessControlProvider#getEffectivePolicies(org.apache.jackrabbit.spi.Path, CompiledPermissions)},
      * the scope of the policies returned by this methods it limited to the Node
      * itself and does never not take inherited elements into account.

@@ -53,7 +53,7 @@ import java.util.Map;
 /**
  * <code>TxLockManagerImpl</code> manages locks with locktype
  * '{@link TransactionConstants#TRANSACTION dcr:transaction}'.
- * <p/>
+ * <p>
  */
  //todo: removing all expired locks
  //todo: 'local' and 'global' are not accurate terms in the given context > replace

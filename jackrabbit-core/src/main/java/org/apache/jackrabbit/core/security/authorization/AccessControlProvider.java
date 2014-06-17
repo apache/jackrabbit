@@ -33,7 +33,7 @@ import java.util.Set;
  * objects that apply to an item in a single workspace. The provider is bound
  * to a system session in contrast to the <code>AccessControlManager</code> that
  * is bound to a specific session/subject.
- * <p/>
+ * <p>
  * Please note following additional special conditions:
  * <ul>
  * <li>The detection of access control policy/entries is an implementation

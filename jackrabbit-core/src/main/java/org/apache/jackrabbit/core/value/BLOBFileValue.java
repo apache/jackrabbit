@@ -30,7 +30,7 @@ import org.apache.jackrabbit.core.data.DataStore;
  * Unlike <code>BinaryValue</code> it has no state, i.e.
  * the <code>getStream()</code> method always returns a fresh
  * <code>InputStream</code> instance.
- * <p/>
+ * <p>
  * <b>Important Note:</b><p/>
  * This interface is for Jackrabbit-internal use only. Applications should
  * use <code>javax.jcr.ValueFactory</code> to create binary values.
@@ -50,7 +50,7 @@ abstract class BLOBFileValue implements Binary {
      * this object. However an implementation must guarantee that the returned
      * value has state that is independent from this value. Immutable values
      * can savely return the same value (this object).
-     * <p/>
+     * <p>
      * Specifically, {@link #dispose()} on the returned value must not have an
      * effect on this value!
      *

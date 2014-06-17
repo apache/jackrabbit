@@ -265,7 +265,7 @@ public class XALockManager implements LockManager, InternalXAResource {
 
     /**
      * {@inheritDoc}
-     * <p/>
+     * <p>
      * This will finish the update and unlock the shared lock manager.
      */
     public void commit(TransactionContext tx) {
@@ -277,7 +277,7 @@ public class XALockManager implements LockManager, InternalXAResource {
 
     /**
      * {@inheritDoc}
-     * <p/>
+     * <p>
      * This will undo all updates and unlock the shared lock manager.
      */
     public void rollback(TransactionContext tx) {

@@ -32,14 +32,14 @@ import java.util.List;
  * CompactNodeTypeDefReader. Parses node type definitions written in the compact
  * node type definition format and provides a list of type definition
  * objects that can then be used to register node types.
- * <p/>
+ * <p>
  * The CompactNodeTypeDefReader is parameterizable in the type of the node type
  * definition <code>T</code> and the type of the namespace mapping <code>N</code>
  * which the parser should build. For types <code>T</code> and <code>N</code> the
  * parser's constructor takes a {@link DefinitionBuilderFactory} for
  * <code>T</code> and <code>N</code>.
- * <p/>
- * <p/>
+ * <p>
+ * <p>
  * The EBNF grammar of the compact node type definition:<br>
  * <pre>
  * Cnd ::= {NamespaceMapping | NodeTypeDef}

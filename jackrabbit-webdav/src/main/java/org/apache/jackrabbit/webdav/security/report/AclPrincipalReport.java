@@ -36,7 +36,7 @@ import java.util.Map;
  * The AclPrincipalReport report returns the requested property set
  * for all principals in the DAV:acl property, that are identified by http(s)
  * URLs or by a DAV:property principal.
- * <p/>
+ * <p>
  * The request body MUST be a DAV:acl-principal-prop-set XML element:
  * <pre>
  * &lt;!ELEMENT acl-principal-prop-set ANY&gt;

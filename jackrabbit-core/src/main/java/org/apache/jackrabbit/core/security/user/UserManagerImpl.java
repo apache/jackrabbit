@@ -205,7 +205,7 @@ public class UserManagerImpl extends ProtectedItemModifier
     /**
      * Parameter used to change the number of levels that are used by default
      * store authorizable nodes.<br>The default number of levels is 2.
-     * <p/>
+     * <p>
      * <strong>NOTE:</strong> Changing the default depth once users and groups
      * have been created in the repository will cause inconsistencies, due to
      * the fact that the resolution of ID to an authorizable relies on the
@@ -985,7 +985,7 @@ public class UserManagerImpl extends ProtectedItemModifier
      * Create the administrator user. If the node to be created collides
      * with an existing node (ItemExistsException) the existing node gets removed
      * and the admin user node is (re)created.
-     * <p/>
+     * <p>
      * Collision with an existing node may occur under the following circumstances:
      *
      * <ul>

@@ -25,7 +25,7 @@ import javax.jcr.RepositoryException;
  * OPV=Version children upon restore. JSR170 states: <em>"This determination
  * [of the version] depends on the configuration of the workspace and is outside
  * the scope of this specification."</em>
- * <p/>
+ * <p>
  * The version selection in jackrabbit works as follows:<br/>
  * The <code>Node.restore()</code> methods uses the
  * {@link DateVersionSelector} which is initialized with the creation date of
@@ -36,7 +36,7 @@ import javax.jcr.RepositoryException;
  * {@link LabelVersionSelector} which is initialized with the label of the
  * version to be restored. This selector selects the version with the same
  * label. if no such version exists, the initial one is restored.
- * <p/>
+ * <p>
  *
  * @see DateVersionSelector
  * @see LabelVersionSelector

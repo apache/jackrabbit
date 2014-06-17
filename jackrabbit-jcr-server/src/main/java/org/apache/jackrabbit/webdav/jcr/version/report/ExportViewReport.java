@@ -48,7 +48,7 @@ import java.io.IOException;
  * {@link Session#exportDocumentView(String, java.io.OutputStream, boolean, boolean) DocView}
  * and {@link Session#exportSystemView(String, java.io.OutputStream, boolean, boolean) SysView}
  * of the {@link javax.jcr.Item item} represented by the requested resource.
- * <p/>
+ * <p>
  * The request body must contain a {@link ItemResourceConstants#NAMESPACE dcr}:exportview
  * element:
  * <pre>

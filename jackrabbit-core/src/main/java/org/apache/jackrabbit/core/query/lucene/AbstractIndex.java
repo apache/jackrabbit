@@ -49,7 +49,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Implements common functionality for a lucene index.
- * <p/>
+ * <p>
  * Note on synchronization: This class is not entirely thread-safe. Certain
  * concurrent access is however allowed. Read-only access on this index using
  * {@link #getReadOnlyIndexReader()} is thread-safe. That is, multiple threads

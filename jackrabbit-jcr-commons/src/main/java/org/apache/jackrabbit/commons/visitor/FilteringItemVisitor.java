@@ -145,12 +145,12 @@ public abstract class FilteringItemVisitor implements ItemVisitor {
 
     /**
      * Called when the Visitor is passed to a <code>Property</code>.
-     * <p/>
+     * <p>
      * It calls <code>TraversingItemVisitor.entering(Property, int)</code> followed by
      * <code>TraversingItemVisitor.leaving(Property, int)</code>. Implement these abstract methods to
      * specify behaviour on 'arrival at' and 'after leaving' the <code>Property</code>.
-     * <p/>
-     * <p/>
+     * <p>
+     * <p>
      * If this method throws, the visiting process is aborted.
      *
      * @param property the <code>Property</code> that is accepting this visitor.
@@ -165,11 +165,11 @@ public abstract class FilteringItemVisitor implements ItemVisitor {
 
     /**
      * Called when the Visitor is passed to a <code>Node</code>.
-     * <p/>
+     * <p>
      * It calls <code>TraversingItemVisitor.entering(Node, int)</code> followed by
      * <code>TraversingItemVisitor.leaving(Node, int)</code>. Implement these abstract methods to
      * specify behaviour on 'arrival at' and 'after leaving' the <code>Node</code>.
-     * <p/>
+     * <p>
      * If this method throws, the visiting process is aborted.
      *
      * @param node the <code>Node</code> that is accepting this visitor.

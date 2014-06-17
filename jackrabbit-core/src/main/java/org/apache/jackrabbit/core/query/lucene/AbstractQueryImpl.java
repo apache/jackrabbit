@@ -75,7 +75,7 @@ public abstract class AbstractQueryImpl implements ExecutableQuery {
      * the index has stored the nodes. That sequence is stable over multiple
      * invocations of the same query, but will change when nodes get added or
      * removed from the index.
-     * <p/>
+     * <p>
      * The default value for this property is <code>true</code>.
      * @return the current value of this property.
      */

@@ -32,10 +32,10 @@ public interface HierarchyManager {
 
     /**
      * Resolves a path into an item id.
-     * <p/>
+     * <p>
      * If there is both a node and a property at the specified path, this method
      * will return the id of the node.
-     * <p/>
+     * <p>
      * Note that, for performance reasons, this method returns <code>null</code>
      * rather than throwing a <code>PathNotFoundException</code> if there's no
      * item to be found at <code>path</code>.
@@ -53,7 +53,7 @@ public interface HierarchyManager {
 
     /**
      * Resolves a path into a node id.
-     * <p/>
+     * <p>
      * Note that, for performance reasons, this method returns <code>null</code>
      * rather than throwing a <code>PathNotFoundException</code> if there's no
      * node to be found at <code>path</code>.
@@ -67,7 +67,7 @@ public interface HierarchyManager {
 
     /**
      * Resolves a path into a property id.
-     * <p/>
+     * <p>
      * Note that, for performance reasons, this method returns <code>null</code>
      * rather than throwing a <code>PathNotFoundException</code> if there's no
      * property to be found at <code>path</code>.

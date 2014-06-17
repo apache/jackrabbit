@@ -141,7 +141,7 @@ public interface DeltaVConstants {
      * Protected "workspace" property indicating the workspace of a resource.
      * This property is required for all resources if (but only if) the workspace
      * feature is supported.
-     * <p/>
+     * <p>
      * Note that the DAV:activity-version-set represents a
      * {@link org.apache.jackrabbit.webdav.property.HrefProperty HrefProperty}.
      * It is defined to have the following format:
@@ -158,7 +158,7 @@ public interface DeltaVConstants {
      * property for all resources that are member of a version-controlled
      * configuration. This may be the case if the resource is a collection under
      * baseline control or is a member of a collection under baseline control.
-     * <p/>
+     * <p>
      * Note that the DAV:activity-version-set represents a
      * {@link org.apache.jackrabbit.webdav.property.HrefProperty HrefProperty}.
      * It is defined to have the following format:

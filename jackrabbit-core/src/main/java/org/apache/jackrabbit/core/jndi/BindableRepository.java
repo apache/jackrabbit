@@ -41,17 +41,17 @@ import javax.naming.Referenceable;
  * delays the instantiation of the actual Repository instance and
  * implements serialization and JNDI referenceability by keeping
  * track of the repository configuration parameters.
- * <p/>
+ * <p>
  * A BindableRepository instance contains the configuration file
  * and home directory paths of a Jackrabbit repository. The separate
  * {@link #init() init()} method is used to create a transient
  * {@link RepositoryImpl RepositoryImpl} instance to which all the
  * JCR API calls are delegated.
- * <p/>
+ * <p>
  * An instance of this class is normally always also initialized.
  * The uninitialized state is only used briefly during the static
  * construction, deserialization, and JNDI "referenciation".
- * <p/>
+ * <p>
  * A JVM shutdown hook is used to make sure that the initialized
  * repository is properly closed when the JVM shuts down. The
  * {@link RegistryHelper#unregisterRepository(javax.naming.Context, String)}

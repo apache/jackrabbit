@@ -26,7 +26,7 @@ import org.apache.jackrabbit.core.util.db.PostgreSQLConnectionHelper;
 
 /**
  * Extends the {@link BundleDbPersistenceManager} by PostgreSQL specific code.
- * <p/>
+ * <p>
  * Configuration:<br>
  * <ul>
  * <li>&lt;param name="{@link #setBundleCacheSize(String) bundleCacheSize}" value="8"/>

@@ -45,7 +45,7 @@ import java.util.List;
  * that provides a mechanism for retrieving in one request the properties from
  * the resources identified by those DAV:href elements. It should be supported by
  * all resources that support the REPORT method.
- * <p/>
+ * <p>
  * RFC 3253 specifies the following required format for the request body:
  * <pre>
  * &lt;!ELEMENT expand-property (property*)&gt;

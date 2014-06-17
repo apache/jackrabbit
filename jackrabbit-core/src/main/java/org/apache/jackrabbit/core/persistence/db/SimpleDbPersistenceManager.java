@@ -31,7 +31,7 @@ import javax.jcr.RepositoryException;
  * simple custom binary serialization format (see {@link Serializer}) and a
  * very basic non-normalized database schema (in essence tables with one 'key'
  * and one 'data' column).
- * <p/>
+ * <p>
  * It is configured through the following properties:
  * <ul>
  * <li><code>driver</code>: the FQN name of the JDBC driver class</li>
@@ -52,7 +52,7 @@ import javax.jcr.RepositoryException;
  * <code>java.sql.Statement.execute(String)</code> where every occurrence of the
  * the string <code>"${schemaObjectPrefix}"</code> has been replaced with the
  * value of the property <code>schemaObjectPrefix</code>.
- * <p/>
+ * <p>
  * The following is a fragment from a sample configuration using MySQL:
  * <pre>
  *   &lt;PersistenceManager class="org.apache.jackrabbit.core.persistence.db.SimpleDbPersistenceManager"&gt;

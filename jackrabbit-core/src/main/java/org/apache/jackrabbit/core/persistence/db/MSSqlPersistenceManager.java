@@ -25,7 +25,7 @@ import org.apache.jackrabbit.util.Text;
  * database using a simple custom serialization format and a
  * very basic non-normalized database schema (in essence tables with one 'key'
  * and one 'data' column).
- * <p/>
+ * <p>
  * It is configured through the following properties:
  * <ul>
  * <li><code>driver</code>: the FQN name of the JDBC driver class
@@ -43,7 +43,7 @@ import org.apache.jackrabbit.util.Text;
  * if <code>false</code> BLOBs are stored in the database</li>
  * </ul>
  * See also {@link SimpleDbPersistenceManager}.
- * <p/>
+ * <p>
  * The following is a fragment from a sample configuration:
  * <pre>
  *   &lt;PersistenceManager class="org.apache.jackrabbit.core.persistence.db.MSSqlPersistenceManager"&gt;

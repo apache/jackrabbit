@@ -26,7 +26,7 @@ import java.util.Properties;
  * caching facility. Extending classes should only deal with the retrieval of
  * {@link Principal}s from their source, the caching of the principals is done
  * by this implementation.
- * <p/>
+ * <p>
  * The {@link PrincipalProvider} methods that that involve searching like
  * {@link PrincipalProvider#getGroupMembership(Principal)} are not cached.
  */

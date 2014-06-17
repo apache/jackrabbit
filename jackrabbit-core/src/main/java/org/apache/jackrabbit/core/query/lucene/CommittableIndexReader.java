@@ -76,7 +76,7 @@ class CommittableIndexReader extends FilterIndexReader {
 
     /**
      * {@inheritDoc}
-     * <p/>
+     * <p>
      * Increments the modification count.
      */
     protected void doDelete(int n) throws CorruptIndexException, IOException {

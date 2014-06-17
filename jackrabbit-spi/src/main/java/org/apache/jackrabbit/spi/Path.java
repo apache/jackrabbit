@@ -230,7 +230,7 @@ public interface Path extends Serializable {
     /**
      * Tests whether this path is normalized, i.e. whether it does not
      * contain redundant elements such as "." and "..".
-     * <p/>
+     * <p>
      * Note that a normalized path can still contain ".." elements if they are
      * not redundant, e.g. "../../a/b/c" would be a normalized relative path,
      * whereas "../a/../../a/b/c" wouldn't (although they're semantically
@@ -243,7 +243,7 @@ public interface Path extends Serializable {
 
     /**
      * Returns the normalized path representation of this path.
-     * <p/>
+     * <p>
      * If the path cannot be normalized (e.g. if an absolute path is normalized
      * that would result in a 'negative' path) a RepositoryException is thrown.
      *
@@ -255,7 +255,7 @@ public interface Path extends Serializable {
 
     /**
      * Returns the canonical path representation of this path.
-     * <p/>
+     * <p>
      * If the path is relative or cannot be normalized a RepositoryException
      * is thrown.
      *
@@ -301,7 +301,7 @@ public interface Path extends Serializable {
     /**
      * Normalizes this path and returns the ancestor path of the specified
      * relative degree.
-     * <p/>
+     * <p>
      * An ancestor of relative degree <i>x</i> is the path that is <i>x</i>
      * levels up along the path.
      * <ul>
@@ -311,7 +311,7 @@ public interface Path extends Serializable {
      * <li>And so on to <i>degree</i> = <i>n</i>, where <i>n</i> is the depth
      * of this path, which returns the root path.
      * </ul>
-     * <p/>
+     * <p>
      * If this path is relative the implementation may not be able to determine
      * if the ancestor at <code>degree</code> exists. Such an implementation
      * should properly build the ancestor (i.e. parent of .. is ../..) and
@@ -347,7 +347,7 @@ public interface Path extends Serializable {
      * Returns the length of this path, i.e. the number of its elements.
      * Note that the root element "/" counts as a separate element, e.g.
      * the length of "/a/b/c" is 4 whereas the length of "a/b/c" is 3.
-     * <p/>
+     * <p>
      * Also note that the special elements "." and ".." are not treated
      * specially, e.g. both "/a/./.." and "/a/b/c" have a length of 4
      * but this value does not necessarily reflect the true hierarchy level as
@@ -365,7 +365,7 @@ public interface Path extends Serializable {
      * this path is an absolute or a relative path. The depth also takes '.'
      * and '..' elements into account. The depth of the root path, an
      * identifier and the current path must be 0.
-     * <p/>
+     * <p>
      * Note that the returned value might be negative if this path is not
      * canonical, e.g. the depth of "../../a" is -1.
      *
@@ -486,14 +486,14 @@ public interface Path extends Serializable {
      * Object representation of a single JCR path element. An <code>Element</code>
      * object contains the <code>Name</code> and optional index of a single
      * JCR path element.
-     * <p/>
+     * <p>
      * Once created, a <code>Element</code> object must be immutable.
-     * <p/>
+     * <p>
      * The String presentation of an <code>Element</code> must be in the format
      * "<code>{namespaceURI}localPart</code>" or
      * "<code>{namespaceURI}localPart[index]</code>" case of an index greater
      * than {@link Path#INDEX_DEFAULT}.
-     * <p/>
+     * <p>
      * Note, that the implementation must implement the equals method such, that
      * two <code>Element</code> objects having equals <code>Name</code>s and the
      * same normalized index must be equal.

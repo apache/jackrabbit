@@ -85,7 +85,7 @@ public interface PrincipalProvider {
      * evaluates to <code>true</code>. A principal is an indirect member of a
      * group if any of its groups (to any degree of separation) is direct member
      * of the group.
-     * <p/>
+     * <p>
      * Example:<br>
      * If Principal is member of Group A, and Group A is member of
      * Group B, this method will return Group A and Group B.

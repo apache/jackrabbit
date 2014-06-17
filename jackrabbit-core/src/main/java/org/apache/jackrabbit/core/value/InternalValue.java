@@ -52,7 +52,7 @@ import org.apache.jackrabbit.util.ISO8601;
 
 /**
  * <code>InternalValue</code> represents the internal format of a property value.
- * <p/>
+ * <p>
  * The following table specifies the internal format for every property type:
  * <pre>
  * <table>

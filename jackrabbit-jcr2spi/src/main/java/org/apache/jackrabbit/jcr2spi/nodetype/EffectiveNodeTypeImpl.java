@@ -40,7 +40,7 @@ import org.slf4j.LoggerFactory;
  * An <code>EffectiveNodeType</code> represents one or more
  * <code>NodeType</code>s as one 'effective' node type where inheritance
  * is resolved.
- * <p/>
+ * <p>
  * Instances of <code>EffectiveNodeType</code> are immutable.
  */
 public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
@@ -487,7 +487,7 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
     /**
      * Internal helper method which merges another <code>EffectiveNodeType</code>
      * instance with <i>this</i> instance.
-     * <p/>
+     * <p>
      * Warning: This instance might be in an inconsistent state if an exception
      * is thrown.
      *

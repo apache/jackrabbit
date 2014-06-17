@@ -34,7 +34,7 @@ import org.apache.jackrabbit.test.AbstractJCRTest;
  * <li>dispose Binary</li>
  * </ul>
  * do not throw an exception.
- * <p/>
+ * <p>
  * See also JCR-2238.
  */
 public class BinaryValueTest extends AbstractJCRTest {

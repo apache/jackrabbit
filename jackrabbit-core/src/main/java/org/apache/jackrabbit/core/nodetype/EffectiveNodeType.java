@@ -43,7 +43,7 @@ import java.util.HashSet;
  * An <code>EffectiveNodeType</code> represents one or more
  * <code>NodeType</code>s as one 'effective' node type where inheritance
  * is resolved.
- * <p/>
+ * <p>
  * Instances of <code>EffectiveNodeType</code> are immutable.
  */
 public class EffectiveNodeType implements Cloneable {
@@ -81,7 +81,7 @@ public class EffectiveNodeType implements Cloneable {
 
     /**
      * Package private factory method.
-     * <p/>
+     * <p>
      * Creates an effective node type representation of a node type definition.
      * Note that the definitions of all referenced node types must be contained
      * in <code>ntdCache</code>.
@@ -585,7 +585,7 @@ public class EffectiveNodeType implements Cloneable {
     /**
      * Tests if the value constraints defined in the property definition
      * <code>pd</code> are satisfied by the the specified <code>values</code>.
-     * <p/>
+     * <p>
      * Note that the <i>protected</i> flag is not checked. Also note that no
      * type conversions are attempted if the type of the given values does not
      * match the required type as specified in the given definition.
@@ -971,7 +971,7 @@ public class EffectiveNodeType implements Cloneable {
     /**
      * Internal helper method which merges another <code>EffectiveNodeType</code>
      * instance with <i>this</i> instance.
-     * <p/>
+     * <p>
      * Warning: This instance might be in an inconsistent state if an exception
      * is thrown.
      *

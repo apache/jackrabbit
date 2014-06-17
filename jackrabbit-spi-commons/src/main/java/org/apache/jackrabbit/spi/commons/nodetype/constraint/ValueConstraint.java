@@ -54,7 +54,7 @@ public abstract class ValueConstraint implements QValueConstraint {
     /**
      * For constraints that are not namespace prefix mapping sensitive this
      * method returns the same result as <code>{@link #getString()}</code>.
-     * <p/>
+     * <p>
      * Those that are namespace prefix mapping sensitive (e.g.
      * <code>NameConstraint</code>, <code>PathConstraint</code> and
      * <code>ReferenceConstraint</code>) use the given <code>nsResolver</code>
@@ -271,7 +271,7 @@ public abstract class ValueConstraint implements QValueConstraint {
     /**
      * Tests if the value constraints defined in the property definition
      * <code>pd</code> are satisfied by the the specified <code>values</code>.
-     * <p/>
+     * <p>
      * Note that the <i>protected</i> flag is not checked. Also note that no
      * type conversions are attempted if the type of the given values does not
      * match the required type as specified in the given definition.

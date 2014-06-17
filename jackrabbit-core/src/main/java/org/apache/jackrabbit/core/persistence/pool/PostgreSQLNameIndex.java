@@ -52,7 +52,7 @@ public class PostgreSQLNameIndex extends DbNameIndex {
 
     /**
      * Inserts a string into the database and returns the new index.
-     * <p/>
+     * <p>
      * Instead of using the {@link java.sql.Statement#RETURN_GENERATED_KEYS}
      * feature, the newly inserted index is retrieved by a 2nd select statement.
      *

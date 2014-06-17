@@ -73,7 +73,7 @@ public abstract class QueryResultImpl implements JackrabbitQueryResult {
     /**
      * The result nodes including their score. This list is populated on a lazy
      * basis while a client iterates through the results.
-     * <p/>
+     * <p>
      * The exact type is: <code>List&lt;ScoreNode[]></code>
      */
     private final List<ScoreNode[]> resultNodes = new ArrayList<ScoreNode[]>();

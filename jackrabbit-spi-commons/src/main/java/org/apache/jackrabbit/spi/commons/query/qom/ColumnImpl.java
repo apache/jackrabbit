@@ -98,7 +98,7 @@ public class ColumnImpl extends AbstractQOMNode implements Column {
 
     /**
      * Gets the column name.
-     * <p/>
+     * <p>
      *
      * @return the column name; must be null if <code>getPropertyName</code> is
      *         null and non-null otherwise

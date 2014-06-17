@@ -26,7 +26,7 @@ import org.apache.jackrabbit.webdav.property.DavPropertyName;
  * a distinct new URL for each new version, and this URL will never be used to
  * identify any resource other than that version. The content and dead properties
  * of a version never change.
- * <p/>
+ * <p>
  * RFC 3253 defines the following required properties for a version resource:
  * <ul>
  * <li>DAV:predecessor-set  (protected)</li>
@@ -48,7 +48,7 @@ import org.apache.jackrabbit.webdav.property.DavPropertyName;
  * <li>DAV:version-controlled-binding-set</li>
  * </ul>
  *
- * <p/>
+ * <p>
  * In addition a version resource must support the following METHODS:
  * <ul>
  * <li>LABEL (label)</li>
@@ -157,7 +157,7 @@ public interface VersionResource extends DeltaVResource {
      * A server MAY restrict the DAV:activity-set to identify a single activity.
      * A server MAY refuse to allow the value of the DAV:activity-set property
      * of a version to be modified.
-     * <p/>
+     * <p>
      * The property is defined to have the following format:
      * <pre>
      * &lt;!ELEMENT activity-set (href*)&gt;
@@ -172,7 +172,7 @@ public interface VersionResource extends DeltaVResource {
      * DAV:version-controlled-binding-set property identifies the name and the
      * version history of all version-controlled internal members of the
      * collection this version resource belongs to.
-     * <p/>
+     * <p>
      * This property is defined to have the following format:
      * <pre>
      * &lt;!ELEMENT version-controlled-binding-set (version-controlled-binding*)&gt;

@@ -66,15 +66,15 @@ import org.slf4j.LoggerFactory;
  * persistent indexes. Further operations on the new persistent index will
  * however only require an <code>IndexReader</code> which serves for queries
  * but also for delete operations on the index.
- * <p/>
+ * <p>
  * The persistent indexes are merged from time to time. The merge behaviour
  * is configurable using the methods: {@link SearchIndex#setMaxMergeDocs(int)},
  * {@link SearchIndex#setMergeFactor(int)} and {@link SearchIndex#setMinMergeDocs(int)}.
  * For detailed description of the configuration parameters see also the lucene
  * <code>IndexWriter</code> class.
- * <p/>
+ * <p>
  * This class is thread-safe.
- * <p/>
+ * <p>
  * Note on implementation: Multiple modifying threads are synchronized on a
  * <code>MultiIndex</code> instance itself. Synchronization between a modifying
  * thread and reader threads is done using {@link #updateMonitor} and
@@ -524,7 +524,7 @@ public class MultiIndex {
      * <code>indexNames</code>. An <code>IndexListener</code> is registered and
      * notified when documents are deleted from one of the indexes in
      * <code>indexNames</code>.
-     * <p/>
+     * <p>
      * Note: the number of <code>IndexReaders</code> returned by this method is
      * not necessarily the same as the number of index names passed. An index
      * might have been deleted and is not reachable anymore.
@@ -894,7 +894,7 @@ public class MultiIndex {
      * Removes the <code>index</code> from the list of active sub indexes.
      * Depending on the {@link SearchIndex#getMaxHistoryAge()}, the
      * Index is not deleted right away.
-     * <p/>
+     * <p>
      * This method does not close the index, but rather expects that the index
      * has already been closed.
      *
@@ -985,7 +985,7 @@ public class MultiIndex {
      * reader is already <code>null</code> this method does nothing. When this
      * method returns {@link #multiReader} is guaranteed to be <code>null</code>
      * even if an exception is thrown.
-     * <p/>
+     * <p>
      * Please note that this method does not take care of any synchronization.
      * A caller must ensure that it is the only thread operating on this multi
      * index, or that it holds the {@link #updateMonitor}.

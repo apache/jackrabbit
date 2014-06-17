@@ -115,7 +115,7 @@ public interface QNodeTypeDefinition {
      * referenced by <i>this</i> node type definition (e.g. as supertypes, as
      * required/default primary types in child node definitions, as REFERENCE
      * value constraints in property definitions).
-     * <p/>
+     * <p>
      * Note that self-references (e.g. a child node definition that specifies
      * the declaring node type as the default primary type) are not considered
      * dependencies.

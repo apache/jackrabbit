@@ -311,7 +311,7 @@ public class BatchedItemOperations extends ItemValidator {
     /**
      * Copies the tree at <code>srcPath</code> to the new location at
      * <code>destPath</code>. Returns the id of the node at its new position.
-     * <p/>
+     * <p>
      * <b>Precondition:</b> the state manager needs to be in edit mode.
      *
      * @param srcPath
@@ -336,7 +336,7 @@ public class BatchedItemOperations extends ItemValidator {
      * Copies the tree at <code>srcPath</code> retrieved using the specified
      * <code>srcStateMgr</code> to the new location at <code>destPath</code>.
      * Returns the id of the node at its new position.
-     * <p/>
+     * <p>
      * <b>Precondition:</b> the state manager needs to be in edit mode.
      *
      * @param srcPath
@@ -462,7 +462,7 @@ public class BatchedItemOperations extends ItemValidator {
     /**
      * Moves the tree at <code>srcPath</code> to the new location at
      * <code>destPath</code>. Returns the id of the moved node.
-     * <p/>
+     * <p>
      * <b>Precondition:</b> the state manager needs to be in edit mode.
      *
      * @param srcPath
@@ -583,7 +583,7 @@ public class BatchedItemOperations extends ItemValidator {
     /**
      * Removes the specified node, recursively removing its properties and
      * child nodes.
-     * <p/>
+     * <p>
      * <b>Precondition:</b> the state manager needs to be in edit mode.
      *
      * @param nodePath
@@ -1028,9 +1028,9 @@ public class BatchedItemOperations extends ItemValidator {
     //--------------------------------------------< low-level item operations >
     /**
      * Creates a new node.
-     * <p/>
+     * <p>
      * Note that access rights are <b><i>not</i></b> enforced!
-     * <p/>
+     * <p>
      * <b>Precondition:</b> the state manager needs to be in edit mode.
      *
      * @param parent
@@ -1065,9 +1065,9 @@ public class BatchedItemOperations extends ItemValidator {
 
     /**
      * Creates a new node based on the given definition.
-     * <p/>
+     * <p>
      * Note that access rights are <b><i>not</i></b> enforced!
-     * <p/>
+     * <p>
      * <b>Precondition:</b> the state manager needs to be in edit mode.
      *
      * @param parent
@@ -1151,9 +1151,9 @@ public class BatchedItemOperations extends ItemValidator {
 
     /**
      * Creates a new property.
-     * <p/>
+     * <p>
      * Note that access rights are <b><i>not</i></b> enforced!
-     * <p/>
+     * <p>
      * <b>Precondition:</b> the state manager needs to be in edit mode.
      *
      * @param parent
@@ -1204,9 +1204,9 @@ public class BatchedItemOperations extends ItemValidator {
 
     /**
      * Creates a new property based on the given definition.
-     * <p/>
+     * <p>
      * Note that access rights are <b><i>not</i></b> enforced!
-     * <p/>
+     * <p>
      * <b>Precondition:</b> the state manager needs to be in edit mode.
      *
      * @param parent
@@ -1256,7 +1256,7 @@ public class BatchedItemOperations extends ItemValidator {
     /**
      * Unlinks the specified node state from its parent and recursively
      * removes it including its properties and child nodes.
-     * <p/>
+     * <p>
      * Note that no checks (access rights etc.) are performed on the specified
      * target node state. Those checks have to be performed beforehand by the
      * caller. However, the (recursive) removal of target node's child nodes are
@@ -1285,7 +1285,7 @@ public class BatchedItemOperations extends ItemValidator {
 
     /**
      * Retrieves the state of the node at the given path.
-     * <p/>
+     * <p>
      * Note that access rights are <b><i>not</i></b> enforced!
      *
      * @param nodePath
@@ -1300,7 +1300,7 @@ public class BatchedItemOperations extends ItemValidator {
 
     /**
      * Retrieves the state of the node with the given id.
-     * <p/>
+     * <p>
      * Note that access rights are <b><i>not</i></b> enforced!
      *
      * @param id
@@ -1315,7 +1315,7 @@ public class BatchedItemOperations extends ItemValidator {
 
     /**
      * Retrieves the state of the property with the given id.
-     * <p/>
+     * <p>
      * Note that access rights are <b><i>not</i></b> enforced!
      *
      * @param id
@@ -1330,7 +1330,7 @@ public class BatchedItemOperations extends ItemValidator {
 
     /**
      * Retrieves the state of the item with the given id.
-     * <p/>
+     * <p>
      * Note that access rights are <b><i>not</i></b> enforced!
      *
      * @param id
@@ -1347,7 +1347,7 @@ public class BatchedItemOperations extends ItemValidator {
     /**
      * Verifies that the node at <code>nodePath</code> is checked-out; throws a
      * <code>VersionException</code> if that's not the case.
-     * <p/>
+     * <p>
      * A node is considered <i>checked-out</i> if it is versionable and
      * checked-out, or is non-versionable but its nearest versionable ancestor
      * is checked-out, or is non-versionable and there are no versionable
@@ -1429,7 +1429,7 @@ public class BatchedItemOperations extends ItemValidator {
     /**
      * Retrieves the state of the node at <code>nodePath</code> using the given
      * item state manager.
-     * <p/>
+     * <p>
      * Note that access rights are <b><i>not</i></b> enforced!
      *
      * @param srcStateMgr
@@ -1457,7 +1457,7 @@ public class BatchedItemOperations extends ItemValidator {
     /**
      * Retrieves the state of the item with the specified id using the given
      * item state manager.
-     * <p/>
+     * <p>
      * Note that access rights are <b><i>not</i></b> enforced!
      *
      * @param srcStateMgr
@@ -1485,11 +1485,11 @@ public class BatchedItemOperations extends ItemValidator {
     /**
      * Recursively removes the given node state including its properties and
      * child nodes.
-     * <p/>
+     * <p>
      * The removal of child nodes is subject to the following checks:
      * access rights, locking & versioning status. Referential integrity
      * (references) is checked on commit.
-     * <p/>
+     * <p>
      * Note that the child node entry refering to <code>targetState</code> is
      * <b><i>not</i></b> automatically removed from <code>targetState</code>'s
      * parent.

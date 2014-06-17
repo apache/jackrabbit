@@ -33,7 +33,7 @@ import javax.jcr.Property;
  * There's one <code>ItemManager</code> instance per <code>Session</code>
  * instance. It is the factory for <code>Node</code> and <code>Property</code>
  * instances.
- * <p/>
+ * <p>
  * The <code>ItemManager</code>'s responsibilities are:
  * <ul>
  * <li>providing access to <code>Item</code> instances by <code>ItemState</code>
@@ -47,7 +47,7 @@ import javax.jcr.Property;
  * <code>Session</code> instance.
  * <li>maintaining a cache of the item instances it created.
  * </ul>
- * <p/>
+ * <p>
  * If the parent <code>Session</code> is an <code>XASession</code>, there is
  * one <code>ItemManager</code> instance per started global transaction.
  */

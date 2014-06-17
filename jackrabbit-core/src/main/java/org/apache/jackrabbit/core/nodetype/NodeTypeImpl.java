@@ -60,7 +60,7 @@ public class NodeTypeImpl extends AbstractNodeType implements NodeType, NodeType
 
     /**
      * Package private constructor
-     * <p/>
+     * <p>
      * Creates a valid node type instance. We assume that the node type
      * definition is valid and all referenced node types (supertypes, required
      * node types etc.) do exist and are valid.

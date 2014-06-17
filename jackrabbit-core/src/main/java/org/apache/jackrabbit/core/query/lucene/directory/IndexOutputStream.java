@@ -64,7 +64,7 @@ public class IndexOutputStream extends OutputStream {
 
     /**
      * {@inheritDoc}
-     * <p/>
+     * <p>
      * Flushes the underlying index output.
      */
     public void flush() throws IOException {
@@ -73,7 +73,7 @@ public class IndexOutputStream extends OutputStream {
 
     /**
      * {@inheritDoc}
-     * <p/>
+     * <p>
      * Closes the underlying index output.
      */
     public void close() throws IOException {

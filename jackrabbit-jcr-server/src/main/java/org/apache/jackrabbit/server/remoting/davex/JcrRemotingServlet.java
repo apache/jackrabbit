@@ -78,12 +78,12 @@ import org.slf4j.LoggerFactory;
  * Upon RepositoryService.getItemInfos a JSON object is composed containing
  * the information for the requested node and its child items up to a
  * specified or configuration determined depth.
- * <p/>
+ * <p>
  * Batch read is triggered by adding a '.json' extension to the resource href.
  * Optionally the client may explicitly specify the desired batch read depth
  * by appending '.depth.json' extension. If no json extension is present the
  * GET request is processed by the base servlet.
- * <p/>
+ * <p>
  * The JSON writer applies the following rules:
  * 
  * <pre>

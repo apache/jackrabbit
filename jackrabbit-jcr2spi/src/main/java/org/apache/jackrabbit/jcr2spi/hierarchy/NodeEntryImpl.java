@@ -982,7 +982,7 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
     //-------------------------------------------------< HierarchyEntryImpl >---
     /**
      * @see HierarchyEntryImpl#doResolve()
-     * <p/>
+     * <p>
      * Returns a <code>NodeState</code>.
      */
     @Override

@@ -33,7 +33,7 @@ import java.util.NoSuchElementException;
  * the id's of the versions and returns them when iterating. please note, that
  * a version can be deleted while traversing this iterator and the 'nextVersion'
  * would produce a  ConcurrentModificationException.
- * <p/>
+ * <p>
  * If this iterator is initialized with a base version, it will only iterate
  * on the versions of a single line of decent from the given root version to the
  * base version.

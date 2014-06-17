@@ -27,7 +27,7 @@ import javax.sql.DataSource;
  * <code>DerbyFileSystem</code> is a JDBC-based <code>FileSystem</code>
  * implementation for Jackrabbit that persists file system entries in an
  * embedded Derby database.
- * <p/>
+ * <p>
  * It is configured through the following properties:
  * <ul>
  * <li><code>url</code>: the database url of the form
@@ -44,7 +44,7 @@ import javax.sql.DataSource;
  * set this to <code>false</code> when using a standalone database</li>
  * </ul>
  * See also {@link DbFileSystem}.
- * <p/>
+ * <p>
  * The following is a fragment from a sample configuration:
  * <pre>
  *   &lt;FileSystem class="org.apache.jackrabbit.core.fs.db.DerbyFileSystem"&gt;

@@ -84,7 +84,7 @@ public class JcrActiveLock extends AbstractActiveLock implements ActiveLock, Dav
      * UUID [Extension] ; The UUID production is the string representation of a
      * UUID, as defined in [ISO-11578]. Note that white space (LWS) is not allowed
      * between elements of this production.</cite>").
-     * <p/>
+     * <p>
      * In case of session-scoped JCR 2.0 locks, the token is never exposed even
      * if the current session is lock holder. In order to cope with DAV specific
      * requirements and the fulfill the requirement stated above, the node's

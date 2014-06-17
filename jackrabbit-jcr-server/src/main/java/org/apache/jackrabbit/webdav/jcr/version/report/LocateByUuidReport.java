@@ -40,7 +40,7 @@ import javax.jcr.RepositoryException;
 /**
  * <code>LocateByUuidReport</code> handles REPORT requests for the 'locate-by-uuid'
  * report.
- * <p/>
+ * <p>
  * The request body must be a 'dcr:locate-by-uuid' XML element:
  * <pre>
  * &lt;!ELEMENT locate-by-uuid ( href , prop? ) &gt;

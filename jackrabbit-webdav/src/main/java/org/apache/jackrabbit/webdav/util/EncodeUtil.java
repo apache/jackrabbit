@@ -45,7 +45,7 @@ public final class EncodeUtil {
      * The list of characters that are not encoded by the <code>escape()</code>
      * and <code>unescape()</code> METHODS. They contains the characters as
      * defined 'unreserved' in section 2.3 of the RFC 2396 'URI generic syntax':
-     * <p/>
+     * <p>
      * <pre>
      * unreserved  = alphanum | mark
      * mark        = "-" | "_" | "." | "!" | "~" | "*" | "'" | "(" | ")"

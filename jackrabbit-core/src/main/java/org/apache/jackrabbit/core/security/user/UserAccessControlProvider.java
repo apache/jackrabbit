@@ -64,7 +64,7 @@ import java.util.Set;
  * is used to protected the 'security workspace' containing the user and
  * group data. It applies special care to make sure that modifying user data
  * (e.g. password), group membership and impersonation is properly controlled.
- * <p/>
+ * <p>
  * This provider creates upon initialization the following 2 groups:
  * <ul>
  * <li>User administrator</li>

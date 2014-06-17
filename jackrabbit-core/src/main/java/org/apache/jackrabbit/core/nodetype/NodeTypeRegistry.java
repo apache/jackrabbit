@@ -143,7 +143,7 @@ public class NodeTypeRegistry implements NodeTypeEventListener {
      * Validates the <code>NodeTypeDef</code> and returns
      * an  <code>EffectiveNodeType</code> object representing the newly
      * registered node type.
-     * <p/>
+     * <p>
      * The validation includes the following checks:
      * <ul>
      * <li>Supertypes must exist and be registered</li>
@@ -208,7 +208,7 @@ public class NodeTypeRegistry implements NodeTypeEventListener {
      * Same as <code>{@link #registerNodeType(QNodeTypeDefinition)}</code> except
      * that a collection of <code>NodeTypeDef</code>s is registered instead of
      * just one.
-     * <p/>
+     * <p>
      * This method can be used to register a set of node types that have
      * dependencies on each other.
      *
@@ -261,7 +261,7 @@ public class NodeTypeRegistry implements NodeTypeEventListener {
     /**
      * Same as <code>{@link #unregisterNodeType(Name)}</code> except
      * that a set of node types is unregistered instead of just one.
-     * <p/>
+     * <p>
      * This method can be used to unregister a set of node types that depend on
      * each other.
      *
@@ -775,7 +775,7 @@ public class NodeTypeRegistry implements NodeTypeEventListener {
 
     /**
      * Loads the built-in node type definitions into the given <code>store</code>.
-     * <p/>
+     * <p>
      * This method may be overridden by extensions of this class; It must
      * only be called once and only from within the constructor though.
      *
@@ -812,7 +812,7 @@ public class NodeTypeRegistry implements NodeTypeEventListener {
 
     /**
      * Loads the custom node type definitions into the given <code>store</code>.
-     * <p/>
+     * <p>
      * This method may be overridden by extensions of this class; It must
      * only be called once and only from within the constructor though.
      *
@@ -900,10 +900,10 @@ public class NodeTypeRegistry implements NodeTypeEventListener {
     /**
      * Checks whether there is existing content that would conflict with the
      * given node type definition.
-     * <p/>
+     * <p>
      * This method is not implemented yet and always throws a
      * <code>RepositoryException</code>.
-     * <p/>
+     * <p>
      * TODO
      * <ol>
      * <li>apply deep locks on root nodes in every workspace or alternatively
@@ -916,7 +916,7 @@ public class NodeTypeRegistry implements NodeTypeEventListener {
      * <li>apply and persist changes to affected nodes (e.g. update
      * definition id's, etc.)
      * </ul>
-     * <p/>
+     * <p>
      * the above checks/actions are absolutely necessary in order to
      * guarantee integrity of repository content.
      *
@@ -956,10 +956,10 @@ public class NodeTypeRegistry implements NodeTypeEventListener {
     /**
      * Checks whether there is existing content that directly or indirectly
      * refers to the specified node type.
-     * <p/>
+     * <p>
      * This method is not implemented yet and always throws a
      * <code>RepositoryException</code>.
-     * <p/>
+     * <p>
      * TODO:
      * <ol>
      * <li>apply deep locks on root nodes in every workspace or alternatively
@@ -969,7 +969,7 @@ public class NodeTypeRegistry implements NodeTypeEventListener {
      * <li>remove the node type if it is not currently referenced, otherwise
      * throw exception
      * </ul>
-     * <p/>
+     * <p>
      * the above checks are absolutely necessary in order to guarantee
      * integrity of repository content.
      *
@@ -1248,7 +1248,7 @@ public class NodeTypeRegistry implements NodeTypeEventListener {
      * Validates and registers the specified collection of <code>NodeTypeDef</code>
      * objects. An <code>InvalidNodeTypeDefException</code> is thrown if the
      * validation of any of the contained <code>NodeTypeDef</code> objects fails.
-     * <p/>
+     * <p>
      * Note that in the case an exception is thrown no node type will be
      * eventually registered.
      *

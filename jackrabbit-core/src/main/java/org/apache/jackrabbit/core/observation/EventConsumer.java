@@ -43,7 +43,7 @@ import org.slf4j.LoggerFactory;
  * The <code>EventConsumer</code> class combines the {@link
  * javax.jcr.observation.EventListener} with the implementation of specified
  * filter for the listener: {@link EventFilter}.
- * <p/>
+ * <p>
  * Collections of {@link EventState} objects will be dispatched to {@link
  * #consumeEvents}.
  */
@@ -260,7 +260,7 @@ class EventConsumer {
     /**
      * Returns <code>true</code> if this <code>EventConsumer</code> is equal to
      * some other object, <code>false</code> otherwise.
-     * <p/>
+     * <p>
      * Two <code>EventConsumer</code>s are considered equal if they refer to the
      * same <code>Session</code> and the <code>EventListener</code>s they
      * reference are equal. Note that the <code>EventFilter</code> is ignored in

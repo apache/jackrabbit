@@ -109,7 +109,7 @@ public interface EffectiveNodeTypeCache extends Cloneable {
         /**
          * Creates a new key as a result of a subtract operation. i.e. removes all
          * node type names that from the other key.
-         * <p/>
+         * <p>
          * Please note that no exception is thrown if the other key has node type
          * names that are not contained in this key (i.e. {@link #contains(Key)}
          * returns <code>false</code>).

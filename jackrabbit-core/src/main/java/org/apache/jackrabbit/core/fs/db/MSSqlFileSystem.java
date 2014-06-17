@@ -22,7 +22,7 @@ import org.apache.jackrabbit.core.util.db.CheckSchemaOperation;
  * <code>MSSqlFileSystem</code> is a JDBC-based <code>FileSystem</code>
  * implementation for Jackrabbit that persists file system entries in an
  * MS SQL database.
- * <p/>
+ * <p>
  * It is configured through the following properties:
  * <ul>
  * <li><code>driver</code>: the FQN name of the JDBC driver class
@@ -37,7 +37,7 @@ import org.apache.jackrabbit.core.util.db.CheckSchemaOperation;
  * <li><code>tableSpace</code>: the tablespace to use</li>
  * </ul>
  * See also {@link DbFileSystem}.
- * <p/>
+ * <p>
  * The following is a fragment from a sample configuration:
  * <pre>
  *   &lt;FileSystem class="org.apache.jackrabbit.core.fs.db.MSSqlFileSystem"&gt;

@@ -297,7 +297,7 @@ abstract class AbstractItemResource extends AbstractResource implements
      * the locator of the specified destination resource indicates a different
      * workspace, {@link Workspace#copy(String, String, String)} is used to perform
      * the copy operation, {@link Workspace#copy(String, String)} otherwise.
-     * <p/>
+     * <p>
      * Note, that this implementation does not support shallow copy.
      *
      * @param destination

@@ -81,7 +81,7 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
      * Constant for the name of the configuration option {@code allow-unknown-principals}.
      * The option is a flag indicating whether access control entries with principals not known to the system
      * can be added to an ACL. the default is {@code false}.
-     * <p/>
+     * <p>
      * Please note that the current implementation does only check principal existence when adding a new access
      * control entry, but does not validate all ACEs when removing a principal. So even if this flag is {@code false},
      * it's possible to create an ACL with a unknown principal.

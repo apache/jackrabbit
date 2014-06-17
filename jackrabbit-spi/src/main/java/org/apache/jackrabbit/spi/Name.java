@@ -22,12 +22,12 @@ import java.io.Serializable;
  * A <code>Name</code> is a combination of a namespace URI and a local part.
  * Instances of this class are used to internally represent the names of JCR
  * content items and other objects within a content repository.
- * <p/>
+ * <p>
  * A <code>Name</code> is immutable once created.
- * <p/>
+ * <p>
  * The String representation of a <code>Name</code> object must be in the
  * format "<code>{namespaceURI}localPart</code>".
- * <p/>
+ * <p>
  * An implementation of the <code>Name</code> interface must implement the
  * {@link Object#equals(Object)} method such that two Name objects are equal if
  * both the namespace URI and the local part are equal.

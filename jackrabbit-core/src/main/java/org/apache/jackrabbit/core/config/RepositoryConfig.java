@@ -707,7 +707,7 @@ public class RepositoryConfig
     /**
      * Creates a new workspace configuration with the specified name and the
      * specified workspace <code>template</.
-     * <p/>
+     * <p>
      * This method creates a workspace configuration subdirectory,
      * copies the workspace configuration template into it, and finally
      * adds the created workspace configuration to the repository.
@@ -876,7 +876,7 @@ public class RepositoryConfig
      * method uses the provided workspace <code>template</code> to create the
      * repository config instead of the template that is present in the
      * repository configuration.
-     * <p/>
+     * <p>
      * This method creates a workspace configuration subdirectory,
      * copies the workspace configuration template into it, and finally
      * adds the created workspace configuration to the repository.

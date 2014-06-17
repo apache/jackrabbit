@@ -204,7 +204,7 @@ class HttpMultipartPost {
      * Returns the first value of the file items with the given <code>name</code>.
      * The byte to string converstion is done using either the contenttype of
      * the file items or the <code>formEncoding</code>.
-     * <p/>
+     * <p>
      * Please note that if the addressed parameter is an uploaded file rather
      * than a simple form entry, the name of the original file is returned    
      * instead of the content.
@@ -232,7 +232,7 @@ class HttpMultipartPost {
      * Returns an array of Strings with all values of the parameter addressed
      * by <code>name</code>. the byte to string conversion is done using either
      * the content type of the multipart body or the <code>formEncoding</code>.
-     * <p/>
+     * <p>
      * Please note that if the addressed parameter is an uploaded file rather
      * than a simple form entry, the name of the original file is returned
      * instead of the content.

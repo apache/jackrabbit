@@ -50,7 +50,7 @@ import java.io.Writer;
  * <code>BufferedStringValue</code> represents an appendable
  * serialized value that is either buffered in-memory or backed
  * by a temporary file if its size exceeds a certain limit.
- * <p/>
+ * <p>
  * <b>Important:</b> Note that in order to free resources
  * <code>{@link #dispose()}</code> should be called as soon as
  * <code>BufferedStringValue</code> instance is not used anymore.

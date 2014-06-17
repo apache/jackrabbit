@@ -37,12 +37,12 @@ import org.xml.sax.helpers.DefaultHandler;
  * data in System View XML or Document View XML. Processing of the XML is
  * handled by specialized <code>ContentHandler</code>s
  * (i.e. <code>SysViewImportHandler</code> and <code>DocViewImportHandler</code>).
- * <p/>
+ * <p>
  * The actual task of importing though is delegated to the implementation of
  * the <code>{@link Importer}</code> interface.
- * <p/>
+ * <p>
  * <b>Important Note:</b>
- * <p/>
+ * <p>
  * These SAX Event Handlers expect that Namespace URI's and local names are
  * reported in the <code>start/endElement</code> events and that
  * <code>start/endPrefixMapping</code> events are reported

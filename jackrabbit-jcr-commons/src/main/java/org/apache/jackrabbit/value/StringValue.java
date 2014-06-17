@@ -41,7 +41,7 @@ public class StringValue extends BaseValue {
 
     /**
      * Indicates whether some other object is "equal to" this one.
-     * <p/>
+     * <p>
      * The result is <code>true</code> if and only if the argument is not
      * <code>null</code> and is a <code>StringValue</code> object that
      * represents the same value as this object.

@@ -74,7 +74,7 @@ public class DavResourceFactoryImpl implements DavResourceFactory {
      * objects. Note, that in contrast to
      * {@link #createResource(DavResourceLocator, DavSession)} the locator may
      * point to a non-existing resource.
-     * <p/>
+     * <p>
      * If the request contains a {@link org.apache.jackrabbit.webdav.version.DeltaVServletRequest#getLabel()
      * Label header}, the resource is build from the indicated
      * {@link org.apache.jackrabbit.webdav.version.VersionResource version} instead.

@@ -30,9 +30,9 @@ import java.util.Collections;
  * <i>transient</i> files, i.e. temporary files that are automatically
  * removed once the associated <code>File</code> object is reclaimed by the
  * garbage collector.
- * <p/>
+ * <p>
  * File deletion is handled by a low-priority background thread.
- * <p/>
+ * <p>
  */
 public class TransientFileFactory {
 
@@ -126,14 +126,14 @@ public class TransientFileFactory {
 
     /**
      * Shuts this factory down removing all temp files and removes shutdown hook.
-     * <p/>
+     * <p>
      * <b>Warning!!!</b>
-     * <p/>
+     * <p>
      * This should be called by a web-application <b><i>IF</b></i> it is unloaded
      * <b><i>AND IF</i></b> jackrabbit-jcr-commons.jar had been loaded by
      * the webapp classloader. This must be called after all repositories had
      * been stopped, so use with great care!
-     * <p/>
+     * <p>
      * See http://issues.apache.org/jira/browse/JCR-1636 for details.
      */
     public static void shutdown() {

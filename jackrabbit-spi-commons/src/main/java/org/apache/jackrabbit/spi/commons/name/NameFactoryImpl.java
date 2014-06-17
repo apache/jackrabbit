@@ -132,7 +132,7 @@ public class NameFactoryImpl implements NameFactory {
         /**
          * Returns the string representation of this <code>Name</code> in the
          * following format:
-         * <p/>
+         * <p>
          * <code><b>{</b>namespaceURI<b>}</b>localName</code>
          *
          * @return the string representation of this <code>Name</code>.

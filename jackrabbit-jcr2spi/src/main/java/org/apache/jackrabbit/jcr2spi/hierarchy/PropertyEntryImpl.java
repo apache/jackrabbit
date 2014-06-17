@@ -61,7 +61,7 @@ public class PropertyEntryImpl extends HierarchyEntryImpl implements PropertyEnt
     //------------------------------------------------------< HierarchyEntryImpl >---
     /**
      * @see HierarchyEntryImpl#doResolve()
-     * <p/>
+     * <p>
      * Returns a <code>PropertyState</code>.
      */
     @Override

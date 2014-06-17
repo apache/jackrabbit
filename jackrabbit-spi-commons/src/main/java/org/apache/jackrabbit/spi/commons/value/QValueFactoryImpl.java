@@ -130,7 +130,7 @@ public class QValueFactoryImpl extends AbstractQValueFactory {
          * <code>InputStream</code>. The contents of the stream is spooled
          * to a temporary file or to a byte buffer if its size is smaller than
          * {@link #MAX_BUFFER_SIZE}.
-         * <p/>
+         * <p>
          * The new instance represents a <i>temporary</i> value whose dynamically
          * allocated resources will be freed explicitly on {@link #discard()}.
          *
@@ -147,7 +147,7 @@ public class QValueFactoryImpl extends AbstractQValueFactory {
          * <code>InputStream</code>. The contents of the stream is spooled
          * to a temporary file or to a byte buffer if its size is smaller than
          * {@link #MAX_BUFFER_SIZE}.
-         * <p/>
+         * <p>
          * The <code>temp</code> parameter governs whether dynamically allocated
          * resources will be freed explicitly on {@link #discard()}. Note that any
          * dynamically allocated resources (temp file/buffer) will be freed

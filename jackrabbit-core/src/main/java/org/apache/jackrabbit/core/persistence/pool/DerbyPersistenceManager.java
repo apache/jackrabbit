@@ -27,7 +27,7 @@ import javax.sql.DataSource;
 
 /**
  * Extends the {@link BundleDbPersistenceManager} by derby specific code.
- * <p/>
+ * <p>
  * Configuration:<br>
  * <ul>
  * <li>&lt;param name="{@link #setBundleCacheSize(String) bundleCacheSize}" value="8"/>
@@ -81,27 +81,27 @@ public class DerbyPersistenceManager extends BundleDbPersistenceManager {
      * pages of user data (or nine pages of total disk use, one is used for
      * overhead) have been allocated. Then it will grow by eight pages at a time
      * if possible.
-     * <p/>
+     * <p>
      * A Derby table or index can be created with a number of pages already
      * pre-allocated. To do so, specify the property prior to the CREATE TABLE
      * or CREATE INDEX statement.
-     * <p/>
+     * <p>
      * Define the number of user pages the table or index is to be created with.
      * The purpose of this property is to preallocate a table or index of
      * reasonable size if the user expects that a large amount of data will be
      * inserted into the table or index. A table or index that has the
      * pre-allocated pages will enjoy a small performance improvement over a
      * table or index that has no pre-allocated pages when the data are loaded.
-     * <p/>
+     * <p>
      * The total desired size of the table or index should be
-     * <p/>
+     * <p>
      * <strong>(1+derby.storage.initialPages) * derby.storage.pageSize bytes.</strong>
-     * <p/>
+     * <p>
      * When you create a table or an index after setting this property, Derby
      * attempts to preallocate the requested number of user pages. However, the
      * operations do not fail even if they are unable to preallocate the
      * requested number of pages, as long as they allocate at least one page.
-     * <p/>
+     * <p>
      * Default is <code>16</code>
      *
      * @param derbyStorageInitialPages the number of initial pages
@@ -129,7 +129,7 @@ public class DerbyPersistenceManager extends BundleDbPersistenceManager {
      * space at the time of insertion minimizes row overflow due to updates,
      * but it can result in wasted space. Set the property prior to issuing the
      * CREATE TABLE statement.
-     * <p/>
+     * <p>
      * Default is <code>256</code>
      *
      * @param derbyStorageMinimumRecordSize the minimum record size
@@ -162,10 +162,10 @@ public class DerbyPersistenceManager extends BundleDbPersistenceManager {
      * application as well). For example, using the default page size of 4K, a
      * page cache size of 2000 pages will require at least 8 MB of memory (and
      * probably more, given the overhead).
-     * <p/>
+     * <p>
      * The minimum value is 40 pages. If you specify a lower value, Derby uses
      * the default value.
-     * <p/>
+     * <p>
      * Default is <code>1024</code> (which gives about 16mb memory usage given
      * the default of 16384 as page size).
      *
@@ -194,10 +194,10 @@ public class DerbyPersistenceManager extends BundleDbPersistenceManager {
      * threshold, no new rows are allowed on the page. This reserved space is
      * used only for rows that increase in size when updated, not for new
      * inserts. Set this property prior to issuing the CREATE TABLE statement.
-     * <p/>
+     * <p>
      * Regardless of the value of derby.storage.pageReservedSpace, an empty page
      * always accepts at least one row.
-     * <p/>
+     * <p>
      * Default is <code>20%</code>
      *
      * @param derbyStoragePageReservedSpace the page reserved space
@@ -221,7 +221,7 @@ public class DerbyPersistenceManager extends BundleDbPersistenceManager {
      * the following values: 4096, 8192, 16384, or 32768. Set this property
      * prior to issuing the CREATE TABLE or CREATE INDEX statement. This value
      * will be used for the lifetime of the newly created conglomerates.
-     * <p/>
+     * <p>
      * Default is <code>16384</code>
      *
      * @param derbyStoragePageSize the storage page size

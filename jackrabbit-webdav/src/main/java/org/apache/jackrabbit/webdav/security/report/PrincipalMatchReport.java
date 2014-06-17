@@ -36,7 +36,7 @@ import org.w3c.dom.Element;
  * the request body must contain a DAV:self element, for the latter a
  * DAV:principal-property element which in turn specifies the property to
  * be examined.
- * <p/>
+ * <p>
  * The request body MUST be a DAV:principal-match XML element:
  * <pre>
  * &lt;!ELEMENT principal-match ((principal-property | self), prop?)&gt;

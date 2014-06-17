@@ -26,7 +26,7 @@ import org.apache.jackrabbit.core.util.db.OracleConnectionHelper;
  * <code>OracleFileSystem</code> is a JDBC-based <code>FileSystem</code>
  * implementation for Jackrabbit that persists file system entries in an
  * Oracle database.
- * <p/>
+ * <p>
  * It is configured through the following properties:
  * <ul>
  * <li><code>driver</code>: the FQN name of the JDBC driver class
@@ -42,7 +42,7 @@ import org.apache.jackrabbit.core.util.db.OracleConnectionHelper;
  * <li><code>indexTablespace</code>: the tablespace to use for indexes</li>
  * </ul>
  * See also {@link DbFileSystem}.
- * <p/>
+ * <p>
  * The following is a fragment from a sample configuration:
  * <pre>
  *   &lt;FileSystem class="org.apache.jackrabbit.core.fs.db.OracleFileSystem"&gt;
@@ -170,7 +170,7 @@ public class OracleFileSystem extends DbFileSystem {
     
     /**
      * Builds the SQL statements
-     * <p/>
+     * <p>
      * Since Oracle treats emtpy strings and BLOBs as null values the SQL
      * statements had to be adapated accordingly. The following changes were
      * necessary:

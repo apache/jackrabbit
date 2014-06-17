@@ -51,7 +51,7 @@ import java.sql.Statement;
  * database using a simple custom serialization format and a
  * very basic non-normalized database schema (in essence tables with one 'key'
  * and one 'data' column).
- * <p/>
+ * <p>
  * It is configured through the following properties:
  * <ul>
  * <li><code>driver</code>: the FQN name of the JDBC driver class
@@ -69,7 +69,7 @@ import java.sql.Statement;
  * if <code>false</code> BLOBs are stored in the database</li>
  * </ul>
  * See also {@link SimpleDbPersistenceManager}.
- * <p/>
+ * <p>
  * The following is a fragment from a sample configuration:
  * <pre>
  *   &lt;PersistenceManager class="org.apache.jackrabbit.core.persistence.db.OraclePersistenceManager"&gt;
@@ -140,7 +140,7 @@ public class OraclePersistenceManager extends SimpleDbPersistenceManager {
     //---------------------------------< SimpleDbPersistenceManager overrides >
     /**
      * {@inheritDoc}
-     * <p/>
+     * <p>
      * Retrieve the <code>oracle.sql.BLOB</code> class via reflection, and
      * initialize the values for the <code>DURATION_SESSION</code> and
      * <code>MODE_READWRITE</code> constants defined there.
@@ -290,7 +290,7 @@ public class OraclePersistenceManager extends SimpleDbPersistenceManager {
 
     /**
      * {@inheritDoc}
-     * <p/>
+     * <p>
      * Overridden in order to support multiple oracle schemas. Note that
      * schema names in Oracle correspond to the username of the connection.
      * See http://issues.apache.org/jira/browse/JCR-582

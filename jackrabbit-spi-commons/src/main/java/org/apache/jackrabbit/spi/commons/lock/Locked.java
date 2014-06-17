@@ -39,7 +39,7 @@ import javax.jcr.lock.LockException;
  * ensuring that the modification will never fail with an {@link
  * javax.jcr.InvalidItemStateException}. This utility can be used with any
  * JCR Repository, not just Jackrabbit.
- * <p/>
+ * <p>
  * The following example shows how this utility can be used to implement
  * a persistent counter:
  * <pre>

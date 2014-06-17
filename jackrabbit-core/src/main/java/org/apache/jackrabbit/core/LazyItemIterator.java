@@ -39,7 +39,7 @@ import org.slf4j.LoggerFactory;
 /**
  * <code>LazyItemIterator</code> is an id-based iterator that instantiates
  * the <code>Item</code>s only when they are requested.
- * <p/>
+ * <p>
  * <strong>Important:</strong> <code>Item</code>s that appear to be nonexistent
  * for some reason (e.g. because of insufficient access rights or because they
  * have been removed since the iterator has been retrieved) are silently
@@ -106,7 +106,7 @@ public class LazyItemIterator implements NodeIterator, PropertyIterator {
 
     /**
      * Prefetches next item.
-     * <p/>
+     * <p>
      * {@link #next} is set to the next available item in this iterator or to
      * <code>null</code> in case there are no more items.
      */
@@ -184,7 +184,7 @@ public class LazyItemIterator implements NodeIterator, PropertyIterator {
 
     /**
      * {@inheritDoc}
-     * <p/>
+     * <p>
      * Note that the size of the iterator as reported by {@link #getSize()}
      * might appear to be shrinking while iterating because items that for
      * some reason cannot be retrieved through this iterator are silently

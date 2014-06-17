@@ -50,7 +50,7 @@ class XALockImpl extends LockImpl {
 
     /**
      * {@inheritDoc}
-     * <p/>
+     * <p>
      * Refresh lock information if XA environment has changed.
      */
     @Override

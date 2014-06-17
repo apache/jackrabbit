@@ -43,7 +43,7 @@ package org.apache.jackrabbit.spi;
  *   <code>ItemId</code>.
  *   </td></tr>
  * </table>
- * <p/>
+ * <p>
  * Two <code>ItemId</code>s should be considered equal if both the unique part
  * and the path part are equal AND if they denote the same
  * {@link #denotesNode() type} of <code>ItemId</code>.

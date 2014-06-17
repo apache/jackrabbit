@@ -164,7 +164,7 @@ public class PropertyDefTest extends AbstractJCRTest {
     /**
      * This test checks if item definitions with mandatory constraints are
      * respected.
-     * <p/>
+     * <p>
      * If the default workspace does not contain a node with a node type
      * definition that specifies a mandatory property a {@link
      * org.apache.jackrabbit.test.NotExecutableException} is thrown.

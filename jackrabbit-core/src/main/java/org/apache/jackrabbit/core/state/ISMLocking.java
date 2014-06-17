@@ -21,7 +21,7 @@ import org.apache.jackrabbit.core.id.ItemId;
 /**
  * <code>ISMLocking</code> defines an interface for a locking strategy of an
  * {@link ItemStateManager}.
- * <p/>
+ * <p>
  * An implementation of <code>ISMLocking</code> must meet the following
  * requirements:
  * <ul>
