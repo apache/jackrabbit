@@ -523,20 +523,20 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager
      * <code>NodeTypeDefinition</code> objects. This method is used to register
      * or update a set of node types with mutual dependencies. Returns an
      * iterator over the resulting <code>NodeType</code> objects.
-     * <p/>
+     * <p>
      * The effect of the method is "all or nothing"; if an error occurs, no node
      * types are registered or updated.
-     * <p/>
+     * <p>
      * Throws an <code>InvalidNodeTypeDefinitionException</code> if a
      * <code>NodeTypeDefinition</code> within the <code>Collection</code> is
      * invalid or if the <code>Collection</code> contains an object of a type
      * other than <code>NodeTypeDefinition</code>.
-     * <p/>
+     * <p>
      * Throws a <code>NodeTypeExistsException</code> if <code>allowUpdate</code>
      * is <code>false</code> and a <code>NodeTypeDefinition</code> within the
      * <code>Collection</code> specifies a node type name that is already
      * registered.
-     * <p/>
+     * <p>
      * Throws an <code>UnsupportedRepositoryOperationException</code> if this
      * implementation does not support node type registration.
      *
@@ -605,9 +605,9 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager
 
     /**
      * Unregisters the specified set of node types. Used to unregister a set of node types with mutual dependencies.
-     * <p/>
+     * <p>
      * Throws a <code>NoSuchNodeTypeException</code> if one of the names listed is not a registered node type.
-     * <p/>
+     * <p>
      * Throws an <code>UnsupportedRepositoryOperationException</code>
      * if this implementation does not support node type registration.
      *

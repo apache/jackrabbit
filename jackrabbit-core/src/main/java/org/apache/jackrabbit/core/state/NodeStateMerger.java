@@ -33,7 +33,7 @@ import java.util.Set;
 /**
  * Internal utility class used for merging concurrent changes that occurred
  * on different <code>NodeState</code> instances representing the same node.
- * <p/>
+ * <p>
  * See http://issues.apache.org/jira/browse/JCR-584.
  */
 class NodeStateMerger {
@@ -42,7 +42,7 @@ class NodeStateMerger {
      * Tries to silently merge the given <code>state</code> with its
      * externally (e.g. through another session) modified overlayed state
      * in order to avoid an <code>InvalidItemStateException</code>.
-     * <p/>
+     * <p>
      * See http://issues.apache.org/jira/browse/JCR-584.
      * See also http://issues.apache.org/jira/browse/JCR-3290.
      *

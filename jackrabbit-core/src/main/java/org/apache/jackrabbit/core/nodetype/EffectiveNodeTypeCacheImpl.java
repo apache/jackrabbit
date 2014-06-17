@@ -193,22 +193,22 @@ public class EffectiveNodeTypeCacheImpl implements EffectiveNodeTypeCache {
      * aggregate (e.g. an aggregation of multiple complex node types with deep
      * inheritance trees is more costly to build/validate than an aggregation
      * of two very simple node types with just one property definition each).
-     * <p/>
+     * <p>
      * A very simple (and not very accurate) approximation of the weight would
      * be the number of explicitly aggregated node types (ignoring inheritance
      * and complexity of each involved node type). A better approximation would
      * be the number of <b>all</b>, explicitly and implicitly (note that
      * inheritance is also an aggregation) aggregated node types.
-     * <p/>
+     * <p>
      * The more accurate the weight definition, the more efficient is the
      * the building of new aggregates.
-     * <p/>
+     * <p>
      * It is important to note that the weight is not part of the key value,
      * i.e. it is not considered by the <code>hashCode()</code> and
      * <code>equals(Object)</code> methods. It does however affect the order
      * of <code>WeightedKey</code> instances. See
      * <code>{@link #compareTo(Object)}</code> for more information.
-     * <p/>
+     * <p>
      * Let's assume we have an aggregation of node types named "b", "a" and "c".
      * Its key would be "[a, b, c]" and the weight 3 (using the simple
      * approximation).

@@ -23,7 +23,7 @@ import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
 
 /**
  * Defines a location step for querying the path of a node.
- * <p/>
+ * <p>
  * <code>
  * /foo  -> descendants = false, nameTest = foo<br>
  * //foo -> descendants = true, nameTest = foo<br>

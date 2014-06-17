@@ -20,7 +20,7 @@ import org.apache.jackrabbit.core.persistence.PMContext;
 
 /**
  * Extends the {@link BundleDbPersistenceManager} by H2 specific code.
- * <p/>
+ * <p>
  * Configuration:
  * <pre>
  * &lt;PersistenceManager class="org.apache.jackrabbit.core.persistence.pool.H2PersistenceManager">

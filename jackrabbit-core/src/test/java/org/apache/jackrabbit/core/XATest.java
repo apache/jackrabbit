@@ -668,16 +668,16 @@ public class XATest extends AbstractJCRTest {
     /**
      * Checks if getReferences() reflects an added reference property that has
      * been saved but not yet committed.
-     * <p/>
+     * <p>
      * Spec say:
-     * <p/>
+     * <p>
      * <i>Some level 2 implementations may only return properties that have been
      * saved (in a transactional setting this includes both those properties
      * that have been saved but not yet committed, as well as properties that
      * have been committed). Other level 2 implementations may additionally
      * return properties that have been added within the current Session but are
      * not yet saved.</i>
-     * <p/>
+     * <p>
      * Jackrabbit does not support the latter, but at least has to support the
      * first.
      */

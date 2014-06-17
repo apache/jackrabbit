@@ -46,16 +46,16 @@ import java.util.Set;
  * Each {@link Authorizable} accessible via {@link UserManager}
  * is respected and the provider serves {@link Authorizable#getPrincipal()
  * Principal}s retrieved from those <code>Authorizable</code> objects.
- * <p/>
+ * <p>
  * In addition this provider exposes the <i>everyone</i> principal, which has no
  * content (user/group) representation.
- * <p/>
+ * <p>
  * Unless explicitly configured (see {@link #NEGATIVE_ENTRY_KEY negative entry
  * option} this implementation of the <code>PrincipalProvider</code> interface
  * caches both positive and negative (null) results of the {@link #providePrincipal}
  * method. The cache is kept up to date by observation listening to creation
  * and removal of users and groups.
- * <p/>
+ * <p>
  * Membership cache:<br>
  * In addition to the caching provided by <code>AbstractPrincipalProvider</code>
  * this implementation keeps an extra membership cache, which is notified in
@@ -113,7 +113,7 @@ public class DefaultPrincipalProvider extends AbstractPrincipalProvider implemen
     //------------------------------------------< AbstractPrincipalProvider >---
     /**
      * {@inheritDoc}
-     * <p/>
+     * <p>
      * This implementation uses the user and node resolver to find the
      * appropriate nodes.
      */

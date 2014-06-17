@@ -36,7 +36,7 @@ public class NameValue extends BaseValue {
     /**
      * Returns a new <code>NameValue</code> initialized to the value
      * represented by the specified <code>String</code>.
-     * <p/>
+     * <p>
      * The specified <code>String</code> must be a valid JCR name.
      *
      * @param s the string to be parsed.
@@ -68,7 +68,7 @@ public class NameValue extends BaseValue {
 
     /**
      * Indicates whether some other object is "equal to" this one.
-     * <p/>
+     * <p>
      * The result is <code>true</code> if and only if the argument is not
      * <code>null</code> and is a <code>NameValue</code> object that
      * represents the same value as this object.

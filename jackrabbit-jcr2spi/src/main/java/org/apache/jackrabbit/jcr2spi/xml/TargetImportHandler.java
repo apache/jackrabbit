@@ -109,7 +109,7 @@ abstract class TargetImportHandler extends DefaultHandler {
     /**
      * <code>AppendableValue</code> represents a serialized value that is
      * appendable.
-     * <p/>
+     * <p>
      * <b>Important:</b> Note that in order to free resources
      * <code>{@link #dispose()}</code> should be called as soon as an
      * <code>AppendableValue</code> object is not used anymore.
@@ -188,7 +188,7 @@ abstract class TargetImportHandler extends DefaultHandler {
      * <code>BufferedStringValue</code> represents an appendable
      * serialized value that is either buffered in-memory or backed
      * by a temporary file if its size exceeds a certain limit.
-     * <p/>
+     * <p>
      * <b>Important:</b> Note that in order to free resources
      * <code>{@link #dispose()}</code> should be called as soon as
      * <code>BufferedStringValue</code> instance is not used anymore.

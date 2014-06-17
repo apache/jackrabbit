@@ -1015,14 +1015,14 @@ public interface RepositoryService {
      * events that go through the passed subscription and have been generated
      * after this method call must be filtered using the passed
      * <code>filters</code>.
-     * <p/>
+     * <p>
      * An implementation is required to accept at least event filter instances
      * created by {@link RepositoryService#createEventFilter}. Optionally an
      * implementation may also support event filters instanciated by the client
      * itself. An implementation may require special deployment in that case,
      * e.g. to make the event filter implementation class available to the
      * repository server.
-     * <p/>
+     * <p>
      * <b>Note on thread-safety:</b> it is permissible to call this methods
      * while another thread is blocked in calling {@link
      * RepositoryService#getEvents(Subscription, long)} using the same
@@ -1047,11 +1047,11 @@ public interface RepositoryService {
     /**
      * Retrieves the events that occurred since the last call to this method for
      * the passed subscription.
-     * <p/>
+     * <p>
      * Note, that an SPI implementation may support observation even if the
      * corresponding {@link javax.jcr.Repository#OPTION_OBSERVATION_SUPPORTED
      * repository descriptor} does return 'false'.
-     * <p/>
+     * <p>
      * An implementation should un-block a calling thread and let it return if
      * the associated subscription is disposed by another thread.
      *
@@ -1093,7 +1093,7 @@ public interface RepositoryService {
 
     /**
      * Indicates that the passed subscription is no longer needed.
-     * <p/>
+     * <p>
      * <b>Note on thread-safety:</b> it is permissible to call this methods
      * while another thread is blocked in calling {@link
      * RepositoryService#getEvents(Subscription, long)} using the same

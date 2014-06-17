@@ -22,7 +22,7 @@ import org.apache.jackrabbit.core.id.NodeId;
 /**
  * <code>ChildNodeEntry</code> specifies the name, index (in the case of
  * same-name siblings) and the UUID of a child node entry.
- * <p/>
+ * <p>
  * <code>ChildNodeEntry</code> instances are immutable.
  */
 public final class ChildNodeEntry {

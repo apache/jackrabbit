@@ -39,7 +39,7 @@ public interface NodeStateListener extends ItemStateListener {
     /**
      * Called when a node has been modified, typically as a result of removal
      * or addition of a child node.
-     * <p/>
+     * <p>
      * Please note, that this method is not called if
      * {@link #stateModified(ItemState)} was called.
      *

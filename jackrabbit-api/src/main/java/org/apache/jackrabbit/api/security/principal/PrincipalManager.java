@@ -24,14 +24,14 @@ import java.security.acl.Group;
  * all principals known to the repository. Each principal manager is bound to
  * a session and is restricted by the respective access control. The principal
  * manager in addition provides basic search facilities.
- * <p/>
+ * <p>
  * A <strong>{@link Principal}</strong> is an object used to connect
  * to any kind of security mechanism. Example for this are the
  * {@link javax.security.auth.spi.LoginModule login modules} that use principals
  * to process the login procedure. <br/>
  * A principal can be a member of a <strong>{@link Group}</strong>. A
  * group is a principal itself and can therefore be a member of a group again.
- * <p/>
+ * <p>
  * Please note the following security considerations that need to be respected
  * when implementing the PrincipalManager: All principals returned by this
  * manager as well as {@link Group#members()} must respect access restrictions
@@ -136,7 +136,7 @@ public interface PrincipalManager {
     /**
      * Returns an iterator over all group principals for which the given
      * principal is either direct or indirect member of.
-     * <p/>
+     * <p>
      * Example:<br>
      * If Principal P is member of Group A, and Group A is member of
      * Group B, this method will return Principal A and Principal B.

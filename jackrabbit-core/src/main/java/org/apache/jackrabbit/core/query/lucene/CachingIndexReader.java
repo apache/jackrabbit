@@ -46,7 +46,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Implements an <code>IndexReader</code> that maintains caches to resolve
  * {@link #getParent(int, BitSet)} calls efficiently.
- * <p/>
+ * <p>
  */
 class CachingIndexReader extends FilterIndexReader {
 

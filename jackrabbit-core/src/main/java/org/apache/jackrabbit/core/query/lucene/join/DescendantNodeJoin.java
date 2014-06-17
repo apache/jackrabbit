@@ -88,7 +88,7 @@ public class DescendantNodeJoin extends AbstractCondition {
 
     /**
      * {@inheritDoc}
-     * <p/>
+     * <p>
      * The outer query hits loop contains the descendant nodes.
      */
     public ScoreNode[][] getMatchingScoreNodes(ScoreNode descendant)

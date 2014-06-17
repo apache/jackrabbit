@@ -38,7 +38,7 @@ public class URIValue extends BaseValue {
     /**
      * Returns a new <code>URIValue</code> initialized to the value
      * represented by the specified <code>String</code>.
-     * <p/>
+     * <p>
      * The specified <code>String</code> must be a valid URI.
      *
      * @param s the string to be parsed.
@@ -72,7 +72,7 @@ public class URIValue extends BaseValue {
 
     /**
      * Indicates whether some other object is "equal to" this one.
-     * <p/>
+     * <p>
      * The result is <code>true</code> if and only if the argument is not
      * <code>null</code> and is a <code>URIValue</code> object that
      * represents the same value as this object.

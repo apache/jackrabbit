@@ -185,7 +185,7 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
 
     /**
      * {@inheritDoc}
-     * <p/>
+     * <p>
      * Overridden method tries to find a mapping for the intermediate item
      * <code>state</code> and add its path elements to the builder currently
      * being used. If no mapping is found, the item is cached instead after
@@ -227,7 +227,7 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
 
     /**
      * {@inheritDoc}
-     * <p/>
+     * <p>
      * Overridden method simply checks whether we have an item matching the id
      * and returns its path, otherwise calls base implementation.
      */
@@ -414,7 +414,7 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
 
     /**
      * {@inheritDoc}
-     * <p/>
+     * <p>
      * Iterate over all cached children of this state and verify each
      * child's position.
      */

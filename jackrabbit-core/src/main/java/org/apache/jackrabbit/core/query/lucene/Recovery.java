@@ -63,7 +63,7 @@ class Recovery {
     /**
      * Runs a recovery on <code>index</code> if <code>redoLog</code> contains
      * log entries.
-     * <p/>
+     * <p>
      * If recovery succeeds the <code>index</code> is flushed and the redo log
      * is cleared. That is, the <code>index</code> is stable.<br/>
      * If recovery fails an IOException is thrown, and the redo log will not

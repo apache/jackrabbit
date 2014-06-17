@@ -68,7 +68,7 @@ import org.slf4j.LoggerFactory;
  * imported content using {@link javax.jcr.Session#save()}. Omitting the
  * save call will lead to transient, semi-validated user content and eventually
  * to inconsistencies.
- * <p/>
+ * <p>
  * Note the following restrictions:
  * <ul>
  * <li>The importer will only be initialized if the user manager is an instance

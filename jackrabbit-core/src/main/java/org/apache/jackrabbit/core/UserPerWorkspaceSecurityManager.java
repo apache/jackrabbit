@@ -52,7 +52,7 @@ import java.util.Set;
  * "security-workspace" that provides user information. Consequently, the
  * UserManager used to retrieve and manipulate user content is always
  * bound to the <code>Session</code> passed to {@link #getUserManager(Session)}.
- * <p/> In addition the default (user-based) principal provider created by
+ * <p> In addition the default (user-based) principal provider created by
  * {@link org.apache.jackrabbit.core.DefaultSecurityManager}
  * cannot be used to retrieve principals. Instead this implementation keeps
  * a distinct pp-registry for each workspace.

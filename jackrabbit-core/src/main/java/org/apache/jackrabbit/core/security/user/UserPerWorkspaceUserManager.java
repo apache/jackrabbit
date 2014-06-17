@@ -29,7 +29,7 @@ import java.util.Properties;
 /**
  * Derived UserManager implementation that allows to switch between autosaving
  * and transient change mode.
- * <p/>
+ * <p>
  * NOTE: This requires that the Session passed to the user manager upon creation
  * is identical to the Session passed to
  * {@link org.apache.jackrabbit.core.security.JackrabbitSecurityManager#getUserManager(Session)}.

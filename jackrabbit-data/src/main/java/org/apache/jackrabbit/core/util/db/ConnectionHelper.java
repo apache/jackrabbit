@@ -39,7 +39,7 @@ import org.slf4j.LoggerFactory;
  * or within the context of a JDBC transaction; the so-called <i>batch mode</i> (use the {@link #startBatch()}
  * and {@link #endBatch(boolean)} methods for this).
  *
- * <p/>
+ * <p>
  *
  * This class contains logic to retry execution of SQL statements. If this helper is <i>not</i> in batch mode
  * and if a statement fails due to an {@code SQLException}, then it is retried. If the {@code block} argument
@@ -53,12 +53,12 @@ import org.slf4j.LoggerFactory;
  * <li>{@link #exec(String, Object[], boolean, int)}</li>
  * </ul>
  *
- * <p/>
+ * <p>
  *
  * This class is not thread-safe and if it is to be used by multiple threads then the clients must make sure
  * that access to this class is properly synchronized.
  *
- * <p/>
+ * <p>
  *
  * <strong>Implementation note</strong>: The {@code Connection} that is retrieved from the {@code DataSource}
  * in {@link #getConnection()} may be broken. This is so because if an internal {@code DataSource} is used,

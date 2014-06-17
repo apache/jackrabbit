@@ -671,7 +671,7 @@ public class SessionTest extends AbstractJCRTest {
     /**
      * Checks if {@link javax.jcr.Session#hasCapability(String, Object, Object[])}
      * works as specified.
-     * <p/>
+     * <p>
      *
      * @throws RepositoryException
      */

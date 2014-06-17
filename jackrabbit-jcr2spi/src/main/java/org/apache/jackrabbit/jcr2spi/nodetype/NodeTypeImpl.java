@@ -56,7 +56,7 @@ public class NodeTypeImpl extends AbstractNodeType implements NodeTypeDefinition
 
     /**
      * Package private constructor
-     * <p/>
+     * <p>
      * Creates a valid node type instance.
      * We assume that the node type definition is valid and all referenced
      * node types (supertypes, required node types etc.) do exist and are valid.
@@ -109,7 +109,7 @@ public class NodeTypeImpl extends AbstractNodeType implements NodeTypeDefinition
     /**
      * Tests if the value constraints defined in the property definition
      * <code>def</code> are satisfied by the the specified <code>values</code>.
-     * <p/>
+     * <p>
      * Note that the <i>protected</i> flag is not checked. Also note that no
      * type conversions are attempted if the type of the given values does not
      * match the required type as specified in the given definition.

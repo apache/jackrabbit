@@ -447,7 +447,7 @@ public abstract class DatabasePersistenceManager extends AbstractPersistenceMana
 
     /**
      * {@inheritDoc}
-     * <p/>
+     * <p>
      * This method uses shared <code>PreparedStatement</code>s which must
      * be executed strictly sequentially. Because this method synchronizes on
      * the persistence manager instance there is no need to synchronize on the
@@ -486,7 +486,7 @@ public abstract class DatabasePersistenceManager extends AbstractPersistenceMana
 
     /**
      * {@inheritDoc}
-     * <p/>
+     * <p>
      * This method uses shared <code>PreparedStatement</code>s which must
      * be executed strictly sequentially. Because this method synchronizes on
      * the persistence manager instance there is no need to synchronize on the
@@ -625,7 +625,7 @@ public abstract class DatabasePersistenceManager extends AbstractPersistenceMana
 
     /**
      * {@inheritDoc}
-     * <p/>
+     * <p>
      * This method uses shared <code>PreparedStatement</code>s which must
      * be executed strictly sequentially. Because this method synchronizes on
      * the persistence manager instance there is no need to synchronize on the
@@ -930,7 +930,7 @@ public abstract class DatabasePersistenceManager extends AbstractPersistenceMana
     /**
      * Resets the given <code>PreparedStatement</code> by clearing the parameters
      * and warnings contained.
-     * <p/>
+     * <p>
      * NOTE: This method MUST be called in a synchronized context as neither
      * this method nor the <code>PreparedStatement</code> instance on which it
      * operates are thread safe.

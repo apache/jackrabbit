@@ -22,12 +22,12 @@ import org.apache.jackrabbit.core.id.NodeId;
 
 /**
  * This interface defines the internal baseline.
- * <p/>
+ * <p>
  * A baseline is the state of a configuration at some point in time, recorded in
  * version storage. A baseline is similar to a normal version except that
  * instead of representing the state of a single node, it represents the state
  * of an entire partial subgraph.
- * <p/>
+ * <p>
  * The internal baseline is the version of the internal configuration.
  */
 public interface InternalBaseline extends InternalVersion {

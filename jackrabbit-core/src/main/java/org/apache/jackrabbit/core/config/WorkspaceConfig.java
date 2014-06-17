@@ -29,7 +29,7 @@ import org.apache.jackrabbit.core.state.ISMLockingFactory;
 /**
  * Workspace configuration. This configuration class is used to create
  * configured workspace objects.
- * <p/>
+ * <p>
  * The contained configuration information are: the home directory and name of
  * the workspace, the file system, the persistence manager, the search index and
  * the item state manager locking configuration. The search index and the item

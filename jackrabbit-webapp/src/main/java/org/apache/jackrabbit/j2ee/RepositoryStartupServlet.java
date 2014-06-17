@@ -64,7 +64,7 @@ import javax.servlet.http.HttpServletResponse;
  * to the JNDI environment and optional to the RMI registry.
  * <p id="registerAlgo">
  * <b>Registration with RMI</b>
- * <p/>
+ * <p>
  * Upon successfull creation of the repository in the {@link #init()} method,
  * the repository is registered with an RMI registry if the web application is
  * so configured. To register with RMI, the following web application
@@ -75,13 +75,13 @@ import javax.servlet.http.HttpServletResponse;
  * repository is to be bound in the registry, and <code>rmi-uri</code>
  * designating an RMI URI complete with host, optional port and name to which
  * the object is bound.
- * <p/>
+ * <p>
  * If the <code>rmi-uri</code> parameter is configured with a non-empty value,
  * the <code>rmi-port</code> and <code>rmi-host</code> parameters are ignored.
  * The <code>repository-name</code> parameter is only considered if a non-empty
  * <code>rmi-uri</code> parameter is configured if the latter does not contain
  * a name to which to bind the repository.
- * <p/>
+ * <p>
  * This is the algorithm used to find out the host, port and name for RMI
  * registration:
  * <ol>
@@ -104,7 +104,7 @@ import javax.servlet.http.HttpServletResponse;
  * zero or a negative value, the default port for the RMI registry
  * (<code>1099</code>) is used.
  * </ol>
- * <p/>
+ * <p>
  * After finding the host and port of the registry, the RMI registry itself
  * is acquired. It is assumed, that host and port primarily designate an RMI
  * registry, which should be active on the local host but has not been started
@@ -114,11 +114,11 @@ import javax.servlet.http.HttpServletResponse;
  * method is called to get a remote instance of the registry. Note, that
  * <code>getRegistry</code> does not create an actual registry on the given
  * host/port nor does it check, whether an RMI registry is active.
- * <p/>
+ * <p>
  * When the registry has been retrieved, either by creation or by just creating
  * a remote instance, the repository is bound to the configured name in the
  * registry.
- * <p/>
+ * <p>
  * Possible causes for registration failures include:
  * <ul>
  * <li>The web application is not configured to register with an RMI registry at
@@ -131,13 +131,13 @@ import javax.servlet.http.HttpServletResponse;
  * <li>An object may already be bound to the same name as is configured to be
  * used for the repository.
  * </ul>
- * <p/>
+ * <p>
  * <b>Note:</b> if a <code>bootstrap-config</code> init parameter is specified the
  * servlet tries to read the respective resource, either as context resource or
  * as file. The properties specified in this file override the init params
  * specified in the <code>web.xml</code>.
- * <p/>
- * <p/>
+ * <p>
+ * <p>
  * <b>Setup Wizard Functionality</b><br>
  * When using the first time, the configuraition can miss the relevant
  * repository parameters in the web.xml. if so, it must contain a
@@ -650,7 +650,7 @@ public class RepositoryStartupServlet extends AbstractRepositoryServlet {
      * Return the fully qualified name of the class providing the remote
      * repository. The class whose name is returned must implement the
      * {@link RemoteFactoryDelegater} interface.
-     * <p/>
+     * <p>
      * Subclasses may override this method for providing a name of a own
      * implementation.
      *
@@ -663,7 +663,7 @@ public class RepositoryStartupServlet extends AbstractRepositoryServlet {
     /**
      * Returns an <code>RMIServerSocketFactory</code> used to create the server
      * socket for a locally created RMI registry.
-     * <p/>
+     * <p>
      * This implementation returns a new instance of a simple
      * <code>RMIServerSocketFactory</code> which just creates instances of
      * the <code>java.net.ServerSocket</code> class bound to the given

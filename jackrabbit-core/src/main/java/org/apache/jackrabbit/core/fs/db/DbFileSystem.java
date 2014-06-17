@@ -25,7 +25,7 @@ import javax.sql.DataSource;
  * <code>DbFileSystem</code> is a generic JDBC-based <code>FileSystem</code>
  * implementation for Jackrabbit that persists file system entries in a
  * database table.
- * <p/>
+ * <p>
  * It is configured through the following properties:
  * <ul>
  * <li><code>driver</code>: the FQN name of the JDBC driver class</li>
@@ -43,7 +43,7 @@ import javax.sql.DataSource;
  * <code>java.sql.Statement.execute(String)</code> where every occurence of the
  * the string <code>"${schemaObjectPrefix}"</code> has been replaced with the
  * value of the property <code>schemaObjectPrefix</code>.
- * <p/>
+ * <p>
  * The following is a fragment from a sample configuration using MySQL:
  * <pre>
  *   &lt;FileSystem class="org.apache.jackrabbit.core.fs.db.DbFileSystem"&gt;

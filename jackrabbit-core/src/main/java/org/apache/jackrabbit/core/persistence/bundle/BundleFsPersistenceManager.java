@@ -47,7 +47,7 @@ import java.util.List;
 /**
  * This is a generic persistence manager that stores the {@link NodePropBundle}s
  * in a filesystem.
- * <p/>
+ * <p>
  * Configuration:<br>
  * <ul>
  * <li>&lt;param name="{@link #setBlobFSBlockSize(String) blobFSBlockSize}" value="0"/>

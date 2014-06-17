@@ -36,7 +36,7 @@ public interface NameFactory {
      * Returns a <code>Name</code> holding the value of the specified
      * string. The string must be in the format returned by the
      * <code>Name.toString()</code> method, i.e.
-     * <p/>
+     * <p>
      * <code><b>{</b>namespaceURI<b>}</b>localName</code>
      *
      * @param nameString a <code>String</code> containing the <code>Name</code>

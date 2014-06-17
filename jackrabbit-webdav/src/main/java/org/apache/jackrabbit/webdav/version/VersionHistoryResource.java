@@ -23,14 +23,14 @@ import org.apache.jackrabbit.webdav.property.ResourceType;
 /**
  * <code>VersionHistoryResource</code> represents a collection that has
  * all versions of a given version-controlled resource as members.
- * <p/>
+ * <p>
  * RFC 3253 defines the following required properties for a version history:
  * <ul>
  * <li>DAV:version-set</li>
  * <li>DAV:root-version</li>
  * <li>all DeltaV-compliant resource properties.</li>
  * </ul>
- * <p/>
+ * <p>
  * In addition a version history resource must support the following METHODS:
  * <ul>
  * <li>all DeltaV-compliant resource METHODS.</li>

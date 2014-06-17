@@ -41,7 +41,7 @@ import java.util.HashSet;
  * NOTE: The query is expected to be represented by the text contained in the
  * Xml element specifying the query language, thus the 'basicsearch' defined
  * by the Webdav Search Internet Draft is not supported by this implementation.
- * <p/>
+ * <p>
  *
  * Example of a valid 'searchrequest' body
  * <pre>

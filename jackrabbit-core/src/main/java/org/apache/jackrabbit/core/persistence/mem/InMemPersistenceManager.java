@@ -54,7 +54,7 @@ import java.util.Map;
  * <code>PersistenceManager</code> for Jackrabbit that keeps all data in memory
  * and that is capable of storing and loading its contents using a simple custom
  * binary serialization format (see {@link Serializer}).
- * <p/>
+ * <p>
  * It is configured through the following properties:
  * <ul>
  * <li><code>initialCapacity</code>: initial capacity of the hash map used to store the data</li>

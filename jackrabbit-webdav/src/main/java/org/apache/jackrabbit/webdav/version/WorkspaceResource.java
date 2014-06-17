@@ -22,7 +22,7 @@ import org.apache.jackrabbit.webdav.property.DavPropertyName;
  * A workspace resource is a collection whose members are related
  * version-controlled and non-version-controlled resources.
  *
- * <p/>
+ * <p>
  * RFC 3253 defines the following required live properties for an Workspace
  * resource.
  * <ul>
@@ -36,7 +36,7 @@ import org.apache.jackrabbit.webdav.property.DavPropertyName;
  * The workspace resource must support all methods defined for a DeltaV-compliant
  * collection. Since no additional methods are required for a workspace this
  * interface mainly acts as marker.
- * <p/>
+ * <p>
  * Please refer to <a href="http://www.ietf.org/rfc/rfc3253.txt">RFC 3253</a>
  * Section 6 for a complete description of this resource type.
  */
@@ -67,7 +67,7 @@ public interface WorkspaceResource extends DeltaVResource {
      * be used. This allows an activity-unaware client to update a workspace in
      * which activity tracking is required. The DAV:current-activity-set MAY be
      * restricted to identify at most one activity.
-     * <p/>
+     * <p>
      * The property is defined to have the following format:
      * <pre>
      * &lt;!ELEMENT current-activity-set (href*)&gt;
@@ -82,7 +82,7 @@ public interface WorkspaceResource extends DeltaVResource {
      * for a workspace resource: DAV:baseline-controlled-collection-set lists
      * all collections of this workspace, that are under baseline control. This
      * list may include the workspace itself.
-     * <p/>
+     * <p>
      * The property is defined to have the following format:
      * <pre>
      * &lt;!ELEMENT baseline-controlled-collection-set (href*)&gt;

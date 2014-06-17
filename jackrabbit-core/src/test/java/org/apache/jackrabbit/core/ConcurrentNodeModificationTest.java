@@ -28,7 +28,7 @@ import javax.jcr.Value;
 /**
  * Performs a test with n sessions concurrently performing non-conflicting
  * modifications on the <i>same</i> node.
- * <p/>
+ * <p>
  * See http://issues.apache.org/jira/browse/JCR-584.
  */
 public class ConcurrentNodeModificationTest extends AbstractJCRTest {

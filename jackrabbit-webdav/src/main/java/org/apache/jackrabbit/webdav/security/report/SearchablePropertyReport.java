@@ -40,9 +40,9 @@ import java.util.Set;
  * searched using the {@link PrincipalSearchReport DAV:principal-property-search REPORT}.
  * This report must be supported on all collections identified in the value of
  * a DAV:principal-collection-set property.
- * <p/>
+ * <p>
  * The request body MUST be an empty DAV:principal-search-property-set element.
- * <p/>
+ * <p>
  * The response body MUSt be a DAV:principal-search-property-set XML element
  * with the following structure:
  * <pre>

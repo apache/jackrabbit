@@ -50,7 +50,7 @@ import java.util.Collections;
  * The <code>EventStateCollection</code> class implements how {@link EventState}
  * objects are created based on the {@link org.apache.jackrabbit.core.state.ItemState}s
  * passed to the {@link #createEventStates} method.
- * <p/>
+ * <p>
  * The basic sequence of method calls is:
  * <ul>
  * <li>{@link #createEventStates} or {@link #addAll} to create or add event
@@ -101,7 +101,7 @@ public final class EventStateCollection {
 
     /**
      * Creates a new empty <code>EventStateCollection</code>.
-     * <p/>
+     * <p>
      * Because the item state manager in {@link #createEventStates} may represent
      * only a subset of the over all item state hierarchy, this constructor
      * also takes a path prefix argument. If non <code>null</code> all events

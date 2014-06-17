@@ -190,7 +190,7 @@ public class NodeImpl extends ItemImpl implements Node, JackrabbitNode {
     /**
      * Returns the id of the property at <code>relPath</code> or <code>null</code>
      * if no property exists at <code>relPath</code>.
-     * <p/>
+     * <p>
      * Note that access rights are not checked.
      *
      * @param relPath relative path of a (possible) property
@@ -208,7 +208,7 @@ public class NodeImpl extends ItemImpl implements Node, JackrabbitNode {
     /**
      * Returns the id of the node at <code>relPath</code> or <code>null</code>
      * if no node exists at <code>relPath</code>.
-     * <p/>
+     * <p>
      * Note that access rights are not checked.
      *
      * @param relPath relative path of a (possible) node
@@ -246,7 +246,7 @@ public class NodeImpl extends ItemImpl implements Node, JackrabbitNode {
     /**
      * Returns the id of the node at <code>p</code> or <code>null</code>
      * if no node exists at <code>p</code>.
-     * <p/>
+     * <p>
      * Note that access rights are not checked.
      *
      * @param p relative path of a (possible) node
@@ -281,7 +281,7 @@ public class NodeImpl extends ItemImpl implements Node, JackrabbitNode {
     /**
      * Returns the id of the property at <code>p</code> or <code>null</code>
      * if no node exists at <code>p</code>.
-     * <p/>
+     * <p>
      * Note that access rights are not checked.
      *
      * @param p relative path of a (possible) node
@@ -986,7 +986,7 @@ public class NodeImpl extends ItemImpl implements Node, JackrabbitNode {
 
     /**
      * Sets the internal value of a property without checking any constraints.
-     * <p/>
+     * <p>
      * Note that no type conversion is being performed, i.e. it's the caller's
      * responsibility to make sure that the type of the given value is compatible
      * with the specified property's definition.
@@ -1026,7 +1026,7 @@ public class NodeImpl extends ItemImpl implements Node, JackrabbitNode {
 
     /**
      * Sets the internal value of a property without checking any constraints.
-     * <p/>
+     * <p>
      * Note that no type conversion is being performed, i.e. it's the caller's
      * responsibility to make sure that the type of the given values is compatible
      * with the specified property's definition.
@@ -1051,7 +1051,7 @@ public class NodeImpl extends ItemImpl implements Node, JackrabbitNode {
 
     /**
      * Sets the internal value of a property without checking any constraints.
-     * <p/>
+     * <p>
      * Note that no type conversion is being performed, i.e. it's the caller's
      * responsibility to make sure that the type of the given values is compatible
      * with the specified property's definition.
@@ -2661,11 +2661,11 @@ public class NodeImpl extends ItemImpl implements Node, JackrabbitNode {
     /**
      * A special kind of <code>remove()</code> that removes this node and every
      * other node in the shared set of this node.
-     * <p/>
+     * <p>
      * This removal must be done atomically, i.e., if one of the nodes cannot be
      * removed, the function throws the exception <code>remove()</code> would
      * have thrown in that case, and none of the nodes are removed.
-     * <p/>
+     * <p>
      * If this node is not shared this method removes only this node.
      *
      * @throws VersionException
@@ -2691,12 +2691,12 @@ public class NodeImpl extends ItemImpl implements Node, JackrabbitNode {
     /**
      * A special kind of <code>remove()</code> that removes this node, but does
      * not remove any other node in the shared set of this node.
-     * <p/>
+     * <p>
      * All of the exceptions defined for <code>remove()</code> apply to this
      * function. In addition, a <code>RepositoryException</code> is thrown if
      * this node cannot be removed without removing another node in the shared
      * set of this node.
-     * <p/>
+     * <p>
      * If this node is not shared this method removes only this node.
      *
      * @throws VersionException

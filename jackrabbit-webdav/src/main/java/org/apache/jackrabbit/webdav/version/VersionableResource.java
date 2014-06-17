@@ -23,14 +23,14 @@ import org.apache.jackrabbit.webdav.DavException;
  * {@link DeltaVResource}, that allows to adding version-control support. By
  * calling {@link #addVersionControl()} resource is put under version control,
  * thus the versionable resource turns into a version controlled resource.
- * <p/>
+ * <p>
  * RFC 3253 defines the following required properties for a versionable resource:
  * <ul>
  * <li>{@link DeltaVConstants#WORKSPACE DAV:workspace} (workspace feature)</li>
  * <li>DAV:version-controlled-configuration (baseline feature)</li>
  * <li>all DeltaV-compliant resource properties</li>
  * </ul>
- * <p/>
+ * <p>
  * In addition a versionable resource must support the following METHODS:
  * <ul>
  * <li>VERSION-CONTROL</li>

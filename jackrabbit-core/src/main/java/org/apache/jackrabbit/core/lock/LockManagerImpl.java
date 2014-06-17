@@ -587,7 +587,7 @@ public class LockManagerImpl
 
     /**
      * {@inheritDoc}
-     * <p/>
+     * <p>
      * In order to prevent deadlocks from within the synchronous dispatching of
      * events, content modifications should not be made from within code
      * sections that hold monitors. (see #JCR-194)
@@ -679,7 +679,7 @@ public class LockManagerImpl
      * Check whether a lock info allows access to a session. May be overridden
      * by subclasses to allow access to nodes for sessions other than the
      * lock holder itself.
-     * <p/>
+     * <p>
      * Default implementation allows access to the lock holder only.
      *
      * @param info info to check
@@ -723,7 +723,7 @@ public class LockManagerImpl
      * Check whether a session is allowed to unlock a node. May be overridden
      * by subclasses to allow this to sessions other than the lock holder
      * itself.
-     * <p/>
+     * <p>
      * Default implementation allows unlocking to the lock holder only.
      *
      * @param info info to check
@@ -1283,7 +1283,7 @@ public class LockManagerImpl
 
         /**
          * {@inheritDoc}
-         * <p/>
+         * <p>
          * When the owning session is logging out, we have to perform some
          * operations depending on the lock type.
          * (1) If the lock was session-scoped, we unlock the node.

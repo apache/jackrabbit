@@ -66,7 +66,7 @@ public class BasicCredentialsProvider implements CredentialsProvider {
      * <li> if this field has a 'user:password' value, the respective
      *      simple credentials are generated.
      * </ul>
-     * <p/>
+     * <p>
      * If the request header is present but cannot be parsed a
      * <code>ServletException</code> is thrown.
      *

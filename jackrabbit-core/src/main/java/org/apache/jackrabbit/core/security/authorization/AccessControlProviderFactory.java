@@ -26,12 +26,12 @@ import javax.jcr.Session;
  * {@link AccessControlProvider}s for the various workspaces present in the
  * repository. If a provider is no longer used by the workspace, it is
  * {@link AccessControlProvider#close() closed}.
- * <p/>
+ * <p>
  * The factory does not need to cache the created {@link AccessControlProvider}s.
  * They are used during the entire lifetime of their workspace, and are cached
  * together with the respective workspace related objects by the repository
  * implementation.
- * <p/>
+ * <p>
  * The {@link AccessControlProvider}s are requested using a
  * {@link Session system Session}. The system sessions have a distinct access
  * control rules in order to prevent chicken-egg problems when setting up

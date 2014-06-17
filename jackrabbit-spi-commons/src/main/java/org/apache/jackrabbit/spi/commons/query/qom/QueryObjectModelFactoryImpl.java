@@ -91,7 +91,7 @@ public abstract class QueryObjectModelFactoryImpl implements QueryObjectModelFac
 
     /**
      * Creates a query with one selector.
-     * <p/>
+     * <p>
      * The specified selector will be the <i>default selector</i> of the query.
      *
      * @param selector   the selector; non-null
@@ -114,7 +114,7 @@ public abstract class QueryObjectModelFactoryImpl implements QueryObjectModelFac
 
     /**
      * Creates a query with one or more selectors.
-     * <p/>
+     * <p>
      * If <code>source</code> is a selector, that selector is the <i>default
      * selector</i> of the query.  Otherwise the query does not have a default
      * selector.
@@ -175,7 +175,7 @@ public abstract class QueryObjectModelFactoryImpl implements QueryObjectModelFac
 
     /**
      * Selects a subset of the nodes in the repository based on node type.
-     * <p/>
+     * <p>
      * The selector name is the node type name.
      *
      * @param nodeTypeName the name of the required node type; non-null
@@ -895,7 +895,7 @@ public abstract class QueryObjectModelFactoryImpl implements QueryObjectModelFac
     /**
      * Identifies a property in the default selector to include in the tabular
      * view of query results.
-     * <p/>
+     * <p>
      * The column name is the property name.
      *
      * @param propertyName the property name, or null to include a column for

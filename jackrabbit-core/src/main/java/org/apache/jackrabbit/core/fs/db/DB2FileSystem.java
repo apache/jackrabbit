@@ -20,7 +20,7 @@ package org.apache.jackrabbit.core.fs.db;
  * <code>DB2FileSystem</code> is a JDBC-based <code>FileSystem</code>
  * implementation for Jackrabbit that persists file system entries in a
  * DB2 database.
- * <p/>
+ * <p>
  * It is configured through the following properties:
  * <ul>
  * <li><code>driver</code>: the FQN name of the JDBC driver class
@@ -34,7 +34,7 @@ package org.apache.jackrabbit.core.fs.db;
  * <li><code>schemaObjectPrefix</code>: prefix to be prepended to schema objects</li>
  * </ul>
  * See also {@link DbFileSystem}.
- * <p/>
+ * <p>
  * The following is a fragment from a sample configuration:
  * <pre>
  *   &lt;FileSystem class="org.apache.jackrabbit.core.fs.db.DB2FileSystem"&gt;
@@ -57,7 +57,7 @@ public class DB2FileSystem extends DbFileSystem {
     //-----------------------------------------< DatabaseFileSystem overrides >
     /**
      * {@inheritDoc}
-     * <p/>
+     * <p>
      * Since DB2 requires parameter markers within the select clause to be
      * explicitly typed using <code>cast(? as type_name)</code> some statements
      * had to be changed accordingly.

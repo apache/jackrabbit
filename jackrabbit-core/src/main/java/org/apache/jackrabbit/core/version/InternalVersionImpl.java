@@ -338,7 +338,7 @@ class InternalVersionImpl extends InternalVersionItemImpl
     /**
      * Removes the predecessor V of this predecessors list and adds all of Vs
      * predecessors to it.
-     * <p/>
+     * <p>
      * please note, that this operation might corrupt the version graph
      *
      * @param v the successor to detach
@@ -359,7 +359,7 @@ class InternalVersionImpl extends InternalVersionItemImpl
     /**
      * Removes the successor V of this successors list and adds all of Vs
      * successors to it.
-     * <p/>
+     * <p>
      * please note, that this operation might corrupt the version graph
      *
      * @param v the successor to detach

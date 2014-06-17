@@ -26,7 +26,7 @@ import org.apache.jackrabbit.webdav.DavException;
  * Such as new versions are created by CHECKIN of a version-controlled
  * resource, a new baseline is created, whenever the VCC resource, that
  * represents a set of resources rather than a single resource, is checked-in.
- * <p/>
+ * <p>
  * Since the baseline behaves like a <code>VersionResource</code> and only is
  * defined to provide additional protected properties, this interface only adds
  * a convenience method that allows to retrieve the baseline collection.
@@ -52,7 +52,7 @@ public interface BaselineResource extends VersionResource {
      * version of the corresponding vc-configuration-resource). In other words:
      * each member in the list must correspond to a member of the baseline-controlled
      * collection at the time this baseline (version) was created.
-     * <p/>
+     * <p>
      *
      * Note that the DAV:baseline-collection represents a
      * {@link org.apache.jackrabbit.webdav.property.HrefProperty HrefProperty}

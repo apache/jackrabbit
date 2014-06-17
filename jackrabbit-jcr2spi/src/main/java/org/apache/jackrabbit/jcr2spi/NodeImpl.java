@@ -1733,7 +1733,7 @@ public class NodeImpl extends ItemImpl implements Node {
     /**
      * Returns the <code>NodeEntry</code> at <code>relPath</code> or
      * <code>null</code> if no node exists at <code>relPath</code>.
-     * <p/>
+     * <p>
      * Note that access rights are not checked.
      *
      * @param relPath relative path of a (possible) node.
@@ -1775,7 +1775,7 @@ public class NodeImpl extends ItemImpl implements Node {
     /**
      * Returns the id of the property at <code>relPath</code> or <code>null</code>
      * if no property exists at <code>relPath</code>.
-     * <p/>
+     * <p>
      * Note that access rights are not checked.
      *
      * @param relPath relative path of a (possible) property

@@ -406,12 +406,12 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
      *     &lt;LoginModule ... (optional)&gt;
      *   &lt;/Security&gt;
      * </pre>
-     * <p/>
+     * <p>
      * The <code>SecurityManager</code>, the <code>AccessManager</code>
      * and <code>LoginModule</code> are all
      * {@link #parseBeanConfig(Element,String) bean configuration}
      * elements.
-     * <p/>
+     * <p>
      * The login module is an optional feature of repository configuration.
      *
      * @param security the &lt;security> element.
@@ -637,16 +637,16 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
      *     &lt;FileSystem ...&gt;
      *   &lt;/Search&gt;
      * </pre>
-     * <p/>
+     * <p>
      * Both the <code>SearchIndex</code> and <code>FileSystem</code>
      * elements are {@link #parseBeanConfig(Element,String) bean configuration}
      * elements. If the search implementation class is not given, then
      * a default implementation is used.
-     * <p/>
+     * <p>
      * The search index is an optional feature of workspace configuration.
      * If the search configuration element is not found, then this method
      * returns <code>null</code>.
-     * <p/>
+     * <p>
      * The FileSystem element in a search index configuration is optional.
      * However some implementations may require a FileSystem.
      *
@@ -846,10 +846,10 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
      *     &lt;Journal ...&gt;
      *   &lt;/Journal&gt;
      * </pre>
-     * <p/>
+     * <p>
      * <code>Cluster</code> is a {@link #parseBeanConfig(Element,String) bean configuration}
      * element.
-     * <p/>
+     * <p>
      * Clustering is an optional feature. If the cluster element is not found, then this
      * method returns <code>null</code>.
      *
@@ -909,7 +909,7 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
      *     ...
      *   &lt;/Journal&gt;
      * </pre>
-     * <p/>
+     * <p>
      * <code>Journal</code> is a {@link #parseBeanConfig(Element,String) bean configuration}
      * element.
      *
@@ -956,7 +956,7 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
      *     &lt;/DataSource&gt;
      *   &lt;/DataSources&gt;
      * </pre>
-     * <p/>
+     * <p>
      * @param parent the parent of the DataSources element
      * @return a {@link DataSourceConfig} for the repository
      * @throws ConfigurationException on error
@@ -1008,7 +1008,7 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
      *     &lt;/param&gt;
      *   &lt;/DataStore&gt;
      * </pre>
-     * <p/>
+     * <p>
      * <code>DataStore</code> is a {@link #parseBeanConfig(Element,String) bean configuration}
      * element.
      *
@@ -1093,7 +1093,7 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
      *     ...
      *   &lt;/RepositoryLockMechanism&gt;
      * </pre>
-     * <p/>
+     * <p>
      * <code>RepositoryLockMechanism</code> is a
      * {@link #parseBeanConfig(Element,String) bean configuration} element.
      *

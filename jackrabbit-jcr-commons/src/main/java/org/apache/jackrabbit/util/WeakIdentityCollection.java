@@ -27,7 +27,7 @@ import java.lang.ref.ReferenceQueue;
 /**
  * <code>WeakIdentityCollection</code> implements a Collection with weak values.
  * Equality of elements is tested using the == operator.
- * <p/>
+ * <p>
  * This collection does not hide the fact that the garbage collector will remove
  * a mapping at some point in time. Thus, the {@link java.util.Iterator} returned
  * by this collection might return <code>null</code> values. The same applies

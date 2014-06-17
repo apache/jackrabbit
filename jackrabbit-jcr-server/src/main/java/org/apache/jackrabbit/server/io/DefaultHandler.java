@@ -63,7 +63,7 @@ import java.util.HashMap;
  * {@link JcrConstants#JCR_CONTENT jcr:content} and the nodetype specified
  * by {@link #getContentNodeType()}.</li>
  * </ul>
- * <p/>
+ * <p>
  * Import of the content:<br>
  * The content is imported to the {@link JcrConstants#JCR_DATA} property of the
  * content node. By default this handler will fail on a attempt to create/replace

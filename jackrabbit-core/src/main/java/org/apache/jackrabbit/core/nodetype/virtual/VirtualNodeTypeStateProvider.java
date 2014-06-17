@@ -69,7 +69,7 @@ public class VirtualNodeTypeStateProvider extends AbstractVISProvider {
 
     /**
      * {@inheritDoc}
-     * <p/>
+     * <p>
      * currently we have no dynamic ones, we just recreate the entire nodetypes tree
      */
     protected VirtualNodeState createRootNodeState() throws RepositoryException {

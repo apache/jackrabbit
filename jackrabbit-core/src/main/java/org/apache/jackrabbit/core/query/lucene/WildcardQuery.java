@@ -43,7 +43,7 @@ import java.util.Set;
 /**
  * Implements a wildcard query on a lucene field with an embedded property name
  * and a pattern.
- * <p/>
+ * <p>
  * Wildcards are:
  * <ul>
  * <li><code>%</code> : matches zero or more characters</li>

@@ -28,24 +28,24 @@ import javax.jcr.Value;
  * {@link Group}. It provides access to the <code>Principal</code>s associated
  * with an <code>Authorizable</code> (see below) and allow to access and
  * modify additional properties such as e.g. full name, e-mail or address.
- * <p/>
- * <p/>
+ * <p>
+ * <p>
  * Please note the difference between <code>Authorizable</code> and
  * {@link java.security.Principal Principal}:<br>
  * An <code>Authorizable</code> is repository object that is neither associated
  * with nor depending from a particular <code>Session</code> and thus independent
  * of the login mechanisms creating <code>Session</code>s.<br>
- * <p/>
+ * <p>
  * On the other hand <code>Principal</code>s are representations of user
  * identities. In other words: each <code>Principal</code> within the set
  * associated with the Session's Subject upon login represents an identity for
  * that user. An the set of <code>Principal</code>s may differ between different
  * login mechanisms.<br>
- * <p/>
+ * <p>
  * Consequently an one-to-many relationship exists between Authorizable
  * and Principal (see also {@link #getPrincipal()}.
- * <p/>
- * <p/>
+ * <p>
+ * <p>
  * The interfaces derived from Authorizable are defined as follows:
  * <ul>
  * <li>{@link User}: defined to be an Authorizable that can be authenticated

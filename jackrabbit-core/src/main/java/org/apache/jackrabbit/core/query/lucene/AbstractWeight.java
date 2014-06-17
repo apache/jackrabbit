@@ -58,7 +58,7 @@ abstract class AbstractWeight extends Weight {
 
     /**
      * {@inheritDoc}
-     * <p/>
+     * <p>
      * Returns a {@link MultiScorer} if the passed <code>reader</code> is of
      * type {@link MultiIndexReader}.
      */

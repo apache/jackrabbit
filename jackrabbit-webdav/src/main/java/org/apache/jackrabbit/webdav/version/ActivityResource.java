@@ -24,7 +24,7 @@ import org.apache.jackrabbit.webdav.property.DavPropertyName;
  * by successor relationships. If an activity selects versions from multiple
  * version histories, the versions selected in each version history must be on a
  * single line of descent.
- * <p/>
+ * <p>
  * RFC 3253 defines the following required live properties for an Activity
  * resource.
  * <ul>
@@ -37,11 +37,11 @@ import org.apache.jackrabbit.webdav.property.DavPropertyName;
  * property returned by an Activity resource must be
  * {@link org.apache.jackrabbit.webdav.property.ResourceType#ACTIVITY DAV:activity}</li>
  * </ul>
- * <p/>
+ * <p>
  * The Activity resource must support all methods defined for a
  * {@link DeltaVResource DeltaV-compliant resource}. Since no additional methods
  * are required for an activity this interface mainly acts as marker.
- * <p/>
+ * <p>
  * Please refer to <a href="http://www.ietf.org/rfc/rfc3253.txt">RFC 3253</a>
  * Section 13 for a complete description of this resource type.
  */

@@ -241,7 +241,7 @@ class ChildNodeEntries implements Cloneable {
     /**
      * Returns a list of <code>ChildNodeEntry</code>s who do only exist in
      * <code>this</code> but not in <code>other</code>.
-     * <p/>
+     * <p>
      * Note that two entries are considered identical in this context if
      * they have the same name and uuid, i.e. the index is disregarded
      * whereas <code>ChildNodeEntry.equals(Object)</code> also compares
@@ -277,7 +277,7 @@ class ChildNodeEntries implements Cloneable {
     /**
      * Returns a list of <code>ChildNodeEntry</code>s who do exist in
      * <code>this</code> <i>and</i> in <code>other</code>.
-     * <p/>
+     * <p>
      * Note that two entries are considered identical in this context if
      * they have the same name and uuid, i.e. the index is disregarded
      * whereas <code>ChildNodeEntry.equals(Object)</code> also compares

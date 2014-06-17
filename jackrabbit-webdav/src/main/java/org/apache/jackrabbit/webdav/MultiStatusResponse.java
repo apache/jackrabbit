@@ -149,7 +149,7 @@ public class MultiStatusResponse implements XmlSerializable, DavConstants {
      * properties according to the given <code>DavPropertyNameSet</code>. It
      * adds all known property to the '200' set, while unknown properties are
      * added to the '404' set.
-     * <p/>
+     * <p>
      * Note, that the set of property names is ignored in case of a {@link
      * #PROPFIND_ALL_PROP} and {@link #PROPFIND_PROPERTY_NAMES} propFindType.
      *

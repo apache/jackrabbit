@@ -60,7 +60,7 @@ public class BinaryImpl implements Binary {
      * <code>InputStream</code>. The contents of the stream is spooled
      * to a temporary file or to a byte buffer if its size is smaller than
      * {@link #MAX_BUFFER_SIZE}.
-     * <p/>
+     * <p>
      * @param in stream to be represented as a <code>BLOBFileValue</code> instance
      * @throws IOException if an error occurs while reading from the stream or
      *                     writing to the temporary file

@@ -44,7 +44,7 @@ import javax.sql.DataSource;
  * <code>JOURNAL</code>, whereas the table <code>GLOBAL_REVISION</code> contains the
  * highest available revision number. These tables are located inside the schema specified
  * in <code>schemaObjectPrefix</code>.
- * <p/>
+ * <p>
  * It is configured through the following properties:
  * <ul>
  * <li><code>driver</code>: the JDBC driver class name to use; this is a required
@@ -467,7 +467,7 @@ public class DatabaseJournal extends AbstractJournal implements DatabaseAware {
 
     /**
      * {@inheritDoc}
-     * <p/>
+     * <p>
      * This journal is locked by incrementing the current value in the table
      * named <code>GLOBAL_REVISION</code>, which effectively write-locks this
      * table. The updated value is then saved away and remembered in the
@@ -526,7 +526,7 @@ public class DatabaseJournal extends AbstractJournal implements DatabaseAware {
 
     /**
      * {@inheritDoc}
-     * <p/>
+     * <p>
      * Save away the locked revision inside the newly appended record.
      */
     protected void appending(AppendRecord record) {
@@ -535,7 +535,7 @@ public class DatabaseJournal extends AbstractJournal implements DatabaseAware {
 
     /**
      * {@inheritDoc}
-     * <p/>
+     * <p>
      * We have already saved away the revision for this record.
      */
     protected void append(AppendRecord record, InputStream in, int length)

@@ -62,12 +62,12 @@ import java.util.Set;
  * <li>the Session's represents a system session or a session associated with
  * the repository's administrator</li>
  * </ul>
- * <p/>
+ * <p>
  * It allows to access all available workspaces if
  * <ul>
  * <li>no <code>WorkspaceAccessManager</code> is defined.</li>
  * </ul>
- * <p/>
+ * <p>
  * How access control policies are matched to a particular item is defined by
  * the <code>AccessControlProvider</code> set to this AccessManager.
  *

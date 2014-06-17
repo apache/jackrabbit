@@ -47,7 +47,7 @@ public interface QValueConstraint {
      * For constraints that are not namespace prefix mapping sensitive this
      * method returns the same defined in
      * <code>{@link PropertyDefinition#getValueConstraints()}</code>.
-     * <p/>
+     * <p>
      * Those that are namespace prefix mapping sensitive (e.g.
      * <code>NameConstraint</code>, <code>PathConstraint</code> and
      * <code>ReferenceConstraint</code>) return an internal string.

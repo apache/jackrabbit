@@ -604,7 +604,7 @@ public class RepositoryImpl extends AbstractRepository
 
     /**
      * Creates a new <code>RepositoryImpl</code> instance.
-     * <p/>
+     * <p>
      *
      * @param config the configuration of the repository
      * @return a new <code>RepositoryImpl</code> instance
@@ -935,7 +935,7 @@ public class RepositoryImpl extends AbstractRepository
      * Creates a new repository session on the specified workspace for the
      * <b><i>authenticated</i></b> subject of the given login context and
      * adds it to the <i>active</i> sessions.
-     * <p/>
+     * <p>
      * Calls {@link #createSessionInstance(AuthContext, WorkspaceConfig)} to
      * create the actual <code>SessionImpl</code> instance.
      *
@@ -964,7 +964,7 @@ public class RepositoryImpl extends AbstractRepository
      * Creates a new repository session on the specified workspace for the given
      * <b><i>authenticated</i></b> subject and adds it to the <i>active</i>
      * sessions.
-     * <p/>
+     * <p>
      * Calls {@link #createSessionInstance(Subject, WorkspaceConfig)} to
      * create the actual <code>SessionImpl</code> instance.
      *
@@ -1304,13 +1304,13 @@ public class RepositoryImpl extends AbstractRepository
     /**
      * Returns a <code>Properties</code> object containing custom repository
      * descriptors or <code>null</code> if none exist.
-     * <p/>
+     * <p>
      * Overridable to allow subclasses to add custom descriptors or to
      * override standard descriptor values.
-     * <p/>
+     * <p>
      * Note that the properties entries will be set as single-valued <code>STRING</code>
      * descriptor values.
-     * <p/>
+     * <p>
      * This method tries to load the <code>Properties</code> from the
      * <code>org/apache/jackrabbit/core/repository.properties</code> resource
      * found in the class path.
@@ -2359,7 +2359,7 @@ public class RepositoryImpl extends AbstractRepository
 
         /**
          * {@inheritDoc}
-         * <p/>
+         * <p>
          * Performs the following tasks in a <code>while (true)</code> loop:
          * <ol>
          * <li>wait for <code>checkInterval</code> milliseconds</li>

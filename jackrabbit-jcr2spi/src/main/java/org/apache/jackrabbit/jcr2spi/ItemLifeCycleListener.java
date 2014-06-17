@@ -45,7 +45,7 @@ public interface ItemLifeCycleListener {
     /**
      * Called when an <code>ItemImpl</code> instance has been destroyed
      * (i.e. it has been permanently rendered 'invalid').
-     * <p/>
+     * <p>
      * Note that most <code>{@link javax.jcr.Item}</code>,
      * <code>{@link javax.jcr.Node}</code> and <code>{@link javax.jcr.Property}</code>
      * methods will throw an <code>InvalidItemStateException</code> when called

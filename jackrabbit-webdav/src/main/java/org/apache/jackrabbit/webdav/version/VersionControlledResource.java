@@ -25,7 +25,7 @@ import org.apache.jackrabbit.webdav.property.DavPropertyName;
  * <code>VersionableResource</code> a resource, that has already been put
  * under version-control. This resource can be checked-in, checked-out and
  * has its own {@link VersionHistoryResource version history}.
- * <p/>
+ * <p>
  * RFC 3253 defines the following required properties for a
  * version-controlled resource (vc-resource):
  * <ul>
@@ -67,7 +67,7 @@ import org.apache.jackrabbit.webdav.property.DavPropertyName;
  * <li>DAV:subbaseline-set (if the configuration resource is checked-out)</li>
  * </ul>
  *
- * <p/>
+ * <p>
  * In addition a version-controlled resource must support the following METHODS:
  * <ul>
  * <li>VERSION-CONTROL</li>
@@ -224,7 +224,7 @@ public interface VersionControlledResource extends VersionableResource {
      * to merge into that checked-out resource the latest version selected by
      * that activity from that version history, and then modify the
      * DAV:predecessor-set of that checked-out resource to identify that version.
-     * <p/>
+     * <p>
      * This property is defined to have the following format:
      * <pre>
      * &lt;!ELEMENT unreserved (#PCDATA)&gt;
@@ -249,7 +249,7 @@ public interface VersionControlledResource extends VersionableResource {
      * DAV:eclipsed-set property present on a collection identifies all
      * internal members that are not version-controlled and hide a vc internal
      * member with the same name.
-     * <p/>
+     * <p>
      * This property is defined to have the following format:
      * <pre>
      * &lt;!ELEMENT eclipsed-set (binding-name*)&gt;

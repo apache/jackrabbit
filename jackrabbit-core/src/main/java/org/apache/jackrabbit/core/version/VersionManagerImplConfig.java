@@ -38,9 +38,9 @@ import org.slf4j.Logger;
 /**
  * The JCR Version Manager implementation is split in several classes in order to
  * group related methods together.
- * <p/>
+ * <p>
  * this class provides methods for the configuration and baselines related operations.
- * <p/>
+ * <p>
  * Implementation note: methods starting with "internal" are considered to be
  * executed within a "write operations" block.
  */
@@ -130,7 +130,7 @@ abstract public class VersionManagerImplConfig extends VersionManagerImplMerge {
 
     /**
      * Creates a new configuration node.
-     * <p/>
+     * <p>
      * The nt:confguration is stored within the nt:configurations storage using
      * the nodeid of the configuration root (rootId) as path.
      *
@@ -159,7 +159,7 @@ abstract public class VersionManagerImplConfig extends VersionManagerImplMerge {
 
     /**
      * Creates a new configuration node.
-     * <p/>
+     * <p>
      * The nt:confguration is stored within the nt:configurations storage using
      * the nodeid of the configuration root (rootId) as path.
      *

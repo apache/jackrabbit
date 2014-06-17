@@ -30,7 +30,7 @@ import java.sql.SQLException;
  * embedded or standalone Derby database using a simple custom serialization format and a
  * very basic non-normalized database schema (in essence tables with one 'key'
  * and one 'data' column).
- * <p/>
+ * <p>
  * It is configured through the following properties:
  * <ul>
  * <li><code>url</code>: the database url of the form
@@ -51,7 +51,7 @@ import java.sql.SQLException;
  * set this to <code>false</code> when using a standalone database</li>
  * </ul>
  * See also {@link SimpleDbPersistenceManager}.
- * <p/>
+ * <p>
  * The following is a fragment from a sample configuration:
  * <pre>
  *   &lt;PersistenceManager class="org.apache.jackrabbit.core.persistence.db.DerbyPersistenceManager"&gt;

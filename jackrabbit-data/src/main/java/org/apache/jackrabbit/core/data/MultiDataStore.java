@@ -52,7 +52,7 @@ import org.slf4j.LoggerFactory;
  * <p>
  * The internal MoveDataTask will be started automatically and could be
  * configured with the following properties.
- * <p/>
+ * <p>
  * The Configuration:
  * 
  * <pre>

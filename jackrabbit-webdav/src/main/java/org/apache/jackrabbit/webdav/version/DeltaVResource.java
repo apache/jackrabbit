@@ -25,7 +25,7 @@ import org.apache.jackrabbit.webdav.version.report.ReportInfo;
 /**
  * The <code>DeltaVResource</code> encapsulates the functionality common to all
  * DeltaV compliant resources.
- * <p/>
+ * <p>
  * RFC 3253 defines the following required properties:
  * <ul>
  * <li>{@link DeltaVConstants#COMMENT DAV:comment}</li>
@@ -35,7 +35,7 @@ import org.apache.jackrabbit.webdav.version.report.ReportInfo;
  * <li>{@link DeltaVConstants#SUPPORTED_REPORT_SET DAV:supported-report-set}</li>
  * <li>all properties defined in WebDAV [RFC2518].</li>
  * </ul>
- * <p/>
+ * <p>
  * In addition a DeltaV compliant resource must support the following METHODS:
  * <ul>
  * <li>REPORT</li>

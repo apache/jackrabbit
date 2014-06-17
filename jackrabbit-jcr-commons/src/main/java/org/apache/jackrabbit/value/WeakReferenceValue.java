@@ -56,7 +56,7 @@ public class WeakReferenceValue extends BaseValue {
     /**
      * Returns a new <code>ReferenceValue</code> initialized to the value
      * represented by the specified <code>String</code>.
-     * <p/>
+     * <p>
      * The specified <code>String</code> must denote the UUID of an existing
      * node.
      *
@@ -93,7 +93,7 @@ public class WeakReferenceValue extends BaseValue {
 
     /**
      * Indicates whether some other object is "equal to" this one.
-     * <p/>
+     * <p>
      * The result is <code>true</code> if and only if the argument is not
      * <code>null</code> and is a <code>ReferenceValue</code> object that
      * represents the same value as this object.

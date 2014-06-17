@@ -39,7 +39,7 @@ import java.util.List;
  * redo log is written to keep track of the changes. In case the Jackrabbit
  * process terminates unexpected the redo log is applied when Jackrabbit is
  * restarted the next time.
- * <p/>
+ * <p>
  * This class is not thread-safe.
  */
 class DefaultRedoLog implements RedoLog {

@@ -148,7 +148,7 @@ public class ISO9075 {
      * Encodes the character <code>c</code> as a String in the following form:
      * <code>"_x" + hex value of c + "_"</code>. Where the hex value has
      * four digits if the character with possibly leading zeros.
-     * <p/>
+     * <p>
      * Example: ' ' (the space character) is encoded to: _x0020_
      * @param c the character to encode
      * @param b the encoded character is appended to <code>StringBuffer</code>

@@ -454,7 +454,7 @@ public class ItemStateValidator {
     /**
      * Verifies that the item represented by the given state is checked-out;
      * throws a <code>VersionException</code> if that's not the case.
-     * <p/>
+     * <p>
      * A node is considered <i>checked-out</i> if it is versionable and
      * checked-out, or is non-versionable but its nearest versionable ancestor
      * is checked-out, or is non-versionable and there are no versionable

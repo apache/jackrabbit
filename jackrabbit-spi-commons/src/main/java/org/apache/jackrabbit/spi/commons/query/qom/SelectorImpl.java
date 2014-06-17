@@ -55,7 +55,7 @@ public class SelectorImpl extends SourceImpl implements Selector {
 
     /**
      * Gets the selector name.
-     * <p/>
+     * <p>
      * A selector's name can be used elsewhere in the query to identify the
      * selector.
      *
@@ -87,7 +87,7 @@ public class SelectorImpl extends SourceImpl implements Selector {
 
     /**
      * Gets the selector name.
-     * <p/>
+     * <p>
      * A selector's name can be used elsewhere in the query to identify the
      * selector.
      *

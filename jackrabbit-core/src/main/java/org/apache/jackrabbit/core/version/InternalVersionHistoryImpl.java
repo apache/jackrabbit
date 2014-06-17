@@ -391,7 +391,7 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
      * Removes the indicated version from this VersionHistory. If the specified
      * vesion does not exist, if it specifies the root version or if it is
      * referenced by any node e.g. as base version, a VersionException is thrown.
-     * <p/>
+     * <p>
      * all successors of the removed version become successors of the
      * predecessors of the removed version and vice versa. then, the entire
      * version node and all its subnodes are removed.

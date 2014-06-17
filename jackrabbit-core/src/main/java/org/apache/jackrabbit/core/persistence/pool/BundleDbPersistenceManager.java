@@ -65,7 +65,7 @@ import org.slf4j.LoggerFactory;
 /**
  * This is a generic persistence manager that stores the {@link NodePropBundle}s
  * in a database.
- * <p/>
+ * <p>
  * Configuration:<br>
  * <ul>
  * <li>&lt;param name="{@link #setBundleCacheSize(String) bundleCacheSize}" value="8"/>

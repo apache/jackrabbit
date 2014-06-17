@@ -230,7 +230,7 @@ public class XAItemStateManager extends LocalItemStateManager implements Interna
     //-----------------------------------------------------< ItemStateManager >
     /**
      * {@inheritDoc}
-     * <p/>
+     * <p>
      * If this state manager is committing changes, this method first checks
      * the commitLog ThreadLocal. Else if associated to a transaction check
      * the transactional change log. Fallback is always the call to the base
@@ -262,7 +262,7 @@ public class XAItemStateManager extends LocalItemStateManager implements Interna
 
     /**
      * {@inheritDoc}
-     * <p/>
+     * <p>
      * If this state manager is committing changes, this method first checks
      * the commitLog ThreadLocal. Else if associated to a transaction check
      * the transactional change log. Fallback is always the call to the base
@@ -304,7 +304,7 @@ public class XAItemStateManager extends LocalItemStateManager implements Interna
 
     /**
      * {@inheritDoc}
-     * <p/>
+     * <p>
      * If this state manager is committing changes, this method first
      * checks the commitLog ThreadLocal. Else if associated to a transaction
      * check the transactional change log. Fallback is always the call to
@@ -321,7 +321,7 @@ public class XAItemStateManager extends LocalItemStateManager implements Interna
 
     /**
      * {@inheritDoc}
-     * <p/>
+     * <p>
      * If this state manager is committing changes, this method first
      * checks the commitLog ThreadLocal. Else if associated to a transaction
      * check the transactional change log. Fallback is always the call to
@@ -340,7 +340,7 @@ public class XAItemStateManager extends LocalItemStateManager implements Interna
 
     /**
      * {@inheritDoc}
-     * <p/>
+     * <p>
      * If associated with a transaction, simply merge the changes given to
      * the ones already known (removing items that were first added and
      * then again deleted).

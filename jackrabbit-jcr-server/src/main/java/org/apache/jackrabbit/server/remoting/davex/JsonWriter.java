@@ -33,7 +33,7 @@ import org.apache.jackrabbit.commons.json.JsonUtil;
 /**
  * <code>JsonWriter</code> traverses a tree of JCR items and writes a JSON object
  * exposing nodes as JSON object members and properties as JSON pairs.
- * <p/>
+ * <p>
  * <strong>Note</strong>: Using JSON.org library is deliberately avoided for the
  * following reasons.
  * <ul>

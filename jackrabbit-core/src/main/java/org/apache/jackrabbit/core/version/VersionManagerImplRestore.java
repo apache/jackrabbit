@@ -48,9 +48,9 @@ import org.slf4j.LoggerFactory;
 /**
  * The JCR Version Manager implementation is split in several classes in order to
  * group related methods together.
- * <p/>
+ * <p>
  * this class provides methods for the restore operations.
- * <p/>
+ * <p>
  * Implementation note: methods starting with "internal" are considered to be
  * executed within a "write operations" block.
  */

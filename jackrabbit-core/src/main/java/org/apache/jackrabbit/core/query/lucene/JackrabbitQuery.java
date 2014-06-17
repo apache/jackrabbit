@@ -33,7 +33,7 @@ public interface JackrabbitQuery {
     /**
      * Executes this query and returns {@link QueryHits} or <code>null</code> if
      * this query should be executed using the regular Lucene API.
-     * <p/>
+     * <p>
      * <b>Important note:</b> an implementation <b>must not</b> call
      * {@link JackrabbitIndexSearcher#execute(Query, Sort, long)}
      * with this query instance as a parameter, otherwise a stack overflow will

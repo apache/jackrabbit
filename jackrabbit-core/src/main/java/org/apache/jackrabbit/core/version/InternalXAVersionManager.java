@@ -206,7 +206,7 @@ public class InternalXAVersionManager extends InternalVersionManagerBase
 
     /**
      * {@inheritDoc}
-     * <p/>
+     * <p>
      * Before modifying activity, make a local copy of it.
      */
     @Override
@@ -348,7 +348,7 @@ public class InternalXAVersionManager extends InternalVersionManagerBase
 
     /**
      * {@inheritDoc}
-     * <p/>
+     * <p>
      * Return item states for changes only. Global version manager will return
      * other items.
      */
@@ -399,7 +399,7 @@ public class InternalXAVersionManager extends InternalVersionManagerBase
 
     /**
      * {@inheritDoc}
-     * <p/>
+     * <p>
      * Not needed.
      */
     public void addListener(ItemStateListener listener) {
@@ -407,7 +407,7 @@ public class InternalXAVersionManager extends InternalVersionManagerBase
 
     /**
      * {@inheritDoc}
-     * <p/>
+     * <p>
      * Not needed.
      */
     public void removeListener(ItemStateListener listener) {
@@ -482,7 +482,7 @@ public class InternalXAVersionManager extends InternalVersionManagerBase
 
     /**
      * {@inheritDoc}
-     * <p/>
+     * <p>
      * Before modifying version history given, make a local copy of it.
      */
     @Override
@@ -507,7 +507,7 @@ public class InternalXAVersionManager extends InternalVersionManagerBase
 
     /**
      * {@inheritDoc}
-     * <p/>
+     * <p>
      * Before modifying version history given, make a local copy of it.
      */
     @Override
@@ -531,7 +531,7 @@ public class InternalXAVersionManager extends InternalVersionManagerBase
 
     /**
      * {@inheritDoc}
-     * <p/>
+     * <p>
      * Before modifying version history given, make a local copy of it.
      */
     @Override
@@ -549,7 +549,7 @@ public class InternalXAVersionManager extends InternalVersionManagerBase
 
     /**
      * {@inheritDoc}
-     * <p/>
+     * <p>
      * Put the version object into our cache.
      */
     @Override
@@ -559,7 +559,7 @@ public class InternalXAVersionManager extends InternalVersionManagerBase
 
     /**
      * {@inheritDoc}
-     * <p/>
+     * <p>
      * Remove the version object from our cache.
      */
     @Override
@@ -589,7 +589,7 @@ public class InternalXAVersionManager extends InternalVersionManagerBase
 
     /**
      * {@inheritDoc}
-     * <p/>
+     * <p>
      * Delegate the call to our XA item state manager.
      */
     public void beforeOperation(TransactionContext tx) {
@@ -598,7 +598,7 @@ public class InternalXAVersionManager extends InternalVersionManagerBase
 
     /**
      * {@inheritDoc}
-     * <p/>
+     * <p>
      * Delegate the call to our XA item state manager.
      */
     public void prepare(TransactionContext tx) throws TransactionException {
@@ -609,7 +609,7 @@ public class InternalXAVersionManager extends InternalVersionManagerBase
 
     /**
      * {@inheritDoc}
-     * <p/>
+     * <p>
      * Delegate the call to our XA item state manager. If successful, inform
      * global repository manager to update its caches.
      */
@@ -625,7 +625,7 @@ public class InternalXAVersionManager extends InternalVersionManagerBase
 
     /**
      * {@inheritDoc}
-     * <p/>
+     * <p>
      * Delegate the call to our XA item state manager.
      */
     public void rollback(TransactionContext tx) {
@@ -636,7 +636,7 @@ public class InternalXAVersionManager extends InternalVersionManagerBase
 
     /**
      * {@inheritDoc}
-     * <p/>
+     * <p>
      * Delegate the call to our XA item state manager.
      */
     public void afterOperation(TransactionContext tx) {

@@ -47,7 +47,7 @@ import org.slf4j.LoggerFactory;
 /**
  * <code>AbstractLoginModule</code> provides the means for the common
  * authentication tasks within the Repository.
- * <p/>
+ * <p>
  * On successful authentication it associates the credentials to principals
  * using the {@link PrincipalProvider} configured for this LoginModule<p />
  * Jackrabbit distinguishes between Login and Impersonation dispatching the
@@ -249,7 +249,7 @@ public abstract class AbstractLoginModule implements LoginModule {
      * <li>{@link #getCredentials()}</li> and
      * <li>{@link #getUserID(Credentials)}</li>
      * </ul>
-     * <p/>
+     * <p>
      *
      * <b>2) User-Principal resolution </b><br>
      * In a second step it is tested, if the resolved User-ID belongs to a User
@@ -288,7 +288,7 @@ public abstract class AbstractLoginModule implements LoginModule {
      * to impersonate to the requested User-ID</li>
      * <li>The user tries to login, but the Credentials can not be verified.</li>
      * </ul>
-     * <p/>
+     * <p>
      * The LoginModule keeps the Credentials and the Principal as instance fields,
      * to mark that login has been successful.
      *
@@ -350,20 +350,20 @@ public abstract class AbstractLoginModule implements LoginModule {
 
     /**
      * Method to commit the authentication process (phase 2).
-     * <p/>
+     * <p>
      * This method is called if the LoginContext's overall authentication
      * succeeded (the relevant REQUIRED, REQUISITE, SUFFICIENT and OPTIONAL
      * LoginModules succeeded).
-     * <p/>
+     * <p>
      * If this LoginModule's own authentication attempt succeeded (checked
      * by retrieving the private state saved by the <code>login</code> method),
      * then this method associates relevant Principals and Credentials with the
      * <code>Subject</code> located in the <code>LoginModule</code>.  If this
      * LoginModule's own authentication attempted failed, then this method
      * removes/destroys any state that was originally saved.
-     * <p/>
+     * <p>
      * The login is considered as succeeded if there is a principal set.
-     * <p/>
+     * <p>
      * The implementation stores the principal associated to the UserID and all
      * the Groups it is member of with the Subject and in addition adds an
      * instance of (#link SimpleCredentials} to the Subject's public credentials.
@@ -386,16 +386,16 @@ public abstract class AbstractLoginModule implements LoginModule {
 
     /**
      * Method to abort the authentication process (phase 2).
-     * <p/>
+     * <p>
      * <p> This method is called if the LoginContext's overall authentication
      * failed. (the relevant REQUIRED, REQUISITE, SUFFICIENT and OPTIONAL
      * LoginModules did not succeed).
-     * <p/>
+     * <p>
      * <p> If this LoginModule's own authentication attempt succeeded (checked
      * by retrieving the private state saved by the <code>login</code> method),
      * then this method cleans up any state that was originally saved.
-     * <p/>
-     * <p/>
+     * <p>
+     * <p>
      *
      * @return true if this method succeeded, or false if this
      *         <code>LoginModule</code> should be ignored.
@@ -531,7 +531,7 @@ public abstract class AbstractLoginModule implements LoginModule {
      * Method tries to resolve the {@link Credentials} used for login. It takes
      * authentication-extension of an already authenticated {@link Subject} into
      * account.
-     * <p/>
+     * <p>
      * Therefore the credentials are retrieved as follows:
      * <ol>
      * <li>Test if the shared state contains credentials.</li>

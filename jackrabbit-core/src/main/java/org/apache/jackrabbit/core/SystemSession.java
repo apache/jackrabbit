@@ -89,7 +89,7 @@ class SystemSession extends SessionImpl {
 
     /**
      * {@inheritDoc}
-     * <p/>
+     * <p>
      * Overridden in order to create custom access manager
      *
      * @return access manager for system session

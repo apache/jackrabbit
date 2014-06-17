@@ -255,7 +255,7 @@ public class SearchIndex extends AbstractQueryHandler {
 
     /**
      * The location of the search index.
-     * <p/>
+     * <p>
      * Note: This is a <b>mandatory</b> parameter!
      */
     private String path;
@@ -333,7 +333,7 @@ public class SearchIndex extends AbstractQueryHandler {
     /**
      * Flag indicating whether document order is enabled as the default
      * ordering.
-     * <p/>
+     * <p>
      * Default value is: <code>false</code>.
      */
     private boolean documentOrder = false;
@@ -342,7 +342,7 @@ public class SearchIndex extends AbstractQueryHandler {
      * If set <code>true</code> the index is checked for consistency on startup.
      * If <code>false</code> a consistency check is only performed when there
      * are entries in the redo log on startup.
-     * <p/>
+     * <p>
      * Default value is: <code>false</code>.
      */
     private boolean forceConsistencyCheck = false;
@@ -352,7 +352,7 @@ public class SearchIndex extends AbstractQueryHandler {
      * on the {@link #forceConsistencyCheck} parameter. If set to
      * <code>false</code>, no consistency check is performed, even if the redo
      * log had been applied on startup.
-     * <p/>
+     * <p>
      * Default value is: <code>false</code>.
      */
     private boolean consistencyCheckEnabled = false;
@@ -360,21 +360,21 @@ public class SearchIndex extends AbstractQueryHandler {
     /**
      * If set <code>true</code> errors detected by the consistency check are
      * repaired. If <code>false</code> the errors are only reported in the log.
-     * <p/>
+     * <p>
      * Default value is: <code>true</code>.
      */
     private boolean autoRepair = true;
 
     /**
      * The id resolver cache size.
-     * <p/>
+     * <p>
      * Default value is: <code>1000</code>.
      */
     private int cacheSize = 1000;
 
     /**
      * The number of documents that are pre fetched when a query is executed.
-     * <p/>
+     * <p>
      * Default value is: {@link Integer#MAX_VALUE}.
      */
     private int resultFetchSize = Integer.MAX_VALUE;
@@ -382,7 +382,7 @@ public class SearchIndex extends AbstractQueryHandler {
     /**
      * If set to <code>true</code> the fulltext field is stored and and a term
      * vector is created with offset information.
-     * <p/>
+     * <p>
      * Default value is: <code>false</code>.
      */
     private boolean supportHighlighting = false;

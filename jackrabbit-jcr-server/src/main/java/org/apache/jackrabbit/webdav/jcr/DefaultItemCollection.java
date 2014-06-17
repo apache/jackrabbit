@@ -400,7 +400,7 @@ public class DefaultItemCollection extends AbstractItemResource
      * added} to the item represented by this resource. If an input stream is specified
      * together with a collection resource {@link Session#importXML(String, java.io.InputStream, int)}
      * is called instead and this resource path is used as <code>parentAbsPath</code> argument.
-     * <p/>
+     * <p>
      * However, if the specified resource is not of resource type collection a
      * new {@link Property} is set or an existing one is changed by modifying its
      * value.<br>

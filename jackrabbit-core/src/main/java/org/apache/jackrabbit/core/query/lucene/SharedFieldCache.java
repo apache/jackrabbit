@@ -207,7 +207,7 @@ public class SharedFieldCache {
      * Creates a <code>ValueIndex</code> for a <code>field</code> and a term
      * <code>prefix</code>. The term prefix acts as the property name for the
      * shared <code>field</code>.
-     * <p/>
+     * <p>
      * This method is an adapted version of: <code>FieldCacheImpl.getStringIndex()</code>
      *
      * @param reader     the <code>IndexReader</code>.

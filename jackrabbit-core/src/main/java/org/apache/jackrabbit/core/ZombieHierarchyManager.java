@@ -30,7 +30,7 @@ import org.apache.jackrabbit.spi.Name;
  * <code>HierarchyManager</code> implementation that is also able to
  * build/resolve paths of those items that have been moved or removed
  * (i.e. moved to the attic).
- * <p/>
+ * <p>
  * todo make use of path caching
  */
 public class ZombieHierarchyManager extends HierarchyManagerImpl {
@@ -49,7 +49,7 @@ public class ZombieHierarchyManager extends HierarchyManagerImpl {
 
     /**
      * {@inheritDoc}
-     * <p/>
+     * <p>
      * Delivers state from attic if such exists, otherwise calls base class.
      */
     protected ItemState getItemState(ItemId id)
@@ -64,7 +64,7 @@ public class ZombieHierarchyManager extends HierarchyManagerImpl {
 
     /**
      * {@inheritDoc}
-     * <p/>
+     * <p>
      * Returns <code>true</code>  if there's state on the attic for the
      * requested item; otherwise delegates to base class.
      */
@@ -79,7 +79,7 @@ public class ZombieHierarchyManager extends HierarchyManagerImpl {
 
     /**
      * {@inheritDoc}
-     * <p/>
+     * <p>
      * Also allows for removed items.
      */
     protected NodeId getParentId(ItemState state) {
@@ -93,7 +93,7 @@ public class ZombieHierarchyManager extends HierarchyManagerImpl {
 
     /**
      * {@inheritDoc}
-     * <p/>
+     * <p>
      * Also allows for removed/renamed child node entries.
      */
     protected ChildNodeEntry getChildNodeEntry(NodeState parent,
@@ -116,7 +116,7 @@ public class ZombieHierarchyManager extends HierarchyManagerImpl {
 
     /**
      * {@inheritDoc}
-     * <p/>
+     * <p>
      * Also allows for removed child node entries.
      */
     protected ChildNodeEntry getChildNodeEntry(NodeState parent,

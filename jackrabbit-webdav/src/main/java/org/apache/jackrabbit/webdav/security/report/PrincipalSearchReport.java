@@ -49,17 +49,17 @@ import java.util.List;
  * searched inside the DAV:prop element and the query string inside the DAV:match
  * element. Multiple DAV:property-search elements or multiple elements within the
  * DAV:prop element will be interpreted with a logical AND.
- * <p/>
+ * <p>
  * <strong>DAV:prop</strong> lists the property names to be reported in the
  * response for each of the principle resources found.
- * <p/>
+ * <p>
  * <strong>DAV:apply-to-principal-collection-set</strong>: Optional empty element.
  * If present in the request body the search will be executed over all members
  * of the collections that are listed as values in the DAV:principal-collection-set
  * property present on the resource the report has been requested for.
  * Otherwise the search is limited to all members (at any depth) of that resource
  * itself.
- * <p/>
+ * <p>
  * The response body must contain a single DAV:multistatus XML element.
  */
 public class PrincipalSearchReport extends AbstractSecurityReport {

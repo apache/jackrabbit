@@ -92,7 +92,7 @@ import java.util.List;
 
 /**
  * <code>AbstractWebdavServlet</code>
- * <p/>
+ * <p>
  */
 abstract public class AbstractWebdavServlet extends HttpServlet implements DavConstants {
 

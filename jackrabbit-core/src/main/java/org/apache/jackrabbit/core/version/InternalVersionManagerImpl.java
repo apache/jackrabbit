@@ -243,7 +243,7 @@ public class InternalVersionManagerImpl extends InternalVersionManagerBase
 
     /**
      * {@inheritDoc}
-     * <p/>
+     * <p>
      * This method must not be synchronized since it could cause deadlocks with
      * item-reading listeners in the observation thread.
      */
@@ -270,7 +270,7 @@ public class InternalVersionManagerImpl extends InternalVersionManagerBase
 
     /**
      * {@inheritDoc}
-     * <p/>
+     * <p>
      * This method must not be synchronized since it could cause deadlocks with
      * item-reading listeners in the observation thread.
      */
@@ -286,7 +286,7 @@ public class InternalVersionManagerImpl extends InternalVersionManagerBase
 
     /**
      * {@inheritDoc}
-     * <p/>
+     * <p>
      * This method must not be synchronized since it could cause deadlocks with
      * item-reading listeners in the observation thread.
      */
@@ -402,7 +402,7 @@ public class InternalVersionManagerImpl extends InternalVersionManagerBase
 
     /**
      * {@inheritDoc}
-     * <p/>
+     * <p>
      * This method must not be synchronized since it could cause deadlocks with
      * item-reading listeners in the observation thread.
      */
@@ -420,7 +420,7 @@ public class InternalVersionManagerImpl extends InternalVersionManagerBase
 
     /**
      * {@inheritDoc}
-     * <p/>
+     * <p>
      * This method must not be synchronized since it could cause deadlocks with
      * item-reading listeners in the observation thread.
      */
@@ -444,7 +444,7 @@ public class InternalVersionManagerImpl extends InternalVersionManagerBase
 
     /**
      * {@inheritDoc}
-     * <p/>
+     * <p>
      * This method must not be synchronized since it could cause deadlocks with
      * item-reading listeners in the observation thread.
      */
@@ -459,7 +459,7 @@ public class InternalVersionManagerImpl extends InternalVersionManagerBase
 
     /**
      * {@inheritDoc}
-     * <p/>
+     * <p>
      * This method must not be synchronized since it could cause deadlocks with
      * item-reading listeners in the observation thread.
      */
@@ -606,7 +606,7 @@ public class InternalVersionManagerImpl extends InternalVersionManagerBase
 
     /**
      * {@inheritDoc}
-     * <p/>
+     * <p>
      * Not used.
      */
     public void stateCreated(ItemState created) {
@@ -614,7 +614,7 @@ public class InternalVersionManagerImpl extends InternalVersionManagerBase
 
     /**
      * {@inheritDoc}
-     * <p/>
+     * <p>
      * Not used.
      */
     public void stateModified(ItemState modified) {
@@ -622,7 +622,7 @@ public class InternalVersionManagerImpl extends InternalVersionManagerBase
 
     /**
      * {@inheritDoc}
-     * <p/>
+     * <p>
      * Remove item from cache on removal.
      */
     public void stateDestroyed(ItemState destroyed) {
@@ -637,7 +637,7 @@ public class InternalVersionManagerImpl extends InternalVersionManagerBase
 
     /**
      * {@inheritDoc}
-     * <p/>
+     * <p>
      * Not used.
      */
     public void stateDiscarded(ItemState discarded) {
@@ -696,7 +696,7 @@ public class InternalVersionManagerImpl extends InternalVersionManagerBase
 
         /**
          * {@inheritDoc}
-         * <p/>
+         * <p>
          * This object uses one instance of a <code>LocalItemStateManager</code>
          * to update data on behalf of many sessions. In order to maintain the
          * association between update operation and session who actually invoked
@@ -714,7 +714,7 @@ public class InternalVersionManagerImpl extends InternalVersionManagerBase
 
         /**
          * {@inheritDoc}
-         * <p/>
+         * <p>
          * This object uses one instance of a <code>LocalItemStateManager</code>
          * to update data on behalf of many sessions. In order to maintain the
          * association between update operation and session who actually invoked

@@ -305,7 +305,7 @@ public class Util {
      * Compares the two values. If the values have differing types, then an
      * attempt is made to convert the second value into the type of the first
      * value.
-     * <p/>
+     * <p>
      * Comparison of binary values is not supported.
      * 
      * @param v1

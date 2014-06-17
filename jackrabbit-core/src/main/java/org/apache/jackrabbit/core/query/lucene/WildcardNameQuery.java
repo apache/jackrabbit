@@ -24,7 +24,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Implements a wildcard query on the name field.
- * <p/>
+ * <p>
  * Wildcards are:
  * <ul>
  * <li><code>%</code> : matches zero or more characters</li>

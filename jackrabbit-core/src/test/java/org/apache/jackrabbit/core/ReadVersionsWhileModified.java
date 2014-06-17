@@ -25,7 +25,7 @@ import javax.jcr.version.Version;
 /**
  * <code>ReadVersionsWhileModified</code> tests if version history can be read
  * consistently while it is modified by another thread.
- * <p/>
+ * <p>
  * This is a test case for: <a href="http://issues.apache.org/jira/browse/JCR-18">
  * JCR-18</a>
  */

@@ -43,7 +43,7 @@ import org.slf4j.LoggerFactory;
 /**
  * <code>LazyItemIterator</code> is an id-based iterator that instantiates
  * the <code>Item</code>s only when they are requested.
- * <p/>
+ * <p>
  * <strong>Important:</strong> <code>Item</code>s that appear to be nonexistent
  * for some reason (e.g. because of insufficient access rights or because they
  * have been removed since the iterator has been retrieved) are silently

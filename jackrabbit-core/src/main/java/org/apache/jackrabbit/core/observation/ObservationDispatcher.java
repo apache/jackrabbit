@@ -173,7 +173,7 @@ public final class ObservationDispatcher extends EventDispatcher
 
     /**
      * {@inheritDoc}
-     * <p/>
+     * <p>
      * Gives this observation manager the opportunity to
      * prepare the events for dispatching.
      */
@@ -200,7 +200,7 @@ public final class ObservationDispatcher extends EventDispatcher
 
     /**
      * {@inheritDoc}
-     * <p/>
+     * <p>
      * Dispatches the {@link EventStateCollection events} to all
      * registered {@link javax.jcr.observation.EventListener}s.
      */

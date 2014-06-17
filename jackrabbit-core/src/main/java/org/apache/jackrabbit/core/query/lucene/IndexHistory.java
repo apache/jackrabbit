@@ -101,7 +101,7 @@ class IndexHistory {
      * say until when an index segment was in use, but it does guarantee that
      * the index segment in question was not in use anymore at the returned
      * time.
-     * <p/>
+     * <p>
      * There are two special cases of return values:
      * <ul>
      * <li>{@link Long#MAX_VALUE}: indicates that the index segment is still in active use.</li>

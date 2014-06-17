@@ -209,7 +209,7 @@ abstract public class VersionManagerImplMerge extends VersionManagerImplRestore 
 
     /**
      * Returns the corresponding node in the workspace of the given session.
-     * <p/>
+     * <p>
      * Given a node N1 in workspace W1, its corresponding node N2 in workspace
      * W2 is defined as follows:
      * <ul>
@@ -262,7 +262,7 @@ abstract public class VersionManagerImplMerge extends VersionManagerImplRestore 
      * then <code>null</code> is returned. If the result of the merge test is
      * 'fail' with bestEffort set to <code>false</code> a MergeException is
      * thrown.
-     * <p/>
+     * <p>
      * jsr170 - 8.2.10 Merge:
      * [...]
      * <ul>

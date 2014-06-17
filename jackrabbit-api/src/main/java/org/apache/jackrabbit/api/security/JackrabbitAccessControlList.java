@@ -93,10 +93,10 @@ public interface JackrabbitAccessControlList extends JackrabbitAccessControlPoli
      * <code>principal</code>, the specified <code>privileges</code>, the
      * <code>isAllow</code> flag and an optional map containing additional
      * restrictions.
-     * <p/>
+     * <p>
      * This method returns <code>true</code> if this policy was modified,
      * <code>false</code> otherwise.
-     * <p/>
+     * <p>
      * An <code>AccessControlException</code> is thrown if any of the specified
      * parameters is invalid or if some other access control related exception occurs.
      * 
@@ -122,10 +122,10 @@ public interface JackrabbitAccessControlList extends JackrabbitAccessControlPoli
      * <code>principal</code>, the specified <code>privileges</code>, the
      * <code>isAllow</code> flag and an optional map containing additional
      * restrictions.
-     * <p/>
+     * <p>
      * This method returns <code>true</code> if this policy was modified,
      * <code>false</code> otherwise.
-     * <p/>
+     * <p>
      * An <code>AccessControlException</code> is thrown if any of the specified
      * parameters is invalid or if some other access control related exception occurs.
      *

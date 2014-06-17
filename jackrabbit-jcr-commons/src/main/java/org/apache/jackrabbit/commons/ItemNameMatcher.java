@@ -32,17 +32,17 @@ public final class ItemNameMatcher {
 
     /**
      * Matches the name pattern against the specified name.
-     * <p/>
+     * <p>
      * The pattern may be a full name or a partial name with one or more
      * wildcard characters ("*"), or a disjunction (using the "|" character
      * to represent logical <i>OR</i>) of these. For example,
-     * <p/>
+     * <p>
      * {@code "jcr:*|foo:bar"}
-     * <p/>
+     * <p>
      * would match
-     * <p/>
+     * <p>
      * {@code "foo:bar"}, but also {@code "jcr:whatever"}.
-     * <p/>
+     * <p>
      * <pre>
      * The EBNF for pattern is:
      *

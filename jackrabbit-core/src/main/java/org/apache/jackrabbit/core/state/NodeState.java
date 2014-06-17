@@ -716,12 +716,12 @@ public class NodeState extends ItemState {
     /**
      * Returns a list of child node entries that exist both in <i>this</i> node
      * state and in the overlayed node state but have been reordered.
-     * <p/>
+     * <p>
      * The list may include only the minimal set of nodes that have been
      * reordered. That is, even though a certain number of nodes have changed
      * their absolute position the list may include less that this number of
      * nodes.
-     * <p/>
+     * <p>
      * Example:<br/>
      * Initial state:
      * <pre>
@@ -853,7 +853,7 @@ public class NodeState extends ItemState {
 
     /**
      * {@inheritDoc}
-     * <p/>
+     * <p>
      * If the listener passed is at the same time a <code>NodeStateListener</code>
      * we remember it as well.
      */

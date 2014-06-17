@@ -93,7 +93,7 @@ public interface UserManager {
      * Returns all <code>Authorizable</code>s that have a
      * {@link Authorizable#getProperty(String) property} with the given relative
      * path (or name) that matches the specified value.
-     * <p/>
+     * <p>
      * If a relative path with more than one segment is specified only properties
      * exactly matching that patch will be returned. If, however, a name is
      * specified all properties that may be retrieved using
@@ -114,7 +114,7 @@ public interface UserManager {
      * path (or name) that matches the specified value. In contrast to
      * {@link #findAuthorizables(String, String)} the type of authorizable is
      * respected while executing the search.
-     * <p/>
+     * <p>
      * If a relative path with more than one segment is specified only properties
      * exactly matching that path will be returned. If, however, a name is
      * specified all properties that may be retrieved using
@@ -261,7 +261,7 @@ public interface UserManager {
 
     /**
      * Changes the auto save behavior of this <code>UserManager</code>.
-     * <p/>
+     * <p>
      * Note, that this shouldn't be allowed in cases where the associated session
      * is different from the original session accessing the user manager.
      *
