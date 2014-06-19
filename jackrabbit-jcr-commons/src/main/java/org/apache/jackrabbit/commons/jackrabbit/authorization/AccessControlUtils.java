@@ -282,7 +282,14 @@ public class AccessControlUtils {
      */
     public static boolean clear(Session session, String absPath, String principalName) throws RepositoryException {
         AccessControlManager acm = session.getAccessControlManager();
-        JackrabbitAccessControlList acl = getAccessControlList(acm, absPath);
+        JackrabbitAccessControlList acl = null;
+        // only clear if there is an existing acl (no need to retrieve applicable policies)
+        AccessControlPolicy[] pcls = acm.getPolicies(absPath);
+        for (AccessControlPolicy policy : pcls) {
+            if (policy instanceof JackrabbitAccessControlList) {
+                acl = (JackrabbitAccessControlList) policy;
+            }
+        }
         if (acl != null) {
             if (principalName == null) {
                 acm.removePolicy(absPath, acl);
