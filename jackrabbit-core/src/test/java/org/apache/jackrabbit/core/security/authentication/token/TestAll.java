@@ -35,6 +35,7 @@ public class TestAll extends TestCase {
         suite.addTestSuite(TokenBasedAuthenticationCompatTest.class);
         suite.addTestSuite(TokenBasedAuthenticationTest.class);
         suite.addTestSuite(TokenBasedLoginTest.class);
+        suite.addTestSuite(TokenProviderTest.class);
 
         return suite;
     }
