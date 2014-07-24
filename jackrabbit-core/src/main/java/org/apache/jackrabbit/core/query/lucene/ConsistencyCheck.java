@@ -477,6 +477,11 @@ public class ConsistencyCheck {
                 NodeId parentId = node.getParentId();
                 NodeState parent = (NodeState) stateMgr.getItemState(parentId);
                 ChildNodeEntry entry = parent.getChildNodeEntry(node.getNodeId());
+                if (entry == null) {
+                    log.warn("Failed to build path: abandoned child {} of node {}. " +
+                            "Please run a repository consistency check", node.getNodeId(), parentId);
+                    return uuid;
+                }
                 elements.add(entry);
                 node = parent;
             }
