@@ -16,9 +16,13 @@
  */
 package org.apache.jackrabbit.test.api.observation;
 
-import javax.jcr.RepositoryException;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+
 import javax.jcr.Node;
 import javax.jcr.Property;
+import javax.jcr.RepositoryException;
 import javax.jcr.observation.Event;
 
 /**
@@ -37,7 +41,8 @@ public class GetInfoTest extends AbstractObservationTest {
             }
         }, Event.NODE_ADDED);
         for (int i = 0; i < events.length; i++) {
-            assertEquals("info map must be empty", 0, events[i].getInfo().size());
+            Set<?> unexpectedKeys = getUnexpectedKeys(events[i].getInfo());
+            assertEquals("info map contains invalid keys: " + unexpectedKeys, 0, unexpectedKeys.size());
         }
     }
 
@@ -51,7 +56,8 @@ public class GetInfoTest extends AbstractObservationTest {
             }
         }, Event.NODE_REMOVED);
         for (int i = 0; i < events.length; i++) {
-            assertEquals("info map must be empty", 0, events[i].getInfo().size());
+            Set<?> unexpectedKeys = getUnexpectedKeys(events[i].getInfo());
+            assertEquals("info map must be empty", 0, unexpectedKeys.size());
         }
     }
 
@@ -63,7 +69,8 @@ public class GetInfoTest extends AbstractObservationTest {
             }
         }, Event.PROPERTY_ADDED);
         for (int i = 0; i < events.length; i++) {
-            assertEquals("info map must be empty", 0, events[i].getInfo().size());
+            Set<?> unexpectedKeys = getUnexpectedKeys(events[i].getInfo());
+            assertEquals("info map must be empty", 0, unexpectedKeys.size());
         }
     }
 
@@ -77,7 +84,8 @@ public class GetInfoTest extends AbstractObservationTest {
             }
         }, Event.PROPERTY_CHANGED);
         for (int i = 0; i < events.length; i++) {
-            assertEquals("info map must be empty", 0, events[i].getInfo().size());
+            Set<?> unexpectedKeys = getUnexpectedKeys(events[i].getInfo());
+            assertEquals("info map must be empty", 0, unexpectedKeys.size());
         }
     }
 
@@ -91,7 +99,16 @@ public class GetInfoTest extends AbstractObservationTest {
             }
         }, Event.PROPERTY_REMOVED);
         for (int i = 0; i < events.length; i++) {
-            assertEquals("info map must be empty", 0, events[i].getInfo().size());
+            Set<?> unexpectedKeys = getUnexpectedKeys(events[i].getInfo());
+            assertEquals("info map must be empty", 0, unexpectedKeys.size());
         }
+    }
+
+    private static Set<?> getUnexpectedKeys(Map<?, ?> info) {
+        Set<Object> result = new HashSet<Object>();
+        result.addAll(info.keySet());
+        result.remove("jcr:primaryType");
+        result.remove("jcr:mixinTypes");
+        return result;
     }
 }
