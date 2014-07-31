@@ -35,13 +35,13 @@ import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.apache.jackrabbit.test.NotExecutableException;
 
-public class TokenProviderTest extends AbstractJCRTest {
+public class CompatTokenProviderTest extends AbstractJCRTest {
 
     private User testuser;
     private String userId;
 
     private SessionImpl session;
-    private TokenProvider tokenProvider;
+    private CompatTokenProvider tokenProvider;
 
     @Override
     protected void setUp() throws Exception {
@@ -68,7 +68,7 @@ public class TokenProviderTest extends AbstractJCRTest {
         } else {
             session = (SessionImpl) getHelper().getSuperuserSession("security");
         }
-        tokenProvider = new TokenProvider((SessionImpl) session, TokenBasedAuthentication.TOKEN_EXPIRATION);
+        tokenProvider = new CompatTokenProvider((SessionImpl) session, TokenBasedAuthentication.TOKEN_EXPIRATION);
     }
 
     @Override
@@ -79,10 +79,6 @@ public class TokenProviderTest extends AbstractJCRTest {
         } finally {
             super.tearDown();
         }
-    }
-
-    public void testCreateTokenFromInvalidCredentials() throws Exception {
-        assertNull(tokenProvider.createToken(testuser, new SimpleCredentials("unknownUserId", new char[0])));
     }
 
     public void testCreateTokenFromCredentials() throws Exception {
@@ -117,15 +113,15 @@ public class TokenProviderTest extends AbstractJCRTest {
 
         TokenInfo info = tokenProvider.createToken(testuser, sc);
         Node tokenNode = getTokenNode(info);
-        Property prop = tokenNode.getProperty("rep:token.key");
+        Property prop = tokenNode.getProperty(".token.key");
         assertNotNull(prop);
         assertEquals(PropertyType.STRING, prop.getType());
-        assertTrue(prop.getDefinition().isProtected());
+        assertFalse(prop.getDefinition().isProtected());
 
-        prop = tokenNode.getProperty("rep:token.exp");
+        prop = tokenNode.getProperty(".token.exp");
         assertNotNull(prop);
         assertEquals(PropertyType.DATE, prop.getType());
-        assertTrue(prop.getDefinition().isProtected());
+        assertFalse(prop.getDefinition().isProtected());
 
         for (String key : privateAttributes.keySet()) {
             assertEquals(privateAttributes.get(key), tokenNode.getProperty(key).getString());
@@ -160,21 +156,19 @@ public class TokenProviderTest extends AbstractJCRTest {
     public void testIsExpired() throws Exception {
         TokenInfo info = tokenProvider.createToken(testuser, new SimpleCredentials(userId, userId.toCharArray()));
 
-        long loginTime = System.currentTimeMillis();
+        long loginTime = waitForSystemTimeIncrement(System.currentTimeMillis());
         assertFalse(info.isExpired(loginTime));
         assertTrue(info.isExpired(loginTime + TokenBasedAuthentication.TOKEN_EXPIRATION));
     }
 
     public void testReset() throws Exception {
         TokenInfo info = tokenProvider.createToken(testuser, new SimpleCredentials(userId, userId.toCharArray()));
-        long expTime = getTokenNode(info).getProperty("rep:token.exp").getLong();
+        long expTime = getTokenNode(info).getProperty(".token.exp").getLong();
 
         long loginTime = System.currentTimeMillis();
         assertFalse(info.resetExpiration(loginTime));
-        assertFalse(info.resetExpiration(loginTime + TokenBasedAuthentication.TOKEN_EXPIRATION));
-
         assertTrue(info.resetExpiration(loginTime + TokenBasedAuthentication.TOKEN_EXPIRATION / 2));
-        long expTime2 = getTokenNode(info).getProperty("rep:token.exp").getLong();
+        long expTime2 = getTokenNode(info).getProperty(".token.exp").getLong();
         assertFalse(expTime == expTime2);
     }
 
@@ -186,6 +180,13 @@ public class TokenProviderTest extends AbstractJCRTest {
     }
 
     private Node getTokenNode(TokenInfo info) throws RepositoryException {
-        return TokenProvider.getTokenNode(info.getToken(), session);
+        return CompatTokenProvider.getTokenNode(info.getToken(), session);
+    }
+
+    private static long waitForSystemTimeIncrement(long old){
+        while (old == System.currentTimeMillis()) {
+            // wait for system timer to move
+        }
+        return System.currentTimeMillis();
     }
 }
