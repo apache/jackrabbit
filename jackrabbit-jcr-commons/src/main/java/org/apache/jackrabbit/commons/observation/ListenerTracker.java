@@ -152,6 +152,11 @@ public class ListenerTracker {
                     eventDeliveryTime.addAndGet(nanoTime() - start);
                 }
             }
+
+            @Override
+            public String toString() {
+                return ListenerTracker.this.toString();
+            }
         };
     }
 
@@ -276,7 +281,8 @@ public class ListenerTracker {
         if (noLocal) {
             builder.append(", no local");
         }
-        builder.append(']');
+        builder.append("]@");
+        builder.append(listener.getClass().getName());
         return builder.toString();
     }
 
