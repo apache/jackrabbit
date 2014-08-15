@@ -123,6 +123,10 @@ public class SimpleCredentialsAuthenticationTest extends AbstractJCRTest {
             return false;
         }
 
+        public boolean isSystemUser() {
+            return false;
+        }
+
         public Credentials getCredentials() throws RepositoryException {
             return creds;
         }

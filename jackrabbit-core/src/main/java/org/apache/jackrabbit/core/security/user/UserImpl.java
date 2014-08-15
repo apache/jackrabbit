@@ -79,6 +79,10 @@ public class UserImpl extends AuthorizableImpl implements User {
         }
     }
 
+    public boolean isSystemUser() {
+        return false;
+    }
+
     /**
      * @see User#getCredentials()
      */

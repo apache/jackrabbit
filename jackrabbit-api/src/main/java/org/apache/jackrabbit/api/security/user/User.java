@@ -34,6 +34,11 @@ public interface User extends Authorizable {
     boolean isAdmin();
 
     /**
+     * @return true if the current user represents a system user.
+     */
+    boolean isSystemUser();
+
+    /**
      * Returns the internal <code>Credentials</code> representation for this
      * user. This method is expected to be used for validation during the
      * login process. However, the return value should neither be usable nor

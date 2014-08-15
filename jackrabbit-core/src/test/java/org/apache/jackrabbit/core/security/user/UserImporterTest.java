@@ -1621,6 +1621,10 @@ public class UserImporterTest extends AbstractJCRTest {
                     return null;
                 }
 
+                public User createSystemUser(String userID, String intermediatePath) throws AuthorizableExistsException, RepositoryException {
+                    return null;
+                }
+
                 public Group createGroup(String groupID) throws AuthorizableExistsException, RepositoryException {
                 	return null;
                 }
