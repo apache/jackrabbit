@@ -594,6 +594,10 @@ public class UserManagerImpl extends ProtectedItemModifier
         }
     }
 
+    public User createSystemUser(String userID, String intermediatePath) throws AuthorizableExistsException, RepositoryException {
+        throw new UnsupportedRepositoryOperationException("Not yet implemented.");
+    }
+
     /**
      * @see UserManager#createGroup(String)
      */
@@ -758,7 +762,6 @@ public class UserManagerImpl extends ProtectedItemModifier
         } else {
             pwHash = password;
         }
-        Value v = getSession().getValueFactory().createValue(pwHash);
         setProperty(userNode, P_PASSWORD, getValue(pwHash), userNode.isNew());
     }
 
