@@ -39,11 +39,14 @@ import static java.util.Arrays.copyOf;
  * {@link javax.jcr.observation.Event} for details.
  * </li>
  * <li>
- * <code>absPath</code>, <code>absPaths</code> <code>isDeep</code>:
- * Only events whose associated parent node is at one of the paths in
- * <code>absPath</code> or <code>absPaths</code> (or within its subgraph,
- * if <code>isDeep</code> is <code>true</code>) will be received. It is
- * permissible to register a listener for a path where no node currently exists.
+ * <code>absPath</code>, <code>absPaths</code>, <code>excludedPaths</code>,
+ * <code>isDeep</code>: Only events whose associated parent node is at one
+ * of the paths in <code>absPath</code> or <code>absPaths</code> (or within
+ * its subgraph, if <code>isDeep</code> is <code>true</code>) will be received
+ * except if the associated parent node is at one of the paths in
+ * <code>excludedPaths</code> or its subgraph.
+ * It is permissible to register a listener for a path where no node currently
+ * exists.
  * </li>
  * <li>
  * <code>uuid</code>:
@@ -89,6 +92,7 @@ public class JackrabbitEventFilter {  // TODO extends EventFilter once JCR 2.1 i
     private String[] nodeTypeNames;
     private boolean noLocal;
     private String[] absPaths = new String[]{};
+    private String[] excludedPaths = new String[]{};
     private boolean noExternal;
     private boolean noInternal;
 
@@ -237,6 +241,27 @@ public class JackrabbitEventFilter {  // TODO extends EventFilter once JCR 2.1 i
      */
     public String[] getAdditionalPaths() {
         return copyOf(absPaths, absPaths.length);
+    }
+
+    /**
+     * Sets the <code>excludedPaths</code> parameter of the filter.
+     * If left unset, this parameter defaults to an empty array.
+     *
+     * @param excludedPaths an absolute path <code>String</code> array.
+     * @return This EventFilter object with the <code>excludedPaths</code> parameter set.
+     */
+    public JackrabbitEventFilter setExcludedPaths(String... excludedPaths) {
+        this.excludedPaths = copyOf(excludedPaths, excludedPaths.length);
+        return this;
+    }
+
+    /**
+     * Returns the <code>excludedPaths</code> parameter of the filter.
+     *
+     * @return a <code>String</code> array.
+     */
+    public String[] getExcludedPaths() {
+        return copyOf(excludedPaths, excludedPaths.length);
     }
 
     /**
