@@ -128,6 +128,12 @@ public class ObservationManagerImpl implements EventStateCollectionFactory,
     public void addEventListener(EventListener listener, JackrabbitEventFilter filter)
             throws RepositoryException {
 
+        String[] excludedPaths = filter.getExcludedPaths();
+        if (excludedPaths.length > 0) {
+            log.warn("JackrabbitEventFilter excludedPaths is not implemented and will be ignored: {}",
+                    Arrays.toString(excludedPaths));
+        }
+
         List<String> absPaths = new ArrayList<String>(Arrays.asList(filter.getAdditionalPaths()));
         if (filter.getAbsPath() != null) {
             absPaths.add(filter.getAbsPath());
