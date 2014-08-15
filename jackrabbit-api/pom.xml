@@ -31,7 +31,7 @@
   </parent>
   <artifactId>jackrabbit-api</artifactId>
   <name>Apache Jackrabbit API</name>
-  <description>Jacrabbit-specific extensions to the JCR API</description>
+  <description>Jackrabbit-specific extensions to the JCR API</description>
   <packaging>bundle</packaging>
 
   <build>
