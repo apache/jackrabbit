@@ -27,6 +27,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.amazonaws.ClientConfiguration;
+import com.amazonaws.Protocol;
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.s3.AmazonS3;
@@ -67,6 +68,10 @@ public final class Utils {
         int maxConnections = Integer.parseInt(prop.getProperty(S3Constants.S3_MAX_CONNS));
         int maxErrorRetry = Integer.parseInt(prop.getProperty(S3Constants.S3_MAX_ERR_RETRY));
         ClientConfiguration cc = new ClientConfiguration();
+        String protocol = prop.getProperty(S3Constants.S3_CONN_PROTOCOL);
+        if ( protocol != null && protocol.equalsIgnoreCase("http")) {
+            cc.setProtocol(Protocol.HTTP);
+        }
         cc.setConnectionTimeout(connectionTimeOut);
         cc.setSocketTimeout(socketTimeOut);
         cc.setMaxConnections(maxConnections);
