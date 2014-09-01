@@ -66,6 +66,11 @@ public final class S3Constants {
      * Amazon aws S3 region.
      */
     public static final String S3_END_POINT = "s3EndPoint";
+    
+    /**
+     * Constant for S3 Connector Protocol
+     */
+    public static final String S3_CONN_PROTOCOL = "s3ConnProtocol";
 
     /**
      * Constant to rename keys
@@ -76,7 +81,7 @@ public final class S3Constants {
      * Constant to rename keys
      */
     public static final String S3_WRITE_THREADS = "writeThreads";
-
+    
     /**
      * private constructor so that class cannot initialized from outside.
      */
