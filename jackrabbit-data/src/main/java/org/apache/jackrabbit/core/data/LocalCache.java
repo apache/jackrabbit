@@ -74,11 +74,6 @@ public class LocalCache {
     private final File tmp;
 
     /**
-     * The maximum size of cache in bytes.
-     */
-    private long maxSize;
-
-    /**
      * If true cache is in purgeMode and not available. All operation would be
      * no-op.
      */
@@ -93,26 +88,26 @@ public class LocalCache {
      * 
      * @param path file system path
      * @param tmpPath temporary directory used by cache.
-     * @param maxSize maximum size of cache.
+     * @param maxSizeInBytes maximum size of cache.
      * @param cachePurgeTrigFactor factor which triggers cache to purge mode.
-     * That is if current size exceed (cachePurgeTrigFactor * maxSize), the
+     * That is if current size exceed (cachePurgeTrigFactor * maxSizeInBytes), the
      * cache will go in auto-purge mode.
      * @param cachePurgeResizeFactor after cache purge size of cache will be
-     * just less (cachePurgeResizeFactor * maxSize).
+     * just less (cachePurgeResizeFactor * maxSizeInBytes).
      * @param asyncUploadCache {@link AsyncUploadCache}
-     * @throws RepositoryException
+     * @throws IOException
+     * @throws java.lang.ClassNotFoundException
      */
-    public LocalCache(String path, String tmpPath, long size, double cachePurgeTrigFactor,
+    public LocalCache(String path, String tmpPath, long maxSizeInBytes, double cachePurgeTrigFactor,
             double cachePurgeResizeFactor, AsyncUploadCache asyncUploadCache) throws IOException,
             ClassNotFoundException {
-        this.maxSize = size;
         directory = new File(path);
         tmp = new File(tmpPath);
         LOG.info(
             "cachePurgeTrigFactor =[{}], cachePurgeResizeFactor =[{}],  cachePurgeTrigFactorSize =[{}], cachePurgeResizeFactorSize =[{}]",
             new Object[] { cachePurgeTrigFactor, cachePurgeResizeFactor,
-                (cachePurgeTrigFactor * size), (cachePurgeResizeFactor * size) });
-        cache = new LRUCache(size, cachePurgeTrigFactor, cachePurgeResizeFactor);
+                (cachePurgeTrigFactor * maxSizeInBytes), (cachePurgeResizeFactor * maxSizeInBytes) });
+        cache = new LRUCache(maxSizeInBytes, cachePurgeTrigFactor, cachePurgeResizeFactor);
         this.asyncUploadCache = asyncUploadCache;
 
         new Thread(new CacheBuildJob()).start();
@@ -134,39 +129,38 @@ public class LocalCache {
         fileName = fileName.replace("\\", "/");
         File f = getFile(fileName);
         long length = 0;
-        synchronized (this) {
-            if (!f.exists() || isInPurgeMode()) {
-                OutputStream out = null;
-                File transFile = null;
-                try {
-                    TransientFileFactory tff = TransientFileFactory.getInstance();
-                    transFile = tff.createTransientFile("s3-", "tmp", tmp);
-                    out = new BufferedOutputStream(new FileOutputStream(transFile));
-                    length = IOUtils.copyLarge(in, out);
-                } finally {
-                    IOUtils.closeQuietly(out);
-                }
-                // rename the file to local fs cache
-                if (canAdmitFile(length)
-                    && (f.getParentFile().exists() || f.getParentFile().mkdirs())
-                    && transFile.renameTo(f) && f.exists()) {
-                    if (transFile.exists() && transFile.delete()) {
-                        LOG.info("tmp file [{}] not deleted successfully", transFile.getAbsolutePath());
-                    }
-                    transFile = null;
-                    LOG.debug("file [{}] added to local cache.", fileName);
-                    cache.put(fileName, f.length());
-                } else {
-                    f = transFile;
-                }
-            } else {
-                // f.exists and not in purge mode
-                f.setLastModified(System.currentTimeMillis());
-                cache.put(fileName, f.length());
+        if (!f.exists() || isInPurgeMode()) {
+            OutputStream out = null;
+            File transFile = null;
+            try {
+                TransientFileFactory tff = TransientFileFactory.getInstance();
+                transFile = tff.createTransientFile("s3-", "tmp", tmp);
+                out = new BufferedOutputStream(new FileOutputStream(transFile));
+                length = IOUtils.copyLarge(in, out);
+            } finally {
+                IOUtils.closeQuietly(out);
             }
-            cache.tryPurge();
-            return new LazyFileInputStream(f);
+            // rename the file to local fs cache
+            if (canAdmitFile(length)
+                && (f.getParentFile().exists() || f.getParentFile().mkdirs())
+                && transFile.renameTo(f) && f.exists()) {
+                if (transFile.exists() && transFile.delete()) {
+                    LOG.info("tmp file [{}] not deleted successfully",
+                        transFile.getAbsolutePath());
+                }
+                transFile = null;
+                LOG.debug("file [{}] added to local cache.", fileName);
+                cache.put(fileName, f.length());
+            } else {
+                f = transFile;
+            }
+        } else {
+            // f.exists and not in purge mode
+            f.setLastModified(System.currentTimeMillis());
+            cache.put(fileName, f.length());
         }
+        cache.tryPurge();
+        return new LazyFileInputStream(f);
     }
 
     /**
@@ -176,9 +170,8 @@ public class LocalCache {
      * 
      * @param fileName the key of cache.
      * @param src file to be added to cache.
-     * @throws IOException
      */
-    public synchronized File store(String fileName, final File src) {
+    public File store(String fileName, final File src) {
         try {
             return store(fileName, src, false).getFile();
         } catch (IOException ioe) {
@@ -191,21 +184,21 @@ public class LocalCache {
      * This method add file to {@link LocalCache} and tries that file can be
      * added to {@link AsyncUploadCache}. If file is added to
      * {@link AsyncUploadCache} successfully, it sets
-     * {@link AsyncUploadResult#setAsyncUpload(boolean)} to true.
+     * {@link AsyncUploadCacheResult#setAsyncUpload(boolean)} to true.
      *
      * @param fileName name of the file.
      * @param src source file.
      * @param tryForAsyncUpload If true it tries to add fileName to
      *            {@link AsyncUploadCache}
      * @return {@link AsyncUploadCacheResult}. This method sets
-     *         {@link AsyncUploadResult#setAsyncUpload(boolean)} to true, if
+     *         {@link AsyncUploadCacheResult#setAsyncUpload(boolean)} to true, if
      *         fileName is added to {@link AsyncUploadCache} successfully else
      *         it sets {@link AsyncUploadCacheResult#setAsyncUpload(boolean)} to
      *         false. {@link AsyncUploadCacheResult#getFile()} contains cached
      *         file, if it is added to {@link LocalCache} or original file.
      * @throws IOException
      */
-    public synchronized AsyncUploadCacheResult store(String fileName, File src, boolean tryForAsyncUpload) throws IOException {
+    public AsyncUploadCacheResult store(String fileName, File src, boolean tryForAsyncUpload) throws IOException {
         fileName = fileName.replace("\\", "/");
         File dest = getFile(fileName);
         File parent = dest.getParentFile();
@@ -240,7 +233,7 @@ public class LocalCache {
         return file == null ? null : new LazyFileInputStream(file);
     }
 
-    public synchronized File getFileIfStored(String fileName) throws IOException {
+    public File getFileIfStored(String fileName) throws IOException {
         fileName = fileName.replace("\\", "/");
         File f = getFile(fileName);
         // return file in purge mode = true and file present in asyncUploadCache
@@ -264,7 +257,7 @@ public class LocalCache {
      * 
      * @param fileName file name that need to be removed from cache.
      */
-    public synchronized void delete(String fileName) {
+    public void delete(String fileName) {
         if (isInPurgeMode()) {
             LOG.debug("purgeMode true :delete returned");
             return;
@@ -277,7 +270,7 @@ public class LocalCache {
      * Returns length of file if exists in cache else returns null.
      * @param fileName name of the file.
      */
-    public synchronized Long getFileLength(String fileName) {
+    public Long getFileLength(String fileName) {
         Long length = null;
         try {
             length = cache.get(fileName);
@@ -308,7 +301,7 @@ public class LocalCache {
      * @param length of the file.
      * @return true if yes else return false.
      */
-    private synchronized boolean canAdmitFile(final long length) {
+    private boolean canAdmitFile(final long length) {
       //order is important here
         boolean value = !isInPurgeMode() && (cache.canAdmitFile(length));
         if (!value) {
