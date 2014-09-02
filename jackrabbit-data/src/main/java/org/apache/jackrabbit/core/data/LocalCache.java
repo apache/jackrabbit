@@ -29,10 +29,9 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import javax.jcr.RepositoryException;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
@@ -95,22 +94,39 @@ public class LocalCache {
      * @param cachePurgeResizeFactor after cache purge size of cache will be
      * just less (cachePurgeResizeFactor * maxSizeInBytes).
      * @param asyncUploadCache {@link AsyncUploadCache}
-     * @throws IOException
-     * @throws java.lang.ClassNotFoundException
      */
     public LocalCache(String path, String tmpPath, long maxSizeInBytes, double cachePurgeTrigFactor,
-            double cachePurgeResizeFactor, AsyncUploadCache asyncUploadCache) throws IOException,
-            ClassNotFoundException {
+            double cachePurgeResizeFactor, AsyncUploadCache asyncUploadCache) {
         directory = new File(path);
         tmp = new File(tmpPath);
         LOG.info(
-            "cachePurgeTrigFactor =[{}], cachePurgeResizeFactor =[{}],  cachePurgeTrigFactorSize =[{}], cachePurgeResizeFactorSize =[{}]",
+            "cachePurgeTrigFactor =[{}], cachePurgeResizeFactor =[{}],  " +
+            "cachePurgeTrigFactorSize =[{}], cachePurgeResizeFactorSize =[{}]",
             new Object[] { cachePurgeTrigFactor, cachePurgeResizeFactor,
-                (cachePurgeTrigFactor * maxSizeInBytes), (cachePurgeResizeFactor * maxSizeInBytes) });
+                (cachePurgeTrigFactor * maxSizeInBytes), 
+                (cachePurgeResizeFactor * maxSizeInBytes) });
         cache = new LRUCache(maxSizeInBytes, cachePurgeTrigFactor, cachePurgeResizeFactor);
         this.asyncUploadCache = asyncUploadCache;
-
-        new Thread(new CacheBuildJob()).start();
+        long startTime = System.currentTimeMillis();
+        ArrayList<File> allFiles = new ArrayList<File>();
+        Iterator<File> it = FileUtils.iterateFiles(directory, null, true);
+        while (it.hasNext()) {
+            File f = it.next();
+            allFiles.add(f);
+        }
+        long t1 = System.currentTimeMillis();
+        LOG.debug("Time taken to recursive [{}] took [{}] sec",
+            allFiles.size(), ((t1 - startTime) / 1000));
+        Collections.sort(allFiles, new Comparator<File>() {
+            public int compare(File o1, File o2) {
+                long l1 = o1.lastModified(), l2 = o2.lastModified();
+                return l1 < l2 ? -1 : l1 > l2 ? 1 : 0;
+            }
+        });
+        long t2 = System.currentTimeMillis();
+        LOG.debug("Time taken to sort [{}] took [{}] sec",
+            allFiles.size(), ((t2 - t1) / 1000));
+        new Thread(new CacheBuildJob(allFiles)).start();
     }
 
     /**
@@ -544,27 +560,17 @@ public class LocalCache {
      * asynchronously.
      */
     private class CacheBuildJob implements Runnable {
+
+        List<File> allFiles ;
+        
+        private CacheBuildJob(List<File> allFiles) {
+            this.allFiles = allFiles;
+        }
         public void run() {
             long startTime = System.currentTimeMillis();
-            ArrayList<File> allFiles = new ArrayList<File>();
-            Iterator<File> it = FileUtils.iterateFiles(directory, null, true);
-            while (it.hasNext()) {
-                File f = it.next();
-                allFiles.add(f);
-            }
-            long t1 = System.currentTimeMillis();
-            LOG.debug("Time taken to recursive [{}] took [{}] sec",
-                allFiles.size(), ((t1 - startTime) / 1000));
-            Collections.sort(allFiles, new Comparator<File>() {
-                public int compare(File o1, File o2) {
-                    long l1 = o1.lastModified(), l2 = o2.lastModified();
-                    return l1 < l2 ? -1 : l1 > l2 ? 1 : 0;
-                }
-            });
-            long t2 = System.currentTimeMillis();
-            LOG.debug("Time taken to sort [{}] took [{}] sec",
-                allFiles.size(), ((t2 - t1) / 1000));
             String dataStorePath = directory.getAbsolutePath();
+            LOG.info("directoryPath = " + dataStorePath);
+            dataStorePath = dataStorePath.replace("\\", "/");
             String tmpPath = tmp.getAbsolutePath();
             LOG.debug("tmp path [{}]", tmpPath); 
             long time = System.currentTimeMillis();

@@ -24,12 +24,14 @@ import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import junit.framework.TestCase;
 
-import org.apache.jackrabbit.core.data.AsyncUploadCache;
-import org.apache.jackrabbit.core.data.AsyncUploadCacheResult;
-import org.apache.jackrabbit.core.data.LocalCache;
+import org.apache.commons.io.FileUtils;
+import org.apache.jackrabbit.core.data.util.NamedThreadFactory;
 import org.apache.jackrabbit.core.fs.local.FileUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -66,10 +68,14 @@ public class TestLocalCache extends TestCase {
     @Override
     protected void tearDown() throws IOException {
         File cachedir = new File(CACHE_DIR);
-        if (cachedir.exists()) FileUtil.delete(cachedir);
+        if (cachedir.exists()) {
+            FileUtils.deleteQuietly(cachedir);
+        }
 
         File tempdir = new File(TEMP_DIR);
-        if (tempdir.exists()) FileUtil.delete(tempdir);
+        if (tempdir.exists()) {
+            FileUtils.deleteQuietly(tempdir);
+        }
     }
 
     /**
@@ -273,6 +279,70 @@ public class TestLocalCache extends TestCase {
         }
     }
 
+    /**
+     * Test concurrent {@link LocalCache} initialization with storing
+     * {@link LocalCache}
+     */
+    public void testConcurrentInitWithStore() {
+        try {
+            AsyncUploadCache pendingFiles = new AsyncUploadCache();
+            pendingFiles.init(TARGET_DIR, CACHE_DIR, 100);
+            pendingFiles.reset();
+            LocalCache cache = new LocalCache(CACHE_DIR, TEMP_DIR, 10000000,
+                0.95, 0.70, pendingFiles);
+            Random random = new Random(12345);
+            int fileUploads = 1000;
+            Map<String, byte[]> byteMap = new HashMap<String, byte[]>(
+                fileUploads);
+            byte[] data;
+            for (int i = 0; i < fileUploads; i++) {
+                data = new byte[100];
+                random.nextBytes(data);
+                String key = "a" + i;
+                byteMap.put(key, data);
+                cache.store(key, new ByteArrayInputStream(byteMap.get(key)));
+            }
+            ExecutorService executor = Executors.newFixedThreadPool(10,
+                new NamedThreadFactory("localcache-store-worker"));
+            cache = new LocalCache(CACHE_DIR, TEMP_DIR, 10000000, 0.95, 0.70,
+                pendingFiles);
+            executor.execute(new StoreWorker(cache, byteMap));
+            executor.shutdown();
+            while (!executor.awaitTermination(15, TimeUnit.SECONDS)) {
+            }
+        } catch (Exception e) {
+            LOG.error("error:", e);
+            fail();
+        }
+    }
+
+
+    private class StoreWorker implements Runnable {
+        Map<String, byte[]> byteMap;
+
+        LocalCache cache;
+
+        Random random;
+
+        private StoreWorker(LocalCache cache, Map<String, byte[]> byteMap) {
+            this.byteMap = byteMap;
+            this.cache = cache;
+            random = new Random(byteMap.size());
+        }
+
+        public void run() {
+            try {
+                for (int i = 0; i < 100; i++) {
+                    String key = "a" + random.nextInt(byteMap.size());
+                    LOG.debug("key=" + key);
+                    cache.store(key, new ByteArrayInputStream(byteMap.get(key)));
+                }
+            } catch (Exception e) {
+                LOG.error("error:", e);
+                fail();
+            }
+        }
+    }
     /**
      * Assert two inputstream
      */
