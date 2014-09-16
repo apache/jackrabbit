@@ -75,8 +75,7 @@ public class StreamWrapper {
     /**
      * Resets the internal InputStream that it could be re-read.<br>
      * Is used from {@link RetryManager} if a {@link SQLException} has occurred.<br>
-     * At the moment only a {@link TempFileInputStream} can be reseted.
-     * 
+     *
      * @return returns true if it was able to reset the Stream
      */
     public boolean resetStream() {
@@ -91,6 +90,11 @@ public class StreamWrapper {
     			log.warn("Failed to create a new TempFileInputStream", e);
     		}
     	}
-    	return false;
+        try {
+            stream.reset();
+            return true;
+        } catch (IOException e) {
+            return false;
+        }
 	}
 }
