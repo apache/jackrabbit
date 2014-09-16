@@ -512,22 +512,7 @@ public class ConnectionHelper {
                 stmt.setObject(i + 1, p);
             }
         }
-        try {
-        	stmt.execute();
-        } catch (SQLException e) {
-        	//Reset Stream for retry ...
-            for (int i = 0; params != null && i < params.length; i++) {
-                Object p = params[i];
-                if (p instanceof StreamWrapper) {
-                    StreamWrapper wrapper = (StreamWrapper) p;
-                    if(!wrapper.resetStream()) {
-                    	wrapper.cleanupResources();
-                    	throw new RuntimeException("Unable to reset the Stream.");
-                    }
-                }
-            }
-        	throw e;
-        }
+        stmt.execute();
         return stmt;
     }
 
@@ -563,6 +548,9 @@ public class ConnectionHelper {
                     log.error("Failed to execute SQL (stacktrace on DEBUG log level): " + lastException);
                     log.debug("Failed to execute SQL", lastException);
                     failures++;
+                    if (!resetParamResources()) {
+                        break;
+                    }
                     if (blockOnConnectionLoss || failures <= RETRIES) { // if we're going to try again
                         try {
                             Thread.sleep(SLEEP_BETWEEN_RETRIES_MS);
@@ -594,5 +582,19 @@ public class ConnectionHelper {
 		        }
 		    }
 		}
+
+        protected boolean resetParamResources() {
+            for (int i = 0; params != null && i < params.length; i++) {
+                Object p = params[i];
+                if (p instanceof StreamWrapper) {
+                    StreamWrapper wrapper = (StreamWrapper) p;
+                    if(!wrapper.resetStream()) {
+                        wrapper.cleanupResources();
+                        return false;
+                    }
+                }
+            }
+            return true;
+        }
     }
 }
