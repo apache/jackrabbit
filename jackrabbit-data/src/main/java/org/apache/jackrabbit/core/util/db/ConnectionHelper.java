@@ -531,38 +531,39 @@ public class ConnectionHelper {
     	}
     	
         public final T doTry() throws SQLException {
-            if (inBatchMode()) {
-                return call();
-            } else {
-                boolean sleepInterrupted = false;
-                int failures = 0;
-                SQLException lastException = null;
-                while (!sleepInterrupted && (blockOnConnectionLoss || failures <= RETRIES)) {
-                    try {
-                    	T object = call(); 
-                        cleanupParamResources();
-                        return object;
-                    } catch (SQLException e) {
-                        lastException = e;
-                    }
-                    log.error("Failed to execute SQL (stacktrace on DEBUG log level): " + lastException);
-                    log.debug("Failed to execute SQL", lastException);
-                    if (!resetParamResources()) {
-                        break; // don't try again if streams cannot be reset
-                    }
-                    failures++;
-                    if (blockOnConnectionLoss || failures <= RETRIES) { // if we're going to try again
+            try {
+                if (inBatchMode()) {
+                    return call();
+                } else {
+                    boolean sleepInterrupted = false;
+                    int failures = 0;
+                    SQLException lastException = null;
+                    while (!sleepInterrupted && (blockOnConnectionLoss || failures <= RETRIES)) {
                         try {
-                            Thread.sleep(SLEEP_BETWEEN_RETRIES_MS);
-                        } catch (InterruptedException e1) {
-                            Thread.currentThread().interrupt();
-                            sleepInterrupted = true;
-                            log.error("Interrupted: canceling retry");
+                            return call();
+                        } catch (SQLException e) {
+                            lastException = e;
+                        }
+                        log.error("Failed to execute SQL (stacktrace on DEBUG log level): " + lastException);
+                        log.debug("Failed to execute SQL", lastException);
+                        if (!resetParamResources()) {
+                            break; // don't try again if streams cannot be reset
+                        }
+                        failures++;
+                        if (blockOnConnectionLoss || failures <= RETRIES) { // if we're going to try again
+                            try {
+                                Thread.sleep(SLEEP_BETWEEN_RETRIES_MS);
+                            } catch (InterruptedException e1) {
+                                Thread.currentThread().interrupt();
+                                sleepInterrupted = true;
+                                log.error("Interrupted: canceling retry");
+                            }
                         }
                     }
+                    throw lastException;
                 }
+            } finally {
                 cleanupParamResources();
-                throw lastException;
             }
         }
 
@@ -589,7 +590,6 @@ public class ConnectionHelper {
                 if (p instanceof StreamWrapper) {
                     StreamWrapper wrapper = (StreamWrapper) p;
                     if(!wrapper.resetStream()) {
-                        wrapper.cleanupResources();
                         return false;
                     }
                 }
