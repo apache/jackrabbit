@@ -89,6 +89,7 @@ public class StreamWrapper {
     		} catch (Exception e) {
     			log.warn("Failed to create a new TempFileInputStream", e);
     		}
+            return false;
     	}
         try {
             stream.reset();
