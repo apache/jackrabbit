@@ -16,19 +16,19 @@
  */
 package org.apache.jackrabbit.core.journal;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import java.io.BufferedOutputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.BufferedOutputStream;
+
+import org.apache.jackrabbit.core.data.db.ResettableTempFileInputStream;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Default temporary record used for appending to some journal.
@@ -298,7 +298,7 @@ public class AppendRecord extends AbstractRecord {
     private InputStream openInput() throws JournalException {
         if (file != null) {
             try {
-                return new FileInputStream(file);
+                return new ResettableTempFileInputStream(file);
             } catch (IOException e) {
                 String msg = "Unable to open file input on: " + file.getPath();
                 throw new JournalException(msg, e);
