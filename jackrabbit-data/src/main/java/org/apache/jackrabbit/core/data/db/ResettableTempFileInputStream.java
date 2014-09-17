@@ -19,39 +19,46 @@ package org.apache.jackrabbit.core.data.db;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FilterInputStream;
 import java.io.IOException;
-
-import org.apache.commons.io.input.ClosedInputStream;
+import java.nio.channels.FileChannel;
 
 /**
- * An input stream from a temporary file. The file is deleted when the stream is
- * closed or garbage collected.
+ * TempFileInputStream that can be reset in order to allow the
+ * ConnectionHelper to retry SQL execution in case of failure.
  */
-public class TempFileInputStream extends FilterInputStream {
+public class ResettableTempFileInputStream extends TempFileInputStream {
 
-    private final File file;
+    private final FileChannel fileChannel;
+    private long mark = 0;
 
-    public TempFileInputStream(File file) throws FileNotFoundException {
+    public ResettableTempFileInputStream(final File file) throws FileNotFoundException {
         this(new FileInputStream(file), file);
     }
 
-    protected TempFileInputStream(FileInputStream in, File file) {
-        super(in);
-        this.file = file;
+    private ResettableTempFileInputStream(final FileInputStream in, final File file) {
+        super(in, file);
+        this.fileChannel = in.getChannel();
     }
 
     @Override
-    public void close() throws IOException {
-        in.close();
-        in = new ClosedInputStream();
-        file.delete();
+    public boolean markSupported() {
+        return true;
     }
 
     @Override
-    protected void finalize() throws Throwable {
-        close();
-        super.finalize();
+    public synchronized void mark(int readlimit) {
+        try {
+            mark = fileChannel.position();
+        } catch (IOException ex) {
+            mark = -1;
+        }
     }
 
+    @Override
+    public synchronized void reset() throws IOException {
+        if (mark == -1) {
+            throw new IOException("Mark failed");
+        }
+        fileChannel.position(mark);
+    }
 }

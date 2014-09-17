@@ -48,7 +48,6 @@ public class TestAll extends TestCase {
         suite.addTestSuite(NodeTypeTest.class);
         suite.addTestSuite(OpenFilesTest.class);
         suite.addTestSuite(PersistenceManagerIteratorTest.class);
-        suite.addTestSuite(TempFileInputStreamTest.class);
         suite.addTestSuite(TestTwoGetStreams.class);
         suite.addTestSuite(WriteWhileReadingTest.class);
         suite.addTestSuite(GCSubtreeMoveTest.class);
