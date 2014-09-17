@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.core.journal;
 
+import org.apache.jackrabbit.core.data.db.TempFileInputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,7 +24,6 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -298,7 +298,7 @@ public class AppendRecord extends AbstractRecord {
     private InputStream openInput() throws JournalException {
         if (file != null) {
             try {
-                return new FileInputStream(file);
+                return new TempFileInputStream(file, false);
             } catch (IOException e) {
                 String msg = "Unable to open file input on: " + file.getPath();
                 throw new JournalException(msg, e);
