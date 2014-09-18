@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.core.util.db;
 
+import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.SQLException;
@@ -28,7 +29,7 @@ public class StreamWrapper {
 
     private final Logger log = LoggerFactory.getLogger(StreamWrapper.class);
 
-    private InputStream stream;
+    private MarkDetectingInputStream stream;
     private final long size;
 
     /**
@@ -41,7 +42,7 @@ public class StreamWrapper {
      * @param size the size of the input stream
      */
     public StreamWrapper(InputStream in, long size) {
-        this.stream = in;
+        this.stream = new MarkDetectingInputStream(in);
         this.size = size;
     }
     
@@ -65,16 +66,40 @@ public class StreamWrapper {
      * Resets the internal InputStream that it could be re-read.<br>
      * Is used from {@link RetryManager} if a {@link SQLException} has occurred.<br>
      * It relies on the assumption that the InputStream was not marked anywhere
-     * during reading so that resetting it moves the cursor to the beginning of the stream.
+     * during reading.
      *
      * @return returns true if it was able to reset the Stream
      */
     public boolean resetStream() {
         try {
-            stream.reset();
-            return true;
+            if (!stream.isMarked()) {
+                stream.reset();
+                return true;
+            } else {
+                log.warn("Cannot reset stream to the beginning because it was marked.");
+                return false;
+            }
         } catch (IOException e) {
             return false;
         }
 	}
+
+    private static class MarkDetectingInputStream extends FilterInputStream {
+
+        private boolean marked;
+
+        protected MarkDetectingInputStream(final InputStream in) {
+            super(in);
+        }
+
+        @Override
+        public synchronized void mark(final int readlimit) {
+            super.mark(readlimit);
+            marked = true;
+        }
+
+        private boolean isMarked() {
+            return marked;
+        }
+    }
 }
