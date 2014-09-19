@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.core.data.db;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.input.CountingInputStream;
 import org.apache.jackrabbit.core.data.AbstractDataStore;
 import org.apache.jackrabbit.core.data.DataIdentifier;
@@ -35,8 +36,10 @@ import org.slf4j.LoggerFactory;
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.lang.ref.WeakReference;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
@@ -349,7 +352,7 @@ public class DbDataStore extends AbstractDataStore
             } else if (STORE_TEMP_FILE.equals(storeStream)) {
                 File temp = moveToTempFile(in);
                 long length = temp.length();
-                wrapper = new StreamWrapper(new TempFileInputStream(temp, true), length);
+                wrapper = new StreamWrapper(new ResettableTempFileInputStream(temp), length);
             } else {
                 throw new DataStoreException("Unsupported stream store algorithm: " + storeStream);
             }
@@ -471,8 +474,18 @@ public class DbDataStore extends AbstractDataStore
      */
     private File moveToTempFile(InputStream in) throws IOException {
         File temp = File.createTempFile("dbRecord", null);
-        TempFileInputStream.writeToFileAndClose(in, temp);
+        writeToFileAndClose(in, temp);
         return temp;
+    }
+
+    private void writeToFileAndClose(InputStream in, File file) throws IOException {
+        OutputStream out = new FileOutputStream(file);
+        try {
+            IOUtils.copy(in, out);
+        } finally {
+            IOUtils.closeQuietly(out);
+            IOUtils.closeQuietly(in);
+        }
     }
 
     public synchronized void deleteRecord(DataIdentifier identifier) throws DataStoreException {
@@ -586,7 +599,7 @@ public class DbDataStore extends AbstractDataStore
             } else if (copyWhenReading) {
                 // If we copy while reading, create a temp file and close the stream
                 File temp = moveToTempFile(stream);
-                stream = new BufferedInputStream(new TempFileInputStream(temp, false));
+                stream = new BufferedInputStream(new TempFileInputStream(temp));
                 DbUtility.close(rs);
             } else {
                 stream = new BufferedInputStream(stream);

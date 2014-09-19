@@ -547,7 +547,8 @@ public class ConnectionHelper {
                         log.error("Failed to execute SQL (stacktrace on DEBUG log level): " + lastException);
                         log.debug("Failed to execute SQL", lastException);
                         if (!resetParamResources()) {
-                            break; // don't try again if streams cannot be reset
+                            log.warn("Could not reset parameters: not retrying SQL call");
+                            break;
                         }
                         failures++;
                         if (blockOnConnectionLoss || failures <= RETRIES) { // if we're going to try again
@@ -571,15 +572,13 @@ public class ConnectionHelper {
 
 		/**
 		 * Cleans up the Parameter resources that are not automatically closed or deleted.
-		 *
-		 * @param params
 		 */
 		protected void cleanupParamResources() {
 		    for (int i = 0; params != null && i < params.length; i++) {
 		        Object p = params[i];
 		        if (p instanceof StreamWrapper) {
 		            StreamWrapper wrapper = (StreamWrapper) p;
-		            wrapper.cleanupResources();
+		            wrapper.closeStream();
 		        }
 		    }
 		}

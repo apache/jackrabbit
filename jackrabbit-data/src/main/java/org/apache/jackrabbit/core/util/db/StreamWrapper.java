@@ -16,20 +16,20 @@
  */
 package org.apache.jackrabbit.core.util.db;
 
-import java.io.BufferedInputStream;
+import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.SQLException;
 
-import org.apache.jackrabbit.core.data.db.TempFileInputStream;
+import org.apache.commons.io.input.CloseShieldInputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class StreamWrapper {
 
-    static Logger log = LoggerFactory.getLogger(StreamWrapper.class);
+    private final Logger log = LoggerFactory.getLogger(StreamWrapper.class);
 
-    private InputStream stream;
+    private MarkDetectingInputStream stream;
     private final long size;
 
     /**
@@ -37,65 +37,69 @@ public class StreamWrapper {
      * safely be passed as a parameter to the {@link ConnectionHelper#exec(String, Object...)},
      * {@link ConnectionHelper#exec(String, Object[], boolean, int)} and
      * {@link ConnectionHelper#update(String, Object[])} methods.
-     * If the wrapped Stream is a {@link TempFileInputStream} it will be wrapped again by a {@link BufferedInputStream}.
-     * 
+     *
      * @param in the InputStream to wrap
      * @param size the size of the input stream
      */
     public StreamWrapper(InputStream in, long size) {
-        this.stream = in;
+        this.stream = new MarkDetectingInputStream(in);
         this.size = size;
     }
     
     public InputStream getStream() {
-        if (stream instanceof TempFileInputStream) {
-            return new BufferedInputStream(stream);
-        }
-        return stream;
+        return new CloseShieldInputStream(stream);
     }
     
     public long getSize() {
         return size;
     }
 
-    /**
-     * Cleans up the internal Resources
-     */
-	public void cleanupResources() {
-        if (stream instanceof TempFileInputStream) {
-        	try {
-        		stream.close();
-        		((TempFileInputStream) stream).deleteFile();
-        	} catch (IOException e) {
-        		log.warn("Unable to cleanup the TempFileInputStream");
-        	}
+    public void closeStream() {
+        try {
+            stream.close();
+        } catch (IOException e) {
+            log.error("Error while closing stream", e);
         }
-	}
+    }
 
     /**
      * Resets the internal InputStream that it could be re-read.<br>
      * Is used from {@link RetryManager} if a {@link SQLException} has occurred.<br>
+     * It relies on the assumption that the InputStream was not marked anywhere
+     * during reading.
      *
      * @return returns true if it was able to reset the Stream
      */
     public boolean resetStream() {
-    	if (stream instanceof TempFileInputStream) {
-    		try {
-	    		TempFileInputStream tempFileInputStream = (TempFileInputStream) stream;
-	    		// Close it if it is not already closed ...
-	    		tempFileInputStream.close();
-    			stream = new TempFileInputStream(tempFileInputStream.getFile(), true);
-    			return true;
-    		} catch (Exception e) {
-    			log.warn("Failed to create a new TempFileInputStream", e);
-    		}
-            return false;
-    	}
         try {
-            stream.reset();
-            return true;
+            if (!stream.isMarked()) {
+                stream.reset();
+                return true;
+            } else {
+                log.warn("Cannot reset stream to the beginning because it was marked.");
+                return false;
+            }
         } catch (IOException e) {
             return false;
         }
 	}
+
+    private static class MarkDetectingInputStream extends FilterInputStream {
+
+        private boolean marked;
+
+        protected MarkDetectingInputStream(final InputStream in) {
+            super(in);
+        }
+
+        @Override
+        public synchronized void mark(final int readlimit) {
+            super.mark(readlimit);
+            marked = true;
+        }
+
+        private boolean isMarked() {
+            return marked;
+        }
+    }
 }
