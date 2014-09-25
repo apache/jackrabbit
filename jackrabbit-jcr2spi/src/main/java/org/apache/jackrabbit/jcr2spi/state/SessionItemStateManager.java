@@ -51,6 +51,7 @@ import org.apache.jackrabbit.jcr2spi.operation.OperationVisitor;
 import org.apache.jackrabbit.jcr2spi.operation.Remove;
 import org.apache.jackrabbit.jcr2spi.operation.ReorderNodes;
 import org.apache.jackrabbit.jcr2spi.operation.SetMixin;
+import org.apache.jackrabbit.jcr2spi.operation.SetPolicy;
 import org.apache.jackrabbit.jcr2spi.operation.SetPrimaryType;
 import org.apache.jackrabbit.jcr2spi.operation.SetPropertyValue;
 import org.apache.jackrabbit.jcr2spi.operation.TransientOperationVisitor;
@@ -246,6 +247,23 @@ public class SessionItemStateManager extends TransientOperationVisitor implement
         operation.addedState(newStates);
 
         transientStateMgr.addOperation(operation);
+    }
+
+    @Override
+    public void visit(SetPolicy operation) throws RepositoryException {
+        NodeState parent = operation.getParentState();
+        ItemDefinitionProvider defProvider = mgrProvider.getItemDefinitionProvider();
+        QNodeDefinition def = defProvider.getQNodeDefinition(parent.getAllNodeTypeNames(), 
+                operation.getNodeName(), operation.getNodeTypeName());
+        
+        // mark parent entry as EXISTING_MODIFIED and perform validation checks
+        List<ItemState> newStates = addNodeState(parent, operation.getNodeName(), 
+                operation.getNodeTypeName(), operation.getUuid(), def, operation.getOptions());
+        
+        operation.addedState(newStates);
+        
+        transientStateMgr.addOperation(operation);
+
     }
 
     /**

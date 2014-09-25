@@ -99,6 +99,7 @@ import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.NodeInfo;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.PathFactory;
+import org.apache.jackrabbit.spi.PrivilegeDefinition;
 import org.apache.jackrabbit.spi.PropertyId;
 import org.apache.jackrabbit.spi.PropertyInfo;
 import org.apache.jackrabbit.spi.QItemDefinition;
@@ -129,6 +130,7 @@ import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.spi.commons.namespace.AbstractNamespaceResolver;
 import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
 import org.apache.jackrabbit.spi.commons.nodetype.compact.CompactNodeTypeDefWriter;
+import org.apache.jackrabbit.spi.commons.privilege.PrivilegeDefinitionImpl;
 import org.apache.jackrabbit.spi.commons.value.QValueValue;
 import org.apache.jackrabbit.spi.commons.value.ValueFactoryQImpl;
 import org.apache.jackrabbit.spi.commons.value.ValueFormat;
@@ -186,6 +188,8 @@ import org.apache.jackrabbit.webdav.search.SearchInfo;
 import org.apache.jackrabbit.webdav.security.CurrentUserPrivilegeSetProperty;
 import org.apache.jackrabbit.webdav.security.Privilege;
 import org.apache.jackrabbit.webdav.security.SecurityConstants;
+import org.apache.jackrabbit.webdav.security.SupportedPrivilege;
+import org.apache.jackrabbit.webdav.security.SupportedPrivilegeSetProperty;
 import org.apache.jackrabbit.webdav.transaction.TransactionConstants;
 import org.apache.jackrabbit.webdav.transaction.TransactionInfo;
 import org.apache.jackrabbit.webdav.version.DeltaVConstants;
@@ -896,6 +900,72 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
 
             // check privileges present against required privileges.
             return privileges.containsAll(requiredPrivileges);
+        } catch (IOException e) {
+            throw new RepositoryException(e);
+        } catch (ParserConfigurationException e) {
+            throw new RepositoryException(e);
+        } catch (DavException e) {
+            throw ExceptionConverter.generate(e);
+        } finally {
+            if (method != null) {
+                method.releaseConnection();
+            }
+        }
+    }
+    
+    public PrivilegeDefinition[] getSupportedPrivileges(SessionInfo sessionInfo, NodeId nodeId) throws RepositoryException {
+        
+        ReportInfo info = new ReportInfo(JcrRemotingConstants.REPORT_PRIVILEGES, ItemResourceConstants.NAMESPACE);
+        ReportMethod method = null;
+        try {
+            String uri = uriResolver.getWorkspaceUri(sessionInfo.getWorkspaceName());
+            String itemHref = obtainAbsolutePathFromUri(getItemUri(nodeId, sessionInfo));
+            
+            Element hrefContentElm = DomUtil.hrefToXml(itemHref, DomUtil.createDocument());
+            
+            // include supported-privilege-set in the request body to tell the server to retrieve a
+            // set of supported privileges .
+            Element supportPrivilegeSet = DomUtil.createElement(DomUtil.createDocument(), SecurityConstants.SUPPORTED_PRIVILEGE_SET.getName(), SecurityConstants.NAMESPACE);
+            
+            info.setContentElement(hrefContentElm);
+            info.setContentElement(supportPrivilegeSet);
+            
+            method = new ReportMethod(uri, info);
+            // clientKey null?
+            getClient(sessionInfo).executeMethod(method);
+            method.checkSuccess();
+
+            MultiStatusResponse[] responses = method.getResponseBodyAsMultiStatus().getResponses();
+                            
+            if (responses.length < 1) {
+                throw new ItemNotFoundException("Unable to retrieve privileges suported for item: " + 
+                                                    saveGetIdString(nodeId, sessionInfo));
+            }
+                                
+            DavPropertyName displayName = SecurityConstants.SUPPORTED_PRIVILEGE_SET;
+            DavProperty<?> p = responses[0].getProperties(DavServletResponse.SC_OK).get(displayName);
+            
+            SupportedPrivilegeSetProperty spsp = new SupportedPrivilegeSetProperty(p);
+            List<SupportedPrivilege> supportedPrivileges = spsp.getValue();
+
+            // build PrivilegeDefinition
+            List<PrivilegeDefinition> pDefs = new ArrayList<PrivilegeDefinition>();
+            NamePathResolver npResolver = getNamePathResolver(sessionInfo);
+            
+            for (SupportedPrivilege priv : supportedPrivileges) {
+                String privilegeName = priv.getJcrName();
+                Set<Name> aggrnames = null;
+                SupportedPrivilege[] aggregates = priv.getSupportedPrivileges();
+                if (aggregates != null && aggregates.length > 0) {
+                    aggrnames = new HashSet<Name>();
+                    for (SupportedPrivilege aggregate : aggregates) {
+                        aggrnames.add(npResolver.getQName(aggregate.getJcrName()));
+                    }                    
+                }
+                PrivilegeDefinition def = new PrivilegeDefinitionImpl(npResolver.getQName(privilegeName), priv.isAbstract(), aggrnames);
+                pDefs.add(def);
+            }
+            return pDefs.toArray(new PrivilegeDefinition[pDefs.size()]);
         } catch (IOException e) {
             throw new RepositoryException(e);
         } catch (ParserConfigurationException e) {
@@ -3021,6 +3091,11 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             }
         }
 
+        @Override
+        public void addNode(NodeId parentId, Name nodeName, String value) throws RepositoryException {
+            // do nothing
+        }
+        
         /**
          * @see Batch#addProperty(NodeId, Name, QValue)
          */

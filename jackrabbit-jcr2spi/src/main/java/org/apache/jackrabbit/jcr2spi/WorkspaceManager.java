@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.jcr2spi;
 
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -78,11 +79,14 @@ import org.apache.jackrabbit.jcr2spi.operation.ReorderNodes;
 import org.apache.jackrabbit.jcr2spi.operation.ResolveMergeConflict;
 import org.apache.jackrabbit.jcr2spi.operation.Restore;
 import org.apache.jackrabbit.jcr2spi.operation.SetMixin;
+import org.apache.jackrabbit.jcr2spi.operation.SetPolicy;
 import org.apache.jackrabbit.jcr2spi.operation.SetPrimaryType;
 import org.apache.jackrabbit.jcr2spi.operation.SetPropertyValue;
 import org.apache.jackrabbit.jcr2spi.operation.Update;
 import org.apache.jackrabbit.jcr2spi.operation.WorkspaceImport;
 import org.apache.jackrabbit.jcr2spi.security.AccessManager;
+import org.apache.jackrabbit.jcr2spi.security.authorization.AccessControlProvider;
+import org.apache.jackrabbit.jcr2spi.security.authorization.AccessControlProviderStub;
 import org.apache.jackrabbit.jcr2spi.state.ChangeLog;
 import org.apache.jackrabbit.jcr2spi.state.ItemState;
 import org.apache.jackrabbit.jcr2spi.state.ItemStateFactory;
@@ -140,6 +144,7 @@ public class WorkspaceManager
     private final NamespaceRegistryImpl nsRegistry;
     private final NodeTypeRegistryImpl ntRegistry;
     private final ItemDefinitionProvider definitionProvider;
+    
 
     /**
      * Semaphore to synchronize the feed thread with client
@@ -176,7 +181,7 @@ public class WorkspaceManager
      * A cache for item infos as supplied by {@link RepositoryService#getItemInfoCache(SessionInfo)}
      */
     private ItemInfoCache cache;
-
+    
     public WorkspaceManager(RepositoryService service, SessionInfo sessionInfo,
                             CacheBehaviour cacheBehaviour, int pollTimeout,
                             boolean observationSupported)
@@ -251,6 +256,15 @@ public class WorkspaceManager
 
     public ItemStateFactory getItemStateFactory() {
         return isf;
+    }
+
+    /**
+     * Locates and instantiates an AccessControlProvider implementation.
+     * @return      an access control manager provider.  
+     * @throws      RepositoryException
+     */
+    public AccessControlProvider getAccessControlProvider() throws RepositoryException {
+        return AccessControlProviderStub.newInstance(service);
     }
 
     public LockInfo getLockInfo(NodeId nodeId) throws RepositoryException {
@@ -894,7 +908,15 @@ public class WorkspaceManager
          */
         public void visit(AddNode operation) throws RepositoryException {
             NodeId parentId = operation.getParentId();
+            
             batch.addNode(parentId, operation.getNodeName(), operation.getNodeTypeName(), operation.getUuid());
+        }
+
+        public void visit(SetPolicy operation) throws RepositoryException {
+            StringWriter wr = new StringWriter();
+            // writes the JSON string to be added to the Batch.
+            operation.writeJson(wr);            
+            batch.addNode(operation.getParentId(), operation.getNodeName(), wr.toString());
         }
 
         /**

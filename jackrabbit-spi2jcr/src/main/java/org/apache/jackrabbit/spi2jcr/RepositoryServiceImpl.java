@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.spi2jcr;
 
 import org.apache.jackrabbit.spi.ItemInfoCache;
+import org.apache.jackrabbit.spi.PrivilegeDefinition;
 import org.apache.jackrabbit.spi.RepositoryService;
 import org.apache.jackrabbit.spi.IdFactory;
 import org.apache.jackrabbit.spi.QValueFactory;
@@ -60,6 +61,7 @@ import org.apache.jackrabbit.spi.commons.conversion.NameException;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
 import org.apache.jackrabbit.spi.commons.conversion.DefaultNamePathResolver;
+import org.apache.jackrabbit.spi.commons.privilege.PrivilegeDefinitionImpl;
 import org.apache.jackrabbit.spi.commons.value.QValueFactoryImpl;
 import org.apache.jackrabbit.spi.commons.value.ValueFormat;
 import org.apache.jackrabbit.spi.commons.value.ValueFactoryQImpl;
@@ -92,6 +94,7 @@ import javax.jcr.ItemVisitor;
 import javax.jcr.ValueFactory;
 import javax.jcr.GuestCredentials;
 import javax.jcr.PropertyIterator;
+import javax.jcr.security.Privilege;
 import javax.jcr.util.TraversingItemVisitor;
 import javax.jcr.observation.ObservationManager;
 import javax.jcr.observation.EventListener;
@@ -333,6 +336,27 @@ public class RepositoryServiceImpl implements RepositoryService {
         } catch (AccessControlException e) {
             return false;
         }
+    }
+
+    public PrivilegeDefinition[] getSupportedPrivileges(SessionInfo sessionInfo, NodeId nodeId) throws RepositoryException {
+        SessionInfoImpl sInfo = getSessionInfoImpl(sessionInfo);
+        String path = pathForId(nodeId, sInfo);
+
+        Privilege[] privs = sInfo.getSession().getAccessControlManager().getSupportedPrivileges(path);
+        PrivilegeDefinition[] pDefs = new PrivilegeDefinition[privs.length];
+        NamePathResolver npResolver = sInfo.getNamePathResolver();
+        for (int i = 0; i < privs.length; i++) {
+            Set<Name> aggrnames = null;
+            if (privs[i].isAggregate()) {
+                aggrnames = new HashSet<Name>();
+                for (Privilege dap : privs[i].getDeclaredAggregatePrivileges()) {
+                    aggrnames.add(npResolver.getQName(dap.getName()));
+                }
+            }
+            PrivilegeDefinition def = new PrivilegeDefinitionImpl(npResolver.getQName(privs[i].getName()), privs[i].isAbstract(), aggrnames);
+            pDefs[i] = def;
+        }
+        return pDefs;
     }
 
     /**
@@ -1424,7 +1448,12 @@ public class RepositoryServiceImpl implements RepositoryService {
                 }
             });
         }
-
+        
+        @Override        
+        public void addNode(final NodeId parentId, final Name nodeName, final String value) throws RepositoryException {        
+            throw new UnsupportedRepositoryOperationException("Not Implemented for spi2jcr");        
+        }
+        
         public void addProperty(final NodeId parentId,
                                 final Name propertyName,
                                 final QValue value)

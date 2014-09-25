@@ -66,6 +66,7 @@ import org.apache.jackrabbit.jcr2spi.nodetype.NodeTypeManagerImpl;
 import org.apache.jackrabbit.jcr2spi.operation.Move;
 import org.apache.jackrabbit.jcr2spi.operation.Operation;
 import org.apache.jackrabbit.jcr2spi.security.AccessManager;
+import org.apache.jackrabbit.jcr2spi.security.authorization.AccessControlProvider;
 import org.apache.jackrabbit.jcr2spi.state.ItemStateFactory;
 import org.apache.jackrabbit.jcr2spi.state.ItemStateValidator;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
@@ -497,8 +498,7 @@ public class SessionImpl extends AbstractSession
     public AccessControlManager getAccessControlManager() throws RepositoryException {
         checkSupportedOption(Repository.OPTION_ACCESS_CONTROL_SUPPORTED);
 
-        // TODO: implementation missing
-        throw new UnsupportedRepositoryOperationException("JCR-1104");
+        return getAccessControlProvider().createAccessControlManager(sessionInfo, itemStateManager, itemManager, getItemDefinitionProvider(), getHierarchyManager(), npResolver);
     }
 
     /**
@@ -795,6 +795,10 @@ public class SessionImpl extends AbstractSession
      */
     public QValueFactory getQValueFactory() throws RepositoryException {
         return config.getRepositoryService().getQValueFactory();
+    }
+
+    public AccessControlProvider getAccessControlProvider() throws RepositoryException {
+        return workspace.getAccessControlProvider();
     }
 
     /**

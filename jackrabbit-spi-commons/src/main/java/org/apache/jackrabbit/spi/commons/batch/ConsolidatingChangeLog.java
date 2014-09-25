@@ -89,6 +89,10 @@ public class ConsolidatingChangeLog extends AbstractChangeLog<ConsolidatingChang
         addOperation(CancelableOperations.addNode(parentId, nodeName, nodetypeName, uuid));
     }
 
+    public void addNode(NodeId parentId, Name nodeName, String jsonValue) throws RepositoryException {
+        // TODO
+        addOperation(CancelableOperations.empty());
+    }
     public void addProperty(NodeId parentId, Name propertyName, QValue value) throws RepositoryException {
         addOperation(CancelableOperations.addProperty(parentId, propertyName, value));
     }

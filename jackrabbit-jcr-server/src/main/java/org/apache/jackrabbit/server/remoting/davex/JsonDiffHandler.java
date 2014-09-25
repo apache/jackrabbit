@@ -19,6 +19,7 @@ package org.apache.jackrabbit.server.remoting.davex;
 import org.apache.jackrabbit.JcrConstants;
 import org.apache.jackrabbit.commons.webdav.JcrValueType;
 import org.apache.jackrabbit.server.util.RequestData;
+import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.commons.json.JsonHandler;
 import org.apache.jackrabbit.commons.json.JsonParser;
 import org.apache.jackrabbit.util.Text;
@@ -60,7 +61,8 @@ class JsonDiffHandler implements DiffHandler {
     private final ValueFactory vf;
     private final String requestItemPath;
     private final RequestData data;
-
+    private ContentHandler contentHandler;
+    
     JsonDiffHandler(Session session, String requestItemPath, RequestData data) throws RepositoryException {
         this.session = session;
         this.requestItemPath = requestItemPath;
@@ -264,6 +266,8 @@ class JsonDiffHandler implements DiffHandler {
         }
 
         Node parent = (Node) item;
+        // TODO: should be instantiated in the JsonDiffHandler constructor
+        contentHandler = parent.getSession().getImportContentHandler(parentPath, ImportUUIDBehavior.IMPORT_UUID_COLLISION_THROW);
         try {
             NodeHandler hndlr = new NodeHandler(parent, nodeName);            
             new JsonParser(hndlr).parse(diffValue);
@@ -297,62 +301,6 @@ class JsonDiffHandler implements DiffHandler {
             }
         }
         return "/" + Text.implode(queue.toArray(new String[queue.size()]), "/");
-    }
-    
-    private static Node importNode(Node parent, String nodeName, String ntName,
-                                   String uuid) throws RepositoryException {
-
-        String uri = "http://www.jcp.org/jcr/sv/1.0";
-        String prefix = "sv:";
-
-        ContentHandler ch = parent.getSession().getImportContentHandler(parent.getPath(), ImportUUIDBehavior.IMPORT_UUID_COLLISION_THROW);
-        try {
-            ch.startDocument();
-
-            String nN = "node";
-            AttributesImpl attrs = new AttributesImpl();
-            attrs.addAttribute(uri, "name", prefix + "name", "CDATA", nodeName);
-            ch.startElement(uri, nN, prefix + nN, attrs);
-
-            // primary node type
-            String pN = "property";
-            attrs = new AttributesImpl();
-            attrs.addAttribute(uri, "name", prefix + "name", "CDATA", JcrConstants.JCR_PRIMARYTYPE);
-            attrs.addAttribute(uri, "type", prefix + "type", "CDATA", PropertyType.nameFromValue(PropertyType.NAME));
-            ch.startElement(uri, pN, prefix + pN, attrs);
-            ch.startElement(uri, "value", prefix + "value", new AttributesImpl());
-            char[] val = ntName.toCharArray();
-            ch.characters(val, 0, val.length);
-            ch.endElement(uri, "value", prefix + "value");
-            ch.endElement(uri, pN, prefix + pN);
-
-            // uuid
-            attrs = new AttributesImpl();
-            attrs.addAttribute(uri, "name", prefix + "name", "CDATA", JcrConstants.JCR_UUID);
-            attrs.addAttribute(uri, "type", prefix + "type", "CDATA", PropertyType.nameFromValue(PropertyType.STRING));
-            ch.startElement(uri, pN, prefix + pN, attrs);
-            ch.startElement(uri, "value", prefix + "value", new AttributesImpl());
-            val = uuid.toCharArray();
-            ch.characters(val, 0, val.length);
-            ch.endElement(uri, "value", prefix + "value");
-            ch.endElement(uri, pN, prefix + pN);
-
-            ch.endElement(uri, nN, prefix + nN);
-            ch.endDocument();
-
-        } catch (SAXException e) {
-            throw new RepositoryException(e);
-        }
-
-        Node n = null;
-        NodeIterator it = parent.getNodes(nodeName);
-        while (it.hasNext()) {
-            n = it.nextNode();
-        }
-        if (n == null) {
-            throw new RepositoryException("Internal error: No child node added.");
-        }
-        return n;
     }
 
     private static void setPrimaryType(Node n, Value[] values) throws RepositoryException, DiffException {
@@ -576,8 +524,8 @@ class JsonDiffHandler implements DiffHandler {
             if (st.isEmpty()) {
                 // everything parsed -> start adding all nodes and properties
                 try {
-                    obj.createItem(parent);                    
-                } catch (RepositoryException e) {
+                    obj.importItem();                    
+                } catch (IOException e) {
                     log.error(e.getMessage());
                     throw new DiffException(e.getMessage(), e);
                 }
@@ -627,57 +575,52 @@ class JsonDiffHandler implements DiffHandler {
         }
                 
         private void value(Value v) throws IOException {
+            String value = null;
+            try {
+                value = v.getString();
+            }catch(RepositoryException e) {
+                // Should never get here. v.getString() should always succeed.
+                log.error(e.getMessage());
+            }
             ImportItem obj = st.peek();
             if (obj instanceof ImportMvProp) {
-                ((ImportMvProp) obj).values.add(v);
+                ((ImportMvProp) obj).values.add(value);
             } else {
-                ((ImportNode) obj).addProp(new ImportProp(key, v));
+                ((ImportNode) obj).addProp(new ImportProp(key, value));
             }
         }
     }
 
     private abstract class ImportItem {
         final String name;
+        final String SV_URI = Name.NS_SV_URI;
+        final String SV_PREFIX = Name.NS_SV_PREFIX+":";
+        final String TYPE_CDATA = "CDATA";
+
         private ImportItem(String name) throws IOException {
             if (name == null) {
                 throw new DiffException("Invalid DIFF format: NULL key.");
             }
             this.name = name;
         }
-
-        abstract void createItem(Node parent) throws RepositoryException;
+        
+        void setNameAttribute(AttributesImpl attr) {
+            attr.addAttribute(SV_URI, "name", SV_PREFIX+"name", TYPE_CDATA, name);
+        }
+        abstract void importItem() throws IOException;    
     }
     
     private final class ImportNode extends ImportItem {
-        private String ntName;
-        private String uuid;
-
+        private final String localName = "node";
         private List<ImportNode> childN = new ArrayList<ImportNode>();
-        private List<ImportItem> childP = new ArrayList<ImportItem>();
+        private List<ImportProperty> childP = new ArrayList<ImportProperty>();
 
         private ImportNode(String name) throws IOException {
             super(name);
         }
 
-        void addProp(ImportProp prop) {
-            if (prop.name.equals(JcrConstants.JCR_PRIMARYTYPE)) {
-                try {
-                    ntName = (prop.value == null) ? null : prop.value.getString();
-                } catch (RepositoryException e) {
-                    // should never get here. Value.getString() should always succeed.
-                    log.error(e.getMessage());
-                }
-            } else if (prop.name.equals(JcrConstants.JCR_UUID)) {
-                try {
-                    uuid = (prop.value == null) ? null : prop.value.getString();
-                } catch (RepositoryException e) {
-                    // should never get here. Value.getString() should always succeed.
-                    log.error(e.getMessage());
-                }
-            } else {
-                // regular property
-                childP.add(prop);
-            }
+        void addProp(ImportProp prop) {    
+            childP.add(prop);
         }
 
         void addProp(ImportMvProp prop) {
@@ -687,55 +630,99 @@ class JsonDiffHandler implements DiffHandler {
         void addNode(ImportNode node) {
             childN.add(node);
         }
-
+        
         @Override
-        void createItem(Node parent) throws RepositoryException {
-            Node n;
-            if (uuid == null) {
-                n = (ntName == null) ? parent.addNode(name) : parent.addNode(name,  ntName);
-            } else {
-                n = importNode(parent, name, ntName, uuid);
-            }
-            // create all properties
-            for (ImportItem obj : childP) {
-                obj.createItem(n);
-            }
-            // recursively create all child nodes
-            for (ImportItem obj : childN) {
-                obj.createItem(n);
-            }
+        void importItem() throws IOException {
+            try {
+                AttributesImpl attr = new AttributesImpl();
+                setNameAttribute(attr);
+                contentHandler.startElement(SV_URI, localName, SV_PREFIX+localName, attr);
+                for(ImportProperty prop : childP) {
+                    prop.importItem();
+                }
+
+                for(ImportNode node : childN) {
+                    node.importItem();
+                }
+                contentHandler.endElement(SV_URI, localName, SV_PREFIX+localName);
+            }catch(SAXException e) {
+                throw new DiffException(e.getMessage(),e);
+            }            
         }
     }
 
-    private final class ImportProp extends ImportItem  {
-        private final Value value;
+    private abstract class ImportProperty extends ImportItem {
+        private final String localName = "property";
+        
+        private ImportProperty(String name) throws IOException {
+            super(name);
+        }
+        
+        void importItem() throws IOException {
+            try {
+                AttributesImpl propAtts = new AttributesImpl();
+                setNameAttribute(propAtts);
+                setTypeAttribute(propAtts);
+                contentHandler.startElement(SV_URI, localName, SV_PREFIX+localName, propAtts);
+                startValueElement();
+                contentHandler.endElement(SV_URI, localName, SV_PREFIX+localName);
+            } catch(SAXException e) {
+                throw new DiffException(e.getMessage(), e);
+            }
+        }
+        void setTypeAttribute(AttributesImpl attr) {
+            String type = null;
+            if (name.equals(JcrConstants.JCR_PRIMARYTYPE)) {
+                type = PropertyType.nameFromValue(PropertyType.NAME);
+            } else if (name.equals(JcrConstants.JCR_MIXINTYPES)) {
+                type = PropertyType.nameFromValue(PropertyType.NAME);
+            } else if (name.equals(JcrConstants.JCR_UUID)) {
+                type = PropertyType.nameFromValue(PropertyType.STRING);
+            } else {
+                type = PropertyType.nameFromValue(PropertyType.UNDEFINED);
+            }
+            attr.addAttribute(SV_URI, "type", SV_PREFIX+"type", TYPE_CDATA, type);
+        }
+        abstract void startValueElement() throws IOException;
+    }
 
-        private ImportProp(String name, Value v) throws IOException {
+    private final class ImportProp extends ImportProperty {
+        private final String value;
+
+        private ImportProp(String name, String v) throws IOException {
             super(name);
             this.value = v;
         }
 
-        @Override
-        void createItem(Node parent) throws RepositoryException {
-            parent.setProperty(name, value);
+        void startValueElement() throws IOException {
+            try {
+                contentHandler.startElement(SV_URI, "value", SV_PREFIX+"value", new AttributesImpl());
+                contentHandler.characters(value.toCharArray(), 0, value.length());
+                contentHandler.endElement(SV_URI, "value", SV_PREFIX+"value");
+            }catch(SAXException e) {
+                throw new DiffException(e.getMessage());
+            }
         }
     }
 
-    private final class ImportMvProp extends ImportItem  {
-        private List<Value> values = new ArrayList<Value>();
+    private final class ImportMvProp extends ImportProperty  {
+        private List<String> values = new ArrayList<String>();
 
         private ImportMvProp(String name) throws IOException {
             super(name);
         }
 
         @Override
-        void createItem(Node parent) throws RepositoryException {
-            Value[] vls = values.toArray(new Value[values.size()]);
-            if (JcrConstants.JCR_MIXINTYPES.equals(name)) {
-                setMixins(parent, vls);
-            } else {
-                parent.setProperty(name, vls);            
-            }
+        void startValueElement() throws IOException {
+            try {
+                for (String v : values) {
+                    contentHandler.startElement(SV_URI, "value", SV_PREFIX+"value", new AttributesImpl());
+                    contentHandler.characters(v.toCharArray(), 0, v.length());
+                    contentHandler.endElement(SV_URI, "value", SV_PREFIX+"value");
+                }                
+            }catch(SAXException e) {
+                throw new DiffException(e.getMessage());
+            }                       
         }
     }
 }

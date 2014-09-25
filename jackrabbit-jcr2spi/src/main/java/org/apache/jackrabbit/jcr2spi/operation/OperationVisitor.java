@@ -102,4 +102,10 @@ public interface OperationVisitor {
      * @since JCR 2.0
      */
     public void visit(CreateConfiguration operation) throws RepositoryException;
+    
+    //---------------------------------------------------< SetPolicy Operation >---
+    /**
+     * @since JCR 2.0
+     */
+    public void visit(SetPolicy operation) throws RepositoryException;
 }
