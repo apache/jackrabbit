@@ -18,6 +18,7 @@ package org.apache.jackrabbit.spi.commons.logging;
 
 import javax.jcr.RepositoryException;
 
+import org.apache.jackrabbit.spi.AddItem;
 import org.apache.jackrabbit.spi.Batch;
 import org.apache.jackrabbit.spi.ItemId;
 import org.apache.jackrabbit.spi.Name;
@@ -59,6 +60,16 @@ public class BatchLogger extends AbstractLogger implements Batch {
                 batch.addNode(parentId, nodeName, nodetypeName, uuid);
                 return null;
             }}, "addNode(NodeId, Name, Name, String)", new Object[]{parentId, nodeName, nodetypeName, uuid});
+    }
+    
+    public void addNode(final NodeId parentId, final AddItem protectedNode)
+            throws RepositoryException {
+
+        execute(new Callable() {
+            public Object call() throws RepositoryException {
+                batch.addNode(parentId, protectedNode);
+                return null;
+            }}, "addNode(NodeId, AddItem)", new Object[]{parentId, protectedNode});
     }
 
     public void addProperty(final NodeId parentId, final Name propertyName, final QValue value)
@@ -140,6 +151,4 @@ public class BatchLogger extends AbstractLogger implements Batch {
                 return null;
             }}, "move(NodeId, NodeId, Name)", new Object[]{srcNodeId, destParentNodeId, destName});
     }
-
-
 }

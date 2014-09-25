@@ -18,6 +18,7 @@ package org.apache.jackrabbit.jcr2spi;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -42,10 +43,13 @@ import javax.jcr.nodetype.NoSuchNodeTypeException;
 import javax.jcr.query.InvalidQueryException;
 import javax.jcr.version.VersionException;
 
+import org.apache.jackrabbit.JcrConstants;
 import org.apache.jackrabbit.jcr2spi.config.CacheBehaviour;
 import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyEventListener;
 import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyManager;
 import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyManagerImpl;
+import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
+import org.apache.jackrabbit.jcr2spi.hierarchy.PropertyEntry;
 import org.apache.jackrabbit.jcr2spi.nodetype.EffectiveNodeTypeProvider;
 import org.apache.jackrabbit.jcr2spi.nodetype.ItemDefinitionProvider;
 import org.apache.jackrabbit.jcr2spi.nodetype.ItemDefinitionProviderImpl;
@@ -78,20 +82,25 @@ import org.apache.jackrabbit.jcr2spi.operation.ReorderNodes;
 import org.apache.jackrabbit.jcr2spi.operation.ResolveMergeConflict;
 import org.apache.jackrabbit.jcr2spi.operation.Restore;
 import org.apache.jackrabbit.jcr2spi.operation.SetMixin;
+import org.apache.jackrabbit.jcr2spi.operation.SetPolicy;
 import org.apache.jackrabbit.jcr2spi.operation.SetPrimaryType;
 import org.apache.jackrabbit.jcr2spi.operation.SetPropertyValue;
 import org.apache.jackrabbit.jcr2spi.operation.Update;
 import org.apache.jackrabbit.jcr2spi.operation.WorkspaceImport;
 import org.apache.jackrabbit.jcr2spi.security.AccessManager;
+import org.apache.jackrabbit.jcr2spi.security.authorization.AccessControlProvider;
+import org.apache.jackrabbit.jcr2spi.security.authorization.AccessControlProviderStub;
 import org.apache.jackrabbit.jcr2spi.state.ChangeLog;
 import org.apache.jackrabbit.jcr2spi.state.ItemState;
 import org.apache.jackrabbit.jcr2spi.state.ItemStateFactory;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
+import org.apache.jackrabbit.jcr2spi.state.PropertyState;
 import org.apache.jackrabbit.jcr2spi.state.Status;
 import org.apache.jackrabbit.jcr2spi.state.TransientISFactory;
 import org.apache.jackrabbit.jcr2spi.state.TransientItemStateFactory;
 import org.apache.jackrabbit.jcr2spi.state.UpdatableItemStateManager;
 import org.apache.jackrabbit.jcr2spi.state.WorkspaceItemStateFactory;
+import org.apache.jackrabbit.spi.AddItem;
 import org.apache.jackrabbit.spi.Batch;
 import org.apache.jackrabbit.spi.Event;
 import org.apache.jackrabbit.spi.EventBundle;
@@ -103,15 +112,22 @@ import org.apache.jackrabbit.spi.LockInfo;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.NameFactory;
 import org.apache.jackrabbit.spi.NodeId;
+import org.apache.jackrabbit.spi.NodeInfo;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.PathFactory;
 import org.apache.jackrabbit.spi.PropertyId;
+import org.apache.jackrabbit.spi.PropertyInfo;
 import org.apache.jackrabbit.spi.QNodeTypeDefinition;
 import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.spi.QueryInfo;
 import org.apache.jackrabbit.spi.RepositoryService;
 import org.apache.jackrabbit.spi.SessionInfo;
 import org.apache.jackrabbit.spi.Subscription;
+import org.apache.jackrabbit.spi.commons.NodeInfoImpl;
+import org.apache.jackrabbit.spi.commons.PropertyInfoImpl;
+import org.apache.jackrabbit.spi.commons.batch.AddNodeImpl;
+import org.apache.jackrabbit.spi.commons.batch.AddPropertyImpl;
+import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.spi.commons.nodetype.NodeTypeStorage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -140,6 +156,7 @@ public class WorkspaceManager
     private final NamespaceRegistryImpl nsRegistry;
     private final NodeTypeRegistryImpl ntRegistry;
     private final ItemDefinitionProvider definitionProvider;
+    
 
     /**
      * Semaphore to synchronize the feed thread with client
@@ -176,7 +193,7 @@ public class WorkspaceManager
      * A cache for item infos as supplied by {@link RepositoryService#getItemInfoCache(SessionInfo)}
      */
     private ItemInfoCache cache;
-
+    
     public WorkspaceManager(RepositoryService service, SessionInfo sessionInfo,
                             CacheBehaviour cacheBehaviour, int pollTimeout,
                             boolean observationSupported)
@@ -251,6 +268,15 @@ public class WorkspaceManager
 
     public ItemStateFactory getItemStateFactory() {
         return isf;
+    }
+
+    /**
+     * Locates and instantiates an AccessControlProvider implementation.
+     * @return      an access control manager provider.  
+     * @throws      RepositoryException
+     */
+    public AccessControlProvider getAccessControlProvider() throws RepositoryException {
+        return AccessControlProviderStub.newInstance(service);
     }
 
     public LockInfo getLockInfo(NodeId nodeId) throws RepositoryException {
@@ -893,8 +919,34 @@ public class WorkspaceManager
          * @see OperationVisitor#visit(AddNode)
          */
         public void visit(AddNode operation) throws RepositoryException {
-            NodeId parentId = operation.getParentId();
+            NodeId parentId = operation.getParentId();            
             batch.addNode(parentId, operation.getNodeName(), operation.getNodeTypeName(), operation.getUuid());
+        }
+
+        public void visit(SetPolicy operation) throws RepositoryException {            
+            Iterator<NodeEntry> entries = operation.getEntryNodes();
+            AddNodeImpl addNode = AddNodeImpl.create(operation.getNodeName(), operation.getNodeTypeName(), operation.getUuid());
+            while (entries.hasNext()) {
+                NodeEntry entry = entries.next();
+                NodeState entryState = entry.getNodeState();
+                AddNodeImpl childAddNode = AddNodeImpl.create(entryState.getName(), entryState.getNodeTypeName(), entryState.getUniqueID());
+                
+                addNode.addNode(childAddNode);
+                
+                Iterator<PropertyEntry> pEntries = entry.getPropertyEntries();
+                while (pEntries.hasNext()) {
+                    PropertyEntry pEntry = pEntries.next();
+
+                    boolean isPrimaryType = pEntry.getName().toString().equals(NameConstants.JCR_PRIMARYTYPE.toString());
+                    if (!isPrimaryType) {
+                        PropertyState pState = pEntry.getPropertyState();
+                        AddPropertyImpl addProp = AddPropertyImpl.create(pState.getName(), pState.getType(), 
+                                                                         pState.isMultiValued(), pState.getValues());
+                        childAddNode.addProperty(addProp);                        
+                    }
+                }
+            }
+            batch.addNode(operation.getParentId(), addNode);
         }
 
         /**

@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+
 import javax.jcr.Credentials;
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.PropertyType;
@@ -43,11 +44,13 @@ import org.apache.jackrabbit.commons.json.JsonUtil;
 import org.apache.jackrabbit.commons.webdav.JcrRemotingConstants;
 import org.apache.jackrabbit.commons.webdav.JcrValueType;
 import org.apache.jackrabbit.commons.webdav.ValueUtil;
+import org.apache.jackrabbit.spi.AddItem;
 import org.apache.jackrabbit.spi.Batch;
 import org.apache.jackrabbit.spi.ItemId;
 import org.apache.jackrabbit.spi.ItemInfo;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.NodeId;
+import org.apache.jackrabbit.spi.NodeInfo;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.PropertyId;
 import org.apache.jackrabbit.spi.PropertyInfo;
@@ -55,6 +58,8 @@ import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.spi.RepositoryService;
 import org.apache.jackrabbit.spi.SessionInfo;
 import org.apache.jackrabbit.spi.commons.ItemInfoCacheImpl;
+import org.apache.jackrabbit.spi.commons.batch.AddNodeImpl;
+import org.apache.jackrabbit.spi.commons.batch.AddPropertyImpl;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.spi.commons.conversion.PathResolver;
 import org.apache.jackrabbit.spi.commons.identifier.IdFactoryImpl;
@@ -677,6 +682,89 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
             appendDiff(SYMBOL_ADD_NODE, jcrPath, wr.toString());
         }
 
+        @Override
+        public void addNode(NodeId parentId, AddItem addNode) throws RepositoryException {
+            assertMethod();
+            AddNodeImpl protectedNode = (AddNodeImpl) addNode;
+            NamePathResolver resolver = getNamePathResolver(sessionInfo);
+            Path normalizedPath = getPathFactory().create(getPath(parentId, sessionInfo), protectedNode.getName(), true);
+            String jcrPath = resolver.getJCRPath(normalizedPath);    
+            
+            String json = createJSONFragment(protectedNode);
+            appendDiff(SYMBOL_ADD_NODE, jcrPath, json);
+        }
+        
+        private String createJSONFragment(AddNodeImpl pNode) throws RepositoryException {
+            StringBuilder jsonBuilder = new StringBuilder();
+            jsonBuilder.append('{');
+            jsonBuilder.append(getJsonKey(JcrConstants.JCR_PRIMARYTYPE));
+            jsonBuilder.append(JsonUtil.getJsonString(getNamePathResolver(sessionInfo).getJCRName(pNode.getNodeTypeName())));
+            
+            if (pNode.getUniqueIdentifier() != null) {
+                jsonBuilder.append(',');
+                jsonBuilder.append(getJsonKey(JcrConstants.JCR_UUID));
+                jsonBuilder.append(JsonUtil.getJsonString(pNode.getUniqueIdentifier()));
+            }
+            
+            for (AddNodeImpl node : pNode.getAddNodes()) {
+                jsonBuilder.append(createJsonNodeFragment(node));
+            }
+            jsonBuilder.append('}');
+            return jsonBuilder.toString();
+        }
+        
+        private String createJsonNodeFragment(AddNodeImpl childNode) throws RepositoryException {
+            StringBuilder json = new StringBuilder();
+            NamePathResolver resolver = getNamePathResolver(sessionInfo);
+            String nodeName = resolver.getJCRName(childNode.getName());
+            Name ntName = childNode.getNodeTypeName();
+            String uuid = childNode.getUniqueIdentifier();
+            
+            json.append(',');
+            json.append(getJsonKey(nodeName));
+            json.append('{');
+            json.append(getJsonKey(JcrConstants.JCR_PRIMARYTYPE));
+            json.append(JsonUtil.getJsonString(resolver.getJCRName(ntName)));
+            if (uuid != null) {
+                json.append(',');
+                json.append(getJsonKey(JcrConstants.JCR_UUID));
+                json.append(JsonUtil.getJsonString(uuid));
+            }
+            // write all the properties.
+            for (AddPropertyImpl prop : childNode.getAddProperties()) {
+                json.append(',');
+                json.append(createJsonPropertyfragment(prop));
+            }
+            json.append('}');
+            return json.toString();
+        }
+        private String createJsonPropertyfragment(AddPropertyImpl prop) throws RepositoryException {
+            StringBuilder json = new StringBuilder();
+            String propName = getNamePathResolver(sessionInfo).getJCRName(prop.getName());
+            if (prop.isMultiValued()) {                
+                json.append(createMvPropJson(propName, prop.getValues()));
+            } else {
+                QValue value = prop.getValues()[0];
+                json.append(getJsonKey(propName));
+                json.append(getJsonString(value));
+            }
+            return json.toString();
+        }
+        
+        private String createMvPropJson(String propName, QValue[] values) throws RepositoryException {
+            StringBuilder json = new StringBuilder();
+            json.append(getJsonKey(propName));
+            int index = 0;
+            json.append('[');
+            for (QValue value : values) {
+                String sv = getNamePathResolver(sessionInfo).getJCRName(value.getName());
+                String delim = (index++ == 0) ? "" : ",";
+                json.append(delim).append('"').append(sv).append('"');
+            }
+            json.append(']');
+            return json.toString();
+        }
+        
         /**
          * @inheritDoc
          */

@@ -33,6 +33,7 @@ import org.apache.jackrabbit.jcr2spi.operation.Operation;
 import org.apache.jackrabbit.jcr2spi.operation.WorkspaceImport;
 import org.apache.jackrabbit.jcr2spi.query.QueryManagerImpl;
 import org.apache.jackrabbit.jcr2spi.security.AccessManager;
+import org.apache.jackrabbit.jcr2spi.security.authorization.AccessControlProvider;
 import org.apache.jackrabbit.jcr2spi.state.ItemStateFactory;
 import org.apache.jackrabbit.jcr2spi.state.ItemStateValidator;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
@@ -498,6 +499,10 @@ public class WorkspaceImpl implements Workspace, ManagerProvider {
      */
     public QValueFactory getQValueFactory() throws RepositoryException {
         return session.getQValueFactory();
+    }
+
+    public AccessControlProvider getAccessControlProvider() throws RepositoryException {
+        return wspManager.getAccessControlProvider();
     }
 
     //------------------------------------< implementation specific methods >---

@@ -147,4 +147,27 @@ public class AddNode extends TransientOperation {
         AddNode an = new AddNode(parentState, nodeName, nodeTypeName, uuid);
         return an;
     }
+    
+    /**
+     * Inner class for adding a protected node.
+     */
+    public static final class SetPolicyAddNode extends AddNode {
+        /**
+         * Options that must not be violated for a successful set policy operation.
+         */
+        private final static int SET_POLICY_ADD_NODE_OPTIONS =  ItemStateValidator.CHECK_ACCESS | 
+                                                       ItemStateValidator.CHECK_LOCK |
+                                                       ItemStateValidator.CHECK_COLLISION |
+                                                       ItemStateValidator.CHECK_VERSIONING;
+        
+        private SetPolicyAddNode(NodeState parentState, Name nodeName, Name nodeTypeName, String uuid) throws RepositoryException {
+            super(parentState, nodeName, nodeTypeName, uuid, SET_POLICY_ADD_NODE_OPTIONS);
+        }
+        
+        public static Operation create(NodeState parentState, Name nodeName, Name nodeTypeName, String uuid) throws RepositoryException {
+            assertChildNodeEntries(parentState);
+            SetPolicyAddNode an = new SetPolicyAddNode(parentState, nodeName, nodeTypeName, uuid);
+            return an;
+        }
+    }
 }

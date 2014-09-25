@@ -16,7 +16,9 @@
  */
 package org.apache.jackrabbit.spi2jcr;
 
+import org.apache.jackrabbit.spi.AddItem;
 import org.apache.jackrabbit.spi.ItemInfoCache;
+import org.apache.jackrabbit.spi.PrivilegeDefinition;
 import org.apache.jackrabbit.spi.RepositoryService;
 import org.apache.jackrabbit.spi.IdFactory;
 import org.apache.jackrabbit.spi.QValueFactory;
@@ -56,15 +58,19 @@ import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
 import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.spi.commons.name.PathBuilder;
+import org.apache.jackrabbit.spi.commons.batch.AddNodeImpl;
+import org.apache.jackrabbit.spi.commons.batch.AddPropertyImpl;
 import org.apache.jackrabbit.spi.commons.conversion.NameException;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.spi.commons.conversion.MalformedPathException;
 import org.apache.jackrabbit.spi.commons.conversion.DefaultNamePathResolver;
+import org.apache.jackrabbit.spi.commons.privilege.PrivilegeDefinitionImpl;
 import org.apache.jackrabbit.spi.commons.value.QValueFactoryImpl;
 import org.apache.jackrabbit.spi.commons.value.ValueFormat;
 import org.apache.jackrabbit.spi.commons.value.ValueFactoryQImpl;
 import org.apache.jackrabbit.JcrConstants;
 
+import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Credentials;
 import javax.jcr.LoginException;
@@ -92,6 +98,7 @@ import javax.jcr.ItemVisitor;
 import javax.jcr.ValueFactory;
 import javax.jcr.GuestCredentials;
 import javax.jcr.PropertyIterator;
+import javax.jcr.security.Privilege;
 import javax.jcr.util.TraversingItemVisitor;
 import javax.jcr.observation.ObservationManager;
 import javax.jcr.observation.EventListener;
@@ -126,6 +133,7 @@ import java.util.Collection;
 import java.io.InputStream;
 import java.io.IOException;
 import java.io.ByteArrayInputStream;
+import java.io.StringWriter;
 import java.security.AccessControlException;
 
 /**
@@ -333,6 +341,27 @@ public class RepositoryServiceImpl implements RepositoryService {
         } catch (AccessControlException e) {
             return false;
         }
+    }
+
+    public PrivilegeDefinition[] getSupportedPrivileges(SessionInfo sessionInfo, NodeId nodeId) throws RepositoryException {
+        SessionInfoImpl sInfo = getSessionInfoImpl(sessionInfo);
+        String path = pathForId(nodeId, sInfo);
+
+        Privilege[] privs = sInfo.getSession().getAccessControlManager().getSupportedPrivileges(path);
+        PrivilegeDefinition[] pDefs = new PrivilegeDefinition[privs.length];
+        NamePathResolver npResolver = sInfo.getNamePathResolver();
+        for (int i = 0; i < privs.length; i++) {
+            Set<Name> aggrnames = null;
+            if (privs[i].isAggregate()) {
+                aggrnames = new HashSet<Name>();
+                for (Privilege dap : privs[i].getDeclaredAggregatePrivileges()) {
+                    aggrnames.add(npResolver.getQName(dap.getName()));
+                }
+            }
+            PrivilegeDefinition def = new PrivilegeDefinitionImpl(npResolver.getQName(privs[i].getName()), privs[i].isAbstract(), aggrnames);
+            pDefs[i] = def;
+        }
+        return pDefs;
     }
 
     /**
@@ -1424,7 +1453,25 @@ public class RepositoryServiceImpl implements RepositoryService {
                 }
             });
         }
-
+        
+        @Override        
+        public void addNode(final NodeId parentId, final AddItem addNode) throws RepositoryException {
+            executeGuarded(new Callable() {
+                public Object run() throws RepositoryException {
+                    Session s = sInfo.getSession();
+                    Node parent = getParent(parentId, sInfo);                   
+                    String xml = createXMLFragment(addNode);
+                    InputStream in = new ByteArrayInputStream(xml.getBytes());                    
+                    try {                    
+                        s.importXML(parent.getPath(), in, ImportUUIDBehavior.IMPORT_UUID_COLLISION_THROW);                        
+                    } catch (IOException e) {                    
+                        throw new RepositoryException(e.getMessage(), e);                        
+                    }           
+                    return null;
+                }
+            });            
+        }                        
+        
         public void addProperty(final NodeId parentId,
                                 final Name propertyName,
                                 final QValue value)
@@ -1659,7 +1706,70 @@ public class RepositoryServiceImpl implements RepositoryService {
             xml.append("</sv:node>");
             return xml.toString();
         }
+        
+        private String createXMLFragment(AddItem nodeInfo) throws RepositoryException {
+            StringBuilder xml = new StringBuilder("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
+            
+            AddNodeImpl protectedNode = (AddNodeImpl) nodeInfo;    
+            String nodeName = getJcrName(protectedNode.getName());
+            String ntName = getJcrName(protectedNode.getNodeTypeName());
+            String uuid = protectedNode.getUniqueIdentifier();
+            
+            xml.append("<sv:node xmlns:jcr=\"http://www.jcp.org/jcr/1.0\" ");
+            xml.append("xmlns:sv=\"http://www.jcp.org/jcr/sv/1.0\" ");
+            xml.append("sv:name=\"").append(nodeName).append("\">");
+            // jcr:primaryType
+            xml.append("<sv:property sv:name=\"jcr:primaryType\" sv:type=\"Name\">");
+            xml.append("<sv:value>").append(ntName).append("</sv:value>");
+            xml.append("</sv:property>");
+            // jcr:uuid
+            if (uuid != null) {
+                xml.append("<sv:property sv:name=\"jcr:uuid\" sv:type=\"String\">");
+                xml.append("<sv:value>").append(uuid).append("</sv:value>");
+                xml.append("</sv:property>");                            
+            }
 
+            // create xml for all child nodes
+            for (AddNodeImpl pNode : protectedNode.getAddNodes()) {
+                xml.append(createXMLNodeFragment(pNode));
+            }
+            
+            xml.append("</sv:node>");
+            return xml.toString();
+        }
+        
+        private String createXMLNodeFragment(AddNodeImpl protectedNode) throws RepositoryException {
+            StringBuffer xmlNode = new StringBuffer();
+            xmlNode.append("<sv:node sv:name=\"").append(getJcrName(protectedNode.getName())).append("\">");
+            // jcr:primaryType
+            xmlNode.append("<sv:property sv:name=\"jcr:primaryType\" sv:type=\"Name\">");
+            xmlNode.append("<sv:value>").append(getJcrName(protectedNode.getNodeTypeName())).append("</sv:value>");
+            xmlNode.append("</sv:property>");
+            // jcr:uuid
+            if (protectedNode.getUniqueIdentifier() != null) {
+                xmlNode.append("<sv:property sv:name=\"jcr:uuid\" sv:type=\"String\">");
+                xmlNode.append("<sv:value>").append(protectedNode.getUniqueIdentifier()).append("</sv:value>");
+                xmlNode.append("</sv:property>");
+            }
+         
+            // create the xml fragment for all the child properties.
+            for (AddPropertyImpl prop : protectedNode.getAddProperties()) {
+                xmlNode.append(createXMLPropertyFragement(prop));
+            }
+            xmlNode.append("</sv:node>");
+            return xmlNode.toString();
+        }
+        
+        private String createXMLPropertyFragement(AddPropertyImpl protectedProperty) throws RepositoryException {
+            StringBuilder xmlProperty = new StringBuilder();
+            xmlProperty.append("<sv:property sv:name="+getJcrName(protectedProperty.getName())+" sv:type="+PropertyType.nameFromValue(protectedProperty.getType())+">");
+            for (QValue value : protectedProperty.getValues()) {
+                xmlProperty.append("<sv:value>").append(value.getString()).append("</sv:value>");
+            }
+            xmlProperty.append("</sv:property>");
+            return xmlProperty.toString();
+        }
+        
         private void end() throws AccessDeniedException, ItemExistsException,
                 ConstraintViolationException, InvalidItemStateException,
                 VersionException, LockException, NoSuchNodeTypeException,
