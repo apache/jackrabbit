@@ -473,12 +473,12 @@ public class SearchIndex extends AbstractQueryHandler {
     private DirectoryManager directoryManager;
 
     /**
-     * Flat that indicates whether the {@link DirectoryManager} should
+     * Flag that indicates whether the {@link DirectoryManager} should
      * use the <code>SimpleFSDirectory</code> instead of letting Lucene
      * automatically pick an implementation based on the platform we are
-     * running on.
+     * running on. Note: see JCR-3818 for a discussion on the trade-off.
      */
-    private boolean useSimpleFSDirectory = false;
+    private boolean useSimpleFSDirectory = true;
 
     /**
      * The termInfosIndexDivisor.
