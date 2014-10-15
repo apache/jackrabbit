@@ -66,6 +66,7 @@ class SeededSecureRandom extends SecureRandom implements Runnable {
         // Can not do that in a static initializer block, because
         // threads are not started after the initializer block exits
         Thread thread = new Thread(this, "SeededSecureRandom");
+        thread.setDaemon(true);
         thread.start();
         try {
             thread.join(MAX_SEED_TIME);
