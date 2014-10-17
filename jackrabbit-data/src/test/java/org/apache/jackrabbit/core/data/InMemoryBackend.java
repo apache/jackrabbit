@@ -29,12 +29,6 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.jackrabbit.core.data.AsyncUploadCallback;
-import org.apache.jackrabbit.core.data.Backend;
-import org.apache.jackrabbit.core.data.CachingDataStore;
-import org.apache.jackrabbit.core.data.DataIdentifier;
-import org.apache.jackrabbit.core.data.DataStoreException;
-
 /**
  * An in-memory backend implementation used to speed up testing.
  */
@@ -43,12 +37,15 @@ public class InMemoryBackend implements Backend {
     private HashMap<DataIdentifier, byte[]> data = new HashMap<DataIdentifier, byte[]>();
 
     private HashMap<DataIdentifier, Long> timeMap = new HashMap<DataIdentifier, Long>();
+    
+    private CachingDataStore store;
 
     @Override
     public void init(CachingDataStore store, String homeDir, String config)
             throws DataStoreException {
         // ignore
         log("init");
+        this.store = store;
     }
 
     @Override
@@ -110,7 +107,8 @@ public class InMemoryBackend implements Backend {
         for (Map.Entry<DataIdentifier, Long> entry : timeMap.entrySet()) {
             DataIdentifier identifier = entry.getKey();
             long timestamp = entry.getValue();
-            if (timestamp < min) {
+            if (timestamp < min && !store.isInUse(identifier)
+                && store.confirmDelete(identifier)) {
                 tobeDeleted.add(identifier);
             }
         }
@@ -139,6 +137,18 @@ public class InMemoryBackend implements Backend {
             timeMap.put(identifier, System.currentTimeMillis());
         }
         return retVal;
+    }
+    
+    @Override
+    public void touch(DataIdentifier identifier, long minModifiedDate) {
+        timeMap.put(identifier, System.currentTimeMillis());
+    }
+
+    @Override
+    public void touchAsync(DataIdentifier identifier, long minModifiedDate,
+            AsyncTouchCallback callback) {
+        timeMap.put(identifier, System.currentTimeMillis());
+        callback.onSuccess(new AsyncTouchResult(identifier));
     }
 
     private void write(final DataIdentifier identifier, final File file,

@@ -89,10 +89,7 @@ public interface Backend {
     void write(DataIdentifier identifier, File file) throws DataStoreException;
 
     /**
-     * Write file to backend in asynchronous mode. Backend implmentation may
-     * choose not to write asynchronously but it requires to call
-     * {@link AsyncUploadCallback#call(DataIdentifier, File, com.day.crx.cloud.s3.ds.AsyncUploadCallback.RESULT)}
-     * after upload succeed or failed.
+     * Write file to backend in asynchronous mode.
      * 
      * @param identifier
      * @param file
@@ -131,6 +128,35 @@ public interface Backend {
      * @throws DataStoreException
      */
     boolean exists(DataIdentifier identifier) throws DataStoreException;
+   
+    /**
+     * Update the lastModified of record if it's lastModified < minModifiedDate.
+     * 
+     * @param identifier
+     * @param minModifiedDate
+     * @throws DataStoreException
+     */
+    void touch(final DataIdentifier identifier, long minModifiedDate)
+            throws DataStoreException;
+    
+    /**
+     * Update the lastModified of record if it's lastModified < minModifiedDate
+     * asynchronously. Result of update is passed using appropriate
+     * {@link AsyncTouchCallback} methods. If identifier's lastModified >
+     * minModified {@link AsyncTouchCallback#onAbort(AsyncTouchResult)} is
+     * called. Any exception is communicated through
+     * {@link AsyncTouchCallback#onFailure(AsyncTouchResult)} . On successful
+     * update of lastModified,
+     * {@link AsyncTouchCallback#onSuccess(AsyncTouchResult)(AsyncTouchResult)}
+     * is invoked.
+     * 
+     * @param identifier
+     * @param minModifiedDate
+     * @param callback
+     * @throws DataStoreException
+     */
+    void touchAsync(final DataIdentifier identifier, long minModifiedDate,
+            final AsyncTouchCallback callback) throws DataStoreException;
 
     /**
      * Close backend and release resources like database connection if any.

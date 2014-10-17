@@ -35,6 +35,8 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.jackrabbit.aws.ext.S3Constants;
 import org.apache.jackrabbit.aws.ext.Utils;
+import org.apache.jackrabbit.core.data.AsyncTouchCallback;
+import org.apache.jackrabbit.core.data.AsyncTouchResult;
 import org.apache.jackrabbit.core.data.AsyncUploadCallback;
 import org.apache.jackrabbit.core.data.AsyncUploadResult;
 import org.apache.jackrabbit.core.data.Backend;
@@ -59,6 +61,7 @@ import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.amazonaws.services.s3.model.Region;
 import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
+import com.amazonaws.services.s3.transfer.Copy;
 import com.amazonaws.services.s3.transfer.TransferManager;
 import com.amazonaws.services.s3.transfer.Upload;
 
@@ -160,7 +163,7 @@ public class S3Backend implements Backend {
             }
             
             String propEndPoint = prop.getProperty(S3Constants.S3_END_POINT);
-            if (propEndPoint != null & !"".equals(propEndPoint)) {
+            if ((propEndPoint != null) & !"".equals(propEndPoint)) {
                 endpoint = propEndPoint;
             }
             /*
@@ -290,7 +293,8 @@ public class S3Backend implements Backend {
                     CopyObjectRequest copReq = new CopyObjectRequest(bucket,
                         key, bucket, key);
                     copReq.setNewObjectMetadata(objectMetaData);
-                    s3service.copyObject(copReq);
+                    Copy copy = tmx.copy(copReq);
+                    copy.waitForCopyResult();
                     LOG.debug("[{}] touched took [{}] ms. ", identifier,
                         (System.currentTimeMillis() - start));
                 }
@@ -318,6 +322,77 @@ public class S3Backend implements Backend {
         LOG.debug("exists [{}]: [{}] took [{}] ms.", new Object[] { identifier,
             retVal, (System.currentTimeMillis() - start) });
         return retVal;
+    }
+    
+    @Override
+    public void touchAsync(final DataIdentifier identifier,
+            final long minModifiedDate, final AsyncTouchCallback callback)
+            throws DataStoreException {
+        ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
+        try {
+            if (callback == null) {
+                throw new IllegalArgumentException(
+                    "callback parameter cannot be null in touchAsync");
+            }
+            Thread.currentThread().setContextClassLoader(
+                getClass().getClassLoader());
+
+            asyncWriteExecuter.execute(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        touch(identifier, minModifiedDate);
+                        callback.onSuccess(new AsyncTouchResult(identifier));
+                    } catch (DataStoreException e) {
+                        AsyncTouchResult result = new AsyncTouchResult(
+                            identifier);
+                        result.setException(e);
+                        callback.onFailure(result);
+                    }
+                }
+            });
+        } catch (Exception e) {
+            callback.onAbort(new AsyncTouchResult(identifier));
+            throw new DataStoreException("Cannot touch the record "
+                + identifier.toString(), e);
+        } finally {
+            if (contextClassLoader != null) {
+                Thread.currentThread().setContextClassLoader(contextClassLoader);
+            }
+        }
+
+    }
+
+    @Override
+    public void touch(DataIdentifier identifier, long minModifiedDate)
+            throws DataStoreException {
+        ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
+        try {
+            final long start = System.currentTimeMillis();
+            final String key = getKeyName(identifier);
+            if (minModifiedDate > 0
+                && minModifiedDate > getLastModified(identifier)) {
+                CopyObjectRequest copReq = new CopyObjectRequest(bucket, key,
+                    bucket, key);
+                copReq.setNewObjectMetadata(new ObjectMetadata());
+                Copy copy = tmx.copy(copReq);
+                copy.waitForCompletion();
+                LOG.debug("[{}] touched. time taken [{}] ms ", new Object[] {
+                    identifier, (System.currentTimeMillis() - start) });
+            } else {
+                LOG.debug("[{}] touch not required. time taken [{}] ms ",
+                    new Object[] { identifier,
+                        (System.currentTimeMillis() - start) });
+            }
+
+        } catch (Exception e) {
+            throw new DataStoreException("Error occured in touching key ["
+                + identifier.toString() + "]", e);
+        } finally {
+            if (contextClassLoader != null) {
+                Thread.currentThread().setContextClassLoader(contextClassLoader);
+            }
+        }
     }
 
     @Override
@@ -471,8 +546,16 @@ public class S3Backend implements Backend {
                         getIdentifierName(s3ObjSumm.getKey()));
                     long lastModified = s3ObjSumm.getLastModified().getTime();
                     LOG.debug("Identifier [{}]'s lastModified = [{}]", identifier, lastModified);
-                    if (!store.isInUse(identifier) && lastModified < min) {
-                        LOG.debug("add id [{}] to delete lists",  s3ObjSumm.getKey());
+                    if (lastModified < min
+                        && store.confirmDelete(identifier)
+                         // confirm once more that record's lastModified < min
+                        //  order is important here
+                        && s3service.getObjectMetadata(bucket,
+                            s3ObjSumm.getKey()).getLastModified().getTime() < min) {
+                       
+
+                        LOG.debug("add id [{}] to delete lists",
+                            s3ObjSumm.getKey());
                         deleteList.add(new DeleteObjectsRequest.KeyVersion(
                             s3ObjSumm.getKey()));
                         deleteIdSet.add(identifier);
@@ -513,10 +596,10 @@ public class S3Backend implements Backend {
     @Override
     public void close() {
         // backend is closing. abort all mulitpart uploads from start.
+        asyncWriteExecuter.shutdownNow();
         tmx.abortMultipartUploads(bucket, startTime);
         tmx.shutdownNow();
         s3service.shutdown();
-        asyncWriteExecuter.shutdownNow();
         LOG.info("S3Backend closed.");
     }
 
@@ -567,10 +650,20 @@ public class S3Backend implements Backend {
                 CopyObjectRequest copReq = new CopyObjectRequest(bucket, key,
                     bucket, key);
                 copReq.setNewObjectMetadata(objectMetaData);
-                s3service.copyObject(copReq);
-                LOG.debug("lastModified of [{}] updated successfully.", identifier);
-                if (callback != null) {
-                    callback.onSuccess(new AsyncUploadResult(identifier, file));
+                Copy copy = tmx.copy(copReq);
+                try {
+                    copy.waitForCopyResult();
+                    LOG.debug("lastModified of [{}] updated successfully.", identifier);
+                    if (callback != null) {
+                        callback.onSuccess(new AsyncUploadResult(identifier, file));
+                    }
+                }catch (Exception e2) {
+                    AsyncUploadResult asyncUpRes= new AsyncUploadResult(identifier, file);
+                    asyncUpRes.setException(e2);
+                    if (callback != null) {
+                        callback.onAbort(asyncUpRes);
+                    }
+                    throw new DataStoreException("Could not upload " + key, e2);
                 }
             }
 
@@ -594,10 +687,12 @@ public class S3Backend implements Backend {
                                 identifier, file));
                         }
                     }
-                } catch (Exception e2) {
-                    if (!asyncUpload) {
-                        callback.onAbort(new AsyncUploadResult(identifier, file));
-                    }
+                } catch (Exception e2 ) {
+                    AsyncUploadResult asyncUpRes= new AsyncUploadResult(identifier, file);
+                    asyncUpRes.setException(e2);
+                    if (callback != null) {
+                        callback.onAbort(asyncUpRes);
+                    } 
                     throw new DataStoreException("Could not upload " + key, e2);
                 }
             }
@@ -721,6 +816,7 @@ public class S3Backend implements Backend {
         }
         return key.substring(0, 4) + key.substring(5);
     }
+    
 
     /**
      * The class renames object key in S3 in a thread.
@@ -737,8 +833,15 @@ public class S3Backend implements Backend {
                 String newS3Key = convertKey(oldKey);
                 CopyObjectRequest copReq = new CopyObjectRequest(bucket,
                     oldKey, bucket, newS3Key);
-                s3service.copyObject(copReq);
-                LOG.debug("[{}] renamed to [{}] ", oldKey, newS3Key);
+                Copy copy = tmx.copy(copReq);
+                try {
+                    copy.waitForCopyResult();
+                    LOG.debug("[{}] renamed to [{}] ", oldKey, newS3Key);
+                } catch (InterruptedException ie) {
+                    LOG.error(" Exception in renaming [{}] to [{}] ",
+                        new Object[] { ie, oldKey, newS3Key });
+                }
+               
             } finally {
                 if (contextClassLoader != null) {
                     Thread.currentThread().setContextClassLoader(
@@ -797,7 +900,7 @@ public class S3Backend implements Backend {
             }
         }
     }
-
+    
     /**
      * This class implements {@link Runnable} interface to upload {@link File}
      * to S3 asynchronously.
@@ -828,4 +931,6 @@ public class S3Backend implements Backend {
 
         }
     }
+
+    
 }
