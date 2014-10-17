@@ -22,7 +22,9 @@ import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
 import org.apache.jackrabbit.aws.ext.ds.TestS3Ds;
+import org.apache.jackrabbit.aws.ext.ds.TestS3DSAsyncTouch;
 import org.apache.jackrabbit.aws.ext.ds.TestS3DsCacheOff;
+import org.apache.jackrabbit.aws.ext.ds.TestS3DSWithSmallCache;
 import org.apache.jackrabbit.core.data.TestCaseBase;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,7 +38,7 @@ public class TestAll extends TestCase {
 
     /**
      * <code>TestAll</code> suite that executes all tests inside this module. To
-     * run test cases agains Amazon S3 pass AWS configuration properties file as
+     * run test cases against Amazon S3 pass AWS configuration properties file as
      * system property -Dconfig=/opt/cq/aws.properties. Sample aws properties
      * located at src/test/resources/aws.properties.
      */
@@ -46,6 +48,8 @@ public class TestAll extends TestCase {
         LOG.info("config= " + config);
         if (config != null && !"".equals(config.trim())) {
             suite.addTestSuite(TestS3Ds.class);
+            suite.addTestSuite(TestS3DSAsyncTouch.class);
+            suite.addTestSuite(TestS3DSWithSmallCache.class);
             suite.addTestSuite(TestS3DsCacheOff.class);
         }
         return suite;

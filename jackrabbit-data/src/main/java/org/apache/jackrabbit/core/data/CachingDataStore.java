@@ -75,10 +75,11 @@ import org.slf4j.LoggerFactory;
  *     &lt;param name="{@link #setConcurrentUploadsThreads(int) concurrentUploadsThreads}" value="10"/>
  *     &lt;param name="{@link #setAsyncUploadLimit(int) asyncUploadLimit}" value="100"/>
  *     &lt;param name="{@link #setUploadRetries(int) uploadRetries}" value="3"/>
+ *     &lt;param name="{@link #setTouchAsync(boolean) touchAsync}" value="false"/>
  * &lt/DataStore>
  */
 public abstract class CachingDataStore extends AbstractDataStore implements
-        MultiDataStoreAware, AsyncUploadCallback {
+        MultiDataStoreAware, AsyncUploadCallback, AsyncTouchCallback {
 
     /**
      * Logger instance.
@@ -112,6 +113,12 @@ public abstract class CachingDataStore extends AbstractDataStore implements
      * is not required to be persisted. 
      */
     protected final Map<DataIdentifier, Integer> uploadRetryMap = new ConcurrentHashMap<DataIdentifier, Integer>(5);
+    
+    /**
+     * In memory map to hold in-progress asynchronous touch. Once touch is
+     * successful corresponding entry is flushed from the map.
+     */
+    protected final Map<DataIdentifier, Long> asyncTouchCache = new ConcurrentHashMap<DataIdentifier, Long>(5);
 
     protected Backend backend;
 
@@ -127,6 +134,11 @@ public abstract class CachingDataStore extends AbstractDataStore implements
     private File tmpDir;
 
     private String secret;
+    
+    /**
+     * Flag to indicate if lastModified is updated asynchronously.
+     */
+    private boolean touchAsync = false;
 
     /**
      * The optional backend configuration.
@@ -385,54 +397,53 @@ public abstract class CachingDataStore extends AbstractDataStore implements
     public DataRecord getRecord(DataIdentifier identifier)
             throws DataStoreException {
         String fileName = getFileName(identifier);
-        boolean touch = minModifiedDate > 0 ? true : false;
-        synchronized (this) {
-            try {
-                if (asyncWriteCache.hasEntry(fileName, touch)) {
-                    usesIdentifier(identifier);
-                    return new CachingDataRecord(this, identifier);
-                } else if (cache.getFileIfStored(fileName) != null) {
-                    if (touch) {
-                        backend.exists(identifier, touch);
-                    }
-                    usesIdentifier(identifier);
-                    return new CachingDataRecord(this, identifier);
-                } else if (backend.exists(identifier, touch)) {
-                    usesIdentifier(identifier);
-                    return new CachingDataRecord(this, identifier);
-                }
-
-            } catch (IOException ioe) {
-                throw new DataStoreException("error in getting record ["
-                    + identifier + "]", ioe);
+        try {
+            if (asyncWriteCache.hasEntry(fileName, minModifiedDate > 0)) {
+                LOG.debug("[{}] record retrieved from asyncUploadmap",
+                    identifier);
+                usesIdentifier(identifier);
+                return new CachingDataRecord(this, identifier);
+            } else if (cache.getFileIfStored(fileName) != null
+                || backend.exists(identifier)) {
+                LOG.debug("[{}] record retrieved from local cache or backend",
+                    identifier);
+                touchInternal(identifier);
+                usesIdentifier(identifier);
+                return new CachingDataRecord(this, identifier);
             }
+
+        } catch (IOException ioe) {
+            throw new DataStoreException("error in getting record ["
+                + identifier + "]", ioe);
         }
         throw new DataStoreException("Record not found: " + identifier);
     }
-
+    
     /**
      * Get a data record for the given identifier or null it data record doesn't
      * exist in {@link Backend}
      * 
-     * @param identifier
-     *            identifier of record.
+     * @param identifier identifier of record.
      * @return the {@link CachingDataRecord} or null.
      */
     @Override
     public DataRecord getRecordIfStored(DataIdentifier identifier)
             throws DataStoreException {
         String fileName = getFileName(identifier);
-        boolean touch = minModifiedDate > 0 ? true : false;
-        synchronized (this) {
-            try {
-                if (asyncWriteCache.hasEntry(fileName, touch)
-                    || backend.exists(identifier, touch)) {
-                    usesIdentifier(identifier);
-                    return new CachingDataRecord(this, identifier);
-                }
-            } catch (IOException ioe) {
-                throw new DataStoreException(ioe);
+        try {
+            if (asyncWriteCache.hasEntry(fileName, minModifiedDate > 0)) {
+                LOG.debug("[{}] record retrieved from asyncuploadmap",
+                    identifier);
+                usesIdentifier(identifier);
+                return new CachingDataRecord(this, identifier);
+            } else if (backend.exists(identifier)) {
+                LOG.debug("[{}] record retrieved from backend", identifier);
+                touchInternal(identifier);
+                usesIdentifier(identifier);
+                return new CachingDataRecord(this, identifier);
             }
+        } catch (IOException ioe) {
+            throw new DataStoreException(ioe);
         }
         return null;
     }
@@ -534,14 +545,20 @@ public abstract class CachingDataStore extends AbstractDataStore implements
         long lastModified = asyncWriteCache.getLastModified(fileName);
         if (lastModified != 0) {
             LOG.debug(
-                "identifier [{}]'s lastModified retrireved from AsyncUploadCache ",
-                identifier);
+                "identifier [{}], lastModified=[{}] retrireved from AsyncUploadCache ",
+                identifier, lastModified);
 
+        } else if (asyncTouchCache.get(identifier) != null) {
+            lastModified = asyncTouchCache.get(identifier);
+            LOG.debug(
+                "identifier [{}], lastModified=[{}] retrireved from asyncTouchCache ",
+                identifier, lastModified);
         } else {
-            lastModified =  backend.getLastModified(identifier);
+            lastModified = backend.getLastModified(identifier);
+            LOG.debug(
+                "identifier [{}], lastModified=[{}] retrireved from backend ",
+                identifier, lastModified);
         }
-        LOG.debug("identifier= [{}], lastModified=[{}]", identifier,
-            lastModified);
         return lastModified;
     }
 
@@ -555,23 +572,8 @@ public abstract class CachingDataStore extends AbstractDataStore implements
         if (length != null) {
             return length.longValue();
         } else {
-            InputStream in = null;
-            InputStream cachedStream = null;
-            try {
-                in = backend.read(identifier);
-                cachedStream = cache.store(fileName, in);
-            } catch (IOException e) {
-                throw new DataStoreException("IO Exception: " + identifier, e);
-            } finally {
-                IOUtils.closeQuietly(in);
-                IOUtils.closeQuietly(cachedStream);
-            }
-            length = cache.getFileLength(fileName);
-            if (length != null) {
-                return length.longValue();
-            }
+            return backend.getLength(identifier);
         }
-        return backend.getLength(identifier);
     }
 
     @Override
@@ -600,6 +602,10 @@ public abstract class CachingDataStore extends AbstractDataStore implements
             if (cachedResult.doRequiresDelete()) {
                 // added record already marked for delete
                 deleteRecord(identifier);
+            } else {
+                // async upload took lot of time.
+                // getRecord to touch if required.
+                getRecord(identifier);
             }
         } catch (IOException ie) {
             LOG.warn("Cannot remove pending file upload. Dataidentifer [ "
@@ -662,6 +668,8 @@ public abstract class CachingDataStore extends AbstractDataStore implements
         File file = result.getFile();
         String fileName = getFileName(identifier);
         try {
+            // remove from failed upload map if any.
+            uploadRetryMap.remove(identifier);
             asyncWriteCache.remove(fileName);
             LOG.info(
                 "Async Upload Aborted. Dataidentifer [{}], file [{}] removed from AsyncCache.",
@@ -672,6 +680,89 @@ public abstract class CachingDataStore extends AbstractDataStore implements
         }
     }
 
+    
+    @Override
+    public void onSuccess(AsyncTouchResult result) {
+        asyncTouchCache.remove(result.getIdentifier());
+        LOG.debug(" Async Touch succeed. Removed [{}] from asyncTouchCache",
+            result.getIdentifier());
+
+    }
+    
+    @Override
+    public void onFailure(AsyncTouchResult result) {
+        LOG.warn(" Async Touch failed. Not removing [{}] from asyncTouchCache",
+            result.getIdentifier());
+        if (result.getException() != null) {
+            LOG.debug(" Async Touch failed. exception", result.getException());
+        }
+    }
+    
+    @Override
+    public void onAbort(AsyncTouchResult result) {
+        asyncTouchCache.remove(result.getIdentifier());
+        LOG.debug(" Async Touch aborted. Removed [{}] from asyncTouchCache",
+            result.getIdentifier());
+    }
+    
+    /**
+     * Method to confirm that identifier can be deleted from {@link Backend}
+     * 
+     * @param identifier
+     * @return
+     */
+    public boolean confirmDelete(DataIdentifier identifier) {
+        if (isInUse(identifier)) {
+            LOG.debug("identifier [{}] is inUse confirmDelete= false ",
+                identifier);
+            return false;
+        }
+
+        String fileName = getFileName(identifier);
+        long lastModified = asyncWriteCache.getLastModified(fileName);
+        if (lastModified != 0) {
+            LOG.debug(
+                "identifier [{}] is asyncWriteCache map confirmDelete= false ",
+                identifier);
+            return false;
+
+        }
+        if (asyncTouchCache.get(identifier) != null) {
+            LOG.debug(
+                "identifier [{}] is asyncTouchCache confirmDelete = false ",
+                identifier);
+            return false;
+        }
+
+        return true;
+    }
+    
+    /**
+     * Internal method to touch identifier in @link {@link Backend}. if
+     * {@link #touchAsync}, the record is updated asynchronously.
+     * 
+     * @param identifier
+     * @throws DataStoreException
+     */
+    private void touchInternal(DataIdentifier identifier)
+            throws DataStoreException {
+
+        if (touchAsync) {
+            Long lastModified = asyncTouchCache.put(identifier,
+                System.currentTimeMillis());
+
+            if (lastModified == null) {
+                LOG.debug("Async touching [{}] ", identifier);
+                backend.touchAsync(identifier, minModifiedDate, this);
+            } else {
+                LOG.debug( "Touched in asyncTouchMap [{}]", identifier);
+            }
+                
+        } else {
+            backend.touch(identifier, minModifiedDate);
+        }
+    }
+    
 
     /**
      * Returns a unique temporary file to be used for creating a new data
@@ -971,6 +1062,12 @@ public abstract class CachingDataStore extends AbstractDataStore implements
 
     public void setUploadRetries(int uploadRetries) {
         this.uploadRetries = uploadRetries;
+    }
+    
+    
+
+    public void setTouchAsync(boolean touchAsync) {
+        this.touchAsync = touchAsync;
     }
 
     public Backend getBackend() {

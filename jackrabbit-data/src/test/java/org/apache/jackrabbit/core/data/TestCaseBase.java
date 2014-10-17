@@ -32,13 +32,6 @@ import javax.jcr.RepositoryException;
 import junit.framework.TestCase;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.jackrabbit.core.data.CachingDataStore;
-import org.apache.jackrabbit.core.data.DataIdentifier;
-import org.apache.jackrabbit.core.data.DataRecord;
-import org.apache.jackrabbit.core.data.DataStore;
-import org.apache.jackrabbit.core.data.DataStoreException;
-import org.apache.jackrabbit.core.data.LocalCache;
-import org.apache.jackrabbit.core.data.MultiDataStoreAware;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -68,7 +61,7 @@ public abstract class TestCaseBase extends TestCase {
     protected String config;
 
     /**
-     * Parameter to use in-memory backend. If false {@link S3Backend}
+     * Parameter to use in-memory backend.
      */
     protected boolean memoryBackend = true;
 
@@ -81,7 +74,7 @@ public abstract class TestCaseBase extends TestCase {
     /**
      * length of record to be added
      */
-    private int dataLength = 123456;
+    protected int dataLength = 123456;
 
     /**
      * datastore directory path
@@ -154,7 +147,7 @@ public abstract class TestCaseBase extends TestCase {
             LOG.error("error:", e);
         }
     }
-
+    
     /**
      * Testcase to validate {@link DataStore#getAllIdentifiers()} API.
      */
@@ -253,10 +246,10 @@ public abstract class TestCaseBase extends TestCase {
         try {
             long start = System.currentTimeMillis();
             LOG.info("Testcase: " + this.getClass().getName()
-                + "#test, testDir=" + dataStoreDir);
+                + "#testSingleThread, testDir=" + dataStoreDir);
             doTestSingleThread();
             LOG.info("Testcase: " + this.getClass().getName()
-                + "#test finished, time taken = ["
+                + "#testSingleThread finished, time taken = ["
                 + (System.currentTimeMillis() - start) + "]ms");
         } catch (Exception e) {
             LOG.error("error:", e);
@@ -446,7 +439,7 @@ public abstract class TestCaseBase extends TestCase {
         DataRecord rec2 = ds.addRecord(new ByteArrayInputStream(data));
 
         // sleep for some time to ensure that async upload completes in backend.
-        sleep(6000);
+        sleep(10000);
         long updateTime = System.currentTimeMillis();
         ds.updateModifiedDateOnAccess(updateTime);
         
@@ -574,7 +567,7 @@ public abstract class TestCaseBase extends TestCase {
         ArrayList<DataRecord> list = new ArrayList<DataRecord>();
         HashMap<DataRecord, Integer> map = new HashMap<DataRecord, Integer>();
         for (int i = 0; i < 10; i++) {
-            int size = 1000000 - (i * 100);
+            int size = 100000 - (i * 100);
             RandomInputStream in = new RandomInputStream(size + offset, size);
             DataRecord rec = ds.addRecord(in);
             list.add(rec);
