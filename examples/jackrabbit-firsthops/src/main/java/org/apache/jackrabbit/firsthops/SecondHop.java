@@ -20,7 +20,8 @@ import javax.jcr.Repository;
 import javax.jcr.Session;
 import javax.jcr.SimpleCredentials;
 import javax.jcr.Node;
-import org.apache.jackrabbit.core.TransientRepository;
+
+import org.apache.jackrabbit.commons.JcrUtils;
 
 /**
  * Second hop example. Stores, retrieves, and removes example content.
@@ -36,9 +37,9 @@ public class SecondHop {
      *             if an error occurs
      */
     public static void main(String[] args) throws Exception {
-        Repository repository = new TransientRepository();
-        Session session = repository.login(new SimpleCredentials("username",
-                "password".toCharArray()));
+        Repository repository = JcrUtils.getRepository();
+        Session session = repository.login(new SimpleCredentials("admin",
+                "admin".toCharArray()));
         try {
             Node root = session.getRootNode();
 

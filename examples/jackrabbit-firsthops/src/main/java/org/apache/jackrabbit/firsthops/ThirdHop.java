@@ -17,8 +17,9 @@
 package org.apache.jackrabbit.firsthops;
 
 import javax.jcr.*;
-import org.apache.jackrabbit.core.TransientRepository;
 import java.io.FileInputStream;
+
+import org.apache.jackrabbit.commons.JcrUtils;
 
 /**
  * Third Jackrabbit example application. Imports an example XML file and outputs
@@ -35,9 +36,9 @@ public class ThirdHop {
      *             if an error occurs
      */
     public static void main(String[] args) throws Exception {
-        Repository repository = new TransientRepository();
-        Session session = repository.login(new SimpleCredentials("username",
-                "password".toCharArray()));
+        Repository repository = JcrUtils.getRepository();
+        Session session = repository.login(new SimpleCredentials("admin",
+                "admin".toCharArray()));
 
         FileInputStream xml = new FileInputStream("src/main/resources/test.xml");
         try {
