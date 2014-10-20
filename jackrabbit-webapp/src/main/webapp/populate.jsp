@@ -31,19 +31,18 @@
                      javax.jcr.Repository,
                      javax.jcr.Session,
                      javax.jcr.SimpleCredentials,
-                     javax.swing.text.AttributeSet,
-                     javax.swing.text.html.HTML,
-                     javax.swing.text.html.HTMLDocument,
-                     javax.swing.text.html.HTMLEditorKit,
                      org.apache.jackrabbit.j2ee.RepositoryAccessServlet,
-                     org.apache.jackrabbit.util.Text"
+                     org.apache.jackrabbit.util.Text,
+                     org.json.simple.JSONArray,
+                     org.json.simple.JSONObject,
+                     org.json.simple.JSONValue"
  %><%@ page contentType="text/html;charset=UTF-8" %><%
     Repository rep;
     Session jcrSession;
     String wspName;
     try {
         rep = RepositoryAccessServlet.getRepository(pageContext.getServletContext());
-        jcrSession = rep.login(new SimpleCredentials("user", "".toCharArray()));
+        jcrSession = rep.login(new SimpleCredentials("admin", "admin".toCharArray()));
         wspName = jcrSession.getWorkspace().getName();
     } catch (Throwable e) {
         %>Error while accessing the repository: <font color="red"><%= Text.encodeIllegalXMLCharacters(e.getMessage()) %></font><br><%
@@ -280,6 +279,8 @@ request.setAttribute("title", "Populate workspace " + wspName);
 
     public static class Search {
 
+        private static final String CHARSET = "UTF-8";
+
         private final String filetype;
 
         private final String term;
@@ -293,36 +294,38 @@ request.setAttribute("title", "Populate workspace " + wspName);
         }
 
         public URL[] getURLs() throws Exception {
-            List urls = new ArrayList();
-            String query = term + " filetype:" + filetype;
-            URL google = new URL("http://www.google.com/search?q=" +
-                    URLEncoder.encode(query, "UTF-8") + "&start=" + start);
-            URLConnection con = google.openConnection();
-            con.setRequestProperty("User-Agent", "");
-            InputStream in = con.getInputStream();
+            List<URL> urls = new ArrayList<URL>();
+            String googleBaseUrl = "http://ajax.googleapis.com/ajax/services/search/web";
+            String googleQueryString = "?v=1.0&start=" + start + "&rsz=8&q=";
+            String query = term + " filetype:" + this.filetype;
+            URL google = new URL(googleBaseUrl + googleQueryString + URLEncoder.encode(query, CHARSET));
+            InputStreamReader reader = null;
             try {
-                HTMLEditorKit kit = new HTMLEditorKit();
-                HTMLDocument doc = new HTMLDocument();
-                doc.putProperty("IgnoreCharsetDirective", Boolean.TRUE);
-                kit.read(new InputStreamReader(in, "UTF-8"), doc, 0);
-                HTMLDocument.Iterator it = doc.getIterator(HTML.Tag.A);
-                while (it.isValid()) {
-                    AttributeSet attr = it.getAttributes();
-                    if (attr != null) {
-                        String href = (String) attr.getAttribute(HTML.Attribute.HREF);
-                        if (href != null && href.endsWith("." + filetype)) {
-                            URL url = new URL(new URL("http", "www.google.com", "dummy"), href);
-                            if (url.getHost().indexOf("google") == -1) {
-                                urls.add(url);
+                URLConnection conn = google.openConnection();
+                conn.setRequestProperty("Referer", "https://github.com/apache/jackrabbit");
+                reader = new InputStreamReader(conn.getInputStream(), CHARSET);
+                Object obj = JSONValue.parse(reader);
+                JSONObject jsonObject = (JSONObject) obj;
+                JSONObject responseData = (JSONObject) jsonObject.get("responseData");
+                if (responseData != null) {
+                    JSONArray results = (JSONArray) responseData.get("results");
+                    if (results != null) {
+                        for (int i = 0; i < results.size(); i++) {
+                            JSONObject result = (JSONObject) results.get(i);
+                            if (result != null) {
+                                String urlString = (String) result.get("url");
+                                URL url = new URL(new URL("http", "www.google.com", "dummy"), urlString);
+                                if (!url.getHost().contains("google")) {
+                                    urls.add(url);
+                                }
                             }
                         }
                     }
-                    it.next();
                 }
             } finally {
-                in.close();
+                reader.close();
             }
-            return (URL[]) urls.toArray(new URL[urls.size()]);
+            return urls.toArray(new URL[urls.size()]);
         }
     }
 
