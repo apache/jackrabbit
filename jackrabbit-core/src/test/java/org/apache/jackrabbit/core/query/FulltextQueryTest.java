@@ -18,6 +18,7 @@ package org.apache.jackrabbit.core.query;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.TreeSet;
 
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
@@ -294,19 +295,19 @@ public class FulltextQueryTest extends AbstractQueryTest {
 
         superuser.save();
 
-        List<String> r1 = new ArrayList<String>();
+        TreeSet<String> r1 = new TreeSet<String>();
         QueryResult result = qm.createQuery(testPath + "/*[jcr:contains(@prop1, 'foo') or jcr:contains(@prop2, 'foo') or jcr:contains(@prop3, 'foo')] order by @jcr:score descending", Query.XPATH).execute();
         for (Row r : new RowIterable(result.getRows())) {
             r1.add(r.getPath() + ":" + (int) (r.getScore() * 1000));
         }
 
-        List<String> r2 = new ArrayList<String>();
+        TreeSet<String> r2 = new TreeSet<String>();
         result = qm.createQuery(testPath + "/*[jcr:contains(@prop3, 'foo') or jcr:contains(@prop1, 'foo') or jcr:contains(@prop2, 'foo')] order by @jcr:score descending", Query.XPATH).execute();
         for (Row r : new RowIterable(result.getRows())) {
             r2.add(r.getPath() + ":" + (int) (r.getScore() * 1000));
         }
 
-        List<String> r3 = new ArrayList<String>();
+        TreeSet<String> r3 = new TreeSet<String>();
         result = qm.createQuery(testPath + "/*[jcr:contains(@prop2, 'foo') or jcr:contains(@prop3, 'foo') or jcr:contains(@prop1, 'foo')] order by @jcr:score descending", Query.XPATH).execute();
         for (Row r : new RowIterable(result.getRows())) {
             r3.add(r.getPath() + ":" + (int) (r.getScore() * 1000));
