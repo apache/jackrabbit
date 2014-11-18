@@ -19,7 +19,6 @@ package org.apache.jackrabbit.webdav.jcr;
 import org.apache.jackrabbit.webdav.DavException;
 import org.apache.jackrabbit.webdav.DavServletResponse;
 import org.apache.jackrabbit.webdav.DavSession;
-import org.apache.jackrabbit.webdav.DavConstants;
 import org.apache.jackrabbit.webdav.jcr.lock.LockTokenMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -98,6 +97,7 @@ public abstract class JcrDavSession implements DavSession {
      * @param token
      * @see DavSession#addLockToken(String)
      */
+    @Override
     public void addLockToken(String token) {
         if (!LockTokenMapper.isForSessionScopedLock(token)) {
             try {
@@ -115,6 +115,7 @@ public abstract class JcrDavSession implements DavSession {
      * @return
      * @see DavSession#getLockTokens()
      */
+    @Override
     public String[] getLockTokens() {
         return lockTokens.toArray(new String[lockTokens.size()]);
     }
@@ -124,6 +125,7 @@ public abstract class JcrDavSession implements DavSession {
      * @param token
      * @see DavSession#removeLockToken(String)
      */
+    @Override
     public void removeLockToken(String token) {
         if (!LockTokenMapper.isForSessionScopedLock(token)) {
             try {

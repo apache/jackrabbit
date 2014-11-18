@@ -54,7 +54,6 @@ import org.apache.jackrabbit.server.io.IOUtil;
 import org.apache.jackrabbit.util.Text;
 import org.apache.jackrabbit.webdav.DavCompliance;
 import org.apache.jackrabbit.webdav.DavException;
-import org.apache.jackrabbit.webdav.DavLocatorFactory;
 import org.apache.jackrabbit.webdav.DavResource;
 import org.apache.jackrabbit.webdav.DavResourceFactory;
 import org.apache.jackrabbit.webdav.DavResourceIterator;
@@ -137,6 +136,7 @@ public class DefaultItemCollection extends AbstractItemResource
         }
     }
 
+    @Override
     public long getModificationTime() {
         // retrieve mod-time from jcr:lastmodified property if existing
         if (exists()) {
@@ -173,6 +173,7 @@ public class DefaultItemCollection extends AbstractItemResource
      * @return true
      * @see org.apache.jackrabbit.webdav.DavResource#isCollection()
      */
+    @Override
     public boolean isCollection() {
         return true;
     }
@@ -417,6 +418,7 @@ public class DefaultItemCollection extends AbstractItemResource
      * @see Node#addNode(String)
      * @see Node#setProperty(String, java.io.InputStream)
      */
+    @Override
     public void addMember(DavResource resource, InputContext inputContext)
             throws DavException {
 
@@ -525,6 +527,7 @@ public class DefaultItemCollection extends AbstractItemResource
     /**
      * @see org.apache.jackrabbit.webdav.DavResource#getMembers()
      */
+    @Override
     public DavResourceIterator getMembers() {
         ArrayList<DavResource> memberList = new ArrayList<DavResource>();
         if (exists()) {
@@ -564,6 +567,7 @@ public class DefaultItemCollection extends AbstractItemResource
      * @see DavResource#removeMember(DavResource)
      * @see javax.jcr.Item#remove()
      */
+    @Override
     public void removeMember(DavResource member) throws DavException {
         Session session = getRepositorySession();
         try {
@@ -794,6 +798,7 @@ public class DefaultItemCollection extends AbstractItemResource
      * @see org.apache.jackrabbit.webdav.ordering.OrderingResource#isOrderable()
      * @see javax.jcr.nodetype.NodeType#hasOrderableChildNodes()
      */
+    @Override
     public boolean isOrderable() {
         boolean orderable = false;
         if (exists()) {
@@ -815,6 +820,7 @@ public class DefaultItemCollection extends AbstractItemResource
      * @see org.apache.jackrabbit.webdav.ordering.OrderingResource#orderMembers(org.apache.jackrabbit.webdav.ordering.OrderPatch)
      * @see Node#orderBefore(String, String)
      */
+    @Override
     public void orderMembers(OrderPatch orderPatch) throws DavException {
         if (!isOrderable()) {
             throw new DavException(DavServletResponse.SC_METHOD_NOT_ALLOWED);
