@@ -281,6 +281,7 @@ public class VersionControlledItemCollection extends DefaultItemCollection
      * exist yet or if an error occurs while making the underlying node versionable.
      * @see org.apache.jackrabbit.webdav.version.VersionableResource#addVersionControl()
      */
+    @Override
     public void addVersionControl() throws DavException {
         if (!exists()) {
             throw new DavException(DavServletResponse.SC_NOT_FOUND);
@@ -302,6 +303,7 @@ public class VersionControlledItemCollection extends DefaultItemCollection
      * @throws org.apache.jackrabbit.webdav.DavException
      * @see org.apache.jackrabbit.webdav.version.VersionControlledResource#checkin()
      */
+    @Override
     public String checkin() throws DavException {
         if (!exists()) {
             throw new DavException(DavServletResponse.SC_NOT_FOUND);
@@ -325,6 +327,7 @@ public class VersionControlledItemCollection extends DefaultItemCollection
      * @throws org.apache.jackrabbit.webdav.DavException
      * @see org.apache.jackrabbit.webdav.version.VersionControlledResource#checkout()
      */
+    @Override
     public void checkout() throws DavException {
         if (!exists()) {
             throw new DavException(DavServletResponse.SC_NOT_FOUND);
@@ -347,6 +350,7 @@ public class VersionControlledItemCollection extends DefaultItemCollection
      * @throws org.apache.jackrabbit.webdav.DavException
      * @see org.apache.jackrabbit.webdav.version.VersionControlledResource#uncheckout()
      */
+    @Override
     public void uncheckout() throws DavException {
         throw new DavException(DavServletResponse.SC_NOT_IMPLEMENTED);
     }
@@ -370,6 +374,7 @@ public class VersionControlledItemCollection extends DefaultItemCollection
      * @see org.apache.jackrabbit.webdav.version.VersionControlledResource#update(org.apache.jackrabbit.webdav.version.UpdateInfo)
      */
     //TODO: with jcr the node must not be versionable in order to perform Node.update.
+    @Override
     public MultiStatus update(UpdateInfo updateInfo) throws DavException {
         if (updateInfo == null) {
             throw new DavException(DavServletResponse.SC_BAD_REQUEST, "Valid update request body required.");
@@ -447,6 +452,7 @@ public class VersionControlledItemCollection extends DefaultItemCollection
      * @see Node#merge(String, boolean)
      */
     //TODO: with jcr the node must not be versionable in order to perform Node.merge
+    @Override
     public MultiStatus merge(MergeInfo mergeInfo) throws DavException {
         if (mergeInfo == null) {
             throw new DavException(DavServletResponse.SC_BAD_REQUEST);
@@ -493,6 +499,7 @@ public class VersionControlledItemCollection extends DefaultItemCollection
      * @see VersionHistory#addVersionLabel(String, String, boolean)
      * @see VersionHistory#removeVersionLabel(String)
      */
+    @Override
     public void label(LabelInfo labelInfo) throws DavException {
         if (labelInfo == null) {
             throw new DavException(DavServletResponse.SC_BAD_REQUEST, "Valid label request body required.");
@@ -525,6 +532,7 @@ public class VersionControlledItemCollection extends DefaultItemCollection
      * @see org.apache.jackrabbit.webdav.version.VersionControlledResource#getVersionHistory()
      * @see javax.jcr.Node#getVersionHistory()
      */
+    @Override
     public VersionHistoryResource getVersionHistory() throws DavException {
         if (!exists()) {
             throw new DavException(DavServletResponse.SC_NOT_FOUND);

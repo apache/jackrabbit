@@ -95,6 +95,7 @@ public class DefaultItemResource extends AbstractItemResource {
      * @return false
      * @see DavResource#isCollection()
      */
+    @Override
     public boolean isCollection() {
         return false;
     }
@@ -105,6 +106,7 @@ public class DefaultItemResource extends AbstractItemResource {
      * @return
      * @see DavResource#getModificationTime()
      */
+    @Override
     public long getModificationTime() {
         return new Date().getTime();
     }
@@ -302,6 +304,7 @@ public class DefaultItemResource extends AbstractItemResource {
      *
      * @see org.apache.jackrabbit.webdav.DavResource#addMember(org.apache.jackrabbit.webdav.DavResource, InputContext)
      */
+    @Override
     public void addMember(DavResource resource, InputContext inputContext) throws DavException {
         throw new DavException(DavServletResponse.SC_METHOD_NOT_ALLOWED, "Cannot add members to a non-collection resource");
     }
@@ -313,6 +316,7 @@ public class DefaultItemResource extends AbstractItemResource {
      * @return an empty iterator
      * @see DavResource#getMembers()
      */
+    @Override
     public DavResourceIterator getMembers() {
         log.warn("A non-collection resource never has internal members.");
         List<DavResource> drl = Collections.emptyList();
@@ -324,6 +328,7 @@ public class DefaultItemResource extends AbstractItemResource {
      *
      * @see DavResource#removeMember(DavResource)
      */
+    @Override
     public void removeMember(DavResource member) throws DavException {
         throw new DavException(DavServletResponse.SC_METHOD_NOT_ALLOWED, "Cannot remove members from a non-collection resource");
     }

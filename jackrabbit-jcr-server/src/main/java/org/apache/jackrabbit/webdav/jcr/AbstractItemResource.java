@@ -51,7 +51,6 @@ import javax.jcr.PathNotFoundException;
 import javax.jcr.Property;
 import javax.jcr.RepositoryException;
 import javax.jcr.Workspace;
-import java.security.AccessControlException;
 import java.util.ArrayList;
 import java.util.List;
 import java.io.IOException;
@@ -144,11 +143,8 @@ abstract class AbstractItemResource extends AbstractResource implements
                 for (Privilege priv : allPrivs) {
                     try {
                         String path = getLocator().getRepositoryPath();
-                        getRepositorySession().checkPermission(path, priv.getName());
+                        getRepositorySession().hasPermission(path, priv.getName());
                         currentPrivs.add(priv);
-                    } catch (AccessControlException e) {
-                        // ignore
-                        log.debug(e.toString());
                     } catch (RepositoryException e) {
                         // ignore
                         log.debug(e.toString());
@@ -164,6 +160,7 @@ abstract class AbstractItemResource extends AbstractResource implements
     /**
      * @see org.apache.jackrabbit.webdav.DavResource#getSupportedMethods()
      */
+    @Override
     public String getSupportedMethods() {
         return ItemResourceConstants.METHODS;
     }
@@ -174,6 +171,7 @@ abstract class AbstractItemResource extends AbstractResource implements
      *
      * @see org.apache.jackrabbit.webdav.DavResource#exists()
      */
+    @Override
     public boolean exists() {
         return item != null;
     }
@@ -188,6 +186,7 @@ abstract class AbstractItemResource extends AbstractResource implements
      *
      * @see org.apache.jackrabbit.webdav.DavResource#getDisplayName()
      */
+    @Override
     public String getDisplayName() {
         String resPath = getResourcePath();
         return (resPath != null) ? Text.getName(resPath) : resPath;
@@ -200,6 +199,7 @@ abstract class AbstractItemResource extends AbstractResource implements
      *
      * @see DavResource#spool(OutputContext)
      */
+    @Override
     public void spool(OutputContext outputContext) throws IOException {
         if (!initedProps) {
             initProperties();
@@ -241,6 +241,7 @@ abstract class AbstractItemResource extends AbstractResource implements
      * repository node.
      * @see org.apache.jackrabbit.webdav.DavResource#getCollection()
      */
+    @Override
     public DavResource getCollection() {
         DavResource collection = null;
 
@@ -339,6 +340,7 @@ abstract class AbstractItemResource extends AbstractResource implements
     /**
      * @see ObservationResource#init(SubscriptionManager)
      */
+    @Override
     public void init(SubscriptionManager subsMgr) {
         this.subsMgr = subsMgr;
     }
@@ -347,6 +349,7 @@ abstract class AbstractItemResource extends AbstractResource implements
      * @see ObservationResource#subscribe(org.apache.jackrabbit.webdav.observation.SubscriptionInfo, String)
      * @see SubscriptionManager#subscribe(org.apache.jackrabbit.webdav.observation.SubscriptionInfo, String, org.apache.jackrabbit.webdav.observation.ObservationResource)
      */
+    @Override
     public Subscription subscribe(SubscriptionInfo info, String subscriptionId)
             throws DavException {
         return subsMgr.subscribe(info, subscriptionId, this);
@@ -356,6 +359,7 @@ abstract class AbstractItemResource extends AbstractResource implements
      * @see ObservationResource#unsubscribe(String)
      * @see SubscriptionManager#unsubscribe(String, org.apache.jackrabbit.webdav.observation.ObservationResource)
      */
+    @Override
     public void unsubscribe(String subscriptionId) throws DavException {
         subsMgr.unsubscribe(subscriptionId, this);
     }
@@ -364,6 +368,7 @@ abstract class AbstractItemResource extends AbstractResource implements
      * @see ObservationResource#poll(String, long)
      * @see SubscriptionManager#poll(String, long, org.apache.jackrabbit.webdav.observation.ObservationResource)
      */
+    @Override
     public EventDiscovery poll(String subscriptionId, long timeout) throws DavException {
         return subsMgr.poll(subscriptionId, timeout, this);
     }

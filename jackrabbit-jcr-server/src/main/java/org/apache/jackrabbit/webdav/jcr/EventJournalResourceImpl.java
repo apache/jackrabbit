@@ -99,10 +99,12 @@ public class EventJournalResourceImpl extends AbstractResource {
         this.request = request;
     }
 
+    @Override
     public String getSupportedMethods() {
         return "GET, HEAD";
     }
 
+    @Override
     public boolean exists() {
         try {
             List<String> available = Arrays.asList(getRepositorySession().getWorkspace().getAccessibleWorkspaceNames());
@@ -113,14 +115,17 @@ public class EventJournalResourceImpl extends AbstractResource {
         }
     }
 
+    @Override
     public boolean isCollection() {
         return false;
     }
 
+    @Override
     public String getDisplayName() {
         return "event journal for " + getLocator().getWorkspaceName();
     }
 
+    @Override
     public long getModificationTime() {
         return System.currentTimeMillis();
     }
@@ -152,6 +157,7 @@ public class EventJournalResourceImpl extends AbstractResource {
 
     private static final Attributes NOATTRS = new AttributesImpl();
 
+    @Override
     public void spool(OutputContext outputContext) throws IOException {
 
         Calendar cal = Calendar.getInstance(Locale.ENGLISH);
@@ -412,18 +418,22 @@ public class EventJournalResourceImpl extends AbstractResource {
         }
     }
 
+    @Override
     public DavResource getCollection() {
         return null;
     }
 
+    @Override
     public void addMember(DavResource resource, InputContext inputContext) throws DavException {
         throw new DavException(DavServletResponse.SC_FORBIDDEN);
     }
 
+    @Override
     public DavResourceIterator getMembers() {
         return DavResourceIteratorImpl.EMPTY;
     }
 
+    @Override
     public void removeMember(DavResource member) throws DavException {
         throw new DavException(DavServletResponse.SC_FORBIDDEN);
     }

@@ -144,6 +144,7 @@ public class WorkspaceResourceImpl extends AbstractResource
 
     //--------------------------------------------------------< DavResource >---
 
+    @Override
     public String getSupportedMethods() {
         StringBuilder sb = new StringBuilder(DavResource.METHODS);
         sb.append(", ");
@@ -161,6 +162,7 @@ public class WorkspaceResourceImpl extends AbstractResource
      * present in the list of available workspace names such as exposed by
      * the editing JCR session.
      */
+    @Override
     public boolean exists() {
         try {
             List<String> available = Arrays.asList(getRepositorySession().getWorkspace().getAccessibleWorkspaceNames());
@@ -174,6 +176,7 @@ public class WorkspaceResourceImpl extends AbstractResource
     /**
      * @return true
      */
+    @Override
     public boolean isCollection() {
         return true;
     }
@@ -185,6 +188,7 @@ public class WorkspaceResourceImpl extends AbstractResource
      * @see org.apache.jackrabbit.webdav.DavResource#getDisplayName()
      * @see javax.jcr.Workspace#getName()
      */
+    @Override
     public String getDisplayName() {
         return getLocator().getWorkspaceName();
     }
@@ -194,6 +198,7 @@ public class WorkspaceResourceImpl extends AbstractResource
      *
      * @return
      */
+    @Override
     public long getModificationTime() {
         return new Date().getTime();
     }
@@ -202,6 +207,7 @@ public class WorkspaceResourceImpl extends AbstractResource
      * @param outputContext
      * @throws IOException
      */
+    @Override
     public void spool(OutputContext outputContext) throws IOException {
 
         outputContext.setProperty("Link", "<?" + EventJournalResourceImpl.RELURIFROMWORKSPACE
@@ -255,6 +261,7 @@ public class WorkspaceResourceImpl extends AbstractResource
      *
      * @see org.apache.jackrabbit.webdav.DavResource#getCollection()
      */
+    @Override
     public DavResource getCollection() {
         DavResource collection = null;
         // create location with 'null' values for workspace-path and resource-path
@@ -274,6 +281,7 @@ public class WorkspaceResourceImpl extends AbstractResource
      * @param inputContext
      * @throws DavException
      */
+    @Override
     public void addMember(DavResource resource, InputContext inputContext) throws DavException {
         log.error("Cannot add a new member to the workspace resource.");
         throw new DavException(DavServletResponse.SC_FORBIDDEN);
@@ -284,6 +292,7 @@ public class WorkspaceResourceImpl extends AbstractResource
      *
      * @return
      */
+    @Override
     public DavResourceIterator getMembers() {
         try {
             DavResourceLocator loc = getLocatorFromItem(getRepositorySession().getRootNode());
@@ -304,6 +313,7 @@ public class WorkspaceResourceImpl extends AbstractResource
      * @param member
      * @throws DavException
      */
+    @Override
     public void removeMember(DavResource member) throws DavException {
         log.error("Cannot add a remove the root node.");
         throw new DavException(DavServletResponse.SC_FORBIDDEN);
@@ -441,6 +451,7 @@ public class WorkspaceResourceImpl extends AbstractResource
      * @throws DavException (403) since workspace is not versionable. implementing
      * <code>VersionControlledResource</code> only for 'update'.
      */
+    @Override
     public void addVersionControl() throws DavException {
         throw new DavException(DavServletResponse.SC_FORBIDDEN);
     }
@@ -450,6 +461,7 @@ public class WorkspaceResourceImpl extends AbstractResource
      * @throws DavException (403) since workspace is not versionable. implementing
      * <code>VersionControlledResource</code> only for 'update'.
      */
+    @Override
     public String checkin() throws DavException {
         throw new DavException(DavServletResponse.SC_FORBIDDEN);
     }
@@ -458,6 +470,7 @@ public class WorkspaceResourceImpl extends AbstractResource
      * @throws DavException (403) since workspace is not versionable. implementing
      * <code>VersionControlledResource</code> only for 'update'.
      */
+    @Override
     public void checkout() throws DavException {
         throw new DavException(DavServletResponse.SC_FORBIDDEN);
     }
@@ -466,6 +479,7 @@ public class WorkspaceResourceImpl extends AbstractResource
      * @throws DavException (403) since workspace is not versionable. implementing
      * <code>VersionControlledResource</code> only for 'update'.
      */
+    @Override
     public void uncheckout() throws DavException {
         throw new DavException(DavServletResponse.SC_FORBIDDEN);
     }
@@ -484,6 +498,7 @@ public class WorkspaceResourceImpl extends AbstractResource
      * @throws org.apache.jackrabbit.webdav.DavException
      * @see org.apache.jackrabbit.webdav.version.VersionControlledResource#update(org.apache.jackrabbit.webdav.version.UpdateInfo)
      */
+    @Override
     public MultiStatus update(UpdateInfo updateInfo) throws DavException {
         if (updateInfo == null) {
             throw new DavException(DavServletResponse.SC_BAD_REQUEST, "Valid update request body required.");
@@ -533,6 +548,7 @@ public class WorkspaceResourceImpl extends AbstractResource
      * @throws DavException (403) since workspace is not versionable. implementing
      * <code>VersionControlledResource</code> only for 'update'.
      */
+    @Override
     public MultiStatus merge(MergeInfo mergeInfo) throws DavException {
         throw new DavException(DavServletResponse.SC_FORBIDDEN);
     }
@@ -541,6 +557,7 @@ public class WorkspaceResourceImpl extends AbstractResource
      * @throws DavException (403) since workspace is not versionable. implementing
      * <code>VersionControlledResource</code> only for 'update'.
      */
+    @Override
     public void label(LabelInfo labelInfo) throws DavException {
         throw new DavException(DavServletResponse.SC_FORBIDDEN);
     }
@@ -549,6 +566,7 @@ public class WorkspaceResourceImpl extends AbstractResource
      * @throws DavException (403) since workspace is not versionable. implementing
      * <code>VersionControlledResource</code> only for 'update'.
      */
+    @Override
     public VersionHistoryResource getVersionHistory() throws DavException {
         throw new DavException(DavServletResponse.SC_FORBIDDEN);
     }

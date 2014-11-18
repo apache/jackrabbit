@@ -76,6 +76,7 @@ public class RootCollection extends AbstractResource {
      * @return string listing the METHODS allowed
      * @see org.apache.jackrabbit.webdav.DavResource#getSupportedMethods()
      */
+    @Override
     public String getSupportedMethods() {
         StringBuilder sb = new StringBuilder(DavResource.METHODS);
         sb.append(", ");
@@ -91,6 +92,7 @@ public class RootCollection extends AbstractResource {
      * @return true
      * @see org.apache.jackrabbit.webdav.DavResource#exists()
      */
+    @Override
     public boolean exists() {
         return true;
     }
@@ -101,6 +103,7 @@ public class RootCollection extends AbstractResource {
      * @return true
      * @see org.apache.jackrabbit.webdav.DavResource#isCollection()
      */
+    @Override
     public boolean isCollection() {
         return true;
     }
@@ -111,6 +114,7 @@ public class RootCollection extends AbstractResource {
      * @return empty string
      * @see org.apache.jackrabbit.webdav.DavResource#getDisplayName()
      */
+    @Override
     public String getDisplayName() {
         return "";
     }
@@ -121,6 +125,7 @@ public class RootCollection extends AbstractResource {
      * @return
      * @see org.apache.jackrabbit.webdav.DavResource#getModificationTime()
      */
+    @Override
     public long getModificationTime() {
         return new Date().getTime();
     }
@@ -132,6 +137,7 @@ public class RootCollection extends AbstractResource {
      * @throws IOException
      * @see DavResource#spool(org.apache.jackrabbit.webdav.io.OutputContext)
      */
+    @Override
     public void spool(OutputContext outputContext) throws IOException {
         if (outputContext.hasStream()) {
             Session session = getRepositorySession();
@@ -180,6 +186,7 @@ public class RootCollection extends AbstractResource {
      * of any resource.
      * @see org.apache.jackrabbit.webdav.DavResource#getCollection()
      */
+    @Override
     public DavResource getCollection() {
         return null;
     }
@@ -188,6 +195,7 @@ public class RootCollection extends AbstractResource {
      * Throws exception: 403 Forbidden.
      * @see DavResource#addMember(DavResource, InputContext)
      */
+    @Override
     public void addMember(DavResource resource, InputContext inputContext) throws DavException {
         throw new DavException(DavServletResponse.SC_FORBIDDEN);
     }
@@ -199,6 +207,7 @@ public class RootCollection extends AbstractResource {
      * @return members of this collection
      * @see org.apache.jackrabbit.webdav.DavResource#getMembers()
      */
+    @Override
     public DavResourceIterator getMembers() {
         List<DavResource> memberList = new ArrayList();
         try {
@@ -223,6 +232,7 @@ public class RootCollection extends AbstractResource {
      *
      * @see DavResource#removeMember(org.apache.jackrabbit.webdav.DavResource)
      */
+    @Override
     public void removeMember(DavResource member) throws DavException {
         Workspace wsp = getRepositorySession().getWorkspace();
         String name = Text.getName(member.getResourcePath());

@@ -77,7 +77,6 @@ import javax.jcr.Session;
 import javax.jcr.observation.EventListener;
 import javax.jcr.observation.Event;
 import javax.jcr.observation.EventIterator;
-import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.ParserConfigurationException;
 
 import java.util.ArrayList;
@@ -151,6 +150,7 @@ abstract class AbstractResource implements DavResource, TransactionResource,
      * @return string listing the compliance classes.
      * @see org.apache.jackrabbit.webdav.DavResource#getComplianceClass()
      */
+    @Override
     public String getComplianceClass() {
         return COMPLIANCE_CLASSES;
     }
@@ -158,6 +158,7 @@ abstract class AbstractResource implements DavResource, TransactionResource,
     /**
      * @see org.apache.jackrabbit.webdav.DavResource#getLocator()
      */
+    @Override
     public DavResourceLocator getLocator() {
         return locator;
     }
@@ -171,6 +172,7 @@ abstract class AbstractResource implements DavResource, TransactionResource,
      * @see DavResource#getResourcePath()
      * @see org.apache.jackrabbit.webdav.DavResourceLocator#getResourcePath()
      */
+    @Override
     public String getResourcePath() {
         return locator.getResourcePath();
     }
@@ -179,6 +181,7 @@ abstract class AbstractResource implements DavResource, TransactionResource,
      * @see DavResource#getHref()
      * @see DavResourceLocator#getHref(boolean)
      */
+    @Override
     public String getHref() {
         return locator.getHref(isCollection());
     }
@@ -186,6 +189,7 @@ abstract class AbstractResource implements DavResource, TransactionResource,
     /**
      * @see org.apache.jackrabbit.webdav.DavResource#getPropertyNames()
      */
+    @Override
     public DavPropertyName[] getPropertyNames() {
         initPropertyNames();
         return names.getContent().toArray(new DavPropertyName[names.getContentSize()]);
@@ -194,6 +198,7 @@ abstract class AbstractResource implements DavResource, TransactionResource,
     /**
      * @see org.apache.jackrabbit.webdav.DavResource#getProperty(org.apache.jackrabbit.webdav.property.DavPropertyName)
      */
+    @Override
     public DavProperty<?> getProperty(DavPropertyName name) {
         DavProperty prop = getProperties().get(name);
         if (prop == null) {
@@ -223,6 +228,7 @@ abstract class AbstractResource implements DavResource, TransactionResource,
     /**
      * @see org.apache.jackrabbit.webdav.DavResource#getProperties()
      */
+    @Override
     public DavPropertySet getProperties() {
         if (!initedProps) {
             initProperties();
@@ -237,6 +243,7 @@ abstract class AbstractResource implements DavResource, TransactionResource,
      * @throws DavException Always throws {@link DavServletResponse#SC_METHOD_NOT_ALLOWED}
      * @see org.apache.jackrabbit.webdav.DavResource#setProperty(org.apache.jackrabbit.webdav.property.DavProperty)
      */
+    @Override
     public void setProperty(DavProperty<?> property) throws DavException {
         throw new DavException(DavServletResponse.SC_METHOD_NOT_ALLOWED);
     }
@@ -248,6 +255,7 @@ abstract class AbstractResource implements DavResource, TransactionResource,
      * @throws DavException Always throws {@link DavServletResponse#SC_METHOD_NOT_ALLOWED}
      * @see org.apache.jackrabbit.webdav.DavResource#removeProperty(org.apache.jackrabbit.webdav.property.DavPropertyName)
      */
+    @Override
     public void removeProperty(DavPropertyName propertyName) throws DavException {
         throw new DavException(DavServletResponse.SC_METHOD_NOT_ALLOWED);
     }
@@ -257,6 +265,7 @@ abstract class AbstractResource implements DavResource, TransactionResource,
      *
      * @see DavResource#alterProperties(List)
      */
+    @Override
     public MultiStatusResponse alterProperties(List<? extends PropEntry> changeList) throws DavException {
         throw new DavException(DavServletResponse.SC_METHOD_NOT_ALLOWED);
     }
@@ -268,6 +277,7 @@ abstract class AbstractResource implements DavResource, TransactionResource,
      * @throws DavException Always throws {@link DavServletResponse#SC_METHOD_NOT_ALLOWED}
      * @see DavResource#move(org.apache.jackrabbit.webdav.DavResource)
      */
+    @Override
     public void move(DavResource destination) throws DavException {
         throw new DavException(DavServletResponse.SC_METHOD_NOT_ALLOWED);
     }
@@ -280,6 +290,7 @@ abstract class AbstractResource implements DavResource, TransactionResource,
      * @throws DavException Always throws {@link DavServletResponse#SC_METHOD_NOT_ALLOWED}
      * @see DavResource#copy(org.apache.jackrabbit.webdav.DavResource, boolean)
      */
+    @Override
     public void copy(DavResource destination, boolean shallow) throws DavException {
         throw new DavException(DavServletResponse.SC_METHOD_NOT_ALLOWED);
     }
@@ -295,6 +306,7 @@ abstract class AbstractResource implements DavResource, TransactionResource,
      * @return true if this resource may be locked by the given type and scope.
      * @see DavResource#isLockable(org.apache.jackrabbit.webdav.lock.Type, org.apache.jackrabbit.webdav.lock.Scope)
      */
+    @Override
     public boolean isLockable(Type type, Scope scope) {
         return supportedLock.isSupportedLock(type, scope);
     }
@@ -307,6 +319,7 @@ abstract class AbstractResource implements DavResource, TransactionResource,
      * @return true if this resource has a lock applied with the given type and scope.
      * @see DavResource#hasLock(Type, Scope)
      */
+    @Override
     public boolean hasLock(Type type, Scope scope) {
         return getLock(type, scope) != null;
     }
@@ -314,6 +327,7 @@ abstract class AbstractResource implements DavResource, TransactionResource,
     /**
      * @see DavResource#getLock(Type, Scope)
      */
+    @Override
     public ActiveLock getLock(Type type, Scope scope) {
         ActiveLock lock = null;
         if (TransactionConstants.TRANSACTION.equals(type)) {
@@ -326,6 +340,7 @@ abstract class AbstractResource implements DavResource, TransactionResource,
      * @see DavResource#getLocks()
      * todo improve....
      */
+    @Override
     public ActiveLock[] getLocks() {
         List<ActiveLock> locks = new ArrayList<ActiveLock>();
         // tx locks
@@ -353,6 +368,7 @@ abstract class AbstractResource implements DavResource, TransactionResource,
     /**
      * @see DavResource#lock(org.apache.jackrabbit.webdav.lock.LockInfo)
      */
+    @Override
     public ActiveLock lock(LockInfo reqLockInfo) throws DavException {
         if (isLockable(reqLockInfo.getType(), reqLockInfo.getScope())) {
             return txMgr.createLock(reqLockInfo, this);
@@ -369,6 +385,7 @@ abstract class AbstractResource implements DavResource, TransactionResource,
      * @throws DavException
      * @see DavResource#refreshLock(org.apache.jackrabbit.webdav.lock.LockInfo, String)
      */
+    @Override
     public ActiveLock refreshLock(LockInfo info, String lockToken) throws DavException {
         return txMgr.refreshLock(info, lockToken, this);
     }
@@ -381,6 +398,7 @@ abstract class AbstractResource implements DavResource, TransactionResource,
      * @param lockToken
      * @throws DavException Always throws {@link DavServletResponse#SC_METHOD_NOT_ALLOWED}
      */
+    @Override
     public void unlock(String lockToken) throws DavException {
         throw new DavException(DavServletResponse.SC_PRECONDITION_FAILED);
     }
@@ -388,6 +406,7 @@ abstract class AbstractResource implements DavResource, TransactionResource,
     /**
      * @see DavResource#addLockManager(org.apache.jackrabbit.webdav.lock.LockManager)
      */
+    @Override
     public void addLockManager(LockManager lockMgr) {
         if (lockMgr instanceof TxLockManagerImpl) {
             txMgr = (TxLockManagerImpl) lockMgr;
@@ -397,6 +416,7 @@ abstract class AbstractResource implements DavResource, TransactionResource,
     /**
      * @see org.apache.jackrabbit.webdav.DavResource#getFactory()
      */
+    @Override
     public DavResourceFactory getFactory() {
         return factory;
     }
@@ -406,6 +426,7 @@ abstract class AbstractResource implements DavResource, TransactionResource,
      * @see org.apache.jackrabbit.webdav.transaction.TransactionResource#getSession()
      * @see org.apache.jackrabbit.webdav.observation.ObservationResource#getSession()
      */
+    @Override
     public DavSession getSession() {
         return session;
     }
@@ -414,6 +435,7 @@ abstract class AbstractResource implements DavResource, TransactionResource,
     /**
      * @see TransactionResource#init(TxLockManager, String)
      */
+    @Override
     public void init(TxLockManager txMgr, String transactionId) {
         this.txMgr = (TxLockManagerImpl) txMgr;
         this.transactionId = transactionId;
@@ -422,6 +444,7 @@ abstract class AbstractResource implements DavResource, TransactionResource,
     /**
      * @see TransactionResource#unlock(String, org.apache.jackrabbit.webdav.transaction.TransactionInfo)
      */
+    @Override
     public void unlock(String lockToken, TransactionInfo tInfo) throws DavException {
         txMgr.releaseLock(tInfo, lockToken, this);
     }
@@ -429,6 +452,7 @@ abstract class AbstractResource implements DavResource, TransactionResource,
     /**
      * @see TransactionResource#getTransactionId()
      */
+    @Override
     public String getTransactionId() {
         return transactionId;
     }
@@ -439,6 +463,7 @@ abstract class AbstractResource implements DavResource, TransactionResource,
      * @return object to be used in the OPTIONS response body or <code>null</code>
      * @see DeltaVResource#getOptionResponse(org.apache.jackrabbit.webdav.version.OptionsInfo)
      */
+    @Override
     public OptionsResponse getOptionResponse(OptionsInfo optionsInfo) {
         OptionsResponse oR = null;
         if (optionsInfo != null) {
@@ -465,6 +490,7 @@ abstract class AbstractResource implements DavResource, TransactionResource,
      * @throws DavException
      * @see DeltaVResource#getReport(org.apache.jackrabbit.webdav.version.report.ReportInfo)
      */
+    @Override
     public Report getReport(ReportInfo reportInfo) throws DavException {
         if (reportInfo == null) {
             throw new DavException(DavServletResponse.SC_BAD_REQUEST, "A REPORT request must provide a valid XML request body.");
@@ -495,6 +521,7 @@ abstract class AbstractResource implements DavResource, TransactionResource,
      * @throws DavException Always throws.
      * @see DeltaVResource#addWorkspace(org.apache.jackrabbit.webdav.DavResource)
      */
+    @Override
     public void addWorkspace(DavResource workspace) throws DavException {
         throw new DavException(DavServletResponse.SC_FORBIDDEN);
     }
@@ -508,6 +535,7 @@ abstract class AbstractResource implements DavResource, TransactionResource,
      * @throws DavException
      * @see DeltaVResource#getReferenceResources(org.apache.jackrabbit.webdav.property.DavPropertyName)
      */
+    @Override
     public DavResource[] getReferenceResources(DavPropertyName hrefPropertyName) throws DavException {
         DavProperty<?> prop = getProperty(hrefPropertyName);
         if (prop == null || !(prop instanceof HrefProperty)) {
@@ -557,6 +585,7 @@ abstract class AbstractResource implements DavResource, TransactionResource,
      * @return
      * @see org.apache.jackrabbit.webdav.search.SearchResource#getQueryGrammerSet()
      */
+    @Override
     public QueryGrammerSet getQueryGrammerSet() {
         return new SearchResourceImpl(getLocator(), session).getQueryGrammerSet();
     }
@@ -567,6 +596,7 @@ abstract class AbstractResource implements DavResource, TransactionResource,
      * @throws DavException
      * @see SearchResource#search(org.apache.jackrabbit.webdav.search.SearchInfo)
      */
+    @Override
     public MultiStatus search(SearchInfo sInfo) throws DavException {
         return new SearchResourceImpl(getLocator(), session).search(sInfo);
     }
@@ -779,6 +809,7 @@ abstract class AbstractResource implements DavResource, TransactionResource,
         /**
          * @see EventListener#onEvent(javax.jcr.observation.EventIterator)
          */
+        @Override
         public void onEvent(EventIterator events) {
             while (events.hasNext()) {
                 try {
