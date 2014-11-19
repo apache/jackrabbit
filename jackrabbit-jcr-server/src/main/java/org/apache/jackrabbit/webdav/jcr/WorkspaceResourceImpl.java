@@ -36,12 +36,16 @@ import org.apache.jackrabbit.webdav.io.InputContext;
 import org.apache.jackrabbit.webdav.io.OutputContext;
 import org.apache.jackrabbit.webdav.jcr.property.JcrDavPropertyNameSet;
 import org.apache.jackrabbit.webdav.jcr.property.NamespacesProperty;
+import org.apache.jackrabbit.webdav.jcr.security.JcrUserPrivilegesProperty;
+import org.apache.jackrabbit.webdav.jcr.security.JcrSupportedPrivilegesProperty;
+import org.apache.jackrabbit.webdav.jcr.security.SecurityUtils;
 import org.apache.jackrabbit.webdav.jcr.version.report.JcrPrivilegeReport;
 import org.apache.jackrabbit.webdav.property.DavProperty;
 import org.apache.jackrabbit.webdav.property.DavPropertyName;
 import org.apache.jackrabbit.webdav.property.DefaultDavProperty;
 import org.apache.jackrabbit.webdav.property.PropEntry;
 import org.apache.jackrabbit.webdav.search.SearchResource;
+import org.apache.jackrabbit.webdav.security.SecurityConstants;
 import org.apache.jackrabbit.webdav.version.DeltaVResource;
 import org.apache.jackrabbit.webdav.version.LabelInfo;
 import org.apache.jackrabbit.webdav.version.MergeInfo;
@@ -104,35 +108,43 @@ public class WorkspaceResourceImpl extends AbstractResource
     @Override
     public DavProperty<?> getProperty(DavPropertyName name) {
         DavProperty prop = super.getProperty(name);
-        if (prop == null && ItemResourceConstants.JCR_NODETYPES_CND.equals(name)) {
-            StringWriter writer = new StringWriter();
+        if (prop == null) {
+            StringWriter writer = null;
             try {
-                Session s = getRepositorySession();
+                if (ItemResourceConstants.JCR_NODETYPES_CND.equals(name)) {
+                    writer = new StringWriter();
+                    Session s = getRepositorySession();
 
-                CompactNodeTypeDefWriter cndWriter = new CompactNodeTypeDefWriter(writer, s, true);
-                NodeTypeIterator ntIterator = s.getWorkspace().getNodeTypeManager().getAllNodeTypes();
-                while (ntIterator.hasNext()) {
-                    cndWriter.write(ntIterator.nextNodeType());
+                    CompactNodeTypeDefWriter cndWriter = new CompactNodeTypeDefWriter(writer, s, true);
+                    NodeTypeIterator ntIterator = s.getWorkspace().getNodeTypeManager().getAllNodeTypes();
+                    while (ntIterator.hasNext()) {
+                        cndWriter.write(ntIterator.nextNodeType());
+                    }
+                    cndWriter.close();
+                    /*
+                    NOTE: avoid having JCR_NODETYPES_CND exposed upon allprop
+                          PROPFIND request since it needs to be calculated.
+                          nevertheless, this property can be altered using
+                          PROPPATCH, which is not consistent with the specification
+                    */
+                    prop = new DefaultDavProperty<String>(ItemResourceConstants.JCR_NODETYPES_CND, writer.toString(), true);
+
+                } else if (SecurityConstants.SUPPORTED_PRIVILEGE_SET.equals(name)) {
+                    prop = new JcrSupportedPrivilegesProperty(getRepositorySession(), null).asDavProperty();
+                } else if (SecurityConstants.CURRENT_USER_PRIVILEGE_SET.equals(name)) {
+                    prop = new JcrUserPrivilegesProperty(getRepositorySession(), null).asDavProperty();
                 }
-                cndWriter.close();
-                /*
-                NOTE: avoid having JCR_NODETYPES_CND exposed upon allprop
-                      PROPFIND request since it needs to be calculated.
-                      nevertheless, this property can be altered using
-                      PROPPATCH, which is not consistent with the specification
-                 */
-                return new DefaultDavProperty<String>(ItemResourceConstants.JCR_NODETYPES_CND, writer.toString(), true);
             } catch (RepositoryException e) {
                 log.error("Failed to access NodeTypeManager: " + e.getMessage());
-                return null;
             } catch (IOException e) {
                 log.error("Failed to write compact node definition: " + e.getMessage());
-                return null;
             } finally {
-                try {
-                    writer.close();
-                } catch (IOException e) {
-                    log.error(e.getMessage());
+                if (writer != null) {
+                    try {
+                        writer.close();
+                    } catch (IOException e) {
+                        log.error(e.getMessage());
+                    }
                 }
             }
         }
@@ -592,6 +604,10 @@ public class WorkspaceResourceImpl extends AbstractResource
     protected void initPropertyNames() {
         super.initPropertyNames();
         names.addAll(JcrDavPropertyNameSet.WORKSPACE_SET);
+        if (SecurityUtils.supportsAccessControl(getRepositorySession())) {
+            names.add(SecurityConstants.SUPPORTED_PRIVILEGE_SET);
+            names.add(SecurityConstants.CURRENT_USER_PRIVILEGE_SET);
+        }
     }
 
     @Override
