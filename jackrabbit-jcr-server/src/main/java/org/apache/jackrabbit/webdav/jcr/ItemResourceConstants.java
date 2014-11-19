@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.webdav.jcr;
 
+import javax.jcr.Session;
+
 import org.apache.jackrabbit.commons.webdav.JcrRemotingConstants;
 import org.apache.jackrabbit.webdav.DavResource;
 import org.apache.jackrabbit.webdav.lock.Scope;
@@ -93,18 +95,31 @@ public interface ItemResourceConstants extends JcrRemotingConstants {
     //-----------------------------------------< JSR170 specific privileges >---
     /**
      * Privilege representing the JSR170 'read' action.
+     * <p><strong>Note:</strong> the name of this constant is somewhat misleading
+     * as it corresponds to {@link javax.jcr.Session#ACTION_READ} and not
+     * to {@link javax.jcr.security.Privilege#JCR_READ}.</p>
      */
-    public static final Privilege PRIVILEGE_JCR_READ = Privilege.getPrivilege("read", NAMESPACE);
+    public static final Privilege PRIVILEGE_JCR_READ = Privilege.getPrivilege(Session.ACTION_READ, NAMESPACE);
     /**
      * Privilege representing the JSR170 'add_node' action.
+     * <p><strong>Note:</strong> the name of this constant is somewhat misleading
+     * as it corresponds to {@link javax.jcr.Session#ACTION_ADD_NODE} and not
+     * to {@link javax.jcr.security.Privilege#JCR_ADD_CHILD_NODES}.</p>
      */
-    public static final Privilege PRIVILEGE_JCR_ADD_NODE = Privilege.getPrivilege("add_node", NAMESPACE);
+    public static final Privilege PRIVILEGE_JCR_ADD_NODE = Privilege.getPrivilege(Session.ACTION_ADD_NODE, NAMESPACE);
     /**
      * Privilege representing the JSR170 'set_property' action.
+     * <p><strong>Note:</strong> the name of this constant is somewhat misleading
+     * as it corresponds to {@link javax.jcr.Session#ACTION_SET_PROPERTY} and not
+     * to {@link javax.jcr.security.Privilege#JCR_MODIFY_PROPERTIES}.</p>
      */
-    public static final Privilege PRIVILEGE_JCR_SET_PROPERTY = Privilege.getPrivilege("set_property", NAMESPACE);
+    public static final Privilege PRIVILEGE_JCR_SET_PROPERTY = Privilege.getPrivilege(Session.ACTION_SET_PROPERTY, NAMESPACE);
     /**
      * Privilege representing the JSR170 'remove' action.
+     * <p><strong>Note:</strong> the name of this constant is somewhat misleading
+     * as it corresponds to {@link javax.jcr.Session#ACTION_REMOVE} and not
+     * to {@link javax.jcr.security.Privilege#JCR_REMOVE_NODE} or
+     * {@link javax.jcr.security.Privilege#JCR_REMOVE_CHILD_NODES}.</p>
      */
-    public static final Privilege PRIVILEGE_JCR_REMOVE = Privilege.getPrivilege("remove", NAMESPACE);
+    public static final Privilege PRIVILEGE_JCR_REMOVE = Privilege.getPrivilege(Session.ACTION_REMOVE, NAMESPACE);
 }

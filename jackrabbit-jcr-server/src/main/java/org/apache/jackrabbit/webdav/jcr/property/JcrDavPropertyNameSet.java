@@ -20,7 +20,6 @@ import org.apache.jackrabbit.webdav.jcr.ItemResourceConstants;
 import org.apache.jackrabbit.webdav.observation.ObservationConstants;
 import org.apache.jackrabbit.webdav.property.DavPropertyName;
 import org.apache.jackrabbit.webdav.property.DavPropertyNameSet;
-import org.apache.jackrabbit.webdav.security.SecurityConstants;
 import org.apache.jackrabbit.webdav.version.DeltaVConstants;
 import org.apache.jackrabbit.webdav.version.VersionControlledResource;
 import org.apache.jackrabbit.webdav.version.VersionHistoryResource;
@@ -77,7 +76,6 @@ public final class JcrDavPropertyNameSet implements ItemResourceConstants {
         ITEM_BASE_SET.add(DavPropertyName.GETCONTENTTYPE);        
         ITEM_BASE_SET.add(DeltaVConstants.WORKSPACE);
         ITEM_BASE_SET.add(ObservationConstants.SUBSCRIPTIONDISCOVERY);
-        ITEM_BASE_SET.add(SecurityConstants.CURRENT_USER_PRIVILEGE_SET);
     }
 
     /**

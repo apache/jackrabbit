@@ -17,30 +17,27 @@
 package org.apache.jackrabbit.webdav.jcr;
 
 import org.apache.jackrabbit.util.Text;
+import org.apache.jackrabbit.webdav.DavCompliance;
 import org.apache.jackrabbit.webdav.DavException;
 import org.apache.jackrabbit.webdav.DavResource;
 import org.apache.jackrabbit.webdav.DavResourceFactory;
 import org.apache.jackrabbit.webdav.DavResourceLocator;
 import org.apache.jackrabbit.webdav.DavServletResponse;
-import org.apache.jackrabbit.webdav.DavCompliance;
 import org.apache.jackrabbit.webdav.io.OutputContext;
-import org.apache.jackrabbit.webdav.jcr.property.JcrDavPropertyNameSet;
-import org.apache.jackrabbit.webdav.observation.ObservationConstants;
-import org.apache.jackrabbit.webdav.observation.ObservationResource;
-import org.apache.jackrabbit.webdav.observation.SubscriptionManager;
-import org.apache.jackrabbit.webdav.observation.Subscription;
-import org.apache.jackrabbit.webdav.observation.SubscriptionInfo;
-import org.apache.jackrabbit.webdav.observation.EventDiscovery;
 import org.apache.jackrabbit.webdav.jcr.nodetype.ItemDefinitionImpl;
 import org.apache.jackrabbit.webdav.jcr.nodetype.NodeDefinitionImpl;
 import org.apache.jackrabbit.webdav.jcr.nodetype.PropertyDefinitionImpl;
-import org.apache.jackrabbit.webdav.property.DefaultDavProperty;
-import org.apache.jackrabbit.webdav.property.HrefProperty;
+import org.apache.jackrabbit.webdav.jcr.property.JcrDavPropertyNameSet;
+import org.apache.jackrabbit.webdav.observation.EventDiscovery;
+import org.apache.jackrabbit.webdav.observation.ObservationConstants;
+import org.apache.jackrabbit.webdav.observation.ObservationResource;
+import org.apache.jackrabbit.webdav.observation.Subscription;
+import org.apache.jackrabbit.webdav.observation.SubscriptionInfo;
+import org.apache.jackrabbit.webdav.observation.SubscriptionManager;
 import org.apache.jackrabbit.webdav.property.DavProperty;
 import org.apache.jackrabbit.webdav.property.DavPropertyName;
-import org.apache.jackrabbit.webdav.security.CurrentUserPrivilegeSetProperty;
-import org.apache.jackrabbit.webdav.security.Privilege;
-import org.apache.jackrabbit.webdav.security.SecurityConstants;
+import org.apache.jackrabbit.webdav.property.DefaultDavProperty;
+import org.apache.jackrabbit.webdav.property.HrefProperty;
 import org.apache.jackrabbit.webdav.transaction.TxLockEntry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,8 +48,6 @@ import javax.jcr.PathNotFoundException;
 import javax.jcr.Property;
 import javax.jcr.RepositoryException;
 import javax.jcr.Workspace;
-import java.util.ArrayList;
-import java.util.List;
 import java.io.IOException;
 
 /**
@@ -133,24 +128,6 @@ abstract class AbstractItemResource extends AbstractResource implements
             } else if (ObservationConstants.SUBSCRIPTIONDISCOVERY.equals(name)) {
                 // observation resource
                 prop = subsMgr.getSubscriptionDiscovery(this);
-            } else if (SecurityConstants.CURRENT_USER_PRIVILEGE_SET.equals(name)) {
-                // TODO complete set of properties defined by RFC 3744
-                Privilege[] allPrivs = new Privilege[] {PRIVILEGE_JCR_READ,
-                        PRIVILEGE_JCR_ADD_NODE,
-                        PRIVILEGE_JCR_SET_PROPERTY,
-                        PRIVILEGE_JCR_REMOVE};
-                List<Privilege> currentPrivs = new ArrayList<Privilege>();
-                for (Privilege priv : allPrivs) {
-                    try {
-                        String path = getLocator().getRepositoryPath();
-                        getRepositorySession().hasPermission(path, priv.getName());
-                        currentPrivs.add(priv);
-                    } catch (RepositoryException e) {
-                        // ignore
-                        log.debug(e.toString());
-                    }
-                }
-                prop =  new CurrentUserPrivilegeSetProperty(currentPrivs.toArray(new Privilege[currentPrivs.size()]));
             }
         }
 

@@ -62,6 +62,10 @@ import org.apache.jackrabbit.webdav.DavResourceLocator;
 import org.apache.jackrabbit.webdav.DavServletResponse;
 import org.apache.jackrabbit.webdav.MultiStatusResponse;
 import org.apache.jackrabbit.webdav.jcr.property.JcrDavPropertyNameSet;
+import org.apache.jackrabbit.webdav.jcr.security.JcrUserPrivilegesProperty;
+import org.apache.jackrabbit.webdav.jcr.security.JcrSupportedPrivilegesProperty;
+import org.apache.jackrabbit.webdav.jcr.security.SecurityUtils;
+import org.apache.jackrabbit.webdav.security.SecurityConstants;
 import org.apache.jackrabbit.webdav.util.HttpDateFormat;
 import org.apache.jackrabbit.webdav.io.InputContext;
 import org.apache.jackrabbit.webdav.io.OutputContext;
@@ -230,6 +234,10 @@ public class DefaultItemCollection extends AbstractItemResource
                 } else if (OrderingConstants.ORDERING_TYPE.equals(name) && isOrderable()) {
                     // property defined by RFC 3648: this resource always has custom ordering!                    
                     prop = new OrderingType(OrderingConstants.ORDERING_TYPE_CUSTOM);
+                } else if (SecurityConstants.SUPPORTED_PRIVILEGE_SET.equals(name)) {
+                    prop = new JcrSupportedPrivilegesProperty(getRepositorySession(), n.getPath()).asDavProperty();
+                } else if (SecurityConstants.CURRENT_USER_PRIVILEGE_SET.equals(name)) {
+                    prop = new JcrUserPrivilegesProperty(getRepositorySession(), n.getPath()).asDavProperty();
                 }
             } catch (RepositoryException e) {
                 log.error("Failed to retrieve node-specific property: " + e);
@@ -952,6 +960,10 @@ public class DefaultItemCollection extends AbstractItemResource
             }
             if (isOrderable()) {
                 names.add(OrderingConstants.ORDERING_TYPE);
+            }
+            if (SecurityUtils.supportsAccessControl(getRepositorySession())) {
+                names.add(SecurityConstants.SUPPORTED_PRIVILEGE_SET);
+                names.add(SecurityConstants.CURRENT_USER_PRIVILEGE_SET);
             }
         }
     }
