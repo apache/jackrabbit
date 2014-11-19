@@ -40,6 +40,11 @@ public class ChangeLogImpl extends AbstractChangeLog<Operation> {
         addOperation(Operations.addNode(parentId, nodeName, nodetypeName, uuid));
     }
 
+    public void addNode(NodeId parentId, Name nodeName, String jsonValue) throws RepositoryException {
+        // TODO
+        addOperation(Operations.empty());
+    }
+    
     public void addProperty(NodeId parentId, Name propertyName, QValue value) throws RepositoryException {
         addOperation(Operations.addProperty(parentId, propertyName, value));
     }

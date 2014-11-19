@@ -41,6 +41,7 @@ import org.apache.jackrabbit.jcr2spi.operation.Operation;
 import org.apache.jackrabbit.jcr2spi.operation.Remove;
 import org.apache.jackrabbit.jcr2spi.operation.ReorderNodes;
 import org.apache.jackrabbit.jcr2spi.operation.SetMixin;
+import org.apache.jackrabbit.jcr2spi.operation.SetPolicy;
 import org.apache.jackrabbit.jcr2spi.operation.SetPrimaryType;
 import org.apache.jackrabbit.jcr2spi.state.ItemState;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
@@ -276,7 +277,10 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
             complete((ReorderNodes) operation);
         } else if (operation instanceof Move) {
             complete((Move) operation);
-        } else {
+        } else if (operation instanceof SetPolicy) {
+            complete((SetPolicy) operation);
+        }
+        else {
             throw new IllegalArgumentException();
         }
     }
@@ -1450,6 +1454,39 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
         }
     }
 
+    private void complete(SetPolicy operation) throws RepositoryException {
+        if (operation.getParentState().getHierarchyEntry() != this) {
+            throw new IllegalArgumentException();
+        }
+       
+        for (ItemState itemState : operation.getItemStates()) {
+            
+            HierarchyEntry he = itemState.getHierarchyEntry();
+            if (he.getStatus() == Status.NEW) {
+                switch (operation.getStatus()) {
+                    case Operation.STATUS_PERSISTED:
+                        if (itemState instanceof NodeState) {
+                            ((HierarchyEntryImpl) he).internalGetItemState().setStatus(Status.EXISTING);
+                            he.invalidate(false);
+                        } else {
+                            PropertyState addedState = (PropertyState) ((PropertyEntryImpl) he).internalGetItemState();
+                            addedState.setStatus(Status.EXISTING);
+                            
+                            QPropertyDefinition pd = addedState.getDefinition();
+                            if (pd.isAutoCreated() || pd.isProtected()) {
+                                he.invalidate(true);
+                            } // else: assume added property is up to date.
+                            break;
+                        }
+                        break;
+                    case Operation.STATUS_UNDO:
+                        he.revert();
+                        break;
+                     default: // ignore
+                }
+            }
+        }
+    }
     private void complete(AddProperty operation) throws RepositoryException {
         if (operation.getParentState().getHierarchyEntry() != this) {
             throw new IllegalArgumentException();

@@ -88,6 +88,11 @@ public class SerializableBatch implements Batch, Serializable {
         recording.add(new AddNode(parentId, nodeName, nodetypeName, uuid));
     }
 
+    public void addNode(NodeId parentId, Name nodeName, String value)
+            throws RepositoryException {
+        recording.add(new AddNode(parentId, nodeName, null, null));
+    }
+    
     public void addProperty(NodeId parentId, Name propertyName, QValue value) {
         recording.add(new AddProperty(parentId, propertyName,
                 new QValue[]{value}, false));

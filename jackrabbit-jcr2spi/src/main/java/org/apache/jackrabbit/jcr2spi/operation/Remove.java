@@ -108,4 +108,13 @@ public class Remove extends TransientOperation {
         }
         return new Remove(state, state.getParent());
     }
+    
+    public static Operation create(ItemState state, int options) throws RepositoryException {
+        if (state.isNode() && ((NodeState) state).getDefinition().allowsSameNameSiblings()) {
+            // in case of SNS-siblings make sure the parent hierarchy entry has
+            // its child entries loaded.
+            assertChildNodeEntries(state.getParent());
+        }
+        return new Remove(state, state.getParent(), options);
+    }
 }

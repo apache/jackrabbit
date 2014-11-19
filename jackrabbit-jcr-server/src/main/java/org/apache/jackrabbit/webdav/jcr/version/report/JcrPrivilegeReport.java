@@ -33,6 +33,9 @@ import org.apache.jackrabbit.webdav.DavResourceLocator;
 import org.apache.jackrabbit.webdav.xml.DomUtil;
 import org.apache.jackrabbit.webdav.security.Privilege;
 import org.apache.jackrabbit.webdav.security.CurrentUserPrivilegeSetProperty;
+import org.apache.jackrabbit.webdav.security.SecurityConstants;
+import org.apache.jackrabbit.webdav.security.SupportedPrivilege;
+import org.apache.jackrabbit.webdav.security.SupportedPrivilegeSetProperty;
 import org.w3c.dom.Element;
 import org.w3c.dom.Document;
 
@@ -110,8 +113,15 @@ public class JcrPrivilegeReport extends AbstractJcrReport {
         href = obtainAbsolutePathFromUri(href); // TODO: we should check whether the authority component matches
         DavResourceLocator resourceLoc = resource.getLocator();
         DavResourceLocator loc = resourceLoc.getFactory().createResourceLocator(resourceLoc.getPrefix(), href);
-        // immediately build the final multistatus element
-        addResponses(loc);
+        
+        // check if info contains a DAV:supported-privilege-set
+        Element supportPrivilegeSet = info.getContentElement(SecurityConstants.SUPPORTED_PRIVILEGE_SET.getName(), SecurityConstants.NAMESPACE);
+        if (supportPrivilegeSet != null) {
+            addSupportedPrivileges(loc);
+        } else {
+            // immediately build the final multistatus element
+            addResponses(loc);
+        }
     }
 
     /**
@@ -130,6 +140,7 @@ public class JcrPrivilegeReport extends AbstractJcrReport {
         String repositoryPath = locator.getRepositoryPath();
         MultiStatusResponse resp = new MultiStatusResponse(locator.getHref(false), null);
         List<Privilege> currentPrivs = new ArrayList<Privilege>();
+        
         for (Privilege priv : PRIVS) {
             try {
                 if (getRepositorySession().hasPermission(repositoryPath, priv.getName())) {
@@ -144,6 +155,64 @@ public class JcrPrivilegeReport extends AbstractJcrReport {
         ms.addResponse(resp);
     }
 
+    /**
+     * A side-track for replacing the colon in a jcr name, seprating the namespace prefix from the local name.
+     * This replacement is needed so that creating privilege element becomes possible.
+     * Uses privilege namespace and the name itself contains the jcr namespace.
+     */
+    private String replaceColon(String name) {        
+        int pos = name.indexOf(':');        
+        StringBuilder sb = new StringBuilder(name);
+        sb.setCharAt(pos, '-');
+        return sb.toString();
+    }
+    
+    private SupportedPrivilege getSupportedPrivilege(javax.jcr.security.Privilege privilege) {
+
+        String privilegeName = replaceColon(privilege.getName());
+        String description = null;
+        String descriptionLanguage = null;
+
+        Privilege priv = Privilege.getPrivilege(privilegeName, ItemResourceConstants.NAMESPACE);
+        List<SupportedPrivilege> supportedPrivileges = null;
+        if (privilege.isAggregate()) {
+            // this supported privilege contains an array of supported privileges consisting of the privileges it aggregates!
+            supportedPrivileges = new ArrayList<SupportedPrivilege>();
+            for (javax.jcr.security.Privilege dap : privilege.getDeclaredAggregatePrivileges()) {
+                supportedPrivileges.add(getSupportedPrivilege(dap));
+            }
+        }
+
+        SupportedPrivilege[] sp = null;
+        if (supportedPrivileges != null) {
+             sp = supportedPrivileges.toArray(new SupportedPrivilege[supportedPrivileges.size()]);
+             supportedPrivileges.clear();
+        }
+
+        return new SupportedPrivilege(priv, description, descriptionLanguage, privilege.isAbstract(), sp);
+    }
+    
+    private void addSupportedPrivileges(DavResourceLocator loc) {
+        String repositoryPath = loc.getRepositoryPath();
+        MultiStatusResponse msResponse = new MultiStatusResponse(loc.getHref(false), null);
+        List<SupportedPrivilege> supportedPrivileges = new ArrayList<SupportedPrivilege>();
+        try {
+            javax.jcr.security.Privilege[] privs = getRepositorySession().getAccessControlManager().getSupportedPrivileges(repositoryPath);
+            for (javax.jcr.security.Privilege privilege : privs) {
+                 supportedPrivileges.add(getSupportedPrivilege(privilege));
+            }
+            
+        } catch(AccessControlException e) {
+            // session does not have sufficient permission to retrieve the supported privileges
+            log.debug(e.toString());
+        } catch(RepositoryException e) {
+            log.debug(e.toString());
+        }
+        
+        msResponse.add(new SupportedPrivilegeSetProperty(supportedPrivileges.toArray(new SupportedPrivilege[supportedPrivileges.size()])));
+        ms.addResponse(msResponse);
+    }
+    
     private static String obtainAbsolutePathFromUri(String uri) {
         try {
             java.net.URI u = new java.net.URI(uri);

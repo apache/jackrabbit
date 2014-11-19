@@ -141,5 +141,16 @@ public class BatchLogger extends AbstractLogger implements Batch {
             }}, "move(NodeId, NodeId, Name)", new Object[]{srcNodeId, destParentNodeId, destName});
     }
 
+    @Override
+    public void addNode(final NodeId parentId, final Name nodeName, final String value)
+            throws RepositoryException {
+        execute(new Callable() {
+            public Object call() throws RepositoryException {
+                batch.addNode(parentId, nodeName, value);
+                return null;
+            }}, "move(NodeId, NodeId, Name)", new Object[]{parentId, nodeName, value});
+        
+    }
+
 
 }

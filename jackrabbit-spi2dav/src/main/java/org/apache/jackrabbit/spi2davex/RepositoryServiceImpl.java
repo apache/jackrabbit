@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+
 import javax.jcr.Credentials;
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.PropertyType;
@@ -677,6 +678,16 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
             appendDiff(SYMBOL_ADD_NODE, jcrPath, wr.toString());
         }
 
+        @Override
+        public void addNode(NodeId parentId, Name nodeName, String value) throws RepositoryException {
+            assertMethod();
+            NamePathResolver resolver = getNamePathResolver(sessionInfo);
+            Path normalizedPath = getPathFactory().create(getPath(parentId, sessionInfo), nodeName, true);
+            String jcrPath = resolver.getJCRPath(normalizedPath);           
+
+            appendDiff(SYMBOL_ADD_NODE, jcrPath, value);
+        }
+        
         /**
          * @inheritDoc
          */

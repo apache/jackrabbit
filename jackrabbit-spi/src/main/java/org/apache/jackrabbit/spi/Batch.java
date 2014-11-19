@@ -102,6 +102,15 @@ public interface Batch {
     public void addNode(NodeId parentId, Name nodeName, Name nodetypeName, String uuid) throws RepositoryException;
 
     /**
+     * 
+     * @param parentId
+     * @param nodeName
+     * @param value
+     * @throws RepositoryException
+     */
+    public void addNode(NodeId parentId, Name nodeName, String value) throws RepositoryException;
+
+    /**
      * Add a new property to the persistent layer.
      * <p>
      * Note: this call should succeed in case the property already exists.
