@@ -39,10 +39,20 @@ import org.w3c.dom.Document;
 import javax.jcr.RepositoryException;
 import java.util.List;
 import java.util.ArrayList;
-import java.security.AccessControlException;
 
 /**
- * <code>JcrPrivilegeReport</code>...
+ * <p>Report to retrieve the permissions granted to the reading session as defined
+ * by {@link javax.jcr.Session#hasPermission(String, String)}.</p>
+ *
+ * <p>NOTE: the name of this report and the names of the privileges are
+ * misleading as they rather correspond to the <i>actions</i> defined by
+ * {@link javax.jcr.Session}; while the JCR privileges s.str. have only been
+ * specified as of JSR 283 in the {@link javax.jcr.security.Privilege} interface.
+ * A better name would have been <strong>JcrActionReport</strong></p>
+ *
+ * @see org.apache.jackrabbit.webdav.jcr.security.JcrUserPrivilegesProperty for
+ * the webdav correspondence to {@link javax.jcr.security.AccessControlManager#getPrivileges(String)}
+ * mapped to the {@link org.apache.jackrabbit.webdav.security.CurrentUserPrivilegeSetProperty}.
  */
 public class JcrPrivilegeReport extends AbstractJcrReport {
 
@@ -67,6 +77,7 @@ public class JcrPrivilegeReport extends AbstractJcrReport {
      * @return {@link #PRIVILEGES_REPORT}
      * @see org.apache.jackrabbit.webdav.version.report.Report#getType()
      */
+    @Override
     public ReportType getType() {
         return PRIVILEGES_REPORT;
     }
@@ -77,6 +88,7 @@ public class JcrPrivilegeReport extends AbstractJcrReport {
      * @return true
      * @see org.apache.jackrabbit.webdav.version.report.Report#isMultiStatusReport()
      */
+    @Override
     public boolean isMultiStatusReport() {
         return true;
     }
@@ -109,6 +121,7 @@ public class JcrPrivilegeReport extends AbstractJcrReport {
      * @return Xml element representing the output of the specified view.
      * @see org.apache.jackrabbit.webdav.xml.XmlSerializable#toXml(Document)
      */
+    @Override
     public Element toXml(Document document) {
         return ms.toXml(document);
     }
@@ -119,11 +132,9 @@ public class JcrPrivilegeReport extends AbstractJcrReport {
         List<Privilege> currentPrivs = new ArrayList<Privilege>();
         for (Privilege priv : PRIVS) {
             try {
-                getRepositorySession().checkPermission(repositoryPath, priv.getName());
-                currentPrivs.add(priv);
-            } catch (AccessControlException e) {
-                // ignore
-                log.debug(e.toString());
+                if (getRepositorySession().hasPermission(repositoryPath, priv.getName())) {
+                    currentPrivs.add(priv);
+                }
             } catch (RepositoryException e) {
                 // ignore
                 log.debug(e.toString());
