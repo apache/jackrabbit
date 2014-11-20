@@ -44,13 +44,16 @@ import org.apache.jackrabbit.jcr2spi.nodetype.EffectiveNodeType;
 import org.apache.jackrabbit.jcr2spi.nodetype.EffectiveNodeTypeProvider;
 import org.apache.jackrabbit.jcr2spi.nodetype.ItemDefinitionProvider;
 import org.apache.jackrabbit.jcr2spi.operation.AddNode;
+import org.apache.jackrabbit.jcr2spi.operation.AddNode.SetPolicyAddNode;
 import org.apache.jackrabbit.jcr2spi.operation.AddProperty;
+import org.apache.jackrabbit.jcr2spi.operation.AddProperty.SetPolicyAddProperty;
 import org.apache.jackrabbit.jcr2spi.operation.Move;
 import org.apache.jackrabbit.jcr2spi.operation.Operation;
 import org.apache.jackrabbit.jcr2spi.operation.OperationVisitor;
 import org.apache.jackrabbit.jcr2spi.operation.Remove;
 import org.apache.jackrabbit.jcr2spi.operation.ReorderNodes;
 import org.apache.jackrabbit.jcr2spi.operation.SetMixin;
+import org.apache.jackrabbit.jcr2spi.operation.SetPolicy;
 import org.apache.jackrabbit.jcr2spi.operation.SetPrimaryType;
 import org.apache.jackrabbit.jcr2spi.operation.SetPropertyValue;
 import org.apache.jackrabbit.jcr2spi.operation.TransientOperationVisitor;
@@ -244,7 +247,14 @@ public class SessionItemStateManager extends TransientOperationVisitor implement
         QNodeDefinition def = defProvider.getQNodeDefinition(parent.getAllNodeTypeNames(), operation.getNodeName(), operation.getNodeTypeName());
         List<ItemState> newStates = addNodeState(parent, operation.getNodeName(), operation.getNodeTypeName(), operation.getUuid(), def, operation.getOptions());
         operation.addedState(newStates);
+        
+        if (!(operation instanceof SetPolicyAddNode)) {
+            transientStateMgr.addOperation(operation);
+        }            
+    }
 
+    @Override
+    public void visit(SetPolicy operation) throws RepositoryException {
         transientStateMgr.addOperation(operation);
     }
 
@@ -265,7 +275,9 @@ public class SessionItemStateManager extends TransientOperationVisitor implement
 
         addPropertyState(parent, propertyName, targetType, operation.getValues(), pDef, operation.getOptions());
 
-        transientStateMgr.addOperation(operation);
+        if (!(operation instanceof SetPolicyAddProperty)) {
+            transientStateMgr.addOperation(operation);
+        }
     }
 
     /**

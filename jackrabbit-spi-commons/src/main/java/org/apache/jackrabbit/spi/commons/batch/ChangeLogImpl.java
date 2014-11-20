@@ -19,6 +19,7 @@ package org.apache.jackrabbit.spi.commons.batch;
 
 import javax.jcr.RepositoryException;
 
+import org.apache.jackrabbit.spi.AddItem;
 import org.apache.jackrabbit.spi.Batch;
 import org.apache.jackrabbit.spi.ItemId;
 import org.apache.jackrabbit.spi.Name;
@@ -40,6 +41,10 @@ public class ChangeLogImpl extends AbstractChangeLog<Operation> {
         addOperation(Operations.addNode(parentId, nodeName, nodetypeName, uuid));
     }
 
+    public void addNode(NodeId parentId, AddItem protectedNode) throws RepositoryException {
+        addOperation(Operations.setPolicy(parentId, protectedNode));
+    }
+    
     public void addProperty(NodeId parentId, Name propertyName, QValue value) throws RepositoryException {
         addOperation(Operations.addProperty(parentId, propertyName, value));
     }

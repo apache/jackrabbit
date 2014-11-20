@@ -20,6 +20,7 @@ import java.util.Arrays;
 
 import javax.jcr.RepositoryException;
 
+import org.apache.jackrabbit.spi.AddItem;
 import org.apache.jackrabbit.spi.Batch;
 import org.apache.jackrabbit.spi.ItemId;
 import org.apache.jackrabbit.spi.Name;
@@ -171,6 +172,70 @@ public final class Operations {
         return new AddNode(parentId, nodeName, nodetypeName, uuid);
     }
 
+    //--------------------------------------------------------< SetPolicy >---
+    public static class SetPolicy implements Operation {
+        protected final NodeId parentId;
+        protected final AddItem protectedNode;
+        
+        public SetPolicy(NodeId parentId, AddItem protectedItem) {
+            super();
+            this.parentId = parentId;
+            this.protectedNode = protectedItem;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        public void apply(Batch batch) throws RepositoryException {            
+            batch.addNode(parentId, protectedNode);
+        }
+        
+        //----------------------------< Object >---
+        @Override
+        public String toString() {
+            return "SetPolicy[" + parentId + ", " + protectedNode+"]";
+        }
+        
+        @Override
+        public boolean equals(Object other) {
+            if (null == other) {
+                return false;
+            }
+            if (this == other) {
+                return true;
+            }
+            if (other instanceof SetPolicy) {
+                return equals((SetPolicy) other);
+            }
+            return false;
+        }
+        
+        public boolean equals(SetPolicy other) {
+            return Operations.equals(parentId, other.parentId)
+                && Operations.equals(protectedNode, other.protectedNode);
+        }
+        
+        @Override
+        public int hashCode() {
+            return 41 * (
+                          41 + Operations.hashCode(parentId))
+                       + Operations.hashCode(protectedNode);
+        }
+
+    }
+    /**
+     * Factory method for creating an {@link SetPolicy} operation.
+     * @see Batch#addNode(NodeId, AddItem)
+     *
+     * @param parentId
+     * @param addItem
+     * @param nodetypeName
+     * @param uuid
+     * @return
+     */
+    public static Operation setPolicy(NodeId parentId, AddItem protectedItem) {
+        return new SetPolicy(parentId, protectedItem);
+    }
     // -------------------------------------------------------< AddProperty >---
     /**
      * Representative of an add-property {@link Operation} which calls

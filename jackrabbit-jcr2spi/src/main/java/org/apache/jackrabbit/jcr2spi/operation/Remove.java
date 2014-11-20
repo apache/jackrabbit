@@ -108,4 +108,25 @@ public class Remove extends TransientOperation {
         }
         return new Remove(state, state.getParent());
     }
+    
+    /**
+     * Inner class for the 'RemovePolicy' operation.
+     */
+    public final static class RemovePolicy extends Remove {
+        private static int REMOVE_POLICY_OPTIONS = ItemStateValidator.CHECK_ACCESS | 
+                                                   ItemStateValidator.CHECK_LOCK |
+                                                   ItemStateValidator.CHECK_COLLISION |
+                                                   ItemStateValidator.CHECK_VERSIONING;
+        
+        private RemovePolicy(ItemState removeState, NodeState parent) throws RepositoryException {
+            super(removeState, parent, REMOVE_POLICY_OPTIONS);
+        }       
+        
+        public static Operation create(ItemState state) throws RepositoryException {
+            if (state.isNode() && ((NodeState) state).getDefinition().allowsSameNameSiblings()) {                
+                assertChildNodeEntries(state.getParent());
+            }
+            return new RemovePolicy(state, state.getParent());
+        }
+    }
 }

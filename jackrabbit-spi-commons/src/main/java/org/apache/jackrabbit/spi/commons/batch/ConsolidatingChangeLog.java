@@ -21,6 +21,7 @@ import java.util.ListIterator;
 
 import javax.jcr.RepositoryException;
 
+import org.apache.jackrabbit.spi.AddItem;
 import org.apache.jackrabbit.spi.Batch;
 import org.apache.jackrabbit.spi.ItemId;
 import org.apache.jackrabbit.spi.Name;
@@ -89,6 +90,9 @@ public class ConsolidatingChangeLog extends AbstractChangeLog<ConsolidatingChang
         addOperation(CancelableOperations.addNode(parentId, nodeName, nodetypeName, uuid));
     }
 
+    public void addNode(NodeId parentId, AddItem protectedNode) throws RepositoryException {
+        addOperation(CancelableOperations.setPolicy(parentId, protectedNode));
+    }
     public void addProperty(NodeId parentId, Name propertyName, QValue value) throws RepositoryException {
         addOperation(CancelableOperations.addProperty(parentId, propertyName, value));
     }
@@ -326,6 +330,55 @@ public class ConsolidatingChangeLog extends AbstractChangeLog<ConsolidatingChang
          */
         public static CancelableOperation addNode(NodeId parentId, Name nodeName, Name nodetypeName, String uuid) {
             return new AddNode(parentId, nodeName, nodetypeName, uuid);
+        }
+
+        //----------------------------------------------------< SetPolicy >---
+        /**
+         * An <code>AddNode</code> operation is is cancelled by a
+         * {@link ConsolidatingChangeLog.CancelableOperations.Remove Remove} operation higher up the tree.
+         * The remove operation is also cancelled if it is targeted at the same node than this add
+         * operation.
+         */
+        public static class SetPolicy extends Operations.SetPolicy implements CancelableOperation {
+
+            public SetPolicy(NodeId parentId, AddItem protectedNode) {
+                super(parentId, protectedNode);
+            }
+
+            /**
+             * The cancellation only considers canceling the parent node, which corresponds
+             * to the policy node.
+             */
+            public int cancel(CancelableOperation other) throws RepositoryException {
+                if (other instanceof Remove) {
+                    Path thisPath = ConsolidatingChangeLog.getPath(parentId, protectedNode.getName());
+                    Path otherPath = ConsolidatingChangeLog.getPath(((Remove) other).itemId);
+                    if (thisPath == null || otherPath == null) {
+                        return CANCEL_NONE;
+                    }
+                    if (thisPath.equals(otherPath)) {
+                        return CANCEL_BOTH;
+                    }
+                    return (thisPath.isDescendantOf(otherPath))
+                        ? CANCEL_THIS
+                        : CANCEL_NONE;
+                }
+                return CANCEL_NONE;
+            }
+        }
+
+        /**
+         * Factory method for creating an {@link AddNode AddNode} operation.
+         * @see Batch#addNode(NodeId, Name, Name, String)
+         *
+         * @param parentId
+         * @param nodeName
+         * @param nodetypeName
+         * @param uuid
+         * @return
+         */
+        public static CancelableOperation setPolicy(NodeId parentId, AddItem protectedNode) {
+            return new SetPolicy(parentId, protectedNode);
         }
 
         // ---------------------------------------------------< AddProperty >---

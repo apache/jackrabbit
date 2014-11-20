@@ -41,6 +41,7 @@ import org.apache.jackrabbit.jcr2spi.operation.Operation;
 import org.apache.jackrabbit.jcr2spi.operation.Remove;
 import org.apache.jackrabbit.jcr2spi.operation.ReorderNodes;
 import org.apache.jackrabbit.jcr2spi.operation.SetMixin;
+import org.apache.jackrabbit.jcr2spi.operation.SetPolicy;
 import org.apache.jackrabbit.jcr2spi.operation.SetPrimaryType;
 import org.apache.jackrabbit.jcr2spi.state.ItemState;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
@@ -276,7 +277,10 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
             complete((ReorderNodes) operation);
         } else if (operation instanceof Move) {
             complete((Move) operation);
-        } else {
+        } else if (operation instanceof SetPolicy) {
+            complete((SetPolicy) operation);
+        }
+        else {
             throw new IllegalArgumentException();
         }
     }
@@ -1434,7 +1438,7 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
         }
 
         for (Iterator<ItemState> it = operation.getAddedStates().iterator(); it.hasNext();) {
-            HierarchyEntry he = it.next().getHierarchyEntry();
+            HierarchyEntry he = it.next().getHierarchyEntry();            
             if (he.getStatus() == Status.NEW) {
                 switch (operation.getStatus()) {
                     case Operation.STATUS_PERSISTED:

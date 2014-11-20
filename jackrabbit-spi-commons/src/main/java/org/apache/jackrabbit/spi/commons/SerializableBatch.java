@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.spi.commons;
 
+import org.apache.jackrabbit.spi.AddItem;
 import org.apache.jackrabbit.spi.Batch;
 import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.QValue;
@@ -88,6 +89,11 @@ public class SerializableBatch implements Batch, Serializable {
         recording.add(new AddNode(parentId, nodeName, nodetypeName, uuid));
     }
 
+    public void addNode(NodeId parentId, AddItem protectedNode)
+            throws RepositoryException {
+        recording.add(new SetPolicy(parentId, protectedNode));
+    }
+    
     public void addProperty(NodeId parentId, Name propertyName, QValue value) {
         recording.add(new AddProperty(parentId, propertyName,
                 new QValue[]{value}, false));
@@ -169,7 +175,25 @@ public class SerializableBatch implements Batch, Serializable {
             batch.addNode(parentId, nodeName, nodetypeName, uuid);
         }
     }
+    
+    private static class SetPolicy implements Operation {
 
+        private final NodeId parentId;
+
+        private final AddItem protectedNode;
+
+        SetPolicy(NodeId parentId, AddItem protectedNode) {
+            this.parentId = parentId;
+            this.protectedNode = protectedNode;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        public void replay(Batch batch) throws RepositoryException {
+            batch.addNode(parentId, protectedNode);
+        }
+    }
     private static class AddProperty implements Operation {
 
         private final NodeId parentId;
