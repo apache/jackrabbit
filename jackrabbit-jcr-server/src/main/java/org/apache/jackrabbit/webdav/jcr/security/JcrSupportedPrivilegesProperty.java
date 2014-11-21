@@ -91,9 +91,10 @@ public class JcrSupportedPrivilegesProperty {
     private SupportedPrivilege createSupportedPrivilege(Privilege privilege) throws RepositoryException {
         String privilegeName = privilege.getName();
 
+        String localName = Text.getLocalName(privilegeName);
         String prefix = Text.getNamespacePrefix(privilegeName);
         Namespace ns = (prefix.isEmpty()) ? Namespace.EMPTY_NAMESPACE : Namespace.getNamespace(prefix, session.getNamespaceURI(prefix));
-        org.apache.jackrabbit.webdav.security.Privilege davPrivilege = org.apache.jackrabbit.webdav.security.Privilege.getPrivilege(privilegeName, ns);
+        org.apache.jackrabbit.webdav.security.Privilege davPrivilege = org.apache.jackrabbit.webdav.security.Privilege.getPrivilege(localName, ns);
 
         SupportedPrivilege[] aggregates = (privilege.isAggregate()) ? getDeclaredAggregates(privilege) : null;
 
