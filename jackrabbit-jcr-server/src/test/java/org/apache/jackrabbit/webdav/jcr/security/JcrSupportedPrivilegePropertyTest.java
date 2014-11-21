@@ -36,4 +36,11 @@ public class JcrSupportedPrivilegePropertyTest extends AbstractSecurityTest {
             assertEquals(1, value.size());
         }
     }
+
+    public void testJcrAllPrivilege() throws RepositoryException {
+        JcrSupportedPrivilegesProperty prop = new JcrSupportedPrivilegesProperty(superuser);
+        List<SupportedPrivilege> value = prop.asDavProperty().getValue();
+
+        assertEquals(1, value.size());
+    }
 }

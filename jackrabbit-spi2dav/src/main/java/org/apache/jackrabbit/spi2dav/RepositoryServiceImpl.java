@@ -45,6 +45,7 @@ import javax.jcr.LoginException;
 import javax.jcr.MergeException;
 import javax.jcr.NamespaceException;
 import javax.jcr.NoSuchWorkspaceException;
+import javax.jcr.PathNotFoundException;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.UnsupportedRepositoryOperationException;
@@ -99,6 +100,7 @@ import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.NodeInfo;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.PathFactory;
+import org.apache.jackrabbit.spi.PrivilegeDefinition;
 import org.apache.jackrabbit.spi.PropertyId;
 import org.apache.jackrabbit.spi.PropertyInfo;
 import org.apache.jackrabbit.spi.QItemDefinition;
@@ -129,6 +131,7 @@ import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.spi.commons.namespace.AbstractNamespaceResolver;
 import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
 import org.apache.jackrabbit.spi.commons.nodetype.compact.CompactNodeTypeDefWriter;
+import org.apache.jackrabbit.spi.commons.privilege.PrivilegeDefinitionImpl;
 import org.apache.jackrabbit.spi.commons.value.QValueValue;
 import org.apache.jackrabbit.spi.commons.value.ValueFactoryQImpl;
 import org.apache.jackrabbit.spi.commons.value.ValueFormat;
@@ -186,6 +189,8 @@ import org.apache.jackrabbit.webdav.search.SearchInfo;
 import org.apache.jackrabbit.webdav.security.CurrentUserPrivilegeSetProperty;
 import org.apache.jackrabbit.webdav.security.Privilege;
 import org.apache.jackrabbit.webdav.security.SecurityConstants;
+import org.apache.jackrabbit.webdav.security.SupportedPrivilege;
+import org.apache.jackrabbit.webdav.security.SupportedPrivilegeSetProperty;
 import org.apache.jackrabbit.webdav.transaction.TransactionConstants;
 import org.apache.jackrabbit.webdav.transaction.TransactionInfo;
 import org.apache.jackrabbit.webdav.version.DeltaVConstants;
@@ -905,6 +910,77 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         } finally {
             if (method != null) {
                 method.releaseConnection();
+            }
+        }
+    }
+
+    @Override
+    public PrivilegeDefinition[] getPrivilegeDefinitions(SessionInfo sessionInfo) throws RepositoryException {
+        return internalGetPrivilegeDefinitions(sessionInfo, uriResolver.getRepositoryUri());
+    }
+
+    @Override
+    public PrivilegeDefinition[] getSupportedPrivileges(SessionInfo sessionInfo, NodeId nodeId) throws RepositoryException {
+        String uri = (nodeId == null) ? uriResolver.getWorkspaceUri(sessionInfo.getWorkspaceName()) : getItemUri(nodeId, sessionInfo);
+        return internalGetPrivilegeDefinitions(sessionInfo, uri);
+    }
+
+    private PrivilegeDefinition[] internalGetPrivilegeDefinitions(SessionInfo sessionInfo, String uri) throws RepositoryException {
+        DavPropertyNameSet nameSet = new DavPropertyNameSet();
+        nameSet.add(SecurityConstants.SUPPORTED_PRIVILEGE_SET);
+        DavMethodBase method = null;
+        try {
+            method = new PropFindMethod(uri, nameSet, DEPTH_0);
+            getClient(sessionInfo).executeMethod(method);
+
+            MultiStatusResponse[] responses = method.getResponseBodyAsMultiStatus().getResponses();
+            if (responses.length < 1) {
+                throw new PathNotFoundException("Unable to retrieve privileges definitions.");
+            }
+
+            DavPropertyName displayName = SecurityConstants.SUPPORTED_PRIVILEGE_SET;
+            DavProperty<?> p = responses[0].getProperties(DavServletResponse.SC_OK).get(displayName);
+            if (p == null) {
+                return new PrivilegeDefinition[0];
+            } else {
+                // build PrivilegeDefinition(s) from the supported-privileges dav property
+                NamePathResolver npResolver = getNamePathResolver(sessionInfo);
+                Map<Name, SupportedPrivilege> spMap = new HashMap<Name, SupportedPrivilege>();
+                fillSupportedPrivilegeMap(new SupportedPrivilegeSetProperty(p).getValue(), spMap, npResolver);
+
+                List<PrivilegeDefinition> pDefs = new ArrayList<PrivilegeDefinition>();
+                for (Name privilegeName : spMap.keySet()) {
+                    SupportedPrivilege sp = spMap.get(privilegeName);
+                    Set<Name> aggrnames = null;
+                    SupportedPrivilege[] aggregates = sp.getSupportedPrivileges();
+                    if (aggregates != null && aggregates.length > 0) {
+                        aggrnames = new HashSet<Name>();
+                        for (SupportedPrivilege aggregate : aggregates) {
+                            aggrnames.add(npResolver.getQName(aggregate.getPrivilege().getName()));
+                        }
+                    }
+                    PrivilegeDefinition def = new PrivilegeDefinitionImpl(privilegeName, sp.isAbstract(), aggrnames);
+                    pDefs.add(def);
+                }
+                return pDefs.toArray(new PrivilegeDefinition[pDefs.size()]);
+            }
+        } catch (IOException e) {
+            throw new RepositoryException(e);
+        } catch (DavException e) {
+            throw ExceptionConverter.generate(e);
+        } finally {
+            if (method != null) {
+                method.releaseConnection();
+            }
+        }
+    }
+
+    private static void fillSupportedPrivilegeMap(List<SupportedPrivilege> sps, Map<Name, SupportedPrivilege> spMap, NamePathResolver npResolver) throws NamespaceException, IllegalNameException {
+        for (SupportedPrivilege sp : sps) {
+            spMap.put(npResolver.getQName(sp.getPrivilege().getName()), sp);
+            List<SupportedPrivilege> agg = Arrays.asList(sp.getSupportedPrivileges());
+            if (!agg.isEmpty()) {
+                fillSupportedPrivilegeMap(agg, spMap, npResolver);
             }
         }
     }

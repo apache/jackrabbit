@@ -218,6 +218,26 @@ public interface RepositoryService {
      */
     public boolean isGranted(SessionInfo sessionInfo, ItemId itemId, String[] actions) throws RepositoryException;
 
+    /**
+     * TODO
+     *
+     *
+     * @param sessionInfo
+     * @return
+     * @throws RepositoryException
+     */
+    public PrivilegeDefinition[] getPrivilegeDefinitions(SessionInfo sessionInfo) throws RepositoryException;
+
+    /**
+     * TODO
+     *
+     * @param sessionInfo
+     * @param nodeId
+     * @return
+     * @throws RepositoryException
+     */
+    public PrivilegeDefinition[] getSupportedPrivileges(SessionInfo sessionInfo, NodeId nodeId) throws RepositoryException;
+
     //------------------------------------------------------< Reading items >---
     /**
      * Returns the <code>QNodeDefinition</code> for the <code>Node</code>

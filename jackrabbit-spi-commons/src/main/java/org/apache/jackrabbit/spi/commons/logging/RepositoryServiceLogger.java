@@ -42,6 +42,7 @@ import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.NodeInfo;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.PathFactory;
+import org.apache.jackrabbit.spi.PrivilegeDefinition;
 import org.apache.jackrabbit.spi.PropertyId;
 import org.apache.jackrabbit.spi.PropertyInfo;
 import org.apache.jackrabbit.spi.QNodeDefinition;
@@ -181,6 +182,23 @@ public class RepositoryServiceLogger extends AbstractLogger implements Repositor
                 return Boolean.valueOf(service.isGranted(unwrap(sessionInfo), itemId, actions));
             }
         }, "isGranted(SessionInfo, ItemId, String[])", new Object[] { unwrap(sessionInfo), itemId, actions });
+    }
+
+    @Override
+    public PrivilegeDefinition[] getPrivilegeDefinitions(final SessionInfo sessionInfo) throws RepositoryException {
+        return (PrivilegeDefinition[]) execute(new Callable() {
+            public Object call() throws RepositoryException {
+                return service.getPrivilegeDefinitions(unwrap(sessionInfo));
+            }
+        }, "getSupportedPrivileges(SessionInfo)", new Object[]{unwrap(sessionInfo)});
+    }
+
+    public PrivilegeDefinition[] getSupportedPrivileges(final SessionInfo sessionInfo, final NodeId nodeId) throws RepositoryException {
+        return (PrivilegeDefinition[]) execute(new Callable() {
+            public Object call() throws RepositoryException {
+                return service.getSupportedPrivileges(unwrap(sessionInfo), nodeId);
+            }
+        }, "getSupportedPrivileges(SessionInfo, NodeId)", new Object[]{unwrap(sessionInfo), nodeId});
     }
 
     public QNodeDefinition getNodeDefinition(final SessionInfo sessionInfo, final NodeId nodeId)

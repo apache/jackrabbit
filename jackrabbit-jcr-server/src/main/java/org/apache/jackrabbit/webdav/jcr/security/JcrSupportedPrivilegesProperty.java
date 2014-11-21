@@ -40,9 +40,23 @@ public class JcrSupportedPrivilegesProperty {
 
     private final Session session;
     private final String absPath;
+    private final Set<Privilege> privileges = new HashSet<Privilege>();
 
     private final Map<String, SupportedPrivilege> supportedPrivileges = new HashMap<String, SupportedPrivilege>();
     private final HashSet<String> aggregated = new HashSet<String>();
+
+    /**
+     * Build supported privileges for the jcr:all privilege.
+     *
+     * @param session The reading session
+     */
+    public JcrSupportedPrivilegesProperty(Session session) throws RepositoryException {
+        this.session = session;
+        this.absPath = null;
+        AccessControlManager acMgr = session.getAccessControlManager();
+        Privilege jcrAll = acMgr.privilegeFromName(Privilege.JCR_ALL);
+        privileges.add(jcrAll);
+    }
 
     /**
      * @param session The reading session
@@ -62,9 +76,11 @@ public class JcrSupportedPrivilegesProperty {
      * @throws RepositoryException
      */
     public SupportedPrivilegeSetProperty asDavProperty() throws RepositoryException {
-        AccessControlManager acMgr = session.getAccessControlManager();
-        Set<Privilege> privs = new HashSet<Privilege>(Arrays.asList(acMgr.getSupportedPrivileges(absPath)));
-        for (Privilege p : privs) {
+        if (privileges.isEmpty()) {
+            AccessControlManager acMgr = session.getAccessControlManager();
+            privileges.addAll(Arrays.asList(acMgr.getSupportedPrivileges(absPath)));
+        }
+        for (Privilege p : privileges) {
             if (!aggregated.contains(p.getName())) {
                 createSupportedPrivilege(p);
             }

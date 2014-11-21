@@ -54,6 +54,7 @@ import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.NodeInfo;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.PathFactory;
+import org.apache.jackrabbit.spi.PrivilegeDefinition;
 import org.apache.jackrabbit.spi.PropertyId;
 import org.apache.jackrabbit.spi.PropertyInfo;
 import org.apache.jackrabbit.spi.QNodeDefinition;
@@ -167,6 +168,15 @@ public abstract class AbstractJCR2SPITest extends TestCase implements Repository
             }
 
             @Override
+            public PrivilegeDefinition[] getPrivilegeDefinitions(SessionInfo sessionInfo) throws RepositoryException {
+                return AbstractJCR2SPITest.this.getPrivilegeDefinitions(sessionInfo);
+            }
+
+            public PrivilegeDefinition[] getSupportedPrivileges(SessionInfo sessionInfo, NodeId nodeId) throws RepositoryException {
+                return AbstractJCR2SPITest.this.getSupportedPrivileges(sessionInfo, nodeId);
+            }
+
+            @Override
             public NodeInfo getNodeInfo(SessionInfo sessionInfo, NodeId nodeId) throws ItemNotFoundException,
                     RepositoryException {
 
@@ -264,6 +274,15 @@ public abstract class AbstractJCR2SPITest extends TestCase implements Repository
         return repositoryService.getItemInfoCache(sessionInfo);
     }
 
+    public PrivilegeDefinition[] getPrivilegeDefinitions(
+            SessionInfo sessionInfo) throws RepositoryException {
+        return repositoryService.getPrivilegeDefinitions(sessionInfo);
+    }
+
+    public PrivilegeDefinition[] getSupportedPrivileges(
+            SessionInfo sessionInfo, NodeId nodeId) throws RepositoryException {
+        return repositoryService.getSupportedPrivileges(sessionInfo, nodeId);
+    }
     //-----------------------------------< SessionInfo creation and release >---
 
     public SessionInfo obtain(Credentials credentials, String workspaceName) throws RepositoryException {

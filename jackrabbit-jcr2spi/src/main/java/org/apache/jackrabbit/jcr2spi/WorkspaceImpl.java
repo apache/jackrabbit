@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.jcr2spi;
 
-import org.apache.jackrabbit.jcr2spi.config.CacheBehaviour;
 import org.apache.jackrabbit.jcr2spi.config.RepositoryConfig;
 import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyManager;
 import org.apache.jackrabbit.jcr2spi.lock.LockManagerImpl;
@@ -33,6 +32,7 @@ import org.apache.jackrabbit.jcr2spi.operation.Operation;
 import org.apache.jackrabbit.jcr2spi.operation.WorkspaceImport;
 import org.apache.jackrabbit.jcr2spi.query.QueryManagerImpl;
 import org.apache.jackrabbit.jcr2spi.security.AccessManager;
+import org.apache.jackrabbit.jcr2spi.security.authorization.AccessControlProvider;
 import org.apache.jackrabbit.jcr2spi.state.ItemStateFactory;
 import org.apache.jackrabbit.jcr2spi.state.ItemStateValidator;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
@@ -45,7 +45,6 @@ import org.apache.jackrabbit.spi.NameFactory;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.PathFactory;
 import org.apache.jackrabbit.spi.QValueFactory;
-import org.apache.jackrabbit.spi.RepositoryService;
 import org.apache.jackrabbit.spi.SessionInfo;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.spi.commons.conversion.NameResolver;
@@ -112,11 +111,7 @@ public class WorkspaceImpl implements Workspace, ManagerProvider {
     public WorkspaceImpl(String name, SessionImpl session, RepositoryConfig config, SessionInfo sessionInfo) throws RepositoryException {
         this.name = name;
         this.session = session;
-        wspManager = createManager(
-                config.getRepositoryService(),
-                sessionInfo,
-                session.getCacheBehaviour(),
-                session.getPollTimeout());
+        wspManager = createManager(config, sessionInfo);
     }
 
     //----------------------------------------------------------< Workspace >---
@@ -500,6 +495,13 @@ public class WorkspaceImpl implements Workspace, ManagerProvider {
         return session.getQValueFactory();
     }
 
+    /**
+     * @see ManagerProvider#getAccessControlProvider() ()
+     */
+    public AccessControlProvider getAccessControlProvider() throws RepositoryException {
+        return wspManager.getAccessControlProvider();
+    }
+
     //------------------------------------< implementation specific methods >---
     void dispose() {
         // NOTE: wspManager has already been disposed upon SessionItemStateManager.dispose()
@@ -548,19 +550,14 @@ public class WorkspaceImpl implements Workspace, ManagerProvider {
     /**
      * Create the workspace state manager. May be overridden by subclasses.
      *
-     * @param service the RepositoryService
+     * @param config the RepositoryConfiguration
      * @param sessionInfo the SessionInfo used to create this instance.
-     * @param cacheBehaviour the desired cache behavior
-     * @param pollTimeout the desired pollTimeout.
-     * @return state manager
+     * @return workspace manager
      * @throws javax.jcr.RepositoryException If an error occurs
      */
-    protected WorkspaceManager createManager(RepositoryService service,
-                                             SessionInfo sessionInfo,
-                                             CacheBehaviour cacheBehaviour,
-                                             int pollTimeout) throws RepositoryException {
-        return new WorkspaceManager(service, sessionInfo, cacheBehaviour,
-                pollTimeout, session.isSupportedOption(Repository.OPTION_OBSERVATION_SUPPORTED));
+    protected WorkspaceManager createManager(RepositoryConfig config,
+                                             SessionInfo sessionInfo) throws RepositoryException {
+        return new WorkspaceManager(config, sessionInfo, session.isSupportedOption(Repository.OPTION_OBSERVATION_SUPPORTED));
     }
 
     /**
