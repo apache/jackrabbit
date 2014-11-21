@@ -16,6 +16,17 @@
  */
 package org.apache.jackrabbit.webdav.jcr;
 
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import javax.jcr.Repository;
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
+import javax.jcr.Workspace;
+
 import org.apache.jackrabbit.util.Text;
 import org.apache.jackrabbit.webdav.DavException;
 import org.apache.jackrabbit.webdav.DavResource;
@@ -24,23 +35,17 @@ import org.apache.jackrabbit.webdav.DavResourceIterator;
 import org.apache.jackrabbit.webdav.DavResourceIteratorImpl;
 import org.apache.jackrabbit.webdav.DavResourceLocator;
 import org.apache.jackrabbit.webdav.DavServletResponse;
-import org.apache.jackrabbit.webdav.search.SearchResource;
 import org.apache.jackrabbit.webdav.io.InputContext;
 import org.apache.jackrabbit.webdav.io.OutputContext;
+import org.apache.jackrabbit.webdav.jcr.security.JcrSupportedPrivilegesProperty;
+import org.apache.jackrabbit.webdav.jcr.security.SecurityUtils;
+import org.apache.jackrabbit.webdav.property.DavProperty;
+import org.apache.jackrabbit.webdav.property.DavPropertyName;
+import org.apache.jackrabbit.webdav.search.SearchResource;
+import org.apache.jackrabbit.webdav.security.SecurityConstants;
 import org.apache.jackrabbit.webdav.version.DeltaVResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.jcr.RepositoryException;
-import javax.jcr.Session;
-import javax.jcr.Repository;
-import javax.jcr.Workspace;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Date;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.OutputStreamWriter;
 
 /**
  * <code>RootCollection</code> represent the WebDAV root resource that does not
@@ -95,6 +100,21 @@ public class RootCollection extends AbstractResource {
     @Override
     public boolean exists() {
         return true;
+    }
+
+    @Override
+    public DavProperty<?> getProperty(DavPropertyName name) {
+        DavProperty prop = super.getProperty(name);
+        if (prop == null) {
+            try {
+                if (SecurityConstants.SUPPORTED_PRIVILEGE_SET.equals(name)) {
+                    prop = new JcrSupportedPrivilegesProperty(getRepositorySession()).asDavProperty();
+                }
+            } catch (RepositoryException e) {
+                log.error("Failed to build SupportedPrivilegeSet property: " + e.getMessage());
+            }
+        }
+        return prop;
     }
 
     /**
@@ -278,5 +298,13 @@ public class RootCollection extends AbstractResource {
     @Override
     protected String getWorkspaceHref() {
         return null;
+    }
+
+    @Override
+    protected void initPropertyNames() {
+        super.initPropertyNames();
+        if (SecurityUtils.supportsAccessControl(getRepositorySession())) {
+            names.add(SecurityConstants.SUPPORTED_PRIVILEGE_SET);
+        }
     }
 }

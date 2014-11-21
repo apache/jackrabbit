@@ -44,6 +44,11 @@ public abstract class AbstractRepositoryConfig implements RepositoryConfig {
         return DEFAULT_POLL_TIMEOUT;
     }
 
+    @Override
+    public <T> T getConfiguration(String name, T defaultValue) {
+        return null;
+    }
+
     public int getInfoCacheSize() {
         return DEFAULT_INFO_CACHE_SIZE;
     }

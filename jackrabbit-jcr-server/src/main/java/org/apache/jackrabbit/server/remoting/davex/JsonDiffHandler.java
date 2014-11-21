@@ -19,6 +19,7 @@ package org.apache.jackrabbit.server.remoting.davex;
 import org.apache.jackrabbit.JcrConstants;
 import org.apache.jackrabbit.commons.webdav.JcrValueType;
 import org.apache.jackrabbit.server.util.RequestData;
+import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.commons.json.JsonHandler;
 import org.apache.jackrabbit.commons.json.JsonParser;
 import org.apache.jackrabbit.util.Text;
@@ -38,7 +39,11 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.Value;
 import javax.jcr.ValueFactory;
+import javax.jcr.ValueFormatException;
+import javax.jcr.nodetype.NodeDefinition;
 import javax.jcr.nodetype.NodeType;
+import javax.jcr.nodetype.NodeTypeManager;
+import javax.jcr.nodetype.PropertyDefinition;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -61,6 +66,8 @@ class JsonDiffHandler implements DiffHandler {
     private final String requestItemPath;
     private final RequestData data;
 
+    private NodeTypeManager ntManager;
+
     JsonDiffHandler(Session session, String requestItemPath, RequestData data) throws RepositoryException {
         this.session = session;
         this.requestItemPath = requestItemPath;
@@ -72,6 +79,7 @@ class JsonDiffHandler implements DiffHandler {
     /**
      * @see DiffHandler#addNode(String, String)
      */
+    @Override
     public void addNode(String targetPath, String diffValue) throws DiffException {
         if (diffValue == null || !(diffValue.startsWith("{") && diffValue.endsWith("}"))) {
             throw new DiffException("Invalid 'addNode' value '" + diffValue + "'");
@@ -92,6 +100,7 @@ class JsonDiffHandler implements DiffHandler {
     /**
      * @see DiffHandler#setProperty(String, String) 
      */
+    @Override
     public void setProperty(String targetPath, String diffValue) throws DiffException {
         try {
             String itemPath = getItemPath(targetPath);
@@ -156,6 +165,7 @@ class JsonDiffHandler implements DiffHandler {
     /**
      * @see DiffHandler#remove(String, String) 
      */
+    @Override
     public void remove(String targetPath, String diffValue) throws DiffException {
         if (!(diffValue == null || diffValue.trim().length() == 0)) {
             throw new DiffException("'remove' may not have a diffValue.");
@@ -171,6 +181,7 @@ class JsonDiffHandler implements DiffHandler {
     /**
      * @see DiffHandler#move(String, String) 
      */
+    @Override
     public void move(String targetPath, String diffValue) throws DiffException {
         if (diffValue == null || diffValue.length() == 0) {
             throw new DiffException("Invalid 'move' value '" + diffValue + "'");
@@ -276,6 +287,13 @@ class JsonDiffHandler implements DiffHandler {
         }
     }
 
+    private NodeTypeManager getNodeTypeManager() throws RepositoryException {
+        if (ntManager == null) {
+            ntManager = session.getWorkspace().getNodeTypeManager();
+        }
+        return ntManager;
+    }
+
     private static String normalize(String path) {
         if (path.indexOf('.') == -1) {
             return path;
@@ -298,14 +316,18 @@ class JsonDiffHandler implements DiffHandler {
         }
         return "/" + Text.implode(queue.toArray(new String[queue.size()]), "/");
     }
-    
+
+    private static ContentHandler createContentHandler(Node parent) throws RepositoryException {
+        return parent.getSession().getImportContentHandler(parent.getPath(), ImportUUIDBehavior.IMPORT_UUID_COLLISION_THROW);
+    }
+
     private static Node importNode(Node parent, String nodeName, String ntName,
                                    String uuid) throws RepositoryException {
 
         String uri = "http://www.jcp.org/jcr/sv/1.0";
         String prefix = "sv:";
 
-        ContentHandler ch = parent.getSession().getImportContentHandler(parent.getPath(), ImportUUIDBehavior.IMPORT_UUID_COLLISION_THROW);
+        ContentHandler ch = createContentHandler(parent);
         try {
             ch.startDocument();
 
@@ -460,31 +482,40 @@ class JsonDiffHandler implements DiffHandler {
     private final class ValueHandler implements JsonHandler {
         private Value v;
 
+        @Override
         public void object() throws IOException {
             // ignore
         }
+        @Override
         public void endObject() throws IOException {
             // ignore
         }
+        @Override
         public void array() throws IOException {
             // ignore
         }
+        @Override
         public void endArray() throws IOException {
             // ignore
         }
+        @Override
         public void key(String key) throws IOException {
             // ignore
         }
 
+        @Override
         public void value(String value) throws IOException {
             v = (value == null) ? null : vf.createValue(value);
         }
+        @Override
         public void value(boolean value) throws IOException {
             v = vf.createValue(value);
         }
+        @Override
         public void value(long value) throws IOException {
             v = vf.createValue(value);
         }
+        @Override
         public void value(double value) throws IOException {
             v = vf.createValue(value);
         }
@@ -500,22 +531,28 @@ class JsonDiffHandler implements DiffHandler {
     private final class ValuesHandler implements JsonHandler {
         private List<Value> values = new ArrayList<Value>();
 
+        @Override
         public void object() throws IOException {
             // ignore
         }
+        @Override
         public void endObject() throws IOException {
             // ignore
         }
+        @Override
         public void array() throws IOException {
             // ignore
         }
+        @Override
         public void endArray() throws IOException {
             // ignore
         }
+        @Override
         public void key(String key) throws IOException {
             // ignore
         }
 
+        @Override
         public void value(String value) throws IOException {
             if (value != null) {
                 values.add(vf.createValue(value));
@@ -523,12 +560,15 @@ class JsonDiffHandler implements DiffHandler {
                 log.warn("Null element for a multivalued property -> Ignore.");
             }
         }
+        @Override
         public void value(boolean value) throws IOException {
             values.add(vf.createValue(value));
         }
+        @Override
         public void value(long value) throws IOException {
             values.add(vf.createValue(value));
         }
+        @Override
         public void value(double value) throws IOException {
             values.add(vf.createValue(value));
         }
@@ -553,6 +593,7 @@ class JsonDiffHandler implements DiffHandler {
             key = nodeName;
         }
 
+        @Override
         public void object() throws IOException {
             ImportNode n = new ImportNode(key);
             if (!st.isEmpty()) {
@@ -566,6 +607,7 @@ class JsonDiffHandler implements DiffHandler {
             st.push(n);
         }
 
+        @Override
         public void endObject() throws IOException {
             // element on stack must be ImportMvProp since array may only
             // contain simple values, no arrays/objects are allowed.
@@ -576,7 +618,14 @@ class JsonDiffHandler implements DiffHandler {
             if (st.isEmpty()) {
                 // everything parsed -> start adding all nodes and properties
                 try {
-                    obj.createItem(parent);                    
+                    if (obj.mandatesImport(parent)) {
+                        obj.importItem(createContentHandler(parent));
+                    } else {
+                        obj.createItem(parent);
+                    }
+                } catch (IOException e) {
+                    log.error(e.getMessage());
+                    throw new DiffException(e.getMessage(), e);
                 } catch (RepositoryException e) {
                     log.error(e.getMessage());
                     throw new DiffException(e.getMessage(), e);
@@ -584,6 +633,7 @@ class JsonDiffHandler implements DiffHandler {
             }
         }
 
+        @Override
         public void array() throws IOException {
             ImportMvProp prop = new ImportMvProp(key);
             ImportItem obj = st.peek();
@@ -595,6 +645,7 @@ class JsonDiffHandler implements DiffHandler {
             st.push(prop);
         }
 
+        @Override
         public void endArray() throws IOException {
             // element on stack must be ImportMvProp since array may only
             // contain simple values, no arrays/objects are allowed.
@@ -604,24 +655,29 @@ class JsonDiffHandler implements DiffHandler {
             }
         }
 
+        @Override
         public void key(String key) throws IOException {
             this.key = key;
         }
 
+        @Override
         public void value(String value) throws IOException {
             Value v = (value == null) ? null : vf.createValue(value);
             value(v);
         }
 
+        @Override
         public void value(boolean value) throws IOException {
             value(vf.createValue(value));
         }
 
+        @Override
         public void value(long value) throws IOException {
             Value v = vf.createValue(value);
             value(v);
         }
 
+        @Override
         public void value(double value) throws IOException {
             value(vf.createValue(value));
         }
@@ -637,43 +693,95 @@ class JsonDiffHandler implements DiffHandler {
     }
 
     private abstract class ImportItem {
+
+        static final String TYPE_CDATA = "CDATA";
+
         final String name;
+
         private ImportItem(String name) throws IOException {
             if (name == null) {
                 throw new DiffException("Invalid DIFF format: NULL key.");
             }
             this.name = name;
         }
+        
+        void setNameAttribute(AttributesImpl attr) {
+            attr.addAttribute(Name.NS_SV_URI, "name", Name.NS_SV_PREFIX +":name", TYPE_CDATA, name);
+        }
 
-        abstract void createItem(Node parent) throws RepositoryException;
+        abstract boolean mandatesImport(Node parent);
+
+        abstract void createItem(Node parent) throws RepositoryException, IOException;
+
+        abstract void importItem(ContentHandler contentHandler) throws IOException;
     }
     
     private final class ImportNode extends ImportItem {
-        private String ntName;
-        private String uuid;
+
+        private static final String LOCAL_NAME = "node";
+
+        private ImportProp ntName;
+        private ImportProp uuid;
 
         private List<ImportNode> childN = new ArrayList<ImportNode>();
-        private List<ImportItem> childP = new ArrayList<ImportItem>();
+        private List<ImportProperty> childP = new ArrayList<ImportProperty>();
 
         private ImportNode(String name) throws IOException {
             super(name);
         }
 
+        private String getUUID() {
+            if (uuid != null && uuid.value != null) {
+                try {
+                    return uuid.value.getString();
+                } catch (RepositoryException e) {
+                    log.error(e.getMessage());
+                }
+            }
+            return null;
+        }
+
+        private String getPrimaryType() {
+            if (ntName != null && ntName.value != null) {
+                try {
+                    return ntName.value.getString();
+                } catch (RepositoryException e) {
+                    log.error(e.getMessage());
+                }
+            }
+            return null;
+        }
+
+        @Override
+        boolean mandatesImport(Node parent) {
+            String primaryType = getPrimaryType();
+            // Very simplistic and simplified test for protection that doesn't
+            // take mixin types into account and ignores all JCR primary types
+            if (!primaryType.startsWith(Name.NS_NT_PREFIX)) {
+                try {
+                    NodeType nt = getNodeTypeManager().getNodeType(primaryType);
+                    for (NodeDefinition nd : nt.getChildNodeDefinitions()) {
+                        if (nd.isProtected()) {
+                            return true;
+                        }
+                    }
+                    for (PropertyDefinition pd : nt.getPropertyDefinitions()) {
+                        if (!pd.getName().startsWith(Name.NS_JCR_PREFIX) && pd.isProtected()) {
+                            return true;
+                        }
+                    }
+                } catch (RepositoryException e) {
+                    log.warn(e.getMessage(), e);
+                }
+            }
+            return false;
+        }
+
         void addProp(ImportProp prop) {
             if (prop.name.equals(JcrConstants.JCR_PRIMARYTYPE)) {
-                try {
-                    ntName = (prop.value == null) ? null : prop.value.getString();
-                } catch (RepositoryException e) {
-                    // should never get here. Value.getString() should always succeed.
-                    log.error(e.getMessage());
-                }
+                ntName = prop;
             } else if (prop.name.equals(JcrConstants.JCR_UUID)) {
-                try {
-                    uuid = (prop.value == null) ? null : prop.value.getString();
-                } catch (RepositoryException e) {
-                    // should never get here. Value.getString() should always succeed.
-                    log.error(e.getMessage());
-                }
+                uuid = prop;
             } else {
                 // regular property
                 childP.add(prop);
@@ -689,25 +797,113 @@ class JsonDiffHandler implements DiffHandler {
         }
 
         @Override
-        void createItem(Node parent) throws RepositoryException {
-            Node n;
-            if (uuid == null) {
-                n = (ntName == null) ? parent.addNode(name) : parent.addNode(name,  ntName);
+        void importItem(ContentHandler contentHandler) throws IOException {
+            try {
+                AttributesImpl attr = new AttributesImpl();
+                setNameAttribute(attr);
+                contentHandler.startElement(Name.NS_SV_URI, LOCAL_NAME, Name.NS_SV_PREFIX+":"+LOCAL_NAME, attr);
+
+                if (ntName != null && ntName.value != null) {
+                    ntName.importItem(contentHandler);
+                }
+                if (uuid != null && uuid.value != null) {
+                    uuid.importItem(contentHandler);
+                }
+
+                for(ImportProperty prop : childP) {
+                    prop.importItem(contentHandler);
+                }
+
+                for(ImportNode node : childN) {
+                    node.importItem(contentHandler);
+                }
+                contentHandler.endElement(Name.NS_SV_URI, LOCAL_NAME, Name.NS_SV_PREFIX+":"+LOCAL_NAME);
+            } catch(SAXException e) {
+                throw new DiffException(e.getMessage(), e);
+            }
+        }
+
+        @Override
+        void createItem(Node parent) throws RepositoryException, IOException {
+            if (mandatesImport(parent)) {
+                ContentHandler ch = createContentHandler(parent);
+                try {
+                    ch.startDocument();
+                    importItem(ch);
+                    ch.endDocument();
+                } catch (SAXException e) {
+                    throw new DiffException(e.getMessage(), e);
+                }
             } else {
-                n = importNode(parent, name, ntName, uuid);
-            }
-            // create all properties
-            for (ImportItem obj : childP) {
-                obj.createItem(n);
-            }
-            // recursively create all child nodes
-            for (ImportItem obj : childN) {
-                obj.createItem(n);
+                Node n;
+                String uuidValue = getUUID();
+                String primaryType = getPrimaryType();
+                if (uuidValue == null) {
+                    n = (primaryType == null) ? parent.addNode(name) : parent.addNode(name,  primaryType);
+                } else {
+                    n = importNode(parent, name, primaryType, uuidValue);
+                }
+                // create all properties
+                for (ImportItem obj : childP) {
+                    obj.createItem(n);
+                }
+                // recursively create all child nodes
+                for (ImportItem obj : childN) {
+                    obj.createItem(n);
+                }
             }
         }
     }
 
-    private final class ImportProp extends ImportItem  {
+    private abstract class ImportProperty extends ImportItem {
+
+        static final String VALUE = "value";
+        static final String TYPE = "type";
+        static final String LOCAL_NAME = "property";
+
+        private ImportProperty(String name) throws IOException {
+            super(name);
+        }
+
+        @Override
+        boolean mandatesImport(Node parent) {
+            // TODO: verify again if a protected property (except for jcr:primaryType and jcr:mixinTypes) will ever change outside the scope of importing the whole tree.
+            return false;
+        }
+
+        @Override
+        void importItem(ContentHandler contentHandler) throws IOException {
+            try {
+                AttributesImpl propAtts = new AttributesImpl();
+                setNameAttribute(propAtts);
+                setTypeAttribute(propAtts);
+                contentHandler.startElement(Name.NS_SV_URI, LOCAL_NAME, Name.NS_SV_PREFIX+":"+LOCAL_NAME, propAtts);
+                startValueElement(contentHandler);
+                contentHandler.endElement(Name.NS_SV_URI, LOCAL_NAME, Name.NS_SV_PREFIX+":"+LOCAL_NAME);
+            } catch(SAXException e) {
+                throw new DiffException(e.getMessage(), e);
+            }
+        }
+
+        void setTypeAttribute(AttributesImpl attr) {
+            String type = null;
+            if (name.equals(JcrConstants.JCR_PRIMARYTYPE)) {
+                type = PropertyType.nameFromValue(PropertyType.NAME);
+            } else if (name.equals(JcrConstants.JCR_MIXINTYPES)) {
+                type = PropertyType.nameFromValue(PropertyType.NAME);
+            } else if (name.equals(JcrConstants.JCR_UUID)) {
+                type = PropertyType.nameFromValue(PropertyType.STRING);
+            } else {
+                type = PropertyType.nameFromValue(PropertyType.UNDEFINED);
+            }
+            attr.addAttribute(Name.NS_SV_URI, TYPE, Name.NS_SV_PREFIX+":"+TYPE, TYPE_CDATA, type);
+        }
+
+        abstract void startValueElement(ContentHandler contentHandler) throws IOException;
+    }
+
+    private final class ImportProp extends ImportProperty {
+
         private final Value value;
 
         private ImportProp(String name, Value v) throws IOException {
@@ -719,9 +915,26 @@ class JsonDiffHandler implements DiffHandler {
         void createItem(Node parent) throws RepositoryException {
             parent.setProperty(name, value);
         }
+
+        @Override
+        void startValueElement(ContentHandler contentHandler) throws IOException {
+            try {
+                String str = value.getString();
+                contentHandler.startElement(Name.NS_SV_URI, VALUE, Name.NS_SV_PREFIX+":"+VALUE, new AttributesImpl());
+                contentHandler.characters(str.toCharArray(), 0, str.length());
+                contentHandler.endElement(Name.NS_SV_URI, VALUE, Name.NS_SV_PREFIX+":"+VALUE);
+            } catch(SAXException e) {
+                throw new DiffException(e.getMessage());
+            } catch (ValueFormatException e) {
+                throw new DiffException(e.getMessage());
+            } catch (RepositoryException e) {
+                throw new DiffException(e.getMessage());
+            }
+        }
     }
 
-    private final class ImportMvProp extends ImportItem  {
+    private final class ImportMvProp extends ImportProperty  {
+
         private List<Value> values = new ArrayList<Value>();
 
         private ImportMvProp(String name) throws IOException {
@@ -734,7 +947,25 @@ class JsonDiffHandler implements DiffHandler {
             if (JcrConstants.JCR_MIXINTYPES.equals(name)) {
                 setMixins(parent, vls);
             } else {
-                parent.setProperty(name, vls);            
+                parent.setProperty(name, vls);
+            }
+        }
+
+        @Override
+        void startValueElement(ContentHandler contentHandler) throws IOException {
+            try {
+                for (Value v : values) {
+                    String str = v.getString();
+                    contentHandler.startElement(Name.NS_SV_URI, VALUE, Name.NS_SV_PREFIX+":"+VALUE, new AttributesImpl());
+                    contentHandler.characters(str.toCharArray(), 0, str.length());
+                    contentHandler.endElement(Name.NS_SV_URI, VALUE, Name.NS_SV_PREFIX+":"+VALUE);
+                }
+            } catch(SAXException e) {
+                throw new DiffException(e.getMessage());
+            } catch (ValueFormatException e) {
+                throw new DiffException(e.getMessage());
+            } catch (RepositoryException e) {
+                throw new DiffException(e.getMessage());
             }
         }
     }

@@ -43,6 +43,7 @@ import javax.jcr.query.InvalidQueryException;
 import javax.jcr.version.VersionException;
 
 import org.apache.jackrabbit.jcr2spi.config.CacheBehaviour;
+import org.apache.jackrabbit.jcr2spi.config.RepositoryConfig;
 import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyEventListener;
 import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyManager;
 import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyManagerImpl;
@@ -83,6 +84,8 @@ import org.apache.jackrabbit.jcr2spi.operation.SetPropertyValue;
 import org.apache.jackrabbit.jcr2spi.operation.Update;
 import org.apache.jackrabbit.jcr2spi.operation.WorkspaceImport;
 import org.apache.jackrabbit.jcr2spi.security.AccessManager;
+import org.apache.jackrabbit.jcr2spi.security.authorization.AccessControlProvider;
+import org.apache.jackrabbit.jcr2spi.security.authorization.AccessControlProviderStub;
 import org.apache.jackrabbit.jcr2spi.state.ChangeLog;
 import org.apache.jackrabbit.jcr2spi.state.ItemState;
 import org.apache.jackrabbit.jcr2spi.state.ItemStateFactory;
@@ -124,6 +127,7 @@ public class WorkspaceManager
 
     private static Logger log = LoggerFactory.getLogger(WorkspaceManager.class);
 
+    private final RepositoryConfig config;
     private final RepositoryService service;
     private final SessionInfo sessionInfo;
     private final NameFactory nameFactory;
@@ -132,14 +136,14 @@ public class WorkspaceManager
     private final ItemStateFactory isf;
     private final HierarchyManager hierarchyManager;
 
-    private final CacheBehaviour cacheBehaviour;
     private final boolean observationSupported;
-    private final int pollTimeout;
 
     private final IdFactory idFactory;
     private final NamespaceRegistryImpl nsRegistry;
     private final NodeTypeRegistryImpl ntRegistry;
     private final ItemDefinitionProvider definitionProvider;
+
+    private AccessControlProvider acProvider;
 
     /**
      * Semaphore to synchronize the feed thread with client
@@ -177,16 +181,13 @@ public class WorkspaceManager
      */
     private ItemInfoCache cache;
 
-    public WorkspaceManager(RepositoryService service, SessionInfo sessionInfo,
-                            CacheBehaviour cacheBehaviour, int pollTimeout,
-                            boolean observationSupported)
+    public WorkspaceManager(RepositoryConfig config, SessionInfo sessionInfo, boolean observationSupported)
         throws RepositoryException {
 
-        this.service = service;
+        this.config = config;
+        this.service = config.getRepositoryService();
         this.sessionInfo = sessionInfo;
-        this.cacheBehaviour = cacheBehaviour;
         this.observationSupported = observationSupported;
-        this.pollTimeout = pollTimeout;
 
         this.nameFactory = service.getNameFactory();
         this.pathFactory = service.getPathFactory();
@@ -206,6 +207,7 @@ public class WorkspaceManager
         // installed. Note: this listener has to be the first one called in order
         // for the hierarchy to be consistent with the event (See JCR-2293).
         InternalEventListener listener = createHierarchyListener(hierarchyManager);
+        CacheBehaviour cacheBehaviour = config.getCacheBehaviour();
         if (cacheBehaviour == CacheBehaviour.OBSERVATION) {
             addEventListener(listener);
         } else {
@@ -251,6 +253,18 @@ public class WorkspaceManager
 
     public ItemStateFactory getItemStateFactory() {
         return isf;
+    }
+
+    /**
+     * Locates and instantiates an AccessControlProvider implementation.
+     * @return      an access control manager provider.  
+     * @throws      RepositoryException
+     */
+    public AccessControlProvider getAccessControlProvider() throws RepositoryException {
+        if (acProvider == null) {
+            acProvider = AccessControlProviderStub.newInstance(config, service);
+        }
+        return acProvider;
     }
 
     public LockInfo getLockInfo(NodeId nodeId) throws RepositoryException {
@@ -358,7 +372,7 @@ public class WorkspaceManager
      */
     public void addEventListener(InternalEventListener listener) throws RepositoryException {
         if (changeFeed == null) {
-            changeFeed = createChangeFeed(pollTimeout, observationSupported);
+            changeFeed = createChangeFeed(config.getPollTimeout(), observationSupported);
         }
 
         synchronized (listeners) {
@@ -493,7 +507,7 @@ public class WorkspaceManager
      * @return a new InternalEventListener
      */
     private InternalEventListener createHierarchyListener(HierarchyManager hierarchyMgr) {
-        InternalEventListener listener = new HierarchyEventListener(this, hierarchyMgr, cacheBehaviour);
+        InternalEventListener listener = new HierarchyEventListener(this, hierarchyMgr, config.getCacheBehaviour());
         return listener;
     }
 

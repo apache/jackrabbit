@@ -252,6 +252,20 @@ public class Jcr2spiRepositoryFactory implements RepositoryFactory {
             return pollTimeOut;
         }
 
+        @Override
+        public <T> T getConfiguration(String name, T defaultValue) {
+            if (parameters.containsKey(name)) {
+                Object value = parameters.get(name);
+                Class clazz = (defaultValue == null)
+                        ? value.getClass()
+                        : defaultValue.getClass();
+                if (clazz.isAssignableFrom(value.getClass())) {
+                    return (T) value;
+                }
+            }
+            return defaultValue;
+        }
+
         public RepositoryService getRepositoryService() throws RepositoryException {
             if (repositoryService == null) {
                 repositoryService = serviceFactory.createRepositoryService(parameters);
@@ -394,6 +408,11 @@ public class Jcr2spiRepositoryFactory implements RepositoryFactory {
 
         public int getPollTimeout() {
             return config.getPollTimeout();
+        }
+
+        @Override
+        public <T> T getConfiguration(String name, T defaultValue) {
+            return config.getConfiguration(name, defaultValue);
         }
 
         public RepositoryService getRepositoryService() throws RepositoryException {

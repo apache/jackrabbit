@@ -16,9 +16,15 @@
  */
 package org.apache.jackrabbit.webdav.security;
 
+import org.apache.jackrabbit.webdav.DavException;
+import org.apache.jackrabbit.webdav.DavServletResponse;
 import org.apache.jackrabbit.webdav.property.AbstractDavProperty;
+import org.apache.jackrabbit.webdav.property.DavProperty;
+import org.w3c.dom.Element;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Collections;
 
@@ -50,6 +56,28 @@ public class SupportedPrivilegeSetProperty extends AbstractDavProperty<List<Supp
     public SupportedPrivilegeSetProperty(SupportedPrivilege[] supportedPrivileges) {
         super(SecurityConstants.SUPPORTED_PRIVILEGE_SET, true);
         this.supportedPrivileges = supportedPrivileges;
+    }
+
+    public SupportedPrivilegeSetProperty(DavProperty<?> p) throws DavException {
+        super(SecurityConstants.SUPPORTED_PRIVILEGE_SET, true);
+        if (!SecurityConstants.SUPPORTED_PRIVILEGE_SET.equals(getName())) {
+            throw new DavException(DavServletResponse.SC_BAD_REQUEST, "DAV:supported-privilege-set expected.");
+        }
+
+        List<SupportedPrivilege> supportedPrivs = new ArrayList<SupportedPrivilege>();
+        
+        for (Object obj : Collections.singletonList(p.getValue())) {
+            if (p instanceof Element) {
+                supportedPrivs.add(SupportedPrivilege.getSupportedPrivilege((Element) p));
+            } else if (obj instanceof Collection) {
+                for (Object entry : ((Collection<?>) obj)) {
+                    if (entry instanceof Element) {
+                        supportedPrivs.add(SupportedPrivilege.getSupportedPrivilege((Element) entry));
+                    }
+                }
+            }
+        }
+        supportedPrivileges = supportedPrivs.toArray(new SupportedPrivilege[supportedPrivs.size()]);
     }
 
     /**

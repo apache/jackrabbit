@@ -68,6 +68,7 @@ import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.NodeInfo;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.PathFactory;
+import org.apache.jackrabbit.spi.PrivilegeDefinition;
 import org.apache.jackrabbit.spi.PropertyId;
 import org.apache.jackrabbit.spi.PropertyInfo;
 import org.apache.jackrabbit.spi.QNodeDefinition;
@@ -224,6 +225,11 @@ public class RepositoryFactoryImplTest extends TestCase {
             return 1234;
         }
 
+        @Override
+        public <T> T getConfiguration(String name, T defaultValue) {
+            return null;
+        }
+
         public RepositoryService getRepositoryService() throws RepositoryException {
             return RepositoryServiceImpl.INSTANCE;
         }
@@ -287,6 +293,16 @@ public class RepositoryFactoryImplTest extends TestCase {
 
         public boolean isGranted(SessionInfo sessionInfo, ItemId itemId, String[] actions) throws RepositoryException {
             return false;
+        }
+
+        @Override
+        public PrivilegeDefinition[] getPrivilegeDefinitions(SessionInfo sessionInfo) throws RepositoryException {
+            return new PrivilegeDefinition[0];
+        }
+
+        @Override
+        public PrivilegeDefinition[] getSupportedPrivileges(SessionInfo sessionInfo, NodeId nodeId) throws RepositoryException {
+            return new PrivilegeDefinition[0];
         }
 
         public QNodeDefinition getNodeDefinition(SessionInfo sessionInfo, NodeId nodeId) throws RepositoryException {

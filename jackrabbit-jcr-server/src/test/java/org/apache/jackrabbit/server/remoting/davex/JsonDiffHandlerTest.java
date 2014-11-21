@@ -72,165 +72,196 @@ public class JsonDiffHandlerTest extends TestCase {
 
     private final class DummySession implements Session {
 
+        @Override
         public Repository getRepository() {
             return null;
         }
 
+        @Override
         public String getUserID() {
             return null;
         }
 
+        @Override
         public Object getAttribute(String name) {
             return null;
         }
 
+        @Override
         public String[] getAttributeNames() {
             return new String[0];
         }
 
+        @Override
         public Workspace getWorkspace() {
             return null;
         }
 
+        @Override
         public Session impersonate(Credentials credentials) {
             return null;
         }
 
+        @Override
         public Node getRootNode() {
             return null;
         }
 
+        @Override
         public Node getNodeByUUID(String uuid) {
             return null;
         }
 
+        @Override
         public Item getItem(String absPath) {
             return null;
         }
 
+        @Override
         public boolean itemExists(String absPath) {
             return false;
         }
 
+        @Override
         public void move(String srcAbsPath, String destAbsPath) {
         }
 
+        @Override
         public void save() {
         }
 
+        @Override
         public void refresh(boolean keepChanges) {
         }
 
+        @Override
         public boolean hasPendingChanges() {
             return false;
         }
 
+        @Override
         public ValueFactory getValueFactory() {
             return null;
         }
 
+        @Override
         public void checkPermission(String absPath, String actions) throws AccessControlException {
         }
 
+        @Override
         public ContentHandler getImportContentHandler(String parentAbsPath, int uuidBehavior) {
             return null;
         }
 
+        @Override
         public void importXML(String parentAbsPath, InputStream in, int uuidBehavior) {
         }
 
+        @Override
         public void exportSystemView(String absPath, ContentHandler contentHandler, boolean skipBinary, boolean noRecurse) {
         }
 
+        @Override
         public void exportSystemView(String absPath, OutputStream out, boolean skipBinary, boolean noRecurse) {
         }
 
+        @Override
         public void exportDocumentView(String absPath, ContentHandler contentHandler, boolean skipBinary, boolean noRecurse) {
         }
 
+        @Override
         public void exportDocumentView(String absPath, OutputStream out, boolean skipBinary, boolean noRecurse) {
         }
 
+        @Override
         public void setNamespacePrefix(String prefix, String uri) {
         }
 
+        @Override
         public String[] getNamespacePrefixes() {
             return new String[0];
         }
 
+        @Override
         public String getNamespaceURI(String prefix) {
             return null;
         }
 
+        @Override
         public String getNamespacePrefix(String uri) {
             return null;
         }
 
+        @Override
         public void logout() {
         }
 
+        @Override
         public boolean isLive() {
             return false;
         }
 
+        @Override
         public void addLockToken(String lt) {
         }
 
+        @Override
         public String[] getLockTokens() {
             return new String[0];
         }
 
+        @Override
         public void removeLockToken(String lt) {
         }
 
+        @Override
         public AccessControlManager getAccessControlManager() {
-            // TODO Auto-generated method stub
             return null;
         }
 
+        @Override
         public Node getNode(String arg0) {
-            // TODO Auto-generated method stub
             return null;
         }
 
+        @Override
         public Node getNodeByIdentifier(String arg0) {
-            // TODO Auto-generated method stub
             return null;
         }
 
+        @Override
         public Property getProperty(String arg0) {
-            // TODO Auto-generated method stub
             return null;
         }
 
+        @Override
         public RetentionManager getRetentionManager() {
-            // TODO Auto-generated method stub
             return null;
         }
 
+        @Override
         public boolean hasCapability(String arg0, Object arg1, Object[] arg2) {
-            // TODO Auto-generated method stub
             return false;
         }
 
+        @Override
         public boolean hasPermission(String arg0, String arg1) {
-            // TODO Auto-generated method stub
             return false;
         }
 
+        @Override
         public boolean nodeExists(String arg0) {
-            // TODO Auto-generated method stub
             return false;
         }
 
+        @Override
         public boolean propertyExists(String arg0) {
-            // TODO Auto-generated method stub
             return false;
         }
 
+        @Override
         public void removeItem(String arg0) {
-            // TODO Auto-generated method stub
-            
+
         }
     }
 }

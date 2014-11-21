@@ -41,4 +41,6 @@ public interface RepositoryConfig {
      * @return  the poll timeout in milliseconds.
      */
     public int getPollTimeout();
+
+    public <T> T getConfiguration(String name, T defaultValue);
 }

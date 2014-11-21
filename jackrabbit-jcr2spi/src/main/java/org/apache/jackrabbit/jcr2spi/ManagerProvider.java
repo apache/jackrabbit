@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.jcr2spi;
 
+import org.apache.jackrabbit.jcr2spi.security.authorization.AccessControlProvider;
 import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
 import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyManager;
 import org.apache.jackrabbit.jcr2spi.security.AccessManager;
@@ -84,4 +85,6 @@ public interface ManagerProvider {
     public ValueFactory getJcrValueFactory() throws RepositoryException;
 
     public QValueFactory getQValueFactory() throws RepositoryException;
+
+    public AccessControlProvider getAccessControlProvider() throws RepositoryException;
 }

@@ -21,6 +21,7 @@ import junit.framework.TestCase;
 import junit.framework.TestResult;
 import junit.framework.TestSuite;
 
+import org.apache.jackrabbit.jcr2spi.security.Jcr2SpiSecurityTestSuite;
 import org.apache.jackrabbit.jcr2spi.Jcr2SpiTestSuite;
 import org.apache.jackrabbit.test.JCRTestSuite;
 
@@ -34,6 +35,7 @@ public class ConformanceTest extends TestCase {
         if (Boolean.getBoolean("jackrabbit.test.integration")) {
             suite.addTest(new JCRTestSuite());
             suite.addTest(new Jcr2SpiTestSuite());
+            suite.addTest(new Jcr2SpiSecurityTestSuite());
             suite.addTest(new StopRepository());
         }
         return suite;
