@@ -19,7 +19,6 @@ import org.apache.jackrabbit.spi.QValueFactory;
 import org.apache.jackrabbit.spi.commons.conversion.DefaultNamePathResolver;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.spi.commons.value.QValueFactoryImpl;
-import org.apache.jackrabbit.test.NotExecutableException;
 import org.apache.jackrabbit.test.api.security.AbstractAccessControlTest;
 import org.junit.Test;
 

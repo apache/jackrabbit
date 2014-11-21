@@ -946,7 +946,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
                 // build PrivilegeDefinition(s) from the supported-privileges dav property
                 NamePathResolver npResolver = getNamePathResolver(sessionInfo);
                 Map<Name, SupportedPrivilege> spMap = new HashMap<Name, SupportedPrivilege>();
-                fillSupportedPrivilegeMap(new SupportedPrivilegeSetProperty(p).getValue(), spMap, npResolver);
+                fillSupportedPrivilegeMap(new SupportedPrivilegeSetProperty(p).getValue(), spMap, getNameFactory());
 
                 List<PrivilegeDefinition> pDefs = new ArrayList<PrivilegeDefinition>();
                 for (Name privilegeName : spMap.keySet()) {
@@ -975,12 +975,14 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         }
     }
 
-    private static void fillSupportedPrivilegeMap(List<SupportedPrivilege> sps, Map<Name, SupportedPrivilege> spMap, NamePathResolver npResolver) throws NamespaceException, IllegalNameException {
+    private static void fillSupportedPrivilegeMap(List<SupportedPrivilege> sps, Map<Name, SupportedPrivilege> spMap, NameFactory nameFactory) throws NamespaceException, IllegalNameException {
         for (SupportedPrivilege sp : sps) {
-            spMap.put(npResolver.getQName(sp.getPrivilege().getName()), sp);
+            Privilege p = sp.getPrivilege();
+            Name privName = nameFactory.create(p.getNamespace().getURI(), p.getName());
+            spMap.put(privName, sp);
             List<SupportedPrivilege> agg = Arrays.asList(sp.getSupportedPrivileges());
             if (!agg.isEmpty()) {
-                fillSupportedPrivilegeMap(agg, spMap, npResolver);
+                fillSupportedPrivilegeMap(agg, spMap, nameFactory);
             }
         }
     }
