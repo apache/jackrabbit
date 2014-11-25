@@ -34,12 +34,15 @@ import javax.jcr.Item;
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
+import javax.jcr.Property;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.Value;
 import javax.jcr.ValueFactory;
 import javax.jcr.ValueFormatException;
+import javax.jcr.nodetype.ItemDefinition;
 import javax.jcr.nodetype.NodeDefinition;
 import javax.jcr.nodetype.NodeType;
 import javax.jcr.nodetype.NodeTypeManager;
@@ -172,7 +175,15 @@ class JsonDiffHandler implements DiffHandler {
         }
         try {
             String itemPath = getItemPath(targetPath);
-            session.getItem(itemPath).remove();
+            Item item = session.getItem(itemPath);
+            
+            ItemDefinition def = (item.isNode()) ? ((Node) item).getDefinition() : ((Property) item).getDefinition();
+            if (def.isProtected()) {
+                // delegate to the manager.
+                ProtectedRemoveManager.remove(itemPath);
+            } else {
+                item.remove();
+            }
         } catch (RepositoryException e) {
             throw new DiffException(e.getMessage(), e);
         }
@@ -245,6 +256,10 @@ class JsonDiffHandler implements DiffHandler {
     }
 
     //--------------------------------------------------------------------------
+    public void load(InputStream inStream) throws RepositoryException {
+        ProtectedRemoveManager.load(session, inStream);
+    }
+    
     /**
      * 
      * @param diffPath

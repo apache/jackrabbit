@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.server.remoting.davex;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -235,6 +236,11 @@ public abstract class JcrRemotingServlet extends JCRWebdavServerServlet {
      */
     public static final String INIT_PARAM_BATCHREAD_CONFIG = "batchread-config";
 
+    /**
+     * the 'protectedhandlers-config' init paramter.
+     */
+    public static final String INIT_PARAM_PROTECTED_HANDLERS_CONFIG = "protectedhandlers-config";
+    
     private static final String PARAM_DIFF = ":diff";
     private static final String PARAM_COPY = ":copy";
     private static final String PARAM_CLONE = ":clone";
@@ -510,11 +516,39 @@ public abstract class JcrRemotingServlet extends JCRWebdavServerServlet {
         return null;
     }
 
-    private static void processDiff(Session session, String targetPath, RequestData data)
+    /**
+     * Before processing the DIFF request, we first load
+     * the configuration for the protectemItemRemoveHandlers, a required
+     * config for removing ac-content. Failure to properly configure the protectedhandlers-config
+     * init-param will cause an <code>UnsupportedRepositoryOperationException</code>
+     * to be thrown.
+     * 
+     * @param session
+     * @param targetPath
+     * @param data
+     * @throws RepositoryException
+     * @throws DiffException
+     * @throws IOException
+     */
+    private void processDiff(Session session, String targetPath, RequestData data)
             throws RepositoryException, DiffException, IOException {
 
         String[] diffs = data.getParameterValues(PARAM_DIFF);
         DiffHandler handler = new JsonDiffHandler(session, targetPath, data);
+        String propsFile = getServletConfig().getInitParameter(INIT_PARAM_PROTECTED_HANDLERS_CONFIG);
+        
+        if (propsFile == null) {
+            log.warn("protectedhandlers-config is missing -> DIFF processing can fail for the Remove operation if the content to" +
+            		"remove is protected!");
+        } else {
+            File file = new File(propsFile);
+            if (file.exists()) {
+                ((JsonDiffHandler) handler).load(new FileInputStream(file));
+            } else {
+                log.debug("Fail to locate the protected-item-remove-handler properties file.");
+            }
+        }
+
         DiffParser parser = new DiffParser(handler);
 
         for (String diff : diffs) {

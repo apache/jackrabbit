@@ -67,8 +67,8 @@ public class SupportedPrivilegeSetProperty extends AbstractDavProperty<List<Supp
         List<SupportedPrivilege> supportedPrivs = new ArrayList<SupportedPrivilege>();
         
         for (Object obj : Collections.singletonList(p.getValue())) {
-            if (p instanceof Element) {
-                supportedPrivs.add(SupportedPrivilege.getSupportedPrivilege((Element) p));
+            if (obj instanceof Element) {
+                supportedPrivs.add(SupportedPrivilege.getSupportedPrivilege((Element) obj));
             } else if (obj instanceof Collection) {
                 for (Object entry : ((Collection<?>) obj)) {
                     if (entry instanceof Element) {

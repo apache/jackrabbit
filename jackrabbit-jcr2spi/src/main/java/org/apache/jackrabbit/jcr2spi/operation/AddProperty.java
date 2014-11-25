@@ -25,6 +25,7 @@ import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.version.VersionException;
 
+import org.apache.jackrabbit.jcr2spi.state.ItemStateValidator;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.NodeId;
@@ -135,5 +136,24 @@ public class AddProperty extends TransientOperation {
                                    QPropertyDefinition def, QValue[] values) throws RepositoryException {
         AddProperty ap = new AddProperty(parentState, propName, propertyType, values, def);
         return ap;
+    }
+    
+    /**
+     * Inner class for adding a protected property.
+     */
+    public static final class SetPolicyAddProperty extends AddProperty implements IgnoreOperation {
+        private final static int SET_POLICY_ADD_PROPERTY_OPTIONS =  ItemStateValidator.CHECK_ACCESS | 
+                                                       ItemStateValidator.CHECK_LOCK |
+                                                       ItemStateValidator.CHECK_COLLISION |
+                                                       ItemStateValidator.CHECK_VERSIONING;
+        
+        private SetPolicyAddProperty(NodeState parentState, Name propName, int propertyType, QValue[] values, QPropertyDefinition definition) throws RepositoryException {
+            super(parentState, propName, propertyType, values, definition, SET_POLICY_ADD_PROPERTY_OPTIONS);
+        }
+        
+        public static Operation create(NodeState parentState, Name propName, int type, QValue[] values, QPropertyDefinition def) throws RepositoryException {
+            SetPolicyAddProperty ap = new SetPolicyAddProperty(parentState, propName, type, values, def);
+            return ap;
+        }
     }
 }

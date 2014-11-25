@@ -230,6 +230,16 @@ public interface RepositoryService {
 
     /**
      * TODO
+     * 
+     * @param sessionInfo
+     * @param id
+     * @return
+     * @throws RepositoryException
+     */
+    public PrivilegeDefinition[] getPrivileges(SessionInfo sessionInfo, NodeId id) throws RepositoryException;
+    
+    /**
+     * TODO
      *
      * @param sessionInfo
      * @param nodeId

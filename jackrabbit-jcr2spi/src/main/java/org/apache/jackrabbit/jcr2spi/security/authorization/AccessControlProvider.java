@@ -41,7 +41,7 @@ public interface AccessControlProvider {
     void init(RepositoryConfig config, RepositoryService service);
 
     /**
-     * Then privileges corresponding to the specified names.
+     * The privileges corresponding to the specified name.
      *
      * @param sessionInfo
      * @param resolver
@@ -63,7 +63,7 @@ public interface AccessControlProvider {
      */
     Map<String, Privilege> getSupportedPrivileges(SessionInfo sessionInfo, NodeId nodeId, NamePathResolver npResolver) throws RepositoryException;
 
-    Set<Privilege> getPrivileges(SessionInfo sessionInfo, NodeId id) throws RepositoryException;
+    Set<Privilege> getPrivileges(SessionInfo sessionInfo, NodeId id, NamePathResolver npResolver) throws RepositoryException;
 
     AccessControlManager createAccessControlManager(SessionInfo sessionInfo,
                                                     UpdatableItemStateManager itemStateManager,

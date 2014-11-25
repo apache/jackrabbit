@@ -113,6 +113,7 @@ import org.apache.jackrabbit.spi.QueryInfo;
 import org.apache.jackrabbit.spi.RepositoryService;
 import org.apache.jackrabbit.spi.SessionInfo;
 import org.apache.jackrabbit.spi.Subscription;
+import org.apache.jackrabbit.spi.Tree;
 import org.apache.jackrabbit.spi.commons.ChildInfoImpl;
 import org.apache.jackrabbit.spi.commons.EventBundleImpl;
 import org.apache.jackrabbit.spi.commons.EventFilterImpl;
@@ -132,6 +133,8 @@ import org.apache.jackrabbit.spi.commons.namespace.AbstractNamespaceResolver;
 import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
 import org.apache.jackrabbit.spi.commons.nodetype.compact.CompactNodeTypeDefWriter;
 import org.apache.jackrabbit.spi.commons.privilege.PrivilegeDefinitionImpl;
+import org.apache.jackrabbit.spi.commons.tree.PropertyImpl;
+import org.apache.jackrabbit.spi.commons.tree.TreeImpl;
 import org.apache.jackrabbit.spi.commons.value.QValueValue;
 import org.apache.jackrabbit.spi.commons.value.ValueFactoryQImpl;
 import org.apache.jackrabbit.spi.commons.value.ValueFormat;
@@ -925,6 +928,21 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         return internalGetPrivilegeDefinitions(sessionInfo, uri);
     }
 
+    @Override
+    public PrivilegeDefinition[] getPrivileges(SessionInfo sessionInfo, NodeId nodeId) throws RepositoryException {
+        String uri = (nodeId == null) ? uriResolver.getWorkspaceUri(sessionInfo.getWorkspaceName()) : getItemUri(nodeId, sessionInfo);
+        return internalGetUserPrivilegeDefinitions(sessionInfo, uri);
+    }
+    
+    private PrivilegeDefinition[] internalGetUserPrivilegeDefinitions(SessionInfo sessionInfo, String uri) throws RepositoryException {
+        DavPropertyNameSet nameSet = new DavPropertyNameSet();
+        nameSet.add(SecurityConstants.CURRENT_USER_PRIVILEGE_SET);
+        DavMethodBase method = null;
+        
+        // TODO
+        return new PrivilegeDefinition[0];
+    }
+    
     private PrivilegeDefinition[] internalGetPrivilegeDefinitions(SessionInfo sessionInfo, String uri) throws RepositoryException {
         DavPropertyNameSet nameSet = new DavPropertyNameSet();
         nameSet.add(SecurityConstants.SUPPORTED_PRIVILEGE_SET);
@@ -944,7 +962,6 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
                 return new PrivilegeDefinition[0];
             } else {
                 // build PrivilegeDefinition(s) from the supported-privileges dav property
-                NamePathResolver npResolver = getNamePathResolver(sessionInfo);
                 Map<Name, SupportedPrivilege> spMap = new HashMap<Name, SupportedPrivilege>();
                 fillSupportedPrivilegeMap(new SupportedPrivilegeSetProperty(p).getValue(), spMap, getNameFactory());
 
@@ -956,7 +973,9 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
                     if (aggregates != null && aggregates.length > 0) {
                         aggrnames = new HashSet<Name>();
                         for (SupportedPrivilege aggregate : aggregates) {
-                            aggrnames.add(npResolver.getQName(aggregate.getPrivilege().getName()));
+                            Name aggregateName = nameFactory.create(aggregate.getPrivilege().getNamespace().getURI(), 
+                                                                    aggregate.getPrivilege().getName());
+                            aggrnames.add(aggregateName);
                         }
                     }
                     PrivilegeDefinition def = new PrivilegeDefinitionImpl(privilegeName, sp.isAbstract(), aggrnames);
@@ -975,6 +994,18 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         }
     }
 
+    private static void fillUserPrivilegesMap(List<Privilege> privs, Map<Name, SupportedPrivilege> spMap, NameFactory nameFactory) throws NamespaceException, IllegalNameException {
+      /*  for (Privilege priv : privs) {
+            Privilege p = priv.getPrivilege();
+            Name privName = nameFactory.create(p.getNamespace().getURI(), p.getName());
+            spMap.put(privName, sp);
+            List<SupportedPrivilege> agg = Arrays.asList(sp.getSupportedPrivileges());
+            if (!agg.isEmpty()) {
+                fillSupportedPrivilegeMap(agg, spMap, nameFactory);
+            }
+        } */
+    }
+    
     private static void fillSupportedPrivilegeMap(List<SupportedPrivilege> sps, Map<Name, SupportedPrivilege> spMap, NameFactory nameFactory) throws NamespaceException, IllegalNameException {
         for (SupportedPrivilege sp : sps) {
             Privilege p = sp.getPrivilege();
@@ -3097,6 +3128,92 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             } catch (ParserConfigurationException e) {
                 throw new RepositoryException(e);
             }
+        }
+
+        /**
+         * @see Batch#setTree(NodeId, Tree)
+         */
+        public void setTree(NodeId parentId, Tree aclTree) throws RepositoryException {
+            checkConsumed();
+            try {
+                // TODO: TOBEFIXED. WebDAV does not allow MKCOL for existing resource -> problem with SNS
+                // use fake name instead (see also #importXML)
+                Name fakeName = getNameFactory().create(Name.NS_DEFAULT_URI, UUID.randomUUID().toString());
+                String uri = getItemUri(parentId, fakeName, sessionInfo);
+                MkColMethod method = new MkColMethod(uri);
+                
+                // node info
+                TreeImpl acl = ((TreeImpl) aclTree);
+                Name nodeName = acl.getName();
+                Name ntName = acl.getNodeTypeName();
+                String uuid = acl.getUniqueIdentifier();
+                
+                Document body = (Document) buildNodeInfo(DomUtil.createDocument(), nodeName, ntName, uuid);
+                
+                for (TreeImpl childNode : acl.getAddNodes()) {
+                    importNode(body, childNode);
+                }                
+                method.setRequestBody(body);
+
+                methods.add(method);
+            } catch (IOException e) {
+                throw new RepositoryException(e);
+            } catch (ParserConfigurationException e) {
+                throw new RepositoryException(e);
+            }
+        }        
+        
+        private Element buildNodeInfo(Document body, Name nodeName, Name nodeTypeName, String uuid) throws RepositoryException {            
+            // node element + name attr.
+            Element nodeElement = DomUtil.addChildElement(body, NODE_ELEMENT, SV_NAMESPACE);
+            String nameAttr = resolver.getJCRName(nodeName);
+            DomUtil.setAttribute(nodeElement, NAME_ATTRIBUTE, SV_NAMESPACE, nameAttr);
+            
+            // primary type + (name and type) attribute.
+            Element propElement = DomUtil.addChildElement(nodeElement, PROPERTY_ELEMENT, SV_NAMESPACE);
+            String primaryTypeName = resolver.getJCRName(NameConstants.JCR_PRIMARYTYPE);
+            DomUtil.setAttribute(propElement, NAME_ATTRIBUTE, SV_NAMESPACE, primaryTypeName);
+            DomUtil.setAttribute(propElement, TYPE_ATTRIBUTE, SV_NAMESPACE, PropertyType.nameFromValue(PropertyType.NAME));
+            primaryTypeName = resolver.getJCRName(nodeTypeName);
+            DomUtil.addChildElement(propElement, VALUE_ELEMENT, SV_NAMESPACE, primaryTypeName);
+            
+            // uuid property.
+            if (uuid != null) {
+                propElement = DomUtil.addChildElement(nodeElement, PROPERTY_ELEMENT, SV_NAMESPACE);
+                String jcrUUID = resolver.getJCRName(NameConstants.JCR_UUID);
+                DomUtil.setAttribute(propElement, NAME_ATTRIBUTE, SV_NAMESPACE, jcrUUID);
+                DomUtil.setAttribute(propElement, TYPE_ATTRIBUTE, SV_NAMESPACE, PropertyType.nameFromValue(PropertyType.STRING));
+                DomUtil.addChildElement(propElement, VALUE_ELEMENT, SV_NAMESPACE, uuid);
+            }
+            return nodeElement;
+
+        }
+
+        private void importNode(Document body, TreeImpl childNode) throws RepositoryException {
+            Name nodeName = childNode.getName();
+            Name ntName = childNode.getNodeTypeName();
+            String uuid = childNode.getUniqueIdentifier();
+            Element nodeElement = (Element) buildNodeInfo(body, nodeName, ntName, uuid);
+                       
+            // build all properties of the child node.
+            for (PropertyImpl prop : childNode.getAddProperties()) {
+                importProperty(nodeElement, prop);
+            }
+            
+        }
+        
+        private void importProperty(Element nodeElement, PropertyImpl prop) throws RepositoryException {
+            String propName = resolver.getJCRName(prop.getName());
+            String propType = PropertyType.nameFromValue(prop.getType());
+            Element propElement = DomUtil.addChildElement(nodeElement, PROPERTY_ELEMENT, SV_NAMESPACE);
+            DomUtil.setAttribute(propElement, NAME_ATTRIBUTE, SV_NAMESPACE, propName);
+            DomUtil.setAttribute(propElement, TYPE_ATTRIBUTE, SV_NAMESPACE, propType);
+            
+            // build all the values.
+            for (QValue value : prop.getValues()) {
+                DomUtil.addChildElement(propElement, VALUE_ELEMENT, SV_NAMESPACE, value.getString());                
+            }
+            
         }
 
         /**

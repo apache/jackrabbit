@@ -29,17 +29,17 @@ import org.junit.Test;
  */
 public class AccessControlListImplTest extends AbstractAccessControlTest {
 
-    private NamePathResolver resolver;
     private QValueFactory vFactory;
 
     private Principal unknownPrincipal;
     private Principal knownPrincipal;
 
+    private NamePathResolver npResolver;
     @Override
     public void setUp() throws Exception {
         super.setUp();
 
-        resolver = new DefaultNamePathResolver(superuser);
+        npResolver = new DefaultNamePathResolver(getHelper().getSuperuserSession());
         vFactory = QValueFactoryImpl.getInstance();
 
         unknownPrincipal = getHelper().getUnknownPrincipal(superuser);
@@ -53,7 +53,7 @@ public class AccessControlListImplTest extends AbstractAccessControlTest {
 
     private JackrabbitAccessControlList createAccessControList(String aclPath)
             throws RepositoryException {
-        return new AccessControlListImpl(aclPath, resolver, vFactory);
+        return new AccessControlListImpl(aclPath, npResolver, vFactory);
     }
 
     private Map<String, Value> createEmptyRestriction() {
@@ -65,19 +65,19 @@ public class AccessControlListImplTest extends AbstractAccessControlTest {
         JackrabbitAccessControlList acl = createAccessControList(testRoot);
 
         // allow read to unknownPrincipal
-        Privilege[] p = privilegesFromName(Privilege.JCR_READ);
+        Privilege[] p = privilegesFromName(getJcrName(Privilege.JCR_READ));
         acl.addAccessControlEntry(unknownPrincipal, p);
 
         // allow addChildNodes to secondPrincipal
-        p = privilegesFromName(Privilege.JCR_ADD_CHILD_NODES);
+        p = privilegesFromName(getJcrName(Privilege.JCR_ADD_CHILD_NODES));
         acl.addAccessControlEntry(knownPrincipal, p);
 
         // deny modifyAccessControl to 'unknown' principal
-        p = privilegesFromName(Privilege.JCR_MODIFY_ACCESS_CONTROL);
+        p = privilegesFromName(getJcrName(Privilege.JCR_MODIFY_ACCESS_CONTROL));
         acl.addEntry(unknownPrincipal, p, false);
 
         // deny jcr:nodeTypeManagement to secondPrincipal
-        p = privilegesFromName(Privilege.JCR_NODE_TYPE_MANAGEMENT);
+        p = privilegesFromName(getJcrName(Privilege.JCR_NODE_TYPE_MANAGEMENT));
         acl.addEntry(knownPrincipal, p, false);
 
         // four different entries
@@ -96,7 +96,7 @@ public class AccessControlListImplTest extends AbstractAccessControlTest {
     @Test
     public void testMultipleEntryEffect() throws Exception {
         JackrabbitAccessControlList acl = createAccessControList(testRoot);
-        Privilege[] privileges = privilegesFromName(Privilege.JCR_READ);
+        Privilege[] privileges = privilegesFromName(getJcrName(Privilege.JCR_READ));
 
         // GRANT 'read' privilege to the Admin user -> list now contains one
         // allow entry
@@ -114,23 +114,23 @@ public class AccessControlListImplTest extends AbstractAccessControlTest {
 
         // GRANT 'add_child_node' privilege for the admin user -> same entry but
         // with an additional 'add_child_node' privilege.
-        privileges = privilegesFromNames(new String[] {Privilege.JCR_ADD_CHILD_NODES, Privilege.JCR_READ });
+        privileges = privilegesFromNames(new String[] {getJcrName(Privilege.JCR_ADD_CHILD_NODES), getJcrName(Privilege.JCR_READ) });
 
         actual = acl.addAccessControlEntry(unknownPrincipal, privileges);
         assertTrue(actual);
 
-        // A new Entry wasn't added -> the existing entry was modified ->
-        // entries count should still be 1.
-        assertEquals(1, acl.size());
+        // A new Entry was added -> entries count should still be 2.
+        assertEquals(2, acl.size());
 
         // The single entry should now contain both 'read' and 'add_child_nodes'
         // privileges for the same principal.
-        assertEquals(2, acl.getAccessControlEntries()[0].getPrivileges().length);
+        assertEquals(1, acl.getAccessControlEntries()[0].getPrivileges().length);
+        assertEquals(2, acl.getAccessControlEntries()[1].getPrivileges().length);
 
         // adding a privilege that's already granted for the same principal ->
         // again modified as the client doesn't care about possible compaction the
         // server may want to make.
-        privileges = privilegesFromNames(new String[] { Privilege.JCR_READ });
+        privileges = privilegesFromNames(new String[] { getJcrName(Privilege.JCR_READ) });
         actual = acl.addAccessControlEntry(unknownPrincipal, privileges);
         assertTrue(actual);
 
@@ -146,11 +146,11 @@ public class AccessControlListImplTest extends AbstractAccessControlTest {
 
         // ... and that privilege should not be a 'read' privilege -> was revoked
         String jcrName = acl.getAccessControlEntries()[0].getPrivileges()[0].getName();
-        assertNotSame(getJcrName(Privilege.JCR_READ), jcrName);
+        assertNotSame(getJcrName(getJcrName(Privilege.JCR_READ)), jcrName);
 
         // deny entry contains a single privilege -> 'read' privilege
         jcrName = acl.getAccessControlEntries()[1].getPrivileges()[0].getName();
-        assertEquals(getJcrName(Privilege.JCR_READ), jcrName);
+        assertEquals(getJcrName(getJcrName(Privilege.JCR_READ)), jcrName);
 
         // remove the allow entry
         acl.removeAccessControlEntry(acl.getAccessControlEntries()[0]);
@@ -165,7 +165,7 @@ public class AccessControlListImplTest extends AbstractAccessControlTest {
         assertTrue(acl.isEmpty());
 
         // GRANT a read privilege
-        privileges = privilegesFromNames(new String[] { Privilege.JCR_READ });
+        privileges = privilegesFromNames(new String[] { getJcrName(Privilege.JCR_READ) });
         actual = acl.addAccessControlEntry(unknownPrincipal, privileges);
         assertTrue("New Entry -> grants read privilege", actual);
 
@@ -178,11 +178,11 @@ public class AccessControlListImplTest extends AbstractAccessControlTest {
     
     // -------------------------------------------------------< utility methods >---
     private Name getQName(String name) throws RepositoryException {
-        return resolver.getQName(name);
+        return npResolver.getQName(name);
     }
 
     private String getJcrName(String name) throws RepositoryException {
-        return resolver.getJCRName(getQName(name));
+        return npResolver.getJCRName(getQName(name));
     }
 
     private AccessControlEntry[] getEntries(AccessControlList acl, Principal princ) throws RepositoryException {

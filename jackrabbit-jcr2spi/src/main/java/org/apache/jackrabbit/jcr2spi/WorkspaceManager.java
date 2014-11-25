@@ -47,6 +47,8 @@ import org.apache.jackrabbit.jcr2spi.config.RepositoryConfig;
 import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyEventListener;
 import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyManager;
 import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyManagerImpl;
+import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
+import org.apache.jackrabbit.jcr2spi.hierarchy.PropertyEntry;
 import org.apache.jackrabbit.jcr2spi.nodetype.EffectiveNodeTypeProvider;
 import org.apache.jackrabbit.jcr2spi.nodetype.ItemDefinitionProvider;
 import org.apache.jackrabbit.jcr2spi.nodetype.ItemDefinitionProviderImpl;
@@ -79,6 +81,7 @@ import org.apache.jackrabbit.jcr2spi.operation.ReorderNodes;
 import org.apache.jackrabbit.jcr2spi.operation.ResolveMergeConflict;
 import org.apache.jackrabbit.jcr2spi.operation.Restore;
 import org.apache.jackrabbit.jcr2spi.operation.SetMixin;
+import org.apache.jackrabbit.jcr2spi.operation.SetPolicy;
 import org.apache.jackrabbit.jcr2spi.operation.SetPrimaryType;
 import org.apache.jackrabbit.jcr2spi.operation.SetPropertyValue;
 import org.apache.jackrabbit.jcr2spi.operation.Update;
@@ -90,6 +93,7 @@ import org.apache.jackrabbit.jcr2spi.state.ChangeLog;
 import org.apache.jackrabbit.jcr2spi.state.ItemState;
 import org.apache.jackrabbit.jcr2spi.state.ItemStateFactory;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
+import org.apache.jackrabbit.jcr2spi.state.PropertyState;
 import org.apache.jackrabbit.jcr2spi.state.Status;
 import org.apache.jackrabbit.jcr2spi.state.TransientISFactory;
 import org.apache.jackrabbit.jcr2spi.state.TransientItemStateFactory;
@@ -115,7 +119,10 @@ import org.apache.jackrabbit.spi.QueryInfo;
 import org.apache.jackrabbit.spi.RepositoryService;
 import org.apache.jackrabbit.spi.SessionInfo;
 import org.apache.jackrabbit.spi.Subscription;
+import org.apache.jackrabbit.spi.Tree;
+import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.spi.commons.nodetype.NodeTypeStorage;
+import org.apache.jackrabbit.spi.commons.tree.TreeImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -911,6 +918,40 @@ public class WorkspaceManager
             batch.addNode(parentId, operation.getNodeName(), operation.getNodeTypeName(), operation.getUuid());
         }
 
+        /**
+         * @see OperationVisitor#visit(AddNode)
+         */
+        public void visit(SetPolicy operation) throws RepositoryException {
+            
+            Tree aclTree = TreeImpl.create(operation.getNodeName(), operation.getNodeTypeName(), operation.getUuid());
+            
+            // build the acl tree.
+            Iterator<NodeEntry> entries = operation.getEntryNodes();
+            while (entries.hasNext()) {
+                NodeEntry entry = entries.next();
+                NodeState entryState = entry.getNodeState();
+                TreeImpl aceNode = (TreeImpl) TreeImpl.create(entryState.getName(), entryState.getNodeTypeName(), entryState.getUniqueID());
+                
+                ((TreeImpl)aclTree).addNode(aceNode);
+                
+                org.apache.jackrabbit.spi.commons.tree.PropertyImpl addProp = null;
+                Iterator<PropertyEntry> pEntries = entry.getPropertyEntries();
+                while (pEntries.hasNext()) {
+                    PropertyEntry pEntry = pEntries.next();
+
+                    boolean isPrimaryType = pEntry.getName().toString().equals(NameConstants.JCR_PRIMARYTYPE.toString());
+                    if (!isPrimaryType) {
+                        PropertyState pState = pEntry.getPropertyState();
+                        addProp = org.apache.jackrabbit.spi.commons.tree.PropertyImpl.create(pState.getName(), pState.getType(), 
+                                                                         pState.isMultiValued(), pState.getValues());
+                        aceNode.addProperty(addProp);
+                    }
+                }
+            }
+            
+            batch.setTree(operation.getParentId(), aclTree);
+        }
+        
         /**
          * @see OperationVisitor#visit(AddProperty)
          */
