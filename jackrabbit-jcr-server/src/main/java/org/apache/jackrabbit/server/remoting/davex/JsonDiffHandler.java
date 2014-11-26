@@ -50,6 +50,7 @@ import javax.jcr.nodetype.PropertyDefinition;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Stack;
 import java.util.LinkedList;
@@ -969,6 +970,11 @@ class JsonDiffHandler implements DiffHandler {
         @Override
         void startValueElement(ContentHandler contentHandler) throws IOException {
             try {
+                // Multi-valued property with values present in the request multi-part
+                if (values.size() == 0) {
+                    values = Arrays.asList(extractValuesFromRequest(name));
+                }
+                
                 for (Value v : values) {
                     String str = v.getString();
                     contentHandler.startElement(Name.NS_SV_URI, VALUE, Name.NS_SV_PREFIX+":"+VALUE, new AttributesImpl());

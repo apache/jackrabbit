@@ -752,13 +752,19 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
         
         private String createMvPropJson(String propName, QValue[] values) throws RepositoryException {
             StringBuilder json = new StringBuilder();
+            NamePathResolver resolver = getNamePathResolver(sessionInfo);
+            
             json.append(getJsonKey(propName));
             int index = 0;
             json.append('[');
             for (QValue value : values) {
-                String sv = getNamePathResolver(sessionInfo).getJCRName(value.getName());
-                String delim = (index++ == 0) ? "" : ",";
-                json.append(delim).append('"').append(sv).append('"');
+                String valueStr = getJsonString(value);
+                if (valueStr == null) {
+                    addPart(propName, value, resolver);
+                } else {
+                    String delim = (index++ == 0) ? "" : ",";
+                    json.append(delim).append('"').append(valueStr).append('"');
+                }                
             }
             json.append(']');
             return json.toString();
