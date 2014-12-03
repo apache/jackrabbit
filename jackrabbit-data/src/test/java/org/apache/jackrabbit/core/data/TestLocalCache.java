@@ -25,14 +25,11 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 
-import junit.framework.TestCase;
-
-import org.apache.jackrabbit.core.data.AsyncUploadCache;
-import org.apache.jackrabbit.core.data.AsyncUploadCacheResult;
-import org.apache.jackrabbit.core.data.LocalCache;
 import org.apache.jackrabbit.core.fs.local.FileUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import junit.framework.TestCase;
 
 /**
  * Testcase to test local cache.

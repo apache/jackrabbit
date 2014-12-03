@@ -526,8 +526,8 @@ public class LocalCache {
                         Map.Entry<String, Long> entry = itr.next();
                         if (entry.getKey() != null) {
                             if (cache.currentSizeInBytes > cache.cachePurgeResize) {
-                                itr.remove();
-
+                                cache.remove(entry.getKey());
+                                itr = cache.entrySet().iterator();
                             } else {
                                 break;
                             }
