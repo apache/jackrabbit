@@ -68,6 +68,17 @@ public interface UserManager {
     Authorizable getAuthorizable(String id) throws RepositoryException;
 
     /**
+     * Get the Authorizable of a specific type by its id.
+     *
+     * @param id the user of group id.
+     * @param authorizableClass the type of Authorizable required.
+     * @return Authorizable or <code>null</code>, if not present.
+     * @throws AuthorizableTypeException If an authorizable exists but is not of the requested type.
+     * @throws RepositoryException If an error occurs
+     */
+    <T> T getAuthorizable(String id, Class<T> authorizableClass) throws AuthorizableTypeException, RepositoryException;
+
+    /**
      * Get the Authorizable by its Principal.
      *
      * @param principal The principal of the authorizable to retrieve.
@@ -75,6 +86,17 @@ public interface UserManager {
      * @throws RepositoryException If an error occurs.
      */
     Authorizable getAuthorizable(Principal principal) throws RepositoryException;
+
+    /**
+     * Get the Authorizable of a specific type by its Principal.
+     *
+     * @param principal The principal of the Authorizable to retrieve.
+     * @param authorizableClass the type of Authorizable required.
+     * @return Authorizable or <code>null</code>, if not present.
+     * @throws AuthorizableTypeException If an authorizable exists but is not of the requested type.
+     * @throws RepositoryException If an error occurs.
+     */
+    <T> T getAuthorizable(Principal principal, Class<T> authorizableClass) throws AuthorizableTypeException, RepositoryException;
 
     /**
      * In accordance to {@link org.apache.jackrabbit.api.security.user.Authorizable#getPath()}
@@ -88,6 +110,18 @@ public interface UserManager {
      * @see org.apache.jackrabbit.api.security.user.Authorizable#getPath()
      */
     Authorizable getAuthorizableByPath(String path) throws UnsupportedRepositoryOperationException, RepositoryException;
+
+    /**
+     * In accordance to {@link org.apache.jackrabbit.api.security.user.Authorizable#getPath()}
+     * this method allows to retrieve an authorizable of a specific type by it's path.
+     *
+     * @param path The path to an authorizable.
+     * @param authorizableClass the type of Authorizable required.
+     * @return Authorizable or <code>null</code>, if not present.
+     * @throws AuthorizableTypeException If an authorizable exists but is not of the requested type.
+     * @throws RepositoryException If another error occurs.
+     */
+    <T> T getAuthorizableByPath(String path, Class<T> authorizableClass) throws AuthorizableTypeException, RepositoryException;
 
     /**
      * Returns all <code>Authorizable</code>s that have a
