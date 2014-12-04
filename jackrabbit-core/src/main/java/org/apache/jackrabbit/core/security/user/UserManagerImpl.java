@@ -19,6 +19,7 @@ package org.apache.jackrabbit.core.security.user;
 import org.apache.jackrabbit.api.security.principal.ItemBasedPrincipal;
 import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.jackrabbit.api.security.user.AuthorizableExistsException;
+import org.apache.jackrabbit.api.security.user.AuthorizableTypeException;
 import org.apache.jackrabbit.api.security.user.Group;
 import org.apache.jackrabbit.api.security.user.Query;
 import org.apache.jackrabbit.api.security.user.User;
@@ -451,6 +452,13 @@ public class UserManagerImpl extends ProtectedItemModifier
     }
 
     /**
+     * @see UserManager#getAuthorizable(String, Class)
+     */
+    public <T> T getAuthorizable(String id, Class<T> authorizableClass) throws AuthorizableTypeException, RepositoryException {
+        return getAuthorizableByType(getAuthorizable(id), authorizableClass);
+    }
+
+    /**
      * @see UserManager#getAuthorizable(Principal)
      */
     public Authorizable getAuthorizable(Principal principal) throws RepositoryException {
@@ -490,6 +498,13 @@ public class UserManagerImpl extends ProtectedItemModifier
     }
 
     /**
+     * @see UserManager#getAuthorizable(Principal, Class)
+     */
+    public <T> T getAuthorizable(Principal principal, Class<T> authorizableClass) throws AuthorizableTypeException, RepositoryException {
+        return getAuthorizableByType(getAuthorizable(principal), authorizableClass);
+    }
+
+    /**
      * Always throws <code>UnsupportedRepositoryOperationException</code> since
      * this implementation of the user management API does not allow to retrieve
      * the path of an authorizable.
@@ -498,6 +513,13 @@ public class UserManagerImpl extends ProtectedItemModifier
      */
     public Authorizable getAuthorizableByPath(String path) throws UnsupportedRepositoryOperationException, RepositoryException {
         throw new UnsupportedRepositoryOperationException();
+    }
+
+    /**
+     * @see UserManager#getAuthorizableByPath(String, Class)
+     */
+    public <T> T getAuthorizableByPath(String path, Class<T> authorizableClass) throws AuthorizableTypeException, RepositoryException {
+        return getAuthorizableByType(getAuthorizableByPath(path), authorizableClass);
     }
 
     /**
@@ -909,6 +931,13 @@ public class UserManagerImpl extends ProtectedItemModifier
         }
 
         return getAuthorizable(n);
+    }
+
+    private <T> T getAuthorizableByType(Authorizable authorizable, Class<T> authorizableClass) throws AuthorizableTypeException {
+        if (authorizable == null || authorizableClass.isInstance(authorizable)) {
+            return authorizableClass.cast(authorizable);
+        }
+        throw new AuthorizableTypeException("Invalid authorizable type '" + authorizable.getClass() + "'");
     }
 
     private Value getValue(String strValue) {

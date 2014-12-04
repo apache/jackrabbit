@@ -70,4 +70,51 @@ public class UserManagerTest extends AbstractUserTest {
             throw new NotExecutableException();
         }
     }
+
+    public void testGetAuthorizableByPathAndType() throws NotExecutableException, RepositoryException {
+        String uid = superuser.getUserID();
+        Authorizable a = userMgr.getAuthorizable(uid);
+        if (a == null) {
+            throw new NotExecutableException();
+        }
+        try {
+            String path = a.getPath();
+            Authorizable a2 = userMgr.getAuthorizableByPath(path, a.getClass());
+            assertNotNull(a2);
+            assertEquals(a.getID(), a2.getID());
+        } catch (UnsupportedRepositoryOperationException e) {
+            throw new NotExecutableException();
+        }
+    }
+
+    public void testGetAuthorizableByIdAndType() throws NotExecutableException, RepositoryException {
+        for (Principal principal : getPrincipalSetFromSession(superuser)) {
+            Principal p = principal;
+            Authorizable auth = userMgr.getAuthorizable(p);
+            if (auth != null) {
+                Authorizable authByID = userMgr.getAuthorizable(auth.getID(), auth.getClass());
+                assertEquals("Equal ID expected", auth.getID(), authByID.getID());
+            }
+        }
+    }
+
+    public void testGetAuthorizableByIdAndWrongType() throws NotExecutableException, RepositoryException {
+        for (Principal principal : getPrincipalSetFromSession(superuser)) {
+            Principal p = principal;
+            Authorizable auth = userMgr.getAuthorizable(p);
+            if (auth != null) {
+                Class<? extends Authorizable> otherType = auth.isGroup() ? User.class : Group.class;
+                try {
+                    userMgr.getAuthorizable(auth.getID(), otherType);
+                    fail("Wrong Authorizable type is not detected.");
+                } catch (AuthorizableTypeException ignore) {
+                }
+            }
+        }
+    }
+
+    public void testGetNonExistingAuthorizableByIdAndType() throws NotExecutableException, RepositoryException {
+        Authorizable auth = userMgr.getAuthorizable("nonExistingAuthorizable", User.class);
+        assertNull(auth);
+    }
 }

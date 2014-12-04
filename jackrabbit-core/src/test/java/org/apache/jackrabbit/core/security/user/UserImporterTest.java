@@ -21,6 +21,7 @@ import org.apache.jackrabbit.api.security.principal.PrincipalIterator;
 import org.apache.jackrabbit.api.security.principal.PrincipalManager;
 import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.jackrabbit.api.security.user.AuthorizableExistsException;
+import org.apache.jackrabbit.api.security.user.AuthorizableTypeException;
 import org.apache.jackrabbit.api.security.user.Group;
 import org.apache.jackrabbit.api.security.user.Impersonation;
 import org.apache.jackrabbit.api.security.user.Query;
@@ -1593,11 +1594,23 @@ public class UserImporterTest extends AbstractJCRTest {
                     return null;
                 }
 
+                public <T> T getAuthorizable(String id, Class<T> authorizableClass) throws AuthorizableTypeException, RepositoryException {
+                    return null;
+                }
+
                 public Authorizable getAuthorizable(Principal principal) throws RepositoryException {
                     return null;
                 }
 
+                public <T> T getAuthorizable(Principal principal, Class<T> authorizableClass) throws AuthorizableTypeException, RepositoryException {
+                    return null;
+                }
+
                 public Authorizable getAuthorizableByPath(String path) throws UnsupportedRepositoryOperationException, RepositoryException {
+                    return null;
+                }
+
+                public <T> T getAuthorizableByPath(String path, Class<T> authorizableClass) throws AuthorizableTypeException, RepositoryException {
                     return null;
                 }
 
