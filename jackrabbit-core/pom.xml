@@ -114,6 +114,7 @@ org.apache.jackrabbit.test.api.lock.SessionScopedLockTest#testLockExpiration
 org.apache.jackrabbit.test.api.observation.NodeReorderTest#testNodeReorderMove
 org.apache.jackrabbit.core.data.ConcurrentGcTest#testDatabases
 org.apache.jackrabbit.core.data.GarbageCollectorTest#testCloseSessionWhileRunningGc
+org.apache.jackrabbit.core.ReplacePropertyWhileOthersReadTest <!-- JCR-3835 -->
               </value>
             </property>
             <property>
