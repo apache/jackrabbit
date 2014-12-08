@@ -65,6 +65,7 @@ org.apache.jackrabbit.test.api.query.qom.EquiJoinConditionTest#testLeftOuterJoin
               </value>
             </property>
           </systemProperties>
+          <runOrder>reversealphabetical</runOrder>
         </configuration>
       </plugin>
       <plugin>
