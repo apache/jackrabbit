@@ -28,13 +28,13 @@ import org.apache.jackrabbit.test.JUnitTest;
  * Tests converting BigDecimal to String and back.
  */
 public class DecimalConvertTest extends JUnitTest {
-    
+
     public void testCommon() {
         // System.out.println(DecimalField.decimalToString(new BigDecimal(0)));
         // System.out.println(DecimalField.decimalToString(new BigDecimal(2)));
         // System.out.println(DecimalField.decimalToString(new BigDecimal(120)));
         // System.out.println(DecimalField.decimalToString(new BigDecimal(-1)));
-        
+
         ArrayList<BigDecimal> list = new ArrayList<BigDecimal>();
         list.add(BigDecimal.ZERO);
         list.add(BigDecimal.ONE);
@@ -56,8 +56,22 @@ public class DecimalConvertTest extends JUnitTest {
         list.add(new BigDecimal("-1.23E-10"));
         testWithList(list);
     }
-    
+
+    public void testMinimumScale() {
+        if (true) { // JCR-3834
+            return;
+        }
+        final BigDecimal d1 = new BigDecimal(BigInteger.ONE, Integer.MIN_VALUE);
+        final BigDecimal d2 = new BigDecimal(BigInteger.ONE, Integer.MIN_VALUE+1);
+        final String s1 = DecimalField.decimalToString(d1);
+        final String s2 = DecimalField.decimalToString(d2);
+        assertEquals(Math.signum(d1.compareTo(d2)), Math.signum(s1.compareTo(s2)));
+    }
+
     public void testRandomized() {
+        if (true) { // JCR-3834
+            return;
+        }
         ArrayList<BigDecimal> list = new ArrayList<BigDecimal>();
         list.add(BigDecimal.ZERO);
         list.add(BigDecimal.ONE);
@@ -86,7 +100,7 @@ public class DecimalConvertTest extends JUnitTest {
         }
         testWithList(list);
     }
-    
+
     private void testWithList(ArrayList<BigDecimal> list) {
         // add negative values
         for (BigDecimal d : new ArrayList<BigDecimal>(list)) {
@@ -98,7 +112,7 @@ public class DecimalConvertTest extends JUnitTest {
         for (BigDecimal d : list) {
             String s = DecimalField.decimalToString(d);
             if (lastDecimal != null) {
-                int compDecimal = lastDecimal.compareTo(d);
+                int compDecimal = (int) Math.signum(lastDecimal.compareTo(d));
                 int compString = (int) Math.signum(lastString.compareTo(s));
                 if (compDecimal != compString) {
                     assertEquals(compDecimal, compString);
