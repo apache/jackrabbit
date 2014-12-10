@@ -70,7 +70,6 @@ public class NodeTypeDefDiffTest extends TestCase {
         newDef.setPropertyDefs(new QPropertyDefinition[]{newPropDef.build()});
 
         QNodeDefinitionBuilder newChildDef = new QNodeDefinitionBuilder();
-        newChildDef.setRequiredPrimaryTypes(new Name[]{ NameConstants.NT_BASE, NODE_TYPE1, NameConstants.NT_FOLDER });
         newChildDef.setRequiredPrimaryTypes(new Name[]{ NODE_TYPE1, NameConstants.NT_BASE });
         newChildDef.setName(CHILD_NAME);
         newChildDef.setDeclaringNodeType(oldDef.getName());
@@ -86,5 +85,55 @@ public class NodeTypeDefDiffTest extends TestCase {
         // add nt:folder to a node def's requiredPrimaryType constraint
         nodeTypeDefDiff = NodeTypeDefDiff.create(newDef.build(), oldDef.build());
         assertTrue(nodeTypeDefDiff.isMajor());
+    }
+
+    public void testChangedSameNameChildNodeDefinition() throws Exception {
+        // old node type definition
+        QNodeTypeDefinitionBuilder oldDef = new QNodeTypeDefinitionBuilder();
+        oldDef.setName(NODE_TYPE1);
+        oldDef.setSupertypes(new Name[] { NameConstants.NT_BASE });
+
+        QNodeDefinitionBuilder oldChildDef1 = new QNodeDefinitionBuilder();
+        oldChildDef1.setRequiredPrimaryTypes(new Name[]{ NameConstants.NT_FOLDER });
+        oldChildDef1.setName(CHILD_NAME);
+        oldChildDef1.setDeclaringNodeType(oldDef.getName());
+
+        QNodeDefinitionBuilder oldChildDef2 = new QNodeDefinitionBuilder();
+        oldChildDef2.setRequiredPrimaryTypes(new Name[]{ NameConstants.NT_FILE });
+        oldChildDef2.setName(CHILD_NAME);
+        oldChildDef2.setDeclaringNodeType(oldDef.getName());
+
+        oldDef.setChildNodeDefs(new QNodeDefinition[] { oldChildDef1.build(), oldChildDef2.build() });
+
+        // new node type definition
+        QNodeTypeDefinitionBuilder newDef = new QNodeTypeDefinitionBuilder();
+        newDef.setName(NODE_TYPE1);
+        newDef.setSupertypes(new Name[] { NameConstants.NT_BASE });
+
+        QNodeDefinitionBuilder newChildDef1 = new QNodeDefinitionBuilder();
+        newChildDef1.setRequiredPrimaryTypes(new Name[]{ NameConstants.NT_FOLDER });
+        newChildDef1.setName(CHILD_NAME);
+        newChildDef1.setDeclaringNodeType(oldDef.getName());
+
+        QNodeDefinitionBuilder newChildDef2 = new QNodeDefinitionBuilder();
+        newChildDef2.setRequiredPrimaryTypes(new Name[]{ NameConstants.NT_FILE });
+        newChildDef2.setName(CHILD_NAME);
+        newChildDef2.setDeclaringNodeType(oldDef.getName());
+
+        QNodeDefinitionBuilder newChildDef3 = new QNodeDefinitionBuilder();
+        newChildDef3.setRequiredPrimaryTypes(new Name[]{ NameConstants.NT_RESOURCE });
+        newChildDef3.setName(CHILD_NAME);
+        newChildDef3.setDeclaringNodeType(oldDef.getName());
+
+        newDef.setChildNodeDefs(new QNodeDefinition[] { newChildDef1.build(), newChildDef2.build(), newChildDef3.build() });
+
+        // from old to new is trivial
+        NodeTypeDefDiff nodeTypeDefDiff = NodeTypeDefDiff.create(oldDef.build(), newDef.build());
+        assertTrue(nodeTypeDefDiff.isTrivial());
+
+        // .. but the reverse is not
+        nodeTypeDefDiff = NodeTypeDefDiff.create(newDef.build(), oldDef.build());
+        assertTrue(nodeTypeDefDiff.isMajor());
+
     }
 }

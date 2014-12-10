@@ -27,6 +27,9 @@ import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import javax.jcr.PropertyType;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -280,48 +283,41 @@ public class NodeTypeDefDiff {
      */
     private int buildChildNodeDefDiffs() {
         int maxType = NONE;
-        QNodeDefinition[] cnda1 = oldDef.getChildNodeDefs();
-        Map<QNodeDefinitionId, QNodeDefinition> defs1 = new HashMap<QNodeDefinitionId, QNodeDefinition>();
-        for (QNodeDefinition def1 : cnda1) {
-            defs1.put(new QNodeDefinitionId(def1), def1);
+        final Map<QNodeDefinitionId, List<QNodeDefinition>> oldDefs = collectChildNodeDefs(oldDef.getChildNodeDefs());
+        final Map<QNodeDefinitionId, List<QNodeDefinition>> newDefs = collectChildNodeDefs(newDef.getChildNodeDefs());
+
+        for (QNodeDefinitionId defId : oldDefs.keySet()) {
+            final ChildNodeDefDiffs childNodeDefDiffs = new ChildNodeDefDiffs(oldDefs.get(defId), newDefs.get(defId));
+            this.childNodeDefDiffs.addAll(childNodeDefDiffs.getChildNodeDefDiffs());
+            newDefs.remove(defId);
         }
 
-        QNodeDefinition[] cnda2 = newDef.getChildNodeDefs();
-        Map<QNodeDefinitionId, QNodeDefinition> defs2 = new HashMap<QNodeDefinitionId, QNodeDefinition>();
-        for (QNodeDefinition def2 : cnda2) {
-            defs2.put(new QNodeDefinitionId(def2), def2);
+        for (QNodeDefinitionId defId : newDefs.keySet()) {
+            final ChildNodeDefDiffs childNodeDefDiffs = new ChildNodeDefDiffs(null, newDefs.get(defId));
+            this.childNodeDefDiffs.addAll(childNodeDefDiffs.getChildNodeDefDiffs());
         }
 
-        /**
-         * walk through defs1 and process all entries found in
-         * both defs1 & defs2 and those found only in defs1
-         */
-        for (Map.Entry<QNodeDefinitionId, QNodeDefinition> entry1 : defs1.entrySet()) {
-            QNodeDefinitionId id = entry1.getKey();
-            QNodeDefinition def1 = entry1.getValue();
-            QNodeDefinition def2 = defs2.get(id);
-            ChildNodeDefDiff diff = new ChildNodeDefDiff(def1, def2);
+        for (ChildNodeDefDiff diff : childNodeDefDiffs) {
             if (diff.getType() > maxType) {
                 maxType = diff.getType();
             }
-            childNodeDefDiffs.add(diff);
-            defs2.remove(id);
-        }
-
-        /**
-         * defs2 by now only contains entries found in defs2 only;
-         * walk through defs2 and process all remaining entries
-         */
-        for (Map.Entry<QNodeDefinitionId, QNodeDefinition> entry2 : defs2.entrySet()) {
-            QNodeDefinition def2 = entry2.getValue();
-            ChildNodeDefDiff diff = new ChildNodeDefDiff(null, def2);
-            if (diff.getType() > maxType) {
-                maxType = diff.getType();
-            }
-            childNodeDefDiffs.add(diff);
         }
 
         return maxType;
+    }
+
+    private Map<QNodeDefinitionId, List<QNodeDefinition>> collectChildNodeDefs(final QNodeDefinition[] cnda1) {
+        Map<QNodeDefinitionId, List<QNodeDefinition>> defs1 = new HashMap<QNodeDefinitionId, List<QNodeDefinition>>();
+        for (QNodeDefinition def1 : cnda1) {
+            final QNodeDefinitionId def1Id = new QNodeDefinitionId(def1);
+            List<QNodeDefinition> list = defs1.get(def1Id);
+            if (list == null) {
+                list = new ArrayList<QNodeDefinition>();
+                defs1.put(def1Id, list);
+            }
+            list.add(def1);
+        }
+        return defs1;
     }
 
     @Override
@@ -697,6 +693,69 @@ public class NodeTypeDefDiff {
             h = 37 * h + declaringNodeType.hashCode();
             h = 37 * h + name.hashCode();
             return h;
+        }
+    }
+
+    private class ChildNodeDefDiffs {
+
+        private final List<QNodeDefinition> defs1;
+        private final List<QNodeDefinition> defs2;
+
+        private ChildNodeDefDiffs(final List<QNodeDefinition> defs1, final List<QNodeDefinition> defs2) {
+            this.defs1 = defs1 != null ? defs1 : Collections.<QNodeDefinition>emptyList();
+            this.defs2 = defs2 != null ? defs2 : Collections.<QNodeDefinition>emptyList();
+        }
+
+        private Collection<ChildNodeDefDiff> getChildNodeDefDiffs() {
+            // gather all possible combinations of diffs
+            final List<ChildNodeDefDiff> diffs = new ArrayList<ChildNodeDefDiff>();
+            for (QNodeDefinition def1 : defs1) {
+                for (QNodeDefinition def2 : defs2) {
+                    diffs.add(new ChildNodeDefDiff(def1, def2));
+                }
+            }
+            if (defs2.size() < defs1.size()) {
+                for (QNodeDefinition def1 : defs1) {
+                    diffs.add(new ChildNodeDefDiff(def1, null));
+                }
+            }
+            if (defs1.size() < defs2.size()) {
+                for (QNodeDefinition def2 : defs2) {
+                    diffs.add(new ChildNodeDefDiff(null, def2));
+                }
+            }
+            // sort them according to decreasing compatibility
+            Collections.sort(diffs, new Comparator<ChildNodeDefDiff>() {
+                @Override
+                public int compare(final ChildNodeDefDiff o1, final ChildNodeDefDiff o2) {
+                    return o1.getType() - o2.getType();
+                }
+            });
+            // select the most compatible ones
+            final int size = defs1.size() > defs2.size() ? defs1.size() : defs2.size();
+            final List<ChildNodeDefDiff> results = new ArrayList<ChildNodeDefDiff>();
+            for (ChildNodeDefDiff diff : diffs) {
+                if (!alreadyMatched(results, diff.getNewDef(), diff.getOldDef())) {
+                    results.add(diff);
+                }
+                if (results.size() == size) {
+                    break;
+                }
+            }
+            return results;
+        }
+
+        private boolean alreadyMatched(final List<ChildNodeDefDiff> result, final QNodeDefinition newDef, final QNodeDefinition oldDef) {
+            boolean containsNewDef = false, containsOldDef = false;
+            for (ChildNodeDefDiff d : result) {
+                if (d.getNewDef() != null && d.getNewDef().equals(newDef)) {
+                    containsNewDef = true;
+                }
+                if (d.getOldDef() != null && d.getOldDef().equals(oldDef)) {
+                    containsOldDef = true;
+                }
+            }
+            return containsNewDef || containsOldDef;
         }
     }
 }
