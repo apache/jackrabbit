@@ -36,6 +36,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * A <code>NodeTypeDefDiff</code> represents the result of the comparison of
@@ -716,12 +717,16 @@ public class NodeTypeDefDiff {
             }
             if (defs2.size() < defs1.size()) {
                 for (QNodeDefinition def1 : defs1) {
-                    diffs.add(new ChildNodeDefDiff(def1, null));
+                    for (int i = 0; i < defs1.size() - defs2.size(); i++) {
+                        diffs.add(new ChildNodeDefDiff(def1, null));
+                    }
                 }
             }
             if (defs1.size() < defs2.size()) {
                 for (QNodeDefinition def2 : defs2) {
-                    diffs.add(new ChildNodeDefDiff(null, def2));
+                    for (int i = 0; i < defs2.size() - defs1.size(); i++) {
+                        diffs.add(new ChildNodeDefDiff(null, def2));
+                    }
                 }
             }
             // sort them according to decreasing compatibility
@@ -733,10 +738,18 @@ public class NodeTypeDefDiff {
             });
             // select the most compatible ones
             final int size = defs1.size() > defs2.size() ? defs1.size() : defs2.size();
+            AtomicInteger allowedNewNull = new AtomicInteger(defs1.size() - defs2.size());
+            AtomicInteger allowedOldNull = new AtomicInteger(defs2.size() - defs1.size());
             final List<ChildNodeDefDiff> results = new ArrayList<ChildNodeDefDiff>();
             for (ChildNodeDefDiff diff : diffs) {
-                if (!alreadyMatched(results, diff.getNewDef(), diff.getOldDef())) {
+                if (!alreadyMatched(results, diff.getNewDef(), diff.getOldDef(), allowedNewNull, allowedOldNull)) {
                     results.add(diff);
+                    if (diff.getNewDef() == null) {
+                        allowedNewNull.decrementAndGet();
+                    }
+                    if (diff.getOldDef() == null) {
+                        allowedOldNull.decrementAndGet();
+                    }
                 }
                 if (results.size() == size) {
                     break;
@@ -745,17 +758,31 @@ public class NodeTypeDefDiff {
             return results;
         }
 
-        private boolean alreadyMatched(final List<ChildNodeDefDiff> result, final QNodeDefinition newDef, final QNodeDefinition oldDef) {
+        private boolean alreadyMatched(final List<ChildNodeDefDiff> result, final QNodeDefinition newDef, final QNodeDefinition oldDef, final AtomicInteger allowedNewNull, final AtomicInteger allowedOldNull) {
             boolean containsNewDef = false, containsOldDef = false;
             for (ChildNodeDefDiff d : result) {
                 if (d.getNewDef() != null && d.getNewDef().equals(newDef)) {
                     containsNewDef = true;
+                    break;
                 }
                 if (d.getOldDef() != null && d.getOldDef().equals(oldDef)) {
                     containsOldDef = true;
+                    break;
                 }
             }
+            if (oldDef == null) {
+                if (allowedOldNull.get() < 1) {
+                    containsOldDef = true;
+                }
+            }
+            if (newDef == null) {
+                if (allowedNewNull.get() < 1) {
+                    containsNewDef = true;
+                }
+            }
+
             return containsNewDef || containsOldDef;
         }
     }
+
 }
