@@ -717,16 +717,12 @@ public class NodeTypeDefDiff {
             }
             if (defs2.size() < defs1.size()) {
                 for (QNodeDefinition def1 : defs1) {
-                    for (int i = 0; i < defs1.size() - defs2.size(); i++) {
-                        diffs.add(new ChildNodeDefDiff(def1, null));
-                    }
+                    diffs.add(new ChildNodeDefDiff(def1, null));
                 }
             }
             if (defs1.size() < defs2.size()) {
                 for (QNodeDefinition def2 : defs2) {
-                    for (int i = 0; i < defs2.size() - defs1.size(); i++) {
-                        diffs.add(new ChildNodeDefDiff(null, def2));
-                    }
+                    diffs.add(new ChildNodeDefDiff(null, def2));
                 }
             }
             // sort them according to decreasing compatibility
