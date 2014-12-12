@@ -102,6 +102,15 @@ public interface Batch {
     public void addNode(NodeId parentId, Name nodeName, Name nodetypeName, String uuid) throws RepositoryException;
 
     /**
+     * Add a new content tree to the persistent layer.
+     * NOTE: that the current use-case of {@link Batch#setTree(NodeId, Tree)} is to add
+     * a content tree representing an ACL policy to the Batch in one bulk.
+     * @param parentId
+     * @param contentTree
+     * @throws RepositoryException
+     */
+    public void setTree(NodeId parentId, Tree contentTree) throws RepositoryException;
+    /**
      * Add a new property to the persistent layer.
      * <p>
      * Note: this call should succeed in case the property already exists.

@@ -25,6 +25,7 @@ import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.PropertyId;
 import org.apache.jackrabbit.spi.QValue;
+import org.apache.jackrabbit.spi.Tree;
 
 /**
  * This {@link ChangeLog} implementation simply keeps back all calls to its {@link Batch} methods as
@@ -40,6 +41,10 @@ public class ChangeLogImpl extends AbstractChangeLog<Operation> {
         addOperation(Operations.addNode(parentId, nodeName, nodetypeName, uuid));
     }
 
+    public void setTree(NodeId parentId, Tree aclTree) throws RepositoryException {
+        addOperation(Operations.setTree(parentId, aclTree));
+    }
+    
     public void addProperty(NodeId parentId, Name propertyName, QValue value) throws RepositoryException {
         addOperation(Operations.addProperty(parentId, propertyName, value));
     }

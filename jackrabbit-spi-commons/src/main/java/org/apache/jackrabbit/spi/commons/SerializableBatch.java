@@ -22,6 +22,7 @@ import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.spi.PropertyId;
 import org.apache.jackrabbit.spi.ItemId;
 import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.Tree;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.ValueFormatException;
@@ -88,6 +89,11 @@ public class SerializableBatch implements Batch, Serializable {
         recording.add(new AddNode(parentId, nodeName, nodetypeName, uuid));
     }
 
+    public void setTree(NodeId parentId, Tree aclTree)
+            throws RepositoryException {
+        recording.add(new SetTree(parentId, aclTree));
+    }
+    
     public void addProperty(NodeId parentId, Name propertyName, QValue value) {
         recording.add(new AddProperty(parentId, propertyName,
                 new QValue[]{value}, false));
@@ -170,6 +176,25 @@ public class SerializableBatch implements Batch, Serializable {
         }
     }
 
+    private static class SetTree implements Operation {
+
+        private final NodeId parentId;
+
+        private final Tree aclTree;
+
+        SetTree(NodeId parentId, Tree aclTree) {
+            this.parentId = parentId;
+            this.aclTree = aclTree;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        public void replay(Batch batch) throws RepositoryException {
+            batch.setTree(parentId, aclTree);
+        }
+    }
+    
     private static class AddProperty implements Operation {
 
         private final NodeId parentId;

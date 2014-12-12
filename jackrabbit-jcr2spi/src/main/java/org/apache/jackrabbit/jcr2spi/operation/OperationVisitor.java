@@ -35,6 +35,8 @@ import javax.jcr.version.VersionException;
 public interface OperationVisitor {
 
     public void visit(AddNode operation) throws RepositoryException;
+    
+    public void visit(SetPolicy operation) throws RepositoryException;
 
     public void visit(AddProperty operation) throws RepositoryException;
 

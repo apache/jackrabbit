@@ -34,12 +34,15 @@ import javax.jcr.Item;
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
+import javax.jcr.Property;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.Value;
 import javax.jcr.ValueFactory;
 import javax.jcr.ValueFormatException;
+import javax.jcr.nodetype.ItemDefinition;
 import javax.jcr.nodetype.NodeDefinition;
 import javax.jcr.nodetype.NodeType;
 import javax.jcr.nodetype.NodeTypeManager;
@@ -47,6 +50,7 @@ import javax.jcr.nodetype.PropertyDefinition;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Stack;
 import java.util.LinkedList;
@@ -172,7 +176,15 @@ class JsonDiffHandler implements DiffHandler {
         }
         try {
             String itemPath = getItemPath(targetPath);
-            session.getItem(itemPath).remove();
+            Item item = session.getItem(itemPath);
+            
+            ItemDefinition def = (item.isNode()) ? ((Node) item).getDefinition() : ((Property) item).getDefinition();
+            if (def.isProtected()) {
+                // delegate to the manager.
+                ProtectedRemoveManager.remove(itemPath);
+            } else {
+                item.remove();
+            }
         } catch (RepositoryException e) {
             throw new DiffException(e.getMessage(), e);
         }
@@ -245,6 +257,10 @@ class JsonDiffHandler implements DiffHandler {
     }
 
     //--------------------------------------------------------------------------
+    public void load(InputStream inStream) throws RepositoryException {
+        ProtectedRemoveManager.load(session, inStream);
+    }
+    
     /**
      * 
      * @param diffPath
@@ -954,6 +970,11 @@ class JsonDiffHandler implements DiffHandler {
         @Override
         void startValueElement(ContentHandler contentHandler) throws IOException {
             try {
+                // Multi-valued property with values present in the request multi-part
+                if (values.size() == 0) {
+                    values = Arrays.asList(extractValuesFromRequest(name));
+                }
+                
                 for (Value v : values) {
                     String str = v.getString();
                     contentHandler.startElement(Name.NS_SV_URI, VALUE, Name.NS_SV_PREFIX+":"+VALUE, new AttributesImpl());

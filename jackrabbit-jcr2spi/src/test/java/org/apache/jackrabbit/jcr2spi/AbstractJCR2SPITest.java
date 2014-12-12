@@ -172,10 +172,16 @@ public abstract class AbstractJCR2SPITest extends TestCase implements Repository
                 return AbstractJCR2SPITest.this.getPrivilegeDefinitions(sessionInfo);
             }
 
+            @Override
             public PrivilegeDefinition[] getSupportedPrivileges(SessionInfo sessionInfo, NodeId nodeId) throws RepositoryException {
                 return AbstractJCR2SPITest.this.getSupportedPrivileges(sessionInfo, nodeId);
             }
 
+            @Override
+            public PrivilegeDefinition[] getPrivileges(SessionInfo sessionInfo, NodeId nodeId) throws RepositoryException {
+                return AbstractJCR2SPITest.this.getPrivileges(sessionInfo, nodeId);
+            }
+            
             @Override
             public NodeInfo getNodeInfo(SessionInfo sessionInfo, NodeId nodeId) throws ItemNotFoundException,
                     RepositoryException {
@@ -282,6 +288,11 @@ public abstract class AbstractJCR2SPITest extends TestCase implements Repository
     public PrivilegeDefinition[] getSupportedPrivileges(
             SessionInfo sessionInfo, NodeId nodeId) throws RepositoryException {
         return repositoryService.getSupportedPrivileges(sessionInfo, nodeId);
+    }
+    
+    public PrivilegeDefinition[] getPrivileges(
+            SessionInfo sessionInfo, NodeId nodeId) throws RepositoryException {
+        return repositoryService.getPrivileges(sessionInfo, nodeId);
     }
     //-----------------------------------< SessionInfo creation and release >---
 
