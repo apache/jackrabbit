@@ -45,6 +45,7 @@ import org.apache.jackrabbit.spi.QNodeTypeDefinition;
 import org.apache.jackrabbit.spi.Event;
 import org.apache.jackrabbit.spi.ItemInfo;
 import org.apache.jackrabbit.spi.ChildInfo;
+import org.apache.jackrabbit.spi.Tree;
 import org.apache.jackrabbit.spi.commons.EventFilterImpl;
 import org.apache.jackrabbit.spi.commons.EventBundleImpl;
 import org.apache.jackrabbit.spi.commons.ItemInfoCacheImpl;
@@ -373,6 +374,29 @@ public class RepositoryServiceImpl implements RepositoryService {
         return pDefs;
     }
 
+    @Override
+    public PrivilegeDefinition[] getPrivileges(SessionInfo sessionInfo, NodeId nodeId) throws RepositoryException {
+        SessionInfoImpl sInfo = getSessionInfoImpl(sessionInfo);
+        String path = (nodeId == null) ? null : pathForId(nodeId, sInfo);
+        NamePathResolver npResolver = sInfo.getNamePathResolver();
+        
+        Privilege[] privs = sInfo.getSession().getAccessControlManager().getPrivileges(path);
+        List<PrivilegeDefinition> pDefs = new ArrayList<PrivilegeDefinition>(privs.length);
+        for (Privilege priv : privs) {
+            Name privName = npResolver.getQName(priv.getName());
+            Set<Name> aggrNames = null;
+            if (priv.isAggregate()) {
+                aggrNames = new HashSet<Name>();
+                for (Privilege dap : priv.getDeclaredAggregatePrivileges()) {
+                    aggrNames.add(npResolver.getQName(dap.getName()));
+                }
+            }
+            PrivilegeDefinition def = new PrivilegeDefinitionImpl(privName, priv.isAbstract(), aggrNames);
+            pDefs.add(def);
+        }
+        return pDefs.toArray(new PrivilegeDefinition[pDefs.size()]);
+    }
+    
     public PrivilegeDefinition[] getSupportedPrivileges(SessionInfo sessionInfo, NodeId nodeId) throws RepositoryException {
         SessionInfoImpl sInfo = getSessionInfoImpl(sessionInfo);
         String path = (nodeId == null) ? null : pathForId(nodeId, sInfo);
@@ -577,6 +601,11 @@ public class RepositoryServiceImpl implements RepositoryService {
             throw new RepositoryException("Unknown Batch implementation: " +
                     batch.getClass().getName());
         }
+    }
+
+    @Override
+    public Tree createTree(SessionInfo sessionInfo, Batch batch, Name nodeName, Name primaryTypeName, String uniqueId) throws RepositoryException {
+        return new XmlTree(nodeName, primaryTypeName, uniqueId, getSessionInfoImpl(sessionInfo).getNamePathResolver());
     }
 
     /**
@@ -1453,6 +1482,8 @@ public class RepositoryServiceImpl implements RepositoryService {
             this.sInfo = sInfo;
         }
 
+        //----------------------------------------------------------< Batch >---
+        @Override
         public void addNode(final NodeId parentId,
                             final Name nodeName,
                             final Name nodetypeName,
@@ -1484,6 +1515,7 @@ public class RepositoryServiceImpl implements RepositoryService {
             });
         }
 
+        @Override
         public void addProperty(final NodeId parentId,
                                 final Name propertyName,
                                 final QValue value)
@@ -1500,6 +1532,7 @@ public class RepositoryServiceImpl implements RepositoryService {
             });
         }
 
+        @Override
         public void addProperty(final NodeId parentId,
                                 final Name propertyName,
                                 final QValue[] values) throws ValueFormatException, VersionException, LockException, ConstraintViolationException, PathNotFoundException, ItemExistsException, AccessDeniedException, UnsupportedRepositoryOperationException, RepositoryException {
@@ -1518,6 +1551,7 @@ public class RepositoryServiceImpl implements RepositoryService {
             });
         }
 
+        @Override
         public void setValue(final PropertyId propertyId, final QValue value)
                 throws RepositoryException {
             executeGuarded(new Callable() {
@@ -1531,6 +1565,7 @@ public class RepositoryServiceImpl implements RepositoryService {
             });
         }
 
+        @Override
         public void setValue(final PropertyId propertyId, final QValue[] values)
                 throws RepositoryException {
             executeGuarded(new Callable() {
@@ -1547,6 +1582,7 @@ public class RepositoryServiceImpl implements RepositoryService {
             });
         }
 
+        @Override
         public void remove(final ItemId itemId) throws RepositoryException {
             executeGuarded(new Callable() {
                 public Object run() throws RepositoryException {
@@ -1594,6 +1630,7 @@ public class RepositoryServiceImpl implements RepositoryService {
             return nodeId;
         }
 
+        @Override
         public void reorderNodes(final NodeId parentId,
                                  final NodeId srcNodeId,
                                  final NodeId beforeNodeId)
@@ -1623,6 +1660,7 @@ public class RepositoryServiceImpl implements RepositoryService {
             });
         }
 
+        @Override
         public void setMixins(final NodeId nodeId,
                               final Name[] mixinNodeTypeIds)
                 throws RepositoryException {
@@ -1651,6 +1689,7 @@ public class RepositoryServiceImpl implements RepositoryService {
             });
         }
 
+        @Override
         public void setPrimaryType(final NodeId nodeId, final Name primaryNodeTypeName) throws RepositoryException {
             executeGuarded(new Callable() {
                 public Object run() throws RepositoryException {
@@ -1661,6 +1700,7 @@ public class RepositoryServiceImpl implements RepositoryService {
             });
         }
 
+        @Override
         public void move(final NodeId srcNodeId,
                          final NodeId destParentNodeId,
                          final Name destName) throws RepositoryException {
@@ -1678,6 +1718,36 @@ public class RepositoryServiceImpl implements RepositoryService {
             });
         }
 
+        @Override
+        public void setTree(final NodeId parentId, Tree tree) throws RepositoryException {
+            if (!(tree instanceof XmlTree)) {
+                throw new RepositoryException("Unknown Tree implementation: " + tree.getClass().getName());
+            }
+
+            final XmlTree xmlTree = (XmlTree) tree;
+            executeGuarded(new Callable() {
+                public Object run() throws RepositoryException {
+                    Session s = sInfo.getSession();
+                    Node parent = getParent(parentId, sInfo);
+                    String xml = xmlTree.toXML();;
+                    InputStream in = new ByteArrayInputStream(xml.getBytes());
+                    try {
+                        s.importXML(parent.getPath(), in, ImportUUIDBehavior.IMPORT_UUID_COLLISION_THROW);
+                    } catch (IOException e) {
+                        throw new RepositoryException(e.getMessage(), e);
+                    } finally {
+                        try {
+                            in.close();
+                        } catch (IOException e) {
+                            throw new RepositoryException(e.getMessage(), e);
+                        }
+                    }
+                    return null;
+                }
+            });
+        }
+
+        //----------------------------------------------------------------------
         private void executeGuarded(Callable call) throws RepositoryException {
             if (failed) {
                 return;

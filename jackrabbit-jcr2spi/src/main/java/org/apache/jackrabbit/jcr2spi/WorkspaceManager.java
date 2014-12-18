@@ -47,6 +47,8 @@ import org.apache.jackrabbit.jcr2spi.config.RepositoryConfig;
 import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyEventListener;
 import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyManager;
 import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyManagerImpl;
+import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
+import org.apache.jackrabbit.jcr2spi.hierarchy.PropertyEntry;
 import org.apache.jackrabbit.jcr2spi.nodetype.EffectiveNodeTypeProvider;
 import org.apache.jackrabbit.jcr2spi.nodetype.ItemDefinitionProvider;
 import org.apache.jackrabbit.jcr2spi.nodetype.ItemDefinitionProviderImpl;
@@ -79,6 +81,7 @@ import org.apache.jackrabbit.jcr2spi.operation.ReorderNodes;
 import org.apache.jackrabbit.jcr2spi.operation.ResolveMergeConflict;
 import org.apache.jackrabbit.jcr2spi.operation.Restore;
 import org.apache.jackrabbit.jcr2spi.operation.SetMixin;
+import org.apache.jackrabbit.jcr2spi.operation.SetTree;
 import org.apache.jackrabbit.jcr2spi.operation.SetPrimaryType;
 import org.apache.jackrabbit.jcr2spi.operation.SetPropertyValue;
 import org.apache.jackrabbit.jcr2spi.operation.Update;
@@ -90,6 +93,7 @@ import org.apache.jackrabbit.jcr2spi.state.ChangeLog;
 import org.apache.jackrabbit.jcr2spi.state.ItemState;
 import org.apache.jackrabbit.jcr2spi.state.ItemStateFactory;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
+import org.apache.jackrabbit.jcr2spi.state.PropertyState;
 import org.apache.jackrabbit.jcr2spi.state.Status;
 import org.apache.jackrabbit.jcr2spi.state.TransientISFactory;
 import org.apache.jackrabbit.jcr2spi.state.TransientItemStateFactory;
@@ -115,6 +119,8 @@ import org.apache.jackrabbit.spi.QueryInfo;
 import org.apache.jackrabbit.spi.RepositoryService;
 import org.apache.jackrabbit.spi.SessionInfo;
 import org.apache.jackrabbit.spi.Subscription;
+import org.apache.jackrabbit.spi.Tree;
+import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.spi.commons.nodetype.NodeTypeStorage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -922,6 +928,38 @@ public class WorkspaceManager
             } else {
                 QValue value = operation.getValues()[0];
                 batch.addProperty(parentId, propertyName, value);
+            }
+        }
+
+        /**
+         * @see OperationVisitor#visit(org.apache.jackrabbit.jcr2spi.operation.SetTree)
+         */
+        public void visit(SetTree operation) throws RepositoryException {
+            NodeState treeState = operation.getTreeState();
+            Tree tree = service.createTree(sessionInfo, batch, treeState.getName(), treeState.getNodeTypeName(), treeState.getUniqueID());
+            populateTree(tree, treeState.getNodeEntry());
+            batch.setTree(operation.getParentId(), tree);
+        }
+
+        private void populateTree(Tree tree, NodeEntry nodeEntry) throws RepositoryException {
+            Iterator<PropertyEntry> pEntries = nodeEntry.getPropertyEntries();
+            while (pEntries.hasNext()) {
+                PropertyState ps = pEntries.next().getPropertyState();
+                if (!NameConstants.JCR_PRIMARYTYPE.equals(ps.getName()) && !NameConstants.JCR_UUID.equals(ps.getName())) {
+                    if (ps.isMultiValued()) {
+                        tree.addProperty(ps.getName(), ps.getType(), ps.getValues());
+                    } else {
+                        tree.addProperty(ps.getName(), ps.getType(), ps.getValue());
+                    }
+                }
+            }
+
+            Iterator<NodeEntry> nEntries = nodeEntry.getNodeEntries();
+            while (nEntries.hasNext()) {
+                NodeEntry child = nEntries.next();
+                NodeState childState = child.getNodeState();
+                Tree childTree = tree.addChild(childState.getName(), childState.getNodeTypeName(), childState.getUniqueID());
+                populateTree(childTree, child);
             }
         }
 

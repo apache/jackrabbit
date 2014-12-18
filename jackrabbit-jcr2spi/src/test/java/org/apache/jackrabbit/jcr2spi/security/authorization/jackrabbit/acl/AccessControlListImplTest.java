@@ -36,7 +36,6 @@ import org.apache.jackrabbit.spi.commons.conversion.DefaultNamePathResolver;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.spi.commons.value.QValueFactoryImpl;
 import org.apache.jackrabbit.test.api.security.AbstractAccessControlTest;
-import org.junit.Test;
 
 /**
  * Tests the functionality of the JCR AccessControlList API implementation. The
@@ -45,11 +44,12 @@ import org.junit.Test;
  */
 public class AccessControlListImplTest extends AbstractAccessControlTest {
 
-    private NamePathResolver resolver;
     private QValueFactory vFactory;
 
     private Principal unknownPrincipal;
     private Principal knownPrincipal;
+
+    private NamePathResolver resolver;
 
     @Override
     public void setUp() throws Exception {
@@ -76,7 +76,6 @@ public class AccessControlListImplTest extends AbstractAccessControlTest {
         return Collections.<String, Value> emptyMap();
     }
 
-    @Test
     public void testAddingDifferentEntries() throws Exception {
         JackrabbitAccessControlList acl = createAccessControList(testRoot);
 
@@ -109,15 +108,13 @@ public class AccessControlListImplTest extends AbstractAccessControlTest {
         
     }
 
-    @Test
     public void testMultipleEntryEffect() throws Exception {
         JackrabbitAccessControlList acl = createAccessControList(testRoot);
         Privilege[] privileges = privilegesFromName(Privilege.JCR_READ);
 
         // GRANT 'read' privilege to the Admin user -> list now contains one
         // allow entry
-        boolean actual = acl.addAccessControlEntry(unknownPrincipal, privileges);
-        assertTrue(actual);
+        assertTrue(acl.addAccessControlEntry(unknownPrincipal, privileges));
 
         // policy contains a single entry
         assertEquals(1, acl.size());
@@ -131,28 +128,24 @@ public class AccessControlListImplTest extends AbstractAccessControlTest {
         // GRANT 'add_child_node' privilege for the admin user -> same entry but
         // with an additional 'add_child_node' privilege.
         privileges = privilegesFromNames(new String[] {Privilege.JCR_ADD_CHILD_NODES, Privilege.JCR_READ });
+        assertTrue(acl.addAccessControlEntry(unknownPrincipal, privileges));
 
-        actual = acl.addAccessControlEntry(unknownPrincipal, privileges);
-        assertTrue(actual);
-
-        // A new Entry wasn't added -> the existing entry was modified ->
-        // entries count should still be 1.
-        assertEquals(1, acl.size());
+        // A new Entry was added -> entries count should be 2.
+        assertEquals(2, acl.size());
 
         // The single entry should now contain both 'read' and 'add_child_nodes'
         // privileges for the same principal.
-        assertEquals(2, acl.getAccessControlEntries()[0].getPrivileges().length);
+        assertEquals(1, acl.getAccessControlEntries()[0].getPrivileges().length);
+        assertEquals(2, acl.getAccessControlEntries()[1].getPrivileges().length);
 
         // adding a privilege that's already granted for the same principal ->
         // again modified as the client doesn't care about possible compaction the
         // server may want to make.
         privileges = privilegesFromNames(new String[] { Privilege.JCR_READ });
-        actual = acl.addAccessControlEntry(unknownPrincipal, privileges);
-        assertTrue(actual);
+        assertTrue(acl.addAccessControlEntry(unknownPrincipal, privileges));
 
         // revoke the read privilege
-        actual = acl.addEntry(unknownPrincipal, privileges, false, createEmptyRestriction());
-        assertTrue("Fail to revoke read privilege", actual);
+        assertTrue("Fail to revoke read privilege", acl.addEntry(unknownPrincipal, privileges, false, createEmptyRestriction()));
 
         // should now be two entries -> an allow entry + a deny entry
         assertEquals(2, acl.size());
@@ -182,12 +175,9 @@ public class AccessControlListImplTest extends AbstractAccessControlTest {
 
         // GRANT a read privilege
         privileges = privilegesFromNames(new String[] { Privilege.JCR_READ });
-        actual = acl.addAccessControlEntry(unknownPrincipal, privileges);
-        assertTrue("New Entry -> grants read privilege", actual);
+        assertTrue("New Entry -> grants read privilege", acl.addAccessControlEntry(unknownPrincipal, privileges));
 
-        actual = acl.addEntry(unknownPrincipal, privileges, false, createEmptyRestriction());
-        assertTrue("Fail to revoke the read privilege", actual);
-
+        assertTrue("Fail to revoke the read privilege", acl.addEntry(unknownPrincipal, privileges, false, createEmptyRestriction()));
         Assert.assertEquals(1, acl.size());
     }
     

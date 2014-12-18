@@ -230,6 +230,16 @@ public interface RepositoryService {
 
     /**
      * TODO
+     * 
+     * @param sessionInfo
+     * @param id
+     * @return
+     * @throws RepositoryException
+     */
+    public PrivilegeDefinition[] getPrivileges(SessionInfo sessionInfo, NodeId id) throws RepositoryException;
+    
+    /**
+     * TODO
      *
      * @param sessionInfo
      * @param nodeId
@@ -411,6 +421,18 @@ public interface RepositoryService {
      * @see Batch
      */
     public void submit(Batch batch) throws PathNotFoundException, ItemNotFoundException, NoSuchNodeTypeException, ValueFormatException, VersionException, LockException, ConstraintViolationException, AccessDeniedException, UnsupportedRepositoryOperationException, RepositoryException;
+
+    /**
+     * Creates a new {@code Tree} that can be populated and later on be applied
+     * to the specified {@code Batch} by calling {@code #setTree}.
+     *
+     * @param nodeName
+     * @param primaryTypeName
+     * @param uniqueId
+     * @return a new {@code Tree} instance.
+     * @throws RepositoryException
+     */
+    public Tree createTree(SessionInfo sessionInfo, Batch batch, Name nodeName, Name primaryTypeName, String uniqueId) throws RepositoryException;
 
     //-------------------------------------------------------------< Import >---
     /**

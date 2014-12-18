@@ -18,14 +18,17 @@ package org.apache.jackrabbit.jcr2spi.security.authorization.jackrabbit.acl;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import javax.jcr.ItemNotFoundException;
-import javax.jcr.NamespaceException;
+
 import javax.jcr.PathNotFoundException;
+import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.UnsupportedRepositoryOperationException;
+import javax.jcr.ValueFormatException;
+import javax.jcr.security.AccessControlEntry;
 import javax.jcr.security.AccessControlException;
 import javax.jcr.security.AccessControlList;
 import javax.jcr.security.AccessControlManager;
@@ -34,33 +37,54 @@ import javax.jcr.security.AccessControlPolicyIterator;
 import javax.jcr.security.Privilege;
 
 import org.apache.jackrabbit.commons.iterator.AccessControlPolicyIteratorAdapter;
-import org.apache.jackrabbit.jcr2spi.ItemManager;
 import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyManager;
+import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
 import org.apache.jackrabbit.jcr2spi.nodetype.ItemDefinitionProvider;
+import org.apache.jackrabbit.jcr2spi.operation.AddNode;
+import org.apache.jackrabbit.jcr2spi.operation.Operation;
+import org.apache.jackrabbit.jcr2spi.operation.Remove;
+import org.apache.jackrabbit.jcr2spi.operation.SetMixin;
+import org.apache.jackrabbit.jcr2spi.operation.SetTree;
 import org.apache.jackrabbit.jcr2spi.security.authorization.AccessControlProvider;
 import org.apache.jackrabbit.jcr2spi.security.authorization.jackrabbit.AccessControlConstants;
+import org.apache.jackrabbit.jcr2spi.state.ItemStateValidator;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
 import org.apache.jackrabbit.jcr2spi.state.UpdatableItemStateManager;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
+import org.apache.jackrabbit.spi.QPropertyDefinition;
+import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.spi.QValueFactory;
 import org.apache.jackrabbit.spi.SessionInfo;
+import org.apache.jackrabbit.spi.commons.conversion.NameException;
+import org.apache.jackrabbit.spi.commons.conversion.NameParser;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Jackrabbit-core specific implementation of the {@code AccessControlManager}.
  */
 class AccessControlManagerImpl implements AccessControlManager, AccessControlConstants {
 
+    private static final Logger log = LoggerFactory.getLogger(AccessControlManagerImpl.class);
+
+    private static int REMOVE_POLICY_OPTIONS =
+            ItemStateValidator.CHECK_ACCESS |
+            ItemStateValidator.CHECK_LOCK |
+            ItemStateValidator.CHECK_COLLISION |
+            ItemStateValidator.CHECK_VERSIONING;
+    
     private final SessionInfo sessionInfo;
     private final HierarchyManager hierarchyManager;
     private final NamePathResolver npResolver;
     private final QValueFactory qvf;
     private final AccessControlProvider acProvider;
-
+    private final UpdatableItemStateManager itemStateMgr;
+    private final ItemDefinitionProvider definitionProvider;
+    
     AccessControlManagerImpl(SessionInfo sessionInfo,
                              UpdatableItemStateManager itemStateMgr,
-                             ItemManager itemManager,
                              ItemDefinitionProvider definitionProvider,
                              HierarchyManager hierarchyManager,
                              NamePathResolver npResolver,
@@ -68,13 +92,15 @@ class AccessControlManagerImpl implements AccessControlManager, AccessControlCon
                              AccessControlProvider acProvider) {
         this.sessionInfo = sessionInfo;
         this.hierarchyManager = hierarchyManager;
+        this.itemStateMgr = itemStateMgr;
         this.npResolver = npResolver;
         this.qvf = qvf;
         this.acProvider = acProvider;
+        this.definitionProvider = definitionProvider;
     }
 
     public Privilege[] getSupportedPrivileges(String absPath) throws PathNotFoundException, RepositoryException {
-        NodeState state = getNodeState(getQPath(absPath));
+        NodeState state = getNodeState(npResolver.getQPath(absPath));
         Map<String, Privilege> privileges = acProvider.getSupportedPrivileges(sessionInfo, state.getNodeId(), npResolver);
         return privileges.values().toArray(new Privilege[privileges.size()]);
     }
@@ -84,12 +110,12 @@ class AccessControlManagerImpl implements AccessControlManager, AccessControlCon
     }
 
     public boolean hasPrivileges(String absPath, Privilege[] privileges) throws PathNotFoundException, RepositoryException {
-        Set<Privilege> privs = acProvider.getPrivileges(sessionInfo, getNodeState(getQPath(absPath)).getNodeId());
+        Set<Privilege> privs = acProvider.getPrivileges(sessionInfo, getNodeState(npResolver.getQPath(absPath)).getNodeId(), npResolver);
         return privs.containsAll(Arrays.asList(privileges));
     }
 
     public Privilege[] getPrivileges(String absPath) throws PathNotFoundException, RepositoryException {
-        Set<Privilege> privs = acProvider.getPrivileges(sessionInfo, getNodeState(getQPath(absPath)).getNodeId());
+        Set<Privilege> privs = acProvider.getPrivileges(sessionInfo, getNodeState(npResolver.getQPath(absPath)).getNodeId(), npResolver);
         return privs.toArray(new Privilege[privs.size()]);
     }
 
@@ -102,7 +128,7 @@ class AccessControlManagerImpl implements AccessControlManager, AccessControlCon
         checkValidNodePath(absPath);
 
         AccessControlPolicy[] applicable = getApplicable(absPath);
-        if (applicable != null) {
+        if (applicable != null && applicable.length > 0) {
             return new AccessControlPolicyIteratorAdapter(Arrays.asList(applicable));
         } else {
             return AccessControlPolicyIteratorAdapter.EMPTY;
@@ -112,23 +138,65 @@ class AccessControlManagerImpl implements AccessControlManager, AccessControlCon
     public AccessControlPolicy[] getPolicies(String absPath) throws RepositoryException {
         List<AccessControlList> policies = new ArrayList<AccessControlList>();
         NodeState aclNode = getAclNode(absPath);
-        final AccessControlList acl;
+        AccessControlList acl;
         
         if (aclNode != null) {
-            acl = createPolicy(aclNode, absPath);
+            acl = new AccessControlListImpl(aclNode, absPath, npResolver, qvf, this);
             policies.add(acl);
         }
         return policies.toArray(new AccessControlList[policies.size()]);
     }
-     
+
     public void setPolicy(String absPath, AccessControlPolicy policy) throws RepositoryException {
-        // TODO
-        throw new UnsupportedRepositoryOperationException("not yet implemented");
+        checkValidNodePath(absPath);
+        checkValidPolicy(policy);
+        checkAcccessControlItem(absPath);
+
+        SetTree operation;
+        NodeState aclNode = getAclNode(absPath);
+        if (aclNode == null) {
+            // policy node doesn't exist at absPath -> create one.
+            Name name = (absPath == null) ? N_REPO_POLICY : N_POLICY;
+
+            NodeState parent = null;
+            Name mixinType = null;
+            if (absPath == null) {
+                parent = getRootNodeState();
+                mixinType = NT_REP_REPO_ACCESS_CONTROLLABLE;
+            } else {
+                parent = getNodeState(absPath);
+                mixinType = NT_REP_ACCESS_CONTROLLABLE;
+            }
+            setMixin(parent, mixinType);
+
+            operation = SetTree.create(parent, name, NT_REP_ACL, null);
+            aclNode = operation.getTreeState();
+        } else {
+            Iterator<NodeEntry> it = getNodeEntry(aclNode).getNodeEntries();
+            while(it.hasNext()) {
+                it.next().transientRemove();
+            }
+            operation = SetTree.create(aclNode);
+        }
+
+        // create the entry nodes
+        for (AccessControlEntry entry : ((AccessControlListImpl) policy).getAccessControlEntries()) {
+            createAceNode(operation, aclNode, entry);
+        }
+
+        itemStateMgr.execute(operation);
     }
         
     public void removePolicy(String absPath, AccessControlPolicy policy) throws RepositoryException {
-        // TODO
-        throw new UnsupportedRepositoryOperationException("not yet implemented");
+        checkValidNodePath(absPath);
+        checkValidPolicy(policy);
+        
+        NodeState aclNode = getAclNode(absPath);        
+        if (aclNode != null) {
+            removeNode(aclNode);
+        } else {
+            throw new AccessControlException("No policy exist at "+absPath);
+        }
     }
 
     //--------------------------------------------------< private >---
@@ -147,16 +215,6 @@ class AccessControlManagerImpl implements AccessControlManager, AccessControlCon
         }
         
         return (acl == null) ? new AccessControlPolicy[0] : new AccessControlPolicy[] {acl};
-    }
-
-    /**
-     * Creates an AccessControlList policy for the given acl node.
-     * @param aclNode the node for which the policy is to be created for.
-     * @param aclPath the policy path.
-     * @return
-     */
-    private AccessControlListImpl createPolicy(NodeState aclNode, String aclPath) throws RepositoryException {
-        return new AccessControlListImpl(aclNode, aclPath, npResolver, qvf, this);
     }
 
     private NodeState getAclNode(String controlledNodePath) throws RepositoryException {
@@ -181,14 +239,6 @@ class AccessControlManagerImpl implements AccessControlManager, AccessControlCon
             }
         }
         return acl;
-    }
-
-    private Path getQPath(String name) throws RepositoryException {
-        try {
-            return npResolver.getQPath(name);
-        } catch(NamespaceException e) {
-            throw new RepositoryException(e.getMessage());
-        }
     }
         
     /**
@@ -225,36 +275,144 @@ class AccessControlManagerImpl implements AccessControlManager, AccessControlCon
         return (lst == null) ? false : lst.contains(mixinName);
     }
 
+    /**
+     * Checks whether if the given nodePath points to an access
+     * control policy or entry node.
+     * @param nodePath
+     * @throws AccessControlException
+     * @throws RepositoryException
+     */
+    private void checkAcccessControlItem(String nodePath) throws AccessControlException, RepositoryException {
+        NodeState controlledState = getNodeState(nodePath);
+        Name ntName = controlledState.getNodeTypeName();
+        boolean isAcItem =  ntName.equals(NT_REP_ACL) ||
+                            ntName.equals(NT_REP_GRANT_ACE) ||
+                            ntName.equals(NT_REP_DENY_ACE);
+        if (isAcItem) {
+            throw new AccessControlException("The path: "+nodePath+" points to an access control content node");
+        }
+
+    }
+    
+    private void createAceNode(SetTree operation, NodeState parentState, AccessControlEntry entry) throws RepositoryException {
+        AccessControlEntryImpl ace = (AccessControlEntryImpl) entry;
+        
+        String uuid = null;
+        boolean isAllow = ace.isAllow();
+        Name nodeName = getUniqueNodeName(parentState, (isAllow) ? "allow" : "deny");
+        Name nodeTypeName = (isAllow) ? NT_REP_GRANT_ACE : NT_REP_DENY_ACE;
+        NodeState aceNode = addNode(operation, parentState, nodeName, uuid, nodeTypeName);
+               
+        // add rep:principalName property
+        String valueStr = ace.getPrincipal().getName();
+        QValue value = qvf.create(valueStr, PropertyType.STRING);
+        addProperty(operation, aceNode, N_REP_PRINCIPAL_NAME, PropertyType.STRING, new QValue[] {value});
+
+        // add rep:privileges MvProperty
+        Privilege[] privs = ace.getPrivileges();
+        QValue[] vls = new QValue[privs.length];
+        Name privilegeName = null;
+        try {
+            for (int i = 0; i < privs.length; i++) {
+                privilegeName = npResolver.getQName(privs[i].getName());
+                vls[i] = qvf.create(privilegeName.toString(), PropertyType.NAME);
+            }            
+        } catch (ValueFormatException e) {
+            throw new RepositoryException(e.getMessage());
+        }
+
+        addProperty(operation, aceNode, N_REP_PRIVILEGES, PropertyType.NAME, vls);
+
+        // TODO: add rep:glob property            
+    }
+    
     private NodeState getNodeState(String nodePath) throws RepositoryException {
-        return getNodeState(getQPath(nodePath));
+        return getNodeState(npResolver.getQPath(nodePath));
     }
     
     private NodeState getRootNodeState() throws RepositoryException {
-        try {
-            return getHierarchyManager().getRootEntry().getNodeState();
-        } catch (ItemNotFoundException e) {
-            throw new RepositoryException(e.getMessage());
-        }
+        return hierarchyManager.getRootEntry().getNodeState();
     }
     
     private NodeState getNodeState(Path qPath) throws RepositoryException {
-        return getHierarchyManager().getNodeState(qPath);
+        return hierarchyManager.getNodeState(qPath);
+    }
+    
+    private NodeEntry getNodeEntry(NodeState nodeState) throws RepositoryException {
+        return hierarchyManager.getNodeEntry(nodeState.getPath());
     }
     
     private void checkValidNodePath(String absPath) throws PathNotFoundException, RepositoryException {
         if (absPath != null) {
-            Path qPath = getQPath(absPath);
+            Path qPath = npResolver.getQPath(absPath);
             if (!qPath.isAbsolute()) {
                 throw new RepositoryException("Absolute path expected. Found: " + absPath);
             }
 
-            if (getHierarchyManager().getNodeEntry(qPath).getNodeState() == null) {
+            if (hierarchyManager.getNodeEntry(qPath).getNodeState() == null) {
                 throw new PathNotFoundException(absPath);
             }
         }
     }
 
-    private HierarchyManager getHierarchyManager() {
-        return hierarchyManager;
+    private void checkValidPolicy(AccessControlPolicy policy) throws AccessControlException {
+        if (policy == null || !(policy instanceof AccessControlListImpl)) {
+            throw new AccessControlException("Policy is not applicable ");
+        }
+    }
+    
+    private NodeState addNode(SetTree treeOperation, NodeState parent, Name nodeName, String uuid, Name nodeTypeName) throws RepositoryException {
+        Operation sp = treeOperation.addChildNode(parent, nodeName, nodeTypeName, uuid);
+        itemStateMgr.execute(sp);
+        return (NodeState) ((AddNode) sp).getAddedStates().get(0);
+    }
+    
+    private void addProperty(SetTree treeOperation, NodeState parent, Name propName, int propType, QValue[] values) throws RepositoryException {
+        QPropertyDefinition definition = definitionProvider.getQPropertyDefinition(parent.getAllNodeTypeNames(), propName, propType);
+
+        Operation ap = treeOperation.addChildProperty(parent, propName, propType, values, definition);
+        itemStateMgr.execute(ap);
+    }
+    
+    private void removeNode(NodeState aclNode) throws RepositoryException {
+        Operation removePolicy = Remove.create(aclNode, REMOVE_POLICY_OPTIONS);
+        itemStateMgr.execute(removePolicy);
+    }
+    
+    private void setMixin(NodeState parent, Name mixinName) throws RepositoryException {
+        if (!isNodeType(parent, mixinName)){
+            Operation sm = SetMixin.create(parent, new Name[]{mixinName});
+            itemStateMgr.execute(sm);
+         } else {
+             log.debug(mixinName.toString()+" is already present on the given node state "+parent.getName().toString());
+         }
+    }
+    
+    // copied from jackrabbit-core ACLEditor
+    /**
+     * Create a unique valid name for the Permission nodes to be save.
+     *
+     * @param node a name for the child is resolved
+     * @param name if missing the {@link #DEFAULT_ACE_NAME} is taken
+     * @return the name
+     * @throws RepositoryException if an error occurs
+     */
+    private Name getUniqueNodeName(NodeState node, String name) throws RepositoryException {
+            
+        try {        
+            NameParser.checkFormat(name);
+        } catch (NameException e) {                        
+            log.debug("Invalid path name for Permission: " + name + ".");       
+        }
+
+        int i = 0;
+        String check = name;
+        Name n = npResolver.getQName(check);
+        while (node.hasChildNodeEntry(n, 1)) {
+            check = name + i;
+            n = npResolver.getQName(check);
+            i++;
+        }
+        return n;
     }
 }

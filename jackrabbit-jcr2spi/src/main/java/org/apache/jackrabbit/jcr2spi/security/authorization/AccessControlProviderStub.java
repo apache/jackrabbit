@@ -57,6 +57,7 @@ public class AccessControlProviderStub {
     /**
      * Instantiates and returns a concrete AccessControlProvider implementation.
      * @param service     The repository service.
+     * @param config      The RepositoryConfig to read configuration parameters.
      * @return
      * @throws RepositoryException
      */
@@ -65,7 +66,7 @@ public class AccessControlProviderStub {
         if (className != null) {
             try {
                 Class<?> acProviderClass = Class.forName(className);
-                if (acProviderClass.isAssignableFrom(AccessControlProvider.class)) {
+                if (AccessControlProvider.class.isAssignableFrom(acProviderClass)) {
                     AccessControlProvider acProvider = (AccessControlProvider) acProviderClass.newInstance();
                     acProvider.init(config, service);
                     return acProvider;
@@ -92,7 +93,6 @@ public class AccessControlProviderStub {
                     prop.load(is);
                 } else {
                     log.debug("Fail to locate the access control provider properties file.");
-                    return null;
                 }
             } else {
                 File file = new File(providerImplProp);
@@ -104,9 +104,8 @@ public class AccessControlProviderStub {
             }
 
             // loads the concrete class to instantiate.
-            String  className = prop.getProperty(PROPERTY_ACCESSCONTROL_PROVIDER_CLASS, "");
-            if (!className.isEmpty()) {
-                return className;
+            if (prop.contains(PROPERTY_ACCESSCONTROL_PROVIDER_CLASS)) {
+                return prop.getProperty(PROPERTY_ACCESSCONTROL_PROVIDER_CLASS, null);
             } else {
                 log.debug("Missing AccessControlProvider configuration.");
                 return null;

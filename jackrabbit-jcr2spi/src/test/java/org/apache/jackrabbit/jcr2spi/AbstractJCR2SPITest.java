@@ -67,6 +67,7 @@ import org.apache.jackrabbit.spi.RepositoryService;
 import org.apache.jackrabbit.spi.SessionInfo;
 import org.apache.jackrabbit.spi.Subscription;
 import org.apache.jackrabbit.spi.Path.Element;
+import org.apache.jackrabbit.spi.Tree;
 import org.apache.jackrabbit.spi.commons.AbstractReadableRepositoryService;
 import org.apache.jackrabbit.spi.commons.ItemInfoBuilder;
 import org.apache.jackrabbit.spi.commons.ItemInfoBuilder.NodeInfoBuilder;
@@ -172,10 +173,16 @@ public abstract class AbstractJCR2SPITest extends TestCase implements Repository
                 return AbstractJCR2SPITest.this.getPrivilegeDefinitions(sessionInfo);
             }
 
+            @Override
             public PrivilegeDefinition[] getSupportedPrivileges(SessionInfo sessionInfo, NodeId nodeId) throws RepositoryException {
                 return AbstractJCR2SPITest.this.getSupportedPrivileges(sessionInfo, nodeId);
             }
 
+            @Override
+            public PrivilegeDefinition[] getPrivileges(SessionInfo sessionInfo, NodeId nodeId) throws RepositoryException {
+                return AbstractJCR2SPITest.this.getPrivileges(sessionInfo, nodeId);
+            }
+            
             @Override
             public NodeInfo getNodeInfo(SessionInfo sessionInfo, NodeId nodeId) throws ItemNotFoundException,
                     RepositoryException {
@@ -283,6 +290,11 @@ public abstract class AbstractJCR2SPITest extends TestCase implements Repository
             SessionInfo sessionInfo, NodeId nodeId) throws RepositoryException {
         return repositoryService.getSupportedPrivileges(sessionInfo, nodeId);
     }
+    
+    public PrivilegeDefinition[] getPrivileges(
+            SessionInfo sessionInfo, NodeId nodeId) throws RepositoryException {
+        return repositoryService.getPrivileges(sessionInfo, nodeId);
+    }
     //-----------------------------------< SessionInfo creation and release >---
 
     public SessionInfo obtain(Credentials credentials, String workspaceName) throws RepositoryException {
@@ -357,6 +369,10 @@ public abstract class AbstractJCR2SPITest extends TestCase implements Repository
         repositoryService.submit(batch);
     }
 
+    @Override
+    public Tree createTree(SessionInfo sessionInfo, Batch batch, Name nodeName, Name primaryTypeName, String uniqueId) throws RepositoryException {
+        return repositoryService.createTree(sessionInfo, batch, nodeName, primaryTypeName, uniqueId);
+    }
 
     //-------------------------------------------------------------< Import >---
 
