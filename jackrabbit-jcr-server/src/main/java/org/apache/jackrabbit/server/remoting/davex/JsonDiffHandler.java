@@ -34,12 +34,15 @@ import javax.jcr.Item;
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
+import javax.jcr.Property;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.Value;
 import javax.jcr.ValueFactory;
 import javax.jcr.ValueFormatException;
+import javax.jcr.nodetype.ConstraintViolationException;
+import javax.jcr.nodetype.ItemDefinition;
 import javax.jcr.nodetype.NodeDefinition;
 import javax.jcr.nodetype.NodeType;
 import javax.jcr.nodetype.NodeTypeManager;
@@ -65,14 +68,20 @@ class JsonDiffHandler implements DiffHandler {
     private final ValueFactory vf;
     private final String requestItemPath;
     private final RequestData data;
+    private final ProtectedRemoveManager protectedRemoveManager;
 
     private NodeTypeManager ntManager;
 
     JsonDiffHandler(Session session, String requestItemPath, RequestData data) throws RepositoryException {
+        this(session, requestItemPath, data, null);
+    }
+
+    JsonDiffHandler(Session session, String requestItemPath, RequestData data, ProtectedRemoveManager protectedRemoveManager) throws RepositoryException {
         this.session = session;
         this.requestItemPath = requestItemPath;
         this.data = data;
         vf = session.getValueFactory();
+        this.protectedRemoveManager = protectedRemoveManager;
     }
 
     //--------------------------------------------------------< DiffHandler >---
@@ -172,7 +181,17 @@ class JsonDiffHandler implements DiffHandler {
         }
         try {
             String itemPath = getItemPath(targetPath);
-            session.getItem(itemPath).remove();
+            Item item = session.getItem(itemPath);
+            
+            ItemDefinition def = (item.isNode()) ? ((Node) item).getDefinition() : ((Property) item).getDefinition();
+            if (def.isProtected()) {
+                // delegate to the manager.
+                if (protectedRemoveManager == null || !protectedRemoveManager.remove(session, itemPath)) {
+                   throw new ConstraintViolationException("Cannot remove protected node: no suitable handler configured.");
+                }
+            } else {
+                item.remove();
+            }
         } catch (RepositoryException e) {
             throw new DiffException(e.getMessage(), e);
         }

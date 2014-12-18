@@ -45,12 +45,14 @@ import org.apache.jackrabbit.jcr2spi.nodetype.EffectiveNodeTypeProvider;
 import org.apache.jackrabbit.jcr2spi.nodetype.ItemDefinitionProvider;
 import org.apache.jackrabbit.jcr2spi.operation.AddNode;
 import org.apache.jackrabbit.jcr2spi.operation.AddProperty;
+import org.apache.jackrabbit.jcr2spi.operation.IgnoreOperation;
 import org.apache.jackrabbit.jcr2spi.operation.Move;
 import org.apache.jackrabbit.jcr2spi.operation.Operation;
 import org.apache.jackrabbit.jcr2spi.operation.OperationVisitor;
 import org.apache.jackrabbit.jcr2spi.operation.Remove;
 import org.apache.jackrabbit.jcr2spi.operation.ReorderNodes;
 import org.apache.jackrabbit.jcr2spi.operation.SetMixin;
+import org.apache.jackrabbit.jcr2spi.operation.SetTree;
 import org.apache.jackrabbit.jcr2spi.operation.SetPrimaryType;
 import org.apache.jackrabbit.jcr2spi.operation.SetPropertyValue;
 import org.apache.jackrabbit.jcr2spi.operation.TransientOperationVisitor;
@@ -245,7 +247,9 @@ public class SessionItemStateManager extends TransientOperationVisitor implement
         List<ItemState> newStates = addNodeState(parent, operation.getNodeName(), operation.getNodeTypeName(), operation.getUuid(), def, operation.getOptions());
         operation.addedState(newStates);
 
-        transientStateMgr.addOperation(operation);
+        if (!(operation instanceof IgnoreOperation)) {
+            transientStateMgr.addOperation(operation);
+        }
     }
 
     /**
@@ -265,6 +269,15 @@ public class SessionItemStateManager extends TransientOperationVisitor implement
 
         addPropertyState(parent, propertyName, targetType, operation.getValues(), pDef, operation.getOptions());
 
+        if (!(operation instanceof IgnoreOperation)) {
+            transientStateMgr.addOperation(operation);
+        }
+    }
+
+    /**
+     * @see OperationVisitor#visit(org.apache.jackrabbit.jcr2spi.operation.SetTree)
+     */
+    public void visit(SetTree operation) throws RepositoryException {
         transientStateMgr.addOperation(operation);
     }
 

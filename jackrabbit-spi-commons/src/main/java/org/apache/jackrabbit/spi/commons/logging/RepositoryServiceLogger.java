@@ -54,6 +54,7 @@ import org.apache.jackrabbit.spi.QueryInfo;
 import org.apache.jackrabbit.spi.RepositoryService;
 import org.apache.jackrabbit.spi.SessionInfo;
 import org.apache.jackrabbit.spi.Subscription;
+import org.apache.jackrabbit.spi.Tree;
 
 /**
  * Log wrapper for a {@link RepositoryService}.
@@ -201,6 +202,14 @@ public class RepositoryServiceLogger extends AbstractLogger implements Repositor
         }, "getSupportedPrivileges(SessionInfo, NodeId)", new Object[]{unwrap(sessionInfo), nodeId});
     }
 
+    public PrivilegeDefinition[] getPrivileges(final SessionInfo sessionInfo, final NodeId nodeId) throws RepositoryException {
+        return (PrivilegeDefinition[]) execute(new Callable() {
+            public Object call() throws RepositoryException {
+                return service.getPrivileges(unwrap(sessionInfo), nodeId);
+            }
+        }, "getPrivileges(SessionInfo, NodeId)", new Object[]{unwrap(sessionInfo), nodeId});
+    }
+
     public QNodeDefinition getNodeDefinition(final SessionInfo sessionInfo, final NodeId nodeId)
             throws RepositoryException {
 
@@ -285,6 +294,14 @@ public class RepositoryServiceLogger extends AbstractLogger implements Repositor
                 return null;
             }
         }, "submit(Batch)", new Object[]{unwrap(batch)});
+    }
+
+    @Override
+    public Tree createTree(final SessionInfo sessionInfo, final Batch batch, final Name nodeName, final Name primaryTypeName, final String uniqueId) throws RepositoryException {
+            return (Tree) execute(new Callable() {
+                public Object call() throws RepositoryException {
+                    return service.createTree(sessionInfo, batch, nodeName, primaryTypeName, uniqueId);
+                }}, "createTree(SessionInfo, Batch, Name, Name, String)", new Object[]{sessionInfo, batch, nodeName, primaryTypeName, uniqueId});
     }
 
     public void importXml(final SessionInfo sessionInfo, final NodeId parentId, final InputStream xmlStream,

@@ -235,12 +235,18 @@ public abstract class JcrRemotingServlet extends JCRWebdavServerServlet {
      */
     public static final String INIT_PARAM_BATCHREAD_CONFIG = "batchread-config";
 
+    /**
+     * the 'protectedhandlers-config' init paramter.
+     */
+    public static final String INIT_PARAM_PROTECTED_HANDLERS_CONFIG = "protectedhandlers-config";
+    
     private static final String PARAM_DIFF = ":diff";
     private static final String PARAM_COPY = ":copy";
     private static final String PARAM_CLONE = ":clone";
     private static final String PARAM_INCLUDE = ":include";
 
     private BatchReadConfig brConfig;
+    private ProtectedRemoveManager protectedRemoveManager;
 
     @Override
     public void init() throws ServletException {
@@ -262,6 +268,13 @@ public abstract class JcrRemotingServlet extends JCRWebdavServerServlet {
             } catch (IOException e) {
                 log.debug("Unable to build BatchReadConfig from " + brConfigParam + ".");
             }
+        }
+
+        String protectedHandlerConfig = getServletConfig().getInitParameter(INIT_PARAM_PROTECTED_HANDLERS_CONFIG);
+        try {
+            protectedRemoveManager = new ProtectedRemoveManager(protectedHandlerConfig);
+        } catch (IOException e) {
+            log.debug("Unable to create ProtectedRemoveManager from " + protectedHandlerConfig + ".");
         }
 
         // Determine the configured location for temporary files used when
@@ -395,13 +408,13 @@ public abstract class JcrRemotingServlet extends JCRWebdavServerServlet {
                     loc = copy(session, pValues, davResource.getLocator());
                 } else if (data.getParameterValues(PARAM_DIFF) != null) {
                     String targetPath = davResource.getLocator().getRepositoryPath();
-                    processDiff(session, targetPath, data);
+                    processDiff(session, targetPath, data, protectedRemoveManager);
                 } else if ((pValues = data.getParameterValues(PARAM_INCLUDE)) != null
                         && canHandle(DavMethods.DAV_GET, webdavRequest, davResource)) {
                     includes = pValues;
                 } else {
                     String targetPath = davResource.getLocator().getRepositoryPath();
-                    loc = modifyContent(session, targetPath, data);
+                    loc = modifyContent(session, targetPath, data, protectedRemoveManager);
                 }
 
                 // TODO: append entity
@@ -510,11 +523,11 @@ public abstract class JcrRemotingServlet extends JCRWebdavServerServlet {
         return null;
     }
 
-    private static void processDiff(Session session, String targetPath, RequestData data)
+    private static void processDiff(Session session, String targetPath, RequestData data, ProtectedRemoveManager protectedRemoveManager)
             throws RepositoryException, DiffException, IOException {
 
         String[] diffs = data.getParameterValues(PARAM_DIFF);
-        DiffHandler handler = new JsonDiffHandler(session, targetPath, data);
+        DiffHandler handler = new JsonDiffHandler(session, targetPath, data, protectedRemoveManager);
         DiffParser parser = new DiffParser(handler);
 
         for (String diff : diffs) {
@@ -542,10 +555,10 @@ public abstract class JcrRemotingServlet extends JCRWebdavServerServlet {
      * @throws RepositoryException
      * @throws DiffException
      */
-    private static String modifyContent(Session session, String targetPath, RequestData data)
+    private static String modifyContent(Session session, String targetPath, RequestData data, ProtectedRemoveManager protectedRemoveManager)
             throws RepositoryException, DiffException {
 
-        JsonDiffHandler dh = new JsonDiffHandler(session, targetPath, data);
+        JsonDiffHandler dh = new JsonDiffHandler(session, targetPath, data, protectedRemoveManager);
         boolean success = false;
         try {
             for (Iterator<String> pNames = data.getParameterNames(); pNames.hasNext();) {

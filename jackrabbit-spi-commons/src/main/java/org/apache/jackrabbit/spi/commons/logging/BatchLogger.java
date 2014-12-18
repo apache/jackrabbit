@@ -24,6 +24,7 @@ import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.PropertyId;
 import org.apache.jackrabbit.spi.QValue;
+import org.apache.jackrabbit.spi.Tree;
 
 /**
  * Log wrapper for a {@link Batch}.
@@ -141,5 +142,13 @@ public class BatchLogger extends AbstractLogger implements Batch {
             }}, "move(NodeId, NodeId, Name)", new Object[]{srcNodeId, destParentNodeId, destName});
     }
 
-
+    @Override
+    public void  setTree(final NodeId parentId, final Tree contentTree)
+            throws RepositoryException {
+        execute(new Callable() {
+            public Object call() throws RepositoryException {
+                batch.setTree(parentId, contentTree);
+                return null;
+            }}, "setTree(NodeId, Tree)", new Object[]{parentId, contentTree});
+    }
 }

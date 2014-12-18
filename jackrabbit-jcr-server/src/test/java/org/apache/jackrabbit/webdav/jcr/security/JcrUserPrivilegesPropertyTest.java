@@ -32,9 +32,10 @@ public class JcrUserPrivilegesPropertyTest extends AbstractSecurityTest {
     private Set<Privilege> getExpected(AccessControlManager acMgr, Session s) throws RepositoryException {
         Set<Privilege> expected = new HashSet<Privilege>();
         for (javax.jcr.security.Privilege p : acMgr.getPrivileges(testRoot)) {
+            String localName = Text.getLocalName(p.getName());
             String prefix = Text.getNamespacePrefix(p.getName());
             Namespace ns = (prefix.isEmpty()) ? Namespace.EMPTY_NAMESPACE : Namespace.getNamespace(prefix, s.getNamespaceURI(prefix));
-            expected.add(Privilege.getPrivilege(p.getName(), ns));
+            expected.add(Privilege.getPrivilege(localName, ns));
         }
         return expected;
     }

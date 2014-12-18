@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.jcr2dav;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
 
 import javax.jcr.Repository;
@@ -40,6 +42,11 @@ public class RepositoryStubImpl extends JackrabbitRepositoryStub {
 
     private static Repository client;
 
+    private static final String ACCESS_CONTROL_PROVIDER_PROPERTIES = "accessControlProvider.properties";
+
+    // TODO
+    private static final String PROPERTIES_PROTECTED_ITEM_REMOVE_HANDLERS= "protectedHandlers.properties";
+    
     public RepositoryStubImpl(Properties env) {
         super(env);
     }
@@ -74,6 +81,8 @@ public class RepositoryStubImpl extends JackrabbitRepositoryStub {
             holder.setInitParameter(
                     JCRWebdavServerServlet.INIT_PARAM_MISSING_AUTH_MAPPING,
                     "");
+            holder.setInitParameter(JcrRemotingServlet.INIT_PARAM_PROTECTED_HANDLERS_CONFIG, 
+                    PROPERTIES_PROTECTED_ITEM_REMOVE_HANDLERS);
 
             Context context = new Context(server, "/");
             context.addServlet(holder, "/*");
@@ -88,8 +97,13 @@ public class RepositoryStubImpl extends JackrabbitRepositoryStub {
 
         if (client == null) {
             try {
-                client = JcrUtils.getRepository(
-                        "http://localhost:" + connector.getLocalPort() + "/");
+                String uri = "http://localhost:" + connector.getLocalPort() + "/";
+                Map<String, String> parameters = new HashMap<String, String>();
+                parameters.put(JcrUtils.REPOSITORY_URI, uri);
+                // TODO
+                parameters.put(ACCESS_CONTROL_PROVIDER_PROPERTIES, "accessControlProvider.properties");
+                
+                client = JcrUtils.getRepository(parameters);
             } catch (Exception e) {
                 throw new RepositoryStubException(e);
             }

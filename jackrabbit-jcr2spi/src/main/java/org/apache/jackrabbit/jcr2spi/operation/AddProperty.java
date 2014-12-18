@@ -49,10 +49,10 @@ public class AddProperty extends TransientOperation {
                         QPropertyDefinition definition) throws RepositoryException {
         this(parentState, propName, propertyType, values, definition, DEFAULT_OPTIONS);
     }
-    
-    private AddProperty(NodeState parentState, Name propName,
-                        int propertyType, QValue[] values,
-                        QPropertyDefinition definition, int options) throws RepositoryException {
+
+    AddProperty(NodeState parentState, Name propName,
+                int propertyType, QValue[] values,
+                QPropertyDefinition definition, int options) throws RepositoryException {
         super(options);
         this.parentId = parentState.getNodeId();
         this.parentState = parentState;

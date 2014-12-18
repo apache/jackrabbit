@@ -56,9 +56,8 @@ public class AddNode extends TransientOperation {
         this(parentState, nodeName, nodeTypeName, uuid, DEFAULT_OPTIONS);
     }
 
-    private AddNode(NodeState parentState, Name nodeName, Name nodeTypeName,
-                    String uuid, int options)
-            throws RepositoryException {
+    AddNode(NodeState parentState, Name nodeName, Name nodeTypeName,
+            String uuid, int options) throws RepositoryException {
         super(options);
         this.parentId = parentState.getNodeId();
         this.parentState = parentState;

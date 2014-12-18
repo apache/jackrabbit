@@ -72,6 +72,7 @@ import org.apache.jackrabbit.spi.QueryInfo;
 import org.apache.jackrabbit.spi.RepositoryService;
 import org.apache.jackrabbit.spi.SessionInfo;
 import org.apache.jackrabbit.spi.Subscription;
+import org.apache.jackrabbit.spi.Tree;
 import org.apache.jackrabbit.spi.commons.identifier.IdFactoryImpl;
 import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
 import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
@@ -511,6 +512,14 @@ public abstract class AbstractRepositoryService implements RepositoryService {
      * @throws UnsupportedRepositoryOperationException always.
      */
     public void submit(Batch batch) throws PathNotFoundException, ItemNotFoundException, NoSuchNodeTypeException, ValueFormatException, VersionException, LockException, ConstraintViolationException, AccessDeniedException, UnsupportedRepositoryOperationException, RepositoryException {
+        throw new UnsupportedRepositoryOperationException();
+    }
+
+    /**
+     * @throws UnsupportedRepositoryOperationException always.
+     */
+    @Override
+    public Tree createTree(SessionInfo sessionInfo, Batch batch, Name nodeName, Name primaryTypeName, String uniqueId) throws RepositoryException {
         throw new UnsupportedRepositoryOperationException();
     }
 

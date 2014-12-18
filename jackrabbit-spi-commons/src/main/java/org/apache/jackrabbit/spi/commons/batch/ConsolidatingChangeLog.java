@@ -29,6 +29,7 @@ import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.spi.PathFactory;
 import org.apache.jackrabbit.spi.PropertyId;
 import org.apache.jackrabbit.spi.QValue;
+import org.apache.jackrabbit.spi.Tree;
 import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
 
 /**
@@ -123,6 +124,11 @@ public class ConsolidatingChangeLog extends AbstractChangeLog<ConsolidatingChang
 
     public void setValue(PropertyId propertyId, QValue[] values) throws RepositoryException {
         addOperation(CancelableOperations.setValue(propertyId, values));
+    }
+
+    @Override
+    public void setTree(NodeId parentId, Tree contentTree) throws RepositoryException {
+        addOperation(CancelableOperations.setTree(parentId, contentTree));
     }
 
     /**
@@ -772,6 +778,47 @@ public class ConsolidatingChangeLog extends AbstractChangeLog<ConsolidatingChang
             return new SetValue(propertyId, values);
         }
 
+
+        //--------------------------------------------------------< SetTree >---
+        public static class SetTree extends Operations.SetTree implements CancelableOperation {
+
+            public SetTree(NodeId parentId, Tree contentTree) {
+                super(parentId, contentTree);
+            }
+
+            /**
+             * The cancellation only considers canceling the parent node, which corresponds
+             * to the policy node.
+             */
+            public int cancel(CancelableOperation other) throws RepositoryException {
+                if (other instanceof Remove) {
+                    Path thisPath = ConsolidatingChangeLog.getPath(parentId, tree.getName());
+                    Path otherPath = ConsolidatingChangeLog.getPath(((Remove) other).itemId);
+                    if (thisPath == null || otherPath == null) {
+                        return CANCEL_NONE;
+                    }
+                    if (thisPath.equals(otherPath)) {
+                        return CANCEL_BOTH;
+                    }
+                    return (thisPath.isDescendantOf(otherPath))
+                            ? CANCEL_THIS
+                            : CANCEL_NONE;
+                }
+                return CANCEL_NONE;
+            }
+        }
+
+        /**
+         * Factory method for creating an {@link SetTree} operation.
+         * @see Batch#setTree(NodeId, Tree)
+         *
+         * @param parentId
+         * @param tree
+         * @return
+         */
+        public static CancelableOperation setTree(NodeId parentId, Tree tree) {
+            return new SetTree(parentId, tree);
+        }
     }
 
 }

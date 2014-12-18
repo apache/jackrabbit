@@ -52,7 +52,7 @@ public class JcrUserPrivilegesProperty {
 
             String prefix = Text.getNamespacePrefix(privilegeName);
             Namespace ns = (prefix.isEmpty()) ? Namespace.EMPTY_NAMESPACE : Namespace.getNamespace(prefix, session.getNamespaceURI(prefix));
-            davPrivs.add(Privilege.getPrivilege(privilegeName, ns));
+            davPrivs.add(Privilege.getPrivilege(Text.getLocalName(privilegeName), ns));
         }
 
         return new CurrentUserPrivilegeSetProperty(davPrivs.toArray(new Privilege[davPrivs.size()]));

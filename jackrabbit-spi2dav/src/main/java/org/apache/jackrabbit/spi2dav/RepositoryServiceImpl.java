@@ -113,6 +113,7 @@ import org.apache.jackrabbit.spi.QueryInfo;
 import org.apache.jackrabbit.spi.RepositoryService;
 import org.apache.jackrabbit.spi.SessionInfo;
 import org.apache.jackrabbit.spi.Subscription;
+import org.apache.jackrabbit.spi.Tree;
 import org.apache.jackrabbit.spi.commons.ChildInfoImpl;
 import org.apache.jackrabbit.spi.commons.EventBundleImpl;
 import org.apache.jackrabbit.spi.commons.EventFilterImpl;
@@ -201,7 +202,6 @@ import org.apache.jackrabbit.webdav.version.VersionControlledResource;
 import org.apache.jackrabbit.webdav.version.report.ReportInfo;
 import org.apache.jackrabbit.webdav.xml.DomUtil;
 import org.apache.jackrabbit.webdav.xml.ElementIterator;
-import org.apache.jackrabbit.webdav.xml.Namespace;
 import org.apache.jackrabbit.webdav.xml.XmlSerializable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -925,6 +925,21 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         return internalGetPrivilegeDefinitions(sessionInfo, uri);
     }
 
+    @Override
+    public PrivilegeDefinition[] getPrivileges(SessionInfo sessionInfo, NodeId nodeId) throws RepositoryException {
+        String uri = (nodeId == null) ? uriResolver.getWorkspaceUri(sessionInfo.getWorkspaceName()) : getItemUri(nodeId, sessionInfo);
+        return internalGetUserPrivilegeDefinitions(sessionInfo, uri);
+    }
+    
+    private PrivilegeDefinition[] internalGetUserPrivilegeDefinitions(SessionInfo sessionInfo, String uri) throws RepositoryException {
+        DavPropertyNameSet nameSet = new DavPropertyNameSet();
+        nameSet.add(SecurityConstants.CURRENT_USER_PRIVILEGE_SET);
+        DavMethodBase method = null;
+        
+        // TODO
+        return new PrivilegeDefinition[0];
+    }
+    
     private PrivilegeDefinition[] internalGetPrivilegeDefinitions(SessionInfo sessionInfo, String uri) throws RepositoryException {
         DavPropertyNameSet nameSet = new DavPropertyNameSet();
         nameSet.add(SecurityConstants.SUPPORTED_PRIVILEGE_SET);
@@ -944,7 +959,6 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
                 return new PrivilegeDefinition[0];
             } else {
                 // build PrivilegeDefinition(s) from the supported-privileges dav property
-                NamePathResolver npResolver = getNamePathResolver(sessionInfo);
                 Map<Name, SupportedPrivilege> spMap = new HashMap<Name, SupportedPrivilege>();
                 fillSupportedPrivilegeMap(new SupportedPrivilegeSetProperty(p).getValue(), spMap, getNameFactory());
 
@@ -956,7 +970,9 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
                     if (aggregates != null && aggregates.length > 0) {
                         aggrnames = new HashSet<Name>();
                         for (SupportedPrivilege aggregate : aggregates) {
-                            aggrnames.add(npResolver.getQName(aggregate.getPrivilege().getName()));
+                            Name aggregateName = nameFactory.create(aggregate.getPrivilege().getNamespace().getURI(), 
+                                                                    aggregate.getPrivilege().getName());
+                            aggrnames.add(aggregateName);
                         }
                     }
                     PrivilegeDefinition def = new PrivilegeDefinitionImpl(privilegeName, sp.isAbstract(), aggrnames);
@@ -1520,6 +1536,11 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         } finally {
             batchImpl.dispose();
         }
+    }
+
+    @Override
+    public Tree createTree(SessionInfo sessionInfo, Batch batch, Name nodeName, Name primaryTypeName, String uniqueId) throws RepositoryException {
+        return new DocumentTree(nodeName, primaryTypeName, uniqueId, getNamePathResolver(sessionInfo));
     }
 
     /**
@@ -2948,16 +2969,6 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         }
     }
 
-    /**
-     * The XML elements and attributes used in serialization
-     */
-    private static final Namespace SV_NAMESPACE = Namespace.getNamespace(Name.NS_SV_PREFIX, Name.NS_SV_URI);
-    private static final String NODE_ELEMENT = "node";
-    private static final String PROPERTY_ELEMENT = "property";
-    private static final String VALUE_ELEMENT = "value";
-    private static final String NAME_ATTRIBUTE = "name";
-    private static final String TYPE_ATTRIBUTE = "type";
-
     //------------------------------------------------< Inner Class 'Batch' >---
     private class BatchImpl implements Batch {
 
@@ -3056,9 +3067,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         }
 
         //----------------------------------------------------------< Batch >---
-        /**
-         * @see Batch#addNode(NodeId, Name, Name, String)
-         */
+        @Override
         public void addNode(NodeId parentId, Name nodeName, Name nodetypeName, String uuid) throws RepositoryException {
             checkConsumed();
             try {
@@ -3070,25 +3079,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
 
                 // build 'sys-view' for the node to create and append it as request body
                 Document body = DomUtil.createDocument();
-                Element nodeElement = DomUtil.addChildElement(body, NODE_ELEMENT, SV_NAMESPACE);
-                String nameAttr = resolver.getJCRName(nodeName);
-                DomUtil.setAttribute(nodeElement, NAME_ATTRIBUTE, SV_NAMESPACE, nameAttr);
-
-                // nodetype must never be null
-                Element propElement = DomUtil.addChildElement(nodeElement, PROPERTY_ELEMENT, SV_NAMESPACE);
-                String name = resolver.getJCRName(NameConstants.JCR_PRIMARYTYPE);
-                DomUtil.setAttribute(propElement, NAME_ATTRIBUTE, SV_NAMESPACE, name);
-                DomUtil.setAttribute(propElement, TYPE_ATTRIBUTE, SV_NAMESPACE, PropertyType.nameFromValue(PropertyType.NAME));
-                name = resolver.getJCRName(nodetypeName);
-                DomUtil.addChildElement(propElement, VALUE_ELEMENT, SV_NAMESPACE, name);
-                // optional uuid
-                if (uuid != null) {
-                    propElement = DomUtil.addChildElement(nodeElement, PROPERTY_ELEMENT, SV_NAMESPACE);
-                    name = resolver.getJCRName(NameConstants.JCR_UUID);
-                    DomUtil.setAttribute(propElement, NAME_ATTRIBUTE, SV_NAMESPACE, name);
-                    DomUtil.setAttribute(propElement, TYPE_ATTRIBUTE, SV_NAMESPACE, PropertyType.nameFromValue(PropertyType.STRING));
-                    DomUtil.addChildElement(propElement, VALUE_ELEMENT, SV_NAMESPACE, uuid);
-                }
+                BatchUtils.createNodeElement(body, nodeName, nodetypeName, uuid, resolver);
                 method.setRequestBody(body);
 
                 methods.add(method);
@@ -3099,9 +3090,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             }
         }
 
-        /**
-         * @see Batch#addProperty(NodeId, Name, QValue)
-         */
+        @Override
         public void addProperty(NodeId parentId, Name propertyName, QValue value) throws RepositoryException {
             checkConsumed();
             String uri = getItemUri(parentId, propertyName, sessionInfo);
@@ -3112,9 +3101,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             methods.add(method);
         }
 
-        /**
-         * @see Batch#addProperty(NodeId, Name, QValue[])
-         */
+        @Override
         public void addProperty(NodeId parentId, Name propertyName, QValue[] values) throws RepositoryException {
             checkConsumed();
             // TODO: avoid usage of the ValuesProperty. specially for binary props.
@@ -3135,9 +3122,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             }
         }
 
-        /**
-         * @see Batch#setValue(PropertyId, QValue)
-         */
+        @Override
         public void setValue(PropertyId propertyId, QValue value) throws ValueFormatException, VersionException, LockException, ConstraintViolationException, AccessDeniedException, UnsupportedRepositoryOperationException, RepositoryException {
             checkConsumed();
             if (value == null) {
@@ -3155,9 +3140,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             }
         }
 
-        /**
-         * @see Batch#setValue(PropertyId, QValue[])
-         */
+        @Override
         public void setValue(PropertyId propertyId, QValue[] values) throws ValueFormatException, VersionException, LockException, ConstraintViolationException, AccessDeniedException, UnsupportedRepositoryOperationException, RepositoryException {
             checkConsumed();
             if (values == null) {
@@ -3211,9 +3194,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             return ent;
         }
 
-        /**
-         * @see Batch#remove(ItemId)
-         */
+        @Override
         public void remove(ItemId itemId) throws RepositoryException {
             checkConsumed();
             String uri = getItemUri(itemId, sessionInfo);
@@ -3225,9 +3206,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             }
         }
 
-        /**
-         * @see Batch#reorderNodes(NodeId, NodeId, NodeId)
-         */
+        @Override
         public void reorderNodes(NodeId parentId, NodeId srcNodeId, NodeId beforeNodeId) throws RepositoryException {
             checkConsumed();
             try {
@@ -3251,9 +3230,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             }
         }
 
-        /**
-         * @see Batch#setMixins(NodeId, Name[])
-         */
+        @Override
         public void setMixins(NodeId nodeId, Name[] mixinNodeTypeIds) throws NoSuchNodeTypeException, VersionException, ConstraintViolationException, LockException, AccessDeniedException, UnsupportedRepositoryOperationException, RepositoryException {
             checkConsumed();
             try {
@@ -3282,9 +3259,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             }
         }
 
-        /**
-         * @see Batch#setPrimaryType(NodeId, Name)
-         */
+        @Override
         public void setPrimaryType(NodeId nodeId, Name primaryNodeTypeName) throws RepositoryException {
             checkConsumed();
             try {
@@ -3300,9 +3275,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             }
         }
 
-        /**
-         * @see Batch#move(NodeId, NodeId, Name)
-         */
+        @Override
         public void move(NodeId srcNodeId, NodeId destParentNodeId, Name destName) throws RepositoryException {
             checkConsumed();
             String uri = getItemUri(srcNodeId, sessionInfo);
@@ -3314,6 +3287,28 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
 
             methods.add(method);
             clear = true;
+        }
+
+        @Override
+        public void setTree(NodeId parentId, Tree tree) throws RepositoryException {
+            checkConsumed();
+
+            if (!(tree instanceof DocumentTree)) {
+                throw new RepositoryException("Invalid tree implementation " + tree.getClass().getName());
+            }
+            try {
+                // TODO: TOBEFIXED. WebDAV does not allow MKCOL for existing resource -> problem with SNS
+                // use fake name instead (see also #importXML)
+                Name fakeName = getNameFactory().create(Name.NS_DEFAULT_URI, UUID.randomUUID().toString());
+                String uri = getItemUri(parentId, fakeName, sessionInfo);
+                MkColMethod method = new MkColMethod(uri);
+
+                method.setRequestBody(((DocumentTree) tree).toDocument());
+
+                methods.add(method);
+            } catch (IOException e) {
+                throw new RepositoryException(e);
+            }
         }
     }
 

@@ -26,6 +26,7 @@ import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.PropertyId;
 import org.apache.jackrabbit.spi.QValue;
+import org.apache.jackrabbit.spi.Tree;
 
 /**
  * Factory for creating {@link Operation}s. The inner classes of this class
@@ -784,4 +785,68 @@ public final class Operations {
             : o.hashCode();
     }
 
+    //--------------------------------------------------------------< SetTree >---
+    public static class SetTree implements Operation {
+        protected final NodeId parentId;
+        protected final Tree tree;
+
+        public SetTree(NodeId parentId, Tree tree) {
+            super();
+            this.parentId = parentId;
+            this.tree = tree;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        public void apply(Batch batch) throws RepositoryException {
+            batch.setTree(parentId, tree);
+        }
+
+        //----------------------------< Object >---
+        @Override
+        public String toString() {
+            return "SetTree[" + parentId + ", " + tree+"]";
+        }
+
+        @Override
+        public boolean equals(Object other) {
+            if (null == other) {
+                return false;
+            }
+            if (this == other) {
+                return true;
+            }
+            if (other instanceof SetTree) {
+                return equals((SetTree) other);
+            }
+            return false;
+        }
+
+        public boolean equals(SetTree other) {
+            return Operations.equals(parentId, other.parentId)
+                && Operations.equals(tree, other.tree);
+        }
+
+        @Override
+        public int hashCode() {
+            return 41 * (
+                          41 + Operations.hashCode(parentId))
+                       + Operations.hashCode(tree);
+        }
+    }
+
+    /**
+     * Factory method for creating an {@link SetTree} operation.
+     * @see Batch#addNode(NodeId, AddItem)
+     *
+     * @param parentId
+     * @param addItem
+     * @param nodetypeName
+     * @param uuid
+     * @return
+     */
+    public static Operation setTree(NodeId parentId, Tree contentTree) {
+        return new SetTree(parentId, contentTree);
+    }
 }

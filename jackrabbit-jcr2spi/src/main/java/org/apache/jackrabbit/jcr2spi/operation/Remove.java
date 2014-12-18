@@ -25,15 +25,11 @@ import org.apache.jackrabbit.jcr2spi.state.ItemState;
 import org.apache.jackrabbit.jcr2spi.state.ItemStateValidator;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
 import org.apache.jackrabbit.spi.ItemId;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * <code>Remove</code>...
  */
 public class Remove extends TransientOperation {
-
-    private static Logger log = LoggerFactory.getLogger(Remove.class);
 
     private static final int REMOVE_OPTIONS =
             ItemStateValidator.CHECK_LOCK
@@ -43,10 +39,6 @@ public class Remove extends TransientOperation {
     private final ItemId removeId;
     protected ItemState removeState;
     protected NodeState parent;
-
-    private Remove(ItemState removeState, NodeState parent) throws RepositoryException {
-        this(removeState, parent, REMOVE_OPTIONS);
-    }
 
     private Remove(ItemState removeState, NodeState parent, int options) throws RepositoryException {
         super(options);
@@ -101,11 +93,15 @@ public class Remove extends TransientOperation {
 
     //------------------------------------------------------------< Factory >---
     public static Operation create(ItemState state) throws RepositoryException {
+        return create(state, REMOVE_OPTIONS);
+    }
+
+    public static Operation create(ItemState state, int options) throws RepositoryException {
         if (state.isNode() && ((NodeState) state).getDefinition().allowsSameNameSiblings()) {
             // in case of SNS-siblings make sure the parent hierarchy entry has
             // its child entries loaded.
             assertChildNodeEntries(state.getParent());
         }
-        return new Remove(state, state.getParent());
+        return new Remove(state, state.getParent(), options);
     }
 }

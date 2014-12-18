@@ -51,6 +51,8 @@ public interface OperationVisitor {
 
     public void visit(ReorderNodes operation) throws RepositoryException;
 
+    public void visit(SetTree operation) throws RepositoryException;
+
     public void visit(Clone operation) throws NoSuchWorkspaceException, LockException, ConstraintViolationException, AccessDeniedException, ItemExistsException, UnsupportedRepositoryOperationException, VersionException, RepositoryException;
 
     public void visit(Copy operation) throws NoSuchWorkspaceException, LockException, ConstraintViolationException, AccessDeniedException, ItemExistsException, UnsupportedRepositoryOperationException, VersionException, RepositoryException;

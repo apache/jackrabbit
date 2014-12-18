@@ -281,4 +281,13 @@ public interface Batch {
      * @see javax.jcr.Session#move(String, String)
      */
     public void move(NodeId srcNodeId, NodeId destParentNodeId, Name destName) throws RepositoryException;
+
+    /**
+     * Add a new content tree to the persistent layer.
+     *
+     * @param parentId
+     * @param contentTree
+     * @throws RepositoryException
+     */
+    public void setTree(NodeId parentId, Tree contentTree) throws RepositoryException;
 }

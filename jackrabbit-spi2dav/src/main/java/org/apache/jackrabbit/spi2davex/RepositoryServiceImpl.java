@@ -36,12 +36,10 @@ import org.apache.commons.httpclient.URIException;
 import org.apache.commons.httpclient.methods.RequestEntity;
 import org.apache.commons.httpclient.methods.multipart.MultipartRequestEntity;
 import org.apache.commons.httpclient.methods.multipart.Part;
-import org.apache.commons.httpclient.methods.multipart.PartBase;
 import org.apache.jackrabbit.JcrConstants;
 import org.apache.jackrabbit.commons.json.JsonParser;
 import org.apache.jackrabbit.commons.json.JsonUtil;
 import org.apache.jackrabbit.commons.webdav.JcrRemotingConstants;
-import org.apache.jackrabbit.commons.webdav.JcrValueType;
 import org.apache.jackrabbit.commons.webdav.ValueUtil;
 import org.apache.jackrabbit.spi.Batch;
 import org.apache.jackrabbit.spi.ItemId;
@@ -54,6 +52,7 @@ import org.apache.jackrabbit.spi.PropertyInfo;
 import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.spi.RepositoryService;
 import org.apache.jackrabbit.spi.SessionInfo;
+import org.apache.jackrabbit.spi.Tree;
 import org.apache.jackrabbit.spi.commons.ItemInfoCacheImpl;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 import org.apache.jackrabbit.spi.commons.conversion.PathResolver;
@@ -98,8 +97,6 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
 
     private static final String ORDER_POSITION_LAST = "#last";
     private static final String ORDER_POSITION_BEFORE = "#before";
-
-    private static final String DEFAULT_CHARSET = "UTF-8";
 
     private static final DavPropertyName JCR_TYPE =
             DavPropertyName.create(ItemResourceConstants.JCR_TYPE_LN, ItemResourceConstants.NAMESPACE);
@@ -465,6 +462,11 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
     }
 
     @Override
+    public Tree createTree(SessionInfo sessionInfo, Batch batch, Name nodeName, Name primaryTypeName, String uniqueId) throws RepositoryException {
+        return new JsonTree(nodeName, primaryTypeName, uniqueId, getNamePathResolver(sessionInfo));
+    }
+
+    @Override
     public void copy(SessionInfo sessionInfo, String srcWorkspaceName, NodeId srcNodeId, NodeId destParentNodeId, Name destName) throws RepositoryException {
         if (srcWorkspaceName.equals(sessionInfo.getWorkspaceName())) {
             super.copy(sessionInfo, srcWorkspaceName, srcNodeId, destParentNodeId, destName);
@@ -596,7 +598,7 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
 
             // add the diff part - always do multipart in case the receiving servlet
             // engine has a form-size restriction (JCR-3726)
-            addPart(PARAM_DIFF, buf.toString());
+            Utils.addPart(PARAM_DIFF, buf.toString(), parts);
             Part[] partArr = parts.toArray(new Part[parts.size()]);
             RequestEntity entity = new MultipartRequestEntity(partArr, method.getParams());
             method.setRequestEntity(entity);
@@ -653,9 +655,7 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
         }
 
         //----------------------------------------------------------< Batch >---
-        /**
-         * @inheritDoc
-         */
+        @Override
         public void addNode(NodeId parentId, Name nodeName, Name nodetypeName,
                             String uuid) throws RepositoryException {
             assertMethod();
@@ -666,56 +666,46 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
 
             StringWriter wr = new StringWriter();
             wr.write('{');
-            wr.write(getJsonKey(JcrConstants.JCR_PRIMARYTYPE));
+            wr.write(Utils.getJsonKey(JcrConstants.JCR_PRIMARYTYPE));
             wr.write(JsonUtil.getJsonString(getNamePathResolver(sessionInfo).getJCRName(nodetypeName)));
             if (uuid != null) {
                 wr.write(',');
-                wr.write(getJsonKey(JcrConstants.JCR_UUID));
+                wr.write(Utils.getJsonKey(JcrConstants.JCR_UUID));
                 wr.write(JsonUtil.getJsonString(uuid));
             }
             wr.write('}');
             appendDiff(SYMBOL_ADD_NODE, jcrPath, wr.toString());
         }
 
-        /**
-         * @inheritDoc
-         */
+        @Override
         public void addProperty(NodeId parentId, Name propertyName, QValue value) throws RepositoryException {
             assertMethod();
             Path p = getPathFactory().create(getPath(parentId, sessionInfo), propertyName, true);
             setProperty(p, value, false);
         }
 
-        /**
-         * @inheritDoc
-         */
+        @Override
         public void addProperty(NodeId parentId, Name propertyName, QValue[] values) throws RepositoryException {
             assertMethod();
             Path p = getPathFactory().create(getPath(parentId, sessionInfo), propertyName, true);
             setProperty(p, values, false);
         }
 
-        /**
-         * @inheritDoc
-         */
+        @Override
         public void setValue(PropertyId propertyId, QValue value) throws RepositoryException {
             assertMethod();
             Path p = getPath(propertyId, sessionInfo);
             setProperty(p, value, true);
         }
 
-        /**
-         * @inheritDoc
-         */
+        @Override
         public void setValue(PropertyId propertyId, QValue[] values) throws RepositoryException {
             assertMethod();
             Path p = getPath(propertyId, sessionInfo);
             setProperty(p, values, true);
         }
 
-        /**
-         * @inheritDoc
-         */
+        @Override
         public void remove(ItemId itemId) throws RepositoryException {
             assertMethod();
 
@@ -732,9 +722,7 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
             }
         }
 
-        /**
-         * @inheritDoc
-         */
+        @Override
         public void reorderNodes(NodeId parentId, NodeId srcNodeId, NodeId beforeNodeId) throws RepositoryException {
             assertMethod();
 
@@ -758,9 +746,7 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
             }
         }
 
-        /**
-         * @inheritDoc
-         */
+        @Override
         public void setMixins(NodeId nodeId, Name[] mixinNodeTypeNames) throws RepositoryException {
             assertMethod();
 
@@ -774,9 +760,7 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
             setProperty(p, vs, true);
         }
 
-        /**
-         * @inheritDoc
-         */
+        @Override
         public void setPrimaryType(NodeId nodeId, Name primaryNodeTypeName) throws RepositoryException {
             assertMethod();
 
@@ -787,9 +771,7 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
             setProperty(p, v, true);
         }
 
-        /**
-         * @inheritDoc
-         */
+        @Override
         public void move(NodeId srcNodeId, NodeId destParentNodeId, Name destName) throws RepositoryException {
             assertMethod();
 
@@ -802,6 +784,19 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
             clear = true;
         }
 
+        @Override
+        public void setTree(NodeId parentId, Tree contentTree) throws RepositoryException {
+            assertMethod();
+            if (!(contentTree instanceof JsonTree)) {
+                throw new RepositoryException("Invalid Tree implementation : " + contentTree.getClass().getName());
+            }
+
+            Path normalizedPath = getPathFactory().create(getPath(parentId, sessionInfo), contentTree.getName(), true);
+            String jcrPath = getNamePathResolver(sessionInfo).getJCRPath(normalizedPath);
+            appendDiff(SYMBOL_ADD_NODE, jcrPath, ((JsonTree) contentTree).toJsonString(parts));
+        }
+
+        //----------------------------------------------------------------------
         /**
          *
          * @param symbol
@@ -830,10 +825,10 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
                 clearPreviousSetProperty(jcrPropPath);
             }
 
-            String strValue = getJsonString(value);
+            String strValue = Utils.getJsonString(value);
             appendDiff(SYMBOL_SET_PROPERTY, jcrPropPath, strValue);
             if (strValue == null) {
-                addPart(jcrPropPath, value, resolver);
+                Utils.addPart(jcrPropPath, value, resolver, parts);
             }
         }
 
@@ -846,9 +841,9 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
 
             StringBuilder strVal = new StringBuilder("[");
             for (int i = 0; i < values.length; i++) {
-                String str = getJsonString(values[i]);
+                String str = Utils.getJsonString(values[i]);
                 if (str == null) {
-                    addPart(jcrPropPath, values[i], resolver);
+                    Utils.addPart(jcrPropPath, values[i], resolver, parts);
                 } else {
                     String delim = (i == 0) ? "" : ",";
                     strVal.append(delim).append(str);
@@ -868,89 +863,10 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
                 String entry = it.next();
                 if (entry.startsWith(key)) {
                     it.remove();
-                    removeParts(jcrPropPath);
+                    Utils.removeParts(jcrPropPath, parts);
                     return;
                 }
             }
-        }
-
-        /**
-         *
-         * @param paramName
-         * @param value
-         */
-        private void addPart(String paramName, String value) {
-            parts.add(new StringPart(paramName, value, DEFAULT_CHARSET));
-        }
-
-        /**
-         *
-         * @param paramName
-         * @param value
-         * @param resolver
-         * @throws RepositoryException
-         */
-        private void addPart(String paramName, QValue value, NamePathResolver resolver) throws RepositoryException {
-            Part part;
-            switch (value.getType()) {
-                case PropertyType.BINARY:
-                    part = new BinaryPart(paramName, new BinaryPartSource(value), JcrValueType.contentTypeFromType(PropertyType.BINARY), DEFAULT_CHARSET);
-                    break;
-                case PropertyType.NAME:
-                    part = new StringPart(paramName, resolver.getJCRName(value.getName()), DEFAULT_CHARSET);
-                    break;
-                case PropertyType.PATH:
-                    part = new StringPart(paramName, resolver.getJCRPath(value.getPath()), DEFAULT_CHARSET);
-                    break;
-                default:
-                    part = new StringPart(paramName, value.getString(), DEFAULT_CHARSET);
-            }
-            String ctype = JcrValueType.contentTypeFromType(value.getType());
-            ((PartBase) part).setContentType(ctype);
-
-            parts.add(part);
-        }
-
-        private void removeParts(String paramName) {
-            for (Iterator<Part> it = parts.iterator(); it.hasNext();) {
-                Part part = it.next();
-                if (part.getName().equals(paramName)) {
-                    it.remove();
-                }
-            }
-        }
-
-        private String getJsonKey(String str) {
-            return JsonUtil.getJsonString(str) + ":";
-        }
-
-        private String getJsonString(QValue value) throws RepositoryException {
-            String str;
-            switch (value.getType()) {
-                case PropertyType.STRING:
-                    str = JsonUtil.getJsonString(value.getString());
-                    break;
-                case PropertyType.BOOLEAN:
-                case PropertyType.LONG:
-                    str = value.getString();
-                    break;
-                case PropertyType.DOUBLE:
-                    double d = value.getDouble();
-                    if (Double.isNaN(d) || Double.isInfinite(d)) {
-                    // JSON cannot specifically handle this property type...
-                        str = null;
-                    } else {
-                        str = value.getString();
-                        if (str.indexOf('.') == -1) {
-                            str += ".0";
-                        }
-                    }
-                    break;
-                default:
-                    // JSON cannot specifically handle this property type...
-                    str = null;
-            }
-            return str;
         }
 
         private Path calcRemovePath(Path removedNodePath) throws RepositoryException {

@@ -17,10 +17,10 @@
 package org.apache.jackrabbit.jcr2spi.security.authorization.jackrabbit.acl;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import javax.jcr.RepositoryException;
-import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.security.AccessControlException;
 import javax.jcr.security.AccessControlManager;
 import javax.jcr.security.Privilege;
@@ -76,9 +76,14 @@ public class AccessControlProviderImpl implements AccessControlProvider {
     }
 
     @Override
-    public Set<Privilege> getPrivileges(SessionInfo sessionInfo, NodeId id) throws RepositoryException {
-        // TODO
-        throw new UnsupportedRepositoryOperationException("not yet implemented");
+    public Set<Privilege> getPrivileges(SessionInfo sessionInfo, NodeId id, NamePathResolver npResolver) throws RepositoryException {
+        PrivilegeDefinition[] defs = service.getPrivileges(sessionInfo, id);
+        Set<Privilege> privileges = new HashSet<Privilege>(defs.length);
+        for (PrivilegeDefinition def : defs) {
+            Privilege p = new PrivilegeImpl(def, defs, npResolver);
+            privileges.add(p);
+        }
+        return privileges;        
     }
 
     @Override
@@ -88,7 +93,7 @@ public class AccessControlProviderImpl implements AccessControlProvider {
             ItemManager itemManager,
             ItemDefinitionProvider definitionProvider,
             HierarchyManager hierarchyManager, NamePathResolver npResolver) throws RepositoryException {
-        return new AccessControlManagerImpl(sessionInfo, itemStateManager, itemManager, definitionProvider, hierarchyManager, npResolver, service.getQValueFactory(), this);
+        return new AccessControlManagerImpl(sessionInfo, itemStateManager, definitionProvider, hierarchyManager, npResolver, service.getQValueFactory(), this);
     }
 
     //--------------------------------------------------------------------------
