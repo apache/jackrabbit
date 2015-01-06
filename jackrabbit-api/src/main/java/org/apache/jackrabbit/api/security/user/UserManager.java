@@ -23,6 +23,8 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.UnsupportedRepositoryOperationException;
 
+import aQute.bnd.annotation.ProviderType;
+
 /**
  * The <code>UserManager</code> provides access to and means to maintain
  * {@link Authorizable authorizable objects} i.e. {@link User users} and
@@ -37,6 +39,7 @@ import javax.jcr.UnsupportedRepositoryOperationException;
  * {@link Session#save()} operation; callers should be prepared to repeat them
  * in case this happens.
  */
+@ProviderType
 public interface UserManager {
 
     /**
@@ -70,13 +73,14 @@ public interface UserManager {
     /**
      * Get the Authorizable of a specific type by its id.
      *
-     * @param id the user of group id.
-     * @param authorizableClass the type of Authorizable required.
+     * @param id the user or group id.
+     * @param authorizableClass the class of the type of Authorizable required; must not be <code>null</code>.
+     * @param <T> the required Authorizable type.
      * @return Authorizable or <code>null</code>, if not present.
      * @throws AuthorizableTypeException If an authorizable exists but is not of the requested type.
      * @throws RepositoryException If an error occurs
      */
-    <T> T getAuthorizable(String id, Class<T> authorizableClass) throws AuthorizableTypeException, RepositoryException;
+    <T extends Authorizable> T getAuthorizable(String id, Class<T> authorizableClass) throws AuthorizableTypeException, RepositoryException;
 
     /**
      * Get the Authorizable by its Principal.
@@ -91,12 +95,13 @@ public interface UserManager {
      * Get the Authorizable of a specific type by its Principal.
      *
      * @param principal The principal of the Authorizable to retrieve.
-     * @param authorizableClass the type of Authorizable required.
+     * @param authorizableClass the class of the type of Authorizable required; must not be <code>null</code>.
+     * @param <T> the required Authorizable type.
      * @return Authorizable or <code>null</code>, if not present.
      * @throws AuthorizableTypeException If an authorizable exists but is not of the requested type.
      * @throws RepositoryException If an error occurs.
      */
-    <T> T getAuthorizable(Principal principal, Class<T> authorizableClass) throws AuthorizableTypeException, RepositoryException;
+    <T extends Authorizable> T getAuthorizable(Principal principal, Class<T> authorizableClass) throws AuthorizableTypeException, RepositoryException;
 
     /**
      * In accordance to {@link org.apache.jackrabbit.api.security.user.Authorizable#getPath()}
@@ -113,15 +118,16 @@ public interface UserManager {
 
     /**
      * In accordance to {@link org.apache.jackrabbit.api.security.user.Authorizable#getPath()}
-     * this method allows to retrieve an authorizable of a specific type by it's path.
+     * this method allows to retrieve an authorizable of a specific type by its path.
      *
      * @param path The path to an authorizable.
-     * @param authorizableClass the type of Authorizable required.
+     * @param authorizableClass the class of the type of Authorizable required; must not be <code>null</code>.
+     * @param <T> the required Authorizable type.
      * @return Authorizable or <code>null</code>, if not present.
      * @throws AuthorizableTypeException If an authorizable exists but is not of the requested type.
      * @throws RepositoryException If another error occurs.
      */
-    <T> T getAuthorizableByPath(String path, Class<T> authorizableClass) throws AuthorizableTypeException, RepositoryException;
+    <T extends Authorizable> T getAuthorizableByPath(String path, Class<T> authorizableClass) throws AuthorizableTypeException, RepositoryException;
 
     /**
      * Returns all <code>Authorizable</code>s that have a

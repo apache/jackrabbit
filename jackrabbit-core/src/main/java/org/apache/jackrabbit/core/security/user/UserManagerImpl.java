@@ -454,8 +454,8 @@ public class UserManagerImpl extends ProtectedItemModifier
     /**
      * @see UserManager#getAuthorizable(String, Class)
      */
-    public <T> T getAuthorizable(String id, Class<T> authorizableClass) throws AuthorizableTypeException, RepositoryException {
-        return getAuthorizableByType(getAuthorizable(id), authorizableClass);
+    public <T extends Authorizable> T getAuthorizable(String id, Class<T> authorizableClass) throws AuthorizableTypeException, RepositoryException {
+        return castAuthorizableByType(getAuthorizable(id), authorizableClass);
     }
 
     /**
@@ -500,8 +500,8 @@ public class UserManagerImpl extends ProtectedItemModifier
     /**
      * @see UserManager#getAuthorizable(Principal, Class)
      */
-    public <T> T getAuthorizable(Principal principal, Class<T> authorizableClass) throws AuthorizableTypeException, RepositoryException {
-        return getAuthorizableByType(getAuthorizable(principal), authorizableClass);
+    public <T extends Authorizable> T getAuthorizable(Principal principal, Class<T> authorizableClass) throws AuthorizableTypeException, RepositoryException {
+        return castAuthorizableByType(getAuthorizable(principal), authorizableClass);
     }
 
     /**
@@ -518,8 +518,8 @@ public class UserManagerImpl extends ProtectedItemModifier
     /**
      * @see UserManager#getAuthorizableByPath(String, Class)
      */
-    public <T> T getAuthorizableByPath(String path, Class<T> authorizableClass) throws AuthorizableTypeException, RepositoryException {
-        return getAuthorizableByType(getAuthorizableByPath(path), authorizableClass);
+    public <T extends Authorizable> T getAuthorizableByPath(String path, Class<T> authorizableClass) throws AuthorizableTypeException, RepositoryException {
+        return castAuthorizableByType(getAuthorizableByPath(path), authorizableClass);
     }
 
     /**
@@ -933,11 +933,12 @@ public class UserManagerImpl extends ProtectedItemModifier
         return getAuthorizable(n);
     }
 
-    private <T> T getAuthorizableByType(Authorizable authorizable, Class<T> authorizableClass) throws AuthorizableTypeException {
-        if (authorizable == null || authorizableClass.isInstance(authorizable)) {
+    private <T extends Authorizable> T castAuthorizableByType(Authorizable authorizable, Class<T> authorizableClass) throws AuthorizableTypeException {
+        try {
             return authorizableClass.cast(authorizable);
+        } catch (ClassCastException e) {
+            throw new AuthorizableTypeException("Invalid authorizable type '" + authorizable.getClass() + "'");
         }
-        throw new AuthorizableTypeException("Invalid authorizable type '" + authorizable.getClass() + "'");
     }
 
     private Value getValue(String strValue) {

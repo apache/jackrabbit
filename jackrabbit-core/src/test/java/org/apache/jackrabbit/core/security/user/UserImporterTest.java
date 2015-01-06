@@ -1594,7 +1594,7 @@ public class UserImporterTest extends AbstractJCRTest {
                     return null;
                 }
 
-                public <T> T getAuthorizable(String id, Class<T> authorizableClass) throws AuthorizableTypeException, RepositoryException {
+                public <T extends Authorizable> T getAuthorizable(String id, Class<T> authorizableClass) throws AuthorizableTypeException, RepositoryException {
                     return null;
                 }
 
@@ -1602,7 +1602,7 @@ public class UserImporterTest extends AbstractJCRTest {
                     return null;
                 }
 
-                public <T> T getAuthorizable(Principal principal, Class<T> authorizableClass) throws AuthorizableTypeException, RepositoryException {
+                public <T extends Authorizable> T getAuthorizable(Principal principal, Class<T> authorizableClass) throws AuthorizableTypeException, RepositoryException {
                     return null;
                 }
 
@@ -1610,7 +1610,7 @@ public class UserImporterTest extends AbstractJCRTest {
                     return null;
                 }
 
-                public <T> T getAuthorizableByPath(String path, Class<T> authorizableClass) throws AuthorizableTypeException, RepositoryException {
+                public <T extends Authorizable> T getAuthorizableByPath(String path, Class<T> authorizableClass) throws AuthorizableTypeException, RepositoryException {
                     return null;
                 }
 
