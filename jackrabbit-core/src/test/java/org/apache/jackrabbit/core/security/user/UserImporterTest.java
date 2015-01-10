@@ -1602,15 +1602,7 @@ public class UserImporterTest extends AbstractJCRTest {
                     return null;
                 }
 
-                public <T extends Authorizable> T getAuthorizable(Principal principal, Class<T> authorizableClass) throws AuthorizableTypeException, RepositoryException {
-                    return null;
-                }
-
                 public Authorizable getAuthorizableByPath(String path) throws UnsupportedRepositoryOperationException, RepositoryException {
-                    return null;
-                }
-
-                public <T extends Authorizable> T getAuthorizableByPath(String path, Class<T> authorizableClass) throws AuthorizableTypeException, RepositoryException {
                     return null;
                 }
 
