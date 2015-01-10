@@ -92,18 +92,6 @@ public interface UserManager {
     Authorizable getAuthorizable(Principal principal) throws RepositoryException;
 
     /**
-     * Get the Authorizable of a specific type by its Principal.
-     *
-     * @param principal The principal of the Authorizable to retrieve.
-     * @param authorizableClass the class of the type of Authorizable required; must not be <code>null</code>.
-     * @param <T> the required Authorizable type.
-     * @return Authorizable or <code>null</code>, if not present.
-     * @throws AuthorizableTypeException If an authorizable exists but is not of the requested type.
-     * @throws RepositoryException If an error occurs.
-     */
-    <T extends Authorizable> T getAuthorizable(Principal principal, Class<T> authorizableClass) throws AuthorizableTypeException, RepositoryException;
-
-    /**
      * In accordance to {@link org.apache.jackrabbit.api.security.user.Authorizable#getPath()}
      * this method allows to retrieve an given authorizable by it's path.
      *
@@ -115,19 +103,6 @@ public interface UserManager {
      * @see org.apache.jackrabbit.api.security.user.Authorizable#getPath()
      */
     Authorizable getAuthorizableByPath(String path) throws UnsupportedRepositoryOperationException, RepositoryException;
-
-    /**
-     * In accordance to {@link org.apache.jackrabbit.api.security.user.Authorizable#getPath()}
-     * this method allows to retrieve an authorizable of a specific type by its path.
-     *
-     * @param path The path to an authorizable.
-     * @param authorizableClass the class of the type of Authorizable required; must not be <code>null</code>.
-     * @param <T> the required Authorizable type.
-     * @return Authorizable or <code>null</code>, if not present.
-     * @throws AuthorizableTypeException If an authorizable exists but is not of the requested type.
-     * @throws RepositoryException If another error occurs.
-     */
-    <T extends Authorizable> T getAuthorizableByPath(String path, Class<T> authorizableClass) throws AuthorizableTypeException, RepositoryException;
 
     /**
      * Returns all <code>Authorizable</code>s that have a

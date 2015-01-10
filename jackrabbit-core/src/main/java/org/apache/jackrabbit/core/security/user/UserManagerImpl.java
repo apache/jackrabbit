@@ -498,13 +498,6 @@ public class UserManagerImpl extends ProtectedItemModifier
     }
 
     /**
-     * @see UserManager#getAuthorizable(Principal, Class)
-     */
-    public <T extends Authorizable> T getAuthorizable(Principal principal, Class<T> authorizableClass) throws AuthorizableTypeException, RepositoryException {
-        return castAuthorizableByType(getAuthorizable(principal), authorizableClass);
-    }
-
-    /**
      * Always throws <code>UnsupportedRepositoryOperationException</code> since
      * this implementation of the user management API does not allow to retrieve
      * the path of an authorizable.
@@ -513,13 +506,6 @@ public class UserManagerImpl extends ProtectedItemModifier
      */
     public Authorizable getAuthorizableByPath(String path) throws UnsupportedRepositoryOperationException, RepositoryException {
         throw new UnsupportedRepositoryOperationException();
-    }
-
-    /**
-     * @see UserManager#getAuthorizableByPath(String, Class)
-     */
-    public <T extends Authorizable> T getAuthorizableByPath(String path, Class<T> authorizableClass) throws AuthorizableTypeException, RepositoryException {
-        return castAuthorizableByType(getAuthorizableByPath(path), authorizableClass);
     }
 
     /**

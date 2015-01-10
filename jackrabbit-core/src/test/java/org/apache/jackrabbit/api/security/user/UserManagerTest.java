@@ -71,21 +71,6 @@ public class UserManagerTest extends AbstractUserTest {
         }
     }
 
-    public void testGetAuthorizableByPathAndType() throws NotExecutableException, RepositoryException {
-        String uid = superuser.getUserID();
-        Authorizable a = userMgr.getAuthorizable(uid);
-        if (a == null) {
-            throw new NotExecutableException();
-        }
-        try {
-            String path = a.getPath();
-            Authorizable a2 = userMgr.getAuthorizableByPath(path, a.getClass());
-            assertNotNull(a2);
-            assertEquals(a.getID(), a2.getID());
-        } catch (UnsupportedRepositoryOperationException e) {
-            throw new NotExecutableException();
-        }
-    }
 
     public void testGetAuthorizableByIdAndType() throws NotExecutableException, RepositoryException {
         for (Principal principal : getPrincipalSetFromSession(superuser)) {
