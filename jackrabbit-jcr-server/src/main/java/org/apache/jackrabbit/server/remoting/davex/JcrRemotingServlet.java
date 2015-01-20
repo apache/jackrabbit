@@ -437,7 +437,7 @@ public abstract class JcrRemotingServlet extends JCRWebdavServerServlet {
                     webdavResponse.setStatus(HttpServletResponse.SC_CREATED);
                 }
             } catch (RepositoryException e) {
-                log.warn(e.getMessage());
+                log.warn(e.getMessage(), e);
                 throw new JcrDavException(e);
             } catch (DiffException e) {
                 log.warn(e.getMessage());
