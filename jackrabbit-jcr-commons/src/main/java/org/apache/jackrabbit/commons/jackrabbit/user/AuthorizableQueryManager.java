@@ -60,6 +60,7 @@ import java.util.Stack;
     {
       property: /* relative path (String) * /
       ( direction: "asc" | "desc" )                       // Defaults to "asc"
+      ( ignoreCase: true | false )                        // Defaults to "true", see QueryBuilder#setSortOrder()
     }
   ) ?                                                     // Defaults to document order
 
@@ -636,15 +637,16 @@ public class AuthorizableQueryManager {
             private String currentKey;
             private String property;
             private QueryBuilder.Direction direction;
+            private boolean ignoreCase = true;
 
             @Override
             public void endObject() throws IOException {
                 if (property == null) {
                     throw new IOException("Missing property");
                 } else {
-                    queryBuilder.setSortOrder(property, direction == null
-                            ? QueryBuilder.Direction.ASCENDING
-                            : direction, true);
+                    queryBuilder.setSortOrder(property,
+                            direction == null ? QueryBuilder.Direction.ASCENDING : direction,
+                            ignoreCase);
                 }
                 handlers.pop();
             }
@@ -660,6 +662,8 @@ public class AuthorizableQueryManager {
                     property = s;
                 } else if ("direction".equals(currentKey)) {
                     direction = directionFor(s);
+                } else if ("ignoreCase".equals(currentKey)) {
+                    ignoreCase = Boolean.valueOf(s);
                 } else {
                     throw new IOException("Unexpected: '" + currentKey + ':' + s + '\'');
                 }
