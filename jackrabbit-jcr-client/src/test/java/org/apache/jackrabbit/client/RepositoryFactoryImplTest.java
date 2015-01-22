@@ -302,8 +302,8 @@ public class RepositoryFactoryImplTest extends TestCase {
         }
 
         @Override
-        public PrivilegeDefinition[] getPrivileges(SessionInfo sessionInfo, NodeId id) throws RepositoryException {
-            return new PrivilegeDefinition[0];
+        public Name[] getPrivilegeNames(SessionInfo sessionInfo, NodeId id) throws RepositoryException {
+            return new Name[0];
         }
 
         @Override

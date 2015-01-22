@@ -29,8 +29,6 @@ import java.util.Set;
 
 /**
  * <code>CurrentUserPrivilegeSetProperty</code>...
- *
- * TODO: should respect aggregation of privileges.....
  */
 public class CurrentUserPrivilegeSetProperty extends AbstractDavProperty<Collection<Privilege>> {
 

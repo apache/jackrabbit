@@ -926,18 +926,42 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     }
 
     @Override
-    public PrivilegeDefinition[] getPrivileges(SessionInfo sessionInfo, NodeId nodeId) throws RepositoryException {
+    public Name[] getPrivilegeNames(SessionInfo sessionInfo, NodeId nodeId) throws RepositoryException {
         String uri = (nodeId == null) ? uriResolver.getWorkspaceUri(sessionInfo.getWorkspaceName()) : getItemUri(nodeId, sessionInfo);
-        return internalGetUserPrivilegeDefinitions(sessionInfo, uri);
-    }
-    
-    private PrivilegeDefinition[] internalGetUserPrivilegeDefinitions(SessionInfo sessionInfo, String uri) throws RepositoryException {
         DavPropertyNameSet nameSet = new DavPropertyNameSet();
         nameSet.add(SecurityConstants.CURRENT_USER_PRIVILEGE_SET);
+
         DavMethodBase method = null;
-        
-        // TODO
-        return new PrivilegeDefinition[0];
+        try {
+            method = new PropFindMethod(uri, nameSet, DEPTH_0);
+            getClient(sessionInfo).executeMethod(method);
+
+            MultiStatusResponse[] responses = method.getResponseBodyAsMultiStatus().getResponses();
+            if (responses.length < 1) {
+                throw new PathNotFoundException("Unable to retrieve privileges definitions.");
+            }
+
+            DavPropertyName displayName = SecurityConstants.SUPPORTED_PRIVILEGE_SET;
+            DavProperty<?> p = responses[0].getProperties(DavServletResponse.SC_OK).get(displayName);
+            if (p == null) {
+                return new Name[0];
+            } else {
+                Collection<Privilege> privs = new CurrentUserPrivilegeSetProperty(p).getValue();
+                Set<Name> privNames = new HashSet<Name>(privs.size());
+                for (Privilege priv : privs) {
+                    privNames.add(nameFactory.create(priv.getNamespace().getURI(), priv.getName()));
+                }
+                return privNames.toArray(new Name[privNames.size()]);
+            }
+        } catch (IOException e) {
+            throw new RepositoryException(e);
+        } catch (DavException e) {
+            throw ExceptionConverter.generate(e);
+        } finally {
+            if (method != null) {
+                method.releaseConnection();
+            }
+        }
     }
     
     private PrivilegeDefinition[] internalGetPrivilegeDefinitions(SessionInfo sessionInfo, String uri) throws RepositoryException {
