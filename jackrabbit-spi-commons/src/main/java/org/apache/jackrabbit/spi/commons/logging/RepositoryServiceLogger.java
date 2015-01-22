@@ -202,10 +202,10 @@ public class RepositoryServiceLogger extends AbstractLogger implements Repositor
         }, "getSupportedPrivileges(SessionInfo, NodeId)", new Object[]{unwrap(sessionInfo), nodeId});
     }
 
-    public PrivilegeDefinition[] getPrivileges(final SessionInfo sessionInfo, final NodeId nodeId) throws RepositoryException {
-        return (PrivilegeDefinition[]) execute(new Callable() {
+    public Name[] getPrivilegeNames(final SessionInfo sessionInfo, final NodeId nodeId) throws RepositoryException {
+        return (Name[]) execute(new Callable() {
             public Object call() throws RepositoryException {
-                return service.getPrivileges(unwrap(sessionInfo), nodeId);
+                return service.getPrivilegeNames(unwrap(sessionInfo), nodeId);
             }
         }, "getPrivileges(SessionInfo, NodeId)", new Object[]{unwrap(sessionInfo), nodeId});
     }

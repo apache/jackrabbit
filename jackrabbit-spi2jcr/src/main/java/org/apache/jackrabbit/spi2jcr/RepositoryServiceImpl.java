@@ -375,26 +375,17 @@ public class RepositoryServiceImpl implements RepositoryService {
     }
 
     @Override
-    public PrivilegeDefinition[] getPrivileges(SessionInfo sessionInfo, NodeId nodeId) throws RepositoryException {
+    public Name[] getPrivilegeNames(SessionInfo sessionInfo, NodeId nodeId) throws RepositoryException {
         SessionInfoImpl sInfo = getSessionInfoImpl(sessionInfo);
         String path = (nodeId == null) ? null : pathForId(nodeId, sInfo);
         NamePathResolver npResolver = sInfo.getNamePathResolver();
         
         Privilege[] privs = sInfo.getSession().getAccessControlManager().getPrivileges(path);
-        List<PrivilegeDefinition> pDefs = new ArrayList<PrivilegeDefinition>(privs.length);
+        List<Name> names = new ArrayList<Name>(privs.length);
         for (Privilege priv : privs) {
-            Name privName = npResolver.getQName(priv.getName());
-            Set<Name> aggrNames = null;
-            if (priv.isAggregate()) {
-                aggrNames = new HashSet<Name>();
-                for (Privilege dap : priv.getDeclaredAggregatePrivileges()) {
-                    aggrNames.add(npResolver.getQName(dap.getName()));
-                }
-            }
-            PrivilegeDefinition def = new PrivilegeDefinitionImpl(privName, priv.isAbstract(), aggrNames);
-            pDefs.add(def);
+            names.add(npResolver.getQName(priv.getName()));
         }
-        return pDefs.toArray(new PrivilegeDefinition[pDefs.size()]);
+        return names.toArray(new Name[names.size()]);
     }
     
     public PrivilegeDefinition[] getSupportedPrivileges(SessionInfo sessionInfo, NodeId nodeId) throws RepositoryException {

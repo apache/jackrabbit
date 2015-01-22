@@ -32,6 +32,7 @@ import org.apache.jackrabbit.jcr2spi.nodetype.ItemDefinitionProvider;
 import org.apache.jackrabbit.jcr2spi.security.authorization.AccessControlProvider;
 import org.apache.jackrabbit.jcr2spi.security.authorization.PrivilegeImpl;
 import org.apache.jackrabbit.jcr2spi.state.UpdatableItemStateManager;
+import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.PrivilegeDefinition;
 import org.apache.jackrabbit.spi.RepositoryService;
@@ -42,7 +43,7 @@ public class AccessControlProviderImpl implements AccessControlProvider {
 
     private RepositoryService service;
 
-    private Map<String, Privilege> privileges = new HashMap<String, Privilege>();
+    private Map<Name, Privilege> privileges = new HashMap<Name, Privilege>();
 
     @Override
     public void init(RepositoryConfig config, RepositoryService service) {
@@ -51,17 +52,13 @@ public class AccessControlProviderImpl implements AccessControlProvider {
 
     @Override
     public Privilege privilegeFromName(SessionInfo sessionInfo, NamePathResolver resolver, String privilegeName) throws RepositoryException {
-        Privilege priv = privileges.get(privilegeName);
-
+        Name name = resolver.getQName(privilegeName);
+        Privilege priv = getPrivilegeFromName(sessionInfo, resolver, name);
         if (priv == null) {
-            readPrivilegesFromService(sessionInfo, resolver);
-            if (privileges.containsKey(privilegeName)) {
-                priv = privileges.get(privilegeName);
-            } else {
-                throw new AccessControlException("Unknown privilege " + privilegeName);
-            }
+            throw new AccessControlException("Unknown privilege " + privilegeName);
+        } else {
+            return priv;
         }
-        return priv;
     }
 
     @Override
@@ -77,13 +74,15 @@ public class AccessControlProviderImpl implements AccessControlProvider {
 
     @Override
     public Set<Privilege> getPrivileges(SessionInfo sessionInfo, NodeId id, NamePathResolver npResolver) throws RepositoryException {
-        PrivilegeDefinition[] defs = service.getPrivileges(sessionInfo, id);
-        Set<Privilege> privileges = new HashSet<Privilege>(defs.length);
-        for (PrivilegeDefinition def : defs) {
-            Privilege p = new PrivilegeImpl(def, defs, npResolver);
-            privileges.add(p);
+        Name[] privNames = service.getPrivilegeNames(sessionInfo, id);
+        Set<Privilege> pvs = new HashSet<Privilege>(privNames.length);
+        for (Name name : privNames) {
+            Privilege priv = getPrivilegeFromName(sessionInfo, npResolver, name);
+            if (priv != null) {
+                pvs.add(priv);
+            }
         }
-        return privileges;        
+        return pvs;
     }
 
     @Override
@@ -97,10 +96,22 @@ public class AccessControlProviderImpl implements AccessControlProvider {
     }
 
     //--------------------------------------------------------------------------
+
     private void readPrivilegesFromService(SessionInfo sessionInfo, NamePathResolver resolver) throws RepositoryException {
         PrivilegeDefinition[] defs = service.getPrivilegeDefinitions(sessionInfo);
         for (PrivilegeDefinition d : defs) {
-            privileges.put(resolver.getJCRName(d.getName()), new PrivilegeImpl(d, defs, resolver));
+            privileges.put(d.getName(), new PrivilegeImpl(d, defs, resolver));
         }
+    }
+
+    private Privilege getPrivilegeFromName(SessionInfo sessionInfo, NamePathResolver resolver, Name privilegeName) throws RepositoryException {
+        Privilege priv = privileges.get(privilegeName);
+        if (priv == null) {
+            readPrivilegesFromService(sessionInfo, resolver);
+            if (privileges.containsKey(privilegeName)) {
+                priv = privileges.get(privilegeName);
+            }
+        }
+        return priv;
     }
 }
