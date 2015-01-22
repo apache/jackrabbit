@@ -184,8 +184,6 @@ public class AccessControlManagerImplTest extends AbstractAccessControlTest {
             // GRANT 'add_child_nodes' privilege
             policy.addAccessControlEntry(getUnknownPrincipal(), privilegesFromName(Privilege.JCR_ADD_CHILD_NODES));
 
-            assertEquals(2, policy.getAccessControlEntries().length);
-
             // bind the policy and save changes
             acMgr.setPolicy(testRoot, policy);
             superuser.save();

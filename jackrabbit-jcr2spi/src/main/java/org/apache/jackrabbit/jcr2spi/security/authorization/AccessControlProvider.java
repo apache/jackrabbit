@@ -38,7 +38,7 @@ import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
  */
 public interface AccessControlProvider {
 
-    void init(RepositoryConfig config, RepositoryService service);
+    void init(RepositoryConfig config) throws RepositoryException;
 
     /**
      * The privileges corresponding to the specified name.
