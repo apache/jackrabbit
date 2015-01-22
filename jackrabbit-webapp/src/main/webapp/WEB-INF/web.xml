@@ -332,11 +332,11 @@
             <param-value>/WEB-INF/batchread.properties</param-value>
             <description>JcrRemotingServlet: Optional mapping from node type names to default depth.</description>
         </init-param>
-        <!-- init-param>
-        	<param-name>concurrency-level</param-name>
-        	<param-value>50</param-value>
-        	<description>Number of concurrent requests expected. Default value is 50.</description>
-        </init-param -->
+        <init-param>
+        	<param-name>protectedhandlers-config</param-name>
+        	<param-value>/WEB-INF/protectedHandlers.properties</param-value>
+        	<description>JcrRemotingServlet: Handlers for removing protected items.</description>
+        </init-param>
         <!--
             Optional parameter to define the behaviour of the referrer-based CSRF protection
         -->

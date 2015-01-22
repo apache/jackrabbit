@@ -50,6 +50,7 @@ import javax.jcr.nodetype.PropertyDefinition;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Stack;
 import java.util.LinkedList;
@@ -614,15 +615,23 @@ class JsonDiffHandler implements DiffHandler {
 
         @Override
         public void object() throws IOException {
-            ImportNode n = new ImportNode(key);
-            if (!st.isEmpty()) {
-                ImportItem obj = st.peek();
-                if (obj instanceof ImportNode) {
-                    ((ImportNode) obj).addNode(n);
-                } else {
-                    throw new DiffException("Invalid DIFF format: The JSONArray may only contain simple values.");
-                }
-            }
+        	ImportNode n;
+        	if (st.isEmpty()) {
+        		try {
+            		n = new ImportNode(parent.getPath(), key);        			
+        		} catch (RepositoryException e) {
+        			throw new DiffException(e.getMessage(), e);
+        		}
+
+        	} else {
+        		ImportItem obj = st.peek();
+                n = new ImportNode(obj.getPath(), key);                                                    
+                if (obj instanceof ImportNode) {                        
+                	((ImportNode) obj).addNode(n);                    
+                } else {                
+                	throw new DiffException("Invalid DIFF format: The JSONArray may only contain simple values.");                    
+                }        		
+        	}
             st.push(n);
         }
 
@@ -653,9 +662,9 @@ class JsonDiffHandler implements DiffHandler {
         }
 
         @Override
-        public void array() throws IOException {
-            ImportMvProp prop = new ImportMvProp(key);
+        public void array() throws IOException {            
             ImportItem obj = st.peek();
+            ImportMvProp prop = new ImportMvProp(obj.getPath(), key);
             if (obj instanceof ImportNode) {
                 ((ImportNode)obj).addProp(prop);
             } else {
@@ -706,7 +715,7 @@ class JsonDiffHandler implements DiffHandler {
             if (obj instanceof ImportMvProp) {
                 ((ImportMvProp) obj).values.add(v);
             } else {
-                ((ImportNode) obj).addProp(new ImportProp(key, v));
+                ((ImportNode) obj).addProp(new ImportProp(obj.getPath(), key, v));
             }
         }
     }
@@ -715,19 +724,27 @@ class JsonDiffHandler implements DiffHandler {
 
         static final String TYPE_CDATA = "CDATA";
 
+        final String parentPath;
         final String name;
-
-        private ImportItem(String name) throws IOException {
+        final String path;
+        
+        private ImportItem(String parentPath, String name) throws IOException {
             if (name == null) {
                 throw new DiffException("Invalid DIFF format: NULL key.");
             }
             this.name = name;
+            this.parentPath = parentPath;
+            this.path = parentPath+"/"+name;
         }
         
         void setNameAttribute(AttributesImpl attr) {
             attr.addAttribute(Name.NS_SV_URI, "name", Name.NS_SV_PREFIX +":name", TYPE_CDATA, name);
         }
 
+        String getPath() {
+        	return path;
+        }
+        
         abstract boolean mandatesImport(Node parent);
 
         abstract void createItem(Node parent) throws RepositoryException, IOException;
@@ -745,8 +762,8 @@ class JsonDiffHandler implements DiffHandler {
         private List<ImportNode> childN = new ArrayList<ImportNode>();
         private List<ImportProperty> childP = new ArrayList<ImportProperty>();
 
-        private ImportNode(String name) throws IOException {
-            super(name);
+        private ImportNode(String parentPath, String name) throws IOException {
+            super(parentPath, name);
         }
 
         private String getUUID() {
@@ -813,8 +830,8 @@ class JsonDiffHandler implements DiffHandler {
 
         void addNode(ImportNode node) {
             childN.add(node);
-        }
-
+        }        
+        
         @Override
         void importItem(ContentHandler contentHandler) throws IOException {
             try {
@@ -880,8 +897,8 @@ class JsonDiffHandler implements DiffHandler {
         static final String TYPE = "type";
         static final String LOCAL_NAME = "property";
 
-        private ImportProperty(String name) throws IOException {
-            super(name);
+        private ImportProperty(String parentPath, String name) throws IOException {
+            super(parentPath, name);
         }
 
         @Override
@@ -925,9 +942,17 @@ class JsonDiffHandler implements DiffHandler {
 
         private final Value value;
 
-        private ImportProp(String name, Value v) throws IOException {
-            super(name);
-            this.value = v;
+        private ImportProp(String parentPath, String name, Value value) throws IOException {
+            super(parentPath, name);
+            try {
+                if (value == null) {
+            		this.value = extractValuesFromRequest(getPath())[0];
+            	} else {
+            		this.value = value;
+            	}                        	
+            } catch (RepositoryException e) {
+            	throw new DiffException(e.getMessage(), e);
+            }
         }
 
         @Override
@@ -937,7 +962,7 @@ class JsonDiffHandler implements DiffHandler {
 
         @Override
         void startValueElement(ContentHandler contentHandler) throws IOException {
-            try {
+            try {            	
                 String str = value.getString();
                 contentHandler.startElement(Name.NS_SV_URI, VALUE, Name.NS_SV_PREFIX+":"+VALUE, new AttributesImpl());
                 contentHandler.characters(str.toCharArray(), 0, str.length());
@@ -956,8 +981,8 @@ class JsonDiffHandler implements DiffHandler {
 
         private List<Value> values = new ArrayList<Value>();
 
-        private ImportMvProp(String name) throws IOException {
-            super(name);
+        private ImportMvProp(String parentPath, String name) throws IOException {
+            super(parentPath, name);
         }
 
         @Override
@@ -973,6 +998,11 @@ class JsonDiffHandler implements DiffHandler {
         @Override
         void startValueElement(ContentHandler contentHandler) throws IOException {
             try {
+            	// Multi-valued property with values present in the request multi-part             	
+            	if (values.size() == 0) {            	
+            		values = Arrays.asList(extractValuesFromRequest(getPath()));            	   
+            	}
+            	
                 for (Value v : values) {
                     String str = v.getString();
                     contentHandler.startElement(Name.NS_SV_URI, VALUE, Name.NS_SV_PREFIX+":"+VALUE, new AttributesImpl());

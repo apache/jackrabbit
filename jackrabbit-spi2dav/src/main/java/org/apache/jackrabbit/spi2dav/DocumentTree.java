@@ -22,6 +22,7 @@ import javax.jcr.RepositoryException;
 import javax.xml.parsers.ParserConfigurationException;
 
 import org.apache.jackrabbit.spi.Name;
+import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.spi.Tree;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
@@ -47,12 +48,12 @@ class DocumentTree extends AbstractTree {
 
     //---------------------------------------------------------------< Tree >---
     @Override
-    public void addProperty(Name propertyName, int propertyType, QValue value) throws RepositoryException {
-        addProperty(propertyName, propertyType, new QValue[]{value});
+    public void addProperty(NodeId parentId, Name propertyName, int propertyType, QValue value) throws RepositoryException {
+        addProperty(parentId, propertyName, propertyType, new QValue[]{value});
     }
 
     @Override
-    public void addProperty(Name propertyName, int propertyType, QValue[] values) throws RepositoryException {
+    public void addProperty(NodeId parentId, Name propertyName, int propertyType, QValue[] values) throws RepositoryException {
         properties.add(new Property(propertyName, propertyType, values));
     }
 

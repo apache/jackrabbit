@@ -34,88 +34,87 @@ import org.mortbay.jetty.servlet.ServletHolder;
 
 public class RepositoryStubImpl extends JackrabbitRepositoryStub {
 
-    private static Repository repository;
+	private static Repository repository;
 
-    private static SocketConnector connector;
+	private static SocketConnector connector;
 
-    private static Server server;
+	private static Server server;
 
-    private static Repository client;
+	private static Repository client;
 
-    private static final String ACCESS_CONTROL_PROVIDER_PROPERTIES = "accessControlProvider.properties";
+	private final String acProviderImplClass;
+	
+	private final String protectedRemoveImplClass;
+	
+	private static final String PROP_ACCESSCONTROL_PROVIDER_CLASS = "org.apache.jackrabbit.jcr2spi.AccessControlProvider.class";
 
-    // TODO
-    private static final String PROPERTIES_PROTECTED_ITEM_REMOVE_HANDLERS= "protectedHandlers.properties";
-    
-    public RepositoryStubImpl(Properties env) {
-        super(env);
-    }
+	private static final String PROP_PROTECTED_ITEM_REMOVE_CLASS = "javax.jcr.tck.access.control.list.handler";
+	
+	public RepositoryStubImpl(Properties env) {
+		super(env);
+		acProviderImplClass = env.getProperty(PROP_ACCESSCONTROL_PROVIDER_CLASS);
+		protectedRemoveImplClass = env.getProperty(PROP_PROTECTED_ITEM_REMOVE_CLASS);
+	}
 
-    @Override
-    public Repository getRepository() throws RepositoryStubException {
-        if (repository == null) {
-            repository = super.getRepository();
-        }
+	@Override
+	public Repository getRepository() throws RepositoryStubException {
+		if (repository == null) {
+			repository = super.getRepository();
+		}
 
-        if (connector == null) {
-            connector = new SocketConnector();
-            connector.setHost("localhost");
-            String pvalue = System.getProperty("org.apache.jackrabbit.jcr2dav.RepositoryStubImpl.port", "0");
-            int port = pvalue.equals("") ? 0 : Integer.parseInt(pvalue);
-            connector.setPort(port);
-        }
+		if (connector == null) {
+			connector = new SocketConnector();
+			connector.setHost("localhost");
+			String pvalue = System.getProperty("org.apache.jackrabbit.jcr2dav.RepositoryStubImpl.port", "0");
+			int port = pvalue.equals("") ? 0 : Integer.parseInt(pvalue);
+			connector.setPort(port);
+		}
 
-        if (server == null) {
-            server = new Server();
-            server.addConnector(connector);
+		if (server == null) {
+			server = new Server();
+			server.addConnector(connector);
 
-            ServletHolder holder = new ServletHolder(
-                    new JcrRemotingServlet() {
-                        protected Repository getRepository() {
-                            return repository;
-                        }
-                    });
-            holder.setInitParameter(
-                    JCRWebdavServerServlet.INIT_PARAM_RESOURCE_PATH_PREFIX,
-                    "");
-            holder.setInitParameter(
-                    JCRWebdavServerServlet.INIT_PARAM_MISSING_AUTH_MAPPING,
-                    "");
-            holder.setInitParameter(JcrRemotingServlet.INIT_PARAM_PROTECTED_HANDLERS_CONFIG, 
-                    PROPERTIES_PROTECTED_ITEM_REMOVE_HANDLERS);
+			ServletHolder holder = new ServletHolder(new JcrRemotingServlet() {
+				protected Repository getRepository() {
+					return repository;
+				}
+			});
+			holder.setInitParameter(JCRWebdavServerServlet.INIT_PARAM_RESOURCE_PATH_PREFIX, "");
+			holder.setInitParameter(JCRWebdavServerServlet.INIT_PARAM_MISSING_AUTH_MAPPING, "");
+			holder.setInitParameter(JcrRemotingServlet.INIT_PARAM_PROTECTED_HANDLERS_CONFIG, protectedRemoveImplClass);
 
-            Context context = new Context(server, "/");
-            context.addServlet(holder, "/*");
-            server.addHandler(context);
+			Context context = new Context(server, "/");
+			context.addServlet(holder, "/*");
+			server.addHandler(context);
 
-            try {
-                server.start();
-            } catch (Exception e) {
-                throw new RepositoryStubException(e);
-            }
-        }
+			try {
+				server.start();
+			} catch (Exception e) {
+				throw new RepositoryStubException(e);
+			}
+		}
 
-        if (client == null) {
-            try {
-                String uri = "http://localhost:" + connector.getLocalPort() + "/";
-                Map<String, String> parameters = new HashMap<String, String>();
-                parameters.put(JcrUtils.REPOSITORY_URI, uri);
-                // TODO
-                parameters.put(ACCESS_CONTROL_PROVIDER_PROPERTIES, "accessControlProvider.properties");
-                
-                client = JcrUtils.getRepository(parameters);
-            } catch (Exception e) {
-                throw new RepositoryStubException(e);
-            }
-        }
+		if (client == null) {
+			try {
+				Map<String, String> parameters = new HashMap<String, String>();
 
-        return client;
-    }
+				String uri = "http://localhost:" + connector.getLocalPort() + "/";
 
-    public static void stopServer() throws Exception {
-        if (server != null) {
-            server.stop();
-        }
-    }
+				parameters.put(JcrUtils.REPOSITORY_URI, uri);
+				parameters.put(PROP_ACCESSCONTROL_PROVIDER_CLASS, acProviderImplClass);
 
+				client = JcrUtils.getRepository(parameters);
+			} catch (Exception e) {
+				throw new RepositoryStubException(e);
+			}
+		}
+
+		return client;
+	}
+
+	public static void stopServer() throws Exception {
+		if (server != null) {
+			server.stop();
+		}
+	}
 }

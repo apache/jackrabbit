@@ -59,6 +59,7 @@ import org.apache.jackrabbit.spi.SessionInfo;
 import org.apache.jackrabbit.spi.commons.conversion.NameException;
 import org.apache.jackrabbit.spi.commons.conversion.NameParser;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
+import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -169,7 +170,7 @@ class AccessControlManagerImpl implements AccessControlManager, AccessControlCon
             }
             setMixin(parent, mixinType);
 
-            operation = SetTree.create(parent, name, NT_REP_ACL, null);
+            operation = SetTree.create(itemStateMgr, parent, name, NT_REP_ACL, null);            
             aclNode = operation.getTreeState();
         } else {
             Iterator<NodeEntry> it = getNodeEntry(aclNode).getNodeEntries();
