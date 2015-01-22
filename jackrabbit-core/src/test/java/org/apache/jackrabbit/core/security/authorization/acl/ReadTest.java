@@ -16,14 +16,19 @@
  */
 package org.apache.jackrabbit.core.security.authorization.acl;
 
+import org.apache.jackrabbit.JcrConstants;
 import org.apache.jackrabbit.api.JackrabbitSession;
 import org.apache.jackrabbit.api.security.JackrabbitAccessControlList;
+import org.apache.jackrabbit.api.security.user.Authorizable;
+import org.apache.jackrabbit.api.security.user.Group;
 import org.apache.jackrabbit.core.security.authorization.AbstractEvaluationTest;
 import org.apache.jackrabbit.core.security.authorization.AccessControlConstants;
 import org.apache.jackrabbit.test.NotExecutableException;
+import org.junit.Test;
 
 import javax.jcr.AccessDeniedException;
 import javax.jcr.Node;
+import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.Value;
@@ -337,6 +342,146 @@ public class ReadTest extends AbstractEvaluationTest {
         propPath = childNPath + "/" + jcrPrimaryType;
         assertFalse(testSession.hasPermission(propPath, javax.jcr.Session.ACTION_READ));
         assertFalse(testSession.propertyExists(propPath));
+    }
+
+    /**
+     * @see <a href="https://issues.apache.org/jira/browse/OAK-2412">OAK-2412</a>
+     */
+    @Test
+    public void testEmptyGlobRestriction()throws Exception{
+        Node grandchild = superuser.getNode(childNPath).addNode("child");
+        String ccPath = grandchild.getPath();
+        superuser.save();
+
+        // first deny access to 'path' (read-access is granted in the test setup)
+        Privilege[] read = privilegesFromName(Privilege.JCR_READ);
+        withdrawPrivileges(path, read, Collections.EMPTY_MAP);
+
+        Session testSession = getTestSession();
+        assertFalse(testSession.nodeExists(path));
+        assertFalse(canGetNode(testSession, path));
+        assertFalse(testSession.nodeExists(childNPath));
+        assertFalse(canGetNode(testSession, childNPath));
+        assertFalse(testSession.nodeExists(ccPath));
+        assertFalse(canGetNode(testSession, ccPath));
+        assertFalse(testSession.propertyExists(childNPath + '/' + JcrConstants.JCR_PRIMARYTYPE));
+
+        Map<String, Value> emptyStringRestriction = new HashMap<String, Value>(getRestrictions(superuser, childNPath));
+        emptyStringRestriction.put(AccessControlConstants.P_GLOB.toString(), vf.createValue(""));
+
+        givePrivileges(childNPath, read, emptyStringRestriction);
+        assertFalse(testSession.nodeExists(path));
+        assertFalse(canGetNode(testSession, path));
+        assertTrue(testSession.nodeExists(childNPath));
+        assertTrue(canGetNode(testSession, childNPath));
+        assertFalse(testSession.nodeExists(ccPath));
+        assertFalse(canGetNode(testSession, ccPath));
+        assertFalse(testSession.propertyExists(childNPath + '/' + JcrConstants.JCR_PRIMARYTYPE));
+
+        givePrivileges(ccPath, read, Collections.EMPTY_MAP);
+        assertTrue(testSession.nodeExists(ccPath));
+        assertTrue(canGetNode(testSession, ccPath));
+        assertTrue(testSession.propertyExists(ccPath + '/' + JcrConstants.JCR_PRIMARYTYPE));
+    }
+
+    /**
+     * @see <a href="https://issues.apache.org/jira/browse/OAK-2412">OAK-2412</a>
+     */
+    @Test
+    public void testEmptyGlobRestriction2()throws Exception{
+        Node grandchild = superuser.getNode(childNPath).addNode("child");
+        String ccPath = grandchild.getPath();
+        superuser.save();
+
+        // first deny access to 'path' (read-access is granted in the test setup)
+        Privilege[] read = privilegesFromName(Privilege.JCR_READ);
+        withdrawPrivileges(path, read, Collections.EMPTY_MAP);
+
+        Session testSession = getTestSession();
+        assertFalse(testSession.nodeExists(path));
+        assertFalse(canGetNode(testSession, path));
+        assertFalse(testSession.nodeExists(childNPath));
+        assertFalse(canGetNode(testSession, childNPath));
+        assertFalse(testSession.nodeExists(ccPath));
+        assertFalse(canGetNode(testSession, ccPath));
+        assertFalse(testSession.propertyExists(childNPath + '/' + JcrConstants.JCR_PRIMARYTYPE));
+
+        Map<String, Value> emptyStringRestriction = new HashMap<String, Value>(getRestrictions(superuser, path));
+        emptyStringRestriction.put(AccessControlConstants.P_GLOB.toString(), vf.createValue(""));
+
+        givePrivileges(path, read, emptyStringRestriction);
+        assertTrue(testSession.nodeExists(path));
+        assertTrue(canGetNode(testSession, path));
+        assertFalse(testSession.nodeExists(childNPath));
+        assertFalse(canGetNode(testSession, childNPath));
+        assertFalse(testSession.nodeExists(ccPath));
+        assertFalse(canGetNode(testSession, ccPath));
+        assertFalse(testSession.propertyExists(childNPath + '/' + JcrConstants.JCR_PRIMARYTYPE));
+    }
+
+    /**
+     * @see <a href="https://issues.apache.org/jira/browse/OAK-2412">OAK-2412</a>
+     */
+    @Test
+    public void testEmptyGlobRestriction3()throws Exception{
+        Node child2 = superuser.getNode(path).addNode("child2");
+        String childNPath2 = child2.getPath();
+        superuser.save();
+
+        try {
+            Group group1 = getTestGroup();
+            Group group2 = getUserManager(superuser).createGroup("group2");
+            group2.addMember(testUser);
+            Group group3 = getUserManager(superuser).createGroup("group3");
+            superuser.save();
+
+            assertTrue(group1.isDeclaredMember(testUser));
+            assertTrue(group2.isDeclaredMember(testUser));
+            assertFalse(group3.isDeclaredMember(testUser));
+
+            Privilege[] read = privilegesFromName(Privilege.JCR_READ);
+
+            withdrawPrivileges(path, group1.getPrincipal(), read, Collections.EMPTY_MAP);
+            Map<String, Value> emptyStringRestriction = new HashMap<String, Value>(getRestrictions(superuser, path));
+            emptyStringRestriction.put(AccessControlConstants.P_GLOB.toString(), vf.createValue(""));
+            givePrivileges(path, group1.getPrincipal(), read, emptyStringRestriction);
+
+            withdrawPrivileges(childNPath, group2.getPrincipal(), read, Collections.EMPTY_MAP);
+            emptyStringRestriction = new HashMap<String, Value>(getRestrictions(superuser, childNPath));
+            emptyStringRestriction.put(AccessControlConstants.P_GLOB.toString(), vf.createValue(""));
+            givePrivileges(childNPath, group2.getPrincipal(), read, emptyStringRestriction);
+
+            withdrawPrivileges(childNPath2, group3.getPrincipal(), read, Collections.EMPTY_MAP);
+            emptyStringRestriction = new HashMap<String, Value>(getRestrictions(superuser, childNPath2));
+            emptyStringRestriction.put(AccessControlConstants.P_GLOB.toString(), vf.createValue(""));
+            givePrivileges(childNPath2, group3.getPrincipal(), read, emptyStringRestriction);
+
+            // NOTE: test-session is created here and is expected to reflect the
+            // group membership changes made above.
+            Session testSession = getTestSession();
+            assertTrue(testSession.nodeExists(path));
+            assertTrue(testSession.nodeExists(childNPath));
+            assertFalse(testSession.nodeExists(childNPath2));
+        } finally {
+            Authorizable g2 = getUserManager(superuser).getAuthorizable("group2");
+            if (g2 != null) {
+                g2.remove();
+            }
+            Authorizable g3 = getUserManager(superuser).getAuthorizable("group3");
+            if (g3 != null) {
+                g3.remove();
+            }
+            superuser.save();
+        }
+    }
+
+    private static boolean canGetNode(Session session, String nodePath) throws RepositoryException {
+        try {
+            session.getNode(nodePath);
+            return true;
+        } catch (PathNotFoundException e) {
+            return false;
+        }
     }
 
     public void testRemoveMixin() throws Exception {
