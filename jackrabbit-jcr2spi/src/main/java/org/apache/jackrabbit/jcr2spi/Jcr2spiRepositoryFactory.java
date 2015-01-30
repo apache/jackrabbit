@@ -152,12 +152,10 @@ public class Jcr2spiRepositoryFactory implements RepositoryFactory {
                 log.warn("Ignoring {} since {} was specified", PARAM_REPOSITORY_SERVICE_FACTORY,
                         PARAM_REPOSITORY_CONFIG);
             }
-        }
-        else {
+        } else {
             if (serviceFactory == null) {
                 return null;
-            }
-            else {
+            } else {
                 config = new RepositoryConfigImpl(serviceFactory, parameters);
             }
         }
@@ -181,17 +179,15 @@ public class Jcr2spiRepositoryFactory implements RepositoryFactory {
         if (serviceFactoryParam instanceof RepositoryServiceFactory) {
             log.debug("Found RepositoryServiceFactory {}", serviceFactoryParam);
             return (RepositoryServiceFactory) serviceFactoryParam;
-        }
-        else if (serviceFactoryParam instanceof String) {
-            String serviceFactoryName = (String)serviceFactoryParam;
+        } else if (serviceFactoryParam instanceof String) {
+            String serviceFactoryName = (String) serviceFactoryParam;
             log.debug("Found RepositoryServiceFactory class name {}", serviceFactoryName);
             try {
                 Class<?> serviceFactoryClass;
                 try {
                     serviceFactoryClass = Class.forName(serviceFactoryName, true,
-                                Thread.currentThread().getContextClassLoader());
-                }
-                catch (ClassNotFoundException e) {
+                            Thread.currentThread().getContextClassLoader());
+                } catch (ClassNotFoundException e) {
                     // Backup for OSGi
                     serviceFactoryClass = Class.forName(serviceFactoryName);
                 }
@@ -201,20 +197,17 @@ public class Jcr2spiRepositoryFactory implements RepositoryFactory {
                 if (serviceFactory instanceof RepositoryServiceFactory) {
                     log.debug("Found RepositoryServiceFactory {}", serviceFactory);
                     return (RepositoryServiceFactory) serviceFactory;
-                }
-                else {
+                } else {
                     String msg = "Error acquiring RepositoryServiceFactory " + serviceFactoryParam;
                     log.error(msg);
                     throw new RepositoryException(msg);
                 }
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 String msg = "Error acquiring RepositoryServiceFactory";
                 log.error(msg, e);
                 throw new RepositoryException(msg, e);
             }
-        }
-        else {
+        } else {
             String msg = "Error acquiring RepositoryServiceFactory from " + serviceFactoryParam;
             log.error(msg);
             throw new RepositoryException(msg);
@@ -282,27 +275,22 @@ public class Jcr2spiRepositoryFactory implements RepositoryFactory {
             if (paramCacheBehaviour == null) {
                 log.debug("{} not set, defaulting to {}", PARAM_CACHE_BEHAVIOR, DEFAULT_CACHE_BEHAVIOR);
                 return DEFAULT_CACHE_BEHAVIOR;
-            }
-            else if (paramCacheBehaviour instanceof CacheBehaviour) {
+            } else if (paramCacheBehaviour instanceof CacheBehaviour) {
                 log.debug("Setting CacheBehaviour to {}", paramCacheBehaviour);
                 return (CacheBehaviour) paramCacheBehaviour;
-            }
-            else if (paramCacheBehaviour instanceof String) {
+            } else if (paramCacheBehaviour instanceof String) {
                 String cacheBehaviour = (String) paramCacheBehaviour;
                 if ("invalidate".equals(cacheBehaviour)) {
                     log.debug("Setting CacheBehaviour to {}", CacheBehaviour.INVALIDATE);
                     return CacheBehaviour.INVALIDATE;
-                }
-                else if ("observation".equals(cacheBehaviour)) {
+                } else if ("observation".equals(cacheBehaviour)) {
                     log.debug("Setting CacheBehaviour to {}", CacheBehaviour.OBSERVATION);
                     return CacheBehaviour.OBSERVATION;
-                }
-                else {
+                } else {
                     log.error("Invalid valid for CacheBehaviour: {} {}", PARAM_CACHE_BEHAVIOR, cacheBehaviour);
                     throw new RepositoryException("Invalid value for CacheBehaviour: " + cacheBehaviour);
                 }
-            }
-            else {
+            } else {
                 String msg = "Invalid value for CacheBehaviour: " + paramCacheBehaviour;
                 log.error(msg);
                 throw new RepositoryException(msg);
@@ -316,23 +304,19 @@ public class Jcr2spiRepositoryFactory implements RepositoryFactory {
             if (paramItemCacheSize == null) {
                 log.debug("{} not set, defaulting to {}", PARAM_ITEM_CACHE_SIZE, DEFAULT_ITEM_CACHE_SIZE);
                 return DEFAULT_ITEM_CACHE_SIZE;
-            }
-            else if (paramItemCacheSize instanceof Integer) {
+            } else if (paramItemCacheSize instanceof Integer) {
                 log.debug("Setting ItemCacheSize to {}", paramItemCacheSize);
                 return (Integer) paramItemCacheSize;
-            }
-            else if (paramItemCacheSize instanceof String) {
+            } else if (paramItemCacheSize instanceof String) {
                 try {
                     log.debug("Setting ItemCacheSize to {}", paramItemCacheSize);
                     return Integer.parseInt((String) paramItemCacheSize);
-                }
-                catch (NumberFormatException e) {
+                } catch (NumberFormatException e) {
                     String msg = "Invalid value for ItemCacheSize: " + paramItemCacheSize;
                     log.error(msg);
                     throw new RepositoryException(msg, e);
                 }
-            }
-            else {
+            } else {
                 String msg = "Invalid value for ItemCacheSize: " + paramItemCacheSize;
                 log.error(msg);
                 throw new RepositoryException(msg);
@@ -346,23 +330,19 @@ public class Jcr2spiRepositoryFactory implements RepositoryFactory {
             if (paramPollTimeOut == null) {
                 log.debug("{} not set, defaulting to {}", PARAM_POLL_TIME_OUT, DEFAULT_POLL_TIME_OUT);
                 return DEFAULT_POLL_TIME_OUT;
-            }
-            else if (paramPollTimeOut instanceof Integer) {
+            } else if (paramPollTimeOut instanceof Integer) {
                 log.debug("Setting PollTimeout to {}", paramPollTimeOut);
                 return (Integer) paramPollTimeOut;
-            }
-            else if (paramPollTimeOut instanceof String) {
+            } else if (paramPollTimeOut instanceof String) {
                 try {
                     log.debug("Setting PollTimeout to {}", paramPollTimeOut);
                     return Integer.parseInt((String) paramPollTimeOut);
-                }
-                catch (NumberFormatException e) {
+                } catch (NumberFormatException e) {
                     String msg = "Invalid value for PollTimeout: " + paramPollTimeOut;
                     log.error(msg);
                     throw new RepositoryException(msg, e);
                 }
-            }
-            else {
+            } else {
                 String msg = "Invalid value for PollTimeout: " + paramPollTimeOut;
                 log.error(msg);
                 throw new RepositoryException(msg);
@@ -382,8 +362,7 @@ public class Jcr2spiRepositoryFactory implements RepositoryFactory {
             Object lwProvider = parameters.get(PARAM_LOG_WRITER_PROVIDER);
             if (lwProvider instanceof LogWriterProvider) {
                 service = SpiLoggerFactory.create(config.getRepositoryService(), (LogWriterProvider) lwProvider);
-            }
-            else {
+            } else {
                 service = SpiLoggerFactory.create(config.getRepositoryService());
             }
         }
