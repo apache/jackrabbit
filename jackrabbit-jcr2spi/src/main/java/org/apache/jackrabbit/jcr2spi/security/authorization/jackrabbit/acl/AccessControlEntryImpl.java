@@ -18,10 +18,12 @@ package org.apache.jackrabbit.jcr2spi.security.authorization.jackrabbit.acl;
 
 import java.security.Principal;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 import javax.jcr.ValueFormatException;
@@ -58,10 +60,14 @@ class AccessControlEntryImpl implements JackrabbitAccessControlEntry {
      * Restrictions that may apply with this entry.
      */
     private final Map<Name, QValue> restrictions;
+    private final Map<Name, Iterable<QValue>> mvRestrictions;
 
     private final NamePathResolver resolver;
 
     private final QValueFactory qvf;
+
+    private int hashCode = -1;
+    private int privsHashCode = -1;
 
     /**
      * 
@@ -72,9 +78,8 @@ class AccessControlEntryImpl implements JackrabbitAccessControlEntry {
      * @throws RepositoryException 
      */
     AccessControlEntryImpl(Principal principal, Privilege[] privileges, boolean isAllow,
-                           Map<String, QValue> restrictions, NamePathResolver resolver,
-                           QValueFactory qvf)
-                                    throws RepositoryException {
+                           Map<Name, QValue> restrictions, Map<Name, Iterable<QValue>> mvRestrictions,
+                           NamePathResolver resolver, QValueFactory qvf) throws RepositoryException {
         if (principal == null || (privileges != null && privileges.length == 0)) {
             throw new AccessControlException("An Entry must not have a NULL principal or empty privileges");
         }
@@ -86,13 +91,15 @@ class AccessControlEntryImpl implements JackrabbitAccessControlEntry {
         this.resolver = resolver;
         this.qvf = qvf;
 
-        if (restrictions == null || (restrictions.size() == 0)) {
+        if (restrictions == null) {
             this.restrictions = Collections.<Name, QValue>emptyMap();
         } else {
-            this.restrictions = new HashMap<Name, QValue>(restrictions.size());
-            for (String restName : restrictions.keySet()) {
-                this.restrictions.put(resolver.getQName(restName), restrictions.get(restName));
-            }
+            this.restrictions = restrictions;
+        }
+        if (mvRestrictions == null) {
+            this.mvRestrictions = Collections.emptyMap();
+        } else {
+            this.mvRestrictions = mvRestrictions;
         }
     }
     
@@ -144,8 +151,56 @@ class AccessControlEntryImpl implements JackrabbitAccessControlEntry {
             throws RepositoryException {
         return new Value[] {getRestriction(restrictionName)};
     }
-    
+
+    //-------------------------------------------------------------< Object >---
+    @Override
+    public int hashCode() {
+        if (hashCode == -1) {
+            hashCode = buildHashCode();
+        }
+        return hashCode;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == this) {
+            return true;
+        }
+        if (obj instanceof AccessControlEntryImpl) {
+            AccessControlEntryImpl other = (AccessControlEntryImpl) obj;
+            return principal.getName().equals(other.principal.getName()) &&
+                    isAllow == other.isAllow &&
+                    restrictions.equals(other.restrictions) &&
+                    mvRestrictions.equals(other.mvRestrictions) &&
+                    getPrivilegesHashCode() == other.getPrivilegesHashCode();
+        }
+        return false;
+    }
+
     //-------------------------------------------------------------< private >---
+    private int buildHashCode() {
+        int h = 17;
+        h = 37 * h + principal.getName().hashCode();
+        h = 37 * h + getPrivilegesHashCode();
+        h = 37 * h + Boolean.valueOf(isAllow).hashCode();
+        h = 37 * h + restrictions.hashCode();
+        h = 37 * h + mvRestrictions.hashCode();
+        return h;
+    }
+
+    private int getPrivilegesHashCode() {
+        if (privsHashCode == -1) {
+            Set<Privilege> prvs = new HashSet<Privilege>(Arrays.asList(privileges));
+            for (Privilege p : privileges) {
+                if (p.isAggregate()) {
+                    prvs.addAll(Arrays.asList(p.getAggregatePrivileges()));
+                }
+            }
+            privsHashCode = prvs.hashCode();
+        }
+        return privsHashCode;
+    }
+
     private void checkAbstract(Privilege[] privileges) throws AccessControlException {
         for (Privilege privilege : privileges) {
             if (privilege.isAbstract()) {

@@ -18,6 +18,7 @@ package org.apache.jackrabbit.jcr2spi.security.authorization.jackrabbit.acl;
 
 import java.security.Principal;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -39,9 +40,11 @@ import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
 import org.apache.jackrabbit.jcr2spi.security.authorization.jackrabbit.AccessControlConstants;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
 import org.apache.jackrabbit.jcr2spi.state.PropertyState;
+import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.spi.QValueFactory;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
+import org.apache.jackrabbit.spi.commons.value.ValueFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -99,16 +102,16 @@ class AccessControlListImpl implements JackrabbitAccessControlList, AccessContro
                 }
 
                 // rep:glob property -> restrictions
-                Map<String, QValue> restrictions = null;
+                Map<Name, QValue> restrictions = null;
                 if (aceNode.hasPropertyName(P_GLOB)) {
                     ps = aceNode.getPropertyState(P_GLOB);
-                    restrictions = Collections.singletonMap(jcrRepGlob, ps.getValue());
+                    restrictions = Collections.singletonMap(ps.getName(), ps.getValue());
                 }
 
                 // the isAllow flag
                 boolean isAllow = NT_REP_GRANT_ACE.equals(aceNode.getNodeTypeName());
                 // build the entry
-                AccessControlEntry ace = new AccessControlEntryImpl(principal, privileges, isAllow, restrictions, resolver, qValueFactory);
+                AccessControlEntry ace = new AccessControlEntryImpl(principal, privileges, isAllow, restrictions, Collections.EMPTY_MAP, resolver, qValueFactory);
                 entries.add(ace);
             } catch (RepositoryException e) {
                 log.debug("Fail to create Entry for "+ aceNode.getName().toString());
@@ -165,22 +168,22 @@ class AccessControlListImpl implements JackrabbitAccessControlList, AccessContro
                             boolean isAllow, Map<String, Value> restrictions,
                             Map<String, Value[]> mvRestrictions) throws AccessControlException,
             RepositoryException {
-        if (mvRestrictions != null && !mvRestrictions.isEmpty()) {
-            throw new UnsupportedRepositoryOperationException("Jackrabbit 2.x does not support multi-valued restrictions");
-        }
-        return addEntry(principal, privileges, isAllow, restrictions);
+
+
+        // create entry to be added
+        Map<Name, QValue> rs = createRestrictions(restrictions);
+        Map<Name, Iterable<QValue>> mvRs = createMvRestrictions(mvRestrictions);
+        AccessControlEntry entry = createEntry(principal, privileges, isAllow, rs, mvRs);
+
+        return entries.add(entry);
+
     }
 
     @Override
     public boolean addEntry(Principal principal, Privilege[] privileges,
                             boolean isAllow, Map<String, Value> restrictions)
             throws AccessControlException, RepositoryException {
-
-        // create entry to be added
-        Map<String, QValue> rs = createRestrictions(restrictions);
-        AccessControlEntry entry = createEntry(principal, privileges, isAllow, rs);
-
-        return entries.add(entry);
+        return addEntry(principal, privileges, isAllow, restrictions, Collections.EMPTY_MAP);
     }
 
     @Override
@@ -205,19 +208,62 @@ class AccessControlListImpl implements JackrabbitAccessControlList, AccessContro
         throw new UnsupportedRepositoryOperationException("not yet implemented");
     }
 
-    //------------------------------------------------------------< private >---
-    private AccessControlEntry createEntry(Principal principal, Privilege[] privileges, boolean isAllow, Map<String, QValue> restrictions) throws RepositoryException {
-        return new AccessControlEntryImpl(principal, privileges, isAllow, restrictions, resolver, qValueFactory);
+    //-------------------------------------------------------------< Object >---
+    /**
+     * Returns zero to satisfy the Object equals/hashCode contract.
+     * This class is mutable and not meant to be used as a hash key.
+     *
+     * @return always zero
+     * @see Object#hashCode()
+     */
+    @Override
+    public int hashCode() {
+        return 0;
     }
 
-    private Map<String, QValue> createRestrictions(Map<String, Value> restrictions) throws RepositoryException {
-        Map<String, QValue> rs = new HashMap<String, QValue>(restrictions.size());
+    /**
+     * Returns true if the path and the entries are equal; false otherwise.
+     *
+     * @param obj Object to be tested.
+     * @return true if the path and the entries are equal; false otherwise.
+     * @see Object#equals(Object)
+     */
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == this) {
+            return true;
+        }
+
+        if (obj instanceof AccessControlListImpl) {
+            AccessControlListImpl acl = (AccessControlListImpl) obj;
+            return jcrPath.equals(acl.jcrPath) && entries.equals(acl.entries);
+        }
+        return false;
+    }
+
+    //------------------------------------------------------------< private >---
+    private AccessControlEntry createEntry(Principal principal, Privilege[] privileges, boolean isAllow,
+                                           Map<Name, QValue> restrictions, Map<Name, Iterable<QValue>> mvRestrictions) throws RepositoryException {
+        return new AccessControlEntryImpl(principal, privileges, isAllow, restrictions, mvRestrictions, resolver, qValueFactory);
+    }
+
+    private Map<Name, QValue> createRestrictions(Map<String, Value> restrictions) throws RepositoryException {
+        Map<Name, QValue> rs = new HashMap<Name, QValue>(restrictions.size());
         for (String restName : restrictions.keySet()) {
-            QValue restValue = qValueFactory.create(restrictions.get(restName).getString(), PropertyType.STRING);
-            rs.put(restName, restValue);
+            Value v = restrictions.get(restName);
+            rs.put(resolver.getQName(restName), ValueFormat.getQValue(v, resolver, qValueFactory));
         }
         return rs;
     }
+
+    private Map<Name, Iterable<QValue>> createMvRestrictions(Map<String, Value[]> restrictions) throws RepositoryException {
+            Map<Name, Iterable<QValue>> rs = new HashMap<Name, Iterable<QValue>>(restrictions.size());
+            for (String restName : restrictions.keySet()) {
+                QValue[] qvs = ValueFormat.getQValues(restrictions.get(restName), resolver, qValueFactory);
+                rs.put(resolver.getQName(restName), Arrays.asList(qvs));
+            }
+            return rs;
+        }
 
     private static Principal createPrincipal(final String name) {
         return new Principal() {

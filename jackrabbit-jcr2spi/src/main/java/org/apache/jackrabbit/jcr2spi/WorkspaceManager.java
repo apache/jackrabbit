@@ -268,7 +268,7 @@ public class WorkspaceManager
      */
     public AccessControlProvider getAccessControlProvider() throws RepositoryException {
         if (acProvider == null) {
-            acProvider = AccessControlProviderStub.newInstance(config, service);
+            acProvider = AccessControlProviderStub.newInstance(config);
         }
         return acProvider;
     }
@@ -947,9 +947,9 @@ public class WorkspaceManager
                 PropertyState ps = pEntries.next().getPropertyState();
                 if (!NameConstants.JCR_PRIMARYTYPE.equals(ps.getName()) && !NameConstants.JCR_UUID.equals(ps.getName())) {
                     if (ps.isMultiValued()) {
-                        tree.addProperty(ps.getName(), ps.getType(), ps.getValues());
+                        tree.addProperty(ps.getParent().getNodeId(), ps.getName(), ps.getType(), ps.getValues());
                     } else {
-                        tree.addProperty(ps.getName(), ps.getType(), ps.getValue());
+                        tree.addProperty(ps.getParent().getNodeId(), ps.getName(), ps.getType(), ps.getValue());
                     }
                 }
             }

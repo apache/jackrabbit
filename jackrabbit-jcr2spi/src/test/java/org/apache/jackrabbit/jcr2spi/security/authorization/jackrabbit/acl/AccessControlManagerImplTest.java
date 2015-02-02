@@ -184,8 +184,6 @@ public class AccessControlManagerImplTest extends AbstractAccessControlTest {
             // GRANT 'add_child_nodes' privilege
             policy.addAccessControlEntry(getUnknownPrincipal(), privilegesFromName(Privilege.JCR_ADD_CHILD_NODES));
 
-            assertEquals(2, policy.getAccessControlEntries().length);
-
             // bind the policy and save changes
             acMgr.setPolicy(testRoot, policy);
             superuser.save();
@@ -195,7 +193,7 @@ public class AccessControlManagerImplTest extends AbstractAccessControlTest {
             
             NodeIterator nit = aclNode.getNodes();
             
-            // Jackrabbit-core will match the two entries -> only a single aceNode will be created.
+            // Jackrabbit-core will merge the two entries -> only a single aceNode will be created.
             assertEquals(1, nit.getSize());            
         } finally {
             superuser.refresh(false);

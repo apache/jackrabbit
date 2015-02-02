@@ -18,15 +18,16 @@ package org.apache.jackrabbit.jcr2spi.security.authorization.jackrabbit.acl;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.jcr.AccessDeniedException;
 import javax.jcr.PathNotFoundException;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
-import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.ValueFormatException;
 import javax.jcr.security.AccessControlEntry;
 import javax.jcr.security.AccessControlException;
@@ -111,7 +112,18 @@ class AccessControlManagerImpl implements AccessControlManager, AccessControlCon
 
     public boolean hasPrivileges(String absPath, Privilege[] privileges) throws PathNotFoundException, RepositoryException {
         Set<Privilege> privs = acProvider.getPrivileges(sessionInfo, getNodeState(npResolver.getQPath(absPath)).getNodeId(), npResolver);
-        return privs.containsAll(Arrays.asList(privileges));
+        List<Privilege> toTest = Arrays.asList(privileges);
+        if (privs.containsAll(toTest)) {
+            return true;
+        } else {
+            Set<Privilege> agg = new HashSet<Privilege>(privs);
+            for (Privilege p : privs) {
+                if (p.isAggregate()) {
+                    agg.addAll(Arrays.asList(p.getAggregatePrivileges()));
+                }
+            }
+            return agg.containsAll(toTest);
+        }
     }
 
     public Privilege[] getPrivileges(String absPath) throws PathNotFoundException, RepositoryException {
@@ -120,8 +132,11 @@ class AccessControlManagerImpl implements AccessControlManager, AccessControlCon
     }
 
     public AccessControlPolicy[] getEffectivePolicies(String absPath) throws RepositoryException {
-        // TODO
-        throw new UnsupportedRepositoryOperationException("not yet implemented");
+        checkValidNodePath(absPath);
+        checkAccessControlRead(absPath);
+
+        // TODO : add proper implementation
+        return new AccessControlPolicy[] {new AccessControlPolicy() {}};
     }
 
     public AccessControlPolicyIterator getApplicablePolicies(String absPath) throws RepositoryException {
@@ -136,6 +151,8 @@ class AccessControlManagerImpl implements AccessControlManager, AccessControlCon
     }
 
     public AccessControlPolicy[] getPolicies(String absPath) throws RepositoryException {
+        checkValidNodePath(absPath);
+
         List<AccessControlList> policies = new ArrayList<AccessControlList>();
         NodeState aclNode = getAclNode(absPath);
         AccessControlList acl;
@@ -169,7 +186,7 @@ class AccessControlManagerImpl implements AccessControlManager, AccessControlCon
             }
             setMixin(parent, mixinType);
 
-            operation = SetTree.create(parent, name, NT_REP_ACL, null);
+            operation = SetTree.create(itemStateMgr, parent, name, NT_REP_ACL, null);            
             aclNode = operation.getTreeState();
         } else {
             Iterator<NodeEntry> it = getNodeEntry(aclNode).getNodeEntries();
@@ -291,9 +308,14 @@ class AccessControlManagerImpl implements AccessControlManager, AccessControlCon
         if (isAcItem) {
             throw new AccessControlException("The path: "+nodePath+" points to an access control content node");
         }
-
     }
-    
+
+    private void checkAccessControlRead(String absPath) throws RepositoryException {
+        if (!hasPrivileges(absPath, new Privilege[] {privilegeFromName(Privilege.JCR_READ_ACCESS_CONTROL)})) {
+            throw new AccessDeniedException();
+        }
+    }
+
     private void createAceNode(SetTree operation, NodeState parentState, AccessControlEntry entry) throws RepositoryException {
         AccessControlEntryImpl ace = (AccessControlEntryImpl) entry;
         
@@ -323,7 +345,7 @@ class AccessControlManagerImpl implements AccessControlManager, AccessControlCon
 
         addProperty(operation, aceNode, N_REP_PRIVILEGES, PropertyType.NAME, vls);
 
-        // TODO: add rep:glob property            
+        // TODO: add single and mv restrictions
     }
     
     private NodeState getNodeState(String nodePath) throws RepositoryException {

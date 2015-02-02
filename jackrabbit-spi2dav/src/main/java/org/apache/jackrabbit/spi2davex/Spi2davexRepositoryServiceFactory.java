@@ -66,6 +66,11 @@ public class Spi2davexRepositoryServiceFactory implements RepositoryServiceFacto
      */
     public static final String PARAM_MAX_CONNECTIONS = "org.apache.jackrabbit.spi2davex.MaxConnections";
 
+
+    public static final String PARAM_WORKSPACE_NAME_DEFAULT =  "org.apache.jackrabbit.spi2davex.WorkspaceNameDefault";
+
+    public static final String DEFAULT_WORKSPACE_NAME_DEFAULT = "default";
+
     public RepositoryService createRepositoryService(Map<?, ?> parameters) throws RepositoryException {
         // retrieve the repository uri
         String uri;
@@ -83,6 +88,8 @@ public class Spi2davexRepositoryServiceFactory implements RepositoryServiceFacto
         BatchReadConfig brc = null;
         int itemInfoCacheSize = ItemInfoCacheImpl.DEFAULT_CACHE_SIZE;
         int maximumHttpConnections = 0;
+
+        String workspaceNameDefault = DEFAULT_WORKSPACE_NAME_DEFAULT;
 
         if (parameters != null) {
             // batchRead config
@@ -110,12 +117,17 @@ public class Spi2davexRepositoryServiceFactory implements RepositoryServiceFacto
                     // using default
                 }
             }
+
+            param = parameters.get(PARAM_WORKSPACE_NAME_DEFAULT);
+            if (param != null) {
+                workspaceNameDefault = param.toString();
+            }
         }
 
         if (maximumHttpConnections > 0) {
-            return new RepositoryServiceImpl(uri, null, brc, itemInfoCacheSize, maximumHttpConnections);
+            return new RepositoryServiceImpl(uri, workspaceNameDefault, brc, itemInfoCacheSize, maximumHttpConnections);
         } else {
-            return new RepositoryServiceImpl(uri, null, brc, itemInfoCacheSize);
+            return new RepositoryServiceImpl(uri, workspaceNameDefault, brc, itemInfoCacheSize);
         }
     }
 

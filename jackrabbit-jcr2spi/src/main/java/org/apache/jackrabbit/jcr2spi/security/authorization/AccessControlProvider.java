@@ -29,7 +29,6 @@ import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyManager;
 import org.apache.jackrabbit.jcr2spi.nodetype.ItemDefinitionProvider;
 import org.apache.jackrabbit.jcr2spi.state.UpdatableItemStateManager;
 import org.apache.jackrabbit.spi.NodeId;
-import org.apache.jackrabbit.spi.RepositoryService;
 import org.apache.jackrabbit.spi.SessionInfo;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 
@@ -38,7 +37,7 @@ import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
  */
 public interface AccessControlProvider {
 
-    void init(RepositoryConfig config, RepositoryService service);
+    void init(RepositoryConfig config) throws RepositoryException;
 
     /**
      * The privileges corresponding to the specified name.

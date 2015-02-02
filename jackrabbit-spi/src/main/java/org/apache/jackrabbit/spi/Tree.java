@@ -30,9 +30,9 @@ public interface Tree {
 
     public String getUniqueId();
 
-    public void addProperty(Name propertyName, int propertyType, QValue value) throws RepositoryException;
+    public void addProperty(NodeId parentId, Name propertyName, int propertyType, QValue value) throws RepositoryException;
 
-    public void addProperty(Name propertyName, int propertyType, QValue[] values) throws RepositoryException;
+    public void addProperty(NodeId parentId, Name propertyName, int propertyType, QValue[] values) throws RepositoryException;
 
     public Tree addChild(Name childName, Name primaryTypeName, String uniqueId);
 }
