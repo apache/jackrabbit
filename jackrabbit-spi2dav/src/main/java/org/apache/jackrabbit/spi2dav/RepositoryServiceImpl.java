@@ -941,7 +941,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
                 throw new PathNotFoundException("Unable to retrieve privileges definitions.");
             }
 
-            DavPropertyName displayName = SecurityConstants.SUPPORTED_PRIVILEGE_SET;
+            DavPropertyName displayName = SecurityConstants.CURRENT_USER_PRIVILEGE_SET;
             DavProperty<?> p = responses[0].getProperties(DavServletResponse.SC_OK).get(displayName);
             if (p == null) {
                 return new Name[0];

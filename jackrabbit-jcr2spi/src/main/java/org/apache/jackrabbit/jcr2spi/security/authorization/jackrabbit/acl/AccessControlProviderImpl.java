@@ -20,6 +20,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+
 import javax.jcr.RepositoryException;
 import javax.jcr.security.AccessControlException;
 import javax.jcr.security.AccessControlManager;
@@ -46,15 +47,16 @@ public class AccessControlProviderImpl implements AccessControlProvider {
     private Map<Name, Privilege> privileges = new HashMap<Name, Privilege>();
 
     @Override
-    public void init(RepositoryConfig config, RepositoryService service) {
-        this.service = service;
+    public void init(RepositoryConfig config) throws RepositoryException {
+        this.service = config.getRepositoryService();
     }
 
     @Override
     public Privilege privilegeFromName(SessionInfo sessionInfo, NamePathResolver resolver, String privilegeName) throws RepositoryException {
         Name name = resolver.getQName(privilegeName);
         Privilege priv = getPrivilegeFromName(sessionInfo, resolver, name);
-        if (priv == null) {
+    	
+         if (priv == null) {
             throw new AccessControlException("Unknown privilege " + privilegeName);
         } else {
             return priv;

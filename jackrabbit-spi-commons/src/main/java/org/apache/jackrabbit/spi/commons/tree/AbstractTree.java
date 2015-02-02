@@ -37,7 +37,7 @@ public abstract class AbstractTree implements Tree {
         this.nodeName = nodeName;
         this.ntName = ntName;
         this.uniqueId = uniqueId;
-
+        this.children = new ArrayList<Tree>();
         this.resolver = resolver;
     }
 
@@ -69,11 +69,9 @@ public abstract class AbstractTree implements Tree {
 
     @Override
     public Tree addChild(Name childName, Name primaryTypeName, String uniqueId) {
-        Tree child = createChild(childName, primaryTypeName, uniqueId);
-        if (children == null) {
-            children = new ArrayList<Tree>();
-        }
+        Tree child = createChild(childName, primaryTypeName, uniqueId);        
         children.add(child);
+        
         return child;
     }
 }

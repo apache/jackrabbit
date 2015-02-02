@@ -16,8 +16,6 @@
  */
 package org.apache.jackrabbit.jcr2spi.security.authorization;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
@@ -25,93 +23,95 @@ import javax.jcr.RepositoryException;
 import javax.jcr.UnsupportedRepositoryOperationException;
 
 import org.apache.jackrabbit.jcr2spi.config.RepositoryConfig;
-import org.apache.jackrabbit.spi.RepositoryService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Stub class that provide clients with access to a concrete AccessControlProvider implementation.
- * TODO: Explain the way the concrete provider is located, loaded and instantiated.
+ * Stub class that provide clients with access to a concrete
+ * AccessControlProvider implementation. TODO: Explain the way the concrete
+ * provider is located, loaded and instantiated.
  * 
  */
 public class AccessControlProviderStub {
 
-    private static Logger log = LoggerFactory.getLogger(AccessControlProviderStub.class);
+	private static Logger log = LoggerFactory.getLogger(AccessControlProviderStub.class);
 
-    /**
-     * The class property parameter determines the {@link AccessControlProvider}
-     * to load and instantiate. This is a fall-back parameter if the SYS_PROP_AC_PROVIDER_IMPL is not set.
-     */
-    private static final String ACCESS_CONTROL_PROVIDER_PROPERTIES = "accessControlProvider.properties";
+	/**
+	 * The class property parameter determines the {@link AccessControlProvider}
+	 * to load and instantiate. This is a fall-back parameter if the
+	 * SYS_PROP_AC_PROVIDER_IMPL is not set.
+	 */
+	private static final String ACCESS_CONTROL_PROVIDER_PROPERTIES = "accessControlProvider.properties";
 
-    /**
-     * Key look-up.
-     */
-    private static final String PROPERTY_ACCESSCONTROL_PROVIDER_CLASS = "org.apache.jackrabbit.jcr2spi.AccessControlProvider.class";
+	/**
+	 * Key look-up.
+	 */
+	private static final String PROPERTY_ACCESSCONTROL_PROVIDER_CLASS = "org.apache.jackrabbit.jcr2spi.AccessControlProvider.class";
 
-    /**
-     * Avoid instantiation.
-     */
-    private AccessControlProviderStub() {}
+	/**
+	 * Avoid instantiation.
+	 */
+	private AccessControlProviderStub() {
+	}
 
-    /**
-     * Instantiates and returns a concrete AccessControlProvider implementation.
-     * @param service     The repository service.
-     * @param config      The RepositoryConfig to read configuration parameters.
-     * @return
-     * @throws RepositoryException
-     */
-    public static AccessControlProvider newInstance(RepositoryConfig config, RepositoryService service) throws RepositoryException {
-        String className = getProviderClass(config);
-        if (className != null) {
-            try {
-                Class<?> acProviderClass = Class.forName(className);
-                if (AccessControlProvider.class.isAssignableFrom(acProviderClass)) {
-                    AccessControlProvider acProvider = (AccessControlProvider) acProviderClass.newInstance();
-                    acProvider.init(config, service);
-                    return acProvider;
-                } else {
-                    throw new RepositoryException("Fail to create AccessControlProvider from configuration.");
-                }
-            } catch (Exception e) {
-                throw new RepositoryException("Fail to create AccessControlProvider from configuration.");
-            }
-        }
+	/**
+	 * Instantiates and returns a concrete AccessControlProvider implementation.
+	 * 
+	 * @param service
+	 *            The repository service.
+	 * @param config
+	 *            The RepositoryConfig to read configuration parameters.
+	 * @return
+	 * @throws RepositoryException
+	 */
+	public static AccessControlProvider newInstance(RepositoryConfig config) throws RepositoryException {
 
-        // ac not supported in this setup.
-        throw new UnsupportedRepositoryOperationException("Access control is not supported");
-    }
-    
-    private static String getProviderClass(RepositoryConfig config) throws RepositoryException {
-        Properties prop = new Properties();
-        String providerImplProp = config.getConfiguration(ACCESS_CONTROL_PROVIDER_PROPERTIES, null);
-        try {
-            if (providerImplProp == null) {
-                // not configured try to load as resource
-                InputStream is = AccessControlProviderStub.class.getResourceAsStream(ACCESS_CONTROL_PROVIDER_PROPERTIES);
-                if (is != null) {
-                    prop.load(is);
-                } else {
-                    log.debug("Fail to locate the access control provider properties file.");
-                }
-            } else {
-                File file = new File(providerImplProp);
-                if (file.exists()) { // check that path actually exist.
-                    prop.load(new FileInputStream(file));
-                } else {
-                    log.debug("Fail to locate the access control provider properties file.");
-                }
-            }
+		String className = getProviderClass(config);
+		if (className != null) {
+			try {
+				Class<?> acProviderClass = Class.forName(className);
+				if (AccessControlProvider.class.isAssignableFrom(acProviderClass)) {
+					AccessControlProvider acProvider = (AccessControlProvider) acProviderClass.newInstance();
+					acProvider.init(config);
+					return acProvider;
+				} else {
+					throw new RepositoryException("Fail to create AccessControlProvider from configuration.");
+				}
+			} catch (Exception e) {
+				throw new RepositoryException("Fail to create AccessControlProvider from configuration.");
+			}
+		}
 
-            // loads the concrete class to instantiate.
-            if (prop.contains(PROPERTY_ACCESSCONTROL_PROVIDER_CLASS)) {
-                return prop.getProperty(PROPERTY_ACCESSCONTROL_PROVIDER_CLASS, null);
-            } else {
-                log.debug("Missing AccessControlProvider configuration.");
-                return null;
-            }
-        } catch (IOException e) {
-            throw new RepositoryException("Fail to load AccessControlProvider configuration.");
-        }
-    }
+		// ac not supported in this setup.
+		throw new UnsupportedRepositoryOperationException("Access control is not supported");
+	}
+
+	private static String getProviderClass(RepositoryConfig config) throws RepositoryException {
+
+		String implClass = config.getConfiguration(PROPERTY_ACCESSCONTROL_PROVIDER_CLASS, null);
+
+		if (implClass != null) {
+			return implClass;
+		} else {
+			try {
+				// not configured try to load as resource
+				Properties prop = new Properties();
+				InputStream is = AccessControlProviderStub.class.getResourceAsStream(ACCESS_CONTROL_PROVIDER_PROPERTIES);
+				if (is != null) {
+					prop.load(is);
+					// loads the concrete class to instantiate.
+					if (prop.containsKey(PROPERTY_ACCESSCONTROL_PROVIDER_CLASS)) {
+						return prop.getProperty(PROPERTY_ACCESSCONTROL_PROVIDER_CLASS);
+					} else {
+						log.debug("Missing AccessControlProvider configuration.");
+					}
+				} else {
+					log.debug("Fail to locate the access control provider properties file.");
+				}
+			} catch (IOException e) {
+				throw new RepositoryException("Fail to load AccessControlProvider configuration.");
+			}
+		}
+		return null;
+	}
 }

@@ -143,53 +143,26 @@ public class AccessControlListImplTest extends AbstractAccessControlTest {
         // server may want to make.
         privileges = privilegesFromNames(new String[] { Privilege.JCR_READ });
         assertTrue(acl.addAccessControlEntry(unknownPrincipal, privileges));
+        assertEquals(3, acl.size());
 
         // revoke the read privilege
         assertTrue("Fail to revoke read privilege", acl.addEntry(unknownPrincipal, privileges, false, createEmptyRestriction()));
 
-        // should now be two entries -> an allow entry + a deny entry
-        assertEquals(2, acl.size());
+        // should now be 3 entries -> 2 allow entry + a deny entry
+        assertEquals(4, acl.size());
+    }
 
-        // allow entry contains only a single privilege
-        assertTrue(acl.getAccessControlEntries()[0].getPrivileges().length == 1);
-
-        // ... and that privilege should not be a 'read' privilege -> was revoked
-        String jcrName = acl.getAccessControlEntries()[0].getPrivileges()[0].getName();
-        assertNotSame(getJcrName(Privilege.JCR_READ), jcrName);
-
-        // deny entry contains a single privilege -> 'read' privilege
-        jcrName = acl.getAccessControlEntries()[1].getPrivileges()[0].getName();
-        assertEquals(getJcrName(Privilege.JCR_READ), jcrName);
-
-        // remove the allow entry
-        acl.removeAccessControlEntry(acl.getAccessControlEntries()[0]);
-
-        // ... list should now only contain a single entry -> the deny entry
-        assertTrue(acl.size() == 1);
-
-        // remove the deny entry
-        acl.removeAccessControlEntry(acl.getAccessControlEntries()[0]);
-
-        // ... list must be empty at this point
-        assertTrue(acl.isEmpty());
-
+    public void testMultipleEntryEffect2() throws Exception {
+        JackrabbitAccessControlList acl = createAccessControList(testRoot);
         // GRANT a read privilege
-        privileges = privilegesFromNames(new String[] { Privilege.JCR_READ });
+        Privilege[] privileges = privilegesFromNames(new String[] { Privilege.JCR_READ });
         assertTrue("New Entry -> grants read privilege", acl.addAccessControlEntry(unknownPrincipal, privileges));
 
         assertTrue("Fail to revoke the read privilege", acl.addEntry(unknownPrincipal, privileges, false, createEmptyRestriction()));
-        Assert.assertEquals(1, acl.size());
-    }
-    
-    
-    // -------------------------------------------------------< utility methods >---
-    private Name getQName(String name) throws RepositoryException {
-        return resolver.getQName(name);
+        Assert.assertEquals(2, acl.size());
     }
 
-    private String getJcrName(String name) throws RepositoryException {
-        return resolver.getJCRName(getQName(name));
-    }
+    // -------------------------------------------------------< utility methods >---
 
     private AccessControlEntry[] getEntries(AccessControlList acl, Principal princ) throws RepositoryException {
         AccessControlEntry[] entries = acl.getAccessControlEntries();

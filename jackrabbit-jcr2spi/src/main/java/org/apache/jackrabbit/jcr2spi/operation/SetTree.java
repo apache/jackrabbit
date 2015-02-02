@@ -17,7 +17,6 @@
 package org.apache.jackrabbit.jcr2spi.operation;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 import javax.jcr.AccessDeniedException;
@@ -29,9 +28,9 @@ import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.version.VersionException;
 
-import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
 import org.apache.jackrabbit.jcr2spi.state.ItemStateValidator;
 import org.apache.jackrabbit.jcr2spi.state.NodeState;
+import org.apache.jackrabbit.jcr2spi.state.UpdatableItemStateManager;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.NodeId;
 import org.apache.jackrabbit.spi.QPropertyDefinition;
@@ -40,7 +39,7 @@ import org.apache.jackrabbit.spi.QValue;
 public class SetTree extends TransientOperation {
  
     /**
-     * List of operations added by this SetPolicy operation.
+     * List of operations added to this SetTree operation.
      */
     private final List<Operation> operations = new ArrayList<Operation>();
         
@@ -51,10 +50,12 @@ public class SetTree extends TransientOperation {
         this.treeState = treeState;
     }
 
-    private SetTree(NodeState parentState, Name nodeName, Name nodeTypeName, String uuid) throws RepositoryException {
+    private SetTree(UpdatableItemStateManager itemStateMgr, NodeState parentState, Name nodeName, Name nodeTypeName, String uuid) throws RepositoryException {
         super(ItemStateValidator.CHECK_NONE);
         Operation addNode = InternalAddNode.create(parentState, nodeName, nodeTypeName, uuid);
         operations.add(addNode);
+        
+        itemStateMgr.execute(addNode);
         treeState = (NodeState) ((AddNode) addNode).getAddedStates().get(0);
     }
 
@@ -148,8 +149,8 @@ public class SetTree extends TransientOperation {
         return operation;
     }
 
-    public static SetTree create(NodeState parent, Name nodeName, Name nodeTypeName, String uuid) throws RepositoryException {
-        return new SetTree(parent, nodeName, nodeTypeName, uuid);
+    public static SetTree create(UpdatableItemStateManager itemStateMgr, NodeState parent, Name nodeName, Name nodeTypeName, String uuid) throws RepositoryException {
+        return new SetTree(itemStateMgr, parent, nodeName, nodeTypeName, uuid);
     }
 
     //--------------------------------------------------------------------------
@@ -161,13 +162,13 @@ public class SetTree extends TransientOperation {
         /**
          * Options that must not be violated for a successful set policy operation.
          */
-        private final static int SET_POLICY_ADD_NODE_OPTIONS =  ItemStateValidator.CHECK_ACCESS |
+        private final static int ADD_NODE_OPTIONS =  ItemStateValidator.CHECK_ACCESS |
                 ItemStateValidator.CHECK_LOCK |
                 ItemStateValidator.CHECK_COLLISION |
                 ItemStateValidator.CHECK_VERSIONING;
 
         private InternalAddNode(NodeState parentState, Name nodeName, Name nodeTypeName, String uuid) throws RepositoryException {
-            super(parentState, nodeName, nodeTypeName, uuid, SET_POLICY_ADD_NODE_OPTIONS);
+            super(parentState, nodeName, nodeTypeName, uuid, ADD_NODE_OPTIONS);
         }
 
         public static Operation create(NodeState parentState, Name nodeName, Name nodeTypeName, String uuid) throws RepositoryException {
@@ -181,13 +182,13 @@ public class SetTree extends TransientOperation {
      * Inner class for adding a protected property.
      */
     private static final class InternalAddProperty extends AddProperty implements IgnoreOperation {
-        private final static int SET_POLICY_ADD_PROPERTY_OPTIONS =  ItemStateValidator.CHECK_ACCESS |
+        private final static int ADD_PROPERTY_OPTIONS =  ItemStateValidator.CHECK_ACCESS |
                 ItemStateValidator.CHECK_LOCK |
                 ItemStateValidator.CHECK_COLLISION |
                 ItemStateValidator.CHECK_VERSIONING;
 
         private InternalAddProperty(NodeState parentState, Name propName, int propertyType, QValue[] values, QPropertyDefinition definition) throws RepositoryException {
-            super(parentState, propName, propertyType, values, definition, SET_POLICY_ADD_PROPERTY_OPTIONS);
+            super(parentState, propName, propertyType, values, definition, ADD_PROPERTY_OPTIONS);
         }
     }
 }

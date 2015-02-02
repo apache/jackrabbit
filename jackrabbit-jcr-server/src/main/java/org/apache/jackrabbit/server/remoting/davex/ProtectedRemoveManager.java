@@ -38,29 +38,37 @@ public class ProtectedRemoveManager {
     private List<ProtectedItemRemoveHandler> handlers = new ArrayList<ProtectedItemRemoveHandler>();
 
     public ProtectedRemoveManager(String config) throws IOException {
-        Properties props = new Properties();
-        if (config == null) {
-            log.warn("protectedhandlers-config is missing -> DIFF processing can fail for the Remove operation if the content to" +
-                    "remove is protected!");
-        } else {
-            File file = new File(config);
-            if (file.exists()) {
-                InputStream inStream = new FileInputStream(file);
-                props.load(inStream);
-                for (Enumeration<?> en = props.propertyNames(); en.hasMoreElements();) {
-                    String key = en.nextElement().toString();
-                    String className = props.getProperty(key);
-                    if (!className.isEmpty()) {
-                        ProtectedItemRemoveHandler irHandler = createHandler(className);
-                        if (irHandler != null) {
-                            handlers.add(irHandler);
-                        }
-                    }
-                }
-            } else {
-                log.debug("Fail to locate the protected-item-remove-handler properties file.");
-            }
-        }
+
+    	 if (config == null) {
+             log.warn("protectedhandlers-config is missing -> DIFF processing can fail for the Remove operation if the content to" +
+                     "remove is protected!");
+         } else {
+        	 File file = new File(config);
+        	 if (file.exists()) {         
+        		 InputStream inStream = new FileInputStream(file);
+                 Properties props = new Properties();
+        		 props.load(inStream);             
+        		 for (Enumeration<?> en = props.propertyNames(); en.hasMoreElements();) {             
+        			 String key = en.nextElement().toString();                 
+        			 String className = props.getProperty(key);                 
+        			 if (!className.isEmpty()) {                 
+        				 ProtectedItemRemoveHandler irHandler = createHandler(className);                     
+        				 if (irHandler != null) {                     
+        					 handlers.add(irHandler);                        
+        				 }                    
+        			 }                
+        		 }            
+        	 } else { // config is an Impl class
+        		 if (!config.isEmpty()) {        	    	
+        			 ProtectedItemRemoveHandler irHandler = createHandler(config);        	         
+        			 if (irHandler != null) {        	         
+        				 handlers.add(irHandler);        	            
+        			 }        	    	
+        		 } else {        	    
+        			 log.debug("Fail to locate the protected-item-remove-handler properties file.");        	    	
+        		 }
+        	 }        
+         }    	 
     }
 
     public boolean remove(Session session, String itemPath) throws RepositoryException {

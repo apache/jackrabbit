@@ -16,15 +16,19 @@
  */
 package org.apache.jackrabbit.jcr2dav;
 
+import java.security.Principal;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
 import javax.jcr.Repository;
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
 
 import org.apache.jackrabbit.commons.JcrUtils;
 import org.apache.jackrabbit.core.JackrabbitRepositoryStub;
 import org.apache.jackrabbit.server.remoting.davex.JcrRemotingServlet;
+import org.apache.jackrabbit.test.NotExecutableException;
 import org.apache.jackrabbit.test.RepositoryStubException;
 import org.apache.jackrabbit.webdav.jcr.JCRWebdavServerServlet;
 import org.mortbay.jetty.Server;
@@ -34,6 +38,10 @@ import org.mortbay.jetty.servlet.ServletHolder;
 
 public class RepositoryStubImpl extends JackrabbitRepositoryStub {
 
+    private static final String PROP_ACCESSCONTROL_PROVIDER_CLASS = "org.apache.jackrabbit.jcr2spi.AccessControlProvider.class";
+
+    private static final String PROP_PROTECTED_ITEM_REMOVE_CLASS = "org.apache.jackrabbit.server.ProtectedItemRemoveHandler.class";
+
     private static Repository repository;
 
     private static SocketConnector connector;
@@ -42,13 +50,14 @@ public class RepositoryStubImpl extends JackrabbitRepositoryStub {
 
     private static Repository client;
 
-    private static final String ACCESS_CONTROL_PROVIDER_PROPERTIES = "accessControlProvider.properties";
+    private final String acProviderImplClass;
 
-    // TODO
-    private static final String PROPERTIES_PROTECTED_ITEM_REMOVE_HANDLERS= "protectedHandlers.properties";
-    
+    private final String protectedRemoveImplClass;
+
     public RepositoryStubImpl(Properties env) {
         super(env);
+        acProviderImplClass = env.getProperty(PROP_ACCESSCONTROL_PROVIDER_CLASS);
+        protectedRemoveImplClass = env.getProperty(PROP_PROTECTED_ITEM_REMOVE_CLASS);
     }
 
     @Override
@@ -69,20 +78,14 @@ public class RepositoryStubImpl extends JackrabbitRepositoryStub {
             server = new Server();
             server.addConnector(connector);
 
-            ServletHolder holder = new ServletHolder(
-                    new JcrRemotingServlet() {
-                        protected Repository getRepository() {
-                            return repository;
-                        }
-                    });
-            holder.setInitParameter(
-                    JCRWebdavServerServlet.INIT_PARAM_RESOURCE_PATH_PREFIX,
-                    "");
-            holder.setInitParameter(
-                    JCRWebdavServerServlet.INIT_PARAM_MISSING_AUTH_MAPPING,
-                    "");
-            holder.setInitParameter(JcrRemotingServlet.INIT_PARAM_PROTECTED_HANDLERS_CONFIG, 
-                    PROPERTIES_PROTECTED_ITEM_REMOVE_HANDLERS);
+            ServletHolder holder = new ServletHolder(new JcrRemotingServlet() {
+                protected Repository getRepository() {
+                    return repository;
+                }
+            });
+            holder.setInitParameter(JCRWebdavServerServlet.INIT_PARAM_RESOURCE_PATH_PREFIX, "");
+            holder.setInitParameter(JCRWebdavServerServlet.INIT_PARAM_MISSING_AUTH_MAPPING, "");
+            holder.setInitParameter(JcrRemotingServlet.INIT_PARAM_PROTECTED_HANDLERS_CONFIG, protectedRemoveImplClass);
 
             Context context = new Context(server, "/");
             context.addServlet(holder, "/*");
@@ -97,12 +100,13 @@ public class RepositoryStubImpl extends JackrabbitRepositoryStub {
 
         if (client == null) {
             try {
-                String uri = "http://localhost:" + connector.getLocalPort() + "/";
                 Map<String, String> parameters = new HashMap<String, String>();
+
+                String uri = "http://localhost:" + connector.getLocalPort() + "/";
+
                 parameters.put(JcrUtils.REPOSITORY_URI, uri);
-                // TODO
-                parameters.put(ACCESS_CONTROL_PROVIDER_PROPERTIES, "accessControlProvider.properties");
-                
+                parameters.put(PROP_ACCESSCONTROL_PROVIDER_CLASS, acProviderImplClass);
+
                 client = JcrUtils.getRepository(parameters);
             } catch (Exception e) {
                 throw new RepositoryStubException(e);
@@ -112,10 +116,31 @@ public class RepositoryStubImpl extends JackrabbitRepositoryStub {
         return client;
     }
 
+    @Override
+    public Principal getKnownPrincipal(Session session) throws RepositoryException {
+        // TODO
+        return new Principal() {
+            @Override
+            public String getName() {
+                return "everyone";
+            }
+        };
+    }
+
+    @Override
+    public Principal getUnknownPrincipal(Session session) throws RepositoryException, NotExecutableException {
+        // TODO
+        return new Principal() {
+            @Override
+            public String getName() {
+                return "unknownPrincipal";
+            }
+        };
+    }
+
     public static void stopServer() throws Exception {
         if (server != null) {
             server.stop();
         }
     }
-
 }

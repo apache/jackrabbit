@@ -62,6 +62,7 @@ import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
 import org.apache.jackrabbit.spi.commons.name.PathBuilder;
 import org.apache.jackrabbit.spi.commons.name.PathFactoryImpl;
+import org.apache.jackrabbit.spi.commons.tree.AbstractTree;
 import org.apache.jackrabbit.spi.commons.value.ValueFormat;
 import org.apache.jackrabbit.spi2dav.ExceptionConverter;
 import org.apache.jackrabbit.spi2dav.ItemResourceConstants;
@@ -463,7 +464,7 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
 
     @Override
     public Tree createTree(SessionInfo sessionInfo, Batch batch, Name nodeName, Name primaryTypeName, String uniqueId) throws RepositoryException {
-        return new JsonTree(nodeName, primaryTypeName, uniqueId, getNamePathResolver(sessionInfo));
+        return new JsonTree(sessionInfo, nodeName, primaryTypeName, uniqueId, getNamePathResolver(sessionInfo));
     }
 
     @Override
@@ -893,6 +894,110 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
             }
             // first of siblings or no sibling at all
             return removedNodePath;
+        }
+    }
+    
+    //--------------------------------------------------------------------------
+    class JsonTree extends AbstractTree {
+
+        private final StringBuilder properties = new StringBuilder();
+        private final List<Part> parts = new ArrayList<Part>();
+        private final SessionInfo sessionInfo;
+        
+        JsonTree(SessionInfo sessionInfo, Name nodeName, Name ntName, String uniqueId, NamePathResolver resolver) {
+            super(nodeName, ntName, uniqueId, resolver);
+            this.sessionInfo = sessionInfo;
+        }
+
+        //-------------------------------------------------------< AbstractTree >---
+        @Override
+        protected Tree createChild(Name name, Name primaryTypeName, String uniqueId) {
+            return new JsonTree(sessionInfo, name, primaryTypeName, uniqueId, getResolver());
+        }
+
+        //---------------------------------------------------------------< Tree >---
+        @Override
+        public void addProperty(NodeId parentId, Name propertyName, int propertyType, QValue value) throws RepositoryException {
+            properties.append(',');
+            properties.append(Utils.getJsonKey(getResolver().getJCRName(propertyName)));
+            
+            String valueStr = Utils.getJsonString(value);
+            if (valueStr == null) {            	  
+            	String jcrPropPath = createPath(parentId, propertyName);
+            	Utils.addPart(jcrPropPath, value, getResolver(), parts);
+            } else {
+            	properties.append(valueStr);
+            }
+            
+        }
+
+        @Override
+        public void addProperty(NodeId parentId, Name propertyName, int propertyType, QValue[] values) throws RepositoryException {
+            String name = getResolver().getJCRName(propertyName);
+            properties.append(',');
+            properties.append(Utils.getJsonKey(name));
+            int index = 0;
+            properties.append('[');
+            for (QValue value : values) {
+                String valueStr = Utils.getJsonString(value);
+                if (valueStr == null) {                	
+                	String jcrPropPath = createPath(parentId, propertyName);
+                    Utils.addPart(jcrPropPath, value, getResolver(), parts);
+                } else {
+                    String delim = (index++ == 0) ? "" : ",";
+                    properties.append(delim).append('"').append(valueStr).append('"');
+                }
+            }
+            properties.append(']');
+        }
+        
+        private String createPath(NodeId parentId, Name propertyName) throws RepositoryException {
+        	Path propPath = getPathFactory().create(getPath(parentId, sessionInfo), propertyName, true);
+        	return getResolver().getJCRPath(propPath);
+        }
+        
+        //--------------------------------------------------------------------------
+        String toJsonString(List<Part> batchParts) throws RepositoryException {
+        	batchParts.addAll(this.parts);
+        	for (Tree child : this.getChildren()) {
+        		batchParts.addAll(((JsonTree) child).getParts());
+        	}        
+
+            StringBuilder json = new StringBuilder();
+            createJsonNodeFragment(json, this, true);
+            return json.toString();
+        }    
+        
+        //--------------------------------------------------------------------------
+        private String createJsonNodeFragment(StringBuilder json, JsonTree tree, boolean start) throws RepositoryException {
+            if (!start) {
+                json.append(',');
+                json.append(Utils.getJsonKey(getResolver().getJCRName(tree.getName())));
+            }
+            json.append('{');
+            json.append(Utils.getJsonKey(JcrConstants.JCR_PRIMARYTYPE));
+            json.append(JsonUtil.getJsonString(getResolver().getJCRName(tree.getPrimaryTypeName())));
+            String uuid = tree.getUniqueId();
+            if (uuid != null) {
+                json.append(',');
+                json.append(Utils.getJsonKey(JcrConstants.JCR_UUID));
+                json.append(JsonUtil.getJsonString(uuid));
+            }
+            // write all the properties.
+            json.append(tree.getProperties());
+            for (Tree child : tree.getChildren()) {
+                createJsonNodeFragment(json, (JsonTree) child, false);
+            }
+            json.append('}');
+            return json.toString();
+        }
+        
+        private StringBuilder getProperties() {
+        	return properties;
+        }
+        
+        private List<Part> getParts() {
+        	return parts;
         }
     }
 }
