@@ -117,8 +117,6 @@
                       org.apache.jackrabbit.test.api.security.AccessControlListTest#testAddAccessControlEntryTwice
                       org.apache.jackrabbit.test.api.security.AccessControlListTest#testAddAccessControlEntryAgain
                       <!-- Tests to verify -->
-                      org.apache.jackrabbit.test.api.security.RSessionAccessControlDiscoveryTest#testGetPrivileges
-                      org.apache.jackrabbit.test.api.security.RSessionAccessControlDiscoveryTest#testHasPrivileges
                       org.apache.jackrabbit.test.api.security.RSessionAccessControlPolicyTest#testGetApplicablePolicies
                       org.apache.jackrabbit.test.api.security.RSessionAccessControlPolicyTest#testGetPolicy
                   </value>
