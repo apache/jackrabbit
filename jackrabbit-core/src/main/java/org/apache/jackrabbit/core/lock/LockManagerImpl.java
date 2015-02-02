@@ -976,13 +976,13 @@ public class LockManagerImpl
 
         try {
             acquireLockPropertiesLock();
-            
+
+            // add properties to content
+            if (stateMgr.inEditMode()) {
+                throw new RepositoryException("Unable to remove lock properties.");
+            }
+            stateMgr.edit();
             try {
-                // add properties to content
-                if (stateMgr.inEditMode()) {
-                    throw new RepositoryException("Unable to remove lock properties.");
-                }
-                stateMgr.edit();
 
                 NodeId nodeId = node.getNodeId();
                 NodeState nodeState = (NodeState) stateMgr.getItemState(nodeId);
