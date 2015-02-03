@@ -1,9 +1,9 @@
-Release Notes -- Apache Jackrabbit -- Version 2.9.0
+Release Notes -- Apache Jackrabbit -- Version 2.9.1
 
 Introduction
 ------------
 
-This is Apache Jackrabbit(TM) 2.9, a fully compliant implementation of the
+This is Apache Jackrabbit(TM) 2.9.1, a fully compliant implementation of the
 Content Repository for Java(TM) Technology API, version 2.0 (JCR 2.0) as
 specified in the Java Specification Request 283 (JSR 283).
 
@@ -11,35 +11,44 @@ Apache Jackrabbit 2.9 is an unstable series of releases cut directly from
 Jackrabbit trunk, with a focus on new features and other improvements.
 For production use we recommend the latest stable 2.8 release.
 
-Changes in Jackrabbit 2.9.0
+Changes in Jackrabbit 2.9.1
 ------------------------------
-
-New Features
-
-  [JCR-3797] Add path exclusion to JackrabbitEventFilter
-  [JCR-3802] User Management: API for System Users
 
 Improvements
 
-  [JCR-3766] Sync new IndexInfos file
-  [JCR-3777] Add simple allow/deny/clear convenience methods to ...
-  [JCR-3782] Backport OAK-1612, OAK-1615, OAK-1616
-  [JCR-3788] S3DataStore  require to set endpoint for thirdparty cloud ...
-  [JCR-3801] Improve ListenerTracker output
+  [JCR-3803] Local cache contention lead to performance degradation
+  [JCR-3804] [jackrabbit-aws] Allow http communication to S3
+  [JCR-3810] StreamWrapper can attempt to reset other types of InputStreams
+  [JCR-3815] Local Cache Purge Cause Performance Issues
+  [JCR-3817] [jackrabbit-aws-ext] Performance of operation degrades while running DS GC
+  [JCR-3818] Use SimpleFSDirectory by default
+  [JCR-3825] Use RepositoryFactory for first hops
+  [JCR-3826] AbstractPrincipalProvider cachesize is not configurable
+  [JCR-3838] [aws-ext] Proactive & Asynchronous caching of binary when its metadata is accessed from S3
+  [JCR-3843] [jackrabbit-aws-ext] Support S3 in Franfurt Datacenter
+  [JCR-3844] JcrRemotingServlet does not log full stacktrace
+  [JCR-3845] Have AuthorizableQueryManager Support Specifying Sort Ignore Case Mode
 
 Bug fixes
 
-  [JCR-3235] ArrayIndexOfOufBounds in TargetImportHandler ...
-  [JCR-3368] CachingHierarchyManager: inconsistent state after transient ...
-  [JCR-3779] Node.getPath() returns inconsistent values depending on ...
-  [JCR-3783] Deadlock due to IOException in WorkspaceUpdateChannel ...
-  [JCR-3784] ReplacePropertyWhileOthersReadTest fails when run with ...
-  [JCR-3786] Incompatible CachingDataStore's path &  FileDataStore's path ...
-  [JCR-3789] AccessControlUtils.clear should not retrieve applicable policies
-  [JCR-3796] TokenProvider.createToken is case sensitive
+  [JCR-3274] jackrabbit-standalone-2.4.0.jar Populate does not work
+  [JCR-3805] LocalCache doesn't build up properly in JDK 7.
+  [JCR-3809] ConnectionHelper swallows exception when it fails to reset binary streams after a failed SQL statement execution
+  [JCR-3816] [aws-ext]S3DS not able update lastModified of record > 5GB
+  [JCR-3821] SeededSecureRandom thread can prevent Jackrabbit from shutting down
+  [JCR-3839] [aws-ext] Regression to JCR-3734 Slow local cache built-up time
+  [JCR-3840] NodeTypeDefDiff does not take same-name child type definitions into account
+
+Tasks
+  [JCR-3830] Allow for privilege discovery in jcr-server
+  [JCR-3833] Compatibility with Java 8
+
+Sub-tasks
+
+  [JCR-2113] JSR 283 Access Control Management (JCR-2003 - JCR2SPI / SPI: Add support for JCR 2.0)
 
 In addition to the above-mentioned changes, this release contains
-all the changes included up to the Apache Jackrabbit 2.8.0 release.
+all the changes included up to the Apache Jackrabbit 2.9.0 release.
 
 For more detailed information about all the changes in this and other
 Jackrabbit releases, please see the Jackrabbit issue tracker at
