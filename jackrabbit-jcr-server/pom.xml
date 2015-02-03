@@ -44,6 +44,12 @@
           </includes>
           <forkMode>once</forkMode>
           <argLine>-Xmx128m -enableassertions</argLine>
+          <systemProperties>
+            <property>
+              <name>derby.stream.error.file</name>
+              <value>target/derby.log</value>
+            </property>
+          </systemProperties>
         </configuration>
       </plugin>
       <plugin>
