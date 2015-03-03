@@ -22,7 +22,7 @@ import org.apache.jackrabbit.api.stats.TimeSeries;
  * Time series of the average calculated by dividing a measured
  * value by the counter of events during the measurement period.
  */
-class TimeSeriesAverage implements TimeSeries {
+public class TimeSeriesAverage implements TimeSeries {
 
     /** Value */
     private final TimeSeries value;
