@@ -34,6 +34,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.jackrabbit.aws.ext.S3Constants;
+import org.apache.jackrabbit.aws.ext.S3RequestDecorator;
 import org.apache.jackrabbit.aws.ext.Utils;
 import org.apache.jackrabbit.core.data.AsyncTouchCallback;
 import org.apache.jackrabbit.core.data.AsyncTouchResult;
@@ -91,6 +92,8 @@ public class S3Backend implements Backend {
     
     private ThreadPoolExecutor asyncWriteExecuter;
 
+    private S3RequestDecorator s3ReqDecorator;
+
     /**
      * Initialize S3Backend. It creates AmazonS3Client and TransferManager from
      * aws.properties. It creates S3 bucket if it doesn't pre-exist in S3.
@@ -128,6 +131,8 @@ public class S3Backend implements Backend {
                 getClass().getClassLoader());
             LOG.debug("init");
             this.store = store;
+            s3ReqDecorator = new S3RequestDecorator(prop);
+
             s3service = Utils.openService(prop);
             if (bucket == null || "".equals(bucket.trim())) {
                 bucket = prop.getProperty(S3Constants.S3_BUCKET);
@@ -264,7 +269,7 @@ public class S3Backend implements Backend {
                     CopyObjectRequest copReq = new CopyObjectRequest(bucket,
                         key, bucket, key);
                     copReq.setNewObjectMetadata(objectMetaData);
-                    Copy copy = tmx.copy(copReq);
+                    Copy copy = tmx.copy(s3ReqDecorator.decorate(copReq));
                     copy.waitForCopyResult();
                     LOG.debug("[{}] touched took [{}] ms. ", identifier,
                         (System.currentTimeMillis() - start));
@@ -346,7 +351,7 @@ public class S3Backend implements Backend {
                 CopyObjectRequest copReq = new CopyObjectRequest(bucket, key,
                     bucket, key);
                 copReq.setNewObjectMetadata(new ObjectMetadata());
-                Copy copy = tmx.copy(copReq);
+                Copy copy = tmx.copy(s3ReqDecorator.decorate(copReq));
                 copy.waitForCompletion();
                 LOG.debug("[{}] touched. time taken [{}] ms ", new Object[] {
                     identifier, (System.currentTimeMillis() - start) });
@@ -568,7 +573,9 @@ public class S3Backend implements Backend {
     public void close() {
         // backend is closing. abort all mulitpart uploads from start.
         asyncWriteExecuter.shutdownNow();
-        tmx.abortMultipartUploads(bucket, startTime);
+        if(s3service.doesBucketExist(bucket)) {
+            tmx.abortMultipartUploads(bucket, startTime);
+        }
         tmx.shutdownNow();
         s3service.shutdown();
         LOG.info("S3Backend closed.");
@@ -621,7 +628,7 @@ public class S3Backend implements Backend {
                 CopyObjectRequest copReq = new CopyObjectRequest(bucket, key,
                     bucket, key);
                 copReq.setNewObjectMetadata(objectMetaData);
-                Copy copy = tmx.copy(copReq);
+                Copy copy = tmx.copy(s3ReqDecorator.decorate(copReq));
                 try {
                     copy.waitForCopyResult();
                     LOG.debug("lastModified of [{}] updated successfully.", identifier);
@@ -641,8 +648,8 @@ public class S3Backend implements Backend {
             if (objectMetaData == null) {
                 try {
                     // start multipart parallel upload using amazon sdk
-                    Upload up = tmx.upload(new PutObjectRequest(bucket, key,
-                        file));
+                    Upload up = tmx.upload(s3ReqDecorator.decorate(new PutObjectRequest(
+                        bucket, key, file)));
                     // wait for upload to finish
                     if (asyncUpload) {
                         up.addProgressListener(new S3UploadProgressListener(up,
@@ -691,8 +698,7 @@ public class S3Backend implements Backend {
         try {
             Thread.currentThread().setContextClassLoader(
                 getClass().getClassLoader());
-            ObjectListing prevObjectListing = s3service.listObjects(bucket,
-                KEY_PREFIX);
+            ObjectListing prevObjectListing = s3service.listObjects(bucket);
             List<DeleteObjectsRequest.KeyVersion> deleteList = new ArrayList<DeleteObjectsRequest.KeyVersion>();
             int nThreads = Integer.parseInt(properties.getProperty("maxConnections"));
             ExecutorService executor = Executors.newFixedThreadPool(nThreads,
@@ -703,8 +709,11 @@ public class S3Backend implements Backend {
                     executor.execute(new KeyRenameThread(s3ObjSumm.getKey()));
                     taskAdded = true;
                     count++;
-                    deleteList.add(new DeleteObjectsRequest.KeyVersion(
-                        s3ObjSumm.getKey()));
+                    // delete the object if it follows old key name format
+                    if( s3ObjSumm.getKey().startsWith(KEY_PREFIX)) {
+                        deleteList.add(new DeleteObjectsRequest.KeyVersion(
+                            s3ObjSumm.getKey()));
+                    }
                 }
                 if (!prevObjectListing.isTruncated()) break;
                 prevObjectListing = s3service.listNextBatchOfObjects(prevObjectListing);
@@ -763,8 +772,7 @@ public class S3Backend implements Backend {
     private static String convertKey(String oldKey)
             throws IllegalArgumentException {
         if (!oldKey.startsWith(KEY_PREFIX)) {
-            throw new IllegalArgumentException("[" + oldKey
-                + "] doesn't start with prefix [" + KEY_PREFIX + "]");
+            return oldKey;
         }
         String key = oldKey.substring(KEY_PREFIX.length());
         return key.substring(0, 4) + Utils.DASH + key.substring(4);
@@ -804,7 +812,7 @@ public class S3Backend implements Backend {
                 String newS3Key = convertKey(oldKey);
                 CopyObjectRequest copReq = new CopyObjectRequest(bucket,
                     oldKey, bucket, newS3Key);
-                Copy copy = tmx.copy(copReq);
+                Copy copy = tmx.copy(s3ReqDecorator.decorate(copReq));
                 try {
                     copy.waitForCopyResult();
                     LOG.debug("[{}] renamed to [{}] ", oldKey, newS3Key);
@@ -812,7 +820,6 @@ public class S3Backend implements Backend {
                     LOG.error(" Exception in renaming [{}] to [{}] ",
                         new Object[] { ie, oldKey, newS3Key });
                 }
-               
             } finally {
                 if (contextClassLoader != null) {
                     Thread.currentThread().setContextClassLoader(
@@ -902,6 +909,4 @@ public class S3Backend implements Backend {
 
         }
     }
-
-    
 }

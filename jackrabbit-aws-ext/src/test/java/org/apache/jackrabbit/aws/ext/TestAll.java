@@ -24,6 +24,7 @@ import junit.framework.TestSuite;
 import org.apache.jackrabbit.aws.ext.ds.TestS3Ds;
 import org.apache.jackrabbit.aws.ext.ds.TestS3DSAsyncTouch;
 import org.apache.jackrabbit.aws.ext.ds.TestS3DsCacheOff;
+import org.apache.jackrabbit.aws.ext.ds.TestS3DSWithSSES3;
 import org.apache.jackrabbit.aws.ext.ds.TestS3DSWithSmallCache;
 import org.apache.jackrabbit.core.data.TestCaseBase;
 import org.slf4j.Logger;
@@ -51,6 +52,7 @@ public class TestAll extends TestCase {
             suite.addTestSuite(TestS3DSAsyncTouch.class);
             suite.addTestSuite(TestS3DSWithSmallCache.class);
             suite.addTestSuite(TestS3DsCacheOff.class);
+            suite.addTestSuite(TestS3DSWithSSES3.class);
         }
         return suite;
     }
