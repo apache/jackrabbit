@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.aws.ext.ds;
 
+import java.util.Properties;
+
 import org.apache.jackrabbit.core.data.Backend;
 
 /**
@@ -25,20 +27,21 @@ import org.apache.jackrabbit.core.data.Backend;
  * bucket are not immediately reflected in the next test case.
  */
 public class S3TestDataStore extends S3DataStore {
-    String bucket;
+
+    Properties props;
 
     public S3TestDataStore() {
         super();
     }
 
-    public S3TestDataStore(String bucket) {
+    public S3TestDataStore(Properties props) {
         super();
-        this.bucket = bucket;
+        this.props = props;
     }
 
     protected Backend createBackend() {
         Backend backend = new S3Backend();
-        ((S3Backend) backend).setBucket(bucket);
+        ((S3Backend) backend).setProperties(props);
         return backend;
     }
 }

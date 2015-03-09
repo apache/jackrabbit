@@ -24,12 +24,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -218,8 +215,11 @@ public class LocalCache {
             if (destExists) {
                 dest.setLastModified(System.currentTimeMillis());
             }
-            LOG.debug("file [{}]  exists= [{}] and adding to local cache.",
-                fileName, destExists);
+            LOG.debug(
+                "file [{}]  exists= [{}] added to local cache, isLastModified [{}]",
+                new Object[] { dest.getAbsolutePath(), dest.exists(),
+                    destExists });
+            
             cache.put(fileName, dest.length());
             result.setFile(dest);
             if (tryForAsyncUpload) {
@@ -251,7 +251,7 @@ public class LocalCache {
         if (!f.exists() || (isInPurgeMode() && !asyncUploadCache.hasEntry(fileName, false))) {
             LOG.debug(
                 "getFileIfStored returned: purgeMode=[{}], file=[{}] exists=[{}]",
-                new Object[] { isInPurgeMode(), fileName, f.exists() });
+                new Object[] { isInPurgeMode(), f.getAbsolutePath(), f.exists() });
             return null;
         } else {
             // touch entry in LRU caches
@@ -365,7 +365,7 @@ public class LocalCache {
         LOG.debug("try deleting file [{}]", fileName);
         File f = getFile(fileName);
         if (f.exists() && f.delete()) {
-            LOG.debug("File [{}]  deleted successfully", fileName);
+            LOG.info("File [{}]  deleted successfully", f.getAbsolutePath());
             toBeDeleted.remove(fileName);
             while (true) {
                 f = f.getParentFile();

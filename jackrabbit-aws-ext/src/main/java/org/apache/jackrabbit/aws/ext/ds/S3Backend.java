@@ -77,22 +77,6 @@ public class S3Backend implements Backend {
 
     private static final String KEY_PREFIX = "dataStore_";
 
-    /**
-     * The default value AWS bucket region.
-     */
-    private static final String DEFAULT_AWS_BUCKET_REGION = "us-standard";
-
-    /**
-     * constants to define endpoint to various AWS region
-     */
-    private static final String AWSDOTCOM = "amazonaws.com";
-
-    private static final String S3 = "s3";
-
-    private static final String DOT = ".";
-
-    private static final String DASH = "-";
-    
     private AmazonS3Client s3service;
 
     private String bucket;
@@ -150,33 +134,19 @@ public class S3Backend implements Backend {
             }
             String region = prop.getProperty(S3Constants.S3_REGION);
             Region s3Region = null;
-            String endpoint = null;
-            if (DEFAULT_AWS_BUCKET_REGION.equals(region)) {
+            if (Utils.DEFAULT_AWS_BUCKET_REGION.equals(region)) {
                 s3Region =  Region.US_Standard;
-                endpoint = S3 + DOT + AWSDOTCOM;
             } else if (Region.EU_Ireland.toString().equals(region)) {
                 s3Region = Region.EU_Ireland;
-                endpoint = "s3-eu-west-1" + DOT + AWSDOTCOM;
             } else {
                 s3Region = Region.fromValue(region);
-                endpoint = S3 + DASH + region + DOT + AWSDOTCOM;
             }
             
-            String propEndPoint = prop.getProperty(S3Constants.S3_END_POINT);
-            if ((propEndPoint != null) & !"".equals(propEndPoint)) {
-                endpoint = propEndPoint;
-            }
-            /*
-             * setting endpoint to remove latency of redirection. If endpoint is
-             * not set, invocation first goes us standard region, which
-             * redirects it to correct location.
-             */
-            s3service.setEndpoint(endpoint);
-            LOG.info("S3 service endpoint [{}] ", endpoint);
-           
             if (!s3service.doesBucketExist(bucket)) {
                 s3service.createBucket(bucket, s3Region);
                 LOG.info("Created bucket [{}] in [{}] ", bucket, region);
+            } else {
+                LOG.info("Using bucket [{}] in [{}] ", bucket, region);
             }
            
             int writeThreads = 10;
@@ -200,8 +170,9 @@ public class S3Backend implements Backend {
                 asyncWritePoolSize, new NamedThreadFactory("s3-write-worker"));
             String renameKeyProp = prop.getProperty(S3Constants.S3_RENAME_KEYS);
             boolean renameKeyBool = (renameKeyProp == null || "".equals(renameKeyProp))
-                    ? true
+                    ? false
                     : Boolean.parseBoolean(renameKeyProp);
+            LOG.info("Rename keys [{}]", renameKeyBool);
             if (renameKeyBool) {
                 renameKeys();
             }
@@ -796,7 +767,7 @@ public class S3Backend implements Backend {
                 + "] doesn't start with prefix [" + KEY_PREFIX + "]");
         }
         String key = oldKey.substring(KEY_PREFIX.length());
-        return key.substring(0, 4) + DASH + key.substring(4);
+        return key.substring(0, 4) + Utils.DASH + key.substring(4);
     }
 
     /**
@@ -804,14 +775,14 @@ public class S3Backend implements Backend {
      */
     private static String getKeyName(DataIdentifier identifier) {
         String key = identifier.toString();
-        return key.substring(0, 4) + DASH + key.substring(4);
+        return key.substring(0, 4) + Utils.DASH + key.substring(4);
     }
 
     /**
      * Get data identifier from key.
      */
     private static String getIdentifierName(String key) {
-        if (!key.contains(DASH)) {
+        if (!key.contains(Utils.DASH)) {
             return null;
         }
         return key.substring(0, 4) + key.substring(5);

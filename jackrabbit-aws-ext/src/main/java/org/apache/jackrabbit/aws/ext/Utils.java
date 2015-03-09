@@ -30,6 +30,7 @@ import com.amazonaws.ClientConfiguration;
 import com.amazonaws.Protocol;
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.BasicAWSCredentials;
+import com.amazonaws.services.s3.model.Region;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.ObjectListing;
@@ -45,6 +46,22 @@ public final class Utils {
     public static final String DEFAULT_CONFIG_FILE = "aws.properties";
 
     private static final String DELETE_CONFIG_SUFFIX = ";burn";
+
+    /**
+     * The default value AWS bucket region.
+     */
+    public static final String DEFAULT_AWS_BUCKET_REGION = "us-standard";
+
+    /**
+     * constants to define endpoint to various AWS region
+     */
+    public static final String AWSDOTCOM = "amazonaws.com";
+
+    public static final String S3 = "s3";
+
+    public static final String DOT = ".";
+
+    public static final String DASH = "-";
 
     /**
      * private constructor so that class cannot initialized from outside.
@@ -63,20 +80,29 @@ public final class Utils {
         AWSCredentials credentials = new BasicAWSCredentials(
             prop.getProperty(S3Constants.ACCESS_KEY),
             prop.getProperty(S3Constants.SECRET_KEY));
-        int connectionTimeOut = Integer.parseInt(prop.getProperty(S3Constants.S3_CONN_TIMEOUT));
-        int socketTimeOut = Integer.parseInt(prop.getProperty(S3Constants.S3_SOCK_TIMEOUT));
-        int maxConnections = Integer.parseInt(prop.getProperty(S3Constants.S3_MAX_CONNS));
-        int maxErrorRetry = Integer.parseInt(prop.getProperty(S3Constants.S3_MAX_ERR_RETRY));
-        ClientConfiguration cc = new ClientConfiguration();
-        String protocol = prop.getProperty(S3Constants.S3_CONN_PROTOCOL);
-        if ( protocol != null && protocol.equalsIgnoreCase("http")) {
-            cc.setProtocol(Protocol.HTTP);
+        AmazonS3Client s3service =  new AmazonS3Client(credentials, getClientConfiguration(prop));
+        String region = prop.getProperty(S3Constants.S3_REGION);
+        String endpoint = null;
+        String propEndPoint = prop.getProperty(S3Constants.S3_END_POINT);
+        if ((propEndPoint != null) & !"".equals(propEndPoint)) {
+            endpoint = propEndPoint;
+        } else {
+            if (DEFAULT_AWS_BUCKET_REGION.equals(region)) {
+                endpoint = S3 + DOT + AWSDOTCOM;
+            } else if (Region.EU_Ireland.toString().equals(region)) {
+                endpoint = "s3-eu-west-1" + DOT + AWSDOTCOM;
+            } else {
+                endpoint = S3 + DASH + region + DOT + AWSDOTCOM;
+            }
         }
-        cc.setConnectionTimeout(connectionTimeOut);
-        cc.setSocketTimeout(socketTimeOut);
-        cc.setMaxConnections(maxConnections);
-        cc.setMaxErrorRetry(maxErrorRetry);
-        return new AmazonS3Client(credentials, cc);
+        /*
+         * setting endpoint to remove latency of redirection. If endpoint is
+         * not set, invocation first goes us standard region, which
+         * redirects it to correct location.
+         */
+        s3service.setEndpoint(endpoint);
+        LOG.info("S3 service endpoint [{}] ", endpoint);
+        return s3service;
     }
 
     /**
@@ -140,6 +166,23 @@ public final class Utils {
         if (!deleted) {
             LOG.warn("Could not delete " + file.getAbsolutePath());
         }
+    }
+
+    private static ClientConfiguration getClientConfiguration(Properties prop) {
+        int connectionTimeOut = Integer.parseInt(prop.getProperty(S3Constants.S3_CONN_TIMEOUT));
+        int socketTimeOut = Integer.parseInt(prop.getProperty(S3Constants.S3_SOCK_TIMEOUT));
+        int maxConnections = Integer.parseInt(prop.getProperty(S3Constants.S3_MAX_CONNS));
+        int maxErrorRetry = Integer.parseInt(prop.getProperty(S3Constants.S3_MAX_ERR_RETRY));
+        ClientConfiguration cc = new ClientConfiguration();
+        String protocol = prop.getProperty(S3Constants.S3_CONN_PROTOCOL);
+        if (protocol != null && protocol.equalsIgnoreCase("http")) {
+            cc.setProtocol(Protocol.HTTP);
+        }
+        cc.setConnectionTimeout(connectionTimeOut);
+        cc.setSocketTimeout(socketTimeOut);
+        cc.setMaxConnections(maxConnections);
+        cc.setMaxErrorRetry(maxErrorRetry);
+        return cc;
     }
 
 }
