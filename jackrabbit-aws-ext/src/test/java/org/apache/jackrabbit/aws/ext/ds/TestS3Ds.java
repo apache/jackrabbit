@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.aws.ext.ds;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -23,6 +24,7 @@ import java.util.Properties;
 
 import javax.jcr.RepositoryException;
 
+import org.apache.jackrabbit.aws.ext.S3Constants;
 import org.apache.jackrabbit.aws.ext.Utils;
 import org.apache.jackrabbit.core.data.Backend;
 import org.apache.jackrabbit.core.data.CachingDataStore;
@@ -48,23 +50,35 @@ public class TestS3Ds extends TestCaseBase {
 
     private Date startTime = null;
 
-    public TestS3Ds() {
+    protected Properties props;
+
+    public TestS3Ds() throws IOException {
       config = System.getProperty(CONFIG);
       memoryBackend = false;
       noCache = false;
+      props = Utils.readConfig(config);
   }
 
     protected void setUp() throws Exception {
         startTime = new Date();
         super.setUp();
+        String bucket = String.valueOf(randomGen.nextInt(9999)) + "-"
+                        + String.valueOf(randomGen.nextInt(9999)) + "-test";
+        props.setProperty(S3Constants.S3_BUCKET, bucket );
+        // delete bucket if exists
+        deleteBucket(bucket);
     }
-    protected void tearDown() throws Exception {
-        deleteBucket();
-        super.tearDown();
+    protected void tearDown()  {
+        try {
+            deleteBucket();
+            super.tearDown();
+        } catch ( Exception ignore ) {
+            
+        }
     }
     
     protected CachingDataStore createDataStore() throws RepositoryException {
-        ds = new S3TestDataStore(String.valueOf(randomGen.nextInt(9999)) + "-test");
+        ds = new S3TestDataStore(props);
         ds.setConfig(config);
         if (noCache) {
             ds.setCacheSize(0);
@@ -80,23 +94,30 @@ public class TestS3Ds extends TestCaseBase {
      * Cleaning of bucket after test run.
      */
     public void deleteBucket() throws Exception {
-        Properties props = Utils.readConfig(config);
-        AmazonS3Client s3service = Utils.openService(props);
         Backend backend = ds.getBackend();
         String bucket = ((S3Backend)backend).getBucket();
-        LOG.info("delete bucket [" + bucket + "]");
+        deleteBucket(bucket);
+    }
+    
+    public void deleteBucket(String bucket) throws Exception {
+        LOG.info("deleting bucket [" + bucket + "]");
+        Properties props = Utils.readConfig(config);
+        AmazonS3Client s3service = Utils.openService(props);
         TransferManager tmx = new TransferManager(s3service);
+
         if (s3service.doesBucketExist(bucket)) {
-            for (int i = 0; i < 3; i++) {
+            for (int i = 0; i < 4; i++) {
                 tmx.abortMultipartUploads(bucket, startTime);
                 ObjectListing prevObjectListing = s3service.listObjects(bucket);
-                while (prevObjectListing != null ) {
+                while (prevObjectListing != null) {
                     List<DeleteObjectsRequest.KeyVersion> deleteList = new ArrayList<DeleteObjectsRequest.KeyVersion>();
                     for (S3ObjectSummary s3ObjSumm : prevObjectListing.getObjectSummaries()) {
-                        deleteList.add(new DeleteObjectsRequest.KeyVersion(s3ObjSumm.getKey()));
+                        deleteList.add(new DeleteObjectsRequest.KeyVersion(
+                            s3ObjSumm.getKey()));
                     }
                     if (deleteList.size() > 0) {
-                        DeleteObjectsRequest delObjsReq = new DeleteObjectsRequest(bucket);
+                        DeleteObjectsRequest delObjsReq = new DeleteObjectsRequest(
+                            bucket);
                         delObjsReq.setKeys(deleteList);
                         s3service.deleteObjects(delObjsReq);
                     }
@@ -105,10 +126,13 @@ public class TestS3Ds extends TestCaseBase {
                 }
             }
             s3service.deleteBucket(bucket);
-            LOG.info("bucket: " + bucket + " deleted");
-            tmx.shutdownNow();
-            s3service.shutdown();
+            LOG.info("bucket [ " + bucket + "] deleted");
+
+        } else {
+            LOG.info("bucket [" + bucket + "] doesn't exists");
         }
+        tmx.shutdownNow();
+        s3service.shutdown();
     }
 
 }

@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.aws.ext.ds;
 
+import java.io.IOException;
+
 import org.apache.jackrabbit.core.data.CachingDataStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,7 +32,7 @@ public class TestS3DsCacheOff extends TestS3Ds {
 
     protected static final Logger LOG = LoggerFactory.getLogger(TestS3DsCacheOff.class);
 
-    public TestS3DsCacheOff() {
+    public TestS3DsCacheOff() throws IOException {
         config = System.getProperty(CONFIG);
         memoryBackend = false;
         noCache = true;

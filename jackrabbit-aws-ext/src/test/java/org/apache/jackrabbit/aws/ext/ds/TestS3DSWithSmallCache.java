@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.aws.ext.ds;
 
+import java.io.IOException;
+
 import javax.jcr.RepositoryException;
 
 import org.apache.jackrabbit.core.data.CachingDataStore;
@@ -31,14 +33,16 @@ import org.slf4j.LoggerFactory;
  */
 public class TestS3DSWithSmallCache extends TestS3Ds {
 
-    public TestS3DSWithSmallCache() {
+    protected static final Logger LOG = LoggerFactory.getLogger(TestS3DSWithSmallCache.class);
+    
+    public TestS3DSWithSmallCache() throws IOException {
         config = System.getProperty(CONFIG);
         memoryBackend = false;
         noCache = false;
     }
     
     protected CachingDataStore createDataStore() throws RepositoryException {
-        ds = new S3TestDataStore(String.valueOf(randomGen.nextInt(9999)) + "-test");
+        ds = new S3TestDataStore(props);
         ds.setConfig(config);
         ds.setCacheSize(dataLength * 10);
         ds.setCachePurgeTrigFactor(0.5d);

@@ -93,15 +93,25 @@ public abstract class TestCaseBase extends TestCase {
      */
     @Override
     protected void setUp() throws Exception {
-        dataStoreDir = TEST_DIR + "-"
-            + String.valueOf(randomGen.nextInt(dataLength));
+        dataStoreDir = TEST_DIR + "-" + String.valueOf(randomGen.nextInt(9999))
+            + "-" + String.valueOf(randomGen.nextInt(9999));
+        // delete directory if it exists
+        File directory = new File(dataStoreDir);
+        if (directory.exists()) {
+            boolean delSuccessFul = FileUtils.deleteQuietly(directory);
+            int retry = 2, count = 0;
+            while (!delSuccessFul && count <= retry) {
+                // try once more
+                delSuccessFul = FileUtils.deleteQuietly(new File(dataStoreDir));
+                count++;
+            }
+            LOG.info("setup : directory [" + dataStoreDir + "] deleted ["
+                + delSuccessFul + "]");
+        }
     }
 
-    /**
-     * Delete temporary directory.
-     */
     @Override
-    protected void tearDown() throws Exception {
+    protected void tearDown() {
         boolean delSuccessFul = FileUtils.deleteQuietly(new File(dataStoreDir));
         int retry = 2, count = 0;
         while (!delSuccessFul && count <= retry) {
@@ -112,7 +122,6 @@ public abstract class TestCaseBase extends TestCase {
         LOG.info("tearDown : directory [" + dataStoreDir + "] deleted ["
             + delSuccessFul + "]");
     }
-
     /**
      * Testcase to validate {@link DataStore#addRecord(InputStream)} API.
      */

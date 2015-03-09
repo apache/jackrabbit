@@ -32,7 +32,6 @@ import junit.framework.TestCase;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.jackrabbit.core.data.util.NamedThreadFactory;
-import org.apache.jackrabbit.core.fs.local.FileUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,18 +45,31 @@ public class TestLocalCache extends TestCase {
     private static final String TEMP_DIR = "target/temp";
 
     private static final String TARGET_DIR = "target";
+    
+    protected String  cacheDirPath;
+
+    protected String tempDirPath;
+
+    /**
+     * Random number generator to populate data
+     */
+    protected Random randomGen = new Random();
 
     private static final Logger LOG = LoggerFactory.getLogger(TestLocalCache.class);
 
     @Override
     protected void setUp() {
         try {
-            File cachedir = new File(CACHE_DIR);
-            if (cachedir.exists()) FileUtil.delete(cachedir);
+            cacheDirPath = CACHE_DIR + "-"
+                + String.valueOf(randomGen.nextInt(9999));
+            File cachedir = new File(cacheDirPath);
+            if (cachedir.exists()) FileUtils.deleteQuietly(cachedir);
             cachedir.mkdirs();
 
-            File tempdir = new File(TEMP_DIR);
-            if (tempdir.exists()) FileUtil.delete(tempdir);
+            tempDirPath = TEMP_DIR + "-"
+                + String.valueOf(randomGen.nextInt(9999));
+            File tempdir = new File(tempDirPath);
+            if (tempdir.exists()) FileUtils.deleteQuietly(tempdir);
             tempdir.mkdirs();
         } catch (Exception e) {
             LOG.error("error:", e);
@@ -67,12 +79,12 @@ public class TestLocalCache extends TestCase {
 
     @Override
     protected void tearDown() throws IOException {
-        File cachedir = new File(CACHE_DIR);
+        File cachedir = new File(cacheDirPath);
         if (cachedir.exists()) {
             FileUtils.deleteQuietly(cachedir);
         }
 
-        File tempdir = new File(TEMP_DIR);
+        File tempdir = new File(tempDirPath);
         if (tempdir.exists()) {
             FileUtils.deleteQuietly(tempdir);
         }
@@ -82,15 +94,11 @@ public class TestLocalCache extends TestCase {
      * Test to validate store retrieve in cache.
      */
     public void testStoreRetrieve() {
-        // FIXME: JCR-3806
-        if (true) {
-            return;
-        }
         try {
             AsyncUploadCache pendingFiles = new AsyncUploadCache();
-            pendingFiles.init(TARGET_DIR, CACHE_DIR, 100);
+            pendingFiles.init(tempDirPath, cacheDirPath, 100);
             pendingFiles.reset();
-            LocalCache cache = new LocalCache(CACHE_DIR, TEMP_DIR, 400, 0.95,
+            LocalCache cache = new LocalCache(cacheDirPath, tempDirPath, 400, 0.95,
                 0.70, pendingFiles);
             Random random = new Random(12345);
             byte[] data = new byte[100];
@@ -126,15 +134,11 @@ public class TestLocalCache extends TestCase {
      * cachePurgeTrigFactor * size.
      */
     public void testAutoPurge() {
-        // FIXME: JCR-3806
-        if (true) {
-            return;
-        }
         try {
             AsyncUploadCache pendingFiles = new AsyncUploadCache();
-            pendingFiles.init(TARGET_DIR, CACHE_DIR, 100);
+            pendingFiles.init(tempDirPath, cacheDirPath, 100);
             pendingFiles.reset();
-            LocalCache cache = new LocalCache(CACHE_DIR, TEMP_DIR, 400, 0.95,
+            LocalCache cache = new LocalCache(cacheDirPath, tempDirPath, 400, 0.95,
                 0.70, pendingFiles);
             Random random = new Random(12345);
             byte[] data = new byte[100];
@@ -193,15 +197,11 @@ public class TestLocalCache extends TestCase {
      * cachePurgeTrigFactor * size.
      */
     public void testAutoPurgeWithPendingUpload() {
-        // FIXME: JCR-3806
-        if (true) {
-            return;
-        }
         try {
             AsyncUploadCache pendingFiles = new AsyncUploadCache();
-            pendingFiles.init(TARGET_DIR, CACHE_DIR, 100);
+            pendingFiles.init(tempDirPath, cacheDirPath, 100);
             pendingFiles.reset();
-            LocalCache cache = new LocalCache(CACHE_DIR, TEMP_DIR, 400, 0.95,
+            LocalCache cache = new LocalCache(cacheDirPath, tempDirPath, 400, 0.95,
                 0.70, pendingFiles);
             Random random = new Random(12345);
             byte[] data = new byte[125];
@@ -220,7 +220,7 @@ public class TestLocalCache extends TestCase {
             data = new byte[100];
             random.nextBytes(data);
             byteMap.put("a4", data);
-            File tempDir = new File(TEMP_DIR);
+            File tempDir = new File(tempDirPath);
             File f = File.createTempFile("test", "tmp", tempDir);
             FileOutputStream fos = new FileOutputStream(f);
             fos.write(byteMap.get("a1"));
@@ -286,9 +286,9 @@ public class TestLocalCache extends TestCase {
     public void testConcurrentInitWithStore() {
         try {
             AsyncUploadCache pendingFiles = new AsyncUploadCache();
-            pendingFiles.init(TARGET_DIR, CACHE_DIR, 100);
+            pendingFiles.init(tempDirPath, cacheDirPath, 100);
             pendingFiles.reset();
-            LocalCache cache = new LocalCache(CACHE_DIR, TEMP_DIR, 10000000,
+            LocalCache cache = new LocalCache(cacheDirPath, tempDirPath, 10000000,
                 0.95, 0.70, pendingFiles);
             Random random = new Random(12345);
             int fileUploads = 1000;
@@ -302,9 +302,11 @@ public class TestLocalCache extends TestCase {
                 byteMap.put(key, data);
                 cache.store(key, new ByteArrayInputStream(byteMap.get(key)));
             }
+            cache.close();
+            
             ExecutorService executor = Executors.newFixedThreadPool(10,
                 new NamedThreadFactory("localcache-store-worker"));
-            cache = new LocalCache(CACHE_DIR, TEMP_DIR, 10000000, 0.95, 0.70,
+            cache = new LocalCache(cacheDirPath, tempDirPath, 10000000, 0.95, 0.70,
                 pendingFiles);
             executor.execute(new StoreWorker(cache, byteMap));
             executor.shutdown();
