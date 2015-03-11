@@ -83,9 +83,9 @@ public final class S3Constants {
     public static final String S3_WRITE_THREADS = "writeThreads";
     
     /**
-     * Constant to enable encrption in S3.
+     * Constant to enable encryption in S3.
      */
-    public static final String S3_ENCRYPTION = "s3Encrption";
+    public static final String S3_ENCRYPTION = "s3Encryption";
 
     /**
      * Constant for no encryption. it is default.
