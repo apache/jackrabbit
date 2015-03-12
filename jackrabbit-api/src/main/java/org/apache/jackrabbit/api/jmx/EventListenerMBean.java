@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.api.jmx;
 
+import javax.management.openmbean.CompositeData;
+
 /**
  * MBean interface for exposing information about a registered observation
  * listener.
@@ -80,5 +82,29 @@ public interface EventListenerMBean {
 
     /** Is date information accessed from an external event? */
     boolean isDateAccessedFromExternalEvent();
+
+    /**
+     * {@link org.apache.jackrabbit.api.stats.TimeSeries time series} of the number of
+     * items related to generating observation events that are currently queued by the
+     * system. The exact nature of these items is implementation specific and might not
+     * be in a one to one relation with the number of pending JCR events.
+     * @return  time series of the queue length
+     */
+    CompositeData getQueueLength();
+
+    /**
+     * @return  time series of the number of JCR events
+     */
+    CompositeData getEventCount();
+
+    /**
+     * @return  time series of the time it took an event listener to process JCR events.
+     */
+    CompositeData getEventConsumerTime();
+
+    /**
+     * @return  time series of the time it took the system to produce JCR events.
+     */
+    CompositeData getEventProducerTime();
 
 }

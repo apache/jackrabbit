@@ -20,6 +20,7 @@ package org.apache.jackrabbit.commons.observation;
 
 import static java.lang.System.currentTimeMillis;
 import static java.lang.System.nanoTime;
+import static org.apache.jackrabbit.stats.TimeSeriesStatsUtil.asCompositeData;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -30,10 +31,13 @@ import java.util.concurrent.atomic.AtomicLong;
 import javax.jcr.observation.Event;
 import javax.jcr.observation.EventIterator;
 import javax.jcr.observation.EventListener;
+import javax.management.openmbean.CompositeData;
 
 import org.apache.jackrabbit.api.jmx.EventListenerMBean;
 import org.apache.jackrabbit.api.observation.JackrabbitEvent;
 import org.apache.jackrabbit.commons.iterator.EventIteratorAdapter;
+import org.apache.jackrabbit.stats.TimeSeriesMax;
+import org.apache.jackrabbit.stats.TimeSeriesRecorder;
 
 /**
  * Tracks event deliveries to an event listener and the way the listener
@@ -67,6 +71,14 @@ public class ListenerTracker {
 
     private final AtomicLong eventDeliveryTime = new AtomicLong();
 
+    private final TimeSeriesMax queueLength = new TimeSeriesMax();
+
+    private final TimeSeriesRecorder eventCount = new TimeSeriesRecorder(true);
+
+    private final TimeSeriesRecorder eventConsumerTime = new TimeSeriesRecorder(true);
+
+    private final TimeSeriesRecorder eventProducerTime = new TimeSeriesRecorder(true);
+
     final AtomicBoolean userInfoAccessedWithoutExternalsCheck =
             new AtomicBoolean();
 
@@ -80,11 +92,9 @@ public class ListenerTracker {
             new AtomicBoolean();
 
     public ListenerTracker(
-            EventListener listener,
-            int eventTypes, String absPath, boolean isDeep,
-            String[] uuid, String[] nodeTypeName, boolean noLocal) {
+            EventListener listener, int eventTypes, String absPath, boolean isDeep, String[] uuid,
+            String[] nodeTypeName, boolean noLocal) {
         this.listener = listener;
-
         this.eventTypes = eventTypes;
         this.absPath = absPath;
         this.isDeep = isDeep;
@@ -123,18 +133,46 @@ public class ListenerTracker {
         // do nothing
     }
 
+    /**
+     * Applications should call this to report the current queue length.
+     * @param length
+     */
+    public void recordQueueLength(long length) {
+        queueLength.recordValue(length);
+    }
+
+    /**
+     * Records the number of measured values over the past second and resets
+     * the counter. This method should be scheduled to be called once per
+     * second.
+     */
+    public void recordOneSecond() {
+        queueLength.recordOneSecond();
+        eventCount.recordOneSecond();
+        eventConsumerTime.recordOneSecond();
+        eventProducerTime.recordOneSecond();
+    }
+
     public EventListener getTrackedListener() {
         return new EventListener() {
             @Override
             public void onEvent(EventIterator events) {
                 eventDeliveries.incrementAndGet();
-                long start = nanoTime();
+                final long start = nanoTime();
                 try {
                     beforeEventDelivery();
                     listener.onEvent(new EventIteratorAdapter(events) {
+                        long t0 = start;
+
+                        private void recordTime(TimeSeriesRecorder recorder) {
+                            recorder.getCounter().addAndGet(-(t0 - (t0 = nanoTime())));
+                        }
+
                         @Override
                         public Object next() {
+                            recordTime(eventConsumerTime);
                             eventsDelivered.incrementAndGet();
+                            eventCount.getCounter().incrementAndGet();
                             Object object = super.next();
                             if (object instanceof JackrabbitEvent) {
                                 object = new JackrabbitEventTracker(
@@ -144,7 +182,17 @@ public class ListenerTracker {
                                 object = new EventTracker(
                                         ListenerTracker.this, (Event) object);
                             }
+                            recordTime(eventProducerTime);
                             return object;
+                        }
+
+                        @Override
+                        public boolean hasNext() {
+                            recordTime(eventConsumerTime);
+                            boolean result = super.hasNext();
+                            t0 = nanoTime();
+                            recordTime(eventProducerTime);
+                            return result;
                         }
                     });
                 } finally {
@@ -246,6 +294,22 @@ public class ListenerTracker {
             @Override
             public synchronized boolean isDateAccessedFromExternalEvent() {
                 return dateAccessedFromExternalEvent.get();
+            }
+            @Override
+            public CompositeData getQueueLength() {
+                return asCompositeData(queueLength, "queueLength");
+            }
+            @Override
+            public CompositeData getEventCount() {
+                return asCompositeData(eventCount, "eventCount");
+            }
+            @Override
+            public CompositeData getEventConsumerTime() {
+                return asCompositeData(eventConsumerTime, "eventConsumerTime");
+            }
+            @Override
+            public CompositeData getEventProducerTime() {
+                return asCompositeData(eventProducerTime, "eventProducerTime");
             }
         };
     }
