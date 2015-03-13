@@ -47,6 +47,7 @@ public class TestS3DSWithSSES3 extends TestS3Ds {
         ds = new S3TestDataStore(props);
         ds.setConfig(config);
         ds.init(dataStoreDir);
+        sleep(1000);
         return ds;
     }
 

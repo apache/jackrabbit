@@ -84,6 +84,7 @@ public class TestS3Ds extends TestCaseBase {
             ds.setCacheSize(0);
         }
         ds.init(dataStoreDir);
+        sleep(1000);
         return ds;
     }
 
