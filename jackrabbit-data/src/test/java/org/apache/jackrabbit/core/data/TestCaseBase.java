@@ -21,6 +21,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.SequenceInputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -589,9 +590,15 @@ public abstract class TestCaseBase extends TestCase {
             int size = map.get(rec);
             rec = ds.getRecord(rec.getIdentifier());
             assertEquals(size, rec.getLength());
-            InputStream in = rec.getStream();
             RandomInputStream expected = new RandomInputStream(size + offset,
                 size);
+            InputStream in = rec.getStream();
+            // Workaround for race condition that can happen with low cache size relative to the test
+            // read immediately
+            byte[] buffer = new byte[1];
+            in.read(buffer);
+            in = new SequenceInputStream(new ByteArrayInputStream(buffer), in);
+
             if (random.nextBoolean()) {
                 in = readInputStreamRandomly(in, random);
             }

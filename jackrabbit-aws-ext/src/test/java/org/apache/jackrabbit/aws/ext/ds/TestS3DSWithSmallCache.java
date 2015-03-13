@@ -48,6 +48,7 @@ public class TestS3DSWithSmallCache extends TestS3Ds {
         ds.setCachePurgeTrigFactor(0.5d);
         ds.setCachePurgeResizeFactor(0.4d);
         ds.init(dataStoreDir);
+        sleep(1000);
         return ds;
     }
 }

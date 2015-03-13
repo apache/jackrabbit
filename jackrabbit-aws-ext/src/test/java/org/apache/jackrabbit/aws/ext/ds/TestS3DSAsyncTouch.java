@@ -46,6 +46,7 @@ public class TestS3DSAsyncTouch extends TestS3Ds {
         ds.init(dataStoreDir);
         ds.setTouchAsync(true);
         ds.updateModifiedDateOnAccess(System.currentTimeMillis()+ 50* 1000);
+        sleep(1000);
         return ds;
     }
 }

@@ -215,6 +215,7 @@ public class LocalCache {
             if (destExists) {
                 dest.setLastModified(System.currentTimeMillis());
             }
+            LOG.debug("file [{}] moved to [{}] ", src.getAbsolutePath(), dest.getAbsolutePath());
             LOG.debug(
                 "file [{}]  exists= [{}] added to local cache, isLastModified [{}]",
                 new Object[] { dest.getAbsolutePath(), dest.exists(),
