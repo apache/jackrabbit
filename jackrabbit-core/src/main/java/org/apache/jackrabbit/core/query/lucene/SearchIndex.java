@@ -386,6 +386,14 @@ public class SearchIndex extends AbstractQueryHandler {
      * Default value is: <code>false</code>.
      */
     private boolean supportHighlighting = false;
+    
+    /**
+     * If enabled, NodeIterator.getSize() may report a larger value than the
+     * actual result. This value may shrink when the query result encounters
+     * non-existing nodes or the session does not have access to a node. This
+     * might be a security problem.
+     */
+    private boolean sizeEstimate = false;
 
     /**
      * The excerpt provider class. Implements {@link ExcerptProvider}.
@@ -2177,6 +2185,30 @@ public class SearchIndex extends AbstractQueryHandler {
      */
     public long getExtractorTimeout() {
         return extractorTimeout;
+    }
+    
+    /**
+     * If enabled, NodeIterator.getSize() may report a larger value than the
+     * actual result. This value may shrink when the query result encounters
+     * non-existing nodes or the session does not have access to a node. This
+     * might be a security problem.
+     * 
+     * @param b <code>true</code> to enable
+     */
+    public void setSizeEstimate(boolean b) {
+        if (b) {
+            log.info("Size estimation is enabled");
+        }
+        this.sizeEstimate = b;
+    }
+    
+    /**
+     * Get the size estimate setting.
+     * 
+     * @return the setting
+     */
+    public boolean getSizeEstimate() {
+        return sizeEstimate;
     }
 
     /**
