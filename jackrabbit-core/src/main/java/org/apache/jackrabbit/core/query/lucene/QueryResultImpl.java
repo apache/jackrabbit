@@ -119,6 +119,8 @@ public abstract class QueryResultImpl implements JackrabbitQueryResult {
      * The maximum size of this result if limit >= 0
      */
     private final long limit;
+    
+    private final boolean sizeEstimate;
 
     /**
      * Creates a new query result. The concrete sub class is responsible for
@@ -146,6 +148,7 @@ public abstract class QueryResultImpl implements JackrabbitQueryResult {
             ColumnImpl[] columns, boolean documentOrder,
             long offset, long limit) throws RepositoryException {
         this.index = index;
+        this.sizeEstimate = index.getSizeEstimate();
         this.sessionContext = sessionContext;
         this.queryImpl = queryImpl;
         this.spellSuggestion = spellSuggestion;
@@ -258,10 +261,12 @@ public abstract class QueryResultImpl implements JackrabbitQueryResult {
             log.debug("getResults({}) limit={}", size, limit);
         }
         
-        // quick check
-        // if numResults is set, all relevant results have been fetched
-        if (numResults != -1) {
-            return;
+        if (!sizeEstimate) {
+            // quick check
+            // if numResults is set, all relevant results have been fetched
+            if (numResults != -1) {
+                return;
+            }
         }
 
         long maxResultSize = size;
@@ -291,7 +296,11 @@ public abstract class QueryResultImpl implements JackrabbitQueryResult {
             List<ScoreNode[]> offsetNodes = new ArrayList<ScoreNode[]>();
             if (resultNodes.isEmpty() && offset > 0) {
                 // collect result offset into dummy list
-                collectScoreNodes(result, offsetNodes, offset);
+                if (sizeEstimate) {
+                    collectScoreNodes(result, new ArrayList<ScoreNode[]>(), offset);                    
+                } else {
+                    collectScoreNodes(result, offsetNodes, offset);
+                }
             } else {
                 int start = resultNodes.size() + invalid + (int) offset;
                 result.skip(start);
@@ -303,23 +312,28 @@ public abstract class QueryResultImpl implements JackrabbitQueryResult {
             log.debug("retrieved ScoreNodes in {} ms ({})",
                     System.currentTimeMillis() - time, r3 - r2);
 
-            // update numResults if all results have been fetched 
-            // if resultNodes.getSize() is strictly smaller than maxResultSize, it means that all results have been fetched
-            int resultSize = resultNodes.size();
-            if (resultSize < maxResultSize) {
-                if (resultNodes.isEmpty()) {
-                    // if there's no result nodes, the actual totalResults if smaller or equals than the offset
-                    totalResults = offsetNodes.size();
-                    numResults = 0;
+            if (sizeEstimate) {
+                // update numResults
+                numResults = result.getSize();                
+            } else {
+                // update numResults if all results have been fetched 
+                // if resultNodes.getSize() is strictly smaller than maxResultSize, it means that all results have been fetched
+                int resultSize = resultNodes.size();
+                if (resultSize < maxResultSize) {
+                    if (resultNodes.isEmpty()) {
+                        // if there's no result nodes, the actual totalResults if smaller or equals than the offset
+                        totalResults = offsetNodes.size();
+                        numResults = 0;
+                    }
+                    else {
+                        totalResults = resultSize + (int) offset;
+                        numResults = resultSize;
+                    }
                 }
-                else {
-                    totalResults = resultSize + (int) offset;
-                    numResults = resultSize;
+                else if (resultSize == limit) {
+                    // if there's "limit" results, we can't know the total size (which may be greater), but the result size is the limit
+                    numResults = (int) limit;
                 }
-            }
-            else if (resultSize == limit) {
-                // if there's "limit" results, we can't know the total size (which may be greater), but the result size is the limit
-                numResults = (int) limit;
             }
         } catch (IOException e) {
             throw new RepositoryException(e);
@@ -393,11 +407,23 @@ public abstract class QueryResultImpl implements JackrabbitQueryResult {
      * will get get if you don't set any limit or offset. This method may return
      * <code>-1</code> if the total size is unknown.
      * <p>
+     * If the "sizeEstimate" options is enabled:
+     * Keep in mind that this number may get smaller if nodes are found in
+     * the result set which the current session has no permission to access.
+     * This might be a security problem.
      *
      * @return the total number of hits.
      */
     public int getTotalSize() {
-        return totalResults;
+        if (sizeEstimate) {
+            if (numResults == -1) {
+                return -1;
+            } else {
+                return numResults - invalid;
+            }
+        } else {
+            return totalResults;
+        }
     }
 
     private final class LazyScoreNodeIteratorImpl implements ScoreNodeIterator {
@@ -448,9 +474,26 @@ public abstract class QueryResultImpl implements JackrabbitQueryResult {
 
         /**
          * {@inheritDoc}
+         * <p/>
+         * If the "sizeEstimate" options is enabled:
+         * This value may shrink when the query result encounters non-existing
+         * nodes or the session does not have access to a node.
          */
         public long getSize() {
-            return numResults;
+            if (sizeEstimate) {
+                int total = getTotalSize();
+                if (total == -1) {
+                    return -1;
+                }
+                long size = offset > total ? 0 : total - offset;
+                if (limit >= 0 && size > limit) {
+                    return limit;
+                } else {
+                    return size;
+                }                
+            } else {
+                return numResults;
+            }
         }
 
         /**
@@ -504,9 +547,16 @@ public abstract class QueryResultImpl implements JackrabbitQueryResult {
             while (next == null) {
                 if (nextPos >= resultNodes.size()) {
                     // quick check if there are more results at all
-                    // if numResults is set, all relevant results have been fetched
-                    if (numResults != -1) {
-                        break;
+                    if (sizeEstimate) {
+                        // this check is only possible if we have numResults
+                        if (numResults != -1 && (nextPos + invalid) >= numResults) {
+                            break;
+                        }
+                    } else {
+                        // if numResults is set, all relevant results have been fetched
+                        if (numResults != -1) {
+                            break;
+                        }
                     }
 
                     // fetch more results
