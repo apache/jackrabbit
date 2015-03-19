@@ -434,7 +434,7 @@ public class RepositoryStartupServlet extends AbstractRepositoryServlet {
         } else { // Jackrabbit Oak
             try {
                 String model = System.getProperty("sun.arch.data.model", "32");
-                store = new FileStore(repHome, 256*1024*1024, "64".equals(model));
+                store = new FileStore(repHome, 256, "64".equals(model));
                 repository = new Jcr(new SegmentNodeStore(store)).createRepository();
             } catch (IOException e) {
                 throw new ServletExceptionWithCause("Error while creating repository", e);
