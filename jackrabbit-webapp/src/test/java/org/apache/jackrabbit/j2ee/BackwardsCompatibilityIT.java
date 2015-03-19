@@ -47,10 +47,9 @@ import org.apache.derby.jdbc.EmbeddedDriver;
 import org.apache.jackrabbit.core.RepositoryImpl;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.config.RepositoryConfig;
-import org.apache.jackrabbit.mk.core.MicroKernelImpl;
 import org.apache.jackrabbit.oak.Oak;
 import org.apache.jackrabbit.oak.jcr.Jcr;
-import org.apache.jackrabbit.oak.kernel.KernelNodeStore;
+import org.apache.jackrabbit.oak.plugins.segment.SegmentNodeStore;
 import org.apache.jackrabbit.oak.spi.state.NodeStore;
 import org.apache.jackrabbit.oak.upgrade.RepositoryUpgrade;
 import org.slf4j.Logger;
@@ -80,7 +79,7 @@ public class BackwardsCompatibilityIT extends TestCase {
                 log.info("Testing backwards compatibility with {}", dir);
                 checkJackrabbitRepository(dir);
 
-                NodeStore store = new KernelNodeStore(new MicroKernelImpl());
+                NodeStore store = new SegmentNodeStore();
                 RepositoryUpgrade.copy(dir, store);
                 checkRepositoryContent(
                         new Jcr(new Oak(store)).createRepository());
