@@ -44,6 +44,7 @@ Bug fixes
   [JCR-3840] NodeTypeDefDiff does not take same-name child type definitions into account
   [JCR-3850] RepositoryStartupServlet constructs FileStore incorrectly
   [JCR-3857] [jackrabbit-aws-ext] Correct typo in S3Constants
+  [JCR-3862] [FileDataStore]: deleteRecord leaves the parent directories empty
 
 Tasks
   [JCR-3830] Allow for privilege discovery in jcr-server
