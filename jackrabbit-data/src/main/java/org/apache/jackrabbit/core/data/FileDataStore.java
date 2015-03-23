@@ -280,12 +280,38 @@ public class FileDataStore extends AbstractDataStore
         File file = getFile(identifier);
         synchronized (this) {
             if (file.exists()) {
-                if (!file.delete()) {
+                if (file.delete()) {
+                    deleteEmptyParentDirs(file);
+                } else {
                     log.warn("Failed to delete file " + file.getAbsolutePath());
                 }
             }
         }
-	}
+    }
+
+    private void deleteEmptyParentDirs(File file) {
+        File parent = file.getParentFile();
+        try {
+            // Only iterate & delete if parent directory of the blob file is child
+            // of the base directory and if it is empty
+            while (FileUtils.directoryContains(directory, parent)) {
+                String[] entries = parent.list();
+                if (entries == null) {
+                    log.warn("Failed to list directory {}", parent.getAbsolutePath());
+                    break;
+                }
+                if (entries.length > 0) {
+                    break;
+                }
+                boolean deleted = parent.delete();
+                log.debug("Deleted parent [{}] of file [{}]: {}",
+                        new Object[]{parent, file.getAbsolutePath(), deleted});
+                parent = parent.getParentFile();
+            }
+        } catch (IOException e) {
+            log.warn("Error in parents deletion for " + file.getAbsoluteFile(), e);
+        }
+    }
 
     public int deleteAllOlderThan(long min) {
         int count = 0;
