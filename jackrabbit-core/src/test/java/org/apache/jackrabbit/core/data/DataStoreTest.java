@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.core.data;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.core.data.db.DbDataStore;
 import org.apache.jackrabbit.test.JUnitTest;
 
@@ -100,6 +101,44 @@ public class DataStoreTest extends JUnitTest {
             t.printStackTrace();
             throw new Error(t);
         }
+    }
+
+    public void testDeleteRecordWithParentCollision() throws Exception {
+        FileDataStore fds = new FileDataStore();
+        fds.init(testDir + "/fileDeleteCollision");
+
+        String c1 = "06b2f82fd81b2c20";
+        String c2 = "02c60cb75083ceef";
+        DataRecord d1 = fds.addRecord(IOUtils.toInputStream(c1));
+        DataRecord d2 = fds.addRecord(IOUtils.toInputStream(c2));
+        fds.deleteRecord(d1.getIdentifier());
+        DataRecord testRecord = fds.getRecordIfStored(d2.getIdentifier());
+
+        assertNotNull(testRecord);
+        assertEquals(d2.getIdentifier(), testRecord.getIdentifier());
+        // Check the presence of the parent directory (relies on internal details of the FileDataStore)
+        File parentDirD1 = new File(
+            fds.getPath() + System.getProperty("file.separator") + d1.getIdentifier().toString().substring(0, 2));
+        assertTrue(parentDirD1.exists());
+    }
+
+    public void testDeleteRecordWithoutParentCollision() throws Exception {
+        FileDataStore fds = new FileDataStore();
+        fds.init(testDir + "/fileDelete");
+
+        String c1 = "idhfigjhehgkdfgk";
+        String c2 = "02c60cb75083ceef";
+        DataRecord d1 = fds.addRecord(IOUtils.toInputStream(c1));
+        DataRecord d2 = fds.addRecord(IOUtils.toInputStream(c2));
+        fds.deleteRecord(d1.getIdentifier());
+        DataRecord testRecord = fds.getRecordIfStored(d2.getIdentifier());
+
+        assertNotNull(testRecord);
+        assertEquals(d2.getIdentifier(), testRecord.getIdentifier());
+        // Check the absence of the parent directory (relies on internal details of the FileDataStore)
+        File parentDirD1 = new File(
+            fds.getPath() + System.getProperty("file.separator") + d1.getIdentifier().toString().substring(0, 2));
+        assertFalse(parentDirD1.exists());
     }
 
     public void testReference() throws Exception {
