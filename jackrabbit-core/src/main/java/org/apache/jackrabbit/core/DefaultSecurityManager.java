@@ -56,6 +56,7 @@ import org.apache.jackrabbit.core.security.authorization.AccessControlProvider;
 import org.apache.jackrabbit.core.security.authorization.AccessControlProviderFactory;
 import org.apache.jackrabbit.core.security.authorization.AccessControlProviderFactoryImpl;
 import org.apache.jackrabbit.core.security.authorization.WorkspaceAccessManager;
+import org.apache.jackrabbit.core.security.principal.AbstractPrincipalProvider;
 import org.apache.jackrabbit.core.security.principal.AdminPrincipal;
 import org.apache.jackrabbit.core.security.principal.DefaultPrincipalProvider;
 import org.apache.jackrabbit.core.security.principal.PrincipalManagerImpl;
@@ -222,7 +223,7 @@ public class DefaultSecurityManager implements JackrabbitSecurityManager {
 
         // initialize principal-provider registry
         // 1) create default
-        PrincipalProvider defaultPP = createDefaultPrincipalProvider();
+        PrincipalProvider defaultPP = createDefaultPrincipalProvider(moduleConfig);
         // 2) create registry instance
         principalProviderRegistry = new ProviderRegistryImpl(defaultPP);
         // 3) register all configured principal providers.
@@ -520,9 +521,20 @@ public class DefaultSecurityManager implements JackrabbitSecurityManager {
      * @return An new instance of <code>DefaultPrincipalProvider</code>.
      * @throws RepositoryException If an error occurs.
      */
-    protected PrincipalProvider createDefaultPrincipalProvider() throws RepositoryException {
+    protected PrincipalProvider createDefaultPrincipalProvider(Properties[] moduleConfig) throws RepositoryException {
+        boolean initialized = false;
         PrincipalProvider defaultPP = new DefaultPrincipalProvider(this.systemSession, (UserManagerImpl) systemUserManager);
-        defaultPP.init(new Properties());
+        for (Properties props : moduleConfig) {
+            //GRANITE-4470: apply config to DefaultPrincipalProvider if there is no explicit PrincipalProvider configured
+            if (!props.containsKey(LoginModuleConfig.PARAM_PRINCIPAL_PROVIDER_CLASS) && props.containsKey(AbstractPrincipalProvider.MAXSIZE_KEY)) {
+                defaultPP.init(props);
+                initialized = true;
+                break;
+            }
+        }
+        if (!initialized) {
+            defaultPP.init(new Properties());
+        }
         return defaultPP;
     }
 
