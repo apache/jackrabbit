@@ -18,9 +18,12 @@ package org.apache.jackrabbit.core;
 
 import org.apache.jackrabbit.api.security.principal.PrincipalManager;
 import org.apache.jackrabbit.api.security.user.UserManager;
+import org.apache.jackrabbit.core.config.LoginModuleConfig;
 import org.apache.jackrabbit.core.config.UserManagerConfig;
 import org.apache.jackrabbit.core.security.authentication.AuthContext;
+import org.apache.jackrabbit.core.security.authentication.AuthContextProvider;
 import org.apache.jackrabbit.core.security.authorization.WorkspaceAccessManager;
+import org.apache.jackrabbit.core.security.principal.AbstractPrincipalProvider;
 import org.apache.jackrabbit.core.security.principal.DefaultPrincipalProvider;
 import org.apache.jackrabbit.core.security.principal.PrincipalManagerImpl;
 import org.apache.jackrabbit.core.security.principal.PrincipalProvider;
@@ -88,8 +91,22 @@ public class UserPerWorkspaceSecurityManager extends DefaultSecurityManager {
                     repo.markWorkspaceActive(wspName);
                 }
 
+                Properties[] moduleConfig = new AuthContextProvider("", ((RepositoryImpl) getRepository()).getConfig().getSecurityConfig().getLoginModuleConfig()).getModuleConfig();
+
                 PrincipalProvider defaultPP = new DefaultPrincipalProvider(systemSession, (UserManagerImpl) getUserManager(systemSession));
-                defaultPP.init(new Properties());
+
+                boolean initialized = false;
+                for (Properties props : moduleConfig) {
+                    //GRANITE-4470: apply config to DefaultPrincipalProvider if there is no explicit PrincipalProvider configured
+                    if (!props.containsKey(LoginModuleConfig.PARAM_PRINCIPAL_PROVIDER_CLASS) && props.containsKey(AbstractPrincipalProvider.MAXSIZE_KEY)) {
+                        defaultPP.init(props);
+                        initialized = true;
+                        break;
+                    }
+                }
+                if (!initialized) {
+                    defaultPP.init(new Properties());
+                }
 
                 p = new WorkspaceBasedPrincipalProviderRegistry(defaultPP);
                 ppRegistries.put(wspName, p);
@@ -196,7 +213,7 @@ public class UserPerWorkspaceSecurityManager extends DefaultSecurityManager {
      * @throws RepositoryException
      */
     @Override
-    protected PrincipalProvider createDefaultPrincipalProvider() throws RepositoryException {
+    protected PrincipalProvider createDefaultPrincipalProvider(Properties[] moduleConfig) throws RepositoryException {
         return null;
     }
 
