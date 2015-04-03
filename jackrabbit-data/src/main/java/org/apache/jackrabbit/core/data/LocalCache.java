@@ -615,8 +615,8 @@ public class LocalCache {
                         LOG.info    ("tmp file [{}] skipped ", filePath);
                         continue;
                     }
-                    if (name.startsWith(dataStorePath)) {
-                        name = name.substring(dataStorePath.length());
+                    if (filePath.startsWith(dataStorePath)) {
+                        name = filePath.substring(dataStorePath.length());
                     }
                     if (name.startsWith("/") || name.startsWith("\\")) {
                         name = name.substring(1);

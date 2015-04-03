@@ -101,7 +101,7 @@ public class InMemoryBackend implements Backend {
     }
 
     @Override
-    public Set<DataIdentifier> deleteAllOlderThan(final long min) {
+    public Set<DataIdentifier> deleteAllOlderThan(final long min) throws DataStoreException {
         log("deleteAllOlderThan " + min);
         Set<DataIdentifier> tobeDeleted = new HashSet<DataIdentifier>();
         for (Map.Entry<DataIdentifier, Long> entry : timeMap.entrySet()) {
@@ -109,6 +109,7 @@ public class InMemoryBackend implements Backend {
             long timestamp = entry.getValue();
             if (timestamp < min && !store.isInUse(identifier)
                 && store.confirmDelete(identifier)) {
+                store.deleteFromCache(identifier);
                 tobeDeleted.add(identifier);
             }
         }

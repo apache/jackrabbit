@@ -31,6 +31,7 @@ import java.util.concurrent.TimeUnit;
 import junit.framework.TestCase;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.core.data.util.NamedThreadFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,8 +46,8 @@ public class TestLocalCache extends TestCase {
     private static final String TEMP_DIR = "target/temp";
 
     private static final String TARGET_DIR = "target";
-    
-    protected String  cacheDirPath;
+
+    protected String cacheDirPath;
 
     protected String tempDirPath;
 
@@ -61,15 +62,23 @@ public class TestLocalCache extends TestCase {
     protected void setUp() {
         try {
             cacheDirPath = CACHE_DIR + "-"
+                + String.valueOf(randomGen.nextInt(9999)) + "-"
                 + String.valueOf(randomGen.nextInt(9999));
             File cachedir = new File(cacheDirPath);
-            if (cachedir.exists()) FileUtils.deleteQuietly(cachedir);
+            for (int i = 0; i < 4 && cachedir.exists(); i++) {
+                FileUtils.deleteQuietly(cachedir);
+                Thread.sleep(1000);
+            }
             cachedir.mkdirs();
 
             tempDirPath = TEMP_DIR + "-"
+                + String.valueOf(randomGen.nextInt(9999)) + "-"
                 + String.valueOf(randomGen.nextInt(9999));
             File tempdir = new File(tempDirPath);
-            if (tempdir.exists()) FileUtils.deleteQuietly(tempdir);
+            for (int i = 0; i < 4 && tempdir.exists(); i++) {
+                FileUtils.deleteQuietly(tempdir);
+                Thread.sleep(1000);
+            }
             tempdir.mkdirs();
         } catch (Exception e) {
             LOG.error("error:", e);
@@ -78,15 +87,17 @@ public class TestLocalCache extends TestCase {
     }
 
     @Override
-    protected void tearDown() throws IOException {
+    protected void tearDown() throws Exception {
         File cachedir = new File(cacheDirPath);
-        if (cachedir.exists()) {
+        for (int i = 0; i < 4 && cachedir.exists(); i++) {
             FileUtils.deleteQuietly(cachedir);
+            Thread.sleep(1000);
         }
 
         File tempdir = new File(tempDirPath);
-        if (tempdir.exists()) {
+        for (int i = 0; i < 4 && tempdir.exists(); i++) {
             FileUtils.deleteQuietly(tempdir);
+            Thread.sleep(1000);
         }
     }
 
@@ -98,8 +109,8 @@ public class TestLocalCache extends TestCase {
             AsyncUploadCache pendingFiles = new AsyncUploadCache();
             pendingFiles.init(tempDirPath, cacheDirPath, 100);
             pendingFiles.reset();
-            LocalCache cache = new LocalCache(cacheDirPath, tempDirPath, 400, 0.95,
-                0.70, pendingFiles);
+            LocalCache cache = new LocalCache(cacheDirPath, tempDirPath, 400,
+                0.95, 0.70, pendingFiles);
             Random random = new Random(12345);
             byte[] data = new byte[100];
             Map<String, byte[]> byteMap = new HashMap<String, byte[]>();
@@ -117,12 +128,15 @@ public class TestLocalCache extends TestCase {
             cache.store("a1", new ByteArrayInputStream(byteMap.get("a1")));
             cache.store("a2", new ByteArrayInputStream(byteMap.get("a2")));
             cache.store("a3", new ByteArrayInputStream(byteMap.get("a3")));
-            assertEquals(new ByteArrayInputStream(byteMap.get("a1")),
-                cache.getIfStored("a1"));
-            assertEquals(new ByteArrayInputStream(byteMap.get("a2")),
-                cache.getIfStored("a2"));
-            assertEquals(new ByteArrayInputStream(byteMap.get("a3")),
-                cache.getIfStored("a3"));
+            InputStream result = cache.getIfStored("a1");
+            assertEquals(new ByteArrayInputStream(byteMap.get("a1")), result);
+            IOUtils.closeQuietly(result);
+            result = cache.getIfStored("a2");
+            assertEquals(new ByteArrayInputStream(byteMap.get("a2")), result);
+            IOUtils.closeQuietly(result);
+            result = cache.getIfStored("a3");
+            assertEquals(new ByteArrayInputStream(byteMap.get("a3")), result);
+            IOUtils.closeQuietly(result);
         } catch (Exception e) {
             LOG.error("error:", e);
             fail();
@@ -138,8 +152,8 @@ public class TestLocalCache extends TestCase {
             AsyncUploadCache pendingFiles = new AsyncUploadCache();
             pendingFiles.init(tempDirPath, cacheDirPath, 100);
             pendingFiles.reset();
-            LocalCache cache = new LocalCache(cacheDirPath, tempDirPath, 400, 0.95,
-                0.70, pendingFiles);
+            LocalCache cache = new LocalCache(cacheDirPath, tempDirPath, 400,
+                0.95, 0.70, pendingFiles);
             Random random = new Random(12345);
             byte[] data = new byte[100];
             Map<String, byte[]> byteMap = new HashMap<String, byte[]>();
@@ -161,12 +175,16 @@ public class TestLocalCache extends TestCase {
             cache.store("a1", new ByteArrayInputStream(byteMap.get("a1")));
             cache.store("a2", new ByteArrayInputStream(byteMap.get("a2")));
             cache.store("a3", new ByteArrayInputStream(byteMap.get("a3")));
-            assertEquals(new ByteArrayInputStream(byteMap.get("a1")),
-                cache.getIfStored("a1"));
-            assertEquals(new ByteArrayInputStream(byteMap.get("a2")),
-                cache.getIfStored("a2"));
-            assertEquals(new ByteArrayInputStream(byteMap.get("a3")),
-                cache.getIfStored("a3"));
+
+            InputStream result = cache.getIfStored("a1");
+            assertEquals(new ByteArrayInputStream(byteMap.get("a1")), result);
+            IOUtils.closeQuietly(result);
+            result = cache.getIfStored("a2");
+            assertEquals(new ByteArrayInputStream(byteMap.get("a2")), result);
+            IOUtils.closeQuietly(result);
+            result = cache.getIfStored("a3");
+            assertEquals(new ByteArrayInputStream(byteMap.get("a3")), result);
+            IOUtils.closeQuietly(result);
 
             data = new byte[90];
             random.nextBytes(data);
@@ -174,18 +192,30 @@ public class TestLocalCache extends TestCase {
             // storing a4 should purge cache
             cache.store("a4", new ByteArrayInputStream(byteMap.get("a4")));
             Thread.sleep(1000);
-            assertNull("a1 should be null", cache.getIfStored("a1"));
-            assertNull("a2 should be null", cache.getIfStored("a2"));
-            assertEquals(new ByteArrayInputStream(byteMap.get("a3")),
-                cache.getIfStored("a3"));
-            assertEquals(new ByteArrayInputStream(byteMap.get("a4")),
-                cache.getIfStored("a4"));
+
+            result = cache.getIfStored("a1");
+            assertNull("a1 should be null", result);
+            IOUtils.closeQuietly(result);
+
+            result = cache.getIfStored("a2");
+            assertNull("a2 should be null", result);
+            IOUtils.closeQuietly(result);
+
+            result = cache.getIfStored("a3");
+            assertEquals(new ByteArrayInputStream(byteMap.get("a3")), result);
+            IOUtils.closeQuietly(result);
+
+            result = cache.getIfStored("a4");
+            assertEquals(new ByteArrayInputStream(byteMap.get("a4")), result);
+            IOUtils.closeQuietly(result);
+
             data = new byte[100];
             random.nextBytes(data);
             byteMap.put("a5", data);
             cache.store("a5", new ByteArrayInputStream(byteMap.get("a5")));
-            assertEquals(new ByteArrayInputStream(byteMap.get("a3")),
-                cache.getIfStored("a3"));
+            result = cache.getIfStored("a3");
+            assertEquals(new ByteArrayInputStream(byteMap.get("a3")), result);
+            IOUtils.closeQuietly(result);
         } catch (Exception e) {
             LOG.error("error:", e);
             fail();
@@ -201,8 +231,8 @@ public class TestLocalCache extends TestCase {
             AsyncUploadCache pendingFiles = new AsyncUploadCache();
             pendingFiles.init(tempDirPath, cacheDirPath, 100);
             pendingFiles.reset();
-            LocalCache cache = new LocalCache(cacheDirPath, tempDirPath, 400, 0.95,
-                0.70, pendingFiles);
+            LocalCache cache = new LocalCache(cacheDirPath, tempDirPath, 400,
+                0.95, 0.70, pendingFiles);
             Random random = new Random(12345);
             byte[] data = new byte[125];
             Map<String, byte[]> byteMap = new HashMap<String, byte[]>();
@@ -245,12 +275,15 @@ public class TestLocalCache extends TestCase {
             assertTrue("should be able to add to pending upload",
                 result.canAsyncUpload());
 
-            assertEquals(new ByteArrayInputStream(byteMap.get("a1")),
-                cache.getIfStored("a1"));
-            assertEquals(new ByteArrayInputStream(byteMap.get("a2")),
-                cache.getIfStored("a2"));
-            assertEquals(new ByteArrayInputStream(byteMap.get("a3")),
-                cache.getIfStored("a3"));
+            InputStream inp = cache.getIfStored("a1");
+            assertEquals(new ByteArrayInputStream(byteMap.get("a1")), inp);
+            IOUtils.closeQuietly(inp);
+            inp = cache.getIfStored("a2");
+            assertEquals(new ByteArrayInputStream(byteMap.get("a2")), inp);
+            IOUtils.closeQuietly(inp);
+            inp = cache.getIfStored("a3");
+            assertEquals(new ByteArrayInputStream(byteMap.get("a3")), inp);
+            IOUtils.closeQuietly(inp);
 
             data = new byte[90];
             random.nextBytes(data);
@@ -266,13 +299,17 @@ public class TestLocalCache extends TestCase {
                 result.canAsyncUpload());
             Thread.sleep(1000);
 
-            assertEquals(new ByteArrayInputStream(byteMap.get("a1")),
-                cache.getIfStored("a1"));
-            assertEquals(new ByteArrayInputStream(byteMap.get("a2")),
-                cache.getIfStored("a2"));
-            assertEquals(new ByteArrayInputStream(byteMap.get("a3")),
-                cache.getIfStored("a3"));
-            assertNull("a4 should be null", cache.getIfStored("a4"));
+            inp = cache.getIfStored("a1");
+            assertEquals(new ByteArrayInputStream(byteMap.get("a1")), inp);
+            IOUtils.closeQuietly(inp);
+            inp = cache.getIfStored("a2");
+            assertEquals(new ByteArrayInputStream(byteMap.get("a2")), inp);
+            IOUtils.closeQuietly(inp);
+            inp = cache.getIfStored("a3");
+            assertEquals(new ByteArrayInputStream(byteMap.get("a3")), inp);
+            IOUtils.closeQuietly(inp);
+            inp = cache.getIfStored("a4");
+            assertNull("a4 should be null", inp);
         } catch (Exception e) {
             LOG.error("error:", e);
             fail();
@@ -288,8 +325,8 @@ public class TestLocalCache extends TestCase {
             AsyncUploadCache pendingFiles = new AsyncUploadCache();
             pendingFiles.init(tempDirPath, cacheDirPath, 100);
             pendingFiles.reset();
-            LocalCache cache = new LocalCache(cacheDirPath, tempDirPath, 10000000,
-                0.95, 0.70, pendingFiles);
+            LocalCache cache = new LocalCache(cacheDirPath, tempDirPath,
+                10000000, 0.95, 0.70, pendingFiles);
             Random random = new Random(12345);
             int fileUploads = 1000;
             Map<String, byte[]> byteMap = new HashMap<String, byte[]>(
@@ -303,11 +340,11 @@ public class TestLocalCache extends TestCase {
                 cache.store(key, new ByteArrayInputStream(byteMap.get(key)));
             }
             cache.close();
-            
+
             ExecutorService executor = Executors.newFixedThreadPool(10,
                 new NamedThreadFactory("localcache-store-worker"));
-            cache = new LocalCache(cacheDirPath, tempDirPath, 10000000, 0.95, 0.70,
-                pendingFiles);
+            cache = new LocalCache(cacheDirPath, tempDirPath, 10000000, 0.95,
+                0.70, pendingFiles);
             executor.execute(new StoreWorker(cache, byteMap));
             executor.shutdown();
             while (!executor.awaitTermination(15, TimeUnit.SECONDS)) {
@@ -317,7 +354,6 @@ public class TestLocalCache extends TestCase {
             fail();
         }
     }
-
 
     private class StoreWorker implements Runnable {
         Map<String, byte[]> byteMap;
@@ -345,11 +381,12 @@ public class TestLocalCache extends TestCase {
             }
         }
     }
+
     /**
      * Assert two inputstream
      */
     protected void assertEquals(InputStream a, InputStream b)
-            throws IOException {
+                    throws IOException {
         while (true) {
             int ai = a.read();
             int bi = b.read();
@@ -358,6 +395,8 @@ public class TestLocalCache extends TestCase {
                 break;
             }
         }
+        IOUtils.closeQuietly(a);
+        IOUtils.closeQuietly(b);
     }
 
 }
