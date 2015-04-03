@@ -31,6 +31,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -77,6 +78,7 @@ import org.slf4j.LoggerFactory;
  *     &lt;param name="{@link #setUploadRetries(int) uploadRetries}" value="3"/>
  *     &lt;param name="{@link #setTouchAsync(boolean) touchAsync}" value="false"/>
  *     &lt;param name="{@link #setProactiveCaching(boolean) proactiveCaching}" value="true"/>
+ *     &lt;param name="{@link #setRecLengthCacheSize(int) recLengthCacheSize}" value="200"/>
  * &lt/DataStore>
  */
 public abstract class CachingDataStore extends AbstractDataStore implements
@@ -126,6 +128,12 @@ public abstract class CachingDataStore extends AbstractDataStore implements
      * download is finished corresponding entry is flushed from the map.
      */
     protected final Map<DataIdentifier, Long> asyncDownloadCache = new ConcurrentHashMap<DataIdentifier, Long>(5);
+
+    /**
+     * In memory cache to hold {@link DataRecord#getLength()} against
+     * {@link DataIdentifier}
+     */
+    protected Map<DataIdentifier, Long> recLenCache = null;
 
     protected Backend backend;
 
@@ -236,6 +244,12 @@ public abstract class CachingDataStore extends AbstractDataStore implements
      * repository.xml. By default it is 100
      */
     private int asyncUploadLimit = 100;
+    
+    /**
+     * Size of {@link #recLenCache}. Each entry consumes of approx 140 bytes.
+     * Default total memory consumption of {@link #recLenCache} 28KB.
+     */
+    private int recLengthCacheSize = 200;
 
     /**
      * Initialized the data store. If the path is not set, &lt;repository
@@ -333,6 +347,25 @@ public abstract class CachingDataStore extends AbstractDataStore implements
                 new NamedThreadFactory("backend-file-download-worker"));
             cache = new LocalCache(path, tmpDir.getAbsolutePath(), cacheSize,
                 cachePurgeTrigFactor, cachePurgeResizeFactor, asyncWriteCache);
+            /*
+             * Initialize LRU cache of size {@link #recLengthCacheSize}
+             */
+            recLenCache = Collections.synchronizedMap(new LinkedHashMap<DataIdentifier, Long>(
+                recLengthCacheSize, 0.75f, true) {
+
+                private static final long serialVersionUID = -8752749075395630485L;
+
+                @Override
+                protected boolean removeEldestEntry(
+                                Map.Entry<DataIdentifier, Long> eldest) {
+                    if (size() > recLengthCacheSize) {
+                        LOG.trace("evicted from recLengthCache [{}]",
+                            eldest.getKey());
+                        return true;
+                    }
+                    return false;
+                }
+            });
         } catch (Exception e) {
             throw new RepositoryException(e);
         }
@@ -415,24 +448,17 @@ public abstract class CachingDataStore extends AbstractDataStore implements
 
     @Override
     public DataRecord getRecord(DataIdentifier identifier)
-            throws DataStoreException {
+                    throws DataStoreException {
         String fileName = getFileName(identifier);
-        boolean existsAtBackend = false;
         try {
             if (asyncWriteCache.hasEntry(fileName, minModifiedDate > 0)) {
-                LOG.debug("[{}] record retrieved from asyncUploadmap",
+                LOG.debug("getRecord: [{}]  retrieved from asyncUploadmap",
                     identifier);
                 usesIdentifier(identifier);
                 return new CachingDataRecord(this, identifier);
-            } else if (cache.getFileIfStored(fileName) != null
-                || (existsAtBackend = backend.exists(identifier))) {
-                if (existsAtBackend) {
-                    LOG.debug("[{}] record retrieved from backend", identifier);
-                    asyncDownload(identifier);
-                } else {
-                    LOG.debug("[{}] record retrieved from local cache",
-                        identifier);
-                }
+            } else if (getLength(identifier) > -1) {
+                LOG.debug("getRecord: [{}]  retrieved using getLength",
+                    identifier);
                 touchInternal(identifier);
                 usesIdentifier(identifier);
                 return new CachingDataRecord(this, identifier);
@@ -453,19 +479,36 @@ public abstract class CachingDataStore extends AbstractDataStore implements
      */
     @Override
     public DataRecord getRecordIfStored(DataIdentifier identifier)
-            throws DataStoreException {
+                    throws DataStoreException {
         String fileName = getFileName(identifier);
         try {
             if (asyncWriteCache.hasEntry(fileName, minModifiedDate > 0)) {
-                LOG.debug("[{}] record retrieved from asyncuploadmap",
+                LOG.debug(
+                    "getRecordIfStored: [{}]  retrieved from asyncuploadmap",
                     identifier);
                 usesIdentifier(identifier);
                 return new CachingDataRecord(this, identifier);
-            } else if (backend.exists(identifier)) {
-                LOG.debug("[{}] record retrieved from backend", identifier);
+            } else if (recLenCache.containsKey(identifier)) {
+                LOG.debug(
+                    "getRecordIfStored: [{}]  retrieved using recLenCache",
+                    identifier);
                 touchInternal(identifier);
                 usesIdentifier(identifier);
                 return new CachingDataRecord(this, identifier);
+            } else {
+                try {
+                    long length = backend.getLength(identifier);
+                    LOG.debug(
+                        "getRecordIfStored :[{}]  retrieved from backend",
+                        identifier);
+                    recLenCache.put(identifier, length);
+                    touchInternal(identifier);
+                    usesIdentifier(identifier);
+                    return new CachingDataRecord(this, identifier);
+                } catch (DataStoreException ignore) {
+                    LOG.warn(" getRecordIfStored: [{}]  not found", identifier);
+                }
+
             }
         } catch (IOException ioe) {
             throw new DataStoreException(ioe);
@@ -507,6 +550,7 @@ public abstract class CachingDataStore extends AbstractDataStore implements
         synchronized (this) {
             try {
                 // order is important here
+                recLenCache.remove(identifier);
                 asyncWriteCache.delete(fileName);
                 backend.deleteRecord(identifier);
                 cache.delete(fileName);
@@ -520,8 +564,10 @@ public abstract class CachingDataStore extends AbstractDataStore implements
     public synchronized int deleteAllOlderThan(long min)
             throws DataStoreException {
         Set<DataIdentifier> diSet = backend.deleteAllOlderThan(min);
+        
         // remove entries from local cache
         for (DataIdentifier identifier : diSet) {
+            recLenCache.remove(identifier);
             cache.delete(getFileName(identifier));
         }
         try {
@@ -593,13 +639,24 @@ public abstract class CachingDataStore extends AbstractDataStore implements
      * otherwise retrieve it from {@link Backend}.
      */
     public long getLength(final DataIdentifier identifier)
-            throws DataStoreException {
+                    throws DataStoreException {
         String fileName = getFileName(identifier);
-        Long length = cache.getFileLength(fileName);
+
+        Long length = recLenCache.get(identifier);
         if (length != null) {
-            return length.longValue();
+            LOG.debug(" identifier [{}] length fetched from recLengthCache",
+                identifier);
+            return length;
+        } else if ((length = cache.getFileLength(fileName)) != null) {
+            LOG.debug(" identifier [{}] length fetched from local cache",
+                identifier);
+            recLenCache.put(identifier, length);
+            return length;
         } else {
             length = backend.getLength(identifier);
+            LOG.debug(" identifier [{}] length fetched from backend",
+                identifier);
+            recLenCache.put(identifier, length);
             asyncDownload(identifier);
             return length;
         }
@@ -616,6 +673,20 @@ public abstract class CachingDataStore extends AbstractDataStore implements
 
     public Set<String> getPendingUploads() {
         return asyncWriteCache.getAll();
+    }
+    
+    
+    public void deleteFromCache(DataIdentifier identifier)
+                    throws DataStoreException {
+        try {
+            // order is important here
+            recLenCache.remove(identifier);
+            String fileName = getFileName(identifier);
+            asyncWriteCache.delete(fileName);
+            cache.delete(fileName);
+        } catch (IOException ioe) {
+            throw new DataStoreException(ioe);
+        }
     }
     
     @Override
@@ -1127,6 +1198,10 @@ public abstract class CachingDataStore extends AbstractDataStore implements
 
     public void setProactiveCaching(boolean proactiveCaching) {
         this.proactiveCaching = proactiveCaching;
+    }
+    
+    public void setRecLengthCacheSize(int recLengthCacheSize) {
+        this.recLengthCacheSize = recLengthCacheSize;
     }
 
     public Backend getBackend() {
