@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.core.data;
 
+import javax.jcr.RepositoryException;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,10 +28,14 @@ public class TestInMemDs extends TestCaseBase {
 
     protected static final Logger LOG = LoggerFactory.getLogger(TestInMemDs.class);
 
-    public TestInMemDs() {
-        config = null;
-        memoryBackend = true;
-        noCache = false;
+    
+    protected DataStore createDataStore() throws RepositoryException {
+        InMemoryDataStore inMemDS = new InMemoryDataStore();
+        inMemDS.setProperties(null);
+        inMemDS.init(dataStoreDir);
+        inMemDS.setSecret("12345");
+        return inMemDS;
     }
+    
 
 }

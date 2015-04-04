@@ -57,22 +57,6 @@ public abstract class TestCaseBase extends TestCase {
     public static final String CONFIG = "config";
 
     /**
-     * File path of aws properties.
-     */
-    protected String config;
-
-    /**
-     * Parameter to use in-memory backend.
-     */
-    protected boolean memoryBackend = true;
-
-    /**
-     * Parameter to use local cache. If true local cache {@link LocalCache} is
-     * not used.
-     */
-    protected boolean noCache;
-
-    /**
      * length of record to be added
      */
     protected int dataLength = 123456;
@@ -82,7 +66,7 @@ public abstract class TestCaseBase extends TestCase {
      */
     protected String dataStoreDir;
 
-    protected CachingDataStore ds;
+    protected DataStore ds;
 
     /**
      * Random number generator to populate data
@@ -287,15 +271,7 @@ public abstract class TestCaseBase extends TestCase {
 
     }
 
-    protected CachingDataStore createDataStore() throws RepositoryException {
-        ds = new InMemoryDataStore();
-        ds.setConfig(config);
-        if (noCache) {
-            ds.setCacheSize(0);
-        }
-        ds.init(dataStoreDir);
-        return ds;
-    }
+    protected abstract DataStore createDataStore() throws RepositoryException ;
 
     /**
      * Test {@link DataStore#addRecord(InputStream)} and assert length of added
@@ -344,7 +320,7 @@ public abstract class TestCaseBase extends TestCase {
         random.nextBytes(data3);
         DataRecord rec3 = ds.addRecord(new ByteArrayInputStream(data3));
 
-        ds.deleteRecord(rec2.getIdentifier());
+        ((MultiDataStoreAware)ds).deleteRecord(rec2.getIdentifier());
 
         assertNull("rec2 should be null",
             ds.getRecordIfStored(rec2.getIdentifier()));
@@ -409,7 +385,7 @@ public abstract class TestCaseBase extends TestCase {
         ds.updateModifiedDateOnAccess(updateTime);
 
         // sleep to workaround System.currentTimeMillis granularity.
-        sleep(100);
+        sleep(3000);
         data = new byte[dataLength];
         random.nextBytes(data);
         DataRecord rec3 = ds.addRecord(new ByteArrayInputStream(data));
@@ -420,15 +396,12 @@ public abstract class TestCaseBase extends TestCase {
 
         rec1 = ds.getRecord(rec1.getIdentifier());
 
-        assertEquals("rec1 touched", true,
-            ds.getLastModified(rec1.getIdentifier()) > updateTime);
+        assertEquals("rec1 touched", true, rec1.getLastModified() > updateTime);
         LOG.debug("rec2 timestamp=" + rec2.getLastModified());
         assertEquals("rec2 not touched", true,
-            ds.getLastModified(rec2.getIdentifier()) < updateTime);
-        assertEquals("rec3 touched", true,
-            ds.getLastModified(rec3.getIdentifier()) > updateTime);
-        assertEquals("rec4 touched", true,
-            ds.getLastModified(rec4.getIdentifier()) > updateTime);
+            rec2.getLastModified() < updateTime);
+        assertEquals("rec3 touched", true, rec3.getLastModified() > updateTime);
+        assertEquals("rec4 touched", true, rec4.getLastModified() > updateTime);
         ds.close();
 
     }
@@ -454,7 +427,7 @@ public abstract class TestCaseBase extends TestCase {
         ds.updateModifiedDateOnAccess(updateTime);
         
         // sleep to workaround System.currentTimeMillis granularity.
-        sleep(100);
+        sleep(3000);
         data = new byte[dataLength];
         random.nextBytes(data);
         DataRecord rec3 = ds.addRecord(new ByteArrayInputStream(data));
@@ -480,12 +453,9 @@ public abstract class TestCaseBase extends TestCase {
         }
 
         assertEquals("touched records found", 0, list.size());
-        assertEquals("rec1 touched", true,
-            ds.getLastModified(rec1.getIdentifier()) > updateTime);
-        assertEquals("rec3 touched", true,
-            ds.getLastModified(rec3.getIdentifier()) > updateTime);
-        assertEquals("rec4 touched", true,
-            ds.getLastModified(rec4.getIdentifier()) > updateTime);
+        assertEquals("rec1 touched", true, rec1.getLastModified() > updateTime);
+        assertEquals("rec3 touched", true, rec3.getLastModified() > updateTime);
+        assertEquals("rec4 touched", true, rec4.getLastModified() > updateTime);
         ds.close();
     }
 
@@ -493,9 +463,8 @@ public abstract class TestCaseBase extends TestCase {
      * Test if record can be accessed via
      * {@link DataStore#getRecordFromReference(String)}
      */
-    public void doReferenceTest() throws Exception {
+    protected void doReferenceTest() throws Exception {
         ds = createDataStore();
-        ds.setSecret("12345");
         byte[] data = new byte[dataLength];
         randomGen.nextBytes(data);
         String reference;
