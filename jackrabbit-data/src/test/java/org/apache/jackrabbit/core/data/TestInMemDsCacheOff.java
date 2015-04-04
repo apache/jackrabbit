@@ -16,19 +16,25 @@
  */
 package org.apache.jackrabbit.core.data;
 
+import javax.jcr.RepositoryException;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * Test {@link CachingDataStore} with InMemoryBackend and local cache off.
  */
+
 public class TestInMemDsCacheOff extends TestCaseBase {
 
     protected static final Logger LOG = LoggerFactory.getLogger(TestInMemDsCacheOff.class);
-
-    public TestInMemDsCacheOff() {
-        config = null;
-        memoryBackend = true;
-        noCache = true;
+    @Override
+    protected DataStore createDataStore() throws RepositoryException {
+        InMemoryDataStore inMemDS = new InMemoryDataStore();
+        inMemDS.setProperties(null);
+        inMemDS.init(dataStoreDir);
+        inMemDS.setSecret("12345");
+        inMemDS.setCacheSize(0);
+        return inMemDS;
     }
 }

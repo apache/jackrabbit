@@ -52,40 +52,45 @@ public class TestS3Ds extends TestCaseBase {
 
     protected Properties props;
 
-    public TestS3Ds() throws IOException {
-      config = System.getProperty(CONFIG);
-      memoryBackend = false;
-      noCache = false;
-      props = Utils.readConfig(config);
-  }
+    protected String config;
 
+    public TestS3Ds() throws IOException {
+        System.setProperty(
+            TestCaseBase.CONFIG,
+            "C:/src/apache/jackrabbit-encryp-changes/jackrabbit/jackrabbit-aws-ext/src/test/resources/aws.properties");
+        config = System.getProperty(CONFIG);
+        props = Utils.readConfig(System.getProperty(CONFIG));
+    }
+
+    @Override
     protected void setUp() throws Exception {
         startTime = new Date();
         super.setUp();
         String bucket = String.valueOf(randomGen.nextInt(9999)) + "-"
-                        + String.valueOf(randomGen.nextInt(9999)) + "-test";
-        props.setProperty(S3Constants.S3_BUCKET, bucket );
+            + String.valueOf(randomGen.nextInt(9999)) + "-test";
+        props.setProperty(S3Constants.S3_BUCKET, bucket);
         // delete bucket if exists
         deleteBucket(bucket);
     }
-    protected void tearDown()  {
+
+    @Override
+    protected void tearDown() {
         try {
             deleteBucket();
             super.tearDown();
-        } catch ( Exception ignore ) {
-            
+        } catch (Exception ignore) {
+
         }
     }
-    
+
+    @Override
     protected CachingDataStore createDataStore() throws RepositoryException {
-        ds = new S3TestDataStore(props);
-        ds.setConfig(config);
-        if (noCache) {
-            ds.setCacheSize(0);
-        }
-        ds.init(dataStoreDir);
+        S3DataStore s3ds = new S3DataStore();
+        s3ds.setProperties(props);
+        s3ds.setSecret("123456");
+        s3ds.init(dataStoreDir);
         sleep(1000);
-        return ds;
+        return s3ds;
     }
 
     /**
@@ -95,11 +100,11 @@ public class TestS3Ds extends TestCaseBase {
      * Cleaning of bucket after test run.
      */
     public void deleteBucket() throws Exception {
-        Backend backend = ds.getBackend();
-        String bucket = ((S3Backend)backend).getBucket();
+        Backend backend = ((S3DataStore) ds).getBackend();
+        String bucket = ((S3Backend) backend).getBucket();
         deleteBucket(bucket);
     }
-    
+
     public void deleteBucket(String bucket) throws Exception {
         LOG.info("deleting bucket [" + bucket + "]");
         Properties props = Utils.readConfig(config);

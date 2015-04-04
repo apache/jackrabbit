@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.core.data;
 
+import java.util.Properties;
+
 import org.apache.jackrabbit.core.data.Backend;
 import org.apache.jackrabbit.core.data.CachingDataStore;
 
@@ -23,14 +25,27 @@ import org.apache.jackrabbit.core.data.CachingDataStore;
  * A caching data store that uses the in-memory backend.
  */
 public class InMemoryDataStore extends CachingDataStore {
+    
+    private Properties properties;
 
     @Override
     protected Backend createBackend() {
-        return new InMemoryBackend();
+        InMemoryBackend backend = new InMemoryBackend();
+        if (properties != null) {
+            backend.setProperties(properties);
+        }
+        return backend;
     }
 
     @Override
     protected String getMarkerFile() {
         return "mem.init.done";
+    }
+    
+    /**
+     * Properties required to configure the S3Backend
+     */
+    public void setProperties(Properties properties) {
+        this.properties = properties;
     }
 }

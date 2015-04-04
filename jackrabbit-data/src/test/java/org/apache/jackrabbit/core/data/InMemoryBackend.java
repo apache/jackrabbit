@@ -27,6 +27,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 
 /**
@@ -39,6 +40,8 @@ public class InMemoryBackend implements Backend {
     private HashMap<DataIdentifier, Long> timeMap = new HashMap<DataIdentifier, Long>();
     
     private CachingDataStore store;
+    
+    private Properties properties;
 
     @Override
     public void init(CachingDataStore store, String homeDir, String config)
@@ -176,6 +179,16 @@ public class InMemoryBackend implements Backend {
         if (async) {
             callback.onSuccess(new AsyncUploadResult(identifier, file));
         }
+    }
+    
+    /**
+     * Properties used to configure the backend. If provided explicitly before
+     * init is invoked then these take precedence
+     *
+     * @param properties to configure S3Backend
+     */
+    public void setProperties(Properties properties) {
+        this.properties = properties;
     }
 
     /**
