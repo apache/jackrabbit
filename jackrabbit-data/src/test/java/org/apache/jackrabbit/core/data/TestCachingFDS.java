@@ -17,55 +17,34 @@
 
 package org.apache.jackrabbit.core.data;
 
-import java.io.File;
 import java.util.Properties;
 
 import javax.jcr.RepositoryException;
 
-import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * Test cases to test {@link FileDataStore}
- */
-public class TestFileDataStore extends TestCaseBase {
+public class TestCachingFDS extends TestFileDataStore {
 
-    protected static final Logger LOG = LoggerFactory.getLogger(TestFileDataStore.class);
+    protected static final Logger LOG = LoggerFactory.getLogger(TestCachingFDS.class);
 
-    protected String path;
-
-    @Override
     protected DataStore createDataStore() throws RepositoryException {
-        FileDataStore fds = new FileDataStore();
+        CachingFDS cacheFDS = new CachingFDS();
         Properties props = loadProperties("/fs.properties");
         String pathValue = props.getProperty("path");
         if (props != null && !"".equals(pathValue.trim())) {
-            path = pathValue + "/fds" + "-"
+            path = pathValue + "/cachingFds" + "-"
                 + String.valueOf(randomGen.nextInt(100000)) + "-"
                 + String.valueOf(randomGen.nextInt(100000));
         } else {
-            path = dataStoreDir + "/repository/datastore";
+            path = dataStoreDir + "/cachingFds";
         }
+        props.setProperty("path", path);
         LOG.info("path [{}] set.", path);
-        fds.setPath(path);
-        fds.init(dataStoreDir);
-        return fds;
-    }
-
-    @Override
-    protected void tearDown() {
-        LOG.info("cleaning path [{}]", path);
-        File f = new File(path);
-        try {
-            for (int i = 0; i < 4 && f.exists(); i++) {
-                FileUtils.deleteQuietly(f);
-                Thread.sleep(2000);
-            }
-        } catch (Exception ignore) {
-
-        }
-        super.tearDown();
+        cacheFDS.setProperties(props);
+        cacheFDS.setSecret("12345");
+        cacheFDS.init(dataStoreDir);
+        return cacheFDS;
     }
 
 }

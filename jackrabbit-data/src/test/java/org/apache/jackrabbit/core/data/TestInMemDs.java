@@ -28,7 +28,7 @@ public class TestInMemDs extends TestCaseBase {
 
     protected static final Logger LOG = LoggerFactory.getLogger(TestInMemDs.class);
 
-    
+    @Override
     protected DataStore createDataStore() throws RepositoryException {
         InMemoryDataStore inMemDS = new InMemoryDataStore();
         inMemDS.setProperties(null);

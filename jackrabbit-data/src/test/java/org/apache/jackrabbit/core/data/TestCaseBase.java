@@ -22,10 +22,12 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.SequenceInputStream;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Properties;
 import java.util.Random;
 
 import javax.jcr.RepositoryException;
@@ -662,5 +664,19 @@ public abstract class TestCaseBase extends TestCase {
 
             }
         }
+    }
+    
+    /**
+     * Return {@link Properties} from class resource. Return empty
+     * {@link Properties} if not found.
+     */
+    protected Properties loadProperties(String resource) {
+        Properties configProp = new Properties();
+        try {
+            configProp.load(this.getClass().getResourceAsStream(resource));
+        } catch (Exception ignore) {
+
+        }
+        return configProp;
     }
 }
