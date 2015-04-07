@@ -96,7 +96,7 @@ public class AccessControlProviderStub {
 			try {
 				// not configured try to load as resource
 				Properties prop = new Properties();
-				InputStream is = AccessControlProviderStub.class.getResourceAsStream(ACCESS_CONTROL_PROVIDER_PROPERTIES);
+				InputStream is = AccessControlProviderStub.class.getClassLoader().getResourceAsStream(ACCESS_CONTROL_PROVIDER_PROPERTIES);
 				if (is != null) {
 					prop.load(is);
 					// loads the concrete class to instantiate.

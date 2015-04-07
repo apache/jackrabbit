@@ -67,7 +67,7 @@ class XmlTree extends AbstractTree {
     private static void createXMLNodeFragment(StringBuilder xml, XmlTree tree, NamePathResolver resolver, boolean includeNsInfo) throws RepositoryException {
         xml.append("<sv:node ");
         if (includeNsInfo) {
-           xml.append("xmlns:jcr=\"http://www.jcp.org/jcr/1.0\" xmlns:sv=\"http://www.jcp.org/jcr/sv/1.0\"");
+           xml.append("xmlns:jcr=\"http://www.jcp.org/jcr/1.0\" xmlns:sv=\"http://www.jcp.org/jcr/sv/1.0\" ");
         }
         xml.append("sv:name=\"").append(resolver.getJCRName(tree.getName())).append("\">");
         // jcr:primaryType

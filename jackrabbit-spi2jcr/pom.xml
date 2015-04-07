@@ -62,6 +62,19 @@
                 org.apache.jackrabbit.test.api.LifecycleTest
 org.apache.jackrabbit.test.api.query.qom.EquiJoinConditionTest#testRightOuterJoin1<!--JCR-3493, JCR-3498-->
 org.apache.jackrabbit.test.api.query.qom.EquiJoinConditionTest#testLeftOuterJoin2<!--JCR-3493, JCR-3498-->
+
+                <!-- security related tests -->
+                <!-- The following 5 tests don't make too much sense on a jcr-client that doesn't necessarily should
+                     know about the concrete implementation and thus might just collection all information and
+                     delegate any optimization to the server-side -->
+                org.apache.jackrabbit.test.api.security.AccessControlListTest#testAddAggregatedPrivilegesSeparately <!-- JCR-3832 -->
+                org.apache.jackrabbit.test.api.security.AccessControlListTest#testAddAccessControlEntryInvalidPrincipal
+                org.apache.jackrabbit.test.api.security.AccessControlListTest#testAddAccessControlEntryInvalidPrivilege
+                org.apache.jackrabbit.test.api.security.AccessControlListTest#testAddAccessControlEntryTwice
+                org.apache.jackrabbit.test.api.security.AccessControlListTest#testAddAccessControlEntryAgain
+                <!-- Tests to verify -->
+                org.apache.jackrabbit.test.api.security.RSessionAccessControlPolicyTest#testGetApplicablePolicies
+                org.apache.jackrabbit.test.api.security.RSessionAccessControlPolicyTest#testGetPolicy
               </value>
             </property>
           </systemProperties>

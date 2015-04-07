@@ -17,14 +17,18 @@
 package org.apache.jackrabbit.spi2jcr;
 
 import org.apache.jackrabbit.core.JackrabbitRepositoryStub;
+import org.apache.jackrabbit.core.security.principal.EveryonePrincipal;
 import org.apache.jackrabbit.jcr2spi.AbstractRepositoryConfig;
 import org.apache.jackrabbit.jcr2spi.RepositoryImpl;
 import org.apache.jackrabbit.spi.RepositoryService;
 import org.apache.jackrabbit.spi.commons.name.NameConstants;
+import org.apache.jackrabbit.test.NotExecutableException;
 import org.apache.jackrabbit.test.RepositoryStubException;
 
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
+import javax.jcr.Session;
+import java.security.Principal;
 import java.util.Properties;
 
 /**
@@ -67,6 +71,11 @@ public class RepositoryStubImpl extends JackrabbitRepositoryStub {
             }
         }
         return repo;
+    }
+
+    @Override
+    public Principal getKnownPrincipal(Session session) throws RepositoryException {
+        return EveryonePrincipal.getInstance();
     }
 
     /**
