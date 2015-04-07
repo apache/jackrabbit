@@ -14,9 +14,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package org.apache.jackrabbit.api.security.user;
+
+import javax.jcr.RepositoryException;
 
 /**
- * Jackrabbit extensions for user management.
+ * The {@code AuthorizableTypeException} signals an {@link Authorizable} type mismatch.
  */
-@aQute.bnd.annotation.Version("2.4.0")
-package org.apache.jackrabbit.api.security.user;
+public class AuthorizableTypeException extends RepositoryException {
+
+    /**
+     * Serial version UID.
+     */
+    private static final long serialVersionUID = -7630050662371536149L;
+
+    public AuthorizableTypeException(String msg) {
+        super(msg);
+    }
+
+}

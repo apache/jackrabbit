@@ -19,6 +19,7 @@ package org.apache.jackrabbit.core.security.user;
 import org.apache.jackrabbit.api.security.principal.ItemBasedPrincipal;
 import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.jackrabbit.api.security.user.AuthorizableExistsException;
+import org.apache.jackrabbit.api.security.user.AuthorizableTypeException;
 import org.apache.jackrabbit.api.security.user.Group;
 import org.apache.jackrabbit.api.security.user.Query;
 import org.apache.jackrabbit.api.security.user.User;
@@ -448,6 +449,13 @@ public class UserManagerImpl extends ProtectedItemModifier
         }
 
         return a;
+    }
+
+    /**
+     * @see UserManager#getAuthorizable(String, Class)
+     */
+    public <T extends Authorizable> T getAuthorizable(String id, Class<T> authorizableClass) throws AuthorizableTypeException, RepositoryException {
+        return castAuthorizableByType(getAuthorizable(id), authorizableClass);
     }
 
     /**
@@ -909,6 +917,14 @@ public class UserManagerImpl extends ProtectedItemModifier
         }
 
         return getAuthorizable(n);
+    }
+
+    private <T extends Authorizable> T castAuthorizableByType(Authorizable authorizable, Class<T> authorizableClass) throws AuthorizableTypeException {
+        try {
+            return authorizableClass.cast(authorizable);
+        } catch (ClassCastException e) {
+            throw new AuthorizableTypeException("Invalid authorizable type '" + authorizable.getClass() + "'");
+        }
     }
 
     private Value getValue(String strValue) {
