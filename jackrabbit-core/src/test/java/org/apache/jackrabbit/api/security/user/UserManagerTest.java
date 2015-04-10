@@ -70,4 +70,60 @@ public class UserManagerTest extends AbstractUserTest {
             throw new NotExecutableException();
         }
     }
+
+
+    public void testGetAuthorizableByIdAndType() throws NotExecutableException, RepositoryException {
+        for (Principal principal : getPrincipalSetFromSession(superuser)) {
+            Principal p = principal;
+            Authorizable a = userMgr.getAuthorizable(p);
+            if (a != null) {
+                Authorizable authorizable = userMgr.getAuthorizable(a.getID(), a.getClass());
+                assertEquals("Equal ID expected", a.getID(), authorizable.getID());
+
+                authorizable = userMgr.getAuthorizable(a.getID(), Authorizable.class);
+                assertEquals("Equal ID expected", a.getID(), authorizable.getID());
+            }
+        }
+    }
+
+    public void testGetAuthorizableByIdAndWrongType() throws NotExecutableException, RepositoryException {
+        for (Principal principal : getPrincipalSetFromSession(superuser)) {
+            Principal p = principal;
+            Authorizable auth = userMgr.getAuthorizable(p);
+            if (auth != null) {
+                Class<? extends Authorizable> otherType = auth.isGroup() ? User.class : Group.class;
+                try {
+                    userMgr.getAuthorizable(auth.getID(), otherType);
+                    fail("Wrong Authorizable type is not detected.");
+                } catch (AuthorizableTypeException e) {
+                    // success
+                }
+            }
+        }
+    }
+
+    public void testGetNonExistingAuthorizableByIdAndType() throws NotExecutableException, RepositoryException {
+        Authorizable auth = userMgr.getAuthorizable("nonExistingAuthorizable", User.class);
+        assertNull(auth);
+
+        auth = userMgr.getAuthorizable("nonExistingAuthorizable", Authorizable.class);
+        assertNull(auth);
+    }
+
+    public void testGetAuthorizableByNullType() throws Exception {
+        String uid = superuser.getUserID();
+        Authorizable auth = userMgr.getAuthorizable(uid);
+        if (auth != null) {
+            try {
+                userMgr.getAuthorizable(uid, null);
+                fail("Null Authorizable type is not detected.");
+            } catch (AuthorizableTypeException e) {
+                // success
+            }
+        }
+    }
+
+    public void testGetNonExistingAuthorizableByNullType() throws Exception {
+        assertNull(userMgr.getAuthorizable("nonExistingAuthorizable", null));
+    }
 }

@@ -1593,6 +1593,10 @@ public class UserImporterTest extends AbstractJCRTest {
                     return null;
                 }
 
+                public <T extends Authorizable> T getAuthorizable(String id, Class<T> authorizableClass) throws RepositoryException {
+                    return null;
+                }
+
                 public Authorizable getAuthorizable(Principal principal) throws RepositoryException {
                     return null;
                 }
