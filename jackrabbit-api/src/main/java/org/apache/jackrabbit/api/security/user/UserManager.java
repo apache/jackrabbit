@@ -23,6 +23,8 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.UnsupportedRepositoryOperationException;
 
+import aQute.bnd.annotation.ProviderType;
+
 /**
  * The <code>UserManager</code> provides access to and means to maintain
  * {@link Authorizable authorizable objects} i.e. {@link User users} and
@@ -37,6 +39,7 @@ import javax.jcr.UnsupportedRepositoryOperationException;
  * {@link Session#save()} operation; callers should be prepared to repeat them
  * in case this happens.
  */
+@ProviderType
 public interface UserManager {
 
     /**
@@ -66,6 +69,18 @@ public interface UserManager {
      * @see Authorizable#getID()
      */
     Authorizable getAuthorizable(String id) throws RepositoryException;
+
+    /**
+     * Get the Authorizable of a specific type by its id.
+     *
+     * @param id the user or group id.
+     * @param authorizableClass the class of the type of Authorizable required; must not be <code>null</code>.
+     * @param <T> the required Authorizable type.
+     * @return Authorizable or <code>null</code>, if not present.
+     * @throws AuthorizableTypeException If an authorizable exists but is not of the requested type.
+     * @throws RepositoryException If an error occurs
+     */
+    <T extends Authorizable> T getAuthorizable(String id, Class<T> authorizableClass) throws AuthorizableTypeException, RepositoryException;
 
     /**
      * Get the Authorizable by its Principal.
