@@ -212,6 +212,15 @@
 <!ELEMENT Import (ProtectedItemImporter|ProtectedNodeImporter|ProtectedPropertyImporter)*>
 
 <!--
+    The ProtectedItemImporter element configures an importer for protected
+    items. The class attribute specifies the FQN of the class implementing the
+    ProtectedNodeImporter interface.
+    The param(s) define implementation specific parameters.
+-->
+<!ELEMENT ProtectedItemImporter (param*)>
+<!ATTLIST ProtectedItemImporter class CDATA #REQUIRED>
+
+<!--
     The ProtectedNodeImporter element configures an importer for protected
     nodes. The class attribute specifies the FQN of the class implementing the
     ProtectedNodeImporter interface.
