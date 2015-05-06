@@ -17,16 +17,23 @@
 
 package org.apache.jackrabbit.core.data;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.util.Properties;
 
 import javax.jcr.RepositoryException;
 
+import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class TestCachingFDS extends TestFileDataStore {
 
     protected static final Logger LOG = LoggerFactory.getLogger(TestCachingFDS.class);
+
+    private static final String PENDIND_UPLOAD_FILE = "async-pending-uploads.ser";
+
+    private static final String TO_BE_DELETED_UPLOAD_FILE = "async-tobedeleted-uploads.ser";
 
     protected DataStore createDataStore() throws RepositoryException {
         CachingFDS cacheFDS = new CachingFDS();
@@ -45,6 +52,32 @@ public class TestCachingFDS extends TestFileDataStore {
         cacheFDS.setSecret("12345");
         cacheFDS.init(dataStoreDir);
         return cacheFDS;
+    }
+
+    /**
+     * Test robustness of {@link AsyncUploadCache} corruption.
+     */
+    public void testAsyncUploadCacheCorruption() {
+        try {
+            ds = createDataStore();
+            File pendingUploads = new File(dataStoreDir + "/"
+                + PENDIND_UPLOAD_FILE);
+            FileOutputStream fos = new FileOutputStream(pendingUploads);
+            IOUtils.write("garbage-data", fos);
+            fos.close();
+
+            File tobeDeletedFile = new File(dataStoreDir + "/"
+                + TO_BE_DELETED_UPLOAD_FILE);
+            fos = new FileOutputStream(tobeDeletedFile);
+            IOUtils.write("garbage-data", fos);
+            fos.close();
+            ds.close();
+
+            doAddRecordTest();
+        } catch (Exception e) {
+            LOG.error("error:", e);
+            fail(e.getMessage());
+        }
     }
 
 }

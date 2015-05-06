@@ -110,10 +110,12 @@ public class FSBackend implements Backend {
             throw new DataStoreException("Can not create a directory "
                 + "because a file exists with the same name: " + this.path);
         }
-        boolean created = pathDir.mkdirs();
-        if (!created) {
-            throw new DataStoreException("Could not create directory: "
-                + pathDir.getAbsolutePath());
+        if( !pathDir.exists()) {
+            boolean created = pathDir.mkdirs();
+            if (!created) {
+                throw new DataStoreException("Could not create directory: "
+                                + pathDir.getAbsolutePath());
+            }
         }
         asyncWriteExecuter = (ThreadPoolExecutor) Executors.newFixedThreadPool(
             10, new NamedThreadFactory("fs-write-worker"));

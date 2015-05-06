@@ -33,6 +33,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -239,6 +240,7 @@ public class AsyncUploadCache {
             "AsynWriteCache:homeDir=[{}], path=[{}], asyncUploadLimit=[{}].",
             new Object[] { homeDir, path, asyncUploadLimit });
         pendingUploads = new File(homeDir + "/" + PENDIND_UPLOAD_FILE);
+        toBeDeletedUploads = new File(homeDir + "/" + TO_BE_DELETED_UPLOAD_FILE);
         if (pendingUploads.exists()) {
             deserializeAsyncUploadMap();
         } else {
@@ -246,7 +248,7 @@ public class AsyncUploadCache {
             asyncUploadMap = new HashMap<String, Long>();
             serializeAsyncUploadMap();
         }
-        toBeDeletedUploads = new File(homeDir + "/" + TO_BE_DELETED_UPLOAD_FILE);
+        
         if (toBeDeletedUploads.exists()) {
             deserializeToBeDeleted();
         } else {
@@ -262,22 +264,15 @@ public class AsyncUploadCache {
      */
     public synchronized void reset() throws IOException {
         String filePath = pendingUploads.getAbsolutePath();
-        if (pendingUploads.exists()) {
-            if (!pendingUploads.delete()) {
-                throw new IOException("Failed to delete file [" + filePath
-                    + "]");
-            }
+        if (!pendingUploads.exists()) {
+            pendingUploads.createNewFile();
         }
         pendingUploads.createNewFile();
         asyncUploadMap = new HashMap<String, Long>();
         serializeAsyncUploadMap();
 
-        filePath = toBeDeletedUploads.getAbsolutePath();
-        if (toBeDeletedUploads.exists()) {
-            if (!toBeDeletedUploads.delete()) {
-                throw new IOException("Failed to delete file [" + filePath
-                    + "]");
-            }
+        if (!toBeDeletedUploads.exists()) {
+            toBeDeletedUploads.createNewFile();
         }
         toBeDeletedUploads.createNewFile();
         toBeDeleted = new HashSet<String>();
@@ -295,8 +290,11 @@ public class AsyncUploadCache {
         ObjectOutput output = new ObjectOutputStream(buffer);
         try {
             output.writeObject(asyncUploadMap);
+            output.flush();
         } finally {
             output.close();
+            IOUtils.closeQuietly(buffer);
+            
         }
     }
 
@@ -311,9 +309,9 @@ public class AsyncUploadCache {
         ObjectInput input = new ObjectInputStream(buffer);
         try {
             asyncUploadMap = (Map<String, Long>) input.readObject();
-            // display its data
         } finally {
             input.close();
+            IOUtils.closeQuietly(buffer);
         }
     }
 
@@ -328,8 +326,10 @@ public class AsyncUploadCache {
         ObjectOutput output = new ObjectOutputStream(buffer);
         try {
             output.writeObject(toBeDeleted);
+            output.flush();
         } finally {
             output.close();
+            IOUtils.closeQuietly(buffer);
         }
     }
 
@@ -346,6 +346,7 @@ public class AsyncUploadCache {
             toBeDeleted = (Set<String>) input.readObject();
         } finally {
             input.close();
+            IOUtils.closeQuietly(buffer);
         }
     }
 }

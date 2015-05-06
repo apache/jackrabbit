@@ -273,14 +273,18 @@ public abstract class CachingDataStore extends AbstractDataStore implements
                 FileUtils.cleanDirectory(tmpDir);
                 LOG.info("tmp=[{}] cleaned.", tmpDir.getPath());
             }
-
-            asyncWriteCache = new AsyncUploadCache();
-            asyncWriteCache.init(homeDir, path, asyncUploadLimit);
-
+            boolean asyncWriteCacheInitStatus = true;
+            try {
+                asyncWriteCache = new AsyncUploadCache();
+                asyncWriteCache.init(homeDir, path, asyncUploadLimit);
+            } catch (Exception e) {
+                LOG.warn("Failed to initialize asyncWriteCache", e);
+                asyncWriteCacheInitStatus = false;
+            }
             backend = createBackend();
             backend.init(this, path, config);
             String markerFileName = getMarkerFile();
-            if (markerFileName != null) {
+            if (markerFileName != null && !"".equals(markerFileName.trim())) {
                 // create marker file in homeDir to avoid deletion in cache
                 // cleanup.
                 File markerFile = new File(homeDir, markerFileName);
@@ -297,7 +301,16 @@ public abstract class CachingDataStore extends AbstractDataStore implements
                 } else {
                     LOG.info("marker file = [{}] exists ",
                         markerFile.getAbsolutePath());
+                    if (!asyncWriteCacheInitStatus) {
+                        LOG.info("Initialization of asyncWriteCache failed. "
+                            + "Re-loading all files from local cache");
+                        uploadFilesFromCache();
+                        asyncWriteCache.reset();
+                    }
                 }
+            } else {
+                throw new DataStoreException("Failed to intialized DataStore."
+                    + " MarkerFileName is null or empty. ");
             }
             // upload any leftover async uploads to backend during last shutdown
             Set<String> fileList = asyncWriteCache.getAll();
@@ -452,12 +465,12 @@ public abstract class CachingDataStore extends AbstractDataStore implements
         String fileName = getFileName(identifier);
         try {
             if (asyncWriteCache.hasEntry(fileName, minModifiedDate > 0)) {
-                LOG.debug("getRecord: [{}]  retrieved from asyncUploadmap",
+                LOG.trace("getRecord: [{}]  retrieved from asyncUploadmap",
                     identifier);
                 usesIdentifier(identifier);
                 return new CachingDataRecord(this, identifier);
             } else if (getLength(identifier) > -1) {
-                LOG.debug("getRecord: [{}]  retrieved using getLength",
+                LOG.trace("getRecord: [{}]  retrieved using getLength",
                     identifier);
                 touchInternal(identifier);
                 usesIdentifier(identifier);
@@ -483,13 +496,13 @@ public abstract class CachingDataStore extends AbstractDataStore implements
         String fileName = getFileName(identifier);
         try {
             if (asyncWriteCache.hasEntry(fileName, minModifiedDate > 0)) {
-                LOG.debug(
+                LOG.trace(
                     "getRecordIfStored: [{}]  retrieved from asyncuploadmap",
                     identifier);
                 usesIdentifier(identifier);
                 return new CachingDataRecord(this, identifier);
             } else if (recLenCache.containsKey(identifier)) {
-                LOG.debug(
+                LOG.trace(
                     "getRecordIfStored: [{}]  retrieved using recLenCache",
                     identifier);
                 touchInternal(identifier);
@@ -615,13 +628,13 @@ public abstract class CachingDataStore extends AbstractDataStore implements
         String fileName = getFileName(identifier);
         long lastModified = asyncWriteCache.getLastModified(fileName);
         if (lastModified != 0) {
-            LOG.debug(
+            LOG.trace(
                 "identifier [{}], lastModified=[{}] retrireved from AsyncUploadCache ",
                 identifier, lastModified);
 
         } else if (asyncTouchCache.get(identifier) != null) {
             lastModified = asyncTouchCache.get(identifier);
-            LOG.debug(
+            LOG.trace(
                 "identifier [{}], lastModified=[{}] retrireved from asyncTouchCache ",
                 identifier, lastModified);
         } else {
@@ -644,11 +657,11 @@ public abstract class CachingDataStore extends AbstractDataStore implements
 
         Long length = recLenCache.get(identifier);
         if (length != null) {
-            LOG.debug(" identifier [{}] length fetched from recLengthCache",
+            LOG.trace(" identifier [{}] length fetched from recLengthCache",
                 identifier);
             return length;
         } else if ((length = cache.getFileLength(fileName)) != null) {
-            LOG.debug(" identifier [{}] length fetched from local cache",
+            LOG.trace(" identifier [{}] length fetched from local cache",
                 identifier);
             recLenCache.put(identifier, length);
             return length;
@@ -874,17 +887,19 @@ public abstract class CachingDataStore extends AbstractDataStore implements
             downloadExecService.execute(new Runnable() {
                 @Override
                 public void run() {
+                    long startTime = System.currentTimeMillis();
                     InputStream input = null;
                     try {
-                        // getStream to cache file
-                        LOG.debug("Async download [{}] started.", identifier);
+                        LOG.trace("Async download [{}] started.", identifier);
                         input = getStream(identifier);
                     } catch (RepositoryException re) {
                         // ignore exception
                     } finally {
                         asyncDownloadCache.remove(identifier);
                         IOUtils.closeQuietly(input);
-                        LOG.debug("Async download [{}] completed.", identifier);
+                        LOG.debug("Async download [{}] completed in [{}] ms.",
+                            identifier,
+                            (System.currentTimeMillis() - startTime));
                     }
                 }
             });
