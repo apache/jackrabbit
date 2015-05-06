@@ -32,7 +32,7 @@ public class TestCachingFDSCacheOff extends TestFileDataStore {
         CachingFDS cacheFDS = new CachingFDS();
         Properties props = loadProperties("/fs.properties");
         String pathValue = props.getProperty("path");
-        if (props != null && !"".equals(pathValue.trim())) {
+        if (pathValue != null && !"".equals(pathValue.trim())) {
             path = pathValue + "/cachingFds" + "-"
                 + String.valueOf(randomGen.nextInt(100000)) + "-"
                 + String.valueOf(randomGen.nextInt(100000));
