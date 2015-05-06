@@ -40,7 +40,7 @@ public class TestFileDataStore extends TestCaseBase {
         FileDataStore fds = new FileDataStore();
         Properties props = loadProperties("/fs.properties");
         String pathValue = props.getProperty("path");
-        if (props != null && !"".equals(pathValue.trim())) {
+        if (pathValue != null && !"".equals(pathValue.trim())) {
             path = pathValue + "/fds" + "-"
                 + String.valueOf(randomGen.nextInt(100000)) + "-"
                 + String.valueOf(randomGen.nextInt(100000));
