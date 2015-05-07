@@ -160,7 +160,7 @@ public class TokenProviderTest extends AbstractJCRTest {
     public void testIsExpired() throws Exception {
         TokenInfo info = tokenProvider.createToken(testuser, new SimpleCredentials(userId, userId.toCharArray()));
 
-        long loginTime = System.currentTimeMillis();
+        long loginTime = waitForSystemTimeIncrement(System.currentTimeMillis());
         assertFalse(info.isExpired(loginTime));
         assertTrue(info.isExpired(loginTime + TokenBasedAuthentication.TOKEN_EXPIRATION));
     }
@@ -169,7 +169,7 @@ public class TokenProviderTest extends AbstractJCRTest {
         TokenInfo info = tokenProvider.createToken(testuser, new SimpleCredentials(userId, userId.toCharArray()));
         long expTime = getTokenNode(info).getProperty("rep:token.exp").getLong();
 
-        long loginTime = System.currentTimeMillis();
+        long loginTime = waitForSystemTimeIncrement(System.currentTimeMillis());
         assertFalse(info.resetExpiration(loginTime));
         assertFalse(info.resetExpiration(loginTime + TokenBasedAuthentication.TOKEN_EXPIRATION));
 
@@ -187,5 +187,12 @@ public class TokenProviderTest extends AbstractJCRTest {
 
     private Node getTokenNode(TokenInfo info) throws RepositoryException {
         return TokenProvider.getTokenNode(info.getToken(), session);
+    }
+
+    private static long waitForSystemTimeIncrement(long old){
+        while (old == System.currentTimeMillis()) {
+            // wait for system timer to move
+        }
+        return System.currentTimeMillis();
     }
 }
