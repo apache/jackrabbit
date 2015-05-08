@@ -89,13 +89,10 @@
         </plugins>
       </build>
     </profile>
-    <!-- JCR-661: The antrun tools.jar dependency is not needed on macs -->
     <profile>
-      <id>non-mac</id>
+      <id>jdk-tools</id>
       <activation>
-        <os>
-          <family>!mac</family>
-        </os>
+        <file><exists>${java.home}/../lib/tools.jar</exists></file>
       </activation>
       <build>
         <plugins>
