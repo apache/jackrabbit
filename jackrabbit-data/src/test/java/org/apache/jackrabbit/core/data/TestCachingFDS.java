@@ -38,16 +38,16 @@ public class TestCachingFDS extends TestFileDataStore {
     protected DataStore createDataStore() throws RepositoryException {
         CachingFDS cacheFDS = new CachingFDS();
         Properties props = loadProperties("/fs.properties");
-        String pathValue = props.getProperty("path");
+        String pathValue = props.getProperty(FSBackend.FS_BACKEND_PATH);
         if (pathValue != null && !"".equals(pathValue.trim())) {
-            path = pathValue + "/cachingFds" + "-"
+            fsPath = pathValue + "/cachingFds" + "-"
                 + String.valueOf(randomGen.nextInt(100000)) + "-"
                 + String.valueOf(randomGen.nextInt(100000));
         } else {
-            path = dataStoreDir + "/cachingFds";
+            fsPath = dataStoreDir + "/cachingFds";
         }
-        props.setProperty("path", path);
-        LOG.info("path [{}] set.", path);
+        props.setProperty(FSBackend.FS_BACKEND_PATH, fsPath);
+        LOG.info("fsBackendPath [{}] set.", fsPath);
         cacheFDS.setProperties(props);
         cacheFDS.setSecret("12345");
         cacheFDS.init(dataStoreDir);
@@ -79,5 +79,4 @@ public class TestCachingFDS extends TestFileDataStore {
             fail(e.getMessage());
         }
     }
-
 }

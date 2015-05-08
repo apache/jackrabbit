@@ -45,7 +45,7 @@ public class FSBackend implements Backend {
 
     private Properties properties;
 
-    private String path;
+    private String fsPath;
 
     private CachingDataStore store;
 
@@ -53,11 +53,11 @@ public class FSBackend implements Backend {
 
     private String config;
 
-    File pathDir;
+    File fsPathDir;
 
     private ThreadPoolExecutor asyncWriteExecuter;
 
-    public static final String PATH = "path";
+    public static final String FS_BACKEND_PATH = "fsBackendPath";
 
     /**
      * Logger instance.
@@ -100,21 +100,21 @@ public class FSBackend implements Backend {
                     throws DataStoreException {
         this.store = store;
         this.homeDir = homeDir;
-        this.path = prop.getProperty(PATH);
-        if (this.path == null || "".equals(this.path)) {
+        this.fsPath = prop.getProperty(FS_BACKEND_PATH);
+        if (this.fsPath == null || "".equals(this.fsPath)) {
             throw new DataStoreException("Could not initialize FSBackend from "
-                + config + ". [" + PATH + "] property not found.");
+                + config + ". [" + FS_BACKEND_PATH + "] property not found.");
         }
-        pathDir = new File(this.path);
-        if (pathDir.exists() && pathDir.isFile()) {
+        fsPathDir = new File(this.fsPath);
+        if (fsPathDir.exists() && fsPathDir.isFile()) {
             throw new DataStoreException("Can not create a directory "
-                + "because a file exists with the same name: " + this.path);
+                + "because a file exists with the same name: " + this.fsPath);
         }
-        if( !pathDir.exists()) {
-            boolean created = pathDir.mkdirs();
+        if (!fsPathDir.exists()) {
+            boolean created = fsPathDir.mkdirs();
             if (!created) {
                 throw new DataStoreException("Could not create directory: "
-                                + pathDir.getAbsolutePath());
+                    + fsPathDir.getAbsolutePath());
             }
         }
         asyncWriteExecuter = (ThreadPoolExecutor) Executors.newFixedThreadPool(
@@ -172,8 +172,10 @@ public class FSBackend implements Backend {
                 try {
                     FileUtils.copyFile(src, dest);
                 } catch (IOException ioe) {
+                    LOG.error("failed to copy [{}] to [{}]",
+                        src.getAbsolutePath(), dest.getAbsolutePath());
                     throw new DataStoreException("Not able to write file ["
-                        + identifier + "]");
+                        + identifier + "]", ioe);
                 }
             }
         }
@@ -209,7 +211,7 @@ public class FSBackend implements Backend {
     public Iterator<DataIdentifier> getAllIdentifiers()
                     throws DataStoreException {
         ArrayList<File> files = new ArrayList<File>();
-        for (File file : pathDir.listFiles()) {
+        for (File file : fsPathDir.listFiles()) {
             if (file.isDirectory()) { // skip top-level files
                 listRecursive(files, file);
             }
@@ -298,7 +300,7 @@ public class FSBackend implements Backend {
     public Set<DataIdentifier> deleteAllOlderThan(long min)
                     throws DataStoreException {
         Set<DataIdentifier> deleteIdSet = new HashSet<DataIdentifier>(30);
-        for (File file : pathDir.listFiles()) {
+        for (File file : fsPathDir.listFiles()) {
             if (file.isDirectory()) { // skip top-level files
                 deleteOlderRecursive(file, min, deleteIdSet);
             }
@@ -340,7 +342,7 @@ public class FSBackend implements Backend {
      */
     private File getFile(DataIdentifier identifier) {
         String string = identifier.toString();
-        File file = this.pathDir;
+        File file = this.fsPathDir;
         file = new File(file, string.substring(0, 2));
         file = new File(file, string.substring(2, 4));
         file = new File(file, string.substring(4, 6));
@@ -418,7 +420,7 @@ public class FSBackend implements Backend {
             // Only iterate & delete if parent directory of the blob file is
             // child
             // of the base directory and if it is empty
-            while (FileUtils.directoryContains(pathDir, parent)) {
+            while (FileUtils.directoryContains(fsPathDir, parent)) {
                 String[] entries = parent.list();
                 if (entries == null) {
                     LOG.warn("Failed to list directory {}",

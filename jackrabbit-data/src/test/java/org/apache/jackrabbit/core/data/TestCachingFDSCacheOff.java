@@ -27,19 +27,19 @@ import org.slf4j.LoggerFactory;
 public class TestCachingFDSCacheOff extends TestFileDataStore {
 
     protected static final Logger LOG = LoggerFactory.getLogger(TestCachingFDS.class);
-
+    
     protected DataStore createDataStore() throws RepositoryException {
         CachingFDS cacheFDS = new CachingFDS();
         Properties props = loadProperties("/fs.properties");
-        String pathValue = props.getProperty("path");
+        String pathValue = props.getProperty(FSBackend.FS_BACKEND_PATH);
         if (pathValue != null && !"".equals(pathValue.trim())) {
-            path = pathValue + "/cachingFds" + "-"
+            fsPath = pathValue + "/cachingFds" + "-"
                 + String.valueOf(randomGen.nextInt(100000)) + "-"
                 + String.valueOf(randomGen.nextInt(100000));
         } else {
-            path = dataStoreDir + "/cachingFDS";
+            fsPath = dataStoreDir + "/cachingFDS";
         }
-        props.setProperty("path", path);
+        props.setProperty(FSBackend.FS_BACKEND_PATH, fsPath);
         cacheFDS.setProperties(props);
         cacheFDS.setSecret("12345");
         cacheFDS.setCacheSize(0);
