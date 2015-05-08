@@ -33,30 +33,30 @@ public class TestFileDataStore extends TestCaseBase {
 
     protected static final Logger LOG = LoggerFactory.getLogger(TestFileDataStore.class);
 
-    protected String path;
+    String fsPath;
 
     @Override
     protected DataStore createDataStore() throws RepositoryException {
         FileDataStore fds = new FileDataStore();
         Properties props = loadProperties("/fs.properties");
-        String pathValue = props.getProperty("path");
+        String pathValue = props.getProperty(FSBackend.FS_BACKEND_PATH);
         if (pathValue != null && !"".equals(pathValue.trim())) {
-            path = pathValue + "/fds" + "-"
+            fsPath = pathValue + "/fds" + "-"
                 + String.valueOf(randomGen.nextInt(100000)) + "-"
                 + String.valueOf(randomGen.nextInt(100000));
         } else {
-            path = dataStoreDir + "/repository/datastore";
+            fsPath = dataStoreDir + "/repository/datastore";
         }
-        LOG.info("path [{}] set.", path);
-        fds.setPath(path);
+        LOG.info("path [{}] set.", fsPath);
+        fds.setPath(fsPath);
         fds.init(dataStoreDir);
         return fds;
     }
 
     @Override
     protected void tearDown() {
-        LOG.info("cleaning path [{}]", path);
-        File f = new File(path);
+        LOG.info("cleaning fsPath [{}]", fsPath);
+        File f = new File(fsPath);
         try {
             for (int i = 0; i < 4 && f.exists(); i++) {
                 FileUtils.deleteQuietly(f);
@@ -67,5 +67,4 @@ public class TestFileDataStore extends TestCaseBase {
         }
         super.tearDown();
     }
-
 }
