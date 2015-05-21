@@ -28,9 +28,7 @@ import org.w3c.dom.NodeList;
 import org.w3c.dom.Text;
 import org.w3c.dom.NamedNodeMap;
 import org.xml.sax.SAXException;
-import org.xml.sax.helpers.DefaultHandler;
 
-import javax.xml.XMLConstants;
 import javax.xml.namespace.QName;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -56,26 +54,10 @@ public class DomUtil {
     private static Logger log = LoggerFactory.getLogger(DomUtil.class);
 
     /**
-     * Constant for <code>DocumentBuilderFactory</code> which is used
+     * Constant for <code>DavDocumentBuilderFactory</code> which is used
      * to create and parse DOM documents.
      */
-    private static DocumentBuilderFactory BUILDER_FACTORY = createFactory();
-
-    private static DocumentBuilderFactory createFactory() {
-        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-        factory.setNamespaceAware(true);
-        factory.setIgnoringComments(true);
-        factory.setIgnoringElementContentWhitespace(true);
-        factory.setCoalescing(true);
-        try {
-            factory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
-        } catch (ParserConfigurationException e) {
-            log.warn("Secure XML processing is not supported", e);
-        } catch (AbstractMethodError e) {
-            log.warn("Secure XML processing is not supported", e);
-        }
-        return factory;
-    }
+    private static final DavDocumentBuilderFactory BUILDER_FACTORY = new DavDocumentBuilderFactory();
 
     /**
      * Support the replacement of {@link #BUILDER_FACTORY}. This is useful
@@ -88,7 +70,7 @@ public class DomUtil {
      */
     public static void setBuilderFactory(
             DocumentBuilderFactory documentBuilderFactory) {
-        BUILDER_FACTORY = documentBuilderFactory;
+        BUILDER_FACTORY.setFactory(documentBuilderFactory);
     }
 
     /**
@@ -119,11 +101,6 @@ public class DomUtil {
     public static Document parseDocument(InputStream stream)
             throws ParserConfigurationException, SAXException, IOException {
         DocumentBuilder docBuilder = BUILDER_FACTORY.newDocumentBuilder();
-
-        // Set an error handler to prevent parsers from printing error messages
-        // to standard output!
-        docBuilder.setErrorHandler(new DefaultHandler());
-
         return docBuilder.parse(stream);
     }
 
