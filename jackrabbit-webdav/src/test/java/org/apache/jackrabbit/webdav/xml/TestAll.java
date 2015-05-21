@@ -33,6 +33,7 @@ public class TestAll extends TestCase {
         TestSuite suite = new TestSuite("org.apache.jackrabbit.webdav.xml tests");
 
         suite.addTestSuite(NamespaceTest.class);
+        suite.addTestSuite(ParserTest.class);
 
         return suite;
     }
