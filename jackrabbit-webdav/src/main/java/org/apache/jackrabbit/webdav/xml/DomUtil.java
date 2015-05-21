@@ -28,7 +28,6 @@ import org.w3c.dom.NodeList;
 import org.w3c.dom.Text;
 import org.w3c.dom.NamedNodeMap;
 
-import javax.xml.parsers.DocumentBuilderFactory;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -40,16 +39,10 @@ public class DomUtil {
     private static Logger log = LoggerFactory.getLogger(DomUtil.class);
 
     /**
-     * Constant for <code>DocumentBuilderFactory</code> which is used
+     * Constant for <code>DavDocumentBuilderFactory</code> which is used
      * widely to create new <code>Document</code>s
      */
-    public static DocumentBuilderFactory BUILDER_FACTORY = DocumentBuilderFactory.newInstance();
-    static {
-        BUILDER_FACTORY.setNamespaceAware(true);
-        BUILDER_FACTORY.setIgnoringComments(true);
-        BUILDER_FACTORY.setIgnoringElementContentWhitespace(true);
-        BUILDER_FACTORY.setCoalescing(true);
-    }
+    public static DavDocumentBuilderFactory BUILDER_FACTORY = new DavDocumentBuilderFactory();
 
     /**
      * Returns the value of the named attribute of the current element.

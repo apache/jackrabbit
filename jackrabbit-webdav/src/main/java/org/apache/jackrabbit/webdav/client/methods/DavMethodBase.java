@@ -27,6 +27,7 @@ import org.apache.jackrabbit.webdav.DavException;
 import org.apache.jackrabbit.webdav.DavServletResponse;
 import org.apache.jackrabbit.webdav.MultiStatus;
 import org.apache.jackrabbit.webdav.header.Header;
+import org.apache.jackrabbit.webdav.xml.DavDocumentBuilderFactory;
 import org.apache.jackrabbit.webdav.xml.XmlSerializable;
 import org.apache.jackrabbit.webdav.xml.DomUtil;
 import org.slf4j.Logger;
@@ -39,6 +40,7 @@ import org.xml.sax.helpers.DefaultHandler;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -49,7 +51,7 @@ public abstract class DavMethodBase extends EntityEnclosingMethod implements Dav
 
     private static Logger log = LoggerFactory.getLogger(DavMethodBase.class);
 
-    static final DocumentBuilderFactory BUILDER_FACTORY = DomUtil.BUILDER_FACTORY;
+    static final DavDocumentBuilderFactory BUILDER_FACTORY = DomUtil.BUILDER_FACTORY;
 
     private boolean success;
     private Document responseDocument;
