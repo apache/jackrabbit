@@ -1,61 +1,69 @@
-Release Notes -- Apache Jackrabbit -- Version 2.10.0
+Release Notes -- Apache Jackrabbit -- Version 2.10.1
 
 Introduction
 ------------
 
-This is Apache Jackrabbit(TM) 2.10, a fully compliant implementation of the
+This is Apache Jackrabbit(TM) 2.10.1, a fully compliant implementation of the
 Content Repository for Java(TM) Technology API, version 2.0 (JCR 2.0) as
 specified in the Java Specification Request 283 (JSR 283).
 
-Apache Jackrabbit 2.10 is an incremental feature release based on and
-compatible with earlier stable Jackrabbit 2.x releases. Jackrabbit 2.10.x
-releases are considered stable and targeted for production use.
+Apache Jackrabbit 2.10.1 is a patch release that contains fixes and
+improvements over Jackrabbit 2.10. Jackrabbit 2.10.x releases are considered
+stable and targeted for production use.
 
-Changes since Jackrabbit 2.8.0
-------------------------------
+Security advisory (JCR-3883 / CVE-2015-1833)
+--------------------------------------------
 
-Improvements
+This release fixes an important security issue in the jackrabbit-webdav module
+reported by Mikhail Egorov.
 
-  [JCR-3803] Local cache contention lead to performance degradation
-  [JCR-3804] [jackrabbit-aws] Allow http communication to S3
-  [JCR-3810] StreamWrapper can attempt to reset other types of InputStreams
-  [JCR-3815] Local Cache Purge Cause Performance Issues
-  [JCR-3817] [jackrabbit-aws-ext] Performance of operation degrades while running DS GC
-  [JCR-3818] Use SimpleFSDirectory by default
-  [JCR-3825] Use RepositoryFactory for first hops
-  [JCR-3826] AbstractPrincipalProvider cachesize is not configurable
-  [JCR-3838] [aws-ext] Proactive & Asynchronous caching of binary when its metadata is accessed from S3
-  [JCR-3842] [jackrabbit-aws-ext] Support encryption in S3Datastore
-  [JCR-3843] [jackrabbit-aws-ext] Support S3 in Franfurt Datacenter
-  [JCR-3844] JcrRemotingServlet does not log full stacktrace
-  [JCR-3845] Have AuthorizableQueryManager Support Specifying Sort Ignore Case Mode
-  [JCR-3852] [jackrabbit-aws-ext] Refactor code to open S3 service & consolidate testcases
-  [JCR-3855] Make TimeSeriesAverage public
-  [JCR-3861] Update Oak dependency in webapp
+When processing a WebDAV request body containing XML, the XML parser can be 
+instructed to read content from network resources accessible to the host, 
+identified by URI schemes such as "http(s)" or  "file". Depending on the 
+WebDAV request, this can not only be used to trigger internal network 
+requests, but might also be used to insert said content into the request, 
+potentially exposing it to the attacker and others (for instance, by inserting
+said content in a WebDAV property value using a PROPPATCH request). See also
+IETF RFC 4918, Section 20.6.
+
+Users of the jackrabbit-webdav module are advised to immediately update the
+module to this release or disable WebDAV access to the repository. Users
+on earlier versions of Jackrabbit who are unable to upgrade to 2.10.1 should
+apply the fix to the corresponding 2.x branch or disable WebDAV access until
+official releases of those earlier versions are available. Patches for 2.x
+branches are attached to the JIRA issue.
+
+Changes since Jackrabbit 2.10.0
+-------------------------------
 
 Bug fixes
 
-  [JCR-3274] jackrabbit-standalone-2.4.0.jar Populate does not work
-  [JCR-3805] LocalCache doesn't build up properly in JDK 7.
-  [JCR-3809] ConnectionHelper swallows exception when it fails to reset binary streams after a failed SQL statement execution
-  [JCR-3816] [aws-ext]S3DS not able update lastModified of record > 5GB
-  [JCR-3821] SeededSecureRandom thread can prevent Jackrabbit from shutting down
-  [JCR-3839] [aws-ext] Regression to JCR-3734 Slow local cache built-up time
-  [JCR-3840] NodeTypeDefDiff does not take same-name child type definitions into account
-  [JCR-3850] RepositoryStartupServlet constructs FileStore incorrectly
-  [JCR-3857] [jackrabbit-aws-ext] Correct typo in S3Constants
-  [JCR-3862] [FileDataStore]: deleteRecord leaves the parent directories empty
+  [JCR-3853] JCR2SPI: Load ac provider resource
+  [JCR-3871] POI Vulnerabilities
+  [JCR-3872] Config DTD does not declare ProtectedItemImporter elements
+  [JCR-3873] CachingDataStore not safe against crashes, corrupted uploads file will prevent system startup
+  [JCR-3876] POM dependency to jackrabbit-data test-jar is not test-scoped 
+  [JCR-3878] Fix test case failure in jackrabbit-data
+  [JCR-3883] Jackrabbit WebDAV bundle susceptible to XXE/XEE attack
 
-Tasks
-  [JCR-3830] Allow for privilege discovery in jcr-server
-  [JCR-3833] Compatibility with Java 8
+Improvements
+
+  [JCR-3864] CachingDatastore -cache file sizes to save remote call to remote datastore( S3DS) 
+  [JCR-3868] Adapt TestCaseBase.java to test for FileDatastore
+  [JCR-3869] CachingDataStore for SAN or NFS mounted storage 
+  [JCR-3879] Remove contention in AsyncUploadCache to improve performance
+  [JCR-3881] Change CachingFDS configuration properties 
+
+New Features
+
+  [JCR-3836] Allow to get an Authorizable of a given type 
 
 Sub-tasks
 
-  [JCR-2113] JSR 283 Access Control Management (JCR-2003 - JCR2SPI / SPI: Add support for JCR 2.0)
+  [JCR-3837] Add AuthorizableTypeException in user security API package
 
 In addition to the above-mentioned changes, this release contains
-all the changes included up to the Apache Jackrabbit 2.8.0 release.
+all the changes included up to the Apache Jackrabbit 2.10.0 release.
 
 For more detailed information about all the changes in this and other
 Jackrabbit releases, please see the Jackrabbit issue tracker at
