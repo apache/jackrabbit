@@ -8,9 +8,27 @@ Content Repository for Java(TM) Technology API, version 2.0 (JCR 2.0) as
 specified in the Java Specification Request 283 (JSR 283).
 
 Apache Jackrabbit 2.4.6 is patch release that contains fixes and
-improvements over Jackrabbit 2.4.5. This release also contains a security fix
+improvements over Jackrabbit 2.4.5. This release also contain security fixes
 for Jackrabbit 2.4.4 and earlier. Jackrabbit 2.4.x releases are considered
 stable and targeted for production use.
+
+Security advisory (JCR-3883 / CVE-2015-1833)
+--------------------------------------------
+
+This release fixes an important security issue in the jackrabbit-webdav module
+reported by Mikhail Egorov.
+
+When processing a WebDAV request body containing XML, the XML parser can be 
+instructed to read content from network resources accessible to the host, 
+identified by URI schemes such as "http(s)" or  "file". Depending on the 
+WebDAV request, this can not only be used to trigger internal network 
+requests, but might also be used to insert said content into the request, 
+potentially exposing it to the attacker and others (for instance, by inserting
+said content in a WebDAV property value using a PROPPATCH request). See also
+IETF RFC 4918, Section 20.6.
+
+Users of the jackrabbit-webdav module are advised to immediately update the
+module to this release or disable WebDAV access to the repository.
 
 Security advisory (JCR-3630)
 ----------------------------
@@ -22,10 +40,18 @@ WebDAV access to the repository. This release includes the fix for the issue.
 Changes since Jackrabbit 2.4.5
 ------------------------------
 
+Improvements
+
+  [JCR-3826] - AbstractPrincipalProvider cachesize is not configurable
+    
 Bug fixes
 
-  [JCR-3364] Moving of nodes requires read access to all parent nodes of the destination node
-  [JCR-3603] Index aggreate with property include does not speed up order by
+  [JCR-3364] - Moving of nodes requires read access to all parent nodes of the destination node
+  [JCR-3518] - Build fails on Mac OS + JDK 7
+  [JCR-3603] - Index aggreate with property include does not speed up order by
+  [JCR-3711] - RepositoryChecker versioning cleanup may leave repaired node in invalid type state
+  [JCR-3883] - Jackrabbit WebDAV bundle susceptible to XXE/XEE attack (CVE-2015-1833)
+
 
 Changes since Jackrabbit 2.4.4
 ------------------------------
