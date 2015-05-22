@@ -23,11 +23,7 @@ said content in a WebDAV property value using a PROPPATCH request). See also
 IETF RFC 4918, Section 20.6.
 
 Users of the jackrabbit-webdav module are advised to immediately update the
-module to this release or disable WebDAV access to the repository. Users
-on earlier versions of Jackrabbit who are unable to upgrade to 2.10.1 should
-apply the fix to the corresponding 2.x branch or disable WebDAV access until
-official releases of those earlier versions are available. Patches for 2.x
-branches are attached to the JIRA issue.
+module to this release or disable WebDAV access to the repository.
 
 Changes in this release
 -----------------------
