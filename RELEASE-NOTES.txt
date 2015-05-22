@@ -42,15 +42,15 @@ Changes since Jackrabbit 2.4.5
 
 Improvements
 
-  [JCR-3826] - AbstractPrincipalProvider cachesize is not configurable
+  [JCR-3826] AbstractPrincipalProvider cachesize is not configurable
     
 Bug fixes
 
-  [JCR-3364] - Moving of nodes requires read access to all parent nodes of the destination node
-  [JCR-3518] - Build fails on Mac OS + JDK 7
-  [JCR-3603] - Index aggreate with property include does not speed up order by
-  [JCR-3711] - RepositoryChecker versioning cleanup may leave repaired node in invalid type state
-  [JCR-3883] - Jackrabbit WebDAV bundle susceptible to XXE/XEE attack (CVE-2015-1833)
+  [JCR-3364] Moving of nodes requires read access to all parent nodes of the destination node
+  [JCR-3518] Build fails on Mac OS + JDK 7
+  [JCR-3603] Index aggreate with property include does not speed up order by
+  [JCR-3711] RepositoryChecker versioning cleanup may leave repaired node in invalid type state
+  [JCR-3883] Jackrabbit WebDAV bundle susceptible to XXE/XEE attack (CVE-2015-1833)
 
 
 Changes since Jackrabbit 2.4.4
@@ -84,49 +84,49 @@ Changes since Jackrabbit 2.4.3
 
 New Features
 
-  [JCR-1873] - It should be possible to define how hrefs are generated for WebDav
+  [JCR-1873] It should be possible to define how hrefs are generated for WebDav
 
 
 Improvements
 
-  [JCR-3386] - Adjust some default values of the BasicDataSource in the ConnectionFactory
-  [JCR-3392] - Combine the XA aware (Reentrant) LockImpls to prevent duplicate code
-  [JCR-3442] - Allow (override) access of the system search manager to RepositoryImpl subclasses
-  [JCR-3535] - Davex remoting should support absolute path hrefs
-  [JCR-3553] - improve error logging for unexpected path formats
-  [JCR-3566] - add TCK test for NaN and infinity double property values
+  [JCR-3386] Adjust some default values of the BasicDataSource in the ConnectionFactory
+  [JCR-3392] Combine the XA aware (Reentrant) LockImpls to prevent duplicate code
+  [JCR-3442] Allow (override) access of the system search manager to RepositoryImpl subclasses
+  [JCR-3535] Davex remoting should support absolute path hrefs
+  [JCR-3553] improve error logging for unexpected path formats
+  [JCR-3566] add TCK test for NaN and infinity double property values
 
 
 Bug Fixes
 
-  [JCR-3425] - XAAwareRWLock implementation fails with IllegalStateException on JBoss AS7
-  [JCR-3428] - Partial search terms are no longer highlighted in the excerpts 
-  [JCR-3434] - EventJournal#skipTo() broken
-  [JCR-3439] - PrincipalManagerImpl.CheckedGroup should implement JackrabbitPrincipal
-  [JCR-3445] - PostgreSQL error with setValidationQueryTimeout
-  [JCR-3447] - InternalValueFactory should use the DataStore whenever available
-  [JCR-3450] - Reduce memory usage of SharedFieldCache.ValueIndex
-  [JCR-3469] - Thread interrupt may result in closed index files
-  [JCR-3476] - NodeIndexer attempts to extract binary property even when mime type is not supported by tika parser
-  [JCR-3478] - Partial search terms matching fails when there is a lot of matching content outside the query's scope
-  [JCR-3483] - Result set iterator causes infinite loop when used after session has been closed
-  [JCR-3486] - Potential null pointer exception in session save operation
-  [JCR-3501] - When cancelling an update modcount of modified states must be reset
-  [JCR-3502] - Deleted states are not merged correctly
-  [JCR-3523] - Workspace.copy changes WeakReferences to References
-  [JCR-3539] - NotQuery#advance (and for older versions skipTo) violates Lucene advance contract in case a Filter is used
-  [JCR-3540] - locator for RootCollection generates a broken href when using absolutePath setting
-  [JCR-3545] - unknown REPORT should cause status code 409/DAV:supported-report
-  [JCR-3546] - header fields values such as "Location" need to be resolved against the request uri
-  [JCR-3549] - URIResolverImpl needs to handle absolute paths in addition to absolute URIs
-  [JCR-3551] - DavEx cannot handle Double.NaN properties
-  [JCR-3554] - RepositoryService.getReferences needs to deal with absolute paths in hrefs
-  [JCR-3562] - Adding a child node named {foo fails but bar} works
-  [JCR-3576] - handle absolute paths in observation response bodies
-  [JCR-3578] - use absolute paths in DeltaV request bodies, and resolve hrefs in responses properly
-  [JCR-3581] - Incorrect bitwise arithmetic in BitsetENTCacheImpl.BitsetKey.compareTo implementation - wrong bit mask value used  
-  [JCR-3580] - JcrPrivilegeReport needs to deal with both absolute paths and absolute URIs in payloads
-  [JCR-3583] - UPDATE method needs to deal with both absolute paths and absolute URIs in payloads
+  [JCR-3425] XAAwareRWLock implementation fails with IllegalStateException on JBoss AS7
+  [JCR-3428] Partial search terms are no longer highlighted in the excerpts 
+  [JCR-3434] EventJournal#skipTo() broken
+  [JCR-3439] PrincipalManagerImpl.CheckedGroup should implement JackrabbitPrincipal
+  [JCR-3445] PostgreSQL error with setValidationQueryTimeout
+  [JCR-3447] InternalValueFactory should use the DataStore whenever available
+  [JCR-3450] Reduce memory usage of SharedFieldCache.ValueIndex
+  [JCR-3469] Thread interrupt may result in closed index files
+  [JCR-3476] NodeIndexer attempts to extract binary property even when mime type is not supported by tika parser
+  [JCR-3478] Partial search terms matching fails when there is a lot of matching content outside the query's scope
+  [JCR-3483] Result set iterator causes infinite loop when used after session has been closed
+  [JCR-3486] Potential null pointer exception in session save operation
+  [JCR-3501] When cancelling an update modcount of modified states must be reset
+  [JCR-3502] Deleted states are not merged correctly
+  [JCR-3523] Workspace.copy changes WeakReferences to References
+  [JCR-3539] NotQuery#advance (and for older versions skipTo) violates Lucene advance contract in case a Filter is used
+  [JCR-3540] locator for RootCollection generates a broken href when using absolutePath setting
+  [JCR-3545] unknown REPORT should cause status code 409/DAV:supported-report
+  [JCR-3546] header fields values such as "Location" need to be resolved against the request uri
+  [JCR-3549] URIResolverImpl needs to handle absolute paths in addition to absolute URIs
+  [JCR-3551] DavEx cannot handle Double.NaN properties
+  [JCR-3554] RepositoryService.getReferences needs to deal with absolute paths in hrefs
+  [JCR-3562] Adding a child node named {foo fails but bar} works
+  [JCR-3576] handle absolute paths in observation response bodies
+  [JCR-3578] use absolute paths in DeltaV request bodies, and resolve hrefs in responses properly
+  [JCR-3581] Incorrect bitwise arithmetic in BitsetENTCacheImpl.BitsetKey.compareTo implementation - wrong bit mask value used  
+  [JCR-3580] JcrPrivilegeReport needs to deal with both absolute paths and absolute URIs in payloads
+  [JCR-3583] UPDATE method needs to deal with both absolute paths and absolute URIs in payloads
 
 
 Changes since Jackrabbit 2.4.2
@@ -134,30 +134,30 @@ Changes since Jackrabbit 2.4.2
 
 Improvements
 
-  [JCR-3265] - Consistency checker should double check for false positives
-  [JCR-3269] - Consistency checker should fix 'disconnected' nodes
-  [JCR-3369] - Garbage collector improvements
-  [JCR-3393] - InternalVersionManagerBase.calculateCheckinVersionName may fail with NPE on broken versioning persistence
-  [JCR-3352] - Minor improvements for collecting ACEs
+  [JCR-3265] Consistency checker should double check for false positives
+  [JCR-3269] Consistency checker should fix 'disconnected' nodes
+  [JCR-3369] Garbage collector improvements
+  [JCR-3393] InternalVersionManagerBase.calculateCheckinVersionName may fail with NPE on broken versioning persistence
+  [JCR-3352] Minor improvements for collecting ACEs
 
 Bug fixes
 
-  [JCR-3267] - Consistency checker needs to run multiple times to fix all problems
-  [JCR-3318] - BLOB not stored and no exception thrown
-  [JCR-3334] - incorrect logging template in CachingEntryCollector
-  [JCR-3349] - The BatchMode of the ConnectionHelper doesn't work in XA Environment
-  [JCR-3353] - A DeadLock can occur if an Exception is thrown while unlocking the Journal
-  [JCR-3354] - The ReadWriteLock in AbstractJournal can create a Deadlock in XA Environment
-  [JCR-3367] - InMemBundlePersistenceManager#getAllNodeIds is not implemented correctly
-  [JCR-3377] - DataStore Temp-Files will not be deleted as side effect of JCR-3318
-  [JCR-3378] - The ConnectionHelper can return a closed Connection in BatchMode
-  [JCR-3379] - XA concurrent transactions - NullPointerException
-  [JCR-3383] - Unclosed Resources in ConnectionHelper if ResultSet is null
-  [JCR-3387] - On heavy load we see occasional SQLException: closed statement: next
-  [JCR-3390] - Reordering policy node fails with AccessDeniedException
-  [JCR-3399] - Shared ISM does not release the internal Writelock if something unexpectedly is happening in externalUpdate
-  [JCR-3401] - Wrong results when querying with a DescendantSelfAxisQuery
-  [JCR-3417] - Failed Journal lock not propagated
+  [JCR-3267] Consistency checker needs to run multiple times to fix all problems
+  [JCR-3318] BLOB not stored and no exception thrown
+  [JCR-3334] incorrect logging template in CachingEntryCollector
+  [JCR-3349] The BatchMode of the ConnectionHelper doesn't work in XA Environment
+  [JCR-3353] A DeadLock can occur if an Exception is thrown while unlocking the Journal
+  [JCR-3354] The ReadWriteLock in AbstractJournal can create a Deadlock in XA Environment
+  [JCR-3367] InMemBundlePersistenceManager#getAllNodeIds is not implemented correctly
+  [JCR-3377] DataStore Temp-Files will not be deleted as side effect of JCR-3318
+  [JCR-3378] The ConnectionHelper can return a closed Connection in BatchMode
+  [JCR-3379] XA concurrent transactions - NullPointerException
+  [JCR-3383] Unclosed Resources in ConnectionHelper if ResultSet is null
+  [JCR-3387] On heavy load we see occasional SQLException: closed statement: next
+  [JCR-3390] Reordering policy node fails with AccessDeniedException
+  [JCR-3399] Shared ISM does not release the internal Writelock if something unexpectedly is happening in externalUpdate
+  [JCR-3401] Wrong results when querying with a DescendantSelfAxisQuery
+  [JCR-3417] Failed Journal lock not propagated
 
 
 Changes since Jackrabbit 2.4.1
