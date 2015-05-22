@@ -34,24 +34,24 @@ Changes in this release
 
 Bug fixes
 
-  [JCR-3439] - PrincipalManagerImpl.CheckedGroup should implement JackrabbitPrincipal
-  [JCR-3447] - InternalValueFactory should use the DataStore whenever available
-  [JCR-3483] - Result set iterator causes infinite loop when used after session has been closed
-  [JCR-3486] - Potential null pointer exception in session save operation
-  [JCR-3501] - When cancelling an update modcount of modified states must be reset
-  [JCR-3502] - Deleted states are not merged correctly
-  [JCR-3523] - Workspace.copy changes WeakReferences to References
-  [JCR-3539] - NotQuery#advance (and for older versions skipTo) violates Lucene advance contract in case a Filter is used
-  [JCR-3551] - DavEx cannot handle Double.NaN properties
-  [JCR-3617] - Inconsistent CachingHierarchyManager under concurrent access
-  [JCR-3630] - XSS in DirListingExportHandler
-  [JCR-3635] - Manually specified jcr:frozenUuid overwriting the one assigned by the VersionManager when versioning node
-  [JCR-3883] - Jackrabbit WebDAV bundle susceptible to XXE/XEE attack (CVE-2015-1833)
+  [JCR-3439] PrincipalManagerImpl.CheckedGroup should implement JackrabbitPrincipal
+  [JCR-3447] InternalValueFactory should use the DataStore whenever available
+  [JCR-3483] Result set iterator causes infinite loop when used after session has been closed
+  [JCR-3486] Potential null pointer exception in session save operation
+  [JCR-3501] When cancelling an update modcount of modified states must be reset
+  [JCR-3502] Deleted states are not merged correctly
+  [JCR-3523] Workspace.copy changes WeakReferences to References
+  [JCR-3539] NotQuery#advance (and for older versions skipTo) violates Lucene advance contract in case a Filter is used
+  [JCR-3551] DavEx cannot handle Double.NaN properties
+  [JCR-3617] Inconsistent CachingHierarchyManager under concurrent access
+  [JCR-3630] XSS in DirListingExportHandler
+  [JCR-3635] Manually specified jcr:frozenUuid overwriting the one assigned by the VersionManager when versioning node
+  [JCR-3883] Jackrabbit WebDAV bundle susceptible to XXE/XEE attack (CVE-2015-1833)
 
 Improvements
 
-  [JCR-3442] - Allow (override) access of the system search manager to RepositoryImpl subclasses
-  [JCR-3566] - add TCK test for NaN and infinity double property values
+  [JCR-3442] Allow (override) access of the system search manager to RepositoryImpl subclasses
+  [JCR-3566] add TCK test for NaN and infinity double property values
 
 For more detailed information about all the changes in this and other
 Jackrabbit releases, please see the Jackrabbit issue tracker at
