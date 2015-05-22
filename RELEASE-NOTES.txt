@@ -1,4 +1,4 @@
-Release Notes -- Apache Jackrabbit -- Version 2.2.13
+Release Notes -- Apache Jackrabbit -- Version 2.2.14
 
 Introduction
 ------------
@@ -7,37 +7,51 @@ This is Apache Jackrabbit(TM) 2.2, a fully compliant implementation of the
 Content Repository for Java(TM) Technology API, version 2.0 (JCR 2.0) as
 specified in the Java Specification Request 283 (JSR 283).
 
-Apache Jackrabbit 2.2.13 is patch release that contains fixes and
+Apache Jackrabbit 2.2.14 is patch release that contains fixes and
 improvements over previous 2.2.x releases. This release is backwards
 compatible with all earlier 2.x releases.
+
+Security advisory (JCR-3883 / CVE-2015-1833)
+--------------------------------------------
+
+This release fixes an important security issue in the jackrabbit-webdav module
+reported by Mikhail Egorov.
+
+When processing a WebDAV request body containing XML, the XML parser can be 
+instructed to read content from network resources accessible to the host, 
+identified by URI schemes such as "http(s)" or  "file". Depending on the 
+WebDAV request, this can not only be used to trigger internal network 
+requests, but might also be used to insert said content into the request, 
+potentially exposing it to the attacker and others (for instance, by inserting
+said content in a WebDAV property value using a PROPPATCH request). See also
+IETF RFC 4918, Section 20.6.
+
+Users of the jackrabbit-webdav module are advised to immediately update the
+module to this release or disable WebDAV access to the repository.
 
 Changes in this release
 -----------------------
 
-Improvements
-
-  [JCR-3339] - Log stack trace with warn message in ObservationDispatcher
-  [JCR-3369] - Garbage collector improvements
-  [JCR-3392] - Combine the XA aware (Reentrant) LockImpls to prevent duplicate code
-  [JCR-3393] - InternalVersionManagerBase.calculateCheckinVersionName may fail with NPE on broken versioning persistence
-  [JCR-3352] - Minor improvements for collecting ACEs
-
 Bug fixes
 
-  [JCR-3303] - ClusterNode's stopDelay should default to something other zero
-  [JCR-3334] - incorrect logging template in CachingEntryCollector
-  [JCR-3353] - A DeadLock can occur if an Exception is thrown while unlocking the Journal
-  [JCR-3354] - The ReadWriteLock in AbstractJournal can create a Deadlock in XA Environment
-  [JCR-3378] - The ConnectionHelper can return a closed Connection in BatchMode
-  [JCR-3379] - XA concurrent transactions - NullPointerException
-  [JCR-3383] - Unclosed Resources in ConnectionHelper if ResultSet is null
-  [JCR-3387] - On heavy load we see occasional SQLException: closed statement: next
-  [JCR-3390] - Reordering policy node fails with AccessDeniedException
-  [JCR-3399] - Shared ISM does not release the internal Writelock if something unexpectedly is happening in externalUpdate
-  [JCR-3425] - XAAwareRWLock implementation fails with IllegalStateException on JBoss AS7
-  [JCR-3432] - Backport JCR-3417: Failed Journal lock not propagated
-  [JCR-3433] - Backport JCR-3349: The BatchMode of the ConnectionHelper doesn't work in XA Environment
-  [JCR-3434] - EventJournal#skipTo() broken
+  [JCR-3439] - PrincipalManagerImpl.CheckedGroup should implement JackrabbitPrincipal
+  [JCR-3447] - InternalValueFactory should use the DataStore whenever available
+  [JCR-3483] - Result set iterator causes infinite loop when used after session has been closed
+  [JCR-3486] - Potential null pointer exception in session save operation
+  [JCR-3501] - When cancelling an update modcount of modified states must be reset
+  [JCR-3502] - Deleted states are not merged correctly
+  [JCR-3523] - Workspace.copy changes WeakReferences to References
+  [JCR-3539] - NotQuery#advance (and for older versions skipTo) violates Lucene advance contract in case a Filter is used
+  [JCR-3551] - DavEx cannot handle Double.NaN properties
+  [JCR-3617] - Inconsistent CachingHierarchyManager under concurrent access
+  [JCR-3630] - XSS in DirListingExportHandler
+  [JCR-3635] - Manually specified jcr:frozenUuid overwriting the one assigned by the VersionManager when versioning node
+  [JCR-3883] - Jackrabbit WebDAV bundle susceptible to XXE/XEE attack (CVE-2015-1833)
+
+Improvements
+
+  [JCR-3442] - Allow (override) access of the system search manager to RepositoryImpl subclasses
+  [JCR-3566] - add TCK test for NaN and infinity double property values
 
 For more detailed information about all the changes in this and other
 Jackrabbit releases, please see the Jackrabbit issue tracker at
