@@ -1,31 +1,40 @@
-Release Notes -- Apache Jackrabbit -- Version 2.0.5
+Release Notes -- Apache Jackrabbit -- Version 2.0.6
 
 Introduction
 ------------
 
-Apache Jackrabbit 2.0.5 is a bug fix release that fixes issues reported
+Apache Jackrabbit 2.0.6 is a bug fix release that fixes issues reported
 against previous releases. This release is fully compatible with the
 earlier 2.0.x releases.
+
+Security advisory (JCR-3883 / CVE-2015-1833)
+--------------------------------------------
+
+This release fixes an important security issue in the jackrabbit-webdav module
+reported by Mikhail Egorov.
+
+When processing a WebDAV request body containing XML, the XML parser can be 
+instructed to read content from network resources accessible to the host, 
+identified by URI schemes such as "http(s)" or  "file". Depending on the 
+WebDAV request, this can not only be used to trigger internal network 
+requests, but might also be used to insert said content into the request, 
+potentially exposing it to the attacker and others (for instance, by inserting
+said content in a WebDAV property value using a PROPPATCH request). See also
+IETF RFC 4918, Section 20.6.
+
+Users of the jackrabbit-webdav module are advised to immediately update the
+module to this release or disable WebDAV access to the repository. Users
+on earlier versions of Jackrabbit who are unable to upgrade to 2.10.1 should
+apply the fix to the corresponding 2.x branch or disable WebDAV access until
+official releases of those earlier versions are available. Patches for 2.x
+branches are attached to the JIRA issue.
 
 Changes in this release
 -----------------------
 
 Bug fixes
 
-  [JCR-2523] StaleItemStateException during distributed transaction
-  [JCR-2655] initVersions crashes with NPE
-  [JCR-2734] Inconsistencies in BitSetKey comparison
-  [JCR-2753] Deadlock in DefaultISMLocking
-  [JCR-2813] "overwriting cached entry" warnings
-  [JCR-2820] FineGrainedISMLocking problems
-  [JCR-2890] Deadlock in acl.EntryCollector / ItemManager
-  [JCR-2953] PathParser accepts illegal paths containing curly brackets
-  [JCR-2962] InputStream not being explicitly closed
-  [JCR-2967] SessionItemStateManager.getIdOfRootTransientNodeState() ...
-  [JCR-2969] FileDataStore garbage collection can throw a ...
-  [JCR-3065] ConcurrentModificationException in FineGrainedISMLocking
-  [JCR-3075] incorrect HTML excerpt generation for queries on japanese ...
-  [JCR-3077] WeightedHighlighter does not encode XML markup characters
+  [JCR-3883] - Jackrabbit WebDAV bundle susceptible to XXE/XEE attack (CVE-2015-1833)
 
 See the Jackrabbit issue tracker for more details about these changes:
 
