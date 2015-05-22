@@ -30,7 +30,7 @@ Changes in this release
 
 Bug fixes
 
-  [JCR-3883] - Jackrabbit WebDAV bundle susceptible to XXE/XEE attack (CVE-2015-1833)
+  [JCR-3883] Jackrabbit WebDAV bundle susceptible to XXE/XEE attack (CVE-2015-1833)
 
 See the Jackrabbit issue tracker for more details about these changes:
 
