@@ -54,6 +54,7 @@ Bug fixes
   [JCR-3821] SeededSecureRandom thread can prevent Jackrabbit from shutting down
   [JCR-3840] NodeTypeDefDiff does not take same-name child type definitions into account
   [JCR-3850] RepositoryStartupServlet constructs FileStore incorrectly
+  [JCR-3871] POI Vulnerabilities
   [JCR-3883] Jackrabbit WebDAV bundle susceptible to XXE/XEE attack (CVE-2015-1833)
 
 In addition to the above-mentioned changes, this release contains
