@@ -196,7 +196,7 @@ public abstract class AbstractCompiledPermissions implements CompiledPermissions
             PrivilegeBits cdPrivs = PrivilegeBits.getInstance(denyPrivileges);
             cdPrivs.addDifference(other.denyPrivileges, allowPrivileges);
 
-            return new Result(cAllows, cDenies, allowPrivileges, denyPrivileges);
+            return new Result(cAllows, cDenies, cAPrivs, cdPrivs);
         }
 
         /**
