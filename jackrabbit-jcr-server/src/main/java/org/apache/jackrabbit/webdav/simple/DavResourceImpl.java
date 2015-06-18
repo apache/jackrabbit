@@ -20,6 +20,8 @@ import org.apache.jackrabbit.JcrConstants;
 import org.apache.jackrabbit.server.io.AbstractExportContext;
 import org.apache.jackrabbit.server.io.CopyMoveContextImpl;
 import org.apache.jackrabbit.server.io.DefaultIOListener;
+import org.apache.jackrabbit.server.io.DeleteContextImpl;
+import org.apache.jackrabbit.server.io.DeleteManager;
 import org.apache.jackrabbit.server.io.ExportContext;
 import org.apache.jackrabbit.server.io.ExportContextImpl;
 import org.apache.jackrabbit.server.io.IOListener;
@@ -557,31 +559,20 @@ public class DavResourceImpl implements DavResource, BindableResource, JcrConsta
             throw new DavException(DavServletResponse.SC_FORBIDDEN);
         }
 
+        DeleteManager dm = config.getDeleteManager();
+        dm.delete(new DeleteContextImpl(getJcrSession()), member);
 
+        // make sure, non-jcr locks are removed, once the removal is completed
         try {
-            String itemPath = member.getLocator().getRepositoryPath();
-            Item memItem = getJcrSession().getItem(itemPath);
-            if (memItem instanceof Node) {
-                ((Node)memItem).removeShare();
-            } else {
-                memItem.remove();
-            }
-            getJcrSession().save();
-
-            // make sure, non-jcr locks are removed, once the removal is completed
-            try {
-                if (!isJcrLockable()) {
-                    ActiveLock lock = getLock(Type.WRITE, Scope.EXCLUSIVE);
-                    if (lock != null) {
-                        lockManager.releaseLock(lock.getToken(), member);
-                    }
+            if (!isJcrLockable()) {
+                ActiveLock lock = getLock(Type.WRITE, Scope.EXCLUSIVE);
+                if (lock != null) {
+                    lockManager.releaseLock(lock.getToken(), member);
                 }
-            } catch (DavException e) {
-                // since check for 'locked' exception has been performed before
-                // ignore any error here
             }
-        } catch (RepositoryException e) {
-            throw new JcrDavException(e);
+        } catch (DavException e) {
+            // since check for 'locked' exception has been performed before
+            // ignore any error here
         }
     }
 
