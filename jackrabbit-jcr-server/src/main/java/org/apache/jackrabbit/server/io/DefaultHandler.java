@@ -71,7 +71,7 @@ import java.util.HashMap;
  * Subclasses therefore should provide their own {@link #importData(ImportContext, boolean, Node)
  * importData} method, that handles the data according their needs.
  */
-public class DefaultHandler implements IOHandler, PropertyHandler, CopyMoveHandler {
+public class DefaultHandler implements IOHandler, PropertyHandler, CopyMoveHandler, DeleteHandler {
 
     private static Logger log = LoggerFactory.getLogger(DefaultHandler.class);
 
@@ -717,6 +717,35 @@ public class DefaultHandler implements IOHandler, PropertyHandler, CopyMoveHandl
     public boolean move(CopyMoveContext context, DavResource source, DavResource destination) throws DavException {
         try {
             context.getWorkspace().move(source.getLocator().getRepositoryPath(), destination.getLocator().getRepositoryPath());
+            return true;
+        } catch (RepositoryException e) {
+            throw new JcrDavException(e);
+        }
+    }
+
+    //----------------------------------------------------< DeleteHandler >---
+
+    /**
+     * @see DeleteHandler#canDelete(DeleteContext, DavResource)
+     */
+    public boolean canDelete(DeleteContext deleteContext, DavResource member) {
+        return true;
+    }
+
+    /**
+     * @see DeleteHandler#delete(DeleteContext, DavResource)
+     */
+    public boolean delete(DeleteContext deleteContext, DavResource member) throws DavException {
+        try {
+            String itemPath = member.getLocator().getRepositoryPath();
+            Item item = deleteContext.getSession().getItem(itemPath);
+            if (item instanceof Node) {
+                ((Node) item).removeShare();
+            } else {
+                item.remove();
+            }
+            deleteContext.getSession().save();
+            log.debug("default handler deleted {}", member.getResourcePath());
             return true;
         } catch (RepositoryException e) {
             throw new JcrDavException(e);

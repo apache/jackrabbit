@@ -35,6 +35,8 @@ import org.apache.jackrabbit.server.io.CopyMoveHandler;
 import org.apache.jackrabbit.server.io.CopyMoveManager;
 import org.apache.jackrabbit.server.io.CopyMoveManagerImpl;
 import org.apache.jackrabbit.server.io.DefaultIOManager;
+import org.apache.jackrabbit.server.io.DeleteManager;
+import org.apache.jackrabbit.server.io.DeleteManagerImpl;
 import org.apache.jackrabbit.server.io.IOHandler;
 import org.apache.jackrabbit.server.io.IOManager;
 import org.apache.jackrabbit.server.io.PropertyHandler;
@@ -80,6 +82,7 @@ public class ResourceConfig {
     private IOManager ioManager;
     private CopyMoveManager cmManager;
     private PropertyManager propManager;
+    private DeleteManager deleteManager;
     private String[] nodetypeNames = new String[0];
     private boolean collectionNames = false;
 
@@ -470,6 +473,18 @@ public class ResourceConfig {
             cmManager = CopyMoveManagerImpl.getDefaultManager();
         }
         return cmManager;
+    }
+
+    /**
+     * Returns the delete manager.
+     * @return the delete manager
+     */
+    public DeleteManager getDeleteManager() {
+        if (deleteManager == null) {
+            log.debug("Missing delete-manager > building default.");
+            deleteManager = DeleteManagerImpl.getDefaultManager();
+        }
+        return deleteManager;
     }
 
     /**
