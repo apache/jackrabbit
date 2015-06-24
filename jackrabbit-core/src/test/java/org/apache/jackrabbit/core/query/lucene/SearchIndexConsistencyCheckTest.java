@@ -254,10 +254,22 @@ public class SearchIndexConsistencyCheckTest extends AbstractJCRTest {
         assertEquals("Expected 1 index consistency error", 1, errors.size());
         assertEquals("Different node was reported to be duplicate", errors.get(0).id, fooId);
 
+        consistencyCheck.doubleCheckErrors();
+        errors = consistencyCheck.getErrors();
+
+        assertEquals("Expected 1 index consistency error after double check", 1, errors.size());
+        assertEquals("Different node was reported to be duplicate after double check", errors.get(0).id, fooId);
+
         consistencyCheck.repair(false);
 
         assertTrue("Index was not repaired properly", searchIndexContainsNode(searchIndex, fooId));
-        assertTrue("Consistency check still reports errors", searchIndex.runConsistencyCheck().getErrors().isEmpty());
+
+        consistencyCheck.doubleCheckErrors();
+        errors = consistencyCheck.getErrors();
+
+        assertTrue("Consistency double check of multiple entries failed", errors.isEmpty());
+        assertTrue("Consistency check still finds errors", searchIndex.runConsistencyCheck().getErrors().isEmpty());
+
     }
 
     /**
