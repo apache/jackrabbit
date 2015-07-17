@@ -116,7 +116,7 @@ public class TokenProvider extends ProtectedItemModifier {
      */
     public TokenInfo createToken(User user, SimpleCredentials sc) throws RepositoryException {
         TokenInfo tokenInfo = null;
-        if (sc != null && user != null && user.getID().equals(sc.getUserID())) {
+        if (sc != null && user != null && user.getID().equalsIgnoreCase(sc.getUserID())) {
             String[] attrNames = sc.getAttributeNames();
             Map<String, String> attributes = new HashMap<String, String>(attrNames.length);
             for (String attrName : sc.getAttributeNames()) {
