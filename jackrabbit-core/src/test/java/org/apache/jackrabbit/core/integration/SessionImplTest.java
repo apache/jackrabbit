@@ -16,17 +16,27 @@
  */
 package org.apache.jackrabbit.core.integration;
 
+import java.io.File;
+import java.io.IOException;
 import java.security.AccessControlException;
 
+import javax.jcr.AccessDeniedException;
 import javax.jcr.Credentials;
+import javax.jcr.LoginException;
 import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.SimpleCredentials;
 import javax.security.auth.Subject;
 
+import junit.framework.Assert;
+
+import org.apache.commons.io.FileUtils;
+import org.apache.jackrabbit.core.RepositoryContext;
 import org.apache.jackrabbit.core.RepositoryImpl;
 import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.config.RepositoryConfig;
+import org.apache.jackrabbit.core.config.WorkspaceConfig;
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.security.principal.PrincipalImpl;
 import org.apache.jackrabbit.test.AbstractJCRTest;
@@ -36,6 +46,8 @@ import org.apache.jackrabbit.test.NotExecutableException;
  * Integration tests for the Session implementation in Jackrabbit core.
  */
 public class SessionImplTest extends AbstractJCRTest {
+	
+	boolean logoutCalled = false;
 
     /**
      * <a href="https://issues.apache.org/jira/browse/JCR-1731">JCR-1731</a>:
@@ -174,4 +186,68 @@ public class SessionImplTest extends AbstractJCRTest {
         assertFalse(superuser.itemExists(dummyPath));
         assertFalse(superuser.nodeExists(dummyPath));
     }
+    
+    /**
+     * Checks if the logout method is called after garbage collection if the connection was not cleanly closed.
+     * 
+     * @throws RepositoryException error creating session
+     * @throws LoginException wrong credentials
+     * @throws InterruptedException got interrupt
+     * @throws IOException unable to create repository directory
+     */
+    public void testLogoutAfterGC() throws LoginException, RepositoryException, InterruptedException, IOException {
+    	// setup session
+    	File dir = new File("target", "SessionImplTest");
+    	if (dir.exists()) {
+    		FileUtils.deleteDirectory(dir);
+    	}
+    	RepositoryConfig conf = RepositoryConfig.install(dir);
+    	WorkspaceConfig wsconf = conf.createWorkspaceConfig("SessionImplTest", new StringBuffer(""));
+    	Subject sub = ((SessionImpl) superuser).getSubject();
+        Session session = new SessionImplLogoutCheck(RepositoryContext.create(conf), sub, wsconf);
+        Assert.assertTrue(session.isLive());
+        // remove reference to allow garbage collection
+        session = null;
+        // run garbage collection
+        final long time = 1000;
+        final long cycles = 30;
+        for (int i = 0; i < cycles; i++) {
+            System.gc();
+            if (logoutCalled) {
+            	break;
+            }
+            Thread.sleep(time);        	
+        }
+        // verify that logout was called after garbage collection
+        Assert.assertTrue(logoutCalled);
+    }
+    
+    /**
+     * Test class to override and track logout method.
+     * 
+     * @author Roland Gruber
+     */
+    private class SessionImplLogoutCheck extends SessionImpl {
+    	
+		protected SessionImplLogoutCheck(RepositoryContext repositoryContext,
+				Subject subject, WorkspaceConfig wspConfig)
+				throws AccessDeniedException, RepositoryException {
+			super(repositoryContext, subject, wspConfig);
+		}
+
+		@Override
+		public void logout() {
+			super.logout();
+			// notify test about successful logout
+			logoutCalled = true;
+		}
+
+		@Override
+		public boolean isLive() {
+			// fake always alive session to force logout
+			return true;
+		}
+
+    }
+    
 }

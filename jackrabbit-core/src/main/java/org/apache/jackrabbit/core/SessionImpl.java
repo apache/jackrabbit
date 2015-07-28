@@ -219,7 +219,7 @@ public class SessionImpl extends AbstractSession
      * The stack trace knows who opened this session. It is logged
      * if the session is finalized, but Session.logout() was never called.
      */
-    private Exception openStackTrace = new Exception("Stack Trace");
+    Exception openStackTrace = new Exception("Stack Trace");
 
     /**
      * Protected constructor.
@@ -1318,12 +1318,11 @@ public class SessionImpl extends AbstractSession
     }
 
     /**
-     * Finalize the session. If the application doesn't call Session.logout(),
+     * Cleanup the session. If the application doesn't call Session.logout(),
      * the session is closed automatically; however a warning is written to the log file,
      * together with the stack trace of where the session was opened.
      */
-    @Override
-    public void finalize() {
+    void cleanup() {
         if (isLive()) {
             log.warn("Unclosed session detected. The session was opened here: ", openStackTrace);
             logout();
