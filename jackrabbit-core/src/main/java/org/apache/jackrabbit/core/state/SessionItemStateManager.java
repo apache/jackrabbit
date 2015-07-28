@@ -803,7 +803,19 @@ public class SessionItemStateManager
                 visibleState = transientState;
             }
         }
-        dispatcher.notifyStateCreated(visibleState);
+        boolean notifyTransientSpace;
+        if (visibleState instanceof NodeState) {
+            // No need to push "node created" to transient space:
+            // either the transient already knows about this state, or it doesn't.
+            // If we notify in this case, this can lead to a deadlock,
+            // see JCR-3226.
+            notifyTransientSpace = false;
+        } else {
+            notifyTransientSpace = true;
+        }
+        if (notifyTransientSpace) {
+            dispatcher.notifyStateCreated(visibleState);
+        }
     }
 
     /**
