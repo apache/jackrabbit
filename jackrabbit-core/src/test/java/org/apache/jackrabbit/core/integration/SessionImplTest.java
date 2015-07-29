@@ -25,6 +25,7 @@ import javax.jcr.Session;
 import javax.jcr.SimpleCredentials;
 import javax.security.auth.Subject;
 
+import org.apache.jackrabbit.api.JackrabbitSession;
 import org.apache.jackrabbit.core.RepositoryImpl;
 import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.core.id.NodeId;
@@ -173,5 +174,32 @@ public class SessionImplTest extends AbstractJCRTest {
         String dummyPath = "[" + NodeId.randomId() + "]";
         assertFalse(superuser.itemExists(dummyPath));
         assertFalse(superuser.nodeExists(dummyPath));
+    }
+
+    /**
+     * @see <a href="https://issues.apache.org/jira/browse/JCR-3885">JCR-3885</a>
+     */
+    public void testSessionHasPermission() throws Exception {
+        JackrabbitSession js = (JackrabbitSession) superuser;
+
+        assertEquals(superuser.hasPermission("/", Session.ACTION_READ), js.hasPermission("/", new String[] {Session.ACTION_READ}));
+        assertEquals(superuser.hasPermission("/", Session.ACTION_READ + "," + Session.ACTION_ADD_NODE) , js.hasPermission("/", Session.ACTION_READ, Session.ACTION_ADD_NODE));
+
+        try {
+            js.hasPermission("/", new String[0]);
+            fail();
+        } catch (IllegalArgumentException e) {
+            // success
+        }
+
+        try {
+            js.hasPermission("/", new String[] {""});
+            fail();
+        } catch (IllegalArgumentException e) {
+            // success
+        }
+
+        // note: that's a bit unexpected
+        assertEquals(superuser.hasPermission("/", ",,"), js.hasPermission("/", "", "", ""));
     }
 }
