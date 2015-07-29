@@ -677,6 +677,14 @@ public class SessionImpl extends AbstractSession
 
     //----------------------------------------------------< JackrabbitSession >
     /**
+     * @see JackrabbitSession#hasPermission(String, String...)
+     */
+    @Override
+    public boolean hasPermission(String absPath, String... actions) throws RepositoryException {
+        return hasPermission(absPath, Text.implode(actions, ","));
+    }
+
+    /**
      * @see JackrabbitSession#getPrincipalManager()
      */
     public PrincipalManager getPrincipalManager() throws RepositoryException, AccessDeniedException {
