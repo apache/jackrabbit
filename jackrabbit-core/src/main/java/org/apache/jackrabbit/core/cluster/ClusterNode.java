@@ -697,10 +697,11 @@ public class ClusterNode implements Runnable,
                 return;
             }
             try {
-                long journalUpdateSize = record.update();
 
                 long recordRevision = record.getRevision();
                 setRevision(recordRevision);
+
+                long journalUpdateSize = record.update();
 
                 log.debug("Stored record '{}' to Journal ({})", recordRevision, journalUpdateSize);
 
