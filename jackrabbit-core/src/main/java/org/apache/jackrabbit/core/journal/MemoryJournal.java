@@ -99,6 +99,11 @@ public class MemoryJournal extends AbstractJournal {
         checkState();
     }
 
+    @Override
+    protected void appending(AppendRecord record) {
+        record.setRevision(records.size()+1);
+    }
+
     /**
      * {@inheritDoc}
      */
@@ -129,7 +134,6 @@ public class MemoryJournal extends AbstractJournal {
             throw new JournalException("Interrupted in append().");
         }
         records.add(new MemoryRecord(getId(), record.getProducerId(), data));
-        record.setRevision(records.size());
     }
 
     /**
