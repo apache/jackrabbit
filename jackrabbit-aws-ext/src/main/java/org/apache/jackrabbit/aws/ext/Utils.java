@@ -64,6 +64,7 @@ public final class Utils {
 
     public static final String DASH = "-";
 
+    public static final String OBJECT_STORE_ENDPOINT = "https://ooss-d.uhc.com";
     /**
      * private constructor so that class cannot initialized from outside.
      */
@@ -89,9 +90,11 @@ public final class Utils {
             LOG.info("Configuring Amazon Client from property file.");
             AWSCredentials credentials = new BasicAWSCredentials(accessKey,
                 secretKey);
-            s3service = new AmazonS3Client(credentials,
-                getClientConfiguration(prop));
+            //s3service = new AmazonS3Client(credentials,
+            //    getClientConfiguration(prop));
+            s3service = new AmazonS3Client(credentials);
         }
+        /*
         String region = prop.getProperty(S3Constants.S3_REGION);
         String endpoint = null;
         String propEndPoint = prop.getProperty(S3Constants.S3_END_POINT);
@@ -105,14 +108,15 @@ public final class Utils {
             } else {
                 endpoint = S3 + DASH + region + DOT + AWSDOTCOM;
             }
-        }
+        }*/
         /*
          * setting endpoint to remove latency of redirection. If endpoint is
          * not set, invocation first goes us standard region, which
          * redirects it to correct location.
          */
-        s3service.setEndpoint(endpoint);
-        LOG.info("S3 service endpoint [{}] ", endpoint);
+        //String endpoint = OBJECT_STORE_ENDPOINT;
+        s3service.setEndpoint(OBJECT_STORE_ENDPOINT);
+        LOG.info("ObjectStore service endpoint [{}] ", OBJECT_STORE_ENDPOINT);
         return s3service;
     }
 
@@ -185,10 +189,11 @@ public final class Utils {
         int maxConnections = Integer.parseInt(prop.getProperty(S3Constants.S3_MAX_CONNS));
         int maxErrorRetry = Integer.parseInt(prop.getProperty(S3Constants.S3_MAX_ERR_RETRY));
         ClientConfiguration cc = new ClientConfiguration();
-        String protocol = prop.getProperty(S3Constants.S3_CONN_PROTOCOL);
+        /*String protocol = prop.getProperty(S3Constants.S3_CONN_PROTOCOL);
         if (protocol != null && protocol.equalsIgnoreCase("http")) {
             cc.setProtocol(Protocol.HTTP);
-        }
+        }*/
+        cc.setProtocol(Protocol.HTTPS);
         cc.setConnectionTimeout(connectionTimeOut);
         cc.setSocketTimeout(socketTimeOut);
         cc.setMaxConnections(maxConnections);
