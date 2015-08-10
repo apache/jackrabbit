@@ -35,7 +35,6 @@ import javax.jcr.Node;
 import javax.jcr.Property;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
-import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.Value;
 
 import org.apache.jackrabbit.api.security.user.Authorizable;
@@ -173,11 +172,6 @@ class GroupImpl extends AuthorizableImpl implements Group {
         return getMembershipProvider(getNode()).addMember(authImpl);
     }
 
-    @Override
-    public Set<String> addMembers(String... memberIds) throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("not implemented");
-    }
-
 
     /**
      * @see Group#removeMember(Authorizable)
@@ -192,11 +186,6 @@ class GroupImpl extends AuthorizableImpl implements Group {
         }
 
         return getMembershipProvider(getNode()).removeMember((AuthorizableImpl) authorizable);
-    }
-
-    @Override
-    public Set<String> removeMembers(String... memberIds) throws RepositoryException {
-        throw new UnsupportedRepositoryOperationException("not implemented");
     }
 
     //--------------------------------------------------------------------------

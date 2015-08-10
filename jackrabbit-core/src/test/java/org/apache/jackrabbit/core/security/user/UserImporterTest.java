@@ -1582,11 +1582,6 @@ public class UserImporterTest extends AbstractJCRTest {
         private DummySession() {
         }
 
-        @Override
-        public boolean hasPermission(String absPath, String... actions) throws RepositoryException {
-            return false;
-        }
-
         public PrincipalManager getPrincipalManager() throws AccessDeniedException, UnsupportedRepositoryOperationException, RepositoryException {
             return null;
         }

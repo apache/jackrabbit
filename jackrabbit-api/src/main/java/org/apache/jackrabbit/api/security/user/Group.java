@@ -16,10 +16,8 @@
  */
 package org.apache.jackrabbit.api.security.user;
 
-import javax.annotation.Nonnull;
 import javax.jcr.RepositoryException;
 import java.util.Iterator;
-import java.util.Set;
 
 /**
  * A Group is a collection of {@link #getMembers() Authorizable}s.
@@ -71,24 +69,6 @@ public interface Group extends Authorizable {
     boolean addMember(Authorizable authorizable) throws RepositoryException;
 
     /**
-     * Add one or more member(s) to this Group. Note, that an implementation may
-     * define circumstances under which this method allows to add non-existing
-     * {@code Authorizable}s as new members. Also an implementation may choose to
-     * (partially) postpone validation/verification util {@link Session#save()}.
-     *
-     * @param memberIds The {@code Id}s of the authorizables to be added as
-     * members to this group.
-     * @return a set of those {@code memberIds} that could not be added or an
-     * empty set of all ids have been successfully processed. The former may include
-     * those cases where a given id cannot be resolved to an existing authorizable,
-     * one that is already member or if adding the member would create a
-     * cyclic group membership.
-     * @throws RepositoryException If one of the specified memberIds is invalid or
-     * if some other error occurs.
-     */
-    Set<String> addMembers(@Nonnull String... memberIds) throws RepositoryException;
-
-    /**
      * Remove a member from this Group.
      *
      * @param authorizable The <code>Authorizable</code> to be removed from
@@ -97,20 +77,4 @@ public interface Group extends Authorizable {
      * @throws RepositoryException If an error occurs.
      */
     boolean removeMember(Authorizable authorizable) throws RepositoryException;
-
-    /**
-     * Remove one or several members from this Group. Note, that an implementation
-     * may define circumstances under which this method allows to remove members
-     * that (no longer) exist. An implementation may choose to (partially)
-     * postpone validation/verification util {@link Session#save()}.
-     *
-     * @param memberIds The {@code Id}s of the authorizables to be removed
-     * from the members of this group.
-     * @return a set of those {@code memberIds} that could not be removed or an
-     * empty set if all ids have been successfully processed. The former may include
-     * those cases where a given id cannot be resolved to an existing authorizable.
-     * @throws RepositoryException If one of the specified memberIds is invalid
-     * or if some other error occurs.
-     */
-    Set<String> removeMembers(@Nonnull String... memberIds) throws RepositoryException;
 }
