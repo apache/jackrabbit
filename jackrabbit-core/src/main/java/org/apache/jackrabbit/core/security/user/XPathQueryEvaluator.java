@@ -138,7 +138,7 @@ public class XPathQueryEvaluator implements XPathQueryBuilder.ConditionVisitor {
                 .append("')")
                 .append(" or ")
                 .append("jcr:like(fn:name(),'")
-                .append(escape(condition.getPattern()))
+                .append(escapeForQuery(escape(condition.getPattern())))
                 .append("')")
                 .append(')');
     }

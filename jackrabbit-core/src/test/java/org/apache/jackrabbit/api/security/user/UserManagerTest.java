@@ -16,12 +16,17 @@
  */
 package org.apache.jackrabbit.api.security.user;
 
+import org.apache.jackrabbit.commons.jackrabbit.user.AuthorizableQueryManager;
 import org.apache.jackrabbit.test.NotExecutableException;
+import org.apache.jackrabbit.util.Text;
+import org.junit.Test;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.UnsupportedRepositoryOperationException;
 import java.security.Principal;
+import java.util.Arrays;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -126,4 +131,82 @@ public class UserManagerTest extends AbstractUserTest {
     public void testGetNonExistingAuthorizableByNullType() throws Exception {
         assertNull(userMgr.getAuthorizable("nonExistingAuthorizable", null));
     }
+
+    @Test
+    public void testFindUserWithSpecialCharIdByPrincipalName() throws RepositoryException {
+        List<String> ids = Arrays.asList("'", Text.escapeIllegalJcrChars("']"), Text.escape("']"));
+        for (String id : ids) {
+            User user = null;
+            try {
+                user = userMgr.createUser(id, "pw");
+                superuser.save();
+
+                boolean found = false;
+                Iterator<Authorizable> it = userMgr.findAuthorizables("rep:principalName", id, UserManager.SEARCH_TYPE_USER);
+                while (it.hasNext() && !found) {
+                    Authorizable a = it.next();
+                    found = id.equals(a.getID());
+                }
+                assertTrue(found);
+            } finally {
+                if (user != null) {
+                    user.remove();
+                    superuser.save();
+                }
+            }
+        }
+    }
+
+    @Test
+    public void testFindUserWithSpecialCharIdByPrincipalName2() throws RepositoryException {
+        List<String> ids = Arrays.asList("]");
+        for (String id : ids) {
+            User user = null;
+            try {
+                user = userMgr.createUser(id, "pw");
+                superuser.save();
+
+                boolean found = false;
+                Iterator<Authorizable> it = userMgr.findAuthorizables("rep:principalName", id, UserManager.SEARCH_TYPE_USER);
+                while (it.hasNext() && !found) {
+                    Authorizable a = it.next();
+                    found = id.equals(a.getID());
+                }
+                assertTrue(found);
+            } finally {
+                if (user != null) {
+                    user.remove();
+                    superuser.save();
+                }
+            }
+        }
+    }
+
+    @Test
+    public void testQueryUserWithSpecialCharId() throws Exception {
+        List<String> ids = Arrays.asList("'", "]");
+        for (String id : ids) {
+            User user = null;
+            try {
+                user = userMgr.createUser(id, "pw");
+                superuser.save();
+
+                boolean found = false;
+                String query = "{\"condition\":[{\"named\":\"" + id + "\"}]}";
+                AuthorizableQueryManager queryManager = new AuthorizableQueryManager(userMgr, superuser.getValueFactory());
+                Iterator<Authorizable> it = queryManager.execute(query);
+                while (it.hasNext() && !found) {
+                    Authorizable a = it.next();
+                    found = id.equals(a.getID());
+                }
+                assertTrue(found);
+            } finally {
+                if (user != null) {
+                    user.remove();
+                    superuser.save();
+                }
+            }
+        }
+    }
+
 }
