@@ -236,7 +236,8 @@ public abstract class JcrRemotingServlet extends JCRWebdavServerServlet {
     public static final String INIT_PARAM_BATCHREAD_CONFIG = "batchread-config";
 
     /**
-     * the 'protectedhandlers-config' init paramter.
+     * the 'protectedhandlers-config' init paramter. this parameter contains the XML
+     * configuration file for protected item remove handlers. 
      */
     public static final String INIT_PARAM_PROTECTED_HANDLERS_CONFIG = "protectedhandlers-config";
     
@@ -274,7 +275,7 @@ public abstract class JcrRemotingServlet extends JCRWebdavServerServlet {
         try {
             protectedRemoveManager = new ProtectedRemoveManager(protectedHandlerConfig);
         } catch (IOException e) {
-            log.debug("Unable to create ProtectedRemoveManager from " + protectedHandlerConfig + ".");
+            log.debug("Unable to create ProtectedRemoveManager from " + protectedHandlerConfig + ". " + e.getMessage());
         }
 
         // Determine the configured location for temporary files used when

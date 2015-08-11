@@ -18,12 +18,11 @@ package org.apache.jackrabbit.server.remoting.davex;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Enumeration;
 import java.util.List;
-import java.util.Properties;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
@@ -31,13 +30,13 @@ import javax.jcr.Session;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class ProtectedRemoveManager {
+class ProtectedRemoveManager {
 
     private static final Logger log = LoggerFactory.getLogger(ProtectedRemoveManager.class);
 
     private List<ProtectedItemRemoveHandler> handlers = new ArrayList<ProtectedItemRemoveHandler>();
 
-    public ProtectedRemoveManager(String config) throws IOException {
+    ProtectedRemoveManager(String config) throws IOException {
 
     	 if (config == null) {
              log.warn("protectedhandlers-config is missing -> DIFF processing can fail for the Remove operation if the content to" +
@@ -45,25 +44,17 @@ public class ProtectedRemoveManager {
          } else {
         	 File file = new File(config);
         	 if (file.exists()) {         
-        		 InputStream inStream = new FileInputStream(file);
-                 Properties props = new Properties();
-        		 props.load(inStream);             
-        		 for (Enumeration<?> en = props.propertyNames(); en.hasMoreElements();) {             
-        			 String key = en.nextElement().toString();                 
-        			 String className = props.getProperty(key);                 
-        			 if (!className.isEmpty()) {                 
-        				 ProtectedItemRemoveHandler irHandler = createHandler(className);                     
-        				 if (irHandler != null) {                     
-        					 handlers.add(irHandler);                        
-        				 }                    
-        			 }                
-        		 }            
+ 				try {
+                    InputStream fis = new FileInputStream(file);
+ 					ProtectedRemoveConfig prConfig = new ProtectedRemoveConfig(this);
+ 					prConfig.parse(fis);
+ 				} catch (FileNotFoundException e) {
+ 					throw new IOException(e.getMessage(), e);
+ 				}            
         	 } else { // config is an Impl class
         		 if (!config.isEmpty()) {        	    	
-        			 ProtectedItemRemoveHandler irHandler = createHandler(config);        	         
-        			 if (irHandler != null) {        	         
-        				 handlers.add(irHandler);        	            
-        			 }        	    	
+        			 ProtectedItemRemoveHandler handler = createHandler(config); 					
+        			 addHandler(handler);        	    	
         		 } else {        	    
         			 log.debug("Fail to locate the protected-item-remove-handler properties file.");        	    	
         		 }
@@ -71,7 +62,7 @@ public class ProtectedRemoveManager {
          }    	 
     }
 
-    public boolean remove(Session session, String itemPath) throws RepositoryException {
+    boolean remove(Session session, String itemPath) throws RepositoryException {
         for (ProtectedItemRemoveHandler handler : handlers) {
             if (handler.remove(session, itemPath)) {
                 return true;
@@ -86,13 +77,15 @@ public class ProtectedRemoveManager {
      * @return
      * @throws RepositoryException
      */
-    private static ProtectedItemRemoveHandler createHandler(String className) {
+    ProtectedItemRemoveHandler createHandler(String className) {
+    	ProtectedItemRemoveHandler irHandler = null;
         try {
-            Class<?> irHandlerClass = Class.forName(className);
-            if (ProtectedItemRemoveHandler.class.isAssignableFrom(irHandlerClass)) {
-                ProtectedItemRemoveHandler irHandler = (ProtectedItemRemoveHandler) irHandlerClass.newInstance();
-                return irHandler;
-            }
+        	if (!className.isEmpty()) {
+				Class<?> irHandlerClass = Class.forName(className);
+				if (ProtectedItemRemoveHandler.class.isAssignableFrom(irHandlerClass)) {
+					irHandler = (ProtectedItemRemoveHandler) irHandlerClass.newInstance();
+				}
+			}
         } catch (ClassNotFoundException e) {
             log.error(e.getMessage(), e);
         } catch (InstantiationException e) {
@@ -100,6 +93,12 @@ public class ProtectedRemoveManager {
         } catch (IllegalAccessException e) {
             log.error(e.getMessage(), e);
         }
-        return null;
+        return irHandler;
     }
+    
+    void addHandler(ProtectedItemRemoveHandler instance) {
+		if (instance != null) {
+			handlers.add(instance);
+		}
+	}
 }

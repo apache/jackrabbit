@@ -33,6 +33,7 @@ public class TestAll extends TestCase {
         TestSuite suite = new TestSuite("org.apache.jackrabbit.server.remoting.davex tests");
 
         suite.addTestSuite(DiffParserTest.class);
+        suite.addTestSuite(JsonDiffHandlerImportTest.class);
         suite.addTestSuite(JsonDiffHandlerTest.class);
         suite.addTestSuite(BatchReadConfigTest.class);
 
