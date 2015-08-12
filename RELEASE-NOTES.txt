@@ -1,32 +1,38 @@
-Release Notes -- Apache Jackrabbit -- Version 2.10.2
+Release Notes -- Apache Jackrabbit -- Version 2.11.0
 
 Introduction
 ------------
 
-This is Apache Jackrabbit(TM) 2.10.2, a fully compliant implementation of the
+This is Apache Jackrabbit(TM) 2.11.0, a fully compliant implementation of the
 Content Repository for Java(TM) Technology API, version 2.0 (JCR 2.0) as
 specified in the Java Specification Request 283 (JSR 283).
 
-Apache Jackrabbit 2.10.2 is a patch release that contains fixes and
-improvements over Jackrabbit 2.10. Jackrabbit 2.10.x releases are considered
-stable and targeted for production use.
+Apache Jackrabbit 2.11.0 is an unstable release cut directly from
+Jackrabbit trunk, with a focus on new features and other
+improvements. For production use we recommend the latest stable 2.10.x
+release.
 
-Changes since Jackrabbit 2.10.1
--------------------------------
+Changes in Jackrabbit 2.11.0
+----------------------------
+
+Bug
+
+    [JCR-3888] - Possible dead lock in SharedItemStateManager in
+    clustered environment
 
 Improvement
 
+    [JCR-3874] - XML Configuration for ProtectedItemRemoveHandler
+    implementations
     [JCR-3880] - Allow to add/remove group members by ID
-    [JCR-3884] - Add handler to handle webdav based DELETE requests
     [JCR-3885] - Extend set of Actions in JackrabbitSession to reflect
     other operations than regular read/write
-    [JCR-3886] - [jackrabbit-aws-ext] Support IAM role to connect to
-    S3 bucket
     [JCR-3894] - Add PrincipalSetPolicy interface to Jackrabbit
     Security API
 
+
 In addition to the above-mentioned changes, this release contains
-all the changes included up to the Apache Jackrabbit 2.10.1 release.
+all the changes included up to the Apache Jackrabbit 2.10.x release.
 
 For more detailed information about all the changes in this and other
 Jackrabbit releases, please see the Jackrabbit issue tracker at
