@@ -87,6 +87,42 @@ public class NodeTypeDefDiffTest extends TestCase {
         assertTrue(nodeTypeDefDiff.isMajor());
     }
 
+    /**
+     * If we add a residual property definition of a different type, it should be recognized as
+     * a new definition not as a change in definition
+     */
+    public void testMultipleResidualPropertyDefinitions() throws Exception {
+        // old node type definition
+        QNodeTypeDefinitionBuilder oldDef = new QNodeTypeDefinitionBuilder();
+        oldDef.setName(NODE_TYPE1);
+        oldDef.setSupertypes(new Name[] { NameConstants.NT_BASE });
+
+        QPropertyDefinitionBuilder oldPropDef = new QPropertyDefinitionBuilder();
+        oldPropDef.setDeclaringNodeType(NODE_TYPE1);
+        oldPropDef.setName(PROP_NAME);
+        oldPropDef.setRequiredType(PropertyType.STRING);
+        oldPropDef.setMultiple(false);
+
+        oldDef.setPropertyDefs(new QPropertyDefinition[]{ oldPropDef.build() });
+
+        // new node type definition
+        QNodeTypeDefinitionBuilder newDef = new QNodeTypeDefinitionBuilder();
+        newDef.setName(NODE_TYPE1);
+        newDef.setSupertypes(new Name[] { NameConstants.NT_BASE });
+
+        QPropertyDefinitionBuilder newPropDef1 = oldPropDef;
+        QPropertyDefinitionBuilder newPropDef2 = new QPropertyDefinitionBuilder();
+        newPropDef2.setDeclaringNodeType(NODE_TYPE1);
+        newPropDef2.setName(PROP_NAME);
+        newPropDef2.setRequiredType(PropertyType.BOOLEAN);
+        newPropDef2.setMultiple(false);
+
+        newDef.setPropertyDefs(new QPropertyDefinition[]{ newPropDef1.build(), newPropDef2.build() });
+
+        NodeTypeDefDiff nodeTypeDefDiff = NodeTypeDefDiff.create(oldDef.build(), newDef.build());
+        assertTrue(nodeTypeDefDiff.isTrivial());
+    }
+
     public void testChangedSameNameChildNodeDefinition() throws Exception {
         // old node type definition
         QNodeTypeDefinitionBuilder oldDef = new QNodeTypeDefinitionBuilder();
