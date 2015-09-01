@@ -184,7 +184,7 @@ public abstract class AbstractEvaluationTest extends AbstractAccessControlTest {
         return modifyPrivileges(path, testUser.getPrincipal(), privilegesFromName(privilege), isAllow, getRestrictions(superuser, path));
     }
 
-    private JackrabbitAccessControlList modifyPrivileges(String path, Principal principal, Privilege[] privileges, boolean isAllow, Map<String, Value> restrictions) throws NotExecutableException, RepositoryException {
+    protected JackrabbitAccessControlList modifyPrivileges(String path, Principal principal, Privilege[] privileges, boolean isAllow, Map<String, Value> restrictions) throws NotExecutableException, RepositoryException {
         JackrabbitAccessControlList tmpl = getPolicy(acMgr, path, principal);
         tmpl.addEntry(principal, privileges, isAllow, restrictions);
         
