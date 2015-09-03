@@ -1659,6 +1659,18 @@ public class UserImporterTest extends AbstractJCRTest {
             };
         }
 
+        public Item getItemOrNull(String absPath) throws RepositoryException {
+            return null;
+        }
+
+        public Property getPropertyOrNull(String absPath) throws RepositoryException {
+            return null;
+        }
+
+        public Node getNodeOrNull(String absPath) throws RepositoryException {
+            return null;
+        }
+
         public Repository getRepository() {
             return null;
         }

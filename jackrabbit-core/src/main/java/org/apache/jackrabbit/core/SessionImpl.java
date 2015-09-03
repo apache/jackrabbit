@@ -706,6 +706,36 @@ public class SessionImpl extends AbstractSession
         return userManager;
     }
 
+    @Override
+    public Item getItemOrNull(String absPath) throws RepositoryException {
+        // TODO optimise, reduce to a single read operation
+        if (itemExists(absPath)) {
+            return getItem(absPath);
+        } else {
+            return null;
+        }
+    }
+
+    @Override
+    public Property getPropertyOrNull(String absPath) throws RepositoryException {
+        // TODO optimise, reduce to a single read operation
+        if (propertyExists(absPath)) {
+            return getProperty(absPath);
+        } else {
+            return null;
+        }
+    }
+
+    @Override
+    public Node getNodeOrNull(String absPath) throws RepositoryException {
+        // TODO optimise, reduce to a single read operation
+        if (nodeExists(absPath)) {
+            return getNode(absPath);
+        } else {
+            return null;
+        }
+    }
+
     //--------------------------------------------------------------< Session >
     /**
      * {@inheritDoc}
