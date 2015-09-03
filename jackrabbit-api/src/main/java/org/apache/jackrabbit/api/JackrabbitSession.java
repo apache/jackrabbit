@@ -20,6 +20,9 @@ import org.apache.jackrabbit.api.security.user.UserManager;
 import org.apache.jackrabbit.api.security.principal.PrincipalManager;
 
 import javax.annotation.Nonnull;
+import javax.jcr.Item;
+import javax.jcr.Node;
+import javax.jcr.Property;
 import javax.jcr.Session;
 import javax.jcr.AccessDeniedException;
 import javax.jcr.RepositoryException;
@@ -213,5 +216,39 @@ public interface JackrabbitSession extends Session {
      * @see UserManager
      */
     UserManager getUserManager() throws AccessDeniedException, UnsupportedRepositoryOperationException, RepositoryException;
+
+    /**
+     * Returns the node at the specified absolute path in the workspace. If no
+     * such node exists, then it returns the property at the specified path.
+     * If no such property exists, then it return {@code null}.
+     *
+     * @param absPath An absolute path.
+     * @return the specified {@code Item} or {@code null}.
+     * @throws RepositoryException if another error occurs.
+     * @since 2.10.2
+     */
+    Item getItemOrNull(final String absPath) throws RepositoryException;
+
+    /**
+     * Returns the property at the specified absolute path in the workspace or
+     * {@code null} if no such node exists.
+     *
+     * @param absPath An absolute path.
+     * @return the specified {@code Property} or {@code null}.
+     * @throws RepositoryException if another error occurs.
+     * @since 2.10.2
+     */
+    Property getPropertyOrNull(final String absPath) throws RepositoryException;
+
+    /**
+     * Returns the node at the specified absolute path in the workspace or
+     * {@code null} if no such node exists.
+     *
+     * @param absPath An absolute path.
+     * @return the specified {@code Node} or {@code null}.
+     * @throws RepositoryException If another error occurs.
+     * @since 2.10.2
+     */
+    Node getNodeOrNull(final String absPath) throws RepositoryException;
 
 }
