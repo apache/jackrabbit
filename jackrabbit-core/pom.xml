@@ -116,6 +116,9 @@ org.apache.jackrabbit.core.data.ConcurrentGcTest#testDatabases
 org.apache.jackrabbit.core.data.GarbageCollectorTest#testCloseSessionWhileRunningGc
 org.apache.jackrabbit.core.ReplacePropertyWhileOthersReadTest <!-- JCR-3835 -->
 org.apache.jackrabbit.core.security.user.MembershipCachePerfTest <!-- don't run expensive test -->
+org.apache.jackrabbit.test.api.query.qom.NodeLocalNameTest#testStringLiteralInvalidName        <!-- OAK-3265 -->
+org.apache.jackrabbit.test.api.query.qom.NodeLocalNameTest#testPathLiteral                     <!-- OAK-3265 -->
+org.apache.jackrabbit.test.api.query.qom.NodeLocalNameTest#testURILiteral                      <!-- OAK-3265 -->
               </value>
             </property>
             <property>
