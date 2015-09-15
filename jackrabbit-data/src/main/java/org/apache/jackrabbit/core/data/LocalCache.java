@@ -29,6 +29,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
@@ -76,6 +77,11 @@ public class LocalCache {
     private volatile boolean purgeMode;
     
     private AsyncUploadCache asyncUploadCache;
+    
+    private AtomicLong cacheMissCounter = new AtomicLong();
+    
+    private AtomicLong cacheMissDuration = new AtomicLong();
+    
 
     /**
      * Build LRU cache of files located at 'path'. It uses lastModified property
@@ -247,12 +253,21 @@ public class LocalCache {
     public File getFileIfStored(String fileName) throws IOException {
         fileName = fileName.replace("\\", "/");
         File f = getFile(fileName);
+        long diff = (System.currentTimeMillis() - cacheMissDuration.get()) / 1000;
+        // logged at 5 minute interval minimum
+        if (diff > 5 * 60) {
+            LOG.info("local cache misses [{}] in [{}] sec", new Object[] {
+                cacheMissCounter.getAndSet(0), diff });
+            cacheMissDuration.set(System.currentTimeMillis());
+        }
+        
         // return file in purge mode = true and file present in asyncUploadCache
         // as asyncUploadCache's files will be not be deleted in cache purge.
         if (!f.exists() || (isInPurgeMode() && !asyncUploadCache.hasEntry(fileName, false))) {
             LOG.debug(
                 "getFileIfStored returned: purgeMode=[{}], file=[{}] exists=[{}]",
                 new Object[] { isInPurgeMode(), f.getAbsolutePath(), f.exists() });
+            cacheMissCounter.incrementAndGet();
             return null;
         } else {
             // touch entry in LRU caches
