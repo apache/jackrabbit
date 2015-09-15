@@ -993,7 +993,9 @@ public abstract class CachingDataStore extends AbstractDataStore implements
         try {
             DataIdentifier identifier = new DataIdentifier(f.getName());
             usesIdentifier(identifier);
-            backend.write(identifier, f);
+            if (!backend.exists(identifier)) {
+                backend.write(identifier, f);
+            }
             if (updateAsyncUploadCache) {
                 String fileName = getFileName(identifier);
                 asyncWriteCache.remove(fileName);
