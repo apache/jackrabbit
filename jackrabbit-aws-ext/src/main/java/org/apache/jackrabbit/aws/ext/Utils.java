@@ -117,28 +117,6 @@ public final class Utils {
     }
 
     /**
-     * Delete S3 bucket. This method first deletes all objects from bucket and
-     * then delete empty bucket.
-     * 
-     * @param bucketName the bucket name.
-     */
-    public static void deleteBucket(final String bucketName) throws IOException {
-        Properties prop = readConfig(DEFAULT_CONFIG_FILE);
-        AmazonS3 s3service = openService(prop);
-        ObjectListing prevObjectListing = s3service.listObjects(bucketName);
-        while (true) {
-            for (S3ObjectSummary s3ObjSumm : prevObjectListing.getObjectSummaries()) {
-                s3service.deleteObject(bucketName, s3ObjSumm.getKey());
-            }
-            if (!prevObjectListing.isTruncated()) {
-                break;
-            }
-            prevObjectListing = s3service.listNextBatchOfObjects(prevObjectListing);
-        }
-        s3service.deleteBucket(bucketName);
-    }
-
-    /**
      * Read a configuration properties file. If the file name ends with ";burn",
      * the file is deleted after reading.
      * 
