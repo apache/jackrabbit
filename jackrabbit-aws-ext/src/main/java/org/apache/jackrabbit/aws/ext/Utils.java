@@ -82,7 +82,7 @@ public final class Utils {
     public static AmazonS3Client openService(final Properties prop) {
         String accessKey = prop.getProperty(S3Constants.ACCESS_KEY);
         String secretKey = prop.getProperty(S3Constants.SECRET_KEY);
-        AmazonS3Client s3service = null;
+        AmazonS3Client s3service;
         if (StringUtils.isNullOrEmpty(accessKey)
             || StringUtils.isNullOrEmpty(secretKey)) {
             LOG.info("Configuring Amazon Client from environment");
@@ -95,7 +95,7 @@ public final class Utils {
                 getClientConfiguration(prop));
         }
         String region = prop.getProperty(S3Constants.S3_REGION);
-        String endpoint = null;
+        String endpoint;
         String propEndPoint = prop.getProperty(S3Constants.S3_END_POINT);
         if ((propEndPoint != null) & !"".equals(propEndPoint)) {
             endpoint = propEndPoint;
