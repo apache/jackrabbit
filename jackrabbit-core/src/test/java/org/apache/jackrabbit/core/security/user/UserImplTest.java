@@ -142,9 +142,11 @@ public class UserImplTest extends AbstractUserTest {
         // plain text passwords
         pwds.put("abc", "abc");
         pwds.put("{a}password", "{a}password");
-        // passwords already in hashed format.
-        pwds.put(sha1Hash, "abc");
-        pwds.put(md5Hash, "abc");
+        // passwords with hash-like char-sequence -> must still be hashed.
+        pwds.put(sha1Hash, sha1Hash);
+        pwds.put(md5Hash, md5Hash);
+        pwds.put("{"+SecurityConstants.DEFAULT_DIGEST+"}any", "{"+SecurityConstants.DEFAULT_DIGEST+"}any");
+        pwds.put("{"+SecurityConstants.DEFAULT_DIGEST+"}", "{"+SecurityConstants.DEFAULT_DIGEST+"}");
 
         for (String pw : pwds.keySet()) {
             u.changePassword(pw);
@@ -159,11 +161,9 @@ public class UserImplTest extends AbstractUserTest {
         // valid passwords, non-matching plain text
         Map<String, String>noMatch = new HashMap<String, String>();
         noMatch.put("{"+SecurityConstants.DEFAULT_DIGEST+"}", "");
-        noMatch.put("{"+SecurityConstants.DEFAULT_DIGEST+"}", "{"+SecurityConstants.DEFAULT_DIGEST+"}");
         noMatch.put("{"+SecurityConstants.DEFAULT_DIGEST+"}any", "any");
-        noMatch.put("{"+SecurityConstants.DEFAULT_DIGEST+"}any", "{"+SecurityConstants.DEFAULT_DIGEST+"}any");
-        noMatch.put(sha1Hash, sha1Hash);
-        noMatch.put(md5Hash, md5Hash);
+        noMatch.put(sha1Hash, "abc");
+        noMatch.put(md5Hash, "abc");
 
         for (String pw : noMatch.keySet()) {
             u.changePassword(pw);
@@ -172,10 +172,14 @@ public class UserImplTest extends AbstractUserTest {
             SimpleCredentials sc = new SimpleCredentials(u.getID(), plain.toCharArray());
             CryptedSimpleCredentials cc = (CryptedSimpleCredentials) u.getCredentials();
 
-            assertFalse(cc.matches(sc));
+            assertFalse(pw, cc.matches(sc));
         }
+    }
 
-        // invalid pw string
+    public void testChangePasswordNull() throws RepositoryException {
+        User u = (User) userMgr.getAuthorizable(uID);
+
+        // invalid 'null' pw string
         try {
             u.changePassword(null);
             fail("invalid pw null");

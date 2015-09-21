@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.core.security.authentication.token;
 
+import java.util.Calendar;
+import java.util.Date;
 import java.util.UUID;
 import javax.jcr.Credentials;
 import javax.jcr.ItemNotFoundException;
@@ -32,31 +34,28 @@ import org.apache.jackrabbit.core.SessionImpl;
 import org.apache.jackrabbit.test.AbstractJCRTest;
 
 /**
- * <code>TokenBasedAuthenticationOakTest</code>...
+ * <code>TokenBasedAuthenticationCompatTest</code>...
  */
-public class TokenBasedAuthenticationTest extends AbstractJCRTest {
+public class TokenBasedAuthenticationCompatTest extends AbstractJCRTest {
 
-    private SessionImpl adminSession;
-    private User testUser;
+    SessionImpl adminSession;
+    User testUser;
 
-    private String token;
-    private Node tokenNode;
-    private TokenCredentials tokenCreds;
+    Node tokenNode;
+    String token;
 
-    private String expiredToken;
-    private Node expiredNode;
-    private TokenCredentials expiredCreds;
+    TokenBasedAuthentication nullTokenAuth;
+    TokenBasedAuthentication validTokenAuth;
 
-
-    private TokenBasedAuthentication nullTokenAuth;
-    private TokenBasedAuthentication validTokenAuth;
-
-    private Credentials simpleCreds = new SimpleCredentials("uid", "pw".toCharArray());
-    private Credentials creds = new Credentials() {};
+    TokenCredentials tokenCreds;
+    Credentials simpleCreds = new SimpleCredentials("uid", "pw".toCharArray());
+    Credentials creds = new Credentials() {};
 
     @Override
     protected void setUp() throws Exception {
         super.setUp();
+
+        System.setProperty(TokenBasedAuthentication.PARAM_COMPAT, Boolean.TRUE.toString());
 
         adminSession = (SessionImpl) getHelper().getSuperuserSession("security");
         testUser = adminSession.getUserManager().createUser(UUID.randomUUID().toString(), "pw");
@@ -64,42 +63,30 @@ public class TokenBasedAuthenticationTest extends AbstractJCRTest {
 
         SimpleCredentials sc = new SimpleCredentials(testUser.getID(), "pw".toCharArray());
         sc.setAttribute(TokenBasedAuthentication.TOKEN_ATTRIBUTE, "");
-        sc.setAttribute(TokenBasedAuthentication.TOKEN_ATTRIBUTE+".any", "correct");
-        sc.setAttribute("informative", "value");
 
-        TokenProvider tp = new TokenProvider(adminSession, TokenBasedAuthentication.TOKEN_EXPIRATION);
+        CompatTokenProvider tp = new CompatTokenProvider(adminSession, TokenBasedAuthentication.TOKEN_EXPIRATION);
         TokenInfo ti = tp.createToken(testUser, sc);
-        tokenCreds = ti.getCredentials();
-        token = tokenCreds.getToken();
-        tokenNode = TokenProvider.getTokenNode(token, adminSession);
+        tokenNode = CompatTokenProvider.getTokenNode(ti.getToken(), adminSession);
 
-        tp = new TokenProvider(adminSession, 1);
-        TokenInfo expired = tp.createToken(testUser, sc);
-        expiredCreds = expired.getCredentials();
-        expiredToken = expiredCreds.getToken();
-        expiredNode = TokenProvider.getTokenNode(expiredToken, adminSession);
+        token = ti.getToken();
 
         nullTokenAuth = new TokenBasedAuthentication(null, -1, adminSession);
         validTokenAuth = new TokenBasedAuthentication(token, 7200, adminSession);
 
+        tokenCreds = new TokenCredentials(token);
     }
 
     @Override
     protected void tearDown() throws Exception {
-        try {
-            testUser.remove();
-            adminSession.save();
-            adminSession.logout();
-        } finally {
-            super.tearDown();
-        }
+        System.setProperty(TokenBasedAuthentication.PARAM_COMPAT, Boolean.FALSE.toString());
+        super.tearDown();
     }
 
-    private TokenBasedAuthentication createAuthenticationForExpiredToken() throws RepositoryException, LockException, ConstraintViolationException, VersionException {
-        return new TokenBasedAuthentication(expiredToken, TokenBasedAuthentication.TOKEN_EXPIRATION, adminSession);
-    }
-
-    private TokenBasedAuthentication createAuthentication() throws RepositoryException {
+    private TokenBasedAuthentication expiredToken() throws RepositoryException, LockException, ConstraintViolationException, VersionException {
+        Calendar cal = Calendar.getInstance();
+        cal.setTimeInMillis(new Date().getTime() - 100);
+        tokenNode.setProperty(".token.exp", cal);
+        adminSession.save();
         return new TokenBasedAuthentication(token, TokenBasedAuthentication.TOKEN_EXPIRATION, adminSession);
     }
 
@@ -112,26 +99,26 @@ public class TokenBasedAuthenticationTest extends AbstractJCRTest {
 
         assertFalse(validTokenAuth.canHandle(creds));
         assertFalse(nullTokenAuth.canHandle(creds));
-    }
 
-    public void testCanHandleExpiredToken() throws RepositoryException {
-        TokenBasedAuthentication expiredToken = createAuthenticationForExpiredToken();
-        assertTrue(expiredToken.canHandle(expiredCreds));
+        TokenBasedAuthentication expiredToken = expiredToken();
+        assertTrue(expiredToken.canHandle(tokenCreds));
     }
 
     public void testExpiry() throws RepositoryException {
-        TokenBasedAuthentication expiredToken = createAuthenticationForExpiredToken();
-        assertFalse(expiredToken.authenticate(expiredCreds));
+        assertTrue(validTokenAuth.authenticate(tokenCreds));
+
+        TokenBasedAuthentication expiredToken = expiredToken();
+        assertFalse(expiredToken.authenticate(tokenCreds));
     }
 
     public void testRemoval() throws RepositoryException {
-        String identifier = expiredNode.getIdentifier();
+        String identifier = tokenNode.getIdentifier();
 
-        TokenBasedAuthentication expiredToken = createAuthenticationForExpiredToken();
-        assertFalse(expiredToken.authenticate(expiredCreds));
+        TokenBasedAuthentication expiredToken = expiredToken();
+        assertFalse(expiredToken.authenticate(tokenCreds));
 
         try {
-            superuser.getNodeByIdentifier(identifier);
+            adminSession.getNodeByIdentifier(identifier);
             fail("expired token node should be removed.");
         } catch (ItemNotFoundException e) {
             // success
@@ -155,48 +142,57 @@ public class TokenBasedAuthenticationTest extends AbstractJCRTest {
     }
 
     public void testAttributes() throws RepositoryException {
-        TokenBasedAuthentication auth = createAuthentication();
-        assertFalse(auth.authenticate(new TokenCredentials(token)));
+        tokenNode.setProperty(TokenBasedAuthentication.TOKEN_ATTRIBUTE +".any", "correct");
+        adminSession.save();
+        TokenBasedAuthentication auth = new TokenBasedAuthentication(tokenNode.getIdentifier(), TokenBasedAuthentication.TOKEN_EXPIRATION, adminSession);
 
-        TokenCredentials tc = new TokenCredentials(token);
-        tc.setAttribute(TokenBasedAuthentication.TOKEN_ATTRIBUTE +".any", "wrong");
-        assertFalse(auth.authenticate(tc));
+        assertFalse(auth.authenticate(tokenCreds));
 
-        tc = new TokenCredentials(token);
-        tc.setAttribute(TokenBasedAuthentication.TOKEN_ATTRIBUTE +".any", "correct");
+        tokenCreds.setAttribute(TokenBasedAuthentication.TOKEN_ATTRIBUTE + ".any", "wrong");
+        assertFalse(auth.authenticate(tokenCreds));
+
+        tokenCreds.setAttribute(TokenBasedAuthentication.TOKEN_ATTRIBUTE +".any", "correct");
+        assertTrue(auth.authenticate(tokenCreds));
+
+        // add informative property
+        tokenNode.setProperty("noMatchRequired", "abc");
+        adminSession.save();
+        auth = new TokenBasedAuthentication(tokenNode.getIdentifier(), TokenBasedAuthentication.TOKEN_EXPIRATION, adminSession);
+
         assertTrue(auth.authenticate(tokenCreds));
     }
 
     public void testUpdateAttributes() throws RepositoryException {
+        tokenNode.setProperty(TokenBasedAuthentication.TOKEN_ATTRIBUTE +".any", "correct");
+        tokenNode.setProperty("informative","value");
+        adminSession.save();
+
         // token credentials must be updated to contain the additional attribute
         // present on the token node.
-        TokenBasedAuthentication auth = createAuthentication();
-
-        TokenCredentials tc = new TokenCredentials(token);
-        tc.setAttribute(TokenBasedAuthentication.TOKEN_ATTRIBUTE +".any", "correct");
-
-        assertTrue(auth.authenticate(tc));
-        assertEquals("value", tc.getAttribute("informative"));
+        TokenBasedAuthentication auth = new TokenBasedAuthentication(tokenNode.getIdentifier(), TokenBasedAuthentication.TOKEN_EXPIRATION, adminSession);
+        tokenCreds.setAttribute(TokenBasedAuthentication.TOKEN_ATTRIBUTE + ".any", "correct");
+        assertTrue(auth.authenticate(tokenCreds));               
+        assertEquals("value", tokenCreds.getAttribute("informative"));
 
         // additional informative property present on credentials upon subsequent
         // authentication -> the node must not be updated
-        auth = createAuthentication();
-        tc.setAttribute("informative2", "value2");
-        assertTrue(auth.authenticate(tc));
+        auth = new TokenBasedAuthentication(tokenNode.getIdentifier(), TokenBasedAuthentication.TOKEN_EXPIRATION, adminSession);
+        tokenCreds.setAttribute("informative2", "value2");
+        assertTrue(auth.authenticate(tokenCreds));
         assertFalse(tokenNode.hasProperty("informative2"));
 
         // modified informative property present on credentials upon subsequent
         // authentication -> the node must not be updated
-        auth = createAuthentication();
-        tc.setAttribute("informative", "otherValue");
-        assertTrue(auth.authenticate(tc));
+        auth = new TokenBasedAuthentication(tokenNode.getIdentifier(), TokenBasedAuthentication.TOKEN_EXPIRATION, adminSession);
+        tokenCreds.setAttribute("informative", "otherValue");
+        assertTrue(auth.authenticate(tokenCreds));
         assertTrue(tokenNode.hasProperty("informative"));
         assertEquals("value", tokenNode.getProperty("informative").getString());
 
         // additional mandatory property on the credentials upon subsequent
         // authentication -> must be ignored
-        auth = createAuthentication();
-        tc.setAttribute(TokenBasedAuthentication.TOKEN_ATTRIBUTE +".toIgnore", "ignore");
+        auth = new TokenBasedAuthentication(tokenNode.getIdentifier(), TokenBasedAuthentication.TOKEN_EXPIRATION, adminSession);
+        tokenCreds.setAttribute(TokenBasedAuthentication.TOKEN_ATTRIBUTE +".toIgnore", "ignore");
         assertTrue(auth.authenticate(tokenCreds));
         assertFalse(tokenNode.hasProperty(TokenBasedAuthentication.TOKEN_ATTRIBUTE +".toIgnore"));
     }

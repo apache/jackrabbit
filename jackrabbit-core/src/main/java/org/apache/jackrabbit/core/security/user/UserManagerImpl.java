@@ -51,6 +51,7 @@ import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.version.VersionException;
 import java.io.UnsupportedEncodingException;
+import java.security.NoSuchAlgorithmException;
 import java.security.Principal;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -60,6 +61,8 @@ import java.util.Set;
 import java.util.UUID;
 
 /**
+ * <h2>Implementation Characteristics</h2>
+ *
  * Default implementation of the <code>UserManager</code> interface with the
  * following characteristics:
  *
@@ -77,6 +80,8 @@ import java.util.UUID;
  *    </ul>
  * </li>
  * </ul>
+ *
+ * <h3>Authorizable Creation</h3>
  *
  * The built-in logic applies the following rules:
  * <ul>
@@ -115,9 +120,12 @@ import java.util.UUID;
  *           + aSmith        [rep:User]
  * </pre>
  *
+ * <h3>Configuration</h3>
+ *
  * This <code>UserManager</code> is able to handle the following configuration
  * options:
  *
+ * <h4>Configuration Parameters</h4>
  * <ul>
  * <li>{@link #PARAM_USERS_PATH}: Defines where user nodes are created.
  * If missing set to {@link #USERS_PATH}.</li>
@@ -142,7 +150,25 @@ import java.util.UUID;
  * <li>{@link #PARAM_AUTO_EXPAND_SIZE}: This parameter only takes effect
  * if {@link #PARAM_AUTO_EXPAND_TREE} is enabled.<br>The value is expected to be
  * a positive long greater than zero. The default value is 1000.</li>
+ * <li>{@link #PARAM_GROUP_MEMBERSHIP_SPLIT_SIZE}: If this parameter is present
+ * group memberships are collected in a node structure below {@link UserConstants#N_MEMBERS}
+ * instead of the default multi valued property {@link UserConstants#P_MEMBERS}.
+ * Its value determines the maximum number of member properties until additional
+ * intermediate nodes are inserted. Valid parameter values are integers &gt; 4.</li>
+ * <li>{@link #PARAM_PASSWORD_HASH_ALGORITHM}: Optional parameter to configure
+ * the algorithm used for password hash generation. The default value is
+ * {@link PasswordUtility#DEFAULT_ALGORITHM}.</li>
+ * <li>{@link #PARAM_PASSWORD_HASH_ITERATIONS}: Optional parameter to configure
+ * the number of iterations used for password hash generations. The default
+ * value is {@link PasswordUtility#DEFAULT_ITERATIONS}.</li>
  * </ul>
+ *
+ * <h4>Authorizable Actions</h4>
+ * In addition to the specified configuration parameters this user manager
+ * implementation allows to define zero to many {@link AuthorizableAction}s.
+ * Authorizable actions provide the ability to execute additional validation or
+ * tasks upon authorizable creation, removal and upon changing a users password.<br/>
+ * See also {@link org.apache.jackrabbit.core.config.UserManagerConfig#getAuthorizableActions()}
  */
 public class UserManagerImpl extends ProtectedItemModifier
         implements UserManager, UserConstants, SessionListener {
@@ -212,13 +238,27 @@ public class UserManagerImpl extends ProtectedItemModifier
     public static final String PARAM_AUTO_EXPAND_SIZE = "autoExpandSize";
 
     /**
-     * If this parameter is present group memberships are collected in a node
+     * If this parameter is present group members are collected in a node
      * structure below {@link UserConstants#N_MEMBERS} instead of the default
      * multi valued property {@link UserConstants#P_MEMBERS}. Its value determines
      * the maximum number of member properties until additional intermediate nodes
-     * are inserted. Valid values are integers > 4.
+     * are inserted. Valid values are integers &gt; 4. The default value is 0 and
+     * indicates that the {@link UserConstants#P_MEMBERS} property is used to
+     * record group members.
      */
     public static final String PARAM_GROUP_MEMBERSHIP_SPLIT_SIZE = "groupMembershipSplitSize";
+
+    /**
+     * Configuration parameter to change the default algorithm used to generate
+     * password hashes. The default value is {@link PasswordUtility#DEFAULT_ALGORITHM}.
+     */
+    public static final String PARAM_PASSWORD_HASH_ALGORITHM = "passwordHashAlgorithm";
+
+    /**
+     * Configuration parameter to change the number of iterations used for
+     * password hash generation. The default value is {@link PasswordUtility#DEFAULT_ITERATIONS}.
+     */
+    public static final String PARAM_PASSWORD_HASH_ITERATIONS = "passwordHashIterations";
 
     private static final Logger log = LoggerFactory.getLogger(UserManagerImpl.class);
 
@@ -226,49 +266,11 @@ public class UserManagerImpl extends ProtectedItemModifier
     private final String adminId;
     private final NodeResolver authResolver;
     private final NodeCreator nodeCreator;
+    private final UserManagerConfig config;
 
-    /**
-     * Configuration value defining the node where User nodes will be created.
-     * Default value is {@link UserConstants#USERS_PATH}.
-     */
     private final String usersPath;
-
-    /**
-     * Configuration value defining the node where Group nodes will be created.
-     * Default value is {@link UserConstants#GROUPS_PATH}.
-     */
     private final String groupsPath;
-
-    /**
-     * Flag indicating if {@link #getAuthorizable(String)} should be able to deal
-     * with users or groups created with Jackrabbit < 2.0.<br>
-     * As of 2.0 authorizables are created using a defined logic that allows
-     * to retrieve them without searching/traversing. If this flag is
-     * <code>true</code> this method will try to find authorizables using the
-     * <code>authResolver</code> if not found otherwise.
-     */
-    private final boolean compatibleJR16;
-
-    /**
-     * Maximum number of properties on the group membership node structure under
-     * {@link UserConstants#N_MEMBERS} until additional intermediate nodes are inserted.
-     * If 0 (default), {@link UserConstants#P_MEMBERS} is used to record group
-     * memberships.
-     */
-    private final int groupMembershipSplitSize;
-
-    /**
-     * The membership cache.
-     */
     private final MembershipCache membershipCache;
-
-    /**
-     * Authorizable actions that will all be executed upon creation and removal
-     * of authorizables in the order they are contained in the array.<p/>
-     * Note, that if {@link #isAutoSave() autosave} is turned on, the configured
-     * actions are executed before persisting the creation or removal.
-     */
-    private AuthorizableAction[] authorizableActions = new AuthorizableAction[0];
 
     /**
      * Create a new <code>UserManager</code> with the default configuration.
@@ -317,27 +319,31 @@ public class UserManagerImpl extends ProtectedItemModifier
      */
     public UserManagerImpl(SessionImpl session, String adminId, Properties config,
                            MembershipCache mCache) throws RepositoryException {
+        this(session, new UserManagerConfig(config, adminId, null), mCache);
+    }
+
+    /**
+     * Create a new <code>UserManager</code> for the given <code>session</code>.
+     *
+     * @param session The editing/reading session.
+     * @param config The user manager configuration.
+     * @param mCache The shared membership cache.
+     * @throws RepositoryException If an error occurs.
+     */
+    private UserManagerImpl(SessionImpl session, UserManagerConfig config, MembershipCache mCache) throws RepositoryException {
         this.session = session;
-        this.adminId = adminId;
+        this.adminId = config.getAdminId();
+        this.config = config;
 
         nodeCreator = new NodeCreator(config);
 
-        Object param = (config != null) ? config.get(PARAM_USERS_PATH) : null;
-        usersPath = (param != null) ? param.toString() : USERS_PATH;
-
-        param = (config != null) ? config.get(PARAM_GROUPS_PATH) : null;
-        groupsPath = (param != null) ? param.toString() : GROUPS_PATH;
-
-        param = (config != null) ? config.get(PARAM_COMPATIBLE_JR16) : null;
-        compatibleJR16 = (param != null) && Boolean.parseBoolean(param.toString());
-
-        param = (config != null) ? config.get(PARAM_GROUP_MEMBERSHIP_SPLIT_SIZE) : null;
-        groupMembershipSplitSize = parseMembershipSplitSize(param);
+        this.usersPath = config.getConfigValue(PARAM_USERS_PATH, USERS_PATH);
+        this.groupsPath = config.getConfigValue(PARAM_GROUPS_PATH, GROUPS_PATH);
 
         if (mCache != null) {
             membershipCache = mCache;
         } else {
-            membershipCache = new MembershipCache(session, groupsPath, groupMembershipSplitSize > 0);
+            membershipCache = new MembershipCache(session, groupsPath, hasMemberSplitSize());
         }
 
         NodeResolver nr;
@@ -388,8 +394,25 @@ public class UserManagerImpl extends ProtectedItemModifier
      *
      * @return The maximum number of group members before splitting up the structure.
      */
-    public int getGroupMembershipSplitSize() {
-        return groupMembershipSplitSize;
+    public int getMemberSplitSize() {
+        int splitSize = config.getConfigValue(PARAM_GROUP_MEMBERSHIP_SPLIT_SIZE, 0);
+        if (splitSize != 0 && splitSize < 4) {
+            log.warn("Invalid value {} for {}. Expected integer >= 4", splitSize, PARAM_GROUP_MEMBERSHIP_SPLIT_SIZE);
+            splitSize = 0;
+        }
+        return splitSize;
+    }
+
+    /**
+     * Returns <code>true</code> if the split-member configuration parameter
+     * is greater or equal than 4 indicating that group members should be stored
+     * in a tree instead of a single multivalued property.
+     *
+     * @return true if group members are being stored in a tree instead of a
+     * single multivalued property.
+     */
+    public boolean hasMemberSplitSize() {
+        return getMemberSplitSize() >= 4;
     }
 
     /**
@@ -399,9 +422,7 @@ public class UserManagerImpl extends ProtectedItemModifier
      * @param authorizableActions An array of authorizable actions.
      */
     public void setAuthorizableActions(AuthorizableAction[] authorizableActions) {
-        if (authorizableActions != null) {
-            this.authorizableActions = authorizableActions;
-        }
+        config.setAuthorizableActions(authorizableActions);
     }
 
     //--------------------------------------------------------< UserManager >---
@@ -548,15 +569,14 @@ public class UserManagerImpl extends ProtectedItemModifier
                            Principal principal, String intermediatePath)
             throws AuthorizableExistsException, RepositoryException {
         checkValidID(userID);
-        if (password == null) {
-            throw new IllegalArgumentException("Cannot create user: null password.");
-        }
+
+        // NOTE: password validation during setPassword and onCreate.
         // NOTE: principal validation during setPrincipal call.
 
         try {
             NodeImpl userNode = (NodeImpl) nodeCreator.createUserNode(userID, intermediatePath);
             setPrincipal(userNode, principal);
-            setProperty(userNode, P_PASSWORD, getValue(UserImpl.buildPasswordValue(password)), true);
+            setPassword(userNode, password, true);
 
             User user = createUser(userNode);
             onCreate(user, password);
@@ -577,8 +597,7 @@ public class UserManagerImpl extends ProtectedItemModifier
     /**
      * @see UserManager#createGroup(String)
      */
-    public Group createGroup(String groupID)
-    		throws AuthorizableExistsException, RepositoryException {
+    public Group createGroup(String groupID) throws AuthorizableExistsException, RepositoryException {
     	return createGroup(groupID, new PrincipalImpl(groupID), null);
     }
     
@@ -703,6 +722,39 @@ public class UserManagerImpl extends ProtectedItemModifier
             throw new RepositoryException("rep:principalName can only be set once on a new node.");
         }
         setProperty(node, P_PRINCIPAL_NAME, getValue(principal.getName()), true);
+    }
+
+    /**
+     * Generate a password value from the specified string and set the
+     * {@link UserConstants#P_PASSWORD} property to the given user node.
+     *
+     * @param userNode A user node.
+     * @param password The password value.
+     * @param forceHash If <code>true</code> the specified password string will
+     * always be hashed; otherwise the hash will only be generated if it appears
+     * to be a {@link PasswordUtility#isPlainTextPassword(String) plain text} password.
+     * @throws RepositoryException If an exception occurs.
+     */
+    void setPassword(NodeImpl userNode, String password, boolean forceHash) throws RepositoryException {
+        if (password == null) {
+            throw new IllegalArgumentException("Password may not be null.");
+        }
+        String pwHash;
+        if (forceHash || PasswordUtility.isPlainTextPassword(password)) {
+            try {
+                String algorithm = config.getConfigValue(PARAM_PASSWORD_HASH_ALGORITHM, PasswordUtility.DEFAULT_ALGORITHM);
+                int iterations = config.getConfigValue(PARAM_PASSWORD_HASH_ITERATIONS, PasswordUtility.DEFAULT_ITERATIONS);
+                pwHash = PasswordUtility.buildPasswordHash(password, algorithm, PasswordUtility.DEFAULT_SALT_SIZE, iterations);
+            } catch (NoSuchAlgorithmException e) {
+                throw new RepositoryException(e);
+            } catch (UnsupportedEncodingException e) {
+                throw new RepositoryException(e);
+            }
+        } else {
+            pwHash = password;
+        }
+        Value v = getSession().getValueFactory().createValue(pwHash);
+        setProperty(userNode, P_PASSWORD, getValue(pwHash), userNode.isNew());
     }
 
     void setProtectedProperty(NodeImpl node, Name propName, Value value) throws RepositoryException, LockException, ConstraintViolationException, ItemExistsException, VersionException {
@@ -831,6 +883,7 @@ public class UserManagerImpl extends ProtectedItemModifier
         try {
             n = session.getNodeById(nodeId);
         } catch (ItemNotFoundException e) {
+            boolean compatibleJR16 = config.getConfigValue(PARAM_COMPATIBLE_JR16, false);
             if (compatibleJR16) {
                 // backwards-compatibility with JR < 2.0 user/group structure that doesn't
                 // allow to determine existence of an authorizable from the id directly.
@@ -1018,27 +1071,6 @@ public class UserManagerImpl extends ProtectedItemModifier
         }
     }
 
-    private static int parseMembershipSplitSize(Object param) {
-        int n = 0;
-        if (param != null) {
-            try {
-                n = Integer.parseInt(param.toString());
-                if (n < 4) {
-                    n = 0;
-                }
-            }
-            catch (NumberFormatException e) {
-                n = 0;
-            }
-            if (n == 0) {
-                log.warn("Invalid value {} for {}. Expected integer >= 4",
-                        param.toString(), PARAM_GROUP_MEMBERSHIP_SPLIT_SIZE);
-            }
-        }
-
-        return n;
-    }
-
     //--------------------------------------------------------------------------
     /**
      * Let the configured <code>AuthorizableAction</code>s perform additional
@@ -1050,7 +1082,7 @@ public class UserManagerImpl extends ProtectedItemModifier
      * @throws RepositoryException If an exception occurs.
      */
     void onCreate(User user, String pw) throws RepositoryException {
-        for (AuthorizableAction action : authorizableActions) {
+        for (AuthorizableAction action : config.getAuthorizableActions()) {
             action.onCreate(user, pw, session);
         }
     }
@@ -1064,7 +1096,7 @@ public class UserManagerImpl extends ProtectedItemModifier
      * @throws RepositoryException If an exception occurs.
      */
     void onCreate(Group group) throws RepositoryException {
-        for (AuthorizableAction action : authorizableActions) {
+        for (AuthorizableAction action : config.getAuthorizableActions()) {
             action.onCreate(group, session);
         }
     }
@@ -1078,7 +1110,7 @@ public class UserManagerImpl extends ProtectedItemModifier
      * @throws RepositoryException If an exception occurs.
      */
     void onRemove(Authorizable authorizable) throws RepositoryException {
-        for (AuthorizableAction action : authorizableActions) {
+        for (AuthorizableAction action : config.getAuthorizableActions()) {
             action.onRemove(authorizable, session);
         }
     }
@@ -1093,7 +1125,7 @@ public class UserManagerImpl extends ProtectedItemModifier
      * @throws RepositoryException If an exception occurs.
      */
     void onPasswordChange(User user, String password) throws RepositoryException {
-        for (AuthorizableAction action : authorizableActions) {
+        for (AuthorizableAction action : config.getAuthorizableActions()) {
             action.onPasswordChange(user, password, session);
         }
     }
@@ -1331,36 +1363,22 @@ public class UserManagerImpl extends ProtectedItemModifier
         // all child nodes.
         private final long autoExpandSize;
 
-        private NodeCreator(Properties config) {
+        private NodeCreator(UserManagerConfig config) {
             int d = DEFAULT_DEPTH;
             boolean expand = false;
             long size = DEFAULT_SIZE;
 
             if (config != null) {
-                if (config.containsKey(PARAM_DEFAULT_DEPTH)) {
-                    try {
-                        d = Integer.parseInt(config.get(PARAM_DEFAULT_DEPTH).toString());
-                        if (d <= 0) {
-                           log.warn("Invalid defaultDepth '" + d + "' -> using default.");
-                           d = DEFAULT_DEPTH;
-                        }
-                    } catch (NumberFormatException e) {
-                        log.warn("Unable to parse defaultDepth config parameter -> using default.", e);
-                    }
+                d = config.getConfigValue(PARAM_DEFAULT_DEPTH, DEFAULT_DEPTH);
+                if (d <= 0) {
+                    log.warn("Invalid defaultDepth '" + d + "' -> using default.");
+                    d = DEFAULT_DEPTH;
                 }
-                if (config.containsKey(PARAM_AUTO_EXPAND_TREE)) {
-                    expand = Boolean.parseBoolean(config.get(PARAM_AUTO_EXPAND_TREE).toString());
-                }
-                if (config.containsKey(PARAM_AUTO_EXPAND_SIZE)) {
-                    try {
-                        size = Integer.parseInt(config.get(PARAM_AUTO_EXPAND_SIZE).toString());
-                        if (expand && size <= 0) {
-                            log.warn("Invalid autoExpandSize '" + size + "' -> using default.");
-                            size = DEFAULT_SIZE;
-                        }
-                    } catch (NumberFormatException e) {
-                        log.warn("Unable to parse autoExpandSize config parameter -> using default.", e);
-                    }
+                expand = config.getConfigValue(PARAM_AUTO_EXPAND_TREE, false);
+                size = config.getConfigValue(PARAM_AUTO_EXPAND_SIZE, DEFAULT_SIZE);
+                if (expand && size <= 0) {
+                    log.warn("Invalid autoExpandSize '" + size + "' -> using default.");
+                    size = DEFAULT_SIZE;
                 }
             }
 

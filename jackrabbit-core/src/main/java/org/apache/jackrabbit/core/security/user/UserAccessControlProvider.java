@@ -182,7 +182,7 @@ public class UserAccessControlProvider extends AbstractAccessControlProvider
             usersPath = (uMgr instanceof UserManagerImpl) ? ((UserManagerImpl) uMgr).getUsersPath() : UserConstants.USERS_PATH;
             groupsPath = (uMgr instanceof UserManagerImpl) ? ((UserManagerImpl) uMgr).getGroupsPath() : UserConstants.GROUPS_PATH;
 
-            membersInProperty = (!(uMgr instanceof UserManagerImpl)) || ((UserManagerImpl) uMgr).getGroupMembershipSplitSize() <= 0;
+            membersInProperty = !(uMgr instanceof UserManagerImpl) || !((UserManagerImpl) uMgr).hasMemberSplitSize();
 
             if (configuration.containsKey(PARAM_ANONYMOUS_ID)) {
                 anonymousId = (String) configuration.get(PARAM_ANONYMOUS_ID);

@@ -860,7 +860,7 @@ public class UserImporterTest extends AbstractJCRTest {
     }
 
     public void testImportNonExistingMemberBestEffort() throws IOException, RepositoryException, SAXException, NotExecutableException {
-        if (umgr.getGroupMembershipSplitSize() > 0) {
+        if (umgr.hasMemberSplitSize()) {
             throw new NotExecutableException();
         }
 
@@ -914,7 +914,7 @@ public class UserImporterTest extends AbstractJCRTest {
 
         String g1Id = "0120a4f9-196a-3f9e-b9f5-23f31f914da7";
         String nonExistingId = "b2f5ff47-4366-31b6-a533-d8dc3614845d"; // groupId of 'g' group.
-        if (umgr.getAuthorizable("g") != null || umgr.getGroupMembershipSplitSize() > 0) {
+        if (umgr.getAuthorizable("g") != null || umgr.hasMemberSplitSize()) {
             throw new NotExecutableException();
         }
 

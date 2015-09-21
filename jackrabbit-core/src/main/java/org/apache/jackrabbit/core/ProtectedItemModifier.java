@@ -16,10 +16,17 @@
  */
 package org.apache.jackrabbit.core;
 
+import javax.jcr.AccessDeniedException;
+import javax.jcr.ItemExistsException;
+import javax.jcr.Property;
+import javax.jcr.RepositoryException;
+import javax.jcr.Value;
+
 import org.apache.jackrabbit.core.id.NodeId;
 import org.apache.jackrabbit.core.nodetype.NodeTypeImpl;
 import org.apache.jackrabbit.core.retention.RetentionManagerImpl;
 import org.apache.jackrabbit.core.security.AccessManager;
+import org.apache.jackrabbit.core.security.authentication.token.TokenProvider;
 import org.apache.jackrabbit.core.security.authorization.Permission;
 import org.apache.jackrabbit.core.security.authorization.acl.ACLEditor;
 import org.apache.jackrabbit.core.security.user.UserManagerImpl;
@@ -29,12 +36,6 @@ import org.apache.jackrabbit.core.state.NodeState;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
-
-import javax.jcr.AccessDeniedException;
-import javax.jcr.ItemExistsException;
-import javax.jcr.Property;
-import javax.jcr.RepositoryException;
-import javax.jcr.Value;
 
 /**
  * <code>ProtectedItemModifier</code>: An abstract helper class to allow classes
@@ -58,6 +59,7 @@ public abstract class ProtectedItemModifier {
         if (!(UserManagerImpl.class.isAssignableFrom(cl) ||
               RetentionManagerImpl.class.isAssignableFrom(cl) ||
               ACLEditor.class.isAssignableFrom(cl) ||
+              TokenProvider.class.isAssignableFrom(cl) ||
               org.apache.jackrabbit.core.security.authorization.principalbased.ACLEditor.class.isAssignableFrom(cl))) {
             throw new IllegalArgumentException("Only UserManagerImpl, RetentionManagerImpl and ACLEditor may extend from the ProtectedItemModifier");
         }

@@ -16,27 +16,25 @@
  */
 package org.apache.jackrabbit.core.security.authentication.token;
 
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
+import javax.jcr.RepositoryException;
+
+import org.apache.jackrabbit.api.security.authentication.token.TokenCredentials;
 
 /**
- * Test suite that includes all test cases for package org.apache.jackrabbit.core.security.authentication.token.
+ * TokenInfo... TODO
  */
-public class TestAll extends TestCase {
+interface TokenInfo {
 
-    /**
-     * Returns a <code>Test</code> suite that executes all tests inside this
-     * package.
-     */
-    public static Test suite() {
-        TestSuite suite = new TestSuite("org.apache.jackrabbit.core.security.authentication.token tests");
+    String getToken();
 
-        suite.addTestSuite(TokenBasedAuthenticationCompatTest.class);
-        suite.addTestSuite(TokenBasedAuthenticationTest.class);
-        suite.addTestSuite(TokenBasedLoginTest.class);
-        suite.addTestSuite(TokenProviderTest.class);
 
-        return suite;
-    }
+    boolean isExpired(long loginTime);
+
+    boolean remove();
+
+    boolean matches(TokenCredentials tokenCredentials) throws RepositoryException;
+
+    boolean resetExpiration(long loginTime) throws RepositoryException;
+
+    TokenCredentials getCredentials();
 }

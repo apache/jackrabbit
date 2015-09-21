@@ -54,6 +54,7 @@ public class TestAll extends TestCase {
         suite.addTestSuite(UserAccessControlProviderTest.class);
         suite.addTestSuite(DefaultPrincipalProviderTest.class);        
 
+        suite.addTestSuite(PasswordUtilityTest.class);
         return suite;
     }
 }
