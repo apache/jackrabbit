@@ -19,17 +19,20 @@
 
 package org.apache.jackrabbit.stats;
 
+import static java.util.Arrays.fill;
+
 import org.apache.jackrabbit.api.stats.TimeSeries;
 
 /**
  * Time series of the maximum value recorded in a period
  */
 public class TimeSeriesMax implements TimeSeries {
-    private final MaxValue max = new MaxValue(0);
-    private final long[] perSecond = new long[60];
-    private final long[] perMinute = new long[60];
-    private final long[] perHour = new long[7 * 24];
-    private final long[] perWeek = new long[3 * 52];
+    private final MaxValue max;
+    private final long missingValue;
+    private final long[] perSecond;
+    private final long[] perMinute;
+    private final long[] perHour;
+    private final long[] perWeek;
 
     /** Current second (index in {@link #perSecond}) */
     private int seconds;
@@ -43,6 +46,25 @@ public class TimeSeriesMax implements TimeSeries {
     /** Current week (index in {@link #perWeek}) */
     private int weeks;
 
+    public TimeSeriesMax() {
+        this(0);
+    }
+
+    public TimeSeriesMax(long missingValue) {
+        this.missingValue = missingValue;
+        max = new MaxValue(missingValue);
+        perSecond = newArray(60, missingValue);
+        perMinute = newArray(60, missingValue);
+        perHour = newArray(7 * 24, missingValue);
+        perWeek = newArray(3 * 52, missingValue);
+    }
+
+    private static long[] newArray(int size, long value) {
+        long[] array = new long[size];
+        fill(array, value);
+        return array;
+    }
+
     public void recordValue(long value) {
         max.setIfMaximal(value);
     }
@@ -53,7 +75,7 @@ public class TimeSeriesMax implements TimeSeries {
      * second.
      */
     public synchronized void recordOneSecond() {
-        perSecond[seconds++] = max.getAndSetValue(0);
+        perSecond[seconds++] = max.getAndSetValue(missingValue);
         if (seconds == perSecond.length) {
             seconds = 0;
             perMinute[minutes++] = max(perSecond);
@@ -69,6 +91,11 @@ public class TimeSeriesMax implements TimeSeries {
         if (weeks == perWeek.length) {
             weeks = 0;
         }
+    }
+
+    @Override
+    public long getMissingValue() {
+        return missingValue;
     }
 
     @Override
@@ -94,11 +121,13 @@ public class TimeSeriesMax implements TimeSeries {
     /**
      * Returns the maximum of all entries in the given array.
      */
-    private static long max(long[] array) {
-        long max = Long.MIN_VALUE;
+    private long max(long[] array) {
+        long max = missingValue;
         for (long v : array) {
-            if (v > max) {
+            if (max == missingValue) {
                 max = v;
+            } else if (v != missingValue) {
+                max = Math.max(max, v);
             }
         }
         return max;
@@ -120,22 +149,24 @@ public class TimeSeriesMax implements TimeSeries {
         return reverse;
     }
 
-    private static class MaxValue {
-        private long value;
+    private class MaxValue {
+        private long max;
 
-        public MaxValue(long value) {
-            this.value = value;
+        public MaxValue(long max) {
+            this.max = max;
         }
 
         public synchronized long getAndSetValue(long value) {
-            long v = this.value;
-            this.value = value;
+            long v = max;
+            max = value;
             return v;
         }
 
         public synchronized void setIfMaximal(long value) {
-            if (value > this.value) {
-                this.value = value;
+            if (max == missingValue) {
+                max = value;
+            } else if (value != missingValue) {
+                max = Math.max(max, value);
             }
         }
     }

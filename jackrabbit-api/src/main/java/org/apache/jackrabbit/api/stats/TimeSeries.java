@@ -54,4 +54,11 @@ public interface TimeSeries {
      */
     long[] getValuePerWeek();
 
+    /**
+     * The value used to encode missing values i.e. for a period where no value was recorded.
+     *
+     * @return  default value
+     */
+    long getMissingValue();
+
 }

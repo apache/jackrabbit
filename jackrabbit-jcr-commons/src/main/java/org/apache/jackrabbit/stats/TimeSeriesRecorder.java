@@ -18,10 +18,12 @@ package org.apache.jackrabbit.stats;
 
 import static java.lang.Math.round;
 
+import static java.util.Arrays.fill;
+
 import java.util.concurrent.atomic.AtomicLong;
 
-import org.apache.jackrabbit.api.stats.TimeSeries;
 import org.apache.jackrabbit.api.stats.RepositoryStatistics.Type;
+import org.apache.jackrabbit.api.stats.TimeSeries;
 
 /**
  * Recorder of a time series. An instance of this class records (and clears)
@@ -32,41 +34,68 @@ import org.apache.jackrabbit.api.stats.RepositoryStatistics.Type;
 public class TimeSeriesRecorder implements TimeSeries {
 
     /** Value */
-    private final AtomicLong counter = new AtomicLong();
+    private final AtomicLong counter;
 
     /** Whether to reset value each second */
     private final boolean resetValueEachSecond;
 
+    /** The value used to encode missing values */
+    private final long missingValue;
+
     /** Measured value per second over the last minute. */
-    private final long[] valuePerSecond = new long[60];
+    private final long[] valuePerSecond;
 
     /** Measured value per minute over the last hour. */
-    private final long[] valuePerMinute = new long[60];
+    private final long[] valuePerMinute;
 
     /** Measured value per hour over the last week. */
-    private final long[] valuePerHour = new long[7 * 24];
+    private final long[] valuePerHour;
 
     /** Measured value per week over the last three years. */
-    private final long[] valuePerWeek = new long[3 * 52];
+    private final long[] valuePerWeek;
 
     /** Current second (index in {@link #valuePerSecond}) */
-    private int seconds = 0;
+    private int seconds;
 
     /** Current minute (index in {@link #valuePerMinute}) */
-    private int minutes = 0;
+    private int minutes;
 
     /** Current hour (index in {@link #valuePerHour}) */
-    private int hours = 0;
+    private int hours;
 
     /** Current week (index in {@link #valuePerWeek}) */
-    private int weeks = 0;
+    private int weeks;
 
     public TimeSeriesRecorder(Type type) {
         this(type.isResetValueEachSecond());
     }
 
+    /**
+     * Same as {@link #TimeSeriesRecorder(boolean, long)} passing long for the 2nd argument
+     * @param resetValueEachSecond    Whether to reset value each second
+     */
     public TimeSeriesRecorder(boolean resetValueEachSecond) {
+        this(resetValueEachSecond, 0);
+    }
+
+    /**
+     * @param resetValueEachSecond    Whether to reset value each second
+     * @param missingValue            The value used to encode missing values
+     */
+    public TimeSeriesRecorder(boolean resetValueEachSecond, long missingValue) {
         this.resetValueEachSecond = resetValueEachSecond;
+        this.missingValue = missingValue;
+        counter = new AtomicLong(missingValue);
+        valuePerSecond = newArray(60, missingValue);
+        valuePerMinute = newArray(60, missingValue);
+        valuePerHour = newArray(7 * 24, missingValue);
+        valuePerWeek = newArray(3 * 52, missingValue);
+    }
+
+    private static long[] newArray(int size, long value) {
+        long[] array = new long[size];
+        fill(array, value);
+        return array;
     }
 
     /**
@@ -86,7 +115,7 @@ public class TimeSeriesRecorder implements TimeSeries {
      */
     public synchronized void recordOneSecond() {
         if (resetValueEachSecond) {
-            valuePerSecond[seconds++] = counter.getAndSet(0);
+            valuePerSecond[seconds++] = counter.getAndSet(missingValue);
         } else {
             valuePerSecond[seconds++] = counter.get();
         }
@@ -109,18 +138,28 @@ public class TimeSeriesRecorder implements TimeSeries {
 
     //----------------------------------------------------------< TimeSeries >
 
+
+    @Override
+    public long getMissingValue() {
+        return missingValue;
+    }
+
+    @Override
     public synchronized long[] getValuePerSecond() {
         return cyclicCopyFrom(valuePerSecond, seconds);
     }
 
+    @Override
     public synchronized long[] getValuePerMinute() {
         return cyclicCopyFrom(valuePerMinute, minutes);
     }
 
+    @Override
     public synchronized long[] getValuePerHour() {
         return cyclicCopyFrom(valuePerHour, hours);
     }
 
+    @Override
     public synchronized long[] getValuePerWeek() {
         return cyclicCopyFrom(valuePerWeek, weeks);
     }
@@ -135,14 +174,20 @@ public class TimeSeriesRecorder implements TimeSeries {
      */
     private long aggregate(long[] array) {
         long sum = 0;
-        for (int i = 0; i < array.length; i++) {
-
-            sum += array[i];
+        int count = 0;
+        for (long value : array) {
+            if (value != missingValue) {
+                count++;
+                sum += value;
+            }
         }
-        if (resetValueEachSecond) {
+        if (count == 0) {
+            return missingValue;
+        } else if (resetValueEachSecond) {
             return sum;
+        } else {
+            return round((double) sum / count);
         }
-        return round((double) sum / array.length);
     }
 
     /**

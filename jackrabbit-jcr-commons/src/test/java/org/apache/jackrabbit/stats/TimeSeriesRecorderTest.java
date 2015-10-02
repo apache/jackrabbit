@@ -23,9 +23,10 @@ import org.apache.jackrabbit.api.stats.RepositoryStatistics;
 
 public class TimeSeriesRecorderTest extends TestCase {
 
+    private TimeSeriesRecorder recorder;
+
     public void testCounter() {
-        TimeSeriesRecorder recorder = new TimeSeriesRecorder(
-                RepositoryStatistics.Type.SESSION_READ_COUNTER);
+        recorder = new TimeSeriesRecorder(RepositoryStatistics.Type.SESSION_READ_COUNTER);
         AtomicLong counter = recorder.getCounter();
 
         // initial values
@@ -110,12 +111,103 @@ public class TimeSeriesRecorderTest extends TestCase {
         assertValues(recorder.getValuePerWeek(), 13);
     }
 
+    public void testCounterWithMissing() {
+        for (long m : new long[]{-42, 42}) {
+            recorder = new TimeSeriesRecorder(true, m);
+            AtomicLong counter = recorder.getCounter();
+
+            // initial values
+            assertValues(recorder.getValuePerSecond());
+            assertValues(recorder.getValuePerMinute());
+            assertValues(recorder.getValuePerHour());
+            assertValues(recorder.getValuePerWeek());
+
+            // no changes in first second
+            recorder.recordOneSecond();
+            assertValues(recorder.getValuePerSecond());
+            assertValues(recorder.getValuePerMinute());
+            assertValues(recorder.getValuePerHour());
+            assertValues(recorder.getValuePerWeek());
+
+            // one increment in second
+            counter.set(0);
+            counter.incrementAndGet();
+            recorder.recordOneSecond();
+            assertValues(recorder.getValuePerSecond(), 1);
+            assertValues(recorder.getValuePerMinute());
+            assertValues(recorder.getValuePerHour());
+            assertValues(recorder.getValuePerWeek());
+
+            // two increments in second
+            counter.set(0);
+            counter.incrementAndGet();
+            counter.incrementAndGet();
+            recorder.recordOneSecond();
+            assertValues(recorder.getValuePerSecond(), 2, 1);
+            assertValues(recorder.getValuePerMinute());
+            assertValues(recorder.getValuePerHour());
+            assertValues(recorder.getValuePerWeek());
+
+            // no changes in a second
+            recorder.recordOneSecond();
+            assertValues(recorder.getValuePerSecond(), recorder.getMissingValue(), 2, 1);
+            assertValues(recorder.getValuePerMinute());
+            assertValues(recorder.getValuePerHour());
+            assertValues(recorder.getValuePerWeek());
+
+            // ten increments in a second
+            counter.set(0);
+            counter.addAndGet(10);
+            recorder.recordOneSecond();
+            assertValues(recorder.getValuePerSecond(), 10, recorder.getMissingValue(), 2, 1);
+            assertValues(recorder.getValuePerMinute());
+            assertValues(recorder.getValuePerHour());
+            assertValues(recorder.getValuePerWeek());
+
+            // one minute
+            for (int i = 0; i < 60; i++) {
+                recorder.recordOneSecond();
+            }
+            assertValues(recorder.getValuePerSecond());
+            assertValues(recorder.getValuePerMinute(), 13);
+            assertValues(recorder.getValuePerHour());
+            assertValues(recorder.getValuePerWeek());
+
+            // second minute
+            for (int i = 0; i < 60; i++) {
+                recorder.recordOneSecond();
+            }
+            assertValues(recorder.getValuePerSecond());
+            assertValues(recorder.getValuePerMinute(), recorder.getMissingValue(), 13);
+            assertValues(recorder.getValuePerHour());
+            assertValues(recorder.getValuePerWeek());
+
+            // one hour
+            for (int i = 0; i < 60 * 60; i++) {
+                recorder.recordOneSecond();
+            }
+            assertValues(recorder.getValuePerSecond());
+            assertValues(recorder.getValuePerMinute());
+            assertValues(recorder.getValuePerHour(), 13);
+            assertValues(recorder.getValuePerWeek());
+
+            // one week
+            for (int i = 0; i < 7 * 24 * 60 * 60; i++) {
+                recorder.recordOneSecond();
+            }
+            assertValues(recorder.getValuePerSecond());
+            assertValues(recorder.getValuePerMinute());
+            assertValues(recorder.getValuePerHour());
+            assertValues(recorder.getValuePerWeek(), 13);
+        }
+    }
+
     private void assertValues(long[] values, long... expected) {
         for (int i = 0; i < expected.length; i++) {
             assertEquals(expected[i], values[values.length - i - 1]);
         }
         for (int i = expected.length; i < values.length; i++) {
-            assertEquals(0, values[values.length - i - 1]);
+            assertEquals(recorder.getMissingValue(), values[values.length - i - 1]);
         }
     }
 
