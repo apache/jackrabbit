@@ -75,6 +75,10 @@ org.apache.jackrabbit.test.api.query.qom.EquiJoinConditionTest#testLeftOuterJoin
                 <!-- Tests to verify -->
                 org.apache.jackrabbit.test.api.security.RSessionAccessControlPolicyTest#testGetApplicablePolicies
                 org.apache.jackrabbit.test.api.security.RSessionAccessControlPolicyTest#testGetPolicy
+                
+               org.apache.jackrabbit.test.api.query.qom.NodeLocalNameTest#testStringLiteralInvalidName        <!-- OAK-3265, JCR-3913 -->
+               org.apache.jackrabbit.test.api.query.qom.NodeLocalNameTest#testPathLiteral                     <!-- OAK-3265, JCR-3913 -->
+               org.apache.jackrabbit.test.api.query.qom.NodeLocalNameTest#testURILiteral                      <!-- OAK-3265, JCR-3913 -->
               </value>
             </property>
           </systemProperties>
