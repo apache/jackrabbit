@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.stats;
 
+import static java.lang.Math.round;
+
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.jackrabbit.api.stats.TimeSeries;
@@ -140,7 +142,7 @@ public class TimeSeriesRecorder implements TimeSeries {
         if (resetValueEachSecond) {
             return sum;
         }
-        return sum / array.length;
+        return round((double) sum / array.length);
     }
 
     /**
