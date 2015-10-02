@@ -30,31 +30,58 @@ public class TimeSeriesAverage implements TimeSeries {
     /** Value */
     private final TimeSeries counter;
 
+    /** The value used to encode missing values */
+    private final long missingValue;
+
+    /**
+     * Same as {@link #TimeSeriesAverage(TimeSeries, TimeSeries, long)} passing 0 for the 3rd argument.
+     * @param value         {@code TimeSeries} of values
+     * @param counter       {@code TimeSeries} of counts
+     */
     public TimeSeriesAverage(TimeSeries value, TimeSeries counter) {
+        this(value, counter, 0);
+    }
+
+    /**
+     * @param value         {@code TimeSeries} of values
+     * @param counter       {@code TimeSeries} of counts
+     * @param missingValue  The value used to encode missing values
+     */
+    public TimeSeriesAverage(TimeSeries value, TimeSeries counter, long missingValue) {
         this.value = value;
         this.counter = counter;
+        this.missingValue = missingValue;
     }
 
     //----------------------------------------------------------< TimeSeries >
 
+    @Override
+    public long getMissingValue() {
+        return missingValue;
+    }
+
+    @Override
     public long[] getValuePerSecond() {
         long[] values = value.getValuePerSecond();
         long[] counts = counter.getValuePerSecond();
         return divide(values, counts);
     }
 
+    @Override
     public long[] getValuePerMinute() {
         long[] values = value.getValuePerMinute();
         long[] counts = counter.getValuePerMinute();
         return divide(values, counts);
     }
 
+    @Override
     public synchronized long[] getValuePerHour() {
         long[] values = value.getValuePerHour();
         long[] counts = counter.getValuePerHour();
         return divide(values, counts);
     }
 
+    @Override
     public synchronized long[] getValuePerWeek() {
         long[] values = value.getValuePerWeek();
         long[] counts = counter.getValuePerWeek();
@@ -66,20 +93,20 @@ public class TimeSeriesAverage implements TimeSeries {
     /**
      * Per-entry division of two arrays.
      *
-     * @param a array
-     * @param b array
+     * @param v array
+     * @param c array
      * @return result of division
      */
-    private long[] divide(long[] a, long[] b) {
-        long[] c = new long[a.length];
-        for (int i = 0; i < a.length; i++) {
-            if (b[i] != 0) {
-                c[i] = a[i] / b[i];
+    private long[] divide(long[] v, long[] c) {
+        long[] avg = new long[v.length];
+        for (int i = 0; i < v.length; i++) {
+            if (c[i] == 0 || v[i] == value.getMissingValue() || c[i] == counter.getMissingValue()) {
+                avg[i] = missingValue;
             } else {
-                c[i] = 0;
+                avg[i] = v[i] / c[i];
             }
         }
-        return c;
+        return avg;
     }
 
 }
