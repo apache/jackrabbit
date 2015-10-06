@@ -112,7 +112,6 @@ public class LockTest extends AbstractJCRTest {
 
         // lock node
         Lock lock = n1.lock(false, true);
-        String lt = lock.getLockToken();
 
         // assert: isLive must return true
         assertTrue("Lock must be live", lock.isLive());
@@ -124,11 +123,9 @@ public class LockTest extends AbstractJCRTest {
             // get same node
             Node n2 = (Node) otherSuperuser.getItem(n1.getPath());
 
-            Lock lock2 = n2.getLock();
-            assertNotNull("other session must see the lock", lock2);
-            String lt2 = lock2.getLockToken();
-            assertTrue("other session must either not get the lock token, or see the actual one (tokens: " + lt + ", " + lt2 + ")",
-                    lt2 == null || lt2.equals(lt));
+            // assert: lock token must be null for other session
+            assertNull("Lock token must be null for other session",
+                    n2.getLock().getLockToken());
 
             // assert: modifying same node in other session must fail
             try {
