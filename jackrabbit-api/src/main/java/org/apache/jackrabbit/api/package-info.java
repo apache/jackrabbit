@@ -18,5 +18,5 @@
 /**
  * Jackrabbit extensions for JCR core interfaces
  */
-@aQute.bnd.annotation.Version("2.3")
+@aQute.bnd.annotation.Version("2.4")
 package org.apache.jackrabbit.api;

@@ -225,7 +225,7 @@ public interface JackrabbitSession extends Session {
      * @param absPath An absolute path.
      * @return the specified {@code Item} or {@code null}.
      * @throws RepositoryException if another error occurs.
-     * @since 2.10.2
+     * @since 2.11.1
      */
     Item getItemOrNull(final String absPath) throws RepositoryException;
 
@@ -236,7 +236,7 @@ public interface JackrabbitSession extends Session {
      * @param absPath An absolute path.
      * @return the specified {@code Property} or {@code null}.
      * @throws RepositoryException if another error occurs.
-     * @since 2.10.2
+     * @since 2.11.1
      */
     Property getPropertyOrNull(final String absPath) throws RepositoryException;
 
@@ -247,7 +247,7 @@ public interface JackrabbitSession extends Session {
      * @param absPath An absolute path.
      * @return the specified {@code Node} or {@code null}.
      * @throws RepositoryException If another error occurs.
-     * @since 2.10.2
+     * @since 2.11.1
      */
     Node getNodeOrNull(final String absPath) throws RepositoryException;
 
