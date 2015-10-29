@@ -35,6 +35,7 @@ import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.ObjectListing;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
+import com.amazonaws.services.s3.S3ClientOptions;
 import com.amazonaws.util.StringUtils;
 
 /**
@@ -64,7 +65,6 @@ public final class Utils {
 
     public static final String DASH = "-";
 
-    public static final String OBJECT_STORE_ENDPOINT = "https://ooss-d.uhc.com";
     /**
      * private constructor so that class cannot initialized from outside.
      */
@@ -90,11 +90,10 @@ public final class Utils {
             LOG.info("Configuring Amazon Client from property file.");
             AWSCredentials credentials = new BasicAWSCredentials(accessKey,
                 secretKey);
-            //s3service = new AmazonS3Client(credentials,
-            //    getClientConfiguration(prop));
-            s3service = new AmazonS3Client(credentials);
+            s3service = new AmazonS3Client(credentials,
+                getClientConfiguration(prop));
         }
-        /*
+        
         String region = prop.getProperty(S3Constants.S3_REGION);
         String endpoint = null;
         String propEndPoint = prop.getProperty(S3Constants.S3_END_POINT);
@@ -108,15 +107,11 @@ public final class Utils {
             } else {
                 endpoint = S3 + DASH + region + DOT + AWSDOTCOM;
             }
-        }*/
-        /*
-         * setting endpoint to remove latency of redirection. If endpoint is
-         * not set, invocation first goes us standard region, which
-         * redirects it to correct location.
-         */
-        //String endpoint = OBJECT_STORE_ENDPOINT;
-        s3service.setEndpoint(OBJECT_STORE_ENDPOINT);
-        LOG.info("ObjectStore service endpoint [{}] ", OBJECT_STORE_ENDPOINT);
+        }
+        
+        s3service.setEndpoint(endpoint);
+        LOG.info("S3 service endpoint [{}] ", endpoint);
+        s3service.setS3ClientOptions(getS3ClientOptions(prop));
         return s3service;
     }
 
@@ -183,16 +178,22 @@ public final class Utils {
         }
     }
 
+    private static S3ClientOptions getS3ClientOptions(Properties prop) {
+        return new S3ClientOptions().withPathStyleAccess(
+            Boolean.parseBoolean(prop.getProperty(S3Constants.S3_PATH_STYLE_ACCESS))
+        );
+    }
+    
     private static ClientConfiguration getClientConfiguration(Properties prop) {
         int connectionTimeOut = Integer.parseInt(prop.getProperty(S3Constants.S3_CONN_TIMEOUT));
         int socketTimeOut = Integer.parseInt(prop.getProperty(S3Constants.S3_SOCK_TIMEOUT));
         int maxConnections = Integer.parseInt(prop.getProperty(S3Constants.S3_MAX_CONNS));
         int maxErrorRetry = Integer.parseInt(prop.getProperty(S3Constants.S3_MAX_ERR_RETRY));
         ClientConfiguration cc = new ClientConfiguration();
-        /*String protocol = prop.getProperty(S3Constants.S3_CONN_PROTOCOL);
+        String protocol = prop.getProperty(S3Constants.S3_CONN_PROTOCOL);
         if (protocol != null && protocol.equalsIgnoreCase("http")) {
             cc.setProtocol(Protocol.HTTP);
-        }*/
+        }
         cc.setProtocol(Protocol.HTTPS);
         cc.setConnectionTimeout(connectionTimeOut);
         cc.setSocketTimeout(socketTimeOut);
