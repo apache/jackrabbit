@@ -26,17 +26,16 @@ import java.util.Properties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.amazonaws.AmazonClientException;
 import com.amazonaws.ClientConfiguration;
 import com.amazonaws.Protocol;
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.BasicAWSCredentials;
-import com.amazonaws.regions.Regions;
+import com.amazonaws.services.s3.model.Region;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.ObjectListing;
-import com.amazonaws.services.s3.model.Region;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
+import com.amazonaws.services.s3.S3ClientOptions;
 import com.amazonaws.util.StringUtils;
 
 /**
@@ -94,23 +93,13 @@ public final class Utils {
             s3service = new AmazonS3Client(credentials,
                 getClientConfiguration(prop));
         }
+        
         String region = prop.getProperty(S3Constants.S3_REGION);
         String endpoint = null;
         String propEndPoint = prop.getProperty(S3Constants.S3_END_POINT);
         if ((propEndPoint != null) & !"".equals(propEndPoint)) {
             endpoint = propEndPoint;
-        } else { 
-            if (StringUtils.isNullOrEmpty(region)) {
-                com.amazonaws.regions.Region s3Region = Regions.getCurrentRegion();
-                if (s3Region != null) {
-                    region = s3Region.getName();
-                } else {
-                    throw new AmazonClientException(
-                        "parameter ["
-                            + S3Constants.S3_REGION
-                            + "] not configured and cannot be derived from environment");
-                }
-            }
+        } else {
             if (DEFAULT_AWS_BUCKET_REGION.equals(region)) {
                 endpoint = S3 + DOT + AWSDOTCOM;
             } else if (Region.EU_Ireland.toString().equals(region)) {
@@ -119,13 +108,10 @@ public final class Utils {
                 endpoint = S3 + DASH + region + DOT + AWSDOTCOM;
             }
         }
-        /*
-         * setting endpoint to remove latency of redirection. If endpoint is
-         * not set, invocation first goes us standard region, which
-         * redirects it to correct location.
-         */
+        
         s3service.setEndpoint(endpoint);
         LOG.info("S3 service endpoint [{}] ", endpoint);
+        s3service.setS3ClientOptions(getS3ClientOptions(prop));
         return s3service;
     }
 
@@ -192,35 +178,27 @@ public final class Utils {
         }
     }
 
+    private static S3ClientOptions getS3ClientOptions(Properties prop) {
+        return new S3ClientOptions().withPathStyleAccess(
+            Boolean.parseBoolean(prop.getProperty(S3Constants.S3_PATH_STYLE_ACCESS))
+        );
+    }
+    
     private static ClientConfiguration getClientConfiguration(Properties prop) {
         int connectionTimeOut = Integer.parseInt(prop.getProperty(S3Constants.S3_CONN_TIMEOUT));
         int socketTimeOut = Integer.parseInt(prop.getProperty(S3Constants.S3_SOCK_TIMEOUT));
         int maxConnections = Integer.parseInt(prop.getProperty(S3Constants.S3_MAX_CONNS));
         int maxErrorRetry = Integer.parseInt(prop.getProperty(S3Constants.S3_MAX_ERR_RETRY));
-        
-        String protocol = prop.getProperty(S3Constants.S3_CONN_PROTOCOL);
-        String proxyHost = prop.getProperty(S3Constants.PROXY_HOST);
-        String proxyPort = prop.getProperty(S3Constants.PROXY_PORT);
-        
         ClientConfiguration cc = new ClientConfiguration();
-        
+        String protocol = prop.getProperty(S3Constants.S3_CONN_PROTOCOL);
         if (protocol != null && protocol.equalsIgnoreCase("http")) {
             cc.setProtocol(Protocol.HTTP);
         }
-        
-        if (proxyHost != null && !proxyHost.isEmpty()) {
-            cc.setProxyHost(proxyHost);
-        }
-        
-        if (proxyPort != null && !proxyPort.isEmpty()) {
-            cc.setProxyPort(Integer.parseInt(proxyPort));
-        }
-            
+        cc.setProtocol(Protocol.HTTPS);
         cc.setConnectionTimeout(connectionTimeOut);
         cc.setSocketTimeout(socketTimeOut);
         cc.setMaxConnections(maxConnections);
         cc.setMaxErrorRetry(maxErrorRetry);
-        
         return cc;
     }
 

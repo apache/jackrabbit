@@ -96,16 +96,11 @@ public final class S3Constants {
      *  Constant to set SSE_S3 encryption.
      */
     public static final String S3_ENCRYPTION_SSE_S3 = "SSE_S3";
-
+    
     /**
-     *  Constant to set proxy host.
+     * Path style access flag true/false
      */
-    public static final String PROXY_HOST = "proxyHost";
-
-    /**
-     *  Constant to set proxy port.
-     */
-    public static final String PROXY_PORT = "proxyPort";
+    public static final String S3_PATH_STYLE_ACCESS = "pathStyleAccess";
 
     /**
      * private constructor so that class cannot initialized from outside.
