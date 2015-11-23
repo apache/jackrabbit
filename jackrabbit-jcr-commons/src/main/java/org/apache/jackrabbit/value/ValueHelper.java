@@ -16,8 +16,20 @@
  */
 package org.apache.jackrabbit.value;
 
+import static javax.jcr.PropertyType.BINARY;
+import static javax.jcr.PropertyType.BOOLEAN;
+import static javax.jcr.PropertyType.DATE;
+import static javax.jcr.PropertyType.DECIMAL;
+import static javax.jcr.PropertyType.DOUBLE;
+import static javax.jcr.PropertyType.LONG;
+import static javax.jcr.PropertyType.NAME;
+import static javax.jcr.PropertyType.PATH;
+import static javax.jcr.PropertyType.REFERENCE;
+import static javax.jcr.PropertyType.STRING;
 import static javax.jcr.PropertyType.UNDEFINED;
+import static javax.jcr.PropertyType.WEAKREFERENCE;
 
+import com.google.common.collect.ImmutableSet;
 import org.apache.jackrabbit.util.Base64;
 import org.apache.jackrabbit.util.Text;
 import org.apache.jackrabbit.util.TransientFileFactory;
@@ -40,6 +52,9 @@ import java.io.FilterInputStream;
 import java.io.OutputStream;
 import java.io.BufferedOutputStream;
 import java.net.URI;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * The <code>ValueHelper</code> class provides several <code>Value</code>
@@ -53,6 +68,36 @@ public class ValueHelper {
     private ValueHelper() {
     }
 
+    private static final Map<Integer, Set<Integer>> SUPPORTED_CONVERSIONS = new HashMap<Integer, Set<Integer>>();
+    static {
+        SUPPORTED_CONVERSIONS.put(DATE, ImmutableSet.of(STRING, BINARY, DOUBLE, DECIMAL, LONG));
+        SUPPORTED_CONVERSIONS.put(DOUBLE, ImmutableSet.of(STRING, BINARY, DECIMAL, DATE, LONG));
+        SUPPORTED_CONVERSIONS.put(DECIMAL, ImmutableSet.of(STRING, BINARY, DOUBLE, DATE, LONG));
+        SUPPORTED_CONVERSIONS.put(LONG, ImmutableSet.of(STRING, BINARY, DECIMAL, DATE, DOUBLE));
+        SUPPORTED_CONVERSIONS.put(BOOLEAN, ImmutableSet.of(STRING, BINARY));
+        SUPPORTED_CONVERSIONS.put(NAME, ImmutableSet.of(STRING, BINARY, PATH, PropertyType.URI));
+        SUPPORTED_CONVERSIONS.put(PATH, ImmutableSet.of(STRING, BINARY, NAME, PropertyType.URI));
+        SUPPORTED_CONVERSIONS.put(PropertyType.URI, ImmutableSet.of(STRING, BINARY, NAME, PATH));
+        SUPPORTED_CONVERSIONS.put(REFERENCE, ImmutableSet.of(STRING, BINARY, WEAKREFERENCE));
+        SUPPORTED_CONVERSIONS.put(WEAKREFERENCE, ImmutableSet.of(STRING, BINARY, REFERENCE));
+    }
+
+    public static boolean isSupportedConversion(int fromType, int toType) {
+        if (fromType == toType) {
+            return true;
+        } else if (STRING == fromType || BINARY == fromType) {
+            return true;
+        } else {
+            return SUPPORTED_CONVERSIONS.containsKey(fromType) && SUPPORTED_CONVERSIONS.get(fromType).contains(toType);
+        }
+    }
+
+    public static void checkSupportedConversion(int fromType, int toType) throws ValueFormatException {
+        if (!isSupportedConversion(fromType, toType)) {
+            throw new ValueFormatException("Unsupported conversion from '" + PropertyType.nameFromValue(fromType) + "' to '" + PropertyType.nameFromValue(toType) + '\'');
+        }
+    }
+
     /**
      * @param srcValue
      * @param targetType
@@ -62,7 +107,7 @@ public class ValueHelper {
      * @see #convert(Value, int, ValueFactory)
      */
     public static Value convert(String srcValue, int targetType, ValueFactory factory)
-        throws ValueFormatException, IllegalArgumentException {
+            throws ValueFormatException, IllegalArgumentException {
         if (srcValue == null) {
             return null;
         } else {
@@ -78,7 +123,7 @@ public class ValueHelper {
      * @throws IllegalArgumentException
      */
     public static Value convert(InputStream srcValue, int targetType, ValueFactory factory)
-        throws ValueFormatException, IllegalArgumentException {
+            throws ValueFormatException, IllegalArgumentException {
         if (srcValue == null) {
             return null;
         } else {
@@ -562,7 +607,7 @@ public class ValueHelper {
      * @throws IllegalStateException
      */
     public static Value copy(Value srcValue, ValueFactory factory)
-        throws IllegalStateException {
+            throws IllegalStateException {
         if (srcValue == null) {
             return null;
         }
@@ -618,7 +663,7 @@ public class ValueHelper {
      * @throws IllegalStateException
      */
     public static Value[] copy(Value[] srcValues, ValueFactory factory)
-        throws IllegalStateException {
+            throws IllegalStateException {
         if (srcValues == null) {
             return null;
         }
