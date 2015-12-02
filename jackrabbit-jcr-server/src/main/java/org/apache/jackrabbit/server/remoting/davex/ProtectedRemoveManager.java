@@ -36,6 +36,10 @@ class ProtectedRemoveManager {
 
     private List<ProtectedItemRemoveHandler> handlers = new ArrayList<ProtectedItemRemoveHandler>();
 
+    ProtectedRemoveManager(){
+
+    }
+
     ProtectedRemoveManager(String config) throws IOException {
 
     	 if (config == null) {
@@ -46,8 +50,7 @@ class ProtectedRemoveManager {
         	 if (file.exists()) {         
  				try {
                     InputStream fis = new FileInputStream(file);
- 					ProtectedRemoveConfig prConfig = new ProtectedRemoveConfig(this);
- 					prConfig.parse(fis);
+                    load(fis);
  				} catch (FileNotFoundException e) {
  					throw new IOException(e.getMessage(), e);
  				}            
@@ -60,6 +63,11 @@ class ProtectedRemoveManager {
         		 }
         	 }        
          }    	 
+    }
+
+    void load(InputStream fis) throws IOException {
+        ProtectedRemoveConfig prConfig = new ProtectedRemoveConfig(this);
+        prConfig.parse(fis);
     }
 
     boolean remove(Session session, String itemPath) throws RepositoryException {
