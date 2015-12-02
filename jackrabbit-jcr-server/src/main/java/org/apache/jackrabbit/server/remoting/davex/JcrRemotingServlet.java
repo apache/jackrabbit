@@ -237,7 +237,7 @@ public abstract class JcrRemotingServlet extends JCRWebdavServerServlet {
 
     /**
      * the 'protectedhandlers-config' init paramter. this parameter contains the XML
-     * configuration file for protected item remove handlers. 
+     * configuration file for protected item remove handlers.
      */
     public static final String INIT_PARAM_PROTECTED_HANDLERS_CONFIG = "protectedhandlers-config";
     
@@ -272,10 +272,22 @@ public abstract class JcrRemotingServlet extends JCRWebdavServerServlet {
         }
 
         String protectedHandlerConfig = getServletConfig().getInitParameter(INIT_PARAM_PROTECTED_HANDLERS_CONFIG);
+        InputStream in = null;
         try {
-            protectedRemoveManager = new ProtectedRemoveManager(protectedHandlerConfig);
+            protectedRemoveManager = new ProtectedRemoveManager();
+            in = getServletContext().getResourceAsStream(protectedHandlerConfig);
+            if (in != null){
+                protectedRemoveManager.load(in);
+            }
         } catch (IOException e) {
-            log.debug("Unable to create ProtectedRemoveManager from " + protectedHandlerConfig + ". " + e.getMessage());
+            log.debug("Unable to create ProtectedRemoveManager from " + protectedHandlerConfig , e);
+        } finally{
+            if (in != null){
+                try {
+                    in.close();
+                } catch (IOException ignore) {
+                }
+            }
         }
 
         // Determine the configured location for temporary files used when
