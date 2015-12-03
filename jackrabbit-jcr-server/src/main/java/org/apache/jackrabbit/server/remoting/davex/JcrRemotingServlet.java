@@ -274,10 +274,13 @@ public abstract class JcrRemotingServlet extends JCRWebdavServerServlet {
         String protectedHandlerConfig = getServletConfig().getInitParameter(INIT_PARAM_PROTECTED_HANDLERS_CONFIG);
         InputStream in = null;
         try {
-            protectedRemoveManager = new ProtectedRemoveManager();
             in = getServletContext().getResourceAsStream(protectedHandlerConfig);
             if (in != null){
+                protectedRemoveManager = new ProtectedRemoveManager();
                 protectedRemoveManager.load(in);
+            } else {
+                //Config might be direct class implementation
+                protectedRemoveManager = new ProtectedRemoveManager(protectedHandlerConfig);
             }
         } catch (IOException e) {
             log.debug("Unable to create ProtectedRemoveManager from " + protectedHandlerConfig , e);
