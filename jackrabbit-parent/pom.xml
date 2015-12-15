@@ -73,7 +73,7 @@
   <!-- B U I L D   S E T T I N G S                                         -->
   <!-- =================================================================== -->
   <prerequisites>
-    <maven>2.0.9</maven>
+    <maven>3.0.0</maven>
   </prerequisites>
 
   <profiles>

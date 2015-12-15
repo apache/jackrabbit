@@ -19,8 +19,8 @@ You can build Jackrabbit like this:
 
     mvn clean install
 
-You need Maven 2.1 (or higher, Maven 3 recommended) with Java 6 (or higher)
-for the build. For more instructions, please see the documentation at:
+You need Maven 3 (or higher) with Java 6 (or higher) for the
+build. For more instructions, please see the documentation at:
 
    http://jackrabbit.apache.org/building-jackrabbit.html
 
