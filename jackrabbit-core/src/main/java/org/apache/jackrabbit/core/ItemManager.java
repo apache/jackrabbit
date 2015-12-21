@@ -381,7 +381,7 @@ public class ItemManager implements ItemStateListener {
             try {
                 state = sism.getItemState(itemId);
             } catch (NoSuchItemStateException nsise) {
-                throw new ItemNotFoundException(itemId.toString());
+                throw new ItemNotFoundException(itemId.toString(), nsise);
             } catch (ItemStateException ise) {
                 String msg = "failed to retrieve item state of item " + itemId;
                 log.error(msg, ise);

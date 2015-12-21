@@ -58,6 +58,8 @@ public class TestAll extends TestCase {
         suite.addTestSuite(ConcurrentReorderTest.class);
         suite.addTestSuite(ConcurrentAddRemoveNodeTest.class);
 
+        suite.addTestSuite(LostFromCacheIssueTest.class);
+
         // TODO: These tests pass, but they cause some instability in other
         // parts of the test suite, most likely due to uncleaned test data
         if (Boolean.getBoolean("org.apache.jackrabbit.test.integration")) {
