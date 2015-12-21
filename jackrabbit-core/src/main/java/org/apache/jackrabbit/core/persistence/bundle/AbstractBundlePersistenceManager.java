@@ -639,9 +639,8 @@ public abstract class AbstractBundlePersistenceManager implements
                 bundle.update((NodeState) state);
             } else {
                 PropertyId id = (PropertyId) state.getId();
-                // skip redundant primaryType, mixinTypes and uuid properties
+                // skip redundant primaryType and uuid properties
                 if (id.getName().equals(JCR_PRIMARYTYPE)
-                    || id.getName().equals(JCR_MIXINTYPES)
                     || id.getName().equals(JCR_UUID)) {
                     continue;
                 }
@@ -687,9 +686,8 @@ public abstract class AbstractBundlePersistenceManager implements
         for (ItemState state : changeLog.addedStates()) {
             if (!state.isNode()) {
                 PropertyId id = (PropertyId) state.getId();
-                // skip primaryType pr mixinTypes properties
+                // skip primaryType and uuid properties
                 if (id.getName().equals(JCR_PRIMARYTYPE)
-                    || id.getName().equals(JCR_MIXINTYPES)
                     || id.getName().equals(JCR_UUID)) {
                     continue;
                 }

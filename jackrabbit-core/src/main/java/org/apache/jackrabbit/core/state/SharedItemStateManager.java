@@ -264,6 +264,7 @@ public class SharedItemStateManager
             }
         }
 
+        Exception ex = null;
         ISMLocking.ReadLock readLock = acquireReadLock(id);
         try {
             // check internal first
@@ -273,6 +274,7 @@ public class SharedItemStateManager
             // exception-for-control-flow performance hit here, as almost
             // all performance-critical content is non-virtual. With this
             // catch we can avoid an extra hasNonVirtualItemState() call.
+            ex = e;
         } finally {
             readLock.release();
         }
@@ -284,7 +286,8 @@ public class SharedItemStateManager
             }
         }
 
-        throw new NoSuchItemStateException(id.toString());
+        String message = id.toString();
+        throw ex == null ? new NoSuchItemStateException(message) : new NoSuchItemStateException(message, ex);
     }
 
     /**
