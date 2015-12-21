@@ -306,7 +306,6 @@ public class NodePropBundle {
      */
     public void addProperty(PropertyEntry entry) {
         assert !NameConstants.JCR_PRIMARYTYPE.equals(entry.getName());
-        assert !NameConstants.JCR_MIXINTYPES.equals(entry.getName());
         assert !NameConstants.JCR_UUID.equals(entry.getName());
         properties.put(entry.getName(), entry);
     }

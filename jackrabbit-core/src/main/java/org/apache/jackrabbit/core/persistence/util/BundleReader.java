@@ -248,7 +248,6 @@ class BundleReader {
             NodePropBundle.PropertyEntry pState = readPropertyEntry(pId);
             // skip redundant primaryType, mixinTypes and uuid properties
             if (!name.equals(NameConstants.JCR_PRIMARYTYPE)
-                    && !name.equals(NameConstants.JCR_MIXINTYPES)
                     && !name.equals(NameConstants.JCR_UUID)) {
                 bundle.addProperty(pState);
             }
