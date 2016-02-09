@@ -16,21 +16,19 @@
  */
 package org.apache.jackrabbit.core;
 
-import java.io.File;
-import java.io.InputStream;
+import javax.jcr.NamespaceException;
 import javax.jcr.NamespaceRegistry;
 import javax.jcr.Node;
+import javax.jcr.PathNotFoundException;
 import javax.jcr.Property;
-import javax.jcr.Session;
-import javax.jcr.SimpleCredentials;
+import javax.jcr.RepositoryException;
 import javax.jcr.Workspace;
 import javax.jcr.nodetype.NodeTypeManager;
 
-import junit.framework.TestCase;
-import org.apache.jackrabbit.core.RepositoryImpl;
-import org.apache.jackrabbit.core.SessionImpl;
+import org.apache.jackrabbit.core.nodetype.InvalidNodeTypeDefException;
 import org.apache.jackrabbit.core.nodetype.NodeTypeManagerImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
+import org.apache.jackrabbit.core.nodetype.xml.Constants;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.QNodeTypeDefinition;
@@ -39,51 +37,33 @@ import org.apache.jackrabbit.spi.commons.QNodeTypeDefinitionImpl;
 import org.apache.jackrabbit.test.AbstractJCRTest;
 
 public class LostFromCacheIssueTest extends AbstractJCRTest {
-    //public RepositoryImpl repository = null;
-    //public Session session = null;
+
+    private static final String NAMESPACE_PREFIX = "LostFromCacheIssueTestNamespacePrefix";
+    private static final String NAMESPACE_URI = "http://www.onehippo.org/test/1.0";
+
+    private static final String TESTNODE_PATH = "/LostFromCacheIssueTest/node";
+
+    private static final String NODETYPE_1 = NAMESPACE_PREFIX + ":mixin";
+    private static final String NODETYPE_2 = NAMESPACE_PREFIX + ":mxn";
+
     public Property mixinTypes;
 
-//    static private void delete(File path) {
-//        if(path.exists()) {
-//            if(path.isDirectory()) {
-//                File[] files = path.listFiles();
-//                for(int i=0; i<files.length; i++)
-//                    delete(files[i]);
-//            }
-//            path.delete();
-//        }
-//    }
-//
-//    static private void clear() {
-//        String[] files = new String[] { ".lock", "repository", "version", "workspaces" };
-//        for(int i=0; i<files.length; i++) {
-//            File file = new File(files[i]);
-//            delete(file);
-//        }
-//    }
-
     public void setUp() throws Exception {
-//        org.apache.jackrabbit.core.config.RepositoryConfig repoConfig = null;
-//        InputStream config = getClass().getResourceAsStream("jackrabbit.xml");
-//        String path = ".";
-//
-//        clear();
 
         super.setUp();
 
-        //repoConfig = org.apache.jackrabbit.core.config.RepositoryConfig.create(config, path);
-        //repository = org.apache.jackrabbit.core.RepositoryImpl.create(repoConfig);
-        //Session session = repository.login(new SimpleCredentials("admin", "admin".toCharArray()));
-        Session session = superuser;
-
         System.err.println("Registering namespace and node types...");
-        Workspace workspace = session.getWorkspace();
+        Workspace workspace = superuser.getWorkspace();
         NamespaceRegistry namespaceRegistry = workspace.getNamespaceRegistry();
         NodeTypeManager ntmgr = workspace.getNodeTypeManager();
         NodeTypeRegistry nodetypeRegistry = ((NodeTypeManagerImpl)ntmgr).getNodeTypeRegistry();
-        namespaceRegistry.registerNamespace("myprefix", "http://www.onehippo.org/test/1.0");
+        try {
+            namespaceRegistry.registerNamespace(NAMESPACE_PREFIX, NAMESPACE_URI);
+        } catch (NamespaceException ignore) {
+            //already exists
+        }
         QNodeTypeDefinition nodeTypeDefinition = new QNodeTypeDefinitionImpl(
-                ((SessionImpl)session).getQName("test:mixin"),
+                ((SessionImpl)superuser).getQName(NODETYPE_1),
                 Name.EMPTY_ARRAY,
                 Name.EMPTY_ARRAY,
                 true,
@@ -94,9 +74,13 @@ public class LostFromCacheIssueTest extends AbstractJCRTest {
                 QPropertyDefinition.EMPTY_ARRAY,
                 QNodeDefinition.EMPTY_ARRAY
                 );
-        nodetypeRegistry.registerNodeType(nodeTypeDefinition);
+        try {
+            nodetypeRegistry.registerNodeType(nodeTypeDefinition);
+        } catch (InvalidNodeTypeDefException ignore) {
+            //already exists
+        }
         nodeTypeDefinition = new QNodeTypeDefinitionImpl(
-                ((SessionImpl)session).getQName("test:mxn"),
+                ((SessionImpl)superuser).getQName(NODETYPE_2),
                 Name.EMPTY_ARRAY,
                 Name.EMPTY_ARRAY,
                 true,
@@ -107,42 +91,58 @@ public class LostFromCacheIssueTest extends AbstractJCRTest {
                 QPropertyDefinition.EMPTY_ARRAY,
                 QNodeDefinition.EMPTY_ARRAY
                 );
-        nodetypeRegistry.registerNodeType(nodeTypeDefinition);
+        try {
+            nodetypeRegistry.registerNodeType(nodeTypeDefinition);
+        } catch (InvalidNodeTypeDefException ignore) {
+            //already exists
+        }
 
-        /*System.err.println("Initializing tree...");
-        Node node = session.getRootNode();
-        node = node.addNode("test", "nt:unstructured");
-        buildTree(node, 2, 2, 10, 96, 0);
-        session.save();*/
-        session.getRootNode().addNode("test").addNode("node");
-        session.save();
-
-//        session.logout();
-//        this.session = repository.login(new SimpleCredentials("admin", "admin".toCharArray()));
+        getOrCreate(superuser.getRootNode(), TESTNODE_PATH);
+        superuser.save();
     }
 
-//    public void tearDown() throws Exception {
-//        if (session != null) {
-//            session.logout();
-//        }
-//        if (repository != null) {
-//            repository.shutdown();
-//        }
-//    }
+    private static Node getOrCreate(Node parent, String path) throws RepositoryException {
+        if (parent == null || path == null || path.trim().isEmpty()) {
+            throw new IllegalArgumentException("Missing `parent` or `path`");
+        }
+
+        String p = path;
+        if (path.startsWith("/")) {
+            p = path.substring(1);
+        }
+
+        Node node = null;
+        try {
+            node = parent.getNode(p);
+        } catch (PathNotFoundException e) {
+            // swallowing exception
+        }
+
+        if (node == null) {
+            // if null is not there and therefore creating it
+            for (String n : p.split("/")) {
+                if (node == null) {
+                    node = parent.addNode(n);
+                } else {
+                    node = node.addNode(n);
+                }
+            }
+        }
+
+        return node;
+    }
 
     public void testIssue() throws Exception {
-        String path = "/test/node";
-        Session session = superuser;
-        Node node = session.getRootNode().getNode(path.substring(1));
-        node.addMixin("test:mxn");
+        Node node = superuser.getRootNode().getNode(TESTNODE_PATH.substring(1));
+        node.addMixin(NODETYPE_2);
         mixinTypes = node.getProperty("jcr:mixinTypes");
-        session.save();
-        node.addMixin("test:mixin");
-        session.save();
-        node.removeMixin("test:mxn");
-        node.removeMixin("test:mixin");
-        session.save();
-        node.addMixin("test:mixin");
-        session.save();
+        superuser.save();
+        node.addMixin(NODETYPE_1);
+        superuser.save();
+        node.removeMixin(NODETYPE_2);
+        node.removeMixin(NODETYPE_1);
+        superuser.save();
+        node.addMixin(NODETYPE_1);
+        superuser.save();
     }
 }
