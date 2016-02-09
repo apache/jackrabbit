@@ -61,9 +61,9 @@
   </modules>
 
   <scm>
-    <connection>scm:svn:http://svn.apache.org/repos/asf/jackrabbit/trunk</connection>
-    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/jackrabbit/trunk</developerConnection>
-    <url>http://svn.apache.org/viewvc/jackrabbit/trunk</url>
+    <connection>scm:svn:http://svn.apache.org/repos/asf/jackrabbit/branches/2.12</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/jackrabbit/branches/2.12</developerConnection>
+    <url>http://svn.apache.org/repos/asf/jackrabbit/branches/2.12</url>
   </scm>
 
   <build>
