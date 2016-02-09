@@ -28,7 +28,6 @@ import javax.jcr.nodetype.NodeTypeManager;
 import org.apache.jackrabbit.core.nodetype.InvalidNodeTypeDefException;
 import org.apache.jackrabbit.core.nodetype.NodeTypeManagerImpl;
 import org.apache.jackrabbit.core.nodetype.NodeTypeRegistry;
-import org.apache.jackrabbit.core.nodetype.xml.Constants;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.QNodeDefinition;
 import org.apache.jackrabbit.spi.QNodeTypeDefinition;
@@ -52,7 +51,6 @@ public class LostFromCacheIssueTest extends AbstractJCRTest {
 
         super.setUp();
 
-        System.err.println("Registering namespace and node types...");
         Workspace workspace = superuser.getWorkspace();
         NamespaceRegistry namespaceRegistry = workspace.getNamespaceRegistry();
         NodeTypeManager ntmgr = workspace.getNodeTypeManager();
