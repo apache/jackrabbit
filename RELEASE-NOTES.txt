@@ -1,41 +1,32 @@
-Release Notes -- Apache Jackrabbit -- Version 2.11.3
+Release Notes -- Apache Jackrabbit -- Version 2.12.0
 
 Introduction
 ------------
 
-This is Apache Jackrabbit(TM) 2.11.3, a fully compliant implementation of the
+This is Apache Jackrabbit(TM) 2.12.0, a fully compliant implementation of the
 Content Repository for Java(TM) Technology API, version 2.0 (JCR 2.0) as
 specified in the Java Specification Request 283 (JSR 283).
 
-Apache Jackrabbit 2.11.3 is an unstable release cut directly from
-Jackrabbit trunk, with a focus on new features and other
-improvements. For production use we recommend the latest stable 2.10.x
-release.
+Apache Jackrabbit 2.12.0 is an incremental feature release based on
+and compatible with earlier stable Jackrabbit 2.x releases. Jackrabbit
+2.12.x releases are considered stable and targeted for production use.
 
-Changes in Jackrabbit 2.11.3
+Changes in Jackrabbit 2.12.0
 ----------------------------
 
 Bug
 
-    [JCR-3934] - Error occured while loading protected handler config
-    in JcrRemotingServlet
+    [JCR-2633] - Modified externally exception when modifying
+    mixinTypes with single session
+    [JCR-3937] - jackrabbit-jcr-commons bundle incorrectly has google
+    dependency in Export-Package uses clause
+    [JCR-3948] - LostFromCacheIssueTest failure
+    [JCR-3949] - occasional test failure in
+    RepositoryConfigTest.testAutomaticClusterNodeIdCreation()
 
 Improvement
 
-    [JCR-3914] - Support default aws region
-    [JCR-3924] - Allow release-deploy to skip tests
-
-New Feature
-
-    [JCR-3933] - Extend ValueHelper to check for valid conversion
-
-In addition to the above-mentioned changes, this release contains
-all the changes included up to the Apache Jackrabbit 2.10.x release.
-
-For more detailed information about all the changes in this and other
-Jackrabbit releases, please see the Jackrabbit issue tracker at
-
-    https://issues.apache.org/jira/browse/JCR
+    [JCR-3938] - Require maven 3.x for build
 
 Release Contents
 ----------------
