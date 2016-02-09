@@ -53,6 +53,8 @@ public class DbClusterTestJCR3162 extends JUnitTest {
     private String clusterId1 = UUID.randomUUID().toString();
     private String clusterId2 = UUID.randomUUID().toString();
 
+    private String prevClusterId;
+
     public void setUp() throws Exception {
         deleteAll();
         FileUtils
@@ -66,7 +68,7 @@ public class DbClusterTestJCR3162 extends JUnitTest {
                                 "./src/test/resources/org/apache/jackrabbit/core/cluster/repository-h2.xml"),
                         new File("./target/dbClusterTest/node2/repository.xml"));
 
-        System.setProperty(ClusterNode.SYSTEM_PROPERTY_NODE_ID, clusterId1);
+        prevClusterId = System.setProperty(ClusterNode.SYSTEM_PROPERTY_NODE_ID, clusterId1);
         rep1 = RepositoryImpl.create(RepositoryConfig.create(new File(
                 "./target/dbClusterTest/node1")));
 
@@ -75,6 +77,14 @@ public class DbClusterTestJCR3162 extends JUnitTest {
     }
 
     public void tearDown() throws Exception {
+        // revert change to system property
+        if (prevClusterId == null) {
+            System.clearProperty(ClusterNode.SYSTEM_PROPERTY_NODE_ID);
+        }
+        else {
+            System.setProperty(ClusterNode.SYSTEM_PROPERTY_NODE_ID, prevClusterId);
+        }
+
         try {
             rep1.shutdown();
             if (rep2 != null) {
