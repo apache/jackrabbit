@@ -245,6 +245,10 @@ public class RepositoryConfigTest extends TestCase {
     public void testAutomaticClusterNodeIdCreation() throws Exception {
         final long syncDelay = 12;
 
+        assertNull(
+                "This test requires the system property " + ClusterNode.SYSTEM_PROPERTY_NODE_ID + " not to be set; found value: "
+                        + System.getProperty(ClusterNode.SYSTEM_PROPERTY_NODE_ID) + " (leftover from broken unit test?)",
+                System.getProperty(ClusterNode.SYSTEM_PROPERTY_NODE_ID));
         System.setProperty("cluster.syncDelay", Long.toString(syncDelay));
         try {
             File file = new File(DIR, "cluster_node.id");
