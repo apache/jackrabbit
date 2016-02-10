@@ -73,15 +73,20 @@ public class TokenBasedAuthenticationTest extends AbstractJCRTest {
         token = tokenCreds.getToken();
         tokenNode = TokenProvider.getTokenNode(token, adminSession);
 
-        tp = new TokenProvider(adminSession, 1);
+        long ttl = 1; // 1ms expiration
+        tp = new TokenProvider(adminSession, ttl);
         TokenInfo expired = tp.createToken(testUser, sc);
         expiredCreds = expired.getCredentials();
         expiredToken = expiredCreds.getToken();
+        long tokenWillExpireAfter = System.currentTimeMillis() + ttl;
         expiredNode = TokenProvider.getTokenNode(expiredToken, adminSession);
 
         nullTokenAuth = new TokenBasedAuthentication(null, -1, adminSession);
         validTokenAuth = new TokenBasedAuthentication(token, 7200, adminSession);
 
+        while (System.currentTimeMillis() <= tokenWillExpireAfter) {
+            // wait until the token is actually expired
+        }
     }
 
     @Override
