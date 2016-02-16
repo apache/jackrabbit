@@ -22,11 +22,13 @@ import javax.jcr.SimpleCredentials;
 
 import java.util.HashMap;
 
+import junit.framework.TestCase;
+
 /**
  * This case executes tests on the connection request info.
  */
 public final class ConnectionRequestInfoTest
-        extends AbstractTestCase {
+        extends TestCase {
 
     private SimpleCredentials creds1 = new SimpleCredentials("user", "password".toCharArray());
     private SimpleCredentials creds2 = new SimpleCredentials("user", "password".toCharArray());
