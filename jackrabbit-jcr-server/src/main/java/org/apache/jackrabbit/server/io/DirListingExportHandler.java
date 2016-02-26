@@ -146,14 +146,14 @@ public class DirListingExportHandler implements IOHandler, PropertyHandler {
                 String repURL = rep.getDescriptor(Repository.REP_VENDOR_URL_DESC);
                 String repVersion = rep.getDescriptor(Repository.REP_VERSION_DESC);
                 writer.print("<html><head><title>");
-                writer.print(repName);
+                writer.print(Text.encodeIllegalHTMLCharacters(repName));
                 writer.print(" ");
-                writer.print(repVersion);
+                writer.print(Text.encodeIllegalHTMLCharacters(repVersion));
                 writer.print(" ");
-                writer.print(item.getPath());
+                writer.print(Text.encodeIllegalHTMLCharacters(item.getPath()));
                 writer.print("</title></head>");
                 writer.print("<body><h2>");
-                writer.print(item.getPath());
+                writer.print(Text.encodeIllegalHTMLCharacters(item.getPath()));
                 writer.print("</h2><ul>");
                 writer.print("<li><a href=\"..\">..</a></li>");
                 if (item.isNode()) {
@@ -162,21 +162,21 @@ public class DirListingExportHandler implements IOHandler, PropertyHandler {
                         Node child = iter.nextNode();
                         String label = Text.getName(child.getPath());
                         writer.print("<li><a href=\"");
-                        writer.print(Text.escape(label));
+                        writer.print(Text.encodeIllegalHTMLCharacters(Text.escape(label)));
                         if (child.isNode()) {
                             writer.print("/");
                         }
                         writer.print("\">");
-                        writer.print(Text.encodeIllegalXMLCharacters(label));
+                        writer.print(Text.encodeIllegalHTMLCharacters(label));
                         writer.print("</a></li>");
                     }
                 }
                 writer.print("</ul><hr size=\"1\"><em>Powered by <a href=\"");
-                writer.print(repURL);
+                writer.print(Text.encodeIllegalHTMLCharacters(repURL));
                 writer.print("\">");
-                writer.print(repName);
+                writer.print(Text.encodeIllegalHTMLCharacters(repName));
                 writer.print("</a> version ");
-                writer.print(repVersion);
+                writer.print(Text.encodeIllegalHTMLCharacters(repVersion));
                 writer.print("</em></body></html>");
             } catch (RepositoryException e) {
                 // should not occur
@@ -210,14 +210,14 @@ public class DirListingExportHandler implements IOHandler, PropertyHandler {
                 String repURL = rep.getDescriptor(Repository.REP_VENDOR_URL_DESC);
                 String repVersion = rep.getDescriptor(Repository.REP_VERSION_DESC);
                 writer.print("<html><head><title>");
-                writer.print(repName);
+                writer.print(Text.encodeIllegalHTMLCharacters(repName));
                 writer.print(" ");
-                writer.print(repVersion);
+                writer.print(Text.encodeIllegalHTMLCharacters(repVersion));
                 writer.print(" ");
-                writer.print(resource.getResourcePath());
+                writer.print(Text.encodeIllegalHTMLCharacters(resource.getResourcePath()));
                 writer.print("</title></head>");
                 writer.print("<body><h2>");
-                writer.print(resource.getResourcePath());
+                writer.print(Text.encodeIllegalHTMLCharacters(resource.getResourcePath()));
                 writer.print("</h2><ul>");
                 writer.print("<li><a href=\"..\">..</a></li>");
                 DavResourceIterator iter = resource.getMembers();
@@ -225,17 +225,17 @@ public class DirListingExportHandler implements IOHandler, PropertyHandler {
                     DavResource child = iter.nextResource();
                     String label = Text.getName(child.getResourcePath());
                     writer.print("<li><a href=\"");
-                    writer.print(child.getHref());
+                    writer.print(Text.encodeIllegalHTMLCharacters(child.getHref()));
                     writer.print("\">");
-                    writer.print(Text.encodeIllegalXMLCharacters(label));
+                    writer.print(Text.encodeIllegalHTMLCharacters(label));
                     writer.print("</a></li>");
                 }
                 writer.print("</ul><hr size=\"1\"><em>Powered by <a href=\"");
-                writer.print(repURL);
+                writer.print(Text.encodeIllegalHTMLCharacters(repURL));
                 writer.print("\">");
-                writer.print(repName);
+                writer.print(Text.encodeIllegalHTMLCharacters(repName));
                 writer.print("</a> version ");
-                writer.print(repVersion);
+                writer.print(Text.encodeIllegalHTMLCharacters(repVersion));
                 writer.print("</em></body></html>");
             } catch (RepositoryException e) {
                 // should not occur
