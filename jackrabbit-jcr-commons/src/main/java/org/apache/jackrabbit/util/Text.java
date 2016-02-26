@@ -209,13 +209,28 @@ public class Text {
     }
 
     /**
-     * Replaces illegal XML characters in the given string by their corresponding
-     * predefined entity references.
+     * Replaces XML characters in the given string that might need escaping
+     * as XML text or attribute
      *
      * @param text text to be escaped
      * @return a string
      */
     public static String encodeIllegalXMLCharacters(String text) {
+        return encodeMarkupCharacters(text, false);
+    }
+
+    /**
+     * Replaces HTML characters in the given string that might need escaping
+     * as HTML text or attribute
+     *
+     * @param text text to be escaped
+     * @return a string
+     */
+    public static String encodeIllegalHTMLCharacters(String text) {
+        return encodeMarkupCharacters(text, true);
+    }
+
+    private static String encodeMarkupCharacters(String text, boolean isHtml) {
         if (text == null) {
             throw new IllegalArgumentException("null argument");
         }
@@ -250,7 +265,7 @@ public class Text {
             } else if (ch == '"') {
                 buf.append("&quot;");
             } else if (ch == '\'') {
-                buf.append("&apos;");
+                buf.append(isHtml ? "&#39;" : "&apos;");
             }
         }
         if (buf == null) {
