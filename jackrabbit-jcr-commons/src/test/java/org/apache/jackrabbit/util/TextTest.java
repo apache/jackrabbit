@@ -189,4 +189,11 @@ public class TextTest extends TestCase {
         assertEquals("local'name", Text.escapeIllegalJcrChars("local'name"));
         assertEquals("local\"name", Text.escapeIllegalJcrChars("local\"name"));       
     }
+    public void testEscapeXML() {
+        assertEquals("&amp;&lt;&gt;&apos;&quot;", Text.encodeIllegalXMLCharacters("&<>'\""));
+    }
+
+    public void testEscapeHTML() {
+        assertEquals("&amp;&lt;&gt;&#39;&quot;", Text.encodeIllegalHTMLCharacters("&<>'\""));
+    }
 }
