@@ -1,32 +1,22 @@
-Release Notes -- Apache Jackrabbit -- Version 2.12.0
+Release Notes -- Apache Jackrabbit -- Version 2.12.1
 
 Introduction
 ------------
 
-This is Apache Jackrabbit(TM) 2.12.0, a fully compliant implementation of the
+This is Apache Jackrabbit(TM) 2.12.1, a fully compliant implementation of the
 Content Repository for Java(TM) Technology API, version 2.0 (JCR 2.0) as
 specified in the Java Specification Request 283 (JSR 283).
 
-Apache Jackrabbit 2.12.0 is an incremental feature release based on
-and compatible with earlier stable Jackrabbit 2.x releases. Jackrabbit
-2.12.x releases are considered stable and targeted for production use.
+Apache Jackrabbit 2.12.1 is a patch release that contains fixes and
+improvements over Jackrabbit 2.12. Jackrabbit 2.12.x releases are
+considered stable and targeted for production use.
 
-Changes in Jackrabbit 2.12.0
+Changes in Jackrabbit 2.12.1
 ----------------------------
 
 Bug
 
-    [JCR-2633] - Modified externally exception when modifying
-    mixinTypes with single session
-    [JCR-3937] - jackrabbit-jcr-commons bundle incorrectly has google
-    dependency in Export-Package uses clause
-    [JCR-3948] - LostFromCacheIssueTest failure
-    [JCR-3949] - occasional test failure in
-    RepositoryConfigTest.testAutomaticClusterNodeIdCreation()
-
-Improvement
-
-    [JCR-3938] - Require maven 3.x for build
+    [JCR-3950] - CLONE - XSS in DirListingExportHandler
 
 Release Contents
 ----------------
