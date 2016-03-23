@@ -11,22 +11,32 @@ Apache Jackrabbit 2.10.2 is a patch release that contains fixes and
 improvements over Jackrabbit 2.10. Jackrabbit 2.10.x releases are considered
 stable and targeted for production use.
 
-Changes since Jackrabbit 2.10.1
+Changes in Jackrabbit 2.10.2
 -------------------------------
+
+Bug
+
+    [JCR-2633] - Modified externally exception when modifying
+    mixinTypes with single session
+    [JCR-3888] - Possible dead lock in SharedItemStateManager in
+    clustered environment
+    [JCR-3902] - NodeTypeDefDiff incorrectly handles multiple residual
+    property definitions
+    [JCR-3915] - undo incorrect change to lock token test
+    [JCR-3949] - occasional test failure in
+    RepositoryConfigTest.testAutomaticClusterNodeIdCreation()
+    [JCR-3950] - CLONE - XSS in DirListingExportHandler
 
 Improvement
 
-    [JCR-3880] - Allow to add/remove group members by ID
     [JCR-3884] - Add handler to handle webdav based DELETE requests
-    [JCR-3885] - Extend set of Actions in JackrabbitSession to reflect
-    other operations than regular read/write
     [JCR-3886] - [jackrabbit-aws-ext] Support IAM role to connect to
     S3 bucket
-    [JCR-3894] - Add PrincipalSetPolicy interface to Jackrabbit
-    Security API
+    [JCR-3900] - LockTest.testNodeLocked: incorrect assumption about
+    when the lock token can be returned
 
 In addition to the above-mentioned changes, this release contains
-all the changes included up to the Apache Jackrabbit 2.10.1 release.
+all the changes included up to the Apache Jackrabbit 2.10.x release.
 
 For more detailed information about all the changes in this and other
 Jackrabbit releases, please see the Jackrabbit issue tracker at
