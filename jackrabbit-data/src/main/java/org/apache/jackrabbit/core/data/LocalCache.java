@@ -564,13 +564,20 @@ public class LocalCache {
                     for (String fileName : new ArrayList<String>(toBeDeleted)) {
                         cache.remove(fileName);
                     }
+                    int skipCount = 0;
                     Iterator<Map.Entry<String, Long>> itr = cache.entrySet().iterator();
                     while (itr.hasNext()) {
                         Map.Entry<String, Long> entry = itr.next();
                         if (entry.getKey() != null) {
                             if (cache.currentSizeInBytes > cache.cachePurgeResize) {
-                                cache.remove(entry.getKey());
-                                itr = cache.entrySet().iterator();
+                                if (cache.remove(entry.getKey()) != null) {
+                                    itr = cache.entrySet().iterator();
+                                    for (int i = 0; i < skipCount && itr.hasNext(); i++) {
+                                        itr.next();
+                                    }
+                                } else {
+                                    skipCount++;
+                                }
                             } else {
                                 break;
                             }
