@@ -23,6 +23,7 @@ import java.util.Set;
 import javax.jcr.Node;
 import javax.jcr.Property;
 import javax.jcr.RepositoryException;
+import javax.jcr.Session;
 import javax.jcr.observation.Event;
 
 /**
@@ -81,11 +82,12 @@ public class GetInfoTest extends AbstractObservationTest {
         Event[] events = getEvents(new Callable(){
             public void call() throws RepositoryException {
                 prop.setValue("modified");
+                prop.getSession().save();
             }
         }, Event.PROPERTY_CHANGED);
         for (int i = 0; i < events.length; i++) {
             Set<?> unexpectedKeys = getUnexpectedKeys(events[i].getInfo());
-            assertEquals("info map must be empty", 0, unexpectedKeys.size());
+            assertEquals("info map must be empty: " + unexpectedKeys, 0, unexpectedKeys.size());
         }
     }
 
@@ -95,12 +97,14 @@ public class GetInfoTest extends AbstractObservationTest {
         testRootNode.getSession().save();
         Event[] events = getEvents(new Callable(){
             public void call() throws RepositoryException {
+                Session s = prop.getSession();
                 prop.remove();
+                s.save();
             }
         }, Event.PROPERTY_REMOVED);
         for (int i = 0; i < events.length; i++) {
             Set<?> unexpectedKeys = getUnexpectedKeys(events[i].getInfo());
-            assertEquals("info map must be empty", 0, unexpectedKeys.size());
+            assertEquals("info map must be empty: " + unexpectedKeys, 0, unexpectedKeys.size());
         }
     }
 
