@@ -34,7 +34,7 @@ public interface RepositoryStatistics {
         BUNDLE_WRITE_DURATION(true),
         BUNDLE_WRITE_AVERAGE(false),
         BUNDLE_CACHE_ACCESS_COUNTER(true),
-        BUNDLE_CACHE_SIZE_COUNTER(true),
+        BUNDLE_CACHE_SIZE_COUNTER(false),
         BUNDLE_CACHE_MISS_COUNTER(true),
         BUNDLE_CACHE_MISS_DURATION(true),
         BUNDLE_CACHE_MISS_AVERAGE(false),
