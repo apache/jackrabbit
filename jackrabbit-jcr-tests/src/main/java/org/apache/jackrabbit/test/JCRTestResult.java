@@ -64,6 +64,18 @@ public class JCRTestResult extends TestResult {
         this.knownIssuesOverride = JCRTestResult.tokenize("known.issues.override");
     }
 
+    @Override
+    protected void run(TestCase test) {
+        if (isKnownIssue(test)) {
+            // notify listeners but not actually run the test
+            startTest(test);
+            log.println("Known issue: " + test + " (skipped)");
+            endTest(test);
+        } else {
+            super.run(test);
+        }
+    }
+
     /**
      * Only add an error if <code>throwable</code> is not of type
      * {@link NotExecutableException} and the test case is not a known issue.
