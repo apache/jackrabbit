@@ -80,20 +80,23 @@ public class NodeReorderTest extends AbstractObservationTest {
         testRootNode.addNode(nodeName2, testNodeType);
         testRootNode.addNode(nodeName3, testNodeType);
         testRootNode.getSession().save();
-        EventResult addNodeListener = new EventResult(log);
-        EventResult removeNodeListener = new EventResult(log);
-        EventResult moveNodeListener = new EventResult(log);
-        addEventListener(addNodeListener, Event.NODE_ADDED);
-        addEventListener(removeNodeListener, Event.NODE_REMOVED);
-        addEventListener(moveNodeListener, Event.NODE_MOVED);
+        EventResult listener = new EventResult(log);
+        addEventListener(listener, Event.NODE_ADDED | Event.NODE_REMOVED | Event.NODE_MOVED);
         testRootNode.orderBefore(nodeName3, nodeName2);
         testRootNode.getSession().save();
-        added.addAll(Arrays.asList(addNodeListener.getEvents(DEFAULT_WAIT_TIMEOUT)));
-        removed.addAll(Arrays.asList(removeNodeListener.getEvents(DEFAULT_WAIT_TIMEOUT)));
-        moved.addAll(Arrays.asList(moveNodeListener.getEvents(DEFAULT_WAIT_TIMEOUT)));
-        removeEventListener(addNodeListener);
-        removeEventListener(removeNodeListener);
-        removeEventListener(moveNodeListener);
+        List<Event> events = Arrays.asList(listener.getEvents(DEFAULT_WAIT_TIMEOUT));
+        for (Event e : events) {
+            if (e.getType() == Event.NODE_ADDED) {
+                added.add(e);
+            } else if (e.getType() == Event.NODE_REMOVED) {
+                removed.add(e);
+            } else if (e.getType() == Event.NODE_MOVED) {
+                moved.add(e);
+            } else {
+                fail("unexpected event type: " + e.getType());
+            }
+        }
+        removeEventListener(listener);
     }
 
     /**
