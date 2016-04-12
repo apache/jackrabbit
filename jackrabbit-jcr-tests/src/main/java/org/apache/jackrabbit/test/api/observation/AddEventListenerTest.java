@@ -108,7 +108,8 @@ public class AddEventListenerTest extends AbstractObservationTest {
 
         testRootNode.addNode(nodeName1, testNodeType);
         testRootNode.getSession().save();
-        Event[] events = listener.getEvents(DEFAULT_WAIT_TIMEOUT);
+        // only wait one second because we don't expect any event
+        Event[] events = listener.getEvents(1000);
         obsMgr.removeEventListener(listener);
         assertEquals("EventListener must not receive own modification when noLocal=true", 0, events.length);
     }
