@@ -56,6 +56,12 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
      */
     public static final int DEFAULT_UPPER_LIMIT = 10000;
 
+    private static final int MAX_UPPER_LIMIT =
+            Integer.getInteger("org.apache.jackrabbit.core.CachingHierarchyManager.cacheSize", DEFAULT_UPPER_LIMIT);
+
+    private static final int CACHE_STATISTICS_LOG_INTERVAL_MILLIS =
+            Integer.getInteger("org.apache.jackrabbit.core.CachingHierarchyManager.logInterval", 60000);
+
     /**
      * Logger instance
      */
@@ -80,6 +86,11 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
      * Upper limit
      */
     private final int upperLimit;
+
+    /**
+     * Object collecting and logging statistics about the idCache
+     */
+    private final CacheStatistics idCacheStatistics;
 
     /**
      * Head of LRU
@@ -115,7 +126,13 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
     public CachingHierarchyManager(NodeId rootNodeId,
                                    ItemStateManager provider) {
         super(rootNodeId, provider);
-        upperLimit = DEFAULT_UPPER_LIMIT;
+        upperLimit = MAX_UPPER_LIMIT;
+        idCacheStatistics = new CacheStatistics();
+        if (log.isTraceEnabled()) {
+            log.trace("CachingHierarchyManager initialized. Max cache size = {}", upperLimit, new Exception());
+        } else {
+            log.debug("CachingHierarchyManager initialized. Max cache size = {}", upperLimit);
+        }
     }
 
     /**
@@ -546,6 +563,9 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
                 return;
             }
             if (idCache.size() >= upperLimit) {
+
+                idCacheStatistics.log();
+
                 /**
                  * Remove least recently used item. Scans the LRU list from
                  * head to tail and removes the first item that has no children.
@@ -1015,4 +1035,32 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
             return id.toString();
         }
     }
+
+    private final class CacheStatistics {
+
+        private final String id;
+
+        private final ReferenceMap cache;
+
+        private long timeStamp = 0;
+
+        public CacheStatistics() {
+            this.id = cacheMonitor.toString();
+            this.cache = idCache;
+        }
+
+        public void log() {
+            if (log.isDebugEnabled()) {
+                long now = System.currentTimeMillis();
+                final String msg = "Cache id = {};size = {};max = {}";
+                if (log.isTraceEnabled()) {
+                    log.trace(msg, new Object[]{id, this.cache.size(), upperLimit}, new Exception());
+                } else if (now > timeStamp + CACHE_STATISTICS_LOG_INTERVAL_MILLIS) {
+                    timeStamp = now;
+                    log.debug(msg, new Object[]{id, this.cache.size(), upperLimit}, new Exception());
+                }
+            }
+        }
+    }
+
 }
