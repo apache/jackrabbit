@@ -36,6 +36,8 @@ import org.apache.jackrabbit.core.security.authorization.PrivilegeRegistry;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
 import org.apache.jackrabbit.util.Text;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.RepositoryException;
@@ -51,6 +53,15 @@ import java.util.Set;
  */
 class CompiledPermissionsImpl extends AbstractCompiledPermissions implements AccessControlListener {
 
+    private static final Logger LOG = LoggerFactory.getLogger(CompiledPermissionsImpl.class);
+
+    public static final int DEFAULT_MAX_CACHE_SIZE = 5000;
+
+    public static final int MAX_CACHE_SIZE = Integer.getInteger(
+            "org.apache.jackrabbit.core.security.authorization.acl.CompiledPermissionsImpl.cacheSize",
+            DEFAULT_MAX_CACHE_SIZE
+    );
+
     private final List<String> principalNames;
     private final SessionImpl session;
     private final EntryCollector entryCollector;
@@ -61,7 +72,7 @@ class CompiledPermissionsImpl extends AbstractCompiledPermissions implements Acc
      * removing LRU items.
      */
     @SuppressWarnings("unchecked")
-    private final Map<ItemId, Boolean> readCache = new GrowingLRUMap(1024, 5000);
+    private final Map<ItemId, Boolean> readCache = new GrowingLRUMap(1024, MAX_CACHE_SIZE);
 
     private final Object monitor = new Object();
 
@@ -84,6 +95,8 @@ class CompiledPermissionsImpl extends AbstractCompiledPermissions implements Acc
             */
             entryCollector.addListener(this);
         }
+
+        LOG.debug("Read permission cache size = {}", MAX_CACHE_SIZE);
     }
 
     private Result buildResult(NodeImpl node, boolean isExistingNode,
