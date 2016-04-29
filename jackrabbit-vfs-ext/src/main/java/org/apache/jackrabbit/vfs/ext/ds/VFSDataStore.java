@@ -22,7 +22,7 @@ import org.apache.jackrabbit.core.data.CachingDataStore;
 /**
  * Commons VFS based data store.
  */
-public class VfsDataStore extends CachingDataStore {
+public class VFSDataStore extends CachingDataStore {
 
     /**
      * The name of the folder that contains all the data record files. The structure
@@ -53,7 +53,7 @@ public class VfsDataStore extends CachingDataStore {
 
     @Override
     protected Backend createBackend() {
-        VfsBackend backend = new VfsBackend(getBasePath());
+        VFSBackend backend = new VFSBackend(getBasePath());
         backend.setAsyncUploadPoolSize(getAsyncUploadPoolSize());
         return backend;
     }

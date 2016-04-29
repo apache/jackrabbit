@@ -52,9 +52,9 @@ import org.slf4j.LoggerFactory;
 /**
  * A data store backend that stores data on VFS file system.
  */
-public class VfsBackend implements Backend {
+public class VFSBackend implements Backend {
 
-    private static final Logger LOG = LoggerFactory.getLogger(VfsBackend.class);
+    private static final Logger LOG = LoggerFactory.getLogger(VFSBackend.class);
 
     /**
      * The maximum last modified time resolution of the file system.
@@ -78,7 +78,7 @@ public class VfsBackend implements Backend {
 
     private ThreadPoolExecutor asyncWriteExecuter;
 
-    public VfsBackend(final String basePath) {
+    public VFSBackend(final String basePath) {
         this.basePath = basePath;
     }
 
