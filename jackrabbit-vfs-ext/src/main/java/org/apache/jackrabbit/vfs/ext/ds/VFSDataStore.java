@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.vfs.ext.ds;
 
+import java.util.Properties;
+
 import org.apache.jackrabbit.core.data.Backend;
 import org.apache.jackrabbit.core.data.CachingDataStore;
 
@@ -24,37 +26,14 @@ import org.apache.jackrabbit.core.data.CachingDataStore;
  */
 public class VFSDataStore extends CachingDataStore {
 
-    /**
-     * The name of the folder that contains all the data record files. The structure
-     * of content within this directory is controlled by this class.
-     */
-    private String basePath;
-
-    /**
-     * This thread pool count for asynchronous uploads. By default it is 10.
-     */
-    private int asyncUploadPoolSize = 10;
-
-    public String getBasePath() {
-        return basePath;
-    }
-
-    public void setBasePath(String basePath) {
-        this.basePath = basePath;
-    }
-
-    public int getAsyncUploadPoolSize() {
-        return asyncUploadPoolSize;
-    }
-
-    public void setAsyncUploadPoolSize(int asyncUploadPoolSize) {
-        this.asyncUploadPoolSize = asyncUploadPoolSize;
-    }
+    private Properties properties;
 
     @Override
     protected Backend createBackend() {
-        VFSBackend backend = new VFSBackend(getBasePath());
-        backend.setAsyncUploadPoolSize(getAsyncUploadPoolSize());
+        VFSBackend backend = new VFSBackend();
+        if(properties != null){
+            backend.setProperties(properties);
+        }
         return backend;
     }
 
@@ -63,4 +42,10 @@ public class VFSDataStore extends CachingDataStore {
         return "vfs.init.done";
     }
 
+    /**
+     * Properties required to configure the S3Backend
+     */
+    public void setProperties(Properties properties) {
+        this.properties = properties;
+    }
 }

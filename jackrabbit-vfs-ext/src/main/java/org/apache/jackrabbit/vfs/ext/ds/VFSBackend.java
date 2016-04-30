@@ -26,6 +26,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -56,6 +57,10 @@ public class VFSBackend implements Backend {
 
     private static final Logger LOG = LoggerFactory.getLogger(VFSBackend.class);
 
+    public static final String VFS_BACKEND_PATH = "vfsBackendPath";
+
+    public static final String ASYNC_WRITE_POOL_SIZE = "asyncWritePoolSize";
+
     /**
      * The maximum last modified time resolution of the file system.
      */
@@ -63,38 +68,76 @@ public class VFSBackend implements Backend {
 
     private CachingDataStore store;
 
-    /**
-     * The name of the folder that contains all the data record files. The structure
-     * of content within this directory is controlled by this class.
-     */
-    private final String basePath;
+    private String homeDir;
 
-    private volatile FileObject baseFolder;
+    private Properties properties;
 
-    /**
-     * This thread pool count for asynchronous uploads. By default it is 10.
-     */
-    private int asyncUploadPoolSize = 10;
+    private String config;
+
+    private String vfsPath;
+
+    private volatile FileObject vfsPathFolder;
 
     private ThreadPoolExecutor asyncWriteExecuter;
 
-    public VFSBackend(final String basePath) {
-        this.basePath = basePath;
-    }
-
-    public int getAsyncUploadPoolSize() {
-        return asyncUploadPoolSize;
-    }
-
-    public void setAsyncUploadPoolSize(int asyncUploadPoolSize) {
-        this.asyncUploadPoolSize = asyncUploadPoolSize;
-    }
-
     @Override
     public void init(CachingDataStore store, String homeDir, String config) throws DataStoreException {
+        Properties initProps = null;
+        // Check is configuration is already provided. That takes precedence
+        // over config provided via file based config
+        this.config = config;
+        if (this.properties != null) {
+            initProps = this.properties;
+        } else {
+            initProps = new Properties();
+            InputStream in = null;
+            try {
+                in = new FileInputStream(config);
+                initProps.load(in);
+            } catch (IOException e) {
+                throw new DataStoreException(
+                    "Could not initialize VFSBackend from " + config, e);
+            } finally {
+                IOUtils.closeQuietly(in);
+            }
+            this.properties = initProps;
+        }
+        init(store, homeDir, initProps);
+    }
+
+    public void init(CachingDataStore store, String homeDir, Properties prop) throws DataStoreException {
         this.store = store;
+        this.homeDir = homeDir;
+        this.vfsPath = prop.getProperty(VFS_BACKEND_PATH);
+
+        if (this.vfsPath == null || "".equals(this.vfsPath)) {
+            throw new DataStoreException("Could not initialize VFSBackend from "
+                + config + ". [" + VFS_BACKEND_PATH + "] property not found.");
+        }
+
+        try {
+            vfsPathFolder = getFileSystemManager().resolveFile(this.vfsPath);
+
+            if (vfsPathFolder.exists() && vfsPathFolder.getType() != FileType.FOLDER) {
+                throw new DataStoreException("Can not create a directory "
+                    + "because a file exists with the same name: " + this.vfsPath);
+            }
+
+            if (!vfsPathFolder.exists()) {
+                vfsPathFolder.createFolder();
+            }
+        } catch (FileSystemException e) {
+            throw new DataStoreException("Could not resolve or create vfs path folder: "
+                    + vfsPathFolder.getName().getPath());
+        }
+
+        int asyncWritePoolSize = 10;
+        String asyncWritePoolSizeStr = prop.getProperty(ASYNC_WRITE_POOL_SIZE);
+        if (asyncWritePoolSizeStr != null) {
+            asyncWritePoolSize = Integer.parseInt(asyncWritePoolSizeStr);
+        }
         asyncWriteExecuter = (ThreadPoolExecutor) Executors.newFixedThreadPool(
-                getAsyncUploadPoolSize(), new NamedThreadFactory("vfs-write-worker"));
+                asyncWritePoolSize, new NamedThreadFactory("vfs-write-worker"));
     }
 
     @Override
@@ -102,7 +145,7 @@ public class VFSBackend implements Backend {
         FileObject fileObject = getFileObject(identifier, true);
 
         try {
-            return fileObject.getContent().getInputStream();
+            return new LazyFileContentInputStream(fileObject);
         } catch (FileSystemException e) {
             throw new DataStoreException("Could not get input stream from object: " + identifier, e);
         }
@@ -122,12 +165,7 @@ public class VFSBackend implements Backend {
     @Override
     public long getLastModified(DataIdentifier identifier) throws DataStoreException {
         FileObject fileObject = getFileObject(identifier, true);
-
-        try {
-            return fileObject.getContent().getLastModifiedTime();
-        } catch (FileSystemException e) {
-            throw new DataStoreException("Could not get last modified timestamp from object: " + identifier, e);
-        }
+        return getLastModified(fileObject);
     }
 
     @Override
@@ -150,7 +188,7 @@ public class VFSBackend implements Backend {
         List<DataIdentifier> identifiers = new LinkedList<DataIdentifier>();
 
         try {
-            for (FileObject fileObject : baseFolder.getChildren()) {
+            for (FileObject fileObject : vfsPathFolder.getChildren()) {
                 if (!fileObject.exists()) {
                     continue;
                 }
@@ -177,7 +215,6 @@ public class VFSBackend implements Backend {
                 if (touch) {
                     touch(identifier, System.currentTimeMillis(), false, null);
                 }
-
                 return true;
             } else {
                 return false;
@@ -209,7 +246,8 @@ public class VFSBackend implements Backend {
 
     @Override
     public void close() throws DataStoreException {
-        getFileSystemManager().closeFileSystem(baseFolder.getFileSystem());
+        asyncWriteExecuter.shutdownNow();
+        getFileSystemManager().closeFileSystem(vfsPathFolder.getFileSystem());
     }
 
     @Override
@@ -217,7 +255,7 @@ public class VFSBackend implements Backend {
         Set<DataIdentifier> deleteIdSet = new HashSet<DataIdentifier>(30);
 
         try {
-            for (FileObject fileObject : baseFolder.getChildren()) {
+            for (FileObject fileObject : vfsPathFolder.getChildren()) {
                 if (!fileObject.exists()) {
                     continue;
                 }
@@ -238,10 +276,22 @@ public class VFSBackend implements Backend {
         FileObject fileObject = getFileObject(identifier, false);
 
         try {
-            fileObject.delete();
+            if (fileObject.exists() && fileObject.getType() == FileType.FILE) {
+                fileObject.delete();
+                deleteEmptyParentDirs(fileObject);
+            }
         } catch (FileSystemException e) {
             throw new DataStoreException("Object not deleted: " + identifier, e);
         }
+    }
+
+    /**
+     * Properties used to configure the backend. If provided explicitly before
+     * init is invoked then these take precedence
+     * @param properties to configure Backend
+     */
+    public void setProperties(Properties properties) {
+        this.properties = properties;
     }
 
     protected FileSystemManager getFileSystemManager() throws DataStoreException {
@@ -250,32 +300,6 @@ public class VFSBackend implements Backend {
         } catch (FileSystemException e) {
             throw new DataStoreException("Could not get VFS manager.", e);
         }
-    }
-
-    protected FileObject getBaseFolder() throws DataStoreException {
-        FileObject localBaseFolder = baseFolder;
-
-        if (localBaseFolder == null) {
-            synchronized (this) {
-                localBaseFolder = baseFolder;
-
-                if (localBaseFolder == null) {
-                    try {
-                        localBaseFolder = getFileSystemManager().resolveFile(basePath);
-
-                        if (!localBaseFolder.exists() || localBaseFolder.getType() != FileType.FOLDER) {
-                            localBaseFolder.createFolder();
-                        }
-
-                        baseFolder = localBaseFolder;
-                    } catch (FileSystemException e) {
-                        throw new DataStoreException("Could not resolve the base folder at " + basePath, e);
-                    }
-                }
-            }
-        }
-
-        return localBaseFolder;
     }
 
     /**
@@ -300,7 +324,7 @@ public class VFSBackend implements Backend {
         String relPath = sb.toString();
 
         try {
-            FileObject file = baseFolder.resolveFile(relPath);
+            FileObject file = vfsPathFolder.resolveFile(relPath);
 
             if (checkFileExistence) {
                 if (!file.exists()) {
@@ -314,6 +338,45 @@ public class VFSBackend implements Backend {
         } catch (FileSystemException e) {
             throw new DataStoreException("Object not resolved: " + identifier, e);
         }
+    }
+
+    /**
+     * Set the last modified date of a fileObject, if the fileObject is writable.
+     * @param fileObject the file object
+     * @param time the new last modified date
+     * @throws DataStoreException if the fileObject is writable but modifying the date
+     *             fails
+     */
+    private void setLastModified(FileObject fileObject, long time)
+                    throws DataStoreException {
+        try {
+            fileObject.getContent().setLastModifiedTime(time);
+        } catch (FileSystemException e) {
+            throw new DataStoreException(
+                    "An IO Exception occurred while trying to set the last modified date: "
+                        + fileObject.getName().getPath(), e);
+        }
+    }
+
+    /**
+     * Get the last modified date of a file object.
+     * @param file the file object
+     * @return the last modified date
+     * @throws DataStoreException if reading fails
+     */
+    private long getLastModified(FileObject fileObject) throws DataStoreException {
+        long lastModified = 0;
+
+        try {
+            fileObject.getContent().getLastModifiedTime();
+            if (lastModified == 0) {
+                throw new DataStoreException("Failed to read record modified date: " + fileObject.getName().getPath());
+            }
+        } catch (FileSystemException e) {
+            throw new DataStoreException("Failed to read record modified date: " + fileObject.getName().getPath());
+        }
+
+        return lastModified;
     }
 
     private void pushIdentifiersRecursively(List<DataIdentifier> identifiers, FileObject folderObject)
@@ -345,56 +408,26 @@ public class VFSBackend implements Backend {
             asyncUpRes = new AsyncUploadResult(identifier, file);
         }
 
-        InputStream input = null;
-        OutputStream output = null;
-
-        try {
-            input = new FileInputStream(file);
-            output = fileObject.getContent().getOutputStream();
-            IOUtils.copy(input, output);
-        } catch (FileSystemException e) {
-            DataStoreException e2 = new DataStoreException("Could not get output stream to object: " + identifier, e);
-            if (asyncUpRes != null) {
-                asyncUpRes.setException(e2);
-            }
-            throw e2;
-        } catch (IOException e) {
-            DataStoreException e2 = new DataStoreException("Could not copy file to object: " + identifier, e);
-            if (asyncUpRes != null) {
-                asyncUpRes.setException(e2);
-            }
-            throw e2;
-        } finally {
-            if (output != null) {
-                try {
-                    output.close();
-                } catch (IOException e) {
-                    DataStoreException e2 = new DataStoreException("Could not close output stream to object: " + identifier, e); 
-                    if (asyncUpRes != null) {
-                        asyncUpRes.setException(e2);
+        synchronized (this) {
+            try {
+                if (fileObject.exists() && fileObject.getType() == FileType.FILE) {
+                    long now = System.currentTimeMillis();
+                    if (getLastModified(fileObject) < now + ACCESS_TIME_RESOLUTION) {
+                        setLastModified(fileObject, now + ACCESS_TIME_RESOLUTION);
                     }
-                    throw e2;
-                }
-            }
-
-            if (input != null) {
-                try {
-                    input.close();
-                } catch (IOException e) {
-                    DataStoreException e2 = new DataStoreException("Could not close input stream from file: " + identifier, e);
-                    if (asyncUpRes != null) {
-                        asyncUpRes.setException(e2);
-                    }
-                    throw e2;
-                }
-            }
-
-            if (asyncUpRes != null && callback != null) {
-                if (asyncUpRes.getException() != null) {
-                    callback.onAbort(asyncUpRes);
                 } else {
+                    copy(file, fileObject);
+                }
+                if (asyncUpRes != null && callback != null) {
                     callback.onSuccess(asyncUpRes);
                 }
+            } catch (IOException e) {
+                DataStoreException e2 = new DataStoreException("Could not get output stream to object: " + fileObject.getName().getPath(), e);
+                if (asyncUpRes != null && callback != null) {
+                    asyncUpRes.setException(e2);
+                    callback.onFailure(asyncUpRes);
+                }
+                throw e2;
             }
         }
     }
@@ -430,6 +463,27 @@ public class VFSBackend implements Backend {
                     callback.onSuccess(asyncTouchRes);
                 }
             }
+        }
+    }
+
+    private void deleteEmptyParentDirs(FileObject fileObject) {
+        try {
+            FileObject parent = fileObject.getParent();
+            // Only iterate & delete if parent directory of the blob file is
+            // child of the base directory and if it is empty
+            String vfsPathDir = vfsPath + "/";
+            while (parent.getName().getPath().contains(vfsPathDir)) {
+                FileObject[] entries = parent.getChildren();
+                if (entries.length > 0) {
+                    break;
+                }
+                boolean deleted = parent.delete();
+                LOG.debug("Deleted parent [{}] of file [{}]: {}",
+                        new Object[] { parent, fileObject.getName().getPath(), deleted });
+                parent = parent.getParent();
+            }
+        } catch (IOException e) {
+            LOG.warn("Error in parents deletion for " + fileObject.getName().getPath(), e);
         }
     }
 
@@ -477,6 +531,20 @@ public class VFSBackend implements Backend {
                     }
                 }
             }
+        }
+    }
+
+    private void copy(File srcFile, FileObject destFileObject) throws IOException {
+        InputStream input = null;
+        OutputStream output = null;
+
+        try {
+            input = new FileInputStream(srcFile);
+            output = destFileObject.getContent().getOutputStream();
+            IOUtils.copy(input, output);
+        } finally {
+            IOUtils.closeQuietly(output);
+            IOUtils.closeQuietly(input);
         }
     }
 
