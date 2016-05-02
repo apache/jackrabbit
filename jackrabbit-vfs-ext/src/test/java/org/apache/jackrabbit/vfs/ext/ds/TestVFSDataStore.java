@@ -16,10 +16,13 @@
  */
 package org.apache.jackrabbit.vfs.ext.ds;
 
+import java.io.File;
+import java.net.URI;
 import java.util.Properties;
 
 import javax.jcr.RepositoryException;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.jackrabbit.core.data.CachingDataStore;
 import org.apache.jackrabbit.core.data.TestCaseBase;
 import org.slf4j.Logger;
@@ -35,20 +38,42 @@ public class TestVFSDataStore extends TestCaseBase {
 
     protected static final Logger LOG = LoggerFactory.getLogger(TestVFSDataStore.class);
 
-    protected Properties props;
-
-    protected String config;
-
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
-    }
+    private String vfsUri;
 
     @Override
     protected CachingDataStore createDataStore() throws RepositoryException {
         VFSDataStore vfsds = new VFSDataStore();
-        sleep(1000);
+        Properties props = loadProperties("/vfs.properties");
+
+        String uriValue = props.getProperty(VFSBackend.VFS_BACKEND_URI);
+        if (uriValue != null && !"".equals(uriValue.trim())) {
+            vfsUri = uriValue + "/vfsds" + "-"
+                + String.valueOf(randomGen.nextInt(100000)) + "-"
+                + String.valueOf(randomGen.nextInt(100000));
+        } else {
+            vfsUri = new File(new File(dataStoreDir), "vfsds").toURI().toString();
+        }
+        props.setProperty(VFSBackend.VFS_BACKEND_URI, vfsUri);
+        LOG.info("vfsBackendUri [{}] set.", vfsUri);
+        vfsds.setProperties(props);
+        vfsds.init(dataStoreDir);
+
         return vfsds;
+    }
+
+    @Override
+    protected void tearDown() {
+        LOG.info("cleaning vfsUri [{}]", vfsUri);
+        File f = new File(URI.create(vfsUri));
+        try {
+            for (int i = 0; i < 4 && f.exists(); i++) {
+                FileUtils.deleteQuietly(f);
+                Thread.sleep(2000);
+            }
+        } catch (Exception ignore) {
+
+        }
+        super.tearDown();
     }
 
 }

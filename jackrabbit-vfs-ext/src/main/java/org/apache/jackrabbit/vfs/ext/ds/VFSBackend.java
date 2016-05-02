@@ -57,7 +57,7 @@ public class VFSBackend implements Backend {
 
     private static final Logger LOG = LoggerFactory.getLogger(VFSBackend.class);
 
-    public static final String VFS_BACKEND_PATH = "vfsBackendPath";
+    public static final String VFS_BACKEND_URI = "vfsBackendUri";
 
     public static final String ASYNC_WRITE_POOL_SIZE = "asyncWritePoolSize";
 
@@ -74,9 +74,9 @@ public class VFSBackend implements Backend {
 
     private String config;
 
-    private String vfsPath;
+    private String vfsUri;
 
-    private volatile FileObject vfsPathFolder;
+    private volatile FileObject vfsUriFolder;
 
     private ThreadPoolExecutor asyncWriteExecuter;
 
@@ -108,27 +108,27 @@ public class VFSBackend implements Backend {
     public void init(CachingDataStore store, String homeDir, Properties prop) throws DataStoreException {
         this.store = store;
         this.homeDir = homeDir;
-        this.vfsPath = prop.getProperty(VFS_BACKEND_PATH);
+        vfsUri = prop.getProperty(VFS_BACKEND_URI);
 
-        if (this.vfsPath == null || "".equals(this.vfsPath)) {
+        if (vfsUri == null || "".equals(vfsUri)) {
             throw new DataStoreException("Could not initialize VFSBackend from "
-                + config + ". [" + VFS_BACKEND_PATH + "] property not found.");
+                + config + ". [" + VFS_BACKEND_URI + "] property not found.");
         }
 
         try {
-            vfsPathFolder = getFileSystemManager().resolveFile(this.vfsPath);
+            vfsUriFolder = getFileSystemManager().resolveFile(vfsUri);
 
-            if (vfsPathFolder.exists() && vfsPathFolder.getType() != FileType.FOLDER) {
-                throw new DataStoreException("Can not create a directory "
-                    + "because a file exists with the same name: " + this.vfsPath);
+            if (vfsUriFolder.exists() && vfsUriFolder.getType() != FileType.FOLDER) {
+                throw new DataStoreException("Cannot create a folder "
+                    + "because a file exists with the same name: " + vfsUri);
             }
 
-            if (!vfsPathFolder.exists()) {
-                vfsPathFolder.createFolder();
+            if (!vfsUriFolder.exists()) {
+                vfsUriFolder.createFolder();
             }
         } catch (FileSystemException e) {
-            throw new DataStoreException("Could not resolve or create vfs path folder: "
-                    + vfsPathFolder.getName().getPath());
+            throw new DataStoreException("Could not resolve or create vfs uri folder: "
+                    + vfsUriFolder.getName().getPath(), e);
         }
 
         int asyncWritePoolSize = 10;
@@ -142,7 +142,7 @@ public class VFSBackend implements Backend {
 
     @Override
     public InputStream read(DataIdentifier identifier) throws DataStoreException {
-        FileObject fileObject = getFileObject(identifier, true);
+        FileObject fileObject = getExistingFileObject(identifier);
 
         try {
             return new LazyFileContentInputStream(fileObject);
@@ -153,7 +153,7 @@ public class VFSBackend implements Backend {
 
     @Override
     public long getLength(DataIdentifier identifier) throws DataStoreException {
-        FileObject fileObject = getFileObject(identifier, true);
+        FileObject fileObject = getExistingFileObject(identifier);
 
         try {
             return fileObject.getContent().getSize();
@@ -164,7 +164,7 @@ public class VFSBackend implements Backend {
 
     @Override
     public long getLastModified(DataIdentifier identifier) throws DataStoreException {
-        FileObject fileObject = getFileObject(identifier, true);
+        FileObject fileObject = getExistingFileObject(identifier);
         return getLastModified(fileObject);
     }
 
@@ -188,7 +188,7 @@ public class VFSBackend implements Backend {
         List<DataIdentifier> identifiers = new LinkedList<DataIdentifier>();
 
         try {
-            for (FileObject fileObject : vfsPathFolder.getChildren()) {
+            for (FileObject fileObject : vfsUriFolder.getChildren()) {
                 if (!fileObject.exists()) {
                     continue;
                 }
@@ -208,7 +208,7 @@ public class VFSBackend implements Backend {
 
     @Override
     public boolean exists(DataIdentifier identifier, boolean touch) throws DataStoreException {
-        FileObject fileObject = getFileObject(identifier, false);
+        FileObject fileObject = getFileObject(identifier);
 
         try {
             if (fileObject.exists() && fileObject.getType() == FileType.FILE) {
@@ -247,7 +247,7 @@ public class VFSBackend implements Backend {
     @Override
     public void close() throws DataStoreException {
         asyncWriteExecuter.shutdownNow();
-        getFileSystemManager().closeFileSystem(vfsPathFolder.getFileSystem());
+        getFileSystemManager().closeFileSystem(vfsUriFolder.getFileSystem());
     }
 
     @Override
@@ -255,7 +255,7 @@ public class VFSBackend implements Backend {
         Set<DataIdentifier> deleteIdSet = new HashSet<DataIdentifier>(30);
 
         try {
-            for (FileObject fileObject : vfsPathFolder.getChildren()) {
+            for (FileObject fileObject : vfsUriFolder.getChildren()) {
                 if (!fileObject.exists()) {
                     continue;
                 }
@@ -273,7 +273,7 @@ public class VFSBackend implements Backend {
 
     @Override
     public void deleteRecord(DataIdentifier identifier) throws DataStoreException {
-        FileObject fileObject = getFileObject(identifier, false);
+        FileObject fileObject = getFileObject(identifier);
 
         try {
             if (fileObject.exists() && fileObject.getType() == FileType.FILE) {
@@ -296,7 +296,11 @@ public class VFSBackend implements Backend {
 
     protected FileSystemManager getFileSystemManager() throws DataStoreException {
         try {
-            return VFS.getManager();
+            FileSystemManager fileSystemManager = VFS.getManager();
+            if (fileSystemManager == null) {
+                throw new DataStoreException("Could not get the default VFS manager.");
+            }
+            return fileSystemManager;
         } catch (FileSystemException e) {
             throw new DataStoreException("Could not get VFS manager.", e);
         }
@@ -311,7 +315,7 @@ public class VFSBackend implements Backend {
      * @throws FileSystemException if VFS file system exception occurs
      * @throws DataStoreException 
      */
-    protected FileObject getFileObject(DataIdentifier identifier, boolean checkFileExistence) throws DataStoreException {
+    protected FileObject getFileObject(DataIdentifier identifier) throws DataStoreException {
         String idString = identifier.toString();
 
         StringBuilder sb = new StringBuilder(80);
@@ -324,14 +328,29 @@ public class VFSBackend implements Backend {
         String relPath = sb.toString();
 
         try {
-            FileObject file = vfsPathFolder.resolveFile(relPath);
+            return vfsUriFolder.resolveFile(relPath);
+        } catch (FileSystemException e) {
+            throw new DataStoreException("Object not resolved: " + identifier, e);
+        }
+    }
 
-            if (checkFileExistence) {
-                if (!file.exists()) {
-                    throw new DataStoreException("Object not found: " + identifier);
-                } else if (file.getType() != FileType.FILE) {
-                    throw new DataStoreException("Object not in file: " + identifier);
-                }
+    /**
+     * Returns the identified file object. This method implements the pattern
+     * used to avoid problems with too many files in a single folder.
+     *
+     * @param identifier data identifier
+     * @return identified file object
+     * @throws FileSystemException if VFS file system exception occurs
+     * @throws DataStoreException 
+     */
+    protected FileObject getExistingFileObject(DataIdentifier identifier) throws DataStoreException {
+        try {
+            FileObject file = getFileObject(identifier);
+
+            if (!file.exists()) {
+                throw new DataStoreException("Object not found: " + identifier);
+            } else if (file.getType() != FileType.FILE) {
+                throw new DataStoreException("Object not in file: " + identifier);
             }
 
             return file;
@@ -400,7 +419,7 @@ public class VFSBackend implements Backend {
 
     private void write(DataIdentifier identifier, File file, boolean asyncUpload, AsyncUploadCallback callback)
             throws DataStoreException {
-        FileObject fileObject = getFileObject(identifier, true);
+        FileObject fileObject = getFileObject(identifier);
 
         AsyncUploadResult asyncUpRes = null;
 
@@ -433,7 +452,7 @@ public class VFSBackend implements Backend {
     }
 
     private void touch(DataIdentifier identifier, long minModifiedDate, boolean asyncTouch, AsyncTouchCallback callback) throws DataStoreException {
-        FileObject fileObject = getFileObject(identifier, true);
+        FileObject fileObject = getExistingFileObject(identifier);
 
         AsyncTouchResult asyncTouchRes = null;
 
@@ -471,8 +490,8 @@ public class VFSBackend implements Backend {
             FileObject parent = fileObject.getParent();
             // Only iterate & delete if parent directory of the blob file is
             // child of the base directory and if it is empty
-            String vfsPathDir = vfsPath + "/";
-            while (parent.getName().getPath().contains(vfsPathDir)) {
+            String vfsUriDir = vfsUri + "/";
+            while (parent.getName().getPath().contains(vfsUriDir)) {
                 FileObject[] entries = parent.getChildren();
                 if (entries.length > 0) {
                     break;
