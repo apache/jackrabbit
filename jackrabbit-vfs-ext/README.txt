@@ -13,6 +13,35 @@ included here, run the following command with Maven 3:
     mvn clean install
 
 ====================================================
+Unit Test Instructions
+====================================================
+
+1. Testing with the default local file system
+
+    By default, the unit tests use the local file system as backend storage.
+    You can run the unit tests with the default temporary local file system like the following:
+
+        mvn clean test
+
+        or
+
+        mvn clean test -Dconfig=src/test/resources/vfs.properties
+
+2. Testing with WebDAV file system
+
+    You can run the unit tests with WebDAV backend file system like the following:
+
+        mvn clean test -Dconfig=src/test/resources/vfs-webdav.properties
+
+    Tip: You can install/run WsgiDAV server (http://wsgidav.readthedocs.io/en/latest/) like the following:
+
+        wsgidav --host=0.0.0.0 --port=8888 --root=/tmp/davroot
+
+3. Testing with HDFS file system
+
+    TODO
+
+====================================================
 Configuration Instructions
 ====================================================
 

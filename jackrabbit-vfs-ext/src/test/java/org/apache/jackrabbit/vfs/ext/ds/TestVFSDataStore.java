@@ -17,10 +17,12 @@
 package org.apache.jackrabbit.vfs.ext.ds;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.util.Properties;
 
 import javax.jcr.RepositoryException;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.vfs2.AllFileSelector;
 import org.apache.commons.vfs2.FileObject;
 import org.apache.jackrabbit.core.data.CachingDataStore;
@@ -36,7 +38,7 @@ import org.slf4j.LoggerFactory;
  * For e.g. -Dconfig=/opt/repository/vfs.properties.
  * </P>
  * <P>
- * Sample VFS properties located at src/test/resources/vfs.properties
+ * Sample VFS properties located at src/test/resources/vfs*.properties
  * </P>
  */
 public class TestVFSDataStore extends TestCaseBase {
@@ -52,9 +54,23 @@ public class TestVFSDataStore extends TestCaseBase {
     @Override
     protected void setUp() throws Exception {
         super.setUp();
-
         String configProp = System.getProperty("config");
-        
+        if (configProp != null && !"".equals(configProp)) {
+            Properties props = new Properties();
+            File configFile = new File(configProp);
+            if (configFile.isFile()) {
+                FileInputStream fis = null;
+                try {
+                    fis = new FileInputStream(configFile);
+                    props.load(fis);
+                } finally {
+                    IOUtils.closeQuietly(fis);
+                }
+            } else {
+                props = loadProperties(configProp);
+            }
+            vfsBackendProps = props;
+        }
     }
 
     @Override

@@ -57,6 +57,12 @@
             <artifactId>jackrabbit-data</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <!-- For WebDAV client against WebDAV server backend -->
+        <dependency>
+            <groupId>org.apache.jackrabbit</groupId>
+            <artifactId>jackrabbit-webdav</artifactId>
+            <version>${project.version}</version>
+        </dependency>
         <dependency>
             <groupId>org.apache.jackrabbit</groupId>
             <artifactId>jackrabbit-data</artifactId>
