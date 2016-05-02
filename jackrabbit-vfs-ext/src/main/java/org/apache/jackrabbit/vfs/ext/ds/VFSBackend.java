@@ -334,16 +334,7 @@ public class VFSBackend implements Backend {
         }
     }
 
-    /**
-     * Returns the identified file object. This method implements the pattern
-     * used to avoid problems with too many files in a single folder.
-     *
-     * @param identifier data identifier
-     * @return identified file object
-     * @throws FileSystemException if VFS file system exception occurs
-     * @throws DataStoreException 
-     */
-    protected FileObject getExistingFileObject(DataIdentifier identifier) throws DataStoreException {
+    private FileObject getExistingFileObject(DataIdentifier identifier) throws DataStoreException {
         try {
             FileObject file = getFileObject(identifier);
 
@@ -366,7 +357,7 @@ public class VFSBackend implements Backend {
      * @throws DataStoreException if the fileObject is writable but modifying the date
      *             fails
      */
-    private void setLastModified(FileObject fileObject, long time)
+    private static void setLastModified(FileObject fileObject, long time)
                     throws DataStoreException {
         try {
             fileObject.getContent().setLastModifiedTime(time);
@@ -383,11 +374,12 @@ public class VFSBackend implements Backend {
      * @return the last modified date
      * @throws DataStoreException if reading fails
      */
-    private long getLastModified(FileObject fileObject) throws DataStoreException {
+    private static long getLastModified(FileObject fileObject) throws DataStoreException {
         long lastModified = 0;
 
         try {
-            fileObject.getContent().getLastModifiedTime();
+            lastModified = fileObject.getContent().getLastModifiedTime();
+
             if (lastModified == 0) {
                 throw new DataStoreException("Failed to read record modified date: " + fileObject.getName().getPath());
             }
@@ -461,19 +453,15 @@ public class VFSBackend implements Backend {
         }
 
         try {
-            FileContent content = fileObject.getContent();
-
             long now = System.currentTimeMillis();
-
-            if (minModifiedDate > 0 && minModifiedDate > content.getLastModifiedTime()) {
-                content.setLastModifiedTime(now + ACCESS_TIME_RESOLUTION);
+            if (minModifiedDate > 0 && minModifiedDate > getLastModified(fileObject)) {
+                setLastModified(fileObject, now + ACCESS_TIME_RESOLUTION);
             }
-        } catch (FileSystemException e) {
-            DataStoreException e2 = new DataStoreException("Object not resolved: " + identifier, e);
+        } catch (DataStoreException e) {
             if (asyncTouchRes != null) {
-                asyncTouchRes.setException(e2);
+                asyncTouchRes.setException(e);
             }
-            throw e2;
+            throw e;
         } finally {
             if (asyncTouchRes != null && callback != null) {
                 if (asyncTouchRes.getException() != null) {
@@ -528,7 +516,7 @@ public class VFSBackend implements Backend {
                 }
 
             } else if (type == FileType.FILE) {
-                long lastModified = fileObject.getContent().getLastModifiedTime();
+                long lastModified = getLastModified(fileObject);
 
                 if (lastModified < timestamp) {
                     identifier = new DataIdentifier(fileObject.getName().getBaseName());
