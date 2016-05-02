@@ -16,23 +16,22 @@
  */
 package org.apache.jackrabbit.vfs.ext;
 
-import org.apache.jackrabbit.vfs.ext.ds.TestVFSDataStore;
-
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
-
 /**
- * Test suite that includes all test cases for the this module.
+ * Defined VFS Extension constants.
  */
-public class TestAll extends TestCase {
+public class VFSConstants {
 
     /**
-     * <code>TestAll</code> suite that executes all tests inside this module.
+     * VFS backend base folder URI.
      */
-    public static Test suite() {
-        TestSuite suite = new TestSuite("VFS tests");
-        suite.addTestSuite(TestVFSDataStore.class);
-        return suite;
+    public static final String VFS_BACKEND_URI = "vfsBackendUri";
+
+    /**
+     * VFS backend asynchronous write pool size. 10 by default.
+     */
+    public static final String ASYNC_WRITE_POOL_SIZE = "asyncWritePoolSize";
+
+    private VFSConstants() {
     }
+
 }

@@ -28,22 +28,28 @@ public class VFSDataStore extends CachingDataStore {
 
     private Properties properties;
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     protected Backend createBackend() {
         VFSBackend backend = new VFSBackend();
-        if(properties != null){
+        if (properties != null) {
             backend.setProperties(properties);
         }
         return backend;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     protected String getMarkerFile() {
         return "vfs.init.done";
     }
 
     /**
-     * Properties required to configure the S3Backend
+     * Properties required to configure the VFSBackend
      */
     public void setProperties(Properties properties) {
         this.properties = properties;

@@ -32,7 +32,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.vfs2.FileContent;
 import org.apache.commons.vfs2.FileObject;
 import org.apache.commons.vfs2.FileSystemException;
 import org.apache.commons.vfs2.FileSystemManager;
@@ -47,6 +46,7 @@ import org.apache.jackrabbit.core.data.CachingDataStore;
 import org.apache.jackrabbit.core.data.DataIdentifier;
 import org.apache.jackrabbit.core.data.DataStoreException;
 import org.apache.jackrabbit.core.data.util.NamedThreadFactory;
+import org.apache.jackrabbit.vfs.ext.VFSConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -55,11 +55,10 @@ import org.slf4j.LoggerFactory;
  */
 public class VFSBackend implements Backend {
 
+    /**
+     * Logger instance.
+     */
     private static final Logger LOG = LoggerFactory.getLogger(VFSBackend.class);
-
-    public static final String VFS_BACKEND_URI = "vfsBackendUri";
-
-    public static final String ASYNC_WRITE_POOL_SIZE = "asyncWritePoolSize";
 
     /**
      * The maximum last modified time resolution of the file system.
@@ -80,6 +79,9 @@ public class VFSBackend implements Backend {
 
     private ThreadPoolExecutor asyncWriteExecuter;
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void init(CachingDataStore store, String homeDir, String config) throws DataStoreException {
         Properties initProps = null;
@@ -95,8 +97,7 @@ public class VFSBackend implements Backend {
                 in = new FileInputStream(config);
                 initProps.load(in);
             } catch (IOException e) {
-                throw new DataStoreException(
-                    "Could not initialize VFSBackend from " + config, e);
+                throw new DataStoreException("Could not initialize VFSBackend from " + config, e);
             } finally {
                 IOUtils.closeQuietly(in);
             }
@@ -105,41 +106,52 @@ public class VFSBackend implements Backend {
         init(store, homeDir, initProps);
     }
 
+    /**
+     * This method initialize backend with the configuration as {@link java.util.Properties}.
+     * 
+     * @param store {@link CachingDataStore}
+     * @param homeDir path of repository home dir.
+     * @param prop configuration as {@link java.util.Properties}.
+     * @throws DataStoreException
+     */
     public void init(CachingDataStore store, String homeDir, Properties prop) throws DataStoreException {
         this.store = store;
         this.homeDir = homeDir;
-        vfsUri = prop.getProperty(VFS_BACKEND_URI);
+        vfsUri = prop.getProperty(VFSConstants.VFS_BACKEND_URI);
 
         if (vfsUri == null || "".equals(vfsUri)) {
-            throw new DataStoreException("Could not initialize VFSBackend from "
-                + config + ". [" + VFS_BACKEND_URI + "] property not found.");
+            throw new DataStoreException("Could not initialize VFSBackend from " + config + ". ["
+                    + VFSConstants.VFS_BACKEND_URI + "] property not found.");
         }
 
         try {
             vfsUriFolder = getFileSystemManager().resolveFile(vfsUri);
 
             if (vfsUriFolder.exists() && vfsUriFolder.getType() != FileType.FOLDER) {
-                throw new DataStoreException("Cannot create a folder "
-                    + "because a file exists with the same name: " + vfsUri);
+                throw new DataStoreException(
+                        "Cannot create a folder " + "because a file exists with the same name: " + vfsUri);
             }
 
             if (!vfsUriFolder.exists()) {
                 vfsUriFolder.createFolder();
             }
         } catch (FileSystemException e) {
-            throw new DataStoreException("Could not resolve or create vfs uri folder: "
-                    + vfsUriFolder.getName().getPath(), e);
+            throw new DataStoreException(
+                    "Could not resolve or create vfs uri folder: " + vfsUriFolder.getName().getPath(), e);
         }
 
         int asyncWritePoolSize = 10;
-        String asyncWritePoolSizeStr = prop.getProperty(ASYNC_WRITE_POOL_SIZE);
+        String asyncWritePoolSizeStr = prop.getProperty(VFSConstants.ASYNC_WRITE_POOL_SIZE);
         if (asyncWritePoolSizeStr != null) {
             asyncWritePoolSize = Integer.parseInt(asyncWritePoolSizeStr);
         }
-        asyncWriteExecuter = (ThreadPoolExecutor) Executors.newFixedThreadPool(
-                asyncWritePoolSize, new NamedThreadFactory("vfs-write-worker"));
+        asyncWriteExecuter = (ThreadPoolExecutor) Executors.newFixedThreadPool(asyncWritePoolSize,
+                new NamedThreadFactory("vfs-write-worker"));
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public InputStream read(DataIdentifier identifier) throws DataStoreException {
         FileObject fileObject = getExistingFileObject(identifier);
@@ -151,6 +163,9 @@ public class VFSBackend implements Backend {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public long getLength(DataIdentifier identifier) throws DataStoreException {
         FileObject fileObject = getExistingFileObject(identifier);
@@ -162,17 +177,26 @@ public class VFSBackend implements Backend {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public long getLastModified(DataIdentifier identifier) throws DataStoreException {
         FileObject fileObject = getExistingFileObject(identifier);
         return getLastModified(fileObject);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void write(DataIdentifier identifier, File file) throws DataStoreException {
         write(identifier, file, false, null);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void writeAsync(DataIdentifier identifier, File file, AsyncUploadCallback callback)
             throws DataStoreException {
@@ -183,6 +207,9 @@ public class VFSBackend implements Backend {
         asyncWriteExecuter.execute(new AsyncUploadJob(identifier, file, callback));
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Iterator<DataIdentifier> getAllIdentifiers() throws DataStoreException {
         List<DataIdentifier> identifiers = new LinkedList<DataIdentifier>();
@@ -206,6 +233,9 @@ public class VFSBackend implements Backend {
         return identifiers.iterator();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean exists(DataIdentifier identifier, boolean touch) throws DataStoreException {
         FileObject fileObject = getFileObject(identifier);
@@ -224,16 +254,25 @@ public class VFSBackend implements Backend {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean exists(DataIdentifier identifier) throws DataStoreException {
         return exists(identifier, false);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void touch(DataIdentifier identifier, long minModifiedDate) throws DataStoreException {
         touch(identifier, minModifiedDate, false, null);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void touchAsync(DataIdentifier identifier, long minModifiedDate, AsyncTouchCallback callback)
             throws DataStoreException {
@@ -244,12 +283,18 @@ public class VFSBackend implements Backend {
         asyncWriteExecuter.execute(new AsyncTouchJob(identifier, minModifiedDate, callback));
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void close() throws DataStoreException {
         asyncWriteExecuter.shutdownNow();
         getFileSystemManager().closeFileSystem(vfsUriFolder.getFileSystem());
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Set<DataIdentifier> deleteAllOlderThan(long timestamp) throws DataStoreException {
         Set<DataIdentifier> deleteIdSet = new HashSet<DataIdentifier>(30);
@@ -271,6 +316,9 @@ public class VFSBackend implements Backend {
         return deleteIdSet;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void deleteRecord(DataIdentifier identifier) throws DataStoreException {
         FileObject fileObject = getFileObject(identifier);
@@ -294,6 +342,11 @@ public class VFSBackend implements Backend {
         this.properties = properties;
     }
 
+    /**
+     * Returns {@link FileSystemManager} instance to use in this backend implementation.
+     * @return {@link FileSystemManager} instance to use in this backend implementation
+     * @throws DataStoreException
+     */
     protected FileSystemManager getFileSystemManager() throws DataStoreException {
         try {
             FileSystemManager fileSystemManager = VFS.getManager();
@@ -334,6 +387,14 @@ public class VFSBackend implements Backend {
         }
     }
 
+    /**
+     * Invokes {@link #getFileObject(DataIdentifier)} internally and throws <code>DataStoreException</code>
+     * if the file object does not exist or it does not represent a file.
+     * @param identifier data identifier
+     * @return identified file object
+     * @throws FileSystemException if VFS file system exception occurs
+     * @throws DataStoreException 
+     */
     private FileObject getExistingFileObject(DataIdentifier identifier) throws DataStoreException {
         try {
             FileObject file = getFileObject(identifier);
@@ -354,17 +415,14 @@ public class VFSBackend implements Backend {
      * Set the last modified date of a fileObject, if the fileObject is writable.
      * @param fileObject the file object
      * @param time the new last modified date
-     * @throws DataStoreException if the fileObject is writable but modifying the date
-     *             fails
+     * @throws DataStoreException if the fileObject is writable but modifying the date fails
      */
-    private static void setLastModified(FileObject fileObject, long time)
-                    throws DataStoreException {
+    private static void setLastModified(FileObject fileObject, long time) throws DataStoreException {
         try {
             fileObject.getContent().setLastModifiedTime(time);
         } catch (FileSystemException e) {
-            throw new DataStoreException(
-                    "An IO Exception occurred while trying to set the last modified date: "
-                        + fileObject.getName().getPath(), e);
+            throw new DataStoreException("An IO Exception occurred while trying to set the last modified date: "
+                    + fileObject.getName().getPath(), e);
         }
     }
 
@@ -433,7 +491,8 @@ public class VFSBackend implements Backend {
                     callback.onSuccess(asyncUpRes);
                 }
             } catch (IOException e) {
-                DataStoreException e2 = new DataStoreException("Could not get output stream to object: " + fileObject.getName().getPath(), e);
+                DataStoreException e2 = new DataStoreException(
+                        "Could not get output stream to object: " + fileObject.getName().getPath(), e);
                 if (asyncUpRes != null && callback != null) {
                     asyncUpRes.setException(e2);
                     callback.onFailure(asyncUpRes);
@@ -443,8 +502,9 @@ public class VFSBackend implements Backend {
         }
     }
 
-    private void touch(DataIdentifier identifier, long minModifiedDate, boolean asyncTouch, AsyncTouchCallback callback) throws DataStoreException {
-        FileObject fileObject = getExistingFileObject(identifier);
+    private void touch(DataIdentifier identifier, long minModifiedDate, boolean asyncTouch, AsyncTouchCallback callback)
+            throws DataStoreException {
+        FileObject fileObject = getFileObject(identifier);
 
         AsyncTouchResult asyncTouchRes = null;
 
@@ -556,8 +616,7 @@ public class VFSBackend implements Backend {
     }
 
     /**
-     * This class implements {@link Runnable} interface to copy {@link File}
-     * to VFS file object asynchronously.
+     * This class implements {@link Runnable} interface to copy {@link File} to VFS file object asynchronously.
      */
     private class AsyncUploadJob implements Runnable {
 

@@ -24,7 +24,7 @@ import org.apache.commons.vfs2.FileObject;
 import org.apache.commons.vfs2.FileSystemException;
 
 /**
- * This input stream delays opening the file until the first byte is read, and
+ * This input stream delays opening the file content until the first byte is read, and
  * closes and discards the underlying stream as soon as the end of input has
  * been reached or when the stream is explicitly closed.
  */
@@ -37,21 +37,21 @@ public class LazyFileContentInputStream extends AutoCloseInputStream {
 
     /**
      * True if the input stream was opened. It is also set to true if the stream
-     * was closed without reading (to avoid opening the file after the stream
+     * was closed without reading (to avoid opening the file content after the stream
      * was closed).
      */
     protected boolean opened;
 
     /**
      * Creates a new <code>LazyFileInputStream</code> for the given file. If the
-     * file is unreadable, a FileNotFoundException is thrown.
+     * file is unreadable, a FileSystemException is thrown.
      * The file is not opened until the first byte is read from the stream.
      *
      * @param file the file
-     * @throws java.io.FileNotFoundException
+     * @throws org.apache.commons.vfs2.FileNotFoundException
+     * @throws org.apache.commons.vfs2.FileSystemException
      */
-    public LazyFileContentInputStream(FileObject fileObject)
-            throws FileSystemException {
+    public LazyFileContentInputStream(FileObject fileObject) throws FileSystemException {
         super(null);
         if (!fileObject.isReadable()) {
             throw new FileNotFoundException(fileObject.getName().getPath());

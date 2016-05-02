@@ -25,14 +25,13 @@ import javax.jcr.RepositoryException;
 import org.apache.commons.io.FileUtils;
 import org.apache.jackrabbit.core.data.CachingDataStore;
 import org.apache.jackrabbit.core.data.TestCaseBase;
+import org.apache.jackrabbit.vfs.ext.VFSConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Test {@link CachingDataStore} with VFSBackend and local cache on. It requires
- * to pass vfs config file via system property. For e.g.
- * -Dconfig=/opt/repository/vfs.properties. Sample vfs properties located at
- * src/test/resources/vfs.properties
+ * Test {@link CachingDataStore} with VFSBackend and local cache on
+ * with a default VFS file system (local file system).
  */
 public class TestVFSDataStore extends TestCaseBase {
 
@@ -44,8 +43,7 @@ public class TestVFSDataStore extends TestCaseBase {
     protected CachingDataStore createDataStore() throws RepositoryException {
         VFSDataStore vfsds = new VFSDataStore();
         Properties props = loadProperties("/vfs.properties");
-
-        String uriValue = props.getProperty(VFSBackend.VFS_BACKEND_URI);
+        String uriValue = props.getProperty(VFSConstants.VFS_BACKEND_URI);
         if (uriValue != null && !"".equals(uriValue.trim())) {
             vfsUri = uriValue + "/vfsds" + "-"
                 + String.valueOf(randomGen.nextInt(100000)) + "-"
@@ -53,9 +51,10 @@ public class TestVFSDataStore extends TestCaseBase {
         } else {
             vfsUri = new File(new File(dataStoreDir), "vfsds").toURI().toString();
         }
-        props.setProperty(VFSBackend.VFS_BACKEND_URI, vfsUri);
+        props.setProperty(VFSConstants.VFS_BACKEND_URI, vfsUri);
         LOG.info("vfsBackendUri [{}] set.", vfsUri);
         vfsds.setProperties(props);
+        vfsds.setSecret("123456");
         vfsds.init(dataStoreDir);
 
         return vfsds;
@@ -71,7 +70,6 @@ public class TestVFSDataStore extends TestCaseBase {
                 Thread.sleep(2000);
             }
         } catch (Exception ignore) {
-
         }
         super.tearDown();
     }
