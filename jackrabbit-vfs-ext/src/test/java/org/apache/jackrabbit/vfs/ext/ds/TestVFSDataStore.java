@@ -17,12 +17,12 @@
 package org.apache.jackrabbit.vfs.ext.ds;
 
 import java.io.File;
-import java.net.URI;
 import java.util.Properties;
 
 import javax.jcr.RepositoryException;
 
-import org.apache.commons.io.FileUtils;
+import org.apache.commons.vfs2.AllFileSelector;
+import org.apache.commons.vfs2.FileObject;
 import org.apache.jackrabbit.core.data.CachingDataStore;
 import org.apache.jackrabbit.core.data.TestCaseBase;
 import org.apache.jackrabbit.vfs.ext.VFSConstants;
@@ -30,43 +30,52 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Test {@link CachingDataStore} with VFSBackend and local cache on
- * with a default VFS file system (local file system).
+ * Test {@link CachingDataStore} with VFSBackend with a VFS file system (local file system) by default.
+ * <P>
+ * You can provide different properties to use other file system backend by passing vfs config file via system property.
+ * For e.g. -Dconfig=/opt/repository/vfs.properties.
+ * </P>
+ * <P>
+ * Sample VFS properties located at src/test/resources/vfs.properties
+ * </P>
  */
 public class TestVFSDataStore extends TestCaseBase {
 
     protected static final Logger LOG = LoggerFactory.getLogger(TestVFSDataStore.class);
 
-    private String vfsUri;
+    private String vfsBaseFolderUri;
+
+    private VFSDataStore vfsDataStore;
+
+    private Properties vfsBackendProps;
+
+    @Override
+    protected void setUp() throws Exception {
+        super.setUp();
+
+        String configProp = System.getProperty("config");
+        
+    }
 
     @Override
     protected CachingDataStore createDataStore() throws RepositoryException {
-        VFSDataStore vfsds = new VFSDataStore();
-        Properties props = loadProperties("/vfs.properties");
-        String uriValue = props.getProperty(VFSConstants.VFS_BACKEND_URI);
-        if (uriValue != null && !"".equals(uriValue.trim())) {
-            vfsUri = uriValue + "/vfsds" + "-"
-                + String.valueOf(randomGen.nextInt(100000)) + "-"
-                + String.valueOf(randomGen.nextInt(100000));
-        } else {
-            vfsUri = new File(new File(dataStoreDir), "vfsds").toURI().toString();
-        }
-        props.setProperty(VFSConstants.VFS_BACKEND_URI, vfsUri);
-        LOG.info("vfsBackendUri [{}] set.", vfsUri);
-        vfsds.setProperties(props);
-        vfsds.setSecret("123456");
-        vfsds.init(dataStoreDir);
-
-        return vfsds;
+        vfsDataStore = new VFSDataStore();
+        Properties props = getBackendProperties();
+        vfsBaseFolderUri = props.getProperty(VFSConstants.VFS_BASE_FOLDER_URI);
+        LOG.info("vfsBaseFolderUri [{}] set.", vfsBaseFolderUri);
+        vfsDataStore.setProperties(props);
+        vfsDataStore.setSecret("123456");
+        vfsDataStore.init(dataStoreDir);
+        return vfsDataStore;
     }
 
     @Override
     protected void tearDown() {
-        LOG.info("cleaning vfsUri [{}]", vfsUri);
-        File f = new File(URI.create(vfsUri));
+        LOG.info("cleaning vfsBaseFolderUri [{}]", vfsBaseFolderUri);
         try {
-            for (int i = 0; i < 4 && f.exists(); i++) {
-                FileUtils.deleteQuietly(f);
+            FileObject vfsBaseFolder = ((VFSBackend) vfsDataStore.getBackend()).getBaseFolderObject();
+            for (int i = 0; i < 4 && vfsBaseFolder.exists(); i++) {
+                vfsBaseFolder.delete(new AllFileSelector());
                 Thread.sleep(2000);
             }
         } catch (Exception ignore) {
@@ -74,4 +83,16 @@ public class TestVFSDataStore extends TestCaseBase {
         super.tearDown();
     }
 
+    private Properties getBackendProperties() {
+        if (vfsBackendProps == null) {
+            Properties props = loadProperties("/vfs.properties");
+            String uriValue = props.getProperty(VFSConstants.VFS_BASE_FOLDER_URI);
+            if (uriValue == null || "".equals(uriValue.trim())) {
+                String baseFolderUri = new File(new File(dataStoreDir), "vfsds").toURI().toString();
+                props.setProperty(VFSConstants.VFS_BASE_FOLDER_URI, baseFolderUri);
+            }
+            vfsBackendProps = props;
+        }
+        return vfsBackendProps;
+    }
 }

@@ -22,9 +22,9 @@ package org.apache.jackrabbit.vfs.ext;
 public class VFSConstants {
 
     /**
-     * VFS backend base folder URI.
+     * VFS base folder URI.
      */
-    public static final String VFS_BACKEND_URI = "vfsBackendUri";
+    public static final String VFS_BASE_FOLDER_URI = "vfsBaseFolderUri";
 
     /**
      * VFS backend asynchronous write pool size. 10 by default.

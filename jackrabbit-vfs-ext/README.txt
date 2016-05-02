@@ -27,6 +27,7 @@ VFS specific configuration properties
 
 VFS specific configuration (e.g, ${rep.home}/vfs.properties) can have the following properites:
 
-    # VFS Backend base folder URI. e.g, vfsBackendUri=file://${rep.home}/vfsds
-    vfsBackendUri=
-
+    # VFS Backend base folder URI. e.g, vfsBaseFolderUri=file://${rep.home}/vfsds
+    vfsBaseFolderUri=
+    # Asynchronous writing pool size to the backend. 10 by default.
+    asyncWritePoolSize=10
