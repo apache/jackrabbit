@@ -35,8 +35,11 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.vfs2.FileObject;
 import org.apache.commons.vfs2.FileSystemException;
 import org.apache.commons.vfs2.FileSystemManager;
+import org.apache.commons.vfs2.FileSystemOptions;
 import org.apache.commons.vfs2.FileType;
 import org.apache.commons.vfs2.VFS;
+import org.apache.commons.vfs2.provider.http.HttpFileSystemConfigBuilder;
+import org.apache.commons.vfs2.provider.webdav.WebdavFileSystemConfigBuilder;
 import org.apache.jackrabbit.core.data.AsyncTouchCallback;
 import org.apache.jackrabbit.core.data.AsyncTouchResult;
 import org.apache.jackrabbit.core.data.AsyncUploadCallback;
@@ -85,6 +88,9 @@ public class VFSBackend implements Backend {
      */
     private Properties properties;
 
+    //TODO
+    private FileSystemOptions fileSystemOptions;
+
     /**
      * VFS base folder URI.
      */
@@ -99,6 +105,12 @@ public class VFSBackend implements Backend {
      * Asynchronous write pooling executor.
      */
     private ThreadPoolExecutor asyncWriteExecuter;
+
+    /**
+     * Whether or not a touch file is preferred to set/get the last modified timestamp for a file object
+     * instead of setting/getting the last modified timestamp directly from the file object.
+     */
+    private boolean touchFilePreferred = true;
 
     /**
      * {@inheritDoc}
@@ -138,6 +150,13 @@ public class VFSBackend implements Backend {
     public void init(CachingDataStore store, String homeDir, Properties prop) throws DataStoreException {
         this.store = store;
         this.homeDir = homeDir;
+
+        //TODO: clean up file system configuration setup from parameters
+        FileSystemOptions opts = new FileSystemOptions();
+        HttpFileSystemConfigBuilder builder = WebdavFileSystemConfigBuilder.getInstance();
+        builder.setMaxTotalConnections(opts, 200);
+        builder.setMaxConnectionsPerHost(opts, 200);
+
         vfsBaseFolderUri = prop.getProperty(VFSConstants.VFS_BASE_FOLDER_URI);
 
         if (vfsBaseFolderUri == null || "".equals(vfsBaseFolderUri)) {
@@ -146,19 +165,15 @@ public class VFSBackend implements Backend {
         }
 
         try {
-            vfsBaseFolder = getFileSystemManager().resolveFile(vfsBaseFolderUri);
+            vfsBaseFolder = getFileSystemManager().resolveFile(vfsBaseFolderUri, opts);
+            vfsBaseFolder.createFolder();
 
-            if (vfsBaseFolder.exists() && vfsBaseFolder.getType() != FileType.FOLDER) {
-                throw new DataStoreException(
-                        "Cannot create a folder " + "because a file exists with the same name: " + vfsBaseFolderUri);
-            }
-
-            if (!vfsBaseFolder.exists()) {
-                vfsBaseFolder.createFolder();
+            if ("file".equals(vfsBaseFolder.getName().getScheme())) {
+                touchFilePreferred = false;
             }
         } catch (FileSystemException e) {
             throw new DataStoreException(
-                    "Could not resolve or create vfs uri folder: " + vfsBaseFolder.getName().getPath(), e);
+                    "Could not resolve or create vfs uri folder: " + vfsBaseFolder.getName().getURI(), e);
         }
 
         int asyncWritePoolSize = 10;
@@ -176,6 +191,9 @@ public class VFSBackend implements Backend {
     @Override
     public InputStream read(DataIdentifier identifier) throws DataStoreException {
         FileObject fileObject = getExistingFileObject(identifier);
+        if (fileObject == null) {
+            throw new DataStoreException("Could not find file object for: " + identifier);
+        }
 
         try {
             return new LazyFileContentInputStream(fileObject);
@@ -190,6 +208,9 @@ public class VFSBackend implements Backend {
     @Override
     public long getLength(DataIdentifier identifier) throws DataStoreException {
         FileObject fileObject = getExistingFileObject(identifier);
+        if (fileObject == null) {
+            throw new DataStoreException("Could not find file object for: " + identifier);
+        }
 
         try {
             return fileObject.getContent().getSize();
@@ -204,7 +225,10 @@ public class VFSBackend implements Backend {
     @Override
     public long getLastModified(DataIdentifier identifier) throws DataStoreException {
         FileObject fileObject = getExistingFileObject(identifier);
-        return getLastModified(fileObject);
+        if (fileObject == null) {
+            throw new DataStoreException("Could not find file object for: " + identifier);
+        }
+        return getLastModifiedTime(fileObject);
     }
 
     /**
@@ -237,10 +261,6 @@ public class VFSBackend implements Backend {
 
         try {
             for (FileObject fileObject : getBaseFolderObject().getChildren()) {
-                if (!fileObject.exists()) {
-                    continue;
-                }
-
                 if (fileObject.getType() == FileType.FOLDER) { // skip top-level files
                     pushIdentifiersRecursively(identifiers, fileObject);
                 }
@@ -259,20 +279,17 @@ public class VFSBackend implements Backend {
      */
     @Override
     public boolean exists(DataIdentifier identifier, boolean touch) throws DataStoreException {
-        FileObject fileObject = getFileObject(identifier);
+        FileObject fileObject = getExistingFileObject(identifier);
 
-        try {
-            if (fileObject.exists() && fileObject.getType() == FileType.FILE) {
-                if (touch) {
-                    touch(identifier, System.currentTimeMillis(), false, null);
-                }
-                return true;
-            } else {
-                return false;
-            }
-        } catch (FileSystemException e) {
-            throw new DataStoreException("Object not resolved: " + identifier, e);
+        if (fileObject == null) {
+            return false;
         }
+
+        if (touch) {
+            touch(identifier, System.currentTimeMillis(), false, null);
+        }
+
+        return true;
     }
 
     /**
@@ -310,7 +327,8 @@ public class VFSBackend implements Backend {
     @Override
     public void close() throws DataStoreException {
         asyncWriteExecuter.shutdownNow();
-        getFileSystemManager().closeFileSystem(getBaseFolderObject().getFileSystem());
+        //FIXME
+        //getFileSystemManager().closeFileSystem(getBaseFolderObject().getFileSystem());
     }
 
     /**
@@ -322,10 +340,6 @@ public class VFSBackend implements Backend {
 
         try {
             for (FileObject fileObject : getBaseFolderObject().getChildren()) {
-                if (!fileObject.exists()) {
-                    continue;
-                }
-
                 if (fileObject.getType() == FileType.FOLDER) { // skip top-level files
                     deleteOlderRecursive(deleteIdSet, fileObject, timestamp);
                 }
@@ -342,15 +356,10 @@ public class VFSBackend implements Backend {
      */
     @Override
     public void deleteRecord(DataIdentifier identifier) throws DataStoreException {
-        FileObject fileObject = getFileObject(identifier);
-
-        try {
-            if (fileObject.exists() && fileObject.getType() == FileType.FILE) {
-                fileObject.delete();
-                deleteEmptyParentDirs(fileObject);
-            }
-        } catch (FileSystemException e) {
-            throw new DataStoreException("Object not deleted: " + identifier, e);
+        FileObject fileObject = getExistingFileObject(identifier);
+        if (fileObject != null) {
+            deleteRecordFileObject(fileObject);
+            deleteEmptyParentDirs(fileObject);
         }
     }
 
@@ -361,6 +370,22 @@ public class VFSBackend implements Backend {
      */
     public void setProperties(Properties properties) {
         this.properties = properties;
+    }
+
+    /**
+     * Returns true if a touch file should be used to save/get the last modified timestamp for a file object. True by default.
+     * @return true if a touch file should be used to save/get the last modified timestamp for a file object
+     */
+    public boolean isTouchFilePreferred() {
+        return touchFilePreferred;
+    }
+
+    /**
+     * Sets whether or not a touch file should be used to save/get the last modified timestamp for a file object.
+     * @param touchFilePreferred whether or not a touch file should be used to save/get the last modified timestamp for a file object
+     */
+    public void setTouchFilePreferred(boolean touchFilePreferred) {
+        this.touchFilePreferred = touchFilePreferred;
     }
 
     /**
@@ -381,7 +406,15 @@ public class VFSBackend implements Backend {
     }
 
     /**
-     * Returns the identified file object. This method implements the pattern
+     * Returns the VFS base folder object.
+     * @return the VFS base folder object
+     */
+    protected FileObject getBaseFolderObject() {
+        return vfsBaseFolder;
+    }
+
+    /**
+     * Returns a resolved identified file object. This method implements the pattern
      * used to avoid problems with too many files in a single folder.
      *
      * @param identifier data identifier
@@ -389,9 +422,10 @@ public class VFSBackend implements Backend {
      * @throws FileSystemException if VFS file system exception occurs
      * @throws DataStoreException 
      */
-    protected FileObject getFileObject(DataIdentifier identifier) throws DataStoreException {
+    protected FileObject resolveFileObject(DataIdentifier identifier) throws DataStoreException {
         String idString = identifier.toString();
 
+        //TODO: refactor path construction
         StringBuilder sb = new StringBuilder(80);
         sb.append(idString.substring(0, 2)).append('/');
         sb.append(idString.substring(2, 4)).append('/');
@@ -404,74 +438,160 @@ public class VFSBackend implements Backend {
         try {
             return getBaseFolderObject().resolveFile(relPath);
         } catch (FileSystemException e) {
-            throw new DataStoreException("Object not resolved: " + identifier, e);
+            throw new DataStoreException("File object not resolved: " + identifier, e);
         }
     }
 
     /**
-     * Returns the VFS base folder object.
-     * @return the VFS base folder object
-     */
-    protected FileObject getBaseFolderObject() {
-        return vfsBaseFolder;
-    }
-
-    /**
-     * Invokes {@link #getFileObject(DataIdentifier)} internally and throws <code>DataStoreException</code>
-     * if the file object does not exist or it does not represent a file.
+     * Returns the identified file object. If not existing, returns null.
+     *
      * @param identifier data identifier
      * @return identified file object
      * @throws FileSystemException if VFS file system exception occurs
      * @throws DataStoreException 
      */
-    private FileObject getExistingFileObject(DataIdentifier identifier) throws DataStoreException {
-        try {
-            FileObject file = getFileObject(identifier);
+    protected FileObject getExistingFileObject(DataIdentifier identifier) throws DataStoreException {
+        String idString = identifier.toString();
+        //TODO: refactor path segments construction
+        String [] segments = new String[5];
+        segments[0] = idString.substring(0, 2);
+        segments[1] = idString.substring(2, 4);
+        segments[2] = idString.substring(4, 6);
+        segments[3] = idString.substring(6, 8);
+        segments[4] = idString;
 
-            if (!file.exists()) {
-                throw new DataStoreException("Object not found: " + identifier);
-            } else if (file.getType() != FileType.FILE) {
-                throw new DataStoreException("Object not in file: " + identifier);
+        FileObject tempFileObject = getBaseFolderObject();
+
+        try {
+            for (int i = 0; i < 5; i++) {
+                tempFileObject = tempFileObject.getChild(segments[i]);
+                if (tempFileObject == null) {
+                    return null;
+                }
             }
 
-            return file;
+            return tempFileObject;
         } catch (FileSystemException e) {
-            throw new DataStoreException("Object not resolved: " + identifier, e);
+            throw new DataStoreException("File object not resolved: " + identifier, e);
         }
     }
 
     /**
-     * Set the last modified date of a fileObject, if the fileObject is writable.
+     * Returns true if the fileObject is used for touching purpose.
+     *
+     * @param fileObject file object
+     * @return true if the fileObject is used for touching purpose
+     */
+    protected boolean isTouchFileObject(FileObject fileObject) {
+        //TODO: any better way? BTW, WebDAV doesn support #setLastModifiedTime(). That's why using touch file.
+        if (fileObject.getName().getBaseName().endsWith(".touch")) {
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Returns the touch file for the fileObject.
+     *
+     * @param fileObject file object
+     * @param create create a touch file if not existing
+     * @return touch file object
+     * @throws DataStoreException 
+     */
+    protected FileObject getTouchFileObject(FileObject fileObject, boolean create) throws DataStoreException {
+        try {
+            FileObject folderObject = fileObject.getParent();
+            //TODO: any better way? BTW, WebDAV doesn support #setLastModifiedTime(). That's why using touch file.
+            String touchFileName = fileObject.getName().getBaseName() + ".touch";
+            FileObject touchFileObject = folderObject.getChild(touchFileName);
+            if (touchFileObject == null && create) {
+                touchFileObject = folderObject.resolveFile(touchFileName);
+                touchFileObject.createFile();
+                touchFileObject = folderObject.getChild(touchFileName);
+            }
+            return touchFileObject;
+        } catch (FileSystemException e) {
+            throw new DataStoreException("Touch file object not resolved: " + fileObject.getName().getURI(), e);
+        }
+    }
+
+    protected void copyFileContent(File srcFile, DataIdentifier identifier, FileObject destResolvedFileObject) throws IOException, DataStoreException {
+        String idString = identifier.toString();
+        //TODO: refactor path segments construction.
+        String [] segments = new String[5];
+        segments[0] = idString.substring(0, 2);
+        segments[1] = idString.substring(2, 4);
+        segments[2] = idString.substring(4, 6);
+        segments[3] = idString.substring(6, 8);
+        segments[4] = idString;
+
+        InputStream input = null;
+        OutputStream output = null;
+
+        try {
+            FileObject baseFolderObject = getBaseFolderObject();
+            FileObject folderObject = null;
+            //TODO: is it necessary to create folder in the loop? Why not creating by single call on #createFolder()?
+            for (int i = 0; i < 4; i++) {
+                folderObject = VFSUtils.createChildFolder(baseFolderObject, segments[i]);
+                baseFolderObject = folderObject;
+            }
+            //TODO: Why not creating by single call on #createFile()?
+            FileObject destFileObject = VFSUtils.createChildFile(folderObject, segments[4]);
+            input = new FileInputStream(srcFile);
+            output = destFileObject.getContent().getOutputStream();
+            IOUtils.copy(input, output);
+        } finally {
+            IOUtils.closeQuietly(output);
+            IOUtils.closeQuietly(input);
+        }
+    }
+
+    /**
+     * Set the last modified time of a fileObject, if the fileObject is writable.
      * @param fileObject the file object
      * @param time the new last modified date
      * @throws DataStoreException if the fileObject is writable but modifying the date fails
      */
-    private static void setLastModified(FileObject fileObject, long time) throws DataStoreException {
+    private void updateLastModifiedTime(FileObject fileObject) throws DataStoreException {
         try {
-            fileObject.getContent().setLastModifiedTime(time);
+            if (isTouchFilePreferred()) {
+                getTouchFileObject(fileObject, true);
+            } else {
+                long time = System.currentTimeMillis() + ACCESS_TIME_RESOLUTION;
+                fileObject.getContent().setLastModifiedTime(time);
+            }
         } catch (FileSystemException e) {
             throw new DataStoreException("An IO Exception occurred while trying to set the last modified date: "
-                    + fileObject.getName().getPath(), e);
+                    + fileObject.getName().getURI(), e);
         }
     }
 
     /**
-     * Get the last modified date of a file object.
+     * Get the last modified time of a file object.
      * @param file the file object
      * @return the last modified date
      * @throws DataStoreException if reading fails
      */
-    private static long getLastModified(FileObject fileObject) throws DataStoreException {
+    private long getLastModifiedTime(FileObject fileObject) throws DataStoreException {
         long lastModified = 0;
 
         try {
-            lastModified = fileObject.getContent().getLastModifiedTime();
-
+            if (isTouchFilePreferred()) {
+                FileObject touchFile = getTouchFileObject(fileObject, false);
+                if (touchFile != null) {
+                    lastModified = touchFile.getContent().getLastModifiedTime();
+                } else {
+                    lastModified = fileObject.getContent().getLastModifiedTime();
+                }
+            } else {
+                lastModified = fileObject.getContent().getLastModifiedTime();
+            }
             if (lastModified == 0) {
-                throw new DataStoreException("Failed to read record modified date: " + fileObject.getName().getPath());
+                throw new DataStoreException("Failed to read record modified date: " + fileObject.getName().getURI());
             }
         } catch (FileSystemException e) {
-            throw new DataStoreException("Failed to read record modified date: " + fileObject.getName().getPath());
+            throw new DataStoreException("Failed to read record modified date: " + fileObject.getName().getURI());
         }
 
         return lastModified;
@@ -482,24 +602,20 @@ public class VFSBackend implements Backend {
         FileType type;
 
         for (FileObject fileObject : folderObject.getChildren()) {
-            if (!fileObject.exists()) {
-                continue;
-            }
-
             type = fileObject.getType();
 
             if (type == FileType.FOLDER) {
                 pushIdentifiersRecursively(identifiers, fileObject);
             } else if (type == FileType.FILE) {
-                identifiers.add(new DataIdentifier(fileObject.getName().getBaseName()));
+                if (!isTouchFileObject(fileObject)) {
+                    identifiers.add(new DataIdentifier(fileObject.getName().getBaseName()));
+                }
             }
         }
     }
 
     private void write(DataIdentifier identifier, File file, boolean asyncUpload, AsyncUploadCallback callback)
             throws DataStoreException {
-        FileObject fileObject = getFileObject(identifier);
-
         AsyncUploadResult asyncUpRes = null;
 
         if (asyncUpload) {
@@ -507,21 +623,21 @@ public class VFSBackend implements Backend {
         }
 
         synchronized (this) {
+            FileObject fileObject = getExistingFileObject(identifier);
+            FileObject resolvedFileObject = resolveFileObject(identifier);
+
             try {
-                if (fileObject.exists() && fileObject.getType() == FileType.FILE) {
-                    long now = System.currentTimeMillis();
-                    if (getLastModified(fileObject) < now + ACCESS_TIME_RESOLUTION) {
-                        setLastModified(fileObject, now + ACCESS_TIME_RESOLUTION);
-                    }
+                if (fileObject != null) {
+                    updateLastModifiedTime(resolvedFileObject);
                 } else {
-                    copy(file, fileObject);
+                    copyFileContent(file, identifier, resolvedFileObject);
                 }
                 if (asyncUpRes != null && callback != null) {
                     callback.onSuccess(asyncUpRes);
                 }
             } catch (IOException e) {
                 DataStoreException e2 = new DataStoreException(
-                        "Could not get output stream to object: " + fileObject.getName().getPath(), e);
+                        "Could not get output stream to object: " + resolvedFileObject.getName().getURI(), e);
                 if (asyncUpRes != null && callback != null) {
                     asyncUpRes.setException(e2);
                     callback.onFailure(asyncUpRes);
@@ -533,8 +649,6 @@ public class VFSBackend implements Backend {
 
     private void touch(DataIdentifier identifier, long minModifiedDate, boolean asyncTouch, AsyncTouchCallback callback)
             throws DataStoreException {
-        FileObject fileObject = getFileObject(identifier);
-
         AsyncTouchResult asyncTouchRes = null;
 
         if (asyncTouch) {
@@ -542,9 +656,10 @@ public class VFSBackend implements Backend {
         }
 
         try {
-            long now = System.currentTimeMillis();
-            if (minModifiedDate > 0 && minModifiedDate > getLastModified(fileObject)) {
-                setLastModified(fileObject, now + ACCESS_TIME_RESOLUTION);
+            FileObject fileObject = resolveFileObject(identifier);
+            //TODO: what if fileObject doesn't exist?
+            if (minModifiedDate > 0 && minModifiedDate > getLastModifiedTime(fileObject)) {
+                updateLastModifiedTime(fileObject);
             }
         } catch (DataStoreException e) {
             if (asyncTouchRes != null) {
@@ -562,24 +677,42 @@ public class VFSBackend implements Backend {
         }
     }
 
+    private boolean deleteRecordFileObject(FileObject fileObject) throws DataStoreException {
+        if (isTouchFilePreferred()) {
+            try {
+                FileObject touchFile = getTouchFileObject(fileObject, false);
+                if (touchFile != null) {
+                    touchFile.delete();
+                }
+            } catch (FileSystemException e) {
+                LOG.warn("Could not delete touch file for " + fileObject.getName().getURI(), e);
+            }
+        }
+        try {
+            return fileObject.delete();
+        } catch (FileSystemException e) {
+            throw new DataStoreException("Could not delete record file at " + fileObject.getName().getURI(), e);
+        }
+    }
+
     private void deleteEmptyParentDirs(FileObject fileObject) {
         try {
-            FileObject parent = fileObject.getParent();
-            // Only iterate & delete if parent directory of the blob file is
+            String baseFolderUri = getBaseFolderObject().getName().getURI() + "/";
+            FileObject parentFolder = fileObject.getParent();
+            // Only iterate & delete if parent folder of the blob file is
             // child of the base directory and if it is empty
-            String vfsBaseFolderUriDir = vfsBaseFolderUri + "/";
-            while (parent.getName().getPath().contains(vfsBaseFolderUriDir)) {
-                FileObject[] entries = parent.getChildren();
+            while (parentFolder.getName().getURI().startsWith(baseFolderUri)) {
+                FileObject[] entries = parentFolder.getChildren();
                 if (entries.length > 0) {
                     break;
                 }
-                boolean deleted = parent.delete();
-                LOG.debug("Deleted parent [{}] of file [{}]: {}",
-                        new Object[] { parent, fileObject.getName().getPath(), deleted });
-                parent = parent.getParent();
+                boolean deleted = parentFolder.delete();
+                LOG.debug("Deleted parent folder [{}] of file [{}]: {}",
+                        new Object[] { parentFolder, fileObject.getName().getURI(), deleted });
+                parentFolder = parentFolder.getParent();
             }
         } catch (IOException e) {
-            LOG.warn("Error in parents deletion for " + fileObject.getName().getPath(), e);
+            LOG.warn("Error in parents deletion for " + fileObject.getName().getURI(), e);
         }
     }
 
@@ -589,10 +722,6 @@ public class VFSBackend implements Backend {
         DataIdentifier identifier;
 
         for (FileObject fileObject : folderObject.getChildren()) {
-            if (!fileObject.exists()) {
-                continue;
-            }
-
             type = fileObject.getType();
 
             if (type == FileType.FOLDER) {
@@ -605,7 +734,7 @@ public class VFSBackend implements Backend {
                 }
 
             } else if (type == FileType.FILE) {
-                long lastModified = getLastModified(fileObject);
+                long lastModified = getLastModifiedTime(fileObject);
 
                 if (lastModified < timestamp) {
                     identifier = new DataIdentifier(fileObject.getName().getBaseName());
@@ -614,33 +743,19 @@ public class VFSBackend implements Backend {
                         store.deleteFromCache(identifier);
 
                         if (LOG.isInfoEnabled()) {
-                            LOG.info("Deleting old file " + fileObject.getName().getPath() + " modified: "
+                            LOG.info("Deleting old file " + fileObject.getName().getURI() + " modified: "
                                     + new Timestamp(lastModified).toString() + " length: "
                                     + fileObject.getContent().getSize());
                         }
 
-                        if (fileObject.delete()) {
+                        if (deleteRecordFileObject(fileObject)) {
                             deleteIdSet.add(identifier);
                         } else {
-                            LOG.warn("Failed to delete old file " + fileObject.getName().getPath());
+                            LOG.warn("Failed to delete old file " + fileObject.getName().getURI());
                         }
                     }
                 }
             }
-        }
-    }
-
-    private void copy(File srcFile, FileObject destFileObject) throws IOException {
-        InputStream input = null;
-        OutputStream output = null;
-
-        try {
-            input = new FileInputStream(srcFile);
-            output = destFileObject.getContent().getOutputStream();
-            IOUtils.copy(input, output);
-        } finally {
-            IOUtils.closeQuietly(output);
-            IOUtils.closeQuietly(input);
         }
     }
 

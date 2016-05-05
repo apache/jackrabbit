@@ -54,7 +54,7 @@ public class LazyFileContentInputStream extends AutoCloseInputStream {
     public LazyFileContentInputStream(FileObject fileObject) throws FileSystemException {
         super(null);
         if (!fileObject.isReadable()) {
-            throw new FileNotFoundException(fileObject.getName().getPath());
+            throw new FileNotFoundException(fileObject.getName().getURI());
         }
         this.fileObject = fileObject;
     }

@@ -96,7 +96,8 @@ public class TestVFSDataStore extends TestCaseBase {
             }
         } catch (Exception ignore) {
         }
-        super.tearDown();
+        //FIXME
+        //super.tearDown();
     }
 
     private Properties getBackendProperties() {
