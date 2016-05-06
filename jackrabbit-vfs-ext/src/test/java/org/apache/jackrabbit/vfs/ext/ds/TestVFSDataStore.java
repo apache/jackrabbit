@@ -23,7 +23,6 @@ import java.util.Properties;
 import javax.jcr.RepositoryException;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.vfs2.AllFileSelector;
 import org.apache.commons.vfs2.FileObject;
 import org.apache.jackrabbit.core.data.CachingDataStore;
 import org.apache.jackrabbit.core.data.TestCaseBase;
@@ -88,13 +87,11 @@ public class TestVFSDataStore extends TestCaseBase {
     @Override
     protected void tearDown() {
         LOG.info("cleaning vfsBaseFolderUri [{}]", vfsBaseFolderUri);
+        FileObject vfsBaseFolder = ((VFSBackend) vfsDataStore.getBackend()).getBaseFolderObject();
         try {
-            FileObject vfsBaseFolder = ((VFSBackend) vfsDataStore.getBackend()).getBaseFolderObject();
-            for (int i = 0; i < 4 && vfsBaseFolder.exists(); i++) {
-                vfsBaseFolder.delete(new AllFileSelector());
-                Thread.sleep(2000);
-            }
-        } catch (Exception ignore) {
+            VFSTestUtils.deleteAllDescendantFiles(vfsBaseFolder);
+        } catch (Exception e) {
+            LOG.error("Failed to clean base folder at '{}'.", vfsBaseFolder.getName().getURI(), e);
         }
         //FIXME
         //super.tearDown();

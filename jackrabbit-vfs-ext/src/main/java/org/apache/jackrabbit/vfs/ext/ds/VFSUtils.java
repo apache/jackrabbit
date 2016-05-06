@@ -16,14 +16,31 @@
  */
 package org.apache.jackrabbit.vfs.ext.ds;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 import org.apache.commons.vfs2.FileObject;
 import org.apache.commons.vfs2.FileSystemException;
+import org.apache.commons.vfs2.FileType;
 import org.apache.jackrabbit.core.data.DataStoreException;
 
 /**
  * VFS Utilities.
  */
 class VFSUtils {
+
+    static Set<FileType> FILE_ONLY_TYPES = Collections
+            .unmodifiableSet(new HashSet<FileType>(Arrays.asList(FileType.FILE)));
+
+    static Set<FileType> FOLDER_ONLY_TYPES = Collections
+            .unmodifiableSet(new HashSet<FileType>(Arrays.asList(FileType.FOLDER)));
+
+    static Set<FileType> FILE_OR_FOLDER_TYPES = Collections
+            .unmodifiableSet(new HashSet<FileType>(Arrays.asList(FileType.FILE, FileType.FOLDER)));
 
     static FileObject createChildFolder(FileObject baseFolder, String name) throws DataStoreException {
         FileObject childFolder = null;
@@ -61,6 +78,40 @@ class VFSUtils {
         }
 
         return childFile;
+    }
+
+    static List<FileObject> getChildFiles(FileObject folderObject) throws DataStoreException {
+        return getChildrenOfTypes(folderObject, FILE_ONLY_TYPES);
+    }
+
+    static List<FileObject> getChildFolders(FileObject folderObject) throws DataStoreException {
+        return getChildrenOfTypes(folderObject, FOLDER_ONLY_TYPES);
+    }
+
+    static List<FileObject> getChildFileOrFolders(FileObject folderObject) throws DataStoreException {
+        return getChildrenOfTypes(folderObject, FILE_OR_FOLDER_TYPES);
+    }
+
+    static boolean hasAnyChildFileOrFolder(FileObject folderObject) throws DataStoreException {
+        return !getChildFileOrFolders(folderObject).isEmpty();
+    }
+
+    static List<FileObject> getChildrenOfTypes(FileObject folderObject, Set<FileType> fileTypes) throws DataStoreException {
+        try {
+            FileObject [] children = folderObject.getChildren();
+            List<FileObject> files = new ArrayList<FileObject>(children.length);
+            FileType fileType;
+            for (int i = 0; i < children.length; i++) {
+                fileType = children[i].getType();
+                if (fileTypes.contains(fileType)) {
+                    files.add(children[i]);
+                }
+            }
+            return files;
+        } catch (FileSystemException e) {
+            throw new DataStoreException(
+                    "Could not find children under " + folderObject.getName().getURI(), e);
+        }
     }
 
     private VFSUtils() {

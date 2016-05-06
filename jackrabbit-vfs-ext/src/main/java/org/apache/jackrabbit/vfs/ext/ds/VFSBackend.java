@@ -260,10 +260,8 @@ public class VFSBackend implements Backend {
         List<DataIdentifier> identifiers = new LinkedList<DataIdentifier>();
 
         try {
-            for (FileObject fileObject : getBaseFolderObject().getChildren()) {
-                if (fileObject.getType() == FileType.FOLDER) { // skip top-level files
-                    pushIdentifiersRecursively(identifiers, fileObject);
-                }
+            for (FileObject fileObject : VFSUtils.getChildFolders(getBaseFolderObject())) { // skip top-level files
+                pushIdentifiersRecursively(identifiers, fileObject);
             }
         } catch (FileSystemException e) {
             throw new DataStoreException("Object identifiers not resolved.", e);
@@ -339,10 +337,8 @@ public class VFSBackend implements Backend {
         Set<DataIdentifier> deleteIdSet = new HashSet<DataIdentifier>(30);
 
         try {
-            for (FileObject fileObject : getBaseFolderObject().getChildren()) {
-                if (fileObject.getType() == FileType.FOLDER) { // skip top-level files
-                    deleteOlderRecursive(deleteIdSet, fileObject, timestamp);
-                }
+            for (FileObject folderObject : VFSUtils.getChildFolders(getBaseFolderObject())) {
+                deleteOlderRecursive(deleteIdSet, folderObject, timestamp);
             }
         } catch (FileSystemException e) {
             throw new DataStoreException("Object deletion aborted.", e);
@@ -598,10 +594,10 @@ public class VFSBackend implements Backend {
     }
 
     private void pushIdentifiersRecursively(List<DataIdentifier> identifiers, FileObject folderObject)
-            throws FileSystemException {
+            throws FileSystemException, DataStoreException {
         FileType type;
 
-        for (FileObject fileObject : folderObject.getChildren()) {
+        for (FileObject fileObject : VFSUtils.getChildFileOrFolders(folderObject)) {
             type = fileObject.getType();
 
             if (type == FileType.FOLDER) {
@@ -695,15 +691,14 @@ public class VFSBackend implements Backend {
         }
     }
 
-    private void deleteEmptyParentDirs(FileObject fileObject) {
+    private void deleteEmptyParentDirs(FileObject fileObject) throws DataStoreException {
         try {
             String baseFolderUri = getBaseFolderObject().getName().getURI() + "/";
             FileObject parentFolder = fileObject.getParent();
             // Only iterate & delete if parent folder of the blob file is
             // child of the base directory and if it is empty
             while (parentFolder.getName().getURI().startsWith(baseFolderUri)) {
-                FileObject[] entries = parentFolder.getChildren();
-                if (entries.length > 0) {
+                if (VFSUtils.hasAnyChildFileOrFolder(parentFolder)) {
                     break;
                 }
                 boolean deleted = parentFolder.delete();
@@ -721,14 +716,14 @@ public class VFSBackend implements Backend {
         FileType type;
         DataIdentifier identifier;
 
-        for (FileObject fileObject : folderObject.getChildren()) {
+        for (FileObject fileObject : VFSUtils.getChildFileOrFolders(folderObject)) {
             type = fileObject.getType();
 
             if (type == FileType.FOLDER) {
                 deleteOlderRecursive(deleteIdSet, fileObject, timestamp);
 
                 synchronized (this) {
-                    if (fileObject.getChildren().length == 0) {
+                    if (!VFSUtils.hasAnyChildFileOrFolder(fileObject)) {
                         fileObject.delete();
                     }
                 }
