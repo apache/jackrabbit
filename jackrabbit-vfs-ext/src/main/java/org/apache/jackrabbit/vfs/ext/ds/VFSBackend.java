@@ -159,7 +159,7 @@ public class VFSBackend implements Backend {
      * @param store {@link CachingDataStore}
      * @param homeDir path of repository home dir.
      * @param prop configuration as {@link java.util.Properties}.
-     * @throws DataStoreException
+     * @throws DataStoreException if any file system exception occurs
      */
     public void init(CachingDataStore store, String homeDir, Properties prop) throws DataStoreException {
         this.store = store;
@@ -373,13 +373,13 @@ public class VFSBackend implements Backend {
 
         if (fileObject != null) {
             deleteRecordFileObject(fileObject);
-            deleteEmptyParentDirs(fileObject);
+            deleteEmptyParentFolders(fileObject);
         }
     }
 
     /**
-     * Properties used to configure the backend. If provided explicitly before
-     * init is invoked then these take precedence
+     * Properties used to configure the backend.
+     * If provided explicitly before init is invoked then these take precedence.
      * @param properties to configure Backend
      */
     public void setProperties(Properties properties) {
@@ -387,7 +387,8 @@ public class VFSBackend implements Backend {
     }
 
     /**
-     * Returns true if a touch file should be used to save/get the last modified time for a file object. True by default.
+     * Returns true if a touch file should be used to save/get the last modified time for a file object.
+     * True by default unless the {@link #getBaseFolderObject()} is representing a local file system folder (e.g, file://...).
      * <P>
      * When returns true, this backend creates a separate file named by the original file base name followed
      * by this touch file name suffix. So, this backend can set the last modified time on the separate touch file
@@ -411,7 +412,7 @@ public class VFSBackend implements Backend {
     /**
      * Returns {@link FileSystemManager} instance to use in this backend implementation.
      * @return {@link FileSystemManager} instance to use in this backend implementation
-     * @throws DataStoreException
+     * @throws DataStoreException if any file system exception occurs
      */
     protected FileSystemManager getFileSystemManager() throws DataStoreException {
         try {
@@ -420,6 +421,7 @@ public class VFSBackend implements Backend {
             if (fileSystemManager == null) {
                 throw new DataStoreException("Could not get the default VFS manager.");
             }
+
             return fileSystemManager;
         } catch (FileSystemException e) {
             throw new DataStoreException("Could not get VFS manager.", e);
@@ -441,7 +443,7 @@ public class VFSBackend implements Backend {
      * @param identifier data identifier
      * @return identified file object
      * @throws FileSystemException if VFS file system exception occurs
-     * @throws DataStoreException 
+     * @throws DataStoreException if any file system exception occurs
      */
     protected FileObject resolveFileObject(DataIdentifier identifier) throws DataStoreException {
         try {
@@ -473,8 +475,8 @@ public class VFSBackend implements Backend {
      *
      * @param identifier data identifier
      * @return identified file object
-     * @throws FileSystemException if VFS file system exception occurs
-     * @throws DataStoreException 
+     * @throws FileSystemException if any file system exception occurs
+     * @throws DataStoreException if any file system exception occurs
      */
     protected FileObject getExistingFileObject(DataIdentifier identifier) throws DataStoreException {
         String relPath = resolveFileObjectRelPath(identifier);
@@ -517,7 +519,7 @@ public class VFSBackend implements Backend {
      * @param fileObject file object
      * @param create create a touch file if not existing
      * @return touch file object
-     * @throws DataStoreException 
+     * @throws DataStoreException if any file system exception occurs
      */
     protected FileObject getTouchFileObject(FileObject fileObject, boolean create) throws DataStoreException {
         try {
@@ -537,7 +539,33 @@ public class VFSBackend implements Backend {
         }
     }
 
-    protected void copyFileContent(File srcFile, DataIdentifier identifier, FileObject destResolvedFileObject) throws IOException, DataStoreException {
+    /**
+     * Creates a {@link ThreadPoolExecutor}.
+     * This method is invoked during the initialization for asynchronous write/touch job executions.
+     * @param workerCount thread pool count
+     * @return a {@link ThreadPoolExecutor}
+     */
+    protected ThreadPoolExecutor createAsyncWriteExecuter(int workerCount) {
+        return (ThreadPoolExecutor) Executors.newFixedThreadPool(workerCount,
+                new NamedThreadFactory("vfs-write-worker"));
+    }
+
+    /**
+     * Returns ThreadPoolExecutor used to execute asynchronous write or touch jobs.
+     * @return ThreadPoolExecutor used to execute asynchronous write or touch jobs
+     */
+    protected ThreadPoolExecutor getAsyncWriteExecuter() {
+        return asyncWriteExecuter;
+    }
+
+    /**
+     * Copy the content of the local file ({@code srcFile}) to the record identified by the {@code identifier}.
+     * @param srcFile source local file
+     * @param identifier record identifier
+     * @throws IOException if any IO exception occurs
+     * @throws DataStoreException if any file system exception occurs
+     */
+    private void copyFileContentToRecord(File srcFile, DataIdentifier identifier) throws IOException, DataStoreException {
         String relPath = resolveFileObjectRelPath(identifier);
         String [] segments = relPath.split("/");
 
@@ -561,25 +589,6 @@ public class VFSBackend implements Backend {
             IOUtils.closeQuietly(output);
             IOUtils.closeQuietly(input);
         }
-    }
-
-    /**
-     * Creates a {@link ThreadPoolExecutor}.
-     * This method is invoked during the initialization for asynchronous write/touch job executions.
-     * @param workerCount thread pool count
-     * @return a {@link ThreadPoolExecutor}
-     */
-    protected ThreadPoolExecutor createAsyncWriteExecuter(int workerCount) {
-        return (ThreadPoolExecutor) Executors.newFixedThreadPool(workerCount,
-                new NamedThreadFactory("vfs-write-worker"));
-    }
-
-    /**
-     * Returns ThreadPoolExecutor used to execute asynchronous write or touch jobs.
-     * @return ThreadPoolExecutor used to execute asynchronous write or touch jobs
-     */
-    protected ThreadPoolExecutor getAsyncWriteExecuter() {
-        return asyncWriteExecuter;
     }
 
     /**
@@ -634,6 +643,14 @@ public class VFSBackend implements Backend {
         return lastModified;
     }
 
+    /**
+     * Scans {@code folderObject} and all the descendant folders to find record entries and push the record entry
+     * identifiers to {@code identifiers}.
+     * @param identifiers identifier list
+     * @param folderObject folder object
+     * @throws FileSystemException if any file system exception occurs
+     * @throws DataStoreException if any file system exception occurs
+     */
     private void pushIdentifiersRecursively(List<DataIdentifier> identifiers, FileObject folderObject)
             throws FileSystemException, DataStoreException {
         FileType type;
@@ -651,6 +668,14 @@ public class VFSBackend implements Backend {
         }
     }
 
+    /**
+     * Writes {@code file}'s content to the record entry identified by {@code identifier}.
+     * @param identifier record identifier
+     * @param file local file to copy from
+     * @param asyncUpload whether or not it should be done asynchronously
+     * @param callback asynchronous uploading callback instance
+     * @throws DataStoreException if any file system exception occurs
+     */
     private void write(DataIdentifier identifier, File file, boolean asyncUpload, AsyncUploadCallback callback)
             throws DataStoreException {
         AsyncUploadResult asyncUpRes = null;
@@ -667,7 +692,7 @@ public class VFSBackend implements Backend {
                 if (fileObject != null) {
                     updateLastModifiedTime(resolvedFileObject);
                 } else {
-                    copyFileContent(file, identifier, resolvedFileObject);
+                    copyFileContentToRecord(file, identifier);
                 }
 
                 if (asyncUpRes != null && callback != null) {
@@ -687,6 +712,14 @@ public class VFSBackend implements Backend {
         }
     }
 
+    /**
+     * Touches the object entry file identified by {@code identifier}.
+     * @param identifier record identifier
+     * @param minModifiedDate minimum modified date time to be used in touching
+     * @param asyncTouch whether or not it should be done asynchronously
+     * @param callback asynchrounous touching callback instance
+     * @throws DataStoreException if any file system exception occurs
+     */
     private void touch(DataIdentifier identifier, long minModifiedDate, boolean asyncTouch, AsyncTouchCallback callback)
             throws DataStoreException {
         AsyncTouchResult asyncTouchRes = null;
@@ -696,11 +729,14 @@ public class VFSBackend implements Backend {
         }
 
         try {
-            FileObject fileObject = resolveFileObject(identifier);
+            FileObject fileObject = getExistingFileObject(identifier);
 
-            //TODO: what if fileObject doesn't exist?
-            if (minModifiedDate > 0 && minModifiedDate > getLastModifiedTime(fileObject)) {
-                updateLastModifiedTime(fileObject);
+            if (fileObject != null) {
+                if (minModifiedDate > 0 && minModifiedDate > getLastModifiedTime(fileObject)) {
+                    updateLastModifiedTime(fileObject);
+                }
+            } else {
+                LOG.warn("File doesn't exist for the identifier: {}.", identifier);
             }
         } catch (DataStoreException e) {
             if (asyncTouchRes != null) {
@@ -719,6 +755,12 @@ public class VFSBackend implements Backend {
         }
     }
 
+    /**
+     * Deletes record file object.
+     * @param fileObject file object to delete
+     * @return true if deleted
+     * @throws DataStoreException if any file system exception occurs
+     */
     private boolean deleteRecordFileObject(FileObject fileObject) throws DataStoreException {
         if (isTouchFilePreferred()) {
             try {
@@ -739,7 +781,12 @@ public class VFSBackend implements Backend {
         }
     }
 
-    private void deleteEmptyParentDirs(FileObject fileObject) throws DataStoreException {
+    /**
+     * Deletes the parent folders of {@code fileObject} if a parent folder is empty.
+     * @param fileObject fileObject to start with
+     * @throws DataStoreException if any file system exception occurs
+     */
+    private void deleteEmptyParentFolders(FileObject fileObject) throws DataStoreException {
         try {
             String baseFolderUri = getBaseFolderObject().getName().getURI() + "/";
             FileObject parentFolder = fileObject.getParent();
@@ -761,6 +808,15 @@ public class VFSBackend implements Backend {
         }
     }
 
+    /**
+     * Deletes any descendant record files under {@code folderObject} if the record files are older than {@code timestamp},
+     * and push all the deleted record identifiers into {@code deleteIdSet}.
+     * @param deleteIdSet set to store all the deleted record identifiers
+     * @param folderObject folder object to start with
+     * @param timestamp timestamp
+     * @throws FileSystemException if any file system exception occurs
+     * @throws DataStoreException if any file system exception occurs
+     */
     private void deleteOlderRecursive(Set<DataIdentifier> deleteIdSet, FileObject folderObject, long timestamp)
             throws FileSystemException, DataStoreException {
         FileType type;
