@@ -87,14 +87,17 @@ public class TestVFSDataStore extends TestCaseBase {
     @Override
     protected void tearDown() {
         LOG.info("cleaning vfsBaseFolderUri [{}]", vfsBaseFolderUri);
-        FileObject vfsBaseFolder = ((VFSBackend) vfsDataStore.getBackend()).getBaseFolderObject();
+        VFSBackend backend = (VFSBackend) vfsDataStore.getBackend();
+        FileObject vfsBaseFolder = backend.getBaseFolderObject();
         try {
+            while (backend.getAsyncWriteExecuter().getActiveCount() > 0) {
+                Thread.sleep(3000);
+            }
             VFSTestUtils.deleteAllDescendantFiles(vfsBaseFolder);
         } catch (Exception e) {
             LOG.error("Failed to clean base folder at '{}'.", vfsBaseFolder.getName().getURI(), e);
         }
-        //FIXME
-        //super.tearDown();
+        super.tearDown();
     }
 
     private Properties getBackendProperties() {

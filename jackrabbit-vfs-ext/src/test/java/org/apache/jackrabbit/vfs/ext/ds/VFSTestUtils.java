@@ -22,11 +22,15 @@ import org.apache.commons.vfs2.FileObject;
 import org.apache.commons.vfs2.FileSystemException;
 import org.apache.commons.vfs2.FileType;
 import org.apache.jackrabbit.core.data.DataStoreException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * VFS Test Utilities.
  */
 class VFSTestUtils {
+
+    private static Logger LOG = LoggerFactory.getLogger(VFSTestUtils.class);
 
     /**
      * Deletes all the descendant files under the folder.
@@ -40,7 +44,10 @@ class VFSTestUtils {
         for (FileObject child : children) {
             fileType = child.getType();
             if (fileType == FileType.FILE) {
-                child.delete();
+                boolean deleted = child.delete();
+                if (!deleted) {
+                    LOG.warn("File not deleted: {}", child.getName().getURI());
+                }
             } else if (fileType == FileType.FOLDER) {
                 deleteAllDescendantFiles(child);
             }

@@ -544,6 +544,14 @@ public class VFSBackend implements Backend {
     }
 
     /**
+     * Returns ThreadPoolExecutor for unit test to be able to check active worker count before tearing down.
+     * @return ThreadPoolExecutor for unit test to be able to check active worker count before tearing down
+     */
+    ThreadPoolExecutor getAsyncWriteExecuter() {
+        return asyncWriteExecuter;
+    }
+
+    /**
      * Set the last modified time of a fileObject, if the fileObject is writable.
      * @param fileObject the file object
      * @param time the new last modified date
