@@ -26,6 +26,9 @@ import org.apache.jackrabbit.core.data.CachingDataStore;
  */
 public class VFSDataStore extends CachingDataStore {
 
+    /**
+     * Configuration properties for the backend.
+     */
     private Properties properties;
 
     /**

@@ -30,21 +30,27 @@ import org.slf4j.LoggerFactory;
  */
 class VFSTestUtils {
 
-    private static Logger LOG = LoggerFactory.getLogger(VFSTestUtils.class);
+    /**
+     * Logger instance.
+     */
+    private static final Logger LOG = LoggerFactory.getLogger(VFSTestUtils.class);
 
     /**
      * Deletes all the descendant files under the folder.
      * @param folderObject folder object
-     * @throws FileSystemException if any VFS file system exception occurs
-     * @throws DataStoreException 
+     * @throws FileSystemException if any file system exception occurs
+     * @throws DataStoreException if any file system exception occurs
      */
     static void deleteAllDescendantFiles(FileObject folderObject) throws FileSystemException, DataStoreException {
         List<FileObject> children = VFSUtils.getChildFileOrFolders(folderObject);
         FileType fileType;
+
         for (FileObject child : children) {
             fileType = child.getType();
+
             if (fileType == FileType.FILE) {
                 boolean deleted = child.delete();
+
                 if (!deleted) {
                     LOG.warn("File not deleted: {}", child.getName().getURI());
                 }

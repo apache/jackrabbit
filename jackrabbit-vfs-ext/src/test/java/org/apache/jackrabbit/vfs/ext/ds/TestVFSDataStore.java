@@ -42,7 +42,10 @@ import org.slf4j.LoggerFactory;
  */
 public class TestVFSDataStore extends TestCaseBase {
 
-    protected static final Logger LOG = LoggerFactory.getLogger(TestVFSDataStore.class);
+    /**
+     * Logger instance.
+     */
+    private static final Logger LOG = LoggerFactory.getLogger(TestVFSDataStore.class);
 
     private String vfsBaseFolderUri;
 

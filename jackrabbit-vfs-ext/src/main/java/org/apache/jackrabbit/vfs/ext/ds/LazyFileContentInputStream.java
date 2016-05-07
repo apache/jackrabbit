@@ -53,9 +53,11 @@ public class LazyFileContentInputStream extends AutoCloseInputStream {
      */
     public LazyFileContentInputStream(FileObject fileObject) throws FileSystemException {
         super(null);
+
         if (!fileObject.isReadable()) {
             throw new FileNotFoundException(fileObject.getName().getURI());
         }
+
         this.fileObject = fileObject;
     }
 
@@ -71,16 +73,28 @@ public class LazyFileContentInputStream extends AutoCloseInputStream {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public int read() throws IOException {
         open();
         return super.read();
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public int available() throws IOException {
         open();
         return super.available();
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public void close() throws IOException {
         // make sure the file is not opened afterwards
         opened = true;
@@ -91,42 +105,67 @@ public class LazyFileContentInputStream extends AutoCloseInputStream {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public synchronized void reset() throws IOException {
         open();
         super.reset();
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public boolean markSupported() {
         try {
             open();
         } catch (IOException e) {
             throw new IllegalStateException(e.toString());
         }
+
         return super.markSupported();
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public synchronized void mark(int readlimit) {
         try {
             open();
         } catch (IOException e) {
             throw new IllegalStateException(e.toString());
         }
+
         super.mark(readlimit);
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public long skip(long n) throws IOException {
         open();
         return super.skip(n);
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public int read(byte[] b) throws IOException {
         open();
         return super.read(b, 0, b.length);
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public int read(byte[] b, int off, int len) throws IOException {
         open();
         return super.read(b, off, len);
     }
-
 }

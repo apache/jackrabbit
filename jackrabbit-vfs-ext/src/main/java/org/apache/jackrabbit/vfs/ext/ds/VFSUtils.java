@@ -33,15 +33,31 @@ import org.apache.jackrabbit.core.data.DataStoreException;
  */
 class VFSUtils {
 
+    /**
+     * A set to filter out other files other than {@link FileType#FILE}.
+     */
     static Set<FileType> FILE_ONLY_TYPES = Collections
             .unmodifiableSet(new HashSet<FileType>(Arrays.asList(FileType.FILE)));
 
+    /**
+     * A set to filter out other files other than {@link FileType#FOLDER}.
+     */
     static Set<FileType> FOLDER_ONLY_TYPES = Collections
             .unmodifiableSet(new HashSet<FileType>(Arrays.asList(FileType.FOLDER)));
 
+    /**
+     * A set to filter out other files other than {@link FileType#FILE} or {@link FileType#FOLDER}.
+     */
     static Set<FileType> FILE_OR_FOLDER_TYPES = Collections
             .unmodifiableSet(new HashSet<FileType>(Arrays.asList(FileType.FILE, FileType.FOLDER)));
 
+    /**
+     * Creates a child folder by the {@code name} under the {@code baseFolder} and retrieves the created folder.
+     * @param baseFolder base folder object
+     * @param name child folder name
+     * @return a child folder by the {@code name} under the {@code baseFolder} and retrieves the created folder
+     * @throws DataStoreException if any file system exception occurs
+     */
     static FileObject createChildFolder(FileObject baseFolder, String name) throws DataStoreException {
         FileObject childFolder = null;
 
@@ -61,6 +77,13 @@ class VFSUtils {
         return childFolder;
     }
 
+    /**
+     * Creates a child file by the {@code name} under the {@code baseFolder} and retrieves the created file.
+     * @param baseFolder base folder object
+     * @param name child file name
+     * @return a child file by the {@code name} under the {@code baseFolder} and retrieves the created file
+     * @throws DataStoreException if any file system exception occurs
+     */
     static FileObject createChildFile(FileObject baseFolder, String name) throws DataStoreException {
         FileObject childFile = null;
 
@@ -80,23 +103,47 @@ class VFSUtils {
         return childFile;
     }
 
+    /**
+     * Returns child files under {@code folderObject} after filtering out files other than {@link FileType#FILE}.
+     * @param folderObject folder object
+     * @return child files under {@code folderObject} after filtering out files other than {@link FileType#FILE}
+     * @throws DataStoreException if any file system exception occurs
+     */
     static List<FileObject> getChildFiles(FileObject folderObject) throws DataStoreException {
         return getChildrenOfTypes(folderObject, FILE_ONLY_TYPES);
     }
 
+    /**
+     * Returns child folders under {@code folderObject} after filtering out files other than {@link FileType#FOLDER}.
+     * @param folderObject folder object
+     * @return child folders under {@code folderObject} after filtering out files other than {@link FileType#FOLDER}
+     * @throws DataStoreException if any file system exception occurs
+     */
     static List<FileObject> getChildFolders(FileObject folderObject) throws DataStoreException {
         return getChildrenOfTypes(folderObject, FOLDER_ONLY_TYPES);
     }
 
+    /**
+     * Returns child file objects under {@code folderObject} after filtering out files other than {@link FileType#FILE} or {@link FileType#FOLDER}.
+     * @param folderObject folder object
+     * @return child file objects under {@code folderObject} after filtering out files other than {@link FileType#FILE} or {@link FileType#FOLDER}
+     * @throws DataStoreException if any file system exception occurs
+     */
     static List<FileObject> getChildFileOrFolders(FileObject folderObject) throws DataStoreException {
         return getChildrenOfTypes(folderObject, FILE_OR_FOLDER_TYPES);
     }
 
+    /**
+     * Returns true if {@code folderObject} has any file or folder child objects.
+     * @param folderObject folder object
+     * @return true if {@code folderObject} has any file or folder child objects
+     * @throws DataStoreException if any file system exception occurs
+     */
     static boolean hasAnyChildFileOrFolder(FileObject folderObject) throws DataStoreException {
         return !getChildFileOrFolders(folderObject).isEmpty();
     }
 
-    static List<FileObject> getChildrenOfTypes(FileObject folderObject, Set<FileType> fileTypes) throws DataStoreException {
+    private static List<FileObject> getChildrenOfTypes(FileObject folderObject, Set<FileType> fileTypes) throws DataStoreException {
         try {
             FileObject [] children = folderObject.getChildren();
             List<FileObject> files = new ArrayList<FileObject>(children.length);

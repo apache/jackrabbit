@@ -69,6 +69,16 @@ public class VFSBackend implements Backend {
     private static final int ACCESS_TIME_RESOLUTION = 2000;
 
     /**
+     * Touch file name suffix.
+     * When {@link #isTouchFilePreferred()} returns true, this backend creates a separate file named by
+     * the original file base name followed by this touch file name suffix.
+     * So, this backend can set the last modified time on the separate touch file instead of trying to do it
+     * on the original entry file.
+     * For example, WebDAV file system doesn't allow to modify the last modified time on a file.
+     */
+    private static final String TOUCH_FILE_NAME_SUFFIX = ".touch";
+
+    /**
      * {@link CachingDataStore} instance using this backend.
      */
     private CachingDataStore store;
@@ -121,11 +131,13 @@ public class VFSBackend implements Backend {
         // Check is configuration is already provided. That takes precedence
         // over config provided via file based config
         this.config = config;
+
         if (this.properties != null) {
             initProps = this.properties;
         } else {
             initProps = new Properties();
             InputStream in = null;
+
             try {
                 in = new FileInputStream(config);
                 initProps.load(in);
@@ -134,8 +146,10 @@ public class VFSBackend implements Backend {
             } finally {
                 IOUtils.closeQuietly(in);
             }
+
             this.properties = initProps;
         }
+
         init(store, homeDir, initProps);
     }
 
@@ -178,11 +192,12 @@ public class VFSBackend implements Backend {
 
         int asyncWritePoolSize = 10;
         String asyncWritePoolSizeStr = prop.getProperty(VFSConstants.ASYNC_WRITE_POOL_SIZE);
+
         if (asyncWritePoolSizeStr != null && !"".equals(asyncWritePoolSizeStr)) {
             asyncWritePoolSize = Integer.parseInt(asyncWritePoolSizeStr);
         }
-        asyncWriteExecuter = (ThreadPoolExecutor) Executors.newFixedThreadPool(asyncWritePoolSize,
-                new NamedThreadFactory("vfs-write-worker"));
+
+        asyncWriteExecuter = createAsyncWriteExecuter(asyncWritePoolSize);
     }
 
     /**
@@ -191,6 +206,7 @@ public class VFSBackend implements Backend {
     @Override
     public InputStream read(DataIdentifier identifier) throws DataStoreException {
         FileObject fileObject = getExistingFileObject(identifier);
+
         if (fileObject == null) {
             throw new DataStoreException("Could not find file object for: " + identifier);
         }
@@ -208,6 +224,7 @@ public class VFSBackend implements Backend {
     @Override
     public long getLength(DataIdentifier identifier) throws DataStoreException {
         FileObject fileObject = getExistingFileObject(identifier);
+
         if (fileObject == null) {
             throw new DataStoreException("Could not find file object for: " + identifier);
         }
@@ -225,9 +242,11 @@ public class VFSBackend implements Backend {
     @Override
     public long getLastModified(DataIdentifier identifier) throws DataStoreException {
         FileObject fileObject = getExistingFileObject(identifier);
+
         if (fileObject == null) {
             throw new DataStoreException("Could not find file object for: " + identifier);
         }
+
         return getLastModifiedTime(fileObject);
     }
 
@@ -249,7 +268,7 @@ public class VFSBackend implements Backend {
             throw new IllegalArgumentException("callback parameter cannot be null in asyncUpload");
         }
 
-        asyncWriteExecuter.execute(new AsyncUploadJob(identifier, file, callback));
+        getAsyncWriteExecuter().execute(new AsyncUploadJob(identifier, file, callback));
     }
 
     /**
@@ -316,7 +335,7 @@ public class VFSBackend implements Backend {
             throw new IllegalArgumentException("callback parameter cannot be null in touchAsync");
         }
 
-        asyncWriteExecuter.execute(new AsyncTouchJob(identifier, minModifiedDate, callback));
+        getAsyncWriteExecuter().execute(new AsyncTouchJob(identifier, minModifiedDate, callback));
     }
 
     /**
@@ -324,9 +343,7 @@ public class VFSBackend implements Backend {
      */
     @Override
     public void close() throws DataStoreException {
-        asyncWriteExecuter.shutdownNow();
-        //FIXME
-        //getFileSystemManager().closeFileSystem(getBaseFolderObject().getFileSystem());
+        getAsyncWriteExecuter().shutdownNow();
     }
 
     /**
@@ -353,6 +370,7 @@ public class VFSBackend implements Backend {
     @Override
     public void deleteRecord(DataIdentifier identifier) throws DataStoreException {
         FileObject fileObject = getExistingFileObject(identifier);
+
         if (fileObject != null) {
             deleteRecordFileObject(fileObject);
             deleteEmptyParentDirs(fileObject);
@@ -369,8 +387,14 @@ public class VFSBackend implements Backend {
     }
 
     /**
-     * Returns true if a touch file should be used to save/get the last modified timestamp for a file object. True by default.
-     * @return true if a touch file should be used to save/get the last modified timestamp for a file object
+     * Returns true if a touch file should be used to save/get the last modified time for a file object. True by default.
+     * <P>
+     * When returns true, this backend creates a separate file named by the original file base name followed
+     * by this touch file name suffix. So, this backend can set the last modified time on the separate touch file
+     * instead of trying to do it on the original entry file.
+     * For example, WebDAV file system doesn't allow to modify the last modified time on a file.
+     * </P>
+     * @return true if a touch file should be used to save/get the last modified time for a file object
      */
     public boolean isTouchFilePreferred() {
         return touchFilePreferred;
@@ -392,6 +416,7 @@ public class VFSBackend implements Backend {
     protected FileSystemManager getFileSystemManager() throws DataStoreException {
         try {
             FileSystemManager fileSystemManager = VFS.getManager();
+
             if (fileSystemManager == null) {
                 throw new DataStoreException("Could not get the default VFS manager.");
             }
@@ -419,23 +444,28 @@ public class VFSBackend implements Backend {
      * @throws DataStoreException 
      */
     protected FileObject resolveFileObject(DataIdentifier identifier) throws DataStoreException {
-        String idString = identifier.toString();
+        try {
+            String relPath = resolveFileObjectRelPath(identifier);
+            return getBaseFolderObject().resolveFile(relPath);
+        } catch (FileSystemException e) {
+            throw new DataStoreException("File object not resolved: " + identifier, e);
+        }
+    }
 
-        //TODO: refactor path construction
+    /**
+     * Returns a resolved relative file object path by the given entry identifier.
+     * @param identifier entry identifier
+     * @return a resolved relative file object path by the given entry identifier
+     */
+    protected String resolveFileObjectRelPath(DataIdentifier identifier) {
+        String idString = identifier.toString();
         StringBuilder sb = new StringBuilder(80);
         sb.append(idString.substring(0, 2)).append('/');
         sb.append(idString.substring(2, 4)).append('/');
         sb.append(idString.substring(4, 6)).append('/');
         sb.append(idString.substring(6, 8)).append('/');
         sb.append(idString);
-
-        String relPath = sb.toString();
-
-        try {
-            return getBaseFolderObject().resolveFile(relPath);
-        } catch (FileSystemException e) {
-            throw new DataStoreException("File object not resolved: " + identifier, e);
-        }
+        return sb.toString();
     }
 
     /**
@@ -447,20 +477,15 @@ public class VFSBackend implements Backend {
      * @throws DataStoreException 
      */
     protected FileObject getExistingFileObject(DataIdentifier identifier) throws DataStoreException {
-        String idString = identifier.toString();
-        //TODO: refactor path segments construction
-        String [] segments = new String[5];
-        segments[0] = idString.substring(0, 2);
-        segments[1] = idString.substring(2, 4);
-        segments[2] = idString.substring(4, 6);
-        segments[3] = idString.substring(6, 8);
-        segments[4] = idString;
+        String relPath = resolveFileObjectRelPath(identifier);
+        String [] segments = relPath.split("/");
 
         FileObject tempFileObject = getBaseFolderObject();
 
         try {
-            for (int i = 0; i < 5; i++) {
+            for (int i = 0; i < segments.length; i++) {
                 tempFileObject = tempFileObject.getChild(segments[i]);
+
                 if (tempFileObject == null) {
                     return null;
                 }
@@ -479,10 +504,10 @@ public class VFSBackend implements Backend {
      * @return true if the fileObject is used for touching purpose
      */
     protected boolean isTouchFileObject(FileObject fileObject) {
-        //TODO: any better way? BTW, WebDAV doesn support #setLastModifiedTime(). That's why using touch file.
-        if (fileObject.getName().getBaseName().endsWith(".touch")) {
+        if (fileObject.getName().getBaseName().endsWith(TOUCH_FILE_NAME_SUFFIX)) {
             return true;
         }
+
         return false;
     }
 
@@ -497,14 +522,15 @@ public class VFSBackend implements Backend {
     protected FileObject getTouchFileObject(FileObject fileObject, boolean create) throws DataStoreException {
         try {
             FileObject folderObject = fileObject.getParent();
-            //TODO: any better way? BTW, WebDAV doesn support #setLastModifiedTime(). That's why using touch file.
-            String touchFileName = fileObject.getName().getBaseName() + ".touch";
+            String touchFileName = fileObject.getName().getBaseName() + TOUCH_FILE_NAME_SUFFIX;
             FileObject touchFileObject = folderObject.getChild(touchFileName);
+
             if (touchFileObject == null && create) {
                 touchFileObject = folderObject.resolveFile(touchFileName);
                 touchFileObject.createFile();
                 touchFileObject = folderObject.getChild(touchFileName);
             }
+
             return touchFileObject;
         } catch (FileSystemException e) {
             throw new DataStoreException("Touch file object not resolved: " + fileObject.getName().getURI(), e);
@@ -512,14 +538,8 @@ public class VFSBackend implements Backend {
     }
 
     protected void copyFileContent(File srcFile, DataIdentifier identifier, FileObject destResolvedFileObject) throws IOException, DataStoreException {
-        String idString = identifier.toString();
-        //TODO: refactor path segments construction.
-        String [] segments = new String[5];
-        segments[0] = idString.substring(0, 2);
-        segments[1] = idString.substring(2, 4);
-        segments[2] = idString.substring(4, 6);
-        segments[3] = idString.substring(6, 8);
-        segments[4] = idString;
+        String relPath = resolveFileObjectRelPath(identifier);
+        String [] segments = relPath.split("/");
 
         InputStream input = null;
         OutputStream output = null;
@@ -527,13 +547,13 @@ public class VFSBackend implements Backend {
         try {
             FileObject baseFolderObject = getBaseFolderObject();
             FileObject folderObject = null;
-            //TODO: is it necessary to create folder in the loop? Why not creating by single call on #createFolder()?
-            for (int i = 0; i < 4; i++) {
+
+            for (int i = 0; i < segments.length - 1; i++) {
                 folderObject = VFSUtils.createChildFolder(baseFolderObject, segments[i]);
                 baseFolderObject = folderObject;
             }
-            //TODO: Why not creating by single call on #createFile()?
-            FileObject destFileObject = VFSUtils.createChildFile(folderObject, segments[4]);
+
+            FileObject destFileObject = VFSUtils.createChildFile(folderObject, segments[segments.length - 1]);
             input = new FileInputStream(srcFile);
             output = destFileObject.getContent().getOutputStream();
             IOUtils.copy(input, output);
@@ -544,10 +564,21 @@ public class VFSBackend implements Backend {
     }
 
     /**
-     * Returns ThreadPoolExecutor for unit test to be able to check active worker count before tearing down.
-     * @return ThreadPoolExecutor for unit test to be able to check active worker count before tearing down
+     * Creates a {@link ThreadPoolExecutor}.
+     * This method is invoked during the initialization for asynchronous write/touch job executions.
+     * @param workerCount thread pool count
+     * @return a {@link ThreadPoolExecutor}
      */
-    ThreadPoolExecutor getAsyncWriteExecuter() {
+    protected ThreadPoolExecutor createAsyncWriteExecuter(int workerCount) {
+        return (ThreadPoolExecutor) Executors.newFixedThreadPool(workerCount,
+                new NamedThreadFactory("vfs-write-worker"));
+    }
+
+    /**
+     * Returns ThreadPoolExecutor used to execute asynchronous write or touch jobs.
+     * @return ThreadPoolExecutor used to execute asynchronous write or touch jobs
+     */
+    protected ThreadPoolExecutor getAsyncWriteExecuter() {
         return asyncWriteExecuter;
     }
 
@@ -583,6 +614,7 @@ public class VFSBackend implements Backend {
         try {
             if (isTouchFilePreferred()) {
                 FileObject touchFile = getTouchFileObject(fileObject, false);
+
                 if (touchFile != null) {
                     lastModified = touchFile.getContent().getLastModifiedTime();
                 } else {
@@ -591,6 +623,7 @@ public class VFSBackend implements Backend {
             } else {
                 lastModified = fileObject.getContent().getLastModifiedTime();
             }
+
             if (lastModified == 0) {
                 throw new DataStoreException("Failed to read record modified date: " + fileObject.getName().getURI());
             }
@@ -636,16 +669,19 @@ public class VFSBackend implements Backend {
                 } else {
                     copyFileContent(file, identifier, resolvedFileObject);
                 }
+
                 if (asyncUpRes != null && callback != null) {
                     callback.onSuccess(asyncUpRes);
                 }
             } catch (IOException e) {
                 DataStoreException e2 = new DataStoreException(
                         "Could not get output stream to object: " + resolvedFileObject.getName().getURI(), e);
+
                 if (asyncUpRes != null && callback != null) {
                     asyncUpRes.setException(e2);
                     callback.onFailure(asyncUpRes);
                 }
+
                 throw e2;
             }
         }
@@ -661,6 +697,7 @@ public class VFSBackend implements Backend {
 
         try {
             FileObject fileObject = resolveFileObject(identifier);
+
             //TODO: what if fileObject doesn't exist?
             if (minModifiedDate > 0 && minModifiedDate > getLastModifiedTime(fileObject)) {
                 updateLastModifiedTime(fileObject);
@@ -669,6 +706,7 @@ public class VFSBackend implements Backend {
             if (asyncTouchRes != null) {
                 asyncTouchRes.setException(e);
             }
+
             throw e;
         } finally {
             if (asyncTouchRes != null && callback != null) {
@@ -685,6 +723,7 @@ public class VFSBackend implements Backend {
         if (isTouchFilePreferred()) {
             try {
                 FileObject touchFile = getTouchFileObject(fileObject, false);
+
                 if (touchFile != null) {
                     touchFile.delete();
                 }
@@ -692,6 +731,7 @@ public class VFSBackend implements Backend {
                 LOG.warn("Could not delete touch file for " + fileObject.getName().getURI(), e);
             }
         }
+
         try {
             return fileObject.delete();
         } catch (FileSystemException e) {
@@ -703,12 +743,14 @@ public class VFSBackend implements Backend {
         try {
             String baseFolderUri = getBaseFolderObject().getName().getURI() + "/";
             FileObject parentFolder = fileObject.getParent();
+
             // Only iterate & delete if parent folder of the blob file is
             // child of the base directory and if it is empty
             while (parentFolder.getName().getURI().startsWith(baseFolderUri)) {
                 if (VFSUtils.hasAnyChildFileOrFolder(parentFolder)) {
                     break;
                 }
+
                 boolean deleted = parentFolder.delete();
                 LOG.debug("Deleted parent folder [{}] of file [{}]: {}",
                         new Object[] { parentFolder, fileObject.getName().getURI(), deleted });
@@ -786,7 +828,6 @@ public class VFSBackend implements Backend {
             } catch (DataStoreException e) {
                 LOG.error("Could not upload [" + identifier + "], file[" + file + "]", e);
             }
-
         }
     }
 
