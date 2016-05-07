@@ -21,6 +21,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.URI;
 import java.sql.Timestamp;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -39,7 +40,6 @@ import org.apache.commons.vfs2.FileSystemOptions;
 import org.apache.commons.vfs2.FileType;
 import org.apache.commons.vfs2.VFS;
 import org.apache.commons.vfs2.provider.http.HttpFileSystemConfigBuilder;
-import org.apache.commons.vfs2.provider.webdav.WebdavFileSystemConfigBuilder;
 import org.apache.jackrabbit.core.data.AsyncTouchCallback;
 import org.apache.jackrabbit.core.data.AsyncTouchResult;
 import org.apache.jackrabbit.core.data.AsyncUploadCallback;
@@ -62,6 +62,21 @@ public class VFSBackend implements Backend {
      * Logger instance.
      */
     private static final Logger LOG = LoggerFactory.getLogger(VFSBackend.class);
+
+    /**
+     * Property key name for maximum backend connection. e.g. max total http connections.
+     */
+    static final String PROP_MAX_TOTAL_CONNECTIONS = "maxTotalConnections";
+
+    /**
+     * Property key name for maximum backend connection. e.g. max http connections per host.
+     */
+    static final String PROP_MAX_CONNECTIONS_PER_HOST = "maxConnectionsPerHost";
+
+    /**
+     * Default maximum backend connection. e.g. max http connection.
+     */
+    static final int DEFAULT_MAX_CONNECTION = 200;
 
     /**
      * The maximum last modified time resolution of the file system.
@@ -97,9 +112,6 @@ public class VFSBackend implements Backend {
      * <code>VFSBackend</code> specific configuration properties.
      */
     private Properties properties;
-
-    //TODO
-    private FileSystemOptions fileSystemOptions;
 
     /**
      * VFS base folder URI.
@@ -165,18 +177,15 @@ public class VFSBackend implements Backend {
         this.store = store;
         this.homeDir = homeDir;
 
-        //TODO: clean up file system configuration setup from parameters
-        FileSystemOptions opts = new FileSystemOptions();
-        HttpFileSystemConfigBuilder builder = WebdavFileSystemConfigBuilder.getInstance();
-        builder.setMaxTotalConnections(opts, 200);
-        builder.setMaxConnectionsPerHost(opts, 200);
-
         vfsBaseFolderUri = prop.getProperty(VFSConstants.VFS_BASE_FOLDER_URI);
 
         if (vfsBaseFolderUri == null || "".equals(vfsBaseFolderUri)) {
             throw new DataStoreException("Could not initialize VFSBackend from " + config + ". ["
                     + VFSConstants.VFS_BASE_FOLDER_URI + "] property not found.");
         }
+
+        FileSystemOptions opts = new FileSystemOptions();
+        buildFileSystemOptions(opts, prop);
 
         try {
             vfsBaseFolder = getFileSystemManager().resolveFile(vfsBaseFolderUri, opts);
@@ -425,6 +434,26 @@ public class VFSBackend implements Backend {
             return fileSystemManager;
         } catch (FileSystemException e) {
             throw new DataStoreException("Could not get VFS manager.", e);
+        }
+    }
+
+    /**
+     * Builds {@link FileSystemOptions} instance by reading {@code props}
+     * to use when resolving the {@link #vfsBaseFolder} during the initialization.
+     * @param opts {@link FileSystemOptions} instance
+     * @param props VFS backend configuration properties
+     */
+    protected void buildFileSystemOptions(FileSystemOptions opts, Properties props) {
+        String baseUriProp = props.getProperty(VFSConstants.VFS_BASE_FOLDER_URI);
+        URI baseUri = URI.create(baseUriProp);
+        String scheme = baseUri.getScheme();
+
+        if ("http".equals(scheme) || "https".equals(scheme) || "webdav".equals(scheme)) {
+            HttpFileSystemConfigBuilder builder = HttpFileSystemConfigBuilder.getInstance();
+            builder.setMaxTotalConnections(opts,
+                    getIntProperty(props, PROP_MAX_TOTAL_CONNECTIONS, DEFAULT_MAX_CONNECTION));
+            builder.setMaxConnectionsPerHost(opts,
+                    getIntProperty(props, PROP_MAX_CONNECTIONS_PER_HOST, DEFAULT_MAX_CONNECTION));
         }
     }
 
@@ -912,5 +941,22 @@ public class VFSBackend implements Backend {
                 LOG.error("Could not touch [" + identifier + "]", e);
             }
         }
+    }
+
+    private int getIntProperty(Properties props, String key, int defaultValue) {
+        try {
+            String value = props.getProperty(key);
+
+            if (value != null) {
+                value = value.trim();
+
+                if (!"".equals(value)) {
+                    return Integer.parseInt(value);
+                }
+            }
+        } catch (NumberFormatException ignore) {
+        }
+
+        return defaultValue;
     }
 }
