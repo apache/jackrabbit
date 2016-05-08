@@ -18,11 +18,6 @@ You can run the unit tests with the default temporary local file system like the
 
         mvn clean test
 
-        or
-
-        mvn clean test -Dconfig=src/test/resources/vfs.properties
-
-
 ### Testing with WebDAV file system
 
 You can run the unit tests with WebDAV backend file system like the following:
@@ -39,16 +34,20 @@ TODO
 
 ## Configuration Instructions
 
+### With local file system
+
         <DataStore class="org.apache.jackrabbit.vfs.ext.ds.VfsDataStore">
             <param name="secret" value="123456" />
-            <param name="config" value="${rep.home}/vfs.properties"/>
+            <param name="baseFolderUri" value="file://${rep.home}/vfsds" />
+            <param name="asyncWritePoolSize" value="10" />
         </DataStore>
 
-## VFS specific configuration properties
+### With WebDAV file system
 
-VFS specific configuration (e.g, ${rep.home}/vfs.properties) can have the following properites:
-
-        # VFS Backend base folder URI. e.g, vfsBaseFolderUri=file://${rep.home}/vfsds
-        vfsBaseFolderUri=
-        # Asynchronous writing pool size to the backend. 10 by default.
-        asyncWritePoolSize=10
+        <DataStore class="org.apache.jackrabbit.vfs.ext.ds.VfsDataStore">
+            <param name="secret" value="123456" />
+            <param name="baseFolderUri" value="webdav://localhost:8888/vfsds" />
+            <param name="asyncWritePoolSize" value="10" />
+            <param name="fileSystemOptionsPropertiesInString"
+                   value="http.maxTotalConnections = 200; http.maxConnectionsPerHost = 200" />
+        </DataStore>

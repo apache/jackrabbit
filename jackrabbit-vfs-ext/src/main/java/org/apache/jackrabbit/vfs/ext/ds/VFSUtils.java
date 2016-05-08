@@ -70,7 +70,7 @@ class VFSUtils {
             }
         } catch (FileSystemException e) {
             throw new DataStoreException(
-                    "Could not create a child folder, '" + name + "' under " + baseFolder.getName().getURI(),
+                    "Could not create a child folder, '" + name + "' under " + baseFolder.getName().getFriendlyURI(),
                     e);
         }
 
@@ -96,7 +96,7 @@ class VFSUtils {
             }
         } catch (FileSystemException e) {
             throw new DataStoreException(
-                    "Could not create a child file, '" + name + "' under " + baseFolder.getName().getURI(),
+                    "Could not create a child file, '" + name + "' under " + baseFolder.getName().getFriendlyURI(),
                     e);
         }
 
@@ -145,19 +145,36 @@ class VFSUtils {
 
     private static List<FileObject> getChildrenOfTypes(FileObject folderObject, Set<FileType> fileTypes) throws DataStoreException {
         try {
+            String folderBaseName = folderObject.getName().getBaseName();
             FileObject [] children = folderObject.getChildren();
             List<FileObject> files = new ArrayList<FileObject>(children.length);
-            FileType fileType;
+            String childBaseName;
+
             for (int i = 0; i < children.length; i++) {
-                fileType = children[i].getType();
-                if (fileTypes.contains(fileType)) {
+                childBaseName = children[i].getName().getBaseName();
+                FileType fileType = null;
+
+                try {
+                    fileType = children[i].getType();
+                } catch (FileSystemException notDetermineTypeEx) {
+                    if (folderBaseName.equals(childBaseName)) {
+                        // Ignore this case.
+                        // Some WebDAV server or VFS seems to include the folder itself as child as imaginary file type,
+                        // and throw FileSystemException saying "Could not determine the type of file" in this case.
+                    } else {
+                        throw notDetermineTypeEx;
+                    }
+                }
+
+                if (fileType != null && fileTypes.contains(fileType)) {
                     files.add(children[i]);
                 }
             }
+
             return files;
         } catch (FileSystemException e) {
             throw new DataStoreException(
-                    "Could not find children under " + folderObject.getName().getURI(), e);
+                    "Could not find children under " + folderObject.getName().getFriendlyURI(), e);
         }
     }
 

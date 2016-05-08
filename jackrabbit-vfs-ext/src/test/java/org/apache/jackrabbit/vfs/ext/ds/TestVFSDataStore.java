@@ -26,7 +26,6 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.vfs2.FileObject;
 import org.apache.jackrabbit.core.data.CachingDataStore;
 import org.apache.jackrabbit.core.data.TestCaseBase;
-import org.apache.jackrabbit.vfs.ext.VFSConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,21 +46,30 @@ public class TestVFSDataStore extends TestCaseBase {
      */
     private static final Logger LOG = LoggerFactory.getLogger(TestVFSDataStore.class);
 
-    private String vfsBaseFolderUri;
+    /**
+     * VFS base folder URI configuration property key name.
+     */
+    private static final String BASE_FOLDER_URI = "baseFolderUri";
 
-    private VFSDataStore vfsDataStore;
+    private String baseFolderUri;
 
-    private Properties vfsBackendProps;
+    private VFSDataStore dataStore;
+
+    private Properties configProps;
 
     @Override
     protected void setUp() throws Exception {
         super.setUp();
+
         String configProp = System.getProperty("config");
+
         if (configProp != null && !"".equals(configProp)) {
             Properties props = new Properties();
             File configFile = new File(configProp);
+
             if (configFile.isFile()) {
                 FileInputStream fis = null;
+
                 try {
                     fis = new FileInputStream(configFile);
                     props.load(fis);
@@ -71,48 +79,53 @@ public class TestVFSDataStore extends TestCaseBase {
             } else {
                 props = loadProperties(configProp);
             }
-            vfsBackendProps = props;
+
+            configProps = props;
         }
     }
 
     @Override
     protected CachingDataStore createDataStore() throws RepositoryException {
-        vfsDataStore = new VFSDataStore();
-        Properties props = getBackendProperties();
-        vfsBaseFolderUri = props.getProperty(VFSConstants.VFS_BASE_FOLDER_URI);
-        LOG.info("vfsBaseFolderUri [{}] set.", vfsBaseFolderUri);
-        vfsDataStore.setProperties(props);
-        vfsDataStore.setSecret("123456");
-        vfsDataStore.init(dataStoreDir);
-        return vfsDataStore;
+        dataStore = new VFSDataStore();
+        Properties props = getConfigProps();
+        baseFolderUri = props.getProperty(BASE_FOLDER_URI);
+        dataStore.setBaseFolderUri(baseFolderUri);
+        LOG.info("baseFolderUri [{}] set.", baseFolderUri);
+        dataStore.setFileSystemOptionsProperties(props);
+        dataStore.setSecret("123456");
+        dataStore.init(dataStoreDir);
+        return dataStore;
     }
 
     @Override
     protected void tearDown() {
-        LOG.info("cleaning vfsBaseFolderUri [{}]", vfsBaseFolderUri);
-        VFSBackend backend = (VFSBackend) vfsDataStore.getBackend();
+        LOG.info("cleaning vfsBaseFolderUri [{}]", baseFolderUri);
+        VFSBackend backend = (VFSBackend) dataStore.getBackend();
         FileObject vfsBaseFolder = backend.getBaseFolderObject();
+
         try {
-            while (backend.getAsyncWriteExecuter().getActiveCount() > 0) {
-                Thread.sleep(3000);
+            // Let's wait for 5 minutes at max if there are still execution jobs in the async writing executor's queue.
+            int seconds = 0;
+            while (backend.getAsyncWriteExecuter().getActiveCount() > 0 && seconds++ < 300) {
+                Thread.sleep(1000);
             }
+
             VFSTestUtils.deleteAllDescendantFiles(vfsBaseFolder);
         } catch (Exception e) {
-            LOG.error("Failed to clean base folder at '{}'.", vfsBaseFolder.getName().getURI(), e);
+            LOG.error("Failed to clean base folder at '{}'.", vfsBaseFolder.getName().getFriendlyURI(), e);
         }
+
         super.tearDown();
     }
 
-    private Properties getBackendProperties() {
-        if (vfsBackendProps == null) {
-            Properties props = loadProperties("/vfs.properties");
-            String uriValue = props.getProperty(VFSConstants.VFS_BASE_FOLDER_URI);
-            if (uriValue == null || "".equals(uriValue.trim())) {
-                String baseFolderUri = new File(new File(dataStoreDir), "vfsds").toURI().toString();
-                props.setProperty(VFSConstants.VFS_BASE_FOLDER_URI, baseFolderUri);
-            }
-            vfsBackendProps = props;
+    private Properties getConfigProps() {
+        if (configProps == null) {
+            Properties props = new Properties();
+            String baseFolderUri = new File(new File(dataStoreDir), "vfsds").toURI().toString();
+            props.setProperty(BASE_FOLDER_URI, baseFolderUri);
+            configProps = props;
         }
-        return vfsBackendProps;
+
+        return configProps;
     }
 }

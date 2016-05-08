@@ -21,13 +21,11 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.URI;
 import java.sql.Timestamp;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -35,11 +33,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.vfs2.FileObject;
 import org.apache.commons.vfs2.FileSystemException;
-import org.apache.commons.vfs2.FileSystemManager;
-import org.apache.commons.vfs2.FileSystemOptions;
 import org.apache.commons.vfs2.FileType;
-import org.apache.commons.vfs2.VFS;
-import org.apache.commons.vfs2.provider.http.HttpFileSystemConfigBuilder;
 import org.apache.jackrabbit.core.data.AsyncTouchCallback;
 import org.apache.jackrabbit.core.data.AsyncTouchResult;
 import org.apache.jackrabbit.core.data.AsyncUploadCallback;
@@ -49,7 +43,6 @@ import org.apache.jackrabbit.core.data.CachingDataStore;
 import org.apache.jackrabbit.core.data.DataIdentifier;
 import org.apache.jackrabbit.core.data.DataStoreException;
 import org.apache.jackrabbit.core.data.util.NamedThreadFactory;
-import org.apache.jackrabbit.vfs.ext.VFSConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -64,19 +57,9 @@ public class VFSBackend implements Backend {
     private static final Logger LOG = LoggerFactory.getLogger(VFSBackend.class);
 
     /**
-     * Property key name for maximum backend connection. e.g. max total http connections.
+     * The default pool size of asynchronous write pooling executor.
      */
-    static final String PROP_MAX_TOTAL_CONNECTIONS = "maxTotalConnections";
-
-    /**
-     * Property key name for maximum backend connection. e.g. max http connections per host.
-     */
-    static final String PROP_MAX_CONNECTIONS_PER_HOST = "maxConnectionsPerHost";
-
-    /**
-     * Default maximum backend connection. e.g. max http connection.
-     */
-    static final int DEFAULT_MAX_CONNECTION = 200;
+    static final int DEFAULT_ASYNC_WRITE_POOL_SIZE = 10;
 
     /**
      * The maximum last modified time resolution of the file system.
@@ -99,29 +82,14 @@ public class VFSBackend implements Backend {
     private CachingDataStore store;
 
     /**
-     * Path of repository home directory.
-     */
-    private String homeDir;
-
-    /**
-     * Configuration file path for the <code>VFSBackend</code> specific configuration properties.
-     */
-    private String config;
-
-    /**
-     * <code>VFSBackend</code> specific configuration properties.
-     */
-    private Properties properties;
-
-    /**
-     * VFS base folder URI.
-     */
-    private String vfsBaseFolderUri;
-
-    /**
      * VFS base folder object.
      */
-    private FileObject vfsBaseFolder;
+    private FileObject baseFolder;
+
+    /**
+     * The pool size of asynchronous write pooling executor.
+     */
+    private int asyncWritePoolSize = DEFAULT_ASYNC_WRITE_POOL_SIZE;
 
     /**
      * Asynchronous write pooling executor.
@@ -134,79 +102,39 @@ public class VFSBackend implements Backend {
      */
     private boolean touchFilePreferred = true;
 
+    public VFSBackend(FileObject baseFolder) {
+        this.baseFolder = baseFolder;
+    }
+
+    /**
+     * Returns the pool size of the async write pool executor.
+     * @return the pool size of the async write pool executor
+     */
+    public int getAsyncWritePoolSize() {
+        return asyncWritePoolSize;
+    }
+
+    /**
+     * Sets the pool size of the async write pool executor.
+     * @param asyncWritePoolSize pool size of the async write pool executor
+     */
+    public void setAsyncWritePoolSize(int asyncWritePoolSize) {
+        this.asyncWritePoolSize = asyncWritePoolSize;
+    }
+
     /**
      * {@inheritDoc}
      */
     @Override
     public void init(CachingDataStore store, String homeDir, String config) throws DataStoreException {
-        Properties initProps = null;
-        // Check is configuration is already provided. That takes precedence
-        // over config provided via file based config
-        this.config = config;
-
-        if (this.properties != null) {
-            initProps = this.properties;
-        } else {
-            initProps = new Properties();
-            InputStream in = null;
-
-            try {
-                in = new FileInputStream(config);
-                initProps.load(in);
-            } catch (IOException e) {
-                throw new DataStoreException("Could not initialize VFSBackend from " + config, e);
-            } finally {
-                IOUtils.closeQuietly(in);
-            }
-
-            this.properties = initProps;
-        }
-
-        init(store, homeDir, initProps);
-    }
-
-    /**
-     * This method initialize backend with the configuration as {@link java.util.Properties}.
-     * 
-     * @param store {@link CachingDataStore}
-     * @param homeDir path of repository home dir.
-     * @param prop configuration as {@link java.util.Properties}.
-     * @throws DataStoreException if any file system exception occurs
-     */
-    public void init(CachingDataStore store, String homeDir, Properties prop) throws DataStoreException {
         this.store = store;
-        this.homeDir = homeDir;
 
-        vfsBaseFolderUri = prop.getProperty(VFSConstants.VFS_BASE_FOLDER_URI);
-
-        if (vfsBaseFolderUri == null || "".equals(vfsBaseFolderUri)) {
-            throw new DataStoreException("Could not initialize VFSBackend from " + config + ". ["
-                    + VFSConstants.VFS_BASE_FOLDER_URI + "] property not found.");
+        // When it's local file system, no need to use a separate touch file.
+        if ("file".equals(baseFolder.getName().getScheme())) {
+            touchFilePreferred = false;
         }
 
-        FileSystemOptions opts = new FileSystemOptions();
-        buildFileSystemOptions(opts, prop);
-
-        try {
-            vfsBaseFolder = getFileSystemManager().resolveFile(vfsBaseFolderUri, opts);
-            vfsBaseFolder.createFolder();
-
-            if ("file".equals(vfsBaseFolder.getName().getScheme())) {
-                touchFilePreferred = false;
-            }
-        } catch (FileSystemException e) {
-            throw new DataStoreException(
-                    "Could not resolve or create vfs uri folder: " + vfsBaseFolder.getName().getURI(), e);
-        }
-
-        int asyncWritePoolSize = 10;
-        String asyncWritePoolSizeStr = prop.getProperty(VFSConstants.ASYNC_WRITE_POOL_SIZE);
-
-        if (asyncWritePoolSizeStr != null && !"".equals(asyncWritePoolSizeStr)) {
-            asyncWritePoolSize = Integer.parseInt(asyncWritePoolSizeStr);
-        }
-
-        asyncWriteExecuter = createAsyncWriteExecuter(asyncWritePoolSize);
+        asyncWriteExecuter = createAsyncWriteExecuter();
     }
 
     /**
@@ -387,15 +315,6 @@ public class VFSBackend implements Backend {
     }
 
     /**
-     * Properties used to configure the backend.
-     * If provided explicitly before init is invoked then these take precedence.
-     * @param properties to configure Backend
-     */
-    public void setProperties(Properties properties) {
-        this.properties = properties;
-    }
-
-    /**
      * Returns true if a touch file should be used to save/get the last modified time for a file object.
      * True by default unless the {@link #getBaseFolderObject()} is representing a local file system folder (e.g, file://...).
      * <P>
@@ -419,50 +338,11 @@ public class VFSBackend implements Backend {
     }
 
     /**
-     * Returns {@link FileSystemManager} instance to use in this backend implementation.
-     * @return {@link FileSystemManager} instance to use in this backend implementation
-     * @throws DataStoreException if any file system exception occurs
-     */
-    protected FileSystemManager getFileSystemManager() throws DataStoreException {
-        try {
-            FileSystemManager fileSystemManager = VFS.getManager();
-
-            if (fileSystemManager == null) {
-                throw new DataStoreException("Could not get the default VFS manager.");
-            }
-
-            return fileSystemManager;
-        } catch (FileSystemException e) {
-            throw new DataStoreException("Could not get VFS manager.", e);
-        }
-    }
-
-    /**
-     * Builds {@link FileSystemOptions} instance by reading {@code props}
-     * to use when resolving the {@link #vfsBaseFolder} during the initialization.
-     * @param opts {@link FileSystemOptions} instance
-     * @param props VFS backend configuration properties
-     */
-    protected void buildFileSystemOptions(FileSystemOptions opts, Properties props) {
-        String baseUriProp = props.getProperty(VFSConstants.VFS_BASE_FOLDER_URI);
-        URI baseUri = URI.create(baseUriProp);
-        String scheme = baseUri.getScheme();
-
-        if ("http".equals(scheme) || "https".equals(scheme) || "webdav".equals(scheme)) {
-            HttpFileSystemConfigBuilder builder = HttpFileSystemConfigBuilder.getInstance();
-            builder.setMaxTotalConnections(opts,
-                    getIntProperty(props, PROP_MAX_TOTAL_CONNECTIONS, DEFAULT_MAX_CONNECTION));
-            builder.setMaxConnectionsPerHost(opts,
-                    getIntProperty(props, PROP_MAX_CONNECTIONS_PER_HOST, DEFAULT_MAX_CONNECTION));
-        }
-    }
-
-    /**
      * Returns the VFS base folder object.
      * @return the VFS base folder object
      */
     protected FileObject getBaseFolderObject() {
-        return vfsBaseFolder;
+        return baseFolder;
     }
 
     /**
@@ -564,18 +444,17 @@ public class VFSBackend implements Backend {
 
             return touchFileObject;
         } catch (FileSystemException e) {
-            throw new DataStoreException("Touch file object not resolved: " + fileObject.getName().getURI(), e);
+            throw new DataStoreException("Touch file object not resolved: " + fileObject.getName().getFriendlyURI(), e);
         }
     }
 
     /**
      * Creates a {@link ThreadPoolExecutor}.
      * This method is invoked during the initialization for asynchronous write/touch job executions.
-     * @param workerCount thread pool count
      * @return a {@link ThreadPoolExecutor}
      */
-    protected ThreadPoolExecutor createAsyncWriteExecuter(int workerCount) {
-        return (ThreadPoolExecutor) Executors.newFixedThreadPool(workerCount,
+    protected ThreadPoolExecutor createAsyncWriteExecuter() {
+        return (ThreadPoolExecutor) Executors.newFixedThreadPool(asyncWritePoolSize,
                 new NamedThreadFactory("vfs-write-worker"));
     }
 
@@ -636,7 +515,7 @@ public class VFSBackend implements Backend {
             }
         } catch (FileSystemException e) {
             throw new DataStoreException("An IO Exception occurred while trying to set the last modified date: "
-                    + fileObject.getName().getURI(), e);
+                    + fileObject.getName().getFriendlyURI(), e);
         }
     }
 
@@ -663,10 +542,10 @@ public class VFSBackend implements Backend {
             }
 
             if (lastModified == 0) {
-                throw new DataStoreException("Failed to read record modified date: " + fileObject.getName().getURI());
+                throw new DataStoreException("Failed to read record modified date: " + fileObject.getName().getFriendlyURI());
             }
         } catch (FileSystemException e) {
-            throw new DataStoreException("Failed to read record modified date: " + fileObject.getName().getURI());
+            throw new DataStoreException("Failed to read record modified date: " + fileObject.getName().getFriendlyURI());
         }
 
         return lastModified;
@@ -729,7 +608,7 @@ public class VFSBackend implements Backend {
                 }
             } catch (IOException e) {
                 DataStoreException e2 = new DataStoreException(
-                        "Could not get output stream to object: " + resolvedFileObject.getName().getURI(), e);
+                        "Could not get output stream to object: " + resolvedFileObject.getName().getFriendlyURI(), e);
 
                 if (asyncUpRes != null && callback != null) {
                     asyncUpRes.setException(e2);
@@ -799,14 +678,14 @@ public class VFSBackend implements Backend {
                     touchFile.delete();
                 }
             } catch (FileSystemException e) {
-                LOG.warn("Could not delete touch file for " + fileObject.getName().getURI(), e);
+                LOG.warn("Could not delete touch file for " + fileObject.getName().getFriendlyURI(), e);
             }
         }
 
         try {
             return fileObject.delete();
         } catch (FileSystemException e) {
-            throw new DataStoreException("Could not delete record file at " + fileObject.getName().getURI(), e);
+            throw new DataStoreException("Could not delete record file at " + fileObject.getName().getFriendlyURI(), e);
         }
     }
 
@@ -817,23 +696,23 @@ public class VFSBackend implements Backend {
      */
     private void deleteEmptyParentFolders(FileObject fileObject) throws DataStoreException {
         try {
-            String baseFolderUri = getBaseFolderObject().getName().getURI() + "/";
+            String baseFolderUri = getBaseFolderObject().getName().getFriendlyURI() + "/";
             FileObject parentFolder = fileObject.getParent();
 
             // Only iterate & delete if parent folder of the blob file is
             // child of the base directory and if it is empty
-            while (parentFolder.getName().getURI().startsWith(baseFolderUri)) {
+            while (parentFolder.getName().getFriendlyURI().startsWith(baseFolderUri)) {
                 if (VFSUtils.hasAnyChildFileOrFolder(parentFolder)) {
                     break;
                 }
 
                 boolean deleted = parentFolder.delete();
                 LOG.debug("Deleted parent folder [{}] of file [{}]: {}",
-                        new Object[] { parentFolder, fileObject.getName().getURI(), deleted });
+                        new Object[] { parentFolder, fileObject.getName().getFriendlyURI(), deleted });
                 parentFolder = parentFolder.getParent();
             }
         } catch (IOException e) {
-            LOG.warn("Error in parents deletion for " + fileObject.getName().getURI(), e);
+            LOG.warn("Error in parents deletion for " + fileObject.getName().getFriendlyURI(), e);
         }
     }
 
@@ -873,7 +752,7 @@ public class VFSBackend implements Backend {
                         store.deleteFromCache(identifier);
 
                         if (LOG.isInfoEnabled()) {
-                            LOG.info("Deleting old file " + fileObject.getName().getURI() + " modified: "
+                            LOG.info("Deleting old file " + fileObject.getName().getFriendlyURI() + " modified: "
                                     + new Timestamp(lastModified).toString() + " length: "
                                     + fileObject.getContent().getSize());
                         }
@@ -881,7 +760,7 @@ public class VFSBackend implements Backend {
                         if (deleteRecordFileObject(fileObject)) {
                             deleteIdSet.add(identifier);
                         } else {
-                            LOG.warn("Failed to delete old file " + fileObject.getName().getURI());
+                            LOG.warn("Failed to delete old file " + fileObject.getName().getFriendlyURI());
                         }
                     }
                 }
@@ -941,22 +820,5 @@ public class VFSBackend implements Backend {
                 LOG.error("Could not touch [" + identifier + "]", e);
             }
         }
-    }
-
-    private int getIntProperty(Properties props, String key, int defaultValue) {
-        try {
-            String value = props.getProperty(key);
-
-            if (value != null) {
-                value = value.trim();
-
-                if (!"".equals(value)) {
-                    return Integer.parseInt(value);
-                }
-            }
-        } catch (NumberFormatException ignore) {
-        }
-
-        return defaultValue;
     }
 }

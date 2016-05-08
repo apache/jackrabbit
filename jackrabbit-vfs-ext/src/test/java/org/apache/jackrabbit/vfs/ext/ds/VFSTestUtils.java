@@ -52,7 +52,7 @@ class VFSTestUtils {
                 boolean deleted = child.delete();
 
                 if (!deleted) {
-                    LOG.warn("File not deleted: {}", child.getName().getURI());
+                    LOG.warn("File not deleted: {}", child.getName().getFriendlyURI());
                 }
             } else if (fileType == FileType.FOLDER) {
                 deleteAllDescendantFiles(child);
