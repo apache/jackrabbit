@@ -18,25 +18,35 @@ package org.apache.jackrabbit.vfs.ext.ds;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.StringReader;
 import java.util.Properties;
 
 import javax.jcr.RepositoryException;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.vfs2.FileObject;
+import org.apache.commons.vfs2.FileSystemOptions;
+import org.apache.commons.vfs2.provider.http.HttpFileSystemConfigBuilder;
 import org.apache.jackrabbit.core.data.CachingDataStore;
 import org.apache.jackrabbit.core.data.TestCaseBase;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.xml.sax.InputSource;
+
+import junit.framework.Assert;
 
 /**
  * Test {@link CachingDataStore} with VFSBackend with a VFS file system (local file system) by default.
  * <P>
  * You can provide different properties to use other file system backend by passing vfs config file via system property.
- * For e.g. -Dconfig=/opt/repository/vfs.properties.
+ * For e.g. -Dconfig=/opt/repository/vfs-webdav.properties.
  * </P>
  * <P>
- * Sample VFS properties located at src/test/resources/vfs*.properties
+ * Sample VFS properties located at src/test/resources/vfs-*.properties
  * </P>
  */
 public class TestVFSDataStore extends TestCaseBase {
@@ -50,6 +60,12 @@ public class TestVFSDataStore extends TestCaseBase {
      * VFS base folder URI configuration property key name.
      */
     private static final String BASE_FOLDER_URI = "baseFolderUri";
+
+    private static final String FILE_SYSTEM_OPTIONS_PARAM_XML =
+            "<param "
+            + "name=\"fileSystemOptionsPropertiesInString\" "
+            + "value=\"fso.http.maxTotalConnections = 200&#13;"
+            + "fso.http.maxConnectionsPerHost = 100\" />";
 
     private String baseFolderUri;
 
@@ -116,6 +132,56 @@ public class TestVFSDataStore extends TestCaseBase {
         }
 
         super.tearDown();
+    }
+
+    /**
+     * Test case to validate {@link VFSDataStore#setFileSystemOptionsPropertiesInString(String)}.
+     */
+    public void testSetFileSystemOptionsPropertiesInString() throws Exception {
+        try {
+            long start = System.currentTimeMillis();
+            LOG.info("Testcase: " + this.getClass().getName()
+                + "#setFileSystemOptionsPropertiesInString, testDir=" + dataStoreDir);
+            doSetFileSystemOptionsPropertiesInString();
+            LOG.info("Testcase: " + this.getClass().getName()
+                + "#setFileSystemOptionsPropertiesInString finished, time taken = ["
+                + (System.currentTimeMillis() - start) + "]ms");
+        } catch (Exception e) {
+            LOG.error("error:", e);
+            fail(e.getMessage());
+        }
+    }
+
+    /**
+     * Test {@link VFSDataStore#setFileSystemOptionsPropertiesInString(String)} and validate the internal properties.
+     */
+    protected void doSetFileSystemOptionsPropertiesInString() throws Exception {
+        dataStore = new VFSDataStore();
+        Properties props = getConfigProps();
+        baseFolderUri = props.getProperty(BASE_FOLDER_URI);
+        dataStore.setBaseFolderUri(baseFolderUri);
+        LOG.info("baseFolderUri [{}] set.", baseFolderUri);
+        dataStore.setFileSystemOptionsProperties(props);
+        dataStore.setSecret("123456");
+
+        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        DocumentBuilder builder = factory.newDocumentBuilder();
+        Document document = builder.parse(new InputSource(new StringReader(FILE_SYSTEM_OPTIONS_PARAM_XML)));
+        Element paramElem = document.getDocumentElement();
+        String propsInString = paramElem.getAttribute("value");
+        dataStore.setFileSystemOptionsPropertiesInString(propsInString);
+        final Properties internalProps = dataStore.getFileSystemOptionsProperties();
+        Assert.assertEquals("200", internalProps.getProperty("fso.http.maxTotalConnections"));
+        Assert.assertEquals("100", internalProps.getProperty("fso.http.maxConnectionsPerHost"));
+
+        dataStore.init(dataStoreDir);
+
+        final FileSystemOptions fso = dataStore.getFileSystemOptions();
+        final HttpFileSystemConfigBuilder configBuilder = HttpFileSystemConfigBuilder.getInstance();
+        Assert.assertEquals(200, configBuilder.getMaxTotalConnections(fso));
+        Assert.assertEquals(100, configBuilder.getMaxConnectionsPerHost(fso));
+
+        dataStore.close();
     }
 
     private Properties getConfigProps() {

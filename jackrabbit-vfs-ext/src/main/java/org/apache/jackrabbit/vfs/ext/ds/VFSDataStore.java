@@ -356,4 +356,14 @@ public class VFSDataStore extends CachingDataStore {
 
         return fso;
     }
+
+    /**
+     * Returns properties used when building a {@link FileSystemOptions} instance by the properties
+     * during the initialization.
+     * @return properties used when building a {@link FileSystemOptions} instance by the properties during the initialization
+     */
+    protected Properties getFileSystemOptionsProperties() {
+        return fileSystemOptionsProperties;
+    }
+
 }
