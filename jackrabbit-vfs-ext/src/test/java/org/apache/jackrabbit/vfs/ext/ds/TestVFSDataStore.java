@@ -65,7 +65,8 @@ public class TestVFSDataStore extends TestCaseBase {
             "<param "
             + "name=\"fileSystemOptionsPropertiesInString\" "
             + "value=\"fso.http.maxTotalConnections = 200&#13;"
-            + "fso.http.maxConnectionsPerHost = 100\" />";
+            + "        fso.http.maxConnectionsPerHost = 100&#13;"
+            + "        fso.http.preemptiveAuth = true\" />";
 
     private String baseFolderUri;
 
@@ -173,6 +174,7 @@ public class TestVFSDataStore extends TestCaseBase {
         final Properties internalProps = dataStore.getFileSystemOptionsProperties();
         Assert.assertEquals("200", internalProps.getProperty("fso.http.maxTotalConnections"));
         Assert.assertEquals("100", internalProps.getProperty("fso.http.maxConnectionsPerHost"));
+        Assert.assertEquals("true", internalProps.getProperty("fso.http.preemptiveAuth"));
 
         dataStore.init(dataStoreDir);
 
@@ -180,6 +182,7 @@ public class TestVFSDataStore extends TestCaseBase {
         final HttpFileSystemConfigBuilder configBuilder = HttpFileSystemConfigBuilder.getInstance();
         Assert.assertEquals(200, configBuilder.getMaxTotalConnections(fso));
         Assert.assertEquals(100, configBuilder.getMaxConnectionsPerHost(fso));
+        Assert.assertTrue(configBuilder.isPreemptiveAuth(fso));
 
         dataStore.close();
     }

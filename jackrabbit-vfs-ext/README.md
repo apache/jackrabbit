@@ -42,14 +42,6 @@ TODO
             <param name="asyncWritePoolSize" value="10" />
             <!-- CachingDataStore specific parameters -->
             <param name="secret" value="123456789"/>
-            <param name="minRecordLength " value="16384"/>
-            <param name="cacheSize" value="68719476736"/>
-            <param name="cachePurgeTrigFactor" value="0.95d"/>
-            <param name="cachePurgeResizeFactor" value="0.85d"/>
-            <param name="continueOnAsyncUploadFailure" value="false"/>
-            <param name="concurrentUploadsThreads" value="10"/>
-            <param name="asyncUploadLimit" value="100"/>
-            <param name="uploadRetries" value="3"/>
         </DataStore>
 
 ### With WebDAV file system
@@ -59,15 +51,9 @@ TODO
             <param name="baseFolderUri" value="webdav://localhost:8888/vfsds" />
             <param name="asyncWritePoolSize" value="10" />
             <param name="fileSystemOptionsPropertiesInString"
-                   value="http.maxTotalConnections = 200&#13;http.maxConnectionsPerHost = 200" />
+                   value="fso.http.maxTotalConnections = 200&#13;
+                          fso.http.maxConnectionsPerHost = 200&#13;
+                          fso.http.preemptiveAuth = true" />
             <!-- CachingDataStore specific parameters -->
             <param name="secret" value="123456789"/>
-            <param name="minRecordLength " value="16384"/>
-            <param name="cacheSize" value="68719476736"/>
-            <param name="cachePurgeTrigFactor" value="0.95d"/>
-            <param name="cachePurgeResizeFactor" value="0.85d"/>
-            <param name="continueOnAsyncUploadFailure" value="false"/>
-            <param name="concurrentUploadsThreads" value="10"/>
-            <param name="asyncUploadLimit" value="100"/>
-            <param name="uploadRetries" value="3"/>
         </DataStore>
