@@ -646,7 +646,7 @@ public class VFSBackend implements Backend {
                     updateLastModifiedTime(fileObject);
                 }
             } else {
-                LOG.warn("File doesn't exist for the identifier: {}.", identifier);
+                LOG.debug("File doesn't exist for the identifier: {}.", identifier);
             }
         } catch (DataStoreException e) {
             if (asyncTouchRes != null) {

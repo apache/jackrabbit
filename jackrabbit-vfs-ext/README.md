@@ -37,17 +37,37 @@ TODO
 ### With local file system
 
         <DataStore class="org.apache.jackrabbit.vfs.ext.ds.VfsDataStore">
-            <param name="secret" value="123456" />
+            <!-- VFSDataStore specific parameters -->
             <param name="baseFolderUri" value="file://${rep.home}/vfsds" />
             <param name="asyncWritePoolSize" value="10" />
+            <!-- CachingDataStore specific parameters -->
+            <param name="secret" value="123456789"/>
+            <param name="minRecordLength " value="16384"/>
+            <param name="cacheSize" value="68719476736"/>
+            <param name="cachePurgeTrigFactor" value="0.95d"/>
+            <param name="cachePurgeResizeFactor" value="0.85d"/>
+            <param name="continueOnAsyncUploadFailure" value="false"/>
+            <param name="concurrentUploadsThreads" value="10"/>
+            <param name="asyncUploadLimit" value="100"/>
+            <param name="uploadRetries" value="3"/>
         </DataStore>
 
 ### With WebDAV file system
 
-        <DataStore class="org.apache.jackrabbit.vfs.ext.ds.VfsDataStore">
-            <param name="secret" value="123456" />
+        <DataStore class="org.apache.jackrabbit.vfs.ext.ds.VFSDataStore">
+            <!-- VFSDataStore specific parameters -->
             <param name="baseFolderUri" value="webdav://localhost:8888/vfsds" />
             <param name="asyncWritePoolSize" value="10" />
             <param name="fileSystemOptionsPropertiesInString"
-                   value="http.maxTotalConnections = 200; http.maxConnectionsPerHost = 200" />
+                   value="http.maxTotalConnections = 200&#13;http.maxConnectionsPerHost = 200" />
+            <!-- CachingDataStore specific parameters -->
+            <param name="secret" value="123456789"/>
+            <param name="minRecordLength " value="16384"/>
+            <param name="cacheSize" value="68719476736"/>
+            <param name="cachePurgeTrigFactor" value="0.95d"/>
+            <param name="cachePurgeResizeFactor" value="0.85d"/>
+            <param name="continueOnAsyncUploadFailure" value="false"/>
+            <param name="concurrentUploadsThreads" value="10"/>
+            <param name="asyncUploadLimit" value="100"/>
+            <param name="uploadRetries" value="3"/>
         </DataStore>
