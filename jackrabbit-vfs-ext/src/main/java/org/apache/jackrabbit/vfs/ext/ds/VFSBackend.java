@@ -424,6 +424,8 @@ public class VFSBackend implements Backend {
 
     /**
      * Returns the touch file for the fileObject.
+     * If there's no corresponding touch file existing, then returns null when {@code create} is false.
+     * When {@code create} is true, it creates a new touch file if no corresponding touch file exists.
      *
      * @param fileObject file object
      * @param create create a touch file if not existing
@@ -773,12 +775,27 @@ public class VFSBackend implements Backend {
      */
     private class AsyncUploadJob implements Runnable {
 
+        /**
+         * Record data identifier.
+         */
         private DataIdentifier identifier;
 
+        /**
+         * Source file to upload.
+         */
         private File file;
 
+        /**
+         * Callback to handle events on completion, failure or abortion.
+         */
         private AsyncUploadCallback callback;
 
+        /**
+         * Constructs an asynchronous file uploading job.
+         * @param identifier record data identifier
+         * @param file source file to upload
+         * @param callback callback to handle events on completion, failure or abortion.
+         */
         public AsyncUploadJob(DataIdentifier identifier, File file, AsyncUploadCallback callback) {
             super();
             this.identifier = identifier;
@@ -786,6 +803,9 @@ public class VFSBackend implements Backend {
             this.callback = callback;
         }
 
+        /**
+         * Executes this job.
+         */
         public void run() {
             try {
                 write(identifier, file, true, callback);
@@ -800,12 +820,27 @@ public class VFSBackend implements Backend {
      */
     private class AsyncTouchJob implements Runnable {
 
+        /**
+         * Record data identifier.
+         */
         private DataIdentifier identifier;
 
+        /**
+         * Minimum modification time in milliseconds to be used in touching.
+         */
         private long minModifiedDate;
 
+        /**
+         * Callback to handle events on completion, failure or abortion.
+         */
         private AsyncTouchCallback callback;
 
+        /**
+         * Constructs an asynchronous record touching job.
+         * @param identifier record data identifier
+         * @param minModifiedDate minimum modification time in milliseconds to be used in touching
+         * @param callback callback to handle events on completion, failure or abortion
+         */
         public AsyncTouchJob(DataIdentifier identifier, long minModifiedDate, AsyncTouchCallback callback) {
             super();
             this.identifier = identifier;
@@ -813,6 +848,9 @@ public class VFSBackend implements Backend {
             this.callback = callback;
         }
 
+        /**
+         * Executes this job.
+         */
         public void run() {
             try {
                 touch(identifier, minModifiedDate, true, callback);

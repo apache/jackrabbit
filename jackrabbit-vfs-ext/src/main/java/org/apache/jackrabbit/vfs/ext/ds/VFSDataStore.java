@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.vfs.ext.ds;
 
+import java.io.IOException;
+import java.io.StringReader;
 import java.util.Enumeration;
 import java.util.Properties;
 
@@ -60,6 +62,11 @@ public class VFSDataStore extends CachingDataStore {
     static final int DEFAULT_MAX_CONNECTION = 200;
 
     /**
+     * Property key prefix for FielSystemOptions.
+     */
+    private static final String FILE_SYSTEM_OPTIONS_PROP_PREFIX = "fso.";
+
+    /**
      * The class name of the VFS {@link FileSystemManager} instance used in this VFS data store.
      * If this is not set, then {@link StandardFileSystemManager} is used by default.
      */
@@ -70,6 +77,11 @@ public class VFSDataStore extends CachingDataStore {
      * If {@link #fileSystemManagerClassName} is not set, then a {@link StandardFileSystemManager} instance is created by default.
      */
     private FileSystemManager fileSystemManager;
+
+    /**
+     * {@link FileSystemOptions} used when resolving the {@link #baseFolder}.
+     */
+    private FileSystemOptions fileSystemOptions;
 
     /**
      * Properties used when building a {@link FileSystemOptions} using {@link DelegatingFileSystemOptionsBuilder}.
@@ -100,7 +112,7 @@ public class VFSDataStore extends CachingDataStore {
         fileSystemManager = createFileSystemManager();
 
         try {
-            FileSystemOptions fso = createFileSystemOptions(fileSystemManager);
+            FileSystemOptions fso = getFileSystemOptions();
 
             if (fso != null) {
                 baseFolder = fileSystemManager.resolveFile(baseFolderUri, fso);
@@ -185,6 +197,30 @@ public class VFSDataStore extends CachingDataStore {
     }
 
     /**
+     * Returns {@link FileSystemOptions} instance used when resolving the {@link #baseFolder}.
+     * This may return null if {@link FileSystemOptions} instance was not injected or
+     * a {@link #fileSystemOptionsProperties} instance cannot be injected or created.
+     * Therefore, the caller should check whether or not this returns null.
+     * When returning null, the caller may not use a {@link FileSystemOptions} instance.
+     * @return {@link FileSystemOptions} instance used when resolving the {@link #baseFolder}
+     */
+    public FileSystemOptions getFileSystemOptions() throws RepositoryException {
+        if (fileSystemOptions == null) {
+            fileSystemOptions = createFileSystemOptions();
+        }
+
+        return fileSystemOptions;
+    }
+
+    /**
+     * Sets the {@link FileSystemOptions} instance used when resolving the {@link #baseFolder}.
+     * @param fileSystemOptions {@link FileSystemOptions} instance used when resolving the {@link #baseFolder}
+     */
+    public void setFileSystemOptions(FileSystemOptions fileSystemOptions) {
+        this.fileSystemOptions = fileSystemOptions;
+    }
+
+    /**
      * Sets the properties used when building a {@link FileSystemOptions}, using {@link DelegatingFileSystemOptionsBuilder}.
      * @param fileSystemOptionsProperties properties used when building a {@link FileSystemOptions}
      */
@@ -195,22 +231,17 @@ public class VFSDataStore extends CachingDataStore {
     /**
      * Sets the properties in a semi-colon delimited string used when building a {@link FileSystemOptions},
      * using {@link DelegatingFileSystemOptionsBuilder}.
-     * @param fileSystemOptionsProperties properties in a semi-colon delimited string used when building a {@link FileSystemOptions}
+     * @param fileSystemOptionsPropertiesInString properties in String
      */
     public void setFileSystemOptionsPropertiesInString(String fileSystemOptionsPropertiesInString) {
-        fileSystemOptionsProperties = new Properties();
-
         if (fileSystemOptionsPropertiesInString != null) {
-            String [] lines = fileSystemOptionsPropertiesInString.split(";");
-
-            for (String line : lines) {
-                String [] pair = line.split("=");
-
-                if (pair.length == 2) {
-                    String key = pair[0].trim();
-                    String value = pair[1].trim();
-                    fileSystemOptionsProperties.setProperty(key, value);
-                }
+            try {
+                StringReader reader = new StringReader(fileSystemOptionsPropertiesInString);
+                Properties props = new Properties();
+                props.load(reader);
+                fileSystemOptionsProperties = props;
+            } catch (IOException e) {
+                throw new IllegalArgumentException("Could not load file system options properties.", e);
             }
         }
     }
@@ -280,33 +311,42 @@ public class VFSDataStore extends CachingDataStore {
     /**
      * Builds and returns {@link FileSystemOptions} instance which is used when resolving the {@link #vfsBaseFolder}
      * during the initialization.
-     * @param fileSystemManager file system manager
+     * If {@link #fileSystemOptionsProperties} is available, this scans all the property key names starting with {@link #FILE_SYSTEM_OPTIONS_PROP_PREFIX}
+     * and uses the rest of the key name after the {@link #FILE_SYSTEM_OPTIONS_PROP_PREFIX} as the combination of scheme and property name
+     * when building a {@link FileSystemOptions} using {@link DelegatingFileSystemOptionsBuilder}.
      * @return {@link FileSystemOptions} instance which is used when resolving the {@link #vfsBaseFolder} during the initialization
      * @throws RepositoryException if any file system exception occurs
      */
-    protected FileSystemOptions createFileSystemOptions(FileSystemManager fileSystemManager) throws RepositoryException {
+    protected FileSystemOptions createFileSystemOptions() throws RepositoryException {
         FileSystemOptions fso = null;
 
         if (fileSystemOptionsProperties != null) {
             try {
                 fso = new FileSystemOptions();
-                DelegatingFileSystemOptionsBuilder delegate = new DelegatingFileSystemOptionsBuilder(fileSystemManager);
+                DelegatingFileSystemOptionsBuilder delegate = new DelegatingFileSystemOptionsBuilder(getFileSystemManager());
 
                 String key;
-                String value;
+                String schemeDotPropName;
                 String scheme;
                 String propName;
+                String value;
                 int offset;
 
                 for (Enumeration<?> e = fileSystemOptionsProperties.propertyNames(); e.hasMoreElements(); ) {
                     key = (String) e.nextElement();
-                    value = fileSystemOptionsProperties.getProperty(key);
-                    offset = key.indexOf('.');
 
-                    if (offset > 0) {
-                        scheme = key.substring(0, offset);
-                        propName = key.substring(offset + 1);
-                        delegate.setConfigString(fso, scheme, propName, value);
+                    if (key.startsWith(FILE_SYSTEM_OPTIONS_PROP_PREFIX)) {
+                        value = fileSystemOptionsProperties.getProperty(key);
+                        schemeDotPropName = key.substring(FILE_SYSTEM_OPTIONS_PROP_PREFIX.length());
+                        offset = schemeDotPropName.indexOf('.');
+
+                        if (offset > 0) {
+                            scheme = schemeDotPropName.substring(0, offset);
+                            propName = schemeDotPropName.substring(offset + 1);
+                            delegate.setConfigString(fso, scheme, propName, value);
+                        } else {
+                            LOG.warn("Ignoring an FileSystemOptions property in invalid format. Key: {}, Value: {}", key, value);
+                        }
                     }
                 }
             } catch (FileSystemException e) {
