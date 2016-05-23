@@ -353,6 +353,9 @@ public class TransactionContext {
      * that handles hashCode and equals in a proper way.
      */
     private static class XidWrapper {
+        
+    	private static final char[] HEX = "0123456789abcdef".toCharArray();
+        
     	private byte[] gtid;
     	
     	public XidWrapper(byte[] gtid) {
@@ -371,6 +374,27 @@ public class TransactionContext {
         public int hashCode() {
             return Arrays.hashCode(gtid);
         }
+
+        @Override
+        public String toString() {
+            return encodeHexString(gtid);
+        }
+
+        /**
+         * Returns the hex encoding of the given bytes.
+         *
+         * @param value value to be encoded
+         * @return encoded value
+         */
+        private static String encodeHexString(byte[] value) {
+            char[] buffer = new char[value.length * 2];
+            for (int i = 0; i < value.length; i++) {
+                buffer[2 * i] = HEX[(value[i] >> 4) & 0x0f];
+                buffer[2 * i + 1] = HEX[value[i] & 0x0f];
+            }
+            return new String(buffer);
+        }
+
     }
 
 }
