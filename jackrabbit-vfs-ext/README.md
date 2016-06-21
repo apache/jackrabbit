@@ -36,24 +36,51 @@ TODO
 
 ### With local file system
 
-        <DataStore class="org.apache.jackrabbit.vfs.ext.ds.VfsDataStore">
+          <DataStore class="org.apache.jackrabbit.vfs.ext.ds.VfsDataStore">
             <!-- VFSDataStore specific parameters -->
             <param name="baseFolderUri" value="file://${rep.home}/vfsds" />
             <param name="asyncWritePoolSize" value="10" />
             <!-- CachingDataStore specific parameters -->
             <param name="secret" value="123456789"/>
-        </DataStore>
+          </DataStore>
 
 ### With WebDAV file system
 
-        <DataStore class="org.apache.jackrabbit.vfs.ext.ds.VFSDataStore">
+          <DataStore class="org.apache.jackrabbit.vfs.ext.ds.VFSDataStore">
+            <param name="config" value="${catalina.base}/conf/vfs2-datastore.properties" />
             <!-- VFSDataStore specific parameters -->
-            <param name="baseFolderUri" value="webdav://localhost:8888/vfsds" />
             <param name="asyncWritePoolSize" value="10" />
-            <param name="fileSystemOptionsPropertiesInString"
-                   value="fso.http.maxTotalConnections = 200&#13;
-                          fso.http.maxConnectionsPerHost = 200&#13;
-                          fso.http.preemptiveAuth = true" />
             <!-- CachingDataStore specific parameters -->
             <param name="secret" value="123456789"/>
-        </DataStore>
+          </DataStore>
+
+vfs2-datastore.properties:
+
+```
+        baseFolderUri = webdav://tester:secret@localhost:8888/vfsds
+        # Properties to build org.apache.commons.vfs2.FileSystemOptions at runtime when resolving the base folder.
+        # Any properties, name of which is starting with 'fso.', are used to build FileSystemOptions
+        # after removing the 'fso.' prefix. See VFS2 documentation for the detail.
+        fso.http.maxTotalConnections = 200
+        fso.http.maxConnectionsPerHost = 200
+        fso.http.preemptiveAuth = false
+```
+
+### With SFTP file system
+
+          <DataStore class="org.apache.jackrabbit.vfs.ext.ds.VFSDataStore">
+            <param name="config" value="${catalina.base}/conf/vfs2-datastore.properties" />
+            <!-- VFSDataStore specific parameters -->
+            <param name="asyncWritePoolSize" value="10" />
+            <!-- CachingDataStore specific parameters -->
+            <param name="secret" value="123456789"/>
+          </DataStore>
+
+vfs2-datastore.properties:
+
+```
+        baseFolderUri = sftp://tester:secret@localhost/vfsds
+        # Properties to build org.apache.commons.vfs2.FileSystemOptions at runtime when resolving the base folder.
+        # Any properties, name of which is starting with 'fso.', are used to build FileSystemOptions
+        # after removing the 'fso.' prefix. See VFS2 documentation for the detail.
+```
