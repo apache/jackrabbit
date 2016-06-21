@@ -75,6 +75,13 @@
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
+        <!-- Test dependency for SFTP VFS2 File System -->
+        <dependency>
+            <groupId>com.jcraft</groupId>
+            <artifactId>jsch</artifactId>
+            <version>0.1.53</version>
+            <scope>test</scope>
+        </dependency>
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>

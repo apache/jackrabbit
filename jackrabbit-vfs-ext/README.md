@@ -28,9 +28,11 @@ You can run the unit tests with WebDAV backend file system like the following:
 
         wsgidav --host=0.0.0.0 --port=8888 --root=/tmp/davroot
 
-### Testing with HDFS file system
+### Testing with SFTP file system
 
-TODO
+You can run the unit tests with WebDAV backend file system like the following:
+
+        mvn clean test -Dconfig=src/test/resources/vfs-sftp.properties
 
 ## Configuration Instructions
 
