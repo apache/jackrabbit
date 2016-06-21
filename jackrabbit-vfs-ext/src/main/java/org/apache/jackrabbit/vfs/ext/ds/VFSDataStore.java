@@ -16,7 +16,10 @@
  */
 package org.apache.jackrabbit.vfs.ext.ds;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.StringReader;
 import java.util.Enumeration;
 import java.util.Properties;
@@ -105,6 +108,8 @@ public class VFSDataStore extends CachingDataStore {
 
     @Override
     public void init(String homeDir) throws RepositoryException {
+        overridePropertiesFromConfig();
+
         if (baseFolderUri == null) {
             throw new RepositoryException("VFS base folder URI must be set.");
         }
@@ -364,6 +369,66 @@ public class VFSDataStore extends CachingDataStore {
      */
     protected Properties getFileSystemOptionsProperties() {
         return fileSystemOptionsProperties;
+    }
+
+    private void overridePropertiesFromConfig() throws RepositoryException {
+        final String config = getConfig();
+
+        // If config param provided, then override properties from the config file.
+        if (config != null && !"".equals(config)) {
+            try {
+                final Properties props = readConfig(config);
+
+                String propValue = props.getProperty("asyncWritePoolSize");
+                if (propValue != null && !"".equals(propValue)) {
+                    setAsyncWritePoolSize(Integer.parseInt(propValue));
+                }
+
+                propValue = props.getProperty("baseFolderUri");
+                if (propValue != null && !"".equals(propValue)) {
+                    setBaseFolderUri(propValue);
+                }
+
+                propValue = props.getProperty("fileSystemManagerClassName");
+                if (propValue != null && !"".equals(propValue)) {
+                    setFileSystemManagerClassName(propValue);
+                }
+
+                final Properties fsoProps = new Properties();
+                String propName;
+                for (Enumeration<?> propNames = props.propertyNames(); propNames.hasMoreElements(); ) {
+                    propName = (String) propNames.nextElement();
+                    if (propName.startsWith(FILE_SYSTEM_OPTIONS_PROP_PREFIX)) {
+                        fsoProps.setProperty(propName, props.getProperty(propName));
+                    }
+                }
+                if (!fsoProps.isEmpty()) {
+                    this.setFileSystemOptionsProperties(fsoProps);
+                }
+            } catch (IOException e) {
+                throw new RepositoryException("Configuration file doesn't exist at '" + config + "'.");
+            }
+        }
+    }
+
+    private Properties readConfig(String fileName) throws IOException {
+        if (!new File(fileName).exists()) {
+            throw new IOException("Config file not found: " + fileName);
+        }
+
+        Properties prop = new Properties();
+        InputStream in = null;
+
+        try {
+            in = new FileInputStream(fileName);
+            prop.load(in);
+        } finally {
+            if (in != null) {
+                in.close();
+            }
+        }
+
+        return prop;
     }
 
 }
