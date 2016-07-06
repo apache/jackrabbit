@@ -1,36 +1,50 @@
-Release Notes -- Apache Jackrabbit -- Version 2.11.3
+Release Notes -- Apache Jackrabbit -- Version 2.13.0
 
 Introduction
 ------------
 
-This is Apache Jackrabbit(TM) 2.11.3, a fully compliant implementation of the
+This is Apache Jackrabbit(TM) 2.13.0, a fully compliant implementation of the
 Content Repository for Java(TM) Technology API, version 2.0 (JCR 2.0) as
 specified in the Java Specification Request 283 (JSR 283).
 
-Apache Jackrabbit 2.11.3 is an unstable release cut directly from
+Apache Jackrabbit 2.13.0 is an unstable release cut directly from
 Jackrabbit trunk, with a focus on new features and other
-improvements. For production use we recommend the latest stable 2.10.x
+improvements. For production use we recommend the latest stable 2.12.x
 release.
 
-Changes in Jackrabbit 2.11.3
+Changes in Jackrabbit 2.13.0
 ----------------------------
 
 Bug
 
-    [JCR-3934] - Error occured while loading protected handler config
-    in JcrRemotingServlet
+    [JCR-2633] - Modified externally exception when modifying mixinTypes with single session
+    [JCR-3632] - Test failed under Java 8
+    [JCR-3937] - jackrabbit-jcr-commons bundle incorrectly has google dependency in Export-Package uses clause
+    [JCR-3948] - LostFromCacheIssueTest failure
+    [JCR-3949] - occasional test failure in RepositoryConfigTest.testAutomaticClusterNodeIdCreation()
+    [JCR-3950] - CLONE - XSS in DirListingExportHandler
+    [JCR-3958] - Endless loop until async upload completes
+    [JCR-3965] - RepositoryStatistics is reset per second for bundle cache size which should not be the case for the bundle cache stats
+    [JCR-3987] - jackrabbit-jcr-commons JcrUtils.getOrCreateByPath fails if session is not allowed to read root
 
 Improvement
 
-    [JCR-3914] - Support default aws region
-    [JCR-3924] - Allow release-deploy to skip tests
+    [JCR-3938] - Require maven 3.x for build
 
 New Feature
 
-    [JCR-3933] - Extend ValueHelper to check for valid conversion
+    [JCR-3983] - Possibility to parallelize the Garbage Collection
+
+Test
+
+    [JCR-3961] - Some tests in GetInfoTest do not save changes
+    [JCR-3962] - NodeReorderTest waits for unexpected events
+    [JCR-3963] - Reduce wait timeout for AddEventListenerTest.testNoLocalTrue()
+    [JCR-3964] - Skip tests marked as known issues
+
 
 In addition to the above-mentioned changes, this release contains
-all the changes included up to the Apache Jackrabbit 2.10.x release.
+all the changes included up to the Apache Jackrabbit 2.12.x release.
 
 For more detailed information about all the changes in this and other
 Jackrabbit releases, please see the Jackrabbit issue tracker at
