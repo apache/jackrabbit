@@ -1556,12 +1556,12 @@ public class JcrUtils {
                 existingPath = temp;
                 break;
             }
-            currentIndex = temp.lastIndexOf("/");
+            currentIndex = temp.lastIndexOf('/');
         }
 
         if (existingPath != null) {
             baseNode = baseNode.getSession().getNode(existingPath);
-            path = path.substring(existingPath.length() + 1);
+            path = fullPath.substring(existingPath.length() + 1);
         }
 
         Node node = baseNode;
