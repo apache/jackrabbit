@@ -146,27 +146,34 @@ public class AccessControlManagerImplTest extends AbstractAccessControlTest {
      */
     public void testAddingFourAccessControlEntries() throws Exception {
         try {
-            AccessControlList acl = (AccessControlList) getACL(testRoot);        
-            
+            AccessControlList acl = (AccessControlList) getACL(testRoot);
+
+            // check precondition,see JCR-3995
+            if (testRootNode.hasNode("rep:policy")) {
+                assertEquals("should not have any ace nodes at this point", 0,
+                        testRootNode.getNode("rep:policy").getNodes().getSize());
+            }
+
             acl.addAccessControlEntry(getUnknownPrincipal(), privilegesFromName(Privilege.JCR_READ));
             acl.addAccessControlEntry(getUnknownPrincipal(), privilegesFromName(Privilege.JCR_READ));
             acl.addAccessControlEntry(getUnknownPrincipal(), privilegesFromName(Privilege.JCR_READ));
             acl.addAccessControlEntry(getUnknownPrincipal(), privilegesFromName(Privilege.JCR_READ));
-            
+
             acMgr.setPolicy(testRoot, acl);
 
             // Transient-space: Must contain FOUR ace nodes.
             assertEquals(4, testRootNode.getNode("rep:policy").getNodes().getSize());
-            
+
             superuser.save();
-            
-            // Persistent-state: Must contain a single ace node -> entries were merged
+
+            // Persistent-state: Must contain a single ace node -> entries were
+            // merged
             assertEquals(1, testRootNode.getNode("rep:policy").getNodes().getSize());
         } finally {
             superuser.refresh(false);
         }
     }
-    
+
     /**
      * Test retrieving a policy after a save call.
      * @throws Exception
