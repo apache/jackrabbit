@@ -1,64 +1,34 @@
-Release Notes -- Apache Jackrabbit -- Version 2.8.1
+Release Notes -- Apache Jackrabbit -- Version 2.8.2
 
 Introduction
 ------------
 
-This is Apache Jackrabbit(TM) 2.8.1, a fully compliant implementation of the
+This is Apache Jackrabbit(TM) 2.8.2, a fully compliant implementation of the
 Content Repository for Java(TM) Technology API, version 2.0 (JCR 2.0) as
 specified in the Java Specification Request 283 (JSR 283).
 
-Apache Jackrabbit 2.8.1 is a patch release that contains fixes and
+Apache Jackrabbit 2.8.2 is a patch release that contains fixes and
 improvements over Jackrabbit 2.8. Jackrabbit 2.8.x releases are considered
 stable and targeted for production use.
 
-Security advisory (JCR-3883 / CVE-2015-1833)
---------------------------------------------
-
-This release fixes an important security issue in the jackrabbit-webdav module
-reported by Mikhail Egorov.
-
-When processing a WebDAV request body containing XML, the XML parser can be 
-instructed to read content from network resources accessible to the host, 
-identified by URI schemes such as "http(s)" or  "file". Depending on the 
-WebDAV request, this can not only be used to trigger internal network 
-requests, but might also be used to insert said content into the request, 
-potentially exposing it to the attacker and others (for instance, by inserting
-said content in a WebDAV property value using a PROPPATCH request). See also
-IETF RFC 4918, Section 20.6.
-
-Users of the jackrabbit-webdav module are advised to immediately update the
-module to this release or disable WebDAV access to the repository.
-
-Changes since Jackrabbit 2.8.0
+Changes since Jackrabbit 2.8.1
 ------------------------------
 
 Improvements
 
-  [JCR-3777] Add simple allow/deny/clear convenience methods to AccessControlUtils
-  [JCR-3782] Backport OAK-1612, OAK-1615, OAK-1616
-  [JCR-3810] StreamWrapper can attempt to reset other types of InputStreams
-  [JCR-3818] Use SimpleFSDirectory by default
-  [JCR-3826] AbstractPrincipalProvider cachesize is not configurable
+    [JCR-3900] - LockTest.testNodeLocked: incorrect assumption about when the lock token can be returned
+    [JCR-3971] - Make read-permission cache-size in CompiledPermissionsImpl configurable
+    [JCR-3972] - Make size of ID-cache in CachingHierarchyManager configurable
 
 Bug fixes
 
-  [JCR-3783] Deadlock due to IOException in WorkspaceUpdateChannel.updatePrepared()
-  [JCR-3784] ReplacePropertyWhileOthersReadTest fails when run with ConcurrentTestSuite
-  [JCR-3789] AccessControlUtils.clear should not retrieve applicable policies
-  [JCR-3790] timing related TokenProviderTest failures
-  [JCR-3796] TokenProvider.createToken is case sensitive
-  [JCR-3798] NPE while building path in lucene index consistency checker
-  [JCR-3809] ConnectionHelper swallows exception when it fails to reset binary streams after a failed SQL statement execution
-  [JCR-3811] AppendRecord should allow reattempting database insertions of journal records should the initial attempt fail
-  [JCR-3814] IllegalStateException in LockManager#unlock
-  [JCR-3821] SeededSecureRandom thread can prevent Jackrabbit from shutting down
-  [JCR-3840] NodeTypeDefDiff does not take same-name child type definitions into account
-  [JCR-3850] RepositoryStartupServlet constructs FileStore incorrectly
-  [JCR-3871] POI Vulnerabilities
-  [JCR-3883] Jackrabbit WebDAV bundle susceptible to XXE/XEE attack (CVE-2015-1833)
+    [JCR-2633] - Modified externally exception when modifying mixinTypes with single session
+    [JCR-3915] - undo incorrect change to lock token test
+    [JCR-3949] - occasional test failure in RepositoryConfigTest.testAutomaticClusterNodeIdCreation()
+    [JCR-3950] - XSS in DirListingExportHandler
 
 In addition to the above-mentioned changes, this release contains
-all the changes included up to the Apache Jackrabbit 2.8.0 release.
+all the changes included up to the Apache Jackrabbit 2.8.1 release.
 
 For more detailed information about all the changes in this and other
 Jackrabbit releases, please see the Jackrabbit issue tracker at
