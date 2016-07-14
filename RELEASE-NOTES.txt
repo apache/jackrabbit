@@ -1,36 +1,26 @@
-Release Notes -- Apache Jackrabbit -- Version 2.11.3
+Release Notes -- Apache Jackrabbit -- Version 2.13.1
 
 Introduction
 ------------
 
-This is Apache Jackrabbit(TM) 2.11.3, a fully compliant implementation of the
+This is Apache Jackrabbit(TM) 2.13.1, a fully compliant implementation of the
 Content Repository for Java(TM) Technology API, version 2.0 (JCR 2.0) as
 specified in the Java Specification Request 283 (JSR 283).
 
-Apache Jackrabbit 2.11.3 is an unstable release cut directly from
+Apache Jackrabbit 2.13.1 is an unstable release cut directly from
 Jackrabbit trunk, with a focus on new features and other
-improvements. For production use we recommend the latest stable 2.10.x
+improvements. For production use we recommend the latest stable 2.12.x
 release.
 
-Changes in Jackrabbit 2.11.3
+Changes in Jackrabbit 2.13.1
 ----------------------------
 
 Bug
 
-    [JCR-3934] - Error occured while loading protected handler config
-    in JcrRemotingServlet
-
-Improvement
-
-    [JCR-3914] - Support default aws region
-    [JCR-3924] - Allow release-deploy to skip tests
-
-New Feature
-
-    [JCR-3933] - Extend ValueHelper to check for valid conversion
+    [JCR-3992] - JcrUtils.getOrCreateByPath broken by JCR-3987
 
 In addition to the above-mentioned changes, this release contains
-all the changes included up to the Apache Jackrabbit 2.10.x release.
+all the changes included up to the Apache Jackrabbit 2.12.x release.
 
 For more detailed information about all the changes in this and other
 Jackrabbit releases, please see the Jackrabbit issue tracker at
