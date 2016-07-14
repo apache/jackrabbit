@@ -26,6 +26,7 @@ import java.util.Properties;
 
 import javax.jcr.RepositoryException;
 
+import org.apache.commons.vfs2.FileName;
 import org.apache.commons.vfs2.FileObject;
 import org.apache.commons.vfs2.FileSystemException;
 import org.apache.commons.vfs2.FileSystemManager;
@@ -116,7 +117,11 @@ public class VFSDataStore extends CachingDataStore {
 
         fileSystemManager = createFileSystemManager();
 
+        FileName baseFolderName = null;
+
         try {
+            baseFolderName = fileSystemManager.resolveURI(baseFolderUri);
+
             FileSystemOptions fso = getFileSystemOptions();
 
             if (fso != null) {
@@ -127,7 +132,8 @@ public class VFSDataStore extends CachingDataStore {
 
             baseFolder.createFolder();
         } catch (FileSystemException e) {
-            throw new RepositoryException("Could not initialize the VFS base folder at '" + baseFolderUri + "'.", e);
+            throw new RepositoryException("Could not initialize the VFS base folder at '"
+                    + (baseFolderName == null ? "" : baseFolderName.getFriendlyURI()) + "'.", e);
         }
 
         super.init(homeDir);
@@ -150,7 +156,7 @@ public class VFSDataStore extends CachingDataStore {
         // Commenting out the following because the javadoc of FileSystemManager#closeFileSystem(FileSystem)
         // says it is dangerous when singleton instance is being used, which is the case as VFSDataStore keeps
         // single file system manager instance.
-        // Alos, VFS seems to remove the related provider component on that invocation.
+        // Also, VFS seems to remove the related provider component on that invocation.
 //        if (fileSystemManager != null) {
 //            fileSystemManager.closeFileSystem(baseFolder.getFileSystem());
 //        }
@@ -249,14 +255,6 @@ public class VFSDataStore extends CachingDataStore {
                 throw new IllegalArgumentException("Could not load file system options properties.", e);
             }
         }
-    }
-
-    /**
-     * Returns the base VFS folder URI.
-     * @return the base VFS folder URI
-     */
-    public String getBaseFolderUri() {
-        return baseFolderUri;
     }
 
     /**
