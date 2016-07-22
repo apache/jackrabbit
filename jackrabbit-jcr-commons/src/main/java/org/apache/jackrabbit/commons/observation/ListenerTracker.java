@@ -190,7 +190,6 @@ public class ListenerTracker {
                         public boolean hasNext() {
                             recordTime(eventConsumerTime);
                             boolean result = super.hasNext();
-                            t0 = nanoTime();
                             recordTime(eventProducerTime);
                             return result;
                         }
