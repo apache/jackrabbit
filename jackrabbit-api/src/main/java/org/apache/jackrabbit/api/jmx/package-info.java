@@ -18,5 +18,5 @@
 /**
  * JMX management interfaces for JCR.
  */
-@aQute.bnd.annotation.Version("2.1.0")
+@aQute.bnd.annotation.Version("2.2.0")
 package org.apache.jackrabbit.api.jmx;
