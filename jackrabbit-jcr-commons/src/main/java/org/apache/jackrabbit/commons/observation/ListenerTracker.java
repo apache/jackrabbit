@@ -71,6 +71,8 @@ public class ListenerTracker {
 
     private final AtomicLong eventDeliveryTime = new AtomicLong();
 
+    private final AtomicLong headTimestamp = new AtomicLong();
+
     private final TimeSeriesMax queueLength = new TimeSeriesMax();
 
     private final TimeSeriesRecorder eventCount = new TimeSeriesRecorder(true);
@@ -139,6 +141,19 @@ public class ListenerTracker {
      */
     public void recordQueueLength(long length) {
         queueLength.recordValue(length);
+    }
+
+    /**
+     * Applications should call this to report the current queue length when an
+     * item is removed from the queue.
+     *
+     * @param length        the length of the queue after the item was removed.
+     * @param headTimestamp the time in milliseconds when the head item was
+     *                      created and put into the queue.
+     */
+    public void recordQueueLength(long length, long headTimestamp) {
+        queueLength.recordValue(length);
+        this.headTimestamp.set(length == 0 ? 0 : headTimestamp);
     }
 
     /**
@@ -279,6 +294,12 @@ public class ListenerTracker {
                         / Math.max(currentTimeMillis() - startTime, 1);
             }
             @Override
+            public double getEventConsumerTimeRatio() {
+                double consumerTime = sum(eventConsumerTime.getValuePerSecond());
+                double producerTime = sum(eventProducerTime.getValuePerSecond());
+                return consumerTime / Math.max(consumerTime + producerTime, 1);
+            }
+            @Override
             public boolean isUserInfoAccessedWithoutExternalsCheck() {
                 return userInfoAccessedWithoutExternalsCheck.get();
             }
@@ -293,6 +314,14 @@ public class ListenerTracker {
             @Override
             public synchronized boolean isDateAccessedFromExternalEvent() {
                 return dateAccessedFromExternalEvent.get();
+            }
+            @Override
+            public long getQueueBacklogMillis() {
+                long t = headTimestamp.get();
+                if (t > 0) {
+                    t = currentTimeMillis() - t;
+                }
+                return t;
             }
             @Override
             public CompositeData getQueueLength() {
@@ -359,6 +388,14 @@ public class ListenerTracker {
         } else {
             return array;
         }
+    }
+
+    private static long sum(long[] values) {
+        long sum = 0;
+        for (long v : values) {
+            sum += v;
+        }
+        return sum;
     }
 
 }
