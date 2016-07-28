@@ -71,6 +71,9 @@ public interface EventListenerMBean {
     /** Ratio of time spent in event processing */
     double getRatioOfTimeSpentProcessingEvents();
 
+    /** Ratio of time spent in event listener vs. the overall event processing */
+    double getEventConsumerTimeRatio();
+
     /** Is user information accessed without checking if an event is external? */
     boolean isUserInfoAccessedWithoutExternalsCheck();
 
@@ -82,6 +85,13 @@ public interface EventListenerMBean {
 
     /** Is date information accessed from an external event? */
     boolean isDateAccessedFromExternalEvent();
+
+    /**
+     * The time difference between the current system time and the head (oldest)
+     * element in the queue in milliseconds. This method returns zero if the
+     * queue is empty.
+     */
+    long getQueueBacklogMillis();
 
     /**
      * {@link org.apache.jackrabbit.api.stats.TimeSeries time series} of the number of
