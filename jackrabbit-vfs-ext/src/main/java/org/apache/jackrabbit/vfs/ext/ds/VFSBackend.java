@@ -374,7 +374,6 @@ public class VFSBackend implements Backend {
         sb.append(idString.substring(0, 2)).append('/');
         sb.append(idString.substring(2, 4)).append('/');
         sb.append(idString.substring(4, 6)).append('/');
-        sb.append(idString.substring(6, 8)).append('/');
         sb.append(idString);
         return sb.toString();
     }
