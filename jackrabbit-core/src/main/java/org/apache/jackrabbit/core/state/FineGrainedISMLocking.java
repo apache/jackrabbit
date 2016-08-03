@@ -134,15 +134,21 @@ public class FineGrainedISMLocking implements ISMLocking {
             // we want to become the current writer
             Sync exclusive = writerStateRWLock.writeLock();
             exclusive.acquire();
+            Object currentId = getCurrentThreadId();
             try {
                 if (activeWriter == null
                         && !readLockMap.hasDependency(changeLog)) {
                     activeWriter = new WriteLockImpl(changeLog);
-                    activeWriterId = getCurrentThreadId();
+                    activeWriterId = currentId;
                     return activeWriter;
                 } else {
-                    signal = new Latch();
-                    waitingWriters.add(signal);
+                    if (isSameThreadId(activeWriterId, currentId) 
+                            && !readLockMap.hasDependency(changeLog)) {
+                        return activeWriter;
+                    } else {
+                        signal = new Latch();
+                        waitingWriters.add(signal);
+                    }
                 }
             } finally {
                 exclusive.release();
