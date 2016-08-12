@@ -48,6 +48,8 @@ public class CSRFUtilTest extends TestCase {
     private static final String GET = "GET";
     private static final String POST = "POST";
 
+    private static final Set<String> EMPTY_REFERER = new HashSet<String>() {{ add(null); }};
+
     private static final List<String> validURLs = new ArrayList<String>();
     private static final List<String> invalidURLs = new ArrayList<String>();
 
@@ -109,6 +111,12 @@ public class CSRFUtilTest extends TestCase {
         CSRFUtil util = new CSRFUtil("");
         testValid(util, validURLs, POST, CSRFUtil.CONTENT_TYPES);
         assertFalse("no referrer", util.isValidRequest(createRequest(null, POST, "text/plain")));
+    }
+
+    public void testNoContentType() throws Exception {
+        CSRFUtil util = new CSRFUtil("");
+        testValid(util, validURLs, POST, EMPTY_REFERER);
+        testInvalid(util, invalidURLs, POST, EMPTY_REFERER);
     }
 
     public void testDisabledConfig() throws Exception {
