@@ -46,7 +46,8 @@ public class CSRFUtil {
                     new String[] {
                             "application/x-www-form-urlencoded",
                             "multipart/form-data",
-                            "text/plain"
+                            "text/plain",
+                            null // no content type included in request
                     }
             )
     ));
