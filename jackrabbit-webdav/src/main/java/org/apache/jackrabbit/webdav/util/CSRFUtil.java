@@ -16,14 +16,12 @@
  */
 package org.apache.jackrabbit.webdav.util;
 
-import org.apache.jackrabbit.webdav.DavMethods;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.servlet.http.HttpServletRequest;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
@@ -37,20 +35,6 @@ public class CSRFUtil {
      * Constant used to
      */
     public static final String DISABLED = "disabled";
-
-    /**
-     * Request content types for CSRF checking, see JCR-3909
-     */
-    public static final Set<String> CONTENT_TYPES = Collections.unmodifiableSet(new HashSet<String>(
-            Arrays.asList(
-                    new String[] {
-                            "application/x-www-form-urlencoded",
-                            "multipart/form-data",
-                            "text/plain",
-                            null // no content type included in request
-                    }
-            )
-    ));
 
     /**
      * logger instance
@@ -109,21 +93,19 @@ public class CSRFUtil {
     }
 
     public boolean isValidRequest(HttpServletRequest request) throws MalformedURLException {
-        int methodCode = DavMethods.getMethodCode(request.getMethod());
-        if (disabled || DavMethods.DAV_POST != methodCode || !CONTENT_TYPES.contains(request.getContentType())) {
+        if (disabled) {
             return true;
         } else {
-
             String refHeader = request.getHeader("Referer");
-            // empty referrer headers are not allowed for POST + relevant content types (see JCR-3909)
             if (refHeader == null) {
-                return false;
+                // empty referrer is always allowed
+                return true;
+            } else {
+                String host = new URL(refHeader).getHost();
+                // test referrer-host equelst server or
+                // if it is contained in the set of explicitly allowed host names
+                return host.equals(request.getServerName()) || allowedReferrerHosts.contains(host);
             }
-
-            String host = new URL(refHeader).getHost();
-            // test referrer-host equals server or
-            // if it is contained in the set of explicitly allowed host names
-            return host.equals(request.getServerName()) || allowedReferrerHosts.contains(host);
         }
     }
 }
