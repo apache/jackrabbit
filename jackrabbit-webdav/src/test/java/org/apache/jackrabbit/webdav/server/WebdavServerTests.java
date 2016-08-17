@@ -26,6 +26,7 @@ public class WebdavServerTests extends TestCase {
         TestSuite suite = new TestSuite("WebDAV Server Tests");
 
         suite.addTestSuite(BindTest.class);
+        suite.addTestSuite(PostTest.class);
         suite.addTestSuite(RFC4918DestinationHeaderTest.class);
         suite.addTestSuite(RFC4918IfHeaderTest.class);
         suite.addTestSuite(RFC4918PropfindTest.class);
