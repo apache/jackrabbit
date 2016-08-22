@@ -200,31 +200,39 @@ public abstract class FilteringItemVisitor implements ItemVisitor {
                         leaving(node, currentLevel);
                     } else {
                         // breadth-first traversal
-                        entering(node, currentLevel);
-                        leaving(node, currentLevel);
+                        currentQueue.addLast(node);
 
-                        if (maxLevel == -1 || currentLevel < maxLevel) {
-                            if ( this.walkProperties ) {
-                                PropertyIterator propIter = node.getProperties();
-                                while (propIter.hasNext()) {
-                                    nextQueue.addLast(propIter.nextProperty());
+                        while(true) {
+                            int currentLevelItems = currentQueue.size();
+                            if (currentLevelItems == 0 || (maxLevel != -1 && currentLevel > maxLevel)) {
+                                break;
+                            }
+                            while (currentLevelItems > 0 ) {
+                                Item currItem = (Item) currentQueue.removeFirst();
+                                if (currItem instanceof Property) {
+                                    Property currProperty = (Property)currItem;
+                                    visit(currProperty);
+                                } else if (currItem instanceof Node) {
+                                    Node currNode = (Node) currItem;
+                                    entering(currNode, currentLevel);
+                                    if ( this.walkProperties ) {
+                                        PropertyIterator propIter = currNode.getProperties();
+                                        while (propIter.hasNext()) {
+                                            currentQueue.addLast(propIter.nextProperty());
+                                        }
+                                    }
+                                    NodeIterator nodeIter = currNode.getNodes();
+                                    while (nodeIter.hasNext()) {
+                                        currentQueue.addLast(nodeIter.nextNode());
+                                    }
+                                    leaving(currNode, currentLevel);
+
                                 }
+                                currentLevelItems--;
                             }
-                            NodeIterator nodeIter = node.getNodes();
-                            while (nodeIter.hasNext()) {
-                                nextQueue.addLast(nodeIter.nextNode());
-                            }
+                            currentLevel++;
                         }
 
-                        while (!currentQueue.isEmpty() || !nextQueue.isEmpty()) {
-                            if (currentQueue.isEmpty()) {
-                                currentLevel++;
-                                currentQueue = nextQueue;
-                                nextQueue = new LinkedList();
-                            }
-                            Item e = (Item) currentQueue.removeFirst();
-                            e.accept(this);
-                        }
                         currentLevel = 0;
                     }
                 } catch (RepositoryException re) {
