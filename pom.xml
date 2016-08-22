@@ -42,6 +42,7 @@
     <module>jackrabbit-jcr-tests</module>
     <module>jackrabbit-data</module>
     <module>jackrabbit-aws-ext</module>
+    <module>jackrabbit-vfs-ext</module>
     <module>jackrabbit-core</module>
     <module>jackrabbit-webdav</module>
     <module>jackrabbit-jcr-server</module>
