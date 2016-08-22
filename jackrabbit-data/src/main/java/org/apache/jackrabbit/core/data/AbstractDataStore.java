@@ -17,11 +17,17 @@
 package org.apache.jackrabbit.core.data;
 
 import java.security.SecureRandom;
+
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 
 public abstract class AbstractDataStore implements DataStore {
+
+    private static Logger LOG = LoggerFactory.getLogger(AbstractDataStore.class);
 
     private static final String ALGORITHM = "HmacSHA1";
 
@@ -91,7 +97,7 @@ public abstract class AbstractDataStore implements DataStore {
 
             return id + ':' + encodeHexString(hash);
         } catch (Exception e) {
-            // TODO: log a warning about this exception
+            LOG.error("Failed to hash identifier using MAC (Message Authentication Code) algorithm.", e);
         }
         return null;
     }
