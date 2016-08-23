@@ -54,6 +54,12 @@ public class TestCachingFDS extends TestFileDataStore {
         return cacheFDS;
     }
 
+    @Override
+    protected void doDeleteRecordTest() throws Exception {
+        ds = createDataStore();
+        LOG.info("Skip deleteRecordTest on CachingFDS (JCR-4006)");
+    }
+
     /**
      * Test robustness of {@link AsyncUploadCache} corruption.
      */
