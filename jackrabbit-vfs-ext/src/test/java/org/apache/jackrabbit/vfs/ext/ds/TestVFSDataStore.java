@@ -56,11 +56,6 @@ public class TestVFSDataStore extends TestCaseBase {
      */
     private static final Logger LOG = LoggerFactory.getLogger(TestVFSDataStore.class);
 
-    /**
-     * VFS base folder URI configuration property key name.
-     */
-    private static final String BASE_FOLDER_URI = "baseFolderUri";
-
     private static final String FILE_SYSTEM_OPTIONS_PARAM_XML =
             "<param "
             + "name=\"fileSystemOptionsPropertiesInString\" "
@@ -73,19 +68,6 @@ public class TestVFSDataStore extends TestCaseBase {
     private VFSDataStore dataStore;
 
     private Properties configProps;
-
-    @Override
-    public void testDeleteRecord() {
-        // ignored, see JCR-4005
-        if (true) {
-            try {
-                createDataStore();
-            } catch (RepositoryException ignore) {
-            }
-            return;
-        }
-        super.testDeleteRecord();
-    }
 
     @Override
     protected void setUp() throws Exception {
@@ -118,9 +100,14 @@ public class TestVFSDataStore extends TestCaseBase {
     protected CachingDataStore createDataStore() throws RepositoryException {
         dataStore = new VFSDataStore();
         Properties props = getConfigProps();
-        baseFolderUri = props.getProperty(BASE_FOLDER_URI);
+        baseFolderUri = props.getProperty(VFSDataStore.BASE_FOLDER_URI);
         dataStore.setBaseFolderUri(baseFolderUri);
         LOG.info("baseFolderUri [{}] set.", baseFolderUri);
+        String value = props.getProperty(VFSDataStore.ASYNC_WRITE_POOL_SIZE);
+        if (value != null) {
+            dataStore.setAsyncWritePoolSize(Integer.parseInt(value));
+            LOG.info("asyncWritePoolSize [{}] set.", dataStore.getAsyncWritePoolSize());
+        }
         dataStore.setFileSystemOptionsProperties(props);
         dataStore.setSecret("123456");
         dataStore.init(dataStoreDir);
@@ -136,7 +123,7 @@ public class TestVFSDataStore extends TestCaseBase {
         try {
             // Let's wait for 5 minutes at max if there are still execution jobs in the async writing executor's queue.
             int seconds = 0;
-            while (backend.getAsyncWriteExecuter().getActiveCount() > 0 && seconds++ < 300) {
+            while (backend.getAsyncWriteExecutorActiveCount() > 0 && seconds++ < 300) {
                 Thread.sleep(1000);
             }
 
@@ -172,7 +159,7 @@ public class TestVFSDataStore extends TestCaseBase {
     protected void doSetFileSystemOptionsPropertiesInString() throws Exception {
         dataStore = new VFSDataStore();
         Properties props = getConfigProps();
-        baseFolderUri = props.getProperty(BASE_FOLDER_URI);
+        baseFolderUri = props.getProperty(VFSDataStore.BASE_FOLDER_URI);
         dataStore.setBaseFolderUri(baseFolderUri);
         LOG.info("baseFolderUri [{}] set.", baseFolderUri);
         dataStore.setFileSystemOptionsProperties(props);
@@ -204,7 +191,9 @@ public class TestVFSDataStore extends TestCaseBase {
         if (configProps == null) {
             Properties props = new Properties();
             String baseFolderUri = new File(new File(dataStoreDir), "vfsds").toURI().toString();
-            props.setProperty(BASE_FOLDER_URI, baseFolderUri);
+            props.setProperty(VFSDataStore.BASE_FOLDER_URI, baseFolderUri);
+            // By default (when testing with local file system), disable asynchronous writing to the backend.
+            props.setProperty(VFSDataStore.ASYNC_WRITE_POOL_SIZE, "0");
             configProps = props;
         }
 
