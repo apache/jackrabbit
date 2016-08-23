@@ -45,6 +45,12 @@ import org.slf4j.LoggerFactory;
  */
 public class VFSDataStore extends CachingDataStore {
 
+    static final String BASE_FOLDER_URI = "baseFolderUri";
+
+    static final String ASYNC_WRITE_POOL_SIZE = "asyncWritePoolSize";
+
+    static final String FILE_SYSTEM_MANAGER_CLASS_NAME = "fileSystemManagerClassName";
+
     /**
      * Logger instance.
      */
@@ -146,7 +152,7 @@ public class VFSDataStore extends CachingDataStore {
         try {
             // Let's wait for 5 minutes at max if there are still execution jobs in the async writing executor's queue.
             int seconds = 0;
-            while (backend.getAsyncWriteExecuter().getActiveCount() > 0 && seconds++ < 300) {
+            while (backend.getAsyncWriteExecutorActiveCount() > 0 && seconds++ < 300) {
                 Thread.sleep(1000);
             }
         } catch (InterruptedException e) {
@@ -377,17 +383,17 @@ public class VFSDataStore extends CachingDataStore {
             try {
                 final Properties props = readConfig(config);
 
-                String propValue = props.getProperty("asyncWritePoolSize");
+                String propValue = props.getProperty(ASYNC_WRITE_POOL_SIZE);
                 if (propValue != null && !"".equals(propValue)) {
                     setAsyncWritePoolSize(Integer.parseInt(propValue));
                 }
 
-                propValue = props.getProperty("baseFolderUri");
+                propValue = props.getProperty(BASE_FOLDER_URI);
                 if (propValue != null && !"".equals(propValue)) {
                     setBaseFolderUri(propValue);
                 }
 
-                propValue = props.getProperty("fileSystemManagerClassName");
+                propValue = props.getProperty(FILE_SYSTEM_MANAGER_CLASS_NAME);
                 if (propValue != null && !"".equals(propValue)) {
                     setFileSystemManagerClassName(propValue);
                 }
