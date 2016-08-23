@@ -1,23 +1,35 @@
-Release Notes -- Apache Jackrabbit -- Version 2.13.1
+Release Notes -- Apache Jackrabbit -- Version 2.13.2
 
 Introduction
 ------------
 
-This is Apache Jackrabbit(TM) 2.13.1, a fully compliant implementation of the
+This is Apache Jackrabbit(TM) 2.13.2, a fully compliant implementation of the
 Content Repository for Java(TM) Technology API, version 2.0 (JCR 2.0) as
 specified in the Java Specification Request 283 (JSR 283).
 
-Apache Jackrabbit 2.13.1 is an unstable release cut directly from
+Apache Jackrabbit 2.13.2 is an unstable release cut directly from
 Jackrabbit trunk, with a focus on new features and other
 improvements. For production use we recommend the latest stable 2.12.x
 release.
 
-Changes in Jackrabbit 2.13.1
+Changes in Jackrabbit 2.13.2
 ----------------------------
 
 Bug
 
-    [JCR-3992] - JcrUtils.getOrCreateByPath broken by JCR-3987
+    [JCR-3996] Incorrect producer time in ListenerTracker
+    [JCR-3999] Possibility for a Deadlock in FineGrainedISMLocking in a XA Environment
+    [JCR-4002] CSRF in Jackrabbit-Webdav using empty content-type
+    [JCR-4005] TestVFSDataStore.testDeleteRecord() fails occasionally
+
+Improvement
+
+    [JCR-4000] More event stats in EventListenerMBean
+    [JCR-4004] Log exception in AbstractDataStore.getReferenceFromIdentifier()
+
+New Feature
+    [JCR-3975] Commons-VFS Datastore implementation
+
 
 In addition to the above-mentioned changes, this release contains
 all the changes included up to the Apache Jackrabbit 2.12.x release.
