@@ -27,6 +27,8 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 
@@ -94,7 +96,7 @@ public class VFSBackend implements Backend {
     /**
      * Asynchronous write pooling executor.
      */
-    private ThreadPoolExecutor asyncWriteExecuter;
+    private Executor asyncWriteExecutor;
 
     /**
      * Whether or not a touch file is preferred to set/get the last modified timestamp for a file object
@@ -134,7 +136,7 @@ public class VFSBackend implements Backend {
             touchFilePreferred = false;
         }
 
-        asyncWriteExecuter = createAsyncWriteExecuter();
+        asyncWriteExecutor = createAsyncWriteExecutor();
     }
 
     /**
@@ -205,7 +207,7 @@ public class VFSBackend implements Backend {
             throw new IllegalArgumentException("callback parameter cannot be null in asyncUpload");
         }
 
-        getAsyncWriteExecuter().execute(new AsyncUploadJob(identifier, file, callback));
+        getAsyncWriteExecutor().execute(new AsyncUploadJob(identifier, file, callback));
     }
 
     /**
@@ -272,7 +274,7 @@ public class VFSBackend implements Backend {
             throw new IllegalArgumentException("callback parameter cannot be null in touchAsync");
         }
 
-        getAsyncWriteExecuter().execute(new AsyncTouchJob(identifier, minModifiedDate, callback));
+        getAsyncWriteExecutor().execute(new AsyncTouchJob(identifier, minModifiedDate, callback));
     }
 
     /**
@@ -280,7 +282,11 @@ public class VFSBackend implements Backend {
      */
     @Override
     public void close() throws DataStoreException {
-        getAsyncWriteExecuter().shutdownNow();
+        Executor asyncExecutor = getAsyncWriteExecutor();
+
+        if (asyncExecutor != null && asyncExecutor instanceof ExecutorService) {
+            ((ExecutorService) asyncExecutor).shutdownNow();
+        }
     }
 
     /**
@@ -454,17 +460,39 @@ public class VFSBackend implements Backend {
      * This method is invoked during the initialization for asynchronous write/touch job executions.
      * @return a {@link ThreadPoolExecutor}
      */
-    protected ThreadPoolExecutor createAsyncWriteExecuter() {
-        return (ThreadPoolExecutor) Executors.newFixedThreadPool(asyncWritePoolSize,
-                new NamedThreadFactory("vfs-write-worker"));
+    protected Executor createAsyncWriteExecutor() {
+        Executor asyncExecutor;
+
+        if (getAsyncWritePoolSize() > 0) {
+            asyncExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(getAsyncWritePoolSize(),
+                    new NamedThreadFactory("vfs-write-worker"));
+        } else {
+            asyncExecutor = new ImmediateExecutor();
+        }
+
+        return asyncExecutor;
     }
 
     /**
      * Returns ThreadPoolExecutor used to execute asynchronous write or touch jobs.
      * @return ThreadPoolExecutor used to execute asynchronous write or touch jobs
      */
-    protected ThreadPoolExecutor getAsyncWriteExecuter() {
-        return asyncWriteExecuter;
+    protected Executor getAsyncWriteExecutor() {
+        return asyncWriteExecutor;
+    }
+
+    /**
+     * Returns the approximate number of threads that are actively executing asynchronous writing tasks.
+     * @return the approximate number of threads that are actively executing asynchronous writing tasks
+     */
+    protected int getAsyncWriteExecutorActiveCount() {
+        Executor asyncExecutor = getAsyncWriteExecutor();
+
+        if (asyncExecutor != null && asyncExecutor instanceof ThreadPoolExecutor) {
+            return ((ThreadPoolExecutor) asyncExecutor).getActiveCount();
+        }
+
+        return 0;
     }
 
     /**
@@ -766,6 +794,17 @@ public class VFSBackend implements Backend {
                     }
                 }
             }
+        }
+    }
+
+    /**
+     * This class implements {@link Executor} interface to run {@code command} right away,
+     * resulting in non-asynchronous mode executions.
+     */
+    private class ImmediateExecutor implements Executor {
+        @Override
+        public void execute(Runnable command) {
+            command.run();
         }
     }
 
