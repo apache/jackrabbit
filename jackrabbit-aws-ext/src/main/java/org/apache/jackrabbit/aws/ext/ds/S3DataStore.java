@@ -25,7 +25,13 @@ import org.apache.jackrabbit.core.data.CachingDataStore;
  * An Amazon S3 data store.
  */
 public class S3DataStore extends CachingDataStore {
+
     private Properties properties;
+
+    public S3DataStore() {
+        // JCR-3817: when GC is running lastModified of each record is updated in S3, affecting the performance.
+        setTouchWhenReading(true);
+    }
 
     @Override
     protected Backend createBackend() {
