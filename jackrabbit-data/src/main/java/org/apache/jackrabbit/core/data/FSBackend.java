@@ -32,32 +32,23 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
 import java.util.Set;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadPoolExecutor;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
-import org.apache.jackrabbit.core.data.util.NamedThreadFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class FSBackend implements Backend {
+public class FSBackend extends AbstractBackend {
 
     private Properties properties;
 
     private String fsPath;
 
-    private CachingDataStore store;
-
-    private String homeDir;
-
-    private String config;
-
     File fsPathDir;
 
-    private ThreadPoolExecutor asyncWriteExecuter;
-
     public static final String FS_BACKEND_PATH = "fsBackendPath";
+
+    public static final String ASYNC_WRITE_POOL_SIZE = "asyncWritePoolSize";
 
     /**
      * Logger instance.
@@ -70,12 +61,13 @@ public class FSBackend implements Backend {
     private static final int ACCESS_TIME_RESOLUTION = 2000;
 
     @Override
-    public void init(CachingDataStore store, String homeDir, String config)
+    public void init(CachingDataStore cachingDataStore, String homeDir, String config)
                     throws DataStoreException {
+        super.init(cachingDataStore, homeDir, config);
+
         Properties initProps = null;
         // Check is configuration is already provided. That takes precedence
         // over config provided via file based config
-        this.config = config;
         if (this.properties != null) {
             initProps = this.properties;
         } else {
@@ -92,18 +84,18 @@ public class FSBackend implements Backend {
             }
             this.properties = initProps;
         }
-        init(store, homeDir, initProps);
+        init(cachingDataStore, homeDir, initProps);
 
     }
 
     public void init(CachingDataStore store, String homeDir, Properties prop)
                     throws DataStoreException {
-        this.store = store;
-        this.homeDir = homeDir;
+        setCachingDataStore(store);
+        setHomeDir(homeDir);
         this.fsPath = prop.getProperty(FS_BACKEND_PATH);
         if (this.fsPath == null || "".equals(this.fsPath)) {
             throw new DataStoreException("Could not initialize FSBackend from "
-                + config + ". [" + FS_BACKEND_PATH + "] property not found.");
+                + getConfig() + ". [" + FS_BACKEND_PATH + "] property not found.");
         }
         fsPathDir = new File(this.fsPath);
         if (fsPathDir.exists() && fsPathDir.isFile()) {
@@ -117,9 +109,12 @@ public class FSBackend implements Backend {
                     + fsPathDir.getAbsolutePath());
             }
         }
-        asyncWriteExecuter = (ThreadPoolExecutor) Executors.newFixedThreadPool(
-            10, new NamedThreadFactory("fs-write-worker"));
-
+        int asyncWritePoolSize = 10;
+        String value = prop.getProperty(ASYNC_WRITE_POOL_SIZE);
+        if (value != null) {
+            asyncWritePoolSize = Integer.parseInt(value);
+        }
+        setAsyncWritePoolSize(asyncWritePoolSize);
     }
 
     @Override
@@ -190,7 +185,7 @@ public class FSBackend implements Backend {
             throw new IllegalArgumentException(
                 "callback parameter cannot be null in asyncUpload");
         }
-        asyncWriteExecuter.execute(new Runnable() {
+        getAsyncWriteExecutor().execute(new Runnable() {
             @Override
             public void run() {
                 try {
@@ -268,7 +263,7 @@ public class FSBackend implements Backend {
             Thread.currentThread().setContextClassLoader(
                 getClass().getClassLoader());
 
-            asyncWriteExecuter.execute(new Runnable() {
+            getAsyncWriteExecutor().execute(new Runnable() {
                 @Override
                 public void run() {
                     try {
@@ -287,12 +282,6 @@ public class FSBackend implements Backend {
             throw new DataStoreException("Cannot touch the record "
                 + identifier.toString(), e);
         }
-
-    }
-
-    @Override
-    public void close() throws DataStoreException {
-        asyncWriteExecuter.shutdownNow();
 
     }
 
@@ -457,8 +446,8 @@ public class FSBackend implements Backend {
                 }
                 if (lastModified < min) {
                     DataIdentifier id = new DataIdentifier(file.getName());
-                    if (store.confirmDelete(id)) {
-                        store.deleteFromCache(id);
+                    if (getCachingDataStore().confirmDelete(id)) {
+                        getCachingDataStore().deleteFromCache(id);
                         if (LOG.isInfoEnabled()) {
                             LOG.info("Deleting old file "
                                 + file.getAbsolutePath() + " modified: "

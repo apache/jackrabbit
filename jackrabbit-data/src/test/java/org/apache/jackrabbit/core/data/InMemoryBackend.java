@@ -33,28 +33,20 @@ import java.util.Set;
 /**
  * An in-memory backend implementation used to speed up testing.
  */
-public class InMemoryBackend implements Backend {
+public class InMemoryBackend extends AbstractBackend {
 
     private HashMap<DataIdentifier, byte[]> data = new HashMap<DataIdentifier, byte[]>();
 
     private HashMap<DataIdentifier, Long> timeMap = new HashMap<DataIdentifier, Long>();
-    
-    private CachingDataStore store;
-    
+
     private Properties properties;
 
     @Override
-    public void init(CachingDataStore store, String homeDir, String config)
+    public void init(CachingDataStore cachingDataStore, String homeDir, String config)
             throws DataStoreException {
+        super.init(cachingDataStore, homeDir, config);
         // ignore
         log("init");
-        this.store = store;
-    }
-
-    @Override
-    public void close() {
-        // ignore
-        log("close");
     }
 
     @Override
@@ -110,9 +102,9 @@ public class InMemoryBackend implements Backend {
         for (Map.Entry<DataIdentifier, Long> entry : timeMap.entrySet()) {
             DataIdentifier identifier = entry.getKey();
             long timestamp = entry.getValue();
-            if (timestamp < min && !store.isInUse(identifier)
-                && store.confirmDelete(identifier)) {
-                store.deleteFromCache(identifier);
+            if (timestamp < min && !getCachingDataStore().isInUse(identifier)
+                && getCachingDataStore().confirmDelete(identifier)) {
+                getCachingDataStore().deleteFromCache(identifier);
                 tobeDeleted.add(identifier);
             }
         }
