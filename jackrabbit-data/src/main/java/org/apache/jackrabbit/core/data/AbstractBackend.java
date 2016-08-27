@@ -42,7 +42,7 @@ public abstract class AbstractBackend implements Backend {
     /**
      * Asynchronous write pooling executor.
      */
-    private Executor asyncWriteExecutor;
+    private volatile Executor asyncWriteExecutor;
 
     /**
      * Returns the pool size of the asynchronous write pool executor.
@@ -101,11 +101,18 @@ public abstract class AbstractBackend implements Backend {
      * @return Executor used to execute asynchronous write or touch jobs
      */
     protected Executor getAsyncWriteExecutor() {
-        if (asyncWriteExecutor == null) {
-            asyncWriteExecutor = createAsyncWriteExecutor();
+        Executor executor = asyncWriteExecutor;
+
+        if (executor == null) {
+            synchronized (this) {
+                executor = asyncWriteExecutor;
+                if (executor == null) {
+                    asyncWriteExecutor = executor = createAsyncWriteExecutor();
+                }
+            }
         }
 
-        return asyncWriteExecutor;
+        return executor;
     }
 
     /**
