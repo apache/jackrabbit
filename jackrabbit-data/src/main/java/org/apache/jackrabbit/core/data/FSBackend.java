@@ -52,6 +52,8 @@ public class FSBackend extends AbstractBackend {
 
     public static final String FS_BACKEND_PATH = "fsBackendPath";
 
+    public static final String ASYNC_WRITE_POOL_SIZE = "asyncWritePoolSize";
+
     /**
      * Logger instance.
      */
@@ -112,6 +114,12 @@ public class FSBackend extends AbstractBackend {
                     + fsPathDir.getAbsolutePath());
             }
         }
+        int asyncWritePoolSize = 10;
+        String value = prop.getProperty(ASYNC_WRITE_POOL_SIZE);
+        if (value != null) {
+            asyncWritePoolSize = Integer.parseInt(value);
+        }
+        setAsyncWritePoolSize(asyncWritePoolSize);
     }
 
     @Override
