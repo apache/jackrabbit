@@ -151,11 +151,6 @@ public abstract class CachingDataStore extends AbstractDataStore implements
     private String secret;
 
     /**
-     * Flag to indicate if a existing data record should be touched when reading.
-     */
-    private boolean touchWhenReading = false;
-
-    /**
      * Flag to indicate if lastModified is updated asynchronously.
      */
     private boolean touchAsync = false;
@@ -472,7 +467,7 @@ public abstract class CachingDataStore extends AbstractDataStore implements
             if (getLength(identifier) > -1) {
                 LOG.trace("getRecord: [{}]  retrieved using getLength",
                     identifier);
-                if (isTouchWhenReading()) {
+                if (minModifiedDate > 0) {
                     touchInternal(identifier);
                 }
                 usesIdentifier(identifier);
@@ -512,7 +507,7 @@ public abstract class CachingDataStore extends AbstractDataStore implements
                 LOG.trace(
                     "getRecordIfStored: [{}]  retrieved using recLenCache",
                     identifier);
-                if (isTouchWhenReading()) {
+                if (minModifiedDate > 0) {
                     touchInternal(identifier);
                 }
                 usesIdentifier(identifier);
@@ -524,7 +519,7 @@ public abstract class CachingDataStore extends AbstractDataStore implements
                         "getRecordIfStored :[{}]  retrieved from backend",
                         identifier);
                     recLenCache.put(identifier, length);
-                    if (isTouchWhenReading()) {
+                    if (minModifiedDate > 0) {
                         touchInternal(identifier);
                     }
                     usesIdentifier(identifier);
@@ -1218,14 +1213,6 @@ public abstract class CachingDataStore extends AbstractDataStore implements
 
     public void setUploadRetries(int uploadRetries) {
         this.uploadRetries = uploadRetries;
-    }
-
-    public boolean isTouchWhenReading() {
-        return touchWhenReading;
-    }
-
-    public void setTouchWhenReading(boolean touchWhenReading) {
-        this.touchWhenReading = touchWhenReading;
     }
 
     public void setTouchAsync(boolean touchAsync) {
