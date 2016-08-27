@@ -44,10 +44,6 @@ public class FSBackend extends AbstractBackend {
 
     private String fsPath;
 
-    private String homeDir;
-
-    private String config;
-
     File fsPathDir;
 
     public static final String FS_BACKEND_PATH = "fsBackendPath";
@@ -72,7 +68,6 @@ public class FSBackend extends AbstractBackend {
         Properties initProps = null;
         // Check is configuration is already provided. That takes precedence
         // over config provided via file based config
-        this.config = config;
         if (this.properties != null) {
             initProps = this.properties;
         } else {
@@ -96,11 +91,11 @@ public class FSBackend extends AbstractBackend {
     public void init(CachingDataStore store, String homeDir, Properties prop)
                     throws DataStoreException {
         setCachingDataStore(store);
-        this.homeDir = homeDir;
+        setHomeDir(homeDir);
         this.fsPath = prop.getProperty(FS_BACKEND_PATH);
         if (this.fsPath == null || "".equals(this.fsPath)) {
             throw new DataStoreException("Could not initialize FSBackend from "
-                + config + ". [" + FS_BACKEND_PATH + "] property not found.");
+                + getConfig() + ". [" + FS_BACKEND_PATH + "] property not found.");
         }
         fsPathDir = new File(this.fsPath);
         if (fsPathDir.exists() && fsPathDir.isFile()) {

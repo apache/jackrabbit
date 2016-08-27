@@ -35,6 +35,16 @@ public abstract class AbstractBackend implements Backend {
     private CachingDataStore cachingDataStore;
 
     /**
+     * path of repository home dir.
+     */
+    private String homeDir;
+
+    /**
+     * path of config property file.
+     */
+    private String config;
+
+    /**
      * The pool size of asynchronous write pooling executor.
      */
     private int asyncWritePoolSize;
@@ -66,6 +76,8 @@ public abstract class AbstractBackend implements Backend {
     @Override
     public void init(CachingDataStore cachingDataStore, String homeDir, String config) throws DataStoreException {
         this.cachingDataStore = cachingDataStore;
+        this.homeDir = homeDir;
+        this.config = config;
     }
 
     /**
@@ -94,6 +106,38 @@ public abstract class AbstractBackend implements Backend {
      */
     protected void setCachingDataStore(CachingDataStore cachingDataStore) {
         this.cachingDataStore = cachingDataStore;
+    }
+
+    /**
+     * Returns path of repository home dir.
+     * @return path of repository home dir
+     */
+    protected String getHomeDir() {
+        return homeDir;
+    }
+
+    /**
+     * Sets path of repository home dir.
+     * @param homeDir path of repository home dir
+     */
+    protected void setHomeDir(String homeDir) {
+        this.homeDir = homeDir;
+    }
+
+    /**
+     * Returns path of config property file.
+     * @return path of config property file
+     */
+    protected String getConfig() {
+        return config;
+    }
+
+    /**
+     * Sets path of config property file.
+     * @param config path of config property file
+     */
+    protected void setConfig(String config) {
+        this.config = config;
     }
 
     /**
