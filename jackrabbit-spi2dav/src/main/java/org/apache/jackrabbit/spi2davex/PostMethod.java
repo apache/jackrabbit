@@ -47,6 +47,7 @@ class PostMethod extends DavMethodBase {
 
     public PostMethod(String uri) {
         super(uri);
+        super.setRequestHeader("Referer", uri);
         HttpMethodParams params = getParams();
         params.setContentCharset("UTF-8");
     }
