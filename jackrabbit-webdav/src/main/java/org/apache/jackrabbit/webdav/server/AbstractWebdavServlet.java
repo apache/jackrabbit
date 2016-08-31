@@ -596,7 +596,7 @@ abstract public class AbstractWebdavServlet extends HttpServlet implements DavCo
      */
     protected void doPost(WebdavRequest request, WebdavResponse response,
                           DavResource resource) throws IOException, DavException {
-        response.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED);
+        doPut(request, response, resource);
     }
 
     /**
@@ -1384,6 +1384,7 @@ abstract public class AbstractWebdavServlet extends HttpServlet implements DavCo
      * @param out
      * @return
      * @see #doPut(WebdavRequest, WebdavResponse, DavResource)
+     * @see #doPost(WebdavRequest, WebdavResponse, DavResource)
      * @see #doMkCol(WebdavRequest, WebdavResponse, DavResource)
      */
     protected OutputContext getOutputContext(DavServletResponse response, OutputStream out) {
