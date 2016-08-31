@@ -16,17 +16,9 @@
  */
 package org.apache.jackrabbit.webdav.util;
 
-import junit.framework.TestCase;
-
-import javax.servlet.RequestDispatcher;
-import javax.servlet.ServletInputStream;
-import javax.servlet.http.Cookie;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpSession;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.net.MalformedURLException;
 import java.security.Principal;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -37,6 +29,15 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.Vector;
+
+import javax.servlet.RequestDispatcher;
+import javax.servlet.ServletInputStream;
+import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
+
+import junit.framework.TestCase;
 
 /**
  * <code>CSRFUtilTest</code>...
@@ -55,16 +56,20 @@ public class CSRFUtilTest extends TestCase {
         validURLs.add("http://localhost:4503/jackrabbit/server");
         validURLs.add("https://localhost:4503/jackrabbit/server");
         validURLs.add("https://localhost/jackrabbit/server");
+        validURLs.add("//localhost/jackrabbit/server");
+        validURLs.add("/jackrabbit/server");
 
         invalidURLs.add("http://invalidHost/test");
         invalidURLs.add("http://host1:8080/test");
         invalidURLs.add("http://user:pw@host2/test");
     }
 
-    private static void testValid(CSRFUtil util, Collection<String> validURLs, String method, Set<String> contentTypes) throws MalformedURLException {
+    static String[] noContentType = new String[0];
+
+    private static void testValid(CSRFUtil util, Collection<String> validURLs, String method, Set<String> contentTypes) {
         if (null == contentTypes) {
             for (String url : validURLs) {
-                assertTrue(url, util.isValidRequest(createRequest(url, method, null)));
+                assertTrue(url, util.isValidRequest(createRequest(url, method, noContentType)));
             }
         } else {
             for (String contentType : contentTypes) {
@@ -75,10 +80,10 @@ public class CSRFUtilTest extends TestCase {
         }
     }
 
-    private static void testInvalid(CSRFUtil util, Collection<String> invalidURLs, String method, Set<String> contentTypes) throws MalformedURLException {
+    private static void testInvalid(CSRFUtil util, Collection<String> invalidURLs, String method, Set<String> contentTypes) {
         if (null == contentTypes) {
             for (String url : validURLs) {
-                assertFalse(url, util.isValidRequest(createRequest(url, method, null)));
+                assertFalse(url, util.isValidRequest(createRequest(url, method, noContentType)));
             }
         } else {
             for (String contentType : contentTypes) {
@@ -89,8 +94,12 @@ public class CSRFUtilTest extends TestCase {
         }
     }
 
+    private static HttpServletRequest createRequest(String url, String method, String[] contentTypes) {
+        return new DummyRequest(url, SERVER_NAME, method, contentTypes);
+    }
+
     private static HttpServletRequest createRequest(String url, String method, String contentType) {
-        return new DummyRequest(url, SERVER_NAME, method, contentType);
+        return new DummyRequest(url, SERVER_NAME, method, new String[] { contentType });
     }
 
     public void testNullConfig() throws Exception {
@@ -109,6 +118,10 @@ public class CSRFUtilTest extends TestCase {
         CSRFUtil util = new CSRFUtil("");
         testValid(util, validURLs, POST, CSRFUtil.CONTENT_TYPES);
         assertFalse("no referrer", util.isValidRequest(createRequest(null, POST, "text/plain")));
+        assertFalse("no referrer", util.isValidRequest(createRequest(null, POST, noContentType)));
+        assertFalse("no referrer", util.isValidRequest(createRequest(null, POST, "TEXT/PLAIN; foo=bar")));
+        assertTrue("no referrer", util.isValidRequest(createRequest(null, POST, "application/json")));
+        assertFalse("no referrer", util.isValidRequest(createRequest(null, POST, new String[] { "application/json", "foo/bar" })));
     }
 
     public void testDisabledConfig() throws Exception {
@@ -155,13 +168,13 @@ public class CSRFUtilTest extends TestCase {
         private final String referer;
         private final String serverName;
         private final String method;
-        private final String contentType;
+        private final String[] contentTypes;
 
-        private DummyRequest(String referer, String serverName, String method, String contentType) {
+        private DummyRequest(String referer, String serverName, String method, String[] contentTypes) {
             this.referer = referer;
             this.serverName = serverName;
             this.method = method;
-            this.contentType = contentType;
+            this.contentTypes = contentTypes;
         }
 
         //---------------------------------------------< HttpServletRequest >---
@@ -178,6 +191,19 @@ public class CSRFUtilTest extends TestCase {
             return serverName;
         }
 
+        public String getContentType() {
+            return contentTypes.length == 0 ? null : contentTypes[0];
+        }
+
+        @SuppressWarnings({ "rawtypes", "unchecked" })
+        public Enumeration getHeaders(String name) {
+            if (name != null && contentTypes.length > 0 && name.toLowerCase(Locale.ENGLISH).equals("content-type")) {
+                return new Vector(Arrays.asList(contentTypes)).elements();
+            } else {
+                return null;
+            }
+        }
+
         //---------------------------------------------------------< unused >---
         public String getAuthType() {
             return null;
@@ -187,9 +213,6 @@ public class CSRFUtilTest extends TestCase {
         }
         public long getDateHeader(String name) {
             return 0;
-        }
-        public Enumeration getHeaders(String name) {
-            return null;
         }
         public Enumeration getHeaderNames() {
             return null;
@@ -265,9 +288,6 @@ public class CSRFUtilTest extends TestCase {
         }
         public int getContentLength() {
             return 0;
-        }
-        public String getContentType() {
-            return contentType;
         }
         public ServletInputStream getInputStream() throws IOException {
             return null;
