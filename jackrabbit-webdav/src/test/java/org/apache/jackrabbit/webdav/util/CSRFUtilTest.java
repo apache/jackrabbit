@@ -29,11 +29,14 @@ import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.security.Principal;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Enumeration;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * <code>CSRFUtilTest</code>...
@@ -42,64 +45,77 @@ public class CSRFUtilTest extends TestCase {
 
     private static final String SERVER_NAME = "localhost";
 
+    private static final String GET = "GET";
+    private static final String POST = "POST";
+
     private static final List<String> validURLs = new ArrayList<String>();
+    private static final List<String> invalidURLs = new ArrayList<String>();
 
     static {
-        validURLs.add(null);
         validURLs.add("http://localhost:4503/jackrabbit/server");
         validURLs.add("https://localhost:4503/jackrabbit/server");
         validURLs.add("https://localhost/jackrabbit/server");
+
+        invalidURLs.add("http://invalidHost/test");
+        invalidURLs.add("http://host1:8080/test");
+        invalidURLs.add("http://user:pw@host2/test");
     }
 
-    private static void testValid(CSRFUtil util, Collection<String> validURLs) throws MalformedURLException {
-        for (String url : validURLs) {
-            assertTrue(url, util.isValidRequest(createRequest(url)));
+    private static void testValid(CSRFUtil util, Collection<String> validURLs, String method, Set<String> contentTypes) throws MalformedURLException {
+        if (null == contentTypes) {
+            for (String url : validURLs) {
+                assertTrue(url, util.isValidRequest(createRequest(url, method, null)));
+            }
+        } else {
+            for (String contentType : contentTypes) {
+                for (String url : validURLs) {
+                    assertTrue(url, util.isValidRequest(createRequest(url, method, contentType)));
+                }
+            }
         }
     }
 
-    private static void testInvalid(CSRFUtil util, Collection<String> invalidURLs) throws MalformedURLException {
-        for (String url : invalidURLs) {
-            assertFalse(url, util.isValidRequest(createRequest(url)));
+    private static void testInvalid(CSRFUtil util, Collection<String> invalidURLs, String method, Set<String> contentTypes) throws MalformedURLException {
+        if (null == contentTypes) {
+            for (String url : validURLs) {
+                assertFalse(url, util.isValidRequest(createRequest(url, method, null)));
+            }
+        } else {
+            for (String contentType : contentTypes) {
+                for (String url : invalidURLs) {
+                    assertFalse(url, util.isValidRequest(createRequest(url, method, contentType)));
+                }
+            }
         }
     }
 
-    private static HttpServletRequest createRequest(String url) {
-        return new DummyRequest(url, SERVER_NAME);
+    private static HttpServletRequest createRequest(String url, String method, String contentType) {
+        return new DummyRequest(url, SERVER_NAME, method, contentType);
     }
 
     public void testNullConfig() throws Exception {
         CSRFUtil util = new CSRFUtil(null);
-
-        testValid(util, validURLs);
-
-        List<String> invalidURLs = new ArrayList<String>();
-        invalidURLs.add("http://invalidHost/test");
-        invalidURLs.add("http://host1:8080/test");
-        invalidURLs.add("http://user:pw@host2/test");
-        testInvalid(util, invalidURLs);
+        testValid(util, validURLs, POST, CSRFUtil.CONTENT_TYPES);
+        testInvalid(util, invalidURLs, POST, CSRFUtil.CONTENT_TYPES);
     }
 
     public void testEmptyConfig() throws Exception {
         CSRFUtil util = new CSRFUtil("");
-        testValid(util, validURLs);
+        testValid(util, validURLs, POST, CSRFUtil.CONTENT_TYPES);
+        testInvalid(util, invalidURLs, POST, CSRFUtil.CONTENT_TYPES);
+    }
 
-        List<String> invalidURLs = new ArrayList<String>();
-        invalidURLs.add("http://invalidHost/test");
-        invalidURLs.add("http://host1:8080/test");
-        invalidURLs.add("http://user:pw@host2/test");
-        testInvalid(util, invalidURLs);
+    public void testNoReferrer() throws Exception {
+        CSRFUtil util = new CSRFUtil("");
+        testValid(util, validURLs, POST, CSRFUtil.CONTENT_TYPES);
+        assertFalse("no referrer", util.isValidRequest(createRequest(null, POST, "text/plain")));
     }
 
     public void testDisabledConfig() throws Exception {
         CSRFUtil util = new CSRFUtil(CSRFUtil.DISABLED);
-        testValid(util, validURLs);
-
+        testValid(util, validURLs, POST, CSRFUtil.CONTENT_TYPES);
         // since test is disabled any other referer host must be allowed
-        List<String> otherHosts = new ArrayList<String>();
-        otherHosts.add("http://validHost:80/test");
-        otherHosts.add("http://host1/test");
-        otherHosts.add("https://user:pw@host2/test");
-        testValid(util, otherHosts);
+        testValid(util, invalidURLs, POST, CSRFUtil.CONTENT_TYPES);
     }
 
     public void testConfig() throws Exception {
@@ -121,20 +137,31 @@ public class CSRFUtilTest extends TestCase {
 
         for (String config : configs) {
             CSRFUtil util = new CSRFUtil(config);
-            testValid(util, validURLs);
-            testValid(util, otherHosts);
-            testInvalid(util, invalidURLs);
+            testValid(util, validURLs, POST, CSRFUtil.CONTENT_TYPES);
+            testValid(util, otherHosts, POST, CSRFUtil.CONTENT_TYPES);
+            testInvalid(util, invalidURLs, POST, CSRFUtil.CONTENT_TYPES);
         }
+    }
+
+    public void testMethodsAndMediaType() throws Exception {
+        CSRFUtil util = new CSRFUtil("");
+        testValid(util, invalidURLs, GET, CSRFUtil.CONTENT_TYPES);
+        testValid(util, invalidURLs, POST, new HashSet<String>(Arrays.asList(new String[] {"application/json"})));
+        testInvalid(util, invalidURLs, POST, CSRFUtil.CONTENT_TYPES);
     }
 
     private static final class DummyRequest implements HttpServletRequest {
 
         private final String referer;
         private final String serverName;
+        private final String method;
+        private final String contentType;
 
-        private DummyRequest(String referer, String serverName) {
+        private DummyRequest(String referer, String serverName, String method, String contentType) {
             this.referer = referer;
             this.serverName = serverName;
+            this.method = method;
+            this.contentType = contentType;
         }
 
         //---------------------------------------------< HttpServletRequest >---
@@ -171,7 +198,7 @@ public class CSRFUtilTest extends TestCase {
             return 0;
         }
         public String getMethod() {
-            return null;
+            return method;
         }
         public String getPathInfo() {
             return null;
@@ -240,7 +267,7 @@ public class CSRFUtilTest extends TestCase {
             return 0;
         }
         public String getContentType() {
-            return null;
+            return contentType;
         }
         public ServletInputStream getInputStream() throws IOException {
             return null;
