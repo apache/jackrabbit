@@ -16,17 +16,19 @@
  */
 package org.apache.jackrabbit.webdav.util;
 
-import org.apache.jackrabbit.webdav.DavMethods;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.servlet.http.HttpServletRequest;
-import java.net.MalformedURLException;
-import java.net.URL;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Enumeration;
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Set;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <code>CSRFUtil</code>...
@@ -39,7 +41,7 @@ public class CSRFUtil {
     public static final String DISABLED = "disabled";
 
     /**
-     * Request content types for CSRF checking, see JCR-3909
+     * Request content types for CSRF checking, see JCR-3909, JCR-4002, and JCR-4009
      */
     public static final Set<String> CONTENT_TYPES = Collections.unmodifiableSet(new HashSet<String>(
             Arrays.asList(
@@ -92,6 +94,7 @@ public class CSRFUtil {
         if (config == null || config.length() == 0) {
             disabled = false;
             allowedReferrerHosts = Collections.emptySet();
+            log.debug("CSRF protection disabled");
         } else {
             if (DISABLED.equalsIgnoreCase(config.trim())) {
                 disabled = true;
@@ -104,25 +107,62 @@ public class CSRFUtil {
                     allowedReferrerHosts.add(entry.trim());
                 }
             }
+            log.debug("CSRF protection enabled, allowed referrers: " + allowedReferrerHosts);
         }
     }
 
-    public boolean isValidRequest(HttpServletRequest request) throws MalformedURLException {
-        int methodCode = DavMethods.getMethodCode(request.getMethod());
-        if (disabled || DavMethods.DAV_POST != methodCode || !CONTENT_TYPES.contains(request.getContentType())) {
+    public boolean isValidRequest(HttpServletRequest request) {
+
+        if (disabled) {
+            return true;
+        } else if (!"POST".equals(request.getMethod())) {
+            // protection only needed for POST
             return true;
         } else {
+            Enumeration<String> cts = (Enumeration<String>) request.getHeaders("Content-Type");
+            String ct = null;
+            if (cts != null && cts.hasMoreElements()) {
+                String t = cts.nextElement();
+                // prune parameters
+                int semicolon = t.indexOf(';');
+                if (semicolon >= 0) {
+                    t = t.substring(0, semicolon);
+                }
+                ct = t.trim().toLowerCase(Locale.ENGLISH);
+            }
+            if (cts != null && cts.hasMoreElements()) {
+                // reject if there are more header field instances
+                log.debug("request blocked because there were multiple content-type header fields");
+                return false;
+            }
+            if (ct != null && !CONTENT_TYPES.contains(ct)) {
+                // type present and not in blacklist
+                return true;
+            }
 
             String refHeader = request.getHeader("Referer");
-            // empty referrer headers are not allowed for POST + relevant content types (see JCR-3909)
+            // empty referrer headers are not allowed for POST + relevant
+            // content types (see JCR-3909)
             if (refHeader == null) {
+                log.debug("POST with content type" + ct + " blocked due to missing referer header field");
                 return false;
             }
 
-            String host = new URL(refHeader).getHost();
-            // test referrer-host equals server or
-            // if it is contained in the set of explicitly allowed host names
-            return host.equals(request.getServerName()) || allowedReferrerHosts.contains(host);
+            try {
+                String host = new URI(refHeader).getHost();
+                // test referrer-host equals server or
+                // if it is contained in the set of explicitly allowed host
+                // names
+                boolean ok = host == null || host.equals(request.getServerName()) || allowedReferrerHosts.contains(host);
+                if (!ok) {
+                    log.debug("POST with content type" + ct + " blocked due to referer header field being: " + refHeader);
+                }
+                return ok;
+            } catch (URISyntaxException ex) {
+                // referrer malformed -> block access
+                log.debug("POST with content type" + ct + " blocked due to malformed referer header field: " + refHeader);
+                return false;
+            }
         }
     }
 }
