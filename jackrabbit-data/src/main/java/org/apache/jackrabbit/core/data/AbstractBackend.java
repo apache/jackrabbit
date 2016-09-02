@@ -47,7 +47,7 @@ public abstract class AbstractBackend implements Backend {
     /**
      * The pool size of asynchronous write pooling executor.
      */
-    private int asyncWritePoolSize;
+    private int asyncWritePoolSize = 10;
 
     /**
      * Asynchronous write pooling executor.
@@ -167,7 +167,7 @@ public abstract class AbstractBackend implements Backend {
     protected Executor createAsyncWriteExecutor() {
         Executor asyncExecutor;
 
-        if (getAsyncWritePoolSize() > 0) {
+        if (cachingDataStore.getAsyncUploadLimit() > 0 && getAsyncWritePoolSize() > 0) {
             asyncExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(getAsyncWritePoolSize(),
                     new NamedThreadFactory(getClass().getSimpleName() + "-write-worker"));
         } else {

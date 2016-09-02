@@ -40,11 +40,11 @@ public class TestCachingFDSCacheOff extends TestFileDataStore {
             fsPath = dataStoreDir + "/cachingFDS";
         }
         props.setProperty(FSBackend.FS_BACKEND_PATH, fsPath);
-        // disable asynchronous writing in testing.
-        props.setProperty(FSBackend.ASYNC_WRITE_POOL_SIZE, "0");
         cacheFDS.setProperties(props);
         cacheFDS.setSecret("12345");
         cacheFDS.setCacheSize(0);
+        // disable asynchronous writing in testing.
+        cacheFDS.setAsyncUploadLimit(0);
         cacheFDS.init(dataStoreDir);
         return cacheFDS;
     }
