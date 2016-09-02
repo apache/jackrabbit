@@ -158,7 +158,7 @@ public final class GlobPattern {
         if (obj instanceof GlobPattern) {
             GlobPattern other = (GlobPattern) obj;
             return nodePath.equals(other.nodePath) &&
-                    (restriction == null) ? other.restriction == null : restriction.equals(other.restriction);
+                    ((restriction == null) ? other.restriction == null : restriction.equals(other.restriction));
         }
         return false;
     }
