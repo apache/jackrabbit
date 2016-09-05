@@ -168,6 +168,17 @@ public class ListenerTracker {
         eventProducerTime.recordOneSecond();
     }
 
+    /**
+     * Record additional producer time spent outside of the listeners, e.g.
+     * before {@code onEvent()} is called.
+     *
+     * @param time the amount of time.
+     * @param unit the time unit.
+     */
+    public void recordProducerTime(long time, TimeUnit unit) {
+        eventProducerTime.getCounter().addAndGet(unit.toNanos(time));
+    }
+
     public EventListener getTrackedListener() {
         return new EventListener() {
             @Override
