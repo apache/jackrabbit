@@ -295,8 +295,8 @@ public class ListenerTracker {
             }
             @Override
             public double getEventConsumerTimeRatio() {
-                double consumerTime = sum(eventConsumerTime.getValuePerSecond());
-                double producerTime = sum(eventProducerTime.getValuePerSecond());
+                double consumerTime = sum(eventConsumerTime);
+                double producerTime = sum(eventProducerTime);
                 return consumerTime / Math.max(consumerTime + producerTime, 1);
             }
             @Override
@@ -390,10 +390,22 @@ public class ListenerTracker {
         }
     }
 
-    private static long sum(long[] values) {
+    private static long sum(TimeSeriesRecorder timeSeries) {
+        long missingValue = timeSeries.getMissingValue();
+        long sum = 0;
+        sum += sum(timeSeries.getValuePerSecond(), missingValue);
+        sum += sum(timeSeries.getValuePerMinute(), missingValue);
+        sum += sum(timeSeries.getValuePerHour(), missingValue);
+        sum += sum(timeSeries.getValuePerWeek(), missingValue);
+        return sum;
+    }
+
+    private static long sum(long[] values, long missing) {
         long sum = 0;
         for (long v : values) {
-            sum += v;
+            if (v != missing) {
+                sum += v;
+            }
         }
         return sum;
     }
