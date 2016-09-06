@@ -351,4 +351,22 @@ public class GlobPatternTest extends JUnitTest {
     public void testMatchesItem() {
        // TODO
     }
+
+     public void testEquals() {
+         GlobPattern gp1 = GlobPattern.create("/a/b/c");
+         GlobPattern gp2 = GlobPattern.create("/a/b/c");
+         assertEquals(gp1, gp2);
+
+         gp1 = GlobPattern.create("/a/b/c");
+         gp2 = GlobPattern.create("/a/b/c/d");
+         assertFalse(gp1.equals(gp2));
+
+         gp1 = GlobPattern.create("/a/b/c", null);
+         gp2 = GlobPattern.create("/a/b/c", "");
+         assertFalse(gp1.equals(gp2));
+
+         gp1 = GlobPattern.create("/a/b/c", "");
+         gp2 = GlobPattern.create("/a/b/c", "");
+         assertEquals(gp1, gp2);
+     }
 }
