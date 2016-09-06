@@ -16,12 +16,12 @@
  */
 package org.apache.jackrabbit.core.security.authorization;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.apache.jackrabbit.test.JUnitTest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * <code>GlobPatternTest</code>...
@@ -350,5 +350,23 @@ public class GlobPatternTest extends JUnitTest {
 
     public void testMatchesItem() {
        // TODO
+    }
+
+    public void testEquals() {
+        GlobPattern gp1 = GlobPattern.create("/a/b/c");
+        GlobPattern gp2 = GlobPattern.create("/a/b/c");
+        assertEquals(gp1, gp2);
+
+        gp1 = GlobPattern.create("/a/b/c");
+        gp2 = GlobPattern.create("/a/b/c/d");
+        assertFalse(gp1.equals(gp2));
+
+        gp1 = GlobPattern.create("/a/b/c", null);
+        gp2 = GlobPattern.create("/a/b/c", "");
+        assertFalse(gp1.equals(gp2));
+
+        gp1 = GlobPattern.create("/a/b/c", "");
+        gp2 = GlobPattern.create("/a/b/c", "");
+        assertEquals(gp1, gp2);
     }
 }
