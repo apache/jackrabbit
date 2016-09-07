@@ -57,7 +57,7 @@ public class FSBackend implements Backend {
 
     File fsPathDir;
 
-    private Executor asyncWriteExecuter;
+    private Executor asyncWriteExecutor;
 
     public static final String FS_BACKEND_PATH = "fsBackendPath";
 
@@ -119,7 +119,7 @@ public class FSBackend implements Backend {
                     + fsPathDir.getAbsolutePath());
             }
         }
-        asyncWriteExecuter = createAsyncWriteExecutor();
+        asyncWriteExecutor = createAsyncWriteExecutor();
 
     }
 
@@ -191,7 +191,7 @@ public class FSBackend implements Backend {
             throw new IllegalArgumentException(
                 "callback parameter cannot be null in asyncUpload");
         }
-        asyncWriteExecuter.execute(new Runnable() {
+        asyncWriteExecutor.execute(new Runnable() {
             @Override
             public void run() {
                 try {
@@ -269,7 +269,7 @@ public class FSBackend implements Backend {
             Thread.currentThread().setContextClassLoader(
                 getClass().getClassLoader());
 
-            asyncWriteExecuter.execute(new Runnable() {
+            asyncWriteExecutor.execute(new Runnable() {
                 @Override
                 public void run() {
                     try {
@@ -359,7 +359,7 @@ public class FSBackend implements Backend {
      * @return ThreadPoolExecutor used to execute asynchronous write or touch jobs
      */
     protected Executor getAsyncWriteExecutor() {
-        return asyncWriteExecuter;
+        return asyncWriteExecutor;
     }
 
     /**
