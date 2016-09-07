@@ -103,13 +103,10 @@ public class TestVFSDataStore extends TestCaseBase {
         baseFolderUri = props.getProperty(VFSDataStore.BASE_FOLDER_URI);
         dataStore.setBaseFolderUri(baseFolderUri);
         LOG.info("baseFolderUri [{}] set.", baseFolderUri);
-        String value = props.getProperty(VFSDataStore.ASYNC_WRITE_POOL_SIZE);
-        if (value != null) {
-            dataStore.setAsyncWritePoolSize(Integer.parseInt(value));
-            LOG.info("asyncWritePoolSize [{}] set.", dataStore.getAsyncWritePoolSize());
-        }
         dataStore.setFileSystemOptionsProperties(props);
         dataStore.setSecret("123456");
+        // disable asynchronous writing in testing.
+        dataStore.setAsyncUploadLimit(0);
         dataStore.init(dataStoreDir);
         return dataStore;
     }
@@ -192,8 +189,6 @@ public class TestVFSDataStore extends TestCaseBase {
             Properties props = new Properties();
             String baseFolderUri = new File(new File(dataStoreDir), "vfsds").toURI().toString();
             props.setProperty(VFSDataStore.BASE_FOLDER_URI, baseFolderUri);
-            // By default (when testing with local file system), disable asynchronous writing to the backend.
-            props.setProperty(VFSDataStore.ASYNC_WRITE_POOL_SIZE, "0");
             configProps = props;
         }
 

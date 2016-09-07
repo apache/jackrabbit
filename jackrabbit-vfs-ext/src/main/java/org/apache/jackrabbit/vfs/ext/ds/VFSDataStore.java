@@ -111,7 +111,7 @@ public class VFSDataStore extends CachingDataStore {
     /**
      * The pool size of asynchronous write pooling executor.
      */
-    private int asyncWritePoolSize = VFSBackend.DEFAULT_ASYNC_WRITE_POOL_SIZE;
+    private int asyncWritePoolSize = 10;
 
     @Override
     public void init(String homeDir) throws RepositoryException {

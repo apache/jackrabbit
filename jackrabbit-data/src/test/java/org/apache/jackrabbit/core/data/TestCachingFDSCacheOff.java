@@ -43,6 +43,8 @@ public class TestCachingFDSCacheOff extends TestFileDataStore {
         cacheFDS.setProperties(props);
         cacheFDS.setSecret("12345");
         cacheFDS.setCacheSize(0);
+        // disable asynchronous writing in testing.
+        cacheFDS.setAsyncUploadLimit(0);
         cacheFDS.init(dataStoreDir);
         return cacheFDS;
     }

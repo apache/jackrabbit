@@ -28,40 +28,32 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Executor;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.vfs2.FileObject;
 import org.apache.commons.vfs2.FileSystemException;
 import org.apache.commons.vfs2.FileType;
+import org.apache.jackrabbit.core.data.AbstractBackend;
 import org.apache.jackrabbit.core.data.AsyncTouchCallback;
 import org.apache.jackrabbit.core.data.AsyncTouchResult;
 import org.apache.jackrabbit.core.data.AsyncUploadCallback;
 import org.apache.jackrabbit.core.data.AsyncUploadResult;
-import org.apache.jackrabbit.core.data.Backend;
 import org.apache.jackrabbit.core.data.CachingDataStore;
 import org.apache.jackrabbit.core.data.DataIdentifier;
 import org.apache.jackrabbit.core.data.DataStoreException;
-import org.apache.jackrabbit.core.data.util.NamedThreadFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * A data store backend that stores data on VFS file system.
  */
-public class VFSBackend implements Backend {
+public class VFSBackend extends AbstractBackend {
 
     /**
      * Logger instance.
      */
     private static final Logger LOG = LoggerFactory.getLogger(VFSBackend.class);
-
-    /**
-     * The default pool size of asynchronous write pooling executor.
-     */
-    static final int DEFAULT_ASYNC_WRITE_POOL_SIZE = 10;
 
     /**
      * The maximum last modified time resolution of the file system.
@@ -79,24 +71,9 @@ public class VFSBackend implements Backend {
     private static final String TOUCH_FILE_NAME_SUFFIX = ".touch";
 
     /**
-     * {@link CachingDataStore} instance using this backend.
-     */
-    private CachingDataStore store;
-
-    /**
      * VFS base folder object.
      */
     private FileObject baseFolder;
-
-    /**
-     * The pool size of asynchronous write pooling executor.
-     */
-    private int asyncWritePoolSize = DEFAULT_ASYNC_WRITE_POOL_SIZE;
-
-    /**
-     * Asynchronous write pooling executor.
-     */
-    private Executor asyncWriteExecutor;
 
     /**
      * Whether or not a touch file is preferred to set/get the last modified timestamp for a file object
@@ -109,34 +86,17 @@ public class VFSBackend implements Backend {
     }
 
     /**
-     * Returns the pool size of the async write pool executor.
-     * @return the pool size of the async write pool executor
-     */
-    public int getAsyncWritePoolSize() {
-        return asyncWritePoolSize;
-    }
-
-    /**
-     * Sets the pool size of the async write pool executor.
-     * @param asyncWritePoolSize pool size of the async write pool executor
-     */
-    public void setAsyncWritePoolSize(int asyncWritePoolSize) {
-        this.asyncWritePoolSize = asyncWritePoolSize;
-    }
-
-    /**
      * {@inheritDoc}
      */
     @Override
-    public void init(CachingDataStore store, String homeDir, String config) throws DataStoreException {
-        this.store = store;
+    public void init(CachingDataStore cachingDataStore, String homeDir, String config) throws DataStoreException {
+        super.init(cachingDataStore, homeDir, config);
 
         // When it's local file system, no need to use a separate touch file.
         if ("file".equals(baseFolder.getName().getScheme())) {
             touchFilePreferred = false;
         }
 
-        asyncWriteExecutor = createAsyncWriteExecutor();
     }
 
     /**
@@ -275,18 +235,6 @@ public class VFSBackend implements Backend {
         }
 
         getAsyncWriteExecutor().execute(new AsyncTouchJob(identifier, minModifiedDate, callback));
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void close() throws DataStoreException {
-        Executor asyncExecutor = getAsyncWriteExecutor();
-
-        if (asyncExecutor != null && asyncExecutor instanceof ExecutorService) {
-            ((ExecutorService) asyncExecutor).shutdownNow();
-        }
     }
 
     /**
@@ -453,32 +401,6 @@ public class VFSBackend implements Backend {
         } catch (FileSystemException e) {
             throw new DataStoreException("Touch file object not resolved: " + fileObject.getName().getFriendlyURI(), e);
         }
-    }
-
-    /**
-     * Creates a {@link ThreadPoolExecutor}.
-     * This method is invoked during the initialization for asynchronous write/touch job executions.
-     * @return a {@link ThreadPoolExecutor}
-     */
-    protected Executor createAsyncWriteExecutor() {
-        Executor asyncExecutor;
-
-        if (getAsyncWritePoolSize() > 0) {
-            asyncExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(getAsyncWritePoolSize(),
-                    new NamedThreadFactory("vfs-write-worker"));
-        } else {
-            asyncExecutor = new ImmediateExecutor();
-        }
-
-        return asyncExecutor;
-    }
-
-    /**
-     * Returns ThreadPoolExecutor used to execute asynchronous write or touch jobs.
-     * @return ThreadPoolExecutor used to execute asynchronous write or touch jobs
-     */
-    protected Executor getAsyncWriteExecutor() {
-        return asyncWriteExecutor;
     }
 
     /**
@@ -777,8 +699,8 @@ public class VFSBackend implements Backend {
                 if (lastModified < timestamp) {
                     identifier = new DataIdentifier(fileObject.getName().getBaseName());
 
-                    if (store.confirmDelete(identifier)) {
-                        store.deleteFromCache(identifier);
+                    if (getCachingDataStore().confirmDelete(identifier)) {
+                        getCachingDataStore().deleteFromCache(identifier);
 
                         if (LOG.isInfoEnabled()) {
                             LOG.info("Deleting old file " + fileObject.getName().getFriendlyURI() + " modified: "
@@ -794,17 +716,6 @@ public class VFSBackend implements Backend {
                     }
                 }
             }
-        }
-    }
-
-    /**
-     * This class implements {@link Executor} interface to run {@code command} right away,
-     * resulting in non-asynchronous mode executions.
-     */
-    private class ImmediateExecutor implements Executor {
-        @Override
-        public void execute(Runnable command) {
-            command.run();
         }
     }
 
