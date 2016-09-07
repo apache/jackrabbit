@@ -32,6 +32,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
 import java.util.Set;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 
@@ -55,7 +57,7 @@ public class FSBackend implements Backend {
 
     File fsPathDir;
 
-    private ThreadPoolExecutor asyncWriteExecuter;
+    private Executor asyncWriteExecutor;
 
     public static final String FS_BACKEND_PATH = "fsBackendPath";
 
@@ -117,8 +119,7 @@ public class FSBackend implements Backend {
                     + fsPathDir.getAbsolutePath());
             }
         }
-        asyncWriteExecuter = (ThreadPoolExecutor) Executors.newFixedThreadPool(
-            10, new NamedThreadFactory("fs-write-worker"));
+        asyncWriteExecutor = createAsyncWriteExecutor();
 
     }
 
@@ -190,7 +191,7 @@ public class FSBackend implements Backend {
             throw new IllegalArgumentException(
                 "callback parameter cannot be null in asyncUpload");
         }
-        asyncWriteExecuter.execute(new Runnable() {
+        asyncWriteExecutor.execute(new Runnable() {
             @Override
             public void run() {
                 try {
@@ -268,7 +269,7 @@ public class FSBackend implements Backend {
             Thread.currentThread().setContextClassLoader(
                 getClass().getClassLoader());
 
-            asyncWriteExecuter.execute(new Runnable() {
+            asyncWriteExecutor.execute(new Runnable() {
                 @Override
                 public void run() {
                     try {
@@ -292,8 +293,11 @@ public class FSBackend implements Backend {
 
     @Override
     public void close() throws DataStoreException {
-        asyncWriteExecuter.shutdownNow();
+        Executor asyncExecutor = getAsyncWriteExecutor();
 
+        if (asyncExecutor != null && asyncExecutor instanceof ExecutorService) {
+            ((ExecutorService) asyncExecutor).shutdownNow();
+        }
     }
 
     @Override
@@ -330,6 +334,32 @@ public class FSBackend implements Backend {
      */
     public void setProperties(Properties properties) {
         this.properties = properties;
+    }
+
+    /**
+     * Creates a {@link Executor}.
+     * This method is invoked during the initialization for asynchronous write/touch job executions.
+     * @return a {@link Executor}
+     */
+    protected Executor createAsyncWriteExecutor() {
+        Executor asyncExecutor;
+
+        if (store.getAsyncUploadLimit() > 0) {
+            asyncExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(10,
+                    new NamedThreadFactory("fs-write-worker"));
+        } else {
+            asyncExecutor = new ImmediateExecutor();
+        }
+
+        return asyncExecutor;
+    }
+
+    /**
+     * Returns ThreadPoolExecutor used to execute asynchronous write or touch jobs.
+     * @return ThreadPoolExecutor used to execute asynchronous write or touch jobs
+     */
+    protected Executor getAsyncWriteExecutor() {
+        return asyncWriteExecutor;
     }
 
     /**
@@ -490,6 +520,17 @@ public class FSBackend implements Backend {
                     file.delete();
                 }
             }
+        }
+    }
+
+    /**
+     * This class implements {@link Executor} interface to run {@code command} right away,
+     * resulting in non-asynchronous mode executions.
+     */
+    private class ImmediateExecutor implements Executor {
+        @Override
+        public void execute(Runnable command) {
+            command.run();
         }
     }
 
