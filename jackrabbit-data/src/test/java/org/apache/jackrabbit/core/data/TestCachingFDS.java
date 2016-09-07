@@ -50,14 +50,10 @@ public class TestCachingFDS extends TestFileDataStore {
         LOG.info("fsBackendPath [{}] set.", fsPath);
         cacheFDS.setProperties(props);
         cacheFDS.setSecret("12345");
+        // disable asynchronous writing in testing.
+        cacheFDS.setAsyncUploadLimit(0);
         cacheFDS.init(dataStoreDir);
         return cacheFDS;
-    }
-
-    @Override
-    protected void doDeleteRecordTest() throws Exception {
-        ds = createDataStore();
-        LOG.info("Skip deleteRecordTest on CachingFDS (JCR-4006)");
     }
 
     /**
