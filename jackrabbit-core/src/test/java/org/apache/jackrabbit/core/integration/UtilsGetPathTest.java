@@ -16,15 +16,20 @@
  */
 package org.apache.jackrabbit.core.integration;
 
+import javax.jcr.AccessDeniedException;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
+import javax.jcr.Session;
 
 import org.apache.jackrabbit.commons.JcrUtils;
 import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.junit.Test;
+import org.mockito.Mockito;
 
 /**
  * @see <a href="https://issues.apache.org/jira/browse/JCR-3992">JCR-3992</a>
+ *      and
+ *      <a href="https://issues.apache.org/jira/browse/JCR-4015">JCR-4015</a>
  */
 public class UtilsGetPathTest extends AbstractJCRTest {
 
@@ -42,5 +47,22 @@ public class UtilsGetPathTest extends AbstractJCRTest {
         superuser.save();
         assertEquals(path2, node2.getPath());
         assertTrue(superuser.nodeExists(path2));
+    }
+
+    @Test
+    public void testGetOrCreateByPathNoRoot() throws RepositoryException {
+        Node inter = JcrUtils.getOrCreateByPath("/foo", "nt:unstructured", superuser);
+        assertEquals("/foo", inter.getPath());
+        superuser.save();
+
+        // test what happens if getRootNode() throws
+        final Session mockedSession = Mockito.spy(superuser);
+        Mockito.when(mockedSession.getRootNode()).thenThrow(new AccessDeniedException("access denied"));
+        Mockito.when(mockedSession.getNode("/")).thenThrow(new AccessDeniedException("access denied"));
+        Mockito.when(mockedSession.getItem("/")).thenThrow(new AccessDeniedException("access denied"));
+
+        Node result = JcrUtils.getOrCreateByPath("/foo/bar", false, null, null, mockedSession, false);
+        superuser.save();
+        assertEquals("/foo/bar", result.getPath());
     }
 }
