@@ -1450,6 +1450,8 @@ public class JcrUtils {
             return session.getRootNode();
         } else if (!absolutePath.startsWith("/")) {
             throw new IllegalArgumentException("not an absolute path: " + absolutePath);
+        } else if (session.nodeExists(absolutePath) && !createUniqueLeaf) {
+            return session.getNode(absolutePath);
         } else {
             // find deepest existing parent node
             String path = absolutePath;
