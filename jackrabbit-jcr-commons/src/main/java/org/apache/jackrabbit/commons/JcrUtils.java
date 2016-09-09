@@ -1448,10 +1448,27 @@ public class JcrUtils {
         if (absolutePath == null || absolutePath.length() == 0 || "/".equals(absolutePath)) {
             // path denotes root node
             return session.getRootNode();
+        } else if (!absolutePath.startsWith("/")) {
+            throw new IllegalArgumentException("not an absolute path: " + absolutePath);
+        } else if (session.nodeExists(absolutePath) && !createUniqueLeaf) {
+            return session.getNode(absolutePath);
+        } else {
+            // find deepest existing parent node
+            String path = absolutePath;
+            int currentIndex = path.lastIndexOf('/');
+            String existingPath = null;
+            while (currentIndex > 0 && existingPath == null) {
+                path = path.substring(0, currentIndex);
+                if (session.nodeExists(path)) {
+                    existingPath = path;
+                } else {
+                    currentIndex = path.lastIndexOf('/');
+                }
+            }
+            // create path relative to the root node
+            return getOrCreateByPath(existingPath == null ? session.getRootNode() : session.getNode(existingPath),
+                    absolutePath.substring(currentIndex + 1), createUniqueLeaf, intermediateNodeType, nodeType, autoSave);
         }
-        // create path relative to the root node
-        return getOrCreateByPath(session.getRootNode(), absolutePath.substring(1),
-                createUniqueLeaf, intermediateNodeType, nodeType, autoSave);
     }
 
     /**
