@@ -33,11 +33,9 @@ import java.util.List;
 import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
-import org.apache.jackrabbit.core.data.util.NamedThreadFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -313,24 +311,6 @@ public class FSBackend extends AbstractBackend {
      */
     public void setProperties(Properties properties) {
         this.properties = properties;
-    }
-
-    /**
-     * Creates a {@link Executor}.
-     * This method is invoked during the initialization for asynchronous write/touch job executions.
-     * @return a {@link Executor}
-     */
-    protected Executor createAsyncWriteExecutor() {
-        Executor asyncExecutor;
-
-        if (getDataStore().getAsyncUploadLimit() > 0) {
-            asyncExecutor = Executors.newFixedThreadPool(10,
-                    new NamedThreadFactory("fs-write-worker"));
-        } else {
-            asyncExecutor = new ImmediateExecutor();
-        }
-
-        return asyncExecutor;
     }
 
     /**
