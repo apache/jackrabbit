@@ -36,11 +36,11 @@ import java.util.concurrent.TimeUnit;
 import org.apache.jackrabbit.aws.ext.S3Constants;
 import org.apache.jackrabbit.aws.ext.S3RequestDecorator;
 import org.apache.jackrabbit.aws.ext.Utils;
+import org.apache.jackrabbit.core.data.AbstractBackend;
 import org.apache.jackrabbit.core.data.AsyncTouchCallback;
 import org.apache.jackrabbit.core.data.AsyncTouchResult;
 import org.apache.jackrabbit.core.data.AsyncUploadCallback;
 import org.apache.jackrabbit.core.data.AsyncUploadResult;
-import org.apache.jackrabbit.core.data.Backend;
 import org.apache.jackrabbit.core.data.CachingDataStore;
 import org.apache.jackrabbit.core.data.DataIdentifier;
 import org.apache.jackrabbit.core.data.DataStoreException;
@@ -71,7 +71,7 @@ import com.amazonaws.util.StringUtils;
 /**
  * A data store backend that stores data on Amazon S3.
  */
-public class S3Backend implements Backend {
+public class S3Backend extends AbstractBackend {
 
     /**
      * Logger instance.
@@ -86,13 +86,9 @@ public class S3Backend implements Backend {
 
     private TransferManager tmx;
 
-    private CachingDataStore store;
-
     private Properties properties;
 
     private Date startTime;
-    
-    private ThreadPoolExecutor asyncWriteExecuter;
 
     private S3RequestDecorator s3ReqDecorator;
 
@@ -103,6 +99,7 @@ public class S3Backend implements Backend {
     @Override
     public void init(CachingDataStore store, String homeDir, String config)
             throws DataStoreException {
+        super.init(store, homeDir, config);
         Properties initProps = null;
         //Check is configuration is already provided. That takes precedence
         //over config provided via file based config
@@ -132,7 +129,7 @@ public class S3Backend implements Backend {
             Thread.currentThread().setContextClassLoader(
                 getClass().getClassLoader());
             LOG.debug("init");
-            this.store = store;
+            setDataStore(store);
             s3ReqDecorator = new S3RequestDecorator(prop);
 
             s3service = Utils.openService(prop);
@@ -184,9 +181,7 @@ public class S3Backend implements Backend {
                 asyncWritePoolSize = Integer.parseInt(maxConnsStr)
                     - writeThreads;
             }
-            
-            asyncWriteExecuter = (ThreadPoolExecutor) Executors.newFixedThreadPool(
-                asyncWritePoolSize, new NamedThreadFactory("s3-write-worker"));
+            setAsyncWritePoolSize(asyncWritePoolSize);
             String renameKeyProp = prop.getProperty(S3Constants.S3_RENAME_KEYS);
             boolean renameKeyBool = (renameKeyProp == null || "".equals(renameKeyProp))
                     ? false
@@ -226,7 +221,7 @@ public class S3Backend implements Backend {
             throw new IllegalArgumentException(
                 "callback parameter cannot be null in asyncUpload");
         }
-        asyncWriteExecuter.execute(new AsyncUploadJob(identifier, file,
+        getAsyncWriteExecutor().execute(new AsyncUploadJob(identifier, file,
             callback));
     }
 
@@ -327,7 +322,7 @@ public class S3Backend implements Backend {
             Thread.currentThread().setContextClassLoader(
                 getClass().getClassLoader());
 
-            asyncWriteExecuter.execute(new Runnable() {
+            getAsyncWriteExecutor().execute(new Runnable() {
                 @Override
                 public void run() {
                     try {
@@ -537,13 +532,13 @@ public class S3Backend implements Backend {
                     long lastModified = s3ObjSumm.getLastModified().getTime();
                     LOG.debug("Identifier [{}]'s lastModified = [{}]", identifier, lastModified);
                     if (lastModified < min
-                        && store.confirmDelete(identifier)
+                        && getDataStore().confirmDelete(identifier)
                          // confirm once more that record's lastModified < min
                         //  order is important here
                         && s3service.getObjectMetadata(bucket,
                             s3ObjSumm.getKey()).getLastModified().getTime() < min) {
                        
-                        store.deleteFromCache(identifier);
+                        getDataStore().deleteFromCache(identifier);
                         LOG.debug("add id [{}] to delete lists",
                             s3ObjSumm.getKey());
                         deleteList.add(new DeleteObjectsRequest.KeyVersion(
@@ -584,9 +579,9 @@ public class S3Backend implements Backend {
     }
 
     @Override
-    public void close() {
+    public void close() throws DataStoreException {
+        super.close();
         // backend is closing. abort all mulitpart uploads from start.
-        asyncWriteExecuter.shutdownNow();
         if(s3service.doesBucketExist(bucket)) {
             tmx.abortMultipartUploads(bucket, startTime);
         }
