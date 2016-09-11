@@ -1,34 +1,30 @@
-Release Notes -- Apache Jackrabbit -- Version 2.8.2
+Release Notes -- Apache Jackrabbit -- Version 2.8.3
 
 Introduction
 ------------
 
-This is Apache Jackrabbit(TM) 2.8.2, a fully compliant implementation of the
+This is Apache Jackrabbit(TM) 2.8.3, a fully compliant implementation of the
 Content Repository for Java(TM) Technology API, version 2.0 (JCR 2.0) as
 specified in the Java Specification Request 283 (JSR 283).
 
-Apache Jackrabbit 2.8.2 is a patch release that contains fixes and
+Apache Jackrabbit 2.8.3 is a patch release that contains fixes and
 improvements over Jackrabbit 2.8. Jackrabbit 2.8.x releases are considered
 stable and targeted for production use.
 
-Changes since Jackrabbit 2.8.1
+Changes since Jackrabbit 2.8.2
 ------------------------------
 
-Improvements
+Bug
 
-    [JCR-3900] - LockTest.testNodeLocked: incorrect assumption about when the lock token can be returned
-    [JCR-3971] - Make read-permission cache-size in CompiledPermissionsImpl configurable
-    [JCR-3972] - Make size of ID-cache in CachingHierarchyManager configurable
+    [JCR-3909] - CSRF bug in Jackrabbit-Webdav
+    [JCR-4009] - CSRF in Jackrabbit-Webdav
 
-Bug fixes
+Sub-task
 
-    [JCR-2633] - Modified externally exception when modifying mixinTypes with single session
-    [JCR-3915] - undo incorrect change to lock token test
-    [JCR-3949] - occasional test failure in RepositoryConfigTest.testAutomaticClusterNodeIdCreation()
-    [JCR-3950] - XSS in DirListingExportHandler
+    [JCR-4019] - move httpclient dependency out of parent pom
 
 In addition to the above-mentioned changes, this release contains
-all the changes included up to the Apache Jackrabbit 2.8.1 release.
+all the changes included up to the Apache Jackrabbit 2.8.2 release.
 
 For more detailed information about all the changes in this and other
 Jackrabbit releases, please see the Jackrabbit issue tracker at
