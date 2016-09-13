@@ -33,343 +33,42 @@ module to this release or disable WebDAV access to the repository.
 Changes since Jackrabbit 2.6.5
 ------------------------------
 
-Improvements
+Bug
 
-  [JCR-3573] Improve token based login concurrency
-  [JCR-3628] Embed cause in org.apache.jackrabbit.core.SessionImpl#getNodeByIdentifier while rethrowing IllegalArgumentException
-  [JCR-3687] Backport improvements made to token based auth in OAK
-  [JCR-3810] StreamWrapper can attempt to reset other types of InputStreams
-  [JCR-3826] AbstractPrincipalProvider cachesize is not configurable
-    
-Bug fixes
+    [JCR-3235] - ArrayIndexOfOufBounds in TargetImportHandler$BufferedStringValue.append()
+    [JCR-3693] - Lucene configuration - aggregation definition : problem with include-property tag
+    [JCR-3709] - DBDataStore updates 2 times the lastModified Date on touch when GC is running
+    [JCR-3710] - occasional test failures in TokenBasedAuthenticationTest
+    [JCR-3711] - RepositoryChecker versioning cleanup may leave repaired node in invalid type state
+    [JCR-3721] - Slow and actively called NodeId.toString()
+    [JCR-3761] - TokenInfo#resetExpiration always fails with ConstraintViolationException
+    [JCR-3770] - refine validateHierarchy check in order to avoid false-positives
+    [JCR-3773] - Lucene ConsistencyCheck reports nodes under jcr:nodeTypes as deleted
+    [JCR-3783] - Deadlock due to IOException in WorkspaceUpdateChannel.updatePrepared()
+    [JCR-3784] - ReplacePropertyWhileOthersReadTest fails when run with ConcurrentTestSuite
+    [JCR-3796] - TokenProvider.createToken is case sensitive
+    [JCR-3798] - NPE while building path in lucene index consistency checker
+    [JCR-3809] - ConnectionHelper swallows exception when it fails to reset binary streams after a failed SQL statement execution
+    [JCR-3811] - AppendRecord should allow reattempting database insertions of journal records should the initial attempt fail
+    [JCR-3814] - IllegalStateException in LockManager#unlock
+    [JCR-3821] - SeededSecureRandom thread can prevent Jackrabbit from shutting down
+    [JCR-3840] - NodeTypeDefDiff does not take same-name child type definitions into account
+    [JCR-3883] - Jackrabbit WebDAV bundle susceptible to XXE/XEE attack (CVE-2015-1833)
+    [JCR-3909] - CSRF bug in Jackrabbit-Webdav
+    [JCR-3949] - occasional test failure in RepositoryConfigTest.testAutomaticClusterNodeIdCreation()
+    [JCR-3950] - XSS in DirListingExportHandler
+    [JCR-4009] - CSRF in Jackrabbit-Webdav
 
-  [JCR-3235] ArrayIndexOfOufBounds in TargetImportHandler$BufferedStringValue.append()
-  [JCR-3693] Lucene configuration - aggregation definition : problem with include-property tag
-  [JCR-3709] DBDataStore updates 2 times the lastModified Date on touch when GC is running
-  [JCR-3711] RepositoryChecker versioning cleanup may leave repaired node in invalid type state
-  [JCR-3721] Slow and actively called NodeId.toString()
-  [JCR-3761] TokenInfo#resetExpiration always fails with ConstraintViolationException
-  [JCR-3770] refine validateHierarchy check in order to avoid false-positives
-  [JCR-3773] Lucene ConsistencyCheck reports nodes under jcr:nodeTypes as deleted
-  [JCR-3783] Deadlock due to IOException in WorkspaceUpdateChannel.updatePrepared()
-  [JCR-3784] ReplacePropertyWhileOthersReadTest fails when run with ConcurrentTestSuite
-  [JCR-3798] NPE while building path in lucene index consistency checker
-  [JCR-3809] ConnectionHelper swallows exception when it fails to reset binary streams after a failed SQL statement execution
-  [JCR-3811] AppendRecord should allow reattempting database insertions of journal records should the initial attempt fail
-  [JCR-3814] IllegalStateException in LockManager#unlock
-  [JCR-3821] SeededSecureRandom thread can prevent Jackrabbit from shutting down
-  [JCR-3840] NodeTypeDefDiff does not take same-name child type definitions into account
-  [JCR-3883] Jackrabbit WebDAV bundle susceptible to XXE/XEE attack (CVE-2015-1833)  
-  
-Changes since Jackrabbit 2.6.4
-------------------------------
+Improvement
 
-Improvements
-
-  [JCR-3690] Allow Node Type Registry subclasses to check for ...
-
-Bug fixes
-
-  [JCR-1880] Same name sibling: Jackrabbit behaves differently when ...
-  [JCR-3364] Moving of nodes requires read access to all parent nodes ...
-  [JCR-3603] Index aggreate with property include does not speed up ...
-  [JCR-3653] SessionState logs nano seconds but writes 'us'
-  [JCR-3654] Error MembershipCache if a group node contains MV property
-  [JCR-3682] Better Exception Handling in TransactionContext to handle ...
-  [JCR-3691] Search index consistency check logs unnecessary warnings ...
-
-Changes since Jackrabbit 2.6.3
-------------------------------
-
-Improvements
-
-  [JCR-3676] Make QueryResultImpl#isAccessGranted proctected
-
-Bug fixes
-
-  [JCR-3582] Unable to create nodes with whitespace chars != ASCII SP
-  [JCR-3398] LOWER operand with nested LOCALNAME operand does not work ...
-  [JCR-3633] If header field sent with PROPFIND (for lock discovery)
-  [JCR-3635] Manually specified jcr:frozenUuid overwriting the one ...
-  [JCR-3645] LockManagerImpl do not prevent the internal PathMap in all ...
-  [JCR-3652] Bundle serialization broken
-  [JCR-3655] Better Locking inside LockManagerImpl
-  [JCR-3656] improve error handling when shared node support is missing
-  [JCR-3658] MembershipCache not consistently synchronized
-  [JCR-3665] Loading nodes in index and database consistency checkers ...
-  [JCR-3671] Config DTD doesn't allow ProtectedItemImporter
-  [JCR-3673] ChildAxisQuery#advance method results in IllegalArgument...
-  [JCR-3674] Unwarranted errors logged about nodetype registrations in ...
-  [JCR-3678] MembershipCache max size is hard coded to 5000
-
-Security advisory (JCR-3630)
-----------------------------
-
-As reported by Noel Dunne and Lars Krapf, there was a cross-site scripting 
-(XSS) vulnerability in the jackrabbit-jcr-server component, used for providing
-WebDAV access to the repository. This release fixes the issue.
-
-Changes since Jackrabbit 2.6.2
-------------------------------
-
-Improvements
-
-  [JCR-2029] JCR Remoting: Use DAV:lockroot to expose the lock-holding node
-  [JCR-3322] add TCK coverage of isNodeType(expandedName)
-  [JCR-3625] make port number for webdav integration tests configurable
-  [JCR-3626] NodeTypeTest.getPrimaryItemName can get ssssslllllloooowwwww
-
-Bug fixes
-
-  [JCR-3228] WebDav/DavEx remoting throws workspace mismatch exceptions ...
-  [JCR-3605] Possible Deadlock during TimeoutHandler is running
-  [JCR-3610] html excerpt broken when one of the indexed properties contains
-  [JCR-3617] Inconsistent CachingHierarchyManager under concurrent access
-  [JCR-3630] XSS in DirListingExportHandler
-
-Changes since Jackrabbit 2.6.1
-------------------------------
-
-New features
-
-  [JCR-3534] Efficient copying of binaries across repositories with the ...
-  [JCR-3550] Methods for determining type of array of values
-
-Improvements
-
-  [JCR-3402] getSize() returning too many often -1
-  [JCR-3531] Borrow all available RepositoryHelpers
-  [JCR-3596] Reduce level for 'overwriting cached item' log messages in ...
-
-Bug fixes
-
-  [JCR-3543] TCK does not allow a property to be re-bound to a different ...
-  [JCR-3595] AbstractJournal logging is too verbose
-
-Changes since Jackrabbit 2.6.0
-------------------------------
-
-Improvements
-
-  [JCR-3495] Unregister from PrivilegeRegistry and NodeTypeRegistry on ...
-  [JCR-3513] Slower range query execution
-  [JCR-3516] Search index consistency check should report and fix wrong ...
-  [JCR-3517] Search index consistency check should be able to double ...
-  [JCR-3519] Disable IOCounters based on log level
-  [JCR-3535] Davex remoting should support absolute path hrefs
-  [JCR-3553] improve error logging for unexpected path formats
-  [JCR-3566] add TCK test for NaN and infinity double property values
-  [JCR-3577] Allow creation of users with 'null' password
-  [JCR-3587] RepositoryImpl should expose the collection of ...
-
-Bug Fixes
-
-  [JCR-3276] JCA Adpater not handling transaction suspension correctly
-  [JCR-3382] ItemManager.getNode does not do a permission check when the ...
-  [JCR-3498] OUTER JOIN behavior is improperly excluding some values
-  [JCR-3512] DelayedDelete in MultiDatastore does not work correctly
-  [JCR-3518] Build fails on Mac OS + JDK 7
-  [JCR-3521] IllegalArgumentException thrown on a box running java7 with ...
-  [JCR-3523] Workspace.copy changes WeakReferences to References
-  [JCR-3539] NotQuery#advance (and for older versions skipTo) violates ...
-  [JCR-3540] locator for RootCollection generates a broken href when ...
-  [JCR-3545] unknown REPORT should cause status code 409/DAV:supported-report
-  [JCR-3546] header fields values such as "Location" need to be resolved ...
-  [JCR-3549] URIResolverImpl needs to handle absolute paths in addition ...
-  [JCR-3551] DavEx cannot handle Double.NaN properties
-  [JCR-3552] Principal associated with Group does not update members
-  [JCR-3554] RepositoryService.getReferences needs to deal with absolute ...
-  [JCR-3562] Adding a child node named {foo fails but bar} works
-  [JCR-3578] use absolute paths in DeltaV request bodies, and resolve ...
-  [JCR-3570] Make immediately Repository start configureable in ...
-  [JCR-3576] handle absolute paths in observation response bodies
-  [JCR-3580] JcrPrivilegeReport needs to deal with both absolute paths ...
-  [JCR-3581] Incorrect bitwise arithmetic in BitsetENTCacheImpl.BitsetKey....
-  [JCR-3583] UPDATE method needs to deal with both absolute paths and ...
-
-
-Changes since Jackrabbit 2.4.0
-------------------------------
-
-New features
-
-  [JCR-3233] Provide callback for consistency checker
-  [JCR-3255] Access cluster node id
-  [JCR-3389] Implement a MultiDataStore
-  [JCR-3420] Improving Jackrabbit integration within OSGi and other ...
-  [JCR-3443] Normalize String properties when ordering query results
-
-Improvements
-
-  [JCR-1873] It should be possible to define how hrefs are generated for WebDav
-  [JCR-3181] add test case for recovering from broken version history ...
-  [JCR-3191] Update commons-io dependency from versiom 1.4 to 2.0.1
-  [JCR-3209] lock token validity
-  [JCR-3212] add TCK test for Info map of NODE_MOVED event on node reordering
-  [JCR-3213] Speed up NodeIndexer.isIndexed() check
-  [JCR-3229] FileRevision should have a flag to control whether to sync ...
-  [JCR-3231] Replace BundleFsPersistenceManager with ...
-  [JCR-3232] Improve FileRevision extensibility
-  [JCR-3237] add missing name constants for mix:title
-  [JCR-3242] Update to Lucene 3.6
-  [JCR-3243] RepositoryStatistics should be more flexible
-  [JCR-3248] TimeoutHandler visitor should be extracted into a dedicated class
-  [JCR-3253] Set omit term freq positions flag on parent field in the index
-  [JCR-3254] make max size of CachingEntryCollector's cache configurable
-  [JCR-3259] augment logging information around CachingEntryCollector
-  [JCR-3263] Consistency checker performance improvements
-  [JCR-3265] Consistency checker should double check for false positives
-  [JCR-3269] Consistency checker should fix 'disconnected' nodes
-  [JCR-3275] Audit log
-  [JCR-3277] Let consistency report provide more information
-  [JCR-3280] SQL2 joins on empty sets are not efficient
-  [JCR-3282] Optimize usage of norms
-  [JCR-3286] InternalVersionManagerBase.calculateCheckinVersionName will ...
-  [JCR-3296] Indexing ignored file types creates some garbage
-  [JCR-3315] Add .gitignore file
-  [JCR-3319] Improve performance of repository updates - tweak index ...
-  [JCR-3327] Upgrade to Java SE 6
-  [JCR-3330] upgrade httpclient 3 dependency to final release 3.1
-  [JCR-3331] various tests do not compile with source==1.6
-  [JCR-3332] Add constructor with size argument to Node- and ...
-  [JCR-3339] Log stack trace with warn message in ObservationDispatcher
-  [JCR-3350] Easy-to-use utility class for adding ACEs to nodes
-  [JCR-3351] Add performance test setup for jr2.6
-  [JCR-3352] Minor improvements for collecting ACEs
-  [JCR-3356] performance tests
-  [JCR-3358] Allow null type in JcrUtils.getOrAddNode(parent, name, type)
-  [JCR-3362] Use a basic form for audit logs
-  [JCR-3365] Provide get property and get node utility methods in JcrUtils
-  [JCR-3369] Garbage collector improvements
-  [JCR-3370] TCK test for shareable node paths assumes work area
-  [JCR-3371] TCK test for shareable nodes incorrectly assumes the ...
-  [JCR-3376] TCK: SQLPathTest.testChildAxisRoot expects root node not ...
-  [JCR-3386] Adjust some default values of the BasicDataSource in the ...
-  [JCR-3392] Combine the XA aware (Reentrant) LockImpls to prevent ...
-  [JCR-3393] InternalVersionManagerBase.calculateCheckinVersionName may ...
-  [JCR-3395] separate entries used for permission eval from ACEs exposed ...
-  [JCR-3405] Improvements to user management implementation
-  [JCR-3406] Journal doUnlock sometimes not called on repository shutdown
-  [JCR-3418] CompactNodeTypeDefReader throws away exception information
-  [JCR-3426] Log warning when changes are performed with event ...
-  [JCR-3429] Make query tests (more) independent
-  [JCR-3442] Allow (override) access of the system search manager to ...
-  [JCR-3454] The RmiRepositoryFactory should handle auto reconnect
-  [JCR-3463] Configurable stopDelay
-  [JCR-3467] ConsistencyCheck.MissingAncestor#repair() should also log UUID
-  [JCR-3474] Add JackrabbitQueryResult.getTotalSize()
-  [JCR-3479] Remove logback log config from jr-core tests jar
-  [JCR-3480] Extend SaveTest#testConstraintViolationException to cover ...
-  [JCR-3490] More efficient node traversal during garbage collection
-  [JCR-3500] Upgrade to Tika 1.3
-
-Bug fixes
-
-  [JCR-861]  Connector should support LocalTransaction as well as ...
-  [JCR-2662] JCR unit tests for journaled observation do not check ...
-  [JCR-2666] JCR TCK Test for Restoring Version Tests That Versionable ...
-  [JCR-3267] Consistency checker needs to run multiple times to fix all ...
-  [JCR-3050] NullPointerException on removing a node acquired from search ...
-  [JCR-3158] Deadlock in DBCP when accessing node
-  [JCR-3192] Javadoc in jackrabbit-jcr-rmi is missing an ending ">" 
-  [JCR-3227] VolatileIndex not closed properly
-  [JCR-3234] QueryStat getPopularQueries doesn't set the proper position
-  [JCR-3236] Can not instantiate lucene Analyzer in SearchIndex
-  [JCR-3247] SQL2 ISDESCENDANTNODE BooleanQuery#TooManyClauses returns
-  [JCR-3250] webapp welcome page shows incorrect port when port is the ...
-  [JCR-3261] Problems with BundleDbPersistenceManager getAllNodeIds
-  [JCR-3266] JCR-SQL2 query with multiple columns in result only returns ...
-  [JCR-3268] Re-index fails on corrupt bundle
-  [JCR-3270] Error instantiating lucene search index in Turkish Regional ...
-  [JCR-3272] EventConsumer.canRead() should rely on AccessManager.isGranted()
-  [JCR-3289] Remove operation right after move operation causes missing ...
-  [JCR-3290] Concurrent add and move can cause inconsistency
-  [JCR-3291] Stack overflow in multi-session test with moves
-  [JCR-3292] Workspace move in concurrent environment causes inconsistencies
-  [JCR-3298] jackrabbit-core RepositoryChecker.fix() can fail with OOM
-  [JCR-3299] Adding new index infos generation is not atomic
-  [JCR-3300] tests should consistently check for repository support and ...
-  [JCR-3303] ClusterNode's stopDelay should default to something other zero
-  [JCR-3305] spi2davex.RepositoryServiceImpl -> idUriCache raises until ...
-  [JCR-3307] JCR test org.apache.jackrabbit.test.api.version....
-  [JCR-3312] AbstractSession.getItem should deal with identifier paths
-  [JCR-3313] JCR TCK Test for expanding column names is too restrictive
-  [JCR-3314] Drop commons-io dependency from spi-commons
-  [JCR-3316] invalid namespace URI in AbstractImportXmlTest
-  [JCR-3317] Set the MaxTotalConnections on ConnectionManager to prevent ...
-  [JCR-3318] BLOB not stored and no exception thrown
-  [JCR-3321] TCK: Strange XPath query in OrderByMultiTypeTest....
-  [JCR-3324] TCK: GetQueryTest.testGetQuery() unnecessarily uses a same ...
-  [JCR-3325] check-release script fails to compute hashes on Cygwin ...
-  [JCR-3326] missing test configuration for org.apache.jackrabbit.test....
-  [JCR-3328] leaking temp files
-  [JCR-3329] incorrect WebDAV PROPFIND response for version-controlled ...
-  [JCR-3334] incorrect logging template in CachingEntryCollector
-  [JCR-3337] Negated descendant node query with no results throws NPE
-  [JCR-3343] ClusterNode's updateCommited method throws NPE
-  [JCR-3345] ACL evaluation may return non-fresh results
-  [JCR-3346] JMX Popular Queries size issue
-  [JCR-3349] The BatchMode of the ConnectionHelper doesn't work in XA ...
-  [JCR-3353] A DeadLock can occur if an Exception is thrown while ...
-  [JCR-3354] The ReadWriteLock in AbstractJournal can create a Deadlock ...
-  [JCR-3355] Unable to create performance tests using JCR 2.0 API
-  [JCR-3262] Oracle JDBC Class Cast Exception
-  [JCR-3363] DataStore garbage collection: test case GarbageCollectorTest....
-  [JCR-3367] InMemBundlePersistenceManager#getAllNodeIds is not ...
-  [JCR-3373] ChildNodesQueryHits may throw IOException when the session ...
-  [JCR-3374] Size estimate for AbstractBundlePersistenceManager.MISSING ...
-  [JCR-3377] DataStore Temp-Files will not be deleted as side effect of ...
-  [JCR-3378] The ConnectionHelper can return a closed Connection in BatchMode
-  [JCR-3379] XA concurrent transactions - NullPointerException
-  [JCR-3380] TCK tests for shareable nodes assume moving shareable ...
-  [JCR-3383] Unclosed Resources in ConnectionHelper if ResultSet is null
-  [JCR-3384] TCK: BinaryPropertyTest.testGetLengthJcr2() fails with a ...
-  [JCR-3385] DbClusterTest fails when port is already in use
-  [JCR-3387] On heavy load we see occasional SQLException: closed ...
-  [JCR-3390] Reordering policy node fails with AccessDeniedException
-  [JCR-3399] Shared ISM does not release the internal Writelock if ...
-  [JCR-3401] Wrong results when querying with a DescendantSelfAxisQuery
-  [JCR-3404] AuthorizableImpl#isProtectedProperty doesn't include the ...
-  [JCR-3407] CaseTermQuery #rewrite behavior changes
-  [JCR-3410] JcrUtils.readFile() and JcrUtils.getLastModifed() are not ...
-  [JCR-3415] XPathQueryEvaluator generates incorrect XPath query
-  [JCR-3417] Failed Journal lock not propagated
-  [JCR-3419] Overwriting Cache Entry Warnings
-  [JCR-3425] XAAwareRWLock implementation fails with IllegalStateException ...
-  [JCR-3427] JCR-3138 may cause resource starvation
-  [JCR-3428] Partial search terms are no longer highlighted in the excerpts
-  [JCR-3430] CNDImporter should handle implied nt:base
-  [JCR-3434] EventJournal#skipTo() broken
-  [JCR-3435] NPE on parsing XPath query with child axis and star name at ...
-  [JCR-3437] The DbDataStore does not implement getRecordIfStored as ...
-  [JCR-3439] PrincipalManagerImpl.CheckedGroup should implement ...
-  [JCR-3440] Deadlock on LOCAL_REVISION table in clustering environment
-  [JCR-3445] PostgreSQL error with setValidationQueryTimeout
-  [JCR-3447] InternalValueFactory should use the DataStore whenever available
-  [JCR-3450] Reduce memory usage of SharedFieldCache.ValueIndex
-  [JCR-3452] Modified property and child node definition are rejected
-  [JCR-3455] Events should be dispatched after the global cluster lock is ...
-  [JCR-3459] RmiRepositoryFactory regression, invalid stream header
-  [JCR-3466] NPE in SingletonTokenStream
-  [JCR-3468] ConcurrentModificationException in BitSetENTCacheImpl
-  [JCR-3469] Thread interrupt may result in closed index files
-  [JCR-3472] LargeResultSetTest: queries don't return anything
-  [JCR-3476] NodeIndexer attempts to extract binary property even when ...
-  [JCR-3478] Partial search terms matching fails when there is a lot of ...
-  [JCR-3482] SetValueVersionExceptionTest makes assumption about ...
-  [JCR-3483] Result set iterator causes infinite loop when used after ...
-  [JCR-3485] The Datastore garbage collector does not work with a ...
-  [JCR-3486] Potential null pointer exception in session save operation
-  [JCR-3491] Start the Repository immediatly in JCA Environment
-  [JCR-3493] OUTER JOIN tests expect incorrect results
-  [JCR-3497] Invalid path in SaveTest#testRepositoryException
-  [JCR-3499] Test cases should not rely on equality of node types
-  [JCR-3501] When cancelling an update modcount of modified states must ...
-  [JCR-3502] Deleted states are not merged correctly
-  [JCR-3503] ConnectionHelper should not call isBatchMode() more times ...
+    [JCR-3573] - Improve token based login concurrency
+    [JCR-3628] - Embed cause in org.apache.jackrabbit.core.SessionImpl#getNodeByIdentifier while rethrowing IllegalArgumentException
+    [JCR-3687] - Backport improvements made to token based auth in OAK
+    [JCR-3810] - StreamWrapper can attempt to reset other types of InputStreams
+    [JCR-3826] - AbstractPrincipalProvider cachesize is not configurable
 
 In addition to the above-mentioned changes, this release contains
-all the changes included up to the Apache Jackrabbit 2.4.0 release.
+all the changes included up to the Apache Jackrabbit 2.10.x release.
 
 For more detailed information about all the changes in this and other
 Jackrabbit releases, please see the Jackrabbit issue tracker at
@@ -403,11 +102,11 @@ About The Apache Software Foundation
 ------------------------------------
 
 Established in 1999, The Apache Software Foundation provides organizational,
-legal, and financial support for more than 100 freely-available,
+legal, and financial support for more than 140 freely-available,
 collaboratively-developed Open Source projects. The pragmatic Apache License
 enables individual and commercial users to easily deploy Apache software;
 the Foundation's intellectual property framework limits the legal exposure
-of its 2,500+ contributors.
+of its 3,800+ contributors.
 
 For more information, visit http://www.apache.org/
 
