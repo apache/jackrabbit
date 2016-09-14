@@ -273,7 +273,7 @@ request.setAttribute("title", "Populate workspace " + wspName);
     }
 %><%!
 
-    // JCR-3974: java.util.Arrays and interfaces having default methods such as java.lang.CharSequence cannot
+    // JCR-3893: java.util.Arrays and interfaces having default methods such as java.lang.CharSequence cannot
     //           be resolved by the old Eclipse JDT compiler on Java 8.
     //           Don't use Arrays and any methods of CharSequence such as #length() or #contains() for now!
 
