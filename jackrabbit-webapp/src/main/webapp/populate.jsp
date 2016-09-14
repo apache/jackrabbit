@@ -22,7 +22,6 @@
                      java.net.URLDecoder,
                      java.net.URLEncoder,
                      java.util.ArrayList,
-                     java.util.Arrays,
                      java.util.Calendar,
                      java.util.Collections,
                      java.util.Iterator,
@@ -65,7 +64,7 @@
         }
         String[] types = request.getParameterValues("filetype");
         if (types != null) {
-            filetypes.addAll(Arrays.asList(types));
+            filetypes.addAll(stringArrayToList(types));
         } else {
             filetypes = DEFAULT_TYPES;
         }
@@ -158,15 +157,15 @@ ProgressBar.prototype.borderWidth = "2px";
                         }
                         final String host = urls[i].getHost();
                         List folderNames = new ArrayList();
-                        folderNames.addAll(Arrays.asList(host.split("\\.")));
+                        folderNames.addAll(stringArrayToList(host.split("\\.")));
                         Collections.reverse(folderNames);
-                        folderNames.addAll(Arrays.asList(path.split("/", 0)));
+                        folderNames.addAll(stringArrayToList(path.split("/", 0)));
                         final String fileName = URLDecoder.decode((String) folderNames.remove(folderNames.size() - 1), "UTF-8").replaceAll(":", "_");
                         Node node = root;
                         for (Iterator fn = folderNames.iterator(); fn.hasNext(); ) {
                             String name = URLDecoder.decode((String) fn.next(), "UTF-8");
                             name = name.replaceAll(":", "_");
-                            if (name.length() == 0) {
+                            if ("".equals(name)) {
                                 continue;
                             }
                             if (!node.hasNode(name)) {
@@ -274,7 +273,21 @@ request.setAttribute("title", "Populate workspace " + wspName);
     }
 %><%!
 
-    public static final List DEFAULT_TYPES = Arrays.asList(
+    // JCR-3893: java.util.Arrays and interfaces having default methods such as java.lang.CharSequence cannot
+    //           be resolved by the old Eclipse JDT compiler on Java 8.
+    //           Don't use Arrays and any methods of CharSequence such as #length() or #contains() for now!
+
+    private static List stringArrayToList(String [] array) {
+        ArrayList list = new ArrayList();
+        if (array != null) {
+            for (int i = 0; i < array.length; i++) {
+                list.add(array[i]);
+            }
+        }
+        return list;
+    }
+
+    public static final List DEFAULT_TYPES = stringArrayToList(
             new String[]{"pdf", "rtf", "doc", "ppt", "xls"});
 
     public static class Search {
@@ -315,7 +328,7 @@ request.setAttribute("title", "Populate workspace " + wspName);
                             if (result != null) {
                                 String urlString = (String) result.get("url");
                                 URL url = new URL(new URL("http", "www.google.com", "dummy"), urlString);
-                                if (!url.getHost().contains("google")) {
+                                if (url.getHost().indexOf("google") == -1) {
                                     urls.add(url);
                                 }
                             }
