@@ -66,7 +66,6 @@ String context =
             <ul>
               <li><a href="<%= context %>/repository/default/">Browse</a></li>
               <li><a href="<%= context %>/search.jsp">Search</a></li>
-              <li><a href="<%= context %>/populate.jsp">Populate</a></li>
             </ul>
           </li>
           <li>Apache Jackrabbit
