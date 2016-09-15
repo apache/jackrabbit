@@ -32,32 +32,19 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
 import java.util.Set;
-import java.util.concurrent.Executor;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadPoolExecutor;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
-import org.apache.jackrabbit.core.data.util.NamedThreadFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class FSBackend implements Backend {
+public class FSBackend extends AbstractBackend {
 
     private Properties properties;
 
     private String fsPath;
 
-    private CachingDataStore store;
-
-    private String homeDir;
-
-    private String config;
-
     File fsPathDir;
-
-    private Executor asyncWriteExecuter;
 
     public static final String FS_BACKEND_PATH = "fsBackendPath";
 
@@ -74,10 +61,10 @@ public class FSBackend implements Backend {
     @Override
     public void init(CachingDataStore store, String homeDir, String config)
                     throws DataStoreException {
+        super.init(store, homeDir, config);
         Properties initProps = null;
         // Check is configuration is already provided. That takes precedence
         // over config provided via file based config
-        this.config = config;
         if (this.properties != null) {
             initProps = this.properties;
         } else {
@@ -100,12 +87,12 @@ public class FSBackend implements Backend {
 
     public void init(CachingDataStore store, String homeDir, Properties prop)
                     throws DataStoreException {
-        this.store = store;
-        this.homeDir = homeDir;
+        setDataStore(store);
+        setHomeDir(homeDir);
         this.fsPath = prop.getProperty(FS_BACKEND_PATH);
         if (this.fsPath == null || "".equals(this.fsPath)) {
             throw new DataStoreException("Could not initialize FSBackend from "
-                + config + ". [" + FS_BACKEND_PATH + "] property not found.");
+                + getConfig() + ". [" + FS_BACKEND_PATH + "] property not found.");
         }
         fsPathDir = new File(this.fsPath);
         if (fsPathDir.exists() && fsPathDir.isFile()) {
@@ -119,8 +106,6 @@ public class FSBackend implements Backend {
                     + fsPathDir.getAbsolutePath());
             }
         }
-        asyncWriteExecuter = createAsyncWriteExecutor();
-
     }
 
     @Override
@@ -191,7 +176,7 @@ public class FSBackend implements Backend {
             throw new IllegalArgumentException(
                 "callback parameter cannot be null in asyncUpload");
         }
-        asyncWriteExecuter.execute(new Runnable() {
+        getAsyncWriteExecutor().execute(new Runnable() {
             @Override
             public void run() {
                 try {
@@ -269,7 +254,7 @@ public class FSBackend implements Backend {
             Thread.currentThread().setContextClassLoader(
                 getClass().getClassLoader());
 
-            asyncWriteExecuter.execute(new Runnable() {
+            getAsyncWriteExecutor().execute(new Runnable() {
                 @Override
                 public void run() {
                     try {
@@ -289,15 +274,6 @@ public class FSBackend implements Backend {
                 + identifier.toString(), e);
         }
 
-    }
-
-    @Override
-    public void close() throws DataStoreException {
-        Executor asyncExecutor = getAsyncWriteExecutor();
-
-        if (asyncExecutor != null && asyncExecutor instanceof ExecutorService) {
-            ((ExecutorService) asyncExecutor).shutdownNow();
-        }
     }
 
     @Override
@@ -334,32 +310,6 @@ public class FSBackend implements Backend {
      */
     public void setProperties(Properties properties) {
         this.properties = properties;
-    }
-
-    /**
-     * Creates a {@link Executor}.
-     * This method is invoked during the initialization for asynchronous write/touch job executions.
-     * @return a {@link Executor}
-     */
-    protected Executor createAsyncWriteExecutor() {
-        Executor asyncExecutor;
-
-        if (store.getAsyncUploadLimit() > 0) {
-            asyncExecutor = Executors.newFixedThreadPool(10,
-                    new NamedThreadFactory("fs-write-worker"));
-        } else {
-            asyncExecutor = new ImmediateExecutor();
-        }
-
-        return asyncExecutor;
-    }
-
-    /**
-     * Returns ThreadPoolExecutor used to execute asynchronous write or touch jobs.
-     * @return ThreadPoolExecutor used to execute asynchronous write or touch jobs
-     */
-    protected Executor getAsyncWriteExecutor() {
-        return asyncWriteExecuter;
     }
 
     /**
@@ -487,8 +437,8 @@ public class FSBackend implements Backend {
                 }
                 if (lastModified < min) {
                     DataIdentifier id = new DataIdentifier(file.getName());
-                    if (store.confirmDelete(id)) {
-                        store.deleteFromCache(id);
+                    if (getDataStore().confirmDelete(id)) {
+                        getDataStore().deleteFromCache(id);
                         if (LOG.isInfoEnabled()) {
                             LOG.info("Deleting old file "
                                 + file.getAbsolutePath() + " modified: "
@@ -522,16 +472,4 @@ public class FSBackend implements Backend {
             }
         }
     }
-
-    /**
-     * This class implements {@link Executor} interface to run {@code command} right away,
-     * resulting in non-asynchronous mode executions.
-     */
-    private class ImmediateExecutor implements Executor {
-        @Override
-        public void execute(Runnable command) {
-            command.run();
-        }
-    }
-
 }
