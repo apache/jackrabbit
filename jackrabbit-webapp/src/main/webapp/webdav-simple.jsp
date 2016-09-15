@@ -55,9 +55,7 @@ href = Text.encodeIllegalXMLCharacters(href);
   the URL (<code>/default/</code>) with the name of another workspace.
 </p>
 <p>
-  You can also <a href="search.jsp">search</a> the default workspace
-  <a href="populate.jsp">populate</a> it with example content from the
-  Internet.
+  You can also <a href="search.jsp">search</a> the default workspace.
 </p>
 
 <h3>File system access</h3>
