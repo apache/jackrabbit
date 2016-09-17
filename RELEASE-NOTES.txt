@@ -39,6 +39,7 @@ Bug
     [JCR-3364] - Moving of nodes requires read access to all parent nodes of the destination node
     [JCR-3518] - Build fails on Mac OS + JDK 7
     [JCR-3603] - Index aggreate with property include does not speed up order by
+    [JCR-3710] - occasional test failures in TokenBasedAuthenticationTest
     [JCR-3711] - RepositoryChecker versioning cleanup may leave repaired node in invalid type state
     [JCR-3761] - TokenInfo#resetExpiration always fails with ConstraintViolationException
     [JCR-3883] - Jackrabbit WebDAV bundle susceptible to XXE/XEE attack (CVE-2015-1833)
