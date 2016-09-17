@@ -42,6 +42,7 @@ Bug
     [JCR-3710] - occasional test failures in TokenBasedAuthenticationTest
     [JCR-3711] - RepositoryChecker versioning cleanup may leave repaired node in invalid type state
     [JCR-3761] - TokenInfo#resetExpiration always fails with ConstraintViolationException
+    [JCR-3790] - timing related TokenProviderTest failures
     [JCR-3883] - Jackrabbit WebDAV bundle susceptible to XXE/XEE attack (CVE-2015-1833)
     [JCR-3909] - CSRF bug in Jackrabbit-Webdav
     [JCR-3949] - occasional test failure in RepositoryConfigTest.testAutomaticClusterNodeIdCreation()
