@@ -56,6 +56,8 @@
     <slf4j.api.version>1.6.6</slf4j.api.version>
     <slf4j.version>1.7.4</slf4j.version> <!-- sync with logback version -->
     <logback.version>1.0.12</logback.version>
+    <java.version>1.6</java.version>
+    <java.version.signature>java16</java.version.signature>
   </properties>
 
   <url>http://jackrabbit.apache.org/</url>
@@ -140,19 +142,38 @@
 
   <build>
     <plugins>
-      <!-- JCR-3327: Upgrade to Java SE 6 -->
       <plugin>
         <artifactId>maven-compiler-plugin</artifactId>
         <configuration>
-          <target>1.6</target>
-          <source>1.6</source>
+          <target>${java.version}</target>
+          <source>${java.version}</source>
         </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>animal-sniffer-maven-plugin</artifactId>
+        <version>1.15</version>
+        <configuration>
+          <signature>
+            <groupId>org.codehaus.mojo.signature</groupId>
+            <artifactId>${java.version.signature}</artifactId>
+            <version>1.0</version>
+          </signature>
+        </configuration>
+        <executions>
+          <execution>
+            <phase>compile</phase>
+            <goals>
+              <goal>check</goal>
+            </goals>
+          </execution>
+        </executions>
       </plugin>
       <!-- Generate aggregate Javadocs -->
       <plugin>
         <artifactId>maven-javadoc-plugin</artifactId>
         <configuration>
-          <source>1.6</source>
+          <source>${java.version}</source>
           <aggregate>true</aggregate>
           <links>
             <link>http://docs.oracle.com/javase/6/docs/api/</link>
@@ -166,7 +187,7 @@
         <artifactId>maven-idea-plugin</artifactId>
         <configuration>
           <downloadSources>true</downloadSources>
-          <jdkLevel>1.6</jdkLevel>
+          <jdkLevel>${java.version}</jdkLevel>
         </configuration>
       </plugin>
       <plugin>
@@ -288,7 +309,7 @@
         <artifactId>maven-pmd-plugin</artifactId>
         <version>2.4</version>
         <configuration>
-          <targetJdk>1.6</targetJdk>
+          <targetJdk>${java.version}</targetJdk>
         </configuration>
       </plugin>
       <plugin>
