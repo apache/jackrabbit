@@ -228,7 +228,7 @@ public class BundleBinding {
         }
         String msg = "Corrupt bundle: could not write a correct bundle, giving up: " + bundle;
         log.error(msg);
-        throw new IOException(msg, lastError);
+        throw (IOException)(new IOException(msg).initCause(lastError));
     }
 
 }
