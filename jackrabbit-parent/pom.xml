@@ -49,6 +49,8 @@
     <tika.version>1.0</tika.version>
     <clirr.baseline.version>2.2.0</clirr.baseline.version>
     <project.reporting.outputEncoding>${project.build.sourceEncoding}</project.reporting.outputEncoding>
+    <java.version>1.5</java.version>
+    <java.version.signature>java15</java.version.signature>
   </properties>
 
   <url>http://jackrabbit.apache.org/</url>
@@ -133,19 +135,38 @@
 
   <build>
     <plugins>
-      <!-- JCR-2087: Upgrade to Java 5 as the base platform -->
       <plugin>
         <artifactId>maven-compiler-plugin</artifactId>
         <configuration>
-          <target>1.5</target>
-          <source>1.5</source>
+          <target>${java.version}</target>
+          <source>${java.version}</source>
         </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>animal-sniffer-maven-plugin</artifactId>
+        <version>1.15</version>
+        <configuration>
+          <signature>
+            <groupId>org.codehaus.mojo.signature</groupId>
+            <artifactId>${java.version.signature}</artifactId>
+            <version>1.0</version>
+          </signature>
+        </configuration>
+        <executions>
+          <execution>
+            <phase>compile</phase>
+            <goals>
+              <goal>check</goal>
+            </goals>
+          </execution>
+        </executions>
       </plugin>
       <!-- Generate aggregate Javadocs -->
       <plugin>
         <artifactId>maven-javadoc-plugin</artifactId>
         <configuration>
-          <source>1.5</source>
+          <source>${java.version}</source>
           <aggregate>true</aggregate>
           <links>
             <link>http://download.oracle.com/javase/1.5.0/docs/api/</link>
@@ -159,7 +180,7 @@
         <artifactId>maven-idea-plugin</artifactId>
         <configuration>
           <downloadSources>true</downloadSources>
-          <jdkLevel>1.5</jdkLevel>
+          <jdkLevel>${java.version}</jdkLevel>
         </configuration>
       </plugin>
       <plugin>
@@ -281,7 +302,7 @@
         <artifactId>maven-pmd-plugin</artifactId>
         <version>2.4</version>
         <configuration>
-          <targetJdk>1.5</targetJdk>
+          <targetJdk>${java.version}</targetJdk>
         </configuration>
       </plugin>
       <plugin>
