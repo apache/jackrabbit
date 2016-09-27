@@ -221,12 +221,12 @@ public abstract class AbstractLocatorFactory implements DavLocatorFactory {
             this.factory = factory;
 
             StringBuffer buf = new StringBuffer(prefix);
-            // NOTE: no need to append the workspace path, since it is must
+            // NOTE: no need to append the workspace path, since it must
             // be part of the resource path.
             if (resourcePath != null && resourcePath.length() > 0) {
                 // check if condition is really met
                 if (!resourcePath.startsWith(workspacePath)) {
-                    throw new IllegalArgumentException("Resource path '" + resourcePath + "' does not start with workspace path '" + workspacePath + ".");
+                    throw new IllegalArgumentException("Resource path '" + resourcePath + "' does not start with workspace path '" + workspacePath + "'.");
                 }
                 buf.append(EncodeUtil.escapePath(resourcePath));
             }
