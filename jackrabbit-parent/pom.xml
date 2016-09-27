@@ -56,8 +56,8 @@
     <slf4j.api.version>1.6.6</slf4j.api.version>
     <slf4j.version>1.7.4</slf4j.version> <!-- sync with logback version -->
     <logback.version>1.0.12</logback.version>
-    <java.version>1.6</java.version>
-    <java.version.signature>java16</java.version.signature>
+    <java.version>1.7</java.version>
+    <java.version.signature>java17</java.version.signature>
   </properties>
 
   <url>http://jackrabbit.apache.org/</url>
@@ -176,7 +176,7 @@
           <source>${java.version}</source>
           <aggregate>true</aggregate>
           <links>
-            <link>http://docs.oracle.com/javase/6/docs/api/</link>
+            <link>http://docs.oracle.com/javase/7/docs/api/</link>
             <link>http://www.day.com/maven/javax.jcr/javadocs/jcr-2.0/</link>
           </links>
         </configuration>
