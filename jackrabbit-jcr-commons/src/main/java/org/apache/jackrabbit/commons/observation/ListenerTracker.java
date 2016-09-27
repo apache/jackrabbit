@@ -240,6 +240,10 @@ public class ListenerTracker {
                 return listener.getClass().getName();
             }
             @Override
+            public String getToString() {
+                return listener.toString();
+            }
+            @Override
             public String getInitStackTrace() {
                 StringWriter writer = new StringWriter();
                 initStackTrace.printStackTrace(new PrintWriter(writer));

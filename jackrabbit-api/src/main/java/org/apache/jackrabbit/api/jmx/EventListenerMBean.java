@@ -28,6 +28,9 @@ public interface EventListenerMBean {
 
     /** Class name of the event listener */
     String getClassName();
+    
+    /** toString of the event listener */
+    String getToString();
 
     /** Stack trace of where the listener was registered */
     String getInitStackTrace();
