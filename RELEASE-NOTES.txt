@@ -1,34 +1,41 @@
-Release Notes -- Apache Jackrabbit -- Version 2.13.3
+Release Notes -- Apache Jackrabbit -- Version 2.13.4
 
 Introduction
 ------------
 
-This is Apache Jackrabbit(TM) 2.13.3, a fully compliant implementation of the
+This is Apache Jackrabbit(TM) 2.13.4, a fully compliant implementation of the
 Content Repository for Java(TM) Technology API, version 2.0 (JCR 2.0) as
 specified in the Java Specification Request 283 (JSR 283).
 
-Apache Jackrabbit 2.13.3 is an unstable release cut directly from
+Apache Jackrabbit 2.13.4 is an unstable release cut directly from
 Jackrabbit trunk, with a focus on new features and other
 improvements. For production use we recommend the latest stable 2.12.x
 release.
 
-Changes in Jackrabbit 2.13.3
+Changes in Jackrabbit 2.13.4
 ----------------------------
 
 Bug
 
-    [JCR-3882] GlobalPattern's equals() implementation throws NullPointerException
-    [JCR-4006] TestCachingFDS.testDeleteRecord() fails occasionally
-    [JCR-4009] CSRF in Jackrabbit-Webdav
+    [JCR-3893] - Multiple issues with standalone 2.10.1
+    [JCR-4008] - Restore TestCachingFDS.testDeleteRecord() to fix it with disabling AsyncUpload in unit tests
+    [JCR-4015] - jackrabbit-jcr-commons JcrUtils.getOrCreateByPath fails if session is not allowed to read root
+    [JCR-4022] - populate.jsp (standalone) doesn't work due to google ajax api change
+    [JCR-4031] - AbstractLocatorFactory: typo in log message
 
 Improvement
 
-    [JCR-4012] Include initial cost in stats for observation processing
-    [JCR-4013] Calculate eventConsumerTimeRatio for entire time series
+    [JCR-4018] - Consistent Async Upload Executor handling in Backend implementations
+    [JCR-4032] - Add jmx EventListenerMBean.getToString() for clearer consolidated listener stats
 
+Task
+
+    [JCR-4019] - move httpclient dependency out of parent pom
+    [JCR-4025] - Enable animal sniffer plugin
+    [JCR-4030] - Allow use of Java 7 in Jackrabbit trunk
 
 In addition to the above-mentioned changes, this release contains
-all the changes included up to the Apache Jackrabbit 2.12.x release.
+all the changes included up to the Apache Jackrabbit 2.13.3 release.
 
 For more detailed information about all the changes in this and other
 Jackrabbit releases, please see the Jackrabbit issue tracker at
