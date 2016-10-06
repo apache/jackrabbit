@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Locale;
 import java.util.Set;
 
 import javax.jcr.Item;
@@ -450,8 +451,16 @@ public abstract class JcrRemotingServlet extends JCRWebdavServerServlet {
                         && ((WrappingLocator) locator).isJsonRequest;
             case DavMethods.DAV_POST:
                 String ct = request.getContentType();
-                return ct.startsWith("multipart/form-data") ||
-                       ct.startsWith("application/x-www-form-urlencoded");
+                if (ct == null) {
+                    return false;
+                } else {
+                    int semicolon = ct.indexOf(';');
+                    if (semicolon >= 0) {
+                        ct = ct.substring(0, semicolon);
+                    }
+                    ct = ct.trim().toLowerCase(Locale.ENGLISH);
+                    return "multipart/form-data".equals(ct) || "application/x-www-form-urlencoded".equals(ct);
+                }
             default:
                 return false;
         }
