@@ -38,7 +38,7 @@ class PostMethod extends DavMethodBase {
     private static Logger log = LoggerFactory.getLogger(PostMethod.class);
 
     /** The Content-Type for www-form-urlencoded. */
-    public static final String FORM_URL_ENCODED_CONTENT_TYPE = "application/x-www-form-urlencoded; charset=utf-8";
+    private static final String FORM_URL_ENCODED_CONTENT_TYPE = "application/x-www-form-urlencoded";
 
     /**
      * The buffered request body consisting of <code>NameValuePair</code>s.
@@ -92,7 +92,7 @@ class PostMethod extends DavMethodBase {
             // as bytes allows us to keep the current charset without worrying about how
             // this charset will effect the encoding of the form url encoded string.
             NameValuePair[] mvps = params.toArray(new NameValuePair[params.size()]);
-            String content = EncodingUtil.formUrlEncode(mvps, getRequestCharSet());
+            String content = EncodingUtil.formUrlEncode(mvps, "UTF-8");
             ByteArrayRequestEntity entity = new ByteArrayRequestEntity(
                     EncodingUtil.getAsciiBytes(content),
                     FORM_URL_ENCODED_CONTENT_TYPE
