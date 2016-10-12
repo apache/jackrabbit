@@ -580,9 +580,24 @@ public class UserManagerImpl extends ProtectedItemModifier
     }
 
     /**
+     * @see UserManager#createUser(String,String,boolean)
+     */
+    public User createUser(String userID, String password, boolean forceHash) throws RepositoryException {
+        return createUser(userID, password, forceHash, new PrincipalImpl(userID), null);
+    }
+
+    /**
      * @see UserManager#createUser(String, String, java.security.Principal, String)
      */
-    public User createUser(String userID, String password,
+    public User createUser(String userID, String password, Principal principal, String intermediatePath)
+            throws AuthorizableExistsException, RepositoryException {
+        return createUser(userID, password, true, principal, intermediatePath);
+    }
+
+    /**
+     * @see UserManager#createUser(String, String, boolean, java.security.Principal, String)
+     */
+    public User createUser(String userID, String password, boolean forceHash,
                            Principal principal, String intermediatePath)
             throws AuthorizableExistsException, RepositoryException {
         checkValidID(userID);
@@ -593,7 +608,7 @@ public class UserManagerImpl extends ProtectedItemModifier
         try {
             NodeImpl userNode = (NodeImpl) nodeCreator.createUserNode(userID, intermediatePath);
             setPrincipal(userNode, principal);
-            setPassword(userNode, password, true);
+            setPassword(userNode, password, forceHash);
 
             User user = createUser(userNode);
             onCreate(user, password);
