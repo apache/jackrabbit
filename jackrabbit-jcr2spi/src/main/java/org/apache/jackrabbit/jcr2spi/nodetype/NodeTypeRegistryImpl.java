@@ -27,7 +27,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.concurrent.ConcurrentHashMap;
 
 import javax.jcr.NamespaceRegistry;
 import javax.jcr.PropertyType;
@@ -603,8 +602,8 @@ public class NodeTypeRegistryImpl implements NodeTypeRegistry, EffectiveNodeType
     private class NodeTypeDefinitionMap implements Map<Name, QNodeTypeDefinition> {
 
         // map of node type names and node type definitions
-        private final ConcurrentHashMap<Name, QNodeTypeDefinition> nodetypeDefinitions =
-            new ConcurrentHashMap<Name, QNodeTypeDefinition>();
+        private Map<Name, QNodeTypeDefinition> nodetypeDefinitions =
+            new HashMap<Name, QNodeTypeDefinition>();
 
         private Collection<QNodeTypeDefinition> getValues() {
             return nodetypeDefinitions.values();
