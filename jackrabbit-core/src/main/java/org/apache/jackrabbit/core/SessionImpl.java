@@ -219,7 +219,7 @@ public class SessionImpl extends AbstractSession
      * The stack trace knows who opened this session. It is logged
      * if the session is finalized, but Session.logout() was never called.
      */
-    private Exception openStackTrace = new Exception("Stack Trace");
+    private final Exception openStackTrace;
 
     /**
      * Protected constructor.
@@ -267,14 +267,16 @@ public class SessionImpl extends AbstractSession
             this.sessionName = "session-" + count;
         }
 
-        namePathResolver = new DefaultNamePathResolver(this, this, true);
-        context.setItemStateManager(createSessionItemStateManager());
-        context.setItemManager(createItemManager());
-        context.setAccessManager(createAccessManager(subject));
-        context.setObservationManager(
-                createObservationManager(wspConfig.getName()));
+        this.namePathResolver = new DefaultNamePathResolver(this, this, true);
+        this.context.setItemStateManager(createSessionItemStateManager());
+        this.context.setItemManager(createItemManager());
+        this.context.setAccessManager(createAccessManager(subject));
+        this.context.setObservationManager(createObservationManager(wspConfig.getName()));
 
-        versionMgr = createVersionManager();
+        this.versionMgr = createVersionManager();
+
+        // avoid building the stack trace when it won't be used anyway
+        this.openStackTrace = log.isWarnEnabled() ? new Exception("Stack Trace") : null;
     }
 
     /**
@@ -1363,7 +1365,12 @@ public class SessionImpl extends AbstractSession
     @Override
     public void finalize() {
         if (isLive()) {
-            log.warn("Unclosed session detected. The session was opened here: ", openStackTrace);
+            if (openStackTrace != null) {
+                // Log a warning if and only if openStackTrace is not null
+                // indicating that the warn level is enabled and the session has
+                // been fully created
+                log.warn("Unclosed session detected. The session was opened here: ", openStackTrace);
+            }
             logout();
         }
     }
