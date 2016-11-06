@@ -79,7 +79,7 @@ public class RFC4918DestinationHeaderTest extends TestCase {
         String destinationpath = new URI(destinationuri).getRawPath();
         // make sure the scheme is removed
         assertFalse(destinationpath.contains(":"));
-        
+
         int status;
         try {
             PutMethod put = new PutMethod(testuri);
@@ -89,7 +89,7 @@ public class RFC4918DestinationHeaderTest extends TestCase {
             // try to move outside the servlet's name space
             MoveMethod move = new MoveMethod(testuri, "/foobar", true);
             status = this.client.executeMethod(move);
-            assertTrue("status: " + status, status == 403);
+            assertTrue("status: " + status, status == 502);
 
             // try a relative path
             move = new MoveMethod(testuri, "foobar", true);

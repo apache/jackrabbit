@@ -845,7 +845,14 @@ abstract public class AbstractWebdavServlet extends HttpServlet implements DavCo
                     return DavServletResponse.SC_PRECONDITION_FAILED;
                 } else {
                     // overwrite existing resource
-                    destResource.getCollection().removeMember(destResource);
+                    DavResource col;
+                    try {
+                        col = destResource.getCollection();
+                    }
+                    catch (IllegalArgumentException ex) {
+                        return DavServletResponse.SC_BAD_GATEWAY;
+                    }
+                    col.removeMember(destResource);
                     status = DavServletResponse.SC_NO_CONTENT;
                 }
             } else {
