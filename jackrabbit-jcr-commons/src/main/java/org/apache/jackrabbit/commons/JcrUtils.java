@@ -1543,6 +1543,27 @@ public class JcrUtils {
             return baseNode.getNode(path);
         }
 
+        // find the parent that exists
+        // we can start from the deepest child in tree
+        String fullPath = baseNode.getPath().equals("/") ? "/" + path : baseNode.getPath() + "/" + path;
+        int currentIndex = fullPath.lastIndexOf('/');
+        String temp = fullPath;
+        String existingPath = null;
+        while (currentIndex > 0) {
+            temp = temp.substring(0, currentIndex);
+            // break when first existing parent is found
+            if (baseNode.getSession().itemExists(temp)) {
+                existingPath = temp;
+                break;
+            }
+            currentIndex = temp.lastIndexOf("/");
+        }
+
+        if (existingPath != null) {
+            baseNode = baseNode.getSession().getNode(existingPath);
+            path = path.substring(existingPath.length() + 1);
+        }
+
         Node node = baseNode;
         int pos = path.lastIndexOf('/');
 
