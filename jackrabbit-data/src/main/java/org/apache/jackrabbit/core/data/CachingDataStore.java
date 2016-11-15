@@ -149,7 +149,7 @@ public abstract class CachingDataStore extends AbstractDataStore implements
     private File tmpDir;
 
     private String secret;
-    
+
     /**
      * Flag to indicate if lastModified is updated asynchronously.
      */
@@ -467,7 +467,9 @@ public abstract class CachingDataStore extends AbstractDataStore implements
             if (getLength(identifier) > -1) {
                 LOG.trace("getRecord: [{}]  retrieved using getLength",
                     identifier);
-                touchInternal(identifier);
+                if (minModifiedDate > 0) {
+                    touchInternal(identifier);
+                }
                 usesIdentifier(identifier);
                 return new CachingDataRecord(this, identifier);
             } else if (asyncWriteCache.hasEntry(fileName, minModifiedDate > 0)) {
@@ -505,7 +507,9 @@ public abstract class CachingDataStore extends AbstractDataStore implements
                 LOG.trace(
                     "getRecordIfStored: [{}]  retrieved using recLenCache",
                     identifier);
-                touchInternal(identifier);
+                if (minModifiedDate > 0) {
+                    touchInternal(identifier);
+                }
                 usesIdentifier(identifier);
                 return new CachingDataRecord(this, identifier);
             } else {
@@ -515,7 +519,9 @@ public abstract class CachingDataStore extends AbstractDataStore implements
                         "getRecordIfStored :[{}]  retrieved from backend",
                         identifier);
                     recLenCache.put(identifier, length);
-                    touchInternal(identifier);
+                    if (minModifiedDate > 0) {
+                        touchInternal(identifier);
+                    }
                     usesIdentifier(identifier);
                     return new CachingDataRecord(this, identifier);
                 } catch (DataStoreException ignore) {
