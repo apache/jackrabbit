@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.spi2dav;
 
-import org.apache.commons.httpclient.URI;
 import org.apache.jackrabbit.commons.webdav.JcrRemotingConstants;
 import org.apache.jackrabbit.spi.commons.conversion.NameException;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
@@ -45,6 +44,7 @@ import org.w3c.dom.Document;
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.RepositoryException;
 import java.io.IOException;
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map;
@@ -79,7 +79,7 @@ class URIResolverImpl implements URIResolver {
     }
 
     String getRepositoryUri() {
-        return repositoryUri.getEscapedURI();
+        return repositoryUri.toASCIIString();
     }
 
     String getWorkspaceUri(String workspaceName) {
