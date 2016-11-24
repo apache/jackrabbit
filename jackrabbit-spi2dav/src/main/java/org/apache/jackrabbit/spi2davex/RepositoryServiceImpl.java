@@ -18,6 +18,8 @@ package org.apache.jackrabbit.spi2davex;
 
 import java.io.IOException;
 import java.io.StringWriter;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -31,8 +33,6 @@ import javax.jcr.RepositoryException;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpException;
 import org.apache.commons.httpclient.HttpMethod;
-import org.apache.commons.httpclient.URI;
-import org.apache.commons.httpclient.URIException;
 import org.apache.commons.httpclient.methods.RequestEntity;
 import org.apache.commons.httpclient.methods.multipart.MultipartRequestEntity;
 import org.apache.commons.httpclient.methods.multipart.Part;
@@ -195,7 +195,7 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
         try {
             URI repositoryUri = computeRepositoryUri(jcrServerURI);
             this.jcrServerURI = repositoryUri.toString();
-        } catch (URIException e) {
+        } catch (URISyntaxException e) {
             throw new RepositoryException(e);
         }
 

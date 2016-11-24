@@ -22,6 +22,7 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -67,8 +68,6 @@ import org.apache.commons.httpclient.HttpConnectionManager;
 import org.apache.commons.httpclient.HttpMethod;
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.httpclient.MultiThreadedHttpConnectionManager;
-import org.apache.commons.httpclient.URI;
-import org.apache.commons.httpclient.URIException;
 import org.apache.commons.httpclient.auth.AuthScope;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.HeadMethod;
@@ -326,14 +325,14 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         try {
             URI repositoryUri = computeRepositoryUri(uri);
             hostConfig = new HostConfiguration();
-            hostConfig.setHost(repositoryUri);
+            hostConfig.setHost(repositoryUri.toASCIIString());
 
             nsCache = new NamespaceCache();
             uriResolver = new URIResolverImpl(repositoryUri, this, DomUtil.createDocument());
             NamePathResolver resolver = new NamePathResolverImpl(nsCache);
             valueFactory = new ValueFactoryQImpl(qValueFactory, resolver);
 
-        } catch (URIException e) {
+        } catch (URISyntaxException e) {
             throw new RepositoryException(e);
         } catch (ParserConfigurationException e) {
             throw new RepositoryException(e);
@@ -2660,8 +2659,8 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
      * Compute the repository URI (while dealing with trailing / and port number
      * defaulting)
      */
-    public static URI computeRepositoryUri(String uri) throws URIException {
-        URI repositoryUri = new URI((uri.endsWith("/")) ? uri : uri + "/", true);
+    public static URI computeRepositoryUri(String uri) throws URISyntaxException {
+        URI repositoryUri = URI.create((uri.endsWith("/")) ? uri : uri + "/");
         // workaround for JCR-3228: normalize default port numbers because of
         // the weak URI matching code elsewhere (the remote server is unlikely
         // to include the port number in URIs when it's the default for the
@@ -2669,7 +2668,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         boolean useDefaultPort = ("http".equalsIgnoreCase(repositoryUri.getScheme()) && repositoryUri.getPort() == 80)
                 || (("https".equalsIgnoreCase(repositoryUri.getScheme()) && repositoryUri.getPort() == 443));
         if (useDefaultPort) {
-            repositoryUri = new URI(repositoryUri.getScheme(), repositoryUri.getUserinfo(), repositoryUri.getHost(), -1,
+            repositoryUri = new URI(repositoryUri.getScheme(), repositoryUri.getUserInfo(), repositoryUri.getHost(), -1,
                     repositoryUri.getPath(), repositoryUri.getQuery(), repositoryUri.getFragment());
         }
 
