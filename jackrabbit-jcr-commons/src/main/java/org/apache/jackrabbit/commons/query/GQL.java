@@ -94,6 +94,12 @@ import org.apache.jackrabbit.util.Text;
  * property name and the value. This also means that a value that contains
  * a colon does not need to be enclosed in double quotes.
  * <p>
+ * <b>Escaping</b>
+ * <p>
+ * To imply double-quotes(&quot;), backslash(\), and colon(:) literally you can
+ * escape them with a backslash. E.g. similar to example above in quoting for colon,
+ * <code>"jcr:title":apache</code> is equiavalent to jcr\:title:apache.
+ * <p>
  * <b>Auto prefixes</b>
  * <p>
  * When a property, node or node type name does not have a namespace prefix GQL
@@ -717,6 +723,7 @@ public final class GQL {
         StringBuffer property = new StringBuffer();
         StringBuffer value = new StringBuffer();
         boolean quoted = false;
+        boolean escaped = false;
         boolean optional = false;
         for (char c : stmt) {
             switch (c) {
@@ -739,7 +746,7 @@ public final class GQL {
                     }
                     break;
                 case ':':
-                    if (quoted) {
+                    if (quoted || escaped) {
                         value.append(c);
                     } else {
                         if (property.length() == 0) {
@@ -753,7 +760,17 @@ public final class GQL {
                     }
                     break;
                 case '"':
-                    quoted = !quoted;
+                    if (escaped) {
+                        value.append(c);
+                    } else {
+                        quoted = !quoted;
+                    }
+                    break;
+                case '\\':
+                    if (escaped) {
+                        value.append(c);
+                    }
+                    escaped = !escaped;
                     break;
                     // noise
                 case '*':
@@ -770,10 +787,12 @@ public final class GQL {
                 case '{':
                 case '}':
                 case '!':
-                case '\\':
                     break;
                 default:
                     value.append(c);
+            }
+            if (c != '\\') {
+                escaped = false;
             }
         }
     }
