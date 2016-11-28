@@ -16,15 +16,15 @@
  */
 package org.apache.jackrabbit.commons.json;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 import junit.framework.TestCase;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
+
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
 
 /**
  * <code>JSONParserTest</code>...
@@ -298,7 +298,7 @@ public class JsonParserTest extends TestCase {
 
     public void testNullValue() throws Exception {
         JSONObject obj = new JSONObject();
-        obj.put("null", JSONObject.NULL);
+        obj.put("null", null);
 
         JsonHandler handler = new DummyJsonHandler() {
             public void key(String key) {
@@ -493,7 +493,7 @@ public class JsonParserTest extends TestCase {
         l.add("{\"a\":{\"b\":{\"c\":{}}}}");
         l.add("{\"a\":{},\"b\":{\"c\":{}}}");
         l.add("{\"a\":{\"b\":{},\"c\":{}}}");
-        
+
         for (Iterator it = l.iterator(); it.hasNext();) {
             JsonHandler handler = new DummyJsonHandler() {
                 private int objectCnt = 0;
@@ -527,8 +527,8 @@ public class JsonParserTest extends TestCase {
             parser.parse(it.next().toString());
         }
     }
-    
-    private static JSONObject getObj() throws JSONException {
+
+    private static JSONObject getObj() {
         JSONObject obj = new JSONObject();
         obj.put("boolean", true);
         obj.put("long", 1);
@@ -540,16 +540,16 @@ public class JsonParserTest extends TestCase {
         return obj;
     }
 
-    private static JSONObject getSimpleObj(Object value) throws JSONException {
+    private static JSONObject getSimpleObj(Object value) {
         JSONObject obj = new JSONObject();
         obj.put("v", value);
         return obj;
     }
 
-    private static JSONArray getSimpleArray(Object[] values) throws JSONException {
+    private static JSONArray getSimpleArray(Object[] values) {
         JSONArray arr = new JSONArray();
         for (int i = 0; i < values.length; i++) {
-            arr.put(values[i]);
+            arr.add(values[i]);
         }
         return arr;
     }
