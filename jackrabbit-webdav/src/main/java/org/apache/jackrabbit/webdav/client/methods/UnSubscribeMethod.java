@@ -15,8 +15,6 @@
 */
 package org.apache.jackrabbit.webdav.client.methods;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.apache.jackrabbit.webdav.DavMethods;
 import org.apache.jackrabbit.webdav.DavServletResponse;
 import org.apache.jackrabbit.webdav.observation.ObservationConstants;
@@ -25,8 +23,6 @@ import org.apache.jackrabbit.webdav.observation.ObservationConstants;
  * <code>UnSubscribeMethod</code>...
  */
 public class UnSubscribeMethod extends DavMethodBase {
-
-    private static Logger log = LoggerFactory.getLogger(UnSubscribeMethod.class);
 
     public UnSubscribeMethod(String uri, String subscriptionId) {
         super(uri);

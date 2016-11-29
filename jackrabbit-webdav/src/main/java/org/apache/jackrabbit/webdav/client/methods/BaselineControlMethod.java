@@ -16,8 +16,10 @@
  */
 package org.apache.jackrabbit.webdav.client.methods;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.io.IOException;
+
+import javax.xml.parsers.ParserConfigurationException;
+
 import org.apache.jackrabbit.webdav.DavMethods;
 import org.apache.jackrabbit.webdav.DavServletResponse;
 import org.apache.jackrabbit.webdav.version.DeltaVConstants;
@@ -25,15 +27,10 @@ import org.apache.jackrabbit.webdav.xml.DomUtil;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
-import javax.xml.parsers.ParserConfigurationException;
-import java.io.IOException;
-
 /**
  * <code>BaselineControlMethod</code>...
  */
 public class BaselineControlMethod extends DavMethodBase {
-
-    private static Logger log = LoggerFactory.getLogger(BaselineControlMethod.class);
 
     public BaselineControlMethod(String uri) {
         super(uri);
