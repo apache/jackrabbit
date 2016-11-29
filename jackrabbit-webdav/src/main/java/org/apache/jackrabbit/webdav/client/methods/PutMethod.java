@@ -16,17 +16,13 @@
  */
 package org.apache.jackrabbit.webdav.client.methods;
 
-import org.apache.jackrabbit.webdav.DavServletResponse;
 import org.apache.jackrabbit.webdav.DavMethods;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.jackrabbit.webdav.DavServletResponse;
 
 /**
  * <code>PutMethod</code>...
  */
 public class PutMethod extends DavMethodBase {
-
-    private static Logger log = LoggerFactory.getLogger(PutMethod.class);
 
     public PutMethod(String uri) {
         super(uri);

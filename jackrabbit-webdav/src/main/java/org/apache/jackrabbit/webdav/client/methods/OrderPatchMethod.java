@@ -16,22 +16,18 @@
  */
 package org.apache.jackrabbit.webdav.client.methods;
 
+import java.io.IOException;
+
 import org.apache.jackrabbit.webdav.DavMethods;
 import org.apache.jackrabbit.webdav.DavServletResponse;
 import org.apache.jackrabbit.webdav.ordering.OrderPatch;
 import org.apache.jackrabbit.webdav.ordering.OrderingConstants;
 import org.apache.jackrabbit.webdav.ordering.Position;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
 
 /**
  * <code>OrderPatchMethod</code>...
  */
 public class OrderPatchMethod extends DavMethodBase {
-
-    private static Logger log = LoggerFactory.getLogger(OrderPatchMethod.class);
 
     /**
      * Create a new <code>OrderPatchMethod</code> with the given order patch

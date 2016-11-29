@@ -16,21 +16,17 @@
  */
 package org.apache.jackrabbit.webdav.client.methods;
 
-import org.apache.jackrabbit.webdav.DavMethods;
-import org.apache.jackrabbit.webdav.search.SearchInfo;
-import org.apache.jackrabbit.webdav.DavServletResponse;
-import org.apache.jackrabbit.webdav.xml.Namespace;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.IOException;
+
+import org.apache.jackrabbit.webdav.DavMethods;
+import org.apache.jackrabbit.webdav.DavServletResponse;
+import org.apache.jackrabbit.webdav.search.SearchInfo;
+import org.apache.jackrabbit.webdav.xml.Namespace;
 
 /**
  * <code>SearchMethod</code>...
  */
 public class SearchMethod extends DavMethodBase {
-
-    private static Logger log = LoggerFactory.getLogger(SearchMethod.class);
 
     public SearchMethod(String uri, String statement, String language) throws IOException {
         this(uri, statement, language, Namespace.EMPTY_NAMESPACE);

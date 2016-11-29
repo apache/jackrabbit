@@ -16,21 +16,17 @@
  */
 package org.apache.jackrabbit.webdav.client.methods;
 
+import org.apache.commons.httpclient.HttpMethod;
 import org.apache.jackrabbit.webdav.DavConstants;
 import org.apache.jackrabbit.webdav.DavMethods;
 import org.apache.jackrabbit.webdav.DavServletResponse;
 import org.apache.jackrabbit.webdav.header.CodedUrlHeader;
 import org.apache.jackrabbit.webdav.header.Header;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.apache.commons.httpclient.HttpMethod;
 
 /**
  * <code>UnLockMethod</code>...
  */
 public class UnLockMethod extends DavMethodBase {
-
-    private static Logger log = LoggerFactory.getLogger(UnLockMethod.class);
 
     public UnLockMethod(String uri, String lockToken) {
         super(uri);

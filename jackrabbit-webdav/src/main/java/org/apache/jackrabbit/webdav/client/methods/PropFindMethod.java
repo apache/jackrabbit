@@ -16,20 +16,19 @@
  */
 package org.apache.jackrabbit.webdav.client.methods;
 
+import java.io.IOException;
+
+import javax.xml.parsers.ParserConfigurationException;
+
 import org.apache.jackrabbit.webdav.DavConstants;
 import org.apache.jackrabbit.webdav.DavMethods;
 import org.apache.jackrabbit.webdav.DavServletResponse;
 import org.apache.jackrabbit.webdav.header.DepthHeader;
 import org.apache.jackrabbit.webdav.property.DavPropertyNameSet;
 import org.apache.jackrabbit.webdav.xml.DomUtil;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
-
-import javax.xml.parsers.ParserConfigurationException;
-import java.io.IOException;
 
 /**
  * <code>PropFindMethod</code>, as specified in
@@ -52,8 +51,6 @@ import java.io.IOException;
  * was used.
  */
 public class PropFindMethod extends DavMethodBase {
-
-    private static Logger log = LoggerFactory.getLogger(PropFindMethod.class);
 
     public PropFindMethod(String uri) throws IOException {
         this(uri, PROPFIND_ALL_PROP, new DavPropertyNameSet(), DEPTH_INFINITY);
