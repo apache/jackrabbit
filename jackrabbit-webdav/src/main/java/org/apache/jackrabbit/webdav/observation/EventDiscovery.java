@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.webdav.observation;
 
 import org.apache.jackrabbit.webdav.xml.DomUtil;
+import org.apache.jackrabbit.webdav.xml.ElementIterator;
 import org.apache.jackrabbit.webdav.xml.XmlSerializable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -88,5 +89,33 @@ public class EventDiscovery implements ObservationConstants, XmlSerializable {
             ed.appendChild(bundle.toXml(document));
         }
         return ed;
+    }
+
+    /**
+     * Build a <code>EventDiscovery</code> from the specified xml element.
+     *
+     * @param eventDiscoveryElement
+     * @return new <code>EventDiscovery</code> instance.
+     * @throws IllegalArgumentException if the given document is <code>null</code>
+     * or does not provide the required element.
+     */
+    public static EventDiscovery createFromXml(Element eventDiscoveryElement) {
+        if (!DomUtil.matches(eventDiscoveryElement, XML_EVENTDISCOVERY, ObservationConstants.NAMESPACE)) {
+            throw new IllegalArgumentException(
+                    "{" + ObservationConstants.NAMESPACE + "}" + XML_EVENTDISCOVERY + " element expected, but got: {"
+                            + eventDiscoveryElement.getNamespaceURI() + "}" + eventDiscoveryElement.getLocalName());
+        }
+        EventDiscovery eventDiscovery = new EventDiscovery();
+        ElementIterator it = DomUtil.getChildren(eventDiscoveryElement, XML_EVENTBUNDLE, ObservationConstants.NAMESPACE);
+        while (it.hasNext()) {
+            final Element ebElement = it.nextElement();
+            EventBundle eb = new EventBundle() {
+                public Element toXml(Document document) {
+                    return (Element) document.importNode(ebElement, true);
+                }
+            };
+            eventDiscovery.addEventBundle(eb);
+        }
+        return eventDiscovery;
     }
 }
