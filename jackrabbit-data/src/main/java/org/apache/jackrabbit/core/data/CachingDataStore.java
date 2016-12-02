@@ -269,6 +269,8 @@ public abstract class CachingDataStore extends AbstractDataStore implements
             LOG.info("path=[{}],  tmpPath=[{}]", path, tmpDir.getAbsolutePath());
             directory = new File(path);
             mkdirs(directory);
+            mkdirs(new File(homeDir));
+
             if (!mkdirs(tmpDir)) {
                 FileUtils.cleanDirectory(tmpDir);
                 LOG.info("tmp=[{}] cleaned.", tmpDir.getPath());
