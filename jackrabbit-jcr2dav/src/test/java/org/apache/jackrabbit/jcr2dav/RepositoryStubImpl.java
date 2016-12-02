@@ -104,7 +104,8 @@ public class RepositoryStubImpl extends JackrabbitRepositoryStub {
 
                 String uri = "http://localhost:" + connector.getLocalPort() + "/";
 
-                parameters.put(JcrUtils.REPOSITORY_URI, uri);
+                String parmName = System.getProperty(this.getClass().getName() + ".REPURIPARM", JcrUtils.REPOSITORY_URI);
+                parameters.put(parmName, uri);
                 parameters.put(PROP_ACCESSCONTROL_PROVIDER_CLASS, acProviderImplClass);
 
                 client = JcrUtils.getRepository(parameters);
