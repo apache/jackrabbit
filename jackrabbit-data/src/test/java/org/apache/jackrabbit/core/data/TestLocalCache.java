@@ -191,7 +191,10 @@ public class TestLocalCache extends TestCase {
             byteMap.put("a4", data);
             // storing a4 should purge cache
             cache.store("a4", new ByteArrayInputStream(byteMap.get("a4")));
-            Thread.sleep(1000);
+            // because purging is done by an asynchronous thread, let's wait until purging done.
+            do {
+                Thread.sleep(1000);
+            } while (cache.isInPurgeMode());
 
             result = cache.getIfStored("a1");
             assertNull("a1 should be null", result);
