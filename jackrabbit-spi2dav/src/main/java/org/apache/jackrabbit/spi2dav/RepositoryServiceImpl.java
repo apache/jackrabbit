@@ -281,7 +281,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
      * Same as {@link #RepositoryServiceImpl(String, IdFactory, NameFactory, PathFactory, QValueFactory, int, int)}
      * using {@link #MAX_CONNECTIONS_DEFAULT} for the maximum number of
      * connections on the client.
-     * 
+     *
      * @param uri The server uri.
      * @param idFactory The id factory.
      * @param nameFactory The name factory.
@@ -405,7 +405,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
                 method.setRequestHeader(ifH.getHeaderName(), ifH.getHeaderValue());
             }
         }
-        
+
         initMethod(method, sessionInfo);
     }
 
@@ -954,7 +954,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             }
         }
     }
-    
+
     private PrivilegeDefinition[] internalGetPrivilegeDefinitions(SessionInfo sessionInfo, String uri) throws RepositoryException {
         DavPropertyNameSet nameSet = new DavPropertyNameSet();
         nameSet.add(SecurityConstants.SUPPORTED_PRIVILEGE_SET);
@@ -985,7 +985,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
                     if (aggregates != null && aggregates.length > 0) {
                         aggrnames = new HashSet<Name>();
                         for (SupportedPrivilege aggregate : aggregates) {
-                            Name aggregateName = nameFactory.create(aggregate.getPrivilege().getNamespace().getURI(), 
+                            Name aggregateName = nameFactory.create(aggregate.getPrivilege().getNamespace().getURI(),
                                                                     aggregate.getPrivilege().getName());
                             aggrnames.add(aggregateName);
                         }
@@ -1306,7 +1306,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         DavPropertyNameSet nameSet = new DavPropertyNameSet();
         String refType = weakReferences ? JcrRemotingConstants.JCR_WEAK_REFERENCES_LN : JcrRemotingConstants.JCR_REFERENCES_LN;
         nameSet.add(refType, ItemResourceConstants.NAMESPACE);
- 
+
         DavMethodBase method = null;
         try {
             String uri = getItemUri(nodeId, sessionInfo);
@@ -1377,7 +1377,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
 
             NamePathResolver resolver = getNamePathResolver(sessionInfo);
             if (ct.startsWith("jcr-value")) {
-                type = JcrValueType.typeFromContentType(ct);                
+                type = JcrValueType.typeFromContentType(ct);
                 QValue v;
                 if (type == PropertyType.BINARY) {
                     v = getQValueFactory().create(method.getResponseBodyAsStream());
@@ -1407,7 +1407,6 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             }
 
             return new PropertyInfoImpl(propertyId, path, type, isMultiValued, values);
-            
         } catch (IOException e) {
             throw new RepositoryException(e);
         } catch (DavException e) {
@@ -2398,7 +2397,6 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
                 } catch (RepositoryException e) {
                     log.warn("Unable to build event parentId: {}", e.getMessage());
                 }
-                
             }
 
             if (userId == null) {
@@ -2545,7 +2543,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     }
 
     @Override
-    public Iterator<QNodeTypeDefinition> getQNodeTypeDefinitions(SessionInfo sessionInfo) throws RepositoryException {       
+    public Iterator<QNodeTypeDefinition> getQNodeTypeDefinitions(SessionInfo sessionInfo) throws RepositoryException {
         ReportMethod method = null;
         try {
             ReportInfo info = new ReportInfo(JcrRemotingConstants.REPORT_NODETYPES, ItemResourceConstants.NAMESPACE);
@@ -2581,7 +2579,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     @Override
     public void registerNodeTypes(SessionInfo sessionInfo, QNodeTypeDefinition[] nodeTypeDefinitions, boolean allowUpdate) throws InvalidNodeTypeDefinitionException, NodeTypeExistsException, UnsupportedRepositoryOperationException, RepositoryException {
         PropPatchMethod method = null;
-     	try {
+        try {
              DavPropertySet setProperties = new DavPropertySet();
              setProperties.add(createRegisterNodeTypesProperty(sessionInfo, nodeTypeDefinitions, allowUpdate));
              String uri = uriResolver.getWorkspaceUri(sessionInfo.getWorkspaceName());
@@ -2603,7 +2601,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     @Override
     public void unregisterNodeTypes(SessionInfo sessionInfo, Name[] nodeTypeNames) throws UnsupportedRepositoryOperationException, NoSuchNodeTypeException, RepositoryException {
         PropPatchMethod method = null;
-     	try {
+        try {
              DavPropertySet setProperties = new DavPropertySet();
              setProperties.add(createUnRegisterNodeTypesProperty(sessionInfo, nodeTypeNames));
              String uri = uriResolver.getWorkspaceUri(sessionInfo.getWorkspaceName());
@@ -2629,7 +2627,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         }
 
         MkWorkspaceMethod method = null;
-     	try {
+        try {
              method = new MkWorkspaceMethod(uriResolver.getWorkspaceUri(name));
              initMethod(method, sessionInfo, true);
              getClient(sessionInfo).executeMethod(method);
@@ -2648,7 +2646,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     @Override
     public void deleteWorkspace(SessionInfo sessionInfo, String name) throws AccessDeniedException, UnsupportedRepositoryOperationException, NoSuchWorkspaceException, RepositoryException {
         DeleteMethod method = null;
-     	try {
+        try {
              method = new DeleteMethod(uriResolver.getWorkspaceUri(name));
              initMethod(method, sessionInfo, true);
              getClient(sessionInfo).executeMethod(method);
