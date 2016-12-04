@@ -1,0 +1,227 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+   Licensed to the Apache Software Foundation (ASF) under one or more
+   contributor license agreements.  See the NOTICE file distributed with
+   this work for additional information regarding copyright ownership.
+   The ASF licenses this file to You under the Apache License, Version 2.0
+   (the "License"); you may not use this file except in compliance with
+   the License.  You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+  -->
+
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd ">
+  <modelVersion>4.0.0</modelVersion>
+
+  <!-- ====================================================================== -->
+  <!-- P R O J E C T  D E S C R I P T I O N                                   -->
+  <!-- ====================================================================== -->
+
+  <parent>
+    <groupId>org.apache.jackrabbit</groupId>
+    <artifactId>jackrabbit-parent</artifactId>
+    <version>2.13.5</version>
+    <relativePath>jackrabbit-parent/pom.xml</relativePath>
+  </parent>
+
+  <artifactId>jackrabbit</artifactId>
+  <name>Apache Jackrabbit</name>
+  <packaging>pom</packaging>
+
+  <modules>
+    <module>jackrabbit-parent</module>
+    <module>jackrabbit-api</module>
+    <module>jackrabbit-jcr-commons</module>
+    <module>jackrabbit-jcr-tests</module>
+    <module>jackrabbit-data</module>
+    <module>jackrabbit-aws-ext</module>
+    <module>jackrabbit-vfs-ext</module>
+    <module>jackrabbit-core</module>
+    <module>jackrabbit-webdav</module>
+    <module>jackrabbit-jcr-server</module>
+    <module>jackrabbit-jcr-rmi</module>
+    <module>jackrabbit-jcr-servlet</module>
+    <module>jackrabbit-webapp</module>
+    <module>jackrabbit-jca</module>
+    <module>jackrabbit-spi</module>
+    <module>jackrabbit-spi-commons</module>
+    <module>jackrabbit-jcr2spi</module>
+    <module>jackrabbit-spi2jcr</module>
+    <module>jackrabbit-spi2dav</module>
+    <module>jackrabbit-jcr2dav</module>
+    <module>jackrabbit-jcr-client</module>
+    <module>jackrabbit-bundle</module>
+    <module>jackrabbit-standalone</module>
+  </modules>
+
+  <scm>
+    <connection>scm:svn:http://svn.apache.org/repos/asf/jackrabbit/tags/jackrabbit-2.13.5</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/jackrabbit/tags/jackrabbit-2.13.5</developerConnection>
+    <url>http://svn.apache.org/viewvc/jackrabbit/tags/jackrabbit-2.13.5</url>
+  </scm>
+
+  <build>
+    <plugins>
+      <plugin>
+        <artifactId>maven-deploy-plugin</artifactId>
+        <configuration>
+          <skip>true</skip>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.rat</groupId>
+        <artifactId>apache-rat-plugin</artifactId>
+        <configuration>
+          <excludes>
+            <exclude>release.properties</exclude>
+            <exclude>test/**/target/**</exclude>
+            <exclude>test/**/.*/**</exclude>
+            <exclude>test/**/*.log</exclude>
+            <exclude>test/performance/base/src/main/resources/deepTree.xml</exclude>
+            <exclude>.git/**</exclude>
+            <exclude>.gitignore</exclude>
+          </excludes>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+
+  <profiles>
+    <profile>
+      <id>apache-release</id>
+      <properties>
+        <username>${user.name}</username>
+        <keyfile>${user.home}/.ssh/id_rsa</keyfile>
+        <passphrase />
+      </properties>
+      <build>
+        <plugins>
+          <plugin>
+            <artifactId>maven-assembly-plugin</artifactId>
+            <executions>
+              <execution>
+                <goals>
+                  <goal>single</goal>
+                </goals>
+                <phase>package</phase>
+                <configuration>
+                  <descriptors>
+                    <descriptor>assembly.xml</descriptor>
+                  </descriptors>
+                </configuration>
+              </execution>
+              <execution>
+                <id>source-release-assembly</id>
+                <configuration>
+                  <skipAssembly>true</skipAssembly>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+          <!-- JCR-2455: Automatic staging of non-Maven release artifacts -->
+          <plugin>
+            <artifactId>maven-antrun-plugin</artifactId>
+            <executions>
+              <execution>
+                <goals>
+                  <goal>run</goal>
+                </goals>
+                <phase>deploy</phase>
+                <configuration>
+                  <tasks>
+                    <mkdir dir="${basedir}/target/${project.version}" />
+                    <copy todir="${basedir}/target/${project.version}" flatten="true">
+                      <fileset dir="${basedir}">
+                        <include name="RELEASE-NOTES.txt" />
+                        <include name="target/*-src.zip*" />
+                        <include name="jackrabbit-standalone/target/*-${project.version}.jar*" />
+                        <include name="jackrabbit-webapp/target/*-${project.version}.war*" />
+                        <include name="jackrabbit-jca/target/*-${project.version}.rar*" />
+                      </fileset>
+                    </copy>
+                    <checksum algorithm="MD5" fileext=".md5">
+                      <fileset dir="${basedir}/target/${project.version}">
+                        <include name="*.zip" />
+                        <include name="*.?ar" />
+                      </fileset>
+                    </checksum>
+                    <checksum algorithm="SHA1" fileext=".sha">
+                      <fileset dir="${basedir}/target/${project.version}">
+                        <include name="*.zip" />
+                        <include name="*.?ar" />
+                      </fileset>
+                    </checksum>
+                    <checksum file="${basedir}/target/${project.version}/jackrabbit-${project.version}-src.zip" algorithm="SHA1" property="checksum" />
+                    <echo file="${basedir}/target/vote.txt">
+From: ${username}@apache.org
+To: dev@jackrabbit.apache.org
+Subject: [VOTE] Release Apache Jackrabbit ${project.version}
+
+A candidate for the Jackrabbit ${project.version} release is available at:
+
+    https://dist.apache.org/repos/dist/dev/jackrabbit/${project.version}/
+
+The release candidate is a zip archive of the sources in:
+
+    https://svn.apache.org/repos/asf/jackrabbit/tags/jackrabbit-${project.version}/
+
+The SHA1 checksum of the archive is ${checksum}.
+
+A staged Maven repository is available for review at:
+
+    https://repository.apache.org/
+
+The command for running automated checks against this release candidate is:
+
+    $ sh check-release.sh ${project.version} ${checksum}
+
+Please vote on releasing this package as Apache Jackrabbit ${project.version}.
+The vote is open for the next 72 hours and passes if a majority of at
+least three +1 Jackrabbit PMC votes are cast.
+
+    [ ] +1 Release this package as Apache Jackrabbit ${project.version}
+    [ ] -1 Do not release this package because...${line.separator}
+                    </echo>
+                    <echo />
+                    <echo>
+The release candidate has been prepared in:
+
+    ${basedir}/target/${project.version}
+
+Please deploy it to https://dist.apache.org/repos/dist/dev/jackrabbit/:
+
+    cd /path/to/jackrabbit-dev
+    mv ${basedir}/target/${project.version} ${project.version}
+    svn add ${project.version}
+    svn commit -m 'Apache Jackrabbit ${project.version} release candidate' ${project.version}
+
+A release vote template has been generated for you:
+
+    file://${basedir}/target/vote.txt
+                    </echo>
+                    <echo />
+                  </tasks>
+                </configuration>
+              </execution>
+            </executions>
+            <dependencies>
+              <dependency>
+                 <groupId>org.apache.ant</groupId>
+                 <artifactId>ant-nodeps</artifactId>
+                 <version>1.8.1</version>
+               </dependency>
+            </dependencies>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
+
+</project>

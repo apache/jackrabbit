@@ -1,0 +1,45 @@
+[bookType]
+  - id
+  - available (Boolean)
+  - isbn mandatory
+  + title (titleType) = titleType mandatory
+  + authors (authorsType) = authorsType mandatory
+  + characters (charactersType) = charactersType mandatory
+
+[authorType]
+  - id
+  - name mandatory
+  - born (Date) mandatory
+  - dead (Date)
+
+[xs:anyType]
+  orderable
+  - * (undefined)
+  + *
+  + jcr:xmltext (jcr:Xmltext) = jcr:Xmltext multiple
+
+[authorsType]
+  orderable
+  + author (authorType) = authorType multiple
+
+[characterType]
+  - id
+  - name mandatory
+  - born (Date) mandatory
+  - qualification mandatory
+
+[jcr:Xmltext]
+  - jcr:xmlcharacters
+
+[titleType]
+  - lang
+  - jcr:xmlContent
+
+[libraryType]
+  orderable
+  + book (bookType) = bookType mandatory multiple
+
+[charactersType]
+  orderable
+  + character (characterType) = characterType multiple
+

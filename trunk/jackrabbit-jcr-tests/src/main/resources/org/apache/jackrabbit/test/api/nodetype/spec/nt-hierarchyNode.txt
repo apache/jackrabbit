@@ -1,0 +1,8 @@
+NodeTypeName
+  nt:hierarchyNode
+IsMixin
+  false
+HasOrderableChildNodes
+  false
+PrimaryItemName
+  null

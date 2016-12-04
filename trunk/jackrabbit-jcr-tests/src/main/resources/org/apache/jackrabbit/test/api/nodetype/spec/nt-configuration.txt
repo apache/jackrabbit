@@ -1,0 +1,17 @@
+NodeTypeName
+  nt:configuration
+IsMixin
+  false
+HasOrderableChildNodes
+  false
+PrimaryItemName
+  null
+PropertyDefinition
+  Name jcr:root
+  RequiredType REFERENCE
+  DefaultValues null
+  AutoCreated true
+  Mandatory true
+  OnParentVersion COPY
+  Protected true
+  Multiple false

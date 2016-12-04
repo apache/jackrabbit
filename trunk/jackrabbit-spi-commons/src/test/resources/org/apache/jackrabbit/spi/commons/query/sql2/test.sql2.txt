@@ -1,0 +1,236 @@
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# File encoding: UTF-8
+
+# See also jcr-spec.pdf
+
+select * from test where name=$nt:name
+
+# 6.7.1 Query (p 99)
+select * from test
+SELECT * FROM TEST
+SeLeCt * FrOm test
+select * from test where id=1
+select * from test where id=1 order by id
+select * from test order by id
+
+# 6.7.2 Source (p 99)
+# 6.7.3 Selector (p 100)
+# 6.7.4 Name (p 100)
+select * from test as t
+select * from ["Test"]
+select * from [test]
+select * from [test] as [t]
+select * from test as ["t"]
+select * from ["test"] as ["t"]
+
+# 6.7.5 Join (p 102)
+# 6.7.6 JoinType (p 102)
+# 6.7.7 JoinCondition (p 103)
+# 6.7.8 EquiJoinCondition (p 103)
+select * from parent inner join child on parent.id=child.parentid
+select * from parent as p inner join child as c on p.id=c.parentid
+select * from parent as p inner join child as c on p.id=c.parentid
+select * from parent as p left outer join child as c on p.id=c.parentid
+select * from parent as p right outer join child as c on p.id=c.parentid
+
+# 6.7.9 SameNodeJoinCondition (p 105)
+select * from parent as p inner join child as c on issamenode(p, c)
+select * from parent as p inner join child as c on issamenode(p, c, a)
+select * from parent as p inner join child as c on issamenode(p, c, [/a/b/c])
+select * from parent as p inner join child as c on issamenode(p, c, ['/a/b/c'])
+
+# 6.7.10 ChildNodeJoinCondition (p 106)
+select * from parent as p inner join child as c on ischildnode(p, c)
+
+# 6.7.11 DescendantNodeJoinCondition (p 107)
+select * from parent as p inner join child as c on isdescendantnode(p, c)
+select * from parent as p right outer join child as c on p.id=c.parentid inner join other as x on p.id = x.id
+
+# 6.7.12 Constraint (p 108)
+# 6.7.13 And (p 108)
+# 6.7.14 Or (p 109)
+select * from test where id<1 and id>1
+select * from test where id=2 or name='Hello'
+select * from test where id<1 and (id>1 or id<2)
+select * from test where (id<1 and id>1) or id<2
+select * from test where id<1 and id>1 or id<2
+select * from test where (id<1 or id>1) and id<2
+select * from test where id<1 or (id>1 and id<2)
+select * from test where id<1 or id>1 and id<2
+
+# 6.7.15 Not (p 110)
+select * from test where not id=2
+select * from test where not (id=2 and name='Hello')
+select * from test where not ([id]=2 and [name]='Hello')
+select * from test where id=2 or not (name='Hello' and id=3)
+select * from test where (not name='Hello') and id=3
+select * from test where id = 3 and (not name='Hello')
+
+# 6.7.16 Comparison (p 110)
+# 6.7.17 Operator (p 112)
+select * from test where id<=2 or id>=3 and name<'a' or name>'c'
+select * from test where id<>2
+select * from [test] where [id]<>2
+select * from test where name like 'H%'
+
+# 6.7.18 PropertyExistence (p 113)
+select * from test where name is not null
+select * from test as t where t.name is not null and t.id<>0
+select * from test as t where not t.name is not null 
+select * from test as t where t.name is null 
+select * from test as t where not t.name is null
+
+# 6.7.19 FullTextSearch (p 113)
+select * from test where contains(name, 'hello -world')
+select * from test where contains(name, $x)
+select * from test as t where contains(t.*, 'hello -world')
+select * from test as t where contains([t].name, 'hello -world')
+
+# 6.7.20 SameNode (p 115)
+select * from test where issamenode([/a/b/c])
+select * from test as a where issamenode(['/a'])
+select * from test as x where issamenode(x, ['/a[2]/b/c'])
+
+# 6.7.21 ChildNode (p 116)
+select * from test where ischildnode([/a[1]/b])
+select * from test as a where ischildnode(['/a'])
+select * from test as x where ischildnode(x, [/])
+select * from test as x where ischildnode(x, ['/a[1]'])
+
+# 6.7.22 DescendantNode (p 117)
+# 6.7.23 Path (p 118)
+select * from test where ISDESCENDANTNODE([/a[1]])
+select * from test as a where ISDESCENDANTNODE([/a])
+select * from test as x where ISDESCENDANTNODE(x, [/a/b/c])
+
+# 6.7.24 Operand (p 118)
+# 6.7.25 StaticOperand (p 119)
+# 6.7.26 DynamicOperand (p 119)
+# 6.7.27 PropertyValue (p 119)
+# 6.7.28 Length (p 120)
+select * from test where length(name)=5
+select * from test as t where length(t.name)=5
+select * from test as t where length(name)=5
+SELECT * FROM [my:thing] WHERE [my:property] = 'abc'
+SELECT * FROM [my:thing] AS thing WHERE [my:property] = 'abc'
+SELECT * FROM [my:thing] AS [thing] WHERE [thing].[my:property] = 'abc'
+
+# 6.7.29 NodeName (p 121)
+select * from test where name()='test'
+select * from test as x where name(x)='test'
+
+# 6.7.30 NodeLocalName (p 121)
+select * from test where localname()='test'
+select * from test as x where localname(x)='test'
+
+# 6.7.31 FullTextSearchScore (p 122)
+select * from test where score()>4
+select * from test as x where score(x)<1
+
+# 6.7.32 LowerCase (p 122)
+select * from test where lower(name)='test'
+select * from test where lower(upper(name))='test'
+select * from test where lower(localname(test))='test'
+select * from test where lower(name(test))='test'
+select * from test as x where lower(x.name)='test'
+
+# 6.7.33 UpperCase (p 123)
+select * from test where upper(name)='test'
+select * from test where upper(lower(name))='test'
+select * from test where upper(localname(test))='test'
+select * from test where upper(name(test))='test'
+select * from test as x where upper(x.name)='test'
+
+# 6.7.34 Literal (p 123)
+select * from test where amount=0.01
+select * from test where amount=10.
+select * from test where amount=.01
+select * from test where amount=.01e-1
+select * from test where amount=-.01e1
+select * from test where amount=-0.01e1
+select * from test where amount=+10
+select * from test where amount=-10e10
+select * from test where amount=+10e-10
+select * from test where amount=+10e+10
+select * from test where active=true
+select * from test where active=false
+select * from test where name='test''test'
+select * from test where name=''''
+select * from test where active="True"
+select * from test where active=""
+select * from test where a=cast('0.01' as string)
+select * from test where a=cast('abcdef' as binary)
+select * from test where a=cast('+2001-01-01T01:02:03.000Z' as date)
+select * from test where a=cast('10' as long)
+select * from test where a=cast('100.5' as double)
+select * from test where a=cast('3.11' as decimal)
+select * from test where a=cast('true' as boolean)
+select * from test where a=cast('firstName' as name)
+select * from test where a=cast('a/b/c' as path)
+select * from test where a=cast('[123]' as reference)
+select * from test where a=cast('[123]' as weakreference)
+select * from test where a=cast("x://y/z" as uri)
+
+# 6.7.35 BindVariable (p 124)
+select * from test where name=$name
+select * from test where name=$x and id=$y
+select * from test where name=$x14
+select * from test where name=$_
+
+# 6.7.36 Prefix (p 124)
+select * from test where name=$nt:name
+select * from test where name=$_:name
+select * from test where name=$_1:name
+
+# 6.7.37 Ordering (p 125)
+# 6.7.38 Order (p 126)
+select * from test order by name
+select * from test order by name asc
+select * from test order by name desc
+select * from test order by id, name
+select * from test order by id, name, id, name
+select * from test order by id desc, name asc, id, name desc
+select * from test order by id desc, name asc, id asc
+
+# 6.7.39 Column (p 127)
+select name from test
+select id, name from test
+select x.id from test as x
+select x.id, name from test as x
+select x.id, y.id from test as x inner join test as y on x.id=y.id
+select x.id as i from test as x inner join test as y on x.id=y.id
+select x.id as i, y.name as n from test as x inner join test as y on x.id=y.id
+select x.id, y.name as n from test as x inner join test as y on x.id=y.id
+select x.* from test as x
+select x.*, y.* from test as x inner join test as y on x.id=y.id
+select x.*, x.id as i, y.*, y.name from test as x inner join test as y on x.id=y.id
+
+#errors
+select * from parent as p inner join child as c on issamenode(p, c, a/b)
+> exception: Query: select * from parent as p inner join child as c on issamenode(p, c, a/(*)b); expected: )
+select * from parent as p inner join child as c on issamenode(p, c, d, e)
+> exception: Query: select * from parent as p inner join child as c on issamenode(p, c, d,(*)e); expected: )
+select * from 
+> exception: Query: select * fro(*)m; expected: a token
+select * from parent as p inner join child as c on ischildnode(p, c, a)
+> exception: Query: select * from parent as p inner join child as c on ischildnode(p, c,(*)a); expected: )
+select * from parent as p inner join child as c on isdescendantnode(p)
+> exception: Query: select * from parent as p inner join child as c on isdescendantnode(p(*)); expected: ,
+select * from parent as p inner join child as c on isdescendantnode(a, b, c)
+> exception: Query: select * from parent as p inner join child as c on isdescendantnode(a, b,(*)c); expected: )
+select id from parent inner join child on parent.id=child.parentid
+> exception: Query: select id(*)from parent inner join child on parent.id=child.parentid; expected: Need to specify the selector name for "id" because the query contains more than one selector.

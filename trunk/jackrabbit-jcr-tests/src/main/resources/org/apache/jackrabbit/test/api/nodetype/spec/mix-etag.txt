@@ -1,0 +1,17 @@
+NodeTypeName
+  mix:etag
+IsMixin
+  true
+HasOrderableChildNodes
+  false
+PrimaryItemName
+  null
+PropertyDefinition
+  Name jcr:etag
+  RequiredType STRING
+  DefaultValues null
+  AutoCreated true
+  Mandatory false
+  OnParentVersion COPY
+  Protected true
+  Multiple false

@@ -1,0 +1,26 @@
+NodeTypeName
+  nt:base
+IsMixin
+  false
+HasOrderableChildNodes
+  false
+PrimaryItemName
+  null
+PropertyDefinition
+  Name jcr:mixinTypes
+  RequiredType NAME
+  DefaultValues null
+  AutoCreated false
+  Mandatory false
+  OnParentVersion COMPUTE
+  Protected true
+  Multiple true
+PropertyDefinition
+  Name jcr:primaryType
+  RequiredType NAME
+  DefaultValues null
+  AutoCreated true
+  Mandatory true
+  OnParentVersion COMPUTE
+  Protected true
+  Multiple false

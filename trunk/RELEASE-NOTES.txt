@@ -1,0 +1,87 @@
+Release Notes -- Apache Jackrabbit -- Version 2.13.5
+
+Introduction
+------------
+
+This is Apache Jackrabbit(TM) 2.13.4, a fully compliant implementation of the
+Content Repository for Java(TM) Technology API, version 2.0 (JCR 2.0) as
+specified in the Java Specification Request 283 (JSR 283).
+
+Apache Jackrabbit 2.13.5 is an unstable release cut directly from
+Jackrabbit trunk, with a focus on new features and other
+improvements. For production use we recommend the latest stable 2.12.x
+release.
+
+Changes in Jackrabbit 2.13.5
+----------------------------
+
+Bug
+
+    [JCR-4007] - CachingDataStore - touching every time on getRecord() was unnecessary
+    [JCR-4027] - NPE in JcrRemotingServlet.canHandle() when content-type is missing
+    [JCR-4033] - Session Leak in case of an exception inside the constructor of SessionImpl
+    [JCR-4041] - spi2davex: bogus content type charset parameter for application/x-www-form-urlencoded
+    [JCR-4042] - Adding Escape Character in GQL
+    [JCR-4047] - Build fails: jackrabbit-jcr2spi: Signature errors found.
+    [JCR-4052] - RFC4918DestinationHeaderTest fails with internal server error
+    [JCR-4068] - jcr-commons: get rid of test dependency to json.org JSON parser
+    [JCR-4072] - Creation of marker file fails when parent folder does not exist in CachingDataStore
+
+Improvement
+
+    [JCR-4063] - Minor improvements in GetSupportedQueryLanguagesTest
+    [JCR-4074] - jackrabbit-jcr2dav: add system property to disable davex support for testing
+
+Sub-task
+
+    [JCR-4059] - avoid use of HttpClient3 URI class
+    [JCR-4064] - Refactor WebDAV related code out of HttpClient3-specific classes for better future re-use
+
+In addition to the above-mentioned changes, this release contains
+all the changes included up to the Apache Jackrabbit 2.13.4 release.
+
+For more detailed information about all the changes in this and other
+Jackrabbit releases, please see the Jackrabbit issue tracker at
+
+    https://issues.apache.org/jira/browse/JCR
+
+Release Contents
+----------------
+
+This release consists of a single source archive packaged as a zip file.
+The archive can be unpacked with the jar tool from your JDK installation.
+See the README.txt file for instructions on how to build this release.
+
+The source archive is accompanied by SHA1 and MD5 checksums and a PGP
+signature that you can use to verify the authenticity of your download.
+The public key used for the PGP signature can be found at
+https://svn.apache.org/repos/asf/jackrabbit/dist/KEYS.
+
+About Apache Jackrabbit
+-----------------------
+
+Apache Jackrabbit is a fully conforming implementation of the Content
+Repository for Java Technology API (JCR). A content repository is a
+hierarchical content store with support for structured and unstructured
+content, full text search, versioning, transactions, observation, and
+more.
+
+For more information, visit http://jackrabbit.apache.org/
+
+About The Apache Software Foundation
+------------------------------------
+
+Established in 1999, The Apache Software Foundation provides organizational,
+legal, and financial support for more than 140 freely-available,
+collaboratively-developed Open Source projects. The pragmatic Apache License
+enables individual and commercial users to easily deploy Apache software;
+the Foundation's intellectual property framework limits the legal exposure
+of its 3,800+ contributors.
+
+For more information, visit http://www.apache.org/
+
+Trademarks
+----------
+
+Apache Jackrabbit, Jackrabbit, Apache, the Apache feather logo, and the Apache
+Jackrabbit project logo are trademarks of The Apache Software Foundation.

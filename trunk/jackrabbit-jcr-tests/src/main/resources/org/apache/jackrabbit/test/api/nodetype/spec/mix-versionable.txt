@@ -1,0 +1,62 @@
+NodeTypeName
+  mix:versionable
+IsMixin
+  true
+HasOrderableChildNodes
+  false
+PrimaryItemName
+  null
+PropertyDefinition
+  Name jcr:activity
+  RequiredType REFERENCE
+  DefaultValues null
+  AutoCreated false
+  Mandatory false
+  OnParentVersion COPY
+  Protected true
+  Multiple false
+PropertyDefinition
+  Name jcr:baseVersion
+  RequiredType REFERENCE
+  DefaultValues null
+  AutoCreated false
+  Mandatory true
+  OnParentVersion IGNORE
+  Protected true
+  Multiple false
+PropertyDefinition
+  Name jcr:configuration
+  RequiredType REFERENCE
+  DefaultValues null
+  AutoCreated false
+  Mandatory false
+  OnParentVersion IGNORE
+  Protected true
+  Multiple false
+PropertyDefinition
+  Name jcr:mergeFailed
+  RequiredType REFERENCE
+  DefaultValues null
+  AutoCreated false
+  Mandatory false
+  OnParentVersion ABORT
+  Protected true
+  Multiple true
+PropertyDefinition
+  Name jcr:predecessors
+  RequiredType REFERENCE
+  DefaultValues null
+  AutoCreated false
+  Mandatory true
+  OnParentVersion IGNORE
+  Protected true
+  Multiple true
+PropertyDefinition
+  Name jcr:versionHistory
+  RequiredType REFERENCE
+  DefaultValues null
+  AutoCreated false
+  Mandatory true
+  OnParentVersion IGNORE
+  Protected true
+  Multiple false
