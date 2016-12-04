@@ -276,7 +276,7 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
     /**
      * @see RepositoryService#getQValueFactory()
      */
-    public QValueFactoryImpl getQValueFactory(SessionInfo sessionInfo) throws RepositoryException {
+    private QValueFactoryImpl getQValueFactory(SessionInfo sessionInfo) throws RepositoryException {
         QValueFactoryImpl qv;
         if (qvFactories.containsKey(sessionInfo)) {
             qv = qvFactories.get(sessionInfo);
