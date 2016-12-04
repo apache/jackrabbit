@@ -1,4 +1,4 @@
-Release Notes -- Apache Jackrabbit -- Version 2.13.4
+Release Notes -- Apache Jackrabbit -- Version 2.13.5
 
 Introduction
 ------------
@@ -7,35 +7,38 @@ This is Apache Jackrabbit(TM) 2.13.4, a fully compliant implementation of the
 Content Repository for Java(TM) Technology API, version 2.0 (JCR 2.0) as
 specified in the Java Specification Request 283 (JSR 283).
 
-Apache Jackrabbit 2.13.4 is an unstable release cut directly from
+Apache Jackrabbit 2.13.5 is an unstable release cut directly from
 Jackrabbit trunk, with a focus on new features and other
 improvements. For production use we recommend the latest stable 2.12.x
 release.
 
-Changes in Jackrabbit 2.13.4
+Changes in Jackrabbit 2.13.5
 ----------------------------
 
 Bug
 
-    [JCR-3893] - Multiple issues with standalone 2.10.1
-    [JCR-4008] - Restore TestCachingFDS.testDeleteRecord() to fix it with disabling AsyncUpload in unit tests
-    [JCR-4015] - jackrabbit-jcr-commons JcrUtils.getOrCreateByPath fails if session is not allowed to read root
-    [JCR-4022] - populate.jsp (standalone) doesn't work due to google ajax api change
-    [JCR-4031] - AbstractLocatorFactory: typo in log message
+    [JCR-4007] - CachingDataStore - touching every time on getRecord() was unnecessary
+    [JCR-4027] - NPE in JcrRemotingServlet.canHandle() when content-type is missing
+    [JCR-4033] - Session Leak in case of an exception inside the constructor of SessionImpl
+    [JCR-4041] - spi2davex: bogus content type charset parameter for application/x-www-form-urlencoded
+    [JCR-4042] - Adding Escape Character in GQL
+    [JCR-4047] - Build fails: jackrabbit-jcr2spi: Signature errors found.
+    [JCR-4052] - RFC4918DestinationHeaderTest fails with internal server error
+    [JCR-4068] - jcr-commons: get rid of test dependency to json.org JSON parser
+    [JCR-4072] - Creation of marker file fails when parent folder does not exist in CachingDataStore
 
 Improvement
 
-    [JCR-4018] - Consistent Async Upload Executor handling in Backend implementations
-    [JCR-4032] - Add jmx EventListenerMBean.getToString() for clearer consolidated listener stats
+    [JCR-4063] - Minor improvements in GetSupportedQueryLanguagesTest
+    [JCR-4074] - jackrabbit-jcr2dav: add system property to disable davex support for testing
 
-Task
+Sub-task
 
-    [JCR-4019] - move httpclient dependency out of parent pom
-    [JCR-4025] - Enable animal sniffer plugin
-    [JCR-4030] - Allow use of Java 7 in Jackrabbit trunk
+    [JCR-4059] - avoid use of HttpClient3 URI class
+    [JCR-4064] - Refactor WebDAV related code out of HttpClient3-specific classes for better future re-use
 
 In addition to the above-mentioned changes, this release contains
-all the changes included up to the Apache Jackrabbit 2.13.3 release.
+all the changes included up to the Apache Jackrabbit 2.13.4 release.
 
 For more detailed information about all the changes in this and other
 Jackrabbit releases, please see the Jackrabbit issue tracker at
