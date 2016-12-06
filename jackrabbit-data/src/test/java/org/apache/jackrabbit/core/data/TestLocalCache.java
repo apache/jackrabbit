@@ -192,7 +192,7 @@ public class TestLocalCache extends TestCase {
             // storing a4 should purge cache
             cache.store("a4", new ByteArrayInputStream(byteMap.get("a4")));
             do {
-                Thread.sleep(500);
+                Thread.sleep(1000);
             } while (cache.isInPurgeMode());
 
             result = cache.getIfStored("a1");
