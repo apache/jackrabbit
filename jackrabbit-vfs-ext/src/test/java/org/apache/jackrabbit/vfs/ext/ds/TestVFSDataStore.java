@@ -25,10 +25,11 @@ import javax.jcr.RepositoryException;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.vfs2.FileObject;
 import org.apache.commons.vfs2.FileSystemOptions;
-import org.apache.commons.vfs2.provider.http.HttpFileSystemConfigBuilder;
+import org.apache.commons.vfs2.provider.sftp.SftpFileSystemConfigBuilder;
 import org.apache.jackrabbit.core.data.CachingDataStore;
 import org.apache.jackrabbit.core.data.TestCaseBase;
 import org.slf4j.Logger;
@@ -56,12 +57,20 @@ public class TestVFSDataStore extends TestCaseBase {
      */
     private static final Logger LOG = LoggerFactory.getLogger(TestVFSDataStore.class);
 
-    private static final String FILE_SYSTEM_OPTIONS_PARAM_XML =
+    // Example when http provider or its variants (https or webdav) FSO is used.
+    @SuppressWarnings("unused")
+    private static final String HTTP_FILE_SYSTEM_OPTIONS_PARAM_XML =
             "<param "
             + "name=\"fileSystemOptionsPropertiesInString\" "
             + "value=\"fso.http.maxTotalConnections = 200&#13;"
             + "        fso.http.maxConnectionsPerHost = 100&#13;"
             + "        fso.http.preemptiveAuth = true\" />";
+
+    private static final String SFTP_FILE_SYSTEM_OPTIONS_PARAM_XML =
+            "<param "
+            + "name=\"fileSystemOptionsPropertiesInString\" "
+            + "value=\"fso.sftp.identities = /home/tester/.ssh/id_rsa&#13;"
+            + "        fso.sftp.timeout = 30000\" />";
 
     private String baseFolderUri;
 
@@ -167,22 +176,23 @@ public class TestVFSDataStore extends TestCaseBase {
 
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
         DocumentBuilder builder = factory.newDocumentBuilder();
-        Document document = builder.parse(new InputSource(new StringReader(FILE_SYSTEM_OPTIONS_PARAM_XML)));
+        Document document = builder.parse(new InputSource(new StringReader(SFTP_FILE_SYSTEM_OPTIONS_PARAM_XML)));
         Element paramElem = document.getDocumentElement();
         String propsInString = paramElem.getAttribute("value");
         dataStore.setFileSystemOptionsPropertiesInString(propsInString);
         final Properties internalProps = dataStore.getFileSystemOptionsProperties();
-        Assert.assertEquals("200", internalProps.getProperty("fso.http.maxTotalConnections"));
-        Assert.assertEquals("100", internalProps.getProperty("fso.http.maxConnectionsPerHost"));
-        Assert.assertEquals("true", internalProps.getProperty("fso.http.preemptiveAuth"));
+        Assert.assertEquals("/home/tester/.ssh/id_rsa", internalProps.getProperty("fso.sftp.identities"));
+        Assert.assertEquals("30000", internalProps.getProperty("fso.sftp.timeout"));
 
         dataStore.init(dataStoreDir);
 
         final FileSystemOptions fso = dataStore.getFileSystemOptions();
-        final HttpFileSystemConfigBuilder configBuilder = HttpFileSystemConfigBuilder.getInstance();
-        Assert.assertEquals(200, configBuilder.getMaxTotalConnections(fso));
-        Assert.assertEquals(100, configBuilder.getMaxConnectionsPerHost(fso));
-        Assert.assertTrue(configBuilder.isPreemptiveAuth(fso));
+        final SftpFileSystemConfigBuilder configBuilder = SftpFileSystemConfigBuilder.getInstance();
+        File [] identities = configBuilder.getIdentities(fso);
+        Assert.assertNotNull(identities);
+        Assert.assertEquals(1, identities.length);
+        Assert.assertEquals("/home/tester/.ssh/id_rsa", FilenameUtils.separatorsToUnix(identities[0].getPath()));
+        Assert.assertEquals(Integer.valueOf(30000), configBuilder.getTimeout(fso));
 
         dataStore.close();
     }
