@@ -25,6 +25,7 @@ import javax.jcr.RepositoryException;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.vfs2.FileObject;
 import org.apache.commons.vfs2.FileSystemOptions;
@@ -190,7 +191,7 @@ public class TestVFSDataStore extends TestCaseBase {
         File [] identities = configBuilder.getIdentities(fso);
         Assert.assertNotNull(identities);
         Assert.assertEquals(1, identities.length);
-        Assert.assertEquals("/home/tester/.ssh/id_rsa", identities[0].getPath());
+        Assert.assertEquals("/home/tester/.ssh/id_rsa", FilenameUtils.separatorsToUnix(identities[0].getPath()));
         Assert.assertEquals(Integer.valueOf(30000), configBuilder.getTimeout(fso));
 
         dataStore.close();
