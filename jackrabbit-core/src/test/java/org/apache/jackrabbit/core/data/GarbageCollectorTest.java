@@ -184,12 +184,12 @@ public class GarbageCollectorTest extends AbstractJCRTest implements ScanEventLi
 
         gc.close();
     }
-    
+
     /**
-     *  Test to validate that two  GC cannot run simulatenously. one 
-     *  exits throwing exception  
+     *  Test to validate that two  GC cannot run simultaneously. One 
+     *  exits throwing exception.
      */
-    public void testSimulatenousRunGC() throws Exception {
+    public void testSimultaneousRunGC() throws Exception {
         Node root = testRootNode;
         Session session = root.getSession();
 
@@ -197,21 +197,26 @@ public class GarbageCollectorTest extends AbstractJCRTest implements ScanEventLi
         GCThread gct2 = new GCThread(session);
         Thread gcThread1 = new Thread(gct1, "Datastore Garbage Collector 1");
         Thread gcThread2 = new Thread(gct2, "Datastore Garbage Collector 2");
-        // run simulatensou gc
+        // run simultaneous GC
         gcThread1.start();
         gcThread2.start();
         Thread.sleep(100);
-        
+
         gct1.setStop(true);
         gct2.setStop(true);
-        
+
         // allow them to complete
         gcThread1.join();
         gcThread2.join();
 
         // only one should throw error
         int count = (gct1.getException() == null ? 0 : 1) + (gct2.getException() == null ? 0 : 1);
-        assertEquals("only one gc should throw exception ", 1, count);
+        if (count == 0) {
+            fail("None of the GCs threw an exception");
+        }
+        else {
+            assertEquals("Only one gc should throw an exception ", 1, count);
+        }
     }
 
     private void runGC(Session session, boolean all) throws Exception {
