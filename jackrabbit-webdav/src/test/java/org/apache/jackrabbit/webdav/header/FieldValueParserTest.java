@@ -14,5 +14,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-@aQute.bnd.annotation.Version("1.1.0")
 package org.apache.jackrabbit.webdav.header;
+
+import java.util.List;
+
+import org.junit.Test;
+import static org.junit.Assert.assertArrayEquals;
+
+import junit.framework.TestCase;
+
+public class FieldValueParserTest extends TestCase {
+
+    @Test
+    public void testDavComplianceHeader() {
+
+        List<String> l;
+
+        l = FieldValueParser.tokenizeList("1");
+        assertArrayEquals(new String[]{"1"}, l.toArray());
+
+        l = FieldValueParser.tokenizeList("1,2,,,,,3,,bind,");
+        assertArrayEquals(new String[]{"1","2","3","bind"}, l.toArray());
+
+        l = FieldValueParser.tokenizeList("1,2,<http://example.com/foo,bar>");
+        assertArrayEquals(new String[]{"1","2","<http://example.com/foo,bar>"}, l.toArray());
+}
+}

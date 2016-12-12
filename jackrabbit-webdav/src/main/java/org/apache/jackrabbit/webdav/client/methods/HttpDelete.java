@@ -14,5 +14,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-@aQute.bnd.annotation.Version("1.1.0")
-package org.apache.jackrabbit.webdav.header;
+package org.apache.jackrabbit.webdav.client.methods;
+
+import java.net.URI;
+
+import org.apache.jackrabbit.webdav.DavMethods;
+
+/**
+ * Represents an HTTP DELETE request.
+ * 
+ * @see <a href="http://webdav.org/specs/rfc7231.html#rfc.section.4.3.5">RFC 7231, Section 4.3.5</a>
+ * @since 2.13.6
+ */
+public class HttpDelete extends BaseDavRequest {
+
+    public HttpDelete(URI uri){
+        super(uri);
+    }
+
+    public HttpDelete(String uri) {
+        this(URI.create(uri));
+    }
+
+    @Override
+    public String getMethod() {
+        return DavMethods.METHOD_DELETE;
+    }
+}
