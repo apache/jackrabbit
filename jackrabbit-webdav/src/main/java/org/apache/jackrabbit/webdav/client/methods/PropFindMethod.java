@@ -16,20 +16,14 @@
  */
 package org.apache.jackrabbit.webdav.client.methods;
 
+import java.io.IOException;
+
 import org.apache.jackrabbit.webdav.DavConstants;
 import org.apache.jackrabbit.webdav.DavMethods;
 import org.apache.jackrabbit.webdav.DavServletResponse;
 import org.apache.jackrabbit.webdav.header.DepthHeader;
 import org.apache.jackrabbit.webdav.property.DavPropertyNameSet;
-import org.apache.jackrabbit.webdav.xml.DomUtil;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-
-import javax.xml.parsers.ParserConfigurationException;
-import java.io.IOException;
+import org.apache.jackrabbit.webdav.property.PropfindInfo;
 
 /**
  * <code>PropFindMethod</code>, as specified in
@@ -53,8 +47,6 @@ import java.io.IOException;
  */
 public class PropFindMethod extends DavMethodBase {
 
-    private static Logger log = LoggerFactory.getLogger(PropFindMethod.class);
-
     public PropFindMethod(String uri) throws IOException {
         this(uri, PROPFIND_ALL_PROP, new DavPropertyNameSet(), DEPTH_INFINITY);
     }
@@ -76,57 +68,8 @@ public class PropFindMethod extends DavMethodBase {
         DepthHeader dh = new DepthHeader(depth);
         setRequestHeader(dh.getHeaderName(), dh.getHeaderValue());
 
-        // build the request body
-        try {
-            // create the document and attach the root element
-            Document document = DomUtil.createDocument();
-            Element propfind = DomUtil.createElement(document, XML_PROPFIND, NAMESPACE);
-            document.appendChild(propfind);
-
-            // fill the propfind element
-            switch (propfindType) {
-                case PROPFIND_ALL_PROP:
-                    propfind.appendChild(DomUtil.createElement(document, XML_ALLPROP, NAMESPACE));
-                    break;
-                    
-                case PROPFIND_PROPERTY_NAMES:
-                    propfind.appendChild(DomUtil.createElement(document, XML_PROPNAME, NAMESPACE));
-                    break;
-                    
-                case PROPFIND_BY_PROPERTY:
-                    if (propNameSet == null) {
-                        // name set missing, ask for a property that is known to exist
-                        Element prop = DomUtil.createElement(document, XML_PROP, NAMESPACE);
-                        Element resourcetype = DomUtil.createElement(document, PROPERTY_RESOURCETYPE, NAMESPACE);
-                        prop.appendChild(resourcetype);
-                        propfind.appendChild(prop);
-                    } else {
-                        propfind.appendChild(propNameSet.toXml(document));
-                    }
-                    break;
-                    
-                case PROPFIND_ALL_PROP_INCLUDE:
-                    propfind.appendChild(DomUtil.createElement(document, XML_ALLPROP, NAMESPACE));
-                    if (propNameSet != null && ! propNameSet.isEmpty()) {
-                        Element include = DomUtil.createElement(document, XML_INCLUDE, NAMESPACE);
-                        Element prop = propNameSet.toXml(document);
-                        for (Node c = prop.getFirstChild(); c != null; c = c.getNextSibling()) {
-                            // copy over the children of <prop> to <include> element
-                            include.appendChild(c.cloneNode(true));
-                        }
-                        propfind.appendChild(include);
-                    }
-                    break;
-                  
-               default:
-                   throw new IllegalArgumentException("unknown propfind type");
-            }
-
-            // set the request body
-            setRequestBody(document);
-        } catch (ParserConfigurationException e) {
-            throw new IOException(e.getMessage());
-        }
+        PropfindInfo info = new PropfindInfo(propfindType, propNameSet);
+        setRequestBody(info);
     }
 
     //---------------------------------------------------------< HttpMethod >---

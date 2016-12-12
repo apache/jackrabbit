@@ -18,15 +18,11 @@ package org.apache.jackrabbit.webdav.client.methods;
 
 import org.apache.jackrabbit.webdav.DavMethods;
 import org.apache.jackrabbit.webdav.DavServletResponse;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * <code>MkWorkspaceMethod</code>...
  */
 public class MkWorkspaceMethod extends DavMethodBase {
-
-    private static Logger log = LoggerFactory.getLogger(MkWorkspaceMethod.class);
 
     public MkWorkspaceMethod(String uri) {
         super(uri);

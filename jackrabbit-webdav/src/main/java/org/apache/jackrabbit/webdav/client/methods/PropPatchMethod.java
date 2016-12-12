@@ -16,30 +16,26 @@
  */
 package org.apache.jackrabbit.webdav.client.methods;
 
+import java.io.IOException;
+import java.util.List;
+
+import org.apache.commons.httpclient.HttpConnection;
+import org.apache.commons.httpclient.HttpState;
 import org.apache.jackrabbit.webdav.DavConstants;
+import org.apache.jackrabbit.webdav.DavException;
 import org.apache.jackrabbit.webdav.DavMethods;
-import org.apache.jackrabbit.webdav.property.DavPropertyNameSet;
-import org.apache.jackrabbit.webdav.property.DavPropertySet;
-import org.apache.jackrabbit.webdav.property.DavPropertyName;
-import org.apache.jackrabbit.webdav.property.DavPropertyNameIterator;
-import org.apache.jackrabbit.webdav.property.DavProperty;
-import org.apache.jackrabbit.webdav.property.PropEntry;
 import org.apache.jackrabbit.webdav.DavServletResponse;
 import org.apache.jackrabbit.webdav.MultiStatus;
 import org.apache.jackrabbit.webdav.MultiStatusResponse;
-import org.apache.jackrabbit.webdav.DavException;
 import org.apache.jackrabbit.webdav.Status;
-import org.apache.jackrabbit.webdav.xml.DomUtil;
-import org.apache.commons.httpclient.HttpState;
-import org.apache.commons.httpclient.HttpConnection;
+import org.apache.jackrabbit.webdav.property.DavPropertyName;
+import org.apache.jackrabbit.webdav.property.DavPropertyNameIterator;
+import org.apache.jackrabbit.webdav.property.DavPropertyNameSet;
+import org.apache.jackrabbit.webdav.property.DavPropertySet;
+import org.apache.jackrabbit.webdav.property.PropEntry;
+import org.apache.jackrabbit.webdav.property.ProppatchInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-
-import javax.xml.parsers.ParserConfigurationException;
-import java.io.IOException;
-import java.util.List;
 
 /**
  * <code>PropPatchMethod</code>...
@@ -48,9 +44,8 @@ public class PropPatchMethod extends DavMethodBase implements DavConstants {
 
     private static Logger log = LoggerFactory.getLogger(PropPatchMethod.class);
 
-    private final DavPropertyNameSet propertyNames = new DavPropertyNameSet();
-
     private DavException responseException;
+    private DavPropertyNameSet propertyNames;
 
     /**
      *
@@ -61,81 +56,17 @@ public class PropPatchMethod extends DavMethodBase implements DavConstants {
      */
     public PropPatchMethod(String uri, List<? extends PropEntry> changeList) throws IOException {
         super(uri);
-        if (changeList == null || changeList.isEmpty()) {
-            throw new IllegalArgumentException("PROPPATCH cannot be executed without properties to be set or removed.");
-        }
-        try {
-            Document document = DomUtil.createDocument();
-            Element propUpdateElement = DomUtil.addChildElement(document, XML_PROPERTYUPDATE, NAMESPACE);
-
-            Element propElement = null;
-            boolean isSet = false;
-            for (Object entry : changeList) {
-                if (entry instanceof DavPropertyName) {
-                    // DAV:remove
-                    DavPropertyName removeName = (DavPropertyName) entry;
-                    if (propElement == null || isSet) {
-                        isSet = false;
-                        propElement = getPropElement(propUpdateElement, isSet);
-                    }
-                    propElement.appendChild(removeName.toXml(document));
-                    propertyNames.add(removeName);
-                } else if (entry instanceof DavProperty) {
-                    // DAV:set
-                    DavProperty<?> setProperty = (DavProperty<?>) entry;
-                    if (propElement == null || !isSet) {
-                        isSet = true;
-                        propElement = getPropElement(propUpdateElement, isSet);
-                    }
-                    propElement.appendChild(setProperty.toXml(document));
-                    propertyNames.add(setProperty.getName());
-                } else {
-                    throw new IllegalArgumentException("ChangeList may only contain DavPropertyName and DavProperty elements.");
-                }
-            }
-            setRequestBody(document);
-        } catch (ParserConfigurationException e) {
-            throw new IOException(e.getMessage());
-        }
+        ProppatchInfo info = new ProppatchInfo(changeList);
+        setRequestBody(info);
+        this.propertyNames = info.getAffectedProperties();
     }
 
     public PropPatchMethod(String uri, DavPropertySet setProperties,
                            DavPropertyNameSet removeProperties) throws IOException {
         super(uri);
-        if (setProperties == null || removeProperties == null) {
-            throw new IllegalArgumentException("Neither setProperties nor removeProperties must be null.");
-        }
-        if (setProperties.isEmpty() && removeProperties.isEmpty()) {
-            throw new IllegalArgumentException("Either setProperties or removeProperties can be empty; not both of them.");
-        }
-
-        propertyNames.addAll(removeProperties);
-        for (DavPropertyName setName : setProperties.getPropertyNames()) {
-            propertyNames.add(setName);
-        }
-
-        try {
-            Document document = DomUtil.createDocument();
-            Element propupdate = DomUtil.addChildElement(document, XML_PROPERTYUPDATE, NAMESPACE);
-            // DAV:set
-            if (!setProperties.isEmpty()) {
-                Element set = DomUtil.addChildElement(propupdate, XML_SET, NAMESPACE);
-                set.appendChild(setProperties.toXml(document));
-            }
-            // DAV:remove
-            if (!removeProperties.isEmpty()) {
-                Element remove = DomUtil.addChildElement(propupdate, XML_REMOVE, NAMESPACE);
-                remove.appendChild(removeProperties.toXml(document));
-            }
-            setRequestBody(document);
-        } catch (ParserConfigurationException e) {
-            throw new IOException(e.getMessage());
-        }
-    }
-
-    private Element getPropElement(Element propUpdate, boolean isSet) {
-        Element updateEntry = DomUtil.addChildElement(propUpdate, (isSet) ? XML_SET : XML_REMOVE , NAMESPACE);
-        return DomUtil.addChildElement(updateEntry, XML_PROP, NAMESPACE);
+        ProppatchInfo info = new ProppatchInfo(setProperties, removeProperties);
+        setRequestBody(info);
+        this.propertyNames = info.getAffectedProperties();
     }
 
     //---------------------------------------------------------< HttpMethod >---
