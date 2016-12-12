@@ -26,8 +26,8 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.commons.httpclient.NameValuePair;
-import org.apache.commons.httpclient.util.ParameterParser;
+import org.apache.http.NameValuePair;
+import org.apache.http.message.BasicHeaderValueParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -150,7 +150,6 @@ public class LinkHeaderFieldParser {
          *            field value
          * @throws Exception
          */
-        @SuppressWarnings("unchecked")
         public LinkRelation(String field) throws Exception {
 
             // find the link target using a regexp
@@ -162,13 +161,12 @@ public class LinkHeaderFieldParser {
             target = m.group(1);
 
             // pass the remainder to the generic parameter parser
-            List<NameValuePair> params = (List<NameValuePair>) new ParameterParser()
-                    .parse(m.group(2), ';');
+            NameValuePair[] params = BasicHeaderValueParser.parseParameters(m.group(2), null);
 
-            if (params.size() == 0) {
+            if (params.length == 0) {
                 parameters = Collections.emptyMap();
-            } else if (params.size() == 1) {
-                NameValuePair nvp = params.get(0);
+            } else if (params.length == 1) {
+                NameValuePair nvp = params[0];
                 parameters = Collections.singletonMap(nvp.getName()
                         .toLowerCase(Locale.ENGLISH), nvp.getValue());
             } else {

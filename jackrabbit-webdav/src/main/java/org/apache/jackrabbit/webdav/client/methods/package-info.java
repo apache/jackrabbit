@@ -14,5 +14,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-@aQute.bnd.annotation.Version("1.0.0")
+
+/**
+ * Provides classes for use with the Apache HttpClient, supporting WebDAV
+ * request methods.
+ * <p>
+ * This version also contains classes for use with the obsolete "Commons
+ * HttpClient"; they have been marked "deprecated" and will be removed in the
+ * next major release.
+ * 
+ * @see <a href="https://issues.apache.org/jira/browse/JCR-2406">JCR-2406</a>
+ * @see <a href=
+ *      "https://hc.apache.org/httpcomponents-client-4.5.x/">https://hc.apache.org/httpcomponents-client-4.5.x/</a>
+ */
+@aQute.bnd.annotation.Version("1.1.0")
 package org.apache.jackrabbit.webdav.client.methods;
