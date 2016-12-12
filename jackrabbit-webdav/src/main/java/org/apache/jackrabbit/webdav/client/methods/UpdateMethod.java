@@ -16,20 +16,16 @@
  */
 package org.apache.jackrabbit.webdav.client.methods;
 
+import java.io.IOException;
+
 import org.apache.jackrabbit.webdav.DavMethods;
 import org.apache.jackrabbit.webdav.DavServletResponse;
 import org.apache.jackrabbit.webdav.version.UpdateInfo;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
 
 /**
  * <code>UpdateMethod</code>...
  */
 public class UpdateMethod extends DavMethodBase {
-
-    private static Logger log = LoggerFactory.getLogger(UpdateMethod.class);
 
     public UpdateMethod(String uri, UpdateInfo updateInfo) throws IOException {
         super(uri);

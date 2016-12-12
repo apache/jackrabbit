@@ -16,8 +16,6 @@
  */
 package org.apache.jackrabbit.webdav.client.methods;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.apache.jackrabbit.webdav.DavMethods;
 import org.apache.jackrabbit.webdav.DavServletResponse;
 
@@ -25,8 +23,6 @@ import org.apache.jackrabbit.webdav.DavServletResponse;
  * <code>MkActivityMethod</code>...
  */
 public class MkActivityMethod extends DavMethodBase {
-
-    private static Logger log = LoggerFactory.getLogger(MkActivityMethod.class);
 
     public MkActivityMethod(String uri) {
         super(uri);
