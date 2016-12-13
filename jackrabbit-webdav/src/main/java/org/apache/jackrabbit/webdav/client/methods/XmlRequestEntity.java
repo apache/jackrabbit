@@ -31,7 +31,9 @@ import org.xml.sax.SAXException;
 
 /**
  * <code>XmlRequestEntity</code>...
+ * @deprecated as of 2.13.6, use {@link XmlEntity} instead
  */
+@Deprecated
 public class XmlRequestEntity implements RequestEntity {
 
     private static Logger log = LoggerFactory.getLogger(XmlRequestEntity.class);

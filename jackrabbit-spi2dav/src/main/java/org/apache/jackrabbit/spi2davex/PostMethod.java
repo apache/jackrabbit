@@ -33,6 +33,7 @@ import java.util.List;
 /**
  * <code>PostMethod</code>...*
  */
+@Deprecated
 class PostMethod extends DavMethodBase {
 
     private static Logger log = LoggerFactory.getLogger(PostMethod.class);

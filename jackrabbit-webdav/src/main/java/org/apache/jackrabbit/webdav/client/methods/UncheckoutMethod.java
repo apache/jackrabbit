@@ -22,6 +22,7 @@ import org.apache.jackrabbit.webdav.DavServletResponse;
 /**
  * <code>UncheckoutMethod</code>...
  */
+@Deprecated
 public class UncheckoutMethod extends DavMethodBase {
 
     public UncheckoutMethod(String uri) {

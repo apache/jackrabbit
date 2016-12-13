@@ -21,7 +21,9 @@ import org.apache.jackrabbit.webdav.DavServletResponse;
 
 /**
  * <code>MkColMethod</code>...
+ * @deprecated as of 2.13.6, use {@link HttpMkcol} instead
  */
+@Deprecated
 public class MkColMethod extends DavMethodBase {
 
     public MkColMethod(String uri) {

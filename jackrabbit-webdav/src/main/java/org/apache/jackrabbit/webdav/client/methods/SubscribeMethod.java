@@ -39,7 +39,9 @@ import java.io.IOException;
 
 /**
  * <code>SubscribeMethod</code>...
+ * @deprecated as of 2.13.6, use {@link HttpSubscribe} instead
  */
+@Deprecated
 public class SubscribeMethod extends DavMethodBase implements ObservationConstants {
 
     private static Logger log = LoggerFactory.getLogger(SubscribeMethod.class);

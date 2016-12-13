@@ -23,7 +23,9 @@ import java.io.IOException;
 
 /**
  * <code>UnbindMethod</code> removes a binding to a resource (semantically equivalent to delete).
+ * @deprecated as of 2.13.6, use {@link HttpUnbind} instead
  */
+@Deprecated
 public class UnbindMethod extends DavMethodBase {
 
     public UnbindMethod(String uri, UnbindInfo info) throws IOException {

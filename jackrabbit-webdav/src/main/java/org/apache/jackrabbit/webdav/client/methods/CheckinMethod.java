@@ -22,7 +22,9 @@ import org.apache.jackrabbit.webdav.version.DeltaVConstants;
 
 /**
  * <code>CheckinMethod</code>...
+ * @deprecated as of 2.13.6, use {@link HttpCheckin} instead
  */
+@Deprecated
 public class CheckinMethod extends DavMethodBase {
 
     public CheckinMethod(String uri) {

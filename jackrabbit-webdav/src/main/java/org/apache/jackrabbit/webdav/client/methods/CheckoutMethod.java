@@ -21,7 +21,9 @@ import org.apache.jackrabbit.webdav.DavServletResponse;
 
 /**
  * <code>CheckoutMethod</code>...
+ * @deprecated as of 2.13.6, use {@link HttpCheckout} instead
  */
+@Deprecated
 public class CheckoutMethod extends DavMethodBase {
 
     public CheckoutMethod(String uri) {

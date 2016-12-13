@@ -25,7 +25,9 @@ import org.apache.jackrabbit.webdav.version.LabelInfo;
 
 /**
  * <code>LabelMethod</code>...
+ * @deprecated as of 2.13.6, use {@link HttpLabel} instead
  */
+@Deprecated
 public class LabelMethod extends DavMethodBase {
 
     /**

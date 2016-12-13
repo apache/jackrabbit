@@ -26,7 +26,9 @@ import org.apache.jackrabbit.webdav.ordering.Position;
 
 /**
  * <code>OrderPatchMethod</code>...
+ * @deprecated as of 2.13.6, use {@link HttpOrderpatch} instead
  */
+@Deprecated
 public class OrderPatchMethod extends DavMethodBase {
 
     /**

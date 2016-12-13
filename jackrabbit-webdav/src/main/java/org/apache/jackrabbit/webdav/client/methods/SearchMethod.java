@@ -25,7 +25,9 @@ import org.apache.jackrabbit.webdav.xml.Namespace;
 
 /**
  * <code>SearchMethod</code>...
+ * @deprecated as of 2.13.6, use {@link HttpSearch} instead
  */
+@Deprecated
 public class SearchMethod extends DavMethodBase {
 
     public SearchMethod(String uri, String statement, String language) throws IOException {

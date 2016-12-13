@@ -21,7 +21,9 @@ import org.apache.jackrabbit.webdav.DavServletResponse;
 
 /**
  * <code>VersionControlMethod</code>...
+ * @deprecated as of 2.13.6, use {@link HttpVersionControl} instead
  */
+@Deprecated
 public class VersionControlMethod extends DavMethodBase {
 
     public VersionControlMethod(String uri) {

@@ -32,7 +32,9 @@ import org.w3c.dom.Element;
 
 /**
  * <code>PollMethod</code> implementation.
+ * @deprecated as of 2.13.6, use {@link HttpPoll} instead
  */
+@Deprecated
 public class PollMethod extends DavMethodBase implements ObservationConstants {
 
     private static Logger log = LoggerFactory.getLogger(PollMethod.class);

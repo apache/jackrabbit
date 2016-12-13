@@ -23,7 +23,9 @@ import java.io.IOException;
 
 /**
  * <code>RebindMethod</code> replaces a binding to a resource (atomic version of move).
+ * @deprecated as of 2.13.6, use {@link HttpRebind} instead
  */
+@Deprecated
 public class RebindMethod extends DavMethodBase {
 
     public RebindMethod(String uri, RebindInfo info) throws IOException {

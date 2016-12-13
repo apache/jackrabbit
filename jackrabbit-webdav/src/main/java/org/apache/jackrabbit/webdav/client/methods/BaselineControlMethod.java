@@ -30,6 +30,7 @@ import org.w3c.dom.Element;
 /**
  * <code>BaselineControlMethod</code>...
  */
+@Deprecated
 public class BaselineControlMethod extends DavMethodBase {
 
     public BaselineControlMethod(String uri) {
