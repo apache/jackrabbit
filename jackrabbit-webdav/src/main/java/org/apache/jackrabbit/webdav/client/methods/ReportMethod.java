@@ -26,7 +26,9 @@ import org.apache.jackrabbit.webdav.version.report.ReportInfo;
 
 /**
  * <code>ReportMethod</code>...
+ * @deprecated as of 2.13.6, use {@link HttpReport} instead
  */
+@Deprecated
 public class ReportMethod extends DavMethodBase {
 
     private final boolean isDeep;

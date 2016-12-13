@@ -42,6 +42,7 @@ import java.io.InputStream;
 /**
  * <code>DavMethodBase</code>...
  */
+@Deprecated
 public abstract class DavMethodBase extends EntityEnclosingMethod implements DavMethod, DavConstants {
 
     private static Logger log = LoggerFactory.getLogger(DavMethodBase.class);

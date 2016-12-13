@@ -22,6 +22,7 @@ import org.apache.jackrabbit.webdav.DavServletResponse;
 /**
  * <code>MkActivityMethod</code>...
  */
+@Deprecated
 public class MkActivityMethod extends DavMethodBase {
 
     public MkActivityMethod(String uri) {

@@ -27,6 +27,7 @@ import java.io.IOException;
 /**
  * <code>DavMethod</code>...
  */
+@Deprecated
 public interface DavMethod extends HttpMethod {
 
     /**

@@ -25,6 +25,7 @@ import org.apache.jackrabbit.webdav.security.AclProperty;
 /**
  * <code>AclMethod</code>...
  */
+@Deprecated
 public class AclMethod extends DavMethodBase {
 
     public AclMethod(String uri, AclProperty aclProperty) throws IOException {

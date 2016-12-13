@@ -21,7 +21,9 @@ import org.apache.jackrabbit.webdav.observation.ObservationConstants;
 
 /**
  * <code>UnSubscribeMethod</code>...
+ * @deprecated as of 2.13.6, use {@link HttpUnsubscribe} instead
  */
+@Deprecated
 public class UnSubscribeMethod extends DavMethodBase {
 
     public UnSubscribeMethod(String uri, String subscriptionId) {

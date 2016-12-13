@@ -39,7 +39,9 @@ import org.slf4j.LoggerFactory;
 
 /**
  * <code>PropPatchMethod</code>...
+ * @deprecated as of 2.13.6, use {@link HttpProppatch} instead
  */
+@Deprecated
 public class PropPatchMethod extends DavMethodBase implements DavConstants {
 
     private static Logger log = LoggerFactory.getLogger(PropPatchMethod.class);

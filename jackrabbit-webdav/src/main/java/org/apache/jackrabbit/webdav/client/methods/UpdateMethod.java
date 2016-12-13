@@ -24,7 +24,9 @@ import org.apache.jackrabbit.webdav.version.UpdateInfo;
 
 /**
  * <code>UpdateMethod</code>...
+ * @deprecated as of 2.13.6, use {@link HttpUpdate} instead
  */
+@Deprecated
 public class UpdateMethod extends DavMethodBase {
 
     public UpdateMethod(String uri, UpdateInfo updateInfo) throws IOException {

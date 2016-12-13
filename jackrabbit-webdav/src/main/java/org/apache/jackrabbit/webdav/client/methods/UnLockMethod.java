@@ -25,7 +25,9 @@ import org.apache.jackrabbit.webdav.header.Header;
 
 /**
  * <code>UnLockMethod</code>...
+ * @deprecated as of 2.13.6, use {@link HttpUnlock} instead
  */
+@Deprecated
 public class UnLockMethod extends DavMethodBase {
 
     public UnLockMethod(String uri, String lockToken) {

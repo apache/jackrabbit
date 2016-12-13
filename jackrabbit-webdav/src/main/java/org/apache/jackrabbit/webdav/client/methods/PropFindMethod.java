@@ -44,7 +44,9 @@ import org.apache.jackrabbit.webdav.property.PropfindInfo;
  * Note: only WebDAV level 3 servers support {@link DavConstants#PROPFIND_ALL_PROP_INCLUDE},
  * older servers will ignore the extension and act as if {@link DavConstants#PROPFIND_ALL_PROP}
  * was used.
+ * @deprecated as of 2.13.6, use {@link HttpPropfind} instead
  */
+@Deprecated
 public class PropFindMethod extends DavMethodBase {
 
     public PropFindMethod(String uri) throws IOException {

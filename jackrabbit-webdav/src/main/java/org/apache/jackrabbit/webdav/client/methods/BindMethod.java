@@ -23,7 +23,9 @@ import java.io.IOException;
 
 /**
  * <code>BindMethod</code> creates a new binding to a resource.
+ * @deprecated as of 2.13.6, use {@link HttpBind} instead
  */
+@Deprecated
 public class BindMethod extends DavMethodBase {
 
     public BindMethod(String uri, BindInfo info) throws IOException {

@@ -32,7 +32,9 @@ import org.w3c.dom.Element;
 
 /**
  * <code>OptionsMethod</code>...
+ * @deprecated as of 2.13.6, use {@link HttpOptions} instead
  */
+@Deprecated
 public class OptionsMethod extends DavMethodBase {
 
     private final Set<String> allowedMethods = new HashSet<String>();

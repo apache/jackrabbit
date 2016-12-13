@@ -24,7 +24,9 @@ import org.apache.jackrabbit.webdav.header.OverwriteHeader;
 
 /**
  * <code>CopyMethod</code>...
+ * @deprecated as of 2.13.6, use {@link HttpCopy} instead
  */
+@Deprecated
 public class CopyMethod extends DavMethodBase {
 
     /**

@@ -41,7 +41,9 @@ import java.io.IOException;
 
 /**
  * <code>LockMethod</code>...
+ * @deprecated as of 2.13.6, use {@link HttpLock} instead
  */
+@Deprecated
 public class LockMethod extends DavMethodBase {
 
     private static Logger log = LoggerFactory.getLogger(LockMethod.class);

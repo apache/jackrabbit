@@ -24,7 +24,9 @@ import org.apache.jackrabbit.webdav.version.MergeInfo;
 
 /**
  * <code>MergeMethod</code>...
+ * @deprecated as of 2.13.6, use {@link HttpMerge} instead
  */
+@Deprecated
 public class MergeMethod extends DavMethodBase {
 
     public MergeMethod(String uri, MergeInfo mergeInfo) throws IOException {

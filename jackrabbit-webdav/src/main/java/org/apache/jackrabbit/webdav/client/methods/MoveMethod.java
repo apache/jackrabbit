@@ -23,7 +23,9 @@ import org.apache.jackrabbit.webdav.header.OverwriteHeader;
 
 /**
  * <code>MoveMethod</code>...
+ * @deprecated as of 2.13.6, use {@link HttpMove} instead
  */
+@Deprecated
 public class MoveMethod extends DavMethodBase {
 
     public MoveMethod(String uri, String destinationUri, boolean overwrite) {

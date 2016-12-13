@@ -21,7 +21,9 @@ import org.apache.jackrabbit.webdav.DavServletResponse;
 
 /**
  * <code>MkWorkspaceMethod</code>...
+ * @deprecated as of 2.13.6, use {@link HttpMkworkspace} instead
  */
+@Deprecated
 public class MkWorkspaceMethod extends DavMethodBase {
 
     public MkWorkspaceMethod(String uri) {

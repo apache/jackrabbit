@@ -21,7 +21,9 @@ import org.apache.jackrabbit.webdav.DavServletResponse;
 
 /**
  * <code>DeleteMethod</code>...
+ * @deprecated as of 2.13.6, use {@link HttpDelete} instead
  */
+@Deprecated
 public class DeleteMethod extends DavMethodBase {
 
     public DeleteMethod(String uri) {

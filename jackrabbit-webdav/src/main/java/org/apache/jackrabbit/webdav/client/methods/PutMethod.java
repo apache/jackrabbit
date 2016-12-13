@@ -16,12 +16,15 @@
  */
 package org.apache.jackrabbit.webdav.client.methods;
 
+import org.apache.http.client.methods.HttpPut;
 import org.apache.jackrabbit.webdav.DavMethods;
 import org.apache.jackrabbit.webdav.DavServletResponse;
 
 /**
  * <code>PutMethod</code>...
+ * @deprecated as of 2.13.6, use {@link HttpPut} instead
  */
+@Deprecated
 public class PutMethod extends DavMethodBase {
 
     public PutMethod(String uri) {
