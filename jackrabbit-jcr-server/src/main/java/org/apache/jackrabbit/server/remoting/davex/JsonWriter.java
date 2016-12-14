@@ -217,7 +217,6 @@ class JsonWriter {
             case PropertyType.WEAKREFERENCE:
             case PropertyType.URI:
             case PropertyType.DECIMAL:
-                return true;
             case PropertyType.DOUBLE:
                 return true;
             default:
