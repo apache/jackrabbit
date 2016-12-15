@@ -16,21 +16,28 @@
  */
 package org.apache.jackrabbit.spi2davex;
 
+import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
+
+import javax.jcr.Binary;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 
-import org.apache.commons.httpclient.methods.multipart.Part;
-import org.apache.commons.httpclient.methods.multipart.PartBase;
+import org.apache.http.entity.ContentType;
+import org.apache.http.entity.mime.FormBodyPart;
+import org.apache.http.entity.mime.FormBodyPartBuilder;
+import org.apache.http.entity.mime.content.InputStreamBody;
+import org.apache.http.entity.mime.content.StringBody;
+import org.apache.jackrabbit.commons.json.JsonUtil;
 import org.apache.jackrabbit.commons.webdav.JcrValueType;
 import org.apache.jackrabbit.spi.QValue;
-import org.apache.jackrabbit.commons.json.JsonUtil;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
 
 final class Utils {
 
     private static final String DEFAULT_CHARSET = "UTF-8";
+    private static final ContentType DEFAULT_TYPE = ContentType.create("text/plain", DEFAULT_CHARSET);
 
     private Utils() {};
 
@@ -72,8 +79,8 @@ final class Utils {
      * @param paramName
      * @param value
      */
-    static void addPart(String paramName, String value, List<Part> parts) {
-        parts.add(new StringPart(paramName, value, DEFAULT_CHARSET));
+    static void addPart(String paramName, String value, List<FormBodyPart> parts) {
+        parts.add(FormBodyPartBuilder.create().setName(paramName).setBody(new StringBody(value, DEFAULT_TYPE)).build());
     }
 
     /**
@@ -83,32 +90,41 @@ final class Utils {
      * @param resolver
      * @throws RepositoryException
      */
-    static void addPart(String paramName, QValue value, NamePathResolver resolver, List<Part> parts) throws RepositoryException {
-        Part part;
+    static void addPart(String paramName, QValue value, NamePathResolver resolver, List<FormBodyPart> parts, List<QValue> binaries) throws RepositoryException {
+        FormBodyPartBuilder builder = FormBodyPartBuilder.create().setName(paramName);
+        ContentType ctype = ContentType.create(JcrValueType.contentTypeFromType(value.getType()), DEFAULT_CHARSET);
+
+        FormBodyPart part;
         switch (value.getType()) {
             case PropertyType.BINARY:
-                part = new BinaryPart(paramName, new BinaryPartSource(value), JcrValueType.contentTypeFromType(PropertyType.BINARY), DEFAULT_CHARSET);
+                binaries.add(value);
+                part = builder.setBody(new InputStreamBody(value.getStream(), ctype)).build();
                 break;
             case PropertyType.NAME:
-                part = new StringPart(paramName, resolver.getJCRName(value.getName()), DEFAULT_CHARSET);
+                part = builder.setBody(new StringBody(resolver.getJCRName(value.getName()), ctype)).build();
                 break;
             case PropertyType.PATH:
-                part = new StringPart(paramName, resolver.getJCRPath(value.getPath()), DEFAULT_CHARSET);
+                part = builder.setBody(new StringBody(resolver.getJCRPath(value.getPath()), ctype)).build();
                 break;
             default:
-                part = new StringPart(paramName, value.getString(), DEFAULT_CHARSET);
+                part = builder.setBody(new StringBody(value.getString(), ctype)).build();
         }
-        String ctype = JcrValueType.contentTypeFromType(value.getType());
-        ((PartBase) part).setContentType(ctype);
 
         parts.add(part);
     }
 
-    static void removeParts(String paramName, List<Part> parts) {
-        for (Iterator<Part> it = parts.iterator(); it.hasNext();) {
-            Part part = it.next();
+    static void removeParts(String paramName, List<FormBodyPart> parts) {
+        for (Iterator<FormBodyPart> it = parts.iterator(); it.hasNext();) {
+            FormBodyPart part = it.next();
             if (part.getName().equals(paramName)) {
                 it.remove();
+                if (part.getBody() instanceof InputStreamBody) {
+                    try {
+                        ((InputStreamBody) part.getBody()).getInputStream().close();
+                    } catch (IOException ex) {
+                        // best effort
+                    }
+                }
             }
         }
     }

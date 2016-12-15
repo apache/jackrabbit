@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.spi2dav;
 
+import org.apache.http.HttpResponse;
 import org.apache.jackrabbit.commons.webdav.JcrRemotingConstants;
 import org.apache.jackrabbit.spi.commons.conversion.NameException;
 import org.apache.jackrabbit.spi.commons.conversion.NamePathResolver;
@@ -32,9 +33,8 @@ import org.apache.jackrabbit.webdav.DavException;
 import org.apache.jackrabbit.webdav.DavServletResponse;
 import org.apache.jackrabbit.webdav.MultiStatus;
 import org.apache.jackrabbit.webdav.MultiStatusResponse;
-import org.apache.jackrabbit.webdav.client.methods.DavMethodBase;
-import org.apache.jackrabbit.webdav.client.methods.PropFindMethod;
-import org.apache.jackrabbit.webdav.client.methods.ReportMethod;
+import org.apache.jackrabbit.webdav.client.methods.HttpPropfind;
+import org.apache.jackrabbit.webdav.client.methods.HttpReport;
 import org.apache.jackrabbit.webdav.property.DavPropertyNameSet;
 import org.apache.jackrabbit.webdav.property.DavPropertySet;
 import org.apache.jackrabbit.webdav.version.report.ReportInfo;
@@ -117,14 +117,16 @@ class URIResolverImpl implements URIResolver {
                     ReportInfo rInfo = new ReportInfo(JcrRemotingConstants.REPORT_LOCATE_BY_UUID, ItemResourceConstants.NAMESPACE);
                     rInfo.setContentElement(DomUtil.hrefToXml(uniqueID, domFactory));
 
-                    ReportMethod rm = null;
+                    HttpReport request = null;
                     try {
                         String wspUri = getWorkspaceUri(workspaceName);
-                        rm = new ReportMethod(wspUri, rInfo);
+                        request = new HttpReport(wspUri, rInfo);
 
-                        service.getClient(sessionInfo).executeMethod(rm);
+                        HttpResponse response = service.executeRequest(sessionInfo, request);
+                        request.checkSuccess(response);
 
-                        MultiStatus ms = rm.getResponseBodyAsMultiStatus();
+                        MultiStatus ms = request.getResponseBodyAsMultiStatus(response);
+
                         if (ms.getResponses().length == 1) {
                             String absoluteUri = resolve(wspUri, ms.getResponses()[0].getHref());
                             uriBuffer.append(absoluteUri);
@@ -138,8 +140,8 @@ class URIResolverImpl implements URIResolver {
                     } catch (DavException e) {
                         throw ExceptionConverter.generate(e);
                     } finally {
-                        if (rm != null) {
-                            rm.releaseConnection();
+                        if (request != null) {
+                            request.releaseConnection();
                         }
                     }
                 }
@@ -262,7 +264,7 @@ class URIResolverImpl implements URIResolver {
         if (nodeIsGone) {
             throw new RepositoryException("Can't reconstruct nodeId from URI when the remote node is gone.");
         }
-        
+
         // retrieve parentId from cache or by recursive calls
         NodeId parentId;
         if (isSameURI(uri, getRootItemUri(sessionInfo.getWorkspaceName()))) {
@@ -276,12 +278,12 @@ class URIResolverImpl implements URIResolver {
         nameSet.add(JcrRemotingConstants.JCR_UUID_LN, ItemResourceConstants.NAMESPACE);
         nameSet.add(JcrRemotingConstants.JCR_NAME_LN, ItemResourceConstants.NAMESPACE);
         nameSet.add(JcrRemotingConstants.JCR_INDEX_LN, ItemResourceConstants.NAMESPACE);
-        DavMethodBase method = null;
+        HttpPropfind request = null;
         try {
-            method = new PropFindMethod(uri, nameSet, DavConstants.DEPTH_0);
+            request = new HttpPropfind(uri, nameSet, DavConstants.DEPTH_0);
 
-            service.getClient(sessionInfo).executeMethod(method);
-            MultiStatusResponse[] responses = method.getResponseBodyAsMultiStatus().getResponses();
+            HttpResponse response = service.executeRequest(sessionInfo, request);
+            MultiStatusResponse[] responses = request.getResponseBodyAsMultiStatus(response).getResponses();
             if (responses.length != 1) {
                 throw new ItemNotFoundException("Unable to retrieve the node with id " + uri);
             }
@@ -292,8 +294,8 @@ class URIResolverImpl implements URIResolver {
         } catch (DavException e) {
             throw ExceptionConverter.generate(e);
         } finally {
-            if (method != null) {
-                method.releaseConnection();
+            if (request != null) {
+                request.releaseConnection();
             }
         }
     }
@@ -324,7 +326,7 @@ class URIResolverImpl implements URIResolver {
     public NodeId getNodeId(String uri, SessionInfo sessionInfo) throws RepositoryException {
         return getNodeId(uri, sessionInfo, false);
     }
-    
+
     /**
      * @inheritDoc
      */

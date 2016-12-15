@@ -16,30 +16,32 @@
  */
 package org.apache.jackrabbit.spi2davex;
 
+import java.net.URI;
+
+import org.apache.http.HttpResponse;
 import org.apache.jackrabbit.webdav.DavMethods;
 import org.apache.jackrabbit.webdav.DavServletResponse;
-import org.apache.jackrabbit.webdav.client.methods.DavMethodBase;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.jackrabbit.webdav.client.methods.BaseDavRequest;
 
-/**
- * <code>GetMethod</code>...
- */
-class GetMethod extends DavMethodBase {
+public class HttpPost extends BaseDavRequest {
 
-    private static Logger log = LoggerFactory.getLogger(GetMethod.class);
-
-    public GetMethod(String uri) {
+    public HttpPost(URI uri) {
         super(uri);
     }
 
-    @Override
-    public String getName() {
-        return DavMethods.METHOD_GET;
+    public HttpPost(String uri) {
+        super(URI.create(uri));
     }
 
     @Override
-    protected boolean isSuccess(int statusCode) {
-        return statusCode == DavServletResponse.SC_OK;
+    public String getMethod() {
+        return DavMethods.METHOD_POST;
+    }
+
+    @Override
+    public boolean succeeded(HttpResponse response) {
+        int statusCode = response.getStatusLine().getStatusCode();
+        return statusCode == DavServletResponse.SC_OK || statusCode == DavServletResponse.SC_NO_CONTENT
+                || statusCode == DavServletResponse.SC_CREATED;
     }
 }

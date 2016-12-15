@@ -16,10 +16,21 @@
  */
 package org.apache.jackrabbit.spi2davex;
 
-import org.apache.commons.httpclient.Header;
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.methods.GetMethod;
-import org.apache.commons.httpclient.methods.HeadMethod;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.jcr.ItemNotFoundException;
+import javax.jcr.PropertyType;
+import javax.jcr.RepositoryException;
+
+import org.apache.http.Header;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpHead;
+import org.apache.http.protocol.HttpContext;
 import org.apache.jackrabbit.commons.webdav.JcrRemotingConstants;
 import org.apache.jackrabbit.spi2dav.ExceptionConverter;
 import org.apache.jackrabbit.spi2dav.ItemResourceConstants;
@@ -27,20 +38,10 @@ import org.apache.jackrabbit.webdav.DavConstants;
 import org.apache.jackrabbit.webdav.DavException;
 import org.apache.jackrabbit.webdav.DavServletResponse;
 import org.apache.jackrabbit.webdav.MultiStatusResponse;
-import org.apache.jackrabbit.webdav.client.methods.DavMethodBase;
-import org.apache.jackrabbit.webdav.client.methods.PropFindMethod;
+import org.apache.jackrabbit.webdav.client.methods.HttpPropfind;
 import org.apache.jackrabbit.webdav.property.DavProperty;
 import org.apache.jackrabbit.webdav.property.DavPropertyNameSet;
 import org.apache.jackrabbit.webdav.property.DavPropertySet;
-
-import javax.jcr.ItemNotFoundException;
-import javax.jcr.PropertyType;
-import javax.jcr.RepositoryException;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * <code>ValueLoader</code>...
@@ -48,44 +49,48 @@ import java.util.Map;
 class ValueLoader {
 
     private final HttpClient client;
+    private final HttpContext context;
 
-    ValueLoader(HttpClient client) {
+    ValueLoader(HttpClient client, HttpContext context) {
         this.client = client;
+        this.context = context;
     }
 
     void loadBinary(String uri, int index, Target target) throws RepositoryException, IOException {
-        GetMethod method = new GetMethod(uri);
+        HttpGet request = new HttpGet(uri);
         try {
-            int statusCode = client.executeMethod(method);
+            HttpResponse response = client.execute(request, context);
+            int statusCode = response.getStatusLine().getStatusCode();
             if (statusCode == DavServletResponse.SC_OK) {
-                target.setStream(method.getResponseBodyAsStream());
+                target.setStream(response.getEntity().getContent());
             } else {
-                throw ExceptionConverter.generate(new DavException(statusCode, ("Unable to load binary at " + uri + " - Status line = " + method.getStatusLine().toString())));
+                throw ExceptionConverter.generate(new DavException(statusCode, ("Unable to load binary at " + uri + " - Status line = " + response.getStatusLine())));
             }
         } finally {
-            method.releaseConnection();
+            request.releaseConnection();
         }
     }
 
     public Map<String, String> loadHeaders(String uri, String[] headerNames) throws IOException,
             RepositoryException {
-        HeadMethod method = new HeadMethod(uri);
+        HttpHead request = new HttpHead(uri);
         try {
-            int statusCode = client.executeMethod(method);
+            HttpResponse response = client.execute(request, context);
+            int statusCode = response.getStatusLine().getStatusCode();
             if (statusCode == DavServletResponse.SC_OK) {
                 Map<String, String> headers = new HashMap<String, String>();
                 for (String name : headerNames) {
-                    Header hdr = method.getResponseHeader(name);
+                    Header hdr = response.getFirstHeader(name);
                     if (hdr != null) {
                         headers.put(name, hdr.getValue());
                     }
                 }
                 return headers;
             } else {
-                throw ExceptionConverter.generate(new DavException(statusCode, ("Unable to load headers at " + uri + " - Status line = " + method.getStatusLine().toString())));
+                throw ExceptionConverter.generate(new DavException(statusCode, ("Unable to load headers at " + uri + " - Status line = " + response.getStatusLine().toString())));
             }
         } finally {
-            method.releaseConnection();
+            request.releaseConnection();
         }
     }
 
@@ -93,13 +98,13 @@ class ValueLoader {
         DavPropertyNameSet nameSet = new DavPropertyNameSet();
         nameSet.add(JcrRemotingConstants.JCR_TYPE_LN, ItemResourceConstants.NAMESPACE);
 
-        DavMethodBase method = null;
+        HttpPropfind request = null;
         try {
-            method = new PropFindMethod(uri, nameSet, DavConstants.DEPTH_0);
-            client.executeMethod(method);
-            method.checkSuccess();
+            request = new HttpPropfind(uri, nameSet, DavConstants.DEPTH_0);
+            HttpResponse response = client.execute(request, context);
+            request.checkSuccess(response);
 
-            MultiStatusResponse[] responses = method.getResponseBodyAsMultiStatus().getResponses();
+            MultiStatusResponse[] responses = request.getResponseBodyAsMultiStatus(response).getResponses();
             if (responses.length == 1) {
                 DavPropertySet props = responses[0].getProperties(DavServletResponse.SC_OK);
                 DavProperty<?> type = props.get(JcrRemotingConstants.JCR_TYPE_LN, ItemResourceConstants.NAMESPACE);
@@ -114,8 +119,8 @@ class ValueLoader {
         } catch (DavException e) {
             throw ExceptionConverter.generate(e);
         } finally {
-            if (method != null) {
-                method.releaseConnection();
+            if (request != null) {
+                request.releaseConnection();
             }
         }
     }

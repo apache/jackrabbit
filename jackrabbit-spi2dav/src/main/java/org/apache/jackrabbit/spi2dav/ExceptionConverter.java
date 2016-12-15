@@ -16,13 +16,7 @@
  */
 package org.apache.jackrabbit.spi2dav;
 
-import org.apache.jackrabbit.webdav.DavConstants;
-import org.apache.jackrabbit.webdav.DavException;
-import org.apache.jackrabbit.webdav.DavMethods;
-import org.apache.jackrabbit.webdav.DavServletResponse;
-import org.apache.jackrabbit.webdav.client.methods.DavMethod;
-import org.apache.jackrabbit.webdav.xml.DomUtil;
-import org.w3c.dom.Element;
+import java.lang.reflect.Constructor;
 
 import javax.jcr.InvalidItemStateException;
 import javax.jcr.ItemNotFoundException;
@@ -31,7 +25,14 @@ import javax.jcr.RepositoryException;
 import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
-import java.lang.reflect.Constructor;
+
+import org.apache.http.client.methods.HttpRequestBase;
+import org.apache.jackrabbit.webdav.DavConstants;
+import org.apache.jackrabbit.webdav.DavException;
+import org.apache.jackrabbit.webdav.DavMethods;
+import org.apache.jackrabbit.webdav.DavServletResponse;
+import org.apache.jackrabbit.webdav.xml.DomUtil;
+import org.w3c.dom.Element;
 
 /**
  * <code>ExceptionConverter</code>...
@@ -45,8 +46,8 @@ public class ExceptionConverter {
         return generate(davExc, null);
     }
 
-    public static RepositoryException generate(DavException davExc, DavMethod method) {
-        String name = (method == null) ? "_undefined_" : method.getName();
+    public static RepositoryException generate(DavException davExc, HttpRequestBase request) {
+        String name = (request == null) ? "_undefined_" : request.getMethod();
         int code = DavMethods.getMethodCode(name);
         return generate(davExc, code, name);
     }
