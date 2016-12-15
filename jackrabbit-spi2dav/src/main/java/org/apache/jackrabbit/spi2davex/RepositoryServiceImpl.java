@@ -276,7 +276,7 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
     /**
      * @see RepositoryService#getQValueFactory()
      */
-    public QValueFactoryImpl getQValueFactory(SessionInfo sessionInfo) throws RepositoryException {
+    private QValueFactoryImpl getQValueFactory(SessionInfo sessionInfo) throws RepositoryException {
         QValueFactoryImpl qv;
         if (qvFactories.containsKey(sessionInfo)) {
             qv = qvFactories.get(sessionInfo);
@@ -336,7 +336,7 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
      * @see RepositoryService#getItemInfos(SessionInfo, ItemId)
      */
     @Override
-    public Iterator<? extends ItemInfo> getItemInfos(SessionInfo sessionInfo, ItemId itemId) throws ItemNotFoundException, RepositoryException {
+    public Iterator<? extends ItemInfo> getItemInfos(SessionInfo sessionInfo, ItemId itemId) throws RepositoryException {
         if (!itemId.denotesNode()) {
             PropertyInfo propertyInfo = getPropertyInfo(sessionInfo, (PropertyId) itemId);
             return Iterators.singleton(propertyInfo);
@@ -896,14 +896,14 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
             return removedNodePath;
         }
     }
-    
+
     //--------------------------------------------------------------------------
     class JsonTree extends AbstractTree {
 
         private final StringBuilder properties = new StringBuilder();
         private final List<Part> parts = new ArrayList<Part>();
         private final SessionInfo sessionInfo;
-        
+
         JsonTree(SessionInfo sessionInfo, Name nodeName, Name ntName, String uniqueId, NamePathResolver resolver) {
             super(nodeName, ntName, uniqueId, resolver);
             this.sessionInfo = sessionInfo;
@@ -920,15 +920,14 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
         public void addProperty(NodeId parentId, Name propertyName, int propertyType, QValue value) throws RepositoryException {
             properties.append(',');
             properties.append(Utils.getJsonKey(getResolver().getJCRName(propertyName)));
-            
+
             String valueStr = Utils.getJsonString(value);
-            if (valueStr == null) {            	  
-            	String jcrPropPath = createPath(parentId, propertyName);
-            	Utils.addPart(jcrPropPath, value, getResolver(), parts);
+            if (valueStr == null) {
+                String jcrPropPath = createPath(parentId, propertyName);
+                Utils.addPart(jcrPropPath, value, getResolver(), parts);
             } else {
-            	properties.append(valueStr);
+                properties.append(valueStr);
             }
-            
         }
 
         @Override
@@ -940,8 +939,8 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
             properties.append('[');
             for (QValue value : values) {
                 String valueStr = Utils.getJsonString(value);
-                if (valueStr == null) {                	
-                	String jcrPropPath = createPath(parentId, propertyName);
+                if (valueStr == null) {
+                    String jcrPropPath = createPath(parentId, propertyName);
                     Utils.addPart(jcrPropPath, value, getResolver(), parts);
                 } else {
                     String delim = (index++ == 0) ? "" : ",";
@@ -950,24 +949,24 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
             }
             properties.append(']');
         }
-        
+
         private String createPath(NodeId parentId, Name propertyName) throws RepositoryException {
-        	Path propPath = getPathFactory().create(getPath(parentId, sessionInfo), propertyName, true);
-        	return getResolver().getJCRPath(propPath);
+            Path propPath = getPathFactory().create(getPath(parentId, sessionInfo), propertyName, true);
+            return getResolver().getJCRPath(propPath);
         }
-        
+
         //--------------------------------------------------------------------------
         String toJsonString(List<Part> batchParts) throws RepositoryException {
-        	batchParts.addAll(this.parts);
-        	for (Tree child : this.getChildren()) {
-        		batchParts.addAll(((JsonTree) child).getParts());
-        	}        
+            batchParts.addAll(this.parts);
+            for (Tree child : this.getChildren()) {
+                batchParts.addAll(((JsonTree) child).getParts());
+            }
 
             StringBuilder json = new StringBuilder();
             createJsonNodeFragment(json, this, true);
             return json.toString();
-        }    
-        
+        }
+
         //--------------------------------------------------------------------------
         private String createJsonNodeFragment(StringBuilder json, JsonTree tree, boolean start) throws RepositoryException {
             if (!start) {
@@ -991,13 +990,13 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
             json.append('}');
             return json.toString();
         }
-        
+
         private StringBuilder getProperties() {
-        	return properties;
+            return properties;
         }
-        
+
         private List<Part> getParts() {
-        	return parts;
+            return parts;
         }
     }
 }

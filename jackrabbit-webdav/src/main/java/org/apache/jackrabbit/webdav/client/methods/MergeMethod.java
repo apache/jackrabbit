@@ -16,20 +16,16 @@
  */
 package org.apache.jackrabbit.webdav.client.methods;
 
+import java.io.IOException;
+
 import org.apache.jackrabbit.webdav.DavMethods;
 import org.apache.jackrabbit.webdav.DavServletResponse;
 import org.apache.jackrabbit.webdav.version.MergeInfo;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
 
 /**
  * <code>MergeMethod</code>...
  */
 public class MergeMethod extends DavMethodBase {
-
-    private static Logger log = LoggerFactory.getLogger(MergeMethod.class);
 
     public MergeMethod(String uri, MergeInfo mergeInfo) throws IOException {
         super(uri);
