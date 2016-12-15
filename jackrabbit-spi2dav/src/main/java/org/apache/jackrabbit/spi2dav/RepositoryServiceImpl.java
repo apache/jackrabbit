@@ -368,8 +368,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             java.net.URI base = new java.net.URI(baseUri);
             java.net.URI rel = new java.net.URI(relUri);
             return base.resolve(rel).toString();
-        }
-        catch (URISyntaxException ex) {
+        } catch (URISyntaxException ex) {
             throw new RepositoryException(ex);
         }
     }
@@ -622,10 +621,6 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     //--------------------------------------------------------------------------
     /**
      * Execute a 'Workspace' operation.
-     *
-     * @param method
-     * @param sessionInfo
-     * @throws RepositoryException
      */
     private void execute(DavMethod method, SessionInfo sessionInfo) throws RepositoryException {
         try {
@@ -740,7 +735,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     public SessionInfo obtain(SessionInfo sessionInfo, String workspaceName)
         throws RepositoryException {
         checkSessionInfo(sessionInfo);
-        return obtain(((SessionInfoImpl)sessionInfo).getCredentials(), workspaceName);
+        return obtain(((SessionInfoImpl) sessionInfo).getCredentials(), workspaceName);
     }
 
     @Override
@@ -765,7 +760,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
 
             MultiStatusResponse[] responses = method.getResponseBodyAsMultiStatus().getResponses();
             if (responses.length != 1) {
-                throw new LoginException("Login failed: Unknown workspace '" + workspaceName+ "'.");
+                throw new LoginException("Login failed: Unknown workspace '" + workspaceName + "'.");
             }
 
             DavPropertySet props = responses[0].getProperties(DavServletResponse.SC_OK);
@@ -786,7 +781,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
                     throw new LoginException("Login failed: Invalid workspace name " + workspaceName);
                 }
             } else {
-                throw new LoginException("Login failed: Unknown workspace '" + workspaceName+ "'.");
+                throw new LoginException("Login failed: Unknown workspace '" + workspaceName + "'.");
             }
         } catch (IOException e) {
             throw new RepositoryException(e.getMessage());
@@ -1175,8 +1170,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             // nodeInfo.
             l.addAll(buildPropertyInfos(nInfo));
             return l.iterator();
-        }
-        else {
+        } else {
             PropertyInfo pInfo = getPropertyInfo(sessionInfo, (PropertyId) itemId);
             return Iterators.singleton(pInfo);
         }
@@ -1206,14 +1200,14 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
 
         if (nid.getPath() == null) {
             PropertyId id = getIdFactory().createPropertyId(nid, NameConstants.JCR_UUID);
-            QValue[] vs = new QValue[] {getQValueFactory().create(nid.getUniqueID(), PropertyType.STRING)};
+            QValue[] vs = new QValue[] { getQValueFactory().create(nid.getUniqueID(), PropertyType.STRING) };
             Path p = getPathFactory().create(nPath, NameConstants.JCR_UUID, true);
             PropertyInfo pi = new PropertyInfoImpl(id, p, PropertyType.STRING, false, vs);
             l.add(pi);
         }
 
         Name pName = NameConstants.JCR_PRIMARYTYPE;
-        QValue[] vs = new QValue[] {getQValueFactory().create(nInfo.getNodetype())};
+        QValue[] vs = new QValue[] { getQValueFactory().create(nInfo.getNodetype()) };
         PropertyInfo pi = new PropertyInfoImpl(getIdFactory().createPropertyId(nid, pName),
                 getPathFactory().create(nPath, pName, true), PropertyType.NAME, false, vs);
         l.add(pi);
@@ -1386,7 +1380,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
                         v = ValueFormat.getQValue(jcrValue, resolver, getQValueFactory());
                     }
                 }
-                values = new QValue[] {v};
+                values = new QValue[] { v };
                 isMultiValued = false;
             } else if (ct.startsWith("text/xml")) {
                 // jcr:values property spooled
@@ -1570,7 +1564,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         String uri = getItemUri(nodeId, sessionInfo);
         String workspUri = uriResolver.getWorkspaceUri(srcWorkspaceName);
 
-        update(uri, null, new String[] {workspUri}, UpdateInfo.UPDATE_BY_WORKSPACE, false, sessionInfo);
+        update(uri, null, new String[] { workspUri }, UpdateInfo.UPDATE_BY_WORKSPACE, false, sessionInfo);
     }
 
     @Override
@@ -1606,7 +1600,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
                 LockDiscovery ld = LockDiscovery.createFromXml(p.toXml(DomUtil.createDocument()));
                 NodeId parentId = getParentId(uri, ps, sessionInfo);
                 return retrieveLockInfo(ld, sessionInfo, nodeId, parentId);
-            }  else {
+            } else {
                 // no lock present
                 log.debug("No Lock present on node with id " + saveGetIdString(nodeId, sessionInfo));
                 return null;
@@ -1634,7 +1628,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     public LockInfo lock(SessionInfo sessionInfo, NodeId nodeId, boolean deep, boolean sessionScoped, long timeoutHint, String ownerHint) throws RepositoryException {
         try {
             checkSessionInfo(sessionInfo);
-            long davTimeout = (timeoutHint == Long.MAX_VALUE) ? INFINITE_TIMEOUT : timeoutHint*1000;
+            long davTimeout = (timeoutHint == Long.MAX_VALUE) ? INFINITE_TIMEOUT : timeoutHint * 1000;
             String ownerInfo = (ownerHint == null) ? sessionInfo.getUserID() : ownerHint;
 
             String uri = getItemUri(nodeId, sessionInfo);
@@ -1724,7 +1718,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
                 return pLockInfo;
             }
         }
-        return new LockInfoImpl(activeLock, holder == null ? nodeId : holder, ((SessionInfoImpl)sessionInfo).getAllLockTokens());
+        return new LockInfoImpl(activeLock, holder == null ? nodeId : holder, ((SessionInfoImpl) sessionInfo).getAllLockTokens());
     }
 
     @Override
@@ -1805,7 +1799,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             }
         }
 
-        update(uri, relPath, new String[] {vUri}, UpdateInfo.UPDATE_BY_VERSION, removeExisting, sessionInfo);
+        update(uri, relPath, new String[] { vUri }, UpdateInfo.UPDATE_BY_VERSION, removeExisting, sessionInfo);
     }
 
     private boolean exists(SessionInfo sInfo, String uri) {
@@ -1824,7 +1818,6 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         }
         return false;
     }
-
 
     @Override
     public void restore(SessionInfo sessionInfo, NodeId[] versionIds, boolean removeExisting) throws RepositoryException {
@@ -2153,8 +2146,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
 
         try {
             checkEventFilterSupport(filters);
-        }
-        catch (UnsupportedRepositoryOperationException ex) {
+        } catch (UnsupportedRepositoryOperationException ex) {
             unsubscribe(rootUri, subscriptionId, sessionInfo);
             throw (ex);
         }
@@ -2230,7 +2222,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             throw new RepositoryException(e);
         } catch (DavException e) {
             throw ExceptionConverter.generate(e);
-        }  finally {
+        } finally {
             if (method != null) {
                 method.releaseConnection();
             }
@@ -2248,7 +2240,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             throw new RepositoryException(e);
         } catch (DavException e) {
             throw ExceptionConverter.generate(e);
-        }  finally {
+        } finally {
             if (method != null) {
                 method.releaseConnection();
             }
@@ -2305,7 +2297,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             throw new RepositoryException(e);
         } catch (DavException e) {
             throw ExceptionConverter.generate(e);
-        }  finally {
+        } finally {
             if (method != null) {
                 method.releaseConnection();
             }
@@ -2570,44 +2562,44 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     public void registerNodeTypes(SessionInfo sessionInfo, QNodeTypeDefinition[] nodeTypeDefinitions, boolean allowUpdate) throws RepositoryException {
         PropPatchMethod method = null;
         try {
-             DavPropertySet setProperties = new DavPropertySet();
-             setProperties.add(createRegisterNodeTypesProperty(sessionInfo, nodeTypeDefinitions, allowUpdate));
-             String uri = uriResolver.getWorkspaceUri(sessionInfo.getWorkspaceName());
-             method = new PropPatchMethod(uri, setProperties, new DavPropertyNameSet());
-             initMethod(method, sessionInfo, true);
-             getClient(sessionInfo).executeMethod(method);
-             method.checkSuccess();
-         } catch (IOException e) {
-             throw new RepositoryException(e);
-         } catch (DavException e) {
-             throw ExceptionConverter.generate(e);
-         } finally {
-             if (method != null) {
+            DavPropertySet setProperties = new DavPropertySet();
+            setProperties.add(createRegisterNodeTypesProperty(sessionInfo, nodeTypeDefinitions, allowUpdate));
+            String uri = uriResolver.getWorkspaceUri(sessionInfo.getWorkspaceName());
+            method = new PropPatchMethod(uri, setProperties, new DavPropertyNameSet());
+            initMethod(method, sessionInfo, true);
+            getClient(sessionInfo).executeMethod(method);
+            method.checkSuccess();
+        } catch (IOException e) {
+            throw new RepositoryException(e);
+        } catch (DavException e) {
+            throw ExceptionConverter.generate(e);
+        } finally {
+            if (method != null) {
                  method.releaseConnection();
-             }
-         }
+            }
+        }
     }
 
     @Override
     public void unregisterNodeTypes(SessionInfo sessionInfo, Name[] nodeTypeNames) throws RepositoryException {
         PropPatchMethod method = null;
         try {
-             DavPropertySet setProperties = new DavPropertySet();
-             setProperties.add(createUnRegisterNodeTypesProperty(sessionInfo, nodeTypeNames));
-             String uri = uriResolver.getWorkspaceUri(sessionInfo.getWorkspaceName());
-             method = new PropPatchMethod(uri, setProperties, new DavPropertyNameSet());
-             initMethod(method, sessionInfo, true);
-             getClient(sessionInfo).executeMethod(method);
-             method.checkSuccess();
-         } catch (IOException e) {
-             throw new RepositoryException(e);
-         } catch (DavException e) {
-             throw ExceptionConverter.generate(e);
-         } finally {
-             if (method != null) {
-                 method.releaseConnection();
-             }
-         }
+            DavPropertySet setProperties = new DavPropertySet();
+            setProperties.add(createUnRegisterNodeTypesProperty(sessionInfo, nodeTypeNames));
+            String uri = uriResolver.getWorkspaceUri(sessionInfo.getWorkspaceName());
+            method = new PropPatchMethod(uri, setProperties, new DavPropertyNameSet());
+            initMethod(method, sessionInfo, true);
+            getClient(sessionInfo).executeMethod(method);
+            method.checkSuccess();
+        } catch (IOException e) {
+            throw new RepositoryException(e);
+        } catch (DavException e) {
+            throw ExceptionConverter.generate(e);
+        } finally {
+            if (method != null) {
+                method.releaseConnection();
+            }
+        }
     }
 
     @Override
@@ -2618,38 +2610,38 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
 
         MkWorkspaceMethod method = null;
         try {
-             method = new MkWorkspaceMethod(uriResolver.getWorkspaceUri(name));
-             initMethod(method, sessionInfo, true);
-             getClient(sessionInfo).executeMethod(method);
-             method.checkSuccess();
-         } catch (IOException e) {
-             throw new RepositoryException(e);
-         } catch (DavException e) {
-             throw ExceptionConverter.generate(e);
-         } finally {
-             if (method != null) {
-                 method.releaseConnection();
-             }
-         }
+            method = new MkWorkspaceMethod(uriResolver.getWorkspaceUri(name));
+            initMethod(method, sessionInfo, true);
+            getClient(sessionInfo).executeMethod(method);
+            method.checkSuccess();
+        } catch (IOException e) {
+            throw new RepositoryException(e);
+        } catch (DavException e) {
+            throw ExceptionConverter.generate(e);
+        } finally {
+            if (method != null) {
+                method.releaseConnection();
+            }
+        }
     }
 
     @Override
     public void deleteWorkspace(SessionInfo sessionInfo, String name) throws RepositoryException {
         DeleteMethod method = null;
         try {
-             method = new DeleteMethod(uriResolver.getWorkspaceUri(name));
-             initMethod(method, sessionInfo, true);
-             getClient(sessionInfo).executeMethod(method);
-             method.checkSuccess();
-         } catch (IOException e) {
-             throw new RepositoryException(e);
-         } catch (DavException e) {
-             throw ExceptionConverter.generate(e);
-         } finally {
-             if (method != null) {
-                 method.releaseConnection();
-             }
-         }
+            method = new DeleteMethod(uriResolver.getWorkspaceUri(name));
+            initMethod(method, sessionInfo, true);
+            getClient(sessionInfo).executeMethod(method);
+            method.checkSuccess();
+        } catch (IOException e) {
+            throw new RepositoryException(e);
+        } catch (DavException e) {
+            throw ExceptionConverter.generate(e);
+        } finally {
+            if (method != null) {
+               method.releaseConnection();
+            }
+        }
     }
 
     /**
@@ -2776,7 +2768,6 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
                     org.w3c.dom.Text txt2 = document.createTextNode(uri);
                     uriElem.appendChild(txt2);
 
-
                     nsElem.appendChild(prefixElem);
                     nsElem.appendChild(uriElem);
 
@@ -2786,7 +2777,6 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         }
         return new DefaultDavProperty<List<XmlSerializable>>(JcrRemotingConstants.JCR_NAMESPACES_LN, val, ItemResourceConstants.NAMESPACE, false);
     }
-
 
     private static DavProperty<List<XmlSerializable>> createNodeTypeProperty(String localName, String[] ntNames) {
         // convert the specified node type names to a xml-serializable value
@@ -2830,8 +2820,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     private boolean isDavClass3(SessionInfo sessionInfo) {
         try {
             return getDavComplianceClasses(sessionInfo).contains("3");
-        }
-        catch (RepositoryException ex) {
+        } catch (RepositoryException ex) {
             log.warn("failure to obtain OPTIONS response", ex);
             return false;
         }
@@ -2846,8 +2835,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
                 sb.append("?").append(u.getRawQuery());
             }
             return sb.toString();
-        }
-        catch (java.net.URISyntaxException ex) {
+        } catch (java.net.URISyntaxException ex) {
             log.warn("parsing " + uri, ex);
             return uri;
         }
