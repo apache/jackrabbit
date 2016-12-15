@@ -20,22 +20,28 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+
 import javax.jcr.Credentials;
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.HttpException;
-import org.apache.commons.httpclient.HttpMethod;
-import org.apache.commons.httpclient.methods.RequestEntity;
-import org.apache.commons.httpclient.methods.multipart.MultipartRequestEntity;
-import org.apache.commons.httpclient.methods.multipart.Part;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.entity.ContentType;
+import org.apache.http.entity.mime.FormBodyPart;
+import org.apache.http.entity.mime.MultipartEntityBuilder;
+import org.apache.http.message.BasicNameValuePair;
 import org.apache.jackrabbit.JcrConstants;
 import org.apache.jackrabbit.commons.json.JsonParser;
 import org.apache.jackrabbit.commons.json.JsonUtil;
@@ -71,7 +77,7 @@ import org.apache.jackrabbit.webdav.DavConstants;
 import org.apache.jackrabbit.webdav.DavException;
 import org.apache.jackrabbit.webdav.DavServletResponse;
 import org.apache.jackrabbit.webdav.MultiStatusResponse;
-import org.apache.jackrabbit.webdav.client.methods.PropFindMethod;
+import org.apache.jackrabbit.webdav.client.methods.HttpPropfind;
 import org.apache.jackrabbit.webdav.header.IfHeader;
 import org.apache.jackrabbit.webdav.property.DavProperty;
 import org.apache.jackrabbit.webdav.property.DavPropertyName;
@@ -281,7 +287,7 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
         if (qvFactories.containsKey(sessionInfo)) {
             qv = qvFactories.get(sessionInfo);
         } else {
-            ValueLoader loader = new ValueLoader(getClient(sessionInfo));
+            ValueLoader loader = new ValueLoader(getClient(sessionInfo), getContext(sessionInfo));
             qv = new QValueFactoryImpl(getNamePathResolver(sessionInfo), loader);
             qvFactories.put(sessionInfo, qv);
         }
@@ -346,11 +352,14 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
             String uri = getURI(path, sessionInfo);
             int depth = batchReadConfig.getDepth(path, this.getNamePathResolver(sessionInfo));
 
-            GetMethod method = new GetMethod(uri + "." + depth + ".json");
+            HttpGet request = new HttpGet(uri + "." + depth + ".json");
+            HttpResponse response = null;
             try {
-                int statusCode = getClient(sessionInfo).executeMethod(method);
+                response = executeRequest(sessionInfo, request);
+                int statusCode = response.getStatusLine().getStatusCode();
                 if (statusCode == DavServletResponse.SC_OK) {
-                    if (method.getResponseContentLength() == 0) {
+                    HttpEntity entity = response.getEntity();
+                    if (entity.getContentLength() == 0) {
                         // no JSON response -> no such node on the server
                         throw new ItemNotFoundException("No such item " + nodeId);
                     }
@@ -360,7 +369,7 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
 
                     ItemInfoJsonHandler handler = new ItemInfoJsonHandler(resolver, nInfo, getRootURI(sessionInfo), getQValueFactory(sessionInfo), getPathFactory(), getIdFactory());
                     JsonParser ps = new JsonParser(handler);
-                    ps.parse(method.getResponseBodyAsStream(), method.getResponseCharSet());
+                    ps.parse(entity.getContent(), ContentType.get(entity).getCharset().name());
 
                     Iterator<? extends ItemInfo> it = handler.getItemInfos();
                     if (!it.hasNext()) {
@@ -368,15 +377,13 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
                     }
                     return handler.getItemInfos();
                 } else {
-                    throw ExceptionConverter.generate(new DavException(statusCode, "Unable to retrieve NodeInfo for " + uri), method);
+                    throw ExceptionConverter.generate(new DavException(statusCode, "Unable to retrieve NodeInfo for " + uri), request);
                 }
-            } catch (HttpException e) {
-                throw ExceptionConverter.generate(new DavException(method.getStatusCode(), "Unable to retrieve NodeInfo for " + uri));
             } catch (IOException e) {
                 log.error("Internal error while retrieving NodeInfo.",e);
                 throw new RepositoryException(e.getMessage());
             } finally {
-                method.releaseConnection();
+                request.releaseConnection();
             }
         }
     }
@@ -388,19 +395,19 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
     public PropertyInfo getPropertyInfo(SessionInfo sessionInfo, PropertyId propertyId) throws RepositoryException {
         Path p = getPath(propertyId, sessionInfo);
         String uri = getURI(p, sessionInfo);
-        PropFindMethod method = null;
+        HttpPropfind request = null;
         try {
-            method = new PropFindMethod(uri, LAZY_PROPERTY_NAME_SET, DavConstants.DEPTH_0);
-            getClient(sessionInfo).executeMethod(method);
-            method.checkSuccess();
+            request = new HttpPropfind(uri, LAZY_PROPERTY_NAME_SET, DavConstants.DEPTH_0);
+            HttpResponse response = executeRequest(sessionInfo, request);
+            request.checkSuccess(response);
 
-            MultiStatusResponse[] responses = method.getResponseBodyAsMultiStatus().getResponses();
-            if (responses.length != 1) {
+            MultiStatusResponse[] mresponses = request.getResponseBodyAsMultiStatus(response).getResponses();
+            if (mresponses.length != 1) {
                 throw new ItemNotFoundException("Unable to retrieve the PropertyInfo. No such property " + uri);
             }
 
-            MultiStatusResponse response = responses[0];
-            DavPropertySet props = response.getProperties(DavServletResponse.SC_OK);
+            MultiStatusResponse mresponse = mresponses[0];
+            DavPropertySet props = mresponse.getProperties(DavServletResponse.SC_OK);
             int propertyType = PropertyType.valueFromName(props.get(JCR_TYPE).getValue().toString());
 
             if (propertyType == PropertyType.BINARY) {
@@ -436,8 +443,8 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
         } catch (DavException e) {
             throw ExceptionConverter.generate(e);
         } finally {
-            if (method != null) {
-                method.releaseConnection();
+            if (request != null) {
+                request.releaseConnection();
             }
         }
     }
@@ -473,9 +480,12 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
             super.copy(sessionInfo, srcWorkspaceName, srcNodeId, destParentNodeId, destName);
             return;
         }
-        PostMethod method = null;
+        HttpPost request = null;
         try {
-            method = new PostMethod(getWorkspaceURI(sessionInfo));
+            request = new HttpPost(getWorkspaceURI(sessionInfo));
+            request.setHeader("Referer", request.getURI().toASCIIString());
+            addIfHeader(sessionInfo, request);
+
             NamePathResolver resolver = getNamePathResolver(sessionInfo);
 
             StringBuilder args = new StringBuilder();
@@ -488,28 +498,29 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
                     destParentPath + resolver.getJCRName(destName) :
                     destParentPath + "/" + resolver.getJCRName(destName));
             args.append(destPath);
-
-            method.addParameter(PARAM_COPY, args.toString());
-            addIfHeader(sessionInfo, method);
-            getClient(sessionInfo).executeMethod(method);
-
-            method.checkSuccess();
+            List<BasicNameValuePair> nvps = Collections.singletonList(new BasicNameValuePair(PARAM_COPY, args.toString()));
+            HttpEntity entity = new UrlEncodedFormEntity(nvps, Charset.forName("UTF-8"));
+            request.setEntity(entity);
+            HttpResponse response = executeRequest(sessionInfo, request);
+            request.checkSuccess(response);
         } catch (IOException e) {
             throw new RepositoryException(e);
         } catch (DavException e) {
-            throw ExceptionConverter.generate(e, method);
+            throw ExceptionConverter.generate(e, request);
         } finally {
-            if (method != null) {
-                method.releaseConnection();
+            if (request != null) {
+                request.releaseConnection();
             }
         }
     }
 
     @Override
     public void clone(SessionInfo sessionInfo, String srcWorkspaceName, NodeId srcNodeId, NodeId destParentNodeId, Name destName, boolean removeExisting) throws RepositoryException {
-        PostMethod method = null;
+        HttpPost request = null;
         try {
-            method = new PostMethod(getWorkspaceURI(sessionInfo));
+            request = new HttpPost(getWorkspaceURI(sessionInfo));
+            request.setHeader("Referer", request.getURI().toASCIIString());
+            addIfHeader(sessionInfo, request);
 
             NamePathResolver resolver = getNamePathResolver(sessionInfo);
             StringBuilder args = new StringBuilder();
@@ -524,29 +535,28 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
             args.append(destPath);
             args.append(",");
             args.append(Boolean.toString(removeExisting));
-
-            method.addParameter(PARAM_CLONE, args.toString());
-            addIfHeader(sessionInfo, method);
-            getClient(sessionInfo).executeMethod(method);
-
-            method.checkSuccess();
+            List<BasicNameValuePair> nvps = Collections.singletonList(new BasicNameValuePair(PARAM_CLONE, args.toString()));
+            HttpEntity entity = new UrlEncodedFormEntity(nvps, Charset.forName("UTF-8"));
+            request.setEntity(entity);
+            HttpResponse response = executeRequest(sessionInfo, request);
+            request.checkSuccess(response);
             if (removeExisting) {
                 clearItemUriCache(sessionInfo);
             }
         } catch (IOException e) {
             throw new RepositoryException(e);
         } catch (DavException e) {
-            throw ExceptionConverter.generate(e, method);
+            throw ExceptionConverter.generate(e, request);
         } finally {
-            if (method != null) {
-                method.releaseConnection();
+            if (request != null) {
+                request.releaseConnection();
             }
         }
     }
 
-    private static void addIfHeader(SessionInfo sInfo, HttpMethod method) {
+    private static void addIfHeader(SessionInfo sInfo, HttpUriRequest request) {
         try {
-            initMethod(method, sInfo, true);
+            initMethod(request, sInfo, true);
         } catch (RepositoryException e) {
             // should never get here
             log.error("Unable to retrieve lock tokens: omitted from request header.");
@@ -559,7 +569,8 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
 
         private final ItemId targetId;
         private final SessionInfo sessionInfo;
-        private final List<Part> parts;
+        private final List<FormBodyPart> parts;
+        private final List<QValue> binaries;
         private final List<String> diff;
         /*
           If this batch needs to remove multiple same-name-siblings starting
@@ -568,7 +579,7 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
         */
         private final Map<Path, Path> removed = new HashMap<Path, Path>();
 
-        private PostMethod method; // TODO: use PATCH request instead.
+        private HttpPost request; // TODO: use PATCH request instead.
         private boolean isConsumed;
         // flag to determine if the uri-lookup needs to be cleared... e.g.
         // after a move operation.
@@ -577,15 +588,18 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
         private BatchImpl(ItemId targetId, SessionInfo sessionInfo) {
             this.targetId = targetId;
             this.sessionInfo = sessionInfo;
-            parts = new ArrayList<Part>();
-            diff = new ArrayList<String>();
+            this.parts = new ArrayList<FormBodyPart>();
+            this.binaries = new ArrayList<QValue>();
+            this.diff = new ArrayList<String>();
         }
 
         private void start() throws RepositoryException {
             checkConsumed();
 
+            request.setHeader("Referer", request.getURI().toASCIIString());
+
             // add lock tokens
-            addIfHeader(sessionInfo, method);
+            addIfHeader(sessionInfo, request);
 
             // insert the content of 'batchMap' part containing the ordered list
             // of methods to be executed:
@@ -600,33 +614,36 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
             // add the diff part - always do multipart in case the receiving servlet
             // engine has a form-size restriction (JCR-3726)
             Utils.addPart(PARAM_DIFF, buf.toString(), parts);
-            Part[] partArr = parts.toArray(new Part[parts.size()]);
-            RequestEntity entity = new MultipartRequestEntity(partArr, method.getParams());
-            method.setRequestEntity(entity);
 
-            HttpClient client = getClient(sessionInfo);
+            MultipartEntityBuilder b = MultipartEntityBuilder.create();
+            for (FormBodyPart p : parts) {
+                b.addPart(p.getName(), p.getBody());
+            }
+            request.setEntity(b.build());
+
+            org.apache.http.client.HttpClient client = getClient(sessionInfo);
             try {
-                client.executeMethod(method);
-                method.checkSuccess();
+                HttpResponse response = client.execute(request, getContext(sessionInfo));
+                request.checkSuccess(response);
                 if (clear) {
                     RepositoryServiceImpl.super.clearItemUriCache(sessionInfo);
                 }
             }  catch (IOException e) {
                 throw new RepositoryException(e);
             } catch (DavException e) {
-                throw ExceptionConverter.generate(e, method);
+                throw ExceptionConverter.generate(e, request);
             } finally {
-                method.releaseConnection();
+                request.releaseConnection();
             }
         }
 
         private void dispose() {
-            method = null;
+            request = null;
             isConsumed = true;
             // discard binary parts (JCR-2582)
-            for (Part part : parts) {
-                if (part instanceof BinaryPart) {
-                    ((BinaryPart) part).dispose();
+            for (QValue bin : binaries) {
+                if (bin instanceof ValueLoader.Target) {
+                    ((ValueLoader.Target) bin).reset();
                 }
             }
         }
@@ -638,19 +655,19 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
         }
 
         private boolean isEmpty() {
-            return method == null;
+            return request == null;
         }
 
         private void assertMethod() throws RepositoryException {
-            if (method == null) {
+            if (request == null) {
                 String uri = getURI(targetId, sessionInfo);
-                method = new PostMethod(uri);
+                request = new HttpPost(uri);
                 // ship lock-tokens as if-header to circumvent problems with
                 // locks created by this session.
                 String[] locktokens = sessionInfo.getLockTokens();
                 if (locktokens != null && locktokens.length > 0) {
                     IfHeader ifH = new IfHeader(locktokens);
-                    method.setRequestHeader(ifH.getHeaderName(), ifH.getHeaderValue());
+                    request.setHeader(ifH.getHeaderName(), ifH.getHeaderValue());
                 }
             }
         }
@@ -794,7 +811,7 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
 
             Path normalizedPath = getPathFactory().create(getPath(parentId, sessionInfo), contentTree.getName(), true);
             String jcrPath = getNamePathResolver(sessionInfo).getJCRPath(normalizedPath);
-            appendDiff(SYMBOL_ADD_NODE, jcrPath, ((JsonTree) contentTree).toJsonString(parts));
+            appendDiff(SYMBOL_ADD_NODE, jcrPath, ((JsonTree) contentTree).toJsonString(parts, binaries));
         }
 
         //----------------------------------------------------------------------
@@ -829,7 +846,7 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
             String strValue = Utils.getJsonString(value);
             appendDiff(SYMBOL_SET_PROPERTY, jcrPropPath, strValue);
             if (strValue == null) {
-                Utils.addPart(jcrPropPath, value, resolver, parts);
+                Utils.addPart(jcrPropPath, value, resolver, parts, binaries);
             }
         }
 
@@ -844,7 +861,7 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
             for (int i = 0; i < values.length; i++) {
                 String str = Utils.getJsonString(values[i]);
                 if (str == null) {
-                    Utils.addPart(jcrPropPath, values[i], resolver, parts);
+                    Utils.addPart(jcrPropPath, values[i], resolver, parts, binaries);
                 } else {
                     String delim = (i == 0) ? "" : ",";
                     strVal.append(delim).append(str);
@@ -901,7 +918,8 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
     class JsonTree extends AbstractTree {
 
         private final StringBuilder properties = new StringBuilder();
-        private final List<Part> parts = new ArrayList<Part>();
+        private final List<FormBodyPart> parts = new ArrayList<FormBodyPart>();
+        private final List<QValue> binaries = new ArrayList<QValue>();
         private final SessionInfo sessionInfo;
 
         JsonTree(SessionInfo sessionInfo, Name nodeName, Name ntName, String uniqueId, NamePathResolver resolver) {
@@ -924,7 +942,7 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
             String valueStr = Utils.getJsonString(value);
             if (valueStr == null) {
                 String jcrPropPath = createPath(parentId, propertyName);
-                Utils.addPart(jcrPropPath, value, getResolver(), parts);
+                Utils.addPart(jcrPropPath, value, getResolver(), parts, binaries);
             } else {
                 properties.append(valueStr);
             }
@@ -941,7 +959,7 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
                 String valueStr = Utils.getJsonString(value);
                 if (valueStr == null) {
                     String jcrPropPath = createPath(parentId, propertyName);
-                    Utils.addPart(jcrPropPath, value, getResolver(), parts);
+                    Utils.addPart(jcrPropPath, value, getResolver(), parts, binaries);
                 } else {
                     String delim = (index++ == 0) ? "" : ",";
                     properties.append(delim).append('"').append(valueStr).append('"');
@@ -956,10 +974,12 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
         }
 
         //--------------------------------------------------------------------------
-        String toJsonString(List<Part> batchParts) throws RepositoryException {
+        String toJsonString(List<FormBodyPart> batchParts, List<QValue> bins) throws RepositoryException {
             batchParts.addAll(this.parts);
+            bins.addAll(this.binaries);
             for (Tree child : this.getChildren()) {
                 batchParts.addAll(((JsonTree) child).getParts());
+                bins.addAll(((JsonTree) child).getBinaries());
             }
 
             StringBuilder json = new StringBuilder();
@@ -995,8 +1015,12 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
             return properties;
         }
 
-        private List<Part> getParts() {
+        private List<FormBodyPart> getParts() {
             return parts;
         }
-    }
+
+        private List<QValue> getBinaries() {
+            return binaries;
+        }
+}
 }

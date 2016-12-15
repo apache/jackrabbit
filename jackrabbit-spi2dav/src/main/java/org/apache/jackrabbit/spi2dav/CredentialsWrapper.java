@@ -18,8 +18,8 @@ package org.apache.jackrabbit.spi2dav;
 
 import javax.jcr.SimpleCredentials;
 
-import org.apache.commons.httpclient.Credentials;
-import org.apache.commons.httpclient.UsernamePasswordCredentials;
+import org.apache.http.auth.Credentials;
+import org.apache.http.auth.UsernamePasswordCredentials;
 
 /**
  * <code>CredentialsWrapper</code>...
@@ -49,7 +49,7 @@ class CredentialsWrapper {
         return userId;
     }
 
-    Credentials getCredentials() {
+    Credentials getHttpCredentials() {
         return credentials;
     }
 }

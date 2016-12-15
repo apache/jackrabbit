@@ -16,8 +16,16 @@
  */
 package org.apache.jackrabbit.spi2dav;
 
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.HttpStatus;
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.util.Calendar;
+
+import javax.jcr.PropertyType;
+import javax.jcr.RepositoryException;
+
+import org.apache.http.HttpResponse;
+import org.apache.http.HttpStatus;
+import org.apache.http.client.HttpClient;
 import org.apache.jackrabbit.JcrConstants;
 import org.apache.jackrabbit.spi.AbstractSPITest;
 import org.apache.jackrabbit.spi.Batch;
@@ -36,7 +44,7 @@ import org.apache.jackrabbit.spi.commons.namespace.NamespaceResolver;
 import org.apache.jackrabbit.util.Text;
 import org.apache.jackrabbit.webdav.DavConstants;
 import org.apache.jackrabbit.webdav.MultiStatus;
-import org.apache.jackrabbit.webdav.client.methods.PropFindMethod;
+import org.apache.jackrabbit.webdav.client.methods.HttpPropfind;
 import org.apache.jackrabbit.webdav.observation.ObservationConstants;
 import org.apache.jackrabbit.webdav.ordering.OrderingConstants;
 import org.apache.jackrabbit.webdav.property.DavPropertyName;
@@ -46,12 +54,6 @@ import org.apache.jackrabbit.webdav.version.DeltaVConstants;
 import org.apache.jackrabbit.webdav.version.VersionControlledResource;
 import org.apache.jackrabbit.webdav.version.VersionHistoryResource;
 import org.apache.jackrabbit.webdav.version.VersionResource;
-
-import javax.jcr.PropertyType;
-import javax.jcr.RepositoryException;
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
-import java.util.Calendar;
 
 /**
  * <code>DavPropertyTest</code>...
@@ -64,7 +66,7 @@ public class DavPropertyTest extends AbstractSPITest implements ItemResourceCons
     private NamePathResolver resolver;
 
     private String repoURI;
-    
+
     @Override
     protected void setUp() throws Exception {
         super.setUp();
@@ -132,34 +134,34 @@ public class DavPropertyTest extends AbstractSPITest implements ItemResourceCons
     }
 
     private DavPropertyNameSet doPropFindNames(String uri) throws Exception {
-        PropFindMethod method = new PropFindMethod(uri, DavConstants.PROPFIND_PROPERTY_NAMES, DavConstants.DEPTH_0);
+        HttpPropfind request = new HttpPropfind(uri, DavConstants.PROPFIND_PROPERTY_NAMES, DavConstants.DEPTH_0);
         HttpClient cl = rs.getClient(si);
-        cl.executeMethod(method);
-        method.checkSuccess();
+        HttpResponse response = cl.execute(request, rs.getContext(si));
+        request.checkSuccess(response);
 
-        MultiStatus ms = method.getResponseBodyAsMultiStatus();
+        MultiStatus ms = request.getResponseBodyAsMultiStatus(response);
         assertEquals(1, ms.getResponses().length);
         return ms.getResponses()[0].getPropertyNames(HttpStatus.SC_OK);
     }
 
     private DavPropertyNameSet doPropFindAll(String uri) throws Exception {
-        PropFindMethod method = new PropFindMethod(uri, DavConstants.PROPFIND_ALL_PROP, DavConstants.DEPTH_0);
+        HttpPropfind request = new HttpPropfind(uri, DavConstants.PROPFIND_ALL_PROP, DavConstants.DEPTH_0);
         HttpClient cl = rs.getClient(si);
-        cl.executeMethod(method);
-        method.checkSuccess();
+        HttpResponse response = cl.execute(request, rs.getContext(si));
+        request.checkSuccess(response);
 
-        MultiStatus ms = method.getResponseBodyAsMultiStatus();
+        MultiStatus ms = request.getResponseBodyAsMultiStatus(response);
         assertEquals(1, ms.getResponses().length);
         return ms.getResponses()[0].getPropertyNames(HttpStatus.SC_OK);
     }
 
     private DavPropertyNameSet doPropFindByProp(String uri, DavPropertyNameSet props) throws Exception {
-        PropFindMethod method = new PropFindMethod(uri, DavConstants.PROPFIND_BY_PROPERTY, props, DavConstants.DEPTH_0);
+        HttpPropfind request = new HttpPropfind(uri, DavConstants.PROPFIND_BY_PROPERTY, props, DavConstants.DEPTH_0);
         HttpClient cl = rs.getClient(si);
-        cl.executeMethod(method);
-        method.checkSuccess();
+        HttpResponse response = cl.execute(request, rs.getContext(si));
+        request.checkSuccess(response);
 
-        MultiStatus ms = method.getResponseBodyAsMultiStatus();
+        MultiStatus ms = request.getResponseBodyAsMultiStatus(response);
         assertEquals(1, ms.getResponses().length);
         return ms.getResponses()[0].getPropertyNames(HttpStatus.SC_OK);
     }
@@ -192,7 +194,7 @@ public class DavPropertyTest extends AbstractSPITest implements ItemResourceCons
         expected.remove(DeltaVConstants.SUPPORTED_REPORT_SET);
         /*
         Expected all-props
-        
+
         {DAV:}getlastmodified
         {DAV:}creationdate
         {DAV:}displayname
@@ -212,7 +214,7 @@ public class DavPropertyTest extends AbstractSPITest implements ItemResourceCons
         DavPropertyNameSet result = doPropFindByProp(repoURI, props);
         assertPropertyNames(props, result);
     }
-    
+
     public void testWorkspace() throws Exception {
         StringBuilder uri = new StringBuilder(repoURI);
         uri.append("/").append(helper.getProperty(RepositoryServiceStub.PROP_PREFIX + "." +RepositoryServiceStub.PROP_WORKSPACE));
@@ -452,7 +454,7 @@ public class DavPropertyTest extends AbstractSPITest implements ItemResourceCons
         expected.add(OrderingConstants.ORDERING_TYPE);
         /*
          Expected property names
-         
+
         {DAV:}getlastmodified
         {DAV:}ordering-type
         {http://www.day.com/jcr/webdav/1.0}definition
@@ -632,7 +634,7 @@ public class DavPropertyTest extends AbstractSPITest implements ItemResourceCons
         rs.submit(b);
 
         String uri = rs.getItemUri(nid, si);
-        
+
         DavPropertyNameSet set = doPropFindNames(uri);
         DavPropertyNameSet expected = new DavPropertyNameSet(BASE_SET);
         expected.addAll(EXISTING_ITEM_BASE_SET);
@@ -969,7 +971,7 @@ public class DavPropertyTest extends AbstractSPITest implements ItemResourceCons
         rs.checkin(si, nid);
 
         String uri = rs.getItemUri(nid, si);
-        
+
         DavPropertyNameSet set = doPropFindNames(uri);
         DavPropertyNameSet expected = new DavPropertyNameSet(BASE_SET);
         expected.addAll(EXISTING_ITEM_BASE_SET);
@@ -1313,8 +1315,6 @@ public class DavPropertyTest extends AbstractSPITest implements ItemResourceCons
     private static final DavPropertyName JCR_PATH = DavPropertyName.create(JCR_PATH_LN, NAMESPACE);
     private static final DavPropertyName JCR_DEPTH = DavPropertyName.create(JCR_DEPTH_LN, NAMESPACE);
     private static final DavPropertyName JCR_PARENT = DavPropertyName.create(JCR_PARENT_LN, NAMESPACE);
-    private static final DavPropertyName JCR_ISNEW = DavPropertyName.create(JCR_ISNEW_LN, NAMESPACE);
-    private static final DavPropertyName JCR_ISMODIFIED = DavPropertyName.create(JCR_ISMODIFIED_LN, NAMESPACE);
     private static final DavPropertyName JCR_DEFINITION = DavPropertyName.create(JCR_DEFINITION_LN, NAMESPACE);
     private static final DavPropertyName JCR_PRIMARYNODETYPE = DavPropertyName.create(JCR_PRIMARYNODETYPE_LN, NAMESPACE);
     private static final DavPropertyName JCR_MIXINNODETYPES = DavPropertyName.create(JCR_MIXINNODETYPES_LN, NAMESPACE);
