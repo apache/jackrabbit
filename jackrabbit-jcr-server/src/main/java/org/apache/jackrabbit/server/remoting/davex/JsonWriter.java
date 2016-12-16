@@ -217,23 +217,8 @@ class JsonWriter {
             case PropertyType.WEAKREFERENCE:
             case PropertyType.URI:
             case PropertyType.DECIMAL:
-                return true;
             case PropertyType.DOUBLE:
-                /* Double.NaN, Double.POSITIVE_INFINITY and Double.NEGATIVE_INFINITY
-                   are not defined in JSON, so they have to be serialized as type-hinted strings.
-                 */
-                if (p.isMultiple()) {
-                    for (Value val : p.getValues()) {
-                        double doubleValue = val.getDouble();
-                        if (Double.isInfinite(doubleValue) || Double.isNaN(doubleValue)) {
-                            return true;
-                        }
-                    }
-                    return false;
-                } else {
-                    double doubleValue = p.getDouble();
-                    return Double.isInfinite(doubleValue) || Double.isNaN(doubleValue);
-                }
+                return true;
             default:
                 // any other property type
                 return false;
