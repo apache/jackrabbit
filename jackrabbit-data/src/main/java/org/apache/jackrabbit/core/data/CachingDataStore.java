@@ -763,7 +763,7 @@ public abstract class CachingDataStore extends AbstractDataStore implements
                     if (retry <= uploadRetries) {
                         uploadRetryMap.put(identifier, retry);
                         LOG.info(
-                            "Retrying [{}] times failed upload for dataidentifer",
+                            "Retrying [{}] times failed upload for dataidentifer {}",
                             retry, identifier);
                         try {
                             backend.writeAsync(identifier, file, this);
@@ -771,7 +771,7 @@ public abstract class CachingDataStore extends AbstractDataStore implements
                             LOG.warn("exception", e);
                         }
                     } else {
-                        LOG.info("Retries [{}] exhausted for  dataidentifer.",
+                        LOG.info("Retries [{}] exhausted for  dataidentifer {}.",
                             (retry - 1), identifier);
                         uploadRetryMap.remove(identifier);
                     }
