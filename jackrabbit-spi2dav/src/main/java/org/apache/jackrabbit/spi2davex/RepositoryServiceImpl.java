@@ -278,7 +278,7 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
     /**
      * @see RepositoryService#getQValueFactory()
      */
-    public QValueFactoryImpl getQValueFactory(SessionInfo sessionInfo) throws RepositoryException {
+    private QValueFactoryImpl getQValueFactory(SessionInfo sessionInfo) throws RepositoryException {
         QValueFactoryImpl qv;
         if (qvFactories.containsKey(sessionInfo)) {
             qv = qvFactories.get(sessionInfo);
@@ -338,7 +338,7 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
      * @see RepositoryService#getItemInfos(SessionInfo, ItemId)
      */
     @Override
-    public Iterator<? extends ItemInfo> getItemInfos(SessionInfo sessionInfo, ItemId itemId) throws ItemNotFoundException, RepositoryException {
+    public Iterator<? extends ItemInfo> getItemInfos(SessionInfo sessionInfo, ItemId itemId) throws RepositoryException {
         if (!itemId.denotesNode()) {
             PropertyInfo propertyInfo = getPropertyInfo(sessionInfo, (PropertyId) itemId);
             return Iterators.singleton(propertyInfo);

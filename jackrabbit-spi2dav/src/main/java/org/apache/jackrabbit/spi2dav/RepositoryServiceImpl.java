@@ -43,22 +43,13 @@ import javax.jcr.Credentials;
 import javax.jcr.InvalidItemStateException;
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.LoginException;
-import javax.jcr.MergeException;
 import javax.jcr.NamespaceException;
-import javax.jcr.NoSuchWorkspaceException;
 import javax.jcr.PropertyType;
 import javax.jcr.RepositoryException;
 import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.Value;
 import javax.jcr.ValueFactory;
-import javax.jcr.ValueFormatException;
 import javax.jcr.lock.LockException;
-import javax.jcr.nodetype.ConstraintViolationException;
-import javax.jcr.nodetype.InvalidNodeTypeDefinitionException;
-import javax.jcr.nodetype.NoSuchNodeTypeException;
-import javax.jcr.nodetype.NodeTypeExistsException;
-import javax.jcr.query.InvalidQueryException;
-import javax.jcr.version.VersionException;
 import javax.xml.parsers.ParserConfigurationException;
 
 import org.apache.commons.httpclient.Header;
@@ -276,7 +267,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
      * Same as {@link #RepositoryServiceImpl(String, IdFactory, NameFactory, PathFactory, QValueFactory, int, int)}
      * using {@link #MAX_CONNECTIONS_DEFAULT} for the maximum number of
      * connections on the client.
-     * 
+     *
      * @param uri The server uri.
      * @param idFactory The id factory.
      * @param nameFactory The name factory.
@@ -400,7 +391,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
                 method.setRequestHeader(ifH.getHeaderName(), ifH.getHeaderValue());
             }
         }
-        
+
         initMethod(method, sessionInfo);
     }
 
@@ -650,38 +641,33 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     }
 
     //--------------------------------------------------< RepositoryService >---
-    /**
-     * @see RepositoryService#getIdFactory()
-     */
+
+    @Override
     public IdFactory getIdFactory() {
         return idFactory;
     }
 
-    /**
-     * @see RepositoryService#getNameFactory()
-     */
+    @Override
     public NameFactory getNameFactory() {
         return nameFactory;
     }
 
-    /**
-     * @see RepositoryService#getPathFactory()
-     */
+    @Override
     public PathFactory getPathFactory() {
         return pathFactory;
     }
 
+    @Override
     public QValueFactory getQValueFactory() {
         return qValueFactory;
     }
 
+    @Override
     public ItemInfoCache getItemInfoCache(SessionInfo sessionInfo) throws RepositoryException {
         return new ItemInfoCacheImpl(itemInfoCacheSize);
     }
 
-    /**
-     * @see RepositoryService#getRepositoryDescriptors()
-     */
+    @Override
     public Map<String, QValue[]> getRepositoryDescriptors() throws RepositoryException {
         if (descriptors.isEmpty()) {
             ReportInfo info = new ReportInfo(JcrRemotingConstants.REPORT_REPOSITORY_DESCRIPTORS, ItemResourceConstants.NAMESPACE);
@@ -738,27 +724,27 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         return descriptors;
     }
 
-    /**
-     * @see RepositoryService#obtain(Credentials, String)
-     */
+    @Override
     public SessionInfo obtain(Credentials credentials, String workspaceName)
-        throws LoginException, NoSuchWorkspaceException, RepositoryException {
+        throws RepositoryException {
         CredentialsWrapper dc = new CredentialsWrapper(credentials);
         return obtain(dc, workspaceName);
     }
 
+    @Override
     public SessionInfo obtain(SessionInfo sessionInfo, String workspaceName)
-        throws LoginException, NoSuchWorkspaceException, RepositoryException {
+        throws RepositoryException {
         checkSessionInfo(sessionInfo);
         return obtain(((SessionInfoImpl)sessionInfo).getCredentials(), workspaceName);
     }
 
-    public SessionInfo impersonate(SessionInfo sessionInfo, Credentials credentials) throws LoginException, RepositoryException {
+    @Override
+    public SessionInfo impersonate(SessionInfo sessionInfo, Credentials credentials) throws RepositoryException {
         throw new UnsupportedOperationException("Not implemented yet.");
     }
 
     private SessionInfo obtain(CredentialsWrapper credentials, String workspaceName)
-        throws LoginException, NoSuchWorkspaceException, RepositoryException {
+        throws RepositoryException {
         // check if the workspace with the given name is accessible
         PropFindMethod method = null;
         SessionInfoImpl sessionInfo = new SessionInfoImpl(credentials, workspaceName);
@@ -822,14 +808,13 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         return sessionInfo;
     }
 
+    @Override
     public void dispose(SessionInfo sessionInfo) throws RepositoryException {
         checkSessionInfo(sessionInfo);
         removeClient(sessionInfo);
     }
 
-    /**
-     * @see RepositoryService#getWorkspaceNames(SessionInfo)
-     */
+    @Override
     public String[] getWorkspaceNames(SessionInfo sessionInfo) throws RepositoryException {
         DavPropertyNameSet nameSet = new DavPropertyNameSet();
         nameSet.add(DeltaVConstants.WORKSPACE);
@@ -860,9 +845,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         }
     }
 
-    /**
-     * @see RepositoryService#isGranted(SessionInfo, ItemId, String[] actions)
-     */
+    @Override
     public boolean isGranted(SessionInfo sessionInfo, ItemId itemId, String[] actions) throws RepositoryException {
         ReportMethod method = null;
         try {
@@ -908,16 +891,11 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         }
     }
 
-    /**
-     * @see RepositoryService#getNodeDefinition(SessionInfo, NodeId)
-     */
     public QNodeDefinition getNodeDefinition(SessionInfo sessionInfo, NodeId nodeId) throws RepositoryException {
         return (QNodeDefinition) getItemDefinition(sessionInfo, nodeId);
     }
 
-    /**
-     * @see RepositoryService#getPropertyDefinition(SessionInfo, PropertyId)
-     */
+    @Override
     public QPropertyDefinition getPropertyDefinition(SessionInfo sessionInfo, PropertyId propertyId) throws RepositoryException {
         return (QPropertyDefinition) getItemDefinition(sessionInfo, propertyId);
     }
@@ -987,9 +965,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         }
     }
 
-    /**
-     * @see RepositoryService#getNodeInfo(SessionInfo, NodeId)
-     */
+    @Override
     public NodeInfo getNodeInfo(SessionInfo sessionInfo, NodeId nodeId) throws RepositoryException {
         // set of properties to be retrieved
         DavPropertyNameSet nameSet = new DavPropertyNameSet();
@@ -1067,9 +1043,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         }
     }
 
-    /**
-     * @see RepositoryService#getItemInfos(SessionInfo, ItemId)
-     */
+    @Override
     public Iterator<? extends ItemInfo> getItemInfos(SessionInfo sessionInfo, ItemId itemId) throws RepositoryException {
         // TODO: implement batch read properly:
         // currently: missing 'value/values' property PropertyInfo cannot be built
@@ -1092,7 +1066,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     private NodeInfoImpl buildNodeInfo(String baseUri, MultiStatusResponse nodeResponse,
                                        NodeId parentId, DavPropertySet propSet,
                                        SessionInfo sessionInfo,
-                                       NamePathResolver resolver) throws NameException, RepositoryException {
+                                       NamePathResolver resolver) throws RepositoryException {
         NodeId id = uriResolver.buildNodeId(parentId, baseUri, nodeResponse, sessionInfo.getWorkspaceName(), getNamePathResolver(sessionInfo));
         NodeInfoImpl nInfo = new NodeInfoImpl(id, propSet, resolver);
         DavProperty p = propSet.get(JcrRemotingConstants.JCR_REFERENCES_LN, ItemResourceConstants.NAMESPACE);
@@ -1141,9 +1115,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         return l;
     }
 
-    /**
-     * @see RepositoryService#getChildInfos(SessionInfo, NodeId)
-     */
+    @Override
     public Iterator<ChildInfo> getChildInfos(SessionInfo sessionInfo, NodeId parentId) throws RepositoryException {
         // set of properties to be retrieved
         DavPropertyNameSet nameSet = new DavPropertyNameSet();
@@ -1200,15 +1172,13 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         return new ChildInfoImpl(qName, uuid, index);
     }
 
-    /**
-     * @see RepositoryService#getReferences(SessionInfo, NodeId, Name, boolean)
-     */
-    public Iterator<PropertyId> getReferences(SessionInfo sessionInfo, NodeId nodeId, Name propertyName, boolean weakReferences) throws ItemNotFoundException, RepositoryException {
+    @Override
+    public Iterator<PropertyId> getReferences(SessionInfo sessionInfo, NodeId nodeId, Name propertyName, boolean weakReferences) throws RepositoryException {
         // set of properties to be retrieved
         DavPropertyNameSet nameSet = new DavPropertyNameSet();
         String refType = weakReferences ? JcrRemotingConstants.JCR_WEAK_REFERENCES_LN : JcrRemotingConstants.JCR_REFERENCES_LN;
         nameSet.add(refType, ItemResourceConstants.NAMESPACE);
- 
+
         DavMethodBase method = null;
         try {
             String uri = getItemUri(nodeId, sessionInfo);
@@ -1251,9 +1221,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         }
     }
 
-    /**
-     * @see RepositoryService#getPropertyInfo(SessionInfo, PropertyId)
-     */
+    @Override
     public PropertyInfo getPropertyInfo(SessionInfo sessionInfo, PropertyId propertyId) throws RepositoryException {
         GetMethod method = null;
         try {
@@ -1281,7 +1249,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
 
             NamePathResolver resolver = getNamePathResolver(sessionInfo);
             if (ct.startsWith("jcr-value")) {
-                type = JcrValueType.typeFromContentType(ct);                
+                type = JcrValueType.typeFromContentType(ct);
                 QValue v;
                 if (type == PropertyType.BINARY) {
                     v = getQValueFactory().create(method.getResponseBodyAsStream());
@@ -1311,7 +1279,6 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             }
 
             return new PropertyInfoImpl(propertyId, path, type, isMultiValued, values);
-            
         } catch (IOException e) {
             throw new RepositoryException(e);
         } catch (DavException e) {
@@ -1391,17 +1358,13 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         }
     }
 
-    /**
-     * @see RepositoryService#createBatch(SessionInfo,ItemId)
-     */
+    @Override
     public Batch createBatch(SessionInfo sessionInfo, ItemId itemId) throws RepositoryException {
         checkSessionInfo(sessionInfo);
         return new BatchImpl(itemId, sessionInfo);
     }
 
-    /**
-     * @see RepositoryService#submit(Batch)
-     */
+    @Override
     public void submit(Batch batch) throws RepositoryException {
         if (!(batch instanceof BatchImpl)) {
             throw new RepositoryException("Unknown Batch implementation.");
@@ -1443,9 +1406,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         }
     }
 
-    /**
-     * @see RepositoryService#importXml(SessionInfo, NodeId, InputStream, int)
-     */
+    @Override
     public void importXml(SessionInfo sessionInfo, NodeId parentId, InputStream xmlStream, int uuidBehaviour) throws RepositoryException {
         // TODO: improve. currently random name is built instead of retrieving name of new resource from top-level xml element within stream
         Name nodeName = getNameFactory().create(Name.NS_DEFAULT_URI, UUID.randomUUID().toString());
@@ -1456,9 +1417,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         execute(method, sessionInfo);
     }
 
-    /**
-     * @see RepositoryService#move(SessionInfo, NodeId, NodeId, Name)
-     */
+    @Override
     public void move(SessionInfo sessionInfo, NodeId srcNodeId, NodeId destParentNodeId, Name destName) throws RepositoryException {
         String uri = getItemUri(srcNodeId, sessionInfo);
         String destUri = getItemUri(destParentNodeId, destName, sessionInfo);
@@ -1471,9 +1430,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         clearItemUriCache(sessionInfo);
     }
 
-    /**
-     * @see RepositoryService#copy(SessionInfo, String, NodeId, NodeId, Name)
-     */
+    @Override
     public void copy(SessionInfo sessionInfo, String srcWorkspaceName, NodeId srcNodeId, NodeId destParentNodeId, Name destName) throws RepositoryException {
         String uri = uriResolver.getItemUri(srcNodeId, srcWorkspaceName, sessionInfo);
         String destUri = getItemUri(destParentNodeId, destName, sessionInfo);
@@ -1484,9 +1441,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         execute(method, sessionInfo);
     }
 
-    /**
-     * @see RepositoryService#update(SessionInfo, NodeId, String)
-     */
+    @Override
     public void update(SessionInfo sessionInfo, NodeId nodeId, String srcWorkspaceName) throws RepositoryException {
         String uri = getItemUri(nodeId, sessionInfo);
         String workspUri = uriResolver.getWorkspaceUri(srcWorkspaceName);
@@ -1494,17 +1449,13 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         update(uri, null, new String[] {workspUri}, UpdateInfo.UPDATE_BY_WORKSPACE, false, sessionInfo);
     }
 
-    /**
-     * @see RepositoryService#clone(SessionInfo, String, NodeId, NodeId, Name, boolean)
-     */
+    @Override
     public void clone(SessionInfo sessionInfo, String srcWorkspaceName, NodeId srcNodeId, NodeId destParentNodeId, Name destName, boolean removeExisting) throws RepositoryException {
         // TODO: missing implementation
         throw new UnsupportedOperationException("Missing implementation");
     }
 
-    /**
-     * @see RepositoryService#getLockInfo(SessionInfo, NodeId)
-     */
+    @Override
     public LockInfo getLockInfo(SessionInfo sessionInfo, NodeId nodeId) throws RepositoryException {
         // set of Dav-properties to be retrieved
         DavPropertyNameSet nameSet = new DavPropertyNameSet();
@@ -1549,18 +1500,14 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         }
     }
 
-    /**
-     * @see RepositoryService#lock(SessionInfo, NodeId, boolean, boolean)
-     */
+    @Override
     public LockInfo lock(SessionInfo sessionInfo, NodeId nodeId, boolean deep,
                          boolean sessionScoped) throws RepositoryException {
         return lock(sessionInfo, nodeId, deep, sessionScoped, Long.MAX_VALUE, null);
     }
 
-    /**
-     * @see RepositoryService#lock(SessionInfo, NodeId, boolean, boolean, long, String)
-     */
-    public LockInfo lock(SessionInfo sessionInfo, NodeId nodeId, boolean deep, boolean sessionScoped, long timeoutHint, String ownerHint) throws UnsupportedRepositoryOperationException, LockException, AccessDeniedException, RepositoryException {
+    @Override
+    public LockInfo lock(SessionInfo sessionInfo, NodeId nodeId, boolean deep, boolean sessionScoped, long timeoutHint, String ownerHint) throws RepositoryException {
         try {
             checkSessionInfo(sessionInfo);
             long davTimeout = (timeoutHint == Long.MAX_VALUE) ? INFINITE_TIMEOUT : timeoutHint*1000;
@@ -1583,9 +1530,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         }
     }
 
-    /**
-     * @see RepositoryService#refreshLock(SessionInfo, NodeId)
-     */
+    @Override
     public void refreshLock(SessionInfo sessionInfo, NodeId nodeId) throws RepositoryException {
         checkSessionInfo(sessionInfo);
         String uri = getItemUri(nodeId, sessionInfo);
@@ -1597,9 +1542,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         execute(method, sessionInfo);
     }
 
-    /**
-     * @see RepositoryService#unlock(SessionInfo, NodeId)
-     */
+    @Override
     public void unlock(SessionInfo sessionInfo, NodeId nodeId) throws RepositoryException {
         checkSessionInfo(sessionInfo);
         String uri = getItemUri(nodeId, sessionInfo);
@@ -1660,10 +1603,8 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         return new LockInfoImpl(activeLock, holder == null ? nodeId : holder, ((SessionInfoImpl)sessionInfo).getAllLockTokens());
     }
 
-    /**
-     * @see RepositoryService#checkin(SessionInfo, NodeId)
-     */
-    public NodeId checkin(SessionInfo sessionInfo, NodeId nodeId) throws VersionException, UnsupportedRepositoryOperationException, InvalidItemStateException, LockException, RepositoryException {
+    @Override
+    public NodeId checkin(SessionInfo sessionInfo, NodeId nodeId) throws RepositoryException {
         String uri = getItemUri(nodeId, sessionInfo);
         CheckinMethod method = new CheckinMethod(uri);
         execute(method, sessionInfo);
@@ -1671,19 +1612,15 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         return uriResolver.getNodeId(resolve(uri, rh.getValue()), sessionInfo);
     }
 
-    /**
-     * @see RepositoryService#checkout(SessionInfo, NodeId)
-     */
-    public void checkout(SessionInfo sessionInfo, NodeId nodeId) throws UnsupportedRepositoryOperationException, LockException, RepositoryException {
+    @Override
+    public void checkout(SessionInfo sessionInfo, NodeId nodeId) throws RepositoryException {
         String uri = getItemUri(nodeId, sessionInfo);
         CheckoutMethod method = new CheckoutMethod(uri);
         execute(method, sessionInfo);
     }
 
-    /**
-     * @see RepositoryService#checkout(SessionInfo, NodeId, NodeId)
-     */
-    public void checkout(SessionInfo sessionInfo, NodeId nodeId, NodeId activityId) throws UnsupportedRepositoryOperationException, LockException, RepositoryException {
+    @Override
+    public void checkout(SessionInfo sessionInfo, NodeId nodeId, NodeId activityId) throws RepositoryException {
         if (activityId == null) {
             checkout(sessionInfo, nodeId);
         } else {
@@ -1692,20 +1629,16 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         }
     }
 
-    /**
-     * @see RepositoryService#checkpoint(SessionInfo, NodeId)
-     */
-    public NodeId checkpoint(SessionInfo sessionInfo, NodeId nodeId) throws UnsupportedRepositoryOperationException, RepositoryException {
+    @Override
+    public NodeId checkpoint(SessionInfo sessionInfo, NodeId nodeId) throws RepositoryException {
         // TODO review again.
         NodeId vID = checkin(sessionInfo, nodeId);
         checkout(sessionInfo, nodeId);
         return vID;
     }
 
-    /**
-     * @see RepositoryService#checkpoint(SessionInfo, NodeId, NodeId)
-     */
-    public NodeId checkpoint(SessionInfo sessionInfo, NodeId nodeId, NodeId activityId) throws UnsupportedRepositoryOperationException, RepositoryException {
+    @Override
+    public NodeId checkpoint(SessionInfo sessionInfo, NodeId nodeId, NodeId activityId) throws RepositoryException {
         if (activityId == null) {
             return checkpoint(sessionInfo, nodeId);
         } else {
@@ -1714,18 +1647,14 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         }
     }
 
-    /**
-     * @see RepositoryService#removeVersion(SessionInfo, NodeId, NodeId)
-     */
+    @Override
     public void removeVersion(SessionInfo sessionInfo, NodeId versionHistoryId, NodeId versionId) throws RepositoryException {
         String uri = getItemUri(versionId, sessionInfo);
         DeleteMethod method = new DeleteMethod(uri);
         execute(method, sessionInfo);
     }
 
-    /**
-     * @see RepositoryService#restore(SessionInfo, NodeId, NodeId, boolean)
-     */
+    @Override
     public void restore(SessionInfo sessionInfo, NodeId nodeId, NodeId versionId, boolean removeExisting) throws RepositoryException {
         String uri = getItemUri(nodeId, sessionInfo);
         String vUri = getItemUri(versionId, sessionInfo);
@@ -1773,9 +1702,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     }
 
 
-    /**
-     * @see RepositoryService#restore(SessionInfo, NodeId[], boolean)
-     */
+    @Override
     public void restore(SessionInfo sessionInfo, NodeId[] versionIds, boolean removeExisting) throws RepositoryException {
         String uri = uriResolver.getWorkspaceUri(sessionInfo.getWorkspaceName());
         String[] vUris = new String[versionIds.length];
@@ -1815,17 +1742,13 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         }
     }
 
-    /**
-     * @see RepositoryService#merge(SessionInfo, NodeId, String, boolean)
-     */
-    public Iterator<NodeId> merge(SessionInfo sessionInfo, NodeId nodeId, String srcWorkspaceName, boolean bestEffort) throws NoSuchWorkspaceException, AccessDeniedException, MergeException, LockException, InvalidItemStateException, RepositoryException {
+    @Override
+    public Iterator<NodeId> merge(SessionInfo sessionInfo, NodeId nodeId, String srcWorkspaceName, boolean bestEffort) throws RepositoryException {
         return merge(sessionInfo, nodeId, srcWorkspaceName, bestEffort, false);
     }
 
-    /**
-     * @see RepositoryService#merge(SessionInfo, NodeId, String, boolean, boolean)
-     */
-    public Iterator<NodeId> merge(SessionInfo sessionInfo, NodeId nodeId, String srcWorkspaceName, boolean bestEffort, boolean isShallow) throws NoSuchWorkspaceException, AccessDeniedException, MergeException, LockException, InvalidItemStateException, RepositoryException {
+    @Override
+    public Iterator<NodeId> merge(SessionInfo sessionInfo, NodeId nodeId, String srcWorkspaceName, boolean bestEffort, boolean isShallow) throws RepositoryException {
         try {
             Document doc = DomUtil.createDocument();
             String wspHref = obtainAbsolutePathFromUri(uriResolver.getWorkspaceUri(srcWorkspaceName));
@@ -1855,10 +1778,8 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         }
     }
 
-    /**
-     * @see RepositoryService#resolveMergeConflict(SessionInfo, NodeId, NodeId[], NodeId[])
-     */
-    public void resolveMergeConflict(SessionInfo sessionInfo, NodeId nodeId, NodeId[] mergeFailedIds, NodeId[] predecessorIds) throws VersionException, InvalidItemStateException, UnsupportedRepositoryOperationException, RepositoryException {
+    @Override
+    public void resolveMergeConflict(SessionInfo sessionInfo, NodeId nodeId, NodeId[] mergeFailedIds, NodeId[] predecessorIds) throws RepositoryException {
         try {
             List<HrefProperty> changeList = new ArrayList<HrefProperty>();
             String[] mergeFailedHref = new String[mergeFailedIds.length];
@@ -1882,10 +1803,8 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         }
     }
 
-    /**
-     * @see RepositoryService#addVersionLabel(SessionInfo,NodeId,NodeId,Name,boolean)
-     */
-    public void addVersionLabel(SessionInfo sessionInfo, NodeId versionHistoryId, NodeId versionId, Name label, boolean moveLabel) throws VersionException, RepositoryException {
+    @Override
+    public void addVersionLabel(SessionInfo sessionInfo, NodeId versionHistoryId, NodeId versionId, Name label, boolean moveLabel) throws RepositoryException {
         try {
             String uri = getItemUri(versionId, sessionInfo);
             String strLabel = getNamePathResolver(sessionInfo).getJCRName(label);
@@ -1896,10 +1815,8 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         }
     }
 
-    /**
-     * @see RepositoryService#removeVersionLabel(SessionInfo,NodeId,NodeId,Name)
-     */
-    public void removeVersionLabel(SessionInfo sessionInfo, NodeId versionHistoryId, NodeId versionId, Name label) throws VersionException, RepositoryException {
+    @Override
+    public void removeVersionLabel(SessionInfo sessionInfo, NodeId versionHistoryId, NodeId versionId, Name label) throws RepositoryException {
         try {
             String uri = getItemUri(versionId, sessionInfo);
             String strLabel = getNamePathResolver(sessionInfo).getJCRName(label);
@@ -1910,41 +1827,31 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         }
     }
 
-    /**
-     * @see RepositoryService#createActivity(SessionInfo, String)
-     */
-    public NodeId createActivity(SessionInfo sessionInfo, String title) throws UnsupportedRepositoryOperationException, RepositoryException {
+    @Override
+    public NodeId createActivity(SessionInfo sessionInfo, String title) throws RepositoryException {
         // TODO
         throw new UnsupportedOperationException("JCR-2104: JSR 283 Versioning. Implementation missing");
     }
 
-    /**
-     * @see RepositoryService#removeActivity(SessionInfo, NodeId)
-     */
-    public void removeActivity(SessionInfo sessionInfo, NodeId activityId) throws UnsupportedRepositoryOperationException, RepositoryException {
+    @Override
+    public void removeActivity(SessionInfo sessionInfo, NodeId activityId) throws RepositoryException {
         // TODO
         throw new UnsupportedOperationException("JCR-2104: JSR 283 Versioning. Implementation missing");
     }
 
-    /**
-     * @see RepositoryService#mergeActivity(SessionInfo, NodeId)
-     */
-    public Iterator<NodeId> mergeActivity(SessionInfo sessionInfo, NodeId activityId) throws UnsupportedRepositoryOperationException, RepositoryException {
+    @Override
+    public Iterator<NodeId> mergeActivity(SessionInfo sessionInfo, NodeId activityId) throws RepositoryException {
         // TODO
         throw new UnsupportedOperationException("JCR-2104: JSR 283 Versioning. Implementation missing");
     }
 
-    /**
-     * @see RepositoryService#createConfiguration(SessionInfo, NodeId)
-     */
-    public NodeId createConfiguration(SessionInfo sessionInfo, NodeId nodeId) throws UnsupportedRepositoryOperationException, RepositoryException {
+    @Override
+    public NodeId createConfiguration(SessionInfo sessionInfo, NodeId nodeId) throws RepositoryException {
         // TODO
         throw new UnsupportedOperationException("JCR-2104: JSR 283 Versioning. Implementation missing");
     }
 
-    /**
-     * @see RepositoryService#getSupportedQueryLanguages(SessionInfo)
-     */
+    @Override
     public String[] getSupportedQueryLanguages(SessionInfo sessionInfo) throws RepositoryException {
         OptionsMethod method = new OptionsMethod(uriResolver.getWorkspaceUri(sessionInfo.getWorkspaceName()));
         try {
@@ -1963,18 +1870,17 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         }
     }
 
+    @Override
     public String[] checkQueryStatement(SessionInfo sessionInfo,
                                     String statement,
                                     String language,
                                     Map<String, String> namespaces)
-            throws InvalidQueryException, RepositoryException {
+            throws RepositoryException {
         // TODO implement
         return new String[0];
     }
 
-    /**
-     * @see RepositoryService#executeQuery(SessionInfo, String, String,java.util.Map,long,long,java.util.Map
-     */
+    @Override
     public QueryInfo executeQuery(SessionInfo sessionInfo, String statement, String language, Map<String, String> namespaces, long limit, long offset, Map<String, QValue> values) throws RepositoryException {
         SearchMethod method = null;
         try {
@@ -2012,9 +1918,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         }
     }
 
-    /**
-     * @see RepositoryService#createEventFilter(SessionInfo, int, Path, boolean, String[], Name[], boolean)
-     */
+    @Override
     public EventFilter createEventFilter(SessionInfo sessionInfo,
                                          int eventTypes,
                                          Path absPath,
@@ -2022,7 +1926,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
                                          String[] uuids,
                                          Name[] nodeTypeNames,
                                          boolean noLocal)
-            throws UnsupportedRepositoryOperationException, RepositoryException {
+            throws RepositoryException {
         // resolve node type names
         // todo what if new node types become available while event filter is still in use?
         Set<Name> resolvedTypeNames = null;
@@ -2042,11 +1946,9 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
                 resolvedTypeNames, noLocal);
     }
 
-    /**
-     * @see RepositoryService#getEvents(Subscription, long)
-     */
+    @Override
     public EventBundle[] getEvents(Subscription subscription, long timeout)
-            throws RepositoryException, UnsupportedRepositoryOperationException {
+            throws RepositoryException {
         checkSubscription(subscription);
 
         EventSubscriptionImpl subscr = (EventSubscriptionImpl) subscription;
@@ -2055,11 +1957,8 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         return poll(rootUri, subscr.getId(), timeout, subscr.getSessionInfo());
     }
 
-    /**
-     * @see RepositoryService#getEvents(SessionInfo, EventFilter, long)
-     */
-    public EventBundle getEvents(SessionInfo sessionInfo, EventFilter filter, long after) throws RepositoryException,
-            UnsupportedRepositoryOperationException {
+    @Override
+    public EventBundle getEvents(SessionInfo sessionInfo, EventFilter filter, long after) throws RepositoryException {
         // TODO: use filters remotely (JCR-3179)
 
         GetMethod method = null;
@@ -2118,12 +2017,10 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         }
     }
 
-    /**
-     * @see RepositoryService#createSubscription(SessionInfo, EventFilter[])
-     */
+    @Override
     public Subscription createSubscription(SessionInfo sessionInfo,
                                            EventFilter[] filters)
-            throws UnsupportedRepositoryOperationException, RepositoryException {
+            throws RepositoryException {
 
         checkSessionInfo(sessionInfo);
         String rootUri = uriResolver.getRootItemUri(sessionInfo.getWorkspaceName());
@@ -2140,9 +2037,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         return new EventSubscriptionImpl(subscriptionId, (SessionInfoImpl) sessionInfo);
     }
 
-    /**
-     * @see RepositoryService#updateEventFilters(Subscription, EventFilter[])
-     */
+    @Override
     public void updateEventFilters(Subscription subscription,
                                    EventFilter[] filters)
             throws RepositoryException {
@@ -2170,6 +2065,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         }
     }
 
+    @Override
     public void dispose(Subscription subscription) throws RepositoryException {
         checkSubscription(subscription);
         EventSubscriptionImpl subscr = (EventSubscriptionImpl) subscription;
@@ -2293,7 +2189,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     }
 
     private List<Event> buildEventList(Element bundleElement, SessionInfoImpl sessionInfo, String baseUri)
-            throws IllegalNameException, NamespaceException, RepositoryException {
+            throws RepositoryException {
         List<Event> events = new ArrayList<Event>();
         ElementIterator eventElementIterator = DomUtil.getChildren(bundleElement, ObservationConstants.N_EVENT);
 
@@ -2367,7 +2263,6 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
                 } catch (RepositoryException e) {
                     log.warn("Unable to build event parentId: {}", e.getMessage());
                 }
-                
             }
 
             if (userId == null) {
@@ -2382,9 +2277,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         return events;
     }
 
-    /**
-     * @see RepositoryService#getRegisteredNamespaces(SessionInfo)
-     */
+    @Override
     public Map<String, String> getRegisteredNamespaces(SessionInfo sessionInfo) throws RepositoryException {
         ReportInfo info = new ReportInfo(JcrRemotingConstants.REPORT_REGISTERED_NAMESPACES, ItemResourceConstants.NAMESPACE);
         ReportMethod method = null;
@@ -2428,11 +2321,9 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         }
     }
 
-    /**
-     * @see RepositoryService#getNamespaceURI(SessionInfo, String)
-     */
+    @Override
     public String getNamespaceURI(SessionInfo sessionInfo, String prefix)
-            throws NamespaceException, RepositoryException {
+            throws RepositoryException {
         try {
             return nsCache.getURI(prefix);
         } catch (NamespaceException e) {
@@ -2442,11 +2333,9 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         }
     }
 
-    /**
-     * @see RepositoryService#getNamespacePrefix(SessionInfo, String)
-     */
+    @Override
     public String getNamespacePrefix(SessionInfo sessionInfo, String uri)
-            throws NamespaceException, RepositoryException {
+            throws RepositoryException {
         try {
             return nsCache.getPrefix(uri);
         } catch (NamespaceException e) {
@@ -2456,10 +2345,8 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         }
     }
 
-    /**
-     * @see RepositoryService#registerNamespace(SessionInfo, String, String)
-     */
-    public void registerNamespace(SessionInfo sessionInfo, String prefix, String uri) throws NamespaceException, UnsupportedRepositoryOperationException, AccessDeniedException, RepositoryException {
+    @Override
+    public void registerNamespace(SessionInfo sessionInfo, String prefix, String uri) throws RepositoryException {
         // make sure we have them all
         getRegisteredNamespaces(sessionInfo);
 
@@ -2473,10 +2360,8 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         nsCache.add(prefix, uri);
     }
 
-    /**
-     * @see RepositoryService#unregisterNamespace(SessionInfo, String)
-     */
-    public void unregisterNamespace(SessionInfo sessionInfo, String uri) throws NamespaceException, UnsupportedRepositoryOperationException, AccessDeniedException, RepositoryException {
+    @Override
+    public void unregisterNamespace(SessionInfo sessionInfo, String uri) throws RepositoryException {
         // make sure we have them all
         getRegisteredNamespaces(sessionInfo);
 
@@ -2499,7 +2384,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
      * @throws AccessDeniedException
      * @throws RepositoryException
      */
-    private void internalSetNamespaces(SessionInfo sessionInfo, Map<String, String> namespaces) throws NamespaceException, UnsupportedRepositoryOperationException, AccessDeniedException, RepositoryException {
+    private void internalSetNamespaces(SessionInfo sessionInfo, Map<String, String> namespaces) throws RepositoryException {
         DavPropertySet setProperties = new DavPropertySet();
         setProperties.add(createNamespaceProperty(namespaces));
 
@@ -2523,10 +2408,8 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         }
     }
 
-    /**
-     * @see RepositoryService#getQNodeTypeDefinitions(SessionInfo)
-     */
-    public Iterator<QNodeTypeDefinition> getQNodeTypeDefinitions(SessionInfo sessionInfo) throws RepositoryException {       
+    @Override
+    public Iterator<QNodeTypeDefinition> getQNodeTypeDefinitions(SessionInfo sessionInfo) throws RepositoryException {
         ReportMethod method = null;
         try {
             ReportInfo info = new ReportInfo(JcrRemotingConstants.REPORT_NODETYPES, ItemResourceConstants.NAMESPACE);
@@ -2552,21 +2435,17 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    @Override
     public Iterator<QNodeTypeDefinition> getQNodeTypeDefinitions(SessionInfo sessionInfo, Name[] nodetypeNames) throws RepositoryException {
         // in order to avoid individual calls for every nodetype, retrieve
         // the complete set from the server (again).
         return getQNodeTypeDefinitions(sessionInfo);
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    public void registerNodeTypes(SessionInfo sessionInfo, QNodeTypeDefinition[] nodeTypeDefinitions, boolean allowUpdate) throws InvalidNodeTypeDefinitionException, NodeTypeExistsException, UnsupportedRepositoryOperationException, RepositoryException {
+    @Override
+    public void registerNodeTypes(SessionInfo sessionInfo, QNodeTypeDefinition[] nodeTypeDefinitions, boolean allowUpdate) throws RepositoryException {
         PropPatchMethod method = null;
-     	try {
+        try {
              DavPropertySet setProperties = new DavPropertySet();
              setProperties.add(createRegisterNodeTypesProperty(sessionInfo, nodeTypeDefinitions, allowUpdate));
              String uri = uriResolver.getWorkspaceUri(sessionInfo.getWorkspaceName());
@@ -2585,12 +2464,10 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
          }
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    public void unregisterNodeTypes(SessionInfo sessionInfo, Name[] nodeTypeNames) throws UnsupportedRepositoryOperationException, NoSuchNodeTypeException, RepositoryException {
+    @Override
+    public void unregisterNodeTypes(SessionInfo sessionInfo, Name[] nodeTypeNames) throws RepositoryException {
         PropPatchMethod method = null;
-     	try {
+        try {
              DavPropertySet setProperties = new DavPropertySet();
              setProperties.add(createUnRegisterNodeTypesProperty(sessionInfo, nodeTypeNames));
              String uri = uriResolver.getWorkspaceUri(sessionInfo.getWorkspaceName());
@@ -2609,16 +2486,14 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
          }
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    public void createWorkspace(SessionInfo sessionInfo, String name, String srcWorkspaceName) throws AccessDeniedException, UnsupportedRepositoryOperationException, NoSuchWorkspaceException, RepositoryException {
+    @Override
+    public void createWorkspace(SessionInfo sessionInfo, String name, String srcWorkspaceName) throws RepositoryException {
         if (srcWorkspaceName != null) {
             throw new UnsupportedOperationException("JCR-2003. Implementation missing");
         }
 
         MkWorkspaceMethod method = null;
-     	try {
+        try {
              method = new MkWorkspaceMethod(uriResolver.getWorkspaceUri(name));
              initMethod(method, sessionInfo, true);
              getClient(sessionInfo).executeMethod(method);
@@ -2634,12 +2509,10 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
          }
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    public void deleteWorkspace(SessionInfo sessionInfo, String name) throws AccessDeniedException, UnsupportedRepositoryOperationException, NoSuchWorkspaceException, RepositoryException {
+    @Override
+    public void deleteWorkspace(SessionInfo sessionInfo, String name) throws RepositoryException {
         DeleteMethod method = null;
-     	try {
+        try {
              method = new DeleteMethod(uriResolver.getWorkspaceUri(name));
              initMethod(method, sessionInfo, true);
              getClient(sessionInfo).executeMethod(method);
@@ -3059,7 +2932,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         /**
          * @see Batch#setValue(PropertyId, QValue)
          */
-        public void setValue(PropertyId propertyId, QValue value) throws ValueFormatException, VersionException, LockException, ConstraintViolationException, AccessDeniedException, UnsupportedRepositoryOperationException, RepositoryException {
+        public void setValue(PropertyId propertyId, QValue value) throws RepositoryException {
             checkConsumed();
             if (value == null) {
                 // setting property value to 'null' is identical to a removal
@@ -3079,7 +2952,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         /**
          * @see Batch#setValue(PropertyId, QValue[])
          */
-        public void setValue(PropertyId propertyId, QValue[] values) throws ValueFormatException, VersionException, LockException, ConstraintViolationException, AccessDeniedException, UnsupportedRepositoryOperationException, RepositoryException {
+        public void setValue(PropertyId propertyId, QValue[] values) throws RepositoryException {
             checkConsumed();
             if (values == null) {
                 // setting property value to 'null' is identical to a removal
@@ -3175,7 +3048,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         /**
          * @see Batch#setMixins(NodeId, Name[])
          */
-        public void setMixins(NodeId nodeId, Name[] mixinNodeTypeIds) throws NoSuchNodeTypeException, VersionException, ConstraintViolationException, LockException, AccessDeniedException, UnsupportedRepositoryOperationException, RepositoryException {
+        public void setMixins(NodeId nodeId, Name[] mixinNodeTypeIds) throws RepositoryException {
             checkConsumed();
             try {
                 DavPropertySet setProperties;
@@ -3256,9 +3129,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             this.sessionInfo = sessionInfo;
         }
 
-        /**
-         * @inheritDoc
-         */
+        @Override
         public String getURI(String prefix) throws NamespaceException {
             try {
                 return getNamespaceURI(sessionInfo, prefix);
@@ -3268,9 +3139,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             }
         }
 
-        /**
-         * @inheritDoc
-         */
+        @Override
         public String getPrefix(String uri) throws NamespaceException {
             try {
                 return getNamespacePrefix(sessionInfo, uri);
@@ -3299,9 +3168,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             return ((SessionInfoImpl) sessionInfo).getNamePathResolver().getQPath(jcrPath);
         }
 
-        /**
-         * @inheritDoc
-         */
+        @Override
         public Path getPath(String identifier) throws MalformedPathException {
             try {
                 int pos = identifier.indexOf('/');
@@ -3321,9 +3188,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             }
         }
 
-        /**
-         * @inheritDoc
-         */
+        @Override
         public void checkFormat(String identifier) throws MalformedPathException {
             // cannot be determined. assume ok.
         }
@@ -3349,37 +3214,27 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             pResolver = new ParsingPathResolver(getPathFactory(), nResolver);
         }
 
-        /**
-         * @inheritDoc
-         */
+        @Override
         public Name getQName(String jcrName) throws IllegalNameException, NamespaceException {
             return nResolver.getQName(jcrName);
         }
 
-        /**
-         * @inheritDoc
-         */
+        @Override
         public String getJCRName(Name qName) throws NamespaceException {
             return nResolver.getJCRName(qName);
         }
 
-        /**
-         * @inheritDoc
-         */
+        @Override
         public Path getQPath(String path) throws MalformedPathException, IllegalNameException, NamespaceException {
             return pResolver.getQPath(path);
         }
 
-        /**
-         * @inheritDoc
-         */
+        @Override
         public Path getQPath(String path, boolean normalizeIdentifier) throws MalformedPathException, IllegalNameException, NamespaceException {
             return pResolver.getQPath(path, normalizeIdentifier);
         }
 
-        /**
-         * @inheritDoc
-         */
+        @Override
         public String getJCRPath(Path path) throws NamespaceException {
             return pResolver.getJCRPath(path);
         }
@@ -3409,6 +3264,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
 
         //----------------------------------------------< NamespaceResolver >---
 
+        @Override
         public String getURI(String prefix) throws NamespaceException {
             String uri = prefixToURI.get(prefix);
             if (uri != null) {
@@ -3418,6 +3274,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             }
         }
 
+        @Override
         public String getPrefix(String uri) throws NamespaceException {
             String prefix = uriToPrefix.get(uri);
             if (prefix != null) {

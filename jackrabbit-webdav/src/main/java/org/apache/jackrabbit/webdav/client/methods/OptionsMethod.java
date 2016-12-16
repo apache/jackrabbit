@@ -16,28 +16,24 @@
  */
 package org.apache.jackrabbit.webdav.client.methods;
 
+import java.io.IOException;
+import java.util.HashSet;
+import java.util.Set;
+
+import org.apache.commons.httpclient.Header;
+import org.apache.commons.httpclient.HttpConnection;
+import org.apache.commons.httpclient.HttpMethodBase;
+import org.apache.commons.httpclient.HttpState;
 import org.apache.jackrabbit.webdav.DavMethods;
 import org.apache.jackrabbit.webdav.DavServletResponse;
 import org.apache.jackrabbit.webdav.version.OptionsInfo;
 import org.apache.jackrabbit.webdav.version.OptionsResponse;
-import org.apache.commons.httpclient.HttpConnection;
-import org.apache.commons.httpclient.HttpState;
-import org.apache.commons.httpclient.Header;
-import org.apache.commons.httpclient.HttpMethodBase;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.w3c.dom.Element;
-
-import java.io.IOException;
-import java.util.HashSet;
-import java.util.Set;
 
 /**
  * <code>OptionsMethod</code>...
  */
 public class OptionsMethod extends DavMethodBase {
-
-    private static Logger log = LoggerFactory.getLogger(OptionsMethod.class);
 
     private final Set<String> allowedMethods = new HashSet<String>();
     private final Set<String> complianceClasses = new HashSet<String>();

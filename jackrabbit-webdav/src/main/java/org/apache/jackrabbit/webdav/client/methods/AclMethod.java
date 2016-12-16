@@ -16,20 +16,16 @@
  */
 package org.apache.jackrabbit.webdav.client.methods;
 
-import org.apache.jackrabbit.webdav.DavServletResponse;
-import org.apache.jackrabbit.webdav.DavMethods;
-import org.apache.jackrabbit.webdav.security.AclProperty;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.IOException;
+
+import org.apache.jackrabbit.webdav.DavMethods;
+import org.apache.jackrabbit.webdav.DavServletResponse;
+import org.apache.jackrabbit.webdav.security.AclProperty;
 
 /**
  * <code>AclMethod</code>...
  */
 public class AclMethod extends DavMethodBase {
-
-    private static Logger log = LoggerFactory.getLogger(AclMethod.class);
 
     public AclMethod(String uri, AclProperty aclProperty) throws IOException {
         super(uri);

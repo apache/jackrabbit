@@ -15,24 +15,20 @@
 */
 package org.apache.jackrabbit.webdav.client.methods;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.apache.jackrabbit.webdav.DavMethods;
-import org.apache.jackrabbit.webdav.DavServletResponse;
-import org.apache.jackrabbit.webdav.DavException;
-import org.apache.jackrabbit.webdav.header.PollTimeoutHeader;
-import org.apache.jackrabbit.webdav.xml.DomUtil;
-import org.apache.jackrabbit.webdav.xml.ElementIterator;
-import org.apache.jackrabbit.webdav.observation.ObservationConstants;
-import org.apache.jackrabbit.webdav.observation.EventDiscovery;
-import org.apache.jackrabbit.webdav.observation.EventBundle;
+import java.io.IOException;
+
+import org.apache.commons.httpclient.HttpConnection;
 import org.apache.commons.httpclient.HttpMethodBase;
 import org.apache.commons.httpclient.HttpState;
-import org.apache.commons.httpclient.HttpConnection;
+import org.apache.jackrabbit.webdav.DavException;
+import org.apache.jackrabbit.webdav.DavMethods;
+import org.apache.jackrabbit.webdav.DavServletResponse;
+import org.apache.jackrabbit.webdav.header.PollTimeoutHeader;
+import org.apache.jackrabbit.webdav.observation.EventDiscovery;
+import org.apache.jackrabbit.webdav.observation.ObservationConstants;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Element;
-import org.w3c.dom.Document;
-
-import java.io.IOException;
 
 /**
  * <code>PollMethod</code> implementation.
@@ -112,23 +108,13 @@ public class PollMethod extends DavMethodBase implements ObservationConstants {
       * @param root
       * @return
       */
-     private boolean buildDiscoveryFromRoot(Element root) {
-         if (DomUtil.matches(root, XML_EVENTDISCOVERY, ObservationConstants.NAMESPACE)) {
-             eventDiscovery = new EventDiscovery();
-             ElementIterator it = DomUtil.getChildren(root, XML_EVENTBUNDLE, ObservationConstants.NAMESPACE);
-             while (it.hasNext()) {
-                 final Element ebElement = it.nextElement();
-                 EventBundle eb = new EventBundle() {
-                     public Element toXml(Document document) {
-                         return (Element) document.importNode(ebElement, true);
-                     }
-                 };
-                 eventDiscovery.addEventBundle(eb);
-             }
-             return true;
-         } else {
-             log.debug("Missing 'eventdiscovery' response body in POLL method.");
-         }
-         return false;
-     }
+    private boolean buildDiscoveryFromRoot(Element root) {
+        try {
+            eventDiscovery = EventDiscovery.createFromXml(root);
+            return true;
+        } catch (IllegalArgumentException ex) {
+            log.debug("Missing 'eventdiscovery' response body in POLL method.", ex);
+            return false;
+        }
+    }
 }
