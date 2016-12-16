@@ -263,7 +263,6 @@ public class AsyncUploadCache {
      * {@link #toBeDeleted}
      */
     public synchronized void reset() throws IOException {
-        String filePath = pendingUploads.getAbsolutePath();
         if (!pendingUploads.exists()) {
             pendingUploads.createNewFile();
         }

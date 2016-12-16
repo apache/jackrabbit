@@ -27,7 +27,7 @@ import java.util.Properties;
  */
 class UserManagerConfig {
 
-    private static final Logger log = LoggerFactory.getLogger(UserManagerImpl.class);
+    private static final Logger log = LoggerFactory.getLogger(UserManagerConfig.class);
 
     private final Properties config;
     private final String adminId;

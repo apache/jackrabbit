@@ -343,7 +343,7 @@ public class UserAccessControlProvider extends AbstractAccessControlProvider
             }
         } catch (RepositoryException e) {
             // should never get here
-            log.error("Error while initializing user/group administrators: ()", e.getMessage());
+            log.error("Error while initializing user/group administrators: {}", e.getMessage());
         }
         return null;
     }

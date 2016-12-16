@@ -34,7 +34,7 @@ import org.xml.sax.helpers.DefaultHandler;
  */
 public class DavDocumentBuilderFactory {
 
-    private static final Logger LOG = LoggerFactory.getLogger(DomUtil.class);
+    private static final Logger LOG = LoggerFactory.getLogger(DavDocumentBuilderFactory.class);
 
     private final DocumentBuilderFactory DEFAULT_FACTORY = createFactory();
 

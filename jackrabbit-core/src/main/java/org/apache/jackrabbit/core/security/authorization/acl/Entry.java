@@ -43,7 +43,7 @@ import org.slf4j.LoggerFactory;
  */
 class Entry implements AccessControlConstants {
 
-    private static final Logger log = LoggerFactory.getLogger(ACLTemplate.class);
+    private static final Logger log = LoggerFactory.getLogger(Entry.class);
 
     private final String principalName;
     private final boolean isGroupEntry;
