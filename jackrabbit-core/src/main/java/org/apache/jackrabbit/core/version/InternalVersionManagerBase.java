@@ -668,7 +668,7 @@ abstract class InternalVersionManagerBase implements InternalVersionManager {
      *      does not exist, that name is used.
      * <li> otherwise a ".0" is added to the name until a non conflicting name
      *      is found.
-     * <ul>
+     * </ul>
      *
      * Example Graph:
      * <xmp>

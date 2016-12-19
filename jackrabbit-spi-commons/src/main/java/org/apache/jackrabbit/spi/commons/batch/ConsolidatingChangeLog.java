@@ -368,7 +368,7 @@ public class ConsolidatingChangeLog extends AbstractChangeLog<ConsolidatingChang
              *   {@link ConsolidatingChangeLog.CancelableOperations.SetValue SetValue} and has this
              *   property as target.</li>
              * <li>{@link ConsolidatingChangeLog.CancelableOperation#CANCEL_NONE CANCEL_NONE} otherwise.</li>
-             * <ul>
+             * </ul>
              */
             public int cancel(CancelableOperation other) throws RepositoryException {
                 if (other instanceof Remove) {
