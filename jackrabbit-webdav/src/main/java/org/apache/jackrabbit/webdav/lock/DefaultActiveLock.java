@@ -28,7 +28,7 @@ import org.apache.jackrabbit.webdav.DavConstants;
  * values are set:<pre>
  * - timeout is set to infinity.
  * - isDeep is set to true.
- * <pre>
+ * </pre>
  */
 public class DefaultActiveLock extends AbstractActiveLock {
 

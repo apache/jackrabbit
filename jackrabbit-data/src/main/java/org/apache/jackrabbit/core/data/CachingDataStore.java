@@ -80,6 +80,7 @@ import org.slf4j.LoggerFactory;
  *     &lt;param name="{@link #setProactiveCaching(boolean) proactiveCaching}" value="true"/>
  *     &lt;param name="{@link #setRecLengthCacheSize(int) recLengthCacheSize}" value="200"/>
  * &lt/DataStore>
+ * </pre>
  */
 public abstract class CachingDataStore extends AbstractDataStore implements
         MultiDataStoreAware, AsyncUploadCallback, AsyncTouchCallback {

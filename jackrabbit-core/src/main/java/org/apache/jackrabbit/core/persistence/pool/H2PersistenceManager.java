@@ -36,7 +36,7 @@ import org.apache.jackrabbit.core.persistence.PMContext;
  *     &lt;param name="{@link #setErrorHandling(String) errorHandling}" value=""/>
  *     &lt;param name="{@link #setLockTimeout(String) lockTimeout}" value="10000"/>
  * &lt;/PersistenceManager>
- * <pre>
+ * </pre>
  */
 public class H2PersistenceManager extends BundleDbPersistenceManager {
 

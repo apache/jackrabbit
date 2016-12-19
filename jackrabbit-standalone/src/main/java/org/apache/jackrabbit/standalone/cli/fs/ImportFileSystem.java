@@ -37,7 +37,7 @@ import org.apache.tika.Tika;
 /**
  * Import data from the file system. <br>
  * If the given path refers to a file it's imported to a <code>Node</code> of
- * type nt:file under the current working <code>Node<code>.<br>
+ * type nt:file under the current working <code>Node</code>.<br>
  * If the given path refers to a folder, the given folder and all the subtree is
  * imported.
  */

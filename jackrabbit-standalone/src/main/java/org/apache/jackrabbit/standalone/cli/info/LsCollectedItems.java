@@ -26,7 +26,7 @@ import org.apache.jackrabbit.standalone.cli.CommandException;
 /**
  * Lists collected <code>Item</code>s.<br>
  * This <code>Command</code> looks for an <code>Iterator</code> under the
- * given <code>Context</code> variable and lists its <code>Item<code>s.
+ * given <code>Context</code> variable and lists its <code>Item</code>s.
  */
 public class LsCollectedItems extends AbstractLsItems {
     /** Context variable that holds the Iterator */
