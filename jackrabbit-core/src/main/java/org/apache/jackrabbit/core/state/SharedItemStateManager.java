@@ -68,7 +68,7 @@ import org.slf4j.LoggerFactory;
  * The states from the VISP are read-only. by the exception for node references.
  * remember that the referrers are stored in a {@link NodeReferences} state,
  * having the ID of the target state.
- * <br/>
+ * <p>
  * there are 5 types of referential relations to be distinguished:
  * <ol>
  * <li> normal --> normal (references from 'normal' states to 'normal' states)
@@ -97,17 +97,17 @@ import org.slf4j.LoggerFactory;
  * the same PropertyId. So the number of references can be tracked (an example
  * of multi-workspace-referrers is a version referenced by the jcr:baseVersion
  * of several (corresponding) nodes in multiple workspaces).
- * <br/>
+ * <p>
  * As mentioned, VN-type references should not impose any constraints on the
  * referrers (e.g. a normal node referenced by a versioned reference property).
  * In case of the version store, the VN-type references are not stored at
  * all, but reinforced as NN-type references in the normal states in case of a
  * checkout operation.
- * <br/>
+ * <p>
  * VV-type references should be handled by the respective VISP. they look as
  * NN-type references in the scope if the VISP anyway...so no special treatment
  * should be necessary.
- * <br/>
+ * <p>
  * VV'-type references are currently not possible, since the version store and
  * virtual node type representation don't allow such references.
  */
@@ -474,7 +474,8 @@ public class SharedItemStateManager
     }
 
     /**
-     * Adds a new virtual item state provider.<p/>
+     * Adds a new virtual item state provider.
+     * <p>
      * NOTE: This method is not synchronized, because it is called right after
      * creation only by the same thread and therefore concurrency issues
      * do not occur. Should this ever change, the synchronization status
@@ -1519,9 +1520,11 @@ public class SharedItemStateManager
      * Store modifications registered in a <code>ChangeLog</code>. The items
      * contained in the <tt>ChangeLog</tt> are not states returned by this
      * item state manager but rather must be reconnected to items provided
-     * by this state manager.<p/>
+     * by this state manager.
+     * <p>
      * After successfully storing the states the observation manager is informed
-     * about the changes, if an observation manager is passed to this method.<p/>
+     * about the changes, if an observation manager is passed to this method.
+     * <p>
      * NOTE: This method is not synchronized, because all methods it invokes
      * on instance members (such as {@link PersistenceManager#store} are
      * considered to be thread-safe. Should this ever change, the

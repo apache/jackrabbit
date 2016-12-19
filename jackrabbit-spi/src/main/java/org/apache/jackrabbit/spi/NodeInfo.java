@@ -20,7 +20,8 @@ import java.util.Iterator;
 
 /**
  * The <code>NodeInfo</code> provides the basic information required to build
- * nodes making up the repository hierarchy.<p/>
+ * nodes making up the repository hierarchy.
+ * <p>
  * Note however, that the list of child nodes does not form part of a
  * <code>NodeInfo</code>. It is retrieved by calling
  * {@link RepositoryService#getChildInfos(SessionInfo, NodeId)}. In case of

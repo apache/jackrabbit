@@ -26,7 +26,9 @@ import org.apache.jackrabbit.core.util.db.ConnectionHelper;
 import org.apache.jackrabbit.core.util.db.OracleConnectionHelper;
 
 /**
- * Extends the {@link BundleDbPersistenceManager} by Oracle specific code. <p/> Configuration:<br>
+ * Extends the {@link BundleDbPersistenceManager} by Oracle specific code.
+ * <p>
+ * Configuration:<br>
  * <ul>
  * <li>&lt;param name="{@link #setExternalBLOBs(String)} externalBLOBs}" value="false"/>
  * <li>&lt;param name="{@link #setBundleCacheSize(String) bundleCacheSize}" value="8"/>

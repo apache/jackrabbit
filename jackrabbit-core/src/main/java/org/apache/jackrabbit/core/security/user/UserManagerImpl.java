@@ -168,7 +168,7 @@ import java.util.UUID;
  * In addition to the specified configuration parameters this user manager
  * implementation allows to define zero to many {@link AuthorizableAction}s.
  * Authorizable actions provide the ability to execute additional validation or
- * tasks upon authorizable creation, removal and upon changing a users password.<br/>
+ * tasks upon authorizable creation, removal and upon changing a users password.<br>
  * See also {@link org.apache.jackrabbit.core.config.UserManagerConfig#getAuthorizableActions()}
  */
 public class UserManagerImpl extends ProtectedItemModifier

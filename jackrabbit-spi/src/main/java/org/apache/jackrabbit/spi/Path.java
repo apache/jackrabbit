@@ -472,7 +472,8 @@ public interface Path extends Serializable {
 
     /**
      * Returns the String representation of this Path as it is used
-     * by {@link PathFactory#create(String)}.<p/>
+     * by {@link PathFactory#create(String)}.
+     * <p>
      * The String representation must consist of the String representation of
      * its elements separated by {@link Path#DELIMITER}.
      *

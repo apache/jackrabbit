@@ -335,7 +335,8 @@ public class WorkspaceResourceImpl extends AbstractResource
      * Allows to alter the registered namespaces ({@link ItemResourceConstants#JCR_NAMESPACES})
      * or register node types {@link ItemResourceConstants#JCR_NODETYPES_CND}
      * where the passed value is a cnd string containing the definition
-     * and forwards any other property to the super class.<p/>
+     * and forwards any other property to the super class.
+     * <p>
      * Note that again no property status is set. Any failure while setting
      * a property results in an exception (violating RFC 2518).
      *
