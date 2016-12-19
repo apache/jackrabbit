@@ -43,7 +43,7 @@ import org.slf4j.LoggerFactory;
  * and if a statement fails due to an {@code SQLException}, then it is retried. If the {@code block} argument
  * of the constructor call was {@code false} then it is retried only once. Otherwise the statement is retried
  * until either it succeeds or the thread is interrupted. This clearly assumes that the only cause of {@code
- * SQLExceptions} is faulty {@code Connections} which are restored eventually. <br/> <strong>Note</strong>:
+ * SQLExceptions} is faulty {@code Connections} which are restored eventually. <br> <strong>Note</strong>:
  * This retry logic only applies to the following methods:
  * <ul>
  * <li>{@link #exec(String, Object...)}</li>
@@ -223,7 +223,8 @@ public class ConnectionHelper {
     }
 
     /**
-     * Starts the <i>batch mode</i>. If an {@link SQLException} is thrown, then the batch mode is not started. <p/>
+     * Starts the <i>batch mode</i>. If an {@link SQLException} is thrown, then the batch mode is not started.
+     * <p>
      * <strong>Important:</strong> clients that call this method must make sure that
      * {@link #endBatch(boolean)} is called eventually.
      *

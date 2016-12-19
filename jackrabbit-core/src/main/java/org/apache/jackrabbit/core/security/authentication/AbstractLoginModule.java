@@ -49,7 +49,8 @@ import org.slf4j.LoggerFactory;
  * authentication tasks within the Repository.
  * <p>
  * On successful authentication it associates the credentials to principals
- * using the {@link PrincipalProvider} configured for this LoginModule<p />
+ * using the {@link PrincipalProvider} configured for this LoginModule
+ * <p>
  * Jackrabbit distinguishes between Login and Impersonation dispatching the
  * the corresponding Repository/Session methods to
  * {@link #authenticate(java.security.Principal, javax.jcr.Credentials)} and
@@ -233,9 +234,10 @@ public abstract class AbstractLoginModule implements LoginModule {
     }
 
     /**
-     * Method to authenticate a <code>Subject</code> (phase 1).<p/>
-     * The login is divided into 3 Phases:<p/>
-     *
+     * Method to authenticate a <code>Subject</code> (phase 1).
+     * <p>
+     * The login is divided into 3 Phases:
+     * <p>
      * <b>1) User-ID resolution</b><br>
      * In a first step it is tried to resolve a User-ID for further validation.
      * As for JCR the identification is marked with the {@link Credentials}
@@ -258,8 +260,8 @@ public abstract class AbstractLoginModule implements LoginModule {
      * {@link PrincipalProvider#findPrincipals(String)}.<br>
      * The provider implementation can be set by the LoginModule configuration.
      * If the option is missing, the system default principal provider will
-     * be used.<p/>
-     *
+     * be used.
+     * <p>
      * <b>3) Verification</b><br>
      * There are four cases, how the User-ID can be verified:
      * The login is anonymous, pre-authenticated or the login is the result of
@@ -462,7 +464,7 @@ public abstract class AbstractLoginModule implements LoginModule {
      * Test if the current request is an Impersonation attempt. The default
      * implementation returns <code>true</code> if an
      * {@link #getImpersonatorSubject(Credentials) subject} for the
-     * impersonation can be retrieved.<p/>
+     * impersonation can be retrieved.
      *
      * @param credentials potentially containing impersonation data
      * @return true if this is an impersonation attempt

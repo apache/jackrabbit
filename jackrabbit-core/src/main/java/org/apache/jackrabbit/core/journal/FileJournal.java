@@ -26,7 +26,8 @@ import java.io.InputStream;
 
 /**
  * File-based journal implementation that appends journal records to a single
- * file.<p/>
+ * file.
+ * <p>
  * It is configured through the following properties:
  * <ul>
  * <li><code>revision</code>: the filename where the parent cluster node's revision

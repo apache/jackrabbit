@@ -50,7 +50,8 @@ public abstract class AbstractLocatorFactory implements DavLocatorFactory {
      * given request handle. The same applies for trailing '/'. The remaining
      * String is called the 'resource handle' and it's first segment is treated
      * as workspace name. If resource handle (and therefore workspace name
-     * are missing, both values are set to <code>null</code>.<p/>
+     * are missing, both values are set to <code>null</code>.
+     * <p>
      * Examples:
      *
      * <pre>

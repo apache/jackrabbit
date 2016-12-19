@@ -186,7 +186,8 @@ public interface AccessManager {
      * may be <code>null</code>.<br>
      * Note, that this method should only be called for persisted items as NEW
      * items may not be visible to the permission evaluation.
-     * For new items {@link #isGranted(Path, int)} should be used instead.<p/>
+     * For new items {@link #isGranted(Path, int)} should be used instead.
+     * <p>
      * If this method is called with both Path and ItemId it is left to the
      * evaluation, which parameter is used.
      *

@@ -154,9 +154,11 @@ public interface JackrabbitAccessControlList extends JackrabbitAccessControlPoli
     /**
      * If the <code>AccessControlList</code> implementation supports
      * reordering of entries the specified <code>srcEntry</code> is inserted
-     * at the position of the specified <code>destEntry</code>.<p/>
+     * at the position of the specified <code>destEntry</code>.
+     * <p>
      * If <code>destEntry</code> is <code>null</code> the entry is moved to the
-     * end of the list.<p/>
+     * end of the list.
+     * <p>
      * If <code>srcEntry</code> and <code>destEntry</code> are the same no
      * changes are made.
      * 

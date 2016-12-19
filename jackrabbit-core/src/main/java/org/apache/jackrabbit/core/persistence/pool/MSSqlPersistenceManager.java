@@ -19,7 +19,9 @@ package org.apache.jackrabbit.core.persistence.pool;
 import org.apache.jackrabbit.core.util.db.CheckSchemaOperation;
 
 /**
- * Extends the {@link BundleDbPersistenceManager} by MS-SQL specific code. <p/> Configuration:<br>
+ * Extends the {@link BundleDbPersistenceManager} by MS-SQL specific code.
+ * <p>
+ * Configuration:<br>
  * <ul>
  * <li>&lt;param name="{@link #setBundleCacheSize(String) bundleCacheSize}" value="8"/>
  * <li>&lt;param name="{@link #setConsistencyCheck(String) consistencyCheck}" value="false"/>

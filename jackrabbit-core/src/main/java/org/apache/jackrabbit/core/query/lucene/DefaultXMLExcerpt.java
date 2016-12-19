@@ -22,7 +22,7 @@ import java.io.IOException;
 
 /**
  * <code>DefaultXMLExcerpt</code> creates an XML excerpt of a matching node.
- * <br/>
+ * <br>
  * E.g. if you search for 'jackrabbit' and 'query' you may get the following
  * result for a node:
  * <pre>

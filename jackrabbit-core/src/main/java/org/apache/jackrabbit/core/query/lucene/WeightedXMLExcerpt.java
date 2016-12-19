@@ -26,7 +26,7 @@ import java.io.IOException;
  * based on the proximity of highlighted terms. Highlighted terms that are
  * adjacent have a higher weight. In addition, the more highlighted terms, the
  * higher the weight.
- * <br/>
+ * <br>
  * E.g. if you search for 'jackrabbit' and 'query' you may get the following
  * result for a node:
  * <pre>

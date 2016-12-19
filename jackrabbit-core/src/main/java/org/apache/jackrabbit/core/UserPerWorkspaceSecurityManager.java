@@ -279,8 +279,8 @@ public class UserPerWorkspaceSecurityManager extends DefaultSecurityManager {
      * is checked in order to successfully complete the login. Since with this
      * SecurityManager users are stored separately in each workspace, a user
      * may only login to a workspace if the corresponding user node exists.
-     * Consequently a lazy workspace access manager is sufficient.<p/>
-     *
+     * Consequently a lazy workspace access manager is sufficient.
+     * <p>
      * If this SecurityManager is used with a distinct <code>LoginModule</code>
      * implementation, the {@link org.apache.jackrabbit.core.config.SecurityManagerConfig#getWorkspaceAccessConfig() configuration}
      * for <code>WorkspaceAccessManager</code> should be adjusted as well.

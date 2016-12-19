@@ -240,7 +240,8 @@ public abstract class DavMethodBase extends EntityEnclosingMethod implements Dav
      * which in this implementation parses the response body into a <code>MultiStatus</code>
      * object if the status code indicates 207 (MultiStatus).<br>
      * Subclasses may want to override this method in order to apply specific
-     * validation of the multi-status.<p/>
+     * validation of the multi-status.
+     * <P>
      * This implementation does nothing.
      *
      * @param multiStatus

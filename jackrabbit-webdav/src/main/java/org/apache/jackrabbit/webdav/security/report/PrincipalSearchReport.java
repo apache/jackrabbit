@@ -36,7 +36,8 @@ import java.util.List;
 
 /**
  * The <code>PrincipalSearchReport</code> performs a search for all principals
- * that match the search criteria specified in the request.<p/>
+ * that match the search criteria specified in the request.
+ * <p>
  * The following XML structure is required in the request body:
  * <pre>
  * &lt;!ELEMENT principal-property-search ((property-search+), prop?, apply-to-principal-collection-set?) &gt;

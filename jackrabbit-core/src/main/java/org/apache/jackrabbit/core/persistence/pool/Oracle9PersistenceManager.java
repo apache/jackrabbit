@@ -23,7 +23,8 @@ import org.apache.jackrabbit.core.util.db.Oracle10R1ConnectionHelper;
 
 /**
  * <code>OracleLegacyPersistenceManager</code> provides support for Oracle jdbc drivers prior to version 10
- * which require special handling of BLOB data. <p/> Configuration:<br>
+ * which require special handling of BLOB data.
+ * <p>Configuration:<br>
  * <ul>
  * <li>&lt;param name="{@link #setBundleCacheSize(String) bundleCacheSize}" value="8"/>
  * <li>&lt;param name="{@link #setConsistencyCheck(String) consistencyCheck}" value="false"/>

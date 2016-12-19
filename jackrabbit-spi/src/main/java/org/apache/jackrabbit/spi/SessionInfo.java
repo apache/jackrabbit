@@ -25,11 +25,11 @@ import javax.jcr.lock.LockException;
  * {@link RepositoryService#obtain(javax.jcr.Credentials, String)} or
  * {@link RepositoryService#obtain(SessionInfo, String)} and will be used for
  * any call on the RepositoryService that requires user and workspace
- * identification.<p/>
- *
+ * identification.
+ * <p>
  * In addition the SessionInfo acts as primary container for
  * lock tokens. They will assert that a given SessionInfo is able to execute
- * operations on the RepositoryService that are affected by existing locks.<p/>
+ * operations on the RepositoryService that are affected by existing locks.
  */
 public interface SessionInfo {
 
