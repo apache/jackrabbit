@@ -24,10 +24,10 @@ import java.io.IOException;
  * <code>WeightedHTMLExcerpt</code> creates a HTML excerpt with the following
  * format:
  * <pre>
- * &lt;div>
- *     &lt;span>&lt;strong>Jackrabbit&lt;/strong> implements both the mandatory XPath and optional SQL &lt;strong>query&lt;/strong> syntax.&lt;/span>
- *     &lt;span>Before parsing the XPath &lt;strong>query&lt;/strong> in &lt;strong>Jackrabbit&lt;/strong>, the statement is surrounded&lt;/span>
- * &lt;/div>
+ * &lt;div&gt;
+ *     &lt;span&gt;&lt;strong&gt;Jackrabbit&lt;/strong&gt; implements both the mandatory XPath and optional SQL &lt;strong&gt;query&lt;/strong&gt; syntax.&lt;/span&gt;
+ *     &lt;span&gt;Before parsing the XPath &lt;strong&gt;query&lt;/strong&gt; in &lt;strong&gt;Jackrabbit&lt;/strong&gt;, the statement is surrounded&lt;/span&gt;
+ * &lt;/div&gt;
  * </pre>
  * In contrast to {@link DefaultHTMLExcerpt} this implementation weights
  * fragments based on the proximity of highlighted terms. Highlighted terms that

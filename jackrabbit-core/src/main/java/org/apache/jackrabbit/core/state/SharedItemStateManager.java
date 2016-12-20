@@ -71,21 +71,21 @@ import org.slf4j.LoggerFactory;
  * <p>
  * there are 5 types of referential relations to be distinguished:
  * <ol>
- * <li> normal --> normal (references from 'normal' states to 'normal' states)
+ * <li> normal --&gt; normal (references from 'normal' states to 'normal' states)
  *      this is the normal case and will be handled by the SISM.
  *
- * <li> normal --> virtual (references from 'normal' states to 'virtual' states)
+ * <li> normal --&gt; virtual (references from 'normal' states to 'virtual' states)
  *      those references should be handled by the VISP rather by the SISM.
  *
- * <li> virtual --> normal (references from 'virtual' states to 'normal' states)
+ * <li> virtual --&gt; normal (references from 'virtual' states to 'normal' states)
  *      such references are not supported. eg. references of versioned nodes do
  *      not impose any constraints on the referenced nodes.
  *
- * <li> virtual --> virtual (references from 'virtual' states to 'virtual'
+ * <li> virtual --&gt; virtual (references from 'virtual' states to 'virtual'
  *      states of the same VISP).
  *      intra-virtual references are handled by the item state manager of the VISP.
  *
- * <li> virtual --> virtual' (references from 'virtual' states to 'virtual'
+ * <li> virtual --&gt; virtual' (references from 'virtual' states to 'virtual'
  *      states of different VISP).
  *      those do currently not occur and are therefore not supported.
  * </ol>

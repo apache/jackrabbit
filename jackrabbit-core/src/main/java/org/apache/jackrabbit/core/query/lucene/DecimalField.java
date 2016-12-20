@@ -34,13 +34,13 @@ import java.math.BigInteger;
  * </pre>
  * Only the signum is encoded if the value is zero. The exponent is not
  * encoded if zero. Negative values are "inverted" character by character
- * ('0' -> 9, '1' -> '8', and so on). The same applies to the exponent.
+ * ('0' -&gt; 9, '1' -&gt; '8', and so on). The same applies to the exponent.
  * <p>
  * Examples: 
- * 0 => "2"
- * 2 => "322" (signum 1; exponent 0; value 2)
- * 120 => "330212" (signum 1; exponent signum 1, length 1, value 2; value 12).
- * -1 => "179" (signum -1, rest inverted; exponent 0; value 1 (-1, inverted).
+ * 0 =&gt; "2"
+ * 2 =&gt; "322" (signum 1; exponent 0; value 2)
+ * 120 =&gt; "330212" (signum 1; exponent signum 1, length 1, value 2; value 12).
+ * -1 =&gt; "179" (signum -1, rest inverted; exponent 0; value 1 (-1, inverted).
  * <p>
  * Values between BigDecimal(BigInteger.ONE, Integer.MIN_VALUE) and 
  * BigDecimal(BigInteger.ONE, Integer.MAX_VALUE) are supported.

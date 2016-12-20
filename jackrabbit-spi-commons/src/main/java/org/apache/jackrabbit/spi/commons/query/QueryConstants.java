@@ -126,7 +126,7 @@ public interface QueryConstants {
     final String OP_NAME_NE_VALUE = "ne";
 
     /**
-     * not equal operation: <>
+     * not equal operation: <&gt;
      * general comparison
      */
     int OPERATION_NE_GENERAL = OPERATION_NE_VALUE + 1;
@@ -168,7 +168,7 @@ public interface QueryConstants {
     final String OP_NAME_GT_VALUE = "gt";
 
     /**
-     * greater than operation: >
+     * greater than operation: &gt;
      * general comparison
      */
     int OPERATION_GT_GENERAL = OPERATION_GT_VALUE + 1;
@@ -189,7 +189,7 @@ public interface QueryConstants {
     final String OP_NAME_GE_VALUE = "ge";
 
     /**
-     * greater or equal operation: >=
+     * greater or equal operation: &gt;=
      * general comparison
      */
     int OPERATION_GE_GENERAL = OPERATION_GE_VALUE + 1;

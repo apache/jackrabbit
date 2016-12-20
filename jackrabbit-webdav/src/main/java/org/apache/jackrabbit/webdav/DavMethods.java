@@ -285,7 +285,7 @@ public final class DavMethods {
 
     /**
      * Returns webdav method type code, error result <= 0
-     * Valid type codes > 0
+     * Valid type codes &gt; 0
      */
     public static int getMethodCode(String method) {
         Integer code = methodMap.get(method.toUpperCase());

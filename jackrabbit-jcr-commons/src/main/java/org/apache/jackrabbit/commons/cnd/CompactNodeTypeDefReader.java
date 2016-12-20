@@ -43,14 +43,14 @@ import java.util.List;
  * The EBNF grammar of the compact node type definition:<br>
  * <pre>
  * Cnd ::= {NamespaceMapping | NodeTypeDef}
- * NamespaceMapping ::= '<' Prefix '=' Uri '>'
+ * NamespaceMapping ::= '<' Prefix '=' Uri '&gt;'
  * Prefix ::= String
  * Uri ::= String
  * NodeTypeDef ::= NodeTypeName [Supertypes]
  *                 [NodeTypeAttribute {NodeTypeAttribute}]
  *                 {PropertyDef | ChildNodeDef}
  * NodeTypeName ::= '[' String ']'
- * Supertypes ::= '>' (StringList | '?')
+ * Supertypes ::= '&gt;' (StringList | '?')
  * NodeTypeAttribute ::= Orderable | Mixin | Abstract | Query |
  *                       PrimaryItem
  * Orderable ::= ('orderable' | 'ord' | 'o') ['?']
@@ -87,7 +87,7 @@ import java.util.List;
  * Multiple ::= ('multiple' | 'mul' | '*') ['?']
  * QueryOps ::= ('queryops' | 'qop')
  *              (('''Operator {','Operator}''') | '?')
- * Operator ::= '=' | '<>' | '<' | '<=' | '>' | '>=' | 'LIKE'
+ * Operator ::= '=' | '<&gt;' | '<' | '<=' | '&gt;' | '&gt;=' | 'LIKE'
  * NoFullText ::= ('nofulltext' | 'nof') ['?']
  * NoQueryOrder ::= ('noqueryorder' | 'nqord') ['?']
  * Sns ::= ('sns' | '*') ['?']

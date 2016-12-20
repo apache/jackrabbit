@@ -27,7 +27,7 @@ import java.util.List;
 
 /**
  * The <code>SupportedLock</code> class encapsulates the lock capabilities
- * of a resource. It is mainly responsible for generating the &lt;supportedlock>
+ * of a resource. It is mainly responsible for generating the &lt;supportedlock&gt;
  * property.
  */
 public class SupportedLock extends AbstractDavProperty<List<LockEntry>> {
@@ -94,7 +94,7 @@ public class SupportedLock extends AbstractDavProperty<List<LockEntry>> {
     }
 
     /**
-     * Creates an XML element that represents the &lt;supportedlock> tag.
+     * Creates an XML element that represents the &lt;supportedlock&gt; tag.
      *
      * @return An XML element of this lock support.
      * @param document

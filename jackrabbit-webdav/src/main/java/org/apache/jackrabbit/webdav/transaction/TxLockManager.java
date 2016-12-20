@@ -27,7 +27,7 @@ import org.apache.jackrabbit.webdav.lock.Type;
  * '{@link TransactionConstants#TRANSACTION dcr:transaction}'.
  *
  * todo: removing all expired locks
- * todo: 'local' and 'global' are not accurate terms in the given context > replace
+ * todo: 'local' and 'global' are not accurate terms in the given context &gt; replace
  * todo: the usage of the 'global' transaction is not according to the JTA specification,
  * which explicitly requires any transaction present on a servlet to be completed before
  * the service method returns. Starting/completing transactions on the session object,

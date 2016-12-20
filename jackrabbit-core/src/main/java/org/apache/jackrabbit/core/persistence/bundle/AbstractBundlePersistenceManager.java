@@ -91,7 +91,7 @@ import org.slf4j.LoggerFactory;
  * <p>
  * Configuration:<br>
  * <ul>
- * <li>&lt;param name="{@link #setBundleCacheSize(String) bundleCacheSize}" value="8"/>
+ * <li>&lt;param name="{@link #setBundleCacheSize(String) bundleCacheSize}" value="8"/&gt;
  * </ul>
  */
 public abstract class AbstractBundlePersistenceManager implements

@@ -223,7 +223,7 @@ public class MergeSubNodeTest extends AbstractMergeTest {
     }
 
     /**
-     * Node.merge(): bestEffort is true > (sub)node which could not be merged
+     * Node.merge(): bestEffort is true &gt; (sub)node which could not be merged
      * are not affected.<br>
      */
     @SuppressWarnings("deprecation")
@@ -261,7 +261,7 @@ public class MergeSubNodeTest extends AbstractMergeTest {
     }
 
     /**
-     * VersionManager.merge(): bestEffort is true > (sub)node which could not be merged
+     * VersionManager.merge(): bestEffort is true &gt; (sub)node which could not be merged
      * are not affected.<br>
      */
     public void disable_testMergeNodeBestEffortTrueJcr2() throws RepositoryException {

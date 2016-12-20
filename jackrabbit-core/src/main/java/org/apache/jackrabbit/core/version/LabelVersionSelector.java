@@ -27,8 +27,8 @@ import org.apache.jackrabbit.spi.Name;
  * V1.0
  * V1.1 - "foo"
  *
- * new LabelVersionSelector("foo").select() --> V1.1
- * new LabelVersionSelector("bar").select() --> null
+ * new LabelVersionSelector("foo").select() --&gt; V1.1
+ * new LabelVersionSelector("bar").select() --&gt; null
  *
  * </xmp>
  */
