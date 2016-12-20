@@ -175,7 +175,6 @@
         <configuration>
           <source>${java.version}</source>
           <aggregate>true</aggregate>
-          <additionalJOption>-Xmaxwarns 10000 -Xmaxerrs 10000</additionalJOption>
           <links>
             <link>http://docs.oracle.com/javase/7/docs/api/</link>
             <link>http://www.day.com/maven/javax.jcr/javadocs/jcr-2.0/</link>
