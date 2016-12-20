@@ -30,19 +30,19 @@ import org.apache.jackrabbit.core.util.db.OracleConnectionHelper;
  * <p>
  * Configuration:<br>
  * <ul>
- * <li>&lt;param name="{@link #setExternalBLOBs(String)} externalBLOBs}" value="false"/>
- * <li>&lt;param name="{@link #setBundleCacheSize(String) bundleCacheSize}" value="8"/>
- * <li>&lt;param name="{@link #setConsistencyCheck(String) consistencyCheck}" value="false"/>
- * <li>&lt;param name="{@link #setMinBlobSize(String) minBlobSize}" value="16384"/>
- * <li>&lt;param name="{@link #setDriver(String) driver}" value="oracle.jdbc.OracleDriverr"/>
- * <li>&lt;param name="{@link #setUrl(String) url}" value="jdbc:oracle:thin:@127.0.0.1:1521:xe"/>
- * <li>&lt;param name="{@link #setUser(String) user}" value=""/>
- * <li>&lt;param name="{@link #setPassword(String) password}" value=""/>
- * <li>&lt;param name="{@link #setSchema(String) schema}" value="oracle"/>
- * <li>&lt;param name="{@link #setSchemaObjectPrefix(String) schemaObjectPrefix}" value="${wsp.name}_"/>
- * <li>&lt;param name="{@link #setTablespace(String) tableSpace}" value="user"/>
- * <li>&lt;param name="{@link #setIndexTablespace(String) tableSpace}" value="user"/>
- * <li>&lt;param name="{@link #setErrorHandling(String) errorHandling}" value=""/>
+ * <li>&lt;param name="{@link #setExternalBLOBs(String)} externalBLOBs}" value="false"/&gt;
+ * <li>&lt;param name="{@link #setBundleCacheSize(String) bundleCacheSize}" value="8"/&gt;
+ * <li>&lt;param name="{@link #setConsistencyCheck(String) consistencyCheck}" value="false"/&gt;
+ * <li>&lt;param name="{@link #setMinBlobSize(String) minBlobSize}" value="16384"/&gt;
+ * <li>&lt;param name="{@link #setDriver(String) driver}" value="oracle.jdbc.OracleDriverr"/&gt;
+ * <li>&lt;param name="{@link #setUrl(String) url}" value="jdbc:oracle:thin:@127.0.0.1:1521:xe"/&gt;
+ * <li>&lt;param name="{@link #setUser(String) user}" value=""/&gt;
+ * <li>&lt;param name="{@link #setPassword(String) password}" value=""/&gt;
+ * <li>&lt;param name="{@link #setSchema(String) schema}" value="oracle"/&gt;
+ * <li>&lt;param name="{@link #setSchemaObjectPrefix(String) schemaObjectPrefix}" value="${wsp.name}_"/&gt;
+ * <li>&lt;param name="{@link #setTablespace(String) tableSpace}" value="user"/&gt;
+ * <li>&lt;param name="{@link #setIndexTablespace(String) tableSpace}" value="user"/&gt;
+ * <li>&lt;param name="{@link #setErrorHandling(String) errorHandling}" value=""/&gt;
  * </ul>
  */
 public class OraclePersistenceManager extends BundleDbPersistenceManager {

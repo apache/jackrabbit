@@ -41,12 +41,12 @@ public class DateField {
 
 
     /**
-     * Returns '000000000' -> something around 30 BC
+     * Returns '000000000' -&gt; something around 30 BC
      */
     public static final String MIN_DATE_STRING = timeToString(-DATE_SHIFT);
 
     /**
-     * Returns 'zzzzzzzzz' -> something around 3189
+     * Returns 'zzzzzzzzz' -&gt; something around 3189
      */
     public static final String MAX_DATE_STRING;
 

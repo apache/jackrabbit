@@ -73,8 +73,8 @@ import javax.sql.DataSource;
  * and the JNDI name as the URL. If the user and password are configured in the JNDI resource,
  * they should not be configured here. Example JNDI settings:
  * <pre>
- * &lt;param name="driver" value="javax.naming.InitialContext" />
- * &lt;param name="url" value="java:comp/env/jdbc/Test" />
+ * &lt;param name="driver" value="javax.naming.InitialContext" /&gt;
+ * &lt;param name="url" value="java:comp/env/jdbc/Test" /&gt;
  * </pre> *
  * </ul>
  */

@@ -56,24 +56,24 @@ public abstract class AbstractLocatorFactory implements DavLocatorFactory {
      *
      * <pre>
      * http://www.foo.bar/ (path prefix missing)
-     * -> workspace path = null
-     * -> resource path  = null
-     * -> href           = http://www.foo.bar/pathPrefix/
+     * -&gt; workspace path = null
+     * -&gt; resource path  = null
+     * -&gt; href           = http://www.foo.bar/pathPrefix/
      *
      * http://www.foo.bar/pathPrefix/
-     * -> workspace path = null
-     * -> resource path  = null
-     * -> href           = http://www.foo.bar/pathPrefix/
+     * -&gt; workspace path = null
+     * -&gt; resource path  = null
+     * -&gt; href           = http://www.foo.bar/pathPrefix/
      *
      * http://www.foo.bar/pathPrefix/wspName
-     * -> workspace path = /wspName
-     * -> resource path  = /wspName
-     * -> href           = http://www.foo.bar/pathPrefix/wspName
+     * -&gt; workspace path = /wspName
+     * -&gt; resource path  = /wspName
+     * -&gt; href           = http://www.foo.bar/pathPrefix/wspName
      *
      * http://www.foo.bar/pathPrefix/wspName/anypath
-     * -> workspace path = /wspName
-     * -> resource path  = /wspName/anypath
-     * -> href           = http://www.foo.bar/pathPrefix/wspName/anypath
+     * -&gt; workspace path = /wspName
+     * -&gt; resource path  = /wspName/anypath
+     * -&gt; href           = http://www.foo.bar/pathPrefix/wspName/anypath
      * </pre>
      *
      * NOTE: If the given href is an absolute uri it must start with the

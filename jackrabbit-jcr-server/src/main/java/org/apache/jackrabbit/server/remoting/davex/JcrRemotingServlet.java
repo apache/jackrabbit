@@ -110,7 +110,7 @@ import org.slf4j.LoggerFactory;
  * extracted from the JSON on the client side need some special handling:
  * 
  * <pre>
- * - Node with index > 1, get a JSON key consisting of
+ * - Node with index &gt; 1, get a JSON key consisting of
  *   Node.getName() + "[" + Node.getIndex() + "]" 
  *
  * - Binary Property
@@ -167,28 +167,28 @@ import org.slf4j.LoggerFactory;
  *   pairs      ::= pair line-end pair | pair line-end pairs
  *   line-end   ::= "\r\n" | "\n" | "\r"
  *   key        ::= diffchar path
- *   diffchar   ::= "+" | "^" | "-" | ">"
+ *   diffchar   ::= "+" | "^" | "-" | "&gt;"
  *   path       ::= abspath | relpath
  *   abspath    ::= * absolute path to an item *
  *   relpath    ::= * relpath from item at request URI to an item *
- *   value      ::= value+ | value- | value^ | value>
+ *   value      ::= value+ | value- | value^ | value&gt;
  *   value+     ::= * a JSON object *
  *   value-     ::= ""
  *   value^     ::= * any JSON value except JSON object *
- *   value>     ::= path | path "#before" | path "#after" | "#first" | "#last"
+ *   value&gt;     ::= path | path "#before" | path "#after" | "#first" | "#last"
  * </pre>
  *
  * In other words:
  * <ul>
  * <li>diff consists of one or more key-value pair(s)</li>
  * <li>key must start with a diffchar followed by a rel. or abs. item path</li>
- * <li>diffchar being any of "+", "^", "-" or ">" representing the transient
+ * <li>diffchar being any of "+", "^", "-" or "&gt;" representing the transient
  * item modifications as follows
  * <pre>
  *   "+" addNode
  *   "^" setProperty / setValue / removeProperty
  *   "-" remove Item
- *   ">" move / reorder Nodes
+ *   "&gt;" move / reorder Nodes
  * </pre>
  * </li>
  * <li>key must be separated from the value by a ":" surrounded by whitespace.</li>

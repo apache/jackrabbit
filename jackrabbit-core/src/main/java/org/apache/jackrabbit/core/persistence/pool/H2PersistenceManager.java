@@ -23,19 +23,19 @@ import org.apache.jackrabbit.core.persistence.PMContext;
  * <p>
  * Configuration:
  * <pre>
- * &lt;PersistenceManager class="org.apache.jackrabbit.core.persistence.pool.H2PersistenceManager">
- *     &lt;param name="{@link #setBundleCacheSize(String) bundleCacheSize}" value="8"/>
- *     &lt;param name="{@link #setConsistencyCheck(String) consistencyCheck}" value="false"/>
- *     &lt;param name="{@link #setMinBlobSize(String) minBlobSize}" value="16384"/>
- *     &lt;param name="{@link #setDriver(String) driver}" value="org.h2.Driver"/>
- *     &lt;param name="{@link #setUrl(String) url}" value="jdbc:h2:file:${wsp.home}/db/itemState"/>
- *     &lt;param name="{@link #setUser(String) user}" value=""/>
- *     &lt;param name="{@link #setPassword(String) password}" value=""/>
- *     &lt;param name="{@link #setSchema(String) schema}" value="h2"/>
- *     &lt;param name="{@link #setSchemaObjectPrefix(String) schemaObjectPrefix}" value=""/>
- *     &lt;param name="{@link #setErrorHandling(String) errorHandling}" value=""/>
- *     &lt;param name="{@link #setLockTimeout(String) lockTimeout}" value="10000"/>
- * &lt;/PersistenceManager>
+ * &lt;PersistenceManager class="org.apache.jackrabbit.core.persistence.pool.H2PersistenceManager"&gt;
+ *     &lt;param name="{@link #setBundleCacheSize(String) bundleCacheSize}" value="8"/&gt;
+ *     &lt;param name="{@link #setConsistencyCheck(String) consistencyCheck}" value="false"/&gt;
+ *     &lt;param name="{@link #setMinBlobSize(String) minBlobSize}" value="16384"/&gt;
+ *     &lt;param name="{@link #setDriver(String) driver}" value="org.h2.Driver"/&gt;
+ *     &lt;param name="{@link #setUrl(String) url}" value="jdbc:h2:file:${wsp.home}/db/itemState"/&gt;
+ *     &lt;param name="{@link #setUser(String) user}" value=""/&gt;
+ *     &lt;param name="{@link #setPassword(String) password}" value=""/&gt;
+ *     &lt;param name="{@link #setSchema(String) schema}" value="h2"/&gt;
+ *     &lt;param name="{@link #setSchemaObjectPrefix(String) schemaObjectPrefix}" value=""/&gt;
+ *     &lt;param name="{@link #setErrorHandling(String) errorHandling}" value=""/&gt;
+ *     &lt;param name="{@link #setLockTimeout(String) lockTimeout}" value="10000"/&gt;
+ * &lt;/PersistenceManager&gt;
  * </pre>
  */
 public class H2PersistenceManager extends BundleDbPersistenceManager {

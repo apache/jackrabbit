@@ -26,7 +26,7 @@ import org.apache.jackrabbit.webdav.xml.Namespace;
  * and response headers, Xml elements and property names used for handling
  * transactions over WebDAV. There exists no public standard for this functionality.
  *
- * todo: 'local' and 'global' are not accurate terms in the given context > replace
+ * todo: 'local' and 'global' are not accurate terms in the given context &gt; replace
  */
 public interface TransactionConstants {
 

@@ -30,22 +30,22 @@ import javax.sql.DataSource;
  * <p>
  * Configuration:<br>
  * <ul>
- * <li>&lt;param name="{@link #setBundleCacheSize(String) bundleCacheSize}" value="8"/>
- * <li>&lt;param name="{@link #setConsistencyCheck(String) consistencyCheck}" value="false"/>
- * <li>&lt;param name="{@link #setMinBlobSize(String) minBlobSize}" value="16384"/>
- * <li>&lt;param name="{@link #setDriver(String) driver}" value="org.apache.derby.jdbc.EmbeddedDriver"/>
- * <li>&lt;param name="{@link #setUrl(String) url}" value="jdbc:derby:${wsp.home}/db/itemState;create=true"/>
- * <li>&lt;param name="{@link #setUser(String) user}" value=""/>
- * <li>&lt;param name="{@link #setPassword(String) password}" value=""/>
- * <li>&lt;param name="{@link #setSchema(String) schema}" value="derby"/>
- * <li>&lt;param name="{@link #setSchemaObjectPrefix(String) schemaObjectPrefix}" value=""/>
- * <li>&lt;param name="{@link #setErrorHandling(String) errorHandling}" value=""/>
- * <!-- derby related -->
- * <li>&lt;param name="{@link #setDerbyStorageInitialPages(String) derbyStorageInitialPages}" value="16"/>
- * <li>&lt;param name="{@link #setDerbyStorageMinimumRecordSize(String) derbyStorageMinimumRecordSize}" value="256"/>
- * <li>&lt;param name="{@link #setDerbyStoragePageCacheSize(String) derbyStoragePageCacheSize}" value="1024"/>
- * <li>&lt;param name="{@link #setDerbyStoragePageReservedSpace(String) derbyStoragePageReservedSpace}" value="20"/>
- * <li>&lt;param name="{@link #setDerbyStoragePageSize(String) derbyStoragePageSize}" value="16384"/>
+ * <li>&lt;param name="{@link #setBundleCacheSize(String) bundleCacheSize}" value="8"/&gt;
+ * <li>&lt;param name="{@link #setConsistencyCheck(String) consistencyCheck}" value="false"/&gt;
+ * <li>&lt;param name="{@link #setMinBlobSize(String) minBlobSize}" value="16384"/&gt;
+ * <li>&lt;param name="{@link #setDriver(String) driver}" value="org.apache.derby.jdbc.EmbeddedDriver"/&gt;
+ * <li>&lt;param name="{@link #setUrl(String) url}" value="jdbc:derby:${wsp.home}/db/itemState;create=true"/&gt;
+ * <li>&lt;param name="{@link #setUser(String) user}" value=""/&gt;
+ * <li>&lt;param name="{@link #setPassword(String) password}" value=""/&gt;
+ * <li>&lt;param name="{@link #setSchema(String) schema}" value="derby"/&gt;
+ * <li>&lt;param name="{@link #setSchemaObjectPrefix(String) schemaObjectPrefix}" value=""/&gt;
+ * <li>&lt;param name="{@link #setErrorHandling(String) errorHandling}" value=""/&gt;
+ * <!-- derby related --&gt;
+ * <li>&lt;param name="{@link #setDerbyStorageInitialPages(String) derbyStorageInitialPages}" value="16"/&gt;
+ * <li>&lt;param name="{@link #setDerbyStorageMinimumRecordSize(String) derbyStorageMinimumRecordSize}" value="256"/&gt;
+ * <li>&lt;param name="{@link #setDerbyStoragePageCacheSize(String) derbyStoragePageCacheSize}" value="1024"/&gt;
+ * <li>&lt;param name="{@link #setDerbyStoragePageReservedSpace(String) derbyStoragePageReservedSpace}" value="20"/&gt;
+ * <li>&lt;param name="{@link #setDerbyStoragePageSize(String) derbyStoragePageSize}" value="16384"/&gt;
  * </ul>
  */
 public class DerbyPersistenceManager extends BundleDbPersistenceManager {

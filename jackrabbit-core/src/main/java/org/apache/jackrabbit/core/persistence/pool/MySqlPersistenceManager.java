@@ -23,16 +23,16 @@ import org.apache.jackrabbit.core.persistence.PMContext;
  * <p>
  * Configuration:<br>
  * <ul>
- * <li>&lt;param name="{@link #setBundleCacheSize(String) bundleCacheSize}" value="8"/>
- * <li>&lt;param name="{@link #setConsistencyCheck(String) consistencyCheck}" value="false"/>
- * <li>&lt;param name="{@link #setMinBlobSize(String) minBlobSize}" value="16384"/>
- * <li>&lt;param name="{@link #setDriver(String) driver}" value="org.gjt.mm.mysql.Driver"/>
- * <li>&lt;param name="{@link #setUrl(String) url}" value=""/>
- * <li>&lt;param name="{@link #setUser(String) user}" value=""/>
- * <li>&lt;param name="{@link #setPassword(String) password}" value=""/>
- * <li>&lt;param name="{@link #setSchema(String) schema}" value="mysql"/>
- * <li>&lt;param name="{@link #setSchemaObjectPrefix(String) schemaObjectPrefix}" value=""/>
- * <li>&lt;param name="{@link #setErrorHandling(String) errorHandling}" value=""/>
+ * <li>&lt;param name="{@link #setBundleCacheSize(String) bundleCacheSize}" value="8"/&gt;
+ * <li>&lt;param name="{@link #setConsistencyCheck(String) consistencyCheck}" value="false"/&gt;
+ * <li>&lt;param name="{@link #setMinBlobSize(String) minBlobSize}" value="16384"/&gt;
+ * <li>&lt;param name="{@link #setDriver(String) driver}" value="org.gjt.mm.mysql.Driver"/&gt;
+ * <li>&lt;param name="{@link #setUrl(String) url}" value=""/&gt;
+ * <li>&lt;param name="{@link #setUser(String) user}" value=""/&gt;
+ * <li>&lt;param name="{@link #setPassword(String) password}" value=""/&gt;
+ * <li>&lt;param name="{@link #setSchema(String) schema}" value="mysql"/&gt;
+ * <li>&lt;param name="{@link #setSchemaObjectPrefix(String) schemaObjectPrefix}" value=""/&gt;
+ * <li>&lt;param name="{@link #setErrorHandling(String) errorHandling}" value=""/&gt;
  * </ul>
  */
 public class MySqlPersistenceManager extends BundleDbPersistenceManager {
