@@ -20,7 +20,7 @@ import java.util.StringTokenizer;
 
 /**
  * Utility for name matching such as required for {@link javax.jcr.Node#getNodes(String)},
- * {@link javax.jcr.Node#getNodes(String[])}, {@link javax.jcr.Node#getProperties(String])}
+ * {@link javax.jcr.Node#getNodes(String[])}, {@link javax.jcr.Node#getProperties(String)}
  * and {@link javax.jcr.Node#getProperties(String[])}.
  */
 public final class ItemNameMatcher {

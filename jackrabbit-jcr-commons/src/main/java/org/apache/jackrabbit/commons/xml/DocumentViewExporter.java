@@ -96,7 +96,7 @@ public class DocumentViewExporter extends Exporter {
      * legal according to "6.4.2.5 Multi-value Properties" of the JSR 170
      * specification.
      *
-     * @see https://issues.apache.org/jira/browse/JCR-325
+     * @see <a href="https://issues.apache.org/jira/browse/JCR-325">JCR-325</a>
      */
     protected void exportProperty(
             String uri, String local, int type, Value[] values) {
