@@ -119,8 +119,6 @@ public abstract class AbstractLockTest extends AbstractJCRTest {
 
     /**
      * Test {@link javax.jcr.lock.Lock#refresh()} on a released lock.
-     *
-     * @throws Exception
      */
     public void testRefresh() throws RepositoryException {
         // refresh must succeed

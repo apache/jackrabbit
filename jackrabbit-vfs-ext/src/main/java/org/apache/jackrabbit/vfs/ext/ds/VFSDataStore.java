@@ -290,7 +290,7 @@ public class VFSDataStore extends CachingDataStore {
     /**
      * Creates a {@link FileSystemManager} instance.
      * @return a {@link FileSystemManager} instance.
-     * @throws FileSystemException if an error occurs creating the manager.
+     * @throws RepositoryException if an error occurs creating the manager.
      */
     protected FileSystemManager createFileSystemManager() throws RepositoryException {
         FileSystemManager fileSystemManager = null;
