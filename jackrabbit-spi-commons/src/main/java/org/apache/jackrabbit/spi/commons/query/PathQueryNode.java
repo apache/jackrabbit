@@ -128,7 +128,7 @@ public class PathQueryNode extends NAryQueryNode<LocationStepQueryNode> {
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
     public boolean equals(Object obj) {
         if (obj instanceof PathQueryNode) {

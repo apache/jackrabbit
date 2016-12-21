@@ -137,7 +137,7 @@ public class EffectiveNodeTypeCacheImpl implements EffectiveNodeTypeCache {
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
     public Key findBest(Key key) {
         // quick check for already cached key

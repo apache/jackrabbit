@@ -167,7 +167,7 @@ public class Timer {
         }
 
         /**
-         * @inheritDoc
+         * {@inheritDoc}
          */
         public final boolean cancel() {
             if (timer != null) {
