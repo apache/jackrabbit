@@ -40,7 +40,7 @@ import javax.servlet.ServletException;
  * | rmi.name          | {repository name}  |
  * | rmi.url           | rmi-url            |
  * +-------------------+--------------------+
- * </per>
+ * </pre>
  */
 public class RMIConfig extends AbstractConfig {
 
