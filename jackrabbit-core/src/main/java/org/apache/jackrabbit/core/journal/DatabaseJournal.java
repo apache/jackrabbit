@@ -68,6 +68,7 @@ import javax.sql.DataSource;
  * thread initiates its first run (default = <code>3</code> which means 3:00 at night)</li>
  * <li><code>schemaCheckEnabled</code>:  whether the schema check during initialization is enabled
  * (default = <code>true</code>)</li>
+ * </ul>
  * <p>
  * JNDI can be used to get the connection. In this case, use the javax.naming.InitialContext as the driver,
  * and the JNDI name as the URL. If the user and password are configured in the JNDI resource,
@@ -75,8 +76,7 @@ import javax.sql.DataSource;
  * <pre>
  * &lt;param name="driver" value="javax.naming.InitialContext" /&gt;
  * &lt;param name="url" value="java:comp/env/jdbc/Test" /&gt;
- * </pre> *
- * </ul>
+ * </pre>
  */
 public class DatabaseJournal extends AbstractJournal implements DatabaseAware {
 
