@@ -635,7 +635,7 @@ public class BatchedItemOperations extends ItemValidator {
      *                     performed; any combination of the following constants:
      *                     <ul>
      *                     <li><code>{@link #CHECK_ACCESS}</code>: make sure
-     *                     current session is granted read & write access on
+     *                     current session is granted read &amp; write access on
      *                     parent node</li>
      *                     <li><code>{@link #CHECK_LOCK}</code>: make sure
      *                     there's no foreign lock on parent node</li>
@@ -940,7 +940,7 @@ public class BatchedItemOperations extends ItemValidator {
      * following conditions must hold true:
      * <ul>
      * <li>the node must exist</li>
-     * <li>the current session must be granted read & write access on it</li>
+     * <li>the current session must be granted read &amp; write access on it</li>
      * <li>the node must not be locked by another session</li>
      * <li>the node must not be checked-in</li>
      * <li>the node must not be protected</li>
