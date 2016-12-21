@@ -107,7 +107,7 @@ public class DateVersionSelector implements VersionSelector {
      * Sets the flag, if the latest version should be selected, if no
      * version can be found using the given hint.
      *
-     * @param returnLatest the <ocde>returnLatest</code> flag
+     * @param returnLatest the <code>returnLatest</code> flag
      */
     public void setReturnLatest(boolean returnLatest) {
         this.returnLatest = returnLatest;

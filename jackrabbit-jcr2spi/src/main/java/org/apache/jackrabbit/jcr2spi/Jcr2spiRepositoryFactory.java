@@ -126,8 +126,7 @@ public class Jcr2spiRepositoryFactory implements RepositoryFactory {
      * <li>SPI2DAV (see jackrabbit-spi2dav module): <code>Spi2davexRepositoryServiceFactory</code></li>
      * <li>SPI2JCR (see jackrabbit-spi2jcr module) <code>Spi2jcrRepositoryServiceFactory</code></li>
      * </ul>
-     * </p>
-     *
+     * <p>
      * NOTE: If the <code>parameters</code> map contains an
      * {@link #PARAM_LOG_WRITER_PROVIDER} entry the
      * {@link org.apache.jackrabbit.spi.RepositoryService RepositoryService} obtained

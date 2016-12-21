@@ -34,7 +34,6 @@ import java.util.Iterator;
 import java.util.Set;
 
 /**
- * <p>
  * This {@link TreeManager} implementation provides B+-tree like behavior. That
  * is items of a sequence (i.e. {@link NodeSequence} or {@link PropertySequence})
  * are mapped to a sub-tree in JCR in a way such that only leave nodes carry
@@ -43,8 +42,6 @@ import java.util.Set;
  * join nodes after deletions. This does not affect the order of items and also
  * leaves the tree balanced wrt. its depths. It might however result in a sparse
  * tree. That is, the tree might get unbalanced wrt. its weights.
- * </p>
- *
  * <p>
  * The nodes in the JCR sub tree are arranged such that any node named <code>x</code>
  * only contains child nodes with names greater or equal to <code>x</code>.
@@ -53,11 +50,8 @@ import java.util.Set;
  * Ordering is always wrt. to a {@link Comparator} on the respective keys.
  * For lexical order this arrangement corresponds to how words are arranged in a multi
  * volume encyclopedia.
- * </p>
- *
  * <p>
  * Example usage:
- *
  * <pre>
  * // Create a new TreeManager instance rooted at node. Splitting of nodes takes place
  * // when the number of children of a node exceeds 40 and is done such that each new
@@ -84,8 +78,6 @@ import java.util.Set;
  * // Remove node with key &quot;day&quot;
  * nodes.removeNode(&quot;day&quot;);
  * </pre>
- *
- * </p>
  */
 public class BTreeManager implements TreeManager {
     private final Node root;

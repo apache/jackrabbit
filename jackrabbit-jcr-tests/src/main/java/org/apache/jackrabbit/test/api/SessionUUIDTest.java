@@ -37,15 +37,18 @@ import javax.jcr.InvalidItemStateException;
 public class SessionUUIDTest extends AbstractJCRTest {
 
     /**
-     * Tries to remove a node that is a reference target using {@link Session#save()}.<br>
-     * <br>Procedure:
+     * Tries to remove a node that is a reference target using {@link Session#save()}.
+     * <p>
+     * Procedure:
      * <ul>
      * <li>Creates two nodes with same session</li>
      * <li>One has a referencing property pointing to the other node</li>
-     * <li>Target node gets removed.</code></li>
+     * <li>Target node gets removed</li>
      * </ul>
+     * <p>
      * This should generate a {@link javax.jcr.ReferentialIntegrityException} upon save.
-     * <br><br>Prerequisites:
+     * <p>
+     * Prerequisites:
      * <ul>
      * <li><code>javax.jcr.tck.SessionUUIDTest.nodetype</code> must allow a property of type {@link javax.jcr.PropertyType#REFERENCE}</li>
      * <li><code>javax.jcr.tck.SessionUUIDTest.propertyname1</code> name of the property of type {@link javax.jcr.PropertyType#REFERENCE}</li>

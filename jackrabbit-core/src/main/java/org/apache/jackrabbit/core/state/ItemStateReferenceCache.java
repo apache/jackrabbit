@@ -28,7 +28,7 @@ import java.util.Map;
 /**
  * <code>ItemStateReferenceCache</code> internally consists of 2 components:
  * <ul>
- * <li>an <code>ItemStateReferenceMap<code> serving as the primary (or main)
+ * <li>an <code>ItemStateReferenceMap</code> serving as the primary (or main)
  * cache; it holds weak references to <code>ItemState</code> instances. This
  * <code>ItemStateCache</code> implementation directly represents the
  * contents of the primary cache, i.e. {@link #isCached(ItemId)},
@@ -41,6 +41,7 @@ import java.util.Map;
  * collector if they are thus rendered weakly reachable.
  * </li>
  * </ul>
+ * <p>
  * This implementation of ItemStateCache is thread-safe.
  */
 public class ItemStateReferenceCache implements ItemStateCache {
