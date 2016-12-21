@@ -144,7 +144,7 @@ import org.slf4j.LoggerFactory;
  * <p>
  * Example:
  * <pre>
- * $ curl 'http://.../parent.json?:path=child1&:path=child2'
+ * $ curl 'http://.../parent.json?:path=child1&amp;:path=child2'
  * {"nodes":{"/parent/child1":{...},"/parent/child2":{...}}}
  * </pre>
  *
