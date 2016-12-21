@@ -54,7 +54,7 @@ import javax.jcr.PropertyType;
  * </pre>
  *
  * @see javax.jcr.Repository#getDescriptorKeys()
- * @see javax.jcr.Repository#getDescriptor(String
+ * @see javax.jcr.Repository#getDescriptor(String)
  * @see javax.jcr.Repository#getDescriptorValue(String)
  * @see javax.jcr.Repository#getDescriptorValues(String) 
  */
