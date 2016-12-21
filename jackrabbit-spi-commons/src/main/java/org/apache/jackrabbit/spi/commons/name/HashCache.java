@@ -23,7 +23,7 @@ package org.apache.jackrabbit.spi.commons.name;
  * hash to the same location, only the most recently accessed object is
  * kept in the cache.
  *
- * @see https://issues.apache.org/jira/browse/JCR-1663
+ * @see <a href="https://issues.apache.org/jira/browse/JCR-1663">JCR-1663</a>
  */
 public class HashCache<T> {
 

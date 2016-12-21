@@ -1861,19 +1861,19 @@ public class NodeImpl extends ItemImpl implements Node, JackrabbitNode {
         orderBefore(insertName, beforeName);
     }
 
-    /** Wrapper around {@link #setProperty(Name, Value[], int boolean)} */
+    /** Wrapper around {@link #setProperty(Name, Value[], int, boolean)} */
     public Property setProperty(String name, Value[] values)
             throws RepositoryException {
         return setProperty(getQName(name), values, getType(values), false);
     }
 
-    /** Wrapper around {@link #setProperty(Name, Value[], int boolean)} */
+    /** Wrapper around {@link #setProperty(Name, Value[], int, boolean)} */
     public Property setProperty(String name, Value[] values, int type)
             throws RepositoryException {
         return setProperty(getQName(name), values, type, true);
     }
 
-    /** Wrapper around {@link #setProperty(Name, Value[], int boolean)} */
+    /** Wrapper around {@link #setProperty(Name, Value[], int, boolean)} */
     public Property setProperty(String name, String[] strings)
             throws RepositoryException {
         Value[] values = getValues(strings, STRING);
