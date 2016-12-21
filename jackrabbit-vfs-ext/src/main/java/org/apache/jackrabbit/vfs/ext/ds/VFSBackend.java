@@ -309,7 +309,6 @@ public class VFSBackend extends AbstractBackend {
      *
      * @param identifier data identifier
      * @return identified file object
-     * @throws FileSystemException if VFS file system exception occurs
      * @throws DataStoreException if any file system exception occurs
      */
     protected FileObject resolveFileObject(DataIdentifier identifier) throws DataStoreException {
@@ -341,7 +340,6 @@ public class VFSBackend extends AbstractBackend {
      *
      * @param identifier data identifier
      * @return identified file object
-     * @throws FileSystemException if any file system exception occurs
      * @throws DataStoreException if any file system exception occurs
      */
     protected FileObject getExistingFileObject(DataIdentifier identifier) throws DataStoreException {
