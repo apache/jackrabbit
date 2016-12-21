@@ -24,7 +24,7 @@ import javax.jcr.query.Query;
 public class XPathQuery extends AbstractQuery {
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
     protected String getLanguage() {
         return Query.XPATH;

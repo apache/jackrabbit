@@ -218,7 +218,7 @@ public class WeakIdentityCollection implements Collection {
 
     /**
      * The returned array may contain <code>null</code> elements!
-     * @inheritDoc
+     * {@inheritDoc}
      */
     public Object[] toArray(Object a[]) {
         if (a.length < size) {

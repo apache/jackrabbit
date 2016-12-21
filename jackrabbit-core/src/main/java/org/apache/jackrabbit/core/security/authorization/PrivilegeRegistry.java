@@ -196,7 +196,7 @@ public final class PrivilegeRegistry implements PrivilegeEventListener {
 
     //---------------------------------------------< PrivilegeEventListener >---
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      * @see PrivilegeEventListener#externalRegisteredPrivileges(java.util.Collection)
      */
     public void externalRegisteredPrivileges(Collection<PrivilegeDefinition> definitions) throws RepositoryException {

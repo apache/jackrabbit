@@ -50,7 +50,7 @@ public class NotQueryNode extends NAryQueryNode<QueryNode> {
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
     public boolean equals(Object obj) {
         if (obj instanceof NotQueryNode) {
