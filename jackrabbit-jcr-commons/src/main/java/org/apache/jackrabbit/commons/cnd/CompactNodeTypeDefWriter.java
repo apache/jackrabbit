@@ -46,12 +46,12 @@ import java.util.TreeSet;
 /**
  * Prints node type defs in a compact notation
  * Print Format:
- * <ex = "http://apache.org/jackrabbit/example"&gt;
+ * &lt;ex = "http://apache.org/jackrabbit/example"&gt;
  * [ex:NodeType] &gt; ex:ParentType1, ex:ParentType2
  * orderable mixin
  *   - ex:property (STRING) = 'default1', 'default2'
  *     primary mandatory autocreated protected multiple VERSION
- *     < 'constraint1', 'constraint2'
+ *     &lt; 'constraint1', 'constraint2'
  *   + ex:node (ex:reqType1, ex:reqType2) = ex:defaultType
  *     mandatory autocreated protected multiple VERSION
  */

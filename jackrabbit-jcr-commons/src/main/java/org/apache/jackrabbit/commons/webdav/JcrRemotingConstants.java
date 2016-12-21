@@ -159,7 +159,7 @@ public interface JcrRemotingConstants {
      * Example:
      * 
      * <pre>
-     * Link: <data:,my%20user%data&gt;, rel="<i>RELATION_USER_DATA</i>"
+     * Link: &lt;data:,my%20user%data&gt;, rel="<i>RELATION_USER_DATA</i>"
      * </pre>
      */
     public static final String RELATION_USER_DATA = NS_URI + "/user-data";
@@ -172,7 +172,7 @@ public interface JcrRemotingConstants {
      * Example:
      * 
      * <pre>
-     * Link: <urn:uuid:96d3c6fe-1073-11e1-a3c0-00059a3c7a00&gt;, rel="<i>RELATION_REMOTE_SESSION_ID</i>"
+     * Link: &lt;urn:uuid:96d3c6fe-1073-11e1-a3c0-00059a3c7a00&gt;, rel="<i>RELATION_REMOTE_SESSION_ID</i>"
      * </pre>
      */
     public static final String RELATION_REMOTE_SESSION_ID = NS_URI + "/session-id";

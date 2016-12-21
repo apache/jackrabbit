@@ -328,7 +328,7 @@ public class SessionTest extends AbstractJCRTest {
     }
 
     /**
-     * Checks if a newly created node gets properly saved using <code{@link
+     * Checks if a newly created node gets properly saved using <code>{@link
      * javax.jcr.Session#save()}</code>.
      * <p>
      * It creates a new node, saves
@@ -356,7 +356,7 @@ public class SessionTest extends AbstractJCRTest {
     }
 
     /**
-     * Checks if a modified node gets properly saved using <code{@link
+     * Checks if a modified node gets properly saved using <code>{@link
      * javax.jcr.Session#save()}</code>.
      * <p>
      * It creates a new node, saves

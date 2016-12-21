@@ -130,7 +130,7 @@ public interface Backend {
     boolean exists(DataIdentifier identifier) throws DataStoreException;
    
     /**
-     * Update the lastModified of record if it's lastModified < minModifiedDate.
+     * Update the lastModified of record if it's lastModified &lt; minModifiedDate.
      * 
      * @param identifier
      * @param minModifiedDate
@@ -140,7 +140,7 @@ public interface Backend {
             throws DataStoreException;
     
     /**
-     * Update the lastModified of record if it's lastModified < minModifiedDate
+     * Update the lastModified of record if it's lastModified &lt; minModifiedDate
      * asynchronously. Result of update is passed using appropriate
      * {@link AsyncTouchCallback} methods. If identifier's lastModified &gt;
      * minModified {@link AsyncTouchCallback#onAbort(AsyncTouchResult)} is

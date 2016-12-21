@@ -40,7 +40,6 @@ import javax.sql.DataSource;
  * <li>&lt;param name="{@link #setSchema(String) schema}" value="derby"/&gt;
  * <li>&lt;param name="{@link #setSchemaObjectPrefix(String) schemaObjectPrefix}" value=""/&gt;
  * <li>&lt;param name="{@link #setErrorHandling(String) errorHandling}" value=""/&gt;
- * <!-- derby related --&gt;
  * <li>&lt;param name="{@link #setDerbyStorageInitialPages(String) derbyStorageInitialPages}" value="16"/&gt;
  * <li>&lt;param name="{@link #setDerbyStorageMinimumRecordSize(String) derbyStorageMinimumRecordSize}" value="256"/&gt;
  * <li>&lt;param name="{@link #setDerbyStoragePageCacheSize(String) derbyStoragePageCacheSize}" value="1024"/&gt;

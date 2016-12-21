@@ -779,7 +779,7 @@ public class BatchedItemOperations extends ItemValidator {
      *                    <li><code>{@link #CHECK_REFERENCES}</code>:
      *                    make sure no references exist on target node</li>
      *                    <li><code>{@link #CHECK_HOLD}</code>: check for effective holds preventing the add operation</li>
-     *                    <li><code>{@link #CHECK_RETENTION}</code: check for effective retention policy preventing the add operation</code></li>
+     *                    <li><code>{@link #CHECK_RETENTION}</code>: check for effective retention policy preventing the add operation</li>
      *                    </ul>
      * @throws ConstraintViolationException
      * @throws AccessDeniedException
