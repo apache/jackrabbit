@@ -618,8 +618,8 @@ public class Text {
      * Returns the namespace prefix of the given <code>qname</code>. If the
      * prefix is missing, an empty string is returned. Please note, that this
      * method does not validate the name or prefix.
-     * </p>
-     * the qname has the format: qname := [prefix ':'] local;
+     * <p>
+     * The qname has the format: qname := [prefix ':'] local;
      *
      * @param qname a qualified name
      * @return the prefix of the name or "".
@@ -636,8 +636,8 @@ public class Text {
     /**
      * Returns the local name of the given <code>qname</code>. Please note, that
      * this method does not validate the name.
-     * </p>
-     * the qname has the format: qname := [prefix ':'] local;
+     * <p>
+     * The qname has the format: qname := [prefix ':'] local;
      *
      * @param qname a qualified name
      * @return the localname

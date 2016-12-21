@@ -43,7 +43,7 @@ public class NodeUUIDTest extends AbstractJCRTest {
      * Tries to remove a node that is a reference target using {@link
      * Node#save()}.<br> <br>Procedure: <ul> <li>Creates two nodes with same
      * session</li> <li>One has a referencing property pointing to the other
-     * node</li> <li>Target node gets removed.</code></li> </ul> This should
+     * node</li> <li>Target node gets removed.</li> </ul> This should
      * generate a {@link javax.jcr.ReferentialIntegrityException} upon save.
      * <br><br>Prerequisites: <ul> <li><code>javax.jcr.tck.NodeUUIDTest.nodetype</code>
      * must allow a property of type {@link javax.jcr.PropertyType#REFERENCE}</li>

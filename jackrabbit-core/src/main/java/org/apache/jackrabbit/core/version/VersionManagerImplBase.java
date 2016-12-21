@@ -47,8 +47,8 @@ import org.slf4j.Logger;
 /**
  * The JCR Version Manager implementation is split in several classes in order to
  * group related methods together.
- * </p>
- * this class provides basic routines for all operations and the methods related
+ * <p>
+ * This class provides basic routines for all operations and the methods related
  * to checkin and checkout.
  */
 abstract public class VersionManagerImplBase {
