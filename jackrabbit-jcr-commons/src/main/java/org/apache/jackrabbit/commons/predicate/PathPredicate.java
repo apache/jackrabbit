@@ -34,14 +34,14 @@ public class PathPredicate implements Predicate {
 
     /**
      * Creates a new default path filter
-     * <xmp>
+     * <pre>
      * | Pattern | Matches
      * | /foo    | exactly "/foo"
      * | /foo.*  | all paths starting with "foo."
      * | foo.*   | all files starting with "foo."
      * | /foo/*  | all direct children of /foo
      * | /foo/** | all children of /foo
-     * </xmp>
+     * </pre>
      * @param pattern the pattern
      */
     public PathPredicate(String pattern) {

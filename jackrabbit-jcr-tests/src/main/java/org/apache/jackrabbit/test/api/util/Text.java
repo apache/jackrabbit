@@ -453,8 +453,8 @@ public class Text {
      * string a valid JCR name.
      * Use {@link #unescapeIllegalJcrChars(String)} for decoding.
      * <p>
-     * QName EBNF:<br>
-     * <xmp>
+     * QName EBNF:
+     * <pre>
      * simplename ::= onecharsimplename | twocharsimplename | threeormorecharname
      * onecharsimplename ::= (* Any Unicode character except: '.', '/', ':', '[', ']', '*', ''', '"', '|' or any whitespace character *)
      * twocharsimplename ::= '.' onecharsimplename | onecharsimplename '.' | onecharsimplename onecharsimplename
@@ -462,7 +462,7 @@ public class Text {
      * string ::= char | string char
      * char ::= nonspace | ' '
      * nonspace ::= (* Any Unicode character except: '/', ':', '[', ']', '*', ''', '"', '|' or any whitespace character *)
-     * </xmp>
+     * </pre>
      *
      * @param name the name to escape
      * @return the escaped name
