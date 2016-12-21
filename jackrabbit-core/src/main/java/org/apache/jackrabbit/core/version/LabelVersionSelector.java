@@ -23,14 +23,14 @@ import org.apache.jackrabbit.spi.Name;
 /**
  * This Class implements a version selector that selects a version by label.
  *
- * <xmp>
+ * <pre>
  * V1.0
  * V1.1 - "foo"
  *
  * new LabelVersionSelector("foo").select() --&gt; V1.1
  * new LabelVersionSelector("bar").select() --&gt; null
  *
- * </xmp>
+ * </pre>
  */
 public class LabelVersionSelector implements VersionSelector {
 
