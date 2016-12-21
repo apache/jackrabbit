@@ -53,7 +53,7 @@ import java.util.ArrayList;
 /**
  * Generate "more like this" similarity queries.
  * Based on this mail:
- * <code><pre>
+ * <pre>
  * Lucene does let you access the document frequency of terms, with IndexReader.docFreq().
  * Term frequencies can be computed by re-tokenizing the text, which, for a single document,
  * is usually fast enough.  But looking up the docFreq() of every term in the document is
@@ -80,7 +80,7 @@ import java.util.ArrayList;
  * above.  The frequency and length thresholds could be parameters, etc.
  *
  * Doug
- * </pre></code>
+ * </pre>
  *
  *
  * <p>
@@ -88,7 +88,7 @@ import java.util.ArrayList;
  *
  * This class has lots of options to try to make it efficient and flexible.
  *
- * <code><pre>
+ * <pre>
  *
  * IndexReader ir = ...
  * IndexSearcher is = ...
@@ -101,7 +101,7 @@ import java.util.ArrayList;
  * <em>// now the usual iteration thru 'hits' - the only thing to watch for is to make sure
  * you ignore the doc if it matches your 'target' document, as it should be similar to itself </em>
  *
- * </pre></code>
+ * </pre>
  *
  * Thus you:
  * <ol>
