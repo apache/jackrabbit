@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.webdav.jcr;
 
+import org.apache.jackrabbit.commons.webdav.JcrValueType;
 import org.apache.jackrabbit.commons.xml.SerializingContentHandler;
 import org.apache.jackrabbit.server.io.IOUtil;
 import org.apache.jackrabbit.webdav.DavException;
