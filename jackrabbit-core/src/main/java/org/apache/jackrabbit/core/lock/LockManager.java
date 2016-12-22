@@ -140,13 +140,9 @@ public interface LockManager {
             throws LockException, RepositoryException;
 
     /**
-     * Returns <code>true</code> if the specified session is allowed to unlock
-     * the node; otherwise returns <code>false</code>.
-     * @param session session
-     * @param node node
-     * @return <code>true</code> if the session is allowed access to the node;
-     *         <code>false</code> otherwise
-     * @throws LockException if write access to the specified path is not allowed
+     * Check whether a session is allowed to unlock a node.
+     *
+     * @throws LockException if unlocking is denied
      * @throws RepositoryException if some other error occurs
      */
     void checkUnlock(Session session, NodeImpl node) throws LockException,
