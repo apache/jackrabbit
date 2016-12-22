@@ -146,7 +146,7 @@ public class AccessControlUtils {
 
     /**
      * A utility method to add a new access control entry.<br>
-     * Please note, that calling {@link javax.jcr.Session#save()()} is required
+     * Please note, that calling {@link javax.jcr.Session#save()} is required
      * in order to persist the changes.
      *
      * @param session The editing session.
@@ -166,7 +166,7 @@ public class AccessControlUtils {
 
     /**
      * A utility method to add a new access control entry. Please note, that
-     * a call to {@link javax.jcr.Session#save()()} is required in order
+     * a call to {@link javax.jcr.Session#save()} is required in order
      * to persist the changes.
      *
      * @param session The editing session
@@ -194,7 +194,7 @@ public class AccessControlUtils {
 
     /**
      * Utility to grant jcr:all privilege to the everyone group principal.
-     * Please note, that {@link javax.jcr.Session#save()()} is required in order
+     * Please note, that {@link javax.jcr.Session#save()} is required in order
      * to persist the changes.
      *
      * @param session The editing session.
@@ -211,7 +211,7 @@ public class AccessControlUtils {
 
     /**
      * Utility to deny jcr:all privilege to the everyone group principal.
-     * Please note, that {@link javax.jcr.Session#save()()} is required in order
+     * Please note, that {@link javax.jcr.Session#save()} is required in order
      * to persist the changes.
      *
      * @param session The editing session.
