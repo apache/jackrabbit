@@ -264,7 +264,7 @@ public class JcrUtils {
     }
 
     /**
-     * Returns an {@link Iterable<Node>} over the shared set of the given node.
+     * Returns an {@link Iterable} over the shared set of the given node.
      * <p>
      * The first iterator is acquired directly during this method call to
      * allow a possible {@link RepositoryException} to be thrown as-is.
@@ -298,7 +298,7 @@ public class JcrUtils {
     }
 
     /**
-     * Returns an {@link Iterable<Node>} over the children of the given node.
+     * Returns an {@link Iterable} over the children of the given node.
      * <p>
      * The first iterator is acquired directly during this method call to
      * allow a possible {@link RepositoryException} to be thrown as-is.
@@ -332,7 +332,7 @@ public class JcrUtils {
     }
 
     /**
-     * Returns an {@link Iterable<Node>} over those children of the given node
+     * Returns an {@link Iterable} over those children of the given node
      * that match the given name pattern.
      * <p>
      * The first iterator is acquired directly during this method call to
@@ -369,7 +369,7 @@ public class JcrUtils {
     }
 
     /**
-     * Returns an {@link Iterable<Node>} over those children of the given node
+     * Returns an {@link Iterable} over those children of the given node
      * that match the given name patterns.
      * <p>
      * The first iterator is acquired directly during this method call to
@@ -406,7 +406,7 @@ public class JcrUtils {
     }
 
     /**
-     * Returns an {@link Iterable<Node>} over the properties of the given node.
+     * Returns an {@link Iterable} over the properties of the given node.
      * <p>
      * The first iterator is acquired directly during this method call to
      * allow a possible {@link RepositoryException} to be thrown as-is.
@@ -441,7 +441,7 @@ public class JcrUtils {
     }
 
     /**
-     * Returns an {@link Iterable<Node>} over those properties of the
+     * Returns an {@link Iterable} over those properties of the
      * given node that match the given name pattern.
      * <p>
      * The first iterator is acquired directly during this method call to
@@ -478,7 +478,7 @@ public class JcrUtils {
     }
 
     /**
-     * Returns an {@link Iterable<Node>} over those properties of the
+     * Returns an {@link Iterable} over those properties of the
      * given node that match the given name patterns.
      * <p>
      * The first iterator is acquired directly during this method call to
@@ -515,7 +515,7 @@ public class JcrUtils {
     }
 
     /**
-     * Returns an {@link Iterable<Node>} over references to the given node.
+     * Returns an {@link Iterable} over references to the given node.
      * <p>
      * The first iterator is acquired directly during this method call to
      * allow a possible {@link RepositoryException} to be thrown as-is.
@@ -550,7 +550,7 @@ public class JcrUtils {
     }
 
     /**
-     * Returns an {@link Iterable<Node>} over those references to the
+     * Returns an {@link Iterable} over those references to the
      * given node that have the given name.
      * <p>
      * The first iterator is acquired directly during this method call to
@@ -587,7 +587,7 @@ public class JcrUtils {
     }
 
     /**
-     * Returns an {@link Iterable<Node>} over weak references to the given node.
+     * Returns an {@link Iterable} over weak references to the given node.
      * <p>
      * The first iterator is acquired directly during this method call to
      * allow a possible {@link RepositoryException} to be thrown as-is.
@@ -622,7 +622,7 @@ public class JcrUtils {
     }
 
     /**
-     * Returns an {@link Iterable<Node>} over those weak references to the
+     * Returns an {@link Iterable} over those weak references to the
      * given node that have the given name.
      * <p>
      * The first iterator is acquired directly during this method call to
@@ -659,7 +659,7 @@ public class JcrUtils {
     }
 
     /**
-     * Returns an {@link Iterable<Node>} over nodes in the given query result.
+     * Returns an {@link Iterable} over nodes in the given query result.
      * <p>
      * The first iterator is acquired directly during this method call to
      * allow a possible {@link RepositoryException} to be thrown as-is.
@@ -694,7 +694,7 @@ public class JcrUtils {
     }
 
     /**
-     * Returns an {@link Iterable<Row>} over nodes in the given query result.
+     * Returns an {@link Iterable} over nodes in the given query result.
      * <p>
      * The first iterator is acquired directly during this method call to
      * allow a possible {@link RepositoryException} to be thrown as-is.

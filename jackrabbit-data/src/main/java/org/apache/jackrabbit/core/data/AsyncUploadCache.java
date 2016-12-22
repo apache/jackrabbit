@@ -39,9 +39,9 @@ import org.slf4j.LoggerFactory;
 
 /**
  * This class holds all in progress uploads. This class contains two data
- * structures, one is {@link #asyncUploadMap} which is {@link Map<String, Long>}
+ * structures, one is {@link #asyncUploadMap} which is {@link Map}
  * of file path vs lastModified of upload. The second {@link #toBeDeleted} is
- * {@link Set<String>} of upload which is marked for delete, while it is already
+ * {@link Set} of upload which is marked for delete, while it is already
  * in progress. Before starting an asynchronous upload, it requires to invoke
  * {@link #add(String)} to add entry to {@link #asyncUploadMap}. After
  * asynchronous upload completes, it requires to invoke
