@@ -147,7 +147,7 @@ public interface Backend {
      * called. Any exception is communicated through
      * {@link AsyncTouchCallback#onFailure(AsyncTouchResult)} . On successful
      * update of lastModified,
-     * {@link AsyncTouchCallback#onSuccess(AsyncTouchResult)(AsyncTouchResult)}
+     * {@link AsyncTouchCallback#onSuccess(AsyncTouchResult)}
      * is invoked.
      * 
      * @param identifier

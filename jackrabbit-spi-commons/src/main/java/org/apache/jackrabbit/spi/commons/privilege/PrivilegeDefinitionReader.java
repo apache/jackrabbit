@@ -39,7 +39,7 @@ public class PrivilegeDefinitionReader {
      *
      * @param in The input stream to read the privilege definitions from.
      * @param contentType Currently only types supported by
-     * {@link PrivilegeXmlHandler#isSupportedContentType(String)PrivilegeXmlHandler}
+     * {@link PrivilegeXmlHandler#isSupportedContentType(String)}
      * are allowed.
      * @throws ParseException If an error occurs.
      * @throws IllegalArgumentException if the specified content type is not supported.
@@ -61,7 +61,7 @@ public class PrivilegeDefinitionReader {
      *
      * @param reader The reader to read the privilege definitions from.
      * @param contentType Currently only types supported by
-     * {@link PrivilegeXmlHandler#isSupportedContentType(String)PrivilegeXmlHandler}
+     * {@link PrivilegeXmlHandler#isSupportedContentType(String)}
      * are allowed.
      * @throws ParseException If an error occurs.
      * @throws IllegalArgumentException if the specified content type is not supported.
