@@ -35,10 +35,8 @@ public class JcrUserPrivilegesProperty {
     private final String absPath;
 
     /**
-     *
      * @param session The reading session
      * @param absPath An absolute path to an existing JCR node or {@code null}.
-     * @param session1
      */
     public JcrUserPrivilegesProperty(Session session, String absPath) throws RepositoryException {
         this.session = session;

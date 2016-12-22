@@ -47,7 +47,7 @@ public class LazyFileContentInputStream extends AutoCloseInputStream {
      * file is unreadable, a FileSystemException is thrown.
      * The file is not opened until the first byte is read from the stream.
      *
-     * @param file the file
+     * @param fileObject the file
      * @throws org.apache.commons.vfs2.FileNotFoundException
      * @throws org.apache.commons.vfs2.FileSystemException
      */
