@@ -50,6 +50,7 @@ import javax.jcr.nodetype.NodeType;
 import javax.xml.parsers.ParserConfigurationException;
 
 import org.apache.jackrabbit.JcrConstants;
+import org.apache.jackrabbit.commons.webdav.JcrValueType;
 import org.apache.jackrabbit.server.io.IOUtil;
 import org.apache.jackrabbit.util.Text;
 import org.apache.jackrabbit.webdav.DavCompliance;
