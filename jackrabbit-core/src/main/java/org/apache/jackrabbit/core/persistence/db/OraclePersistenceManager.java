@@ -146,7 +146,6 @@ public class OraclePersistenceManager extends SimpleDbPersistenceManager {
      * <code>MODE_READWRITE</code> constants defined there.
      * @see oracle.sql.BLOB#DURATION_SESSION
      * @see oracle.sql.BLOB#MODE_READWRITE
-     * @noinspection JavadocReference
      */
     public void init(PMContext context) throws Exception {
         super.init(context);
