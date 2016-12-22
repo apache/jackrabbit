@@ -396,7 +396,6 @@ public interface RemoteAdapterFactory {
     /**
      * Returns a remote adapter for the given local access control manager.
      *
-     * @param acm local access control manager
      * @return remote access control manager
      * @throws RemoteException on RMI errors
      */
@@ -406,7 +405,6 @@ public interface RemoteAdapterFactory {
     /**
      * Returns a remote adapter for the given local access control manager.
      *
-     * @param acm local access control manager
      * @return remote access control manager
      * @throws RemoteException on RMI errors
      */
@@ -416,7 +414,6 @@ public interface RemoteAdapterFactory {
     /**
      * Returns a remote adapter for the given local access control manager.
      *
-     * @param acm local access control manager
      * @return remote access control manager
      * @throws RemoteException on RMI errors
      */
@@ -426,7 +423,6 @@ public interface RemoteAdapterFactory {
     /**
      * Returns a remote adapter for the given local access control manager.
      *
-     * @param acm local access control manager
      * @return remote access control manager
      * @throws RemoteException on RMI errors
      */
@@ -436,7 +432,6 @@ public interface RemoteAdapterFactory {
     /**
      * Returns a remote adapter for the given local access control manager.
      *
-     * @param acm local access control manager
      * @return remote access control manager
      * @throws RemoteException on RMI errors
      */
@@ -446,7 +441,6 @@ public interface RemoteAdapterFactory {
     /**
      * Returns a remote adapter for the given local access control manager.
      *
-     * @param acm local access control manager
      * @return remote access control manager
      * @throws RemoteException on RMI errors
      */
@@ -456,7 +450,6 @@ public interface RemoteAdapterFactory {
     /**
      * Returns a remote adapter for the given local access control manager.
      *
-     * @param acm local access control manager
      * @return remote access control manager
      * @throws RemoteException on RMI errors
      */
@@ -466,7 +459,6 @@ public interface RemoteAdapterFactory {
     /**
      * Returns a remote adapter for the given local access control manager.
      *
-     * @param acm local access control manager
      * @return remote access control manager
      * @throws RemoteException on RMI errors
      */
@@ -476,7 +468,6 @@ public interface RemoteAdapterFactory {
     /**
      * Returns a remote adapter for the given local access control manager.
      *
-     * @param acm local access control manager
      * @return remote access control manager
      * @throws RemoteException on RMI errors
      */
