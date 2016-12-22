@@ -41,7 +41,7 @@ public class BasicCredentialsProvider implements CredentialsProvider {
 
     /**
      * Constructs a new BasicCredentialsProvider with the given default
-     * value {@see #getCredentials} for details.
+     * value. See {@link #getCredentials} for details.
      *
      * @param defaultHeaderValue
      */
