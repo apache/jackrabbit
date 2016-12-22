@@ -26,8 +26,8 @@ package org.apache.jackrabbit.api.security.user;
  * the name.
  *
  * <pre>
- *  Iterator<Authorizable> result = userMgr.findAuthorizables(new Query() {
- *      public <T> void build(QueryBuilder<T> builder) {
+ *  Iterator&lt;Authorizable&gt; result = userMgr.findAuthorizables(new Query() {
+ *      public &lt;T&gt; void build(QueryBuilder&lt;T&gt; builder) {
  *          builder.setCondition(builder.
  *              and(builder.
  *                  property("@name", RelationOp.EQ, valueFactory.createValue("Bob")), builder.

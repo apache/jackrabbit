@@ -277,7 +277,7 @@ public interface Record {
      * Update the changes made to an appended record. This will also update
      * this record's revision.
      *
-     * @returns The update size in bytes.
+     * @return The update size in bytes.
      * @throws JournalException if this record has not been appended,
      *                          or if another error occurs
      */
