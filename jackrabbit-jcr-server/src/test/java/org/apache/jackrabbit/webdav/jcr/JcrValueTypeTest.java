@@ -20,6 +20,8 @@ import junit.framework.TestCase;
 
 import javax.jcr.PropertyType;
 
+import org.apache.jackrabbit.commons.webdav.JcrValueType;
+
 /**
  * <code>JcrValueTypeTest</code>...
  */
