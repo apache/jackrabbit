@@ -58,7 +58,7 @@ import javax.jcr.version.VersionHistory;
  * <ul>
  *   <li>{@link Node#addMixin(String)}</li>
  *   <li>{@link Node#addNode(String)}</li>
- *   <li>{@link Node#addNode(String, String))}</li>
+ *   <li>{@link Node#addNode(String, String)}</li>
  *   <li>{@link Node#canAddMixin(String)}</li>
  *   <li>{@link Node#cancelMerge(Version)}</li>
  *   <li>{@link Node#checkin()}</li>

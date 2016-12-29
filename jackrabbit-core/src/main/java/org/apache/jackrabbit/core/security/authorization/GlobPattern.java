@@ -30,8 +30,6 @@ import org.slf4j.LoggerFactory;
  * defined by {@link javax.jcr.Node#getNodes(String[])}. In contrast to that
  * method the <code>GlobPattern</code> operates on path (not only names).
  * <p>
- *
- * <p>
  * Please note the following special cases:
  * <pre>
  * NodePath     |   Restriction   |   Matches
@@ -39,8 +37,6 @@ import org.slf4j.LoggerFactory;
  * /foo         |   null          |   matches /foo and all children of /foo
  * /foo         |   ""            |   matches /foo only
  * </pre>
- * </p>
- *
  * <p>
  * Examples including wildcard char:
  * <pre>
@@ -57,7 +53,6 @@ import org.slf4j.LoggerFactory;
  * /cat/&#42;    |   all descendants of '/foo/cat'
  * &#42;cat/&#42;    |   all descendants of /foo that have an intermediate segment ending with 'cat'
  * </pre>
- * </p>
  */
 public final class GlobPattern {
 

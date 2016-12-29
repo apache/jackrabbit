@@ -177,8 +177,9 @@ public class PropertyDefTest extends AbstractJCRTest {
     }
 
     /**
-     * Tests if isRequiredType() returns a valid PropertyType. </p> The test
-     * runs for all available node types.
+     * Tests if isRequiredType() returns a valid PropertyType.
+     * <p>
+     * The test runs for all available node types.
      */
     public void testIsRequiredType()
             throws RepositoryException {
@@ -215,8 +216,10 @@ public class PropertyDefTest extends AbstractJCRTest {
 
     /**
      * Tests if value constraints match the pattern specified by the required
-     * property type. </p> The test runs for all value constraints of all
-     * properties of all available node types.
+     * property type.
+     * <p>
+     * The test runs for all value constraints of all properties of all
+     * available node types.
      */
     public void testGetValueConstraints() throws RepositoryException {
 
@@ -318,9 +321,11 @@ public class PropertyDefTest extends AbstractJCRTest {
     }
 
     /**
-     * Tests if single-valued properties do have not more than one default value
-     * </p> The test runs for all default values of all properties of all
-     * available node types.
+     * Tests if single-valued properties do have not more than one default
+     * value.
+     * <p>
+     * The test runs for all default values of all properties of all available
+     * node types.
      */
     public void testGetDefaultValues()
             throws RepositoryException {

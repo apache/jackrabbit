@@ -28,7 +28,7 @@ import org.slf4j.LoggerFactory;
  * <p>
  * For now, it only checks that a node name being created uses NFC
  * 
- * @see http://www.unicode.org/reports/tr15/tr15-23.html
+ * @see <a href="http://www.unicode.org/reports/tr15/tr15-23.html">http://www.unicode.org/reports/tr15/tr15-23.html</a>
  */
 public class NodeNameNormalizer {
 

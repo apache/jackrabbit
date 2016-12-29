@@ -69,7 +69,7 @@ import org.slf4j.LoggerFactory;
  *     &lt;param name="archive" value="org.apache.jackrabbit.core.data.FileDataStore"&gt;
  *        &lt;param .../&gt;
  *     &lt;/param&gt;
- * &lt/DataStore&gt;
+ * &lt;/DataStore&gt;
  * </pre>
  * 
  * <ul>

@@ -35,11 +35,11 @@ import org.slf4j.LoggerFactory;
  * boundaries and within a single JVM. The lock mechanism must also work
  * consistently on a variety of operating systems and JVM implementations.
  *
- * @see https://issues.apache.org/jira/browse/JCR-213
- * @see https://issues.apache.org/jira/browse/JCR-233
- * @see https://issues.apache.org/jira/browse/JCR-254
- * @see https://issues.apache.org/jira/browse/JCR-912
- * @see https://issues.apache.org/jira/browse/JCR-933
+ * @see <a href="https://issues.apache.org/jira/browse/JCR-213">JCR-213</a>
+ * @see <a href="https://issues.apache.org/jira/browse/JCR-233">JCR-233</a>
+ * @see <a href="https://issues.apache.org/jira/browse/JCR-254">JCR-254</a>
+ * @see <a href="https://issues.apache.org/jira/browse/JCR-912">JCR-912</a>
+ * @see <a href="https://issues.apache.org/jira/browse/JCR-933">JCR-933</a>
  */
 public class RepositoryLock implements RepositoryLockMechanism {
 

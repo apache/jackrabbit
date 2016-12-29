@@ -119,9 +119,9 @@ public class NodeOrderableChildNodesTest extends AbstractJCRTest {
      * <p>
      * This should throw and
      * {@link UnsupportedRepositoryOperationException}. Prequisites: <ul>
-     * <li>javax.jcr.tck.NodeOrderableChildNodesTest.testOrderBeforeUnsupportedRepositoryOperationException.nodetype2</li>
+     * <li>javax.jcr.tck.NodeOrderableChildNodesTest.testOrderBeforeUnsupportedRepositoryOperationException.nodetype2:
      * A valid node type that does not support child node ordering.</li>
-     * <li>javax.jcr.tck.NodeOrderableChildNodesTest.testOrderBeforeUnsupportedRepositoryOperationException.nodetype3</li>
+     * <li>javax.jcr.tck.NodeOrderableChildNodesTest.testOrderBeforeUnsupportedRepositoryOperationException.nodetype3:
      * A valid node type that can be added as a child. </ul>
      */
     public void testOrderBeforeUnsupportedRepositoryOperationException()

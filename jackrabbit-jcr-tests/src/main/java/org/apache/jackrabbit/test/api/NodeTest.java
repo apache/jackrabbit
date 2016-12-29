@@ -368,7 +368,7 @@ public class NodeTest extends AbstractJCRTest {
      * This should throw an {@link javax.jcr.ItemExistsException}.
      * <p>
      * Prerequisites:
-     * <ul> <li><code>javax.jcr.tck.NodeTest.testAddNodeItemExistsException.nodetype<code>
+     * <ul> <li><code>javax.jcr.tck.NodeTest.testAddNodeItemExistsException.nodetype</code>
      * node type that does not allow same name siblings and allows to add child
      * nodes of the same type.</li> </ul>
      */
