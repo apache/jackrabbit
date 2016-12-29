@@ -85,7 +85,7 @@ import org.slf4j.LoggerFactory;
  * <p>
  * In order to increase performance, there are two caches being maintained. One is the
  * bundle cache that caches already loaded bundles. The other is the
- * {@link LRUNodeIdCache} that caches non-existent bundles. This is useful
+ * {@code LRUNodeIdCache} that caches non-existent bundles<!-- FIXME -->. This is useful
  * because a lot of {@link #exists(NodeId)} calls are issued that would result
  * in a useless persistence lookup if the desired bundle does not exist.
  * <p>

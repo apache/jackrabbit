@@ -375,7 +375,7 @@ public abstract class AbstractSession implements Session {
      * The default implementation:
      * <ul>
      * <li>Returns the root node if the given path is "/"
-     * <li>Delegates to {@link Node#getNodeByIdentifier(String)} for identifier
+     * <li>Delegates to {@link Session#getNodeByIdentifier(String)} for identifier
      * paths
      * <li>Throws a {@link PathNotFoundException} if the given path does not
      * start with a slash.

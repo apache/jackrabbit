@@ -18,6 +18,7 @@ package org.apache.jackrabbit.spi.commons.query.qom;
 
 import javax.jcr.query.qom.Join;
 import javax.jcr.query.qom.JoinCondition;
+import javax.jcr.query.qom.QueryObjectModelConstants;
 import javax.jcr.query.qom.Source;
 
 import org.apache.jackrabbit.commons.query.qom.JoinType;
@@ -85,9 +86,9 @@ public class JoinImpl extends SourceImpl implements Join {
     /**
      * Gets the join type.
      *
-     * @return either <ul> <li>{@link org.apache.jackrabbit.spi.commons.query.jsr283.qom.QueryObjectModelConstants#JOIN_TYPE_INNER},</li>
-     *         <li>{@link org.apache.jackrabbit.spi.commons.query.jsr283.qom.QueryObjectModelConstants#JOIN_TYPE_LEFT_OUTER},</li>
-     *         <li>{@link org.apache.jackrabbit.spi.commons.query.jsr283.qom.QueryObjectModelConstants#JOIN_TYPE_RIGHT_OUTER}</li>
+     * @return either <ul> <li>{@link QueryObjectModelConstants#JCR_JOIN_TYPE_INNER},</li>
+     *         <li>{@link QueryObjectModelConstants#JCR_JOIN_TYPE_LEFT_OUTER},</li>
+     *         <li>{@link QueryObjectModelConstants#JCR_JOIN_TYPE_RIGHT_OUTER}</li>
      *         </ul>
      */
     public String getJoinType() {

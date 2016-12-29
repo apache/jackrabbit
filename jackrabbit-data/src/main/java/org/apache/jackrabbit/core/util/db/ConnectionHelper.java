@@ -59,7 +59,7 @@ import org.slf4j.LoggerFactory;
  * <p>
  *
  * <strong>Implementation note</strong>: The {@code Connection} that is retrieved from the {@code DataSource}
- * in {@link #getConnection()} may be broken. This is so because if an internal {@code DataSource} is used,
+ * in {@link #getConnection(boolean)} may be broken. This is so because if an internal {@code DataSource} is used,
  * then this is a commons-dbcp {@code DataSource} with a <code>testWhileIdle</code> validation strategy (see
  * the {@code ConnectionFactory} class). Furthermore, if it is a {@code DataSource} obtained through JNDI then we
  * can make no assumptions about the validation strategy. This means that our retry logic must either assume that
@@ -424,9 +424,9 @@ public class ConnectionHelper {
         }
     }
 
-	/**
+   /**
      * Gets a connection based on the {@code batchMode} state of this helper. The connection should be closed
-     * by a call to {@link #closeResources(Connection, Statement, ResultSet)} which also takes the {@code
+     * by a call to {@link #closeResources(Connection, Statement, ResultSet, boolean)} which also takes the {@code
      * batchMode} state into account.
      *
      * @param inBatchMode indicates if we are in a batchMode
@@ -479,7 +479,7 @@ public class ConnectionHelper {
 	/**
      * Closes the given resources given the {@code batchMode} state.
      *
-     * @param con the {@code Connection} obtained through the {@link #getConnection()} method
+     * @param con the {@code Connection} obtained through the {@link #getConnection(boolean)} method
      * @param stmt a {@code Statement}
      * @param rs a {@code ResultSet}
      * @param inBatchMode indicates if we are in a batchMode

@@ -116,7 +116,7 @@ public interface RemoteNodeType extends Remote {
 
     /**
      * Remote version of the
-     * {@link javax.jcr.nodetype.NodeType#getPropertyDefs() NodeType.getPropertyDefs()}
+     * {@link javax.jcr.nodetype.NodeType#getPropertyDefinitions() NodeType.getPropertyDefinitions()}
      * method.
      *
      * @return property definitions
@@ -126,7 +126,7 @@ public interface RemoteNodeType extends Remote {
 
     /**
      * Remote version of the
-     * {@link javax.jcr.nodetype.NodeType#getDeclaredPropertyDefs() NodeType.getDeclaredPropertyDefs()}
+     * {@link javax.jcr.nodetype.NodeType#getDeclaredPropertyDefinitions() NodeType.getDeclaredPropertyDefinitions()}
      * method.
      *
      * @return declared property definitions
@@ -136,7 +136,7 @@ public interface RemoteNodeType extends Remote {
 
     /**
      * Remote version of the
-     * {@link javax.jcr.nodetype.NodeType#getChildNodeDefs() NodeType.getChildNodeDefs()}
+     * {@link javax.jcr.nodetype.NodeType#getChildNodeDefinitions() NodeType.getChildNodeDefinitions()}
      * method.
      *
      * @return child node definitions
@@ -146,7 +146,7 @@ public interface RemoteNodeType extends Remote {
 
     /**
      * Remote version of the
-     * {@link javax.jcr.nodetype.NodeType#getDeclaredChildNodeDefs() NodeType.getDeclaredChildNodeDefs()}
+     * {@link javax.jcr.nodetype.NodeType#getDeclaredChildNodeDefinitions() NodeType.getDeclaredChildNodeDefinitions()}
      * method.
      *
      * @return declared child node definitions
@@ -229,7 +229,7 @@ public interface RemoteNodeType extends Remote {
 
     /**
      * Remote version of the
-     * {@link javax.jcr.nodetype.NodeType#canRemoveNode() NodeType.canRemoveNode()}
+     * {@link javax.jcr.nodetype.NodeType#canRemoveNode(String) NodeType.canRemoveNode()}
      * method.
      *
      * @return boolean
@@ -239,7 +239,7 @@ public interface RemoteNodeType extends Remote {
 
     /**
      * Remote version of the
-     * {@link javax.jcr.nodetype.NodeType#canRemoveProperty() NodeType.canRemoveProperty()}
+     * {@link javax.jcr.nodetype.NodeType#canRemoveProperty(String) NodeType.canRemoveProperty()}
      * method.
      *
      * @return boolean

@@ -16,10 +16,12 @@
  */
 package org.apache.jackrabbit.core.persistence.db;
 
+import org.apache.jackrabbit.core.persistence.util.Serializer;
 import org.apache.jackrabbit.core.util.db.ConnectionFactory;
 import org.apache.jackrabbit.core.util.db.DatabaseAware;
 
 import java.sql.Connection;
+import java.sql.DriverManager;
 import java.sql.SQLException;
 
 import javax.jcr.RepositoryException;

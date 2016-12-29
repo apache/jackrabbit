@@ -30,8 +30,6 @@ import org.apache.jackrabbit.core.fs.FileSystemFactory;
  * In addition to generic bean configuration information, this
  * class also contains an optional file system configuration
  * used by the search index.
- *
- * @see WorkspaceConfig#getSearchConfig()
  */
 public class SearchConfig extends BeanConfig implements FileSystemFactory {
 
