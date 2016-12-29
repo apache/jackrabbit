@@ -20,6 +20,7 @@ import java.rmi.Remote;
 import java.rmi.RemoteException;
 
 import javax.jcr.RepositoryException;
+import javax.jcr.query.Query;
 
 /**
  * Remote version of the JCR {@link javax.jcr.query.QueryManager QueryManager} interface.
@@ -59,9 +60,9 @@ public interface RemoteQueryManager extends Remote {
             throws RepositoryException, RemoteException;
 
     /**
-     * @see javax.jcr.query.QueryManager#getSupportedQueryLanguages
-     *
      * See {@link Query}.
+     * 
+     * @see javax.jcr.query.QueryManager#getSupportedQueryLanguages
      * @return An string array.
      * @throws RepositoryException on repository errors
      * @throws RemoteException on RMI errors

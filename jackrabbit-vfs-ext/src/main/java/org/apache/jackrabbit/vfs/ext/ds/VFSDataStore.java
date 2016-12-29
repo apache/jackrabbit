@@ -318,12 +318,12 @@ public class VFSDataStore extends CachingDataStore {
     }
 
     /**
-     * Builds and returns {@link FileSystemOptions} instance which is used when resolving the {@link #vfsBaseFolder}
+     * Builds and returns {@link FileSystemOptions} instance which is used when resolving the {@link #baseFolder}
      * during the initialization.
      * If {@link #fileSystemOptionsProperties} is available, this scans all the property key names starting with {@link #FILE_SYSTEM_OPTIONS_PROP_PREFIX}
      * and uses the rest of the key name after the {@link #FILE_SYSTEM_OPTIONS_PROP_PREFIX} as the combination of scheme and property name
      * when building a {@link FileSystemOptions} using {@link DelegatingFileSystemOptionsBuilder}.
-     * @return {@link FileSystemOptions} instance which is used when resolving the {@link #vfsBaseFolder} during the initialization
+     * @return {@link FileSystemOptions} instance which is used when resolving the {@link #baseFolder} during the initialization
      * @throws RepositoryException if any file system exception occurs
      */
     protected FileSystemOptions createFileSystemOptions() throws RepositoryException {

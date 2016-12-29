@@ -74,7 +74,7 @@ import javax.sql.DataSource;
  *     &lt;param name="{@link #setCopyWhenReading(boolean) copyWhenReading}" value="true"/&gt;
  *     &lt;param name="{@link #setTablePrefix(String) tablePrefix}" value=""/&gt;
  *     &lt;param name="{@link #setSchemaObjectPrefix(String) schemaObjectPrefix}" value=""/&gt;
- *     &lt;param name="{@link #setSchemaCheckEnabled(String) schemaCheckEnabled}" value="true"/&gt;
+ *     &lt;param name="{@link #setSchemaCheckEnabled(boolean) schemaCheckEnabled}" value="true"/&gt;
  * &lt;/DataStore&gt;
  * </pre>
  * <p>

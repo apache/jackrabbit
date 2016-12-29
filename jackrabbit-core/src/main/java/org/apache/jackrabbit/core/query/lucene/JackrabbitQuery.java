@@ -35,7 +35,7 @@ public interface JackrabbitQuery {
      * this query should be executed using the regular Lucene API.
      * <p>
      * <b>Important note:</b> an implementation <b>must not</b> call
-     * {@link JackrabbitIndexSearcher#execute(Query, Sort, long)}
+     * {@link JackrabbitIndexSearcher#execute(Query, Sort, long, org.apache.jackrabbit.spi.Name))}
      * with this query instance as a parameter, otherwise a stack overflow will
      * occur.
      *

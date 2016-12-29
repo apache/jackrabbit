@@ -24,6 +24,8 @@ import java.security.acl.Group;
 import java.util.Enumeration;
 import java.util.Iterator;
 
+import javax.jcr.UnsupportedRepositoryOperationException;
+
 import org.apache.jackrabbit.rmi.client.LocalAdapterFactory;
 import org.apache.jackrabbit.rmi.client.RemoteRuntimeException;
 import org.apache.jackrabbit.rmi.remote.RemoteIterator;

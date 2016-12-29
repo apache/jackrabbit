@@ -45,7 +45,7 @@ import org.slf4j.LoggerFactory;
  * in progress. Before starting an asynchronous upload, it requires to invoke
  * {@link #add(String)} to add entry to {@link #asyncUploadMap}. After
  * asynchronous upload completes, it requires to invoke
- * {@link #remove(String, AsyncUploadCacheResult)} to remove entry from
+ * {@link #remove(String)} to remove entry from
  * {@link #asyncUploadMap} Any modification to this class are immediately
  * persisted to local file system. {@link #asyncUploadMap} is persisted to /
  * {@link homeDir}/ {@link #PENDIND_UPLOAD_FILE}. {@link #toBeDeleted} is
