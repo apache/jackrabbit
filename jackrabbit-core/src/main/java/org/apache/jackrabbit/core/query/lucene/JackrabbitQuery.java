@@ -17,7 +17,6 @@
 package org.apache.jackrabbit.core.query.lucene;
 
 import org.apache.lucene.search.Sort;
-import org.apache.lucene.search.Query;
 import org.apache.jackrabbit.core.SessionImpl;
 
 import java.io.IOException;
@@ -35,7 +34,7 @@ public interface JackrabbitQuery {
      * this query should be executed using the regular Lucene API.
      * <p>
      * <b>Important note:</b> an implementation <b>must not</b> call
-     * {@link JackrabbitIndexSearcher#execute(Query, Sort, long, org.apache.jackrabbit.spi.Name))}
+     * {@link JackrabbitIndexSearcher#execute(Query, Sort, long, org.apache.jackrabbit.spi.Name)}
      * with this query instance as a parameter, otherwise a stack overflow will
      * occur.
      *
