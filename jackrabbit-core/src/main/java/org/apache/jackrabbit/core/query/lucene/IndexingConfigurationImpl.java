@@ -792,6 +792,11 @@ public class IndexingConfigurationImpl
          *         <code>false</code> otherwise.
          */
         public boolean appliesTo(NodeState state) {
+            for (Name mixinName : state.getMixinTypeNames()){
+            	if (nodeTypeName.equals(mixinName)){
+            		return true;
+            	}
+         	}        	
             if (!nodeTypeName.equals(state.getNodeTypeName())) {
                 return false;
             }
