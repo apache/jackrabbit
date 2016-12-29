@@ -28,7 +28,7 @@ import org.apache.jackrabbit.spi.Name;
  * given date. If no version could be found <code>null</code> is returned
  * unless the <code>returnLatest</code> flag is set to <code>true</code>, where
  * the latest version is returned.
- * <xmp>
+ * <pre>
  * V1.0 - 02-Sep-2006
  * V1.1 - 03-Sep-2006
  * V1.2 - 05-Sep-2006
@@ -38,7 +38,7 @@ import org.apache.jackrabbit.spi.Name;
  * new DateVersionSelector("01-Sep-2006").select() -&gt; null
  * new DateVersionSelector("01-Sep-2006", true).select() -&gt; V1.2
  * new DateVersionSelector(null, true).select() -&gt; V1.2
- * </xmp>
+ * </pre>
  */
 public class DateVersionSelector implements VersionSelector {
 
@@ -107,7 +107,7 @@ public class DateVersionSelector implements VersionSelector {
      * Sets the flag, if the latest version should be selected, if no
      * version can be found using the given hint.
      *
-     * @param returnLatest the <ocde>returnLatest</code> flag
+     * @param returnLatest the <code>returnLatest</code> flag
      */
     public void setReturnLatest(boolean returnLatest) {
         this.returnLatest = returnLatest;

@@ -129,7 +129,7 @@ public class TransientFileFactory {
      * <p>
      * <b>Warning!!!</b>
      * <p>
-     * This should be called by a web-application <b><i>IF</b></i> it is unloaded
+     * This should be called by a web-application <b><i>IF</i></b> it is unloaded
      * <b><i>AND IF</i></b> jackrabbit-jcr-commons.jar had been loaded by
      * the webapp classloader. This must be called after all repositories had
      * been stopped, so use with great care!

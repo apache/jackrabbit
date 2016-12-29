@@ -348,7 +348,7 @@ public abstract class AbstractRepositoryService implements RepositoryService {
      * <ul>
      * <li>calls {@link #checkCredentials(Credentials, String)}</li>
      * <li>calls {@link #checkWorkspace(String)}</li>
-     * <li>calls {@link #createSessionInfo(Credentials, String)}</li>.
+     * <li>calls {@link #createSessionInfo(Credentials, String)}</li>
      * </ul>
      * @param credentials the credentials for the login.
      * @param workspaceName the name of the workspace to log in.

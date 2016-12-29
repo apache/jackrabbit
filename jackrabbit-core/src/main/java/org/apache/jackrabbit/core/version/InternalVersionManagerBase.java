@@ -671,7 +671,7 @@ abstract class InternalVersionManagerBase implements InternalVersionManager {
      * </ul>
      *
      * Example Graph:
-     * <xmp>
+     * <pre>
      * jcr:rootVersion
      *  |     |
      * 1.0   2.0
@@ -689,7 +689,7 @@ abstract class InternalVersionManagerBase implements InternalVersionManager {
      * 1.6     |     1.2.1.1
      *  |-----/
      * 1.7
-     * </xmp>
+     * </pre>
      *
      * @param history the version history
      * @param node the node to checkin

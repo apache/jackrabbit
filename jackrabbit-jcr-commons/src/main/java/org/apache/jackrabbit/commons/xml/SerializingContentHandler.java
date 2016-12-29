@@ -63,7 +63,7 @@ public class SerializingContentHandler extends DefaultContentHandler {
      * The character encoding used for serialization (UTF-8).
      * The encoding is fixed to make the text/xml content type safer to use.
      *
-     * @see https://issues.apache.org/jira/browse/JCR-1621
+     * @see <a href="https://issues.apache.org/jira/browse/JCR-1621">JCR-1621</a>
      */
     public static final String ENCODING = "UTF-8";
 
