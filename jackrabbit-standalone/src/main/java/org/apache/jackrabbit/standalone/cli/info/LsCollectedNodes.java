@@ -40,7 +40,7 @@ public class LsCollectedNodes extends AbstractLsNodes {
     }
 
     /**
-     * Sets the <code>Context<code> variable
+     * Sets the <code>Context</code> variable
      * @param contextVariable
      *        the context variable
      */

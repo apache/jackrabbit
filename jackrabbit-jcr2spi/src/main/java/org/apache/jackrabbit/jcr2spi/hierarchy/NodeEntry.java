@@ -117,7 +117,8 @@ public interface NodeEntry extends HierarchyEntry {
     /**
      * Traverse the tree below this entry and return the child entry matching
      * the given 'workspacePath', i.e. transient modifications and new entries
-     * are ignored.<p/>
+     * are ignored.
+     * <p>
      * If no matching entry can be found, <code>null</code> is return.
      *
      * @param workspacePath

@@ -31,8 +31,8 @@ import org.apache.jackrabbit.webdav.property.DavPropertyName;
  * <li>{@link #BASELINE_CONTROLLED_COLLECTION_SET DAV:baseline-controlled-collection-set} (baseline)</li>
  * <li>{@link #CURRENT_ACTIVITY_SET DAV:current-activity-set} (activity)</li>
  * </ul>
- * Note, that RFC 3253 doesn't define a separate resource type for a workspace.<p/>
- *
+ * Note, that RFC 3253 doesn't define a separate resource type for a workspace.
+ * <p>
  * The workspace resource must support all methods defined for a DeltaV-compliant
  * collection. Since no additional methods are required for a workspace this
  * interface mainly acts as marker.
@@ -46,8 +46,8 @@ public interface WorkspaceResource extends DeltaVResource {
      * The DAV:workspace-checkout-set property is the only required property
      * which is additionally added to a workspace resource.<br>
      * This computed property identifies each checked-out resource whose
-     * DAV:workspace property identifies this workspace.<p/>
-     *
+     * DAV:workspace property identifies this workspace.
+     * <p>
      * Note that the DAV:workspace-checkout-set represents a
      * {@link org.apache.jackrabbit.webdav.property.HrefProperty HrefProperty}.
      */

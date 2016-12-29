@@ -31,7 +31,8 @@ import org.apache.jackrabbit.core.data.DataStore;
  * the <code>getStream()</code> method always returns a fresh
  * <code>InputStream</code> instance.
  * <p>
- * <b>Important Note:</b><p/>
+ * <b>Important Note:</b>
+ * <p>
  * This interface is for Jackrabbit-internal use only. Applications should
  * use <code>javax.jcr.ValueFactory</code> to create binary values.
  */

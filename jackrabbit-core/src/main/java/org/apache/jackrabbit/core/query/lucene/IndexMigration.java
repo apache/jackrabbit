@@ -54,7 +54,7 @@ import org.slf4j.LoggerFactory;
  * <code>IndexMigration</code> implements a utility that migrates a Jackrabbit
  * 1.4.x index to version 1.5. Until version 1.4.x, indexes used the character
  * '\uFFFF' to separate the name of a property from the value. As of Lucene
- * 2.3 this does not work anymore. See LUCENE-1221. Jackrabbit >= 1.5 uses
+ * 2.3 this does not work anymore. See LUCENE-1221. Jackrabbit &gt;= 1.5 uses
  * the character '[' as a separator. Whenever an index is opened from disk, a
  * quick check is run to find out whether a migration is required. See also
  * JCR-1363 for more details.

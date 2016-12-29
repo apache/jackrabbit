@@ -52,7 +52,8 @@ public interface PrivilegeManager {
 
     /**
      * Creates and registers a new custom privilege with the specified
-     * characteristics and returns the new privilege.<p/>
+     * characteristics and returns the new privilege.
+     * <p>
      * If the registration succeeds, the changes are immediately effective;
      * there is no need to call <code>save</code>.
      *

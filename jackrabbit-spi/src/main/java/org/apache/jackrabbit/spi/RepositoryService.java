@@ -51,7 +51,8 @@ import javax.jcr.version.VersionException;
  * The implementation of this interface is intended to hold only the state of
  * the persistent layer, no session-related state should be held. Consequently,
  * each method that alters persistent state always includes all the information
- * necessary to fully specify and authorize a change.<p/>
+ * necessary to fully specify and authorize a change.
+ * <p>
  * For example, consider the method
  * <pre>
  *    void RepositoryService.copy(SessionInfo sessionInfo,
@@ -70,8 +71,8 @@ import javax.jcr.version.VersionException;
  * The source and destination of the copy operation are specified by
  * {@link NodeId}s. The <code>Name</code> holds the new name. Taken together,
  * this information is sufficient to completely specify and authorize the copy
- * operations.<p/>
- *
+ * operations.
+ * <p>
  * The RepositoryService in addition allows to create and submit {@link Batch}
  * objects, that cover lists of operations that have to be applied to the
  * persistent layer at once.
@@ -485,7 +486,8 @@ public interface RepositoryService {
      * in workspace named <code>srcWorkspaceName</code> to the destination
      * in the workspace specified by the given <code>SessionInfo</code>. The
      * destination is composed by the given parent id and the new name
-     * as indicated by <code>destName</code>.<p/>
+     * as indicated by <code>destName</code>.
+     * <p>
      * Note, that <code>srcWorkspaceName</code> may be the same as the one
      * specified within the <code>SessionInfo</code>. In this case the copy
      * corresponds to a copy within a single workspace.
@@ -631,7 +633,8 @@ public interface RepositoryService {
 
     /**
      * Releases the lock on the <code>Node</code> identified by the given
-     * <code>NodeId</code>.<p/>
+     * <code>NodeId</code>.
+     * <p>
      * Please note, that on {@link javax.jcr.Session#logout() logout} all
      * session-scoped locks must be released by calling unlock.
      *
@@ -1007,7 +1010,8 @@ public interface RepositoryService {
     /**
      * Creates an event filter. If the repository supports observation, the
      * filter created is based on the parameters available in {@link
-     * javax.jcr.observation.ObservationManager#addEventListener}.<p/>
+     * javax.jcr.observation.ObservationManager#addEventListener}.
+     * <p>
      * Note, that an SPI implementation may support observation even if
      * the corresponding {@link javax.jcr.Repository#OPTION_OBSERVATION_SUPPORTED repository descriptor}
      * does not return 'true'.

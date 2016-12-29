@@ -30,7 +30,7 @@ import javax.jcr.RepositoryException;
  * adapter base classes to provide transparent RMI access to remote observation
  * managers.
  * <p>
- * See the <a href="../observation/package.html><code>observation</code></a>
+ * See the <a href="../observation/package.html"><code>observation</code></a>
  * package comment for a description on how event listener registration and
  * notification is implemented.
  *

@@ -68,7 +68,7 @@ public class SQLPathTest extends AbstractQueryTest {
     }
 
     /**
-     * Tests if &lt;somepath>/% returns the descendants of &lt;somepath>.
+     * Tests if &lt;somepath&gt;/% returns the descendants of &lt;somepath&gt;.
      * @throws NotExecutableException
      */
     public void testDescendantTestRoot() throws RepositoryException, NotExecutableException {
@@ -77,7 +77,7 @@ public class SQLPathTest extends AbstractQueryTest {
     }
 
     /**
-     * Tests if &lt;somepath>/% returns no nodes if node at &lt;somepath>
+     * Tests if &lt;somepath&gt;/% returns no nodes if node at &lt;somepath&gt;
      * is a leaf.
      * @throws NotExecutableException
      */
@@ -92,8 +92,8 @@ public class SQLPathTest extends AbstractQueryTest {
     }
 
     /**
-     * Tests if &lt;somepath>/%/&lt;nodename> OR &lt;somepath>/&lt;nodename>
-     * returns nodes with name &lt;nodename> which are descendants of
+     * Tests if &lt;somepath&gt;/%/&lt;nodename&gt; OR &lt;somepath&gt;/&lt;nodename&gt;
+     * returns nodes with name &lt;nodename&gt; which are descendants of
      * node at <code>testroot</code>.
      * @throws NotExecutableException
      */
@@ -138,8 +138,8 @@ public class SQLPathTest extends AbstractQueryTest {
     }
 
     /**
-     * Tests if &lt;somepath>/% AND NOT &lt;somepath>/%/% returns the child
-     * nodes of node at &lt;somepath>.
+     * Tests if &lt;somepath&gt;/% AND NOT &lt;somepath&gt;/%/% returns the child
+     * nodes of node at &lt;somepath&gt;.
      * @throws NotExecutableException
      */
     public void testChildAxisTestRoot() throws RepositoryException, NotExecutableException {
@@ -150,8 +150,8 @@ public class SQLPathTest extends AbstractQueryTest {
     }
 
     /**
-     * Tests if &lt;somepath>/% AND NOT &lt;somepath>/%/% returns no nodes
-     * if the node at &lt;somepath> is a leaf.
+     * Tests if &lt;somepath&gt;/% AND NOT &lt;somepath&gt;/%/% returns no nodes
+     * if the node at &lt;somepath&gt; is a leaf.
      * @throws NotExecutableException
      */
     public void testChildAxisLeaf() throws RepositoryException, NotExecutableException {

@@ -216,7 +216,7 @@ public class MergeNodeTest extends AbstractMergeTest {
     }
 
     /**
-     * Node.merge(): bestEffort is true > any merge-failure (represented by the
+     * Node.merge(): bestEffort is true &gt; any merge-failure (represented by the
      * version in the workspace) is reported in the jcrMergeFailed property<br>
      */
     @SuppressWarnings("deprecation")
@@ -257,7 +257,7 @@ public class MergeNodeTest extends AbstractMergeTest {
     }
 
     /**
-     * VersionManager.merge(): bestEffort is true > any merge-failure (represented by the
+     * VersionManager.merge(): bestEffort is true &gt; any merge-failure (represented by the
      * version in the workspace) is reported in the jcrMergeFailed property<br>
      */
     public void testMergeNodeBestEffortTrueCheckMergeFailedPropertyJcr2() throws RepositoryException {
@@ -301,7 +301,7 @@ public class MergeNodeTest extends AbstractMergeTest {
     }
 
     /**
-     * if mergeFailedProperty is present > VersionException<br>
+     * if mergeFailedProperty is present &gt; VersionException<br>
      */
     @SuppressWarnings("deprecation")
     public void disable_testMergeNodeForceFailure() throws RepositoryException {
@@ -330,7 +330,7 @@ public class MergeNodeTest extends AbstractMergeTest {
     }
 
     /**
-     * if mergeFailedProperty is present > VersionException<br>
+     * if mergeFailedProperty is present &gt; VersionException<br>
      */
     public void disable_testMergeNodeForceFailureJcr2() throws RepositoryException {
         // create 2 independent versions for a node and its corresponding node

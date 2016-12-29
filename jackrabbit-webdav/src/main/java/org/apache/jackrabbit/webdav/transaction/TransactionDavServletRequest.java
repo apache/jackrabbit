@@ -33,7 +33,7 @@ public interface TransactionDavServletRequest extends DavServletRequest {
      * Xml is not valid) <code>null</code> is returned.
      *
      * @return <code>TransactionInfo</code> object encapsulating the 'transactioninfo'
-     * Xml element present in the request body or <code>null</null> if no
+     * Xml element present in the request body or <code>null</code> if no
      * body is present or if it could not be parsed.
      * @throws DavException if an invalid request body is present.
      */

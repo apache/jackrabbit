@@ -41,7 +41,7 @@ import org.apache.jackrabbit.standalone.cli.CommandHelper;
 
 /**
  * Exports a <code>Property</code> <code>Value</code> of the current working
- * <code>Node<code> to the file system.
+ * <code>Node</code> to the file system.
  */
 public class ExportPropertyToFile implements Command {
     /** logger */

@@ -73,7 +73,7 @@ public interface TreeManager {
      * {@link Comparator} used for establishing the order of the keys in the
      * sequence.
      *
-     * @return a <code>Comparator&lt;String></code> instance
+     * @return a <code>Comparator&lt;String&gt;</code> instance
      */
     Comparator<String> getOrder();
 

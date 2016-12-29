@@ -36,11 +36,12 @@ import java.util.List;
 
 /**
  * The <code>PrincipalSearchReport</code> performs a search for all principals
- * that match the search criteria specified in the request.<p/>
+ * that match the search criteria specified in the request.
+ * <p>
  * The following XML structure is required in the request body:
  * <pre>
  * &lt;!ELEMENT principal-property-search ((property-search+), prop?, apply-to-principal-collection-set?) &gt;
- * &lt;!ELEMENT property-search (prop, match) >
+ * &lt;!ELEMENT property-search (prop, match) &gt;
  *  prop: see RFC 2518, Section 12.11
  * &lt;!ELEMENT match #PCDATA &gt;
  * &lt;!ELEMENT apply-to-principal-collection-set #EMPTY &gt;

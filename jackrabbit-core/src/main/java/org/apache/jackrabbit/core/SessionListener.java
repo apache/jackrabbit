@@ -26,7 +26,7 @@ public interface SessionListener {
 
     /**
      * Called when a <code>Session</code> is about to be 'closed' by
-     * calling <code>{@link javax.jcr.Session#logout()}</code. At this
+     * calling <code>{@link javax.jcr.Session#logout()}</code>. At this
      * moment the session is still valid.
      *
      * @param session the <code>Session</code> that is about to be 'closed'
@@ -35,7 +35,7 @@ public interface SessionListener {
 
     /**
      * Called when a <code>Session</code> has been 'closed' by
-     * calling <code>{@link javax.jcr.Session#logout()}</code.
+     * calling <code>{@link javax.jcr.Session#logout()}</code>.
      *
      * @param session the <code>Session</code> that has been 'closed'
      */

@@ -79,11 +79,11 @@ public class NodeTypeRegistryImpl implements NodeTypeRegistry, EffectiveNodeType
     private final Map<NodeTypeRegistryListener, NodeTypeRegistryListener> listeners = Collections.synchronizedMap(new ReferenceMap(ReferenceMap.WEAK, ReferenceMap.WEAK));
 
     /**
-     * Create a new <code>NodeTypeRegistry</codes>
+     * Create a new <code>NodeTypeRegistry</code>
      *
      * @param storage
      * @param nsRegistry
-     * @return <code>NodeTypeRegistry</codes> object
+     * @return <code>NodeTypeRegistry</code> object
      */
     public static NodeTypeRegistryImpl create(NodeTypeStorage storage, NamespaceRegistry nsRegistry) {
         NodeTypeRegistryImpl ntRegistry = new NodeTypeRegistryImpl(storage, nsRegistry);
