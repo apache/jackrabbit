@@ -142,7 +142,7 @@ public abstract class AbstractLsNodes extends AbstractLs {
     /**
      * @param ctx
      *        the <code>Context</code>
-     * @return the <code>Node<code>s to show
+     * @return the <code>Node</code>s to show
      * @throws RepositoryException if the current working <code>Repository</code> throws a <code>RepositoryException</code>
      * @throws CommandException
      */

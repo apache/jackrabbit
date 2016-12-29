@@ -130,7 +130,7 @@ public interface JackrabbitSession extends Session {
      * discovery:
      * <ul>
      * <li> {@link
-     * #ACTION_ADD_PROPERTY {@code add_property}: If {@code hasPermission(path,
+     * #ACTION_ADD_PROPERTY {@code add_property}}: If {@code hasPermission(path,
      * "add_property")} returns {@code true}, then this {@code Session} has
      * permission to add a new property at {@code path}.</li>
      * <li> {@link #ACTION_MODIFY_PROPERTY {@code modify_property}}: If

@@ -722,7 +722,7 @@ public class NodeState extends ItemState {
      * their absolute position the list may include less that this number of
      * nodes.
      * <p>
-     * Example:<br/>
+     * Example:<br>
      * Initial state:
      * <pre>
      *  + node1

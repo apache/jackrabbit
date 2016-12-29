@@ -94,7 +94,7 @@ public class LockInfo implements DavConstants, XmlSerializable {
      * @param isDeep boolean value indicating whether the lock should be applied
      * with depth infinity or only to the requested resource.
      * @throws DavException if the <code>liElement</code> is not
-     * <code>null</null> but does not start with an 'lockinfo' element.
+     * <code>null</code> but does not start with an 'lockinfo' element.
      */
     public LockInfo(Element liElement, long timeout, boolean isDeep) throws DavException {
         this.timeout = (timeout > 0) ? timeout : INFINITE_TIMEOUT;
@@ -130,7 +130,7 @@ public class LockInfo implements DavConstants, XmlSerializable {
     }
 
     /**
-     * Returns the lock type or <code>null</null> if no 'lockinfo' element was
+     * Returns the lock type or <code>null</code> if no 'lockinfo' element was
      * passed to the constructor or did not contain an 'type' element and the
      * type has not been set otherwise.
      *
@@ -150,7 +150,7 @@ public class LockInfo implements DavConstants, XmlSerializable {
     }
 
     /**
-     * Return the lock scope or <code>null</null> if no 'lockinfo' element was
+     * Return the lock scope or <code>null</code> if no 'lockinfo' element was
      * passed to the constructor or did not contain an 'scope' element and the
      * scope has not been set otherwise.
      *
@@ -171,7 +171,7 @@ public class LockInfo implements DavConstants, XmlSerializable {
 
     /**
      * Return the owner indicated by the corresponding child element from the
-     * 'lockinfo' element or <code>null</null> if no 'lockinfo' element was
+     * 'lockinfo' element or <code>null</code> if no 'lockinfo' element was
      * passed to the constructor or did not contain an 'owner' element.
      *
      * @return owner or <code>null</code>

@@ -266,8 +266,8 @@ public interface VersionControlledResource extends VersionableResource {
      * is a required property of any version-controlled resource, that represents
      * a 'configuration'. It identifies the collection that contains the
      * version-controlled resources whose versions are tracked by this
-     * configuration.<p/>
-     *
+     * configuration.
+     * <p>
      * This property is defined to have the following format:
      * <pre>
      * &lt;!ELEMENT baseline-controlled-collection (href)&gt;
@@ -284,8 +284,8 @@ public interface VersionControlledResource extends VersionableResource {
     /**
      * This property is mandatory for all checked-out version-controlled-configuration
      * resources. It determines the DAV:subbaseline-set property of the baseline
-     * that results from checking in this resource.<p/>
-     *
+     * that results from checking in this resource.
+     * <p>
      * This property is defined to have the following format:
      * <pre>
      * &lt;!ELEMENT subbaseline-set (href*)&gt;

@@ -23,7 +23,7 @@ import java.util.regex.Pattern;
 
 /**
  * Implements the encode and decode routines as specified for XML name to SQL
- * identifier conversion in ISO 9075-14:2003.<br/>
+ * identifier conversion in ISO 9075-14:2003.<br>
  * If a character <code>c</code> is not valid at a certain position in an XML 1.0
  * NCName it is encoded in the form: '_x' + hexValueOf(c) + '_'.
  */

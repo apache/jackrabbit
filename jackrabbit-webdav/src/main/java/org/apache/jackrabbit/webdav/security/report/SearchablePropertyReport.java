@@ -43,7 +43,7 @@ import java.util.Set;
  * <p>
  * The request body MUST be an empty DAV:principal-search-property-set element.
  * <p>
- * The response body MUSt be a DAV:principal-search-property-set XML element
+ * The response body MUST be a DAV:principal-search-property-set XML element
  * with the following structure:
  * <pre>
  *  &lt;!ELEMENT principal-search-property-set (principal-search-property*) &gt;

@@ -111,9 +111,9 @@ public final class PrivilegeManagerImpl implements PrivilegeManager, PrivilegeRe
     }
 
     /**
-     * Register a new custom privilege with the specified characteristics.<p/>
-     *
-     * <p>The current implementation has the following limitations and constraints:</p>
+     * Register a new custom privilege with the specified characteristics.
+     * <p>
+     * The current implementation has the following limitations and constraints:
      *
      * <ul>
      * <li>the name may not be in use by another privilege</li>
@@ -123,12 +123,13 @@ public final class PrivilegeManagerImpl implements PrivilegeManager, PrivilegeRe
      * names can be resolved to registered privileges and if there exists
      * no registered privilege with the same aggregated privileges.</li>
      * </ul>
-     *
+     * <p>
      * <strong>Please note</strong><br>
      * Custom privilege(s) will not be enforced for any kind of repository
      * operations. Those are exclusively covered by the built-in privileges.
      * This also implies that the {@link Permission}s are not affected by
-     * custom privileges.<p/>
+     * custom privileges.
+     * <p>
      * Applications making use of the custom privilege(s) are in charge of
      * asserting whether the privileges are granted/denied according to their
      * application specific needs.

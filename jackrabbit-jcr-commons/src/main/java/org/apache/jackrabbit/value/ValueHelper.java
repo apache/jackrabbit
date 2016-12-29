@@ -677,7 +677,7 @@ public class ValueHelper {
 
     /**
      * Serializes the given value to a <code>String</code>. The serialization
-     * format is the same as used by Document & System View XML, i.e.
+     * format is the same as used by Document &amp; System View XML, i.e.
      * binary values will be Base64-encoded whereas for all others
      * <code>{@link Value#getString()}</code> will be used.
      *
@@ -702,7 +702,7 @@ public class ValueHelper {
 
     /**
      * Outputs the serialized value to a <code>Writer</code>. The serialization
-     * format is the same as used by Document & System View XML, i.e.
+     * format is the same as used by Document &amp; System View XML, i.e.
      * binary values will be Base64-encoded whereas for all others
      * <code>{@link Value#getString()}</code> will be used for serialization.
      *

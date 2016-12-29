@@ -50,7 +50,7 @@ public abstract class AbstractLsItems extends AbstractLs {
      *         if an errors occurs
      * @throws RepositoryException
      *         if the current <code>Repository</code> throws a
-     *         <code>RepositoryException<code>
+     *         <code>RepositoryException</code>
      */
     protected abstract Iterator getItems(Context ctx) throws CommandException,
             RepositoryException;

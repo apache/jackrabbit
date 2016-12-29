@@ -168,8 +168,8 @@ public class UpdateInfo implements DeltaVConstants, XmlSerializable {
     /**
      * Returns a {@link DavPropertyNameSet}. If the DAV:update element contains
      * a DAV:prop child element the properties specified therein are included
-     * in the set. Otherwise an empty set is returned.<p/>
-     *
+     * in the set. Otherwise an empty set is returned.
+     * <p>
      * <b>WARNING:</b> modifying the DavPropertyNameSet returned by this method does
      * not modify this <code>UpdateInfo</code>.
      *

@@ -1003,7 +1003,7 @@ public class NodeImpl extends ItemImpl implements Node {
 
     /**
      * TODO: Issue 728 of the pfd... this method is a leftover and will be removed in the final version.
-     * -> change to package protected then
+     * -&gt; change to package protected then
      */
     public NodeIterator merge(String srcWorkspace, boolean bestEffort, boolean isShallow) throws RepositoryException {
         return session.getWorkspace().getVersionManager().merge(getPath(), srcWorkspace, bestEffort, isShallow);

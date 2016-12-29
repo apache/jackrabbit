@@ -63,19 +63,19 @@ import javax.sql.DataSource;
  *
  * Configuration:
  * <pre>
- * &lt;DataStore class="org.apache.jackrabbit.core.data.db.DbDataStore">
- *     &lt;param name="{@link #setUrl(String) url}" value="jdbc:postgresql:test"/>
- *     &lt;param name="{@link #setUser(String) user}" value="sa"/>
- *     &lt;param name="{@link #setPassword(String) password}" value="sa"/>
- *     &lt;param name="{@link #setDatabaseType(String) databaseType}" value="postgresql"/>
- *     &lt;param name="{@link #setDriver(String) driver}" value="org.postgresql.Driver"/>
- *     &lt;param name="{@link #setMinRecordLength(int) minRecordLength}" value="1024"/>
- *     &lt;param name="{@link #setMaxConnections(int) maxConnections}" value="2"/>
- *     &lt;param name="{@link #setCopyWhenReading(boolean) copyWhenReading}" value="true"/>
- *     &lt;param name="{@link #setTablePrefix(String) tablePrefix}" value=""/>
- *     &lt;param name="{@link #setSchemaObjectPrefix(String) schemaObjectPrefix}" value=""/>
- *     &lt;param name="{@link #setSchemaCheckEnabled(String) schemaCheckEnabled}" value="true"/>
- * &lt/DataStore>
+ * &lt;DataStore class="org.apache.jackrabbit.core.data.db.DbDataStore"&gt;
+ *     &lt;param name="{@link #setUrl(String) url}" value="jdbc:postgresql:test"/&gt;
+ *     &lt;param name="{@link #setUser(String) user}" value="sa"/&gt;
+ *     &lt;param name="{@link #setPassword(String) password}" value="sa"/&gt;
+ *     &lt;param name="{@link #setDatabaseType(String) databaseType}" value="postgresql"/&gt;
+ *     &lt;param name="{@link #setDriver(String) driver}" value="org.postgresql.Driver"/&gt;
+ *     &lt;param name="{@link #setMinRecordLength(int) minRecordLength}" value="1024"/&gt;
+ *     &lt;param name="{@link #setMaxConnections(int) maxConnections}" value="2"/&gt;
+ *     &lt;param name="{@link #setCopyWhenReading(boolean) copyWhenReading}" value="true"/&gt;
+ *     &lt;param name="{@link #setTablePrefix(String) tablePrefix}" value=""/&gt;
+ *     &lt;param name="{@link #setSchemaObjectPrefix(String) schemaObjectPrefix}" value=""/&gt;
+ *     &lt;param name="{@link #setSchemaCheckEnabled(String) schemaCheckEnabled}" value="true"/&gt;
+ * &lt/DataStore&gt;
  * </pre>
  * <p>
  * Only URL, user name and password usually need to be set.
@@ -86,8 +86,8 @@ import javax.sql.DataSource;
  * and the JNDI name as the URL. If the user and password are configured in the JNDI resource,
  * they should not be configured here. Example JNDI settings:
  * <pre>
- * &lt;param name="driver" value="javax.naming.InitialContext" />
- * &lt;param name="url" value="java:comp/env/jdbc/Test" />
+ * &lt;param name="driver" value="javax.naming.InitialContext" /&gt;
+ * &lt;param name="url" value="java:comp/env/jdbc/Test" /&gt;
  * </pre>
  * <p>
  * For Microsoft SQL Server 2005, there is a problem reading large BLOBs. You will need to use
@@ -99,7 +99,7 @@ import javax.sql.DataSource;
  * blobs at the same time.
  * <p>
  * The tablePrefix can be used to specify a schema and / or catalog name:
- * &lt;param name="tablePrefix" value="ds.">
+ * &lt;param name="tablePrefix" value="ds."&gt;
  */
 public class DbDataStore extends AbstractDataStore
         implements DatabaseAware, MultiDataStoreAware {

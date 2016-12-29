@@ -33,7 +33,7 @@ public abstract class AbstractQueryHits implements QueryHits {
     /**
      * Provides a default implementation:
      * <pre>
-     * while (n-- > 0) {
+     * while (n-- &gt; 0) {
      *     if (nextScoreNode() == null) {
      *         return;
      *     }

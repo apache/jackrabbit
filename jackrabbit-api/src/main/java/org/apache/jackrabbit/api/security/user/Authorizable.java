@@ -181,10 +181,12 @@ public interface Authorizable {
 
     /**
      * Returns a JCR path if this authorizable instance is associated with an
-     * item that can be accessed by the editing <code>Session</code>.<p/>
+     * item that can be accessed by the editing <code>Session</code>.
+     * <p>
      * Throws <code>UnsupportedRepositoryOperationException</code> if this
      * method is not supported or if there is no item associated with this
-     * authorizable that is accessible by the editing <code>Session</code>.<p/>
+     * authorizable that is accessible by the editing <code>Session</code>.
+     * <p>
      * Throws <code>RepositoryException</code> if another error occurs while
      * retrieving the path.
      *

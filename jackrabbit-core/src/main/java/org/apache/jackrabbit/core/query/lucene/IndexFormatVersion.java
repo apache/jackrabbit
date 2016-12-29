@@ -53,7 +53,7 @@ public class IndexFormatVersion {
     public static final IndexFormatVersion V2 = new IndexFormatVersion(2);
 
     /**
-     * V3 is the index format for Jackrabbit releases >= 1.5
+     * V3 is the index format for Jackrabbit releases &gt;= 1.5
      */
     public static final IndexFormatVersion V3 = new IndexFormatVersion(3);
 

@@ -66,7 +66,7 @@ public class OrderQueryNode extends QueryNode {
      * Set the last order specification of this query node to ascending/descending
      * @see OrderSpec#setAscending(boolean)
      *
-     * @param value  <code>true</code>true> for ascending and <code>false</code> for
+     * @param value  <code>true</code> for ascending and <code>false</code> for
      * descending.
      * @throws  IllegalStateException  if no order specification is set
      */

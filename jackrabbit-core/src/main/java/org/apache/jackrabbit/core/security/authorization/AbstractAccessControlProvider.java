@@ -46,7 +46,8 @@ public abstract class AbstractAccessControlProvider implements AccessControlProv
     /**
      * Constant for the name of the configuration option "omit-default-permission".
      * The option is a flag indicating whether default permissions should be
-     * created upon initialization of this provider.<p/>
+     * created upon initialization of this provider.
+     * <p>
      * If this option is present in the configuration no initial ACL content
      * is created.<br>
      * If this configuration option is omitted the default permissions are

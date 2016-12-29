@@ -42,7 +42,8 @@ import java.util.Properties;
 import java.util.Set;
 
 /**
- * Provides principals for the users contained within the Repository.<p/>
+ * Provides principals for the users contained within the Repository.
+ * <p>
  * Each {@link Authorizable} accessible via {@link UserManager}
  * is respected and the provider serves {@link Authorizable#getPrincipal()
  * Principal}s retrieved from those <code>Authorizable</code> objects.
