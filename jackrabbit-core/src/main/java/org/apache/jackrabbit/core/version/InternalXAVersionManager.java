@@ -137,7 +137,7 @@ public class InternalXAVersionManager extends InternalVersionManagerBase
     //------------------------------------------< EventStateCollectionFactory >
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
     public EventStateCollection createEventStateCollection()
             throws RepositoryException {

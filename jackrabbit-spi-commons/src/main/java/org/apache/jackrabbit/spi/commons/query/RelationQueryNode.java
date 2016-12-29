@@ -292,7 +292,7 @@ public class RelationQueryNode extends NAryQueryNode<QueryNode> implements Query
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
     public boolean equals(Object obj) {
         if (obj instanceof RelationQueryNode) {

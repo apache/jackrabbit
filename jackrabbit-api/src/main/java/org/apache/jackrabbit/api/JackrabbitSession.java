@@ -187,7 +187,7 @@ public interface JackrabbitSession extends Session {
      *         perform the specified actions at the specified
      *         {@code absPath}.
      * @throws RepositoryException if an error occurs.
-     * @see {@link Session#hasPermission(String, String)}
+     * @see Session#hasPermission(String, String)
      */
     public boolean hasPermission(@Nonnull String absPath, @Nonnull String... actions) throws RepositoryException;
 

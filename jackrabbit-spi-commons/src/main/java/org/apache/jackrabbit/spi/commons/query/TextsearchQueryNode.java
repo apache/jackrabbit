@@ -186,7 +186,7 @@ public class TextsearchQueryNode extends QueryNode {
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
     public boolean equals(Object obj) {
         if (obj instanceof TextsearchQueryNode) {

@@ -839,12 +839,6 @@ public final class Operations {
     /**
      * Factory method for creating an {@link SetTree} operation.
      * @see Batch#addNode(NodeId, AddItem)
-     *
-     * @param parentId
-     * @param addItem
-     * @param nodetypeName
-     * @param uuid
-     * @return
      */
     public static Operation setTree(NodeId parentId, Tree contentTree) {
         return new SetTree(parentId, contentTree);

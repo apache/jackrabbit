@@ -261,7 +261,7 @@ public class VirtualNodeTypeStateProvider extends AbstractVISProvider {
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
     public boolean setNodeReferences(ChangeLog references) {
         return false;

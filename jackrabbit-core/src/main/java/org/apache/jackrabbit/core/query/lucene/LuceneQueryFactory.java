@@ -338,7 +338,7 @@ public class LuceneQueryFactory {
     /**
      * Creates a lucene query for the given QOM property existence constraint.
      *
-     * @param constraint the QOM constraint.
+     * @param prop the QOM constraint.
      * @return the lucene query for the given constraint.
      * @throws RepositoryException if an error occurs while creating the query.
      */
