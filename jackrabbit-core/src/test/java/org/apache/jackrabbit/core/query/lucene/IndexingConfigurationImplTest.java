@@ -49,7 +49,6 @@ public class IndexingConfigurationImplTest extends AbstractIndexingTest {
         super.setUp();
         Node n = testRootNode.addNode(nodeName1, ntUnstructured);
         n.addMixin(mixReferenceable);
-        n.addMixin(mixLockable);
         session.save();
         nState = (NodeState) getSearchIndex().getContext().getItemStateManager().getItemState(
                 new NodeId(n.getIdentifier()));
@@ -96,12 +95,6 @@ public class IndexingConfigurationImplTest extends AbstractIndexingTest {
                 new NodeId(n.getIdentifier()));
         assertTrue(config.isIndexed(state, FOO));
         assertFalse(config.isIncludedInNodeScopeIndex(state, FOO));
-    }
-
-    public void testIndexRuleMixin() throws Exception{
-        IndexingConfiguration config = createConfig("config5");
-        assertFalse(config.isIndexed(nState, NameConstants.JCR_LOCKOWNER));
-        assertTrue(config.isIndexed(nState, NameConstants.JCR_LOCKISDEEP));
     }
 
     //----------------------------< internal >----------------------------------
