@@ -55,7 +55,7 @@ public interface JackrabbitAccessControlEntry extends AccessControlEntry {
      * @throws ValueFormatException If the restriction with the specified name
      * contains multiple values.
      * @throws RepositoryException if an error occurs.
-     * @see {@link #getRestrictions(String)}
+     * @see #getRestrictions(String)
      */
     Value getRestriction(String restrictionName) throws ValueFormatException, RepositoryException;
 
@@ -72,7 +72,7 @@ public interface JackrabbitAccessControlEntry extends AccessControlEntry {
      * or <code>null</code> if no such restriction exists. The array may contain
      * zero, one or multiple values.
      * @throws RepositoryException if an error occurs.
-     * @see {@link #getRestriction(String)}
+     * @see #getRestriction(String)
      */
     Value[] getRestrictions(String restrictionName) throws RepositoryException;
 }

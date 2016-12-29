@@ -1810,7 +1810,7 @@ public class SearchIndex extends AbstractQueryHandler {
         }
 
         /**
-         * @inheritDoc
+         * {@inheritDoc}
          */
         public int[] getParents(int n, int[] docNumbers) throws IOException {
             int i = readerIndex(n);

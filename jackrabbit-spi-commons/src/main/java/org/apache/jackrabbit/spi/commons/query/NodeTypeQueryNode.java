@@ -57,7 +57,7 @@ public class NodeTypeQueryNode extends ExactQueryNode {
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
     public boolean equals(Object obj) {
         if (obj instanceof NodeTypeQueryNode) {

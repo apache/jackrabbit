@@ -33,7 +33,9 @@ public class ServerPrincipalIterator extends ServerIterator {
         super(new RangeIteratorAdapter(iterator), factory, maxBufferSize);
     }
 
-    /** @{inheritDoc */
+    /**
+     * {@inheritDoc}
+     */
     protected Object getRemoteObject(Object object) throws RemoteException {
         return getFactory().getRemotePrincipal((Principal) object);
     }

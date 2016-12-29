@@ -46,7 +46,7 @@ public class SessionInfoImpl extends org.apache.jackrabbit.spi.commons.SessionIn
 
     //--------------------------------------------------------< SessionInfo >---
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
     @Override
     public String getUserID() {

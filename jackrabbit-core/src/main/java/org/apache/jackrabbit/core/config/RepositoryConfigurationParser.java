@@ -1099,7 +1099,6 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
      *
      * @param root the root configuration element
      * @return repository lock mechanism factory
-     * @throws ConfigurationException if the configuration is broken
      */
     protected RepositoryLockMechanismFactory getRepositoryLockMechanismFactory(final Element root) {
         return new RepositoryLockMechanismFactory() {

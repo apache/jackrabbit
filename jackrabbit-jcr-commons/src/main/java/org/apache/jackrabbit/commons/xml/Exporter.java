@@ -233,7 +233,6 @@ public abstract class Exporter {
      *
      * @see <a href="https://issues.apache.org/jira/browse/JCR-1084">JCR-1084</a>
      * @param node node
-     * @return properties as sorted map
      * @throws RepositoryException if a repository error occurs
      * @throws SAXException if a SAX error occurs
      */

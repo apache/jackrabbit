@@ -63,7 +63,7 @@ public class RMIRemoteRepositoryServlet extends RemoteRepositoryServlet {
      * Creates and returns an RMI repository factory for the configured RMI URL.
      *
      * @return RMI repository factory
-     * @throws ServletException if the factory could not be created
+     * @throws RepositoryException if the factory could not be created
      */
     @Override
     protected Repository getRepository() throws RepositoryException {

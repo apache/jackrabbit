@@ -78,7 +78,7 @@ public class DerefQueryNode extends LocationStepQueryNode {
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
     public boolean equals(Object obj) {
         if (obj instanceof DerefQueryNode) {
