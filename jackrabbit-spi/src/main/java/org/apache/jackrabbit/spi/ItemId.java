@@ -22,7 +22,7 @@ package org.apache.jackrabbit.spi;
  * table shows each of the allowed combinations where an <b>X</b> in
  * the column indicates that a value is set and a <b>-</b> indicates
  * that the value is <code>null</code>:
- * <table summary="allowed combinations of uniqued ID and path">
+ * <table summary="allowed combinations of unique ID and path">
  * <tr><th>UniqueID</th><th>Path</th><th>Usage</th></tr>
  * <tr valign="top"><td align="center"><b>X</b></td><td align="center"><b>-</b></td>
  *   <td>The item can be identified with a unique ID. In most cases such an item
@@ -48,8 +48,7 @@ package org.apache.jackrabbit.spi;
  * and the path part are equal AND if they denote the same
  * {@link #denotesNode() type} of <code>ItemId</code>.
  */
-public interface 
- {
+public interface ItemId {
 
     /**
      * @return <code>true</code> if this <code>ItemId</code> identifies a node;
