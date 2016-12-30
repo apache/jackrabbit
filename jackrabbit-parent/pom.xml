@@ -924,4 +924,10 @@
       <timezone>-5</timezone>
     </developer>
   </developers>
+
+  <scm>
+    <connection>scm:svn:http://svn.apache.org/repos/asf/maven/pom/branches/2.14/jackrabbit-parent</connection>
+    <developerConnection>scm:svn:https://svn.apache.org/repos/asf/maven/pom/branches/2.14/jackrabbit-parent</developerConnection>
+    <url>http://svn.apache.org/viewvc/maven/pom/branches/2.14/jackrabbit-parent</url>
+  </scm>
 </project>
