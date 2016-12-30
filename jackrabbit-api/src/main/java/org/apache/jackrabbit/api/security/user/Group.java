@@ -18,6 +18,8 @@ package org.apache.jackrabbit.api.security.user;
 
 import javax.annotation.Nonnull;
 import javax.jcr.RepositoryException;
+import javax.jcr.Session;
+
 import java.util.Iterator;
 import java.util.Set;
 

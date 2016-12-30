@@ -304,7 +304,7 @@ public class DatabaseJournal extends AbstractJournal implements DatabaseAware {
     /**
      * This method is called from {@link #init(String, NamespaceResolver)} after the
      * {@link #createConnectionHelper(DataSource)} method, and returns a default {@link CheckSchemaOperation}.
-     * Subclasses can overrride this implementation to get a customized implementation.
+     * Subclasses can override this implementation to get a customized implementation.
      *
      * @return a new {@link CheckSchemaOperation} instance
      */
@@ -321,7 +321,6 @@ public class DatabaseJournal extends AbstractJournal implements DatabaseAware {
      * database type. Should be overridden by subclasses that use a different way to
      * create a connection and therefore require other arguments.
      *
-     * @see #getConnection()
      * @throws JournalException if initialization fails
      */
     protected void init() throws JournalException {

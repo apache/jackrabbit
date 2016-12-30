@@ -25,7 +25,7 @@ import java.util.Iterator;
  * Note however, that the list of child nodes does not form part of a
  * <code>NodeInfo</code>. It is retrieved by calling
  * {@link RepositoryService#getChildInfos(SessionInfo, NodeId)}. In case of
- * {@link RepositoryService#getItemInfos(SessionInfo, NodeId) batch read} the
+ * {@link RepositoryService#getItemInfos(SessionInfo, ItemId) batch read} the
  * child nodes might be part of the returned <code>Iterator</code>.
  */
 public interface NodeInfo extends ItemInfo {

@@ -41,7 +41,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Implements a variant of the lucene class {@link org.apache.lucene.search.RangeQuery}.
+ * Implements a variant of the lucene class {@code org.apache.lucene.search.RangeQuery}.
  * This class does not rewrite to basic {@link org.apache.lucene.search.TermQuery}
  * but will calculate the matching documents itself. That way a
  * <code>TooManyClauses</code> can be avoided.

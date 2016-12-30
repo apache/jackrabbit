@@ -29,7 +29,7 @@ import org.apache.jackrabbit.rmi.server.ServerObject;
 
 /**
  * Remote adapter for the JCR {@link RangeIterator} interface. This
- * class makes a local iterator available as an RMI service using teh
+ * class makes a local iterator available as an RMI service using the
  * {@link RemoteIterator} interface.
  */
 public abstract class ServerIterator extends ServerObject
@@ -75,9 +75,8 @@ public abstract class ServerIterator extends ServerObject
      *
      * @return size of the iterator
      * @throws RemoteException on RMI errors
-     * @see RemoteIterator#getSize()
-     * @see RangeIterator#getSize()
      */
+    @Override
     public long getSize() throws RemoteException {
         if (size == -2) {
             size = iterator.getSize();
@@ -92,6 +91,7 @@ public abstract class ServerIterator extends ServerObject
      * @throws NoSuchElementException if skipped past the last element
      * @throws RemoteException on RMI errors
      */
+    @Override
     public void skip(long items)
             throws NoSuchElementException, RemoteException {
         try {
@@ -103,7 +103,7 @@ public abstract class ServerIterator extends ServerObject
 
     /**
      * Returns a remote adapter for the given local object. This abstract
-     * method is used by {@link #nextObjects(int)} to convert the local
+     * method is used by {@link #nextObjects()} to convert the local
      * objects to remote references to be sent to the client.
      * <p>
      * Subclasses should implement this method to use the remote adapter
@@ -122,9 +122,8 @@ public abstract class ServerIterator extends ServerObject
      *
      * @return array of remote references, or <code>null</code>
      * @throws RemoteException on RMI errors
-     * @see RemoteIterator#nextObjects(int)
-     * @see java.util.Iterator#next()
      */
+    @Override
     public Object[] nextObjects() throws RemoteException {
         ArrayList items = new ArrayList();
         while (items.size() < maxBufferSize && iterator.hasNext()) {

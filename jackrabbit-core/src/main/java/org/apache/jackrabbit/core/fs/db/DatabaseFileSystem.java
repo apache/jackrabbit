@@ -19,7 +19,6 @@ package org.apache.jackrabbit.core.fs.db;
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.fs.FileSystemException;
 import org.apache.jackrabbit.core.fs.FileSystemPathUtil;
-import org.apache.jackrabbit.core.persistence.PMContext;
 import org.apache.jackrabbit.core.util.db.CheckSchemaOperation;
 import org.apache.jackrabbit.core.util.db.ConnectionHelper;
 import org.apache.jackrabbit.core.util.db.DbUtility;
@@ -45,9 +44,9 @@ import java.util.ArrayList;
 /**
  * Base class for database file systems. This class contains common
  * functionality for database file system subclasses that normally differ only
- * in the way the database connection is acquired. Subclasses should override
+ * in the way the database connection is acquired. <!-- FIXME: Subclasses should override
  * the {@link #getConnection()} method to return the configured database
- * connection.
+ * connection. -->
  * <p>
  * See the {@link DbFileSystem} for a detailed description of the available
  * configuration options and database behaviour.
@@ -215,7 +214,7 @@ public abstract class DatabaseFileSystem implements FileSystem {
     protected abstract DataSource getDataSource() throws Exception;
 
     /**
-     * This method is called from the {@link #init(PMContext)} method of this class and returns a
+     * This method is called from the {@link #init()} method of this class and returns a
      * {@link ConnectionHelper} instance which is assigned to the {@code conHelper} field. Subclasses may
      * override it to return a specialized connection helper.
      * 
@@ -228,7 +227,7 @@ public abstract class DatabaseFileSystem implements FileSystem {
     }
 
     /**
-     * This method is called from {@link #init(PMContext)} after the
+     * This method is called from {@link #init()} after the
      * {@link #createConnectionHelper(DataSource)} method, and returns a default {@link CheckSchemaOperation}.
      * Subclasses can overrride this implementation to get a customized implementation.
      * 

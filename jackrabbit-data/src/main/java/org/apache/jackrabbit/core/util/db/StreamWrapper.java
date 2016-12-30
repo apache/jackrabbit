@@ -22,6 +22,7 @@ import java.io.InputStream;
 import java.sql.SQLException;
 
 import org.apache.commons.io.input.CloseShieldInputStream;
+import org.apache.jackrabbit.core.util.db.ConnectionHelper.RetryManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,11 +46,11 @@ public class StreamWrapper {
         this.stream = new MarkDetectingInputStream(in);
         this.size = size;
     }
-    
+
     public InputStream getStream() {
         return new CloseShieldInputStream(stream);
     }
-    
+
     public long getSize() {
         return size;
     }
@@ -64,7 +65,7 @@ public class StreamWrapper {
 
     /**
      * Resets the internal InputStream that it could be re-read.<br>
-     * Is used from {@link RetryManager} if a {@link SQLException} has occurred.<br>
+     * Is used from {@link ConnectionHelper.RetryManager} if a {@link SQLException} has occurred.<br>
      * It relies on the assumption that the InputStream was not marked anywhere
      * during reading.
      *

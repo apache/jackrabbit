@@ -46,21 +46,21 @@ public interface RemoteQuery extends Remote {
     RemoteQueryResult execute() throws RepositoryException, RemoteException;
 
     /**
-     * @see javax.jcr.query.Query#setLimit()
+     * @see javax.jcr.query.Query#setLimit(long)
      *
      * @param limit a <code>long</code>
      * @throws RemoteException on RMI errors
      */
     void setLimit(long limit) throws RemoteException;
-    
+
     /**
-     * @see javax.jcr.query.Query#setOffset()
+     * @see javax.jcr.query.Query#setOffset(long)
      *
      * @param offset a <code>long</code>
      * @throws RemoteException on RMI errors
      */
     void setOffset(long offset) throws RemoteException;
-    
+
     /**
      * @see javax.jcr.query.Query#getStatement()
      *
@@ -105,7 +105,7 @@ public interface RemoteQuery extends Remote {
      * @throws RemoteException on RMI errors
      */
     void bindValue(String varName, Value value) throws RepositoryException, RemoteException;
-    
+
     /**
      * @see javax.jcr.query.Query#getBindVariableNames()
      *

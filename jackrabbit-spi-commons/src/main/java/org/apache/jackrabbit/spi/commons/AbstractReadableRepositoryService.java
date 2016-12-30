@@ -127,7 +127,7 @@ public abstract class AbstractReadableRepositoryService extends AbstractReposito
     //------------------------------------------------------------< reading >---
     /**
      * This default implementation returns the first item returned by the call to
-     * {@link #getItemInfos(SessionInfo, NodeId)}. The underlying assumption here is that
+     * {@link #getItemInfos(SessionInfo, ItemId)}. The underlying assumption here is that
      * the implementation and the persistence layer are optimized for batch reading. That is,
      * a call to <code>getItemInfos</code> is no more expensive than retrieving the single
      * <code>NodeInfo</code> only. If this assumption does not hold, subclasses should override

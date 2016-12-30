@@ -47,8 +47,8 @@ import java.util.Iterator;
  *
  * <p>
  * Whether a specific node is included is determined by an
- * {@link #InclusionPolicy}. Error occurring while traversing are delegated to
- * an {@link #ErrorHandler}.
+ * {@link #inclusionPolicy}. Error occurring while traversing are delegated to
+ * an {@link #errorHandler}.
  * </p>
  */
 public final class TreeTraverser implements Iterable<Node> {

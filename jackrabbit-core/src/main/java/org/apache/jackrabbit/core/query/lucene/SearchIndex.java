@@ -2091,7 +2091,7 @@ public class SearchIndex extends AbstractQueryHandler {
      * Sets the list of text extractors (and text filters) to use for
      * extracting text content from binary properties. The list must be
      * comma (or whitespace) separated, and contain fully qualified class
-     * names of the {@link TextExtractor} (and {@link org.apache.jackrabbit.core.query.TextFilter}) classes
+     * names of the {@code TextExtractor} (and {@code org.apache.jackrabbit.core.query.TextFilter}) classes
      * to be used. The configured classes must all have a public default
      * constructor.
      *

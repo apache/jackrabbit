@@ -25,7 +25,7 @@ package org.apache.jackrabbit.spi;
  * An <code>ItemInfoCache</code> is supplied per session from the {@link RepositoryService}. It is used
  * to cache <code>ItemInfo</code>s read from the <code>RepositoryService</code>.
  *
- * @see RepositoryService#getItemInfos(SessionInfo, NodeId)
+ * @see RepositoryService#getItemInfos(SessionInfo, ItemId)
  */
 public interface ItemInfoCache {
 

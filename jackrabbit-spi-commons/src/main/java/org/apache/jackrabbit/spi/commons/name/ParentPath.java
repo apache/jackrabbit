@@ -23,8 +23,6 @@ import org.apache.jackrabbit.spi.Path;
 
 /**
  * A relative path whose last element is the parent path element, i.e. "..".
- *
- * @see ParentElement
  */
 final class ParentPath extends RelativePath {
 
