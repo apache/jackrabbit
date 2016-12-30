@@ -14,7 +14,94 @@ and compatible with earlier stable Jackrabbit 2.x releases. Jackrabbit
 Changes in Jackrabbit 2.14.0
 ----------------------------
 
-// TODO
+The main changes in this release are:
+
+- Switch WebDAV client components to HttpClient 4.5.x (summary in JCR-2406)
+- Introduction of Commons-VFS Datastore implementation (JCR-3975)
+- Allow use of JDK7 features (JCR-4030)
+
+In detail:
+
+New Feature
+
+    [JCR-3975] - Commons-VFS Datastore implementation
+    [JCR-3983] - Possibility to parallelize the Garbage Collection
+
+Bug
+
+    [JCR-2633] - Modified externally exception when modifying mixinTypes with single session
+    [JCR-3632] - Test failed under Java 8
+    [JCR-3882] - GlobalPattern's equals() implementation throws NullPointerException
+    [JCR-3893] - Multiple issues with standalone 2.10.1
+    [JCR-3937] - jackrabbit-jcr-commons bundle incorrectly has google dependency in Export-Package uses clause
+    [JCR-3948] - LostFromCacheIssueTest failure
+    [JCR-3949] - occasional test failure in RepositoryConfigTest.testAutomaticClusterNodeIdCreation()
+    [JCR-3950] - XSS in DirListingExportHandler
+    [JCR-3958] - Endless loop until async upload completes
+    [JCR-3965] - RepositoryStatistics is reset per second for bundle cache size which should not be the case for the bundle cache stats
+    [JCR-3987] - jackrabbit-jcr-commons JcrUtils.getOrCreateByPath fails if session is not allowed to read root
+    [JCR-3992] - JcrUtils.getOrCreateByPath broken by JCR-3987
+    [JCR-3996] - Incorrect producer time in ListenerTracker
+    [JCR-3999] - Possibility for a Deadlock in FineGrainedISMLocking in a XA Environment
+    [JCR-4002] - CSRF in Jackrabbit-Webdav using empty content-type (CVE-2016-6801)
+    [JCR-4005] - TestVFSDataStore.testDeleteRecord() fails occasionally
+    [JCR-4006] - TestCachingFDS.testDeleteRecord() fails occasionally
+    [JCR-4007] - CachingDataStore - touching every time on getRecord() was unnecessary
+    [JCR-4008] - Restore TestCachingFDS.testDeleteRecord() to fix it with disabling AsyncUpload in unit tests
+    [JCR-4009] - CSRF in Jackrabbit-Webdav (CVE-2016-6801)
+    [JCR-4015] - jackrabbit-jcr-commons JcrUtils.getOrCreateByPath fails if session is not allowed to read root
+    [JCR-4022] - populate.jsp (standalone) doesn't work due to google ajax api change
+    [JCR-4027] - NPE in JcrRemotingServlet.canHandle() when content-type is missing
+    [JCR-4031] - AbstractLocatorFactory: typo in log message
+    [JCR-4033] - Session Leak in case of an exception inside the constructor of SessionImpl
+    [JCR-4041] - spi2davex: bogus content type charset parameter for application/x-www-form-urlencoded
+    [JCR-4042] - Adding Escape Character in GQL
+    [JCR-4047] - Build fails: jackrabbit-jcr2spi: Signature errors found.
+    [JCR-4052] - RFC4918DestinationHeaderTest fails with internal server error
+    [JCR-4060] - unintended export versions due to changed defaults in maven bundle plugin
+    [JCR-4068] - jcr-commons: get rid of test dependency to json.org JSON parser
+    [JCR-4072] - Creation of marker file fails when parent folder does not exist in CachingDataStore
+    [JCR-4079] - incorrect PROPPATCH response error handling
+    [JCR-4085] - DavEx json should always add type information for Doubles
+
+Improvement
+
+    [JCR-3938] - Require maven 3.x for build
+    [JCR-4000] - More event stats in EventListenerMBean
+    [JCR-4004] - Log exception in AbstractDataStore.getReferenceFromIdentifier()
+    [JCR-4012] - Include initial cost in stats for observation processing
+    [JCR-4013] - Calculate eventConsumerTimeRatio for entire time series
+    [JCR-4018] - Consistent Async Upload Executor handling in Backend implementations
+    [JCR-4032] - Add jmx EventListenerMBean.getToString() for clearer consolidated listener stats
+    [JCR-4063] - Minor improvements in GetSupportedQueryLanguagesTest
+    [JCR-4074] - jackrabbit-jcr2dav: add system property to disable davex support for testing
+
+Task
+
+    [JCR-4025] - Enable animal sniffer plugin
+    [JCR-4030] - Allow use of Java 7 in Jackrabbit trunk
+    [JCR-4080] - Upgrade Apache Commons Collections to v3.2.2
+    [JCR-4081] - Upgrade Apache Commons IO to 2.5
+    [JCR-4084] - decide on frozen export version numbers
+    [JCR-4090] - Fix Javadoc for JDK 1.8 doctool compliance
+    [JCR-4092] - avoid use of deprecated interface JcrValueType
+
+Sub-task
+
+    [JCR-4019] - move httpclient dependency out of parent pom
+    [JCR-4059] - avoid use of HttpClient3 URI class
+    [JCR-4064] - Refactor WebDAV related code out of HttpClient3-specific classes for better future re-use
+    [JCR-4065] - Add WebDAV API based on HttpClient4
+    [JCR-4066] - Use HttpClient4 based WebDAV API in remoting code
+    [JCR-4077] - Change vfs ext test cases not to depend on http client
+    [JCR-4086] - spi2dav: code reformat to reduce scope of changes for JCR-4066
+
+Test
+
+    [JCR-3961] - Some tests in GetInfoTest do not save changes
+    [JCR-3962] - NodeReorderTest waits for unexpected events
+    [JCR-3963] - Reduce wait timeout for AddEventListenerTest.testNoLocalTrue()
+    [JCR-3964] - Skip tests marked as known issues
 
 For more detailed information about all the changes in this and other
 Jackrabbit releases, please see the Jackrabbit issue tracker at
