@@ -60,6 +60,11 @@
 <exclude>org/apache/jackrabbit/webdav/DavResourceIteratorImpl</exclude>
 <exclude>org/apache/jackrabbit/webdav/security/report/PrincipalMatchReport</exclude>
 <exclude>org/apache/jackrabbit/webdav/security/report/SearchablePropertyReport*</exclude>
+<!-- JCR-2406 -->
+<exclude>org/apache/jackrabbit/webdav/client/methods/XmlRequestEntity</exclude>
+<exclude>org/apache/jackrabbit/webdav/client/methods/DavMethodBase</exclude>
+<exclude>org/apache/jackrabbit/webdav/client/methods/*Method</exclude>
+<exclude>org/apache/jackrabbit/webdav/client/methods/PollMethod$1</exclude>
               </excludes>
               <comparisonArtifacts>
                 <comparisonArtifact>
@@ -110,19 +115,6 @@
       <artifactId>httpclient</artifactId>
       <version>4.5.2</version>
     </dependency>
-    <dependency>
-      <groupId>commons-httpclient</groupId>
-      <artifactId>commons-httpclient</artifactId>
-      <version>3.1</version>
-      <exclusions>
-        <!-- JCR-2411: Replace commons-logging with jcl-over-slf4j -->
-        <exclusion>
-          <groupId>commons-logging</groupId>
-          <artifactId>commons-logging</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <!-- JCR-2411: Replace commons-logging with jcl-over-slf4j -->
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>jcl-over-slf4j</artifactId>
