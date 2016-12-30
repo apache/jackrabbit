@@ -411,7 +411,8 @@ public abstract class AbstractQueryTest extends AbstractJCRTest {
 
     /**
      * Escape an identifier suitable for the SQL parser
-     * @TODO currently only handles dash character
+     * <p>
+     * TODO: currently only handles dash character
      */
     protected String escapeIdentifierForSQL(String identifier) {
 

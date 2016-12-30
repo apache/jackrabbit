@@ -42,7 +42,7 @@ public class RMIRemoteRepository extends ProxyRepository {
 
     /**
      * Creates a proxy for the remote repository in the given RMI URL.
-     * Uses {@link JackrabbitClientAdapterFactory} as the default
+     * Uses {@link ClientAdapterFactory} as the default
      * local adapter factory.
      *
      * @param url URL of the remote repository

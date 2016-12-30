@@ -80,7 +80,7 @@ import org.slf4j.LoggerFactory;
  * <li>&lt;param name="{@link #setSchemaObjectPrefix(String) schemaObjectPrefix}" value=""/&gt;
  * <li>&lt;param name="{@link #setErrorHandling(String) errorHandling}" value=""/&gt;
  * <li>&lt;param name="{@link #setBlockOnConnectionLoss(String) blockOnConnectionLoss}" value="false"/&gt;
- * <li>&lt;param name="{@link #setSchemaCheckEnabled(String) schemaCheckEnabled}" value="true"/&gt;
+ * <li>&lt;param name="{@link #setSchemaCheckEnabled(boolean) schemaCheckEnabled}" value="true"/&gt;
  * </ul>
  */
 public class BundleDbPersistenceManager

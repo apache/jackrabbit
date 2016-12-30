@@ -245,7 +245,7 @@ public class NodeTypeRegistryImpl implements NodeTypeRegistry, EffectiveNodeType
     }
 
     /**
-     * @see EffectiveNodeTypeProvider#getEffectiveNodeType(Name[], Map<Name, QNodeTypeDefinition>)
+     * @see EffectiveNodeTypeProvider#getEffectiveNodeType(Name[], Map)
      */
     public EffectiveNodeType getEffectiveNodeType(Name[] ntNames, Map<Name, QNodeTypeDefinition> ntdMap)
         throws ConstraintViolationException, NoSuchNodeTypeException {
@@ -253,7 +253,7 @@ public class NodeTypeRegistryImpl implements NodeTypeRegistry, EffectiveNodeType
     }
 
     /**
-     * @see EffectiveNodeTypeProvider#getEffectiveNodeType(QNodeTypeDefinition, Map<Name, QNodeTypeDefinition>)
+     * @see EffectiveNodeTypeProvider#getEffectiveNodeType(QNodeTypeDefinition, Map)
      */
     public EffectiveNodeType getEffectiveNodeType(QNodeTypeDefinition ntd, Map<Name, QNodeTypeDefinition> ntdMap)
             throws ConstraintViolationException, NoSuchNodeTypeException {

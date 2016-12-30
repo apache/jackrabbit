@@ -75,6 +75,7 @@ import org.apache.jackrabbit.rmi.remote.RemoteVersion;
 import org.apache.jackrabbit.rmi.remote.RemoteVersionHistory;
 import org.apache.jackrabbit.rmi.remote.RemoteVersionManager;
 import org.apache.jackrabbit.rmi.remote.RemoteWorkspace;
+import org.apache.jackrabbit.rmi.remote.principal.RemoteGroup;
 import org.apache.jackrabbit.rmi.remote.principal.RemotePrincipal;
 import org.apache.jackrabbit.rmi.remote.security.RemoteAccessControlEntry;
 import org.apache.jackrabbit.rmi.remote.security.RemoteAccessControlManager;
@@ -401,9 +402,8 @@ public interface LocalAdapterFactory {
     /**
      * Factory method for creating a local adapter for a remote principal.
      * <p>
-     * If <code>remote</code> is a
-     * {@link org.apache.jackrabbit.rmi.remote.security.RemoteGroup} the
-     * prinicipal returned implements the <code>java.security.acl.Group</code>
+     * If <code>remote</code> is a {@link RemoteGroup} the
+     * principal returned implements the <code>java.security.acl.Group</code>
      * interface.
      *
      * @param remote principal
@@ -416,7 +416,7 @@ public interface LocalAdapterFactory {
      * iterator.
      * <p>
      * Each entry in the <code>remote</code> iterator which is a
-     * {@link org.apache.jackrabbit.rmi.remote.security.RemoteGroup} will be
+     * {@link RemoteGroup} will be
      * provided as a principal implementing the
      * <code>java.security.acl.Group</code> interface.
      *

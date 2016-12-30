@@ -838,7 +838,7 @@ public final class Operations {
 
     /**
      * Factory method for creating an {@link SetTree} operation.
-     * @see Batch#addNode(NodeId, AddItem)
+     * @see Batch#addNode(NodeId, Name, Name, String)
      */
     public static Operation setTree(NodeId parentId, Tree contentTree) {
         return new SetTree(parentId, contentTree);

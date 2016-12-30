@@ -48,7 +48,7 @@ public class JNDIRemoteRepository extends ProxyRepository {
 
     /**
      * Creates a proxy for the remote repository in JNDI.
-     * Uses {@link JackrabbitClientAdapterFactory} as the default
+     * Uses {@link ClientAdapterFactory} as the default
      * local adapter factory.
      *
      * @param context JNDI context
@@ -60,7 +60,7 @@ public class JNDIRemoteRepository extends ProxyRepository {
 
     /**
      * Creates a proxy for the remote repository in JNDI.
-     * Uses {@link JackrabbitClientAdapterFactory} as the default
+     * Uses {@link ClientAdapterFactory} as the default
      * local adapter factory.
      *
      * @param location JNDI location in default context

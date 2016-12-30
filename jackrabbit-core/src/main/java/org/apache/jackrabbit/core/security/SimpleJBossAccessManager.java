@@ -41,7 +41,6 @@ import java.util.Properties;
  * Jackrabbit permissions.
  *
  * @author dhartford
- * @date 2006-11-27
  * @see <a href="http://wiki.apache.org/jackrabbit/SimpleJbossAccessManager">http://wiki.apache.org/jackrabbit/SimpleJbossAccessManager</a>
  */
 public class SimpleJBossAccessManager implements AccessManager {

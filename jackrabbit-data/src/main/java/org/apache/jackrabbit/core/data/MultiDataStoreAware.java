@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.core.data;
 
+import org.apache.jackrabbit.core.data.MultiDataStore.MoveDataTask;
+
 /**
  * To use a DataStore within a MultiDataStore it must implement this
  * MultiDataStoreAware Interface. It extends a DataStore to delete a single

@@ -36,7 +36,7 @@ import org.apache.jackrabbit.spi2davex.Spi2davexRepositoryServiceFactory;
  * Repository factory for JCR to WebDAV connections. This factory supports
  * three main configuration parameters:
  * <dl>
- *   <dt>{@link GenericRepositoryFactory#URI org.apache.jackrabbit.repository.uri}</dt>
+ *   <dt>{@link JcrUtils#REPOSITORY_URI org.apache.jackrabbit.repository.uri}</dt>
  *   <dd>
  *     If this parameter contains a valid http or https URI, then an spi2davex
  *     connection to that URI is returned.

@@ -49,18 +49,13 @@ public class ClientGroup extends ClientPrincipal implements Group {
     }
 
     /**
-     * @throws UnsupportedRepositoryOperationException This method is not
-     *             implemented yet
+     * @return false - this method is not implemented yet
      */
     public boolean addMember(Principal user) {
         // no support for adding member here
         return false;
     }
 
-    /**
-     * @throws UnsupportedRepositoryOperationException This method is not
-     *             implemented yet
-     */
     public boolean isMember(Principal member) {
         try {
             return ((RemoteGroup) getRemotePrincipal()).isMember(member.getName());
@@ -69,7 +64,6 @@ public class ClientGroup extends ClientPrincipal implements Group {
         }
     }
 
-    /** {@inheritDoc} */
     public Enumeration<? extends Principal> members() {
         try {
             final RemoteIterator remote = ((RemoteGroup) getRemotePrincipal()).members();
@@ -89,8 +83,7 @@ public class ClientGroup extends ClientPrincipal implements Group {
     }
 
     /**
-     * @throws UnsupportedRepositoryOperationException This method is not
-     *             implemented yet
+     * @return false - this method is not implemented yet
      */
     public boolean removeMember(Principal user) {
         // no support for removing member here
