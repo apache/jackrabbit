@@ -27,5 +27,5 @@
  * @see <a href=
  *      "https://hc.apache.org/httpcomponents-client-4.5.x/">https://hc.apache.org/httpcomponents-client-4.5.x/</a>
  */
-@aQute.bnd.annotation.Version("1.1.0")
+@aQute.bnd.annotation.Version("2.0.0")
 package org.apache.jackrabbit.webdav.client.methods;
