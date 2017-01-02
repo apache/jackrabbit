@@ -33,7 +33,6 @@ import java.util.NoSuchElementException;
 /**
  * <code>PropertyReadMethodsTest</code>...
  *
- * @sources PropertyReadMethodsTest.java
  */
 public class PropertyReadMethodsTest extends AbstractJCRTest {
 

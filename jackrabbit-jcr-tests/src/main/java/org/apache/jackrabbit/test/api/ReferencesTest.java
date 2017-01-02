@@ -30,7 +30,6 @@ import java.util.HashSet;
 /**
  * <code>ReferencesTest</code> contains the test cases for the references.
  *
- * @sources ReferencesTest.java
  */
 public class ReferencesTest extends AbstractJCRTest {
 

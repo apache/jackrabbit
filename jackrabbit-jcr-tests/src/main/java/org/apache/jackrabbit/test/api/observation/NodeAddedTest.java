@@ -30,7 +30,6 @@ import javax.jcr.observation.Event;
  * {@link #nodeName2}. Furthermore {@link #testNodeType} must allow to add
  * child nodes of the same type ({@link #testNodeType}).
  *
- * @sources NodeAddedTest.java
  */
 public class NodeAddedTest extends AbstractObservationTest {
 

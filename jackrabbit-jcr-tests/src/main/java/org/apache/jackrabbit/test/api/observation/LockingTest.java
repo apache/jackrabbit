@@ -35,7 +35,6 @@ import org.apache.jackrabbit.test.NotExecutableException;
  * type {@link #testNodeType} must either have mix:lockable as one of its
  * supertypes or must allow to add mix:lockable as mixin.
  *
- * @sources LockingTest.java
  */
 public class LockingTest extends AbstractObservationTest {
 

@@ -35,7 +35,6 @@ import javax.jcr.lock.LockException;
  * <code>MergeNodeTest</code> contains tests dealing with general merge node
  * calls.
  *
- * @sources MergeNodeTest.java
  */
 
 public class MergeNodeTest extends AbstractMergeTest {

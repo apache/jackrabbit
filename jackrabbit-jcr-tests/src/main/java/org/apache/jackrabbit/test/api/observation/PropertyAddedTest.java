@@ -33,7 +33,6 @@ import java.util.List;
  * {@link #testNodeType} must also support String properties with names
  * {@link #propertyName1} and {@link #propertyName2}.
  *
- * @sources PropertyAddedTest.java
  */
 public class PropertyAddedTest extends AbstractObservationTest {
 

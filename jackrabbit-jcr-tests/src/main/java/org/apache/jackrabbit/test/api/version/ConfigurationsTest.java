@@ -28,7 +28,6 @@ import javax.jcr.version.VersionManager;
 /**
  * <code>ConfigurationsTest</code> covers methods related to the Configurations
  * feature in Versioning.
- * @sources ConfigurationsTest.java
  * @since JCR 2.0
  */
 public class ConfigurationsTest extends AbstractVersionTest {

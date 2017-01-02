@@ -26,7 +26,6 @@ import javax.jcr.Session;
  * perform tests that check if the QueryManager accepts the query, but the tests
  * will not execute the query and check its results.
  *
- * @sources PredicatesTest.java
  */
 public class PredicatesTest extends AbstractQueryTest {
 

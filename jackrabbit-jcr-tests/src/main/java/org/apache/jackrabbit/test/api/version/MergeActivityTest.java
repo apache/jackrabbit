@@ -26,7 +26,6 @@ import org.apache.jackrabbit.test.NotExecutableException;
 /**
  * <code>MergeActivityTest</code> contains tests dealing with merging activities
  *
- * @sources MergeActivityTest.java
  */
 
 public class MergeActivityTest extends AbstractMergeTest {

@@ -26,7 +26,6 @@ import org.apache.jackrabbit.test.NotExecutableException;
  * <code>WorkspaceCloneVersionableTest</code> contains tests for cloning
  * versionable nodes between workspace.
  *
- * @sources WorkspaceCloneVersionableTest.java
  */
 public class WorkspaceCloneVersionableTest extends AbstractWorkspaceVersionableTest {
 

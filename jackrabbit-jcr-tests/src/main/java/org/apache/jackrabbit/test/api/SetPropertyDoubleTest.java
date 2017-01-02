@@ -25,7 +25,6 @@ import javax.jcr.Node;
  * <code>SetPropertyDoubleTest</code> tests the <code>Node.setProperty(String,
  * double)</code> method
  *
- * @sources SetPropertyDoubleTest.java
  */
 public class SetPropertyDoubleTest extends AbstractJCRTest {
 

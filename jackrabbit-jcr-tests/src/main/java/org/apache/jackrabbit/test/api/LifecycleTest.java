@@ -29,7 +29,6 @@ import org.apache.jackrabbit.test.NotExecutableException;
 /**
  * Compliance tests for section 6.12 Lifecycle Management.
  *
- * @sources LifecycleTest.java
  */
 public class LifecycleTest extends AbstractJCRTest {
 

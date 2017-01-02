@@ -48,7 +48,6 @@ import org.apache.jackrabbit.test.NotExecutableException;
  * <code>PredefinedNodeTypeTest</code> tests if the predefined node types are
  * implemented correctly.
  *
- * @sources PredefinedNodeTypeTest.java
  */
 public class PredefinedNodeTypeTest extends AbstractJCRTest {
 

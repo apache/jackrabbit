@@ -36,7 +36,6 @@ import org.apache.jackrabbit.test.NotExecutableException;
  * @tck.config propertyname1 name of a reference property declared in the
  *  versionable node type.
  *
- * @sources GetReferencesNodeTest.java
  */
 public class GetReferencesNodeTest extends AbstractJCRTest {
 

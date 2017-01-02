@@ -29,7 +29,6 @@ import javax.jcr.nodetype.NodeType;
  * a node of name <code>childNodeName</code> could be added to a node of
  * type <code>NodeType</code>.
  *
- * @sources CanAddChildNodeCallWithoutNodeTypeTest.java
  */
 public class CanAddChildNodeCallWithoutNodeTypeTest extends AbstractJCRTest {
 

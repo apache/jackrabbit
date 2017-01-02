@@ -26,7 +26,6 @@ import javax.jcr.version.VersionManager;
  * <code>OnParentVersionCopyTest</code> tests the OnParentVersion {@link OnParentVersionAction#COPY COPY}
  * behaviour.
  *
- * @sources OnParentVersionCopyTest.java
  */
 public class OnParentVersionCopyTest extends AbstractOnParentVersionTest {
 

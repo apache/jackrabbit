@@ -23,7 +23,6 @@ import javax.jcr.observation.EventListener;
 /**
  * Tests the method {@link javax.jcr.observation.ObservationManager#getRegisteredEventListeners()}.
  *
- * @sources GetRegisteredEventListenersTest.java
  */
 public class GetRegisteredEventListenersTest extends AbstractObservationTest {
 

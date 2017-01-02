@@ -25,7 +25,6 @@ import javax.jcr.Node;
  * <code>SetPropertyLongTest</code> tests the <code>Node.setProperty(String,
  * long)</code> method
  *
- * @sources SetPropertyLongTest.java
  */
 public class SetPropertyLongTest extends AbstractJCRTest {
 

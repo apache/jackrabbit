@@ -30,7 +30,6 @@ import javax.jcr.nodetype.PropertyDefinition;
  * node or property is removable (same for {@link NodeType#canRemoveNode(String)}
  * and {@link NodeType#canRemoveProperty(String)}).
  *
- * @sources CanRemoveItemTest.java
  */
 public class CanRemoveItemTest extends AbstractJCRTest {
 

@@ -37,7 +37,6 @@ import java.io.IOException;
 /**
  * <code>ValueFactoryTest</code> tests the different ValueFactory.createValue methods.
  *
- * @sources ValueFactoryTest.java
  */
 public class ValueFactoryTest extends AbstractJCRTest {
 

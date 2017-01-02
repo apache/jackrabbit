@@ -39,7 +39,6 @@ import java.util.ArrayList;
  * name {@link #propertyName1} and a multi value string property with name
  * {@link #propertyName2}.
  *
- * @sources SetValueStringTest.java
  */
 public class SetValueStringTest extends AbstractJCRTest {
 

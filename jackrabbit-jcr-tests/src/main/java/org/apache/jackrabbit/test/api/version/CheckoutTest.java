@@ -27,7 +27,6 @@ import javax.jcr.version.VersionManager;
  * <code>CheckoutTest</code> covers tests related to {@link
  * javax.jcr.Node#checkout()} and {@link javax.jcr.Node#isCheckedOut()}.
  *
- * @sources CheckoutTest.java
  */
 public class CheckoutTest extends AbstractVersionTest {
 

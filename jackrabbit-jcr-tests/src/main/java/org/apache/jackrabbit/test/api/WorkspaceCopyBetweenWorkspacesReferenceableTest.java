@@ -25,7 +25,6 @@ import org.apache.jackrabbit.test.NotExecutableException;
  * <code>WorkspaceCopyBetweenWorkspacesReferenceableTest</code> contains tests
  * for copying referenceable nodes between workspace.
  *
- * @sources WorkspaceCopyBetweenWorkspacesReferenceableTest.java
  */
 public class WorkspaceCopyBetweenWorkspacesReferenceableTest extends AbstractWorkspaceReferenceableTest {
 

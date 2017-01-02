@@ -25,7 +25,6 @@ import javax.jcr.version.VersionManager;
  * <code>MergeCheckedoutSubNodeTest</code> contains tests dealing with
  * checked-out nodes in the subtree of the node on which merge is called.
  *
- * @sources MergeCheckedoutSubNodeTest.java
  */
 public class MergeCheckedoutSubNodeTest extends AbstractMergeTest {
 

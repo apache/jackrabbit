@@ -26,7 +26,6 @@ import org.apache.jackrabbit.test.NotExecutableException;
 /**
  * Test the method {@link Query#getLanguage()}.
  *
- * @sources GetLanguageTest.java
  */
 public class GetLanguageTest extends AbstractQueryTest {
 

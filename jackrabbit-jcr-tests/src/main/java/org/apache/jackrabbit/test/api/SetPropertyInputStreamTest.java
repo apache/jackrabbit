@@ -31,7 +31,6 @@ import java.io.ByteArrayInputStream;
  * <code>SetPropertyInputStreamTest</code> tests the <code>Node.setProperty(String,
  * InputStream)</code> method
  *
- * @sources SetPropertyInputStreamTest.java
  */
 public class SetPropertyInputStreamTest extends AbstractJCRTest {
 

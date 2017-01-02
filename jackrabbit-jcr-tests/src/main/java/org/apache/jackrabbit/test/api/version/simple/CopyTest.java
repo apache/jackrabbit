@@ -33,7 +33,6 @@ import javax.jcr.version.VersionManager;
  * - A copy of N, call it M, is created, as usual.
  * - A new, empty, version history for M, call it HM, is also created.
  *
- * @sources CopyTest.java
  */
 public class CopyTest extends AbstractVersionTest {
 

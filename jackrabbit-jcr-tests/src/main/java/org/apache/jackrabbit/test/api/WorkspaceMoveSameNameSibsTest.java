@@ -27,7 +27,6 @@ import javax.jcr.RepositoryException;
  * <code>WorkspaceMoveSameNameSibsTest</code> contains tests for moving nodes
  * with same name siblings supported in one workspace.
  *
- * @sources WorkspaceMoveSameNameSibsTest.java
  */
 public class WorkspaceMoveSameNameSibsTest extends AbstractWorkspaceSameNameSibsTest {
 

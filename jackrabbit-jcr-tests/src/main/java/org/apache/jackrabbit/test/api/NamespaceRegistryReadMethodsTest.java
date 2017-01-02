@@ -33,7 +33,6 @@ import java.util.Arrays;
  * NamespaceRegistry class and also the correct Exception throwing for methods
  * not supported in level 1.
  *
- * @sources NamespaceRegistryReadMethodsTest.java
  */
 public class NamespaceRegistryReadMethodsTest extends AbstractJCRTest {
 

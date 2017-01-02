@@ -37,7 +37,6 @@ import javax.jcr.PathNotFoundException;
  * be referenceable or allow to add a mix:referenceable, otherwise a
  * {@link NotExecutableException} is thrown.
  *
- * @sources SetValueReferenceTest.java
  */
 public class SetValueReferenceTest extends AbstractJCRTest {
 

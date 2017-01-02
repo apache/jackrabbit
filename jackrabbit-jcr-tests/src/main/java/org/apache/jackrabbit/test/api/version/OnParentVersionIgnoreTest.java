@@ -26,7 +26,6 @@ import javax.jcr.version.VersionManager;
  * <code>OnParentVersionIgnoreTest</code> tests the OnParentVersion {@link OnParentVersionAction#IGNORE IGNORE}
  * behaviour.
  *
- * @sources OnParentVersionIgnoreTest.java
  */
 public class OnParentVersionIgnoreTest extends AbstractOnParentVersionTest {
 

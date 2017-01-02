@@ -27,7 +27,6 @@ import org.apache.jackrabbit.test.AbstractJCRTest;
  * <code>SetPropertyDecmimalTest</code> tests the <code>Node.setProperty(String,
  * BigDecimal)</code> method
  *
- * @sources SetPropertyDecimalTest.java
  */
 public class SetPropertyDecimalTest extends AbstractJCRTest {
 

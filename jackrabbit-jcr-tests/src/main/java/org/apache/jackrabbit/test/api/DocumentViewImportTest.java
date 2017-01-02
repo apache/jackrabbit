@@ -36,7 +36,6 @@ import java.io.IOException;
  * getImportContentHandler methods of the Workspace and Session class. Also
  * tests the UuidBehaviour flag.
  *
- * @sources DocumentViewImportTest.java
  */
 public class DocumentViewImportTest extends AbstractImportXmlTest {
 

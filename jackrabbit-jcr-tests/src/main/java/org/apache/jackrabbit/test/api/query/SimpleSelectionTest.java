@@ -27,7 +27,6 @@ import java.util.Arrays;
 /**
  * <code>SimpleSelectionTest</code>...
  *
- * @sources SimpleSelectionTest.java
  */
 public class SimpleSelectionTest extends AbstractQueryTest {
 

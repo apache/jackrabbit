@@ -27,7 +27,6 @@ import javax.jcr.UnsupportedRepositoryOperationException;
  * <code>VersionGraphTest</code> contains test methods related to version graph
  * issues.
  *
- * @sources VersionGraphTest.java
  */
 public class VersionGraphTest extends AbstractVersionTest {
 

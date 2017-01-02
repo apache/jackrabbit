@@ -37,7 +37,6 @@ import java.util.NoSuchElementException;
  * The child nodes that are created will be named {@link #nodeName1},
  * {@link #nodeName2} and {@link #nodeName3}.
  *
- * @sources EventIteratorTest.java
  */
 public class EventIteratorTest extends AbstractObservationTest{
 

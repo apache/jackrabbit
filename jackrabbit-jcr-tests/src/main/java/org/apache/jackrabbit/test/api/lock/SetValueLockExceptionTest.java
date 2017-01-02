@@ -36,7 +36,6 @@ import java.io.ByteArrayInputStream;
  * <code>SetValueLockExceptionTest</code> Tests throwing of a LockException for the
  * Property.setValue() methods in case the parentNode of the given property is locked.
  *
- * @sources SetValueLockExceptionTest.java
  */
 public class SetValueLockExceptionTest extends AbstractJCRTest {
 

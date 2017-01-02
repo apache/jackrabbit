@@ -30,7 +30,6 @@ import java.io.InputStream;
  * property a {@link org.apache.jackrabbit.test.NotExecutableException} is
  * thrown.
  *
- * @sources DatePropertyTest.java
  */
 public class DatePropertyTest extends AbstractPropertyTest {
 

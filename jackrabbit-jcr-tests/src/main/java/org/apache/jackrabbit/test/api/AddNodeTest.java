@@ -36,7 +36,6 @@ import javax.jcr.Session;
  * <code>AddNodeTest</code> contains the test cases for the method
  * <code>Node.addNode(String, String)</code>.
  *
- * @sources AddNodeTest.java
  */
 public class AddNodeTest extends AbstractJCRTest {
 

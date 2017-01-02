@@ -33,7 +33,6 @@ import java.util.Calendar;
 /**
  * <code>SetValueVersionExceptionTest</code>...
  *
- * @sources SetValueVersionExceptionTest.java
  */
 public class SetValueVersionExceptionTest extends AbstractJCRTest {
 

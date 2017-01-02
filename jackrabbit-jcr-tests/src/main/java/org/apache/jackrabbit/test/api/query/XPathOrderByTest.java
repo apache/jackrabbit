@@ -24,7 +24,6 @@ package org.apache.jackrabbit.test.api.query;
  * with String properties named {@link #propertyName1} containing
  * distinct values.
  *
- * @sources XPathOrderByTest.java
  */
 public class XPathOrderByTest extends AbstractQueryTest {
 

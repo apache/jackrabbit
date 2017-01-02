@@ -30,7 +30,6 @@ import javax.jcr.NodeIterator;
 /**
  * <code>SessionReadMethodsTest</code>...
  *
- * @sources SessionReadMethodsTest.java
  */
 public class SessionReadMethodsTest extends AbstractJCRTest {
 

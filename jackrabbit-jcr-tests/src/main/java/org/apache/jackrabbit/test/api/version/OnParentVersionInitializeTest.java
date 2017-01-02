@@ -26,7 +26,6 @@ import javax.jcr.version.VersionManager;
  * <code>OnParentVersionInitializeTest</code> tests the {@link OnParentVersionAction#INITIALIZE INITIALIZE}
  * behaviour.
  *
- * @sources OnParentVersionInitializeTest.java
  */
 public class OnParentVersionInitializeTest extends AbstractOnParentVersionTest {
 

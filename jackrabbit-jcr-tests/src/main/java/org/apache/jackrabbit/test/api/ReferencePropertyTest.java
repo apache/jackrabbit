@@ -29,7 +29,6 @@ import javax.jcr.ValueFormatException;
  * a reference property a {@link org.apache.jackrabbit.test.NotExecutableException}
  * is thrown.
  *
- * @sources ReferencePropertyTest.java
  */
 public class ReferencePropertyTest extends AbstractPropertyTest {
 

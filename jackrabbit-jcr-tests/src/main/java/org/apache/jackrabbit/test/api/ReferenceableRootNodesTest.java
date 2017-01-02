@@ -27,7 +27,6 @@ import javax.jcr.RepositoryException;
  * <code>ReferenceableRootNodesTest</code> contains tests with referenceable
  * nodes between different workspaces.
  *
- * @sources ReferenceableRootNodesTest.java
  */
 public class ReferenceableRootNodesTest extends AbstractJCRTest {
 
