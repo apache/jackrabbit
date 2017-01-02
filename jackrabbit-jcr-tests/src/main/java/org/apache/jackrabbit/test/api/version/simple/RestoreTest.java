@@ -40,7 +40,6 @@ import org.apache.jackrabbit.test.NotExecutableException;
  * <li>{@link Node#restore(Version, String, boolean)}</li>
  * </ul>
  *
- * @test
  * @sources RestoreTest.java
  * @executeClass org.apache.jackrabbit.test.api.jsr283.version.simple.RestoreTest
  * @keywords simple-versioning

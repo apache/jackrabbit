@@ -28,7 +28,6 @@ package org.apache.jackrabbit.test.api.query;
  * @tck.config nodename4 name of a child node of type <code>nodetype</code>
  * @tck.config propertyname1 name of a single value String property.
  *
- * @test
  * @sources OrderByStringTest.java
  * @executeClass org.apache.jackrabbit.test.api.query.OrderByStringTest
  * @keywords level2

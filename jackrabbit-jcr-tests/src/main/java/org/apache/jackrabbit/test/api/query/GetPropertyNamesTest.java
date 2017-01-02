@@ -29,7 +29,6 @@ import java.util.ArrayList;
  * Tests if the property names of an XPath query without a jcr:primaryType
  * predicate matches the ones declared in nt:base.
  *
- * @test
  * @sources GetPropertyNamesTest.java
  * @executeClass org.apache.jackrabbit.test.api.query.GetPropertyNamesTest
  * @keywords level1

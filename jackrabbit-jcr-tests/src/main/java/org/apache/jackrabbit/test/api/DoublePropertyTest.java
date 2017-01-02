@@ -30,7 +30,6 @@ import java.io.InputStream;
  * double property a {@link org.apache.jackrabbit.test.NotExecutableException}
  * is thrown.
  *
- * @test
  * @sources DoublePropertyTest.java
  * @executeClass org.apache.jackrabbit.test.api.DoublePropertyTest
  * @keywords level1

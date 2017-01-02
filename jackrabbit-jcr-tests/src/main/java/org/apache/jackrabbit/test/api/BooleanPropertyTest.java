@@ -29,7 +29,6 @@ import java.io.InputStream;
  * boolean property a {@link org.apache.jackrabbit.test.NotExecutableException}
  * is thrown.
  *
- * @test
  * @sources BooleanPropertyTest.java
  * @executeClass org.apache.jackrabbit.test.api.BooleanPropertyTest
  * @keywords level1

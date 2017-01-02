@@ -32,7 +32,6 @@ import java.text.ParseException;
  * value)</code> and <code>NodeType.canSetProperty(String propertyName, Value[]
  * values)</code> where property is of type Name.
  *
- * @test
  * @sources CanSetPropertyNameTest.java
  * @executeClass org.apache.jackrabbit.test.api.nodetype.CanSetPropertyNameTest
  * @keywords level2

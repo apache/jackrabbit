@@ -28,7 +28,6 @@ import javax.jcr.Node;
  * The {@link #testRoot} must allow child nodes of type {@link #testNodeType}.
  * The child node that is created will be named {@link #nodeName1}.
  *
- * @test
  * @sources EventTest.java
  * @executeClass org.apache.jackrabbit.test.api.observation.EventTest
  * @keywords observation

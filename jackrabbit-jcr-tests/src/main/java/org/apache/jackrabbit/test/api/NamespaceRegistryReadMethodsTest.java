@@ -33,7 +33,6 @@ import java.util.Arrays;
  * NamespaceRegistry class and also the correct Exception throwing for methods
  * not supported in level 1.
  *
- * @test
  * @sources NamespaceRegistryReadMethodsTest.java
  * @executeClass org.apache.jackrabbit.test.api.NamespaceRegistryReadMethodsTest
  * @keywords level1

@@ -31,7 +31,6 @@ import javax.jcr.Property;
  * as no property is of type UNDEFINED. This test runs recursively through
  * the workspace starting at {@link #testRoot}.
  *
- * @test
  * @sources PropertyTypeTest.java
  * @executeClass org.apache.jackrabbit.test.api.PropertyTypeTest
  * @keywords level1

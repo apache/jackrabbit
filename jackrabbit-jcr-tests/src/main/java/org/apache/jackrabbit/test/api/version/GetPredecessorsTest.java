@@ -25,7 +25,6 @@ import javax.jcr.version.VersionManager;
  * Version#getPredecessors()}, {@link Version#getLinearPredecessor()} and
  * {@link Version#getLinearSuccessor()}.
  *
- * @test
  * @sources GetPredecessorsTest.java
  * @executeClass org.apache.jackrabbit.test.api.version.GetPredecessorsTest
  * @keywords versioning

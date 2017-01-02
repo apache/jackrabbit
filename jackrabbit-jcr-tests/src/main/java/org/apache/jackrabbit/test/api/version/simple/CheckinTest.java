@@ -26,7 +26,6 @@ import javax.jcr.version.VersionManager;
  * <code>CheckinTest</code> covers tests related to {@link javax.jcr.Node#checkin()}
  * on simple versionable nodes.
  *
- * @test
  * @sources SVCheckinTest.java
  * @executeClass org.apache.jackrabbit.test.api.version.SVCheckinTest
  * @keywords simple-versioning

@@ -39,7 +39,6 @@ import javax.jcr.Repository;
  * type.
  * @tck.config nodename1 name of a child node under <code>testroot</code>.
  *
- * @test
  * @sources TextNodeTest.java
  * @executeClass org.apache.jackrabbit.test.api.query.TextNodeTest
  * @keywords textNodeTest

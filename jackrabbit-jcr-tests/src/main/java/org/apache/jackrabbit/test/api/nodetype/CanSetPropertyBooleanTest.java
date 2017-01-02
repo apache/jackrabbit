@@ -32,7 +32,6 @@ import java.text.ParseException;
  * value)</code> and <code>NodeType.canSetProperty(String propertyName, Value[]
  * values)</code> where property is of type Boolean.
  *
- * @test
  * @sources CanSetPropertyBooleanTest.java
  * @executeClass org.apache.jackrabbit.test.api.nodetype.CanSetPropertyBooleanTest
  * @keywords level2

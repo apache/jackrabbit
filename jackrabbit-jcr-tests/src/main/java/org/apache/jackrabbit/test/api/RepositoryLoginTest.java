@@ -27,7 +27,6 @@ import javax.jcr.Session;
 /**
  * <code>RepositoryLoginTest</code> tests the login methods of a repository.
  *
- * @test
  * @sources RepositoryLoginTest.java
  * @executeClass org.apache.jackrabbit.test.api.RepositoryLoginTest
  * @keywords level1

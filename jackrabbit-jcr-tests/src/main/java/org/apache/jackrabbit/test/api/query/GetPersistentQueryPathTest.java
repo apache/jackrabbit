@@ -29,7 +29,6 @@ import javax.jcr.nodetype.NoSuchNodeTypeException;
  * @tck.config nodename1 name of an nt:query node that can becreated below the
  *  testroot.
  *
- * @test
  * @sources GetPersistentQueryPathTest.java
  * @executeClass org.apache.jackrabbit.test.api.query.GetPersistentQueryPathTest
  * @keywords level2

@@ -25,7 +25,6 @@ import javax.jcr.version.VersionManager;
  * <code>MergeShallowTest</code> contains tests dealing with general shallow
  * merge calls.
  *
- * @test
  * @sources MergeShallowTest.java
  * @executeClass org.apache.jackrabbit.test.api.version.MergeShallowTest
  * @keywords versioning

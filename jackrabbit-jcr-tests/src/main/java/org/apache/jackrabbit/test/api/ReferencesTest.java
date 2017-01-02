@@ -30,7 +30,6 @@ import java.util.HashSet;
 /**
  * <code>ReferencesTest</code> contains the test cases for the references.
  *
- * @test
  * @sources ReferencesTest.java
  * @executeClass org.apache.jackrabbit.test.api.ReferencesTest
  * @keywords level2

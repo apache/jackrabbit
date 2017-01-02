@@ -36,7 +36,6 @@ import javax.jcr.nodetype.NodeTypeManager;
 /**
  * Tests if node definitions are respected in node instances in the workspace.
  *
- * @test
  * @sources NodeDefTest.java
  * @executeClass org.apache.jackrabbit.test.api.nodetype.NodeDefTest
  * @keywords level1

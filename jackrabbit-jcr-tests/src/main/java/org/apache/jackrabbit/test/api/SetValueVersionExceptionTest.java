@@ -33,7 +33,6 @@ import java.util.Calendar;
 /**
  * <code>SetValueVersionExceptionTest</code>...
  *
- * @test
  * @sources SetValueVersionExceptionTest.java
  * @executeClass org.apache.jackrabbit.test.api.SetValueVersionExceptionTest
  * @keywords level2 versionable

@@ -32,7 +32,6 @@ import javax.jcr.nodetype.NoSuchNodeTypeException;
  * optional). If the repository does not support the node type mix:referenceable
  * a {@link NotExecutableException} is thrown.
  *
- * @test
  * @sources NodeUUIDTest.java
  * @executeClass org.apache.jackrabbit.test.api.NodeUUIDTest
  * @keywords level2

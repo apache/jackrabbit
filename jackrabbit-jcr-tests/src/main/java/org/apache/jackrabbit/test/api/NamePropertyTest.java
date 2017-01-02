@@ -29,7 +29,6 @@ import javax.jcr.Node;
  * property a {@link org.apache.jackrabbit.test.NotExecutableException} is
  * thrown.
  *
- * @test
  * @sources NamePropertyTest.java
  * @executeClass org.apache.jackrabbit.test.api.NamePropertyTest
  * @keywords level1

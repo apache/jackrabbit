@@ -37,7 +37,6 @@ import java.util.NoSuchElementException;
  * The child nodes that are created will be named {@link #nodeName1},
  * {@link #nodeName2} and {@link #nodeName3}.
  *
- * @test
  * @sources EventIteratorTest.java
  * @executeClass org.apache.jackrabbit.test.api.observation.EventIteratorTest
  * @keywords observation

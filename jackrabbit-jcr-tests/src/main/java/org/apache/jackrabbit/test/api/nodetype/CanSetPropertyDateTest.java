@@ -32,7 +32,6 @@ import java.text.ParseException;
  * value)</code> and <code>NodeType.canSetProperty(String propertyName, Value[]
  * values)</code> where property is of type Date.
  *
- * @test
  * @sources CanSetPropertyDateTest.java
  * @executeClass org.apache.jackrabbit.test.api.nodetype.CanSetPropertyDateTest
  * @keywords level2

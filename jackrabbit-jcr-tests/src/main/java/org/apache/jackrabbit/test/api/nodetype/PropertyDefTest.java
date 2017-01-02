@@ -37,7 +37,6 @@ import java.util.regex.Matcher;
 /**
  * Tests if property definitions are properly defined.
  *
- * @test
  * @sources PropertyDefTest.java
  * @executeClass org.apache.jackrabbit.test.api.nodetype.PropertyDefTest
  * @keywords level1

@@ -39,7 +39,6 @@ import java.util.ArrayList;
  * name {@link #propertyName1} and a multi value string property with name
  * {@link #propertyName2}.
  *
- * @test
  * @sources SetValueStringTest.java
  * @executeClass org.apache.jackrabbit.test.api.SetValueStringTest
  * @keywords level2

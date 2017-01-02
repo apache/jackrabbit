@@ -27,7 +27,6 @@ import java.util.Arrays;
 /**
  * <code>CheckinTest</code> covers tests related to {@link javax.jcr.Node#checkin()}.
  *
- * @test
  * @sources CheckinTest.java
  * @executeClass org.apache.jackrabbit.test.api.version.CheckinTest
  * @keywords versioning
