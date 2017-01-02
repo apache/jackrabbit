@@ -44,7 +44,6 @@ import java.io.ByteArrayInputStream;
  * javax.jcr.version.Version} class.
  *
  * @sources VersionTest.java
- * @keywords versioning
  */
 public class VersionTest extends AbstractVersionTest {
 

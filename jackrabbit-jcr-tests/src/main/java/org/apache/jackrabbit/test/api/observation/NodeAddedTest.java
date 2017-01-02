@@ -31,7 +31,6 @@ import javax.jcr.observation.Event;
  * child nodes of the same type ({@link #testNodeType}).
  *
  * @sources NodeAddedTest.java
- * @keywords observation
  */
 public class NodeAddedTest extends AbstractObservationTest {
 

@@ -33,7 +33,6 @@ import javax.jcr.observation.Event;
  * {@link #propertyName1} and {@link #propertyName2}.
  *
  * @sources PropertyRemovedTest.java
- * @keywords observation
  */
 public class PropertyRemovedTest extends AbstractObservationTest {
 

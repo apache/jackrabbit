@@ -38,7 +38,6 @@ import javax.jcr.PathNotFoundException;
  * {@link NotExecutableException} is thrown.
  *
  * @sources SetValueReferenceTest.java
- * @keywords level2
  */
 public class SetValueReferenceTest extends AbstractJCRTest {
 

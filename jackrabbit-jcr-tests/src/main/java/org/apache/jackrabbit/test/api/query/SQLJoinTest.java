@@ -32,7 +32,6 @@ import javax.jcr.Node;
  * @tck.config nodename2 name of a child node of type: <code>nodetype</code>.
  *
  * @sources SQLJoinTest.java
- * @keywords sql
  */
 public class SQLJoinTest extends AbstractQueryTest {
 

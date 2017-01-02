@@ -41,7 +41,6 @@ import org.apache.jackrabbit.test.api.nodetype.NodeTypeUtil;
  * setValue()) or on save, if the change would violate a value constraint.
  *
  * @sources SetPropertyConstraintViolationExceptionTest.java
- * @keywords level2
  */
 public class SetPropertyConstraintViolationExceptionTest extends AbstractJCRTest {
 

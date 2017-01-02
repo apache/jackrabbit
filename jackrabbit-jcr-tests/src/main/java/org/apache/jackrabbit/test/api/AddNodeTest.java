@@ -37,7 +37,6 @@ import javax.jcr.Session;
  * <code>Node.addNode(String, String)</code>.
  *
  * @sources AddNodeTest.java
- * @keywords level2
  */
 public class AddNodeTest extends AbstractJCRTest {
 

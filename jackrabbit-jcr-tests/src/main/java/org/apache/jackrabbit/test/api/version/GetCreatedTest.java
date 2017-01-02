@@ -26,7 +26,6 @@ import javax.jcr.version.Version;
  * javax.jcr.version.Version#getCreated()}.
  *
  * @sources GetCreatedTest.java
- * @keywords versioning
  */
 public class GetCreatedTest extends AbstractVersionTest {
 

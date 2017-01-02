@@ -26,7 +26,6 @@ import javax.jcr.Node;
  * long)</code> method
  *
  * @sources SetPropertyLongTest.java
- * @keywords level2
  */
 public class SetPropertyLongTest extends AbstractJCRTest {
 

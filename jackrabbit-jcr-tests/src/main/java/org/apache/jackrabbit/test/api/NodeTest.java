@@ -39,7 +39,6 @@ import javax.jcr.lock.LockException;
  * nodes (level 2 of the specification).
  *
  * @sources NodeTest.java
- * @keywords level2
  */
 public class NodeTest extends AbstractJCRTest {
 

@@ -27,7 +27,6 @@ import javax.jcr.version.VersionManager;
  * on simple versionable nodes.
  *
  * @sources SVCheckinTest.java
- * @keywords simple-versioning
  */
 public class CheckinTest extends AbstractVersionTest {
 

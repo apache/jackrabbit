@@ -70,7 +70,6 @@ import java.io.StringWriter;
  * defined in the JSR 170 specification in chapter 6.4.2, 6.4.3 and 6.4.4 .
  *
  * @sources ExportDocViewTest.java
- * @keywords level1
  */
 public class ExportDocViewTest extends AbstractJCRTest {
 

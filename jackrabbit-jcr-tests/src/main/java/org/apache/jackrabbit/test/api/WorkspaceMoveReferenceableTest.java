@@ -26,7 +26,6 @@ import javax.jcr.RepositoryException;
  * referenceable nodes in one workspace.
  *
  * @sources WorkspaceMoveReferenceableTest.java
- * @keywords level2
  */
 public class WorkspaceMoveReferenceableTest extends AbstractWorkspaceReferenceableTest {
 

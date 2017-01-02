@@ -39,7 +39,6 @@ import java.io.IOException;
  * is used instead.
  *
  * @sources SetValueInputStreamTest.java
- * @keywords level2
  */
 public class SetValueInputStreamTest extends AbstractJCRTest {
 

@@ -35,7 +35,6 @@ import javax.jcr.Node;
  * <code>nodetype</code> or <code>nt:base</code>
  *
  * @sources ElementTest.java
- * @keywords level2
  */
 public class ElementTest extends AbstractQueryTest {
 

@@ -28,7 +28,6 @@ import javax.jcr.version.VersionManager;
  * nodes.
  *
  * @sources SVCheckoutTest.java
- * @keywords simple-versioning
  */
 public class CheckoutTest extends AbstractVersionTest {
 

@@ -33,7 +33,6 @@ import java.text.ParseException;
  * Value[] values)</code> where property is of type Path.
  *
  * @sources CanSetPropertyPathPath.java
- * @keywords level2
  */
 public class CanSetPropertyPathTest extends AbstractJCRTest {
     /**

@@ -28,7 +28,6 @@ import javax.jcr.Session;
  * <code>RepositoryLoginTest</code> tests the login methods of a repository.
  *
  * @sources RepositoryLoginTest.java
- * @keywords level1
  */
 public class RepositoryLoginTest extends AbstractJCRTest {
 

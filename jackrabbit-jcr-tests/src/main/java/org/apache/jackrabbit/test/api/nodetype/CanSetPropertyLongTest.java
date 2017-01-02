@@ -33,7 +33,6 @@ import java.text.ParseException;
  * values)</code> where property is of type Long.
  *
  * @sources CanSetPropertyLongTest.java
- * @keywords level2
  */
 public class CanSetPropertyLongTest extends AbstractJCRTest {
     /**

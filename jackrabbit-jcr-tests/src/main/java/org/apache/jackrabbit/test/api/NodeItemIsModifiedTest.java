@@ -32,7 +32,6 @@ import javax.jcr.RepositoryException;
  * support a non-mandatory string property with name {@link #propertyName1}.
  *
  * @sources NodeItemIsModifiedTest.java
- * @keywords level2
  */
 public class NodeItemIsModifiedTest extends AbstractJCRTest {
 

@@ -33,7 +33,6 @@ import java.text.ParseException;
  * values)</code> where property is of type Date.
  *
  * @sources CanSetPropertyDateTest.java
- * @keywords level2
  */
 public class CanSetPropertyDateTest extends AbstractJCRTest {
     /**

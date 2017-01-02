@@ -42,7 +42,6 @@ import org.apache.jackrabbit.test.AbstractJCRTest;
  * Tests the node type creation functionality of the {@link NodeTypeManager}.
  *
  * @sources NodeTypeCreationTest.java
- * @keywords level2
  */
 public class NodeTypeCreationTest extends AbstractJCRTest {
 

@@ -27,7 +27,6 @@ import javax.jcr.version.VersionManager;
  * behaviour.
  *
  * @sources OnParentVersionInitializeTest.java
- * @keywords versioning
  */
 public class OnParentVersionInitializeTest extends AbstractOnParentVersionTest {
 

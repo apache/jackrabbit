@@ -33,7 +33,6 @@ import javax.jcr.nodetype.ConstraintViolationException;
  * nodes between workspace.<br>
  *
  * @sources WorkspaceCopyBetweenWorkspacesTest.java
- * @keywords level2
  */
 public class WorkspaceCopyBetweenWorkspacesTest extends AbstractWorkspaceCopyBetweenTest {
 

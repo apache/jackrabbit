@@ -33,7 +33,6 @@ import java.text.ParseException;
  * values)</code> where property is of type Boolean.
  *
  * @sources CanSetPropertyBooleanTest.java
- * @keywords level2
  */
 public class CanSetPropertyBooleanTest extends AbstractJCRTest {
     /**

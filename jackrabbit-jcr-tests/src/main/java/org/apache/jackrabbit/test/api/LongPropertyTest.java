@@ -31,7 +31,6 @@ import java.io.InputStream;
  * thrown.
  *
  * @sources LongPropertyTest.java
- * @keywords level1
  */
 public class LongPropertyTest extends AbstractPropertyTest {
 

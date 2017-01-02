@@ -30,7 +30,6 @@ import javax.jcr.Node;
  * thrown.
  *
  * @sources NamePropertyTest.java
- * @keywords level1
  */
 public class NamePropertyTest extends AbstractPropertyTest {
 

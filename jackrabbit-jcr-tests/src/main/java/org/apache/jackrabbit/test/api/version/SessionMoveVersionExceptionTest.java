@@ -25,7 +25,6 @@ import javax.jcr.version.VersionException;
  * moving nodes using {@link javax.jcr.Session#move(String, String)}.
  *
  * @sources SessionMoveVersionExceptionTest.java
- * @keywords versioning
  */
 public class SessionMoveVersionExceptionTest extends AbstractVersionTest {
 

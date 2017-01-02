@@ -27,7 +27,6 @@ import javax.jcr.Session;
  * Test cases for the root node.
  *
  * @sources RootNodeTest.java
- * @keywords level1
  */
 public class RootNodeTest extends AbstractJCRTest {
 

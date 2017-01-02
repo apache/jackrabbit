@@ -42,7 +42,6 @@ import org.slf4j.LoggerFactory;
  * defined in {@link NodeType}.
  *
  * @sources NodeTypeTest.java
- * @keywords level1
  */
 public class NodeTypeTest extends AbstractJCRTest {
 

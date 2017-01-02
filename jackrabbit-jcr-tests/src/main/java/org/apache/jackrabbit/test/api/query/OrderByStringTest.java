@@ -29,7 +29,6 @@ package org.apache.jackrabbit.test.api.query;
  * @tck.config propertyname1 name of a single value String property.
  *
  * @sources OrderByStringTest.java
- * @keywords level2
  */
 public class OrderByStringTest extends AbstractOrderByTest {
 

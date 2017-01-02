@@ -25,7 +25,6 @@ package org.apache.jackrabbit.test.api.query;
  * values.
  *
  * @sources SQLOrderByTest.java
- * @keywords sql
  */
 public class SQLOrderByTest extends AbstractQueryTest {
 

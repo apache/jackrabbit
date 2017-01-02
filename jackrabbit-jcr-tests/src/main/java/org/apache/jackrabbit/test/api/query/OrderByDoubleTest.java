@@ -29,7 +29,6 @@ package org.apache.jackrabbit.test.api.query;
  * @tck.config propertyname1 name of a single value double property.
  *
  * @sources OrderByDoubleTest.java
- * @keywords level2
  */
 public class OrderByDoubleTest extends AbstractOrderByTest {
 

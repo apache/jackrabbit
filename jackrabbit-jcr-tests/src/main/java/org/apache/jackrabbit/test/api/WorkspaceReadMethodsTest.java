@@ -26,7 +26,6 @@ import javax.jcr.Workspace;
  * <code>WorkspaceReadMethodsTest</code>...
  *
  * @sources WorkspaceReadMethodsTest.java
- * @keywords level1
  */
 public class WorkspaceReadMethodsTest extends AbstractJCRTest {
 
