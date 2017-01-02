@@ -28,14 +28,14 @@ import org.apache.jackrabbit.test.NotExecutableException;
 /**
  * <code>GetReferencesNodeTest</code> contains test to check if references are
  * returned from versions.
- *
- * @tck.config versionableNodeType name of a node type which is versionable
- * @tck.config testroot path to test root. Must allow versionable child nodes.
- * @tck.config nodename1 name of a versionable child node.
- * @tck.config nodename2 name of a versionable child node.
- * @tck.config propertyname1 name of a reference property declared in the
+ * <ul>
+ * <li>{@code versionableNodeType} name of a node type which is versionable
+ * <li>{@code testroot} path to test root. Must allow versionable child nodes.
+ * <li>{@code nodename1} name of a versionable child node.
+ * <li>{@code nodename2} name of a versionable child node.
+ * <li>{@code propertyname1} name of a reference property declared in the
  *  versionable node type.
- *
+ * </ul>
  */
 public class GetReferencesNodeTest extends AbstractJCRTest {
 

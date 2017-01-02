@@ -24,11 +24,11 @@ import javax.jcr.nodetype.NoSuchNodeTypeException;
 
 /**
  * Test the method {@link javax.jcr.query.Query#getStoredQueryPath()}.
- *
- * @tck.config testroot node that allows to create a child node of type nt:query.
- * @tck.config nodename1 name of an nt:query node that can becreated below the
+ * <ul>
+ * <li>{@code testroot} node that allows to create a child node of type nt:query.
+ * <li>{@code nodename1} name of an nt:query node that can be created below the
  *  testroot.
- *
+ * </ul>
  */
 public class GetPersistentQueryPathTest extends AbstractQueryTest {
 

@@ -70,10 +70,12 @@ public class WorkspaceMoveSameNameSibsTest extends AbstractWorkspaceSameNameSibs
     /**
      * An ItemExistsException is thrown if a node or property already exists at
      * destAbsPath.
-     * @tck.config sameNameSibsFalseNodeType name of a node type that does not
+     * <ul>
+     * <li>{@code sameNameSibsFalseNodeType} name of a node type that does not
      * allows same name siblings.
-     * @tck.config nodeName3 name of a child node that does not allow same name
+     * <li>{@code nodeName3} name of a child node that does not allow same name
      * siblings..
+     * </ul>
      */
     public void testMoveNodesNodeExistsAtDestPath() throws RepositoryException {
         // create a parent node where allowSameNameSiblings are set to false

@@ -25,15 +25,15 @@ import javax.jcr.Session;
 
 /**
  * <code>PropertyTest</code> contains all test cases for the
- * <code>javax.jcr.Property</code> that are related to writing, modifing or
+ * <code>javax.jcr.Property</code> that are related to writing, modifying or
  * deleting properties (level 2 of the specification).
- *
- * @tck.config nodetype name of a node type. The node at <code>testroot</code>
+ * <ul>
+ * <li>{@code nodetype} name of a node type. The node at <code>testroot</code>
  * must allow child nodes with this node.
- * @tck.config nodename1 name of a child node at <code>testroot</code>.
- * @tck.config propertyname1 name of a string property in
+ * <li>{@code nodename1} name of a child node at <code>testroot</code>.
+ * <li>{@code propertyname1} name of a string property in
  * <code>nodetype</code>.
- *
+ * </ul>
  */
 public class PropertyTest extends AbstractJCRTest {
 
