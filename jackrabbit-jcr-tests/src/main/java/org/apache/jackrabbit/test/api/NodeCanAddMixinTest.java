@@ -32,7 +32,6 @@ import javax.jcr.nodetype.NodeType;
  * <code>Node.canAddMixin(String)</code>.
  *
  * @sources NodeCanAddMixinTest.java
- * @keywords level2
  */
 public class NodeCanAddMixinTest extends AbstractJCRTest {
 

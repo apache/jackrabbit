@@ -32,7 +32,6 @@ import org.apache.jackrabbit.test.NotExecutableException;
  * <code>childNodeName</code> could be added to a node of type <code>NodeType</code>.
  *
  * @sources CanAddChildNodeCallWithNodeTypeTest.java
- * @keywords level1
  */
 public class CanAddChildNodeCallWithNodeTypeTest extends AbstractJCRTest {
     /**

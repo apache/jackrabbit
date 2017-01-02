@@ -32,7 +32,6 @@ import javax.jcr.observation.Event;
  * ({@link #testNodeType}).
  *
  * @sources WorkspaceOperationTest.java
- * @keywords observation
  */
 public class WorkspaceOperationTest extends AbstractObservationTest {
 

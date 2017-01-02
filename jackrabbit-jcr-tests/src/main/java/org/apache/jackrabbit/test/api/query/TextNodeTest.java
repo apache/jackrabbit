@@ -40,7 +40,6 @@ import javax.jcr.Repository;
  * @tck.config nodename1 name of a child node under <code>testroot</code>.
  *
  * @sources TextNodeTest.java
- * @keywords textNodeTest
  */
 public class TextNodeTest extends AbstractQueryTest {
 

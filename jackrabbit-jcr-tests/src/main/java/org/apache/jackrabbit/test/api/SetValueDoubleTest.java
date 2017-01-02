@@ -35,7 +35,6 @@ import javax.jcr.PathNotFoundException;
  * with name {@link #propertyName1}.
  *
  * @sources SetValueDoubleTest.java
- * @keywords level2
  */
 public class SetValueDoubleTest extends AbstractJCRTest {
 

@@ -30,7 +30,6 @@ import javax.jcr.ValueFormatException;
  * is thrown.
  *
  * @sources ReferencePropertyTest.java
- * @keywords level1
  */
 public class ReferencePropertyTest extends AbstractPropertyTest {
 

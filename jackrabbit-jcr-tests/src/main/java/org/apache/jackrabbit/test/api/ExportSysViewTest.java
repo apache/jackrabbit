@@ -41,7 +41,6 @@ import java.io.FileNotFoundException;
  * against the items found by a traverse of the given tree.
  *
  * @sources ExportSysViewTest.java
- * @keywords level1
  */
 public class ExportSysViewTest extends AbstractJCRTest {
 

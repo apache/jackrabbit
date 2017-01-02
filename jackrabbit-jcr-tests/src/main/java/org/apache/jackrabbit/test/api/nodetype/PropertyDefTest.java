@@ -38,7 +38,6 @@ import java.util.regex.Matcher;
  * Tests if property definitions are properly defined.
  *
  * @sources PropertyDefTest.java
- * @keywords level1
  */
 public class PropertyDefTest extends AbstractJCRTest {
 

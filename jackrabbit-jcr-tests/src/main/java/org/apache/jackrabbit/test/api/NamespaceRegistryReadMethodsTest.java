@@ -34,7 +34,6 @@ import java.util.Arrays;
  * not supported in level 1.
  *
  * @sources NamespaceRegistryReadMethodsTest.java
- * @keywords level1
  */
 public class NamespaceRegistryReadMethodsTest extends AbstractJCRTest {
 

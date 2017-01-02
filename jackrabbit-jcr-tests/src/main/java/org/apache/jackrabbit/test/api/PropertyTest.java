@@ -35,7 +35,6 @@ import javax.jcr.Session;
  * <code>nodetype</code>.
  *
  * @sources PropertyTest.java
- * @keywords level2
  */
 public class PropertyTest extends AbstractJCRTest {
 

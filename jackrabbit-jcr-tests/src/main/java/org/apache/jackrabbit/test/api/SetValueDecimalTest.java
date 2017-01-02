@@ -37,7 +37,6 @@ import javax.jcr.PathNotFoundException;
  * with name {@link #propertyName1}.
  *
  * @sources SetValueDecimalTest.java
- * @keywords level2
  */
 public class SetValueDecimalTest extends AbstractJCRTest {
 

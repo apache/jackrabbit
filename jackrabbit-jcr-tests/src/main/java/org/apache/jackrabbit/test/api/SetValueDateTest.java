@@ -37,7 +37,6 @@ import java.util.Calendar;
  * with name {@link #propertyName1}.
  *
  * @sources SetValueDateTest.java
- * @keywords level2
  */
 public class SetValueDateTest extends AbstractJCRTest {
 

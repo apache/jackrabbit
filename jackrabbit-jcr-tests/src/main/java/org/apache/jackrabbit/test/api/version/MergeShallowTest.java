@@ -26,7 +26,6 @@ import javax.jcr.version.VersionManager;
  * merge calls.
  *
  * @sources MergeShallowTest.java
- * @keywords versioning
  */
 
 public class MergeShallowTest extends AbstractMergeTest {

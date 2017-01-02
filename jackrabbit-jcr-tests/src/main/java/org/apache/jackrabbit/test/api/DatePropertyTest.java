@@ -31,7 +31,6 @@ import java.io.InputStream;
  * thrown.
  *
  * @sources DatePropertyTest.java
- * @keywords level1
  */
 public class DatePropertyTest extends AbstractPropertyTest {
 

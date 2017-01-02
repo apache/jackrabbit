@@ -33,7 +33,6 @@ import java.util.Arrays;
  * Tests if the required repository descriptors are available.
  *
  * @sources RepositoryDescriptorTest.java
- * @keywords level1
  */
 public class RepositoryDescriptorTest extends AbstractJCRTest {
 

@@ -37,7 +37,6 @@ import java.io.IOException;
  * tests the UuidBehaviour flag.
  *
  * @sources DocumentViewImportTest.java
- * @keywords level2
  */
 public class DocumentViewImportTest extends AbstractImportXmlTest {
 

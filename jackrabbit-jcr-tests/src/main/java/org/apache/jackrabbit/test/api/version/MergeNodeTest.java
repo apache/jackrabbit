@@ -36,7 +36,6 @@ import javax.jcr.lock.LockException;
  * calls.
  *
  * @sources MergeNodeTest.java
- * @keywords versioning
  */
 
 public class MergeNodeTest extends AbstractMergeTest {

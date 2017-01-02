@@ -33,7 +33,6 @@ import java.text.ParseException;
  * values)</code> where property is of type String.
  *
  * @sources CanSetPropertyStringTest.java
- * @keywords level2
  */
 public class CanSetPropertyStringTest extends AbstractJCRTest {
     /**

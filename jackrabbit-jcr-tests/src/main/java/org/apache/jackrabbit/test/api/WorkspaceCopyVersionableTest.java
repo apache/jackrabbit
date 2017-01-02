@@ -28,7 +28,6 @@ import javax.jcr.version.VersionException;
  * versionable nodes in one workspace.
  *
  * @sources WorkspaceCopyVersionableTest.java
- * @keywords level2 versionable
  */
 public class WorkspaceCopyVersionableTest extends AbstractWorkspaceVersionableTest {
 

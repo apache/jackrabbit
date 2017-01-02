@@ -29,7 +29,6 @@ import javax.jcr.Node;
  * The child node that is created will be named {@link #nodeName1}.
  *
  * @sources EventTest.java
- * @keywords observation
  */
 public class EventTest extends AbstractObservationTest {
 

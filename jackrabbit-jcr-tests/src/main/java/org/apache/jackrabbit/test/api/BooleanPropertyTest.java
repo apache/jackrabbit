@@ -30,7 +30,6 @@ import java.io.InputStream;
  * is thrown.
  *
  * @sources BooleanPropertyTest.java
- * @keywords level1
  */
 public class BooleanPropertyTest extends AbstractPropertyTest {
 

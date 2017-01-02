@@ -28,7 +28,6 @@ import org.apache.jackrabbit.test.NotExecutableException;
  * simple versioning
  *
  * @sources SVFrozenNodeTest.java
- * @keywords simple-versioning
  */
 public class FrozenNodeTest extends AbstractVersionTest {
 

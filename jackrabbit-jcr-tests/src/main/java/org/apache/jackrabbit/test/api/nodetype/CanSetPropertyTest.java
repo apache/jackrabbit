@@ -30,7 +30,6 @@ import javax.jcr.Value;
  * value)</code>
  *
  * @sources CanSetPropertyTest.java
- * @keywords level2
  */
 public class CanSetPropertyTest extends AbstractJCRTest {
     /**

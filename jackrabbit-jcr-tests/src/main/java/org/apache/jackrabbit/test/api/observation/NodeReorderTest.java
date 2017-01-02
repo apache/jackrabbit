@@ -41,7 +41,6 @@ import javax.jcr.observation.Event;
  * @tck.config nodename3 child node name of type <code>nodetype</code>
  *
  * @sources NodeReorderTest.java
- * @keywords observation
  */
 public class NodeReorderTest extends AbstractObservationTest {
 

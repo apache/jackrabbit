@@ -26,7 +26,6 @@ import org.apache.jackrabbit.test.NotExecutableException;
  * copying versionable nodes between workspace.
  *
  * @sources WorkspaceCopyBetweenWorkspacesVersionableTest.java
- * @keywords level2 versioning
  */
 public class WorkspaceCopyBetweenWorkspacesVersionableTest extends AbstractWorkspaceVersionableTest {
 

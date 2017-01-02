@@ -41,7 +41,6 @@ import javax.jcr.NodeIterator;
  * </ul>
  *
  * @sources RestoreTest.java
- * @keywords versioning
  */
 public class RestoreTest extends AbstractVersionTest {
 

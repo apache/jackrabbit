@@ -24,7 +24,6 @@ import javax.jcr.Session;
  * Tests the method {@link Query#getStatement()}.
  *
  * @sources GetStatementTest.java
- * @keywords level1
  */
 public class GetStatementTest extends AbstractQueryTest {
 

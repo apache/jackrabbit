@@ -32,7 +32,6 @@ import javax.jcr.Property;
  * the workspace starting at {@link #testRoot}.
  *
  * @sources PropertyTypeTest.java
- * @keywords level1
  */
 public class PropertyTypeTest extends AbstractJCRTest {
 

@@ -37,7 +37,6 @@ import java.util.LinkedList;
 
 /**
  * @sources CyclicNodeTypeRegistrationTest
- * @keywords level1
  */
 public class CyclicNodeTypeRegistrationTest extends AbstractJCRTest {
     /**

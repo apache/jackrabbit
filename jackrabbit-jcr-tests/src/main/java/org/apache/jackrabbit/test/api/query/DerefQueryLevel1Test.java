@@ -32,7 +32,6 @@ import java.util.ArrayList;
  * Tests the XPath function jcr:deref() in a level 1 repository.
  *
  * @sources DerefQueryLevel1Test.java
- * @keywords level1 deref
  */
 public class DerefQueryLevel1Test extends AbstractQueryTest {
 

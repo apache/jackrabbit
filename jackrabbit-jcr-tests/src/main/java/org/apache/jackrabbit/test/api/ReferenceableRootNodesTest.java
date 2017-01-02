@@ -28,7 +28,6 @@ import javax.jcr.RepositoryException;
  * nodes between different workspaces.
  *
  * @sources ReferenceableRootNodesTest.java
- * @keywords level1
  */
 public class ReferenceableRootNodesTest extends AbstractJCRTest {
 

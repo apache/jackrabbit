@@ -57,7 +57,6 @@ import java.io.StringReader;
  * differences between the original and the re-imported repository.
  *
  * @sources SerializationTest.java
- * @keywords level2
  */
 public class SerializationTest extends AbstractJCRTest {
     protected Workspace workspace;

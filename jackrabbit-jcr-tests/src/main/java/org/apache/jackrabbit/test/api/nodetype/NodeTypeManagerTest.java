@@ -30,7 +30,6 @@ import javax.jcr.nodetype.NoSuchNodeTypeException;
  * types.
  *
  * @sources NodeTypeManagerTest.java
- * @keywords level1
  */
 public class NodeTypeManagerTest extends AbstractJCRTest {
 

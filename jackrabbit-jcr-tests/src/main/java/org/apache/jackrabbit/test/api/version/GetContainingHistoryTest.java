@@ -24,7 +24,6 @@ import javax.jcr.RepositoryException;
  * javax.jcr.version.Version#getContainingHistory()}.
  *
  * @sources GetContainingHistoryTest.java
- * @keywords versioning
  */
 public class GetContainingHistoryTest extends AbstractVersionTest {
 

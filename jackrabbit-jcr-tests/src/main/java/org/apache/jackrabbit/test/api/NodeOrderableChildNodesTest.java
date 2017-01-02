@@ -43,7 +43,6 @@ import javax.jcr.Session;
  * </ul>
  *
  * @sources NodeOrderableChildNodesTest.java
- * @keywords level2
  */
 public class NodeOrderableChildNodesTest extends AbstractJCRTest {
 

@@ -26,7 +26,6 @@ import javax.jcr.Node;
  * boolean)</code> method
  *
  * @sources SetPropertyBooleanTest.java
- * @keywords level2
  */
 public class SetPropertyBooleanTest extends AbstractJCRTest {
 

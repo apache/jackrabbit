@@ -29,7 +29,6 @@ import javax.jcr.version.VersionManager;
  * <code>ActivitiesTest</code> covers methods related to the Activities
  * feature in Versioning.
  * @sources ActivitiesTest.java
- * @keywords versioning
  * @since JCR 2.0
  */
 public class ActivitiesTest extends AbstractVersionTest {

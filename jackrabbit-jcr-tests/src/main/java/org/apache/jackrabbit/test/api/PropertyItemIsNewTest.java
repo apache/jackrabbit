@@ -33,7 +33,6 @@ import javax.jcr.Node;
  * support a non-mandatory string property with name {@link #propertyName1}.
  *
  * @sources PropertyItemIsNewTest.java
- * @keywords level2
  */
 public class PropertyItemIsNewTest extends AbstractJCRTest {
 

@@ -34,7 +34,6 @@ import java.util.Calendar;
  * <code>SetValueVersionExceptionTest</code>...
  *
  * @sources SetValueVersionExceptionTest.java
- * @keywords level2 versionable
  */
 public class SetValueVersionExceptionTest extends AbstractJCRTest {
 

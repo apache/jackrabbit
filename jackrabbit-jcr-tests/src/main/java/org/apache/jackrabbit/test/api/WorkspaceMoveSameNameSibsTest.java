@@ -28,7 +28,6 @@ import javax.jcr.RepositoryException;
  * with same name siblings supported in one workspace.
  *
  * @sources WorkspaceMoveSameNameSibsTest.java
- * @keywords level2
  */
 public class WorkspaceMoveSameNameSibsTest extends AbstractWorkspaceSameNameSibsTest {
 

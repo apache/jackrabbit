@@ -30,7 +30,6 @@ import javax.jcr.Property;
  * thrown.
  *
  * @sources PathPropertyTest.java
- * @keywords level1
  */
 public class PathPropertyTest extends AbstractPropertyTest {
 

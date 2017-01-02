@@ -28,7 +28,6 @@ import java.util.NoSuchElementException;
  * {@link javax.jcr.query.QueryResult#getNodes()}.
  *
  * @sources QueryResultNodeIteratorTest.java
- * @keywords level2
  */
 public class QueryResultNodeIteratorTest extends AbstractQueryTest {
 

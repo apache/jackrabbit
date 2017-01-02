@@ -26,7 +26,6 @@ import javax.jcr.version.VersionManager;
  * VersionHistory#getVersionableUUID()} and {@link VersionHistory#getVersionableIdentifier()}.
  *
  * @sources GetVersionableUUIDTest.java
- * @keywords versioning
  */
 public class GetVersionableUUIDTest extends AbstractVersionTest {
 

@@ -35,7 +35,6 @@ import org.apache.jackrabbit.test.NotExecutableException;
  * <code>Node.AddMixin(String)</code>.
  *
  * @sources NodeAddMixinTest.java
- * @keywords level2
  */
 public class NodeAddMixinTest extends AbstractJCRTest {
 

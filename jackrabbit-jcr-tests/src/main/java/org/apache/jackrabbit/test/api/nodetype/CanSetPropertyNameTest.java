@@ -33,7 +33,6 @@ import java.text.ParseException;
  * values)</code> where property is of type Name.
  *
  * @sources CanSetPropertyNameTest.java
- * @keywords level2
  */
 public class CanSetPropertyNameTest extends AbstractJCRTest {
     /**

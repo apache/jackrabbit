@@ -61,7 +61,6 @@ import java.io.BufferedInputStream;
  * - Property.getType() is compared to Value.getType() .
  *
  * @sources StringPropertyTest.java
- * @keywords level1
  */
 public class StringPropertyTest extends AbstractPropertyTest {
 

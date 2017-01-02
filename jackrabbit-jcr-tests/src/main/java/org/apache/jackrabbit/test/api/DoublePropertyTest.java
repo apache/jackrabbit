@@ -31,7 +31,6 @@ import java.io.InputStream;
  * is thrown.
  *
  * @sources DoublePropertyTest.java
- * @keywords level1
  */
 public class DoublePropertyTest extends AbstractPropertyTest {
 

@@ -27,7 +27,6 @@ import javax.jcr.nodetype.ConstraintViolationException;
  * javax.jcr.version.VersionHistory#addVersionLabel(String, String, boolean)}
  *
  * @sources VersionStorageTest.java
- * @keywords versioning
  */
 public class VersionStorageTest extends AbstractVersionTest {
 

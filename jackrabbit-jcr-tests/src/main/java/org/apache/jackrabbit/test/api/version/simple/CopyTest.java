@@ -34,7 +34,6 @@ import javax.jcr.version.VersionManager;
  * - A new, empty, version history for M, call it HM, is also created.
  *
  * @sources CopyTest.java
- * @keywords simple-versioning
  */
 public class CopyTest extends AbstractVersionTest {
 

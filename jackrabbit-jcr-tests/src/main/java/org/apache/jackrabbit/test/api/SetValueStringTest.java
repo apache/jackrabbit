@@ -40,7 +40,6 @@ import java.util.ArrayList;
  * {@link #propertyName2}.
  *
  * @sources SetValueStringTest.java
- * @keywords level2
  */
 public class SetValueStringTest extends AbstractJCRTest {
 
