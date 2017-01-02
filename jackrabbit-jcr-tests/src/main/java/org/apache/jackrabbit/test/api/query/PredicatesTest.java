@@ -27,7 +27,6 @@ import javax.jcr.Session;
  * will not execute the query and check its results.
  *
  * @sources PredicatesTest.java
- * @executeClass org.apache.jackrabbit.test.api.query.PredicatesTest
  * @keywords level1
  */
 public class PredicatesTest extends AbstractQueryTest {

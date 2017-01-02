@@ -37,7 +37,6 @@ import java.util.LinkedList;
 
 /**
  * @sources CyclicNodeTypeRegistrationTest
- * @executeClass org.apache.jackrabbit.test.api.nodetype.CyclicNodeTypeRegistrationTest
  * @keywords level1
  */
 public class CyclicNodeTypeRegistrationTest extends AbstractJCRTest {

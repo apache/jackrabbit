@@ -28,7 +28,6 @@ import javax.jcr.version.VersionManager;
  * cancelMerge is called.
  *
  * @sources MergeCancelMergeTest.java
- * @executeClass org.apache.jackrabbit.test.api.version.MergeCancelMergeTest
  * @keywords versioning
  */
 public class MergeCancelMergeTest extends AbstractMergeTest {

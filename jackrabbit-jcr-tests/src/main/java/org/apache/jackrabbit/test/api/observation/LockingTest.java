@@ -36,7 +36,6 @@ import org.apache.jackrabbit.test.NotExecutableException;
  * supertypes or must allow to add mix:lockable as mixin.
  *
  * @sources LockingTest.java
- * @executeClass org.apache.jackrabbit.test.api.observation.LockingTest
  * @keywords observation locking
  */
 public class LockingTest extends AbstractObservationTest {

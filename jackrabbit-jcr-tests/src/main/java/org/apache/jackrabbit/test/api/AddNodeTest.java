@@ -37,7 +37,6 @@ import javax.jcr.Session;
  * <code>Node.addNode(String, String)</code>.
  *
  * @sources AddNodeTest.java
- * @executeClass org.apache.jackrabbit.test.api.AddNodeTest
  * @keywords level2
  */
 public class AddNodeTest extends AbstractJCRTest {

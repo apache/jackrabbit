@@ -40,7 +40,6 @@ import javax.jcr.version.Version;
  * - The jcr:copiedFrom property of HM is set to point to the base version of N.
  *
  * @sources CopyTest.java
- * @executeClass javax.jcr.version.CopyTest
  * @keywords versioning
  */
 public class CopyTest extends AbstractVersionTest {

@@ -41,7 +41,6 @@ import org.apache.jackrabbit.test.NotExecutableException;
  * </ul>
  *
  * @sources RestoreTest.java
- * @executeClass org.apache.jackrabbit.test.api.jsr283.version.simple.RestoreTest
  * @keywords simple-versioning
  */
 public class RestoreTest extends AbstractVersionTest {

@@ -25,7 +25,6 @@ package org.apache.jackrabbit.test.api.query;
  * distinct values.
  *
  * @sources XPathOrderByTest.java
- * @executeClass org.apache.jackrabbit.test.api.query.XPathOrderByTest
  * @keywords level1
  */
 public class XPathOrderByTest extends AbstractQueryTest {

@@ -31,7 +31,6 @@ import org.apache.jackrabbit.test.NotExecutableException;
  * workspace.
  *
  * @sources WorkspaceCopyTest.java
- * @executeClass org.apache.jackrabbit.test.api.WorkspaceCopyTest
  * @keywords level2
  */
 public class WorkspaceCopyTest extends AbstractWorkspaceCopyTest {

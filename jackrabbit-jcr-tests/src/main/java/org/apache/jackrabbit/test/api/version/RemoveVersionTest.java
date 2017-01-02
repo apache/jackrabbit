@@ -37,7 +37,6 @@ import java.util.List;
  * in order to test, whether removing versions is supported.
  *
  * @sources RemoveVersionTest.java
- * @executeClass org.apache.jackrabbit.test.api.version.RemoveVersionTest
  * @keywords versioning
  */
 public class RemoveVersionTest extends AbstractVersionTest {

@@ -27,7 +27,6 @@ import java.security.AccessControlException;
  * permissions for a read-only session and a 'superuser' session.
  *
  * @sources CheckPermissionTest.java
- * @executeClass org.apache.jackrabbit.test.api.CheckPermissionTest
  * @keywords level2
  */
 public class CheckPermissionTest extends AbstractJCRTest {

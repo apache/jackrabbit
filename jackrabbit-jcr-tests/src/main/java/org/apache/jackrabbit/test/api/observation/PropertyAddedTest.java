@@ -34,7 +34,6 @@ import java.util.List;
  * {@link #propertyName1} and {@link #propertyName2}.
  *
  * @sources PropertyAddedTest.java
- * @executeClass org.apache.jackrabbit.test.api.observation.PropertyAddedTest
  * @keywords observation
  */
 public class PropertyAddedTest extends AbstractObservationTest {

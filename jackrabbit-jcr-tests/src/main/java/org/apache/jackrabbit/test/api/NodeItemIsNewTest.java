@@ -31,7 +31,6 @@ import javax.jcr.RepositoryException;
  * {@link #testNodeType} with name {@link #nodeName1}.
  *
  * @sources NodeItemIsNewTest.java
- * @executeClass org.apache.jackrabbit.test.api.NodeItemIsNewTest
  * @keywords level2
  */
 public class NodeItemIsNewTest extends AbstractJCRTest {

@@ -29,7 +29,6 @@ import javax.jcr.PropertyType;
  * {@link javax.jcr.PropertyType#UNDEFINED}.
  *
  * @sources UndefinedPropertyTest.java
- * @executeClass org.apache.jackrabbit.test.api.UndefinedPropertyTest
  * @keywords level1
  */
 public class UndefinedPropertyTest extends AbstractJCRTest {

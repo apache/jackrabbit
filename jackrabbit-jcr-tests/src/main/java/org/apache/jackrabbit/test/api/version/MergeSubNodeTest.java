@@ -26,7 +26,6 @@ import javax.jcr.version.VersionManager;
  * subtree of the node on which merge is called.
  *
  * @sources MergeSubNodeTest.java
- * @executeClass org.apache.jackrabbit.test.api.version.MergeSubNodeTest
  * @keywords versioning
  */
 

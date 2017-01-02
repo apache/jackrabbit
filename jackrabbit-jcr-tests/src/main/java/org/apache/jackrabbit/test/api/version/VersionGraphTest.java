@@ -28,7 +28,6 @@ import javax.jcr.UnsupportedRepositoryOperationException;
  * issues.
  *
  * @sources VersionGraphTest.java
- * @executeClass org.apache.jackrabbit.test.api.version.VersionGraphTest
  * @keywords versioning
  */
 public class VersionGraphTest extends AbstractVersionTest {

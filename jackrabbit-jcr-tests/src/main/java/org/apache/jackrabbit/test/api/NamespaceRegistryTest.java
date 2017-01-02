@@ -35,7 +35,6 @@ import java.util.Set;
  * exception when you try to unregister.
  *
  * @sources NamespaceRegistryTest.java
- * @executeClass org.apache.jackrabbit.test.api.NamespaceRegistryTest
  * @keywords level2
  */
 public class NamespaceRegistryTest extends AbstractJCRTest {

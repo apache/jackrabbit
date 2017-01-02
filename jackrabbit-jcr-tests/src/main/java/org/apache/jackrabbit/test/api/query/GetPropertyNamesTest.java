@@ -30,7 +30,6 @@ import java.util.ArrayList;
  * predicate matches the ones declared in nt:base.
  *
  * @sources GetPropertyNamesTest.java
- * @executeClass org.apache.jackrabbit.test.api.query.GetPropertyNamesTest
  * @keywords level1
  */
 public class GetPropertyNamesTest extends AbstractQueryTest {

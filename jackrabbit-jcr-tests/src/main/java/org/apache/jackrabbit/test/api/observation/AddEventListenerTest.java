@@ -39,7 +39,6 @@ import javax.jcr.Session;
  * in those test cases.
  *
  * @sources AddEventListenerTest.java
- * @executeClass org.apache.jackrabbit.test.api.observation.AddEventListenerTest
  * @keywords observation
  */
 public class AddEventListenerTest extends AbstractObservationTest {

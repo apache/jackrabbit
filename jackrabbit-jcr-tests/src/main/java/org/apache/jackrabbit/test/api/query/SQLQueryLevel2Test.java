@@ -25,7 +25,6 @@ import javax.jcr.Value;
  * Tests SQL queries on content written to the workspace by the test itself.
  *
  * @sources SQLQueryLevel2Test.java
- * @executeClass org.apache.jackrabbit.test.api.query.SQLQueryLevel2Test
  * @keywords level2 sql
  */
 public class SQLQueryLevel2Test extends AbstractQueryLevel2Test {

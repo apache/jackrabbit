@@ -28,7 +28,6 @@ import javax.jcr.version.VersionManager;
  * javax.jcr.Node#checkout()} and {@link javax.jcr.Node#isCheckedOut()}.
  *
  * @sources CheckoutTest.java
- * @executeClass org.apache.jackrabbit.test.api.version.CheckoutTest
  * @keywords versioning
  */
 public class CheckoutTest extends AbstractVersionTest {

@@ -26,7 +26,6 @@ import javax.jcr.version.VersionManager;
  * merge calls.
  *
  * @sources MergeShallowTest.java
- * @executeClass org.apache.jackrabbit.test.api.version.MergeShallowTest
  * @keywords versioning
  */
 

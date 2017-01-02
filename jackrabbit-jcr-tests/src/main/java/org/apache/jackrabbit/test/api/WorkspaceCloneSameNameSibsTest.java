@@ -26,7 +26,6 @@ import javax.jcr.NodeIterator;
  * as same name siblings between workspace.
  *
  * @sources WorkspaceCloneSameNameSibsTest.java
- * @executeClass org.apache.jackrabbit.test.api.WorkspaceCopySameNameSibsTest
  * @keywords level2
  */
 public class WorkspaceCloneSameNameSibsTest extends AbstractWorkspaceSameNameSibsTest {

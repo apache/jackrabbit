@@ -30,7 +30,6 @@ import javax.jcr.nodetype.NoSuchNodeTypeException;
  *  testroot.
  *
  * @sources GetPersistentQueryPathTest.java
- * @executeClass org.apache.jackrabbit.test.api.query.GetPersistentQueryPathTest
  * @keywords level2
  */
 public class GetPersistentQueryPathTest extends AbstractQueryTest {

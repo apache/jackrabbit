@@ -38,7 +38,6 @@ import java.util.NoSuchElementException;
  * {@link #nodeName2} and {@link #nodeName3}.
  *
  * @sources EventIteratorTest.java
- * @executeClass org.apache.jackrabbit.test.api.observation.EventIteratorTest
  * @keywords observation
  */
 public class EventIteratorTest extends AbstractObservationTest{

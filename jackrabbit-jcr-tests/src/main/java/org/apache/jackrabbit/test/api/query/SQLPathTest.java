@@ -32,7 +32,6 @@ import java.util.List;
  * node tree at <code>testroot</code> with at least two levels.
  *
  * @sources SQLPathTest.java
- * @executeClass org.apache.jackrabbit.test.api.query.SQLPathTest
  * @keywords sql
  */
 public class SQLPathTest extends AbstractQueryTest {

@@ -53,7 +53,6 @@ import javax.jcr.version.VersionManager;
  * history methods and general version history issues.
  *
  * @sources VersionHistoryTest.java
- * @executeClass org.apache.jackrabbit.test.api.version.VersionHistoryTest
  * @keywords versioning
  */
 public class VersionHistoryTest extends AbstractVersionTest {

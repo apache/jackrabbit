@@ -31,7 +31,6 @@ import java.io.InputStream;
  * thrown.
  *
  * @sources LongPropertyTest.java
- * @executeClass org.apache.jackrabbit.test.api.LongPropertyTest
  * @keywords level1
  */
 public class LongPropertyTest extends AbstractPropertyTest {

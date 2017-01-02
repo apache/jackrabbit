@@ -25,7 +25,6 @@ import javax.jcr.version.VersionException;
  * moving nodes using {@link javax.jcr.Workspace#move(String, String)}.
  *
  * @sources WorkspaceMoveVersionExceptionTest.java
- * @executeClass org.apache.jackrabbit.test.api.version.WorkspaceMoveVersionExceptionTest
  * @keywords versioning
  */
 public class WorkspaceMoveVersionExceptionTest extends AbstractVersionTest {

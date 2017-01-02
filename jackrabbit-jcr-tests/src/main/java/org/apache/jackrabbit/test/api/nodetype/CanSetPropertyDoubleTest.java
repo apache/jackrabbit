@@ -33,7 +33,6 @@ import java.text.ParseException;
  * values)</code> where property is of type Double.
  *
  * @sources CanSetPropertyDoubleTest.java
- * @executeClass org.apache.jackrabbit.test.api.nodetype.CanSetPropertyDoubleTest
  * @keywords level2
  */
 public class CanSetPropertyDoubleTest extends AbstractJCRTest {

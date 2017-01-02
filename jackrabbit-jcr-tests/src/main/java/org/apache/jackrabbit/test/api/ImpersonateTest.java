@@ -32,7 +32,6 @@ import java.security.AccessControlException;
  * respects access controls.
  *
  * @sources ImpersonateTest.java
- * @executeClass org.apache.jackrabbit.test.api.ImpersonateTest
  * @keywords level2
  */
 public class ImpersonateTest extends AbstractJCRTest {

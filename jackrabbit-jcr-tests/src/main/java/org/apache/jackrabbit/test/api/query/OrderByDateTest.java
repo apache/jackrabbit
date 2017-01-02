@@ -32,7 +32,6 @@ import java.util.TimeZone;
  * @tck.config propertyname1 name of a single value calendar property.
  *
  * @sources OrderByDateTest.java
- * @executeClass org.apache.jackrabbit.test.api.query.OrderByDateTest
  * @keywords level2
  */
 public class OrderByDateTest extends AbstractOrderByTest {

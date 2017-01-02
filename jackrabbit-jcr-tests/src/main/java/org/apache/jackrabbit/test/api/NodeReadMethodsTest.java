@@ -43,7 +43,6 @@ import java.util.NoSuchElementException;
  * {@link org.apache.jackrabbit.test.NotExecutableException} is thrown.
  *
  * @sources NodeReadMethodsTest.java
- * @executeClass org.apache.jackrabbit.test.api.NodeReadMethodsTest
  * @keywords level1
  */
 public class NodeReadMethodsTest extends AbstractJCRTest {

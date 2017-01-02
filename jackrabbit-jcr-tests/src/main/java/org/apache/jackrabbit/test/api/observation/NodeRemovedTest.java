@@ -31,7 +31,6 @@ import javax.jcr.observation.Event;
  * child nodes of the same type ({@link #testNodeType}).
  *
  * @sources NodeRemovedTest.java
- * @executeClass org.apache.jackrabbit.test.api.observation.NodeRemovedTest
  * @keywords observation
  */
 public class NodeRemovedTest extends AbstractObservationTest {
