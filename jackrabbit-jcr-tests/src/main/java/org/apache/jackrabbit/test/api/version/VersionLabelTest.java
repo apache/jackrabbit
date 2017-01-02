@@ -42,7 +42,6 @@ import javax.jcr.version.VersionManager;
  * </ul>
  *
  * @sources VersionLabelTest.java
- * @executeClass org.apache.jackrabbit.test.api.version.VersionLabelTest
  * @keywords versioning
  */
 public class VersionLabelTest extends AbstractVersionTest {

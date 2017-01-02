@@ -43,7 +43,6 @@ import javax.jcr.Value;
  * is used instead.
  *
  * @sources SetValueBinaryTest.java
- * @executeClass org.apache.jackrabbit.test.api.SetValueBinaryTest
  * @keywords level2
  */
 public class SetValueBinaryTest extends AbstractJCRTest {

@@ -30,7 +30,6 @@ import javax.jcr.Value;
  * values)</code>
  *
  * @sources CanSetPropertyMultipleTest.java
- * @executeClass org.apache.jackrabbit.test.api.nodetype.CanSetPropertyMultipleTest
  * @keywords level2
  */
 public class CanSetPropertyMultipleTest extends AbstractJCRTest {

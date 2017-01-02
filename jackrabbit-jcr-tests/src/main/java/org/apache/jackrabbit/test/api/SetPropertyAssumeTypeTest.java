@@ -41,7 +41,6 @@ import java.util.Date;
  * <code>Node.setProperty(String, Node)</code> are tested.
  *
  * @sources SetPropertyAssumeTypeTest.java
- * @executeClass org.apache.jackrabbit.test.api.SetPropertyAssumeTypeTest
  * @keywords level2
  */
 public class SetPropertyAssumeTypeTest extends AbstractJCRTest {

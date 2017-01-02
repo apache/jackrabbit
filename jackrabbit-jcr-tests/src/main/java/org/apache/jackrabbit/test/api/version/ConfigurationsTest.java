@@ -29,7 +29,6 @@ import javax.jcr.version.VersionManager;
  * <code>ConfigurationsTest</code> covers methods related to the Configurations
  * feature in Versioning.
  * @sources ConfigurationsTest.java
- * @executeClass org.apache.jackrabbit.test.api.version.ConfigurationsTest
  * @keywords versioning
  * @since JCR 2.0
  */

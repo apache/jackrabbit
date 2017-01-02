@@ -30,7 +30,6 @@ import java.util.Iterator;
  * subtree that received a merge result of fail.
  *
  * @sources MergeNodeIteratorTest.java
- * @executeClass org.apache.jackrabbit.test.api.version.MergeNodeIteratorTest
  * @keywords versioning
  */
 public class MergeNodeIteratorTest extends AbstractMergeTest {

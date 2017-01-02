@@ -28,7 +28,6 @@ import javax.jcr.version.VersionManager;
  * doneMerge is called.
  *
  * @sources MergeDoneMergeTest.java
- * @executeClass org.apache.jackrabbit.test.api.version.MergeDoneMergeTest
  * @keywords versioning
  */
 public class MergeDoneMergeTest extends AbstractMergeTest {

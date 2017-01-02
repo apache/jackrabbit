@@ -42,7 +42,6 @@ import org.slf4j.LoggerFactory;
  * defined in {@link NodeType}.
  *
  * @sources NodeTypeTest.java
- * @executeClass org.apache.jackrabbit.test.api.nodetype.NodeTypeTest
  * @keywords level1
  */
 public class NodeTypeTest extends AbstractJCRTest {

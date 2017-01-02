@@ -37,7 +37,6 @@ import java.util.Calendar;
  * The ValueFormatException has to be thrown immediately (not on save).
  *
  * @sources SetValueValueFormatExceptionTest.java
- * @executeClass org.apache.jackrabbit.test.api.SetValueValueFormatExceptionTest
  * @keywords level2
  */
 public class SetValueValueFormatExceptionTest extends AbstractJCRTest {

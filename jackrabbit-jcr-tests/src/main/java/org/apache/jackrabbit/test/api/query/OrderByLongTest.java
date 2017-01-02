@@ -29,7 +29,6 @@ package org.apache.jackrabbit.test.api.query;
  * @tck.config propertyname1 name of a single value long property.
  *
  * @sources OrderByLongTest.java
- * @executeClass org.apache.jackrabbit.test.api.query.OrderByLongTest
  * @keywords level2
  */
 public class OrderByLongTest extends AbstractOrderByTest {

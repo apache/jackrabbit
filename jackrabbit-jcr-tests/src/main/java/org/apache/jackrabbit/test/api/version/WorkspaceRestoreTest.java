@@ -35,7 +35,6 @@ import javax.jcr.ItemExistsException;
  * method.
  *
  * @sources WorkspaceRestoreTest.java
- * @executeClass org.apache.jackrabbit.test.api.version.WorkspaceRestoreTest
  * @keywords versioning
  */
 public class WorkspaceRestoreTest extends AbstractVersionTest {

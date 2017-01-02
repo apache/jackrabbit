@@ -37,7 +37,6 @@ import javax.jcr.observation.Event;
  * {@link #propertyName1} and {@link #propertyName2}.
  *
  * @sources PropertyChangedTest.java
- * @executeClass org.apache.jackrabbit.test.api.observation.PropertyChangedTest
  * @keywords observation
  */
 public class PropertyChangedTest extends AbstractObservationTest {

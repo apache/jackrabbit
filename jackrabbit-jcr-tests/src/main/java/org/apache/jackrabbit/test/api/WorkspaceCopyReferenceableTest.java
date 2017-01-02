@@ -26,7 +26,6 @@ import javax.jcr.RepositoryException;
  * referenceable nodes in one workspace.
  *
  * @sources WorkspaceCopyReferenceableTest.java
- * @executeClass org.apache.jackrabbit.test.api.WorkspaceCopyReferenceableTest
  * @keywords level2
  */
 public class WorkspaceCopyReferenceableTest extends AbstractWorkspaceReferenceableTest {

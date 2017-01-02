@@ -33,7 +33,6 @@ import java.util.NoSuchElementException;
  * otherwise a {@link NotExecutableException} is thrown.
  *
  * @sources NodeDiscoveringNodeTypesTest.java
- * @executeClass org.apache.jackrabbit.test.api.NodeDiscoveringNodeTypesTest
  * @keywords level1
  */
 public class NodeDiscoveringNodeTypesTest extends AbstractJCRTest {

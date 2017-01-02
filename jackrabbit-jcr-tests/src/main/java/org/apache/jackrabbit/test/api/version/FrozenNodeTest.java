@@ -27,7 +27,6 @@ import org.apache.jackrabbit.test.NotExecutableException;
  * <code>CheckinTest</code> covers tests related to {@link javax.jcr.Node#checkin()}.
  *
  * @sources CheckinTest.java
- * @executeClass org.apache.jackrabbit.test.api.version.CheckinTest
  * @keywords versioning
  */
 public class FrozenNodeTest extends AbstractVersionTest {

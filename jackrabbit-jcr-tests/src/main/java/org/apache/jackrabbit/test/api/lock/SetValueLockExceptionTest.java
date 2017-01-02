@@ -37,7 +37,6 @@ import java.io.ByteArrayInputStream;
  * Property.setValue() methods in case the parentNode of the given property is locked.
  *
  * @sources SetValueLockExceptionTest.java
- * @executeClass org.apache.jackrabbit.test.api.lock.SetValueLockExceptionTest
  * @keywords level2
  */
 public class SetValueLockExceptionTest extends AbstractJCRTest {

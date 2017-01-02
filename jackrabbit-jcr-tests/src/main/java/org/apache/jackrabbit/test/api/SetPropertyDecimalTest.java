@@ -28,7 +28,6 @@ import org.apache.jackrabbit.test.AbstractJCRTest;
  * BigDecimal)</code> method
  *
  * @sources SetPropertyDecimalTest.java
- * @executeClass org.apache.jackrabbit.test.api.SetPropertyDecimalTest
  * @keywords level2
  */
 public class SetPropertyDecimalTest extends AbstractJCRTest {

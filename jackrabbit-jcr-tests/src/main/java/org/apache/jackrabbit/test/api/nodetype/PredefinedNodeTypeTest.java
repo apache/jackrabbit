@@ -49,7 +49,6 @@ import org.apache.jackrabbit.test.NotExecutableException;
  * implemented correctly.
  *
  * @sources PredefinedNodeTypeTest.java
- * @executeClass org.apache.jackrabbit.test.api.nodetype.PredefinedNodeTypeTest
  * @keywords level1
  */
 public class PredefinedNodeTypeTest extends AbstractJCRTest {

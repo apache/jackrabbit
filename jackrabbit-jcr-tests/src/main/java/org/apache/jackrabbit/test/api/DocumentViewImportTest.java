@@ -37,7 +37,6 @@ import java.io.IOException;
  * tests the UuidBehaviour flag.
  *
  * @sources DocumentViewImportTest.java
- * @executeClass org.apache.jackrabbit.test.api.DocumentViewImportTest
  * @keywords level2
  */
 public class DocumentViewImportTest extends AbstractImportXmlTest {

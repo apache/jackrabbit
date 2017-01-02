@@ -24,7 +24,6 @@ import javax.jcr.Node;
  * nonversionable nodes in the subtree of the node on which merge is called.
  *
  * @sources MergeNonVersionableSubNodeTest.java
- * @executeClass org.apache.jackrabbit.test.api.version.MergeNonVersionableSubNodeTest
  * @keywords versioning
  */
 public class MergeNonVersionableSubNodeTest extends AbstractMergeTest {

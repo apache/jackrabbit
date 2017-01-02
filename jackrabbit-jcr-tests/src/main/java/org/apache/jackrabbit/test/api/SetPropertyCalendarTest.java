@@ -28,7 +28,6 @@ import java.util.GregorianCalendar;
  * Calendar)</code> method
  *
  * @sources SetPropertyCalendarTest.java
- * @executeClass org.apache.jackrabbit.test.api.SetPropertyCalendarTest
  * @keywords level2
  */
 public class SetPropertyCalendarTest extends AbstractJCRTest {

@@ -33,7 +33,6 @@ import javax.jcr.nodetype.NoSuchNodeTypeException;
  * a {@link NotExecutableException} is thrown.
  *
  * @sources NodeUUIDTest.java
- * @executeClass org.apache.jackrabbit.test.api.NodeUUIDTest
  * @keywords level2
  */
 public class NodeUUIDTest extends AbstractJCRTest {

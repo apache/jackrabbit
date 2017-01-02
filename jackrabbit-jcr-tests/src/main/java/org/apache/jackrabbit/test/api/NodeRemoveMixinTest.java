@@ -35,7 +35,6 @@ import org.apache.jackrabbit.test.NotExecutableException;
  * <code>Node.removeMixin(String)</code>.
  *
  * @sources NodeRemoveMixinTest.java
- * @executeClass org.apache.jackrabbit.test.api.NodeRemoveMixinTest
  * @keywords level2
  */
 public class NodeRemoveMixinTest extends AbstractJCRTest {

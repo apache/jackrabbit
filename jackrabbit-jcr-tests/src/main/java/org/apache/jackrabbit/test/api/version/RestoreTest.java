@@ -41,7 +41,6 @@ import javax.jcr.NodeIterator;
  * </ul>
  *
  * @sources RestoreTest.java
- * @executeClass org.apache.jackrabbit.test.api.version.RestoreTest
  * @keywords versioning
  */
 public class RestoreTest extends AbstractVersionTest {

@@ -31,7 +31,6 @@ import java.util.HashSet;
  * <code>ReferencesTest</code> contains the test cases for the references.
  *
  * @sources ReferencesTest.java
- * @executeClass org.apache.jackrabbit.test.api.ReferencesTest
  * @keywords level2
  */
 public class ReferencesTest extends AbstractJCRTest {

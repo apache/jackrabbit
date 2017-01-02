@@ -30,7 +30,6 @@ import javax.jcr.InvalidItemStateException;
  * class that require a UUID (and therefore are optional).
  *
  * @sources SessionUUIDTest.java
- * @executeClass org.apache.jackrabbit.test.api.SessionUUIDTest
  * @keywords uuid
  */
 public class SessionUUIDTest extends AbstractJCRTest {

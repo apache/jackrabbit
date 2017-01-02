@@ -36,7 +36,6 @@ import org.apache.jackrabbit.test.NotExecutableException;
  * content).
  *
  * @sources SessionTest.java
- * @executeClass org.apache.jackrabbit.test.api.SessionTest
  * @keywords level2
  */
 public class SessionTest extends AbstractJCRTest {

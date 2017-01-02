@@ -28,7 +28,6 @@ import java.util.Arrays;
  * Tests if the jcr:path property is returned in the query result.
  *
  * @sources SQLJcrPathTest.java
- * @executeClass org.apache.jackrabbit.test.api.query.SQLJcrPathTest
  * @keywords sql
  */
 public class SQLJcrPathTest extends AbstractQueryTest {

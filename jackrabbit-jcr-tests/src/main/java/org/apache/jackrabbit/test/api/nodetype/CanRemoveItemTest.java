@@ -31,7 +31,6 @@ import javax.jcr.nodetype.PropertyDefinition;
  * and {@link NodeType#canRemoveProperty(String)}).
  *
  * @sources CanRemoveItemTest.java
- * @executeClass org.apache.jackrabbit.test.api.nodetype.CanRemoveItemTest
  * @keywords level1
  */
 public class CanRemoveItemTest extends AbstractJCRTest {
