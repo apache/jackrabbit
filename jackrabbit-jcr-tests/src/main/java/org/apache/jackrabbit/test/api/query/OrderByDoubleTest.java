@@ -18,16 +18,16 @@ package org.apache.jackrabbit.test.api.query;
 
 /**
  * Test cases for order by queries on double properties.
- *
- * @tck.config testroot path to node that accepts child nodes of type
+ * <ul>
+ * <li>{@code testroot} path to node that accepts child nodes of type
  *   <code>nodetype</code>
- * @tck.config nodetype name of a node type
- * @tck.config nodename1 name of a child node of type <code>nodetype</code>
- * @tck.config nodename2 name of a child node of type <code>nodetype</code>
- * @tck.config nodename3 name of a child node of type <code>nodetype</code>
- * @tck.config nodename4 name of a child node of type <code>nodetype</code>
- * @tck.config propertyname1 name of a single value double property.
- *
+ * <li>{@code nodetype} name of a node type
+ * <li>{@code nodename1} name of a child node of type <code>nodetype</code>
+ * <li>{@code nodename2} name of a child node of type <code>nodetype</code>
+ * <li>{@code nodename3} name of a child node of type <code>nodetype</code>
+ * <li>{@code nodename4} name of a child node of type <code>nodetype</code>
+ * <li>{@code propertyname1} name of a single value double property.
+ * </ul>
  */
 public class OrderByDoubleTest extends AbstractOrderByTest {
 

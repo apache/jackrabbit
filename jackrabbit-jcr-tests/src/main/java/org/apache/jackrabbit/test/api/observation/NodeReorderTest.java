@@ -30,16 +30,16 @@ import javax.jcr.observation.Event;
 /**
  * Tests if {@link javax.jcr.Node#orderBefore(String, String)} operations trigger
  * the appropriate observation events.
- * <p>
- * @tck.config testroot must allow orderable child nodes of type
+ * <ul>
+ * <li>{@code testroot} must allow orderable child nodes of type
  * <code>nodetype</code>, otherwise the test cases throw a
  * {@link NotExecutableException}. Some tests are only executed if the node
  * at <code>testroot</code> support same name sibling child nodes.
- * @tck.config nodetype node type that allows child nodes of the same type.
- * @tck.config nodename1 child node name of type <code>nodetype</code>
- * @tck.config nodename2 child node name of type <code>nodetype</code>
- * @tck.config nodename3 child node name of type <code>nodetype</code>
- *
+ * <li>{@code nodetype} node type that allows child nodes of the same type.
+ * <li>{@code nodename1} child node name of type <code>nodetype</code>
+ * <li>{@code nodename2} child node name of type <code>nodetype</code>
+ * <li>{@code nodename3} child node name of type <code>nodetype</code>
+ * </ul>
  */
 public class NodeReorderTest extends AbstractObservationTest {
 

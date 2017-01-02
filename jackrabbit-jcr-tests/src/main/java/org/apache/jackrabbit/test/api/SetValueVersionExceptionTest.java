@@ -262,9 +262,11 @@ public class SetValueVersionExceptionTest extends AbstractJCRTest {
     /**
      * Tests if setValue(Node) throws a VersionException immediately
      * or on save if the parent node of this property is checked-in.
-     * @tck.config nodetype2 name of a node type with a reference property
-     * @tck.config propertyname3 name of a single value reference property
+     * <ul>
+     * <li>{@code nodetype2} name of a node type with a reference property
+     * <li>{@code propertyname3} name of a single value reference property
      *   declared in nodetype2
+     * </ul>
      */
     public void testNode()
         throws NotExecutableException, RepositoryException {

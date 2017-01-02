@@ -23,14 +23,14 @@ import javax.jcr.Node;
 
 /**
  * Tests SQL statements with a join of a node type with a mixin type.
- *
- * @tck.config testroot path to node that allows child nodes of type:
+ * <ul>
+ * <li>{@code testroot} path to node that allows child nodes of type:
  *   <code>nodetype</code>
- * @tck.config nodetype name of a node type that allows assignment of mixin
+ * <li>{@code nodetype} name of a node type that allows assignment of mixin
  *   referenceable.
- * @tck.config nodename1 name of a child node of type: <code>nodetype</code>.
- * @tck.config nodename2 name of a child node of type: <code>nodetype</code>.
- *
+ * <li>{@code nodename1} name of a child node of type: <code>nodetype</code>.
+ * <li>{@code nodename2} name of a child node of type: <code>nodetype</code>.
+ * </ul>
  */
 public class SQLJoinTest extends AbstractQueryTest {
 
@@ -126,8 +126,10 @@ public class SQLJoinTest extends AbstractQueryTest {
     /**
      * Test a SQL query with a primary and mixin nodetype join on child nodes
      * with same name siblings.
-     * @tck.config testroot path to node that allows child nodes with same name.
-     * @tck.config nodename1 node name of the same name siblings.
+     * <ul>
+     * <li>{@code testroot} path to node that allows child nodes with same name.
+     * <li>{@code nodename1} node name of the same name siblings.
+     * </ul>
      * @throws NotExecutableException if <code>testroot</code> does not allow
      *  same name siblings.
      */
