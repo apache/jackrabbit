@@ -32,7 +32,6 @@ import java.util.NoSuchElementException;
  * default workspace must at least contain one child node under {@link #testRoot}
  * otherwise a {@link NotExecutableException} is thrown.
  *
- * @test
  * @sources NodeDiscoveringNodeTypesTest.java
  * @executeClass org.apache.jackrabbit.test.api.NodeDiscoveringNodeTypesTest
  * @keywords level1

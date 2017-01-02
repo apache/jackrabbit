@@ -31,7 +31,6 @@ import java.util.List;
  * Tests path predicates in SQL queries. The default workspace must contain a
  * node tree at <code>testroot</code> with at least two levels.
  *
- * @test
  * @sources SQLPathTest.java
  * @executeClass org.apache.jackrabbit.test.api.query.SQLPathTest
  * @keywords sql

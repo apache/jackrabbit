@@ -27,7 +27,6 @@ import javax.jcr.RepositoryException;
  * <code>WorkspaceCopySameNameSibsTest</code> contains tests for copying nodes
  * as same name siblings in one workspace.
  *
- * @test
  * @sources WorkspaceCopySameNameSibsTest.java
  * @executeClass org.apache.jackrabbit.test.api.WorkspaceCopySameNameSibsTest
  * @keywords level2

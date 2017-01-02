@@ -26,7 +26,6 @@ import java.util.NoSuchElementException;
 /**
  * Tests the {@link javax.jcr.NodeIterator} implementation.
  *
- * @test
  * @sources NodeIteratorTest.java
  * @executeClass org.apache.jackrabbit.test.api.NodeIteratorTest
  * @keywords level1

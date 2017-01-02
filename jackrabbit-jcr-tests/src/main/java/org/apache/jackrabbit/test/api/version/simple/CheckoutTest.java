@@ -27,7 +27,6 @@ import javax.jcr.version.VersionManager;
  * Node#checkout()} and {@link Node#isCheckedOut()} of simple versionable
  * nodes.
  *
- * @test
  * @sources SVCheckoutTest.java
  * @executeClass org.apache.jackrabbit.test.api.version.SVCheckoutTest
  * @keywords simple-versioning

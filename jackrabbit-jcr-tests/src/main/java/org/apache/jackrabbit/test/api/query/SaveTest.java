@@ -33,7 +33,6 @@ import org.apache.jackrabbit.test.NotExecutableException;
 /**
  * Tests the method {@link javax.jcr.query.Query#storeAsNode(String)}.
  *
- * @test
  * @sources SaveTest.java
  * @executeClass org.apache.jackrabbit.test.api.query.SaveTest
  * @keywords level2

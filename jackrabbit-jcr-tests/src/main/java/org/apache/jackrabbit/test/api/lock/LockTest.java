@@ -31,7 +31,6 @@ import org.apache.jackrabbit.test.NotExecutableException;
  * <code>LockTest</code> contains the test cases for the lock support in
  * the JCR specification.
  *
- * @test
  * @sources LockTest.java
  * @executeClass org.apache.jackrabbit.test.api.lock.LockTest
  * @keywords locking

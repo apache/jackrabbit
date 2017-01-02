@@ -24,7 +24,6 @@ import javax.jcr.ItemNotFoundException;
 /**
  * Test the method {@link Query#getStoredQueryPath()}.
  *
- * @test
  * @sources GetPersistentQueryPathLevel1Test.java
  * @executeClass org.apache.jackrabbit.test.api.query.GetPersistentQueryPathLevel1Test
  * @keywords level1

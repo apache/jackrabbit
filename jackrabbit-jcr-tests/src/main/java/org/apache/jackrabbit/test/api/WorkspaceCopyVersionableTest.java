@@ -27,7 +27,6 @@ import javax.jcr.version.VersionException;
  * <code>WorkspaceCopyVersionableTest</code> contains tests for copying
  * versionable nodes in one workspace.
  *
- * @test
  * @sources WorkspaceCopyVersionableTest.java
  * @executeClass org.apache.jackrabbit.test.api.WorkspaceCopyVersionableTest
  * @keywords level2 versionable

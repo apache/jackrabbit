@@ -29,7 +29,6 @@ import javax.jcr.Value;
  * Test of <code>NodeType.canSetProperty(String propertyName, Value
  * value)</code>
  *
- * @test
  * @sources CanSetPropertyTest.java
  * @executeClass org.apache.jackrabbit.test.api.nodetype.CanSetPropertyTest
  * @keywords level2

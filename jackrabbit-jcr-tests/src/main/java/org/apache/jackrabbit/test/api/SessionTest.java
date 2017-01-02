@@ -35,7 +35,6 @@ import org.apache.jackrabbit.test.NotExecutableException;
  * <code>javax.jcr.Session</code> class that are level 2 (modifing repository
  * content).
  *
- * @test
  * @sources SessionTest.java
  * @executeClass org.apache.jackrabbit.test.api.SessionTest
  * @keywords level2

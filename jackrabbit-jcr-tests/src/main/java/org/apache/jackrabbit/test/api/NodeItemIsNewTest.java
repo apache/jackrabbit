@@ -30,7 +30,6 @@ import javax.jcr.RepositoryException;
  * The node at {@link #testRoot} must allow a child node of type
  * {@link #testNodeType} with name {@link #nodeName1}.
  *
- * @test
  * @sources NodeItemIsNewTest.java
  * @executeClass org.apache.jackrabbit.test.api.NodeItemIsNewTest
  * @keywords level2

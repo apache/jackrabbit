@@ -28,7 +28,6 @@ import javax.jcr.version.VersionManager;
 /**
  * <code>ActivitiesTest</code> covers methods related to the Activities
  * feature in Versioning.
- * @test
  * @sources ActivitiesTest.java
  * @executeClass org.apache.jackrabbit.test.api.version.ActivitiesTest
  * @keywords versioning

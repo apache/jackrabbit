@@ -40,7 +40,6 @@ import javax.jcr.observation.Event;
  * @tck.config nodename2 child node name of type <code>nodetype</code>
  * @tck.config nodename3 child node name of type <code>nodetype</code>
  *
- * @test
  * @sources NodeReorderTest.java
  * @executeClass org.apache.jackrabbit.test.api.observation.NodeReorderTest
  * @keywords observation

@@ -32,7 +32,6 @@ import java.util.Arrays;
 /**
  * Tests if the required repository descriptors are available.
  *
- * @test
  * @sources RepositoryDescriptorTest.java
  * @executeClass org.apache.jackrabbit.test.api.RepositoryDescriptorTest
  * @keywords level1

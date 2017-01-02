@@ -26,7 +26,6 @@ import org.apache.jackrabbit.test.NotExecutableException;
  * <code>WorkspaceCloneReferenceableTest</code> contains tests for cloning
  * referenceable nodes between workspaces.
  *
- * @test
  * @sources WorkspaceCloneReferenceableTest.java
  * @executeClass org.apache.jackrabbit.test.api.WorkspaceCloneReferenceableTest
  * @keywords level2

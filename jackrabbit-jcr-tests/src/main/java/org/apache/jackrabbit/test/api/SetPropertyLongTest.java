@@ -25,7 +25,6 @@ import javax.jcr.Node;
  * <code>SetPropertyLongTest</code> tests the <code>Node.setProperty(String,
  * long)</code> method
  *
- * @test
  * @sources SetPropertyLongTest.java
  * @executeClass org.apache.jackrabbit.test.api.SetPropertyLongTest
  * @keywords level2

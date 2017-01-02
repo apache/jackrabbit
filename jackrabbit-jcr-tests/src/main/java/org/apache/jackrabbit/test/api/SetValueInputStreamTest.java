@@ -38,7 +38,6 @@ import java.io.IOException;
  * <code>propertyName1</code> is specified as "jcr:data", that binary property
  * is used instead.
  *
- * @test
  * @sources SetValueInputStreamTest.java
  * @executeClass org.apache.jackrabbit.test.api.SetValueInputStreamTest
  * @keywords level2

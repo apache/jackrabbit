@@ -36,7 +36,6 @@ import java.util.List;
  * the JSR 170 specification. The setup therefore includes a initial removal,
  * in order to test, whether removing versions is supported.
  *
- * @test
  * @sources RemoveVersionTest.java
  * @executeClass org.apache.jackrabbit.test.api.version.RemoveVersionTest
  * @keywords versioning

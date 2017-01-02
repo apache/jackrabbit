@@ -34,7 +34,6 @@ import javax.jcr.Session;
  * @tck.config propertyname1 name of a string property in
  * <code>nodetype</code>.
  *
- * @test
  * @sources PropertyTest.java
  * @executeClass org.apache.jackrabbit.test.api.PropertyTest
  * @keywords level2

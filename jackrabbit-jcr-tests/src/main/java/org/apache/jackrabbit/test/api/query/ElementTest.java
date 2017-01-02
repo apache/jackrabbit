@@ -34,7 +34,6 @@ import javax.jcr.Node;
  * @tck.config nodename3 node name for a child node of type
  * <code>nodetype</code> or <code>nt:base</code>
  *
- * @test
  * @sources ElementTest.java
  * @executeClass org.apache.jackrabbit.test.api.query.ElementTest
  * @keywords level2

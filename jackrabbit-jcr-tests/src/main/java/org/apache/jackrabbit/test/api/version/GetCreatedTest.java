@@ -25,7 +25,6 @@ import javax.jcr.version.Version;
  * <code>GetCreatedTest</code> provides test methods covering {@link
  * javax.jcr.version.Version#getCreated()}.
  *
- * @test
  * @sources GetCreatedTest.java
  * @executeClass org.apache.jackrabbit.test.api.version.GetCreatedTest
  * @keywords versioning
