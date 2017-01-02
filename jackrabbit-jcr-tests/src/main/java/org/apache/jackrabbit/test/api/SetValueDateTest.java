@@ -36,7 +36,6 @@ import java.util.Calendar;
  * node type {@link #testNodeType} must define a single value date property
  * with name {@link #propertyName1}.
  *
- * @sources SetValueDateTest.java
  */
 public class SetValueDateTest extends AbstractJCRTest {
 

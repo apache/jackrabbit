@@ -27,7 +27,6 @@ import java.util.Arrays;
 /**
  * Test the method {@link QueryManager#getSupportedQueryLanguages()}.
  *
- * @sources GetSupportedQueryLanguagesTest.java
  */
 public class GetSupportedQueryLanguagesTest extends AbstractQueryTest {
 

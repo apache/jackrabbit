@@ -31,7 +31,6 @@ import org.apache.jackrabbit.test.NotExecutableException;
  * <code>WorkspaceCloneTest</code> contains tests for cloning nodes between
  * workspace.
  *
- * @sources WorkspaceCloneTest.java
  */
 public class WorkspaceCloneTest extends AbstractWorkspaceCopyBetweenTest {
 

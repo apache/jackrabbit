@@ -31,7 +31,6 @@ import org.apache.jackrabbit.test.NotExecutableException;
  * returns true if a node of name <code>childNodeName</code> and of node type
  * <code>childNodeName</code> could be added to a node of type <code>NodeType</code>.
  *
- * @sources CanAddChildNodeCallWithNodeTypeTest.java
  */
 public class CanAddChildNodeCallWithNodeTypeTest extends AbstractJCRTest {
     /**

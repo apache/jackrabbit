@@ -27,7 +27,6 @@ import java.util.GregorianCalendar;
  * <code>SetPropertyCalendarTest</code> tests the <code>Node.setProperty(String,
  * Calendar)</code> method
  *
- * @sources SetPropertyCalendarTest.java
  */
 public class SetPropertyCalendarTest extends AbstractJCRTest {
 

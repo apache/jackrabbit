@@ -34,7 +34,6 @@ import org.apache.jackrabbit.test.NotExecutableException;
  * <code>NodeAddMixinTest</code> contains the test cases for the method
  * <code>Node.AddMixin(String)</code>.
  *
- * @sources NodeAddMixinTest.java
  */
 public class NodeAddMixinTest extends AbstractJCRTest {
 

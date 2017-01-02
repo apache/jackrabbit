@@ -43,7 +43,6 @@ import java.io.ByteArrayInputStream;
  * <code>VersionTest</code> covers tests related to the methods of the {@link
  * javax.jcr.version.Version} class.
  *
- * @sources VersionTest.java
  */
 public class VersionTest extends AbstractVersionTest {
 

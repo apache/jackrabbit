@@ -38,7 +38,6 @@ import javax.jcr.lock.LockException;
  * <code>javax.jcr.Node</code> that are related to writing, modifying or deleting
  * nodes (level 2 of the specification).
  *
- * @sources NodeTest.java
  */
 public class NodeTest extends AbstractJCRTest {
 

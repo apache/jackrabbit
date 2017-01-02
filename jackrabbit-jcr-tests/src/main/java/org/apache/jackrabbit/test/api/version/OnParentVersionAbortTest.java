@@ -27,7 +27,6 @@ import javax.jcr.version.VersionManager;
  * <code>OnParentVersionAbortTest</code> tests the OnParentVersion {@link OnParentVersionAction#ABORT ABORT}
  * behaviour.
  *
- * @sources OnParentVersionAbortTest.java
  */
 public class OnParentVersionAbortTest extends AbstractOnParentVersionTest {
 

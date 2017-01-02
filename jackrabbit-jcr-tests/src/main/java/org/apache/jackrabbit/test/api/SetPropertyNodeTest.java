@@ -25,7 +25,6 @@ import javax.jcr.Node;
  * <code>SetPropertyNodeTest</code> tests the <code>Node.setProperty(String,
  * Node)</code> method
  *
- * @sources SetPropertyNodeTest.java
  */
 public class SetPropertyNodeTest extends AbstractJCRTest {
 

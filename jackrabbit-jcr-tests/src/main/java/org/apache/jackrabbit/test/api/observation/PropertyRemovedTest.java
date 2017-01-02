@@ -32,7 +32,6 @@ import javax.jcr.observation.Event;
  * {@link #testNodeType} must also support String properties with names
  * {@link #propertyName1} and {@link #propertyName2}.
  *
- * @sources PropertyRemovedTest.java
  */
 public class PropertyRemovedTest extends AbstractObservationTest {
 

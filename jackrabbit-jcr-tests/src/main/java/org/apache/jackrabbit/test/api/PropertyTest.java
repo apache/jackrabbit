@@ -34,7 +34,6 @@ import javax.jcr.Session;
  * @tck.config propertyname1 name of a string property in
  * <code>nodetype</code>.
  *
- * @sources PropertyTest.java
  */
 public class PropertyTest extends AbstractJCRTest {
 

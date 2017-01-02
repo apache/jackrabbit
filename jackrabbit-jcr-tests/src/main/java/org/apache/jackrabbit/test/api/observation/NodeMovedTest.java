@@ -34,7 +34,6 @@ import javax.jcr.observation.Event;
  * {@link #testNodeType} must allow to add child nodes of the same type
  * ({@link #testNodeType}).
  *
- * @sources NodeMovedTest.java
  */
 public class NodeMovedTest extends AbstractObservationTest {
 

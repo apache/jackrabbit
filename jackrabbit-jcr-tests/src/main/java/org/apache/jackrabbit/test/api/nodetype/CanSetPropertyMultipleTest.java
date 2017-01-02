@@ -29,7 +29,6 @@ import javax.jcr.Value;
  * Test of <code>NodeType.canSetProperty(String propertyName, Value[]
  * values)</code>
  *
- * @sources CanSetPropertyMultipleTest.java
  */
 public class CanSetPropertyMultipleTest extends AbstractJCRTest {
     /**

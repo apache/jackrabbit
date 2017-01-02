@@ -41,7 +41,6 @@ import javax.jcr.version.VersionManager;
  * <li>{@link VersionHistory#hasVersionLabel(javax.jcr.version.Version, String)} </li>
  * </ul>
  *
- * @sources VersionLabelTest.java
  */
 public class VersionLabelTest extends AbstractVersionTest {
 

@@ -36,7 +36,6 @@ import java.util.Collection;
 import java.util.LinkedList;
 
 /**
- * @sources CyclicNodeTypeRegistrationTest
  */
 public class CyclicNodeTypeRegistrationTest extends AbstractJCRTest {
     /**

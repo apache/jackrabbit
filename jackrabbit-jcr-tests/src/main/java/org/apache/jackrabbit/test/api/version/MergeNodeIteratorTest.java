@@ -29,7 +29,6 @@ import java.util.Iterator;
  * bestEffort is true returns a NodeIterator over all versionalbe nodes in the
  * subtree that received a merge result of fail.
  *
- * @sources MergeNodeIteratorTest.java
  */
 public class MergeNodeIteratorTest extends AbstractMergeTest {
 

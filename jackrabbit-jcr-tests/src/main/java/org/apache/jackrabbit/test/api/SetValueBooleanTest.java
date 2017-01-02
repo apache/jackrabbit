@@ -34,7 +34,6 @@ import javax.jcr.PathNotFoundException;
  * node type {@link #testNodeType} must define a single value boolean property
  * with name {@link #propertyName1}.
  *
- * @sources SetValueBooleanTest.java
  */
 public class SetValueBooleanTest extends AbstractJCRTest {
 

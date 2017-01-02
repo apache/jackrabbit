@@ -34,7 +34,6 @@ import java.util.Set;
  * Even a repository that supports namespaces may always legally throw an
  * exception when you try to unregister.
  *
- * @sources NamespaceRegistryTest.java
  */
 public class NamespaceRegistryTest extends AbstractJCRTest {
 

@@ -23,7 +23,6 @@ import javax.jcr.RepositoryException;
  * <code>GetContainingHistoryTest</code> provides test methods covering {@link
  * javax.jcr.version.Version#getContainingHistory()}.
  *
- * @sources GetContainingHistoryTest.java
  */
 public class GetContainingHistoryTest extends AbstractVersionTest {
 

@@ -27,7 +27,6 @@ import javax.jcr.version.VersionManager;
  * <code>MergeDoneMergeTest</code> contains test dealing with nodes on which
  * doneMerge is called.
  *
- * @sources MergeDoneMergeTest.java
  */
 public class MergeDoneMergeTest extends AbstractMergeTest {
     /**

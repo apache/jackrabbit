@@ -27,7 +27,6 @@ import java.util.Arrays;
 /**
  * Tests if the jcr:path property is returned in the query result.
  *
- * @sources XPathJcrPathTest.java
  */
 public class XPathJcrPathTest extends AbstractQueryTest {
 

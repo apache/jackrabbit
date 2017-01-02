@@ -31,7 +31,6 @@ import javax.jcr.RepositoryException;
  * {@link #testNodeType} with name {@link #nodeName1}. The node type must
  * support a non-mandatory string property with name {@link #propertyName1}.
  *
- * @sources NodeItemIsModifiedTest.java
  */
 public class NodeItemIsModifiedTest extends AbstractJCRTest {
 

@@ -32,7 +32,6 @@ import javax.jcr.query.QueryResult;
  * @tck.config nodename4 name of a child node of type <code>nodetype</code>
  * @tck.config propertyname1 name of a single value String property.
  * @tck.config propertyname2 name of a single value long property.
- * @sources OrderByMultiTypeTest.java
  */
 public class OrderByMultiTypeTest extends AbstractOrderByTest {
 

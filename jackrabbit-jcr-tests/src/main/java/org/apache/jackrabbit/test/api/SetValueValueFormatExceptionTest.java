@@ -36,7 +36,6 @@ import java.util.Calendar;
  * a ValueFormatException if a best-effort conversion fails.
  * The ValueFormatException has to be thrown immediately (not on save).
  *
- * @sources SetValueValueFormatExceptionTest.java
  */
 public class SetValueValueFormatExceptionTest extends AbstractJCRTest {
 

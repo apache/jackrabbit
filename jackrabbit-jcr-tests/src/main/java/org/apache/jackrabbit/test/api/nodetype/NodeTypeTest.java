@@ -41,7 +41,6 @@ import org.slf4j.LoggerFactory;
  * Tests if the node type hierarchy is correctly mapped to the methods
  * defined in {@link NodeType}.
  *
- * @sources NodeTypeTest.java
  */
 public class NodeTypeTest extends AbstractJCRTest {
 

@@ -34,7 +34,6 @@ import javax.jcr.ItemExistsException;
  * <code>WorkspaceRestoreTest</code> provides test methods for the {@link javax.jcr.Workspace#restore(javax.jcr.version.Version[], boolean)}
  * method.
  *
- * @sources WorkspaceRestoreTest.java
  */
 public class WorkspaceRestoreTest extends AbstractVersionTest {
 

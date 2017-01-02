@@ -31,7 +31,6 @@ import javax.jcr.nodetype.NodeType;
  * <code>NodeCanAddMixinTest</code> contains the test cases for the method
  * <code>Node.canAddMixin(String)</code>.
  *
- * @sources NodeCanAddMixinTest.java
  */
 public class NodeCanAddMixinTest extends AbstractJCRTest {
 

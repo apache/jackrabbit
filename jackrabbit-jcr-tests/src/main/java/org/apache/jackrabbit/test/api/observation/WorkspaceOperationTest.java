@@ -31,7 +31,6 @@ import javax.jcr.observation.Event;
  * {@link #testNodeType} must allow to add child nodes of the same type
  * ({@link #testNodeType}).
  *
- * @sources WorkspaceOperationTest.java
  */
 public class WorkspaceOperationTest extends AbstractObservationTest {
 

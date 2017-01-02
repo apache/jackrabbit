@@ -31,7 +31,6 @@ import java.util.TimeZone;
  * @tck.config nodename4 name of a child node of type <code>nodetype</code>
  * @tck.config propertyname1 name of a single value calendar property.
  *
- * @sources OrderByDateTest.java
  */
 public class OrderByDateTest extends AbstractOrderByTest {
 

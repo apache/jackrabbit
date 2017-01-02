@@ -27,7 +27,6 @@ import javax.jcr.version.VersionManager;
  * <code>MergeCancelMergeTest</code> contains tests dealing with nodes on which
  * cancelMerge is called.
  *
- * @sources MergeCancelMergeTest.java
  */
 public class MergeCancelMergeTest extends AbstractMergeTest {
 

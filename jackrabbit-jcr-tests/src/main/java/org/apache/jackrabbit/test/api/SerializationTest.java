@@ -56,7 +56,6 @@ import java.io.StringReader;
  * This class exports and re-imports the repository. The tests check for
  * differences between the original and the re-imported repository.
  *
- * @sources SerializationTest.java
  */
 public class SerializationTest extends AbstractJCRTest {
     protected Workspace workspace;

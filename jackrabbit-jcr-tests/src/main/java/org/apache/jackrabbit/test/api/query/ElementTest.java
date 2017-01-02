@@ -34,7 +34,6 @@ import javax.jcr.Node;
  * @tck.config nodename3 node name for a child node of type
  * <code>nodetype</code> or <code>nt:base</code>
  *
- * @sources ElementTest.java
  */
 public class ElementTest extends AbstractQueryTest {
 

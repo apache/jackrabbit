@@ -24,7 +24,6 @@ import javax.jcr.ItemNotFoundException;
 /**
  * Test the method {@link Query#getStoredQueryPath()}.
  *
- * @sources GetPersistentQueryPathLevel1Test.java
  */
 public class GetPersistentQueryPathLevel1Test extends AbstractQueryTest {
 

@@ -27,7 +27,6 @@ import java.util.Arrays;
 /**
  * <code>CheckinTest</code> covers tests related to {@link javax.jcr.Node#checkin()}.
  *
- * @sources CheckinTest.java
  */
 public class CheckinTest extends AbstractVersionTest {
 

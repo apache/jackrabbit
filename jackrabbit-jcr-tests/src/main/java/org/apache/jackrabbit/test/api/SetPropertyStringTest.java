@@ -32,7 +32,6 @@ import java.util.Arrays;
  * <code>Node.setProperty(String, String)</code>, <code>Node.setProperty(String,
  * String[])</code> and <code>Node.setProperty(String, String[], int)</code>
  *
- * @sources SetPropertyStringTest.java
  */
 public class SetPropertyStringTest extends AbstractJCRTest {
 

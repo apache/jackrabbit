@@ -32,7 +32,6 @@ import java.text.ParseException;
  * value)</code> and <code>NodeType.canSetProperty(String propertyName, Value[]
  * values)</code> where property is of type Binary.
  *
- * @sources CanSetPropertyBinaryTest.java
  */
 public class CanSetPropertyBinaryTest extends AbstractJCRTest {
     /**

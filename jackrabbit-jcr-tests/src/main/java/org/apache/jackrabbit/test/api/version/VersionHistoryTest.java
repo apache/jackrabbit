@@ -52,7 +52,6 @@ import javax.jcr.version.VersionManager;
  * <code>VersionHistoryTest</code> provides test methods related to version
  * history methods and general version history issues.
  *
- * @sources VersionHistoryTest.java
  */
 public class VersionHistoryTest extends AbstractVersionTest {
 

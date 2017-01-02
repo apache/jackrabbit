@@ -25,7 +25,6 @@ import javax.jcr.RepositoryException;
  * <code>WorkspaceCopyReferenceableTest</code> contains tests for copying
  * referenceable nodes in one workspace.
  *
- * @sources WorkspaceCopyReferenceableTest.java
  */
 public class WorkspaceCopyReferenceableTest extends AbstractWorkspaceReferenceableTest {
 

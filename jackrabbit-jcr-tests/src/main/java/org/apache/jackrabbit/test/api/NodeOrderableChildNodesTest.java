@@ -42,7 +42,6 @@ import javax.jcr.Session;
  * valid node type that can be added as child node</li>
  * </ul>
  *
- * @sources NodeOrderableChildNodesTest.java
  */
 public class NodeOrderableChildNodesTest extends AbstractJCRTest {
 

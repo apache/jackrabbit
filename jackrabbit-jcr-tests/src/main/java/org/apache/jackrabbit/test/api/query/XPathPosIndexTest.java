@@ -35,7 +35,6 @@ import javax.jcr.query.QueryResult;
  * At least three nodes with the name {@link #nodeName1} under the
  * {@link #testRoot}.
  *
- * @sources XPathPosIndexTest.java
  */
 public class XPathPosIndexTest extends AbstractQueryTest {
 

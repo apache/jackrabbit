@@ -28,7 +28,6 @@ import javax.jcr.PropertyType;
  * Tests if no property in the workspace is of type
  * {@link javax.jcr.PropertyType#UNDEFINED}.
  *
- * @sources UndefinedPropertyTest.java
  */
 public class UndefinedPropertyTest extends AbstractJCRTest {
 

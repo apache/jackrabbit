@@ -30,7 +30,6 @@ import org.apache.jackrabbit.test.NotExecutableException;
  * <code>WorkspaceMoveTest</code> contains tests for copying nodes in one
  * workspace.
  *
- * @sources WorkspaceMoveTest.java
  */
 public class WorkspaceMoveTest extends AbstractWorkspaceCopyTest {
 

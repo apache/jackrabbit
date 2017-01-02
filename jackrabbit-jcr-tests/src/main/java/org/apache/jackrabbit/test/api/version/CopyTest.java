@@ -39,7 +39,6 @@ import javax.jcr.version.Version;
  *   jcr:predecessors of M are not copied from N but are initialized as usual.
  * - The jcr:copiedFrom property of HM is set to point to the base version of N.
  *
- * @sources CopyTest.java
  */
 public class CopyTest extends AbstractVersionTest {
 

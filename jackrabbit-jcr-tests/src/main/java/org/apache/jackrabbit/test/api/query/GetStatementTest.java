@@ -23,7 +23,6 @@ import javax.jcr.Session;
 /**
  * Tests the method {@link Query#getStatement()}.
  *
- * @sources GetStatementTest.java
  */
 public class GetStatementTest extends AbstractQueryTest {
 

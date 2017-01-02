@@ -36,7 +36,6 @@ import javax.jcr.PathNotFoundException;
  * node type {@link #testNodeType} must define a single value decimal property
  * with name {@link #propertyName1}.
  *
- * @sources SetValueDecimalTest.java
  */
 public class SetValueDecimalTest extends AbstractJCRTest {
 

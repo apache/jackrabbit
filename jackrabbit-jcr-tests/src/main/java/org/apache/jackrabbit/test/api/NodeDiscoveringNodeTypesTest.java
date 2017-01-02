@@ -32,7 +32,6 @@ import java.util.NoSuchElementException;
  * default workspace must at least contain one child node under {@link #testRoot}
  * otherwise a {@link NotExecutableException} is thrown.
  *
- * @sources NodeDiscoveringNodeTypesTest.java
  */
 public class NodeDiscoveringNodeTypesTest extends AbstractJCRTest {
 

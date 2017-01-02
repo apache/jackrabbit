@@ -40,7 +40,6 @@ import javax.jcr.NodeIterator;
  * <li>{@link javax.jcr.Node#restore(javax.jcr.version.Version, String, boolean)}</li>
  * </ul>
  *
- * @sources RestoreTest.java
  */
 public class RestoreTest extends AbstractVersionTest {
 

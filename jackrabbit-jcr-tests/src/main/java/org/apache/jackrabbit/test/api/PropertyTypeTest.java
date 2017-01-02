@@ -31,7 +31,6 @@ import javax.jcr.Property;
  * as no property is of type UNDEFINED. This test runs recursively through
  * the workspace starting at {@link #testRoot}.
  *
- * @sources PropertyTypeTest.java
  */
 public class PropertyTypeTest extends AbstractJCRTest {
 

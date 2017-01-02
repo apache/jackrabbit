@@ -25,7 +25,6 @@ import javax.jcr.version.Version;
  * <code>GetCreatedTest</code> provides test methods covering {@link
  * javax.jcr.version.Version#getCreated()}.
  *
- * @sources GetCreatedTest.java
  */
 public class GetCreatedTest extends AbstractVersionTest {
 

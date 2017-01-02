@@ -26,7 +26,6 @@ import javax.jcr.version.VersionManager;
  * <code>CheckinTest</code> covers tests related to {@link javax.jcr.Node#checkin()}
  * on simple versionable nodes.
  *
- * @sources SVCheckinTest.java
  */
 public class CheckinTest extends AbstractVersionTest {
 
