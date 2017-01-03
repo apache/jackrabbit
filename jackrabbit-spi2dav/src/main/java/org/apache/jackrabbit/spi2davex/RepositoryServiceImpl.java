@@ -186,7 +186,7 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
      * @param itemInfoCacheSize The size of the item info cache.
      * @param maximumHttpConnections maximumHttpConnections A int &gt;0 defining
      * the maximum number of connections per host to be configured on
-     * {@link org.apache.commons.httpclient.params.HttpConnectionManagerParams#setDefaultMaxConnectionsPerHost(int)}.
+     * {@link org.apache.http.impl.conn.PoolingHttpClientConnectionManager#setDefaultMaxPerRoute(int)}.
      * @throws RepositoryException If an exception occurs.
      */
     public RepositoryServiceImpl(String jcrServerURI, String defaultWorkspaceName,
