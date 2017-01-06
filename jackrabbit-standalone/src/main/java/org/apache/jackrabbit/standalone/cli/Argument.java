@@ -40,7 +40,7 @@ public class Argument extends Option {
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      * @return a clone
      */
     public Object clone() {

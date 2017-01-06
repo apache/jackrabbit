@@ -142,7 +142,6 @@ public class RepositoryCopier {
      * @param source source repository directory
      * @param target target repository directory
      * @throws RepositoryException if the copy operation fails
-     * @throws IOException if the target repository can not be initialized
      */
     public static void copy(RepositoryImpl source, RepositoryConfig target)
             throws RepositoryException {

@@ -122,7 +122,6 @@ public interface RemoteRepository extends Remote {
      * method.
      *
      * @return descriptor value
-     * @throws RepositoryException on repository errors
      * @throws RemoteException on RMI errors
      */
 	Value getDescriptorValue(String key) throws RemoteException;

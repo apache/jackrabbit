@@ -57,8 +57,6 @@ public class AccessControlProviderStub {
 	/**
 	 * Instantiates and returns a concrete AccessControlProvider implementation.
 	 * 
-	 * @param service
-	 *            The repository service.
 	 * @param config
 	 *            The RepositoryConfig to read configuration parameters.
 	 * @return

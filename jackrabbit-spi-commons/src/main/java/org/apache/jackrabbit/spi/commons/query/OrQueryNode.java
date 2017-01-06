@@ -52,7 +52,7 @@ public class OrQueryNode extends NAryQueryNode<QueryNode> {
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
     public boolean equals(Object obj) {
         if (obj instanceof OrQueryNode) {

@@ -30,7 +30,7 @@ import javax.jcr.query.Query;
 public class QueryBuilder implements QueryTreeBuilder {
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
     public QueryRootNode createQueryTree(String statement,
                                          NameResolver resolver,
@@ -40,7 +40,7 @@ public class QueryBuilder implements QueryTreeBuilder {
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
     public boolean canHandle(String language) {
         return Query.XPATH.equals(language);
@@ -48,14 +48,14 @@ public class QueryBuilder implements QueryTreeBuilder {
 
     /**
      * This builder supports {@link Query#XPATH}.
-     * @inheritDoc
+     * {@inheritDoc}
      */
     public String[] getSupportedLanguages() {
         return new String[]{Query.XPATH};
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
     public String toString(QueryRootNode root, NameResolver resolver)
             throws InvalidQueryException {
