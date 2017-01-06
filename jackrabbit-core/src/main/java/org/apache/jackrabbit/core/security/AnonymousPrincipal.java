@@ -56,7 +56,7 @@ public final class AnonymousPrincipal implements Principal, Serializable {
 
     //----------------------------------------------------------< Principal >---
     /**
-     * @returns Always returns "anonymous"
+     * @return Always returns "anonymous"
      * @see Principal#getName()
      */
     public String getName() {

@@ -21,7 +21,7 @@ import org.apache.jackrabbit.webdav.xml.XmlSerializable;
 
 /**
  * The <code>Property</code> class represents a Property of a WebDAV
- * resource. The {@link #hashCode()} and {@link #equals(Object)} methods are
+ * resource. The {@link Object#hashCode()} and {@link Object#equals(Object)} methods are
  * overridden in a way, such that the name and value of the property are
  * respected. This means, a property is equal to another if the names
  * and values are equal.<br>

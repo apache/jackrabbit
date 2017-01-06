@@ -40,9 +40,9 @@ import org.apache.jackrabbit.spi.SessionInfo;
  * is created at all and <code>service</code> itself is returned. There is thus virtually
  * no overhead from disabled loggers. Loggers are enabled and disabled via the
  * configuration mechanism of the logging framework which is in place.
- *
- * There are log wrappers for the following SPI entities
- * <table>
+ * <p>
+ * There are log wrappers for the following SPI entities:
+ * <table summary="Log Wrappers">
  * <tr><th>SPI entity</th><th>log wrapper</th></tr>
  * <tr><td>{@link RepositoryService}</td><td>{@link RepositoryServiceLogger}</td></tr>
  * <tr><td>{@link NameFactory}</td><td>{@link NameFactoryLogger}</td></tr>

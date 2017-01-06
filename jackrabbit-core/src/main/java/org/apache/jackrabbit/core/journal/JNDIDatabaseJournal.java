@@ -73,7 +73,7 @@ public class JNDIDatabaseJournal extends DatabaseJournal {
      *
      * @return new database connection
      * @throws SQLException if a database access error occurs
-     * @see DatabaseJournal#getConnection()
+     * @see DataSource#getConnection()
      */
     protected Connection getConnection() throws SQLException {
         try {

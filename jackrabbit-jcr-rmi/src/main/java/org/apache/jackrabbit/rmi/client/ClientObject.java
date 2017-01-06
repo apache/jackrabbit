@@ -87,7 +87,7 @@ public class ClientObject {
      * This method introspects the remote reference to determine
      * whether to instantiate a {@link Node Node},
      * a {@link javax.jcr.version.VersionHistory VersionHistory}, or a
-     *  {@link Version Version} adapter using
+     *  {@link javax.jcr.version.Version Version} adapter using
      * the local adapter factory.
      *
      * @param session current session

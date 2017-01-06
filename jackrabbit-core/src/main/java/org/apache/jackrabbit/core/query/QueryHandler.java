@@ -51,7 +51,7 @@ public interface QueryHandler {
 
     /**
      * Returns the query handler context that passed in {@link
-     * #init(QueryHandlerContext)}.
+     * #init(FileSystem, QueryHandlerContext)}.
      *
      * @return the query handler context.
      */
