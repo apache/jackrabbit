@@ -30,7 +30,7 @@ import org.apache.jackrabbit.core.util.db.OracleConnectionHelper;
  * <p>
  * Configuration:<br>
  * <ul>
- * <li>&lt;param name="{@link #setExternalBLOBs(String)} externalBLOBs}" value="false"/&gt;
+ * <li>&lt;param name="{@link #setExternalBLOBs(boolean)} externalBLOBs}" value="false"/&gt;
  * <li>&lt;param name="{@link #setBundleCacheSize(String) bundleCacheSize}" value="8"/&gt;
  * <li>&lt;param name="{@link #setConsistencyCheck(String) consistencyCheck}" value="false"/&gt;
  * <li>&lt;param name="{@link #setMinBlobSize(String) minBlobSize}" value="16384"/&gt;

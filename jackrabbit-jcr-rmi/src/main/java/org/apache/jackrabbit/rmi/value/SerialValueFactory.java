@@ -41,7 +41,7 @@ import javax.jcr.ValueFormatException;
  * <p>
  * This class may be extended to overwrite any of the
  * <code>createXXXValue</code> methods to create instances of the respective
- * type of {@link org.apache.jackrabbit.rmi.value.StatefullValue}implementation. The
+ * type of {@link Value} implementation. The
  * methods of the <code>ValueFactory</code> interface are declared final to
  * guard against breaking the rules.
  */

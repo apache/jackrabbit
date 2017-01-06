@@ -146,7 +146,7 @@ public class BeanConfig {
 
     /**
      * @param connectionFactory the {@link ConnectionFactory} to inject (if possible) in the
-     *            {@link #newInstance()} method
+     *            {@link #newInstance(Class)} method
      */
     public void setConnectionFactory(ConnectionFactory connectionFactory) {
         this.connectionFactory = connectionFactory;
@@ -286,9 +286,8 @@ public class BeanConfig {
 
     /**
      * Returns the current <code>ClassLoader</code> used to instantiate objects
-     * in the {@link #newInstance()} method.
+     * in the {@link #newInstance(Class)} method.
      *
-     * @see #newInstance()
      * @see #setClassLoader(ClassLoader)
      * @see #getDefaultClassLoader()
      * @see #setDefaultClassLoader(ClassLoader)
@@ -299,13 +298,12 @@ public class BeanConfig {
 
     /**
      * Sets the <code>ClassLoader</code> used to instantiate objects in the
-     * {@link #newInstance()} method.
+     * {@link #newInstance(Class)} method.
      *
      * @param classLoader The class loader to set on this instance. If this is
      *      <code>null</code> the system class loader will be used, which may
      *      lead to unexpected class loading failures.
      *
-     * @see #newInstance()
      * @see #getClassLoader()
      * @see #getDefaultClassLoader()
      * @see #setDefaultClassLoader(ClassLoader)
@@ -317,9 +315,8 @@ public class BeanConfig {
     /**
      * Returns the current <code>ClassLoader</code> used for new instances of
      * this class as the loader used to instantiate objects in the
-     * {@link #newInstance()} method.
+     * {@link #newInstance(Class)} method.
      *
-     * @see #newInstance()
      * @see #getClassLoader()
      * @see #setClassLoader(ClassLoader)
      * @see #setDefaultClassLoader(ClassLoader)
@@ -330,13 +327,12 @@ public class BeanConfig {
 
     /**
      * Sets the <code>ClassLoader</code> used for new instances of this class as
-     * the loader to instantiate objects in the {@link #newInstance()} method.
+     * the loader to instantiate objects in the {@link #newInstance(Class)} method.
      *
      * @param classLoader The class loader to set as the default class loader.
      *      If this is <code>null</code> the system class loader will be used,
      *      which may lead to unexpected class loading failures.
      *
-     * @see #newInstance()
      * @see #getClassLoader()
      * @see #setClassLoader(ClassLoader)
      * @see #getDefaultClassLoader()

@@ -528,7 +528,7 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
      * <code>PersistenceManager</code>, and <code>SearchIndex</code>) are
      * {@link #parseBeanConfig(Element,String) bean configuration} elements.
      * In addition to bean configuration, the
-     * {@link #parseSearchConfig(Element) search element} also contains
+     * search element also contains
      * configuration for the search file system.
      * <p>
      * In addition to the configured information, the returned workspace

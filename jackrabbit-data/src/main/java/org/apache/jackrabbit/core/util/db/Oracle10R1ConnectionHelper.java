@@ -60,9 +60,6 @@ public final class Oracle10R1ConnectionHelper extends OracleConnectionHelper {
     /**
      * Retrieve the <code>oracle.sql.BLOB</code> class via reflection, and initialize the values for the
      * <code>DURATION_SESSION</code> and <code>MODE_READWRITE</code> constants defined there.
-     * 
-     * @see oracle.sql.BLOB#DURATION_SESSION
-     * @see oracle.sql.BLOB#MODE_READWRITE
      */
     @Override
     public void init() throws Exception {

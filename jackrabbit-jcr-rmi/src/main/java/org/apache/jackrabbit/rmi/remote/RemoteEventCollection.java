@@ -56,7 +56,7 @@ public interface RemoteEventCollection extends Remote {
     public static interface RemoteEvent extends Remote {
         /**
          * Remote version of the
-         * {@link javax.jcr.Event#getType() Event.getType()} method.
+         * {@link javax.jcr.observation.Event#getType() Event.getType()} method.
          *
          * @return the type of this event.
          * @throws RemoteException on RMI errors
@@ -65,7 +65,7 @@ public interface RemoteEventCollection extends Remote {
 
         /**
          * Remote version of the
-         * {@link javax.jcr.Event#getPath() Event.getPath()} method.
+         * {@link javax.jcr.observation.Event#getPath() Event.getPath()} method.
          *
          * @return the absolute path associated with this event or
          *         <code>null</code>.
@@ -76,54 +76,52 @@ public interface RemoteEventCollection extends Remote {
 
         /**
          * Remote version of the
-         * {@link javax.jcr.Event#getUserID() Event.getUserID()} method.
+         * {@link javax.jcr.observation.Event#getUserID() Event.getUserID()} method.
          *
          * @return the user ID.
          * @throws RemoteException on RMI errors
          */
         String getUserID() throws RemoteException;
-        
+
         /**
          * Remote version of the
-         * {@link javax.jcr.Event#getIdentifier() Event.getIdentifier()} method.
+         * {@link javax.jcr.observation.Event#getIdentifier() Event.getIdentifier()} method.
          *
          * @return the identifier associated with this event or <code>null</code>.
          * @throws RepositoryException on repository errors
          * @throws RemoteException on RMI errors
          */
         String getIdentifier() throws RepositoryException, RemoteException;
-        
+
         /**
          * Remote version of the
-         * {@link javax.jcr.Event#getInfo() Event.getInfo()} method.
+         * {@link javax.jcr.observation.Event#getInfo() Event.getInfo()} method.
          *
          * @return A <code>Map</code> containing parameter information for instances
-     *         of a <code>NODE_MOVED</code> event.
+         *         of a <code>NODE_MOVED</code> event.
          * @throws RepositoryException on repository errors
          * @throws RemoteException on RMI errors
          */
         Map getInfo() throws RepositoryException, RemoteException;
-        
+
         /**
          * Remote version of the
-         * {@link javax.jcr.Event#getUserData() Event.getUserData()} method.
+         * {@link javax.jcr.observation.Event#getUserData() Event.getUserData()} method.
          *
          * @return The user data string.
          * @throws RepositoryException on repository errors
          * @throws RemoteException on RMI errors
          */
         String getUserData() throws RepositoryException, RemoteException;
-        
+
         /**
          * Remote version of the
-         * {@link javax.jcr.Event#getDate() Event.getDate()} method.
+         * {@link javax.jcr.observation.Event#getDate() Event.getDate()} method.
          *
          * @return the date when the change was persisted that caused this event.
          * @throws RepositoryException on repository errors
          * @throws RemoteException on RMI errors
          */
         long getDate() throws RepositoryException, RemoteException;
-        
     }
-
 }

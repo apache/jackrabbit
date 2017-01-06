@@ -166,7 +166,6 @@ public abstract class ClientIterator extends ClientObject
      * @return <code>true</code> if there are more elements,
      *         <code>false</code> otherwise
      * @throws RemoteRuntimeException on RMI errors
-     * @see Iterator#hasNext()
      */
     public boolean hasNext() throws RemoteRuntimeException {
         try {
@@ -196,7 +195,6 @@ public abstract class ClientIterator extends ClientObject
      * @return next element
      * @throws NoSuchElementException if there are no more elements
      * @throws RemoteRuntimeException on RMI errors
-     * @see Iterator#next()
      */
     public Object next() throws NoSuchElementException, RemoteRuntimeException {
         try {
@@ -215,10 +213,8 @@ public abstract class ClientIterator extends ClientObject
      * Not supported.
      *
      * @throws UnsupportedOperationException always thrown
-     * @see Iterator#remove()
      */
     public void remove() throws UnsupportedOperationException {
         throw new UnsupportedOperationException();
     }
-
 }

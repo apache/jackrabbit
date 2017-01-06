@@ -23,8 +23,6 @@ import org.apache.jackrabbit.spi.Path;
 
 /**
  * A relative path whose last element is the current path element, i.e. ".".
- *
- * @see CurrentElement
  */
 final class CurrentPath extends RelativePath {
 

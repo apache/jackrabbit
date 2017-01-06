@@ -17,10 +17,10 @@
 package org.apache.jackrabbit.core.persistence.pool;
 
 import org.apache.jackrabbit.core.persistence.PMContext;
+import org.apache.jackrabbit.core.persistence.db.DatabasePersistenceManager;
 import org.apache.jackrabbit.core.util.db.ConnectionHelper;
 import org.apache.jackrabbit.core.util.db.DerbyConnectionHelper;
 
-import java.sql.Connection;
 import java.sql.SQLException;
 
 import javax.sql.DataSource;
@@ -286,7 +286,6 @@ public class DerbyPersistenceManager extends BundleDbPersistenceManager {
      * database.
      *
      * @throws SQLException if an error occurs
-     * @see DatabasePersistenceManager#closeConnection(Connection)
      */
     public void close() throws Exception {
         super.close();

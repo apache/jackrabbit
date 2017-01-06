@@ -49,7 +49,7 @@ public class AsyncUploadCacheResult {
     }
 
     /**
-     * Flag to indicate that record to be deleted from {@link Datastore}.
+     * Flag to indicate that record to be deleted from {@link DataStore}.
      */
     public boolean doRequiresDelete() {
         return requiresDelete;
