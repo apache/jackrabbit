@@ -212,7 +212,7 @@ public class NodeTypeRegistry implements NodeTypeEventListener {
      * This method can be used to register a set of node types that have
      * dependencies on each other.
      *
-     * @param ntDefs a collection of <code>QNodeTypeDefinition<code> objects
+     * @param ntDefs a collection of <code>QNodeTypeDefinition</code> objects
      * @throws InvalidNodeTypeDefException if the given node type definition is invalid.
      * @throws RepositoryException if a repository error occurs.
      */
@@ -915,7 +915,7 @@ public class NodeTypeRegistry implements NodeTypeEventListener {
      * violate existing node type constraints
      * <li>apply and persist changes to affected nodes (e.g. update
      * definition id's, etc.)
-     * </ul>
+     * </ol>
      * <p>
      * the above checks/actions are absolutely necessary in order to
      * guarantee integrity of repository content.
@@ -968,7 +968,7 @@ public class NodeTypeRegistry implements NodeTypeEventListener {
      * in the repository.
      * <li>remove the node type if it is not currently referenced, otherwise
      * throw exception
-     * </ul>
+     * </ol>
      * <p>
      * the above checks are absolutely necessary in order to guarantee
      * integrity of repository content.

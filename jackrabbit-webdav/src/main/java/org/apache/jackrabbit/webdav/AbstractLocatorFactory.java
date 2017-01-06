@@ -50,29 +50,30 @@ public abstract class AbstractLocatorFactory implements DavLocatorFactory {
      * given request handle. The same applies for trailing '/'. The remaining
      * String is called the 'resource handle' and it's first segment is treated
      * as workspace name. If resource handle (and therefore workspace name
-     * are missing, both values are set to <code>null</code>.<p/>
+     * are missing, both values are set to <code>null</code>.
+     * <p>
      * Examples:
      *
      * <pre>
      * http://www.foo.bar/ (path prefix missing)
-     * -> workspace path = null
-     * -> resource path  = null
-     * -> href           = http://www.foo.bar/pathPrefix/
+     * -&gt; workspace path = null
+     * -&gt; resource path  = null
+     * -&gt; href           = http://www.foo.bar/pathPrefix/
      *
      * http://www.foo.bar/pathPrefix/
-     * -> workspace path = null
-     * -> resource path  = null
-     * -> href           = http://www.foo.bar/pathPrefix/
+     * -&gt; workspace path = null
+     * -&gt; resource path  = null
+     * -&gt; href           = http://www.foo.bar/pathPrefix/
      *
      * http://www.foo.bar/pathPrefix/wspName
-     * -> workspace path = /wspName
-     * -> resource path  = /wspName
-     * -> href           = http://www.foo.bar/pathPrefix/wspName
+     * -&gt; workspace path = /wspName
+     * -&gt; resource path  = /wspName
+     * -&gt; href           = http://www.foo.bar/pathPrefix/wspName
      *
      * http://www.foo.bar/pathPrefix/wspName/anypath
-     * -> workspace path = /wspName
-     * -> resource path  = /wspName/anypath
-     * -> href           = http://www.foo.bar/pathPrefix/wspName/anypath
+     * -&gt; workspace path = /wspName
+     * -&gt; resource path  = /wspName/anypath
+     * -&gt; href           = http://www.foo.bar/pathPrefix/wspName/anypath
      * </pre>
      *
      * NOTE: If the given href is an absolute uri it must start with the

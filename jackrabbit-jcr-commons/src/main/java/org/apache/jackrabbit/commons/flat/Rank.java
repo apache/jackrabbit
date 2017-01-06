@@ -115,7 +115,7 @@ public class Rank<T> {
      * the values (i.e. through {@link Comparable}). The <code>values</code> are
      * manipulated in place, no copying is performed.
      *
-     * @param <S> extends Comparable&lt;S>
+     * @param <S> extends Comparable&lt;S&gt;
      * @param values values for ranking. Duplicates are <em>not allowed</em>.
      * @return A new instance of <code>Rank</code>.
      */
@@ -129,7 +129,7 @@ public class Rank<T> {
      * the values (i.e. through {@link Comparable}). The <code>values</code> are
      * copied into an internal array before they are manipulated.
      *
-     * @param <S> extends Comparable&lt;S>
+     * @param <S> extends Comparable&lt;S&gt;
      * @param values values for ranking. Duplicates are <em>not allowed</em>.
      * @param componentType type evidence for the values
      * @return A new instance of <code>Rank</code>.
@@ -145,7 +145,7 @@ public class Rank<T> {
      * through {@link Comparable}). The <code>values</code> are copied into an
      * internal array before they are manipulated.
      *
-     * @param <S> extends Comparable&lt;S>
+     * @param <S> extends Comparable&lt;S&gt;
      * @param values values for ranking. Duplicates are <em>not allowed</em>.
      * @param componentType type evidence for the values
      * @param count Number of items to include. -1 for all.
@@ -159,7 +159,7 @@ public class Rank<T> {
      * Utility method for creating a {@link Comparator} of <code>T</code> from a
      * {@link Comparable} of type <code>T</code>.
      *
-     * @param <T> extends Comparable&lt;T>
+     * @param <T> extends Comparable&lt;T&gt;
      * @return Comparator whose order is defined by <code>T</code>.
      */
     public static <T extends Comparable<T>> Comparator<T> comparableComparator() {

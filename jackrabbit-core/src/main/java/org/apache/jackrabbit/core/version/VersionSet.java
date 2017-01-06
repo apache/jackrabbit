@@ -49,7 +49,7 @@ public class VersionSet implements VersionSelector {
 
     /**
      * Creates a <code>ChangeSetVersionSelector</code> that will try to select a
-     * version in the given set. If the version is missing but <code>dateFall 
+     * version in the given set. 
      *
      * @param versions the set of versions
      * @param dateFallback if <code>true</code> date fallback is enabled.

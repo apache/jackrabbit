@@ -284,8 +284,8 @@ public final class DavMethods {
     public static final String METHOD_BIND = "BIND";
 
     /**
-     * Returns webdav method type code, error result <= 0
-     * Valid type codes > 0
+     * Returns webdav method type code, error result &lt;= 0
+     * Valid type codes &gt; 0
      */
     public static int getMethodCode(String method) {
         Integer code = methodMap.get(method.toUpperCase());

@@ -414,7 +414,7 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
      * <p>
      * The login module is an optional feature of repository configuration.
      *
-     * @param security the &lt;security> element.
+     * @param security the &lt;security&gt; element.
      * @return the security configuration.
      * @throws ConfigurationException if the configuration is broken
      */
@@ -432,7 +432,7 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
     /**
      * Parses the security manager configuration.
      *
-     * @param security the &lt;security> element.
+     * @param security the &lt;security&gt; element.
      * @return the security manager configuration or <code>null</code>.
      * @throws ConfigurationException if the configuration is broken
      */
@@ -476,7 +476,7 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
     /**
      * Parses the access manager configuration.
      *
-     * @param security the &lt;security> element.
+     * @param security the &lt;security&gt; element.
      * @return the access manager configuration or <code>null</code>.
      * @throws ConfigurationException if the configuration is broken
      */
@@ -494,7 +494,7 @@ public class RepositoryConfigurationParser extends ConfigurationParser {
     /**
      * Parses the login module configuration.
      *
-     * @param security the &lt;security> element.
+     * @param security the &lt;security&gt; element.
      * @return the login module configuration or <code>null</code>.
      * @throws ConfigurationException if the configuration is broken
      */

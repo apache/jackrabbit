@@ -68,19 +68,19 @@ import org.slf4j.LoggerFactory;
  * <p>
  * Configuration:<br>
  * <ul>
- * <li>&lt;param name="{@link #setBundleCacheSize(String) bundleCacheSize}" value="8"/>
- * <li>&lt;param name="{@link #setConsistencyCheck(String) consistencyCheck}" value="false"/>
- * <li>&lt;param name="{@link #setConsistencyFix(String) consistencyFix}" value="false"/>
- * <li>&lt;param name="{@link #setMinBlobSize(String) minBlobSize}" value="4096"/>
- * <li>&lt;param name="{@link #setDriver(String) driver}" value=""/>
- * <li>&lt;param name="{@link #setUrl(String) url}" value=""/>
- * <li>&lt;param name="{@link #setUser(String) user}" value=""/>
- * <li>&lt;param name="{@link #setPassword(String) password}" value=""/>
- * <li>&lt;param name="{@link #setDatabaseType(String) databaseType}" value=""/>
- * <li>&lt;param name="{@link #setSchemaObjectPrefix(String) schemaObjectPrefix}" value=""/>
- * <li>&lt;param name="{@link #setErrorHandling(String) errorHandling}" value=""/>
- * <li>&lt;param name="{@link #setBlockOnConnectionLoss(String) blockOnConnectionLoss}" value="false"/>
- * <li>&lt;param name="{@link #setSchemaCheckEnabled(String) schemaCheckEnabled}" value="true"/>
+ * <li>&lt;param name="{@link #setBundleCacheSize(String) bundleCacheSize}" value="8"/&gt;
+ * <li>&lt;param name="{@link #setConsistencyCheck(String) consistencyCheck}" value="false"/&gt;
+ * <li>&lt;param name="{@link #setConsistencyFix(String) consistencyFix}" value="false"/&gt;
+ * <li>&lt;param name="{@link #setMinBlobSize(String) minBlobSize}" value="4096"/&gt;
+ * <li>&lt;param name="{@link #setDriver(String) driver}" value=""/&gt;
+ * <li>&lt;param name="{@link #setUrl(String) url}" value=""/&gt;
+ * <li>&lt;param name="{@link #setUser(String) user}" value=""/&gt;
+ * <li>&lt;param name="{@link #setPassword(String) password}" value=""/&gt;
+ * <li>&lt;param name="{@link #setDatabaseType(String) databaseType}" value=""/&gt;
+ * <li>&lt;param name="{@link #setSchemaObjectPrefix(String) schemaObjectPrefix}" value=""/&gt;
+ * <li>&lt;param name="{@link #setErrorHandling(String) errorHandling}" value=""/&gt;
+ * <li>&lt;param name="{@link #setBlockOnConnectionLoss(String) blockOnConnectionLoss}" value="false"/&gt;
+ * <li>&lt;param name="{@link #setSchemaCheckEnabled(String) schemaCheckEnabled}" value="true"/&gt;
  * </ul>
  */
 public class BundleDbPersistenceManager

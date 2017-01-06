@@ -22,14 +22,14 @@ import java.io.IOException;
 
 /**
  * <code>DefaultXMLExcerpt</code> creates an XML excerpt of a matching node.
- * <br/>
+ * <br>
  * E.g. if you search for 'jackrabbit' and 'query' you may get the following
  * result for a node:
  * <pre>
- * &lt;excerpt>
- *     &lt;fragment>&lt;highlight>Jackrabbit&lt;/highlight> implements both the mandatory XPath and optional SQL &lt;highlight>query&lt;/highlight> syntax.&lt;/fragment>
- *     &lt;fragment>Before parsing the XPath &lt;highlight>query&lt;/highlight> in &lt;highlight>Jackrabbit&lt;/highlight>, the statement is surrounded&lt;/fragment>
- * &lt;/excerpt>
+ * &lt;excerpt&gt;
+ *     &lt;fragment&gt;&lt;highlight&gt;Jackrabbit&lt;/highlight&gt; implements both the mandatory XPath and optional SQL &lt;highlight&gt;query&lt;/highlight&gt; syntax.&lt;/fragment&gt;
+ *     &lt;fragment&gt;Before parsing the XPath &lt;highlight&gt;query&lt;/highlight&gt; in &lt;highlight&gt;Jackrabbit&lt;/highlight&gt;, the statement is surrounded&lt;/fragment&gt;
+ * &lt;/excerpt&gt;
  * </pre>
  */
 public class DefaultXMLExcerpt extends AbstractExcerpt {

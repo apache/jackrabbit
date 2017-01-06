@@ -28,7 +28,7 @@ import java.util.Iterator;
  * Interface for accessing JCR {@link Item}s sequentially through an
  * {@link Iterator} or looking them up through a <code>key</code>.
  *
- * @param <T> extends &lt;Item>
+ * @param <T> extends &lt;Item&gt;
  */
 public interface Sequence<T extends Item> extends Iterable<T> {
 

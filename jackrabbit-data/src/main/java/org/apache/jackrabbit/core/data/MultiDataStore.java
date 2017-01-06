@@ -56,20 +56,20 @@ import org.slf4j.LoggerFactory;
  * The Configuration:
  * 
  * <pre>
- * &lt;DataStore class="org.apache.jackrabbit.core.data.MultiDataStore">
- *     &lt;param name="{@link #setMaxAge(int) maxAge}" value="60"/>
- *     &lt;param name="{@link #setMoveDataTaskSleep(int) moveDataTaskSleep}" value="604800"/>
- *     &lt;param name="{@link #setMoveDataTaskFirstRunHourOfDay(int) moveDataTaskFirstRunHourOfDay}" value="1"/>
- *     &lt;param name="{@link #setSleepBetweenRecords(long) sleepBetweenRecords}" value="100"/>
- *     &lt;param name="{@link #setDelayedDelete(boolean) delayedDelete}" value="false"/>
- *     &lt;param name="{@link #setDelayedDeleteSleep(long) delayedDeleteSleep}" value="86400"/>
- *     &lt;param name="primary" value="org.apache.jackrabbit.core.data.db.DbDataStore">
- *        &lt;param .../>
- *     &lt;/param>
- *     &lt;param name="archive" value="org.apache.jackrabbit.core.data.FileDataStore">
- *        &lt;param .../>
- *     &lt;/param>
- * &lt/DataStore>
+ * &lt;DataStore class="org.apache.jackrabbit.core.data.MultiDataStore"&gt;
+ *     &lt;param name="{@link #setMaxAge(int) maxAge}" value="60"/&gt;
+ *     &lt;param name="{@link #setMoveDataTaskSleep(int) moveDataTaskSleep}" value="604800"/&gt;
+ *     &lt;param name="{@link #setMoveDataTaskFirstRunHourOfDay(int) moveDataTaskFirstRunHourOfDay}" value="1"/&gt;
+ *     &lt;param name="{@link #setSleepBetweenRecords(long) sleepBetweenRecords}" value="100"/&gt;
+ *     &lt;param name="{@link #setDelayedDelete(boolean) delayedDelete}" value="false"/&gt;
+ *     &lt;param name="{@link #setDelayedDeleteSleep(long) delayedDeleteSleep}" value="86400"/&gt;
+ *     &lt;param name="primary" value="org.apache.jackrabbit.core.data.db.DbDataStore"&gt;
+ *        &lt;param .../&gt;
+ *     &lt;/param&gt;
+ *     &lt;param name="archive" value="org.apache.jackrabbit.core.data.FileDataStore"&gt;
+ *        &lt;param .../&gt;
+ *     &lt;/param&gt;
+ * &lt/DataStore&gt;
  * </pre>
  * 
  * <ul>

@@ -43,14 +43,14 @@ import java.util.List;
  * The EBNF grammar of the compact node type definition:<br>
  * <pre>
  * Cnd ::= {NamespaceMapping | NodeTypeDef}
- * NamespaceMapping ::= '<' Prefix '=' Uri '>'
+ * NamespaceMapping ::= '&lt;' Prefix '=' Uri '&gt;'
  * Prefix ::= String
  * Uri ::= String
  * NodeTypeDef ::= NodeTypeName [Supertypes]
  *                 [NodeTypeAttribute {NodeTypeAttribute}]
  *                 {PropertyDef | ChildNodeDef}
  * NodeTypeName ::= '[' String ']'
- * Supertypes ::= '>' (StringList | '?')
+ * Supertypes ::= '&gt;' (StringList | '?')
  * NodeTypeAttribute ::= Orderable | Mixin | Abstract | Query |
  *                       PrimaryItem
  * Orderable ::= ('orderable' | 'ord' | 'o') ['?']
@@ -68,7 +68,7 @@ import java.util.List;
  *                       'DECIMAL' | 'URI' | 'UNDEFINED' | '*' |
  *                       '?') ')'
  * DefaultValues ::= '=' (StringList | '?')
- * ValueConstraints ::= '<' (StringList | '?')
+ * ValueConstraints ::= '&lt;' (StringList | '?')
  * ChildNodeDef ::= NodeName [RequiredTypes] [DefaultType]
  *                  [NodeAttribute {NodeAttribute}]
  * NodeName ::= '+' String
@@ -87,7 +87,7 @@ import java.util.List;
  * Multiple ::= ('multiple' | 'mul' | '*') ['?']
  * QueryOps ::= ('queryops' | 'qop')
  *              (('''Operator {','Operator}''') | '?')
- * Operator ::= '=' | '<>' | '<' | '<=' | '>' | '>=' | 'LIKE'
+ * Operator ::= '=' | '&lt;&gt;' | '&lt;' | '&lt;=' | '&gt;' | '&gt;=' | 'LIKE'
  * NoFullText ::= ('nofulltext' | 'nof') ['?']
  * NoQueryOrder ::= ('noqueryorder' | 'nqord') ['?']
  * Sns ::= ('sns' | '*') ['?']

@@ -482,16 +482,16 @@ public abstract class AbstractJCRTest extends JUnitTest {
      * Returns the value of the configuration property with <code>propName</code>.
      * The sequence how configuration properties are read is the follwoing:
      * <ol>
-     * <li><code>javax.jcr.tck.&lt;testClassName>.&lt;testCaseName>.&lt;propName></code></li>
-     * <li><code>javax.jcr.tck.&lt;testClassName>.&lt;propName></code></li>
-     * <li><code>javax.jcr.tck.&lt;packageName>.&lt;propName></code></li>
-     * <li><code>javax.jcr.tck.&lt;propName></code></li>
+     * <li><code>javax.jcr.tck.&lt;testClassName&gt;.&lt;testCaseName&gt;.&lt;propName&gt;</code></li>
+     * <li><code>javax.jcr.tck.&lt;testClassName&gt;.&lt;propName&gt;</code></li>
+     * <li><code>javax.jcr.tck.&lt;packageName&gt;.&lt;propName&gt;</code></li>
+     * <li><code>javax.jcr.tck.&lt;propName&gt;</code></li>
      * </ol>
      * Where:
      * <ul>
-     * <li><code>&lt;testClassName></code> is the name of the test class without package prefix.</li>
-     * <li><code>&lt;testMethodName></code> is the name of the test method</li>
-     * <li><code>&lt;packageName></code> is the name of the package of the test class.
+     * <li><code>&lt;testClassName&gt;</code> is the name of the test class without package prefix.</li>
+     * <li><code>&lt;testMethodName&gt;</code> is the name of the test method</li>
+     * <li><code>&lt;packageName&gt;</code> is the name of the package of the test class.
      * Example: packageName for <code>org.apache.jackrabbit.test.api.BooleanPropertyTest</code>: <code>api</code></li>
      * </ul>
      * @param propName the propName of the configration property.

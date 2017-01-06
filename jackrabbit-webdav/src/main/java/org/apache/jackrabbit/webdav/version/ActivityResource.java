@@ -53,8 +53,8 @@ public interface ActivityResource extends DeltaVResource {
      * versions of a single version history can be selected by an activity's
      * DAV:activity-version-set property, but all DAV:activity-version-set
      * versions from a given version history must be on a single line of descent
-     * from the root version of that version history.<p/>
-     *
+     * from the root version of that version history.
+     * <p>
      * Note that the DAV:activity-version-set represents a
      * {@link org.apache.jackrabbit.webdav.property.HrefProperty HrefProperty}
      */
@@ -62,8 +62,8 @@ public interface ActivityResource extends DeltaVResource {
 
     /**
      * The computed DAV:activity-checkout-set property identifies each
-     * checked-out resource whose DAV:activity-set identifies this activity.<p/>
-     *
+     * checked-out resource whose DAV:activity-set identifies this activity.
+     * <p>
      * Note that the DAV:activity-checkout-set represents a
      * {@link org.apache.jackrabbit.webdav.property.HrefProperty HrefProperty}
      */
@@ -77,8 +77,9 @@ public interface ActivityResource extends DeltaVResource {
      * DAV:subactivity-set. In particular, the versions in this extended set
      * MUST be on a single line of descent, and when an activity selects a version
      * for merging, the latest version in this extended set is the one that will
-     * be merged.<p/>
-     * A server MAY reject attempts to modify the DAV:subactivity-set of an activity.<p/>
+     * be merged.
+     * <p>
+     * A server MAY reject attempts to modify the DAV:subactivity-set of an activity.
      *
      * Note that the DAV:subactivity-set represents a
      * {@link org.apache.jackrabbit.webdav.property.HrefProperty HrefProperty}
@@ -87,8 +88,8 @@ public interface ActivityResource extends DeltaVResource {
 
     /**
      * The computed DAV:current-workspace-set property identifies identifies
-     * each workspace whose DAV:current-activity-set identifies this activity.<p/>
-     *
+     * each workspace whose DAV:current-activity-set identifies this activity.
+     * <p>
      * Note that the DAV:current-workspace-set represents a
      * {@link org.apache.jackrabbit.webdav.property.HrefProperty HrefProperty}
      */

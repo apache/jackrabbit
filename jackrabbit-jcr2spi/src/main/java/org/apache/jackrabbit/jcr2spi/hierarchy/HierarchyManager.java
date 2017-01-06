@@ -45,7 +45,8 @@ public interface HierarchyManager {
     /**
      * Lookup of <code>HierarchyEntry</code> by its workspace Id that may be different
      * if a entry (or any of its ancestors) has been transiently moved or
-     * reordered.<p/>
+     * reordered.
+     * <p>
      * If the Hierarchy already lists the entry with the given workspaceItemId it is
      * returned otherwise <code>null</code>. See {@link #getNodeEntry(NodeId)}
      * or {@link #getPropertyEntry(PropertyId)} for methods that resolves the
@@ -60,7 +61,8 @@ public interface HierarchyManager {
     /**
      * Lookup of <code>HierarchyEntry</code> by its workspace path that may be different
      * if a entry (or any of its ancestors) has been transiently moved or
-     * reordered.<p/>
+     * reordered.
+     * <p>
      * If the Hierarchy already lists the entry with the given path it is
      * returned otherwise <code>null</code>. See {@link #getNodeEntry(Path)}
      * or {@link #getPropertyEntry(Path)} for methods that resolves the path

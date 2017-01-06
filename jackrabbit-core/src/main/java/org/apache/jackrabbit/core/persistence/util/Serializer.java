@@ -42,7 +42,7 @@ import java.util.Set;
 
 /**
  * <code>Serializer</code> is a utility class that provides static methods
- * for serializing & deserializing <code>ItemState</code> and
+ * for serializing &amp; deserializing <code>ItemState</code> and
  * <code>NodeReferences</code> objects using a simple binary serialization
  * format.
  */

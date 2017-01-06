@@ -204,7 +204,7 @@ public abstract class ItemSequence {
 
     /**
      * Returns the predecessor node for the given
-     * <code>key</key>. That is the node
+     * <code>key</code>. That is the node
      * whose key directly precedes the passed <code>key</code> in the order
      * determined by {@link TreeManager#getOrder()}. There are two cases:
      * <ul>
@@ -260,7 +260,7 @@ public abstract class ItemSequence {
 
     /**
      * Returns the successor node for the given
-     * <code>key</key>. That is the node
+     * <code>key</code>. That is the node
      * whose key directly succeeds the passed <code>key</code> in the order
      * determined by {@link TreeManager#getOrder()}. There are two cases:
      * <ul>

@@ -30,7 +30,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.jackrabbit.standalone.cli.CommandHelper;
 
 /**
- * Login to the current working <code>Repository<code>
+ * Login to the current working <code>Repository</code>
  */
 public class Login implements Command {
     /** logger */
@@ -124,7 +124,7 @@ public class Login implements Command {
 
     /**
      * @param workspaceKey
-     *        the <code>Workspace<code> key to set
+     *        the <code>Workspace</code> key to set
      */
     public void setWorkspaceKey(String workspaceKey) {
         this.workspaceKey = workspaceKey;

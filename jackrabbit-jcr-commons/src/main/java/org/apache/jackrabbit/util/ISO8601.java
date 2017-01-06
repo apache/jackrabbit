@@ -33,8 +33,8 @@ import java.util.TimeZone;
  * </pre>
  * where:
  * <pre>
- *   &plusmn;YYYY = four-digit year with optional sign where values <= 0 are
- *           denoting years BCE and values > 0 are denoting years CE,
+ *   &plusmn;YYYY = four-digit year with optional sign where values &lt;= 0 are
+ *           denoting years BCE and values &gt; 0 are denoting years CE,
  *           e.g. -0001 denotes the year 2 BCE, 0000 denotes the year 1 BCE,
  *           0001 denotes the year 1 CE, and so on...
  *   MM    = two-digit month (01=January, etc.)

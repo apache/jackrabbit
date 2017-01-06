@@ -151,7 +151,7 @@ public interface HierarchyManager {
      * @param itemId item id
      * @return <code>true</code> if the node with the specified
      *         <code>nodeId</code> is an ancestor of the item denoted by the
-     *         given <code>itemId</code; <code>false</code> otherwise
+     *         given <code>itemId</code>; <code>false</code> otherwise
      * @throws ItemNotFoundException if any of the specified id's does not
      *                               denote an existing item.
      * @throws RepositoryException   if another error occurs

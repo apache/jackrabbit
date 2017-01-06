@@ -28,7 +28,7 @@ import java.security.acl.Group;
  * A <strong>{@link Principal}</strong> is an object used to connect
  * to any kind of security mechanism. Example for this are the
  * {@link javax.security.auth.spi.LoginModule login modules} that use principals
- * to process the login procedure. <br/>
+ * to process the login procedure. <br>
  * A principal can be a member of a <strong>{@link Group}</strong>. A
  * group is a principal itself and can therefore be a member of a group again.
  * <p>

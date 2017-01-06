@@ -63,23 +63,24 @@ import org.slf4j.LoggerFactory;
  * Configuration:
  * 
  * <pre>
- * &lt;DataStore class="org.apache.jackrabbit.aws.ext.ds.CachingDataStore">
+ * &lt;DataStore class="org.apache.jackrabbit.aws.ext.ds.CachingDataStore"&gt;
  * 
- *     &lt;param name="{@link #setPath(String) path}" value="/data/datastore"/>
- *     &lt;param name="{@link #setConfig(String) config}" value="${rep.home}/backend.properties"/>
- *     &lt;param name="{@link #setCacheSize(long) cacheSize}" value="68719476736"/>
- *     &lt;param name="{@link #setSecret(String) secret}" value="123456"/>
- *     &lt;param name="{@link #setCachePurgeTrigFactor(double)}" value="0.95d"/>
- *     &lt;param name="{@link #setCachePurgeResizeFactor(double) cacheSize}" value="0.85d"/>
- *     &lt;param name="{@link #setMinRecordLength(int) minRecordLength}" value="1024"/>
- *     &lt;param name="{@link #setContinueOnAsyncUploadFailure(boolean) continueOnAsyncUploadFailure}" value="false"/>
- *     &lt;param name="{@link #setConcurrentUploadsThreads(int) concurrentUploadsThreads}" value="10"/>
- *     &lt;param name="{@link #setAsyncUploadLimit(int) asyncUploadLimit}" value="100"/>
- *     &lt;param name="{@link #setUploadRetries(int) uploadRetries}" value="3"/>
- *     &lt;param name="{@link #setTouchAsync(boolean) touchAsync}" value="false"/>
- *     &lt;param name="{@link #setProactiveCaching(boolean) proactiveCaching}" value="true"/>
- *     &lt;param name="{@link #setRecLengthCacheSize(int) recLengthCacheSize}" value="200"/>
- * &lt/DataStore>
+ *     &lt;param name="{@link #setPath(String) path}" value="/data/datastore"/&gt;
+ *     &lt;param name="{@link #setConfig(String) config}" value="${rep.home}/backend.properties"/&gt;
+ *     &lt;param name="{@link #setCacheSize(long) cacheSize}" value="68719476736"/&gt;
+ *     &lt;param name="{@link #setSecret(String) secret}" value="123456"/&gt;
+ *     &lt;param name="{@link #setCachePurgeTrigFactor(double)}" value="0.95d"/&gt;
+ *     &lt;param name="{@link #setCachePurgeResizeFactor(double) cacheSize}" value="0.85d"/&gt;
+ *     &lt;param name="{@link #setMinRecordLength(int) minRecordLength}" value="1024"/&gt;
+ *     &lt;param name="{@link #setContinueOnAsyncUploadFailure(boolean) continueOnAsyncUploadFailure}" value="false"/&gt;
+ *     &lt;param name="{@link #setConcurrentUploadsThreads(int) concurrentUploadsThreads}" value="10"/&gt;
+ *     &lt;param name="{@link #setAsyncUploadLimit(int) asyncUploadLimit}" value="100"/&gt;
+ *     &lt;param name="{@link #setUploadRetries(int) uploadRetries}" value="3"/&gt;
+ *     &lt;param name="{@link #setTouchAsync(boolean) touchAsync}" value="false"/&gt;
+ *     &lt;param name="{@link #setProactiveCaching(boolean) proactiveCaching}" value="true"/&gt;
+ *     &lt;param name="{@link #setRecLengthCacheSize(int) recLengthCacheSize}" value="200"/&gt;
+ * &lt/DataStore&gt;
+ * </pre>
  */
 public abstract class CachingDataStore extends AbstractDataStore implements
         MultiDataStoreAware, AsyncUploadCallback, AsyncTouchCallback {
