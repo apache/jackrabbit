@@ -102,33 +102,46 @@ public class PropPatchMethod extends DavMethodBase implements DavConstants {
         // check of OK response contains all set/remove properties
         MultiStatusResponse[] resp = multiStatus.getResponses();
         if (resp.length != 1) {
-            log.warn("Expected a single multi-status response in PROPPATCH.");
+            log.warn("Expected a single multi-status response in PROPPATCH, but got " + resp.length + " elements.");
         }
         boolean success = true;
+
         // only check the first ms-response
-        for (int i = 0; i < 1; i++) {
-            DavPropertyNameSet okSet = resp[i].getPropertyNames(DavServletResponse.SC_OK);
-            if (okSet.isEmpty()) {
-                log.debug("PROPPATCH failed: No 'OK' response found for resource " + resp[i].getHref());
-                success = false;
-            } else {
-                DavPropertyNameIterator it = propertyNames.iterator();
-                while (it.hasNext()) {
-                    DavPropertyName pn = it.nextPropertyName();
-                    success = okSet.remove(pn);
+        if (resp.length == 1) {
+            MultiStatusResponse r = resp[0];
+
+            if (r.isPropStat()) {
+                DavPropertyNameSet okSet = r.getPropertyNames(DavServletResponse.SC_OK);
+                if (okSet.isEmpty()) {
+                    log.debug("PROPPATCH failed: No 'OK' response found for resource " + r.getHref());
+                    success = false;
+                } else {
+                    DavPropertyNameIterator it = propertyNames.iterator();
+                    while (it.hasNext()) {
+                        DavPropertyName pn = it.nextPropertyName();
+                        success = okSet.remove(pn);
+                    }
+                }
+                if (!okSet.isEmpty()) {
+                    StringBuffer b = new StringBuffer("The following properties outside of the original request where set or removed: ");
+                    DavPropertyNameIterator it = okSet.iterator();
+                    while (it.hasNext()) {
+                        b.append(it.nextPropertyName().toString()).append("; ");
+                    }
+                    log.warn(b.toString());
                 }
             }
-            if (!okSet.isEmpty()) {
-                StringBuffer b = new StringBuffer("The following properties outside of the original request where set or removed: ");
-                DavPropertyNameIterator it = okSet.iterator();
-                while (it.hasNext()) {
-                    b.append(it.nextPropertyName().toString()).append("; ");
+            else {
+                int status = r.getStatus()[0].getStatusCode();
+                success = status == DavServletResponse.SC_OK;
+                if (!success) {
+                    log.warn("PROPPATCH failed: overall status of " + status);
                 }
-                log.warn(b.toString());
             }
         }
         // if  build the error message
         if (!success) {
+            // TODO: array might be empty, no?
             Status[] st = resp[0].getStatus();
             // TODO: respect multiple error reasons (not only the first one)
             for (int i = 0; i < st.length && responseException == null; i ++) {
