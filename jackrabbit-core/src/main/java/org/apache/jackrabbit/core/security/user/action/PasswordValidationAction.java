@@ -35,12 +35,12 @@ import java.util.regex.PatternSyntaxException;
  *     <li><strong>constraint</strong>: a regular expression that can be compiled
  *     to a {@link Pattern} defining validation rules for a password.</li>
  * </ul>
- *
- * <p>The password validation is executed on user creation and upon password
+ * <p>
+ * The password validation is executed on user creation and upon password
  * change. It throws a <code>ConstraintViolationException</code> if the password
- * validation fails.</p>
- *
- * <p>Example configuration:
+ * validation fails.
+ * <p>
+ * Example configuration:
  * <pre>
  *    &lt;UserManager class="org.apache.jackrabbit.core.security.user.UserPerWorkspaceUserManager"&gt;
  *       &lt;AuthorizableAction class="org.apache.jackrabbit.core.security.user.action.PasswordValidationAction"&gt;
@@ -52,7 +52,6 @@ import java.util.regex.PatternSyntaxException;
  *       &lt;/AuthorizableAction&gt;
  *    &lt;/UserManager&gt;
  * </pre>
- * </p>
  *
  * @see org.apache.jackrabbit.api.security.user.UserManager#createUser(String, String)
  * @see User#changePassword(String)

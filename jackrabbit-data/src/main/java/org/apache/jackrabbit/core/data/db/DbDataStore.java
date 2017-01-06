@@ -75,7 +75,7 @@ import javax.sql.DataSource;
  *     &lt;param name="{@link #setTablePrefix(String) tablePrefix}" value=""/&gt;
  *     &lt;param name="{@link #setSchemaObjectPrefix(String) schemaObjectPrefix}" value=""/&gt;
  *     &lt;param name="{@link #setSchemaCheckEnabled(String) schemaCheckEnabled}" value="true"/&gt;
- * &lt/DataStore&gt;
+ * &lt;/DataStore&gt;
  * </pre>
  * <p>
  * Only URL, user name and password usually need to be set.

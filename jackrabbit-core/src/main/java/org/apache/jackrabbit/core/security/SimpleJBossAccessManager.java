@@ -42,7 +42,7 @@ import java.util.Properties;
  *
  * @author dhartford
  * @date 2006-11-27
- * @see http://wiki.apache.org/jackrabbit/SimpleJbossAccessManager
+ * @see <a href="http://wiki.apache.org/jackrabbit/SimpleJbossAccessManager">http://wiki.apache.org/jackrabbit/SimpleJbossAccessManager</a>
  */
 public class SimpleJBossAccessManager implements AccessManager {
 

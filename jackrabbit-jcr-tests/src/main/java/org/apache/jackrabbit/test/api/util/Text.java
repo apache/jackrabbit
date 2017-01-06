@@ -453,8 +453,8 @@ public class Text {
      * string a valid JCR name.
      * Use {@link #unescapeIllegalJcrChars(String)} for decoding.
      * <p>
-     * QName EBNF:<br>
-     * <xmp>
+     * QName EBNF:
+     * <pre>
      * simplename ::= onecharsimplename | twocharsimplename | threeormorecharname
      * onecharsimplename ::= (* Any Unicode character except: '.', '/', ':', '[', ']', '*', ''', '"', '|' or any whitespace character *)
      * twocharsimplename ::= '.' onecharsimplename | onecharsimplename '.' | onecharsimplename onecharsimplename
@@ -462,7 +462,7 @@ public class Text {
      * string ::= char | string char
      * char ::= nonspace | ' '
      * nonspace ::= (* Any Unicode character except: '/', ':', '[', ']', '*', ''', '"', '|' or any whitespace character *)
-     * </xmp>
+     * </pre>
      *
      * @param name the name to escape
      * @return the escaped name
@@ -581,8 +581,8 @@ public class Text {
      * Returns the namespace prefix of the given <code>qname</code>. If the
      * prefix is missing, an empty string is returned. Please note, that this
      * method does not validate the name or prefix.
-     * </p>
-     * the qname has the format: qname := [prefix ':'] local;
+     * <p>
+     * The qname has the format: qname := [prefix ':'] local;
      *
      * @param qname a qualified name
      * @return the prefix of the name or "".
@@ -599,8 +599,8 @@ public class Text {
     /**
      * Returns the local name of the given <code>qname</code>. Please note, that
      * this method does not validate the name.
-     * </p>
-     * the qname has the format: qname := [prefix ':'] local;
+     * <p>
+     * The qname has the format: qname := [prefix ':'] local;
      *
      * @param qname a qualified name
      * @return the localname

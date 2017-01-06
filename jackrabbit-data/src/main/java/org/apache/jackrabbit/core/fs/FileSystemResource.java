@@ -107,7 +107,7 @@ public class FileSystemResource {
 
     /**
      * Deletes this resource.
-     * Same as <code>{@link #delete(false)}</code>.
+     * Same as {@link #delete(boolean)} called with {@code false}.
      *
      * @see FileSystem#deleteFile
      */

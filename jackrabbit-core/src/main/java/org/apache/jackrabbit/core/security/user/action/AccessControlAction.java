@@ -41,8 +41,8 @@ import java.util.List;
  * of a new authorizable; namely the privileges the new authorizable should be
  * granted on it's own 'home directory' being represented by the new node
  * associated with that new authorizable.
- *
- * <p>The following to configuration parameters are available with this implementation:
+ * <p>
+ * The following to configuration parameters are available with this implementation:
  * <ul>
  *    <li><strong>groupPrivilegeNames</strong>: the value is expected to be a
  *    comma separated list of privileges that will be granted to the new group on
@@ -51,8 +51,8 @@ import java.util.List;
  *    comma separated list of privileges that will be granted to the new user on
  *    the user node.</li>
  * </ul>
- * </p>
- * <p>Example configuration:
+ * <p>
+ * Example configuration:
  * <pre>
  *    &lt;UserManager class="org.apache.jackrabbit.core.security.user.UserPerWorkspaceUserManager"&gt;
  *       &lt;AuthorizableAction class="org.apache.jackrabbit.core.security.user.action.AccessControlAction"&gt;
@@ -61,8 +61,8 @@ import java.util.List;
  *       &lt;/AuthorizableAction&gt;
  *    &lt;/UserManager&gt;
  * </pre>
- * </p>
- * <p>The example configuration will lead to the following content structure upon
+ * <p>
+ * The example configuration will lead to the following content structure upon
  * user or group creation::
  *
  * <pre>
@@ -93,7 +93,6 @@ import java.util.List;
  *               - rep:privileges    = ["jcr:read"]
  *           - rep:principalName     = "testGroup"
  * </pre>
- * </p>
  */
 public class AccessControlAction extends AbstractAuthorizableAction {
 

@@ -26,7 +26,6 @@ import org.apache.jackrabbit.standalone.cli.CommandException;
 import org.apache.jackrabbit.standalone.cli.CommandHelper;
 
 /**
- * <p>
  * Property fields:
  * <ul>
  * <li>name</li>
@@ -34,7 +33,6 @@ import org.apache.jackrabbit.standalone.cli.CommandHelper;
  * <li>type</li>
  * <li>length</li>
  * </ul>
- * </p>
  */
 public class LsProperties extends AbstractLsProperties {
 

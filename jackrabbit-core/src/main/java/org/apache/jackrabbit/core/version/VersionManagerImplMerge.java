@@ -50,8 +50,8 @@ import org.slf4j.LoggerFactory;
 /**
  * The JCR Version Manager implementation is split in several classes in order to
  * group related methods together.
- * </p>
- * this class provides methods for the merge operations.
+ * <p>
+ * This class provides methods for the merge operations.
  */
 abstract public class VersionManagerImplMerge extends VersionManagerImplRestore {
 
