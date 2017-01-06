@@ -212,7 +212,7 @@ public interface DeltaVConstants {
      * histories.
      *
      * <pre>
-     * &lt!ELEMENT version-history-collection-set (href*)&gt;
+     * &lt;!ELEMENT version-history-collection-set (href*)&gt;
      * </pre>
      */
     public static final String XML_VH_COLLECTION_SET = "version-history-collection-set";
@@ -226,7 +226,7 @@ public interface DeltaVConstants {
      * of a tree of collections, all of which may contain workspaces.
      *
      * <pre>
-     * &lt!ELEMENT workspace-collection-set (href*)&gt;
+     * &lt;!ELEMENT workspace-collection-set (href*)&gt;
      * </pre>
      */
     public static final String XML_WSP_COLLECTION_SET = "workspace-collection-set";
@@ -240,7 +240,7 @@ public interface DeltaVConstants {
      * of a tree of collections, all of which may contain activity resources.
      *
      * <pre>
-     * &lt!ELEMENT activity-collection-set (href*)&gt;
+     * &lt;!ELEMENT activity-collection-set (href*)&gt;
      * </pre>
      */
     public static final String XML_ACTIVITY_COLLECTION_SET = "activity-collection-set";

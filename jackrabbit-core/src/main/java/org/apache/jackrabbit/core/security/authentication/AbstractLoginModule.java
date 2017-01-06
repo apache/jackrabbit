@@ -248,7 +248,7 @@ public abstract class AbstractLoginModule implements LoginModule {
      * <br> This implementation uses two helper-methods, which allow for
      * customization:
      * <ul>
-     * <li>{@link #getCredentials()}</li> and
+     * <li>{@link #getCredentials()} and</li>
      * <li>{@link #getUserID(Credentials)}</li>
      * </ul>
      * <p>

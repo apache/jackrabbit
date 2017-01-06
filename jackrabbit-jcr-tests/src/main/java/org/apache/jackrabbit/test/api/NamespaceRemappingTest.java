@@ -246,6 +246,7 @@ public class NamespaceRemappingTest extends AbstractJCRTest {
      *     (in any combination of case) or,</li>
      * <li>the specified prefix is the empty string or,</li>
      * <li>the specified namespace URI is the empty string.</li>
+     * </ul>
      * </blockquote>
      *
      * <p>
@@ -271,7 +272,7 @@ public class NamespaceRemappingTest extends AbstractJCRTest {
      *                 http://tools.ietf.org/html/rfc3986#section-3
      * Prefix      ::= Any string that matches the NCName production in
      *                 http://www.w3.org/TR/REC-xml-names
-     * </blockquote>
+     * </pre></blockquote>
      *
      * <p>
      * It is unspecified whether an implementation should actually enforce

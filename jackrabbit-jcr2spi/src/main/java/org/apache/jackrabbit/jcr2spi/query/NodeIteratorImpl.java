@@ -138,7 +138,7 @@ public class NodeIteratorImpl implements ScoreNodeIterator {
 
     /**
      * Returns the number of nodes in this iterator.
-     * </p>
+     * <p>
      * Note: The number returned by this method may differ from the number
      * of nodes actually returned by calls to hasNext() / getNextNode()! This
      * is because this iterator works on a lazy instantiation basis and while

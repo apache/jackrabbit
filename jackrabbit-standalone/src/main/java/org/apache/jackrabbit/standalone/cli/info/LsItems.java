@@ -27,7 +27,6 @@ import org.apache.jackrabbit.standalone.cli.CommandHelper;
 
 /**
  * List items
- * <p>
  * <ul>
  * <li>name</li>
  * <li>type</li>
@@ -35,7 +34,6 @@ import org.apache.jackrabbit.standalone.cli.CommandHelper;
  * <li>isNew</li>
  * <li>isModified</li>
  * </ul>
- * </p>
  */
 public class LsItems extends AbstractLsItems {
 

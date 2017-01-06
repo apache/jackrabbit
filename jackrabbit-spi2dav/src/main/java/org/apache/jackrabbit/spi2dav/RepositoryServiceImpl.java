@@ -251,7 +251,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
 
     /**
      * Same as {@link #RepositoryServiceImpl(String, IdFactory, NameFactory, PathFactory, QValueFactory, int, int)}
-     * using {@link ItemInfoCacheImpl#DEFAULT_CACHE_SIZE)} as size for the item
+     * using {@link ItemInfoCacheImpl#DEFAULT_CACHE_SIZE} as size for the item
      * cache and {@link #MAX_CONNECTIONS_DEFAULT} for the maximum number of
      * connections on the client.
      *

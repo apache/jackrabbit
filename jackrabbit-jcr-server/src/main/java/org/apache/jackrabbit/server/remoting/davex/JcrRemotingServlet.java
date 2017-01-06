@@ -72,7 +72,6 @@ import org.slf4j.LoggerFactory;
  * <li><a href="#bwrite">Batch write</a></li>
  * </ul>
  * functionality and supports cross workspace copy and cloning.
- * </p>
  * 
  * <h3><a name="bread">Batch Read</a></h3>
  *

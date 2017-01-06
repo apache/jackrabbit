@@ -364,7 +364,7 @@ public class VersionControlledItemCollection extends DefaultItemCollection
      * <li>{@link Node#restoreByLabel(String, boolean)}</li>
      * <li>{@link Node#update(String)}</li>
      * </ul>
-     * </p>
+     * <p>
      * Limitation: note that the <code>MultiStatus</code> returned by this method
      * will not list any nodes that have been removed due to an Uuid conflict.
      *

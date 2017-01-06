@@ -48,7 +48,7 @@ import org.slf4j.LoggerFactory;
  * &lt;DataStore class="org.apache.jackrabbit.core.data.FileDataStore"&gt;
  *     &lt;param name="{@link #setPath(String) path}" value="/data/datastore"/&gt;
  *     &lt;param name="{@link #setMinRecordLength(int) minRecordLength}" value="1024"/&gt;
- * &lt/DataStore&gt;
+ * &lt;/DataStore&gt;
  * </pre>
  * <p>
  * If the directory is not set, the directory &lt;repository home&gt;/repository/datastore is used.

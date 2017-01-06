@@ -184,7 +184,7 @@ public class LazyItemIterator implements NodeIterator, PropertyIterator, Version
     /**
      * Returns the number of <code>Item</code>s in this iterator or -1 if the
      * size is unknown.
-     * </p>
+     * <p>
      * Note: The number returned by this method may differ from the number
      * of <code>Item</code>s actually returned by calls to hasNext() / getNextNode().
      * This is caused by the lazy instantiation behaviour of this iterator,

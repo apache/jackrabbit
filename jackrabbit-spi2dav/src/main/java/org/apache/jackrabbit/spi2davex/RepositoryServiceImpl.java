@@ -142,8 +142,8 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
     private final Map<SessionInfo, QValueFactoryImpl> qvFactories = new HashMap<SessionInfo, QValueFactoryImpl>();
 
     /**
-     * Same as {@link #RepositoryServiceImpl(String, String, BatchReadConfig, int, int))}
-     * using <code>null</code> workspace name, {@link ItemInfoCacheImpl#DEFAULT_CACHE_SIZE)}
+     * Same as {@link #RepositoryServiceImpl(String, String, BatchReadConfig, int, int)}
+     * using <code>null</code> workspace name, {@link ItemInfoCacheImpl#DEFAULT_CACHE_SIZE}
      * as size for the item cache and {@link #MAX_CONNECTIONS_DEFAULT} for the
      * maximum number of connections on the client.
      *
@@ -156,7 +156,7 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
     }
 
     /**
-     * Same as {@link #RepositoryServiceImpl(String, String, BatchReadConfig, int, int))}
+     * Same as {@link #RepositoryServiceImpl(String, String, BatchReadConfig, int, int)}
      * using {@link #MAX_CONNECTIONS_DEFAULT} for the maximum number of
      * connections on the client.
      *

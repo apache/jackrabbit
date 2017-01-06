@@ -502,7 +502,7 @@ public class WorkspaceResourceImpl extends AbstractResource
      * workspace resource, this implementation uses {@link VersionControlledResource#update(UpdateInfo)}
      * to map {@link Workspace#restore(javax.jcr.version.Version[], boolean)} to
      * a WebDAV call.
-     * </p>
+     * <p>
      * Limitation: note that the <code>MultiStatus</code> returned by this method
      * will not list any nodes that have been removed due to an Uuid conflict.
      *

@@ -231,7 +231,7 @@ public abstract class Exporter {
      * with the fixed value "nt:share" and the <code>jcr:uuid</code> property
      * of the shareable node are exported.
      *
-     * @see https://issues.apache.org/jira/browse/JCR-1084
+     * @see <a href="https://issues.apache.org/jira/browse/JCR-1084">JCR-1084</a>
      * @param node node
      * @return properties as sorted map
      * @throws RepositoryException if a repository error occurs
