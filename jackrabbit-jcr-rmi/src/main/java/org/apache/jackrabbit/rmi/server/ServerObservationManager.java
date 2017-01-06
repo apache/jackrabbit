@@ -38,7 +38,7 @@ import org.apache.jackrabbit.rmi.remote.RemoteObservationManager;
  * This class works in conjunction with the
  * {@link org.apache.jackrabbit.rmi.client.ClientObservationManager} class to
  * implement the distributed the event listener registration described in
- * <a href="../observation/package.html><code>observation</code></a> package
+ * <a href="../observation/package.html"><code>observation</code></a> package
  * comment.
  *
  * @see javax.jcr.observation.ObservationManager

@@ -56,31 +56,36 @@ public class ItemStateValidator {
 
     /**
      * option for <code>{@link #checkAddNode}</code> and
-     * <code>{@link #checkRemoveItem}</code> methods:<p/>
+     * <code>{@link #checkRemoveItem}</code> methods:
+     * <p>
      * check access rights
      */
     public static final int CHECK_ACCESS = 1;
     /**
      * option for <code>{@link #checkAddNode}</code> and
-     * <code>{@link #checkRemoveItem}</code> methods:<p/>
+     * <code>{@link #checkRemoveItem}</code> methods:
+     * <p>
      * check lock status
      */
     public static final int CHECK_LOCK = 2;
     /**
      * option for <code>{@link #checkAddNode}</code> and
-     * <code>{@link #checkRemoveItem}</code> methods:<p/>
+     * <code>{@link #checkRemoveItem}</code> methods:
+     * <p>
      * check checked-out status
      */
     public static final int CHECK_VERSIONING = 4;
     /**
      * option for <code>{@link #checkAddNode}</code> and
-     * <code>{@link #checkRemoveItem}</code> methods:<p/>
+     * <code>{@link #checkRemoveItem}</code> methods:
+     * <p>
      * check constraints defined in node type
      */
     public static final int CHECK_CONSTRAINTS = 8;
 
     /**
-     * option for <code>{@link #checkRemoveItem}</code> method:<p/>
+     * option for <code>{@link #checkRemoveItem}</code> method:
+     * <p>
      * check that target node is not being referenced
      */
     public static final int CHECK_COLLISION = 32;

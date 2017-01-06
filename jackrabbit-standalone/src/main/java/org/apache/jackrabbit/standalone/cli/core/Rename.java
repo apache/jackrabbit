@@ -26,7 +26,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.jackrabbit.standalone.cli.CommandHelper;
 
 /**
- * Rename a <code>Node<code><br>
+ * Rename a <code>Node</code><br>
  * The persistent flag indicates whether to use the session or the workspace 
  * to perform the move command
  */

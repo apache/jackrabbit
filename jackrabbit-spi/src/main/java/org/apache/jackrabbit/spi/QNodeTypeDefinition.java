@@ -39,7 +39,7 @@ public interface QNodeTypeDefinition {
      * Returns an array containing the names of the supertypes. If no
      * supertypes have been specified, then an empty array is returned
      * for mixin types and the <code>nt:base</code> primary type and
-     * an array containing just <code>nt:base<code> for other primary types.
+     * an array containing just <code>nt:base</code> for other primary types.
      * <p>
      * The returned array must not be modified by the application.
      *

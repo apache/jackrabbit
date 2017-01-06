@@ -19,19 +19,21 @@ package org.apache.jackrabbit.core.persistence.pool;
 import org.apache.jackrabbit.core.util.db.CheckSchemaOperation;
 
 /**
- * Extends the {@link BundleDbPersistenceManager} by MS-SQL specific code. <p/> Configuration:<br>
+ * Extends the {@link BundleDbPersistenceManager} by MS-SQL specific code.
+ * <p>
+ * Configuration:<br>
  * <ul>
- * <li>&lt;param name="{@link #setBundleCacheSize(String) bundleCacheSize}" value="8"/>
- * <li>&lt;param name="{@link #setConsistencyCheck(String) consistencyCheck}" value="false"/>
- * <li>&lt;param name="{@link #setMinBlobSize(String) minBlobSize}" value="16384"/>
- * <li>&lt;param name="{@link #setDriver(String) driver}" value="com.microsoft.sqlserver.jdbc.SQLServerDriver"/>
- * <li>&lt;param name="{@link #setUrl(String) url}" value=""/>
- * <li>&lt;param name="{@link #setUser(String) user}" value=""/>
- * <li>&lt;param name="{@link #setPassword(String) password}" value=""/>
- * <li>&lt;param name="{@link #setSchema(String) schema}" value="mssql"/>
- * <li>&lt;param name="{@link #setSchemaObjectPrefix(String) schemaObjectPrefix}" value=""/>
- * <li>&lt;param name="{@link #setErrorHandling(String) errorHandling}" value=""/>
- * <li>&lt;param name="{@link #setTableSpace(String) tableSpace}" value=""/>
+ * <li>&lt;param name="{@link #setBundleCacheSize(String) bundleCacheSize}" value="8"/&gt;
+ * <li>&lt;param name="{@link #setConsistencyCheck(String) consistencyCheck}" value="false"/&gt;
+ * <li>&lt;param name="{@link #setMinBlobSize(String) minBlobSize}" value="16384"/&gt;
+ * <li>&lt;param name="{@link #setDriver(String) driver}" value="com.microsoft.sqlserver.jdbc.SQLServerDriver"/&gt;
+ * <li>&lt;param name="{@link #setUrl(String) url}" value=""/&gt;
+ * <li>&lt;param name="{@link #setUser(String) user}" value=""/&gt;
+ * <li>&lt;param name="{@link #setPassword(String) password}" value=""/&gt;
+ * <li>&lt;param name="{@link #setSchema(String) schema}" value="mssql"/&gt;
+ * <li>&lt;param name="{@link #setSchemaObjectPrefix(String) schemaObjectPrefix}" value=""/&gt;
+ * <li>&lt;param name="{@link #setErrorHandling(String) errorHandling}" value=""/&gt;
+ * <li>&lt;param name="{@link #setTableSpace(String) tableSpace}" value=""/&gt;
  * </ul>
  */
 public class MSSqlPersistenceManager extends BundleDbPersistenceManager {

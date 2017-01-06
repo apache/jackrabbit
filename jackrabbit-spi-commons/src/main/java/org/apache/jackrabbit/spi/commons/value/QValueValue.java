@@ -50,7 +50,7 @@ public final class QValueValue implements Value {
 
     /**
      * Constructs a <code>QValueValue</code> object representing an SPI
-     * <codeQValue</code>.
+     * <code>QValue</code>.
      *
      * @param qvalue the QValue this <code>QValueValue</code> should represent
      * @param resolver fore resolving namespace URIs to prefixes in NAME/PATH properties

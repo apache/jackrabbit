@@ -431,7 +431,7 @@ public interface Path extends Serializable {
      * @param to index of the element outside of the range i.e. high endpoint
      * (exclusive) within the list of elements to use for the sub-path.
      * @return a new <code>Path</code> consisting of those Path.Element objects
-     * between the given <tt><code>from</code>, inclusive, and the given
+     * between the given <code>from</code>, inclusive, and the given
      * <code>to</code>, exclusive.
      * @throws IllegalArgumentException if <code>from</code>
      * is greater or equal than <code>to</code> or if any of both params is
@@ -472,7 +472,8 @@ public interface Path extends Serializable {
 
     /**
      * Returns the String representation of this Path as it is used
-     * by {@link PathFactory#create(String)}.<p/>
+     * by {@link PathFactory#create(String)}.
+     * <p>
      * The String representation must consist of the String representation of
      * its elements separated by {@link Path#DELIMITER}.
      *

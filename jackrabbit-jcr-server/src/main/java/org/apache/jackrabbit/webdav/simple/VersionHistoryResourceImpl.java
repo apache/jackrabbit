@@ -98,7 +98,7 @@ public class VersionHistoryResourceImpl extends DeltaVResourceImpl implements Ve
     }
 
     /**
-     * The version storage is read-only -> fails with 403.
+     * The version storage is read-only -&gt; fails with 403.
      *
      * @see DavResource#addMember(DavResource, InputContext)
      */
@@ -140,7 +140,7 @@ public class VersionHistoryResourceImpl extends DeltaVResourceImpl implements Ve
     }
 
     /**
-     * Version storage is read-only -> fails with 403.
+     * Version storage is read-only -&gt; fails with 403.
      *
      * @see DavResource#setProperty(DavProperty)
      */
@@ -150,7 +150,7 @@ public class VersionHistoryResourceImpl extends DeltaVResourceImpl implements Ve
     }
 
     /**
-     * Version storage is read-only -> fails with 403.
+     * Version storage is read-only -&gt; fails with 403.
      *
      * @see DavResource#removeProperty(DavPropertyName)
      */
@@ -160,7 +160,7 @@ public class VersionHistoryResourceImpl extends DeltaVResourceImpl implements Ve
     }
 
     /**
-     * Version storage is read-only -> fails with 403.
+     * Version storage is read-only -&gt; fails with 403.
      *
      * @see DavResource#alterProperties(List)
      */

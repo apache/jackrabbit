@@ -50,9 +50,9 @@ import java.util.List;
  * <p>
  * Configuration:<br>
  * <ul>
- * <li>&lt;param name="{@link #setBlobFSBlockSize(String) blobFSBlockSize}" value="0"/>
- * <li>&lt;param name="{@link #setMinBlobSize(String) minBlobSize}" value="4096"/>
- * <li>&lt;param name="{@link #setErrorHandling(String) errorHandling}" value=""/>
+ * <li>&lt;param name="{@link #setBlobFSBlockSize(String) blobFSBlockSize}" value="0"/&gt;
+ * <li>&lt;param name="{@link #setMinBlobSize(String) minBlobSize}" value="4096"/&gt;
+ * <li>&lt;param name="{@link #setErrorHandling(String) errorHandling}" value=""/&gt;
  * </ul>
  */
 public class BundleFsPersistenceManager extends AbstractBundlePersistenceManager {

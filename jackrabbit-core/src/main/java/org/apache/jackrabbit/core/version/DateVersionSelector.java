@@ -33,11 +33,11 @@ import org.apache.jackrabbit.spi.Name;
  * V1.1 - 03-Sep-2006
  * V1.2 - 05-Sep-2006
  *
- * new DateVersionSelector("03-Sep-2006").select() -> V1.1
- * new DateVersionSelector("04-Sep-2006").select() -> V1.1
- * new DateVersionSelector("01-Sep-2006").select() -> null
- * new DateVersionSelector("01-Sep-2006", true).select() -> V1.2
- * new DateVersionSelector(null, true).select() -> V1.2
+ * new DateVersionSelector("03-Sep-2006").select() -&gt; V1.1
+ * new DateVersionSelector("04-Sep-2006").select() -&gt; V1.1
+ * new DateVersionSelector("01-Sep-2006").select() -&gt; null
+ * new DateVersionSelector("01-Sep-2006", true).select() -&gt; V1.2
+ * new DateVersionSelector(null, true).select() -&gt; V1.2
  * </xmp>
  */
 public class DateVersionSelector implements VersionSelector {

@@ -61,8 +61,8 @@ import org.slf4j.LoggerFactory;
  * <code>UserImporter</code> implements a <code>DefaultProtectedPropertyImporter</code>
  * and <code>DefaultProtectedNodeImporter</code> that is able to deal with
  * user/group content as defined by the default user related node types present
- * with jackrabbit-core.<p/>
- *
+ * with jackrabbit-core.
+ * <p>
  * The importer is intended to be used by applications that import user content
  * extracted from another repository instance and immediately persist the
  * imported content using {@link javax.jcr.Session#save()}. Omitting the

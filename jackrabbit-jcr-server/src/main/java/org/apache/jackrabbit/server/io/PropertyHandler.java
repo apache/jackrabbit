@@ -67,7 +67,8 @@ public interface PropertyHandler {
      * Imports, modifies or removes properties according the the
      * {@link PropertyImportContext#getChangeList() change list} available from
      * the import context. Note, that according to JSR 170 setting a property
-     * value to <code>null</code> is equivalent to its removal.<p/>
+     * value to <code>null</code> is equivalent to its removal.
+     * <p>
      * The return value of this method must be used to provided detailed
      * information about any kind of failures.
      *

@@ -24,7 +24,7 @@ import javax.jcr.RepositoryException;
 public interface PathFactory {
 
     /**
-     * Return a new <code>Path</code> out of the given <code>parent<code> path
+     * Return a new <code>Path</code> out of the given <code>parent</code> path
      * and the given relative path. If <code>normalize</code> is
      * <code>true</code>, the returned path will be normalized (or
      * canonicalized, if the parent path is absolute).
@@ -56,7 +56,7 @@ public interface PathFactory {
     public Path create(Path parent, Name name, boolean normalize) throws RepositoryException;
 
     /**
-     * Creates a new <code>Path</code> out of the given <code>parent<code> path
+     * Creates a new <code>Path</code> out of the given <code>parent</code> path
      * and the give name and normalized index. See also
      * {@link PathFactory#create(Path, Name, boolean)}.
      *

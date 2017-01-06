@@ -34,8 +34,8 @@ import javax.jcr.RepositoryException;
 
 /**
  * <code>RegisteredNamespacesReport</code> let the client retrieve the namespaces
- * registered on the repository.<p/>
- *
+ * registered on the repository.
+ * <p>
  * Request body:
  * <pre>
  * &lt;!ELEMENT registerednamespaces EMPTY &gt;

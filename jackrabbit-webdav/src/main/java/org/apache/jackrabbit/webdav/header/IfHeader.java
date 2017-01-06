@@ -726,7 +726,7 @@ public class IfHeader implements Header {
      * This class is a container for data contained in the <em>If</em>
      * production <em>IfList</em>
      * <pre>
-         IfList = { [ "Not" ] ( ("<" Word ">" ) | ( "[" Word "]" ) ) } .
+         IfList = { [ "Not" ] ( ("&lt;" Word "&gt;" ) | ( "[" Word "]" ) ) } .
      * </pre>
      * <p>
      */
@@ -855,7 +855,7 @@ public class IfHeader implements Header {
      * interface to support tagged lists of {@link IfList}s. This class
      * implements the data container for the production :
      * <pre>
-         Tagged = { "<" Word ">" "(" IfList ")" } .
+         Tagged = { "&lt;" Word "&gt;" "(" IfList ")" } .
      * </pre>
      */
     private static class IfHeaderMap extends HashMap<String, IfHeaderList> implements IfHeaderInterface {
