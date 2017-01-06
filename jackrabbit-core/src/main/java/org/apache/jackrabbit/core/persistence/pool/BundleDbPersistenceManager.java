@@ -1097,7 +1097,7 @@ public class BundleDbPersistenceManager
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
     public String toString() {
         return name;

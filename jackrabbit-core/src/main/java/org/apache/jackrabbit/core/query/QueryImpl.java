@@ -99,7 +99,7 @@ public class QueryImpl extends AbstractQueryImpl {
     protected long offset = 0;
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
     @Override
     public void init(

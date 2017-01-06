@@ -382,7 +382,6 @@ public class InternalValue extends AbstractQValue {
     /**
      * @param value
      * @return
-     * @throws IOException
      * @throws RepositoryException
      */
     public static InternalValue create(InputStream value) throws RepositoryException {

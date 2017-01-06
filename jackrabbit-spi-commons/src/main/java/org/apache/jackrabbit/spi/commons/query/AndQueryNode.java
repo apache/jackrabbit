@@ -53,7 +53,7 @@ public class AndQueryNode extends NAryQueryNode<QueryNode> {
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
     public boolean equals(Object obj) {
         if (obj instanceof AndQueryNode) {
