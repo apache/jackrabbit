@@ -1,31 +1,35 @@
-Release Notes -- Apache Jackrabbit -- Version 2.13.7
+Release Notes -- Apache Jackrabbit -- Version 2.15.0
 
 Introduction
 ------------
 
-This is Apache Jackrabbit(TM) 2.13.7, a fully compliant implementation of the
+This is Apache Jackrabbit(TM) 2.15.0, a fully compliant implementation of the
 Content Repository for Java(TM) Technology API, version 2.0 (JCR 2.0) as
 specified in the Java Specification Request 283 (JSR 283).
 
-Apache Jackrabbit 2.13.7 is an unstable release cut directly from
+Apache Jackrabbit 2.15.0 is an unstable release cut directly from
 Jackrabbit trunk, with a focus on new features and other
-improvements. For production use we recommend the latest stable 2.12.x
+improvements. For production use we recommend the latest stable 2.14.x
 release.
 
-Changes in Jackrabbit 2.13.7
+Changes in Jackrabbit 2.15.0
 ----------------------------
-
-Sub-task
-
-    [JCR-4066] - Use HttpClient4 based WebDAV API in remoting code
-    [JCR-4086] - spi2dav: code reformat to reduce scope of changes for JCR-4066
 
 Bug
 
-    [JCR-4085] - DavEx json should always add type information for Doubles
+    [JCR-2406] - Upgrade httpclient dependency to 4.x
+
+Sub-task
+
+    [JCR-4067] - remove HttpClient3 based WebDAV API
+
+Task
+
+    [JCR-4094] - Fix Javadoc for JDK 1.8 doctool compliance - remove TCK related custom tags
+
 
 In addition to the above-mentioned changes, this release contains
-all the changes included up to the Apache Jackrabbit 2.13.6 release.
+all the changes included up to the Apache Jackrabbit 2.14.x release.
 
 For more detailed information about all the changes in this and other
 Jackrabbit releases, please see the Jackrabbit issue tracker at
