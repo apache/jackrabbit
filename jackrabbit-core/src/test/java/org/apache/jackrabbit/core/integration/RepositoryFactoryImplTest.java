@@ -28,8 +28,8 @@ import javax.naming.Context;
 
 import javax.jcr.RepositoryFactory;
 import org.apache.jackrabbit.api.JackrabbitRepository;
-import org.apache.jackrabbit.commons.GenericRepositoryFactory;
 import org.apache.jackrabbit.commons.JcrUtils;
+import org.apache.jackrabbit.commons.JndiRepositoryFactory;
 import org.apache.jackrabbit.core.RepositoryFactoryImpl;
 import org.apache.jackrabbit.core.jndi.provider.DummyInitialContextFactory;
 import org.apache.jackrabbit.core.jndi.RegistryHelper;
@@ -138,7 +138,7 @@ public class RepositoryFactoryImplTest extends AbstractJCRTest {
         RegistryHelper.registerRepository(context, name,
                 REPO_CONF.getAbsolutePath(), REPO_HOME.getAbsolutePath(), false);
         try {
-            parameters.put(GenericRepositoryFactory.JNDI_NAME, name);
+            parameters.put(JndiRepositoryFactory.JNDI_NAME, name);
             repo = JcrUtils.getRepository(parameters);
             checkRepository(repo);
         } finally {
