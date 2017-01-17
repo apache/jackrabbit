@@ -63,22 +63,25 @@ public class Scope implements XmlSerializable {
         return lockScope;
     }
 
-    /**
-     * Returns <code>true</code> if this Scope is equal to the given one.
-     *
-     * @param obj
-     * @return
-     */
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + localName.hashCode();
+        result = prime * result + namespace.hashCode();
+        return result;
+    }
+
     @Override
     public boolean equals(Object obj) {
         if (this == obj) {
             return true;
-        }
-        if (obj instanceof Scope) {
+        } else if (obj instanceof Scope) {
             Scope other = (Scope) obj;
             return localName.equals(other.localName) && namespace.equals(other.namespace);
+        } else {
+            return false;
         }
-        return false;
     }
 
     /**
