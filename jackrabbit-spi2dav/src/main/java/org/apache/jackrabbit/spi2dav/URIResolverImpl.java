@@ -331,14 +331,14 @@ class URIResolverImpl implements URIResolver {
     public NodeId getNodeIdAfterEvent(String uri, SessionInfo sessionInfo, boolean nodeIsGone) throws RepositoryException {
         return getNodeId(uri, sessionInfo, nodeIsGone);
     }
-    
+
     /**
      * @inheritDoc
      */
     public PropertyId getPropertyId(String uri, SessionInfo sessionInfo) throws RepositoryException {
         IdURICache cache = getCache(sessionInfo.getWorkspaceName());
-        if (cache.containsUri(uri)) {
-            ItemId id = cache.getItemId(uri);
+        ItemId id = cache.getItemId(uri);
+        if (id != null) {
             if (!id.denotesNode()) {
                 return (PropertyId) id;
             }
