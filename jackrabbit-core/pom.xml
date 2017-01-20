@@ -35,6 +35,7 @@
 
   <properties>
     <org.apache.jackrabbit.test.integration>false</org.apache.jackrabbit.test.integration>
+    <test.opts.memory>-Xmx512m</test.opts.memory>
   </properties>
 
   <build>
@@ -74,7 +75,7 @@
           <includes>
             <include>**/*TestAll.java</include>
           </includes>
-          <argLine>-Xmx512m</argLine>
+          <argLine>${test.opts}</argLine>
           <systemProperties>
             <property>
               <name>java.awt.headless</name>
