@@ -43,6 +43,8 @@
   </issueManagement>
 
   <properties>
+    <test.opts.memory>-Xmx256m</test.opts.memory>
+    <test.opts>${test.opts.memory} -enableassertions</test.opts>
     <jetty.version>6.1.22</jetty.version>
     <tika.version>1.7</tika.version>
     <project.reporting.outputEncoding>${project.build.sourceEncoding}</project.reporting.outputEncoding>

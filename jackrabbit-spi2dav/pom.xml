@@ -43,7 +43,7 @@
             <include>**/TestAll.java</include>
           </includes>
           <forkMode>once</forkMode>
-          <argLine>-Xmx256m -enableassertions</argLine>
+          <argLine>${test.opts}</argLine>
           <systemProperties>
             <property>
               <name>known.issues</name>
