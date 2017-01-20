@@ -70,7 +70,7 @@
                             </includes>
                             <workingDirectory>target</workingDirectory> 
                             <forkMode>once</forkMode>
-                            <argLine>-Xmx128m -enableassertions</argLine>
+                            <argLine>${test.opts}</argLine>
                         </configuration>
                     </plugin>
                 </plugins>

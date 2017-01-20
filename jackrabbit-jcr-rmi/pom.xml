@@ -136,7 +136,7 @@
           <plugin>
             <artifactId>maven-surefire-plugin</artifactId>
             <configuration>
-              <argLine>-Xmx256m</argLine>
+              <argLine>${test.opts}</argLine>
               <fork>true</fork>
               <systemProperties>
                 <property>
