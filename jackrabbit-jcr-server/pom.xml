@@ -43,7 +43,7 @@
             <include>**/*Test.java</include>
           </includes>
           <forkMode>once</forkMode>
-          <argLine>-Xmx128m -enableassertions</argLine>
+          <argLine>${test.opts}</argLine>
           <systemProperties>
             <property>
               <name>derby.stream.error.file</name>
