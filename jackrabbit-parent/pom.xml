@@ -187,7 +187,7 @@
           <aggregate>true</aggregate>
           <links>
             <link>http://docs.oracle.com/javase/7/docs/api/</link>
-            <link>http://www.day.com/maven/javax.jcr/javadocs/jcr-2.0/</link>
+            <link>https://docs.adobe.com/docs/en/spec/javax.jcr/javadocs/jcr-2.0/</link>
           </links>
         </configuration>
       </plugin>
