@@ -197,6 +197,11 @@ public final class GQL {
      * specific).
      */
     private static final String REP_EXCERPT = "rep:excerpt";
+    
+    /**
+     * A pseudo-property for native xpath conditions.
+     */
+    private static final String NATIVE_XPATH = "jcr:nativeXPath";
 
     /**
      * The GQL query statement.
@@ -321,6 +326,40 @@ public final class GQL {
         GQL query = new GQL(statement, session, commonPathPrefix, filter);
         return query.execute();
     }
+    
+    /**
+     * Executes the GQL query and returns the result as a row iterator.
+     *
+     * @param jcrQuery the native JCR query.
+     * @param jcrQueryLanguage the JCR query language
+     * @param session the session that will execute the query.
+     * @param commonPathPrefix a common path prefix for the GQL query.
+     * @param filter an optional filter that may include/exclude result rows.
+     * @return the result.
+     */
+    public static RowIterator executeXPath(String jcrQuery,
+                                      String jcrQueryLanguage,
+                                      Session session,
+                                      String commonPathPrefix,
+                                      Filter filter) {
+        GQL query = new GQL("", session, commonPathPrefix, filter);
+        return query.executeJcrQuery(jcrQuery, jcrQueryLanguage);
+    }
+    
+    /**
+     * Translate the GQL query to XPath.
+     *
+     * @param statement the GQL query.
+     * @param session the session that will execute the query.
+     * @param commonPathPrefix a common path prefix for the GQL query.
+     * @return the xpath statement.
+     */
+    public static String translateToXPath(String statement,
+            Session session,
+            String commonPathPrefix) throws RepositoryException {
+        GQL query = new GQL(statement, session, commonPathPrefix, null);
+        return query.translateStatement();
+    }
 
     /**
      * Parses the given <code>statement</code> and generates callbacks for each
@@ -385,10 +424,20 @@ public final class GQL {
      * @return the result.
      */
     private RowIterator execute() {
+        String xpath;
         try {
-            String stmt = translateStatement();
+            xpath = translateStatement();
+        } catch (RepositoryException e) {
+            // in case of error return empty result
+            return RowIteratorAdapter.EMPTY;
+        }
+        return executeJcrQuery(xpath, Query.XPATH);
+    }
+    
+    private RowIterator executeJcrQuery(String jcrQuery, String jcrQueryLanguage) {
+        try {
             QueryManager qm = session.getWorkspace().getQueryManager();
-            RowIterator nodes = qm.createQuery(stmt, Query.XPATH).execute().getRows();
+            RowIterator nodes = qm.createQuery(jcrQuery, jcrQueryLanguage).execute().getRows();
             if (filter != null) {
                 nodes = new FilteredRowIterator(nodes);
             }
@@ -410,7 +459,7 @@ public final class GQL {
         } catch (RepositoryException e) {
             // in case of error return empty result
             return RowIteratorAdapter.EMPTY;
-        }
+        }        
     }
 
     /**
@@ -572,20 +621,22 @@ public final class GQL {
         }
         if (propertyNames == null) {
             propertyNames = new HashMap<String, String>();
-            NodeTypeManager ntMgr = session.getWorkspace().getNodeTypeManager();
-            NodeTypeIterator it = ntMgr.getAllNodeTypes();
-            while (it.hasNext()) {
-                NodeType nt = it.nextNodeType();
-                PropertyDefinition[] defs = nt.getDeclaredPropertyDefinitions();
-                for (PropertyDefinition def : defs) {
-                    String pn = def.getName();
-                    if (!pn.equals("*")) {
-                        String localName = pn;
-                        int idx = pn.indexOf(':');
-                        if (idx != -1) {
-                            localName = pn.substring(idx + 1);
+            if (session != null) {
+                NodeTypeManager ntMgr = session.getWorkspace().getNodeTypeManager();
+                NodeTypeIterator it = ntMgr.getAllNodeTypes();
+                while (it.hasNext()) {
+                    NodeType nt = it.nextNodeType();
+                    PropertyDefinition[] defs = nt.getDeclaredPropertyDefinitions();
+                    for (PropertyDefinition def : defs) {
+                        String pn = def.getName();
+                        if (!pn.equals("*")) {
+                            String localName = pn;
+                            int idx = pn.indexOf(':');
+                            if (idx != -1) {
+                                localName = pn.substring(idx + 1);
+                            }
+                            propertyNames.put(localName, pn);
                         }
-                        propertyNames.put(localName, pn);
                     }
                 }
             }
@@ -923,6 +974,10 @@ public final class GQL {
 
         public void toString(StringBuffer buffer)
                 throws RepositoryException {
+            if (property.equals(NATIVE_XPATH)) {
+                buffer.append(value);
+                return;
+            }        
             if (prohibited) {
                 buffer.append("not(");
             }
@@ -1046,12 +1101,18 @@ public final class GQL {
 
         public void toString(StringBuffer buffer)
                 throws RepositoryException {
+            int start = buffer.length();
             buffer.append("order by ");
             List<String> names = new ArrayList<String>(Arrays.asList(Text.explode(value, ',')));
             int length = buffer.length();
             String comma = "";
             for (String name : names) {
                 boolean asc;
+                if (name.equals("-")) {
+                    // no order by at all
+                    buffer.delete(start, buffer.length());
+                    return;
+                }
                 if (name.startsWith("-")) {
                     name = name.substring(1);
                     asc = false;
