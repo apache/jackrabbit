@@ -116,6 +116,7 @@ org.apache.jackrabbit.core.data.ConcurrentGcTest#testDatabases
 org.apache.jackrabbit.core.data.GarbageCollectorTest#testCloseSessionWhileRunningGc
 org.apache.jackrabbit.test.api.query.qom.EquiJoinConditionTest#testRightOuterJoin1<!--JCR-3493, JCR-3498-->
 org.apache.jackrabbit.test.api.query.qom.EquiJoinConditionTest#testLeftOuterJoin2<!--JCR-3493, JCR-3498-->
+org.apache.jackrabbit.core.ReplacePropertyWhileOthersReadTest <!-- JCR-3835 -->
               </value>
             </property>
             <property>
