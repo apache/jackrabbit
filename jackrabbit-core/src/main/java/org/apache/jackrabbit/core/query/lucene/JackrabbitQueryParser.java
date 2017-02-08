@@ -56,7 +56,7 @@ public class JackrabbitQueryParser extends QueryParser {
                                  Analyzer analyzer,
                                  SynonymProvider synonymProvider,
                                  PerQueryCache cache) {
-        super(Version.LUCENE_24, fieldName, analyzer);
+        super(Version.LUCENE_36, fieldName, analyzer);
         this.synonymProvider = synonymProvider;
         this.cache = cache;
         setAllowLeadingWildcard(true);
