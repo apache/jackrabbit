@@ -60,6 +60,8 @@ public class JackrabbitQueryParser extends QueryParser {
         this.synonymProvider = synonymProvider;
         this.cache = cache;
         setAllowLeadingWildcard(true);
+        // see JCR-3075
+        setAutoGeneratePhraseQueries(true);
         setDefaultOperator(Operator.AND);
     }
 
