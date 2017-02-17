@@ -1,45 +1,28 @@
-Release Notes -- Apache Jackrabbit -- Version 2.8.4
+Release Notes -- Apache Jackrabbit -- Version 2.8.5
 
 Introduction
 ------------
 
-This is Apache Jackrabbit(TM) 2.8.4, a fully compliant implementation of the
+This is Apache Jackrabbit(TM) 2.8.5, a fully compliant implementation of the
 Content Repository for Java(TM) Technology API, version 2.0 (JCR 2.0) as
 specified in the Java Specification Request 283 (JSR 283).
 
-Apache Jackrabbit 2.8.4 is a patch release that contains fixes and
+Apache Jackrabbit 2.8.5 is a patch release that contains fixes and
 improvements over Jackrabbit 2.8. Jackrabbit 2.8.x releases are considered
 stable and targeted for production use.
 
-Changes since Jackrabbit 2.8.3
+Changes since Jackrabbit 2.8.4
 ------------------------------
-
-Bug
-
-    [JCR-3987] - jackrabbit-jcr-commons JcrUtils.getOrCreateByPath fails if session is not allowed to read root
-    [JCR-3992] - JcrUtils.getOrCreateByPath broken by JCR-3987
-    [JCR-4015] - jackrabbit-jcr-commons JcrUtils.getOrCreateByPath fails if session is not allowed to read root
-    [JCR-4027] - NPE in JcrRemotingServlet.canHandle() when content-type is missing
-    [JCR-4047] - Build fails: jackrabbit-jcr2spi: Signature errors found.
-    [JCR-4068] - jcr-commons: get rid of test dependency to json.org JSON parser
-    [JCR-4100] - jackrabbit-webdav: Scope implements equals() but not hashCode()
-    [JCR-4102] - jcr2dav: change polling thread sometimes dies with NPE
 
 Improvement
 
-    [JCR-3845] - Have AuthorizableQueryManager Support Specifying Sort Ignore Case Mode
+    [JCR-3801] - Improve ListenerTracker output
+    [JCR-3812] - Improvements to the GQL tools
 
 Task
 
-    [JCR-4080] - Upgrade Apache Commons Collections to v3.2.2
-    [JCR-4081] - Upgrade Apache Commons IO to 2.5
-    [JCR-4092] - avoid use of deprecated interface JcrValueType
+    [JCR-4106] - fix JCR API docs link
 
-Sub-task
-
-    [JCR-4059] - avoid use of HttpClient3 URI class
-    [JCR-4064] - Refactor WebDAV related code out of HttpClient3-specific classes for better future re-use
-    [JCR-4086] - spi2dav: code reformat to reduce scope of changes for JCR-4066
 
 In addition to the above-mentioned changes, this release contains
 all the changes included up to the Apache Jackrabbit 2.8.3 release.
