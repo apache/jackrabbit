@@ -1,31 +1,38 @@
-Release Notes -- Apache Jackrabbit -- Version 2.15.0
+Release Notes -- Apache Jackrabbit -- Version 2.15.1
 
 Introduction
 ------------
 
-This is Apache Jackrabbit(TM) 2.15.0, a fully compliant implementation of the
+This is Apache Jackrabbit(TM) 2.15.1, a fully compliant implementation of the
 Content Repository for Java(TM) Technology API, version 2.0 (JCR 2.0) as
 specified in the Java Specification Request 283 (JSR 283).
 
-Apache Jackrabbit 2.15.0 is an unstable release cut directly from
+Apache Jackrabbit 2.15.1 is an unstable release cut directly from
 Jackrabbit trunk, with a focus on new features and other
 improvements. For production use we recommend the latest stable 2.14.x
 release.
 
-Changes in Jackrabbit 2.15.0
+Changes in Jackrabbit 2.15.1
 ----------------------------
 
 Bug
 
-    [JCR-2406] - Upgrade httpclient dependency to 4.x
+    [JCR-4093] - IndexRule are meant to be applied based on both primaryType and minin type based inheritance. Currently it appears that only primaryType based inheritance is working
+    [JCR-4100] - jackrabbit-webdav: Scope implements equals() but not hashCode()
+    [JCR-4102] - jcr2dav: change polling thread sometimes dies with NPE
+    [JCR-4110] - The JackrabbitQueryParser uses the wrong Lucene-Version in its initializing
 
-Sub-task
+Improvement
 
-    [JCR-4067] - remove HttpClient3 based WebDAV API
+    [JCR-4115] - Don't use SHA-1 for new DataStore binaries (Jackrabbit)
 
 Task
 
-    [JCR-4094] - Fix Javadoc for JDK 1.8 doctool compliance - remove TCK related custom tags
+    [JCR-4096] - stop using deprecated GenericRepositoryFactory
+    [JCR-4101] - add code coverage profile (jacoco)
+    [JCR-4104] - cleanup how command lines for test executions are constructed
+    [JCR-4106] - fix JCR API docs link
+    [JCR-4107] - Upgrade to httpclient 4.5.3
 
 
 In addition to the above-mentioned changes, this release contains
