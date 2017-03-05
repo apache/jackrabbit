@@ -616,6 +616,7 @@ public class LuceneQueryFactory {
                 for (PropertyDefinition pd : nt.getPropertyDefinitions()) {
                     if (pd.getName().equals(pv.getPropertyName())) {
                         type = pd.getRequiredType();
+                        break;
                     }
                 }
             }
