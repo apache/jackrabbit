@@ -97,7 +97,7 @@ public final class Utils {
         String region = prop.getProperty(S3Constants.S3_REGION);
         String endpoint = null;
         String propEndPoint = prop.getProperty(S3Constants.S3_END_POINT);
-        if ((propEndPoint != null) & !"".equals(propEndPoint)) {
+        if ((propEndPoint != null) && !"".equals(propEndPoint)) {
             endpoint = propEndPoint;
         } else { 
             if (StringUtils.isNullOrEmpty(region)) {
