@@ -28,6 +28,7 @@ import static org.apache.jackrabbit.spi.commons.name.NameConstants.MIX_REFERENCE
 import java.util.Calendar;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.TimeZone;
 
 import javax.jcr.ItemNotFoundException;
 import javax.jcr.RepositoryException;
@@ -47,7 +48,6 @@ import org.apache.jackrabbit.core.version.VersionHistoryInfo;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.NameFactory;
 import org.apache.jackrabbit.spi.commons.name.NameFactoryImpl;
-import org.apache.jackrabbit.util.ISO8601;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -304,9 +304,10 @@ class RepositoryChecker {
                         modifiedParent = new NodeState(vhrParentState, NodeState.STATUS_EXISTING_MODIFIED, true);
                     }
 
-                    Calendar now = Calendar.getInstance();
-                    String appendme = " (disconnected by RepositoryChecker on "
-                            + ISO8601.format(now) + ")";
+                    Calendar now = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+                    String appendme = String.format(" (disconnected by RepositoryChecker on %04d%02d%02dT%02d%02d%02dZ)",
+                            now.get(Calendar.YEAR), now.get(Calendar.MONTH) + 1, now.get(Calendar.DAY_OF_MONTH),
+                            now.get(Calendar.HOUR_OF_DAY), now.get(Calendar.MINUTE), now.get(Calendar.SECOND));
                     modifiedParent.renameChildNodeEntry(vhid,
                             nf.create(vhrname.getNamespaceURI(), vhrname.getLocalName() + appendme));
 
