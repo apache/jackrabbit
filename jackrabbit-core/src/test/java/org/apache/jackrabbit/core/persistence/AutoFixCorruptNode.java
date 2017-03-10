@@ -30,13 +30,14 @@ import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.SimpleCredentials;
-
-import junit.framework.TestCase;
+import javax.jcr.nodetype.ConstraintViolationException;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.jackrabbit.core.TestHelper;
 import org.apache.jackrabbit.core.TransientRepository;
 import org.apache.jackrabbit.core.persistence.check.ConsistencyReport;
+
+import junit.framework.TestCase;
 
 /**
  * Tests that a corrupt node is automatically fixed.
@@ -123,7 +124,6 @@ public class AutoFixCorruptNode extends TestCase {
             // now retry with lost+found functionality
             ConsistencyReport report2 = TestHelper.checkConsistency(s, true, lnfid);
             assertTrue("Report should have reported broken nodes", !report2.getItems().isEmpty());
-
             s.logout();
 
             s = openSession(rep, false);
@@ -265,9 +265,11 @@ public class AutoFixCorruptNode extends TestCase {
             Node test = root.addNode("test", "nt:file");
             test.addNode("jcr:content", "nt:unstructured");
             test.addMixin("mix:versionable");
-
             s.save();
 
+            s.getWorkspace().getVersionManager().checkout(test.getPath());
+            s.getWorkspace().getVersionManager().checkin(test.getPath());
+            
             Node vhr = s.getWorkspace().getVersionManager()
                     .getVersionHistory(test.getPath());
 
@@ -354,6 +356,7 @@ public class AutoFixCorruptNode extends TestCase {
             s.getWorkspace().getVersionManager().checkout(test.getPath());
             s.getWorkspace().getVersionManager().checkin(test.getPath());
 
+            validateDisconnectedVHR(oldVHR);            
         } finally {
             s.logout();
             System.setProperty("org.apache.jackrabbit.version.recovery",
@@ -435,6 +438,8 @@ public class AutoFixCorruptNode extends TestCase {
             // try a checkout / checkin
             s.getWorkspace().getVersionManager().checkout(test.getPath());
             s.getWorkspace().getVersionManager().checkin(test.getPath());
+
+            validateDisconnectedVHR(oldVHR);            
         } finally {
             s.logout();
             System.setProperty("org.apache.jackrabbit.version.recovery",
@@ -574,5 +579,28 @@ public class AutoFixCorruptNode extends TestCase {
                     "true");
         }
         return rep.login(cred);
+    }
+    
+    // JCR-4118: check that the old VHR can be retrieved
+    private void validateDisconnectedVHR(Node oldVHR) throws RepositoryException {
+        Session s = oldVHR.getSession();
+        Node old = s.getNode(oldVHR.getPath());
+        assertNotNull("disconnected VHR should be accessible", old);
+
+        assertEquals("nt:versionHistory", old.getPrimaryNodeType().getName());
+        NodeIterator ni = old.getNodes();
+        while (ni.hasNext()) {
+            Node n = ni.nextNode();
+            String type = n.getPrimaryNodeType().getName();
+            assertTrue("node type of VHR child nodes should be nt:version or nt:versionLabels",
+                    "nt:version".equals(type) || "nt:versionLabels".equals(type));
+        }
+
+        try {
+            old.remove();
+            s.save();
+            fail("removal of node using remove() should throw because it's in the versioning workspace");
+        } catch (ConstraintViolationException expected) {
+        }
     }
 }
