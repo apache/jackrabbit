@@ -300,10 +300,11 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
     // getNodeInfo: omitted for requires list of 'references'
 
     /**
-     * If the specified <code>workspaceName</code> the default workspace name
+     * If the specified {@code workspaceName} is {@code null} the default workspace name
      * is used for backwards compatibility with jackrabbit-jcr-server &lt; 1.5.0
      *
      * @see RepositoryService#obtain(Credentials, String)
+     * @see <a href="https://issues.apache.org/jira/browse/JCR-1842">JCR-1842</a>
      */
     @Override
     public SessionInfo obtain(Credentials credentials, String workspaceName)
@@ -314,10 +315,11 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
     }
 
     /**
-     * If the specified <code>workspaceName</code> the default workspace name
+     * If the specified {@code workspaceName} is {@code null} the default workspace name
      * is used for backwards compatibility with jackrabbit-jcr-server &lt; 1.5.0
      *
      * @see RepositoryService#obtain(SessionInfo, String)
+     * @see <a href="https://issues.apache.org/jira/browse/JCR-1842">JCR-1842</a>
      */
     @Override
     public SessionInfo obtain(SessionInfo sessionInfo, String workspaceName)
