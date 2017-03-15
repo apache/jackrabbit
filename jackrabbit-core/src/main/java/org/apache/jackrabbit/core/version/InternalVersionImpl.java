@@ -441,7 +441,10 @@ class InternalVersionImpl extends InternalVersionItemImpl
             for (InternalValue value : values) {
                 InternalVersionImpl v = (InternalVersionImpl)
                         versionHistory.getVersion(value.getNodeId());
-                v.internalAddSuccessor(this, false);
+                // version may be null if history is broken
+                if (v != null) {
+                    v.internalAddSuccessor(this, false);
+                }
             }
         }
     }
