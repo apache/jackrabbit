@@ -167,7 +167,7 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
     // fix legacy
     private void fixLegacy() throws RepositoryException {
         if (rootVersion.getSuccessors().isEmpty()) {
-            for (Name versionName : nameCache.keySet()) {
+            for (Name versionName : getVersionNames()) {
                 InternalVersionImpl v = createVersionInstance(versionName);
                 v.legacyResolveSuccessors();
             }
