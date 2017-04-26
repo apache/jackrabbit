@@ -58,8 +58,8 @@
     <slf4j.api.version>1.6.6</slf4j.api.version>
     <slf4j.version>1.7.4</slf4j.version> <!-- sync with logback version -->
     <logback.version>1.0.12</logback.version>
-    <java.version>1.7</java.version>
-    <java.version.signature>java17</java.version.signature>
+    <java.version>1.8</java.version>
+    <java.version.signature>java18</java.version.signature>
     <skip.coverage>true</skip.coverage>
     <jacoco.version>0.7.9</jacoco.version>
   </properties>
