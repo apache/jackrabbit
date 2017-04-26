@@ -1,39 +1,33 @@
-Release Notes -- Apache Jackrabbit -- Version 2.15.1
+Release Notes -- Apache Jackrabbit -- Version 2.15.2
 
 Introduction
 ------------
 
-This is Apache Jackrabbit(TM) 2.15.1, a fully compliant implementation of the
+This is Apache Jackrabbit(TM) 2.15.2, a fully compliant implementation of the
 Content Repository for Java(TM) Technology API, version 2.0 (JCR 2.0) as
 specified in the Java Specification Request 283 (JSR 283).
 
-Apache Jackrabbit 2.15.1 is an unstable release cut directly from
+Apache Jackrabbit 2.15.2 is an unstable release cut directly from
 Jackrabbit trunk, with a focus on new features and other
 improvements. For production use we recommend the latest stable 2.14.x
 release.
 
-Changes in Jackrabbit 2.15.1
+Changes in Jackrabbit 2.15.2
 ----------------------------
 
 Bug
 
-    [JCR-4093] - IndexRule are meant to be applied based on both primaryType and minin type based inheritance. Currently it appears that only primaryType based inheritance is working
-    [JCR-4100] - jackrabbit-webdav: Scope implements equals() but not hashCode()
-    [JCR-4102] - jcr2dav: change polling thread sometimes dies with NPE
-    [JCR-4110] - The JackrabbitQueryParser uses the wrong Lucene-Version in its initializing
-
-Improvement
-
-    [JCR-4115] - Don't use SHA-1 for new DataStore binaries (Jackrabbit)
+    [JCR-4118] - RepositoryChecker creates invalid node names
+    [JCR-4121] - ConcurrentModificationException in InternalVersionHistoryImpl.fixLegacy()
 
 Task
 
-    [JCR-4096] - stop using deprecated GenericRepositoryFactory
-    [JCR-4101] - add code coverage profile (jacoco)
-    [JCR-4104] - cleanup how command lines for test executions are constructed
-    [JCR-4106] - fix JCR API docs link
-    [JCR-4107] - Upgrade to httpclient 4.5.3
-
+    [JCR-4112] - Require Java 8
+    [JCR-4119] - Upgrade httpcomponents/httpmime to 4.5.3
+    [JCR-4122] - align parent pom references with Oak
+    [JCR-4127] - update to latest apache parent pom (18)
+    [JCR-4128] - update maven plugins and require Maven 3.2.1
+    [JCR-4129] - get rid of unused org.json dependency
 
 In addition to the above-mentioned changes, this release contains
 all the changes included up to the Apache Jackrabbit 2.14.x release.
