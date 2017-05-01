@@ -19,6 +19,7 @@ Bug
 
     [JCR-4118] - RepositoryChecker creates invalid node names
     [JCR-4121] - ConcurrentModificationException in InternalVersionHistoryImpl.fixLegacy()
+    [JCR-4133] - fix javadoc problems that are errors with JDK8
 
 Task
 
