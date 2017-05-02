@@ -19,8 +19,7 @@ package org.apache.jackrabbit.stats;
 import org.apache.jackrabbit.api.stats.QueryStat;
 
 /**
- * Extends external facing {@link QueryStat} with some internal operations
- * 
+ * Extends external facing {@link QueryStat} with some internal operations.
  */
 public interface QueryStatCore extends QueryStat {
 
@@ -29,12 +28,11 @@ public interface QueryStatCore extends QueryStat {
      * 
      * @param language
      *            the query language, see
-     *            {@link org.apache.jackrabbit.spi.commons.name.NameConstants#JCR_LANGUAGE}
+     *            {@link javax.jcr.query.QueryManager#getSupportedQueryLanguages()}
      * @param statement
      *            the query
      * @param durationMs
      *            time in ms
      */
     void logQuery(final String language, final String statement, long durationMs);
-
 }

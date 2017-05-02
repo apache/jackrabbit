@@ -27,19 +27,19 @@ import javax.jcr.RepositoryFactory;
  * repository which is covered by the Apache Jackrabbit project. It does so by
  * delegating back to secondary RepositoryFactory implementations. The
  * parameters passed to the {@link #getRepository(Map)} method determine which
- * secondare RepositoryFactory this factory delegates to.
+ * secondary RepositoryFactory this factory delegates to.
  */
 public class RepositoryFactoryImpl implements RepositoryFactory {
 
     /**
      * When this key parameter is present, this factory delegates to
-     * {@link org.apache.jackrabbit.jcr2spi.Jcr2spiRepositoryFactory}
+     * {@code org.apache.jackrabbit.jcr2spi.Jcr2spiRepositoryFactory}
      */
     public static final String PARAM_REPOSITORY_SERVICE_FACTORY = "org.apache.jackrabbit.spi.RepositoryServiceFactory";
 
     /**
      * When this key parameter is present, this factory delegates to
-     * {@link org.apache.jackrabbit.jcr2spi.Jcr2spiRepositoryFactory}
+     * {@code org.apache.jackrabbit.jcr2spi.Jcr2spiRepositoryFactory}
      */
     public static final String PARAM_REPOSITORY_CONFIG = "org.apache.jackrabbit.jcr2spi.RepositoryConfig";
 
@@ -49,7 +49,7 @@ public class RepositoryFactoryImpl implements RepositoryFactory {
      * {@link #PARAM_REPOSITORY_CONFIG} is present, this factory delegates
      * to {@link org.apache.jackrabbit.jcr2spi.Jcr2spiRepositoryFactory}.
      * Otherwise it delegates to
-     * {@link org.apache.jackrabbit.core.RepositoryFactoryImpl}.
+     * {@code org.apache.jackrabbit.core.RepositoryFactoryImpl}.
      *
      * @see RepositoryFactory#getRepository(java.util.Map)
      */
