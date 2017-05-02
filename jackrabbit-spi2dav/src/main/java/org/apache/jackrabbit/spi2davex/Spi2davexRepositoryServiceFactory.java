@@ -36,8 +36,6 @@ public class Spi2davexRepositoryServiceFactory implements RepositoryServiceFacto
      * URI of the JCR server implementation. {@link #DEFAULT_REPOSITORY_URI} is used as
      * fallback if no parameters or uri has been specified and the uri could not
      * been retrieved from system props either.
-     *
-     * @see org.apache.jackrabbit.server.remoting.davex.JcrRemotingServlet
      */
     public static final String PARAM_REPOSITORY_URI = "org.apache.jackrabbit.spi2davex.uri";
 
