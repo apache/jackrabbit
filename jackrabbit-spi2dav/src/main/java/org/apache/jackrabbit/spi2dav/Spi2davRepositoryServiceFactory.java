@@ -42,8 +42,6 @@ public class Spi2davRepositoryServiceFactory implements RepositoryServiceFactory
     /**
      * Mandatory configuration parameter: It's value is expected to specify the
      * URI of the JCR server implementation.
-     *
-     * @see org.apache.jackrabbit.webdav.jcr.JCRWebdavServerServlet
      */
     public static final String PARAM_REPOSITORY_URI = "org.apache.jackrabbit.spi2dav.uri";
 
