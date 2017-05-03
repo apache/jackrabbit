@@ -269,7 +269,9 @@ public class FSBackend extends AbstractBackend {
                 }
             });
         } catch (Exception e) {
-            callback.onAbort(new AsyncTouchResult(identifier));
+            if (callback != null) {
+                callback.onAbort(new AsyncTouchResult(identifier));
+            }
             throw new DataStoreException("Cannot touch the record "
                 + identifier.toString(), e);
         }
