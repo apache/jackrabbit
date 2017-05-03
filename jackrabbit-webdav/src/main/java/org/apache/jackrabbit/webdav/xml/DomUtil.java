@@ -696,10 +696,9 @@ public class DomUtil {
     }
 
     /**
-     * Builds a 'DAV:href' Xml element from the given href. Please note, that
-     * the path present in the given String should be properly
-     * {@link org.apache.jackrabbit.util.Text#escapePath(String) escaped} in order to prevent problems with
-     * WebDAV clients.
+     * Builds a 'DAV:href' Xml element from the given href.
+     * <p>
+     * Note that the path present needs to be a valid URI or URI reference.
      *
      * @param href String representing the text of the 'href' Xml element
      * @param factory the Document used as factory
