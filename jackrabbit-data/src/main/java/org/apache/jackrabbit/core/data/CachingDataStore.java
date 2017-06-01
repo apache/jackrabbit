@@ -90,11 +90,6 @@ public abstract class CachingDataStore extends AbstractDataStore implements
      */
     private static final Logger LOG = LoggerFactory.getLogger(CachingDataStore.class);
 
-    /**
-     * The digest algorithm used to uniquely identify records.
-     */
-    private static final String DIGEST = "SHA-1";
-
     private static final String DS_STORE = ".DS_Store";
 
     /**
@@ -389,9 +384,9 @@ public abstract class CachingDataStore extends AbstractDataStore implements
 
     /**
      * Creates a new data record in {@link Backend}. The stream is first
-     * consumed and the contents are saved in a temporary file and the SHA-1
+     * consumed and the contents are saved in a temporary file and the {@link #DIGEST}
      * message digest of the stream is calculated. If a record with the same
-     * SHA-1 digest (and length) is found then it is returned. Otherwise new
+     * {@link #DIGEST} digest (and length) is found then it is returned. Otherwise new
      * record is created in {@link Backend} and the temporary file is moved in
      * place to {@link LocalCache}.
      * 
@@ -423,7 +418,7 @@ public abstract class CachingDataStore extends AbstractDataStore implements
             long currTime = System.currentTimeMillis();
             DataIdentifier identifier = new DataIdentifier(
                 encodeHexString(digest.digest()));
-            LOG.debug("SHA1 of [{}], length =[{}] took [{}]ms ",
+            LOG.debug("Digest of [{}], length =[{}] took [{}]ms ",
                 new Object[] { identifier, length, (currTime - startTime) });
             String fileName = getFileName(identifier);
             AsyncUploadCacheResult result = null;
