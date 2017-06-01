@@ -126,11 +126,6 @@ public class DbDataStore extends AbstractDataStore
     public static final String STORE_SIZE_MAX = "max";
 
     /**
-     * The digest algorithm used to uniquely identify records.
-     */
-    protected static final String DIGEST = "SHA-1";
-
-    /**
      * The prefix used for temporary objects.
      */
     protected static final String TEMP_PREFIX = "TEMP_";
