@@ -1,34 +1,32 @@
-Release Notes -- Apache Jackrabbit -- Version 2.15.2
+Release Notes -- Apache Jackrabbit -- Version 2.15.3
 
 Introduction
 ------------
 
-This is Apache Jackrabbit(TM) 2.15.2, a fully compliant implementation of the
+This is Apache Jackrabbit(TM) 2.15.3, a fully compliant implementation of the
 Content Repository for Java(TM) Technology API, version 2.0 (JCR 2.0) as
 specified in the Java Specification Request 283 (JSR 283).
 
-Apache Jackrabbit 2.15.2 is an unstable release cut directly from
+Apache Jackrabbit 2.15.3 is an unstable release cut directly from
 Jackrabbit trunk, with a focus on new features and other
 improvements. For production use we recommend the latest stable 2.14.x
 release.
 
-Changes in Jackrabbit 2.15.2
+Changes in Jackrabbit 2.15.3
 ----------------------------
 
 Bug
 
-    [JCR-4118] - RepositoryChecker creates invalid node names
-    [JCR-4121] - ConcurrentModificationException in InternalVersionHistoryImpl.fixLegacy()
-    [JCR-4133] - fix javadoc problems that are errors with JDK8
+    [JCR-3901] - TCK LockManagerTest does not allow new JCR 2.0 functionality for lock token transfers
+    [JCR-4135] - potential NPE in FSBackend
 
 Task
 
-    [JCR-4112] - Require Java 8
-    [JCR-4119] - Upgrade httpcomponents/httpmime to 4.5.3
-    [JCR-4122] - align parent pom references with Oak
-    [JCR-4127] - update to latest apache parent pom (18)
-    [JCR-4128] - update maven plugins and require Maven 3.2.1
-    [JCR-4129] - get rid of unused org.json dependency
+    [JCR-4134] - update build instructions wrt Java versions
+    [JCR-4139] - Update commons-fileupload dependency to 1.3.2
+    [JCR-4140] - Update easymock dependency to 3.4
+    [JCR-4142] - update junit dependency to 4.12
+    [JCR-4143] - update findbugs dependency to 3.0.2
 
 In addition to the above-mentioned changes, this release contains
 all the changes included up to the Apache Jackrabbit 2.14.x release.
