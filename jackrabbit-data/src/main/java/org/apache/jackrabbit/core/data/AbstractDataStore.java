@@ -37,11 +37,6 @@ public abstract class AbstractDataStore implements DataStore {
     private static final char[] HEX = "0123456789abcdef".toCharArray();
 
     /**
-     * The digest algorithm used to uniquely identify records.
-     */
-    protected String DIGEST = System.getProperty("ds.digest.algorithm", "SHA-256");
-
-    /**
      * Cached copy of the reference key of this data store. Initialized in
      * {@link #getReferenceKey()} when the key is first accessed.
      */
