@@ -26,9 +26,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.ByteBuffer;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -106,35 +103,14 @@ public class DataStoreTest extends JUnitTest {
         }
     }
 
-    public static void main(String... args) throws NoSuchAlgorithmException {
-        // create and print a "directory-collision", that is, two byte arrays
-        // where the hash starts with the same bytes
-        // those values can be used for testDeleteRecordWithParentCollision
-        HashMap<Long, Long> map = new HashMap<Long, Long>();
-        MessageDigest digest = MessageDigest.getInstance("SHA-256");
-        ByteBuffer input = ByteBuffer.allocate(8);
-        byte[] array = input.array();
-        for(long x = 0;; x++) {
-            input.putLong(x).flip();
-            long h = ByteBuffer.wrap(digest.digest(array)).getLong();
-            Long old = map.put(h & 0xffffffffff000000L, x);
-            if (old != null) {
-                System.out.println(Long.toHexString(old) + " " + Long.toHexString(x));
-                break;
-            }
-        }
-    }
-
     public void testDeleteRecordWithParentCollision() throws Exception {
         FileDataStore fds = new FileDataStore();
         fds.init(testDir + "/fileDeleteCollision");
 
-        ByteArrayInputStream c1 = new ByteArrayInputStream(ByteBuffer
-                .allocate(8).putLong(0x181c7).array());
-        ByteArrayInputStream c2 = new ByteArrayInputStream(ByteBuffer
-                .allocate(8).putLong(0x11fd78).array());
-        DataRecord d1 = fds.addRecord(c1);
-        DataRecord d2 = fds.addRecord(c2);
+        String c1 = "06b2f82fd81b2c20";
+        String c2 = "02c60cb75083ceef";
+        DataRecord d1 = fds.addRecord(IOUtils.toInputStream(c1));
+        DataRecord d2 = fds.addRecord(IOUtils.toInputStream(c2));
         fds.deleteRecord(d1.getIdentifier());
         DataRecord testRecord = fds.getRecordIfStored(d2.getIdentifier());
 

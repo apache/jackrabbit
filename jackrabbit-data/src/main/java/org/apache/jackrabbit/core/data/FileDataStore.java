@@ -69,6 +69,11 @@ public class FileDataStore extends AbstractDataStore
     private static Logger log = LoggerFactory.getLogger(FileDataStore.class);
 
     /**
+     * The digest algorithm used to uniquely identify records.
+     */
+    private static final String DIGEST = "SHA-1";
+
+    /**
      * The default value for the minimum object size.
      */
     private static final int DEFAULT_MIN_RECORD_LENGTH = 100;
@@ -158,8 +163,8 @@ public class FileDataStore extends AbstractDataStore
     /**
      * Creates a new data record.
      * The stream is first consumed and the contents are saved in a temporary file
-     * and the {@link #DIGEST} message digest of the stream is calculated. If a
-     * record with the same {@link #DIGEST} digest (and length) is found then it is
+     * and the SHA-1 message digest of the stream is calculated. If a
+     * record with the same SHA-1 digest (and length) is found then it is
      * returned. Otherwise the temporary file is moved in place to become
      * the new data record that gets returned.
      *
