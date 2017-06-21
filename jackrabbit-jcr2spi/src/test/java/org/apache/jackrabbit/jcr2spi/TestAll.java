@@ -107,6 +107,9 @@ public class TestAll extends TestCase {
         // workspace mgt
         suite.addTestSuite(WorkspaceTest.class);
 
+        // json (because of remoting servlet)
+        suite.addTestSuite(CopyMoveToJsonTest.class);
+
         return suite;
     }
 }
