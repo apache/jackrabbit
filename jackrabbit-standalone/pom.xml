@@ -58,6 +58,18 @@
             <Main-Class>org.apache.jackrabbit.standalone.Main</Main-Class>
           </instructions>
         </configuration>
+        <executions>
+          <execution>
+            <phase>verify</phase>
+            <goals>
+              <goal>baseline</goal>
+            </goals>
+            <configuration>
+              <!-- no artefact deployed -->
+              <skip>true</skip>
+            </configuration>
+          </execution>
+        </executions>
       </plugin>
     </plugins>
   </build>
