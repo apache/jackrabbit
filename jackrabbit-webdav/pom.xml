@@ -42,42 +42,6 @@
         <extensions>true</extensions>
       </plugin>
       <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>clirr-maven-plugin</artifactId>
-        <executions>
-          <execution>
-            <phase>verify</phase>
-            <goals>
-              <goal>check</goal>
-            </goals>
-            <configuration>
-              <excludes>
-<!-- http://clirr.sourceforge.net/clirr-core/exegesis.html#7012_-_Method_Added_to_Interface -->
-<!-- This is not a problem for us, so exclude. -->
-<exclude>org/apache/jackrabbit/webdav/observation/Subscription</exclude>
-<exclude>org/apache/jackrabbit/webdav/DavCompliance</exclude>
-<exclude>org/apache/jackrabbit/webdav/DavMethods</exclude>
-<exclude>org/apache/jackrabbit/webdav/DavResourceIteratorImpl</exclude>
-<exclude>org/apache/jackrabbit/webdav/security/report/PrincipalMatchReport</exclude>
-<exclude>org/apache/jackrabbit/webdav/security/report/SearchablePropertyReport*</exclude>
-<!-- JCR-2406 -->
-<exclude>org/apache/jackrabbit/webdav/client/methods/XmlRequestEntity</exclude>
-<exclude>org/apache/jackrabbit/webdav/client/methods/DavMethodBase</exclude>
-<exclude>org/apache/jackrabbit/webdav/client/methods/*Method</exclude>
-<exclude>org/apache/jackrabbit/webdav/client/methods/PollMethod$1</exclude>
-              </excludes>
-              <comparisonArtifacts>
-                <comparisonArtifact>
-                  <groupId>${project.groupId}</groupId>
-                  <artifactId>${project.artifactId}</artifactId>
-                  <version>${clirr.baseline.version}</version>
-                </comparisonArtifact>
-              </comparisonArtifacts>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
           <includes>
