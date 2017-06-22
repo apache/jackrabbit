@@ -27,10 +27,13 @@ import javax.jcr.security.Privilege;
 import java.security.Principal;
 import java.util.Set;
 
+import aQute.bnd.annotation.ProviderType;
+
 /**
  * <code>JackrabbitAccessControlManager</code> provides extensions to the
  * <code>AccessControlManager</code> interface.
  */
+@ProviderType
 public interface JackrabbitAccessControlManager extends AccessControlManager {
 
     /**

@@ -27,12 +27,15 @@ import javax.jcr.security.AccessControlList;
 import javax.jcr.security.AccessControlPolicy;
 import javax.jcr.security.Privilege;
 
+import aQute.bnd.annotation.ProviderType;
+
 /**
  * <code>JackrabbitAccessControlList</code> is an extension of the <code>AccessControlList</code>.
  * Similar to the latter any modifications made will not take effect, until it is
  * {@link javax.jcr.security.AccessControlManager#setPolicy(String, AccessControlPolicy)
  * written back} and {@link javax.jcr.Session#save() saved}.
  */
+@ProviderType
 public interface JackrabbitAccessControlList extends JackrabbitAccessControlPolicy, AccessControlList {
 
     /**
@@ -55,6 +58,21 @@ public interface JackrabbitAccessControlList extends JackrabbitAccessControlPoli
      * @throws RepositoryException If an error occurs.
      */
     int getRestrictionType(String restrictionName) throws RepositoryException;
+
+    /**
+     * Returns <code>true</code> if the restriction is multivalued; <code>false</code>
+     * otherwise. If an given implementation doesn't support multivalued restrictions,
+     * this method always returns <code>false</code>.
+     *
+     * @param restrictionName Any of the restriction names retrieved from
+     * {@link #getRestrictionNames()}.
+     * @return <code>true</code> if the restriction is multivalued; <code>false</code>
+     * if the restriction with the given name is single value or if the implementation
+     * doesn't support multivalued restrictions, this method always returns <code>false</code>.
+     * @throws RepositoryException If an error occurs.
+     * @see #addEntry(Principal, Privilege[], boolean, Map, Map)
+     */
+    boolean isMultiValueRestriction(String restrictionName) throws RepositoryException;
 
     /**
      * Returns <code>true</code> if this policy does not yet define any

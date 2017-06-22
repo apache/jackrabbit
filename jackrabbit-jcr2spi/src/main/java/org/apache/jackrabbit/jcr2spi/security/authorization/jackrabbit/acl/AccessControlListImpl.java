@@ -201,6 +201,11 @@ class AccessControlListImpl implements JackrabbitAccessControlList, AccessContro
     }
 
     @Override
+    public boolean isMultiValueRestriction(String restrictionName) throws RepositoryException {
+        return false;
+    }
+
+    @Override
     public void orderBefore(AccessControlEntry srcEntry,
                             AccessControlEntry destEntry) throws AccessControlException,
             UnsupportedRepositoryOperationException, RepositoryException {

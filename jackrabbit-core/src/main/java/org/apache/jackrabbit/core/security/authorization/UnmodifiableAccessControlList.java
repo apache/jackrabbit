@@ -143,6 +143,11 @@ public class UnmodifiableAccessControlList implements JackrabbitAccessControlLis
         }
     }
 
+    @Override
+    public boolean isMultiValueRestriction(String restrictionName) throws RepositoryException {
+        return false;
+    }
+
     /**
      * @see org.apache.jackrabbit.api.security.JackrabbitAccessControlList#isEmpty()
      */
