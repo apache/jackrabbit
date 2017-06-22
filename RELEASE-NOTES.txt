@@ -1,32 +1,36 @@
-Release Notes -- Apache Jackrabbit -- Version 2.15.3
+Release Notes -- Apache Jackrabbit -- Version 2.15.4
 
 Introduction
 ------------
 
-This is Apache Jackrabbit(TM) 2.15.3, a fully compliant implementation of the
+This is Apache Jackrabbit(TM) 2.15.4, a fully compliant implementation of the
 Content Repository for Java(TM) Technology API, version 2.0 (JCR 2.0) as
 specified in the Java Specification Request 283 (JSR 283).
 
-Apache Jackrabbit 2.15.3 is an unstable release cut directly from
+Apache Jackrabbit 2.15.4 is an unstable release cut directly from
 Jackrabbit trunk, with a focus on new features and other
 improvements. For production use we recommend the latest stable 2.14.x
 release.
 
-Changes in Jackrabbit 2.15.3
+Changes in Jackrabbit 2.15.4
 ----------------------------
 
 Bug
 
-    [JCR-3901] - TCK LockManagerTest does not allow new JCR 2.0 functionality for lock token transfers
-    [JCR-4135] - potential NPE in FSBackend
+    [JCR-4146] - json extension is removed by AbstractWebdavServlet on COPY request
+    [JCR-4149] - change to drop SHA-1 requires version change
+    [JCR-4150] - enable bundle:baseline check
+
+New Feature
+
+    [JCR-4144] - JackrabbitAccessControlList should have an API boolean isMultiValueRestriction(restrictionName)
 
 Task
 
-    [JCR-4134] - update build instructions wrt Java versions
-    [JCR-4139] - Update commons-fileupload dependency to 1.3.2
-    [JCR-4140] - Update easymock dependency to 3.4
-    [JCR-4142] - update junit dependency to 4.12
-    [JCR-4143] - update findbugs dependency to 3.0.2
+    [JCR-4145] - upgrade clirr plugin to 2.8
+    [JCR-4148] - revert update of findbugs
+    [JCR-4151] - remove clirr profile in branches where bundle:baseline is used
+
 
 In addition to the above-mentioned changes, this release contains
 all the changes included up to the Apache Jackrabbit 2.14.x release.
