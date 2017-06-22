@@ -128,7 +128,7 @@ public class DbDataStore extends AbstractDataStore
     /**
      * The digest algorithm used to uniquely identify records.
      */
-    protected static final String DIGEST = "SHA-1";
+    protected static final String DIGEST = System.getProperty("ds.digest.algorithm", "SHA-256");
 
     /**
      * The prefix used for temporary objects.
