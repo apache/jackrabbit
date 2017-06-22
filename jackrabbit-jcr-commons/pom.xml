@@ -52,32 +52,6 @@
           </instructions>
         </configuration>
       </plugin>
-      <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>clirr-maven-plugin</artifactId>
-        <executions>
-          <execution>
-            <phase>verify</phase>
-            <goals>
-              <goal>check</goal>
-            </goals>
-            <configuration>
-              <excludes>
-<exclude>org/apache/jackrabbit/commons/query/qom/JoinType</exclude>
-<exclude>org/apache/jackrabbit/commons/query/qom/Operator</exclude>
-<exclude>org/apache/jackrabbit/commons/query/qom/Order</exclude>
-              </excludes>
-              <comparisonArtifacts>
-                <comparisonArtifact>
-                  <groupId>${project.groupId}</groupId>
-                  <artifactId>${project.artifactId}</artifactId>
-                  <version>${clirr.baseline.version}</version>
-                </comparisonArtifact>
-              </comparisonArtifacts>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
     </plugins>
   </build>
 
