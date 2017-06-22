@@ -21,11 +21,14 @@ import javax.jcr.Value;
 import javax.jcr.ValueFormatException;
 import javax.jcr.security.AccessControlEntry;
 
+import aQute.bnd.annotation.ProviderType;
+
 /**
  * <code>JackrabbitAccessControlEntry</code> is a Jackrabbit specific extension
  * of the <code>AccessControlEntry</code> interface. It represents an single
  * entry of a {@link JackrabbitAccessControlList}.
  */
+@ProviderType
 public interface JackrabbitAccessControlEntry extends AccessControlEntry {
 
     /**

@@ -18,11 +18,14 @@ package org.apache.jackrabbit.api.security;
 
 import javax.jcr.security.AccessControlPolicy;
 
+import aQute.bnd.annotation.ProviderType;
+
 /**
  * <code>JackrabbitAccessControlPolicy</code> is an extension of the
  * <code>AccessControlPolicy</code> that exposes the path of the Node to
  * which it can be applied using {@link javax.jcr.security.AccessControlManager#setPolicy(String, javax.jcr.security.AccessControlPolicy)}.
  */
+@ProviderType
 public interface JackrabbitAccessControlPolicy extends AccessControlPolicy {
 
     /**

@@ -354,6 +354,11 @@ class ACLTemplate extends AbstractACLTemplate {
         }
     }
 
+    @Override
+    public boolean isMultiValueRestriction(String restrictionName) throws RepositoryException {
+        return false;
+    }
+
     /**
      * The only known restriction is:
      * <pre>

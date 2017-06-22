@@ -18,5 +18,5 @@
 /**
  * Jackrabbit extensions for access control.
  */
-@aQute.bnd.annotation.Version("2.3")
+@aQute.bnd.annotation.Version("2.4.0")
 package org.apache.jackrabbit.api.security;
