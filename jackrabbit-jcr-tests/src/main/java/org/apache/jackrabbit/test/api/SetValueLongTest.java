@@ -34,10 +34,6 @@ import javax.jcr.PathNotFoundException;
  * node type {@link #testNodeType} must define a single value long property
  * with name {@link #propertyName1}.
  *
- * @test
- * @sources SetValueLongTest.java
- * @executeClass org.apache.jackrabbit.test.api.SetValueLongTest
- * @keywords level2
  */
 public class SetValueLongTest extends AbstractJCRTest {
 

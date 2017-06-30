@@ -33,10 +33,6 @@ import javax.jcr.ValueFormatException;
  * binary property a {@link org.apache.jackrabbit.test.NotExecutableException}
  * is thrown.
  *
- * @test
- * @sources BinaryPropertyTest.java
- * @executeClass org.apache.jackrabbit.test.api.BinaryPropertyTest
- * @keywords level1
  */
 public class BinaryPropertyTest extends AbstractPropertyTest {
 

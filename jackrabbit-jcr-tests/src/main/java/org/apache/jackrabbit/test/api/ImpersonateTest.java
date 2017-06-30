@@ -31,10 +31,6 @@ import java.security.AccessControlException;
  * Tests if {@link Session#impersonate(Credentials)} to a read-only session
  * respects access controls.
  *
- * @test
- * @sources ImpersonateTest.java
- * @executeClass org.apache.jackrabbit.test.api.ImpersonateTest
- * @keywords level2
  */
 public class ImpersonateTest extends AbstractJCRTest {
 

@@ -34,10 +34,6 @@ import javax.jcr.PathNotFoundException;
  * node type {@link #testNodeType} must define a single value double property
  * with name {@link #propertyName1}.
  *
- * @test
- * @sources SetValueDoubleTest.java
- * @executeClass org.apache.jackrabbit.test.api.SetValueDoubleTest
- * @keywords level2
  */
 public class SetValueDoubleTest extends AbstractJCRTest {
 
