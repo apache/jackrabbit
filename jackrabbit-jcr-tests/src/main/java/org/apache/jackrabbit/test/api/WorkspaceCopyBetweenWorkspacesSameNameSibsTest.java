@@ -25,10 +25,6 @@ import javax.jcr.RepositoryException;
  * <code>WorkspaceCopyBetweenWorkspacesSameNameSibsTest</code> contains tests
  * for copying nodes as same name siblings between workspace.
  *
- * @test
- * @sources WorkspaceCopyBetweenWorkspacesSameNameSibsTest.java
- * @executeClass org.apache.jackrabbit.test.api.WorkspaceCopyBetweenWorkspacesSameNameSibsTest
- * @keywords level2
  */
 public class WorkspaceCopyBetweenWorkspacesSameNameSibsTest extends AbstractWorkspaceSameNameSibsTest {
 
@@ -60,10 +56,12 @@ public class WorkspaceCopyBetweenWorkspacesSameNameSibsTest extends AbstractWork
     /**
      * An ItemExistsException is thrown if a node or property already exists at
      * destAbsPath.
-     * @tck.config sameNameSibsFalseNodeType name of a node type that does not
+     * <ul>
+     * <li>{@code sameNameSibsFalseNodeType} name of a node type that does not
      * allows same name siblings.
-     * @tck.config nodeName3 name of a child node that does not allow same name
+     * <li>{@code nodeName3} name of a child node that does not allow same name
      * siblings..
+     * </ul>
      */
     public void testCopyNodesNodeExistsAtDestPath() throws RepositoryException {
         // create a parent node where allowSameNameSiblings are set to false

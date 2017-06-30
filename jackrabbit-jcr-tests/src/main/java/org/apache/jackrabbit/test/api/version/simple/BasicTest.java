@@ -21,10 +21,6 @@ import javax.jcr.RepositoryException;
 /**
  * <code>BasicTest</code> checks if simple versioning is correctly set up
  *
- * @test
- * @sources SVBasicTest.java
- * @executeClass org.apache.jackrabbit.test.api.version.SVBasicTest
- * @keywords simple-versioning
  */
 public class BasicTest extends AbstractVersionTest {
 

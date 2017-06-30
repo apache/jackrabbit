@@ -32,10 +32,6 @@ import java.text.ParseException;
  * value)</code> and <code>NodeType.canSetProperty(String propertyNa  me,
  * Value[] values)</code> where property is of type Path.
  *
- * @test
- * @sources CanSetPropertyPathPath.java
- * @executeClass org.apache.jackrabbit.test.api.nodetype.CanSetPropertyPathTest
- * @keywords level2
  */
 public class CanSetPropertyPathTest extends AbstractJCRTest {
     /**

@@ -24,10 +24,6 @@ import javax.jcr.version.VersionException;
  * <code>WorkspaceMoveVersionExceptionTest</code> contains tests dealing with
  * moving nodes using {@link javax.jcr.Workspace#move(String, String)}.
  *
- * @test
- * @sources WorkspaceMoveVersionExceptionTest.java
- * @executeClass org.apache.jackrabbit.test.api.version.WorkspaceMoveVersionExceptionTest
- * @keywords versioning
  */
 public class WorkspaceMoveVersionExceptionTest extends AbstractVersionTest {
 

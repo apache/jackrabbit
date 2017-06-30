@@ -69,10 +69,6 @@ import java.io.StringWriter;
  * against the required behaviours according the document view xml mapping
  * defined in the JSR 170 specification in chapter 6.4.2, 6.4.3 and 6.4.4 .
  *
- * @test
- * @sources ExportDocViewTest.java
- * @executeClass org.apache.jackrabbit.test.api.ExportDocViewTest
- * @keywords level1
  */
 public class ExportDocViewTest extends AbstractJCRTest {
 

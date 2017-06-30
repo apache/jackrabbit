@@ -27,10 +27,6 @@ import org.apache.jackrabbit.test.NotExecutableException;
  * <code>SVFrozenNodeTest</code> covers tests related to frozen nodes in
  * simple versioning
  *
- * @test
- * @sources SVFrozenNodeTest.java
- * @executeClass org.apache.jackrabbit.test.api.version.SVFrozenNodeTest
- * @keywords simple-versioning
  */
 public class FrozenNodeTest extends AbstractVersionTest {
 

@@ -32,10 +32,6 @@ import java.text.ParseException;
  * value)</code> and <code>NodeType.canSetProperty(String propertyName, Value[]
  * values)</code> where property is of type Long.
  *
- * @test
- * @sources CanSetPropertyLongTest.java
- * @executeClass org.apache.jackrabbit.test.api.nodetype.CanSetPropertyLongTest
- * @keywords level2
  */
 public class CanSetPropertyLongTest extends AbstractJCRTest {
     /**
