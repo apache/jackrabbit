@@ -17,6 +17,9 @@
 package org.apache.jackrabbit.jcr2spi;
 
 import java.util.Random;
+
+import static org.junit.Assert.assertArrayEquals;
+
 import java.io.ByteArrayInputStream;
 
 import javax.jcr.Node;
@@ -25,6 +28,7 @@ import javax.jcr.Property;
 import javax.jcr.Binary;
 import javax.jcr.ValueFormatException;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.jcr2spi.state.PropertyState;
 import org.apache.jackrabbit.spi.QValue;
 import org.apache.jackrabbit.test.AbstractJCRTest;
@@ -121,7 +125,7 @@ public class BinaryTest extends AbstractJCRTest {
         assertFalse(qv1.equals(qv2));
 
         superuser.save();
-        
+
         assertEquals(qv2, getQValue(p));
         assertDisposed(qv1);
     }
@@ -136,7 +140,7 @@ public class BinaryTest extends AbstractJCRTest {
         QValue qv2 = getQValue(p);
 
         assertFalse(qv1.equals(qv2));
-        
+
         superuser.save();
 
         assertEquals(qv2, getQValue(p));
@@ -163,6 +167,30 @@ public class BinaryTest extends AbstractJCRTest {
         assertSame(qv1, getQValue(p));
 
         assertFalse(qv2.equals(getQValue(p)));
+    }
+
+    public void testStreamIntegrity() throws Exception {
+        Node test = testRootNode.addNode("test");
+        byte bytes[] = new byte[256];
+        for (int i = 0; i < bytes.length; i++) {
+            bytes[i] = (byte)i;
+        }
+        ByteArrayInputStream testData = new ByteArrayInputStream(bytes);
+        Property p = test.setProperty("prop", superuser.getValueFactory().createBinary(testData));
+        superuser.save();
+
+        // check from other session
+        Session s = getHelper().getReadOnlySession();
+        try {
+            p = s.getNode(testRoot).getNode("test").getProperty("prop");
+
+            // check the binaries are indeed the same (JCR-4154)
+            byte[] result = new byte[bytes.length];
+            IOUtils.readFully(p.getBinary().getStream(), result);
+            assertArrayEquals(bytes, result);
+        } finally {
+            s.logout();
+        }
     }
 
     protected void checkBinary(Property p) throws Exception {
