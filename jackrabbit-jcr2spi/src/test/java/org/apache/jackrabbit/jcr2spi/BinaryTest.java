@@ -38,13 +38,10 @@ import org.apache.jackrabbit.test.AbstractJCRTest;
  */
 public class BinaryTest extends AbstractJCRTest {
 
-    private static byte[] generateBytes() {
+    private static ByteArrayInputStream generateValue() {
         byte[] data = new byte[1024 * 1024];
         new Random().nextBytes(data);
-        return data;
-    }
 
-    private static ByteArrayInputStream generateValue(byte[] data) {
         return new ByteArrayInputStream(data);
     }
 
@@ -63,9 +60,7 @@ public class BinaryTest extends AbstractJCRTest {
 
     public void testStreamBinary() throws Exception {
         Node test = testRootNode.addNode("test");
-        byte bytes[] = generateBytes();
-        ByteArrayInputStream testData = generateValue(bytes);
-        Property p = test.setProperty("prop", testData);
+        Property p = test.setProperty("prop", generateValue());
         // check before save
         checkBinary(p);
         superuser.save();
@@ -77,11 +72,6 @@ public class BinaryTest extends AbstractJCRTest {
         try {
             p = s.getNode(testRoot).getNode("test").getProperty("prop");
             checkBinary(p);
-
-            // check the binaries are indeed the same (JCR-4154)
-            byte[] result = new byte[bytes.length];
-            IOUtils.readFully(p.getBinary().getStream(), result);
-            assertArrayEquals(bytes, result);
         } finally {
             s.logout();
         }
@@ -89,7 +79,7 @@ public class BinaryTest extends AbstractJCRTest {
 
     public void testStreamBinary2() throws Exception {
         Node test = testRootNode.addNode("test");
-        Property p = test.setProperty("prop", generateValue(generateBytes()));
+        Property p = test.setProperty("prop", generateValue());
         // check before save
         checkBinary(p);
         superuser.save();
@@ -108,9 +98,9 @@ public class BinaryTest extends AbstractJCRTest {
 
     public void testBinaryTwiceNewProperty() throws Exception {
         Node test = testRootNode.addNode("test");
-        Property p = test.setProperty("prop", generateValue(generateBytes()));
+        Property p = test.setProperty("prop", generateValue());
         QValue qv1 = getQValue(p);
-        test.setProperty("prop", generateValue(generateBytes()));
+        test.setProperty("prop", generateValue());
         QValue qv2 = getQValue(p);
 
         assertFalse(qv1.equals(qv2));
@@ -123,13 +113,13 @@ public class BinaryTest extends AbstractJCRTest {
 
     public void testBinaryTwiceModifiedProperty() throws Exception {
         Node test = testRootNode.addNode("test");
-        Property p = test.setProperty("prop", generateValue(generateBytes()));
+        Property p = test.setProperty("prop", generateValue());
         superuser.save();
 
         // modify twice
-        test.setProperty("prop", generateValue(generateBytes()));
+        test.setProperty("prop", generateValue());
         QValue qv1 = getQValue(p);
-        test.setProperty("prop", generateValue(generateBytes()));
+        test.setProperty("prop", generateValue());
         QValue qv2 = getQValue(p);
 
         assertFalse(qv1.equals(qv2));
@@ -142,11 +132,11 @@ public class BinaryTest extends AbstractJCRTest {
 
     public void testBinaryTwiceIntermediateSave() throws Exception {
         Node test = testRootNode.addNode("test");
-        Property p = test.setProperty("prop", generateValue(generateBytes()));
+        Property p = test.setProperty("prop", generateValue());
         QValue qv1 = getQValue(p);
         superuser.save();
 
-        test.setProperty("prop", generateValue(generateBytes()));
+        test.setProperty("prop", generateValue());
         QValue qv2 = getQValue(p);
 
         assertFalse(qv1.equals(qv2));
@@ -160,12 +150,12 @@ public class BinaryTest extends AbstractJCRTest {
     public void testRevertSettingExistingBinary() throws Exception {
         Node test = testRootNode.addNode("test");
 
-        Binary b = superuser.getValueFactory().createBinary(generateValue(generateBytes()));
+        Binary b = superuser.getValueFactory().createBinary(generateValue());
         Property p = test.setProperty("prop", b);
         QValue qv1 = getQValue(p);
         superuser.save();
 
-        Binary b2 = superuser.getValueFactory().createBinary(generateValue(generateBytes()));
+        Binary b2 = superuser.getValueFactory().createBinary(generateValue());
         test.setProperty("prop", b2);
         QValue qv2 = getQValue(p);
 
@@ -177,6 +167,30 @@ public class BinaryTest extends AbstractJCRTest {
         assertSame(qv1, getQValue(p));
 
         assertFalse(qv2.equals(getQValue(p)));
+    }
+
+    public void testStreamIntegrity() throws Exception {
+        Node test = testRootNode.addNode("test");
+        byte bytes[] = new byte[256];
+        for (int i = 0; i < bytes.length; i++) {
+            bytes[i] = (byte)i;
+        }
+        ByteArrayInputStream testData = new ByteArrayInputStream(bytes);
+        Property p = test.setProperty("prop", superuser.getValueFactory().createBinary(testData));
+        superuser.save();
+
+        // check from other session
+        Session s = getHelper().getReadOnlySession();
+        try {
+            p = s.getNode(testRoot).getNode("test").getProperty("prop");
+
+            // check the binaries are indeed the same (JCR-4154)
+            byte[] result = new byte[bytes.length];
+            IOUtils.readFully(p.getBinary().getStream(), result);
+            assertArrayEquals(bytes, result);
+        } finally {
+            s.logout();
+        }
     }
 
     protected void checkBinary(Property p) throws Exception {
