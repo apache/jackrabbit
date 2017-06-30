@@ -99,7 +99,7 @@ final class Utils {
             case PropertyType.BINARY:
                 binaries.add(value);
                 // server detects binaries based on presence of filename parameters (JCR-4154)
-                part = builder.setBody(new InputStreamBody(value.getStream(), ctype, value.toString())).build();
+                part = builder.setBody(new InputStreamBody(value.getStream(), ctype, paramName)).build();
                 break;
             case PropertyType.NAME:
                 part = builder.setBody(new StringBody(resolver.getJCRName(value.getName()), ctype)).build();
