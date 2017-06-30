@@ -177,16 +177,10 @@ public class WebdavRequestImpl implements WebdavRequest, DavConstants {
      * @see DavServletRequest#getDestinationLocator
      */
     public DavResourceLocator getDestinationLocator() throws DavException {
-        return getHrefLocator(httpRequest.getHeader(HEADER_DESTINATION));
+        return getHrefLocator(httpRequest.getHeader(HEADER_DESTINATION), true);
     }
 
-    /**
-     * Parse a href and return the path of the resource.
-     *
-     * @return path of the resource identified by the href.
-     * @see org.apache.jackrabbit.webdav.bind.BindServletRequest#getHrefLocator
-     */
-    public DavResourceLocator getHrefLocator(String href) throws DavException {
+    private DavResourceLocator getHrefLocator(String href, boolean forDestination) throws DavException {
         String ref = href;
         if (ref != null) {
             //href should be a Simple-ref production as defined in RFC4918, so it is either an absolute URI
@@ -220,7 +214,22 @@ public class WebdavRequestImpl implements WebdavRequest, DavConstants {
                 throw new DavException(DavServletResponse.SC_FORBIDDEN);
             }
         }
-        return factory.createResourceLocator(hrefPrefix, ref);
+        if (factory instanceof AbstractLocatorFactory) {
+            return ((AbstractLocatorFactory)factory).createResourceLocator(hrefPrefix, ref, forDestination);
+        }
+        else {
+            return factory.createResourceLocator(hrefPrefix, ref);
+        }
+    }
+
+    /**
+     * Parse a href and return the path of the resource.
+     *
+     * @return path of the resource identified by the href.
+     * @see org.apache.jackrabbit.webdav.bind.BindServletRequest#getHrefLocator
+     */
+    public DavResourceLocator getHrefLocator(String href) throws DavException {
+        return getHrefLocator(href, false);
     }
 
     /**
