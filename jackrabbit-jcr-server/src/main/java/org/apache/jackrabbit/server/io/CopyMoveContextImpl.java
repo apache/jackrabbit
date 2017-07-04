@@ -16,9 +16,6 @@
  */
 package org.apache.jackrabbit.server.io;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.Workspace;
@@ -27,11 +24,6 @@ import javax.jcr.Workspace;
  * <code>CopyMoveContextImpl</code>...
  */
 public class CopyMoveContextImpl implements CopyMoveContext {
-
-    /**
-     * logger instance
-     */
-    private static final Logger log = LoggerFactory.getLogger(CopyMoveContextImpl.class);
 
     private final boolean isShallow;
     private final Session session;

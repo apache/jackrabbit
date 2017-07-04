@@ -16,21 +16,18 @@
  */
 package org.apache.jackrabbit.server.io;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.apache.jackrabbit.webdav.property.PropEntry;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 import javax.jcr.RepositoryException;
-import java.util.Map;
-import java.util.List;
-import java.util.ArrayList;
+
+import org.apache.jackrabbit.webdav.property.PropEntry;
 
 /**
  * <code>PropertyManagerImpl</code>...
  */
 public class PropertyManagerImpl implements PropertyManager {
-
-    private static Logger log = LoggerFactory.getLogger(PropertyManagerImpl.class);
 
     private static PropertyManager DEFAULT_MANAGER;
 

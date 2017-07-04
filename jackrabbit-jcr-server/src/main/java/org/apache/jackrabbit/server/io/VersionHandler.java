@@ -25,12 +25,8 @@ import javax.jcr.version.Version;
 import org.apache.jackrabbit.JcrConstants;
 import org.apache.jackrabbit.webdav.DavResource;
 import org.apache.jackrabbit.webdav.property.PropEntry;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class VersionHandler extends DefaultHandler implements IOHandler{
-
-    private static Logger log = LoggerFactory.getLogger(VersionHandler.class);
 
     public VersionHandler() {
     }

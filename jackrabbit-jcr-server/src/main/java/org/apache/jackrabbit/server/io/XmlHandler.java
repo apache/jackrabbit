@@ -16,33 +16,31 @@
  */
 package org.apache.jackrabbit.server.io;
 
-import org.apache.jackrabbit.JcrConstants;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.jcr.ImportUUIDBehavior;
-import javax.jcr.Node;
-import javax.jcr.RepositoryException;
-import javax.jcr.Session;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.HashSet;
 import java.util.Set;
 
+import javax.jcr.ImportUUIDBehavior;
+import javax.jcr.Node;
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
+
+import org.apache.jackrabbit.JcrConstants;
+
 /**
  * <code>XmlHandler</code> imports xml files and exports nodes that have
  * the proper {@link #XML_MIMETYPE} defined with their content. The export is
  * performed by running a {@link Session#exportDocumentView(String, OutputStream, boolean, boolean)
  * document view export} for the content of the export root defined with the
- * specified {@link ExportContext}.<br>
+ * specified {@link ExportContext}.
+ * <p>
  * Please note that this handler is not suited for a generic system or document
  * view import/export of {@link Node}s because an extra root node is always
  * created during import and expected during export, respectively.
  */
 public class XmlHandler extends DefaultHandler {
-
-    private static Logger log = LoggerFactory.getLogger(XmlHandler.class);
 
     /**
      * the xml mimetype

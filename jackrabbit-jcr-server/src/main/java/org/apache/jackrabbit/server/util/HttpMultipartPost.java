@@ -40,9 +40,6 @@ import java.util.Set;
  */
 class HttpMultipartPost {
 
-    /**
-     * logger instance
-     */
     private static final Logger log = LoggerFactory.getLogger(HttpMultipartPost.class);
 
     private final Map<String, List<FileItem>> nameToItems = new LinkedHashMap<String, List<FileItem>>();
@@ -55,22 +52,11 @@ class HttpMultipartPost {
         initialized = true;
     }
 
-    /**
-     *
-     * @param tmpDir
-     * @return
-     */
     private static FileItemFactory getFileItemFactory(File tmpDir) {
         DiskFileItemFactory fiFactory = new DiskFileItemFactory(DiskFileItemFactory.DEFAULT_SIZE_THRESHOLD, tmpDir);
         return fiFactory;
     }
 
-    /**
-     * 
-     * @param request
-     * @param tmpDir
-     * @throws IOException
-     */
     private void extractMultipart(HttpServletRequest request, File tmpDir)
             throws IOException {
         if (!ServletFileUpload.isMultipartContent(request)) {
@@ -128,8 +114,8 @@ class HttpMultipartPost {
     }
 
     /**
-     * Release all file items hold with the name-to-items map. specially those
-     * having a tmp-file associated with.
+     * Release all file items hold with the name-to-items map. Especially those
+     * having a temporary file associated with.
      * 
      * @see FileItem#delete()
      */
@@ -159,12 +145,12 @@ class HttpMultipartPost {
 
 
     /**
-     * Returns the content types of the paramaters with the given name. If
+     * Returns the content types of the parameters with the given name. If
      * the parameter does not exist <code>null</code> is returned. If the content
      * type of any of the parameter values is not known, the corresponding entry
      * in the array returned is <code>null</code>.
      * <p>
-     * The content type of a paramater is only known here if the information
+     * The content type of a parameter is only known here if the information
      * has been sent by the client browser. This is generally only the case
      * for file upload fields of HTML forms which have been posted using the
      * HTTP <em>POST</em> with <em>multipart/form-data</em> encoding.
@@ -183,7 +169,7 @@ class HttpMultipartPost {
      * entry will be <code>null</code> because the content type of the text
      * input field will generally not be sent by the client.
      *
-     * @param name The name of the paramater whose content type is to be
+     * @param name The name of the parameter whose content type is to be
      * returned.
      * @return The content types of the file items with the specified name.
      */
@@ -202,7 +188,7 @@ class HttpMultipartPost {
     
     /**
      * Returns the first value of the file items with the given <code>name</code>.
-     * The byte to string converstion is done using either the contenttype of
+     * The byte to string conversion is done using either the content type of
      * the file items or the <code>formEncoding</code>.
      * <p>
      * Please note that if the addressed parameter is an uploaded file rather
@@ -271,7 +257,7 @@ class HttpMultipartPost {
         checkInitialized();
         return fileParamNames;
     }
-    
+
     /**
      * Returns an array of input streams for uploaded file parameters.
      *

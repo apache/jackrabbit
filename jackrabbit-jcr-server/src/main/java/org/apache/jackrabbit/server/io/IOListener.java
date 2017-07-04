@@ -22,30 +22,19 @@ package org.apache.jackrabbit.server.io;
 public interface IOListener {
 
     /**
-     * The import/export context has been passed to the given <code>IOHandler</code>
-     *
-     * @param handler
-     * @param context
+     * The import/export context has been passed to the given <code>IOHandler</code>.
      */
     public void onBegin(IOHandler handler, IOContext context);
 
     /**
      * The specified <code>IOHandler</code> finished. A boolean flag indicates
      * whether the handler was able to run the import/export.
-     *
-     * @param handler
-     * @param context
-     * @param success
      */
     public void onEnd(IOHandler handler, IOContext context, boolean success);
 
     /**
      * An exception occurred during import/export within the specified
      * <code>IOHandler</code>.
-     *
-     * @param ioHandler
-     * @param context
-     * @param e
      */
     public void onError(IOHandler ioHandler, IOContext context, Exception e);
 }

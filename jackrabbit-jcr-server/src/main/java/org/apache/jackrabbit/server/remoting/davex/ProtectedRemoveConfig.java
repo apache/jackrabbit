@@ -35,49 +35,49 @@ import org.xml.sax.SAXException;
  */
 class ProtectedRemoveConfig {
 
-	private static final Logger log = LoggerFactory.getLogger(ProtectedRemoveConfig.class);
+    private static final Logger log = LoggerFactory.getLogger(ProtectedRemoveConfig.class);
 
-	private static final String ELEMENT_HANDLER = "protecteditemremovehandler";
-	private static final String ELEMENT_CLASS = "class";
-	private static final String ATTRIBUTE_NAME = "name";
+    private static final String ELEMENT_HANDLER = "protecteditemremovehandler";
+    private static final String ELEMENT_CLASS = "class";
+    private static final String ATTRIBUTE_NAME = "name";
 
-	private final ProtectedRemoveManager manager;
+    private final ProtectedRemoveManager manager;
 
-	ProtectedRemoveConfig(ProtectedRemoveManager manager) {
-		this.manager = manager;
-	}
+    ProtectedRemoveConfig(ProtectedRemoveManager manager) {
+        this.manager = manager;
+    }
 
-	void parse(InputStream inputStream) throws IOException {
-		Element config;
-		ProtectedItemRemoveHandler instance = null;
-		try {
-			config = DomUtil.parseDocument(inputStream).getDocumentElement();
-			if (config == null) {
-				log.warn("Missing mandatory config element");
-				return;
-			}
-			ElementIterator handlers = DomUtil.getChildren(config, ELEMENT_HANDLER, null);
-			while (handlers.hasNext()) {
-				Element handler = handlers.nextElement();
-				instance = createHandler(handler);
-				manager.addHandler(instance);
-			}
-		} catch (ParserConfigurationException e) {
-			log.error(e.getMessage(), e);
-		} catch (SAXException e) {
-			log.error(e.getMessage(), e);
-		}
-	}
+    void parse(InputStream inputStream) throws IOException {
+        Element config;
+        ProtectedItemRemoveHandler instance = null;
+        try {
+            config = DomUtil.parseDocument(inputStream).getDocumentElement();
+            if (config == null) {
+                log.warn("Missing mandatory config element");
+                return;
+            }
+            ElementIterator handlers = DomUtil.getChildren(config, ELEMENT_HANDLER, null);
+            while (handlers.hasNext()) {
+                Element handler = handlers.nextElement();
+                instance = createHandler(handler);
+                manager.addHandler(instance);
+            }
+        } catch (ParserConfigurationException e) {
+            log.error(e.getMessage(), e);
+        } catch (SAXException e) {
+            log.error(e.getMessage(), e);
+        }
+    }
 
-	private ProtectedItemRemoveHandler createHandler(Element parent) {
-		ProtectedItemRemoveHandler instance = null;
-		Element classElem = DomUtil.getChildElement(parent, ELEMENT_CLASS, null);
-		if (classElem != null) {
-			String className = DomUtil.getAttribute(classElem, ATTRIBUTE_NAME, null);
-			if (className != null) {
-				instance = manager.createHandler(className);
-			}
-		}
-		return instance;
-	}
+    private ProtectedItemRemoveHandler createHandler(Element parent) {
+        ProtectedItemRemoveHandler instance = null;
+        Element classElem = DomUtil.getChildElement(parent, ELEMENT_CLASS, null);
+        if (classElem != null) {
+            String className = DomUtil.getAttribute(classElem, ATTRIBUTE_NAME, null);
+            if (className != null) {
+                instance = manager.createHandler(className);
+            }
+        }
+        return instance;
+    }
 }
