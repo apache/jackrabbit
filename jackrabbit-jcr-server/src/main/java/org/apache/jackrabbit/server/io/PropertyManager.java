@@ -27,32 +27,18 @@ import java.util.Map;
 public interface PropertyManager {
 
     /**
-     *
-     * @param exportContext
-     * @param isCollection
-     * @return
-     * @throws RepositoryException
      */
     public boolean exportProperties(PropertyExportContext exportContext, boolean isCollection) throws RepositoryException;
 
     /**
-     *
-     * @param importContext
-     * @param isCollection
-     * @return
-     * @throws RepositoryException
      */
     public Map<? extends PropEntry, ?> alterProperties(PropertyImportContext importContext, boolean isCollection) throws RepositoryException;
 
     /**
-     *
-     * @param propertyHandler
      */
     public void addPropertyHandler(PropertyHandler propertyHandler);
 
     /**
-     *
-     * @return
      */
     public PropertyHandler[] getPropertyHandlers();
 }

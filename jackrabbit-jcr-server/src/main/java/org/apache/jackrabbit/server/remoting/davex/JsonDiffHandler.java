@@ -183,7 +183,7 @@ class JsonDiffHandler implements DiffHandler {
         try {
             String itemPath = getItemPath(targetPath);
             Item item = session.getItem(itemPath);
-            
+
             ItemDefinition def = (item.isNode()) ? ((Node) item).getDefinition() : ((Property) item).getDefinition();
             if (def.isProtected()) {
                 // delegate to the manager.
@@ -490,8 +490,8 @@ class JsonDiffHandler implements DiffHandler {
     private Value[] extractValues(String diffValue) throws RepositoryException, DiffException, IOException {
         ValuesHandler hndlr = new ValuesHandler();
         // surround diff value { key : } to make it parsable
-        new JsonParser(hndlr).parse("{\"a\":"+diffValue+"}");
-        
+        new JsonParser(hndlr).parse("{\"a\":" + diffValue + "}");
+
         return hndlr.getValues();
     }
 
@@ -615,23 +615,23 @@ class JsonDiffHandler implements DiffHandler {
 
         @Override
         public void object() throws IOException {
-        	ImportNode n;
-        	if (st.isEmpty()) {
-        		try {
-            		n = new ImportNode(parent.getPath(), key);        			
-        		} catch (RepositoryException e) {
-        			throw new DiffException(e.getMessage(), e);
-        		}
+            ImportNode n;
+            if (st.isEmpty()) {
+                try {
+                    n = new ImportNode(parent.getPath(), key);
+                } catch (RepositoryException e) {
+                    throw new DiffException(e.getMessage(), e);
+                }
 
-        	} else {
-        		ImportItem obj = st.peek();
-                n = new ImportNode(obj.getPath(), key);                                                    
-                if (obj instanceof ImportNode) {                        
-                	((ImportNode) obj).addNode(n);                    
-                } else {                
-                	throw new DiffException("Invalid DIFF format: The JSONArray may only contain simple values.");                    
-                }        		
-        	}
+            } else {
+                ImportItem obj = st.peek();
+                n = new ImportNode(obj.getPath(), key);
+                if (obj instanceof ImportNode) {
+                    ((ImportNode) obj).addNode(n);
+                } else {
+                    throw new DiffException("Invalid DIFF format: The JSONArray may only contain simple values.");
+                }
+            }
             st.push(n);
         }
 
@@ -709,7 +709,7 @@ class JsonDiffHandler implements DiffHandler {
         public void value(double value) throws IOException {
             value(vf.createValue(value));
         }
-                
+
         private void value(Value v) throws IOException {
             ImportItem obj = st.peek();
             if (obj instanceof ImportMvProp) {
@@ -727,7 +727,7 @@ class JsonDiffHandler implements DiffHandler {
         final String parentPath;
         final String name;
         final String path;
-        
+
         private ImportItem(String parentPath, String name) throws IOException {
             if (name == null) {
                 throw new DiffException("Invalid DIFF format: NULL key.");
@@ -736,15 +736,15 @@ class JsonDiffHandler implements DiffHandler {
             this.parentPath = parentPath;
             this.path = parentPath+"/"+name;
         }
-        
+
         void setNameAttribute(AttributesImpl attr) {
             attr.addAttribute(Name.NS_SV_URI, "name", Name.NS_SV_PREFIX +":name", TYPE_CDATA, name);
         }
 
         String getPath() {
-        	return path;
+            return path;
         }
-        
+
         abstract boolean mandatesImport(Node parent);
 
         abstract void createItem(Node parent) throws RepositoryException, IOException;
@@ -830,8 +830,8 @@ class JsonDiffHandler implements DiffHandler {
 
         void addNode(ImportNode node) {
             childN.add(node);
-        }        
-        
+        }
+
         @Override
         void importItem(ContentHandler contentHandler) throws IOException {
             try {
@@ -946,12 +946,12 @@ class JsonDiffHandler implements DiffHandler {
             super(parentPath, name);
             try {
                 if (value == null) {
-            		this.value = extractValuesFromRequest(getPath())[0];
-            	} else {
-            		this.value = value;
-            	}                        	
+                    this.value = extractValuesFromRequest(getPath())[0];
+                } else {
+                    this.value = value;
+                }
             } catch (RepositoryException e) {
-            	throw new DiffException(e.getMessage(), e);
+                throw new DiffException(e.getMessage(), e);
             }
         }
 
@@ -962,12 +962,12 @@ class JsonDiffHandler implements DiffHandler {
 
         @Override
         void startValueElement(ContentHandler contentHandler) throws IOException {
-            try {            	
+            try {
                 String str = value.getString();
-                contentHandler.startElement(Name.NS_SV_URI, VALUE, Name.NS_SV_PREFIX+":"+VALUE, new AttributesImpl());
+                contentHandler.startElement(Name.NS_SV_URI, VALUE, Name.NS_SV_PREFIX + ":" + VALUE, new AttributesImpl());
                 contentHandler.characters(str.toCharArray(), 0, str.length());
-                contentHandler.endElement(Name.NS_SV_URI, VALUE, Name.NS_SV_PREFIX+":"+VALUE);
-            } catch(SAXException e) {
+                contentHandler.endElement(Name.NS_SV_URI, VALUE, Name.NS_SV_PREFIX + ":" + VALUE);
+            } catch (SAXException e) {
                 throw new DiffException(e.getMessage());
             } catch (ValueFormatException e) {
                 throw new DiffException(e.getMessage());
@@ -998,18 +998,19 @@ class JsonDiffHandler implements DiffHandler {
         @Override
         void startValueElement(ContentHandler contentHandler) throws IOException {
             try {
-            	// Multi-valued property with values present in the request multi-part             	
-            	if (values.size() == 0) {            	
-            		values = Arrays.asList(extractValuesFromRequest(getPath()));            	   
-            	}
-            	
+                // Multi-valued property with values present in the request
+                // multi-part
+                if (values.size() == 0) {
+                    values = Arrays.asList(extractValuesFromRequest(getPath()));
+                }
+
                 for (Value v : values) {
                     String str = v.getString();
-                    contentHandler.startElement(Name.NS_SV_URI, VALUE, Name.NS_SV_PREFIX+":"+VALUE, new AttributesImpl());
+                    contentHandler.startElement(Name.NS_SV_URI, VALUE, Name.NS_SV_PREFIX + ":" + VALUE, new AttributesImpl());
                     contentHandler.characters(str.toCharArray(), 0, str.length());
-                    contentHandler.endElement(Name.NS_SV_URI, VALUE, Name.NS_SV_PREFIX+":"+VALUE);
+                    contentHandler.endElement(Name.NS_SV_URI, VALUE, Name.NS_SV_PREFIX + ":" + VALUE);
                 }
-            } catch(SAXException e) {
+            } catch (SAXException e) {
                 throw new DiffException(e.getMessage());
             } catch (ValueFormatException e) {
                 throw new DiffException(e.getMessage());

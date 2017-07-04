@@ -36,7 +36,8 @@ import java.util.Map;
 
 /**
  * <code>DirListingExportHandler</code> represents a simple export for collections:
- * a human-readable view listing the members.<br>
+ * a human-readable view listing the members.
+ * <p>
  * Note: If {@link #exportContent(ExportContext, boolean)} is called the view list
  * child nodes only, without respecting their representation as <code>DavResource</code>s.
  */

@@ -118,11 +118,6 @@ public class DefaultHandler implements IOHandler, PropertyHandler, CopyMoveHandl
     /**
      * Creates a new <code>DefaultHandler</code>. Please note that the specified
      * nodetypes must match the definitions of the defaults.
-     *
-     * @param ioManager
-     * @param collectionNodetype
-     * @param defaultNodetype
-     * @param contentNodetype
      */
     public DefaultHandler(IOManager ioManager, String collectionNodetype, String defaultNodetype, String contentNodetype) {
         this.ioManager = ioManager;
@@ -218,12 +213,6 @@ public class DefaultHandler implements IOHandler, PropertyHandler, CopyMoveHandl
     /**
      * Imports the data present on the import context to the specified content
      * node.
-     *
-     * @param context
-     * @param isCollection
-     * @param contentNode
-     * @return
-     * @throws IOException
      */
     protected boolean importData(ImportContext context, boolean isCollection, Node contentNode) throws IOException, RepositoryException {
         InputStream in = context.getInputStream();
@@ -246,11 +235,6 @@ public class DefaultHandler implements IOHandler, PropertyHandler, CopyMoveHandl
     /**
      * Imports the properties present on the specified context to the content
      * node.
-     *
-     * @param context
-     * @param isCollection
-     * @param contentNode
-     * @return
      */
     protected boolean importProperties(ImportContext context, boolean isCollection, Node contentNode) {
         try {
@@ -280,15 +264,11 @@ public class DefaultHandler implements IOHandler, PropertyHandler, CopyMoveHandl
     /**
      * Retrieves/creates the node that will be used to import properties and
      * data. In case of a non-collection this includes and additional content node
-     * to be created beside the 'file' node.<br>
+     * to be created beside the 'file' node.
+     * <p>
      * Please note: If the jcr:content node already exists and contains child
      * nodes, those will be removed in order to make sure, that the import
      * really replaces the existing content of the file-node.
-     *
-     * @param context
-     * @param isCollection
-     * @return
-     * @throws RepositoryException
      */
     protected Node getContentNode(ImportContext context, boolean isCollection) throws RepositoryException {
         Node parentNode = (Node)context.getImportRoot();
