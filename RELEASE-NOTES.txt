@@ -1,36 +1,36 @@
-Release Notes -- Apache Jackrabbit -- Version 2.14.1
+Release Notes -- Apache Jackrabbit -- Version 2.14.2
 
 Introduction
 ------------
 
-This is Apache Jackrabbit(TM) 2.14.1, a fully compliant implementation of the
+This is Apache Jackrabbit(TM) 2.14.2, a fully compliant implementation of the
 Content Repository for Java(TM) Technology API, version 2.0 (JCR 2.0) as
 specified in the Java Specification Request 283 (JSR 283).
 
-Apache Jackrabbit 2.14.1 is a patch release that contains fixes and
+Apache Jackrabbit 2.14.2 is a patch release that contains fixes and
 improvements over Jackrabbit 2.14. Jackrabbit 2.14.x releases are
 considered stable and targeted for production use.
   
-Changes in Jackrabbit 2.14.1
+Changes in Jackrabbit 2.14.2
 ----------------------------
 
 Bug
 
-    [JCR-4100] - jackrabbit-webdav: Scope implements equals() but not hashCode()
-    [JCR-4102] - jcr2dav: change polling thread sometimes dies with NPE
-    [JCR-4118] - RepositoryChecker creates invalid node names
-    [JCR-4121] - ConcurrentModificationException in InternalVersionHistoryImpl.fixLegacy()
-    [JCR-4133] - fix javadoc problems that are errors with JDK8
+    [JCR-4146] - json extension is removed by AbstractWebdavServlet on COPY request
+    [JCR-4149] - change to drop SHA-1 requires version change
+    [JCR-4150] - enable bundle:baseline check
+    [JCR-4154] - davex upload of binaries broken
+
+Improvement
+
+    [JCR-4115] - Don't use SHA-1 for new DataStore binaries (Jackrabbit)
 
 Task
 
-    [JCR-4104] - cleanup how command lines for test executions are constructed
-    [JCR-4106] - fix JCR API docs link
-    [JCR-4107] - Upgrade to httpclient 4.5.3
-    [JCR-4119] - Upgrade httpcomponents/httpmime to 4.5.3
-    [JCR-4122] - align parent pom references with Oak
-    [JCR-4129] - get rid of unused org.json dependency
-    [JCR-4134] - update build instructions wrt Java versions
+    [JCR-4128] - update maven plugins and require Maven 3.2.1
+    [JCR-4142] - update junit dependency to 4.12
+    [JCR-4145] - upgrade clirr plugin to 2.8
+    [JCR-4151] - remove clirr profile in branches where bundle:baseline is used
 
 
 For more detailed information about all the changes in this and other
