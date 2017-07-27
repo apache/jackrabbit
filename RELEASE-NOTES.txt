@@ -1,35 +1,32 @@
-Release Notes -- Apache Jackrabbit -- Version 2.15.4
+Release Notes -- Apache Jackrabbit -- Version 2.15.5
 
 Introduction
 ------------
 
-This is Apache Jackrabbit(TM) 2.15.4, a fully compliant implementation of the
+This is Apache Jackrabbit(TM) 2.15.5, a fully compliant implementation of the
 Content Repository for Java(TM) Technology API, version 2.0 (JCR 2.0) as
 specified in the Java Specification Request 283 (JSR 283).
 
-Apache Jackrabbit 2.15.4 is an unstable release cut directly from
+Apache Jackrabbit 2.15.5 is an unstable release cut directly from
 Jackrabbit trunk, with a focus on new features and other
 improvements. For production use we recommend the latest stable 2.14.x
 release.
 
-Changes in Jackrabbit 2.15.4
+Changes in Jackrabbit 2.15.5
 ----------------------------
+
+Sub-task
+
+    [JCR-4164] - add test coverage for content codings
+    [JCR-4165] - WebDAV servlet: reject unknown/unsupported content codings with 4xx status code
 
 Bug
 
-    [JCR-4146] - json extension is removed by AbstractWebdavServlet on COPY request
-    [JCR-4149] - change to drop SHA-1 requires version change
-    [JCR-4150] - enable bundle:baseline check
-
-New Feature
-
-    [JCR-4144] - JackrabbitAccessControlList should have an API boolean isMultiValueRestriction(restrictionName)
+    [JCR-4154] - davex upload of binaries broken
 
 Task
 
-    [JCR-4145] - upgrade clirr plugin to 2.8
-    [JCR-4148] - revert update of findbugs
-    [JCR-4151] - remove clirr profile in branches where bundle:baseline is used
+    [JCR-4157] - jackrabbit-jcr-server: code cleanup
 
 
 In addition to the above-mentioned changes, this release contains
