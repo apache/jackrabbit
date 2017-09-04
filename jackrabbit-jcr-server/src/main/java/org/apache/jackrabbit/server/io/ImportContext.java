@@ -91,9 +91,6 @@ public interface ImportContext extends IOContext {
     public String getEncoding();
 
     /**
-     *
-     * @param propertyName
-     * @return
      */
     public Object getProperty(Object propertyName);
 }

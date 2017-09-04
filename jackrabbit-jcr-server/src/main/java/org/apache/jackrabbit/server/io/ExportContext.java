@@ -27,8 +27,6 @@ public interface ExportContext extends IOContext {
 
     /**
      * Returns the item to be exported
-     *
-     * @return
      */
     public Item getExportRoot();
 
@@ -41,16 +39,11 @@ public interface ExportContext extends IOContext {
 
     /**
      * Set the content type for the resource content
-     *
-     * @param mimeType
-     * @param encoding
      */
     public void setContentType(String mimeType, String encoding);
 
     /**
      * Sets the content language.
-     *
-     * @param contentLanguage
      */
     public void setContentLanguage(String contentLanguage);
 
@@ -86,9 +79,6 @@ public interface ExportContext extends IOContext {
 
     /**
      * Sets an arbitrary property to this export context.
-     *
-     * @param propertyName
-     * @param propertyValue
      */
     public void setProperty(Object propertyName, Object propertyValue);
 }

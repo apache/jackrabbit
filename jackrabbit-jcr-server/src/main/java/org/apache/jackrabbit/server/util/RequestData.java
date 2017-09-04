@@ -42,7 +42,7 @@ public class RequestData {
     public void dispose() {
         mpReq.dispose();
     }
-    
+
     /**
      * Returns an iterator over all parameter names.
      * 
@@ -52,7 +52,7 @@ public class RequestData {
         @SuppressWarnings("unchecked")
         HashSet<String> names = new HashSet<String>(request.getParameterMap().keySet());
         names.addAll(mpReq.getParameterNames());
-        
+
         return names.iterator();
     }
 
@@ -86,7 +86,7 @@ public class RequestData {
         String[] types = mpReq.getParameterTypes(name);
         return types == null ? null : types;
     }
-    
+
     /**
      * Returns an array of Strings with all values of the parameter addressed
      * by <code>name</code>. the byte to string conversion is done using either

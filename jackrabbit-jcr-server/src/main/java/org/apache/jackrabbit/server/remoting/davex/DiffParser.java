@@ -55,33 +55,14 @@ class DiffParser {
         this.handler = handler;
     }
 
-    /**
-     *
-     * @param str
-     * @throws IOException
-     * @throws DiffException
-     */
     public void parse(String str) throws IOException, DiffException {
         parse(new BufferedReader(new StringReader(str)));
     }
 
-    /**
-     *
-     * @param input
-     * @param charSetName
-     * @throws IOException
-     * @throws DiffException
-     */
     public void parse(InputStream input, String charSetName) throws IOException, DiffException {
         parse(new BufferedReader(new InputStreamReader(input, charSetName)));
     }
 
-    /**
-     *
-     * @param reader
-     * @throws IOException
-     * @throws DiffException
-     */
     public void parse(Reader reader) throws IOException, DiffException {
         int action = -1;
         String path = null;

@@ -113,7 +113,6 @@ public class ExportContextImpl extends AbstractExportContext {
      * Does nothing since the wrapped output context does not understand
      * creation time
      *
-     * @param creationTime
      * @see ExportContext#setCreationTime(long)
      */
     public void setCreationTime(long creationTime) {
@@ -151,7 +150,6 @@ public class ExportContextImpl extends AbstractExportContext {
      * If success is true, the properties set before an the output stream are
      * written to the wrapped <code>OutputContext</code>.
      *
-     * @param success
      * @see ExportContext#informCompleted(boolean)
      */
     @Override

@@ -16,23 +16,20 @@
  */
 package org.apache.jackrabbit.server.io;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.apache.jackrabbit.webdav.DavResource;
-import org.apache.jackrabbit.webdav.property.PropEntry;
-
-import javax.jcr.version.VersionHistory;
-import javax.jcr.RepositoryException;
-import javax.jcr.Item;
 import java.io.IOException;
 import java.util.Map;
+
+import javax.jcr.Item;
+import javax.jcr.RepositoryException;
+import javax.jcr.version.VersionHistory;
+
+import org.apache.jackrabbit.webdav.DavResource;
+import org.apache.jackrabbit.webdav.property.PropEntry;
 
 /**
  * <code>VersionHistoryHandler</code>...
  */
 public class VersionHistoryHandler implements IOHandler, PropertyHandler {
-
-    private static Logger log = LoggerFactory.getLogger(VersionHistoryHandler.class);
 
     private IOManager ioManager;
 

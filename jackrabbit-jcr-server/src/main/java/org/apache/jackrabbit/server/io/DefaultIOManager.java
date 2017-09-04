@@ -16,15 +16,10 @@
  */
 package org.apache.jackrabbit.server.io;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 /**
  * <code>DefaultIOManager</code>...
  */
 public class DefaultIOManager extends IOManagerImpl {
-
-    private static Logger log = LoggerFactory.getLogger(DefaultIOManager.class);
 
     /**
      * Creates a new <code>DefaultIOManager</code> and populates the internal

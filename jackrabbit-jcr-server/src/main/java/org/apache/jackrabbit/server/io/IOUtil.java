@@ -77,10 +77,6 @@ public final class IOUtil {
     }
 
     /**
-     *
-     * @param in
-     * @param out
-     * @throws IOException
      */
     public static void spool(InputStream in, OutputStream out) throws IOException {
         try {
@@ -157,7 +153,8 @@ public final class IOUtil {
     }
 
     /**
-     * Builds a new temp. file from the given input stream.<br>
+     * Builds a new temp. file from the given input stream.
+     * <p>
      * It is left to the user to remove the file as soon as it is not used
      * any more.
      *
