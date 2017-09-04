@@ -115,6 +115,14 @@ public abstract class RepositoryStub {
     public static final String PROP_LOCK_OWNER = "lock.owner";
 
     /**
+     * Determines whether the repository implementation allows open scoped locks
+     * to be owned by multiple sessions (see JCR 2.0 Section 17.3).
+     * 
+     * @since JCR 2.0
+     */
+    public static final String PROP_OPEN_SCOPED_LOCK_MULTIPLE = "open.scoped.lock.multiple";
+
+    /**
      * @since JCR 2.0
      */
     public static final String PROP_HOLD_NAME = "holdname";
