@@ -572,12 +572,6 @@ public abstract class JcrRemotingServlet extends JCRWebdavServerServlet {
     /**
      * TODO: doesn't work properly with intermediate SNS-nodes
      * TODO: doesn't respect jcr:uuid properties.
-     *
-     * @param session
-     * @param targetPath
-     * @param data
-     * @throws RepositoryException
-     * @throws DiffException
      */
     private static String modifyContent(Session session, String targetPath, RequestData data, ProtectedRemoveManager protectedRemoveManager)
             throws RepositoryException, DiffException {
@@ -614,13 +608,6 @@ public abstract class JcrRemotingServlet extends JCRWebdavServerServlet {
         return null; // TODO build loc-href if items were created.
     }
 
-    /**
-     * 
-     * @param session
-     * @param nodePath
-     * @param data
-     * @throws RepositoryException
-     */
     private static void createNode(Session session, String nodePath, RequestData data) throws RepositoryException {
         Node parent = session.getRootNode();
         String[] smgts = Text.explode(nodePath, '/');
@@ -642,12 +629,6 @@ public abstract class JcrRemotingServlet extends JCRWebdavServerServlet {
         }
     }
 
-    /**
-     *
-     * @param request
-     * @return
-     * @throws DavException
-     */
     private static Session getRepositorySession(WebdavRequest request) throws DavException {
         DavSession ds = request.getDavSession();
         return JcrDavSession.getRepositorySession(ds);

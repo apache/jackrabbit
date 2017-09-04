@@ -42,27 +42,27 @@ class ProtectedRemoveManager {
 
     ProtectedRemoveManager(String config) throws IOException {
 
-    	 if (config == null) {
-             log.warn("protectedhandlers-config is missing -> DIFF processing can fail for the Remove operation if the content to" +
-                     "remove is protected!");
-         } else {
-        	 File file = new File(config);
-        	 if (file.exists()) {         
- 				try {
+        if (config == null) {
+            log.warn("protectedhandlers-config is missing -> DIFF processing can fail for the Remove operation if the content to"
+                    + "remove is protected!");
+        } else {
+            File file = new File(config);
+            if (file.exists()) {
+                try {
                     InputStream fis = new FileInputStream(file);
                     load(fis);
- 				} catch (FileNotFoundException e) {
- 					throw new IOException(e.getMessage(), e);
- 				}            
-        	 } else { // config is an Impl class
-        		 if (!config.isEmpty()) {        	    	
-        			 ProtectedItemRemoveHandler handler = createHandler(config); 					
-        			 addHandler(handler);        	    	
-        		 } else {        	    
-        			 log.debug("Fail to locate the protected-item-remove-handler properties file.");        	    	
-        		 }
-        	 }        
-         }    	 
+                } catch (FileNotFoundException e) {
+                    throw new IOException(e.getMessage(), e);
+                }
+            } else { // config is an Impl class
+                if (!config.isEmpty()) {
+                    ProtectedItemRemoveHandler handler = createHandler(config);
+                    addHandler(handler);
+                } else {
+                    log.debug("Fail to locate the protected-item-remove-handler properties file.");
+                }
+            }
+        }
     }
 
     void load(InputStream fis) throws IOException {
@@ -86,14 +86,14 @@ class ProtectedRemoveManager {
      * @throws RepositoryException
      */
     ProtectedItemRemoveHandler createHandler(String className) {
-    	ProtectedItemRemoveHandler irHandler = null;
+        ProtectedItemRemoveHandler irHandler = null;
         try {
-        	if (!className.isEmpty()) {
-				Class<?> irHandlerClass = Class.forName(className);
-				if (ProtectedItemRemoveHandler.class.isAssignableFrom(irHandlerClass)) {
-					irHandler = (ProtectedItemRemoveHandler) irHandlerClass.newInstance();
-				}
-			}
+            if (!className.isEmpty()) {
+                Class<?> irHandlerClass = Class.forName(className);
+                if (ProtectedItemRemoveHandler.class.isAssignableFrom(irHandlerClass)) {
+                    irHandler = (ProtectedItemRemoveHandler) irHandlerClass.newInstance();
+                }
+            }
         } catch (ClassNotFoundException e) {
             log.error(e.getMessage(), e);
         } catch (InstantiationException e) {
@@ -103,10 +103,10 @@ class ProtectedRemoveManager {
         }
         return irHandler;
     }
-    
+
     void addHandler(ProtectedItemRemoveHandler instance) {
-		if (instance != null) {
-			handlers.add(instance);
-		}
-	}
+        if (instance != null) {
+            handlers.add(instance);
+        }
+    }
 }

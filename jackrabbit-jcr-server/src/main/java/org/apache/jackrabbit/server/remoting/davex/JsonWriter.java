@@ -58,13 +58,6 @@ class JsonWriter {
         this.writer = writer;
     }
 
-    /**
-     * 
-     * @param node
-     * @param maxLevels
-     * @throws RepositoryException
-     * @throws IOException
-     */
     void write(Node node, int maxLevels) throws RepositoryException, IOException {
         write(node, 0, maxLevels);
     }
@@ -267,21 +260,11 @@ class JsonWriter {
         writer.write(']');
     }
 
-    /**
-     *
-     * @param key
-     * @throws IOException
-     */
    private void writeKey(String key) throws IOException {
         writer.write(JsonUtil.getJsonString(key));
         writer.write(':');
     }
 
-    /**
-     * @param v
-     * @throws RepositoryException
-     * @throws IOException
-     */
     private void writeJsonValue(Value v) throws RepositoryException, IOException {
 
         switch (v.getType()) {

@@ -24,8 +24,6 @@ public interface IOContext {
 
     /**
      * Returns the IOListener.
-     *
-     * @return
      */
     public IOListener getIOListener();
 
@@ -36,9 +34,7 @@ public interface IOContext {
 
     /**
      * Informs this context that it will not be used for further exports any
-     * more. A boolean flag indicates about the success of the export
-     *
-     * @param success
+     * more. A boolean flag indicates about the success of the export.
      */
     public void informCompleted(boolean success);
 
