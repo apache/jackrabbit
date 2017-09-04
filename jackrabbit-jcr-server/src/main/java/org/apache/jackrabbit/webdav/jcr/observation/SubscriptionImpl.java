@@ -535,18 +535,8 @@ public class SubscriptionImpl implements Subscription, ObservationConstants, Eve
                     log.error("Internal error while retrieving event identifier. {}", e.getMessage());
                 }
                 // info
-                Element info = DomUtil.addChildElement(eventElem, XML_EVENTINFO, NAMESPACE);
                 try {
-                    Map<?, ?> m = event.getInfo();
-                    for (Map.Entry<?, ?> entry : m.entrySet()) {
-                        String key = entry.getKey().toString();
-                        Object value = entry.getValue();
-                        if (value != null) {
-                            DomUtil.addChildElement(info, key, Namespace.EMPTY_NAMESPACE, value.toString());
-                        } else {
-                            DomUtil.addChildElement(info, key, Namespace.EMPTY_NAMESPACE);
-                        }
-                    }
+                    serializeInfoMap(eventElem, session, event.getInfo());
                 } catch (RepositoryException e) {
                     log.error("Internal error while retrieving event info. {}", e.getMessage());
                 }
@@ -555,6 +545,33 @@ public class SubscriptionImpl implements Subscription, ObservationConstants, Eve
         }
     }
 
+    protected static void serializeInfoMap(Element eventElem, Session session, Map<?, ?> map) {
+        // info
+        Element info = DomUtil.addChildElement(eventElem, XML_EVENTINFO, NAMESPACE);
+        Map<?, ?> m = map;
+        for (Map.Entry<?, ?> entry : m.entrySet()) {
+            try {
+                String key = entry.getKey().toString();
+                Namespace ns = Namespace.EMPTY_NAMESPACE;
+                int colon = key.indexOf(':');
+                if (colon >= 0) {
+                    String prefix = key.substring(0, colon);
+                    String localname = key.substring(colon + 1);
+                    ns = Namespace.getNamespace(prefix, session.getNamespaceURI(prefix));
+                    key = localname;
+                }
+                Object value = entry.getValue();
+                if (value != null) {
+                    DomUtil.addChildElement(info, key, ns, value.toString());
+                } else {
+                    DomUtil.addChildElement(info, key, ns);
+                }
+            } catch (RepositoryException nse) {
+                log.error("Internal error while getting namespaceUri, info map field skipped for {}", entry.getKey());
+            }
+        }
+    }    
+    
     //----------------------------< TransactionEvent >------------------------
 
     /**
