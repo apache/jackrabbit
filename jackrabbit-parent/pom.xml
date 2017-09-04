@@ -44,7 +44,7 @@
 
   <properties>
     <test.opts.memory>-Xmx256m</test.opts.memory>
-    <test.opts>${test.opts.memory} -enableassertions</test.opts>
+    <test.opts>${test.opts.coverage} ${test.opts.memory} -enableassertions</test.opts>
     <jetty.version>6.1.26</jetty.version>
     <tika.version>1.7</tika.version>
     <project.reporting.outputEncoding>${project.build.sourceEncoding}</project.reporting.outputEncoding>
@@ -59,6 +59,8 @@
     <logback.version>1.0.12</logback.version>
     <java.version>1.7</java.version>
     <java.version.signature>java17</java.version.signature>
+    <skip.coverage>true</skip.coverage>
+    <jacoco.version>0.7.8</jacoco.version>
   </properties>
 
   <url>http://jackrabbit.apache.org/</url>
@@ -139,6 +141,12 @@
         </plugins>
       </build>
     </profile>
+    <profile>
+      <id>coverage</id>
+      <properties>
+        <skip.coverage>false</skip.coverage>
+      </properties>
+    </profile>
   </profiles>
 
   <build>
@@ -215,6 +223,54 @@
             <exclude>release.properties</exclude>
           </excludes>
         </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.jacoco</groupId>
+        <artifactId>jacoco-maven-plugin</artifactId>
+        <version>${jacoco.version}</version>
+          <executions>
+            <execution>
+              <id>default-prepare-agent</id>
+              <goals>
+                <goal>prepare-agent</goal>
+              </goals>
+              <configuration>
+                <skip>${skip.coverage}</skip>
+                <propertyName>test.opts.coverage</propertyName>
+              </configuration>
+            </execution>
+            <execution>
+              <id>default-prepare-agent-integration</id>
+              <goals>
+                <goal>prepare-agent-integration</goal>
+              </goals>
+            </execution>
+            <execution>
+              <id>default-report</id>
+              <goals>
+                <goal>report</goal>
+              </goals>
+              <configuration>
+                <skip>${skip.coverage}</skip>
+              </configuration>
+            </execution>
+            <execution>
+              <id>default-report-integration</id>
+              <goals>
+                <goal>report-integration</goal>
+              </goals>
+            </execution>
+            <execution>
+              <id>default-check</id>
+              <goals>
+                <goal>check</goal>
+              </goals>
+              <configuration>
+                <rules>
+                </rules>
+              </configuration>
+           </execution>
+         </executions>
       </plugin>
     </plugins>
     <pluginManagement>
