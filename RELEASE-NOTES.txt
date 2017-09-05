@@ -1,32 +1,28 @@
-Release Notes -- Apache Jackrabbit -- Version 2.15.5
+Release Notes -- Apache Jackrabbit -- Version 2.15.6
 
 Introduction
 ------------
 
-This is Apache Jackrabbit(TM) 2.15.5, a fully compliant implementation of the
+This is Apache Jackrabbit(TM) 2.15.6, a fully compliant implementation of the
 Content Repository for Java(TM) Technology API, version 2.0 (JCR 2.0) as
 specified in the Java Specification Request 283 (JSR 283).
 
-Apache Jackrabbit 2.15.5 is an unstable release cut directly from
+Apache Jackrabbit 2.15.6 is an unstable release cut directly from
 Jackrabbit trunk, with a focus on new features and other
 improvements. For production use we recommend the latest stable 2.14.x
 release.
 
-Changes in Jackrabbit 2.15.5
+Changes in Jackrabbit 2.15.6
 ----------------------------
-
-Sub-task
-
-    [JCR-4164] - add test coverage for content codings
-    [JCR-4165] - WebDAV servlet: reject unknown/unsupported content codings with 4xx status code
 
 Bug
 
-    [JCR-4154] - davex upload of binaries broken
+    [JCR-4173] - Unable to receive observation events when connecting via DavEx
+    [JCR-4179] - Test failures with Java 9 when using javax.imageio.spi.ServiceRegistry
 
 Task
 
-    [JCR-4157] - jackrabbit-jcr-server: code cleanup
+    [JCR-4177] - move Mockito version to parent pom
 
 
 In addition to the above-mentioned changes, this release contains
