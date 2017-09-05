@@ -54,7 +54,7 @@ public class ContentCodingTest extends WebDAVTest {
             entity.setContentEncoding(new BasicHeader("Content-Encoding", "qux"));
             put.setEntity(entity);
             status = this.client.execute(put, this.context).getStatusLine().getStatusCode();
-            assertTrue("server must signal error for unknown content coding", status >= 400);
+            assertTrue("server must signal error for unknown content coding", status == 415);
         } finally {
             if (status / 2 == 100) {
                 delete(testUri);
@@ -77,7 +77,7 @@ public class ContentCodingTest extends WebDAVTest {
             entity.setContentEncoding(new BasicHeader("Content-Encoding", "gzip"));
             put.setEntity(entity);
             status = this.client.execute(put, this.context).getStatusLine().getStatusCode();
-            assertTrue("server create or signal error", status == 201 || status >= 400);
+            assertTrue("server create or signal error", status == 201 || status == 415);
             if (status / 2 == 100) {
                 // check length
                 HttpHead head = new HttpHead(testUri);
@@ -105,6 +105,6 @@ public class ContentCodingTest extends WebDAVTest {
         entity.setContentEncoding(new BasicHeader("Content-Encoding", "qux"));
         propfind.setEntity(entity);
         int status = this.client.execute(propfind, this.context).getStatusLine().getStatusCode();
-        assertTrue("server must signal error for unknown content coding", status >= 400);
+        assertTrue("server must signal error for unknown content coding", status == 415);
     }
 }
