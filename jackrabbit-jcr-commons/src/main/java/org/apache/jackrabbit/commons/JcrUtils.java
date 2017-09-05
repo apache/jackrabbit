@@ -32,9 +32,9 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.ServiceLoader;
 import java.util.StringTokenizer;
 
-import javax.imageio.spi.ServiceRegistry;
 import javax.jcr.Binary;
 import javax.jcr.Item;
 import javax.jcr.Node;
@@ -187,7 +187,7 @@ public class JcrUtils {
         log.append(newline);
         log.append("The following RepositoryFactory classes were consulted:");
         Iterator<RepositoryFactory> iterator =
-                ServiceRegistry.lookupProviders(RepositoryFactory.class);
+                ServiceLoader.load(RepositoryFactory.class).iterator();
         while (iterator.hasNext()) {
             RepositoryFactory factory = iterator.next();
             log.append(newline);

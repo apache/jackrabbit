@@ -21,9 +21,9 @@ import org.slf4j.LoggerFactory;
 import junit.framework.TestCase;
 
 import java.util.Iterator;
+import java.util.ServiceLoader;
 
 import javax.jcr.RepositoryFactory;
-import javax.imageio.spi.ServiceRegistry;
 
 /**
  * <code>RepositoryFactoryTest</code>...
@@ -36,7 +36,7 @@ public class RepositoryFactoryTest extends TestCase {
     private static final Logger log = LoggerFactory.getLogger(RepositoryFactoryTest.class);
 
     public void testGetFactory() {
-        Iterator it = ServiceRegistry.lookupProviders(RepositoryFactory.class);
+        Iterator<RepositoryFactory> it = ServiceLoader.load(RepositoryFactory.class).iterator();
         if (it.hasNext()) {
             RepositoryFactory rf = (RepositoryFactory) it.next();
             assertTrue(rf instanceof RepositoryFactoryImpl);
