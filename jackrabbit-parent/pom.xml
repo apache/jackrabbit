@@ -225,7 +225,7 @@
           <configuration>
             <useReleaseProfile>false</useReleaseProfile>
             <goals>deploy</goals>
-            <arguments>-Papache-release,pedantic</arguments>
+            <arguments>-Papache-release,pedantic ${arguments}</arguments>
           </configuration>
         </plugin>
         <plugin>
