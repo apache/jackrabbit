@@ -1791,8 +1791,11 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
 
             PropPatchMethod method = new PropPatchMethod(getItemUri(nodeId, sessionInfo), changeList);
             execute(method, sessionInfo);
+            method.checkSuccess();
         } catch (IOException e) {
             throw new RepositoryException(e);
+        } catch (DavException e) {
+            throw ExceptionConverter.generate(e);
         }
     }
 
