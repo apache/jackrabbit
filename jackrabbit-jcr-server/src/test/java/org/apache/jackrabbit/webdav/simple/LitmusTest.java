@@ -27,10 +27,10 @@ import junit.framework.TestCase;
 import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.commons.JcrUtils;
 import org.apache.jackrabbit.util.Text;
-import org.mortbay.jetty.Server;
-import org.mortbay.jetty.bio.SocketConnector;
-import org.mortbay.jetty.servlet.Context;
-import org.mortbay.jetty.servlet.ServletHolder;
+import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.bio.SocketConnector;
+import org.eclipse.jetty.servlet.ServletContextHandler;
+import org.eclipse.jetty.servlet.ServletHolder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -67,10 +67,8 @@ public class LitmusTest extends TestCase {
                         });
                 holder.setInitParameter("resource-config", "/config.xml");
 
-                Context context = new Context(server, "/");
-                context.setResourceBase("src/test/resources");
-                context.addServlet(holder, "/*");
-                server.addHandler(context);
+                ServletContextHandler schandler = new ServletContextHandler(server, "/");
+                schandler.addServlet(holder, "/*");
 
                 server.start();
                 try {
