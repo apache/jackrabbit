@@ -30,6 +30,7 @@ import javax.jcr.lock.LockManager;
 
 import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.apache.jackrabbit.test.NotExecutableException;
+import org.apache.jackrabbit.test.RepositoryStub;
 
 /** <code>LockManagerTest</code>... */
 public class LockManagerTest extends AbstractJCRTest {
@@ -38,6 +39,8 @@ public class LockManagerTest extends AbstractJCRTest {
     protected Node testNode;
     protected String testPath;
 
+    protected boolean openScopedLockMultiple;
+
     protected void setUp() throws Exception {
         super.setUp();
 
@@ -45,10 +48,12 @@ public class LockManagerTest extends AbstractJCRTest {
         if (Boolean.FALSE.toString().equals(superuser.getRepository().getDescriptor(Repository.OPTION_LOCKING_SUPPORTED))) {
             throw new NotExecutableException();
         }
-        
+
         testNode = testRootNode.addNode(nodeName1, testNodeType);
         testRootNode.getSession().save();
         testPath = testNode.getPath();
+        openScopedLockMultiple = Boolean.TRUE.toString()
+                .equals(getProperty(RepositoryStub.PROP_OPEN_SCOPED_LOCK_MULTIPLE, Boolean.FALSE.toString()));
 
         lockMgr = getLockManager(superuser);
     }
@@ -183,8 +188,6 @@ public class LockManagerTest extends AbstractJCRTest {
 
     public void testAddLockTokenToAnotherSession() throws RepositoryException,
             NotExecutableException {
-        // TODO: for 283 add config option for simultaneous tokens....
-        
         assertLockable(testNode);
 
         boolean sessionScoped = false;
@@ -198,9 +201,15 @@ public class LockManagerTest extends AbstractJCRTest {
 
             try {
                 otherLockMgr.addLockToken(ltoken);
-                fail("Adding token to another session must fail.");
+                if (!openScopedLockMultiple) {
+                    fail("Adding token to another session must fail (see config property "
+                            + RepositoryStub.PROP_OPEN_SCOPED_LOCK_MULTIPLE + ".");
+                }
             } catch (LockException e) {
-                // success
+                if (openScopedLockMultiple) {
+                    fail("Adding token to another session must not fail (see config property "
+                            + RepositoryStub.PROP_OPEN_SCOPED_LOCK_MULTIPLE + ".");
+                }
             }
         } finally {
             other.logout();
@@ -338,8 +347,6 @@ public class LockManagerTest extends AbstractJCRTest {
     }
 
     public void testLockTransfer2() throws Exception {
-        // TODO: for 283 add config option for simultaneous tokens....
-
         assertLockable(testNode);
 
         boolean sessionScoped = false;
@@ -353,9 +360,15 @@ public class LockManagerTest extends AbstractJCRTest {
             otherLockMgr.addLockToken(ltoken);
 
             lockMgr.addLockToken(ltoken);
-            fail("Adding the token to another session must fail.");
+            if (!openScopedLockMultiple) {
+                fail("Adding token to another session must fail (see config property "
+                        + RepositoryStub.PROP_OPEN_SCOPED_LOCK_MULTIPLE + ".");
+            }
         } catch (LockException e) {
-            // success
+            if (openScopedLockMultiple) {
+                fail("Adding token to another session must not fail (see config property "
+                        + RepositoryStub.PROP_OPEN_SCOPED_LOCK_MULTIPLE + ".");
+            }
         } finally {
             otherLockMgr.removeLockToken(ltoken);
             lockMgr.addLockToken(ltoken);
