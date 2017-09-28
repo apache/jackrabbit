@@ -38,10 +38,6 @@ import javax.jcr.Session;
  * a {@link org.apache.jackrabbit.test.NotExecutableException} is thrown
  * in those test cases.
  *
- * @test
- * @sources AddEventListenerTest.java
- * @executeClass org.apache.jackrabbit.test.api.observation.AddEventListenerTest
- * @keywords observation
  */
 public class AddEventListenerTest extends AbstractObservationTest {
 

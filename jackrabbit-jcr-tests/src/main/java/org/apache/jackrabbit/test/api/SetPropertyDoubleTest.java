@@ -25,10 +25,6 @@ import javax.jcr.Node;
  * <code>SetPropertyDoubleTest</code> tests the <code>Node.setProperty(String,
  * double)</code> method
  *
- * @test
- * @sources SetPropertyDoubleTest.java
- * @executeClass org.apache.jackrabbit.test.api.SetPropertyDoubleTest
- * @keywords level2
  */
 public class SetPropertyDoubleTest extends AbstractJCRTest {
 

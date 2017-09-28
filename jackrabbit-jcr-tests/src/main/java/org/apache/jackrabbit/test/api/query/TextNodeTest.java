@@ -24,25 +24,21 @@ import javax.jcr.Repository;
 
 /**
  * Tests the text() node test in XPath.
- *
- * @tck.config testroot path to node that allows child nodes of type
+ * <ul>
+ * <li>{@code testroot} path to node that allows child nodes of type
  * <code>nodetype</code>. The node at <code>testroot</code> must allow child
  * nodes with name jcr:xmltext. Assignment of node type for that child node must
  * be determined by the child node definition. That is, the test will create the
  * node with {@link javax.jcr.Node#addNode(String)}, without giving an explicit
  * node type.
- * @tck.config nodetype name of a node type for nodes under
+ * <li>{@code nodetype} name of a node type for nodes under
  * <code>testroot</code>. This node type must allow child nodes with name
  * jcr:xmltext. Assignment of node type for that child node must be determined
  * by the child node definition. That is, the test will create the node with
  * {@link javax.jcr.Node#addNode(String)}, without giving an explicit node
  * type.
- * @tck.config nodename1 name of a child node under <code>testroot</code>.
- *
- * @test
- * @sources TextNodeTest.java
- * @executeClass org.apache.jackrabbit.test.api.query.TextNodeTest
- * @keywords textNodeTest
+ * <li>{@code nodename1} name of a child node under <code>testroot</code>.
+ * </ul>
  */
 public class TextNodeTest extends AbstractQueryTest {
 

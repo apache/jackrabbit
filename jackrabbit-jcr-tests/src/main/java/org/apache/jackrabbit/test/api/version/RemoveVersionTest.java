@@ -36,10 +36,6 @@ import java.util.List;
  * the JSR 170 specification. The setup therefore includes a initial removal,
  * in order to test, whether removing versions is supported.
  *
- * @test
- * @sources RemoveVersionTest.java
- * @executeClass org.apache.jackrabbit.test.api.version.RemoveVersionTest
- * @keywords versioning
  */
 public class RemoveVersionTest extends AbstractVersionTest {
 
@@ -197,11 +193,13 @@ public class RemoveVersionTest extends AbstractVersionTest {
      * Checks if {@link javax.jcr.version.VersionHistory#removeVersion(String)}
      * throws a {@link javax.jcr.ReferentialIntegrityException} if the named
      * version is still referenced by another node.
-     * @tck.config nodetype name of a node type that supports a reference
+     * <ul>
+     * <li>{@code nodetype} name of a node type that supports a reference
      *  property.
-     * @tck.config nodename4 name of the node created with <code>nodetype</code>.
-     * @tck.config propertyname1 a single value reference property available
+     * <li>{@code nodename4} name of the node created with <code>nodetype</code>.
+     * <li>{@code propertyname1} a single value reference property available
      *  in <code>nodetype</code>.
+     *  </ul>
      */
     public void testReferentialIntegrityException() throws RepositoryException, NotExecutableException {
         // create reference: n1.p1 -> version

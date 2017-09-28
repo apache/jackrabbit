@@ -34,10 +34,6 @@ import javax.jcr.query.QueryResult;
  * <p>
  * At least three nodes under the {@link #testRoot}.
  *
- * @test
- * @sources XPathDocOrderTest.java
- * @executeClass org.apache.jackrabbit.test.api.query.XPathDocOrderTest
- * @keywords level1
  */
 public class XPathDocOrderTest extends AbstractQueryTest {
 

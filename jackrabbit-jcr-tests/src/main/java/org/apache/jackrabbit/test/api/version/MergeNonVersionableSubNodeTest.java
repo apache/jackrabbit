@@ -23,10 +23,6 @@ import javax.jcr.Node;
  * <code>MergeNonVersionableSubNodeTest</code> contains test dealing with
  * nonversionable nodes in the subtree of the node on which merge is called.
  *
- * @test
- * @sources MergeNonVersionableSubNodeTest.java
- * @executeClass org.apache.jackrabbit.test.api.version.MergeNonVersionableSubNodeTest
- * @keywords versioning
  */
 public class MergeNonVersionableSubNodeTest extends AbstractMergeTest {
 

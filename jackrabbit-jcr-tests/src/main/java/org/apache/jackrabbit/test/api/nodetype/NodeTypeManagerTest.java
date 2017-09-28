@@ -29,10 +29,6 @@ import javax.jcr.nodetype.NoSuchNodeTypeException;
  * Tests if the {@link NodeTypeManager} properly returns primary types an mixin
  * types.
  *
- * @test
- * @sources NodeTypeManagerTest.java
- * @executeClass org.apache.jackrabbit.test.api.nodetype.NodeTypeManagerTest
- * @keywords level1
  */
 public class NodeTypeManagerTest extends AbstractJCRTest {
 

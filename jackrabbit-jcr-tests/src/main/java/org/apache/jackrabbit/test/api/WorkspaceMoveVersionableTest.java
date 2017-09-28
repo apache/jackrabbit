@@ -27,10 +27,6 @@ import javax.jcr.version.VersionException;
  * <code>WorkspaceMoveVersionableTest</code> contains tests for moving
  * versionable nodes in one workspace.
  *
- * @test
- * @sources WorkspaceMoveVersionableTest.java
- * @executeClass org.apache.jackrabbit.test.api.WorkspaceMoveVersionableTest
- * @keywords level2 versioning
  */
 public class WorkspaceMoveVersionableTest extends AbstractWorkspaceVersionableTest {
 

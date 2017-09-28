@@ -26,10 +26,6 @@ import javax.jcr.nodetype.ConstraintViolationException;
  * <code>VersionStorageTest</code> provides tests regarding {@link
  * javax.jcr.version.VersionHistory#addVersionLabel(String, String, boolean)}
  *
- * @test
- * @sources VersionStorageTest.java
- * @executeClass org.apache.jackrabbit.test.api.version.VersionStorageTest
- * @keywords versioning
  */
 public class VersionStorageTest extends AbstractVersionTest {
 

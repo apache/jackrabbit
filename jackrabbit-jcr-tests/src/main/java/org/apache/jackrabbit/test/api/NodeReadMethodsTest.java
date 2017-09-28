@@ -42,10 +42,6 @@ import java.util.NoSuchElementException;
  * Most tests require at least one child node under the root node, otherwise a
  * {@link org.apache.jackrabbit.test.NotExecutableException} is thrown.
  *
- * @test
- * @sources NodeReadMethodsTest.java
- * @executeClass org.apache.jackrabbit.test.api.NodeReadMethodsTest
- * @keywords level1
  */
 public class NodeReadMethodsTest extends AbstractJCRTest {
 
