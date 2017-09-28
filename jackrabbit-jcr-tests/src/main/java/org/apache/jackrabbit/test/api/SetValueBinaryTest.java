@@ -42,10 +42,6 @@ import javax.jcr.Value;
  * <code>propertyName1</code> is specified as "jcr:data", that binary property
  * is used instead.
  *
- * @test
- * @sources SetValueBinaryTest.java
- * @executeClass org.apache.jackrabbit.test.api.SetValueBinaryTest
- * @keywords level2
  */
 public class SetValueBinaryTest extends AbstractJCRTest {
 

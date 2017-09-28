@@ -40,10 +40,6 @@ import java.io.FileNotFoundException;
  * node path. This is done with checking the SAX events of the sysview export
  * against the items found by a traverse of the given tree.
  *
- * @test
- * @sources ExportSysViewTest.java
- * @executeClass org.apache.jackrabbit.test.api.ExportSysViewTest
- * @keywords level1
  */
 public class ExportSysViewTest extends AbstractJCRTest {
 

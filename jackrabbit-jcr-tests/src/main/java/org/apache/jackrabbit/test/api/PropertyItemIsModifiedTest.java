@@ -32,10 +32,6 @@ import javax.jcr.Node;
  * {@link #testNodeType} with name {@link #nodeName1}. The node type must
  * support a non-mandatory string property with name {@link #propertyName1}.
  *
- * @test
- * @sources PropertyItemIsModifiedTest.java
- * @executeClass org.apache.jackrabbit.test.api.PropertyItemIsModifiedTest
- * @keywords level2
  */
 public class PropertyItemIsModifiedTest extends AbstractJCRTest {
 

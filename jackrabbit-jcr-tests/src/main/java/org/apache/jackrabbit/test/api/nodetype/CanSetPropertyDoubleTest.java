@@ -32,10 +32,6 @@ import java.text.ParseException;
  * value)</code> and <code>NodeType.canSetProperty(String propertyName, Value[]
  * values)</code> where property is of type Double.
  *
- * @test
- * @sources CanSetPropertyDoubleTest.java
- * @executeClass org.apache.jackrabbit.test.api.nodetype.CanSetPropertyDoubleTest
- * @keywords level2
  */
 public class CanSetPropertyDoubleTest extends AbstractJCRTest {
     /**

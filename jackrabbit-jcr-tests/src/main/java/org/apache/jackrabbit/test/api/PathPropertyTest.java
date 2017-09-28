@@ -29,10 +29,6 @@ import javax.jcr.Property;
  * property a {@link org.apache.jackrabbit.test.NotExecutableException} is
  * thrown.
  *
- * @test
- * @sources PathPropertyTest.java
- * @executeClass org.apache.jackrabbit.test.api.PathPropertyTest
- * @keywords level1
  */
 public class PathPropertyTest extends AbstractPropertyTest {
 

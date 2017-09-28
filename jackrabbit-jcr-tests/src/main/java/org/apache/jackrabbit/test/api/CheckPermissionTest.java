@@ -26,10 +26,6 @@ import java.security.AccessControlException;
  * Tests if {@link Session#checkPermission(String, String)} yields the correct
  * permissions for a read-only session and a 'superuser' session.
  *
- * @test
- * @sources CheckPermissionTest.java
- * @executeClass org.apache.jackrabbit.test.api.CheckPermissionTest
- * @keywords level2
  */
 public class CheckPermissionTest extends AbstractJCRTest {
 

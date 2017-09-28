@@ -40,10 +40,6 @@ import org.apache.jackrabbit.test.api.nodetype.NodeTypeUtil;
  * setProperty() throws a ConstraintViolationException either immediately (by
  * setValue()) or on save, if the change would violate a value constraint.
  *
- * @test
- * @sources SetPropertyConstraintViolationExceptionTest.java
- * @executeClass org.apache.jackrabbit.test.api.SetPropertyConstraintViolationExceptionTest
- * @keywords level2
  */
 public class SetPropertyConstraintViolationExceptionTest extends AbstractJCRTest {
 

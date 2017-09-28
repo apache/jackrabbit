@@ -23,21 +23,17 @@ import javax.jcr.Node;
 
 /**
  * Tests the element test function in XPath.
- *
- * @tck.config testroot path to node that allows child nodes of type
+ * <ul>
+ * <li>{@code testroot} path to node that allows child nodes of type
  * <code>nodetype</code> and <code>nt:base</code>.
- * @tck.config nodetype node type name for nodes to create
- * @tck.config nodename1 node name for a child node of type
+ * <li>{@code nodetype} node type name for nodes to create
+ * <li>{@code nodename1} node name for a child node of type
  * <code>nodetype</code> or <code>nt:base</code>
- * @tck.config nodename2 node name for a child node of type
+ * <li>{@code nodename2} node name for a child node of type
  * <code>nodetype</code> or <code>nt:base</code>
- * @tck.config nodename3 node name for a child node of type
+ * <li>{@code nodename3} node name for a child node of type
  * <code>nodetype</code> or <code>nt:base</code>
- *
- * @test
- * @sources ElementTest.java
- * @executeClass org.apache.jackrabbit.test.api.query.ElementTest
- * @keywords level2
+ * </ul>
  */
 public class ElementTest extends AbstractQueryTest {
 

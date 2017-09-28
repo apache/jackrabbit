@@ -40,10 +40,6 @@ import java.util.Date;
  * <code>Node.setProperty(String, Value[], int)</code> and
  * <code>Node.setProperty(String, Node)</code> are tested.
  *
- * @test
- * @sources SetPropertyAssumeTypeTest.java
- * @executeClass org.apache.jackrabbit.test.api.SetPropertyAssumeTypeTest
- * @keywords level2
  */
 public class SetPropertyAssumeTypeTest extends AbstractJCRTest {
 

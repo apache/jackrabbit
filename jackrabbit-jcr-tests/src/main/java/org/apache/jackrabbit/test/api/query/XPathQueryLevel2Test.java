@@ -24,10 +24,6 @@ import javax.jcr.NodeIterator;
 /**
  * Tests XPath queries on content written to the workspace by the test itself.
  *
- * @test
- * @sources XPathQueryLevel2Test.java
- * @executeClass org.apache.jackrabbit.test.api.query.XPathQueryLevel2Test
- * @keywords level2
  */
 public class XPathQueryLevel2Test extends AbstractQueryLevel2Test {
 

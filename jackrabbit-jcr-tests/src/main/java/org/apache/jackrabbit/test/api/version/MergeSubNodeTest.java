@@ -25,10 +25,6 @@ import javax.jcr.version.VersionManager;
  * <code>MergeSubNodeTest</code> contains tests dealing with sub nodes in the
  * subtree of the node on which merge is called.
  *
- * @test
- * @sources MergeSubNodeTest.java
- * @executeClass org.apache.jackrabbit.test.api.version.MergeSubNodeTest
- * @keywords versioning
  */
 
 public class MergeSubNodeTest extends AbstractMergeTest {

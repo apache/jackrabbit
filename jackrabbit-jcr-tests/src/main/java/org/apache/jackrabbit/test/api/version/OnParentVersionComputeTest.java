@@ -26,10 +26,6 @@ import javax.jcr.version.VersionManager;
  * <code>OnParentVersionComputeTest</code> tests the OnParentVersion {@link OnParentVersionAction#COMPUTE COMPUTE}
  * behaviour.
  *
- * @test
- * @sources OnParentVersionComputeTest.java
- * @executeClass org.apache.jackrabbit.test.api.version.OnParentVersionComputeTest
- * @keywords versioning
  */
 public class OnParentVersionComputeTest extends AbstractOnParentVersionTest {
 

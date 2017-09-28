@@ -30,10 +30,6 @@ import javax.jcr.observation.Event;
  * {@link #nodeName2}. Furthermore {@link #testNodeType} must allow to add
  * child nodes of the same type ({@link #testNodeType}).
  *
- * @test
- * @sources NodeRemovedTest.java
- * @executeClass org.apache.jackrabbit.test.api.observation.NodeRemovedTest
- * @keywords observation
  */
 public class NodeRemovedTest extends AbstractObservationTest {
 

@@ -36,10 +36,6 @@ import javax.jcr.observation.Event;
  * {@link #testNodeType} must also support String properties with names
  * {@link #propertyName1} and {@link #propertyName2}.
  *
- * @test
- * @sources PropertyChangedTest.java
- * @executeClass org.apache.jackrabbit.test.api.observation.PropertyChangedTest
- * @keywords observation
  */
 public class PropertyChangedTest extends AbstractObservationTest {
 

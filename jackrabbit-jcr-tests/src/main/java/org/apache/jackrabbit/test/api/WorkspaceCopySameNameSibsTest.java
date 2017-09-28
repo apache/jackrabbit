@@ -27,10 +27,6 @@ import javax.jcr.RepositoryException;
  * <code>WorkspaceCopySameNameSibsTest</code> contains tests for copying nodes
  * as same name siblings in one workspace.
  *
- * @test
- * @sources WorkspaceCopySameNameSibsTest.java
- * @executeClass org.apache.jackrabbit.test.api.WorkspaceCopySameNameSibsTest
- * @keywords level2
  */
 public class WorkspaceCopySameNameSibsTest extends AbstractWorkspaceSameNameSibsTest {
 
@@ -70,10 +66,12 @@ public class WorkspaceCopySameNameSibsTest extends AbstractWorkspaceSameNameSibs
     /**
      * An ItemExistsException is thrown if a node or property already exists at
      * destAbsPath.
-     * @tck.config sameNameSibsFalseNodeType name of a node type that does not
+     * <ul>
+     * <li>{@code sameNameSibsFalseNodeType} name of a node type that does not
      * allows same name siblings.
-     * @tck.config nodeName3 name of a child node that does not allow same name
+     * <li>{@code nodeName3} name of a child node that does not allow same name
      * siblings..
+     * </ul>
      */
     public void testCopyNodesNodeExistsAtDestPath() throws RepositoryException {
         // create a parent node where allowSameNameSiblings are set to false
@@ -95,11 +93,12 @@ public class WorkspaceCopySameNameSibsTest extends AbstractWorkspaceSameNameSibs
     /**
      * NO ItemExistsException is thrown if a node already exists at destAbsPath
      * and the node allows same-name-siblings.
-     *
-     * @tck.config sameNameSibsTrueNodeType name of a node type that
+     * <ul>
+     * <li>{@code sameNameSibsTrueNodeType} name of a node type that
      * allows same name siblings.
-     * @tck.config nodeName3 name of a child node that allows children with
+     * <li>{@code nodeName3} name of a child node that allows children with
      * same name.
+     * </ul>
      */
     public void testCopyNodesNodeExistsAtDestPath2() throws RepositoryException {
         // create a parent node where allowSameNameSiblings are set to true
