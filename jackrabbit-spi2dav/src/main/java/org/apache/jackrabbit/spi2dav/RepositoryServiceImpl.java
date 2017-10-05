@@ -217,7 +217,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
 
     /**
      * Default value for the maximum number of connections per host such as
-     * configured with {@link PoolingHttpClientConnectionManager#setDefaultMaxPerRoute(int)}.
+     * configured with {@link HttpConnectionManagerParams#setDefaultMaxConnectionsPerHost(int)}.
      */
     public static final int MAX_CONNECTIONS_DEFAULT = 20;
 
@@ -298,7 +298,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
      * @param itemInfoCacheSize The size of the item info cache.
      * @param maximumHttpConnections A int &gt;0 defining the maximum number of
      * connections per host to be configured on
-     * {@link PoolingHttpClientConnectionManager#setMaxTotal(int)}.
+     * {@link HttpConnectionManagerParams#setMaxTotalConnections(int)}.
      * @throws RepositoryException If an error occurs.
      */
     public RepositoryServiceImpl(String uri, IdFactory idFactory,
