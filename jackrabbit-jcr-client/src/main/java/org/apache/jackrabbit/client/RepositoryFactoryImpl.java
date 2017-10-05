@@ -47,7 +47,7 @@ public class RepositoryFactoryImpl implements RepositoryFactory {
      * Creates a JCR repository from the given <code>parameters</code>.
      * If either {@link #PARAM_REPOSITORY_SERVICE_FACTORY} or
      * {@link #PARAM_REPOSITORY_CONFIG} is present, this factory delegates
-     * to {@link org.apache.jackrabbit.jcr2spi.Jcr2spiRepositoryFactory}.
+     * to {@code org.apache.jackrabbit.jcr2spi.Jcr2spiRepositoryFactory}.
      * Otherwise it delegates to
      * {@code org.apache.jackrabbit.core.RepositoryFactoryImpl}.
      *
