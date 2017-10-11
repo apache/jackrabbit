@@ -18,6 +18,7 @@ package org.apache.jackrabbit.jcr2spi;
 
 import java.util.Collections;
 import java.util.Map;
+import java.util.WeakHashMap;
 
 import javax.jcr.AccessDeniedException;
 import javax.jcr.InvalidItemStateException;
@@ -35,7 +36,6 @@ import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.version.VersionException;
 
-import org.apache.commons.collections.map.ReferenceMap;
 import org.apache.jackrabbit.jcr2spi.config.CacheBehaviour;
 import org.apache.jackrabbit.jcr2spi.hierarchy.HierarchyEntry;
 import org.apache.jackrabbit.jcr2spi.hierarchy.NodeEntry;
@@ -69,9 +69,11 @@ public abstract class ItemImpl implements Item, ItemStateLifeCycleListener {
     /**
      * Listeners (weak references)
      */
-    @SuppressWarnings("unchecked")
-    protected final Map<ItemLifeCycleListener, ItemLifeCycleListener> listeners =
-        Collections.synchronizedMap(new ReferenceMap(ReferenceMap.WEAK, ReferenceMap.WEAK));
+    // This is a weak set. Although Java does not have a WeakSet (see
+    // https://stackoverflow.com/questions/4062919/why-does-exist-weakhashmap-but-absent-weakset/4062950#comment80335634_4062950 )
+    // we can emulate a weak set by creating a WeakHashMap with value type Void.
+    private final Map<ItemLifeCycleListener, Void> listeners =
+        Collections.synchronizedMap(new WeakHashMap<ItemLifeCycleListener, Void>());
 
     public ItemImpl(SessionImpl session, ItemState state,
                     ItemLifeCycleListener[] listeners) {
@@ -370,7 +372,7 @@ public abstract class ItemImpl implements Item, ItemStateLifeCycleListener {
      */
     private void notifyCreated() {
         // copy listeners to array to avoid ConcurrentModificationException
-        ItemLifeCycleListener[] la = listeners.values().toArray(new ItemLifeCycleListener[listeners.size()]);
+        ItemLifeCycleListener[] la = listeners.keySet().toArray(new ItemLifeCycleListener[listeners.size()]);
         for (ItemLifeCycleListener l : la) {
             // it's not necessary to check that l is not null because notifyCreated()
             // is only called from the constructor, and there will be a strong
@@ -385,7 +387,7 @@ public abstract class ItemImpl implements Item, ItemStateLifeCycleListener {
      */
     private void notifyUpdated(boolean modified) {
         // copy listeners to array to avoid ConcurrentModificationException
-        ItemLifeCycleListener[] la = listeners.values().toArray(new ItemLifeCycleListener[listeners.size()]);
+        ItemLifeCycleListener[] la = listeners.keySet().toArray(new ItemLifeCycleListener[listeners.size()]);
         for (ItemLifeCycleListener l : la) {
             if (l != null) {
                 l.itemUpdated(this, modified);
@@ -398,7 +400,7 @@ public abstract class ItemImpl implements Item, ItemStateLifeCycleListener {
      */
     private void notifyDestroyed() {
         // copy listeners to array to avoid ConcurrentModificationException
-        ItemLifeCycleListener[] la = listeners.values().toArray(new ItemLifeCycleListener[listeners.size()]);
+        ItemLifeCycleListener[] la = listeners.keySet().toArray(new ItemLifeCycleListener[listeners.size()]);
         for (ItemLifeCycleListener l : la) {
             if (l != null) {
                 l.itemDestroyed(this);
@@ -412,9 +414,7 @@ public abstract class ItemImpl implements Item, ItemStateLifeCycleListener {
      * @param listener the new listener to be informed on life cycle changes
      */
     void addLifeCycleListener(ItemLifeCycleListener listener) {
-        if (!listeners.containsKey(listener)) {
-            listeners.put(listener, listener);
-        }
+        listeners.put(listener, null);
     }
 
     /**
