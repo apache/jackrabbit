@@ -372,6 +372,10 @@ public abstract class ItemImpl implements Item, ItemStateLifeCycleListener {
         // copy listeners to array to avoid ConcurrentModificationException
         ItemLifeCycleListener[] la = listeners.values().toArray(new ItemLifeCycleListener[listeners.size()]);
         for (ItemLifeCycleListener l : la) {
+            // it's not necessary to check that l is not null because notifyCreated()
+            // is only called from the constructor, and there will be a strong
+            // reference to each ItemLifeCycleListener instance via the listeners
+            // array argument to the constructor
             l.itemCreated(this);
         }
     }
