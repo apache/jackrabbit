@@ -371,8 +371,8 @@ public abstract class ItemImpl implements Item, ItemStateLifeCycleListener {
     private void notifyCreated() {
         // copy listeners to array to avoid ConcurrentModificationException
         ItemLifeCycleListener[] la = listeners.values().toArray(new ItemLifeCycleListener[listeners.size()]);
-        for (int i = 0; i < la.length; i++) {
-            la[i].itemCreated(this);
+        for (ItemLifeCycleListener l : la) {
+            l.itemCreated(this);
         }
     }
 
@@ -382,9 +382,9 @@ public abstract class ItemImpl implements Item, ItemStateLifeCycleListener {
     private void notifyUpdated(boolean modified) {
         // copy listeners to array to avoid ConcurrentModificationException
         ItemLifeCycleListener[] la = listeners.values().toArray(new ItemLifeCycleListener[listeners.size()]);
-        for (int i = 0; i < la.length; i++) {
-            if (la[i] != null) {
-                la[i].itemUpdated(this, modified);
+        for (ItemLifeCycleListener l : la) {
+            if (l != null) {
+                l.itemUpdated(this, modified);
             }
         }
     }
@@ -395,9 +395,9 @@ public abstract class ItemImpl implements Item, ItemStateLifeCycleListener {
     private void notifyDestroyed() {
         // copy listeners to array to avoid ConcurrentModificationException
         ItemLifeCycleListener[] la = listeners.values().toArray(new ItemLifeCycleListener[listeners.size()]);
-        for (int i = 0; i < la.length; i++) {
-            if (la[i] != null) {
-                la[i].itemDestroyed(this);
+        for (ItemLifeCycleListener l : la) {
+            if (l != null) {
+                l.itemDestroyed(this);
             }
         }
     }
