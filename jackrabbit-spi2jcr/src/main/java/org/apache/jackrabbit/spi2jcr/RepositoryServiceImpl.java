@@ -629,9 +629,9 @@ public class RepositoryServiceImpl implements RepositoryService {
         executeWithLocalEvents(new Callable() {
             public Object run() throws RepositoryException {
                 String srcPath = pathForId(srcNodeId, sInfo);
-                StringBuffer destPath = new StringBuffer(pathForId(destParentNodeId, sInfo));
+                StringBuilder destPath = new StringBuilder(pathForId(destParentNodeId, sInfo));
                 if (destPath.length() > 1) {
-                    destPath.append("/");
+                    destPath.append('/');
                 }
                 destPath.append(sInfo.getNamePathResolver().getJCRName(destName));
                 sInfo.getSession().getWorkspace().move(srcPath, destPath.toString());
@@ -1762,7 +1762,7 @@ public class RepositoryServiceImpl implements RepositoryService {
         }
 
         private String createXMLFragment(String nodeName, String ntName, String uuid) {
-            StringBuffer xml = new StringBuffer("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
+            StringBuilder xml = new StringBuilder("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
             xml.append("<sv:node xmlns:jcr=\"http://www.jcp.org/jcr/1.0\" ");
             xml.append("xmlns:sv=\"http://www.jcp.org/jcr/sv/1.0\" ");
             xml.append("sv:name=\"").append(nodeName).append("\">");
@@ -1821,9 +1821,9 @@ public class RepositoryServiceImpl implements RepositoryService {
     }
 
     private String getDestinationPath(NodeId destParentNodeId, Name destName, SessionInfoImpl sessionInfo) throws RepositoryException {
-        StringBuffer destPath = new StringBuffer(pathForId(destParentNodeId, sessionInfo));
+        StringBuilder destPath = new StringBuilder(pathForId(destParentNodeId, sessionInfo));
         if (destPath.length() > 1) {
-            destPath.append("/");
+            destPath.append('/');
         }
         destPath.append(sessionInfo.getNamePathResolver().getJCRName(destName));
         return destPath.toString();
@@ -1832,11 +1832,11 @@ public class RepositoryServiceImpl implements RepositoryService {
     private String pathForId(ItemId id, SessionInfoImpl sessionInfo)
             throws RepositoryException {
         Session session = sessionInfo.getSession();
-        StringBuffer path = new StringBuffer();
+        StringBuilder path = new StringBuilder();
         if (id.getUniqueID() != null) {
             path.append(session.getNodeByIdentifier(id.getUniqueID()).getPath());
         } else {
-            path.append("/");
+            path.append('/');
         }
 
         if (id.getPath() == null) {
@@ -1852,7 +1852,7 @@ public class RepositoryServiceImpl implements RepositoryService {
         } else {
             // path is relative
             if (path.length() > 1) {
-                path.append("/");
+                path.append('/');
             }
         }
         path.append(sessionInfo.getNamePathResolver().getJCRPath(id.getPath()));
