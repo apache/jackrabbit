@@ -1718,7 +1718,7 @@ public class RepositoryServiceImpl implements RepositoryService {
                 public Object run() throws RepositoryException {
                     Session s = sInfo.getSession();
                     Node parent = getParent(parentId, sInfo);
-                    String xml = xmlTree.toXML();;
+                    String xml = xmlTree.toXML();
                     InputStream in = new ByteArrayInputStream(xml.getBytes());
                     try {
                         s.importXML(parent.getPath(), in, ImportUUIDBehavior.IMPORT_UUID_COLLISION_THROW);
