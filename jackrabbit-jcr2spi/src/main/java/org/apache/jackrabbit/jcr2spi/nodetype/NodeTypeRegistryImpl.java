@@ -516,7 +516,7 @@ public class NodeTypeRegistryImpl implements NodeTypeRegistry, EffectiveNodeType
      * Notify the listeners that a node type <code>ntName</code> has been registered.
      */
     private void notifyRegistered(Name ntName) {
-        for (NodeTypeRegistryListener ntrl : copyListeners()) {
+        for (final NodeTypeRegistryListener ntrl : copyListeners()) {
             // See: https://stackoverflow.com/a/46699068/196844
             if (ntrl == null) {
                 break;
