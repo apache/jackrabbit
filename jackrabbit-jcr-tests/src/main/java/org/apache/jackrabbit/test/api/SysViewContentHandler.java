@@ -560,13 +560,10 @@ class SysViewContentHandler extends DefaultHandler {
     private void checkChildren(NodeElemData nodeElem, boolean noRecurse)
             throws RepositoryException, SAXException {
 
-        boolean totalSumOk = false;
         Map<String, ChildNodeElem> childElemsFound = nodeElem.childNodeElemNames;
+        boolean totalSumOk;
         boolean partialSumOk = true;
-        if (noRecurse) {
-            totalSumOk = (childElemsFound.size() == 0);
-        }
-        else {
+        if (!noRecurse) {
             // all children found if number of node.getNodes(name) is the same as found
             // in childElemsFound and if sum(number of nodeGetNodes(names))
             // == number of node.getNodes()
