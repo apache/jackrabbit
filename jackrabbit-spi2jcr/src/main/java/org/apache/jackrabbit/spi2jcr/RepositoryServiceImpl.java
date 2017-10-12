@@ -352,9 +352,7 @@ public class RepositoryServiceImpl implements RepositoryService {
             Privilege jcrAll = session.getAccessControlManager().privilegeFromName(Privilege.JCR_ALL);
             privs = new HashSet<Privilege>();
             privs.add(jcrAll);
-            for (Privilege p : jcrAll.getAggregatePrivileges()) {
-                privs.add(p);
-            }
+            privs.addAll(Arrays.asList(jcrAll.getAggregatePrivileges()));
         }
 
         PrivilegeDefinition[] pDefs = new PrivilegeDefinition[privs.size()];
