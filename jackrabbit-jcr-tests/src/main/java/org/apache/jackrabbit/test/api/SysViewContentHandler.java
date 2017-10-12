@@ -40,8 +40,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Stack;
-import java.util.Hashtable;
-import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.Map;
 
@@ -562,8 +560,8 @@ class SysViewContentHandler extends DefaultHandler {
     private void checkChildren(NodeElemData nodeElem, boolean noRecurse)
             throws RepositoryException, SAXException {
 
-        Hashtable<String, ChildNodeElem> childElemsFound = nodeElem.childNodeElemNames;
         boolean totalSumOk = false;
+        Map<String, ChildNodeElem> childElemsFound = nodeElem.childNodeElemNames;
         boolean partialSumOk = true;
         if (noRecurse) {
             totalSumOk = (childElemsFound.size() == 0);
@@ -576,8 +574,7 @@ class SysViewContentHandler extends DefaultHandler {
             NodeIterator nodeIter = nodeElem.node.getNodes();
 
             long children = getSize(nodeIter);
-            for (Enumeration<ChildNodeElem> e = childElemsFound.elements();  e.hasMoreElements();) {
-                ChildNodeElem child = e.nextElement();
+            for (ChildNodeElem child : childElemsFound.values()) {
                 String name = child.name;
                 long number = child.number;
 
@@ -654,7 +651,7 @@ class SysViewContentHandler extends DefaultHandler {
         int position = 0;
         // the childNodeElems (stored are key: name and
         // value: number of the same name siblings)
-        Hashtable<String, ChildNodeElem> childNodeElemNames = new Hashtable<String, ChildNodeElem>();
+        Map<String, ChildNodeElem> childNodeElemNames = new HashMap<String, ChildNodeElem>();
     }
 
     /**
