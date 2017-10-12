@@ -71,7 +71,7 @@ public abstract class ItemImpl implements Item, ItemStateLifeCycleListener {
      * Listeners (weak references)
      */
     // This is a weak set. Although Java does not have a WeakSet (see
-    // https://stackoverflow.com/questions/4062919/why-does-exist-weakhashmap-but-absent-weakset/4062950#comment80335634_4062950 )
+    // https://stackoverflow.com/questions/4062919/why-does-exist-weakhashmap-but-absent-weakset )
     // we can emulate a weak set by creating a WeakHashMap with value type Void.
     private final Map<ItemLifeCycleListener, Void> listeners =
         Collections.synchronizedMap(new WeakHashMap<ItemLifeCycleListener, Void>());
