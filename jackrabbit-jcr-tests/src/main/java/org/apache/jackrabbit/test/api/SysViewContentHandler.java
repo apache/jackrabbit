@@ -425,7 +425,7 @@ class SysViewContentHandler extends DefaultHandler {
         List<PropElemData> propElems = nodeElem.propElems;
 
         // no props exported
-        if (propElems.size() == 0) {
+        if (propElems.isEmpty()) {
             // if node has properties they should be of Binary type and skipBinary should be true
             if (node.hasProperties()) {
                 if (skipBinary) {
