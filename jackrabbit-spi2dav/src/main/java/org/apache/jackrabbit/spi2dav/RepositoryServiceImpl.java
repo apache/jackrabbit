@@ -2054,7 +2054,9 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         } catch (DavException ex) {
             throw ExceptionConverter.generate(ex);
         } finally {
-            request.releaseConnection();
+            if (request != null) {
+                request.releaseConnection();
+            }
         }
     }
 
@@ -2073,7 +2075,9 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         } catch (DavException ex) {
             throw ExceptionConverter.generate(ex);
         } finally {
-            request.releaseConnection();
+            if (request != null) {
+                request.releaseConnection();
+            }
         }
     }
 
