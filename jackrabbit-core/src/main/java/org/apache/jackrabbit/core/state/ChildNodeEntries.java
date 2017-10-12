@@ -34,6 +34,13 @@ import java.util.Map;
  */
 class ChildNodeEntries implements Cloneable {
 
+    // The JavaDoc for Collections.emptyMap() states:
+    // "Implementations of this method need not create a separate Map object
+    // for each call."
+    // https://docs.oracle.com/javase/8/docs/api/java/util/Collections.html#emptyMap--
+    // This indicates that an implementation *might* return a separate Map object.
+    private static final Map<Name, Object> EMPTY_NAME_MAP = Collections.emptyMap();
+
     /**
      * Insertion-ordered map of entries
      * (key=NodeId, value=entry)
@@ -375,7 +382,7 @@ class ChildNodeEntries implements Cloneable {
     protected Object clone() {
         try {
             ChildNodeEntries clone = (ChildNodeEntries) super.clone();
-            if (nameMap != Collections.EMPTY_MAP) {
+            if (nameMap != EMPTY_NAME_MAP) {
                 clone.shared = true;
                 shared = true;
             }
@@ -392,7 +399,7 @@ class ChildNodeEntries implements Cloneable {
      * Initializes the name and entries map with unmodifiable empty instances.
      */
     private void init() {
-        nameMap = Collections.emptyMap();
+        nameMap = EMPTY_NAME_MAP;
         entries = EmptyLinkedMap.INSTANCE;
         shared = false;
     }
@@ -403,7 +410,7 @@ class ChildNodeEntries implements Cloneable {
      */
     @SuppressWarnings("unchecked")
     private void ensureModifiable() {
-        if (nameMap == Collections.EMPTY_MAP) {
+        if (nameMap == EMPTY_NAME_MAP) {
             nameMap = new HashMap<Name, Object>();
             entries = new LinkedMap();
         } else if (shared) {
