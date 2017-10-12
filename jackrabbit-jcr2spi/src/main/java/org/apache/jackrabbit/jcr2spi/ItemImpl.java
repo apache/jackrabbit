@@ -381,8 +381,8 @@ public abstract class ItemImpl implements Item, ItemStateLifeCycleListener {
         // the size() and toArray() calls because notifyCreated() is only called
         // from the constructor, and it is not possible to add a new listener
         // in the time between those two calls.
-        ItemLifeCycleListener[] la = listeners.keySet().toArray(new ItemLifeCycleListener[listeners.size()]);
-        for (ItemLifeCycleListener l : la) {
+        final ItemLifeCycleListener[] la = listeners.keySet().toArray(new ItemLifeCycleListener[listeners.size()]);
+        for (final ItemLifeCycleListener l : la) {
             // it's not necessary to check that l is not null because notifyCreated()
             // is only called from the constructor, and there will be a strong
             // reference to each ItemLifeCycleListener instance via the listeners
@@ -405,14 +405,14 @@ public abstract class ItemImpl implements Item, ItemStateLifeCycleListener {
         // is added between the time that size() returns and toArray() begins),
         // we need to synchronize on listeners for the duration of the size()
         // and toArray() calls.
-        ItemLifeCycleListener[] la;
+        final ItemLifeCycleListener[] la;
         {
             final Set<ItemLifeCycleListener> keys = listeners.keySet();
             synchronized (listeners) {
                 la = keys.toArray(new ItemLifeCycleListener[keys.size()]);
             }
         }
-        for (ItemLifeCycleListener l : la) {
+        for (final ItemLifeCycleListener l : la) {
             // See: https://stackoverflow.com/a/46699068/196844
             if (l == null) {
                 break;
@@ -433,14 +433,14 @@ public abstract class ItemImpl implements Item, ItemStateLifeCycleListener {
         // is added between the time that size() returns and toArray() begins),
         // we need to synchronize on listeners for the duration of the size()
         // and toArray() calls.
-        ItemLifeCycleListener[] la;
+        final ItemLifeCycleListener[] la;
         {
             final Set<ItemLifeCycleListener> keys = listeners.keySet();
             synchronized (listeners) {
                 la = keys.toArray(new ItemLifeCycleListener[keys.size()]);
             }
         }
-        for (ItemLifeCycleListener l : la) {
+        for (final ItemLifeCycleListener l : la) {
             // See: https://stackoverflow.com/a/46699068/196844
             if (l == null) {
                 break;
