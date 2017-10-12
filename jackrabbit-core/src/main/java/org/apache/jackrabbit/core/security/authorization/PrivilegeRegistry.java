@@ -16,7 +16,6 @@
  */
 package org.apache.jackrabbit.core.security.authorization;
 
-import org.apache.commons.collections.map.ReferenceMap;
 import org.apache.jackrabbit.core.cluster.PrivilegeEventChannel;
 import org.apache.jackrabbit.core.cluster.PrivilegeEventListener;
 import org.apache.jackrabbit.spi.PrivilegeDefinition;
@@ -56,6 +55,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.WeakHashMap;
 
 /**
  * The <code>PrivilegeRegistry</code> defines the set of <code>Privilege</code>s
@@ -132,8 +132,10 @@ public final class PrivilegeRegistry implements PrivilegeEventListener {
     private final Map<Name, Definition> registeredPrivileges = new HashMap<Name, Definition>();
     private final Map<PrivilegeBits, Set<Name>> bitsToNames = new HashMap<PrivilegeBits, Set<Name>>();
 
-    @SuppressWarnings("unchecked")    
-    private final Map<Listener, Listener> listeners = Collections.synchronizedMap(new ReferenceMap(ReferenceMap.WEAK, ReferenceMap.WEAK));
+    // This is a weak set. Although Java does not have a WeakSet (see
+    // https://stackoverflow.com/questions/4062919/why-does-exist-weakhashmap-but-absent-weakset )
+    // we can emulate a weak set by creating a WeakHashMap with value type Void.
+    private final Map<Listener, Void> listeners = Collections.synchronizedMap(new WeakHashMap<Listener, Void>());
 
     private final NamespaceRegistry namespaceRegistry;
     private final CustomPrivilegeStore customPrivilegesStore;
@@ -659,18 +661,24 @@ public final class PrivilegeRegistry implements PrivilegeEventListener {
     /**
      * Add a privilege registration listener.
      * 
-     * @param listener
+     * @param listener May not be <code>null</code>.
      */
     void addListener(Listener listener) {
-        listeners.put(listener,listener);
+        if (listener == null) {
+            throw new NullPointerException("listener must not be null.");
+        }
+        listeners.put(listener, null);
     }
 
     /**
      * Removes a privilege registration listener.
      *
-     * @param listener
+     * @param listener May not be <code>null</code>.
      */
     public void removeListener(Listener listener) {
+        if (listener == null) {
+            throw new NullPointerException("listener must not be null.");
+        }
         listeners.remove(listener);
     }
 
@@ -703,7 +711,26 @@ public final class PrivilegeRegistry implements PrivilegeEventListener {
             }
         }
 
-        for (Listener l : listeners.keySet()) {
+        // copy listeners to an array to avoid non-determinism from concurrent
+        // modification.
+        //
+        // listeners is a synchronized map backed by a WeakHashMap. To ensure
+        // that we do not wastefully create an array that is too small to store
+        // the Listener instances (which can happen if a listener is added between
+        // the time that size() returns and toArray() begins), we need to synchronize
+        // on listeners for the duration of the size() and toArray() calls.
+        final Listener[] la;
+        {
+            final Set<Listener> keys = listeners.keySet();
+            synchronized (listeners) {
+                la = keys.toArray(new Listener[keys.size()]);
+            }
+        }
+        for (final Listener l : la) {
+            // See: https://stackoverflow.com/a/46699068/196844
+            if (l == null) {
+                break;
+            }
             l.privilegesRegistered(stubs.keySet());
         }
     }
