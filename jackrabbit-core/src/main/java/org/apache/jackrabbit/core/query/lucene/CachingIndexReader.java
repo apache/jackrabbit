@@ -277,14 +277,20 @@ class CachingIndexReader extends FilterIndexReader {
             throws CorruptIndexException, IOException {
         if (fieldSelector == FieldSelectors.UUID) {
             Document doc;
-            NodeId id = docNumber2id.get(n);
-            if (id == null) {
-                doc = super.document(n, fieldSelector);
-                id = new NodeId(doc.get(FieldNames.UUID));
-                docNumber2id.put(n, id);
-            } else {
-                doc = new Document();
-                doc.add(new IDField(id));
+            // docNumber2id is a synchronized map. Need to make sure that the
+            // conditional put(), which depends on docNumber2id not having a
+            // map entry for key n, is in the same synchronized block as the
+            // call to get().
+            synchronized (docNumber2id) {
+                NodeId id = docNumber2id.get(n);
+                if (id == null) {
+                    doc = super.document(n, fieldSelector);
+                    id = new NodeId(doc.get(FieldNames.UUID));
+                    docNumber2id.put(n, id);
+                } else {
+                    doc = new Document();
+                    doc.add(new IDField(id));
+                }
             }
             return doc;
         } else {
