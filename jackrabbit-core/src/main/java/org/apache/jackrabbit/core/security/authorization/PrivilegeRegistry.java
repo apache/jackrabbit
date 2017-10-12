@@ -711,8 +711,7 @@ public final class PrivilegeRegistry implements PrivilegeEventListener {
             }
         }
 
-        // copy listeners to an array to avoid non-determinism from concurrent
-        // modification.
+        // copy listeners to an array to avoid ConcurrentModificationException
         //
         // listeners is a synchronized map backed by a WeakHashMap. To ensure
         // that we do not wastefully create an array that is too small to store

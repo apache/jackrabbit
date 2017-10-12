@@ -375,7 +375,7 @@ public abstract class ItemImpl implements Item, ItemStateLifeCycleListener {
      * Notify the listeners that this instance has been created.
      */
     private void notifyCreated() {
-        // copy listeners to array to avoid ConcurrentModificationException
+        // copy listeners to an array to avoid ConcurrentModificationException
         //
         // it's not necessary to synchronize on listeners for the duration of
         // the size() and toArray() calls because notifyCreated() is only called
@@ -397,7 +397,7 @@ public abstract class ItemImpl implements Item, ItemStateLifeCycleListener {
      * Notify the listeners that this instance has been updated.
      */
     private void notifyUpdated(boolean modified) {
-        // copy listeners to array to avoid ConcurrentModificationException
+        // copy listeners to an array to avoid ConcurrentModificationException
         //
         // listeners is a synchronized map backed by a WeakHashMap. To ensure
         // that we do not wastefully create an array that is too small to store
@@ -425,7 +425,7 @@ public abstract class ItemImpl implements Item, ItemStateLifeCycleListener {
      * Notify the listeners that this instance has been destroyed.
      */
     private void notifyDestroyed() {
-        // copy listeners to array to avoid ConcurrentModificationException
+        // copy listeners to an array to avoid ConcurrentModificationException
         //
         // listeners is a synchronized map backed by a WeakHashMap. To ensure
         // that we do not wastefully create an array that is too small to store

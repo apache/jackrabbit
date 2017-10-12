@@ -1842,8 +1842,7 @@ public class NodeTypeRegistry implements NodeTypeEventListener {
      * @param ntName node type name
      */
     private void notifyRegistered(Name ntName) {
-        // copy listeners to an array to avoid non-determinism from concurrent
-        // modification.
+        // copy listeners to an array to avoid ConcurrentModificationException
         //
         // listeners is a synchronized map backed by a WeakHashMap. To ensure
         // that we do not wastefully create an array that is too small to store
@@ -1872,8 +1871,7 @@ public class NodeTypeRegistry implements NodeTypeEventListener {
      * @param ntName node type name
      */
     private void notifyReRegistered(Name ntName) {
-        // copy listeners to an array to avoid non-determinism from concurrent
-        // modification.
+        // copy listeners to an array to avoid ConcurrentModificationException
         //
         // listeners is a synchronized map backed by a WeakHashMap. To ensure
         // that we do not wastefully create an array that is too small to store
@@ -1902,8 +1900,7 @@ public class NodeTypeRegistry implements NodeTypeEventListener {
      * @param names node type names
      */
     private void notifyUnregistered(Collection<Name> names) {
-        // copy listeners to an array to avoid non-determinism from concurrent
-        // modification.
+        // copy listeners to an array to avoid ConcurrentModificationException
         //
         // listeners is a synchronized map backed by a WeakHashMap. To ensure
         // that we do not wastefully create an array that is too small to store
