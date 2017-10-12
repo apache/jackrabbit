@@ -16,15 +16,15 @@
  */
 package org.apache.jackrabbit.core.state;
 
-import org.apache.commons.collections.map.LinkedMap;
 import org.apache.jackrabbit.core.id.NodeId;
-import org.apache.jackrabbit.core.util.EmptyLinkedMap;
+import org.apache.jackrabbit.core.util.EmptyLinkedHashMap;
 import org.apache.jackrabbit.spi.Name;
 
 import java.util.List;
 import java.util.HashMap;
 import java.util.Collections;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
@@ -33,6 +33,9 @@ import java.util.Map;
  * the index values of same-name siblings on insertion and removal.
  */
 class ChildNodeEntries implements Cloneable {
+
+    @SuppressWarnings("unchecked")
+    private static final LinkedHashMap<NodeId, ChildNodeEntry> EMPTY_ENTRIES = EmptyLinkedHashMap.INSTANCE;
 
     // The JavaDoc for Collections.emptyMap() states:
     // "Implementations of this method need not create a separate Map object
@@ -45,7 +48,7 @@ class ChildNodeEntries implements Cloneable {
      * Insertion-ordered map of entries
      * (key=NodeId, value=entry)
      */
-    private LinkedMap entries;
+    private LinkedHashMap<NodeId, ChildNodeEntry> entries;
 
     /**
      * Map used for lookup by name
@@ -64,7 +67,7 @@ class ChildNodeEntries implements Cloneable {
     }
 
     ChildNodeEntry get(NodeId id) {
-        return (ChildNodeEntry) entries.get(id);
+        return entries.get(id);
     }
 
     @SuppressWarnings("unchecked")
@@ -221,7 +224,7 @@ class ChildNodeEntries implements Cloneable {
      * @return the removed entry or <code>null</code> if there is no such entry.
      */
     ChildNodeEntry remove(NodeId id) {
-        ChildNodeEntry entry = (ChildNodeEntry) entries.get(id);
+        ChildNodeEntry entry = entries.get(id);
         if (entry != null) {
             return remove(entry.getName(), entry.getIndex());
         }
@@ -267,8 +270,7 @@ class ChildNodeEntries implements Cloneable {
         }
 
         List<ChildNodeEntry> result = new ArrayList<ChildNodeEntry>();
-        for (Object e : entries.values()) {
-            ChildNodeEntry entry = (ChildNodeEntry) e;
+        for (ChildNodeEntry entry : entries.values()) {
             ChildNodeEntry otherEntry = other.get(entry.getId());
             if (entry == otherEntry) {
                 continue;
@@ -301,8 +303,7 @@ class ChildNodeEntries implements Cloneable {
         }
 
         List<ChildNodeEntry> result = new ArrayList<ChildNodeEntry>();
-        for (Object e : entries.values()) {
-            ChildNodeEntry entry = (ChildNodeEntry) e;
+        for (ChildNodeEntry entry : entries.values()) {
             ChildNodeEntry otherEntry = other.get(entry.getId());
             if (entry == otherEntry) {
                 result.add(entry);
@@ -320,15 +321,13 @@ class ChildNodeEntries implements Cloneable {
         return entries.isEmpty();
     }
 
-    @SuppressWarnings("unchecked")
     public List<ChildNodeEntry> list() {
         return new ArrayList<ChildNodeEntry>(entries.values());
     }
 
     public List<ChildNodeEntry> getRenamedEntries(ChildNodeEntries that) {
         List<ChildNodeEntry> renamed = Collections.emptyList();
-        for (Object e : entries.values()) {
-            ChildNodeEntry entry = (ChildNodeEntry) e;
+        for (ChildNodeEntry entry : entries.values()) {
             ChildNodeEntry other = that.get(entry.getId());
             if (other != null && !entry.getName().equals(other.getName())) {
                 // child node entry with same id but different name exists in
@@ -400,7 +399,7 @@ class ChildNodeEntries implements Cloneable {
      */
     private void init() {
         nameMap = EMPTY_NAME_MAP;
-        entries = EmptyLinkedMap.INSTANCE;
+        entries = EMPTY_ENTRIES;
         shared = false;
     }
 
@@ -412,9 +411,9 @@ class ChildNodeEntries implements Cloneable {
     private void ensureModifiable() {
         if (nameMap == EMPTY_NAME_MAP) {
             nameMap = new HashMap<Name, Object>();
-            entries = new LinkedMap();
+            entries = new LinkedHashMap<NodeId, ChildNodeEntry>();
         } else if (shared) {
-            entries = (LinkedMap) entries.clone();
+            entries = (LinkedHashMap<NodeId, ChildNodeEntry>) entries.clone();
             nameMap = new HashMap<Name, Object>(nameMap);
             for (Map.Entry<Name, Object> entry : nameMap.entrySet()) {
                 Object value = entry.getValue();
