@@ -215,7 +215,7 @@ class ChildNodeEntries implements Cloneable {
     }
 
     /**
-     * Removes the child node entry refering to the node with the given id.
+     * Removes the child node entry referring to the node with the given id.
      *
      * @param id id of node whose entry is to be removed.
      * @return the removed entry or <code>null</code> if there is no such entry.
