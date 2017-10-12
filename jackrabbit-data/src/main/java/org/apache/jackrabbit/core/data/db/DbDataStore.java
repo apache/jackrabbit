@@ -287,7 +287,7 @@ public class DbDataStore extends AbstractDataStore
     /**
      * All data identifiers that are currently in use are in this set until they are garbage collected.
      */
-    protected Map<DataIdentifier, WeakReference<DataIdentifier>> inUse =
+    private final Map<DataIdentifier, WeakReference<DataIdentifier>> inUse =
         Collections.synchronizedMap(new WeakHashMap<DataIdentifier, WeakReference<DataIdentifier>>());
 
     /**
@@ -499,7 +499,17 @@ public class DbDataStore extends AbstractDataStore
     public synchronized int deleteAllOlderThan(long min) throws DataStoreException {
         try {
             ArrayList<String> touch = new ArrayList<String>();
-            ArrayList<DataIdentifier> ids = new ArrayList<DataIdentifier>(inUse.keySet());
+            ArrayList<DataIdentifier> ids;
+            synchronized (inUse) {
+                // inUse is a synchronized map. Because the ArrayList(Collection)
+                // constructor iterates over the given collection (in this case,
+                // the key set view of a synchronized map), we need to manually
+                // synchronize on the map to avoid non-determinism.
+                // See:
+                // - https://docs.oracle.com/javase/8/docs/api/java/util/Collections.html#synchronizedMap-java.util.Map-
+                // - https://stackoverflow.com/a/46695144/196844
+                ids = new ArrayList<DataIdentifier>(inUse.keySet());
+            }
             for (DataIdentifier identifier: ids) {
                 if (identifier != null) {
                     touch.add(identifier.toString());
