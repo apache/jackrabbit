@@ -18,6 +18,7 @@ package org.apache.jackrabbit.jcr2spi;
 
 import java.util.Collections;
 import java.util.Map;
+import java.util.Set;
 import java.util.WeakHashMap;
 
 import javax.jcr.AccessDeniedException;
@@ -82,6 +83,9 @@ public abstract class ItemImpl implements Item, ItemStateLifeCycleListener {
 
         if (listeners != null) {
             for (int i = 0; i < listeners.length; i++) {
+                if (listeners[i] == null) {
+                    throw new NullPointerException(String.format("listeners[%d] must not be null.", i));
+                }
                 addLifeCycleListener(listeners[i]);
             }
         }
@@ -372,12 +376,19 @@ public abstract class ItemImpl implements Item, ItemStateLifeCycleListener {
      */
     private void notifyCreated() {
         // copy listeners to array to avoid ConcurrentModificationException
+        //
+        // it's not necessary to synchronize on listeners for the duration of
+        // the size() and toArray() calls because notifyCreated() is only called
+        // from the constructor, and it is not possible to add a new listener
+        // in the time between those two calls.
         ItemLifeCycleListener[] la = listeners.keySet().toArray(new ItemLifeCycleListener[listeners.size()]);
         for (ItemLifeCycleListener l : la) {
             // it's not necessary to check that l is not null because notifyCreated()
             // is only called from the constructor, and there will be a strong
             // reference to each ItemLifeCycleListener instance via the listeners
-            // array argument to the constructor
+            // array argument to the constructor. Therefore, the size of the
+            // WeakHashMap could not decrease while toArray() was executing.
+            // See: https://stackoverflow.com/a/46699068/196844
             l.itemCreated(this);
         }
     }
@@ -387,11 +398,26 @@ public abstract class ItemImpl implements Item, ItemStateLifeCycleListener {
      */
     private void notifyUpdated(boolean modified) {
         // copy listeners to array to avoid ConcurrentModificationException
-        ItemLifeCycleListener[] la = listeners.keySet().toArray(new ItemLifeCycleListener[listeners.size()]);
-        for (ItemLifeCycleListener l : la) {
-            if (l != null) {
-                l.itemUpdated(this, modified);
+        //
+        // listeners is a synchronized map backed by a WeakHashMap. To ensure
+        // that we do not wastefully create an array that is too small to store
+        // the ItemLifeCycleListener instances (which can happen if a listener
+        // is added between the time that size() returns and toArray() begins),
+        // we need to synchronize on listeners for the duration of the size()
+        // and toArray() calls.
+        ItemLifeCycleListener[] la;
+        {
+            final Set<ItemLifeCycleListener> keys = listeners.keySet();
+            synchronized (listeners) {
+                la = keys.toArray(new ItemLifeCycleListener[keys.size()]);
             }
+        }
+        for (ItemLifeCycleListener l : la) {
+            // See: https://stackoverflow.com/a/46699068/196844
+            if (l == null) {
+                break;
+            }
+            l.itemUpdated(this, modified);
         }
     }
 
@@ -400,29 +426,51 @@ public abstract class ItemImpl implements Item, ItemStateLifeCycleListener {
      */
     private void notifyDestroyed() {
         // copy listeners to array to avoid ConcurrentModificationException
-        ItemLifeCycleListener[] la = listeners.keySet().toArray(new ItemLifeCycleListener[listeners.size()]);
-        for (ItemLifeCycleListener l : la) {
-            if (l != null) {
-                l.itemDestroyed(this);
+        //
+        // listeners is a synchronized map backed by a WeakHashMap. To ensure
+        // that we do not wastefully create an array that is too small to store
+        // the ItemLifeCycleListener instances (which can happen if a listener
+        // is added between the time that size() returns and toArray() begins),
+        // we need to synchronize on listeners for the duration of the size()
+        // and toArray() calls.
+        ItemLifeCycleListener[] la;
+        {
+            final Set<ItemLifeCycleListener> keys = listeners.keySet();
+            synchronized (listeners) {
+                la = keys.toArray(new ItemLifeCycleListener[keys.size()]);
             }
+        }
+        for (ItemLifeCycleListener l : la) {
+            // See: https://stackoverflow.com/a/46699068/196844
+            if (l == null) {
+                break;
+            }
+            l.itemDestroyed(this);
         }
     }
 
     /**
      * Add an <code>ItemLifeCycleListener</code>
      *
-     * @param listener the new listener to be informed on life cycle changes
+     * @param listener the new listener to be informed on life cycle changes.
+     * This may not be <code>null</code>.
      */
-    void addLifeCycleListener(ItemLifeCycleListener listener) {
+    final void addLifeCycleListener(ItemLifeCycleListener listener) {
+        if (listener == null) {
+            throw new NullPointerException("listener must not be null.");
+        }
         listeners.put(listener, null);
     }
 
     /**
      * Remove an <code>ItemLifeCycleListener</code>
      *
-     * @param listener an existing listener
+     * @param listener an existing listener, which may not be <code>null</code>.
      */
-    void removeLifeCycleListener(ItemLifeCycleListener listener) {
+    final void removeLifeCycleListener(ItemLifeCycleListener listener) {
+        if (listener == null) {
+            throw new NullPointerException("listener must not be null.");
+        }
         listeners.remove(listener);
     }
 
