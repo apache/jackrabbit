@@ -65,7 +65,7 @@ class SysViewContentHandler extends DefaultHandler {
     // the propElem in process
     PropElemData currentPropElem;
     // the valueElem in process
-    protected StringBuffer currentValue;
+    protected StringBuilder currentValue;
     // prefix mapping data
     protected Map<String, String> prefixes;
     // if the first node is yet treated
@@ -250,7 +250,7 @@ class SysViewContentHandler extends DefaultHandler {
 
             else if (qName.equals(svValue)) {
                 // init
-                currentValue = new StringBuffer();
+                currentValue = new StringBuilder();
             }
             else {
                 // invalid element name is used
