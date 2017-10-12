@@ -87,7 +87,7 @@ class SysViewContentHandler extends DefaultHandler {
 
     /**
      * Constructor
-     * @param path Thepath to the  root node of the tree to be exported.
+     * @param path The path to the root node of the tree to be exported.
      * @param session The session used.
      * @param skipBinary Boolean if the binary properties are not exported.
      * @param noRecurse Boolean if only the root node of the tree should be exported.
