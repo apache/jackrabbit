@@ -477,7 +477,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
     }
 
     private String saveGetIdString(ItemId id, NamePathResolver resolver) {
-        StringBuffer bf = new StringBuffer();
+        StringBuilder bf = new StringBuilder();
         String uid = id.getUniqueID();
         if (uid != null) {
             bf.append(uid);
@@ -1388,7 +1388,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
                     v = getQValueFactory().create(entity.getContent());
                 } else {
                     Reader reader = new InputStreamReader(entity.getContent(), ct.getCharset());
-                    StringBuffer sb = new StringBuffer();
+                    StringBuilder sb = new StringBuilder();
                     int c;
                     while ((c = reader.read()) > -1) {
                         sb.append((char) c);
