@@ -545,7 +545,7 @@ public class ConnectionHelper {
                         } catch (SQLException e) {
                             lastException = e;
                         }
-                        log.error("Failed to execute SQL (stacktrace on DEBUG log level): " + lastException);
+                        log.error("Failed to execute SQL (stacktrace on DEBUG log level): {}", (Object) lastException);
                         log.debug("Failed to execute SQL", lastException);
                         if (!resetParamResources()) {
                             log.warn("Could not reset parameters: not retrying SQL call");

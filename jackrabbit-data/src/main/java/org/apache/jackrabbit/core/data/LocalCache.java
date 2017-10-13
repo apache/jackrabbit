@@ -182,7 +182,7 @@ public class LocalCache {
         try {
             return store(fileName, src, false).getFile();
         } catch (IOException ioe) {
-            LOG.warn("Exception in addding file [" + fileName + "] to local cache.", ioe);
+            LOG.warn("Exception in addding file [{}] to local cache.", fileName, ioe);
         }
         return null;
     }
@@ -617,7 +617,7 @@ public class LocalCache {
             String dataStorePath = directory.getAbsolutePath();
             // convert to java path format
             dataStorePath = dataStorePath.replace("\\", "/");
-            LOG.info("directoryPath = " + dataStorePath);
+            LOG.info("directoryPath = {}", dataStorePath);
 
             String tmpPath = tmp.getAbsolutePath();
             tmpPath = tmpPath.replace("\\", "/");
@@ -646,7 +646,7 @@ public class LocalCache {
                     store(name, f);
                     long now = System.currentTimeMillis();
                     if (now > time + 10000) {
-                        LOG.info("Processed {" + (count) + "}/{" + allFiles.size() + "}");
+                        LOG.info("Processed [{}]/[{}]", count, allFiles.size());
                         time = now;
                     }
                 }

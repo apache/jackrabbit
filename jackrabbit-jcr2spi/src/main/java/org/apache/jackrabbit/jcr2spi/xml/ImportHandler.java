@@ -99,9 +99,7 @@ public class ImportHandler extends DefaultHandler {
     @Override
     public void warning(SAXParseException e) throws SAXException {
         // log exception and carry on...
-        log.warn("warning encountered at line: " + e.getLineNumber()
-                + ", column: " + e.getColumnNumber()
-                + " while parsing XML stream", e);
+        log.warn("warning encountered at line: {}, column: {} while parsing XML stream", new Object[] { e.getLineNumber(), e.getColumnNumber(), e });
     }
 
     /**
@@ -110,9 +108,7 @@ public class ImportHandler extends DefaultHandler {
     @Override
     public void error(SAXParseException e) throws SAXException {
         // log exception and carry on...
-        log.error("error encountered at line: " + e.getLineNumber()
-                + ", column: " + e.getColumnNumber()
-                + " while parsing XML stream: " + e.toString());
+        log.error("error encountered at line: {}, column: {} while parsing XML stream: {}", new Object[] { e.getLineNumber(), e.getColumnNumber(), e });
     }
 
     /**
@@ -121,9 +117,7 @@ public class ImportHandler extends DefaultHandler {
     @Override
     public void fatalError(SAXParseException e) throws SAXException {
         // log and re-throw exception
-        log.error("fatal error encountered at line: " + e.getLineNumber()
-                + ", column: " + e.getColumnNumber()
-                + " while parsing XML stream: " + e.toString());
+        log.error("fatal error encountered at line: {}, column: {} while parsing XML stream: {}", new Object[] { e.getLineNumber(), e.getColumnNumber(), e });
         throw e;
     }
 

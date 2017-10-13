@@ -211,7 +211,7 @@ public class UserImporter implements ProtectedPropertyImporter, ProtectedNodeImp
            {@link UserManager#createGroup} respectively. */
         Authorizable a = userManager.getAuthorizable(parent);
         if (a == null) {
-            log.warn("Cannot handle protected PropInfo " + protectedPropInfo + ". Node " + parent + " doesn't represent a valid Authorizable.");
+            log.warn("Cannot handle protected PropInfo {}. Node {} doesn't represent a valid Authorizable.", protectedPropInfo, parent);
             return false;
         }
 
@@ -437,7 +437,7 @@ public class UserImporter implements ProtectedPropertyImporter, ProtectedNodeImp
 
                     // handling non-existing members in case of best-effort
                     if (!nonExisting.isEmpty()) {
-                        log.info("ImportBehavior.BESTEFFORT: Found " + nonExisting.size() + " entries of rep:members pointing to non-existing authorizables. Adding to rep:members.");
+                        log.info("ImportBehavior.BESTEFFORT: Found {} entries of rep:members pointing to non-existing authorizables. Adding to rep:members.", nonExisting.size());
                         final NodeImpl groupNode = ((AuthorizableImpl) gr).getNode();
 
                         if (userManager.hasMemberSplitSize()) {
@@ -559,7 +559,7 @@ public class UserImporter implements ProtectedPropertyImporter, ProtectedNodeImp
             }
             Authorizable auth = userManager.getAuthorizable(groupNode);
             if (auth == null) {
-                log.debug("Cannot handle protected node " + protectedParent + ". It nor one of its parents represent a valid Authorizable.");
+                log.debug("Cannot handle protected node {}. It nor one of its parents represent a valid Authorizable.", protectedParent);
                 return false;
             } else {
                 currentMembership = new Membership(auth.getID());
@@ -744,7 +744,7 @@ public class UserImporter implements ProtectedPropertyImporter, ProtectedNodeImp
             } else if (NAME_ABORT.equalsIgnoreCase(behaviorString)) {
                 return ABORT;
             } else {
-                log.error("Invalid behavior " + behaviorString + " -> Using default: ABORT.");
+                log.error("Invalid behavior {} -> Using default: ABORT.", behaviorString);
                 return ABORT;
             }
         }

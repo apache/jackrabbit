@@ -433,10 +433,9 @@ public class BundleFsPersistenceManager extends AbstractBundlePersistenceManager
         if (message != null) {
             BundleFsPersistenceManager.log.error(message);
         }
-        BundleFsPersistenceManager.log.error("       Reason: " + se.getMessage());
-        BundleFsPersistenceManager.log.error(
-                "   State/Code: " + se.getSQLState() + "/" + se.getErrorCode());
-        BundleFsPersistenceManager.log.debug("   dump:", se);
+        log.error("       Reason: {}", se.getMessage());
+        log.error("   State/Code: {}/{}", se.getSQLState(), se.getErrorCode());
+        log.debug("   dump:", se);
     }
 
     /**

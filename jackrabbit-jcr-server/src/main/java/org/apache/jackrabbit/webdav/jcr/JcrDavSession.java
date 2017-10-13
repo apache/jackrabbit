@@ -104,7 +104,7 @@ public abstract class JcrDavSession implements DavSession {
                 session.getWorkspace().getLockManager().addLockToken(LockTokenMapper.getJcrLockToken(token));
             }
             catch (RepositoryException ex) {
-                log.debug("trying to add lock token " + token + " to session", ex);
+                log.debug("trying to add lock token {} to session", token, ex);
             }
         }
         lockTokens.add(token);
@@ -132,7 +132,7 @@ public abstract class JcrDavSession implements DavSession {
                 session.getWorkspace().getLockManager().removeLockToken(LockTokenMapper.getJcrLockToken(token));
             }
             catch (RepositoryException ex) {
-                log.debug("trying to remove lock token " + token + " to session", ex);
+                log.debug("trying to remove lock token {} to session", token, ex);
             }
         }
         lockTokens.remove(token);

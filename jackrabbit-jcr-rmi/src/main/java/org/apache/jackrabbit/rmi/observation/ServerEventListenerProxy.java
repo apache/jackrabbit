@@ -96,7 +96,7 @@ public class ServerEventListenerProxy implements EventListener {
             queue.put(remoteEvent);
         } catch (RemoteException re) {
             Throwable t = (re.getCause() == null) ? re : re.getCause();
-            log.error("Problem creating remote event for " + listenerId, t);
+            log.error("Problem creating remote event for {}", listenerId, t);
         }
     }
 

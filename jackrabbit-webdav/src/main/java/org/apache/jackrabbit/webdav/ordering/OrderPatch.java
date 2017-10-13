@@ -148,7 +148,7 @@ public class OrderPatch implements OrderingConstants, XmlSerializable {
                 Member om = new Member(segment, pos);
                 tmpList.add(om);
             } catch (IllegalArgumentException e) {
-                log.warn("Invalid element in 'orderpatch' request body: " + e.getMessage());
+                log.warn("Invalid element in 'orderpatch' request body: {}", e.getMessage());
                 throw new DavException(DavServletResponse.SC_BAD_REQUEST);
             }
         }

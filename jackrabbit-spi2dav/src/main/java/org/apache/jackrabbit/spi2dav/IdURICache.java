@@ -76,7 +76,7 @@ class IdURICache {
         String cleanUri = getCleanUri(uri);
         uriToIdCache.put(cleanUri, itemId);
         idToUriCache.put(itemId, cleanUri);
-        log.debug("Added: ItemId = " + itemId + " URI = " + cleanUri);
+        log.debug("Added: ItemId = {} URI = {}", itemId, cleanUri);
     }
 
     public void remove(String uri) {
@@ -85,7 +85,7 @@ class IdURICache {
         if (itemId != null) {
             idToUriCache.remove(itemId);
         }
-        log.debug("Removed: ItemId = " + itemId + " URI = " + cleanUri);
+        log.debug("Removed: ItemId = {} URI = {}", itemId, cleanUri);
     }
 
     public void remove(ItemId itemId) {
@@ -93,7 +93,7 @@ class IdURICache {
         if (uri != null) {
             uriToIdCache.remove(uri);
         }
-        log.debug("Removed: ItemId = " + itemId + " URI = " + uri);
+        log.debug("Removed: ItemId = {} URI = {}", itemId, uri);
     }
 
     public void clear() {

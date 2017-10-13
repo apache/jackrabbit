@@ -233,7 +233,7 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
                 if (uri.startsWith(rootUri)) {
                     jcrPath = uri.substring(rootUri.length());
                 } else {
-                    log.warn("ItemURI " + uri + " doesn't start with rootURI (" + rootUri + ").");
+                    log.warn("ItemURI {} doesn't start with rootURI ({}).", uri, rootUri);
                     // fallback:
                     // calculated uri does not start with the rootURI
                     // -> search /jcr:root and start sub-string behind.

@@ -158,7 +158,7 @@ class EventConsumer {
                 try {
                     granted = canRead(state);
                 } catch (RepositoryException e) {
-                    log.warn("Unable to check access rights for item: " + targetId);
+                    log.warn("Unable to check access rights for item: {}", targetId);
                 }
                 if (!granted) {
                     if (denied == null) {
@@ -196,7 +196,7 @@ class EventConsumer {
                 try {
                     granted = canRead(evState);
                 } catch (RepositoryException e) {
-                    log.warn("Unable to check access rights for item: " + targetId);
+                    log.warn("Unable to check access rights for item: {}", targetId);
                 }
                 if (!granted) {
                     if (denied == null) {

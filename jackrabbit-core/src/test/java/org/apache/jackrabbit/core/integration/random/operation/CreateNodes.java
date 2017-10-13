@@ -73,7 +73,7 @@ public class CreateNodes extends Operation {
             log.info("Create node {}", child.getPath());
             if (count % saveInterval == 0) {
                 getSession().save();
-                log.debug("Created " + (count / 1000) + "k nodes");
+                log.debug("Created {}k nodes", count / 1000);
             }
             if (levels > 0) {
                 count = createNodes(child, nodesPerLevel, levels, count);

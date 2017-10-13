@@ -224,7 +224,7 @@ public class ClientEventPoll extends Thread {
                 try {
                     listener.onEvent(events);
                 } catch (Exception e) {
-                    log.error("Unexpected failure of Listener " + listener, e);
+                    log.error("Unexpected failure of Listener {}", listener, e);
                 }
 
             } catch (RemoteException re) {

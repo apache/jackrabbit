@@ -912,8 +912,8 @@ public class S3Backend extends AbstractBackend {
             try {
                 write(identifier, file, true, callback);
             } catch (DataStoreException e) {
-                LOG.error("Could not upload [" + identifier + "], file[" + file
-                    + "]", e);
+                LOG.error("Could not upload [{}], file[{}]",
+                        new Object[] { identifier, file, e });
             }
 
         }

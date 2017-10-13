@@ -400,8 +400,7 @@ public class WorkspaceImporter implements Importer {
             def = itemOps.findApplicablePropertyDefinition(prop.getName(), prop.getType(), prop.isMultiValued(), node);
             if (def.isProtected()) {
                 // skip protected property
-                log.debug("skipping protected property "
-                        + itemOps.safeGetJCRPath(idExisting));
+                log.debug("skipping protected property {}", itemOps.safeGetJCRPath(idExisting));
                 return;
             }
             if (!def.isAutoCreated()
@@ -415,7 +414,7 @@ public class WorkspaceImporter implements Importer {
             def = pInfo.getApplicablePropertyDef(itemOps.getEffectiveNodeType(node));
             if (def.isProtected()) {
                 // skip protected property
-                log.debug("skipping protected property " + name);
+                log.debug("skipping protected property {}", name);
                 return;
             }
 
@@ -523,7 +522,7 @@ public class WorkspaceImporter implements Importer {
                 // parent node was skipped, skip this child node too
                 parents.push(null); // push null onto stack for skipped node
                 succeeded = true;
-                log.debug("skipping node " + nodeName);
+                log.debug("skipping node {}", nodeName);
                 return;
             }
             if (parent.hasChildNodeEntry(nodeName)) {
@@ -544,8 +543,7 @@ public class WorkspaceImporter implements Importer {
                         // skip protected node
                         parents.push(null); // push null onto stack for skipped node
                         succeeded = true;
-                        log.debug("skipping protected node "
-                                + itemOps.safeGetJCRPath(existing.getNodeId()));
+                        log.debug("skipping protected node {}", itemOps.safeGetJCRPath(existing.getNodeId()));
                         return;
                     }
                     if (def.isAutoCreated() && entExisting.includesNodeType(ntName)) {
@@ -575,7 +573,7 @@ public class WorkspaceImporter implements Importer {
                         // skip protected node
                         parents.push(null); // push null onto stack for skipped node
                         succeeded = true;
-                        log.debug("skipping protected node " + nodeName);
+                        log.debug("skipping protected node {}", nodeName);
                         return;
                     }
 
@@ -597,7 +595,7 @@ public class WorkspaceImporter implements Importer {
                             // no new node has been created, so skip this node
                             parents.push(null); // push null onto stack for skipped node
                             succeeded = true;
-                            log.debug("skipping existing node: " + nodeName);
+                            log.debug("skipping existing node: {}", nodeName);
                             return;
                         }
                     } catch (ItemNotFoundException e) {
@@ -608,7 +606,7 @@ public class WorkspaceImporter implements Importer {
                             // skip protected node
                             parents.push(null); // push null onto stack for skipped node
                             succeeded = true;
-                            log.debug("skipping protected node " + nodeName);
+                            log.debug("skipping protected node {}", nodeName);
                             return;
                         }
 

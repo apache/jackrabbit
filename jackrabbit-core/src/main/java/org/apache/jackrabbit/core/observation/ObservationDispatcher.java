@@ -154,15 +154,14 @@ public final class ObservationDispatcher extends EventDispatcher
 
             eventQueueSize.getAndAdd(-action.getEventStates().size());
             log.debug("got EventStateCollection");
-            log.debug("event delivery to " + action.getEventConsumers().size() + " consumers started...");
+            log.debug("event delivery to {} consumers started...", action.getEventConsumers().size());
             for (Iterator<EventConsumer> it = action.getEventConsumers().iterator(); it.hasNext();) {
                 EventConsumer c = it.next();
                 try {
                     c.consumeEvents(action.getEventStates());
                 } catch (Throwable t) {
-                    log.warn("EventConsumer " +
-                            c.getEventListener().getClass().getName() +
-                            " threw exception", t);
+                    log.warn("EventConsumer {} threw exception",
+                            c.getEventListener().getClass().getName(), t);
                     // move on to the next consumer
                 }
             }
@@ -249,7 +248,7 @@ public final class ObservationDispatcher extends EventDispatcher
             // log a warning at most every 5 seconds (to avoid filling the log file)
             if (lastError == 0 || now > lastError + 5000) {
                 logWarning = true;
-                log.warn("More than " + MAX_QUEUED_EVENTS + " events in the queue", new Exception("Stack Trace"));
+                log.warn("More than {} events in the queue", MAX_QUEUED_EVENTS, new Exception("Stack Trace"));
                 lastError = now;
             }
             if (Thread.currentThread() == notificationThread) {

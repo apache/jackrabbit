@@ -131,8 +131,8 @@ public class RepositoryLock implements RepositoryLockMechanism {
      */
     public void acquire() throws RepositoryException {
         if (file.exists()) {
-            LOG.warn("Existing lock file " + file + " detected."
-                    + " Repository was not shut down properly.");
+            LOG.warn("Existing lock file {} detected."
+                    + " Repository was not shut down properly.", file);
         }
         try {
             tryLock();
@@ -187,7 +187,7 @@ public class RepositoryLock implements RepositoryLockMechanism {
                 try {
                     System.setProperty(identifier, identifier);
                 } catch (SecurityException e) {
-                    LOG.warn("Unable to set system property: " + identifier, e);
+                    LOG.warn("Unable to set system property: {}", identifier, e);
                 }
             }
         }
@@ -201,7 +201,7 @@ public class RepositoryLock implements RepositoryLockMechanism {
             try {
                 randomAccessFile.close();
             } catch (IOException e) {
-                LOG.warn("Unable to close the random access file " + file, e);
+                LOG.warn("Unable to close the random access file {}", file, e);
             }
             randomAccessFile = null;
         }
@@ -232,7 +232,7 @@ public class RepositoryLock implements RepositoryLockMechanism {
             try {
                 System.getProperties().remove(identifier);
             } catch (SecurityException e) {
-                LOG.error("Unable to clear system property: " + identifier, e);
+                LOG.error("Unable to clear system property: {}", identifier, e);
             }
         }
     }

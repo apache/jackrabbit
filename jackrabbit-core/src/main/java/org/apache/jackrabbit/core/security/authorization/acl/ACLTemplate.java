@@ -145,7 +145,7 @@ class ACLTemplate extends AbstractACLTemplate {
                 String principalName = aceNode.getProperty(P_PRINCIPAL_NAME).getString();
                 Principal princ = principalMgr.getPrincipal(principalName);
                 if (princ == null) {
-                    log.debug("Principal with name " + principalName + " unknown to PrincipalManager.");
+                    log.debug("Principal with name {} unknown to PrincipalManager.", principalName);
                     princ = new PrincipalImpl(principalName);
                 }
 

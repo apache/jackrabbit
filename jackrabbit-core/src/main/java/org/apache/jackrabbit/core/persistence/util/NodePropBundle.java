@@ -724,7 +724,7 @@ public class NodePropBundle {
                         blobStore.remove(blobIds[i]);
                         log.debug("removed blob {}", blobIds[i]);
                     } catch (Exception e) {
-                        log.error("Ignoring error while removing blob " + blobIds[i], e);
+                        log.error("Ignoring error while removing blob {}", blobIds[i], e);
                     }
                 }
             }

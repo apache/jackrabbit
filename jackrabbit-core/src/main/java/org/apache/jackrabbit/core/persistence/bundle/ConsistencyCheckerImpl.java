@@ -233,7 +233,7 @@ public class ConsistencyCheckerImpl {
 
                         count++;
                         if (count % 1000 == 0) {
-                            log.info(pm + ": loaded " + count + " infos...");
+                            log.info("{}: loaded {} infos...", pm, count);
                         }
 
                     }
@@ -290,7 +290,7 @@ public class ConsistencyCheckerImpl {
 
                         count++;
                         if (count % 1000 == 0 && listener == null) {
-                            log.info(pm + ": checked " + count + "/" + idList.size() + " bundles...");
+                            log.info("{}: checked {}/{} bundles...", new Object[] { pm, count, idList.size() });
                         }
                     }
                 } catch (ItemStateException ignored) {
@@ -299,7 +299,7 @@ public class ConsistencyCheckerImpl {
             }
         }
 
-        log.info(pm + ": checked " + count + " bundles.");
+        log.info("{}: checked {} bundles.", pm, count);
 
         return count;
     }
@@ -385,8 +385,11 @@ public class ConsistencyCheckerImpl {
 
     private void info(String id, String message) {
         if (this.listener == null) {
-            String idstring = id == null ? "" : ("Node " + id + ": ");
-            log.info(idstring + message);
+            if (id == null) {
+                log.info(message);
+            } else {
+                log.info("Node {}: {}", id, message);
+            }
         } else {
             listener.info(id, message);
         }
@@ -394,16 +397,22 @@ public class ConsistencyCheckerImpl {
 
     private void error(String id, String message) {
         if (this.listener == null) {
-            String idstring = id == null ? "" : ("Node " + id + ": ");
-            log.error(idstring + message);
+            if (id == null) {
+                log.error(message);
+            } else {
+                log.error("Node {}: {}", id, message);
+            }
         } else {
             listener.error(id, message);
         }
     }
 
     private void error(String id, String message, Throwable ex) {
-        String idstring = id == null ? "" : ("Node " + id + ": ");
-        log.error(idstring + message, ex);
+        if (id == null) {
+            log.error(message, ex);
+        } else {
+            log.error("Node {}: {}", new Object[] { id, message, ex });
+        }
         if (listener != null) {
             listener.error(id, message);
         }
@@ -416,7 +425,7 @@ public class ConsistencyCheckerImpl {
             pm.storeBundle(bundle);
             pm.evictBundle(bundle.getId());
         } catch (ItemStateException e) {
-            log.error(pm + ": Error storing fixed bundle: " + e);
+            log.error("{}: Error storing fixed bundle: {}", pm, e);
         }
     }
 

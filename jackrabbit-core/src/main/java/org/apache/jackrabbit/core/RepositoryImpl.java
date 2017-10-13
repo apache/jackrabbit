@@ -363,9 +363,9 @@ public class RepositoryImpl extends AbstractRepository
             }
 
             succeeded = true;
-            log.info("Repository started (" + (System.currentTimeMillis() - t0) + "ms)");
+            log.info("Repository started ({}ms)", System.currentTimeMillis() - t0);
         } catch (RepositoryException e) {
-            log.error("failed to start Repository: " + e.getMessage(), e);
+            log.error("failed to start Repository: {}", e.getMessage(), e);
             throw e;
         } finally {
             if (!succeeded) {
@@ -451,7 +451,7 @@ public class RepositoryImpl extends AbstractRepository
             securityMgr = smc.newInstance(JackrabbitSecurityManager.class);
         }
 
-        log.info("SecurityManager = " + securityMgr.getClass());
+        log.info("SecurityManager = {}", securityMgr.getClass());
 
         context.setSecurityManager(securityMgr);
 
@@ -547,7 +547,7 @@ public class RepositoryImpl extends AbstractRepository
             }
         } catch (RepositoryException e) {
             // if default workspace failed to initialize, shutdown again
-            log.error("Failed to initialize workspace '" + wspName + "'", e);
+            log.error("Failed to initialize workspace '{}'", wspName, e);
             log.error("Unable to start repository, forcing shutdown...");
             shutdown();
             throw e;
@@ -709,7 +709,7 @@ public class RepositoryImpl extends AbstractRepository
         try {
             wspInfo.initialize();
         } catch (RepositoryException e) {
-            log.error("Unable to initialize workspace '" + workspaceName + "'", e);
+            log.error("Unable to initialize workspace '{}'", workspaceName, e);
             throw new NoSuchWorkspaceException(workspaceName);
         }
         return wspInfo;
@@ -1540,7 +1540,7 @@ public class RepositoryImpl extends AbstractRepository
         try {
             return (v == null) ? null : v.getString();
         } catch (RepositoryException e) {
-            log.error("corrupt descriptor value: " + key, e);
+            log.error("corrupt descriptor value: {}", key, e);
             return null;
         }
     }
@@ -2031,11 +2031,11 @@ public class RepositoryImpl extends AbstractRepository
                     // already initialized, some other thread was quicker, we're done
                     return false;
                 }
-                log.info("initializing workspace '" + getName() + "'...");
+                log.info("initializing workspace '{}'...", getName());
                 doInitialize();
                 initialized = true;
                 doPostInitialize();
-                log.info("workspace '" + getName() + "' initialized");
+                log.info("workspace '{}' initialized", getName());
                 return true;
             } finally {
                 initLock.writeLock().release();
@@ -2067,7 +2067,7 @@ public class RepositoryImpl extends AbstractRepository
                     itemStateMgr.addVirtualItemStateProvider(
                             virtNTMgr.getVirtualItemStateProvider());
                 } catch (Exception e) {
-                    log.error("Unable to add vmgr: " + e.toString(), e);
+                    log.error("Unable to add vmgr: {}", e, e);
                 }
                 ClusterNode clusterNode = context.getClusterNode();
                 if (clusterNode != null && config.isClustered()) {
@@ -2139,7 +2139,7 @@ public class RepositoryImpl extends AbstractRepository
                                 | Event.PROPERTY_CHANGED,
                         "/", true, null, null, false);
             }
-            log.debug("SearchManager initialized (" + (System.currentTimeMillis() - t0) + "ms)");
+            log.debug("SearchManager initialized ({}ms)", System.currentTimeMillis() - t0);
         }
 
         /**
@@ -2166,9 +2166,8 @@ public class RepositoryImpl extends AbstractRepository
                 } else {
                     if ((currentTS - idleTimestamp) > maxIdleTime) {
                         // temporarily shutdown workspace
-                        log.info("disposing workspace '" + getName()
-                                + "' which has been idle for "
-                                + (currentTS - idleTimestamp) + " ms");
+                        log.info("disposing workspace '{}' which has been idle for {} ms",
+                                getName(), currentTS - idleTimestamp);
                         dispose();
                     }
                 }
@@ -2192,14 +2191,14 @@ public class RepositoryImpl extends AbstractRepository
                     return;
                 }
 
-                log.info("shutting down workspace '" + getName() + "'...");
+                log.info("shutting down workspace '{}'...", getName());
                 doDispose();
                 // reset idle timestamp
                 idleTimestamp = 0;
 
                 active = false;
                 initialized = false;
-                log.info("workspace '" + getName() + "' has been shutdown");
+                log.info("workspace '{}' has been shutdown", getName());
             } finally {
                 initLock.writeLock().release();
             }
@@ -2251,8 +2250,8 @@ public class RepositoryImpl extends AbstractRepository
             try {
                 persistMgr.close();
             } catch (Exception e) {
-                log.error("error while closing persistence manager of workspace "
-                        + config.getName(), e);
+                log.error("error while closing persistence manager of workspace {}",
+                        config.getName(), e);
             }
             persistMgr = null;
 
@@ -2272,7 +2271,7 @@ public class RepositoryImpl extends AbstractRepository
             try {
                 fs.close();
             } catch (FileSystemException fse) {
-                log.error("error while closing file system of workspace " + config.getName(), fse);
+                log.error("error while closing file system of workspace {}", config.getName(), fse);
             }
             fs = null;
         }

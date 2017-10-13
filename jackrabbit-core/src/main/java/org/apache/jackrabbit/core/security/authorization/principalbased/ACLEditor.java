@@ -90,7 +90,7 @@ public class ACLEditor extends ProtectedItemModifier implements AccessControlEdi
         }
         if (acl == null) {
             // no policy for the given principal
-            log.debug("No policy template for Principal " + principal.getName());
+            log.debug("No policy template for Principal {}", principal.getName());
         }
         return acl;
     }
@@ -451,7 +451,7 @@ public class ACLEditor extends ProtectedItemModifier implements AccessControlEdi
         if (principal == null) {
             // use fall back in order to be able to get/remove the policy
             String principalName = getPathName(acNode.getPath());
-            log.warn("Principal with name " + principalName + " unknown to PrincipalManager.");
+            log.warn("Principal with name {} unknown to PrincipalManager.", principalName);
             principal = new PrincipalImpl(principalName);
         }
         return new ACLTemplate(principal, acNode);
@@ -473,7 +473,7 @@ public class ACLEditor extends ProtectedItemModifier implements AccessControlEdi
                 NameParser.checkFormat(name);
             } catch (NameException e) {
                 name = DEFAULT_ACE_NAME;
-                log.debug("Invalid path name for Permission: " + name + ".");
+                log.debug("Invalid path name for Permission: {}.", name);
             }
         }
         int i = 0;

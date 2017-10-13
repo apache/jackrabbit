@@ -60,7 +60,7 @@ class SimpleCredentialsAuthentication implements Authentication {
                 throw new RepositoryException(e);
             }
         } else {
-            log.warn("No Credentials found with user " + user.getID());
+            log.warn("No Credentials found with user {}", user.getID());
             this.creds = null;
         }
     }
@@ -103,9 +103,9 @@ class SimpleCredentialsAuthentication implements Authentication {
                 return true;
             }
         } catch (NoSuchAlgorithmException e) {
-            log.debug("Failed to verify Credentials with {}: {}.", credentials.toString(), e);
+            log.debug("Failed to verify Credentials with {}: {}.", credentials, e);
         } catch (UnsupportedEncodingException e) {
-            log.debug("Failed to verify Credentials with {}: {}.", credentials.toString(), e);
+            log.debug("Failed to verify Credentials with {}: {}.", credentials, e);
         }
         return false;
     }

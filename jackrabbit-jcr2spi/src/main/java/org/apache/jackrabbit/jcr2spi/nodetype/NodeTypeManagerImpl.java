@@ -249,7 +249,7 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager implements Node
                 }
             }
         } catch (NamespaceException e) {
-            log.warn(e.getMessage() + " -> clear definition cache." );
+            log.warn("{} -> clear definition cache.", e.getMessage());
             synchronized (pdCache) {
                 pdCache.clear();
             }
@@ -286,7 +286,7 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager implements Node
                 }
             }
         } catch (NamespaceException e) {
-            log.warn(e.getMessage() + " -> clear definition cache." );
+            log.warn("{} -> clear definition cache.", e.getMessage());
             synchronized (pdCache) {
                 pdCache.clear();
             }

@@ -143,7 +143,7 @@ class InternalVersionHistoryImpl extends InternalVersionItemImpl
                     if (node.getState().hasChildNodeEntry(id)) {
                         labelCache.put(labelName, node.getState().getChildNodeEntry(id).getName());
                     } else {
-                        log.warn("Error while resolving label reference. Version missing: " + id);
+                        log.warn("Error while resolving label reference. Version missing: {}", id);
                     }
                 }
             }

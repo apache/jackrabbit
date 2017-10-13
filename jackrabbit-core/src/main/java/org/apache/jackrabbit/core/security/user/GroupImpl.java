@@ -655,7 +655,7 @@ class GroupImpl extends AuthorizableImpl implements Group {
                     try {
                         return ((GroupImpl) authorizable).getMembers(true, type);
                     } catch (RepositoryException e) {
-                        log.warn("Could not determine members of " + authorizable, e);
+                        log.warn("Could not determine members of {}", authorizable, e);
                     }
                 }
                 return Iterators.empty();
@@ -682,7 +682,7 @@ class GroupImpl extends AuthorizableImpl implements Group {
                     return seenAuthorizables.add(authorizable.getID());
                 }
                 catch (RepositoryException e) {
-                    log.warn("Could not determine id of " + authorizable, e);
+                    log.warn("Could not determine id of {}", authorizable, e);
                     return true;
                 }
             }
@@ -790,7 +790,7 @@ class GroupImpl extends AuthorizableImpl implements Group {
                     log.debug("Authorizable node referenced by {} doesn't exist any more -> " +
                             "Ignored from member list.", safeGetID());
                 } catch (RepositoryException e) {
-                    log.debug("Error pre-fetching member for " + safeGetID(), e);
+                    log.debug("Error pre-fetching member for {}", safeGetID(), e);
                 }
 
             }

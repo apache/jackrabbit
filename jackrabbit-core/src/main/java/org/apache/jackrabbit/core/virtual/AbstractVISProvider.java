@@ -223,14 +223,14 @@ public abstract class AbstractVISProvider implements VirtualItemStateProvider, I
             try {
                 getItemState(new PropertyId(state.getNodeId(), name)).discard();
             } catch (ItemStateException e) {
-                log.warn("Unable to discard virtual property " + name, e);
+                log.warn("Unable to discard virtual property {}", name, e);
             }
         }
         for (ChildNodeEntry entry : state.getChildNodeEntries()) {
             try {
                 discardTree((NodeState) getItemState(entry.getId()));
             } catch (ItemStateException e) {
-                log.warn("Unable to discard virtual node " + entry.getId(), e);
+                log.warn("Unable to discard virtual node {}", entry.getId(), e);
             }
         }
         state.discard();
@@ -365,7 +365,7 @@ public abstract class AbstractVISProvider implements VirtualItemStateProvider, I
     protected NodeState cache(NodeState state) {
         if (state != null) {
             nodes.put(state.getNodeId(), state);
-            log.debug("item added to cache. size=" + nodes.size());
+            log.debug("item added to cache. size={}", nodes.size());
         }
         return state;
     }

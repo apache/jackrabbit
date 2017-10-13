@@ -170,7 +170,7 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
             // no access control information can be retrieved for the specified
             // node, since neither the node nor any of its parents is access
             // controlled. TODO: there should be a default policy in this case (see JCR-2331)
-            log.warn("No access controlled node present in item hierarchy starting from " + targetNode.getPath());
+            log.warn("No access controlled node present in item hierarchy starting from {}", targetNode.getPath());
         }
         return acls.toArray(new AccessControlList[acls.size()]);
     }
@@ -365,7 +365,7 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
                 log.info("No applicable ACL available for the root node -> skip initialization of the root node's ACL.");
             }
         } catch (RepositoryException e) {
-            log.error("Failed to set-up minimal access control for root node of workspace " + session.getWorkspace().getName());
+            log.error("Failed to set-up minimal access control for root node of workspace {}", session.getWorkspace().getName());
             session.getRootNode().refresh(false);
         }
     }

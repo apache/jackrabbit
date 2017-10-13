@@ -406,7 +406,7 @@ class AccessControlManagerImpl implements AccessControlManager, AccessControlCon
             Operation sm = SetMixin.create(parent, new Name[]{mixinName});
             itemStateMgr.execute(sm);
          } else {
-             log.debug(mixinName.toString()+" is already present on the given node state "+parent.getName().toString());
+             log.debug("{} is already present on the given node state {}", mixinName, parent.getName());
          }
     }
     
@@ -424,7 +424,7 @@ class AccessControlManagerImpl implements AccessControlManager, AccessControlCon
         try {        
             NameParser.checkFormat(name);
         } catch (NameException e) {                        
-            log.debug("Invalid path name for Permission: " + name + ".");       
+            log.debug("Invalid path name for Permission: {}.", name);       
         }
 
         int i = 0;

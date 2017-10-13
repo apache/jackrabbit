@@ -637,9 +637,7 @@ class CachingIndexReader extends FilterIndexReader {
                     io.writeInt(parent);
                 }
             } catch (Exception e) {
-                log.error(
-                        "Error saving " + FILE_CACHE_NAME_ARRAY + ": "
-                                + e.getMessage(), e);
+                log.error("Error saving " + FILE_CACHE_NAME_ARRAY + ": {}", e.getMessage(), e);
             } finally {
                 if (io != null) {
                     io.close();

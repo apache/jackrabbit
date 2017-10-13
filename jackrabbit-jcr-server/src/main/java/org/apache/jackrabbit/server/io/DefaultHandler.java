@@ -554,7 +554,7 @@ public class DefaultHandler implements IOHandler, PropertyHandler, CopyMoveHandl
                 String name = p.getName();
                 PropertyDefinition def = p.getDefinition();
                 if (def.isMultiple() || isDefinedByFilteredNodeType(def)) {
-                    log.debug("Skip property '" + name + "': not added to webdav property set.");
+                    log.debug("Skip property '{}': not added to webdav property set.", name);
                     continue;
                 }
                 if (JcrConstants.JCR_DATA.equals(name)
@@ -582,7 +582,7 @@ public class DefaultHandler implements IOHandler, PropertyHandler, CopyMoveHandl
         try {
             return contextItem != null && contextItem.isNode() && (isCollection || ((Node)contextItem).hasNode(JcrConstants.JCR_CONTENT));
         } catch (RepositoryException e) {
-            log.error("Unexpected error: " + e.getMessage());
+            log.error("Unexpected error: {}", e.getMessage());
             return false;
         }
     }
@@ -620,7 +620,7 @@ public class DefaultHandler implements IOHandler, PropertyHandler, CopyMoveHandl
                         setJcrProperty(prop, cn);
                     } else {
                         // ignore any other entry in the change list
-                        log.error("unknown object in change list: " + propEntry.getClass().getName());
+                        log.error("unknown object in change list: {}", propEntry.getClass().getName());
                     }
                 } catch (RepositoryException e) {
                     failures.put(propEntry, e);

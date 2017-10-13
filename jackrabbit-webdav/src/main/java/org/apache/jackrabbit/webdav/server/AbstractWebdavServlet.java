@@ -169,19 +169,19 @@ abstract public class AbstractWebdavServlet extends HttpServlet implements DavCo
         if (authenticate_header == null) {
             authenticate_header = DEFAULT_AUTHENTICATE_HEADER;
         }
-        log.info(INIT_PARAM_AUTHENTICATE_HEADER + " = " + authenticate_header);
+        log.info(INIT_PARAM_AUTHENTICATE_HEADER + " = {}", authenticate_header);
         
         // read csrf protection params
         String csrfParam = getInitParameter(INIT_PARAM_CSRF_PROTECTION);
         csrfUtil = new CSRFUtil(csrfParam);
-        log.info(INIT_PARAM_CSRF_PROTECTION + " = " + csrfParam);
+        log.info(INIT_PARAM_CSRF_PROTECTION + " = {}", csrfParam);
 
         //create absolute URI hrefs..
         String param = getInitParameter(INIT_PARAM_CREATE_ABSOLUTE_URI);
         if (param != null) {
             createAbsoluteURI = Boolean.parseBoolean(param);
         }
-        log.info(INIT_PARAM_CREATE_ABSOLUTE_URI + " = " + createAbsoluteURI);
+        log.info(INIT_PARAM_CREATE_ABSOLUTE_URI + " = {}", createAbsoluteURI);
     }
 
     /**
@@ -1271,7 +1271,7 @@ abstract public class AbstractWebdavServlet extends HttpServlet implements DavCo
     protected void doMkActivity(WebdavRequest request, WebdavResponse response,
                                 DavResource resource) throws DavException, IOException {
         if (resource.exists()) {
-            AbstractWebdavServlet.log.warn("Unable to create activity: A resource already exists at the request-URL " + request.getRequestURL());
+            log.warn("Unable to create activity: A resource already exists at the request-URL {}", request.getRequestURL());
             response.sendError(DavServletResponse.SC_FORBIDDEN);
             return;
         }
@@ -1315,13 +1315,13 @@ abstract public class AbstractWebdavServlet extends HttpServlet implements DavCo
         throws DavException, IOException {
 
         if (!resource.exists()) {
-            AbstractWebdavServlet.log.warn("Unable to add baseline control. Resource does not exist " + resource.getHref());
+            log.warn("Unable to add baseline control. Resource does not exist {}", resource.getHref());
             response.sendError(DavServletResponse.SC_NOT_FOUND);
             return;
         }
         // TODO: improve. see http://issues.apache.org/jira/browse/JCR-394
         if (!(resource instanceof VersionControlledResource) || !resource.isCollection()) {
-            AbstractWebdavServlet.log.warn("BaselineControl is not supported by resource " + resource.getHref());
+            log.warn("BaselineControl is not supported by resource {}", resource.getHref());
             response.sendError(DavServletResponse.SC_METHOD_NOT_ALLOWED);
             return;
         }

@@ -228,7 +228,7 @@ public class ZipHandler extends DefaultHandler {
      */
     private boolean importZipEntry(ZipInputStream zin, ZipEntry entry, ImportContext context, Node node) throws RepositoryException, IOException {
         boolean success = false;
-        log.debug("entry: " + entry.getName() + " size: " + entry.getSize());
+        log.debug("entry: {} size: {}", entry.getName(), entry.getSize());
         if (entry.isDirectory()) {
             IOUtil.mkDirs(node, makeValidJCRPath(entry.getName(), false), getCollectionNodeType());
             success = true;

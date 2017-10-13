@@ -87,7 +87,7 @@ class BLOBInResource extends BLOBFileValue {
             fsResource.delete(pruneEmptyParentDirs);
         } catch (FileSystemException fse) {
             // ignore
-            LOG.warn("Error while deleting BLOBFileValue: " + fse.getMessage());
+            LOG.warn("Error while deleting BLOBFileValue: {}", fse.getMessage());
         }
 
     }

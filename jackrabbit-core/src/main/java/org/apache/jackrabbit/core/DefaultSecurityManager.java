@@ -171,9 +171,9 @@ public class DefaultSecurityManager implements JackrabbitSecurityManager {
         // build AuthContextProvider based on appName + optional LoginModuleConfig
         authContextProvider = new AuthContextProvider(config.getAppName(), loginModConf);
         if (authContextProvider.isLocal()) {
-            log.info("init: use Repository Login-Configuration for " + config.getAppName());
+            log.info("init: use Repository Login-Configuration for {}", config.getAppName());
         } else if (authContextProvider.isJAAS()) {
-            log.info("init: use JAAS login-configuration for " + config.getAppName());
+            log.info("init: use JAAS login-configuration for {}", config.getAppName());
         } else {
             String msg = "Neither JAAS nor RepositoryConfig contained a valid configuration for " + config.getAppName();
             log.error(msg);
@@ -359,9 +359,9 @@ public class DefaultSecurityManager implements JackrabbitSecurityManager {
                     }
                 }
                 // all principals found with the given p-Class were Group principals
-                log.debug("Only Group principals found with class '" + cl.getName() + "' -> Not used for UserID.");
+                log.debug("Only Group principals found with class '{}' -> Not used for UserID.", cl.getName());
             } else {
-                log.debug("No principal found with class '" + cl.getName() + "'.");
+                log.debug("No principal found with class '{}'.", cl.getName());
             }
         }
 
@@ -624,7 +624,7 @@ public class DefaultSecurityManager implements JackrabbitSecurityManager {
                 if (!userManager.isAutoSave()) {
                     session.save();
                 }
-                log.info("... created admin-user with id \'" + adminId + "\' ...");
+                log.info("... created admin-user with id '{}' ...", adminId);
             }
         }
 
@@ -636,7 +636,7 @@ public class DefaultSecurityManager implements JackrabbitSecurityManager {
                     if (!userManager.isAutoSave()) {
                         session.save();
                     }
-                    log.info("... created anonymous user with id \'" + anonymousId + "\' ...");
+                    log.info("... created anonymous user with id '{}' ...", anonymousId);
                 } catch (RepositoryException e) {
                     // exception while creating the anonymous user.
                     // log an error but don't abort the repository start-up

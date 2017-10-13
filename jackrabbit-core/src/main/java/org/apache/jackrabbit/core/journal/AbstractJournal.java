@@ -247,8 +247,8 @@ public abstract class AbstractJournal implements Journal {
             while (iterator.hasNext()) {
                 Record record = iterator.nextRecord();
                 if (record.getJournalId().equals(id)) {
-                    log.debug("Record with revision '" + record.getRevision()
-                            + "' created by this journal, skipped.");
+                    log.debug("Record with revision '{}"
+                            + "' created by this journal, skipped.", record.getRevision());
                 } else {
                     RecordConsumer consumer = getConsumer(record.getProducerId());
                     if (consumer != null) {
@@ -258,7 +258,7 @@ public abstract class AbstractJournal implements Journal {
                 stopRevision = record.getRevision();
             }
         } catch (IllegalStateException e) {
-            log.error("Could not synchronize to revision: " + (stopRevision + 1) + " due illegal state of RecordConsumer.");
+            log.error("Could not synchronize to revision: {} due illegal state of RecordConsumer.", stopRevision + 1);
         } finally {
             iterator.close();
         }
@@ -267,7 +267,7 @@ public abstract class AbstractJournal implements Journal {
             for (RecordConsumer consumer : consumers.values()) {
                 consumer.setRevision(stopRevision);
             }
-            log.debug("Synchronized from revision " + startRevision + " to revision: " + stopRevision);
+            log.debug("Synchronized from revision {} to revision: {}", startRevision, stopRevision);
         }
     }
     

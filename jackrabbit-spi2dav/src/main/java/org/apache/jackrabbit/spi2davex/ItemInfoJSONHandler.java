@@ -122,14 +122,14 @@ class ItemInfoJsonHandler implements JsonHandler {
                     ChildInfo ci = new ChildInfoImpl(nInfo.getName(), nInfo.getUniqueID(), nInfo.getIndex());
                     ((NodeInfoImpl) parent).addChildInfo(ci);
                 } else {
-                    log.debug("NodeInfo '"+ nInfo.getPath() + "' out of hierarchy. Parent path = " + parent.getPath());
+                    log.debug("NodeInfo '{}' out of hierarchy. Parent path = {}", nInfo.getPath(), parent.getPath());
                 }
             }
             if (nInfo.isCompleted()) {
                 itemInfos.addAll(props);
                 itemInfos.add(nInfo);
             } else {
-                log.debug("Incomplete NodeInfo '"+ nInfo.getPath() + "' -> Only present as ChildInfo with its parent.");
+                log.debug("Incomplete NodeInfo '{}' -> Only present as ChildInfo with its parent.", nInfo.getPath());
             }
         } catch (RepositoryException e) {
             throw new IOException(e.getMessage());

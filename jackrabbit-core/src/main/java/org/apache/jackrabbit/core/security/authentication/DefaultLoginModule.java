@@ -141,7 +141,7 @@ public class DefaultLoginModule extends AbstractLoginModule {
         try {
             this.session = (SessionImpl) session;
             userManager = this.session.getUserManager();
-            log.debug("- UserManager -> '" + userManager.getClass().getName() + "'");
+            log.debug("- UserManager -> '{}'", userManager.getClass().getName());
         } catch (RepositoryException e) {
             throw new LoginException("Unable to initialize LoginModule: " + e.getMessage());
         }
@@ -149,12 +149,12 @@ public class DefaultLoginModule extends AbstractLoginModule {
         // configuration options related to token based authentication
         if (options.containsKey(PARAM_DISABLE_TOKEN_AUTH)) {
             disableTokenAuth = Boolean.parseBoolean(options.get(PARAM_DISABLE_TOKEN_AUTH).toString());
-            log.debug("- Token authentication disabled -> '" + disableTokenAuth + "'");
+            log.debug("- Token authentication disabled -> '{}'", disableTokenAuth);
         }
         if (options.containsKey(PARAM_TOKEN_EXPIRATION)) {
             try {
                 tokenExpiration = Long.parseLong(options.get(PARAM_TOKEN_EXPIRATION).toString());
-                log.debug("- Token expiration -> '" + tokenExpiration + "'");
+                log.debug("- Token expiration -> '{}'", tokenExpiration);
             } catch (NumberFormatException e) {
                 log.warn("Unabled to parse token expiration: {}", e.getMessage());
             }
@@ -181,7 +181,7 @@ public class DefaultLoginModule extends AbstractLoginModule {
                 user = (User) authrz;
                 if (user.isDisabled()) {
                     // log message and return null -> login module returns false.
-                    log.debug("User " + userId + " has been disabled.");
+                    log.debug("User {} has been disabled.", userId);
                 } else {
                     principal = user.getPrincipal();
                 }
@@ -230,7 +230,7 @@ public class DefaultLoginModule extends AbstractLoginModule {
                 if (log.isDebugEnabled()) {
                     log.warn("Failed to retrieve UserID from token-based credentials", e);
                 } else {
-                    log.warn("Failed to retrieve UserID from token-based credentials: {}", e.toString());
+                    log.warn("Failed to retrieve UserID from token-based credentials: {}", (Object) e);
                 }
             }
             // failed to retrieve the user from loginToken.
@@ -290,7 +290,7 @@ public class DefaultLoginModule extends AbstractLoginModule {
                 throw new FailedLoginException("attempt to impersonate denied for " + principal.getName());
             }
         } else {
-            log.debug("Failed to retrieve user to impersonate for principal name " + principal.getName());
+            log.debug("Failed to retrieve user to impersonate for principal name {}", principal.getName());
             return false;
         }
     }

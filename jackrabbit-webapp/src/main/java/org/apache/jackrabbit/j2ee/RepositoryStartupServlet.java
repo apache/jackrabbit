@@ -261,7 +261,7 @@ public class RepositoryStartupServlet extends AbstractRepositoryServlet {
         } catch (ServletException e) {
             // shutdown repository
             shutdownRepository();
-            log.error("RepositoryStartupServlet initializing failed: " + e, e);
+            log.error("RepositoryStartupServlet initializing failed: {}", e, e);
         }
     }
 
@@ -484,7 +484,7 @@ public class RepositoryStartupServlet extends AbstractRepositoryServlet {
             try {
                 jndiContext = new InitialContext(jc.getJndiEnv());
                 jndiContext.bind(jc.getJndiName(), repository);
-                log.info("Repository bound to JNDI with name: " + jc.getJndiName());
+                log.info("Repository bound to JNDI with name: {}", jc.getJndiName());
             } catch (NamingException e) {
                 throw new ServletExceptionWithCause(
                         "Unable to bind repository using JNDI: " + jc.getJndiName(), e);
@@ -545,7 +545,7 @@ public class RepositoryStartupServlet extends AbstractRepositoryServlet {
                 // rmiHost is not configured
                 RMIServerSocketFactory sf;
                 if (rc.getRmiHost().length() > 0) {
-                    log.debug("Creating RMIServerSocketFactory for host " + rc.getRmiHost());
+                    log.debug("Creating RMIServerSocketFactory for host {}", rc.getRmiHost());
                     InetAddress hostAddress = InetAddress.getByName(rc.getRmiHost());
                     sf = getRMIServerSocketFactory(hostAddress);
                 } else {
@@ -575,33 +575,31 @@ public class RepositoryStartupServlet extends AbstractRepositoryServlet {
             // potentially active registry. We do not check yet, whether the
             // registry is actually accessible.
             if (reg == null) {
-                log.debug("Trying to access existing registry at " + rc.getRmiHost()
-                        + ":" + rc.getRmiPort());
+                log.debug("Trying to access existing registry at {}:{}", rc.getRmiHost(), rc.getRmiPort());
                 try {
                     reg = LocateRegistry.getRegistry(rc.getRmiHost(), rc.rmiPort());
                 } catch (RemoteException re) {
-                    log.warn("Cannot create the reference to the registry at "
-                            + rc.getRmiHost() + ":" + rc.getRmiPort(), re);
+                    log.warn("Cannot create the reference to the registry at {}:{}",
+                            new Object[] { rc.getRmiHost(), rc.getRmiPort(), re });
                 }
             }
 
             // if we finally have a registry, register the repository with the
             // rmiName
             if (reg != null) {
-                log.debug("Registering repository as " + rc.getRmiName()
-                        + " to registry " + reg);
+                log.debug("Registering repository as {} to registry {}", rc.getRmiName(), reg);
                 reg.bind(rc.getRmiName(), remote);
 
                 // when successfull, keep references
                 this.rmiRepository = remote;
-                log.info("Repository bound via RMI with name: " + rc.getRmiUri());
+                log.info("Repository bound via RMI with name: {}", rc.getRmiUri());
             } else {
                 log.info("RMI registry missing, cannot bind repository via RMI");
             }
         } catch (RemoteException e) {
-            log.warn("Unable to bind repository via RMI: " + rc.getRmiUri(), e);
+            log.warn("Unable to bind repository via RMI: {}", rc.getRmiUri(), e);
         } catch (AlreadyBoundException e) {
-            log.warn("Unable to bind repository via RMI: " + rc.getRmiUri(), e);
+            log.warn("Unable to bind repository via RMI: {}", rc.getRmiUri(), e);
         }
     }
 

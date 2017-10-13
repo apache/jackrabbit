@@ -107,9 +107,8 @@ class RepositoryChecker {
             internalFix(true);
         }
 
-        log.info("RepositoryChecker finished; checked " + totalNodes
-                + " nodes in " + (System.currentTimeMillis() - startTime)
-                + "ms, problems found: " + brokenNodes);
+        log.info("RepositoryChecker finished; checked {} nodes in {}ms, problems found: {}",
+                new Object[] { totalNodes, System.currentTimeMillis() - startTime, brokenNodes });
     }
 
     private void internalCheck(NodeId id, boolean recurse,
@@ -155,7 +154,7 @@ class RepositoryChecker {
             }
         } else {
             if (verbose) {
-                log.info("No " + store + " inconsistencies found");
+                log.info("No {} inconsistencies found", store);
             }
         }
     }
@@ -182,7 +181,7 @@ class RepositoryChecker {
         try {
             String type = isVersioned ? "in-use" : "candidate";
 
-            log.debug("Checking " + type + " version history of node {}", nid);
+            log.debug("Checking {} version history of node {}", type, nid);
 
             String intro = "Removing references to an inconsistent " + type
                     + " version history of node " + nid;
@@ -247,8 +246,8 @@ class RepositoryChecker {
             NodeId nvhid = e.getVersionHistoryNodeId();
             if (nvhid != null) {
                 if (vhid != null && !nvhid.equals(vhid)) {
-                    log.error("vhrid returned with InconsistentVersioningState does not match the id we already had: "
-                            + vhid + " vs " + nvhid);
+                    log.error("vhrid returned with InconsistentVersioningState does not match the id we already had: {} vs {}",
+                            vhid, nvhid);
                 }
                 vhid = nvhid; 
             }
@@ -287,7 +286,7 @@ class RepositoryChecker {
             // a future attempt to put the node under version control again 
             // (see JCR-3115)
 
-            log.info("trying to rename version history of node " + node.getId());
+            log.info("trying to rename version history of node {}", node.getId());
 
             NameFactory nf = NameFactoryImpl.getInstance();
 
@@ -314,7 +313,7 @@ class RepositoryChecker {
                     vworkspaceChanges.modified(modifiedParent);
                 }
                 else {
-                    log.info("child node entry " + vhrname + " for version history not found inside parent folder.");
+                    log.info("child node entry {} for version history not found inside parent folder.", vhrname);
                 }
             } catch (Exception ex) {
                 log.error("while trying to rename the version history", ex);

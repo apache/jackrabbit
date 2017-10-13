@@ -114,7 +114,7 @@ class IndexInfos implements Cloneable {
                     break;
                 } catch (EOFException e) {
                     String fileName = getFileName(gens[i]);
-                    log.warn("deleting invalid index infos file: " + fileName);
+                    log.warn("deleting invalid index infos file: {}", fileName);
                     dir.deleteFile(fileName);
                     // reset generation
                     this.generation = 0;
@@ -190,7 +190,7 @@ class IndexInfos implements Cloneable {
                 try {
                     directory.deleteFile(newName);
                 } catch (IOException e) {
-                    log.warn("Unable to delete file: " + directory + "/" + newName);
+                    log.warn("Unable to delete file: {}/{}", directory, newName);
                 }
                 generation--;
             }

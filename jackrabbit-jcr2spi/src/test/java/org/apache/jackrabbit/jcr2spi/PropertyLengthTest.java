@@ -91,7 +91,7 @@ public class PropertyLengthTest extends AbstractJCRTest {
                 }
                 p = testRootNode.setProperty(propertyName1, val);
             } catch (RepositoryException e) {
-                log.error("Unable to create Property of type " + propertyType);
+                log.error("Unable to create Property of type {}", propertyType);
                 throw new NotExecutableException();
             }
         }

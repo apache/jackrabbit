@@ -665,7 +665,7 @@ public class NodeImpl extends ItemImpl implements Node {
 
         Name ntName = getQName(nodeTypeName);
         if (ntName.equals(getPrimaryNodeTypeName())) {
-            log.debug("Changing the primary type has no effect: '" + nodeTypeName + "' already is the primary node type.");
+            log.debug("Changing the primary type has no effect: '{}' already is the primary node type.", nodeTypeName);
             return;
         }
 
@@ -838,13 +838,13 @@ public class NodeImpl extends ItemImpl implements Node {
             // then make sure the new mixin would not conflict.
             return canAddMixin(getQName(mixinName));
         } catch (LockException e) {
-            log.debug("Cannot add mixin '" + mixinName + "': " + e.getMessage());
+            log.debug("Cannot add mixin '{}': {}", mixinName, e.getMessage());
             return false;
         } catch (VersionException e) {
-            log.debug("Cannot add mixin '" + mixinName + "': " + e.getMessage());
+            log.debug("Cannot add mixin '{}': {}", mixinName, e.getMessage());
             return false;
         } catch (ConstraintViolationException e) {
-            log.debug("Cannot add mixin '" + mixinName + "': " + e.getMessage());
+            log.debug("Cannot add mixin '{}': {}", mixinName, e.getMessage());
             return false;
         }
     }
@@ -870,7 +870,7 @@ public class NodeImpl extends ItemImpl implements Node {
             return (Version) getItemManager().getItem(newVersion);
         } else {
             // nothing to do
-            log.debug("Node " + safeGetJCRPath() + " is already checked in.");
+            log.debug("Node {} is already checked in.", safeGetJCRPath());
             return getBaseVersion();
         }
     }
@@ -891,7 +891,7 @@ public class NodeImpl extends ItemImpl implements Node {
             }
         } else {
             // nothing to do
-            log.debug("Node " + safeGetJCRPath() + " is already checked out.");
+            log.debug("Node {} is already checked out.", safeGetJCRPath());
         }
     }
 
@@ -1640,7 +1640,7 @@ public class NodeImpl extends ItemImpl implements Node {
         // first check characteristics of each mixin
         NodeType mixin = ntMgr.getNodeType(mixinName);
         if (!mixin.isMixin()) {
-            log.error(mixin.getName() + ": not a mixin node type");
+            log.error("{}: not a mixin node type", mixin.getName());
             return false;
         }
 
@@ -1651,7 +1651,7 @@ public class NodeImpl extends ItemImpl implements Node {
 
         // check if the base type supports adding this mixin
         if (!entExisting.supportsMixin(mixinName)) {
-            log.debug(mixin.getName() + ": not supported on node type " + getPrimaryNodeTypeName());
+            log.debug("{}: not supported on node type {}", mixin.getName(), getPrimaryNodeTypeName());
             return false;
         }
 

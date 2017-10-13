@@ -236,7 +236,7 @@ public final class PrivilegeManagerImpl implements PrivilegeManager, PrivilegeRe
                 try {
                     privs.add(getPrivilege(n));
                 } catch (RepositoryException e) {
-                    log.error("Internal error: invalid privilege name " + n.toString());
+                    log.error("Internal error: invalid privilege name {}", n);
                 }
             }
             return privs;

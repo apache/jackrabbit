@@ -197,8 +197,7 @@ class NodeIteratorImpl implements NodeIterator {
                     next = (NodeImpl) itemMgr.getItem(
                             sn[selectorIndex].getNodeId());
                 } catch (RepositoryException e) {
-                    log.warn("Failed to retrieve query result node "
-                            + sn[selectorIndex].getNodeId(), e);
+                    log.warn("Failed to retrieve query result node {}", sn[selectorIndex].getNodeId(), e);
                     // try next
                     invalid++;
                 }

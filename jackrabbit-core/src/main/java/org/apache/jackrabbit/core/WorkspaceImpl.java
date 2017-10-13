@@ -834,7 +834,7 @@ public class WorkspaceImpl extends AbstractWorkspace
                     names.add(name);
                 }
             } catch (NoSuchWorkspaceException e) {
-                log.warn("Workspace disappeared unexpectedly: " + name, e);
+                log.warn("Workspace disappeared unexpectedly: {}", name, e);
             }
         }
         return names.toArray(new String[names.size()]);

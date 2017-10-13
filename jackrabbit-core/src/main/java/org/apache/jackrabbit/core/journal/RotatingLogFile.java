@@ -160,8 +160,8 @@ public class RotatingLogFile implements Comparable<RotatingLogFile> {
             try {
                 l.add(new RotatingLogFile(directory, basename, file));
             } catch (IllegalArgumentException e) {
-                log.warn("Bogusly named journal file, skipped: " + files[i] +
-                        ", reason: " + e.getMessage());
+                log.warn("Bogusly named journal file, skipped: {}, reason: {}",
+                        files[i], e.getMessage());
             }
         }
         RotatingLogFile[] logFiles = new RotatingLogFile[l.size()];

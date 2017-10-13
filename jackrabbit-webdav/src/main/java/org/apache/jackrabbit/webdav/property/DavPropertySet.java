@@ -189,7 +189,7 @@ public class DavPropertySet extends PropContainer
             add((DavProperty<?>) contentEntry);
             return true;
         }
-        log.debug("DavProperty object expected. Found: " + contentEntry.getClass().toString());
+        log.debug("DavProperty object expected. Found: {}", contentEntry.getClass());
         return false;
     }
 

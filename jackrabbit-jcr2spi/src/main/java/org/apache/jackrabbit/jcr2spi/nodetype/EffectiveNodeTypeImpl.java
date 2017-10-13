@@ -504,7 +504,7 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
         for (int i = 0; i < nta.length; i++) {
             if (includesNodeType(nta[i])) {
                 // redundant node type
-                log.debug("node type '" + nta[i] + "' is already contained.");
+                log.debug("node type '{}' is already contained.", nta[i]);
                 includedCount++;
             }
         }

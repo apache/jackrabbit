@@ -967,7 +967,7 @@ public class SessionImpl extends AbstractSession
                 try {
                     manager.removeEventListener(listener);
                 } catch (RepositoryException e) {
-                    log.warn("Error removing event listener: " + listener, e);
+                    log.warn("Error removing event listener: {}", listener, e);
                 }
             }
         } catch (RepositoryException e) {
@@ -1006,7 +1006,7 @@ public class SessionImpl extends AbstractSession
                 try {
                     loginContext.logout();
                 } catch (javax.security.auth.login.LoginException le) {
-                    log.warn("failed to logout current subject: " + le.getMessage());
+                    log.warn("failed to logout current subject: {}", le.getMessage());
                 }
                 loginContext = null;
             }

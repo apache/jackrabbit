@@ -191,7 +191,7 @@ abstract class HierarchyEntryImpl implements HierarchyEntry {
     protected void invalidateInternal(boolean recursive) {
         ItemState state = internalGetItemState();
         if (state == null) {
-            log.debug("Skip invalidation for unresolved HierarchyEntry " + name);
+            log.debug("Skip invalidation for unresolved HierarchyEntry {}", name);
         } else {
             state.invalidate();
         }
@@ -336,7 +336,7 @@ abstract class HierarchyEntryImpl implements HierarchyEntry {
                 // Cannot revert EXISTING, REMOVED, INVALIDATED, MODIFIED states.
                 // State was implicitly reverted or external modifications
                 // reverted the modification.
-                log.debug("State with status " + oldStatus + " cannot be reverted.");
+                log.debug("State with status {} cannot be reverted.", oldStatus);
         }
     }
 
@@ -353,7 +353,7 @@ abstract class HierarchyEntryImpl implements HierarchyEntry {
         if (Status.isTransient(status) || Status.isStale(status) || Status.isTerminal(status)) {
             // transient || stale: avoid reloading
             // new || terminal: cannot be reloaded from persistent layer anyway.
-            log.debug("Skip reload for item with status " + Status.getName(status) + ".");
+            log.debug("Skip reload for item with status {}.", Status.getName(status));
             return;
         }
         /**
@@ -371,11 +371,11 @@ abstract class HierarchyEntryImpl implements HierarchyEntry {
             }
         } catch (ItemNotFoundException e) {
             // remove hierarchyEntry including all children
-            log.debug("Item '" + getName() + "' cannot be found on the persistent layer -> remove.");
+            log.debug("Item '{}' cannot be found on the persistent layer -> remove.", getName());
             remove();
         } catch (RepositoryException e) {
             // TODO: rather throw?
-            log.error("Exception while reloading item: " + e);
+            log.error("Exception while reloading item: {}", (Object) e);
         }
     }
 

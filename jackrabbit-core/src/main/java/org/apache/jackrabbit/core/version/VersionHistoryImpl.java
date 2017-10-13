@@ -293,7 +293,7 @@ public class VersionHistoryImpl extends NodeImpl implements VersionHistory {
                 InternalVersionHistory other = ((VersionHistoryImpl) otherItem).getInternalVersionHistory();
                 return other.getId().equals(getInternalVersionHistory().getId());
             } catch (RepositoryException e) {
-                log.warn("Unable to retrieve internal version history objects: " + e.getMessage());
+                log.warn("Unable to retrieve internal version history objects: {}", e.getMessage());
                 log.debug("Stack dump:", e);
             }
         }

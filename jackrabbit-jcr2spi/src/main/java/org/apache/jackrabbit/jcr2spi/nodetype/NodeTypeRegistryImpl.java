@@ -562,7 +562,7 @@ public class NodeTypeRegistryImpl implements NodeTypeRegistry, EffectiveNodeType
         if (ent != null) {
             entCache.put(ent);
         } else {
-            log.debug("Effective node type for " + ntd + " not yet built.");
+            log.debug("Effective node type for {} not yet built.", ntd);
         }
         // register nt-definition
         registeredNTDefs.put(ntd.getName(), ntd);

@@ -43,7 +43,7 @@ public class UserManagerCreateUserTest extends AbstractUserTest {
                 auth.remove();
                 superuser.save();
             } catch (RepositoryException e) {
-                log.warn("Failed to remove User " + auth.getID() + " during tearDown.");
+                log.warn("Failed to remove User {} during tearDown.", auth.getID());
             }
         }
         super.tearDown();

@@ -135,9 +135,9 @@ public class WorkspaceResourceImpl extends AbstractResource
                     prop = new JcrUserPrivilegesProperty(getRepositorySession(), null).asDavProperty();
                 }
             } catch (RepositoryException e) {
-                log.error("Failed to access NodeTypeManager: " + e.getMessage());
+                log.error("Failed to access NodeTypeManager: {}", e.getMessage());
             } catch (IOException e) {
-                log.error("Failed to write compact node definition: " + e.getMessage());
+                log.error("Failed to write compact node definition: {}", e.getMessage());
             } finally {
                 if (writer != null) {
                     try {
@@ -281,7 +281,7 @@ public class WorkspaceResourceImpl extends AbstractResource
         try {
             collection = createResourceFromLocator(parentLoc);
         } catch (DavException e) {
-            log.error("Unexpected error while retrieving collection: " + e.getMessage());
+            log.error("Unexpected error while retrieving collection: {}", e.getMessage());
         }
         return collection;
     }
@@ -620,7 +620,7 @@ public class WorkspaceResourceImpl extends AbstractResource
             DavProperty<?> namespacesProp = new NamespacesProperty(nsReg);
             properties.add(namespacesProp);
         } catch (RepositoryException e) {
-            log.error("Failed to access NamespaceRegistry: " + e.getMessage());
+            log.error("Failed to access NamespaceRegistry: {}", e.getMessage());
         }
     }
 }

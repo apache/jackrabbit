@@ -457,9 +457,9 @@ abstract public class VersionManagerImplRestore extends VersionManagerImplBase {
                         || opv == OnParentVersionAction.ABORT) {
                     toDelete.addFirst(entry);
                 } else if (opv == OnParentVersionAction.INITIALIZE) {
-                    log.warn("OPV.INITIALIZE not supported yet on restore of existing child nodes: " + safeGetJCRPath(child));
+                    log.warn("OPV.INITIALIZE not supported yet on restore of existing child nodes: {}", safeGetJCRPath(child));
                 } else if (opv == OnParentVersionAction.COMPUTE) {
-                    log.warn("OPV.COMPUTE not supported yet on restore of existing child nodes: " + safeGetJCRPath(child));
+                    log.warn("OPV.COMPUTE not supported yet on restore of existing child nodes: {}", safeGetJCRPath(child));
                 }
             }
         }
@@ -613,16 +613,16 @@ abstract public class VersionManagerImplRestore extends VersionManagerImplBase {
                     try {
                         internalRestore(restoredChild, v, vsel, removeExisting);
                     } catch (RepositoryException e) {
-                        log.error("Error while restoring node: " + e);
-                        log.error("  child path: " + restoredChild);
-                        log.error("  selected version: " + v.getName());
+                        log.error("Error while restoring node: {}", (Object) e);
+                        log.error("  child path: {}", restoredChild);
+                        log.error("  selected version: {}", v.getName());
                         StringBuilder avail = new StringBuilder();
                         for (Name name: vh.getVersionNames()) {
                             avail.append(name);
                             avail.append(", ");
                         }
-                        log.error("  available versions: " + avail);
-                        log.error("  versionselector: " + vsel);
+                        log.error("  available versions: {}", avail);
+                        log.error("  versionselector: {}", vsel);
                         throw e;
                     }
                     // add this version to set

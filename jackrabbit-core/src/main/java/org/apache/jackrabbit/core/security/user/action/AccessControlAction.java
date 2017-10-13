@@ -167,7 +167,7 @@ public class AccessControlAction extends AbstractAuthorizableAction {
         }
 
         if (acl == null) {
-            log.warn("Cannot process AccessControlAction: no applicable ACL at " + path);
+            log.warn("Cannot process AccessControlAction: no applicable ACL at {}", path);
         } else {
             // setup acl according to configuration.
             Principal principal = new UnknownPrincipal(authorizable.getPrincipal().getName());

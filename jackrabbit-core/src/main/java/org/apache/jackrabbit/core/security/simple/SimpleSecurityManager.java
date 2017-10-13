@@ -134,9 +134,9 @@ public class SimpleSecurityManager implements JackrabbitSecurityManager {
         LoginModuleConfig loginModConf = config.getLoginModuleConfig();
         authCtxProvider = new AuthContextProvider(config.getAppName(), loginModConf);
         if (authCtxProvider.isLocal()) {
-            log.info("init: using Repository LoginModule configuration for " + config.getAppName());
+            log.info("init: using Repository LoginModule configuration for {}", config.getAppName());
         } else if (authCtxProvider.isJAAS()) {
-            log.info("init: using JAAS LoginModule configuration for " + config.getAppName());
+            log.info("init: using JAAS LoginModule configuration for {}", config.getAppName());
         } else {
             String msg = "No valid LoginModule configuriation for " + config.getAppName();
             log.error(msg);

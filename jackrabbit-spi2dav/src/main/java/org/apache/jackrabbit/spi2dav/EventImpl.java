@@ -150,7 +150,7 @@ public class EventImpl
                     results.add(name);
                 }
             } catch (Exception ex) {
-                log.error("Exception converting name " + rawname, ex);
+                log.error("Exception converting name {}", rawname, ex);
             }
         }
 

@@ -304,7 +304,7 @@ public class EntryCollector extends AccessControlObserver implements AccessContr
                     }
                 } catch (RepositoryException e) {
                     // should not get here
-                    log.warn("Failed to process ACL event: " + event, e);
+                    log.warn("Failed to process ACL event: {}", event, e);
                 }
             }
         }

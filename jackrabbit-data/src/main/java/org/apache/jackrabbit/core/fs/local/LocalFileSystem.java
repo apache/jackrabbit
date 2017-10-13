@@ -163,7 +163,7 @@ public class LocalFileSystem implements FileSystem {
                 throw new FileSystemException(msg);
             }
         }
-        log.info("LocalFileSystem initialized at path " + root.getPath());
+        log.info("LocalFileSystem initialized at path {}", root.getPath());
         if (monitor != null) {
             log.info("LocalFileSystem using handle monitor");
         }

@@ -278,7 +278,7 @@ public class FileDataStore extends AbstractDataStore
                 if (file.delete()) {
                     deleteEmptyParentDirs(file);
                 } else {
-                    log.warn("Failed to delete file " + file.getAbsolutePath());
+                    log.warn("Failed to delete file {}", file.getAbsolutePath());
                 }
             }
         }
@@ -304,7 +304,7 @@ public class FileDataStore extends AbstractDataStore
                 parent = parent.getParentFile();
             }
         } catch (IOException e) {
-            log.warn("Error in parents deletion for " + file.getAbsoluteFile(), e);
+            log.warn("Error in parents deletion for {}", file.getAbsoluteFile(), e);
         }
     }
 
@@ -339,7 +339,7 @@ public class FileDataStore extends AbstractDataStore
                                     " length: " + file.length());
                         }
                         if (!file.delete()) {
-                            log.warn("Failed to delete old file " + file.getAbsolutePath());
+                            log.warn("Failed to delete old file {}", file.getAbsolutePath());
                         }
                         count++;
                     }
@@ -391,7 +391,7 @@ public class FileDataStore extends AbstractDataStore
             String name = f.getName();
             identifiers.add(new DataIdentifier(name));
         }
-        log.debug("Found " + identifiers.size() + " identifiers.");
+        log.debug("Found {} identifiers.", identifiers.size());
         return identifiers.iterator();
     }
 

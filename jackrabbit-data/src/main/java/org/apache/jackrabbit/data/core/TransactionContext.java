@@ -191,7 +191,7 @@ public class TransactionContext {
                 try {
                     resource.rollback(this);
                 } catch (Exception e) {
-                    log.warn("Unable to rollback changes on " + resource, e);
+                    log.warn("Unable to rollback changes on {}", resource, e);
                 }
             } else {
                 try {
@@ -240,7 +240,7 @@ public class TransactionContext {
             try {
                 resource.rollback(this);
             } catch (Exception e) {
-                log.warn("Unable to rollback changes on " + resource, e);
+                log.warn("Unable to rollback changes on {}", resource, e);
                 errors++;
             }
         }

@@ -57,7 +57,7 @@ public class DavDocumentBuilderFactory {
     }
 
     public void setFactory(DocumentBuilderFactory documentBuilderFactory) {
-        LOG.debug("DocumentBuilderFactory changed to: " + documentBuilderFactory);
+        LOG.debug("DocumentBuilderFactory changed to: {}", documentBuilderFactory);
         BUILDER_FACTORY = documentBuilderFactory != null ? documentBuilderFactory : DEFAULT_FACTORY;
     }
 
@@ -68,8 +68,7 @@ public class DavDocumentBuilderFactory {
     private static final EntityResolver DEFAULT_ENTITY_RESOLVER = new EntityResolver() {
         @Override
         public InputSource resolveEntity(String publicId, String systemId) throws IOException {
-            LOG.debug("Resolution of external entities in XML payload not supported - publicId: " + publicId + ", systemId: "
-                    + systemId);
+            LOG.debug("Resolution of external entities in XML payload not supported - publicId: {}, systemId: {}", publicId, systemId);
             throw new IOException("This parser does not support resolution of external entities (publicId: " + publicId
                     + ", systemId: " + systemId + ")");
         }

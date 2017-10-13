@@ -687,7 +687,7 @@ public class EventState {
             try {
                 tmp.add(ntMgr.getNodeType(nodeType));
             } catch (NoSuchNodeTypeException e) {
-                log.warn("Unknown node type: " + nodeType);
+                log.warn("Unknown node type: {}", nodeType);
             }
             Iterator<Name> it = mixins.iterator();
             while (it.hasNext()) {
@@ -695,7 +695,7 @@ public class EventState {
                 try {
                     tmp.add(ntMgr.getNodeType(mixinName));
                 } catch (NoSuchNodeTypeException e) {
-                    log.warn("Unknown node type: " + mixinName);
+                    log.warn("Unknown node type: {}", mixinName);
                 }
             }
             allTypes = Collections.unmodifiableSet(tmp);

@@ -131,7 +131,7 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
 
                 session.save();
             } catch (RepositoryException e) {
-                log.error("Failed to set-up minimal access control for root node of workspace " + session.getWorkspace().getName());
+                log.error("Failed to set-up minimal access control for root node of workspace {}", session.getWorkspace().getName());
                 session.getRootNode().refresh(false);
             }
         }
@@ -149,10 +149,10 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
                 acl.addEntry(principal, privs, true, restrictions);
                 editor.setPolicy(acl.getPath(), acl);
             } else {
-                log.debug("... policy for principal '"+principal.getName()+"' already present.");
+                log.debug("... policy for principal '{}' already present.", principal.getName());
             }
         } else {
-            log.debug("... policy for principal  '"+principal.getName()+"'  already present.");
+            log.debug("... policy for principal  '{}'  already present.", principal.getName());
         }
     }
 
@@ -271,7 +271,7 @@ public class ACLProvider extends AbstractAccessControlProvider implements Access
             }
         }
 
-        log.debug("Unable to build access control editor " + ACLEditor.class.getName() + ".");
+        log.debug("Unable to build access control editor {}.", ACLEditor.class.getName());
         return null;
     }
 

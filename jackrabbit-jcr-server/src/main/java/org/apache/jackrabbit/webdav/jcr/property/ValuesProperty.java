@@ -184,7 +184,7 @@ public class ValuesProperty extends AbstractDavProperty<Value[]> implements Item
                 elem.appendChild(xmlValue);
             }
         } catch (RepositoryException e) {
-            log.error("Unexpected Error while converting jcr value to String: " + e.getMessage());
+            log.error("Unexpected Error while converting jcr value to String: {}", e.getMessage());
         }
         return elem;
     }

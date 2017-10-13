@@ -127,18 +127,18 @@ public class ConcurrentGcTest extends TestCase {
         }
 
         for (int i = 0; i < len && gcException == null; i++) {
-            LOG.info("test " + i);
+            LOG.info("test {}", i);
             byte[] data = new byte[3];
             r.nextBytes(data);
             DataRecord rec = store.addRecord(new ByteArrayInputStream(data));
-            LOG.debug("  added " + rec.getIdentifier());
+            LOG.debug("  added {}", rec.getIdentifier());
             if (r.nextBoolean()) {
-                LOG.debug("  added " + rec.getIdentifier() + " -> keep reference");
+                LOG.debug("  added {} -> keep reference", rec.getIdentifier());
                 ids.add(rec.getIdentifier());
                 store.getRecord(rec.getIdentifier());
             }
             if (r.nextInt(100) == 0) {
-                LOG.debug("clear i: " + i);
+                LOG.debug("clear i: {}", i);
                 ids.clear();
             }
         }
@@ -157,14 +157,14 @@ public class ConcurrentGcTest extends TestCase {
                         if (ids.size() > 0) {
                             // store.clearInUse();
                             long now = System.currentTimeMillis();
-                            LOG.debug("gc now: " + now);
+                            LOG.debug("gc now: {}", now);
                             store.updateModifiedDateOnAccess(now);
                             for (DataIdentifier id : new ArrayList<DataIdentifier>(ids)) {
-                                LOG.debug("   gc touch " + id);
+                                LOG.debug("   gc touch {}", id);
                                 store.getRecord(id);
                             }
                             int count = store.deleteAllOlderThan(now);
-                            LOG.debug("gc now: " + now + " done, deleted: " + count);
+                            LOG.debug("gc now: {} done, deleted: {}", now, count);
                         }
                     }
                 } catch (DataStoreException e) {

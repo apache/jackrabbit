@@ -60,7 +60,7 @@ public class QueryTreeBuilderRegistry {
                 languages.addAll(Arrays.asList(qtb.getSupportedLanguages()));
             }
         } catch (Error e) {
-            log.warn("Unable to load providers for QueryTreeBuilder: " + e);
+            log.warn("Unable to load providers for QueryTreeBuilder: {}", (Object) e);
         }
         LANGUAGES = Collections.unmodifiableSet(languages);
     }

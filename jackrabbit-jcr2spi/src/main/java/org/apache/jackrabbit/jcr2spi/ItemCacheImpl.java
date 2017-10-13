@@ -115,7 +115,7 @@ public class ItemCacheImpl implements ItemCache {
      */
     private synchronized void cacheItem(ItemState state, Item item) {
         if (cache.containsKey(state)) {
-            log.warn("overwriting cached item " + state);
+            log.warn("overwriting cached item {}", state);
         }
         if (log.isDebugEnabled()) {
             log.debug("caching item " + state);

@@ -82,7 +82,7 @@ public class GCConcurrentTest extends AbstractJCRTest {
             ValueFactory vf = session.getValueFactory();
             n.setProperty("data", vf.createBinary(randomInputStream(i)));
             session.save();
-            LOG.debug("saved: " + i);
+            LOG.debug("saved: {}", i);
         }
         Thread.sleep(10);
         for (int i = 0; i < len; i++) {
@@ -92,7 +92,7 @@ public class GCConcurrentTest extends AbstractJCRTest {
             InputStream expected = randomInputStream(i);
             checkStreams(expected, in);
             n.remove();
-            LOG.debug("removed: " + i);
+            LOG.debug("removed: {}", i);
             session.save();
         }
         Thread.sleep(10);

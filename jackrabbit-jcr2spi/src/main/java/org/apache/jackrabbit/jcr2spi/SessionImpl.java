@@ -270,7 +270,7 @@ public class SessionImpl extends AbstractSession
             if (item.isNode()) {
                 return (Node) item;
             } else {
-                log.error("NodeId '" + id + " does not point to a Node");
+                log.error("NodeId '{}' does not point to a Node", id);
                 throw new ItemNotFoundException(LogUtil.saveGetIdString(id, getPathResolver()));
             }
         } catch (AccessDeniedException e) {
@@ -465,7 +465,7 @@ public class SessionImpl extends AbstractSession
         try {
             getLockStateManager().addLockToken(lt);
         } catch (RepositoryException e) {
-            log.warn("Unable to add lock token '" +lt+ "' to this session.", e);
+            log.warn("Unable to add lock token '{}' to this session.", lt, e);
         }
     }
 
@@ -476,7 +476,7 @@ public class SessionImpl extends AbstractSession
         try {
             return getLockStateManager().getLockTokens();
         } catch (RepositoryException e) {
-            log.warn("Unable to retrieve lock tokens for this session. (" + e.getMessage() + ")");
+            log.warn("Unable to retrieve lock tokens for this session. ({})", e.getMessage());
             return new String[0];
         }
     }
@@ -488,7 +488,7 @@ public class SessionImpl extends AbstractSession
         try {
             getLockStateManager().removeLockToken(lt);
         } catch (RepositoryException e) {
-            log.warn("Unable to remove lock token '" +lt+ "' from this session. (" + e.getMessage() + ")");
+            log.warn("Unable to remove lock token '{}' from this session. ({})", lt, e.getMessage());
         }
     }
 

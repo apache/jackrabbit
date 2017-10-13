@@ -46,7 +46,7 @@ public class TestAll extends TestCase {
     public static Test suite() {
         TestSuite suite = new TestSuite("S3 tests");
         String config = System.getProperty(TestCaseBase.CONFIG);
-        LOG.info("config= " + config);
+        LOG.info("config= {}", config);
         if (config != null && !"".equals(config.trim())) {
             suite.addTestSuite(TestS3Ds.class);
             suite.addTestSuite(TestS3DSAsyncTouch.class);

@@ -235,7 +235,7 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
             try {
                 cache(((NodeState) state).getNodeId(), builder.getPath());
             } catch (MalformedPathException mpe) {
-                log.warn("Failed to build path of " + state.getId());
+                log.warn("Failed to build path of {}", state.getId());
             }
         }
     }
@@ -411,16 +411,15 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
                     nodeAdded(state, path, id);
                     checkConsistency();
                 } catch (PathNotFoundException e) {
-                    log.warn("Unable to get path of node " + state.getNodeId()
-                            + ", event ignored.");
+                    log.warn("Unable to get path of node {}, event ignored.", state.getNodeId());
                 } catch (MalformedPathException e) {
-                    log.warn("Unable to create path of " + id, e);
+                    log.warn("Unable to create path of {}", id, e);
                 } catch (ItemNotFoundException e) {
-                    log.warn("Unable to find item " + state.getNodeId(), e);
+                    log.warn("Unable to find item {}", state.getNodeId(), e);
                 } catch (ItemStateException e) {
-                    log.warn("Unable to find item " + id, e);
+                    log.warn("Unable to find item {}", id, e);
                 } catch (RepositoryException e) {
-                    log.warn("Unable to get path of " + state.getNodeId(), e);
+                    log.warn("Unable to get path of {}", state.getNodeId(), e);
                 }
             } else if (state.getParentId() == null && idCache.containsKey(id)) {
                 // A top level node was added
@@ -497,16 +496,15 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
                     nodeRemoved(state, path, id);
                     checkConsistency();
                 } catch (PathNotFoundException e) {
-                    log.warn("Unable to get path of node " + state.getNodeId()
-                            + ", event ignored.");
+                    log.warn("Unable to get path of node {}, event ignored.", state.getNodeId());
                 } catch (MalformedPathException e) {
-                    log.warn("Unable to create path of " + id, e);
+                    log.warn("Unable to create path of {}", id, e);
                 } catch (ItemStateException e) {
-                    log.warn("Unable to find item " + id, e);
+                    log.warn("Unable to find item {}", id, e);
                 } catch (ItemNotFoundException e) {
-                    log.warn("Unable to get path of " + state.getNodeId(), e);
+                    log.warn("Unable to get path of {}", state.getNodeId(), e);
                 } catch (RepositoryException e) {
-                    log.warn("Unable to get path of " + state.getNodeId(), e);
+                    log.warn("Unable to get path of {}", state.getNodeId(), e);
                 }
             } else if (state.getParentId() == null && idCache.containsKey(id)) {
                 // A top level node was removed

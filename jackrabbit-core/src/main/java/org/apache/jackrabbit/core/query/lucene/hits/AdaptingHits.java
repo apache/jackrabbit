@@ -90,8 +90,7 @@ public class AdaptingHits implements Hits {
             int intArraySize = docCount * 4;
             int bitSetSize = maxDoc / 8;
             if (bitSetSize < intArraySize) {
-                log.debug("BitSet is smaller than int[]: "
-                        + bitSetSize + " vs " + intArraySize);
+                log.debug("BitSet is smaller than int[]: {} vs {}", bitSetSize, intArraySize);
                 BitSetHits bitSetHits = new BitSetHits();
                 int i = 0;
                 while (i > -1) {

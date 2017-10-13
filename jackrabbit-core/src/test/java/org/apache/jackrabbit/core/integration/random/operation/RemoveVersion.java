@@ -39,7 +39,7 @@ public class RemoveVersion extends VersionOperation {
         Node n = getNode();
         Version v = getRandomVersion(true);
         if (v != null) {
-            log.info(n.getPath() + ":" + v.getName());
+            log.info("{}:{}", n.getPath(), v.getName());
             n.getVersionHistory().removeVersion(v.getName());
         }
         return wrapWithIterator(n);

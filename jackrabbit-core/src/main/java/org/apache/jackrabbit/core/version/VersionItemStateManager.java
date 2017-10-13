@@ -114,7 +114,7 @@ public class VersionItemStateManager extends SharedItemStateManager {
             }
             return true;
         } catch (ItemStateException e) {
-            log.error("Error while setting references: " + e.toString());
+            log.error("Error while setting references: {}", (Object) e);
             return false;
         }
     }

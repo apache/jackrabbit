@@ -67,7 +67,7 @@ public class UnbindInfo implements XmlSerializable {
                     throw new DavException(DavServletResponse.SC_BAD_REQUEST);
                 }
             } else  {
-                log.warn("unexpected element " + elt.getLocalName());
+                log.warn("unexpected element {}", elt.getLocalName());
                 throw new DavException(DavServletResponse.SC_BAD_REQUEST);
             }
         }

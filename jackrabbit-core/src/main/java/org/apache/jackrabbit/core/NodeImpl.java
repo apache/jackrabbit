@@ -155,8 +155,7 @@ public class NodeImpl extends ItemImpl implements Node, JackrabbitNode {
              * todo need proper way of handling inconsistent/corrupt node type references
              * e.g. 'flag' nodes that refer to non-registered node types
              */
-            log.warn("Fallback to nt:unstructured due to unknown node type '"
-                    + state.getNodeTypeName() + "' of " + this);
+            log.warn("Fallback to nt:unstructured due to unknown node type '{}' of {}", state.getNodeTypeName(), this);
             data.getNodeState().setNodeTypeName(NameConstants.NT_UNSTRUCTURED);
         }
         List<Name> unknown = null;
@@ -166,8 +165,7 @@ public class NodeImpl extends ItemImpl implements Node, JackrabbitNode {
                     unknown = new ArrayList<Name>();
                 }
                 unknown.add(mixinName);
-                log.warn("Ignoring unknown mixin type '" + mixinName +
-                        "' of " + this);
+                log.warn("Ignoring unknown mixin type '{}' of {}", mixinName, this);
             }
         }
         if (unknown != null) {
@@ -630,7 +628,7 @@ public class NodeImpl extends ItemImpl implements Node, JackrabbitNode {
                 // we need to check if the item doesn't exist in the ism
                 ItemStateManager ism = sessionContext.getItemStateManager();
                 if (!ism.hasItemState(childId)) {
-                    log.warn("Node " + childId + " not found, ignore", e);
+                    log.warn("Node {} not found, ignore", childId, e);
                     ignoreError = true;
                 }
             }
@@ -859,7 +857,7 @@ public class NodeImpl extends ItemImpl implements Node, JackrabbitNode {
     @Override
     protected void makePersistent() throws RepositoryException {
         if (!isTransient()) {
-            log.debug(this + " (" + id + "): there's no transient state to persist");
+            log.debug("{} ({}): there's no transient state to persist", this, id);
             return;
         }
 
@@ -3248,7 +3246,7 @@ public class NodeImpl extends ItemImpl implements Node, JackrabbitNode {
 
         Name ntName = sessionContext.getQName(nodeTypeName);
         if (ntName.equals(state.getNodeTypeName())) {
-            log.debug("Node already has " + nodeTypeName + " as primary node type.");
+            log.debug("Node already has {} as primary node type.", nodeTypeName);
             return;
         }
 

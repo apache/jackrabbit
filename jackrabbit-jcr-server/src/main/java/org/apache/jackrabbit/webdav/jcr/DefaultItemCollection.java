@@ -202,9 +202,9 @@ public class DefaultItemCollection extends AbstractItemResource
                 getRepositorySession().exportSystemView(item.getPath(), out, false, true);
             }
         } catch (PathNotFoundException e) {
-            log.error("Error while spooling resource content: " + e.getMessage());
+            log.error("Error while spooling resource content: {}", e.getMessage());
         } catch (RepositoryException e) {
-            log.error("Error while spooling resource content: " + e.getMessage());
+            log.error("Error while spooling resource content: {}", e.getMessage());
         }
     }
 
@@ -241,7 +241,7 @@ public class DefaultItemCollection extends AbstractItemResource
                     prop = new JcrUserPrivilegesProperty(getRepositorySession(), n.getPath()).asDavProperty();
                 }
             } catch (RepositoryException e) {
-                log.error("Failed to retrieve node-specific property: " + e);
+                log.error("Failed to retrieve node-specific property: {}", (Object) e);
             }          
         }
 
@@ -590,7 +590,7 @@ public class DefaultItemCollection extends AbstractItemResource
             getRepositorySession().getItem(itemPath).remove();
             complete();
         } catch (RepositoryException e) {
-            log.error("Unexpected error: " + e.getMessage());
+            log.error("Unexpected error: {}", e.getMessage());
             throw new JcrDavException(e);
         }
     }
@@ -636,7 +636,7 @@ public class DefaultItemCollection extends AbstractItemResource
         if (Type.WRITE.equals(type)) {
             try {
                 if (!exists()) {
-                    log.warn("Unable to retrieve lock: no item found at '" + getResourcePath() + "'");
+                    log.warn("Unable to retrieve lock: no item found at '{}'", getResourcePath());
                 } else if (((Node) item).isLocked()) {
                     Lock jcrLock = ((Node) item).getLock();
                     lock = new JcrActiveLock(jcrLock);
@@ -648,11 +648,11 @@ public class DefaultItemCollection extends AbstractItemResource
                     lock.setLockroot(lockroot);
                 }
             } catch (AccessDeniedException e) {
-                log.error("Error while accessing resource lock: "+e.getMessage());
+                log.error("Error while accessing resource lock: {}", e.getMessage());
             } catch (UnsupportedRepositoryOperationException e) {
-                log.error("Error while accessing resource lock: "+e.getMessage());
+                log.error("Error while accessing resource lock: {}", e.getMessage());
             } catch (RepositoryException e) {
-                log.error("Error while accessing resource lock: "+e.getMessage());
+                log.error("Error while accessing resource lock: {}", e.getMessage());
             }
         } else {
             lock = super.getLock(type, scope);
@@ -681,7 +681,7 @@ public class DefaultItemCollection extends AbstractItemResource
 
         if (Type.WRITE.equals(reqLockInfo.getType())) {
             if (!exists()) {
-                log.warn("Cannot create a write lock for non-existing JCR node (" + getResourcePath() + ")");
+                log.warn("Cannot create a write lock for non-existing JCR node ({})", getResourcePath());
                 throw new DavException(DavServletResponse.SC_NOT_FOUND);
             }
             try {
@@ -985,7 +985,7 @@ public class DefaultItemCollection extends AbstractItemResource
                 properties.add(new NodeTypeProperty(JCR_PRIMARYNODETYPE, n.getPrimaryNodeType(), false));
                 properties.add(new NodeTypeProperty(JCR_MIXINNODETYPES, n.getMixinNodeTypes(), false));
             } catch (RepositoryException e) {
-                log.error("Failed to retrieve node-specific property: " + e);
+                log.error("Failed to retrieve node-specific property: {}", (Object) e);
             }
         }
     }  

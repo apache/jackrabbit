@@ -218,10 +218,10 @@ public final class EventStateCollection {
                             // error since in this case we can't generate the
                             // correct REMOVE event.
                             log.error(
-                                    "The old parent (node id " + oldParentId
+                                    "The old parent (node id {}"
                                     + ") of a moved node (old path "
-                                    + oldPath + ") is no longer available."
-                                    + " No REMOVE event generated!");
+                                    + "{}) is no longer available."
+                                    + " No REMOVE event generated!", oldParentId, oldPath);
                         }
 
                         NodeState newParent = (NodeState) changes.get(newParentId);

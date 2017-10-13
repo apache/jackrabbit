@@ -351,7 +351,7 @@ public class NodeTypeImpl extends AbstractNodeType implements NodeTypeDefinition
             name = resolver().getQName(nodeName);
         } catch (RepositoryException e) {
             // should never get here
-            log.warn("Unable to determine if there are any remove constraints for a node with name " + nodeName);
+            log.warn("Unable to determine if there are any remove constraints for a node with name {}", nodeName);
             return false;
         }
         return !ent.hasRemoveNodeConstraint(name);
@@ -367,7 +367,7 @@ public class NodeTypeImpl extends AbstractNodeType implements NodeTypeDefinition
             name = resolver().getQName(propertyName);
         } catch (RepositoryException e) {
             // should never get here
-            log.warn("Unable to determine if there are any remove constraints for a property with name " + propertyName);
+            log.warn("Unable to determine if there are any remove constraints for a property with name {}", propertyName);
             return false;
         }
         return !ent.hasRemovePropertyConstraint(name);

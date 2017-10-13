@@ -712,7 +712,7 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
                         try {
                             index = Integer.parseInt(indexStr);
                         } catch (NumberFormatException e) {
-                            log.warn("Unable to parse index for path element: " + names[i]);
+                            log.warn("Unable to parse index for path element: {}", names[i]);
                         }
                     }
                     if (name.equals("%")) {

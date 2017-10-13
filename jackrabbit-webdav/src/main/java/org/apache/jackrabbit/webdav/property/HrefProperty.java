@@ -92,10 +92,10 @@ public class HrefProperty extends AbstractDavProperty<String[]> {
                         if (href != null) {
                             hrefList.add(href);
                         } else {
-                            log.warn("Valid DAV:href element expected instead of " + entry.toString());
+                            log.warn("Valid DAV:href element expected instead of {}", entry);
                         }
                     } else {
-                        log.warn("DAV: href element expected in the content of " + getName().toString());
+                        log.warn("DAV: href element expected in the content of {}", getName());
                     }
                 }
             } else if (val instanceof Element && XML_HREF.equals(((Element)val).getLocalName())) {
@@ -103,7 +103,7 @@ public class HrefProperty extends AbstractDavProperty<String[]> {
                 if (href != null) {
                     hrefList.add(href);
                 } else {
-                    log.warn("Valid DAV:href element expected instead of " + val.toString());
+                    log.warn("Valid DAV:href element expected instead of {}", val);
                 }
             }
             value = hrefList.toArray(new String[hrefList.size()]);

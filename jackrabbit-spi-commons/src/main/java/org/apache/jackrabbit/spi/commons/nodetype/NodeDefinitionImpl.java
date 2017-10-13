@@ -94,7 +94,7 @@ public class NodeDefinitionImpl extends ItemDefinitionImpl implements NodeDefini
             return resolver.getJCRName(ntName);
         } catch (NamespaceException e) {
             // should never get here
-            log.error("invalid default node type " + ntName, e);
+            log.error("invalid default node type {}", ntName, e);
             return null;
         }
     }
@@ -115,7 +115,7 @@ public class NodeDefinitionImpl extends ItemDefinitionImpl implements NodeDefini
             return ntMgr.getNodeType(ntName);
         } catch (NoSuchNodeTypeException e) {
             // should never get here
-            log.error("invalid default node type " + ntName, e);
+            log.error("invalid default node type {}", ntName, e);
             return null;
         }
     }

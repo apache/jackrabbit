@@ -42,7 +42,7 @@ public class SetProperty extends Operation {
         Node n = getNode();
         String value = getRandomText(5);
         String path = n.setProperty(name, value).getPath();
-        log.info(path + ": " + value);
+        log.info("{}: {}", path, value);
         return wrapWithIterator(getNode());
     }
 }

@@ -302,8 +302,8 @@ public class NodeTypeTest extends AbstractJCRTest {
             String typename = type.getName();
             String ns = session.getNamespaceURI(AbstractJCRTest.getPrefix(typename));
             if (ns.length() != 0 && !ns.contains(":")) {
-                log.warn("Node type '" + typename + "' has invalid namespace '" + ns
-                        + "', thus skipping testIsNodeTypeQName() for this type");
+                log.warn("Node type '{}' has invalid namespace '{}', thus skipping testIsNodeTypeQName() for this type",
+                        typename, ns);
             } else {
                 String qn = AbstractJCRTest.getQualifiedName(session, typename);
                 assertTrue("isNodeType(String nodeTypeName) must return true if " + "NodeType is nodeTypeName",

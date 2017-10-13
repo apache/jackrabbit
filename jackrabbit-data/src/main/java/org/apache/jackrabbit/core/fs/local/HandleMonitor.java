@@ -93,7 +93,7 @@ public class HandleMonitor {
      * Dumps the contents of this monitor
      */
     public void dump() {
-        log.info("Number of open files: " + openHandles.size());
+        log.info("Number of open files: {}", openHandles.size());
         for (File file : openHandles.keySet()) {
             Handle handle = openHandles.get(file);
             handle.dump();
@@ -168,12 +168,12 @@ public class HandleMonitor {
          */
         private void dump(boolean detailed) {
             if (detailed) {
-                log.info("- " + file.getPath() + ", " + streams.size());
+                log.info("- {}, {}", file.getPath(), streams.size());
                 for (Handle.MonitoredInputStream in : streams) {
                     in.dump();
                 }
             } else {
-                log.info("- " + file.getPath() + ", " + streams.size());
+                log.info("- {}, {}", file.getPath(), streams.size());
             }
         }
 

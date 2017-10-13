@@ -279,7 +279,7 @@ public class MultiIndex {
             // an index that has been deleted, but indexNames has not been
             // written to disk.
             if (!directoryManager.hasDirectory(name)) {
-                log.debug("index does not exist anymore: " + name);
+                log.debug("index does not exist anymore: {}", name);
                 // move on to next index
                 continue;
             }
@@ -905,7 +905,7 @@ public class MultiIndex {
         indexes.remove(index);
         indexNames.removeName(index.getName());
         synchronized (deletable) {
-            log.debug("Moved " + index.getName() + " to deletable");
+            log.debug("Moved {} to deletable", index.getName());
             deletable.put(index.getName(), System.currentTimeMillis());
         }
     }
@@ -1295,8 +1295,7 @@ public class MultiIndex {
                 && idleTime > handler.getVolatileIdleTime() * 1000) {
             try {
                 if (redoLog.hasEntries()) {
-                    log.debug("Flushing index after being idle for "
-                            + idleTime + " ms.");
+                    log.debug("Flushing index after being idle for {} ms.", idleTime);
                     safeFlush();
                 }
             } catch (IOException e) {

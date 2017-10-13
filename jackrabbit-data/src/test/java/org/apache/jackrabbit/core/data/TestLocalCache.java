@@ -374,7 +374,7 @@ public class TestLocalCache extends TestCase {
             try {
                 for (int i = 0; i < 100; i++) {
                     String key = "a" + random.nextInt(byteMap.size());
-                    LOG.debug("key=" + key);
+                    LOG.debug("key={}", key);
                     cache.store(key, new ByteArrayInputStream(byteMap.get(key)));
                 }
             } catch (Exception e) {

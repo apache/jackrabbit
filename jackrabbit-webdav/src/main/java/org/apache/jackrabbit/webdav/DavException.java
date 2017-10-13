@@ -40,7 +40,7 @@ public class DavException extends Exception implements XmlSerializable {
         try {
             statusPhrases.load(DavException.class.getResourceAsStream("statuscode.properties"));
         } catch (IOException e) {
-            log.error("Failed to load status properties: " + e.getMessage());
+            log.error("Failed to load status properties: {}", e.getMessage());
         }
     }
 
@@ -98,7 +98,7 @@ public class DavException extends Exception implements XmlSerializable {
         super(message, cause);
         this.errorCode = errorCode;
         this.errorCondition = errorCondition;
-        log.debug("DavException: (" + errorCode + ") " + message);
+        log.debug("DavException: ({}) {}", errorCode, message);
     }
 
     /**

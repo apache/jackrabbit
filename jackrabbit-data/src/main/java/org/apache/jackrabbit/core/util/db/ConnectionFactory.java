@@ -185,7 +185,7 @@ public final class ConnectionFactory {
                 try {
                     ds.close();
                 } catch (SQLException e) {
-                    log.error("failed to close " + ds, e);
+                    log.error("failed to close {}", ds, e);
                 }
             }
             keyToDataSource.clear();
@@ -371,7 +371,7 @@ public final class ConnectionFactory {
         } else if (url.contains("db2")) {
             return "values(1)";
         }
-        log.warn("Failed to guess validation query for URL " + url);
+        log.warn("Failed to guess validation query for URL {}", url);
         return null;
     }
 }

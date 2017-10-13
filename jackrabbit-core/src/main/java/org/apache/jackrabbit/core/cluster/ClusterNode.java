@@ -855,7 +855,7 @@ public class ClusterNode implements Runnable,
      * {@inheritDoc}
      */
     public void consume(Record record) {
-        log.info("Processing revision: " + record.getRevision());
+        log.info("Processing revision: {}", record.getRevision());
 
         try {
             deserializer.deserialize(record).process(this);
@@ -872,7 +872,7 @@ public class ClusterNode implements Runnable,
         try {
             instanceRevision.set(revision);
         } catch (JournalException e) {
-            log.warn("Unable to set current revision to " + revision + ".", e);
+            log.warn("Unable to set current revision to {}.", revision, e);
         }
     }
 

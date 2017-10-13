@@ -276,7 +276,7 @@ public final class EventImpl implements JackrabbitEvent, AdditionalEventInfo, Ev
             try {
                 sb.append(getPath());
             } catch (RepositoryException e) {
-                log.error("Exception retrieving path: " + e);
+                log.error("Exception retrieving path: {}", (Object) e);
                 sb.append("[Error retrieving path]");
             }
             sb.append(", ").append(EventState.valueOf(getType())).append(": ");

@@ -110,7 +110,7 @@ public class PropertyTypeRegistry implements NodeTypeRegistryListener {
                 }
             }
         } catch (NoSuchNodeTypeException e) {
-            log.error("Unable to get newly registered node type definition for name: " + ntName);
+            log.error("Unable to get newly registered node type definition for name: {}", ntName);
         }
     }
 

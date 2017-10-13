@@ -215,7 +215,7 @@ public class CombinedProvider extends AbstractAccessControlProvider {
                     cPermissions.add((AbstractCompiledPermissions) cp);
                 } else {
                     // TODO: deal with other implementations
-                    log.warn("AbstractCompiledPermissions expected. Found " + cp.getClass().getName() + " -> ignore.");
+                    log.warn("AbstractCompiledPermissions expected. Found {} -> ignore.", cp.getClass().getName());
                 }
             }
         }

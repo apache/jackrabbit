@@ -155,7 +155,7 @@ public class JcrPrivilegeReport extends AbstractJcrReport {
             return sb.toString();
         }
         catch (java.net.URISyntaxException ex) {
-            log.warn("parsing " + uri, ex);
+            log.warn("parsing {}", uri, ex);
             return uri;
         }
     }

@@ -147,7 +147,7 @@ public class DavPropertyNameSet extends PropContainer
         if (contentEntry instanceof DavPropertyName) {
             return add((DavPropertyName) contentEntry);
         }
-        log.debug("DavPropertyName object expected. Found: " + contentEntry.getClass().toString());
+        log.debug("DavPropertyName object expected. Found: {}", contentEntry.getClass());
         return false;
     }
 

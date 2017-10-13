@@ -99,7 +99,7 @@ public class CooperativeFileLock implements RepositoryLockMechanism {
                 }
             }
         } catch (Exception e) {
-            LOG.warn("Error unlocking " + fileName, e);
+            LOG.warn("Error unlocking {}", fileName, e);
         } finally {
             locked = false;
         }
@@ -108,7 +108,7 @@ public class CooperativeFileLock implements RepositoryLockMechanism {
                 watchdog.interrupt();
             }
         } catch (Exception e) {
-            LOG.debug("Error stopping watchdog " + fileName, e);
+            LOG.debug("Error stopping watchdog {}", fileName, e);
         }
     }
 

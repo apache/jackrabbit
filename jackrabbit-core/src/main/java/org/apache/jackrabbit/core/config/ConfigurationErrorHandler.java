@@ -38,7 +38,7 @@ public class ConfigurationErrorHandler implements ErrorHandler {
     }
 
     private void log(String type, SAXParseException exception) {
-        log.warn(type + " parsing the configuration at line " + exception.getLineNumber() + " using system id " + exception.getSystemId() + ": " + exception.toString());
+        log.warn("{} parsing the configuration at line {} using system id {}: {}", new Object[] { type, exception.getLineNumber(), exception.getSystemId(), exception });
     }
 
     /**

@@ -42,7 +42,7 @@ public class UserManagerCreateGroupTest extends AbstractUserTest {
                 createdGroup.remove();
                 superuser.save();
             } catch (RepositoryException e) {
-                log.error("Failed to remove Group " + createdGroup.getID() + " during tearDown.");
+                log.error("Failed to remove Group {} during tearDown.", createdGroup.getID());
             }
         }
 

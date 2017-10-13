@@ -136,7 +136,7 @@ public class PropertyImpl extends ItemImpl implements Property {
     @Override
     protected void makePersistent() throws InvalidItemStateException {
         if (!isTransient()) {
-            log.debug(this + " (" + id + "): there's no transient state to persist");
+            log.debug("{} ({}): there's no transient state to persist", this, id);
             return;
         }
 

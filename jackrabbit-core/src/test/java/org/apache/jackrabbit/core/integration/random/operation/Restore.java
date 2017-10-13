@@ -39,7 +39,7 @@ public class Restore extends VersionOperation {
         Node n = getNode();
         Version v = getRandomVersion(false);
         if (v != null) {
-            log.info(n.getPath() + ":" + v.getName());
+            log.info("{}:{}", n.getPath(), v.getName());
             n.restore(v, true);
         }
         return wrapWithIterator(n);

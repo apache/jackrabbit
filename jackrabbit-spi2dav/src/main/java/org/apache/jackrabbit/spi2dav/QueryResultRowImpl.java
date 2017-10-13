@@ -104,7 +104,7 @@ public class QueryResultRowImpl implements QueryResultRow {
                 qValues.put(names[i], v);
             } catch (RepositoryException e) {
                 // should not occur
-                log.error("Malformed value: " + values[i].toString());
+                log.error("Malformed value: {}", values[i]);
             }
         }
     }

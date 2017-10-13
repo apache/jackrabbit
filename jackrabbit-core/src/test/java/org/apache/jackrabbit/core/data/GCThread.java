@@ -55,11 +55,11 @@ public class GCThread implements Runnable, MarkEventListener {
                 LOG.debug("Scanning...");
                 gc.mark();
                 int count = listIdentifiers(gc);
-                LOG.debug("Stop; currently " + count + " identifiers");
+                LOG.debug("Stop; currently {} identifiers", count);
                 gc.stopScan();
                 int numDeleted = gc.sweep();
                 if (numDeleted > 0) {
-                    LOG.debug("Deleted " + numDeleted + " identifiers");
+                    LOG.debug("Deleted {} identifiers", numDeleted);
                 }
                 LOG.debug("Waiting...");
                 Thread.sleep(10);
@@ -85,7 +85,7 @@ public class GCThread implements Runnable, MarkEventListener {
         int count = 0;
         while (it.hasNext()) {
             DataIdentifier id = it.next();
-            LOG.debug("  " + id);
+            LOG.debug("  {}", id);
             count++;
         }
         return count;

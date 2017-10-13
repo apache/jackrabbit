@@ -355,7 +355,7 @@ class BundleReader {
                             }
                         } catch (IOException e) {
                             if (binding.errorHandling.ignoreMissingBlobs()) {
-                                log.warn("Ignoring error while reading blob-resource: " + e);
+                                log.warn("Ignoring error while reading blob-resource: {}", (Object) e);
                                 val = InternalValue.create(new byte[0]);
                             } else {
                                 throw e;

@@ -341,7 +341,7 @@ public class DefaultAccessManager extends AbstractAccessControlManager implement
                 AccessControlPolicy[] applicable = editor.editAccessControlPolicies(absPath);
                 return new AccessControlPolicyIteratorAdapter(Arrays.asList(applicable));
             } catch (AccessControlException e) {
-                log.debug("No applicable policy at " + absPath);
+                log.debug("No applicable policy at {}", absPath);
             }
         }
         // no applicable policies -> return empty iterator.

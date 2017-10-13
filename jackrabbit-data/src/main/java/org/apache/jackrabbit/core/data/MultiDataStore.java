@@ -337,8 +337,8 @@ public class MultiDataStore implements DataStore {
                 "Jackrabbit-MulitDataStore-MoveDataTaskThread");
         moveDataTaskThread.setDaemon(true);
         moveDataTaskThread.start();
-        log.info("MultiDataStore-MoveDataTask thread started; first run scheduled at "
-                + moveDataTaskNextRun.getTime());
+        log.info("MultiDataStore-MoveDataTask thread started; first run scheduled at {}",
+                moveDataTaskNextRun.getTime());
         if (delayedDelete) {
             try {
                 // Run on startup the DeleteDelayedIdentifiersTask only if the
@@ -497,8 +497,8 @@ public class MultiDataStore implements DataStore {
             writer.write(identifier.toString());
             return true;
         } catch (Exception e) {
-            log.warn("I/O error while saving DataIdentifier (stacktrace on DEBUG log level) to '"
-                    + identifiersToDeleteFile.getPath() + "': " + e.getMessage());
+            log.warn("I/O error while saving DataIdentifier (stacktrace on DEBUG log level) to '{}': {}",
+                    identifiersToDeleteFile.getPath(), e.getMessage());
             log.debug("Root cause: ", e);
             return false;
         } finally {
@@ -520,8 +520,8 @@ public class MultiDataStore implements DataStore {
             return true;
         } catch (Exception e) {
             log.warn("I/O error while purging (stacktrace on DEBUG log level) the "
-                    + IDENTIFIERS_TO_DELETE_FILE_KEY + " file '"
-                    + identifiersToDeleteFile.getPath() + "': " + e.getMessage());
+                    + IDENTIFIERS_TO_DELETE_FILE_KEY + " file '{}': {}",
+                    identifiersToDeleteFile.getPath(), e.getMessage());
             log.debug("Root cause: ", e);
             return false;
         } finally {
@@ -541,8 +541,7 @@ public class MultiDataStore implements DataStore {
         public void run() {
             while (!Thread.currentThread().isInterrupted()) {
                 try {
-                    log.info("Next move-data task run scheduled at "
-                            + moveDataTaskNextRun.getTime());
+                    log.info("Next move-data task run scheduled at {}", moveDataTaskNextRun.getTime());
                     long sleepTime = moveDataTaskNextRun.getTimeInMillis()
                             - System.currentTimeMillis();
                     if (sleepTime > 0) {
@@ -605,7 +604,7 @@ public class MultiDataStore implements DataStore {
                                 log.debug("Moving DataRecord's... ({})", moved);
                             }
                         } catch (DataStoreException e) {
-                            log.error("Failed to move DataRecord. DataIdentifier: " + identifier, e);
+                            log.error("Failed to move DataRecord. DataIdentifier: {}", identifier, e);
                         } finally {
                             moveDataTaskLock.unlock();
                         }
@@ -615,12 +614,10 @@ public class MultiDataStore implements DataStore {
                     Thread.sleep(sleepBetweenRecords);
                 }
                 if (delayedDelete) {
-                    log.info("Moved "
-                            + moved
-                            + " DataRecords to the archive data store. The DataRecords in the primary data store will be removed in "
-                            + delayedDeleteSleep + " seconds.");
+                    log.info("Moved {} DataRecords to the archive data store. The DataRecords in the primary data store will be removed in {} seconds.",
+                            moved, delayedDeleteSleep);
                 } else {
-                    log.info("Moved " + moved + " DataRecords to the archive data store.");
+                    log.info("Moved {} DataRecords to the archive data store.", moved);
                 }
             } catch (Exception e) {
                 log.warn("Failed to run move-data task.", e);
@@ -676,7 +673,7 @@ public class MultiDataStore implements DataStore {
                             ((MultiDataStoreAware) primaryDataStore).deleteRecord(identifier);
                             deleted++;
                         } catch (DataStoreException e) {
-                            log.error("Failed to delete DataRecord. DataIdentifier: " + identifier,
+                            log.error("Failed to delete DataRecord. DataIdentifier: {}", identifier,
                                     e);
                             problemIdentifiers.add(identifier);
                         } finally {
@@ -687,7 +684,7 @@ public class MultiDataStore implements DataStore {
                         // DeleteDelayedIdentifiersTask is running..
                         Thread.sleep(sleepBetweenRecords);
                     }
-                    log.info("Deleted " + deleted + " DataRecords from the primary data store.");
+                    log.info("Deleted {} DataRecords from the primary data store.", deleted);
                     if (problemIdentifiers.isEmpty()) {
                         try {
                             identifiersToDeleteFile.delete();

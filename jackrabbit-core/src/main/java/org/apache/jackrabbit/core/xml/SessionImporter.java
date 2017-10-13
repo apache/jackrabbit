@@ -303,7 +303,7 @@ public class SessionImporter implements Importer {
         Name[] mixins = nodeInfo.getMixinNames();
 
         if (parent == null) {
-            log.debug("Skipping node: " + nodeName);
+            log.debug("Skipping node: {}", nodeName);
             // parent node was skipped, skip this child node too
             parents.push(null); // push null onto stack for skipped node
             // notify the p-i-importer
@@ -316,7 +316,7 @@ public class SessionImporter implements Importer {
         if (parent.getDefinition().isProtected()) {
             // skip protected node
             parents.push(null);
-            log.debug("Skipping protected node: " + nodeName);
+            log.debug("Skipping protected node: {}", nodeName);
 
             if (pnImporter != null) {
                 // pnImporter was already started (current nodeInfo is a sibling)
@@ -364,7 +364,7 @@ public class SessionImporter implements Importer {
                         is the a leaf in the tree to be imported 'end' will
                         not have an effect on the importer, that was never started.
                     */
-                    log.debug("Skipping protected node: " + existing);
+                    log.debug("Skipping protected node: {}", existing);
                     parents.push(existing);
                     return;
                 }
@@ -409,7 +409,7 @@ public class SessionImporter implements Importer {
                     if (node == null) {
                         // no new node has been created, so skip this node
                         parents.push(null); // push null onto stack for skipped node
-                        log.debug("Skipping existing node " + nodeInfo.getName());
+                        log.debug("Skipping existing node {}", nodeInfo.getName());
                         return;
                     }
                 } else {
@@ -427,7 +427,7 @@ public class SessionImporter implements Importer {
             QPropertyDefinition def = pi.getApplicablePropertyDef(node.getEffectiveNodeType());
             if (def.isProtected()) {
                 // skip protected property
-                log.debug("Skipping protected property " + pi.getName());
+                log.debug("Skipping protected property {}", pi.getName());
 
                 // notify the ProtectedPropertyImporter.
                 for (ProtectedItemImporter ppi : pItemImporters) {

@@ -1086,11 +1086,11 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                     try {
                         Name n = session.getQName(literal);
                         values.add(nsMappings.translateName(n));
-                        log.debug("Coerced " + literal + " into NAME.");
+                        log.debug("Coerced {} into NAME.", literal);
                     } catch (NameException e) {
-                        log.debug("Unable to coerce '" + literal + "' into a NAME: " + e.toString());
+                        log.debug("Unable to coerce '{}' into a NAME: {}", literal, e);
                     } catch (NamespaceException e) {
-                        log.debug("Unable to coerce '" + literal + "' into a NAME: " + e.toString());
+                        log.debug("Unable to coerce '{}' into a NAME: {}", literal, e);
                     }
                     break;
                 case PropertyType.PATH:
@@ -1098,11 +1098,11 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                     try {
                         Path p = session.getQPath(literal);
                         values.add(resolver.getJCRPath(p));
-                        log.debug("Coerced " + literal + " into PATH.");
+                        log.debug("Coerced {} into PATH.", literal);
                     } catch (NameException e) {
-                        log.debug("Unable to coerce '" + literal + "' into a PATH: " + e.toString());
+                        log.debug("Unable to coerce '{}' into a PATH: {}", literal, e);
                     } catch (NamespaceException e) {
-                        log.debug("Unable to coerce '" + literal + "' into a PATH: " + e.toString());
+                        log.debug("Unable to coerce '{}' into a PATH: {}", literal, e);
                     }
                     break;
                 case PropertyType.DATE:
@@ -1110,9 +1110,9 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                     Calendar c = ISO8601.parse(literal);
                     if (c != null) {
                         values.add(DateField.timeToString(c.getTimeInMillis()));
-                        log.debug("Coerced " + literal + " into DATE.");
+                        log.debug("Coerced {} into DATE.", literal);
                     } else {
-                        log.debug("Unable to coerce '" + literal + "' into a DATE.");
+                        log.debug("Unable to coerce '{}' into a DATE.", literal);
                     }
                     break;
                 case PropertyType.DOUBLE:
@@ -1120,9 +1120,9 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                     try {
                         double d = Double.parseDouble(literal);
                         values.add(DoubleField.doubleToString(d));
-                        log.debug("Coerced " + literal + " into DOUBLE.");
+                        log.debug("Coerced {} into DOUBLE.", literal);
                     } catch (NumberFormatException e) {
-                        log.debug("Unable to coerce '" + literal + "' into a DOUBLE: " + e.toString());
+                        log.debug("Unable to coerce '{}' into a DOUBLE: {}", literal, e);
                     }
                     break;
                 case PropertyType.LONG:
@@ -1130,9 +1130,9 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                     try {
                         long l = Long.parseLong(literal);
                         values.add(LongField.longToString(l));
-                        log.debug("Coerced " + literal + " into LONG.");
+                        log.debug("Coerced {} into LONG.", literal);
                     } catch (NumberFormatException e) {
-                        log.debug("Unable to coerce '" + literal + "' into a LONG: " + e.toString());
+                        log.debug("Unable to coerce '{}' into a LONG: {}", literal, e);
                     }
                     break;
                 case PropertyType.DECIMAL:
@@ -1140,16 +1140,16 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                     try {
                         BigDecimal d = new BigDecimal(literal);
                         values.add(DecimalField.decimalToString(d));
-                        log.debug("Coerced " + literal + " into DECIMAL.");
+                        log.debug("Coerced {} into DECIMAL.", literal);
                     } catch (NumberFormatException e) {
-                        log.debug("Unable to coerce '" + literal + "' into a DECIMAL: " + e.toString());
+                        log.debug("Unable to coerce '{}' into a DECIMAL: {}", literal, e);
                     }
                     break;
                 case PropertyType.URI:
                     // fall through... TODO: correct?
                 case PropertyType.STRING:
                     values.add(literal);
-                    log.debug("Using literal " + literal + " as is.");
+                    log.debug("Using literal {} as is.", literal);
                     break;
             }
         }
@@ -1162,7 +1162,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                 // might be a path
                 try {
                     values.add(resolver.getJCRPath(session.getQPath(literal)));
-                    log.debug("Coerced " + literal + " into PATH.");
+                    log.debug("Coerced {} into PATH.", literal);
                 } catch (Exception e) {
                     // not a path
                 }
@@ -1172,7 +1172,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                 try {
                     Name n = session.getQName(literal);
                     values.add(nsMappings.translateName(n));
-                    log.debug("Coerced " + literal + " into NAME.");
+                    log.debug("Coerced {} into NAME.", literal);
                 } catch (Exception e) {
                     // not a name
                 }
@@ -1182,19 +1182,19 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                 Calendar c = ISO8601.parse(literal);
                 if (c != null) {
                     values.add(DateField.timeToString(c.getTimeInMillis()));
-                    log.debug("Coerced " + literal + " into DATE.");
+                    log.debug("Coerced {} into DATE.", literal);
                 }
             } else {
                 // long or double are possible at this point
                 try {
                     values.add(LongField.longToString(Long.parseLong(literal)));
-                    log.debug("Coerced " + literal + " into LONG.");
+                    log.debug("Coerced {} into LONG.", literal);
                 } catch (NumberFormatException e) {
                     // not a long
                     // try double
                     try {
                         values.add(DoubleField.doubleToString(Double.parseDouble(literal)));
-                        log.debug("Coerced " + literal + " into DOUBLE.");
+                        log.debug("Coerced {} into DOUBLE.", literal);
                     } catch (NumberFormatException e1) {
                         // not a double
                     }
@@ -1204,7 +1204,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
         // if still no values use literal as is
         if (values.size() == 0) {
             values.add(literal);
-            log.debug("Using literal " + literal + " as is.");
+            log.debug("Using literal {} as is.", literal);
         }
         return values.toArray(new String[values.size()]);
     }

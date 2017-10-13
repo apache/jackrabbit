@@ -192,7 +192,7 @@ class EntriesCache extends AccessControlObserver implements AccessControlConstan
                                 implementation -> ignore
                            */
                         } else {
-                            log.debug("Cannot process NODE_REMOVED event. Parent " + parentPath + " doesn't exist (anymore).");
+                            log.debug("Cannot process NODE_REMOVED event. Parent {} doesn't exist (anymore).", parentPath);
                         }
                         break;
                     case Event.PROPERTY_CHANGED:

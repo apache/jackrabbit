@@ -112,7 +112,7 @@ abstract class AbstractItemResource extends AbstractResource implements
                         prop = new DefaultDavProperty<ItemDefinitionImpl>(JCR_DEFINITION, val, true);
                     } catch (RepositoryException e) {
                         // should not get here
-                        log.error("Error while accessing item definition: " + e.getMessage());
+                        log.error("Error while accessing item definition: {}", e.getMessage());
                     }
                 }
             } else if (JCR_ISNEW.equals(name)) {
@@ -199,7 +199,7 @@ abstract class AbstractItemResource extends AbstractResource implements
                     outputContext.setContentLength(length);
                 }
             } catch (NumberFormatException e) {
-                log.error("Could not build content length from property value '" + contentLength.getValue() + "'");
+                log.error("Could not build content length from property value '{}'", contentLength.getValue());
             }
         }
         DavProperty<?> contentLanguage = getProperty(DavPropertyName.GETCONTENTLANGUAGE);
@@ -227,7 +227,7 @@ abstract class AbstractItemResource extends AbstractResource implements
         try {
             collection = createResourceFromLocator(parentLoc);
         } catch (DavException e) {
-            log.error("Unexpected error while retrieving collection: " + e.getMessage());
+            log.error("Unexpected error while retrieving collection: {}", e.getMessage());
         }
 
         return collection;
@@ -302,7 +302,7 @@ abstract class AbstractItemResource extends AbstractResource implements
             if (getLocator().isSameWorkspace(destination.getLocator())) {
                 workspace.copy(itemPath, destItemPath);
             } else {
-                log.error("Copy between workspaces is not yet implemented (src: '" + getHref() + "', dest: '" + destination.getHref() + "')");
+                log.error("Copy between workspaces is not yet implemented (src: '{}', dest: '{}')", getHref(), destination.getHref());
                 throw new DavException(DavServletResponse.SC_NOT_IMPLEMENTED);
             }
         } catch (PathNotFoundException e) {
@@ -379,7 +379,7 @@ abstract class AbstractItemResource extends AbstractResource implements
                     names.add(JCR_PARENT);
                 }
             } catch (RepositoryException e) {
-                log.warn("Error while accessing node depth: " + e.getMessage());
+                log.warn("Error while accessing node depth: {}", e.getMessage());
             }
             if (item.isNew()) {
                 names.add(JCR_ISNEW);
@@ -410,7 +410,7 @@ abstract class AbstractItemResource extends AbstractResource implements
                 }
             } catch (RepositoryException e) {
                 // should not get here
-                log.error("Error while accessing jcr properties: " + e.getMessage());
+                log.error("Error while accessing jcr properties: {}", e.getMessage());
             }
         }
     }
@@ -449,11 +449,11 @@ abstract class AbstractItemResource extends AbstractResource implements
                 }
             } catch (RepositoryException e) {
                 // this includes LockException, ConstraintViolationException etc. not detected before
-                log.error("Error while completing request: " + e.getMessage() +" -> reverting changes.");
+                log.error("Error while completing request: {} -> reverting changes.", e.getMessage());
                 try {
                     item.refresh(false);
                 } catch (RepositoryException re) {
-                    log.error("Error while reverting changes: " + re.getMessage());
+                    log.error("Error while reverting changes: {}", re.getMessage());
                 }
                 throw new JcrDavException(e);
             }

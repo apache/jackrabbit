@@ -88,7 +88,7 @@ public class DavSessionProviderImpl implements DavSessionProvider {
                 return false;
             }
             DavSession ds = new DavSessionImpl(repSession);
-            log.debug("Attaching session '"+ ds + "' to request '" + request + "'");
+            log.debug("Attaching session '{}' to request '{}'", ds, request);
             request.setDavSession(ds);
             return true;
         } catch (NoSuchWorkspaceException e) {
@@ -120,7 +120,7 @@ public class DavSessionProviderImpl implements DavSessionProvider {
                 repSession.removeLockToken(lockToken);
             }
             sesProvider.releaseSession(repSession);
-            log.debug("Releasing session '"+ ds + "' from request '" + request + "'");
+            log.debug("Releasing session '{}' from request '{}'", ds, request);
         } // else : session is null. nothing to be done.
         request.setDavSession(null);
     }

@@ -43,7 +43,7 @@ public class Checkin extends VersionOperation {
         Node n = getNode();
         if (n.isCheckedOut()) {
             Version v = n.checkin();
-            log.info(n.getPath() + ":" + v.getName());
+            log.info("{}:{}", n.getPath(), v.getName());
         }
         return wrapWithIterator(n);
     }

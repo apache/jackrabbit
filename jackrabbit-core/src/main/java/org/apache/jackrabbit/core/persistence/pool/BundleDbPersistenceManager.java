@@ -500,8 +500,8 @@ public class BundleDbPersistenceManager
                 assert !isIntegrityConstraintViolation(e.getCause());
             }
             failures++;
-            log.error("Failed to persist ChangeLog (stacktrace on DEBUG log level), blockOnConnectionLoss = "
-                    + blockOnConnectionLoss + ": " + lastException);
+            log.error("Failed to persist ChangeLog (stacktrace on DEBUG log level), blockOnConnectionLoss = {}: {}",
+                      blockOnConnectionLoss, lastException);
             log.debug("Failed to persist ChangeLog", lastException);
             if (blockOnConnectionLoss || failures <= 1) { // if we're going to try again
                 try {
@@ -898,7 +898,7 @@ public class BundleDbPersistenceManager
         } catch (SQLException e) {
         	String msg = "failed to read bundle (stacktrace on DEBUG log level): " + id + ": " + e; 
             log.error(msg);
-            log.debug("failed to read bundle: " + id, e);
+            log.debug("failed to read bundle: {}", id, e);
             throw new ItemStateException(msg, e);
         }
     }

@@ -531,7 +531,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             if (sessionInfo != null) {
                 checkSessionInfo(sessionInfo);
                 clients.put(clientKey, client);
-                log.debug("Created Client " + client + " for SessionInfo " + sessionInfo);
+                log.debug("Created Client {} for SessionInfo {}", client, sessionInfo);
             }
         }
         return client;
@@ -557,7 +557,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
 
     private void removeClient(SessionInfo sessionInfo) {
         HttpClient cl = clients.remove(getClientKey(sessionInfo));
-        log.debug("Removed Client " + cl + " for SessionInfo " + sessionInfo);
+        log.debug("Removed Client {} for SessionInfo {}", cl, sessionInfo);
     }
 
     protected String getItemUri(ItemId itemId, SessionInfo sessionInfo) throws RepositoryException {
@@ -720,7 +720,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
                                 int type = (typeStr == null) ? PropertyType.STRING : PropertyType.valueFromName(typeStr);
                                 vs.add(getQValueFactory().create(descriptor, type));
                             } else {
-                                log.error("Invalid descriptor key / value pair: " + key + " -> " + descriptor);
+                                log.error("Invalid descriptor key / value pair: {} -> {}", key, descriptor);
                             }
 
                         }
@@ -1653,7 +1653,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
                 return retrieveLockInfo(ld, sessionInfo, nodeId, parentId);
             } else {
                 // no lock present
-                log.debug("No Lock present on node with id " + saveGetIdString(nodeId, sessionInfo));
+                log.debug("No Lock present on node with id {}", saveGetIdString(nodeId, sessionInfo));
                 return null;
             }
         } catch (IOException e) {
@@ -1768,7 +1768,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             }
         }
         if (activeLock == null) {
-            log.debug("No lock present on node " + saveGetIdString(nodeId, sessionInfo));
+            log.debug("No lock present on node {}", saveGetIdString(nodeId, sessionInfo));
             return null;
         }
 
@@ -2279,7 +2279,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         checkSessionInfo(sessionInfo);
         String rootUri = uriResolver.getRootItemUri(sessionInfo.getWorkspaceName());
         String subscriptionId = subscribe(rootUri, S_INFO, null, sessionInfo, null);
-        log.debug("Subscribed on server for session info " + sessionInfo);
+        log.debug("Subscribed on server for session info {}", sessionInfo);
 
         try {
             checkEventFilterSupport(filters);
@@ -2555,7 +2555,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
                         // TODO: not correct since nsRegistry is retrieved from each session
                         nsCache.add(prefix, uri);
                     } else {
-                        log.error("Invalid prefix / uri pair: " + prefix + " -> " + uri);
+                        log.error("Invalid prefix / uri pair: {} -> {}", prefix, uri);
                     }
                 }
             }
@@ -2969,7 +2969,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
             }
             return sb.toString();
         } catch (java.net.URISyntaxException ex) {
-            log.warn("parsing " + uri, ex);
+            log.warn("parsing {}", uri, ex);
             return uri;
         }
     }
