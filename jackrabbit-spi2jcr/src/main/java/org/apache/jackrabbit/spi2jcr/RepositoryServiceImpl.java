@@ -2002,7 +2002,7 @@ public class RepositoryServiceImpl implements RepositoryService {
         if (supportsObservation) {
             // register local event listener
             Collection<EventSubscription> subscr = sInfo.getSubscriptions();
-            if (subscr.size() != 0) {
+            if (!subscr.isEmpty()) {
                 ObservationManager obsMgr = sInfo.getSession().getWorkspace().getObservationManager();
                 List<EventListener> listeners = new ArrayList<EventListener>(subscr.size());
                 try {
