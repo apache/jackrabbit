@@ -599,7 +599,7 @@ abstract class AbstractIndex {
     private static final class LoggingPrintStream extends PrintStream {
 
         /** Buffer print calls until a newline is written */
-        private StringBuffer buffer = new StringBuffer();
+        private final StringBuilder buffer = new StringBuilder();
 
         public LoggingPrintStream() {
             super(new OutputStream() {
@@ -610,13 +610,17 @@ abstract class AbstractIndex {
         }
 
         public void print(String s) {
-            buffer.append(s);
+            synchronized (buffer) {
+                buffer.append(s);
+            }
         }
 
         public void println(String s) {
-            buffer.append(s);
-            log.debug(buffer.toString());
-            buffer.setLength(0);
+            synchronized (buffer) {
+                buffer.append(s);
+                log.debug(buffer.toString());
+                buffer.setLength(0);
+            }
         }
     }
 }
