@@ -17,7 +17,10 @@
 package org.apache.jackrabbit.core.cache;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.WeakHashMap;
 
 import org.slf4j.Logger;
@@ -50,7 +53,10 @@ public class CacheManager implements CacheAccessListener {
     private static final long DEFAULT_MAX_MEMORY_PER_CACHE = 4 * 1024 * 1024;
 
     /** The set of caches (weakly referenced). */
-    private WeakHashMap<Cache, Object> caches = new WeakHashMap<Cache, Object>();
+    // This is a weak set. Although Java does not have a WeakSet (see
+    // https://stackoverflow.com/questions/4062919/why-does-exist-weakhashmap-but-absent-weakset )
+    // we can emulate a weak set by creating a WeakHashMap with value type Void.
+    private final Map<Cache, Void> caches = Collections.synchronizedMap(new WeakHashMap<Cache, Void>());
 
     /** The default minimum resize interval (in ms). */
     private static final int DEFAULT_MIN_RESIZE_INTERVAL = 1000;
@@ -163,8 +169,11 @@ public class CacheManager implements CacheAccessListener {
             }
             // JCR-3194 avoid ConcurrentModificationException
             List<Cache> list = new ArrayList<Cache>();
+            Set<Cache> keys = caches.keySet();
+            // must manually synch on caches
+            // https://docs.oracle.com/javase/8/docs/api/java/util/Collections.html#synchronizedMap-java.util.Map-
             synchronized (caches) {
-                list.addAll(caches.keySet());
+                list.addAll(keys);
             }
             for (Cache cache : list) {
                 log.debug(cache.getCacheInfoAsString());
@@ -184,11 +193,15 @@ public class CacheManager implements CacheAccessListener {
         // entries in a weak hash map may disappear any time
         // so can't use size() / keySet() directly
         // only using the iterator guarantees that we don't get null references
+        // see: https://stackoverflow.com/a/46699068/196844
         List<Cache> list = new ArrayList<Cache>();
+        Set<Cache> keys = caches.keySet();
+        // must manually synch on caches
+        // https://docs.oracle.com/javase/8/docs/api/java/util/Collections.html#synchronizedMap-java.util.Map-
         synchronized (caches) {
-            list.addAll(caches.keySet());
+            list.addAll(keys);
         }
-        if (list.size() == 0) {
+        if (list.isEmpty()) {
             // nothing to do
             return;
         }
@@ -256,12 +269,13 @@ public class CacheManager implements CacheAccessListener {
      * Add a new cache to the list.
      * This call does not trigger recalculating the cache sizes.
      *
-     * @param cache the cache to add
+     * @param cache the cache to add, which may not be <code>null</code>.
      */
     public void add(Cache cache) {
-        synchronized (caches) {
-            caches.put(cache, null);
+        if (cache == null) {
+            throw new NullPointerException("cache must not be null.");
         }
+        caches.put(cache, null);
     }
 
     /**
@@ -270,12 +284,13 @@ public class CacheManager implements CacheAccessListener {
      * This call does not trigger recalculating the cache sizes.
      *
      * @param cache
-     *            the cache to remove
+     *            the cache to remove, which may not be <code>null</code>.
      */
     public void remove(Cache cache) {
-        synchronized (caches) {
-            caches.remove(cache);
+        if (cache == null) {
+            throw new NullPointerException("cache must not be null.");
         }
+        caches.remove(cache);
     }
 
     /**
