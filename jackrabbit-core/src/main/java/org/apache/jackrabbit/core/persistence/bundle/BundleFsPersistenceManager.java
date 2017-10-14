@@ -308,7 +308,7 @@ public class BundleFsPersistenceManager extends AbstractBundlePersistenceManager
             }
         } catch (Exception e) {
             String msg = "failed to write bundle: " + bundle.getId();
-            BundleFsPersistenceManager.log.error(msg, e);
+            log.error(msg, e);
             throw new ItemStateException(msg, e);
         }
     }
@@ -325,7 +325,7 @@ public class BundleFsPersistenceManager extends AbstractBundlePersistenceManager
                 throw (NoSuchItemStateException) e;
             }
             String msg = "failed to delete bundle: " + bundle.getId();
-            BundleFsPersistenceManager.log.error(msg, e);
+            log.error(msg, e);
             throw new ItemStateException(msg, e);
         }
     }
@@ -353,7 +353,7 @@ public class BundleFsPersistenceManager extends AbstractBundlePersistenceManager
             throw e;
         } catch (Exception e) {
             String msg = "failed to read references: " + targetId;
-            BundleFsPersistenceManager.log.error(msg, e);
+            log.error(msg, e);
             throw new ItemStateException(msg, e);
         } finally {
             IOUtils.closeQuietly(in);
@@ -382,7 +382,7 @@ public class BundleFsPersistenceManager extends AbstractBundlePersistenceManager
             out.close();
         } catch (Exception e) {
             String msg = "failed to write " + refs;
-            BundleFsPersistenceManager.log.error(msg, e);
+            log.error(msg, e);
             throw new ItemStateException(msg, e);
         }
     }
@@ -402,7 +402,7 @@ public class BundleFsPersistenceManager extends AbstractBundlePersistenceManager
                 throw (NoSuchItemStateException) e;
             }
             String msg = "failed to delete " + refs;
-            BundleFsPersistenceManager.log.error(msg, e);
+            log.error(msg, e);
             throw new ItemStateException(msg, e);
         }
     }
@@ -419,7 +419,7 @@ public class BundleFsPersistenceManager extends AbstractBundlePersistenceManager
             return itemFs.exists(buf.toString());
         } catch (Exception e) {
             String msg = "failed to check existence of node references: " + targetId;
-            BundleFsPersistenceManager.log.error(msg, e);
+            log.error(msg, e);
             throw new ItemStateException(msg, e);
         }
     }
@@ -431,7 +431,7 @@ public class BundleFsPersistenceManager extends AbstractBundlePersistenceManager
      */
     protected void logException(String message, SQLException se) {
         if (message != null) {
-            BundleFsPersistenceManager.log.error(message);
+            log.error(message);
         }
         log.error("       Reason: {}", se.getMessage());
         log.error("   State/Code: {}/{}", se.getSQLState(), se.getErrorCode());

@@ -1240,7 +1240,7 @@ abstract public class AbstractWebdavServlet extends HttpServlet implements DavCo
     protected void doMkWorkspace(WebdavRequest request, WebdavResponse response,
                                  DavResource resource) throws DavException, IOException {
         if (resource.exists()) {
-            AbstractWebdavServlet.log.warn("Cannot create a new workspace. Resource already exists.");
+            log.warn("Cannot create a new workspace. Resource already exists.");
             response.sendError(DavServletResponse.SC_FORBIDDEN);
             return;
         }
@@ -1289,7 +1289,7 @@ abstract public class AbstractWebdavServlet extends HttpServlet implements DavCo
         }
 
         if (!(resource instanceof ActivityResource)) {
-            AbstractWebdavServlet.log.error("Unable to create activity: ActivityResource expected");
+            log.error("Unable to create activity: ActivityResource expected");
             response.sendError(DavServletResponse.SC_INTERNAL_SERVER_ERROR);
             return;
         }
