@@ -123,8 +123,7 @@ public class EscapeJCRUtil {
                     String escaped = escapeChar(c);
                     buf.append(escaped);
                 } else {
-                    String substr = str.substring(i, str.length());
-                    if (canMisinterpret(substr)) {
+                    if (canMisinterpret(str.substring(i))) {
                         buf.append(escapeChar(c));
                     } else {
                         buf.append(c);
@@ -134,8 +133,7 @@ public class EscapeJCRUtil {
                 if (!XMLChar.isName(c)) {
                     buf.append(escapeChar(c));
                 } else {
-                    String substr = str.substring(i, str.length());
-                    if (canMisinterpret(substr)) {
+                    if (canMisinterpret(str.substring(i))) {
                         buf.append(escapeChar(c));
                     } else {
                         buf.append(c);

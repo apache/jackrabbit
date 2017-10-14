@@ -213,7 +213,7 @@ public class LocalCache {
         AsyncUploadCacheResult result = new AsyncUploadCacheResult();
         result.setFile(src);
         result.setAsyncUpload(false);
-        boolean destExists = false;
+        boolean destExists;
         if ((destExists = dest.exists())
             || (src.exists() && !dest.exists() && !src.equals(dest)
                 && canAdmitFile(src.length())

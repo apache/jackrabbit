@@ -104,7 +104,7 @@ public class LinkHeaderFieldParser {
                 insideDoubleQuotes = c != '"';
                 if (c == '\\' && i < fieldValue.length() - 1) {
                     // skip over next character
-                    c = fieldValue.charAt(++i);
+                    ++i;
                 }
             } else {
                 insideAngleBrackets = c == '<';

@@ -265,7 +265,7 @@ public class S3Backend extends AbstractBackend {
             throws DataStoreException {
         long start = System.currentTimeMillis();
         String key = getKeyName(identifier);
-        ObjectMetadata objectMetaData = null;
+        ObjectMetadata objectMetaData;
         boolean retVal = false;
         ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
         try {

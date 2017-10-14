@@ -412,7 +412,7 @@ public class AccessControlListTest extends AbstractAccessControlTest {
         // try to re-access the modifiable ACL in order to remove the ACE
         // added before.
         acl = getList(acMgr, path);
-        AccessControlEntry ace = null;
+        AccessControlEntry ace;
         AccessControlEntry[] aces = acl.getAccessControlEntries();
         if (aces.length == 0) {
             throw new NotExecutableException();

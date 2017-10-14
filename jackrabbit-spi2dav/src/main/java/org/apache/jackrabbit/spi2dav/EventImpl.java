@@ -136,7 +136,7 @@ public class EventImpl
 
         while (elements.hasNext()) {
             String rawname = DomUtil.getText(elements.nextElement());
-            Name name = null;
+            Name name;
 
             try {
                 name = resolver.getQName(rawname);

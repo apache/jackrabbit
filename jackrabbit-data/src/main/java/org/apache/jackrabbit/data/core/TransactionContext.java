@@ -210,7 +210,7 @@ public class TransactionContext {
         cleanCurrentXid();
 
         if (txe != null) {
-            XAException e = null;
+            XAException e;
             if (heuristicCommit) {
                 e = new XAException(XAException.XA_HEURMIX);
             } else {

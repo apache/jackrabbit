@@ -353,7 +353,7 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
             int depth = batchReadConfig.getDepth(path, this.getNamePathResolver(sessionInfo));
 
             HttpGet request = new HttpGet(uri + "." + depth + ".json");
-            HttpResponse response = null;
+            HttpResponse response;
             try {
                 response = executeRequest(sessionInfo, request);
                 int statusCode = response.getStatusLine().getStatusCode();

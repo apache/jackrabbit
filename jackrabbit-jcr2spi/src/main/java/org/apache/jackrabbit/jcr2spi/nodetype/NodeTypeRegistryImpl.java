@@ -740,7 +740,6 @@ public class NodeTypeRegistryImpl implements NodeTypeRegistry, EffectiveNodeType
             StringBuilder builder = new StringBuilder();
             for (QNodeTypeDefinition ntd : getValues()) {
                 builder.append(ntd.getName());
-                Name[] supertypes = ntd.getSupertypes();
                 builder.append("\n\tSupertypes");
                 for (Name supertype : ntd.getSupertypes()) {
                     builder.append("\n\t\t").append(supertype);

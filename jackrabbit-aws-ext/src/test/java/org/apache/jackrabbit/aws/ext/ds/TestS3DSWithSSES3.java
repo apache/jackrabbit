@@ -82,7 +82,7 @@ public class TestS3DSWithSSES3 extends TestS3Ds {
             assertRecord(data, rec);
 
             randomGen.nextBytes(data);
-            rec = s3ds.addRecord(new ByteArrayInputStream(data));
+            s3ds.addRecord(new ByteArrayInputStream(data));
             s3ds.close();
 
         } catch (Exception e) {
