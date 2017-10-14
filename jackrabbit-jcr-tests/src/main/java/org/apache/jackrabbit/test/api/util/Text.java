@@ -182,12 +182,12 @@ public class Text {
     }
 
     /**
-     * Replaces all occurences of <code>oldString</code> in <code>text</code>
+     * Replaces all occurrences of <code>oldString</code> in <code>text</code>
      * with <code>newString</code>.
      *
      * @param text
      * @param oldString old substring to be replaced with <code>newString</code>
-     * @param newString new substring to replace occurences of <code>oldString</code>
+     * @param newString new substring to replace occurrences of <code>oldString</code>
      * @return a string
      */
     public static String replace(String text, String oldString, String newString) {

@@ -37,7 +37,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- * <code>LocateByHistoryReport</code> encapsulates the DAV:locate-by-hisotry
+ * <code>LocateByHistoryReport</code> encapsulates the DAV:locate-by-history
  * report, that may be used to locate a version-controlled resource for that
  * version history. The DAV:locate-by-history report can be applied to a collection
  * to locate the collection member that is a version-controlled resource for a
