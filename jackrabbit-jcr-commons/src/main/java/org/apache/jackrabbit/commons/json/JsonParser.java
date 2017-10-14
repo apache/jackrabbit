@@ -84,7 +84,7 @@ public class JsonParser {
         StringBuffer value = new StringBuffer();
 
         int state;
-        Stack complexVStack = new Stack();
+        Stack<Object> complexVStack = new Stack<Object>();
 
         int next = reader.read();
         if (next == '{') {

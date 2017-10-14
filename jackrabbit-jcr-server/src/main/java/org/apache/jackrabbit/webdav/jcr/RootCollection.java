@@ -229,7 +229,7 @@ public class RootCollection extends AbstractResource {
      */
     @Override
     public DavResourceIterator getMembers() {
-        List<DavResource> memberList = new ArrayList();
+        List<DavResource> memberList = new ArrayList<DavResource>();
         try {
             String[] wsNames = getRepositorySession().getWorkspace().getAccessibleWorkspaceNames();
             for (String wsName : wsNames) {

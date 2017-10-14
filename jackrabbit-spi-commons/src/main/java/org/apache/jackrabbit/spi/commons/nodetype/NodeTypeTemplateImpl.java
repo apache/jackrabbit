@@ -94,14 +94,14 @@ public class NodeTypeTemplateImpl implements NodeTypeTemplate {
 
         NodeDefinition[] nodeDefs = def.getDeclaredChildNodeDefinitions();
         if (nodeDefs != null) {
-            List list = getNodeDefinitionTemplates();
+            List<NodeDefinitionTemplate> list = getNodeDefinitionTemplates();
             for (NodeDefinition nodeDef : nodeDefs) {
                 list.add(new NodeDefinitionTemplateImpl(nodeDef, resolver));
             }
         }
         PropertyDefinition[] propDefs = def.getDeclaredPropertyDefinitions();
         if (propDefs != null) {
-            List list = getPropertyDefinitionTemplates();
+            List<PropertyDefinitionTemplate> list = getPropertyDefinitionTemplates();
             for (PropertyDefinition propDef : propDefs) {
                 list.add(new PropertyDefinitionTemplateImpl(propDef, resolver));
             }
@@ -178,7 +178,7 @@ public class NodeTypeTemplateImpl implements NodeTypeTemplate {
     /**
      * {@inheritDoc}
      */
-    public List getPropertyDefinitionTemplates() {
+    public List<PropertyDefinitionTemplate> getPropertyDefinitionTemplates() {
         if (propertyDefinitionTemplates == null) {
             propertyDefinitionTemplates = new LinkedList<PropertyDefinitionTemplate>();
         }
@@ -188,7 +188,7 @@ public class NodeTypeTemplateImpl implements NodeTypeTemplate {
     /**
      * {@inheritDoc}
      */
-    public List getNodeDefinitionTemplates() {
+    public List<NodeDefinitionTemplate> getNodeDefinitionTemplates() {
         if (nodeDefinitionTemplates == null) {
             nodeDefinitionTemplates = new LinkedList<NodeDefinitionTemplate>();
         }

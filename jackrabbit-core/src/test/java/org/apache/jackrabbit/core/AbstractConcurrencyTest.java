@@ -153,11 +153,11 @@ public abstract class AbstractConcurrencyTest extends AbstractJCRTest {
      */
     protected static void dumpStacks(Thread[] threads) {
         try {
-            Method m = Thread.class.getMethod("getStackTrace", null);
-            StringBuffer dumps = new StringBuffer();
+            Method m = Thread.class.getMethod("getStackTrace", (Class<?>[]) null);
+            StringBuilder dumps = new StringBuilder();
             for (int t = 0; t < threads.length; t++) {
                 StackTraceElement[] elements = (StackTraceElement[]) m.invoke(
-                        threads[t], null);
+                        threads[t], (Object[]) null);
                 dumps.append(threads[t].toString()).append('\n');
                 for (int i = 0; i < elements.length; i++) {
                     dumps.append("\tat " + elements[i]).append('\n');

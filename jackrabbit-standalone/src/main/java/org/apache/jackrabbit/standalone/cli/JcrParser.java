@@ -82,11 +82,10 @@ public class JcrParser {
         }
 
         // Extract arguments
-        LinkedList args = this.getArguments(input);
+        List<String> args = this.getArguments(input);
 
         // The first arg is the command name
-        String cmdName = (String) args.getFirst();
-        args.removeFirst();
+        String cmdName = args.remove(0);
 
         // Get the command line descriptor
         cl = CommandLineFactory.getInstance().getCommandLine(cmdName);
@@ -116,8 +115,8 @@ public class JcrParser {
      *        the user's input
      * @return a <code>List</code> containing the arguments
      */
-    private LinkedList getArguments(String input) {
-        LinkedList args = new LinkedList();
+    private List<String> getArguments(String input) {
+        List<String> args = new LinkedList<String>();
         int length = input.length();
 
         boolean insideSingleQuote = false;
@@ -214,10 +213,9 @@ public class JcrParser {
      * @throws JcrParserException
      *         if the user's input is illegal
      */
-    private void populate(CommandLine cl, List valList)
+    private void populate(CommandLine cl, List<String> valList)
             throws JcrParserException {
-        String[] values = (String[]) valList
-            .toArray(new String[valList.size()]);
+        String[] values = valList.toArray(new String[valList.size()]);
 
         // Command Line parameters
         Map options = cl.getOptions();
@@ -225,7 +223,7 @@ public class JcrParser {
         Map clArgs = cl.getArguments();
 
         // Input arguments
-        List args = new ArrayList();
+        List<String> args = new ArrayList<String>();
 
         for (int i = 0; i < values.length; i++) {
             String value = values[i];
@@ -260,7 +258,7 @@ public class JcrParser {
         }
 
         // set arguments
-        String[] argValues = (String[]) args.toArray(new String[args.size()]);
+        String[] argValues = args.toArray(new String[args.size()]);
         for (int j = 0; j < argValues.length; j++) {
             Argument arg = (Argument) clArgs.get(new Integer(j));
             if (arg == null) {
