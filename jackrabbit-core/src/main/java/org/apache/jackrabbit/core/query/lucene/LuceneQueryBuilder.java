@@ -769,8 +769,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                         Query q;
                         if (transform[0] == TransformConstants.TRANSFORM_UPPER_CASE) {
                             q = new CaseTermQuery.Upper(t);
-                        } else
-                        if (transform[0] == TransformConstants.TRANSFORM_LOWER_CASE) {
+                        } else if (transform[0] == TransformConstants.TRANSFORM_LOWER_CASE) {
                             q = new CaseTermQuery.Lower(t);
                         } else {
                             q = new JackrabbitTermQuery(t);
@@ -853,8 +852,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                         Query q;
                         if (transform[0] == TransformConstants.TRANSFORM_UPPER_CASE) {
                             q = new CaseTermQuery.Upper(t);
-                        } else
-                        if (transform[0] == TransformConstants.TRANSFORM_LOWER_CASE) {
+                        } else if (transform[0] == TransformConstants.TRANSFORM_LOWER_CASE) {
                             q = new CaseTermQuery.Lower(t);
                         } else {
                             q = new JackrabbitTermQuery(t);
@@ -882,8 +880,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                         Query q;
                         if (transform[0] == TransformConstants.TRANSFORM_UPPER_CASE) {
                             q = new CaseTermQuery.Upper(t);
-                        } else
-                        if (transform[0] == TransformConstants.TRANSFORM_LOWER_CASE) {
+                        } else if (transform[0] == TransformConstants.TRANSFORM_LOWER_CASE) {
                             q = new CaseTermQuery.Lower(t);
                         } else {
                             q = new JackrabbitTermQuery(t);
