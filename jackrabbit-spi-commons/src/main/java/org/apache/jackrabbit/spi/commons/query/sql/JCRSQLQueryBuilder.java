@@ -217,7 +217,7 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
         // use //* if no path has been set
         PathQueryNode pathNode = root.getLocationNode();
         pathNode.setAbsolute(true);
-        if (pathConstraints.size() == 0) {
+        if (pathConstraints.isEmpty()) {
             LocationStepQueryNode step = factory.createLocationStepQueryNode(pathNode);
             step.setNameTest(null);
             step.setIncludeDescendants(true);

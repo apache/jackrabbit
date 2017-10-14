@@ -1000,7 +1000,7 @@ class JsonDiffHandler implements DiffHandler {
             try {
                 // Multi-valued property with values present in the request
                 // multi-part
-                if (values.size() == 0) {
+                if (values.isEmpty()) {
                     values = Arrays.asList(extractValuesFromRequest(getPath()));
                 }
 

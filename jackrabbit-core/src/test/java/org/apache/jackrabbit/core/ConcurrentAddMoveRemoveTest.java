@@ -55,7 +55,7 @@ public class ConcurrentAddMoveRemoveTest extends AbstractConcurrencyTest {
         //for (ReportItem item : consistencyReport.getItems()) {
         //    System.out.println(item.getMessage());
         //}
-        assertTrue(consistencyReport.getItems().size() == 0);
+        assertTrue(consistencyReport.getItems().isEmpty());
         super.tearDown();
     }
 

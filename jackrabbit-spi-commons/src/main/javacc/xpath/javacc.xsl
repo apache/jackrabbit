@@ -279,7 +279,7 @@ TOKEN_MGR_DECLS : {
    */
   private void popState()
   {
-    if (stateStack.size() == 0)
+    if (stateStack.isEmpty())
     {
       printLinePos();
     }

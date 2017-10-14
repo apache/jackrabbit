@@ -141,7 +141,7 @@ public class EventImpl
             try {
                 name = resolver.getQName(rawname);
 
-                if (results.size() == 0) {
+                if (results.isEmpty()) {
                     results = Collections.singletonList(name);
                 } else if (results.size() == 1) {
                     results = new ArrayList<Name>(results);

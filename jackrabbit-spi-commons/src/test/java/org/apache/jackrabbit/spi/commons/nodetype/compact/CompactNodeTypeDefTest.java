@@ -59,7 +59,7 @@ public class CompactNodeTypeDefTest extends TestCase {
 
         List<QNodeTypeDefinition> ntdList2 = cndReader.getNodeTypeDefinitions();
 
-        if (ntdList1.size() == 0 || ntdList1.size() != ntdList2.size()) {
+        if (ntdList1.isEmpty() || ntdList1.size() != ntdList2.size()) {
             fail("Exported node type definition was not successfully read back in");
         } else {
             for(int k = 0; k < ntdList1.size(); k++) {

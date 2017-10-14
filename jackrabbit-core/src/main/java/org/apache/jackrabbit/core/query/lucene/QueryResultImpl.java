@@ -562,7 +562,7 @@ public abstract class QueryResultImpl implements JackrabbitQueryResult {
                     // fetch more results
                     try {
                         int num;
-                        if (resultNodes.size() == 0) {
+                        if (resultNodes.isEmpty()) {
                             num = index.getResultFetchSize();
                         } else {
                             num = resultNodes.size() * 2;

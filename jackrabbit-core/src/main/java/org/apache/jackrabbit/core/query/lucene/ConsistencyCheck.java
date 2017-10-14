@@ -180,7 +180,7 @@ public class ConsistencyCheck {
      * @throws IOException if a repair failure occurs.
      */
     public void repair(boolean ignoreFailure) throws IOException {
-        if (errors.size() == 0) {
+        if (errors.isEmpty()) {
             log.info("No errors found.");
             return;
         }

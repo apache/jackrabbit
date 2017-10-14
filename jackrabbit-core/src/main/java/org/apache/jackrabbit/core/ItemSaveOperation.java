@@ -102,7 +102,7 @@ class ItemSaveOperation implements SessionWriteOperation<Object> {
             context.getSessionImpl().logout();
             throw e;
         }
-        if (dirty.size() == 0) {
+        if (dirty.isEmpty()) {
             // no transient items, nothing to do here
             return this;
         }

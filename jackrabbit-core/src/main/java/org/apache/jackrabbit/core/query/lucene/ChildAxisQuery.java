@@ -497,7 +497,7 @@ class ChildAxisQuery extends Query implements JackrabbitQuery {
                         List<ChildNodeEntry> childNodes = state.getChildNodeEntries();
                         if (position == LocationStepQueryNode.LAST) {
                             // only select last
-                            if (childNodes.size() == 0
+                            if (childNodes.isEmpty()
                                     || !(childNodes.get(childNodes.size() - 1)).getId().equals(id)) {
                                 return false;
                             }
@@ -522,7 +522,7 @@ class ChildAxisQuery extends Query implements JackrabbitQuery {
                                 // only use the last one
                                 Name name = entry.getName();
                                 List<ChildNodeEntry> childNodes = state.getChildNodeEntries(name);
-                                if (childNodes.size() == 0
+                                if (childNodes.isEmpty()
                                         || !(childNodes.get(childNodes.size() - 1)).getId().equals(id)) {
                                     return false;
                                 }

@@ -60,7 +60,7 @@ public class AddMoveTest extends AbstractJCRTest {
         //for (ReportItem item : consistencyReport.getItems()) {
         //    System.out.println(item.getMessage());
         //}
-        assertTrue(consistencyReport.getItems().size() == 0);
+        assertTrue(consistencyReport.getItems().isEmpty());
     }
 
     /**

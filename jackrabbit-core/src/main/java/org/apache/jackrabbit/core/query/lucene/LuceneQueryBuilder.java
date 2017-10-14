@@ -391,7 +391,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
         } catch (RepositoryException e) {
             exceptions.add(e);
         }
-        if (terms.size() == 0) {
+        if (terms.isEmpty()) {
             // exception occured
             return new BooleanQuery();
         } else if (terms.size() == 1) {
@@ -1153,7 +1153,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                     break;
             }
         }
-        if (values.size() == 0) {
+        if (values.isEmpty()) {
             // use literal as is then try to guess other types
             values.add(literal);
 
@@ -1202,7 +1202,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
             }
         }
         // if still no values use literal as is
-        if (values.size() == 0) {
+        if (values.isEmpty()) {
             values.add(literal);
             log.debug("Using literal " + literal + " as is.");
         }

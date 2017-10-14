@@ -119,7 +119,7 @@ public class ObservationManagerImpl implements ObservationManager, InternalEvent
                 readOnlySubscriptions = null;
             }
         }
-        if (subscriptions.size() == 0) {
+        if (subscriptions.isEmpty()) {
             wspManager.removeEventListener(this);
         } else {
             wspManager.updateEventFilters();
