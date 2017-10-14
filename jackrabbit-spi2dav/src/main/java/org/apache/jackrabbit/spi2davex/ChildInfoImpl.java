@@ -39,7 +39,7 @@ public class ChildInfoImpl implements ChildInfo {
      */
     private final int index;
 
-    private int hashCode;
+    private transient int hashCode;
 
     /**
      * Creates a new serializable <code>ChildInfoImpl</code>.
