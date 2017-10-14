@@ -88,7 +88,7 @@ public abstract class AbstractIdFactory implements IdFactory {
         } else if (uniqueId == null) {
             return DELIMITER + path.toString();
         } else {
-            StringBuffer bf = new StringBuffer();
+            StringBuilder bf = new StringBuilder();
             bf.append(Text.escape(uniqueId, DELIMITER));
             bf.append(DELIMITER);
             bf.append(path.toString());
@@ -212,7 +212,7 @@ public abstract class AbstractIdFactory implements IdFactory {
          */
         @Override
         public String toString() {
-            StringBuffer b = new StringBuffer();
+            StringBuilder b = new StringBuilder();
             if (uniqueID != null) {
                 b.append(uniqueID);
             }

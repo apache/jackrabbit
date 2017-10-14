@@ -345,7 +345,7 @@ class AggregateRuleImpl implements AggregateRule {
      * @return the text content of the <code>node</code>.
      */
     private static String getTextContent(Node node) {
-        StringBuffer content = new StringBuffer();
+        StringBuilder content = new StringBuilder();
         NodeList nodes = node.getChildNodes();
         for (int i = 0; i < nodes.getLength(); i++) {
             Node n = nodes.item(i);

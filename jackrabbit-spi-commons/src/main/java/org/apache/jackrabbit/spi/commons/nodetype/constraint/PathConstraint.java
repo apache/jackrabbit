@@ -77,7 +77,7 @@ class PathConstraint extends ValueConstraint {
                 }
                 path = resolver.getQPath(jcrPath);
             }
-            StringBuffer definition = new StringBuffer(path.getString());
+            StringBuilder definition = new StringBuilder(path.getString());
             if (deep) {
                 definition.append(WILDCARD);
             }

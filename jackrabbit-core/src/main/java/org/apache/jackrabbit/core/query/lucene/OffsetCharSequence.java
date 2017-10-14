@@ -111,7 +111,7 @@ final class OffsetCharSequence implements CharSequence, Comparable<OffsetCharSeq
             return base.subSequence(offset, base.length()).toString();
         } else {
             int len = length();
-            StringBuffer buf = new StringBuffer(len);
+            StringBuilder buf = new StringBuilder(len);
             for (int i = 0; i < len; i++) {
                 buf.append(charAt(i));
             }

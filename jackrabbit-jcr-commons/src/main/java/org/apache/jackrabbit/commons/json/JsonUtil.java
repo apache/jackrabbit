@@ -34,7 +34,7 @@ public class JsonUtil {
         }
 
         int len = str.length();
-        StringBuffer sb = new StringBuffer(len + 2);
+        StringBuilder sb = new StringBuilder(len + 2);
         // leading quote
         sb.append('"');
         // append passed string escaping characters as required

@@ -187,8 +187,8 @@ public class EventImpl implements Event, Serializable {
     //-------------------------------------------------------------< Object >---
     @Override
     public String toString() {
-        return new StringBuffer(getClass().getName())
-            .append("[")
+        return new StringBuilder(getClass().getName())
+            .append('[')
             .append("eventTypes: ").append(type).append(", ")
             .append("absPath: ").append(path).append(", ")
             .append("itemId: ").append(itemId).append(", ")
@@ -196,7 +196,7 @@ public class EventImpl implements Event, Serializable {
             .append("primaryNodeTypeName: ").append(primaryNodeTypeName).append(", ")
             .append("mixinTypeNames: ").append(Arrays.toString(mixinTypeNames)).append(", ")
             .append("userId").append(userId)
-            .append("]")
+            .append(']')
             .toString();
     }
     

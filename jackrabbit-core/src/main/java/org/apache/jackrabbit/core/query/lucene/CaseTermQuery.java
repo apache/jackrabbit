@@ -61,7 +61,7 @@ abstract class CaseTermQuery extends MultiTermQuery implements TransformConstant
     /** Prints a user-readable version of this query. */
     @Override
     public String toString(String field) {
-        StringBuffer buffer = new StringBuffer();
+        StringBuilder buffer = new StringBuilder();
         if (!term.field().equals(field)) {
             buffer.append(term.field());
             buffer.append(':');
@@ -107,23 +107,25 @@ abstract class CaseTermQuery extends MultiTermQuery implements TransformConstant
                 // character of the value.
                 if (term.text().length() > nameLength) {
                     // start with initial lower case
-                    StringBuffer lowerLimit = new StringBuffer(propName);
+                    StringBuilder lowerLimit = new StringBuilder(propName);
                     String termStr = termText.toString();
                     String upperTermStr = termStr.toUpperCase();
                     String lowerTermStr = termStr.toLowerCase();
                     
                     lowerLimit.append(upperTermStr);
                     lowerLimit.setCharAt(nameLength, Character.toLowerCase(lowerLimit.charAt(nameLength)));
-                    StringBuffer upperLimit = new StringBuffer(propName);
+                    StringBuilder upperLimit = new StringBuilder(propName);
                     upperLimit.append(lowerTermStr);
                     rangeScans.add(new RangeScan(reader,
                             new Term(term.field(), lowerLimit.toString()),
                             new Term(term.field(), upperLimit.toString())));
 
                     // second scan with upper case start
-                    lowerLimit = new StringBuffer(propName);
+                    lowerLimit.setLength(0);
+                    lowerLimit.append(propName);
                     lowerLimit.append(upperTermStr);
-                    upperLimit = new StringBuffer(propName);
+                    upperLimit.setLength(0);
+                    upperLimit.append(propName);
                     upperLimit.append(lowerTermStr);
                     upperLimit.setCharAt(nameLength, Character.toUpperCase(upperLimit.charAt(nameLength)));
                     rangeScans.add(new RangeScan(reader,

@@ -237,7 +237,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
 
         Query q = builder.createLuceneQuery();
         if (builder.exceptions.size() > 0) {
-            StringBuffer msg = new StringBuffer();
+            StringBuilder msg = new StringBuilder();
             for (Exception exception : builder.exceptions) {
                 msg.append(exception.toString()).append('\n');
             }
@@ -415,9 +415,9 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
             } else {
                 // final path element is a property name
                 Name propName = relPath.getName();
-                StringBuffer tmp = new StringBuffer();
+                StringBuilder tmp = new StringBuilder();
                 tmp.append(nsMappings.getPrefix(propName.getNamespaceURI()));
-                tmp.append(":").append(FieldNames.FULLTEXT_PREFIX);
+                tmp.append(':').append(FieldNames.FULLTEXT_PREFIX);
                 tmp.append(propName.getLocalName());
                 fieldname = tmp.toString();
             }

@@ -55,11 +55,11 @@ public class MergeActivityTest extends AbstractMergeTest {
         VersionManager vm2 = testRootNodeW2.getSession().getWorkspace().getVersionManager();
         NodeIterator iter = vm2.merge(activityNode);
         if (iter.hasNext()) {
-            StringBuffer failed = new StringBuffer();
-            while (iter.hasNext()) {
+            StringBuilder failed = new StringBuilder();
+            do {
                 failed.append(iter.nextNode().getPath());
                 failed.append(", ");
-            }
+            } while (iter.hasNext());
             fail("Merge must not fail. failed nodes: " + failed);
             return;
         }

@@ -33,7 +33,7 @@ public class DoubleField {
 
     public static String doubleToString(double value) {
         long longValue = Double.doubleToLongBits(value);
-        StringBuffer sb = new StringBuffer(STRING_DOUBLE_LEN);
+        StringBuilder sb = new StringBuilder(STRING_DOUBLE_LEN);
 
         if ((longValue & SIGN_MASK) == 0) {
             // positive

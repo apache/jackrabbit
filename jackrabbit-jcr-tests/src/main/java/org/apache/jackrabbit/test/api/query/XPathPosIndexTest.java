@@ -50,7 +50,7 @@ public class XPathPosIndexTest extends AbstractQueryTest {
      */
     public void testDocOrderIndexedNotation() throws Exception {
         String path = testRoot + "/" + nodeName1 + "[2]";
-        StringBuffer tmp = new StringBuffer("/");
+        StringBuilder tmp = new StringBuilder("/");
         tmp.append(jcrRoot).append(path);
         docOrderTest(new Statement(tmp.toString(), qsXPATH), path);
     }

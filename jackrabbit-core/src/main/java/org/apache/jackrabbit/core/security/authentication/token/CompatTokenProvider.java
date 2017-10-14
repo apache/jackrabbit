@@ -261,7 +261,7 @@ class CompatTokenProvider {
         byte key[] = new byte[size];
         random.nextBytes(key);
 
-        StringBuffer res = new StringBuffer(key.length * 2);
+        StringBuilder res = new StringBuilder(key.length * 2);
         for (byte b : key) {
             res.append(Text.hexTable[(b >> 4) & 15]);
             res.append(Text.hexTable[b & 15]);

@@ -28,7 +28,7 @@ public class LongField {
     }
 
     public static String longToString(long value) {
-        StringBuffer sb = new StringBuffer(STRING_LONG_LEN);
+        StringBuilder sb = new StringBuilder(STRING_LONG_LEN);
         if (value < 0) {
             // shift value
             value += Long.MAX_VALUE;

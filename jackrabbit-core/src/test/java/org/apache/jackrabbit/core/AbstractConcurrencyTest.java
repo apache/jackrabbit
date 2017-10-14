@@ -160,7 +160,7 @@ public abstract class AbstractConcurrencyTest extends AbstractJCRTest {
                         threads[t], (Object[]) null);
                 dumps.append(threads[t].toString()).append('\n');
                 for (int i = 0; i < elements.length; i++) {
-                    dumps.append("\tat " + elements[i]).append('\n');
+                    dumps.append("\tat ").append(elements[i]).append('\n');
                 }
                 dumps.append('\n');
             }

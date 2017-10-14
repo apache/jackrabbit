@@ -126,7 +126,7 @@ public class SQLQueryLevel2Test extends AbstractQueryLevel2Test {
      *         and excluding with a word
      */
     private Statement getFullTextStatement() {
-        StringBuffer tmp = new StringBuffer("SELECT ");
+        StringBuilder tmp = new StringBuilder("SELECT ");
         tmp.append(escapeIdentifierForSQL(propertyName1));
         tmp.append(" FROM ").append(escapeIdentifierForSQL(testNodeType));
         tmp.append(" WHERE CONTAINS(., '\"quick brown\" -cat')");
@@ -140,7 +140,7 @@ public class SQLQueryLevel2Test extends AbstractQueryLevel2Test {
      *         property
      */
     private Statement getMultiValueStatement() {
-        StringBuffer tmp = new StringBuffer("SELECT ");
+        StringBuilder tmp = new StringBuilder("SELECT ");
         tmp.append(escapeIdentifierForSQL(propertyName1));
         tmp.append(" FROM ").append(escapeIdentifierForSQL(testNodeType));
         tmp.append(" WHERE 'two' IN ");
@@ -156,7 +156,7 @@ public class SQLQueryLevel2Test extends AbstractQueryLevel2Test {
      * @return Statement selecting nodes by its range in {@link #propertyName1}
      */
     private Statement getRangeStatement() {
-        StringBuffer tmp = new StringBuffer("SELECT ");
+        StringBuilder tmp = new StringBuilder("SELECT ");
         tmp.append(escapeIdentifierForSQL(propertyName1));
         tmp.append(" FROM ").append(escapeIdentifierForSQL(testNodeType));
         tmp.append(" WHERE ");

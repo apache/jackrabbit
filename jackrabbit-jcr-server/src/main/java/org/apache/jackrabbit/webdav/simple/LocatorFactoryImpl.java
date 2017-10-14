@@ -39,7 +39,7 @@ public class LocatorFactoryImpl implements DavLocatorFactory {
 
     public DavResourceLocator createResourceLocator(String prefix, String href) {
         // build prefix string and remove all prefixes from the given href.
-        StringBuffer b = new StringBuffer("");
+        StringBuilder b = new StringBuilder();
         if (prefix != null && prefix.length() > 0) {
             b.append(prefix);
             if (href.startsWith(prefix)) {

@@ -155,9 +155,9 @@ public class DerefQueryLevel1Test extends AbstractQueryTest {
      */
     private String createStatement(Property refProperty, String nameTest)
             throws RepositoryException {
-        StringBuffer stmt = new StringBuffer();
-        stmt.append("/").append(jcrRoot).append(refProperty.getParent().getPath());
-        stmt.append("/").append(jcrDeref).append("(@");
+        StringBuilder stmt = new StringBuilder();
+        stmt.append('/').append(jcrRoot).append(refProperty.getParent().getPath());
+        stmt.append('/').append(jcrDeref).append("(@");
         stmt.append(refProperty.getName()).append(", '");
         stmt.append(nameTest).append("')");
         return stmt.toString();

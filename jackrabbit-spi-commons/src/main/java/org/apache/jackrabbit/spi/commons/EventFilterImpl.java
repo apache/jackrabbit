@@ -190,15 +190,15 @@ public class EventFilterImpl implements EventFilter, Serializable {
      */
     @Override
     public String toString() {
-        return new StringBuffer(getClass().getName())
-            .append("[")
+        return new StringBuilder(getClass().getName())
+            .append('[')
             .append("eventTypes: ").append(eventTypes).append(", ")
             .append("absPath: ").append(absPath).append(", ")
             .append("isDeep: ").append(isDeep).append(", ")
             .append("uuids: ").append(uuids).append(", ")
             .append("nodeTypeNames: ").append(nodeTypeNames).append(", ")
             .append("noLocal: ").append(noLocal)
-            .append("]")
+            .append(']')
             .toString();
     }
 

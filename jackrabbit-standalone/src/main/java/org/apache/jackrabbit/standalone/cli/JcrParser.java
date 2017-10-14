@@ -123,7 +123,7 @@ public class JcrParser {
         boolean insideDoubleQuote = false;
         int escape = -1;
 
-        StringBuffer arg = new StringBuffer();
+        StringBuilder arg = new StringBuilder();
 
         for (int i = 0; i < length; ++i) {
             char c = input.charAt(i);
@@ -131,9 +131,10 @@ public class JcrParser {
             // end of argument?
             if ((!insideSingleQuote && !insideDoubleQuote && Character
                 .isWhitespace(c))) {
-                if (arg.toString().trim().length() > 0) {
-                    args.add(arg.toString().trim());
-                    arg = new StringBuffer();
+                final String trimmedArg = arg.toString().trim();
+                if (trimmedArg.length() > 0) {
+                    args.add(trimmedArg);
+                    arg.setLength(0);
                 }
                 continue;
             }
@@ -158,8 +159,9 @@ public class JcrParser {
             }
         }
 
-        if (arg.toString().trim().length() > 0) {
-            args.add(arg.toString());
+        final String trimmedArg = arg.toString().trim();
+        if (trimmedArg.length() > 0) {
+            args.add(trimmedArg);
         }
 
         return args;

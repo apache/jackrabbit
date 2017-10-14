@@ -233,7 +233,7 @@ class BitsetENTCacheImpl implements EffectiveNodeTypeCache {
      */
     public String toString() {
         StringBuilder builder = new StringBuilder();
-        builder.append("EffectiveNodeTypeCache (" + super.toString() + ")\n");
+        builder.append("EffectiveNodeTypeCache (").append(super.toString()).append(")\n");
         builder.append("EffectiveNodeTypes in cache:\n");
         for (Key k : sortedKeys) {
             builder.append(k);
@@ -490,11 +490,11 @@ class BitsetENTCacheImpl implements EffectiveNodeTypeCache {
          */
         @Override
         public String toString() {
-            StringBuffer buf = new StringBuffer("w=");
+            StringBuilder buf = new StringBuilder("w=");
             buf.append(names.length);
             int i = nextSetBit(0);
             while (i>=0) {
-                buf.append(", ").append(i).append("=");
+                buf.append(", ").append(i).append('=');
                 buf.append(BitsetENTCacheImpl.this.getName(i));
                 i = nextSetBit(i+1);
             }

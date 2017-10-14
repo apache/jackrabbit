@@ -239,7 +239,7 @@ class ChildAxisQuery extends Query implements JackrabbitQuery {
      * {@inheritDoc}
      */
     public String toString(String field) {
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         sb.append("ChildAxisQuery(");
         sb.append(contextQuery);
         sb.append(", ");
@@ -248,7 +248,7 @@ class ChildAxisQuery extends Query implements JackrabbitQuery {
             sb.append(", ");
             sb.append(position);
         }
-        sb.append(")");
+        sb.append(')');
         return sb.toString();
     }
 

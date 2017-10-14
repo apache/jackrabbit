@@ -182,7 +182,7 @@ public class WeightedHighlighter extends DefaultHighlighter {
         }
 
         // create excerpts
-        StringBuffer sb = new StringBuffer(excerptStart);
+        StringBuilder sb = new StringBuilder(excerptStart);
         it = infos.iterator();
         while (it.hasNext()) {
             FragmentInfo fi = it.next();
@@ -226,7 +226,7 @@ public class WeightedHighlighter extends DefaultHighlighter {
      * @return the length of the start fragment that was appended to
      *         <code>sb</code>.
      */
-    private int startFragment(StringBuffer sb, String text, int offset, int limit) {
+    private int startFragment(StringBuilder sb, String text, int offset, int limit) {
         if (limit == 0) {
             // append all
             sb.append(escape(text.substring(0, offset)));
@@ -259,7 +259,7 @@ public class WeightedHighlighter extends DefaultHighlighter {
      * @param offset the end offset of the last matching term in the fragment.
      * @param limit  do not go further than <code>limit</code>.
      */
-    private void endFragment(StringBuffer sb, String text, int offset, int limit) {
+    private void endFragment(StringBuilder sb, String text, int offset, int limit) {
         if (limit == text.length()) {
             // append all
             sb.append(escape(text.substring(offset)));

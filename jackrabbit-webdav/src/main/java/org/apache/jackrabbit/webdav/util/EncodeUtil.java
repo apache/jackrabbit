@@ -129,7 +129,7 @@ public final class EncodeUtil {
         try {
             BitSet validChars = isPath ? URISaveEx : URISave;
             byte[] bytes = string.getBytes("utf-8");
-            StringBuffer out = new StringBuffer(bytes.length);
+            StringBuilder out = new StringBuilder(bytes.length);
             for (byte aByte : bytes) {
                 int c = aByte & 0xff;
                 if (validChars.get(c) && c != escape) {

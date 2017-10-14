@@ -112,7 +112,7 @@ public final class JcrName {
     }
 
     public String toString() {
-        StringBuffer b = new StringBuffer(jcrName);
+        StringBuilder b = new StringBuilder(jcrName);
         if (isValid()) {
             b.append(",VAL");
         }

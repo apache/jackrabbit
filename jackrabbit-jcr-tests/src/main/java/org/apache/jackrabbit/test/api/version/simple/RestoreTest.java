@@ -1394,20 +1394,20 @@ public class RestoreTest extends AbstractVersionTest {
     public void testLinearVersions() throws Exception {
         // first get all linear versions
         VersionIterator iter = versionableNode.getVersionHistory().getAllLinearVersions();
-        StringBuffer expected = new StringBuffer();
+        StringBuilder expected = new StringBuilder();
         while (iter.hasNext()) {
-            expected.append(iter.nextVersion().getName()).append(",");
+            expected.append(iter.nextVersion().getName()).append(',');
         }
         // restore version
         versionableNode.restore(version, true);
         // append new base version
-        expected.append(versionableNode.getBaseVersion().getName()).append(",");
+        expected.append(versionableNode.getBaseVersion().getName()).append(',');
 
         // get the version names again
         iter = versionableNode.getVersionHistory().getAllLinearVersions();
-        StringBuffer actual = new StringBuffer();
+        StringBuilder actual = new StringBuilder();
         while (iter.hasNext()) {
-            actual.append(iter.nextVersion().getName()).append(",");
+            actual.append(iter.nextVersion().getName()).append(',');
         }
         assertEquals("Node.restore() on simple versioning must create a new version.",
                 expected.toString(), actual.toString());
@@ -1420,20 +1420,20 @@ public class RestoreTest extends AbstractVersionTest {
     public void testLinearVersionsJcr2() throws Exception {
         // first get all linear versions
         VersionIterator iter = versionManager.getVersionHistory(versionableNode.getPath()).getAllLinearVersions();
-        StringBuffer expected = new StringBuffer();
+        StringBuilder expected = new StringBuilder();
         while (iter.hasNext()) {
-            expected.append(iter.nextVersion().getName()).append(",");
+            expected.append(iter.nextVersion().getName()).append(',');
         }
         // restore version
         versionManager.restore(version, true);
         // append new base version
-        expected.append(versionManager.getBaseVersion(versionableNode.getPath()).getName()).append(",");
+        expected.append(versionManager.getBaseVersion(versionableNode.getPath()).getName()).append(',');
 
         // get the version names again
         iter = versionManager.getVersionHistory(versionableNode.getPath()).getAllLinearVersions();
-        StringBuffer actual = new StringBuffer();
+        StringBuilder actual = new StringBuilder();
         while (iter.hasNext()) {
-            actual.append(iter.nextVersion().getName()).append(",");
+            actual.append(iter.nextVersion().getName()).append(',');
         }
         assertEquals("Node.restore() on simple versioning must create a new version.",
                 expected.toString(), actual.toString());
@@ -1446,20 +1446,20 @@ public class RestoreTest extends AbstractVersionTest {
     public void testLinearVersionsJcr2_2() throws Exception {
         // first get all linear versions
         VersionIterator iter = versionManager.getVersionHistory(versionableNode.getPath()).getAllLinearVersions();
-        StringBuffer expected = new StringBuffer();
+        StringBuilder expected = new StringBuilder();
         while (iter.hasNext()) {
-            expected.append(iter.nextVersion().getName()).append(",");
+            expected.append(iter.nextVersion().getName()).append(',');
         }
         // restore version
         versionManager.restore(version, true);
         // append new base version
-        expected.append(versionManager.getBaseVersion(versionableNode.getPath()).getName()).append(",");
+        expected.append(versionManager.getBaseVersion(versionableNode.getPath()).getName()).append(',');
 
         // get the version names again
         iter = versionManager.getVersionHistory(versionableNode.getPath()).getAllLinearVersions();
-        StringBuffer actual = new StringBuffer();
+        StringBuilder actual = new StringBuilder();
         while (iter.hasNext()) {
-            actual.append(iter.nextVersion().getName()).append(",");
+            actual.append(iter.nextVersion().getName()).append(',');
         }
         assertEquals("Node.restore() on simple versioning must create a new version.",
                 expected.toString(), actual.toString());
@@ -1472,20 +1472,20 @@ public class RestoreTest extends AbstractVersionTest {
     public void testLinearVersionsJcr2_3() throws Exception {
         // first get all linear versions
         VersionIterator iter = versionManager.getVersionHistory(versionableNode.getPath()).getAllLinearVersions();
-        StringBuffer expected = new StringBuffer();
+        StringBuilder expected = new StringBuilder();
         while (iter.hasNext()) {
-            expected.append(iter.nextVersion().getName()).append(",");
+            expected.append(iter.nextVersion().getName()).append(',');
         }
         // restore version
         versionManager.restore(versionableNode.getPath(), version.getName(), true);
         // append new base version
-        expected.append(versionManager.getBaseVersion(versionableNode.getPath()).getName()).append(",");
+        expected.append(versionManager.getBaseVersion(versionableNode.getPath()).getName()).append(',');
 
         // get the version names again
         iter = versionManager.getVersionHistory(versionableNode.getPath()).getAllLinearVersions();
-        StringBuffer actual = new StringBuffer();
+        StringBuilder actual = new StringBuilder();
         while (iter.hasNext()) {
-            actual.append(iter.nextVersion().getName()).append(",");
+            actual.append(iter.nextVersion().getName()).append(',');
         }
         assertEquals("Node.restore() on simple versioning must create a new version.",
                 expected.toString(), actual.toString());
@@ -1498,20 +1498,20 @@ public class RestoreTest extends AbstractVersionTest {
     public void testLinearVersionsJcr2_4() throws Exception {
         // first get all linear versions
         VersionIterator iter = versionManager.getVersionHistory(versionableNode.getPath()).getAllLinearVersions();
-        StringBuffer expected = new StringBuffer();
+        StringBuilder expected = new StringBuilder();
         while (iter.hasNext()) {
-            expected.append(iter.nextVersion().getName()).append(",");
+            expected.append(iter.nextVersion().getName()).append(',');
         }
         // restore version
         versionManager.restore(new Version[] {version}, true);
         // append new base version
-        expected.append(versionManager.getBaseVersion(versionableNode.getPath()).getName()).append(",");
+        expected.append(versionManager.getBaseVersion(versionableNode.getPath()).getName()).append(',');
 
         // get the version names again
         iter = versionManager.getVersionHistory(versionableNode.getPath()).getAllLinearVersions();
-        StringBuffer actual = new StringBuffer();
+        StringBuilder actual = new StringBuilder();
         while (iter.hasNext()) {
-            actual.append(iter.nextVersion().getName()).append(",");
+            actual.append(iter.nextVersion().getName()).append(',');
         }
         assertEquals("Node.restore() on simple versioning must create a new version.",
                 expected.toString(), actual.toString());

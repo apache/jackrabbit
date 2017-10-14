@@ -141,17 +141,17 @@ final class DocNumberCache {
                 if (misses != 0) {
                     ratio -= misses * 100L / accesses;
                 }
-                StringBuffer statistics = new StringBuffer();
+                StringBuilder statistics = new StringBuilder();
                 int inUse = 0;
                 for (LRUMap docNumber : docNumbers) {
                     inUse += docNumber.size();
                 }
                 statistics.append("size=").append(inUse);
-                statistics.append("/").append(docNumbers[0].maxSize() * CACHE_SEGMENTS);
+                statistics.append('/').append(docNumbers[0].maxSize() * CACHE_SEGMENTS);
                 statistics.append(", #accesses=").append(accesses);
                 statistics.append(", #hits=").append((accesses - misses));
                 statistics.append(", #misses=").append(misses);
-                statistics.append(", cacheRatio=").append(ratio).append("%");
+                statistics.append(", cacheRatio=").append(ratio).append('%');
                 log.info(statistics.toString());
                 accesses = 0;
                 misses = 0;

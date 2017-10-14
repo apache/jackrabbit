@@ -95,8 +95,8 @@ public class AxisQueryTest extends AbstractQueryTest {
         Node testLocation = superuser.getRootNode().getNode(relTestLocation);
         long end = System.currentTimeMillis() + 1000 * RUN_NUM_SECONDS;
         while (end > System.currentTimeMillis()) {
-            StringBuffer statement = new StringBuffer(relTestLocation);
-            StringBuffer regexp = new StringBuffer(absTestLocation);
+            StringBuilder statement = new StringBuilder(relTestLocation);
+            StringBuilder regexp = new StringBuilder(absTestLocation);
             int numSteps = rand.nextInt(NUM_LEVELS) + 1; // at least one step
             while (numSteps-- > 0) {
                 String axis = getRandomAxis();

@@ -561,18 +561,18 @@ class TreeComparator extends Assert {
      * Recursive display of source and target tree
      */
     public void showTree(Node n, int level) throws RepositoryException {
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         for (int t = 0; t < level; t++) {
             sb.append("-");
         }
-        sb.append(n.getName() + " ");
-        sb.append(n.getPrimaryNodeType().getName() + " [ ");
+        sb.append(n.getName()).append(' ');
+        sb.append(n.getPrimaryNodeType().getName()).append(" [ ");
         PropertyIterator pi = n.getProperties();
         while (pi.hasNext()) {
             Property p = (Property) pi.next();
-            sb.append(p.getName() + " ");
+            sb.append(p.getName()).append(' ');
         }
-        sb.append("]");
+        sb.append(']');
         sc.log(sb.toString());
 
         NodeIterator ni = n.getNodes();

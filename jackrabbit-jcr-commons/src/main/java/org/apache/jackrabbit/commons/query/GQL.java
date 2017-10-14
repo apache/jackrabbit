@@ -481,7 +481,7 @@ public final class GQL {
                 pushExpression(property, value, optional);
             }
         });
-        StringBuffer stmt = new StringBuffer();
+        StringBuilder stmt = new StringBuilder();
         // path constraint
         stmt.append(pathConstraint);
         // predicate
@@ -493,13 +493,13 @@ public final class GQL {
             predicate.addOperand(condition);
         }
         if (predicate.getSize() > 0) {
-            stmt.append("[");
+            stmt.append('[');
         }
         predicate.toString(stmt);
         if (predicate.getSize() > 0) {
-            stmt.append("]");
+            stmt.append(']');
         }
-        stmt.append(" ");
+        stmt.append(' ');
         // order by
         orderBy.toString(stmt);
         return stmt.toString();
@@ -720,8 +720,8 @@ public final class GQL {
         char[] stmt = new char[statement.length() + 1];
         statement.getChars(0, statement.length(), stmt, 0);
         stmt[statement.length()] = ' ';
-        StringBuffer property = new StringBuffer();
-        StringBuffer value = new StringBuffer();
+        StringBuilder property = new StringBuilder();
+        StringBuilder value = new StringBuilder();
         boolean quoted = false;
         boolean escaped = false;
         boolean optional = false;
@@ -900,7 +900,7 @@ public final class GQL {
      */
     private interface Expression {
 
-        void toString(StringBuffer buffer) throws RepositoryException;
+        void toString(StringBuilder buffer) throws RepositoryException;
     }
 
     /**
@@ -927,11 +927,11 @@ public final class GQL {
             super(property, value);
         }
 
-        public void toString(StringBuffer buffer)
+        public void toString(StringBuilder buffer)
                 throws RepositoryException {
-            buffer.append("@");
+            buffer.append('@');
             buffer.append(ISO9075.encode(resolvePropertyName(property)));
-            buffer.append("='").append(value).append("'");
+            buffer.append("='").append(value).append('\'');
         }
     }
 
@@ -971,7 +971,7 @@ public final class GQL {
             this.value = tmp;
         }
 
-        public void toString(StringBuffer buffer)
+        public void toString(StringBuilder buffer)
                 throws RepositoryException {
             buffer.append("jcr:like(fn:lower-case(fn:name()), '");
             buffer.append(value);
@@ -991,7 +991,7 @@ public final class GQL {
             this.prohibited = value.startsWith("-");
         }
 
-        public void toString(StringBuffer buffer)
+        public void toString(StringBuilder buffer)
                 throws RepositoryException {
             if (property.equals(NATIVE_XPATH)) {
                 buffer.append(value);
@@ -1000,11 +1000,11 @@ public final class GQL {
             if (prohibited) {
                 buffer.append("not(");
             }
-            buffer.append(JCR_CONTAINS).append("(");
+            buffer.append(JCR_CONTAINS).append('(');
             if (property.length() == 0) {
                 // node scope
                 if (commonPathPrefix == null) {
-                    buffer.append(".");
+                    buffer.append('.');
                 } else {
                     buffer.append(ISO9075.encodePath(commonPathPrefix));
                 }
@@ -1013,7 +1013,7 @@ public final class GQL {
                 String[] parts = Text.explode(property, '/');
                 if (commonPathPrefix != null) {
                     buffer.append(ISO9075.encodePath(commonPathPrefix));
-                    buffer.append("/");
+                    buffer.append('/');
                 }
                 String slash = "";
                 for (int i = 0; i < parts.length; i++) {
@@ -1021,7 +1021,7 @@ public final class GQL {
                         if (!parts[i].equals(".")) {
                             // last part
                             buffer.append(slash);
-                            buffer.append("@");
+                            buffer.append('@');
                             buffer.append(ISO9075.encode(
                                     resolvePropertyName(parts[i])));
                         }
@@ -1044,7 +1044,7 @@ public final class GQL {
             }
             buffer.append("')");
             if (prohibited) {
-                buffer.append(")");
+                buffer.append(')');
             }
         }
     }
@@ -1056,10 +1056,10 @@ public final class GQL {
 
         private final List<Expression> operands = new ArrayList<Expression>();
 
-        public void toString(StringBuffer buffer)
+        public void toString(StringBuilder buffer)
                 throws RepositoryException {
             if (operands.size() > 1) {
-                buffer.append("(");
+                buffer.append('(');
             }
             String op = "";
             for (Expression expr : operands) {
@@ -1068,7 +1068,7 @@ public final class GQL {
                 op = getOperation();
             }
             if (operands.size() > 1) {
-                buffer.append(")");
+                buffer.append(')');
             }
         }
 
@@ -1118,7 +1118,7 @@ public final class GQL {
             this.value = value;
         }
 
-        public void toString(StringBuffer buffer)
+        public void toString(StringBuilder buffer)
                 throws RepositoryException {
             int start = buffer.length();
             buffer.append("order by ");
@@ -1147,7 +1147,7 @@ public final class GQL {
                     name = createPropertyName(resolvePropertyName(name));
                     buffer.append(name);
                     if (!asc) {
-                        buffer.append(" ").append(DESCENDING);
+                        buffer.append(' ').append(DESCENDING);
                     }
                     comma = ", ";
                 }
@@ -1177,8 +1177,8 @@ public final class GQL {
             }
         }
 
-        private void defaultOrderBy(StringBuffer buffer) {
-            buffer.append("@").append(JCR_SCORE).append(" ").append(DESCENDING);
+        private void defaultOrderBy(StringBuilder buffer) {
+            buffer.append('@').append(JCR_SCORE).append(' ').append(DESCENDING);
         }
     }
 

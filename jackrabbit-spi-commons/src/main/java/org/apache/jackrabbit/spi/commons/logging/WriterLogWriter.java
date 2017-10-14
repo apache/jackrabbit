@@ -87,13 +87,13 @@ public class WriterLogWriter implements LogWriter {
     // -----------------------------------------------------< private >---
 
     private String formatArgs(Object[] args) {
-        StringBuffer b = new StringBuffer();
+        StringBuilder b = new StringBuilder();
         formatArgs(args, b);
         return b.toString();
     }
 
     private String formatResult(Object result) {
-        StringBuffer b = new StringBuffer();
+        StringBuilder b = new StringBuilder();
         formatArg(result, b);
         return b.toString();
     }
@@ -104,7 +104,7 @@ public class WriterLogWriter implements LogWriter {
         return sw.toString();
     }
 
-    private void formatArgs(Object[] args, StringBuffer b) {
+    private void formatArgs(Object[] args, StringBuilder b) {
         String separator = "";
         for (Object arg : args) {
             b.append(separator);
@@ -113,7 +113,7 @@ public class WriterLogWriter implements LogWriter {
         }
     }
 
-    private void formatArg(Object arg, StringBuffer b) {
+    private void formatArg(Object arg, StringBuilder b) {
         if (arg instanceof Object[]) {
             b.append('[');
             formatArgs((Object[]) arg, b);

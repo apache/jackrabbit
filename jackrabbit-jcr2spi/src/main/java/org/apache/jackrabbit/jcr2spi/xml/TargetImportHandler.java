@@ -261,7 +261,7 @@ abstract class TargetImportHandler extends DefaultHandler {
                 if (tmpFile.length() > Integer.MAX_VALUE) {
                     throw new IOException("size of value is too big, use reader()");
                 }
-                StringBuffer sb = new StringBuffer((int) tmpFile.length());
+                StringBuilder sb = new StringBuilder((int) tmpFile.length());
                 char[] chunk = new char[0x2000];
                 int read;
                 Reader reader = new FileReader(tmpFile);

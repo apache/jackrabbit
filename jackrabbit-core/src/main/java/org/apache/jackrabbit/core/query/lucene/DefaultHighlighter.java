@@ -305,7 +305,7 @@ public class DefaultHighlighter {
 
         // merge #maxFragments fragments
         StringReader reader = new StringReader(text);
-        StringBuffer sb = new StringBuffer(excerptStart);
+        StringBuilder sb = new StringBuilder(excerptStart);
         int pos = 0;
         char[] cbuf;
         int skip;
@@ -461,12 +461,12 @@ public class DefaultHighlighter {
                                           String fragmentEnd,
                                           int maxLength) throws IOException {
         StringReader reader = new StringReader(text);
-        StringBuffer excerpt = new StringBuffer(excerptStart);
+        StringBuilder excerpt = new StringBuilder(excerptStart);
         excerpt.append(fragmentStart);
         int min = excerpt.length();
         char[] buf = new char[maxLength];
         int len = reader.read(buf);
-        StringBuffer tmp = new StringBuffer();
+        StringBuilder tmp = new StringBuilder();
         tmp.append(buf, 0, len);
         if (len == buf.length) {
             for (int i = tmp.length() - 1; i > min; i--) {

@@ -968,7 +968,7 @@ public class ExportDocViewTest extends AbstractJCRTest {
         Value[] vals = prop.getValues();
         // order of multi values is preserved.
         // multival with empty array is exported as empty string
-        StringBuffer exportedVal = new StringBuffer();
+        StringBuilder exportedVal = new StringBuilder();
 
         String space = "";
         if (isBinary) {
@@ -1067,7 +1067,7 @@ public class ExportDocViewTest extends AbstractJCRTest {
      */
     private List<String> getChildTextNodeValues(Element elem) {
         List<String> textValues = new ArrayList<String>();
-        StringBuffer buf = new StringBuffer();
+        StringBuilder buf = new StringBuilder();
         org.w3c.dom.Node child = elem.getFirstChild();
         // collect the characters of successive text nodes
         while (child != null) {
@@ -1078,7 +1078,7 @@ public class ExportDocViewTest extends AbstractJCRTest {
                     child = child.getNextSibling();
                 }
                 textValues.add(buf.toString());
-                buf = new StringBuffer();
+                buf.setLength(0);
             } else {
                 child = child.getNextSibling();
             }

@@ -1650,7 +1650,7 @@ public class MultiIndex {
          * @inheritDoc
          */
         public String toString() {
-            StringBuffer logLine = new StringBuffer();
+            StringBuilder logLine = new StringBuilder();
             logLine.append(Long.toString(getTransactionId()));
             logLine.append(' ');
             logLine.append(Action.ADD_INDEX);
@@ -1742,7 +1742,7 @@ public class MultiIndex {
          * @inheritDoc
          */
         public String toString() {
-            StringBuffer logLine = new StringBuffer(ENTRY_LENGTH);
+            StringBuilder logLine = new StringBuilder(ENTRY_LENGTH);
             logLine.append(Long.toString(getTransactionId()));
             logLine.append(' ');
             logLine.append(Action.ADD_NODE);
@@ -1858,7 +1858,7 @@ public class MultiIndex {
          * @inheritDoc
          */
         public String toString() {
-            StringBuffer logLine = new StringBuffer();
+            StringBuilder logLine = new StringBuilder();
             logLine.append(Long.toString(getTransactionId()));
             logLine.append(' ');
             logLine.append(Action.CREATE_INDEX);
@@ -1933,7 +1933,7 @@ public class MultiIndex {
          * @inheritDoc
          */
         public String toString() {
-            StringBuffer logLine = new StringBuffer();
+            StringBuilder logLine = new StringBuilder();
             logLine.append(Long.toString(getTransactionId()));
             logLine.append(' ');
             logLine.append(Action.DELETE_INDEX);
@@ -2021,7 +2021,7 @@ public class MultiIndex {
          * @inheritDoc
          */
         public String toString() {
-            StringBuffer logLine = new StringBuffer(ENTRY_LENGTH);
+            StringBuilder logLine = new StringBuilder(ENTRY_LENGTH);
             logLine.append(Long.toString(getTransactionId()));
             logLine.append(' ');
             logLine.append(Action.DELETE_NODE);
@@ -2124,7 +2124,7 @@ public class MultiIndex {
          * @inheritDoc
          */
         public String toString() {
-            StringBuffer logLine = new StringBuffer();
+            StringBuilder logLine = new StringBuilder();
             logLine.append(Long.toString(getTransactionId()));
             logLine.append(' ');
             logLine.append(Action.VOLATILE_COMMIT);

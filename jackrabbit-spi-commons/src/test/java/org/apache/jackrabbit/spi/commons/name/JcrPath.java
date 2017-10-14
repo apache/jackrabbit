@@ -155,7 +155,7 @@ public final class JcrPath {
     }
 
     public String toString() {
-        StringBuffer b = new StringBuffer(path);
+        StringBuilder b = new StringBuilder(path);
         if (normalizedPath!=null) {
             b.append(" -> ").append(normalizedPath);
         }

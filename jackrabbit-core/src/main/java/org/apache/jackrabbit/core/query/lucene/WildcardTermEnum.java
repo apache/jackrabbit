@@ -207,11 +207,11 @@ class WildcardTermEnum extends FilteredTermEnum implements TransformConstants {
                                 new Term(field, prefix), new Term(field, limit)));
                     } else {
                         // start with initial lower case
-                        StringBuffer lowerLimit = new StringBuffer(patternPrefix.toUpperCase());
+                        StringBuilder lowerLimit = new StringBuilder(patternPrefix.toUpperCase());
                         lowerLimit.setCharAt(0, Character.toLowerCase(lowerLimit.charAt(0)));
                         String prefix = tvf.createValue(lowerLimit.toString());
 
-                        StringBuffer upperLimit = new StringBuffer(patternPrefix.toLowerCase());
+                        StringBuilder upperLimit = new StringBuilder(patternPrefix.toLowerCase());
                         upperLimit.append('\uFFFF');
                         String limit = tvf.createValue(upperLimit.toString());
                         rangeScans.add(new RangeScan(reader,
@@ -219,7 +219,7 @@ class WildcardTermEnum extends FilteredTermEnum implements TransformConstants {
 
                         // second scan with upper case start
                         prefix = tvf.createValue(patternPrefix.toUpperCase());
-                        upperLimit = new StringBuffer(patternPrefix.toLowerCase());
+                        upperLimit = new StringBuilder(patternPrefix.toLowerCase());
                         upperLimit.setCharAt(0, Character.toUpperCase(upperLimit.charAt(0)));
                         upperLimit.append('\uFFFF');
                         limit = tvf.createValue(upperLimit.toString());

@@ -230,7 +230,7 @@ public abstract class AbstractLocatorFactory implements DavLocatorFactory {
             this.resourcePath = resourcePath;
             this.factory = factory;
 
-            StringBuffer buf = new StringBuffer(prefix);
+            StringBuilder buf = new StringBuilder(prefix);
             // NOTE: no need to append the workspace path, since it must
             // be part of the resource path.
             if (resourcePath != null && resourcePath.length() > 0) {
@@ -242,7 +242,7 @@ public abstract class AbstractLocatorFactory implements DavLocatorFactory {
             }
             int length = buf.length();
             if (length == 0 || (length > 0 && buf.charAt(length - 1) != '/')) {
-                buf.append("/");
+                buf.append('/');
             }
             this.href = buf.toString();
         }

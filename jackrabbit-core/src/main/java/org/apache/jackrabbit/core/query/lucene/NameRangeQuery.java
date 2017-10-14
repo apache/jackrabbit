@@ -118,7 +118,7 @@ public class NameRangeQuery extends Query {
      * {@inheritDoc}
      */
     public String toString(String field) {
-        StringBuffer buffer = new StringBuffer();
+        StringBuilder buffer = new StringBuilder();
         buffer.append("name():");
         buffer.append(inclusive ? "[" : "{");
         buffer.append(lowerName != null ? lowerName.toString() : "null");

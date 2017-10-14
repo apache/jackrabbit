@@ -339,7 +339,7 @@ public class FulltextQueryTest extends AbstractQueryTest {
 
     private void assertContainsQuery(String statement, boolean match)
             throws InvalidQueryException, RepositoryException {
-        StringBuffer stmt = new StringBuffer();
+        StringBuilder stmt = new StringBuilder();
         stmt.append("/jcr:root").append(testRoot).append("/*");
         stmt.append("[jcr:contains(., '").append(statement);
         stmt.append("')]");
@@ -347,7 +347,7 @@ public class FulltextQueryTest extends AbstractQueryTest {
         Query q = superuser.getWorkspace().getQueryManager().createQuery(stmt.toString(), Query.XPATH);
         checkResult(q.execute(), match ? 1 : 0);
 
-        stmt = new StringBuffer();
+        stmt.setLength(0);
         stmt.append("SELECT * FROM nt:base ");
         stmt.append("WHERE jcr:path LIKE '").append(testRoot).append("/%' ");
         stmt.append("AND CONTAINS(., '").append(statement).append("')");

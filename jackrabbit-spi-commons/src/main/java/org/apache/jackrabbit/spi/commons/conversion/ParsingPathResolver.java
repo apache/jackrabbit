@@ -100,7 +100,7 @@ public class ParsingPathResolver implements PathResolver {
      * @see PathResolver#getJCRPath(org.apache.jackrabbit.spi.Path) 
      */
     public String getJCRPath(Path path) throws NamespaceException {
-        StringBuffer buffer = new StringBuffer();
+        StringBuilder buffer = new StringBuilder();
 
         Path.Element[] elements = path.getElements();
         for (int i = 0; i < elements.length; i++) {

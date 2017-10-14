@@ -63,7 +63,7 @@ public abstract class AbstractChangeLog<T extends Operation> implements ChangeLo
 
     @Override
     public String toString() {
-        StringBuffer b = new StringBuffer();
+        StringBuilder b = new StringBuilder();
         for (Iterator<T> it = operations.iterator(); it.hasNext(); ) {
             b.append(it.next());
             if (it.hasNext()) {

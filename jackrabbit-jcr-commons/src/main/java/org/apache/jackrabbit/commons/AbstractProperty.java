@@ -89,7 +89,7 @@ public abstract class AbstractProperty extends AbstractItem
      * @throws RepositoryException if an error occurs
      */
     public String getPath() throws RepositoryException {
-        StringBuffer buffer = new StringBuffer(getParent().getPath());
+        StringBuilder buffer = new StringBuilder(getParent().getPath());
         if (buffer.length() > 1) {
             buffer.append('/');
         }

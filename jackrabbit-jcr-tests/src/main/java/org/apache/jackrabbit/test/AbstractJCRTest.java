@@ -677,7 +677,7 @@ public abstract class AbstractJCRTest extends JUnitTest {
      */
     protected String createRandomString(int numChars) {
         Random rand = new Random(System.currentTimeMillis());
-        StringBuffer tmp = new StringBuffer(numChars);
+        StringBuilder tmp = new StringBuilder(numChars);
         for (int i = 0; i < numChars; i++) {
             char c = (char) (rand.nextInt(('z' + 1) - 'a') + 'a');
             tmp.append(c);

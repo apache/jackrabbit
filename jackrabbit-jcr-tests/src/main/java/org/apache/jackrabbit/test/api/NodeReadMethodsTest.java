@@ -731,11 +731,11 @@ public class NodeReadMethodsTest extends AbstractJCRTest {
         }
         PropertyIterator allPropertiesIt = node.getProperties();
         List<Property> allProperties = new ArrayList<Property>();
-        StringBuffer notExistingPropertyName = new StringBuffer();
+        StringBuilder notExistingPropertyName = new StringBuilder();
         while (allPropertiesIt.hasNext()) {
             Property p = allPropertiesIt.nextProperty();
             allProperties.add(p);
-            notExistingPropertyName.append(p.getName() + "X");
+            notExistingPropertyName.append(p.getName()).append('X');
         }
 
         // all tests are running using root's first property

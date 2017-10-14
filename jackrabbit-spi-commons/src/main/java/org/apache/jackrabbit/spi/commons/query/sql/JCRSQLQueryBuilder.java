@@ -768,7 +768,7 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
         if (from == to || (pattern.indexOf(from) < 0 && pattern.indexOf(to) < 0)) {
             return pattern;
         }
-        StringBuffer translated = new StringBuffer(pattern.length());
+        StringBuilder translated = new StringBuilder(pattern.length());
         boolean escaped = false;
         for (int i = 0; i < pattern.length(); i++) {
             if (pattern.charAt(i) == from) {

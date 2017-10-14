@@ -373,11 +373,11 @@ public class ACLEditor extends ProtectedItemModifier implements AccessControlEdi
      * @throws RepositoryException if an error occurs
      */
     String getPathToAcNode(Principal principal) throws RepositoryException {
-        StringBuffer princPath = new StringBuffer(acRootPath);
+        StringBuilder princPath = new StringBuilder(acRootPath);
         if (principal instanceof ItemBasedPrincipal) {
             princPath.append(((ItemBasedPrincipal) principal).getPath());
         } else {
-            princPath.append("/");
+            princPath.append('/');
             princPath.append(Text.escapeIllegalJcrChars(principal.getName()));
         }
         return princPath.toString();

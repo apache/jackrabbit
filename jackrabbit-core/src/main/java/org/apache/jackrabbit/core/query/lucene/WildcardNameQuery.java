@@ -58,7 +58,7 @@ public class WildcardNameQuery extends WildcardQuery {
         if (idx != -1) {
             prefix = pattern.substring(0, idx);
         }
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         // translate prefix
         try {
             sb.append(nsMappings.getPrefix(resolver.getURI(prefix)));
@@ -68,9 +68,9 @@ public class WildcardNameQuery extends WildcardQuery {
             // -> ignore and use empty string for index internal prefix
             //    this will not match anything
         }
-        sb.append(":");
+        sb.append(':');
         // remaining pattern, may also be whole pattern
-        sb.append(pattern.substring(idx + 1));
+        sb.append(pattern, idx + 1, pattern.length());
         return sb.toString();
     }
 }

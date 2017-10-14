@@ -55,10 +55,9 @@ public class EscapeJCRUtil {
     }
 
     private static String escapeValues(String str) {
-        char[] chars = str.toCharArray();
-        StringBuffer buf = new StringBuffer();
-        for (int i = 0; i < chars.length; i++) {
-            char c = chars[i];
+        StringBuilder buf = new StringBuilder();
+        for (int i = 0; i < str.length(); i++) {
+            char c = str.charAt(i);
             if (c == '\u0020'
                     || c == '\u0009'
                     || c == '\n'
@@ -97,11 +96,11 @@ public class EscapeJCRUtil {
      */
     private static String escapeChar(char c) {
         String unicodeRepr = Integer.toHexString(c);
-        StringBuffer escaped = new StringBuffer();
+        StringBuilder escaped = new StringBuilder();
         escaped.append("_x");
         escaped.append(Utf16Padding, 0, utf16length - unicodeRepr.length());
         escaped.append(unicodeRepr);
-        escaped.append("_");
+        escaped.append('_');
         return escaped.toString();
     }
 
@@ -112,11 +111,10 @@ public class EscapeJCRUtil {
      * @return
      */
     private static String escape(String str) {
-        char[] chars = str.toCharArray();
-        StringBuffer buf = new StringBuffer();
+        StringBuilder buf = new StringBuilder();
 
-        for (int i = 0; i < chars.length; i++) {
-            char c = chars[i];
+        for (int i = 0; i < str.length(); i++) {
+            char c = str.charAt(i);
             // handle start character
             if (i == 0) {
                 if (!XMLChar.isNameStart(c)) {

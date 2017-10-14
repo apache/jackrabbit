@@ -260,7 +260,7 @@ public class ZipHandler extends DefaultHandler {
         if (appendLeadingSlash && !label.startsWith("/")) {
             label = "/" + label;
         }
-        StringBuffer ret = new StringBuffer(label.length());
+        StringBuilder ret = new StringBuilder(label.length());
         for (int i=0; i<label.length(); i++) {
             char c = label.charAt(i);
             if (c=='*' || c=='\'' || c=='\"') {

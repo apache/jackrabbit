@@ -67,8 +67,8 @@ class DiffParser {
         int action = -1;
         String path = null;
 
-        StringBuffer lineSeparator = null;
-        StringBuffer bf = null;
+        StringBuilder lineSeparator = null;
+        StringBuilder bf = null;
 
         int state = STATE_START_LINE;
         int next = reader.read();
@@ -110,7 +110,7 @@ class DiffParser {
                     if (Character.isWhitespace((char) next) || next == ':') {
                         throw new DiffException("Invalid start of target path '" + next + "'");
                     }
-                    bf = new StringBuffer();
+                    bf = new StringBuilder();
                     bf.append((char) next);
                     state = STATE_TARGET;
                     break;
@@ -131,12 +131,12 @@ class DiffParser {
 
                 case STATE_START_VALUE:
                     if (isLineSeparator(next)) {
-                        lineSeparator = new StringBuffer();
+                        lineSeparator = new StringBuilder();
                         lineSeparator.append((char) next);
-                        bf = new StringBuffer();
+                        bf = new StringBuilder();
                         state = STATE_START_LINE;
                     } else {
-                        bf = new StringBuffer();
+                        bf = new StringBuilder();
                         bf.append((char) next);
                         state = STATE_VALUE;
                     }
@@ -144,7 +144,7 @@ class DiffParser {
 
                 case STATE_VALUE:
                     if (isLineSeparator(next)) {
-                        lineSeparator = new StringBuffer();
+                        lineSeparator = new StringBuilder();
                         lineSeparator.append((char) next);
                         state = STATE_START_LINE;
                     } else {
@@ -177,7 +177,7 @@ class DiffParser {
         informAction(action, path, bf);
     }
 
-    private void informAction(int action, String path, StringBuffer diffVal) throws DiffException {
+    private void informAction(int action, String path, CharSequence diffVal) throws DiffException {
         if (path == null) {
             throw new DiffException("Missing path for action " + action + "(diffValue = '"+ diffVal +"')");
         }
@@ -208,7 +208,7 @@ class DiffParser {
         return c == '\n' || c == '\r';
 
     }
-    private static boolean endsWithDelim(StringBuffer bf) {
+    private static boolean endsWithDelim(CharSequence bf) {
         if (bf.length() < 2) {
             return false;
         } else {
