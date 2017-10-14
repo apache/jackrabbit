@@ -270,8 +270,7 @@ public class AppendRecord extends AbstractRecord {
                 try {
                     in.close();
                 } catch (IOException e) {
-                    String msg = "I/O error while closing stream.";
-                    log.warn(msg, e);
+                    log.warn("I/O error while closing stream.", e);
                 }
             }
         } finally {
@@ -371,8 +370,7 @@ public class AppendRecord extends AbstractRecord {
             try {
                 dataOut.close();
             } catch (IOException e) {
-                String msg = "I/O error while closing stream.";
-                log.warn(msg, e);
+                log.warn("I/O error while closing stream.", e);
             } finally {
                 outputClosed = true;
             }
