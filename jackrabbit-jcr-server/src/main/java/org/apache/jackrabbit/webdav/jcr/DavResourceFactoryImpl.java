@@ -27,7 +27,6 @@ import javax.jcr.version.VersionHistory;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.jackrabbit.JcrConstants;
-import org.apache.jackrabbit.util.Text;
 import org.apache.jackrabbit.webdav.DavException;
 import org.apache.jackrabbit.webdav.DavMethods;
 import org.apache.jackrabbit.webdav.DavResource;

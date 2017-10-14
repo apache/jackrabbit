@@ -16,8 +16,6 @@
  */
 package org.apache.jackrabbit.core.query;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.TreeSet;
 
 import javax.jcr.Node;
