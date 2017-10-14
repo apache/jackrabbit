@@ -23,13 +23,13 @@ import java.security.Principal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-import java.util.Vector;
 
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletInputStream;
@@ -198,7 +198,7 @@ public class CSRFUtilTest extends TestCase {
         @SuppressWarnings({ "rawtypes", "unchecked" })
         public Enumeration getHeaders(String name) {
             if (name != null && contentTypes.length > 0 && name.toLowerCase(Locale.ENGLISH).equals("content-type")) {
-                return new Vector(Arrays.asList(contentTypes)).elements();
+                return Collections.enumeration(Arrays.asList(contentTypes));
             } else {
                 return null;
             }
