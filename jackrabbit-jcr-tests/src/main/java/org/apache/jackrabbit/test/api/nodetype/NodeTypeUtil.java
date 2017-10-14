@@ -635,8 +635,16 @@ public class NodeTypeUtil {
                             return session.getValueFactory().createValue("0", PropertyType.BINARY);
                         } else if (!maxBoundless) {
                             // build a binary value of size > absMax
-                            StringBuffer content = new StringBuffer();
-                            for (int i = 0; i <= absMax; i = i + 10) {
+                            final int absMaxAsInt;
+                            if (absMax < 0) {
+                                absMaxAsInt = -1;
+                            } else if (absMax + 10L >= Integer.MAX_VALUE) {
+                                absMaxAsInt = Integer.MAX_VALUE - 11;
+                            } else {
+                                absMaxAsInt = (int)absMax;
+                            }
+                            StringBuilder content = new StringBuilder(absMax < 0 ? 0 : absMaxAsInt + 10);
+                            for (int i = 0; i <= absMaxAsInt; i += 10) {
                                 content.append("0123456789");
                             }
                             return session.getValueFactory().createValue(content.toString(), PropertyType.BINARY);
