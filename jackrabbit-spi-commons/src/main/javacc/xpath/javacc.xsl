@@ -252,7 +252,7 @@
 <xsl:call-template name="parser"/>
 
 TOKEN_MGR_DECLS : {
-  private Stack stateStack = new Stack();
+  private Stack&lt;Integer&gt; stateStack = new Stack&lt;Integer&gt;();
   // private Vector persistentLexStates  = new Vector();
   static final int PARENMARKER = 2000;
   
@@ -262,7 +262,7 @@ TOKEN_MGR_DECLS : {
   private void pushState()
   {
     // System.err.println("pushing: "+curLexState); printLinePos();
-    stateStack.addElement(new Integer(curLexState));
+    stateStack.addElement(curLexState);
   }
   
   /**
@@ -271,7 +271,7 @@ TOKEN_MGR_DECLS : {
    */
   private void pushState(int state)
   {
-    stateStack.push(new Integer(state));
+    stateStack.push(state);
   }
   
   /**
@@ -284,7 +284,7 @@ TOKEN_MGR_DECLS : {
       printLinePos();
     }
 
-    int nextState = ((Integer) stateStack.pop()).intValue();
+    int nextState = stateStack.pop();
     // System.err.println("pop "+nextState); printLinePos();
     if(nextState == PARENMARKER)
       printLinePos();
@@ -298,7 +298,7 @@ TOKEN_MGR_DECLS : {
   private boolean isState(int state)
   {
 	for (int i = 0; i &lt; stateStack.size(); i++) {
-        if(((Integer) stateStack.elementAt(i)).intValue() == state)
+        if(stateStack.elementAt(i) == state)
         {
         	return true;
         }
@@ -314,9 +314,9 @@ TOKEN_MGR_DECLS : {
    */
   private void pushParenState(int commaState, int rparState)
   {
-    stateStack.push(new Integer(rparState));
-    stateStack.push(new Integer(commaState));
-    stateStack.push(new Integer(PARENMARKER));
+    stateStack.push(rparState);
+    stateStack.push(commaState);
+    stateStack.push(PARENMARKER);
     SwitchTo(commaState);
   }
 

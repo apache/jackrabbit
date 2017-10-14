@@ -131,10 +131,10 @@ public class ClientEventPoll extends Thread {
      *      listener.
      */
     public synchronized long addListener(EventListener listener) {
-        Long id = new Long(counter++);
+        Long id = counter++;
         listenerMap.put(id, listener);
         idMap.put(listener, id);
-        return id.longValue();
+        return id;
     }
 
     /**
@@ -150,7 +150,7 @@ public class ClientEventPoll extends Thread {
         Long key = (Long) idMap.remove(listener);
         if (key != null) {
             listenerMap.remove(key);
-            return key.longValue();
+            return key;
         }
 
         return -1;
@@ -208,7 +208,7 @@ public class ClientEventPoll extends Thread {
 
                 // extract the listener id from the remote event and find
                 // the locally registered event listener
-                Long id = new Long(remoteEvent.getListenerId());
+                Long id = remoteEvent.getListenerId();
                 EventListener listener = (EventListener) listenerMap.get(id);
 
                 // if the listener is not registered (anymore), the event is

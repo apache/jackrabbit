@@ -72,8 +72,8 @@ public final class Oracle10R1ConnectionHelper extends OracleConnectionHelper {
         try {
             con = dataSource.getConnection();
             blobClass = con.getClass().getClassLoader().loadClass("oracle.sql.BLOB");
-            durationSessionConstant = new Integer(blobClass.getField("DURATION_SESSION").getInt(null));
-            modeReadWriteConstant = new Integer(blobClass.getField("MODE_READWRITE").getInt(null));
+            durationSessionConstant = blobClass.getField("DURATION_SESSION").getInt(null);
+            modeReadWriteConstant = blobClass.getField("MODE_READWRITE").getInt(null);
         } finally {
             if (con != null) {
                 DbUtility.close(con, null, null);

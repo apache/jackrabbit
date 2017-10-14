@@ -484,7 +484,7 @@ public class LocalCache {
                 if (flength != null) {
                     LOG.debug("cache entry [{}], with size [{}] removed.",
                         fileName, flength);
-                    currentSizeInBytes -= flength.longValue();
+                    currentSizeInBytes -= flength;
                 }
             } else if (!getFile(fileName).exists()) {
                 // second attempt. remove from cache if file doesn't exists
@@ -493,7 +493,7 @@ public class LocalCache {
                     LOG.debug(
                         "file not exists. cache entry [{}], with size [{}] removed.",
                         fileName, flength);
-                    currentSizeInBytes -= flength.longValue();
+                    currentSizeInBytes -= flength;
                 }
             } else {
                 LOG.info("not able to remove cache entry [{}], size [{}]", key,

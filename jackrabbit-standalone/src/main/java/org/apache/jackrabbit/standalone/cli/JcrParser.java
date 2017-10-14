@@ -262,7 +262,7 @@ public class JcrParser {
         // set arguments
         String[] argValues = args.toArray(new String[args.size()]);
         for (int j = 0; j < argValues.length; j++) {
-            Argument arg = (Argument) clArgs.get(new Integer(j));
+            Argument arg = (Argument) clArgs.get(j);
             if (arg == null) {
                 throw new JcrParserException("exception.more.arguments.than.expected");
             }

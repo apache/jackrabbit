@@ -91,11 +91,11 @@ public class NamespaceExtractor {
                     int c;
                     Integer co = basePrefixes.get(prefix);
                     if (co == null) {
-                        basePrefixes.put(prefix, new Integer(1));
+                        basePrefixes.put(prefix, 1);
                         c = 1;
                     } else {
-                        c = co.intValue() + 1;
-                        basePrefixes.put(prefix, new Integer(c));
+                        c = co + 1;
+                        basePrefixes.put(prefix, c);
                     }
                     prefix = prefix + "_" + c;
                 }

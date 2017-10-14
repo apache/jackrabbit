@@ -78,7 +78,7 @@ public class LocalFileSystem implements FileSystem {
      * @param enable
      */
     public void setEnableHandleMonitor(String enable) {
-        setEnableHandleMonitor(Boolean.valueOf(enable).booleanValue());
+        setEnableHandleMonitor(Boolean.valueOf(enable));
     }
 
     /**
