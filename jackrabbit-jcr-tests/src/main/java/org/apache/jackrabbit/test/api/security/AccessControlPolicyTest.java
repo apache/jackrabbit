@@ -19,7 +19,6 @@ package org.apache.jackrabbit.test.api.security;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -62,8 +61,7 @@ public class AccessControlPolicyTest extends AbstractAccessControlTest {
 
     protected void tearDown() throws Exception {
         try {
-            for (Iterator<String> it = addedPolicies.keySet().iterator(); it.hasNext();) {
-                String path = it.next();
+            for (String path : addedPolicies.keySet()) {
                 AccessControlPolicy policy = addedPolicies.get(path);
                 acMgr.removePolicy(path, policy);
             }
@@ -110,11 +108,11 @@ public class AccessControlPolicyTest extends AbstractAccessControlTest {
         AccessControlPolicy[] policies = acMgr.getPolicies(path);
 
         assertNotNull("AccessControlManager.getPolicies must never return null.", policies);
-        for (int i = 0; i < policies.length; i++) {
-            if (policies[i] instanceof NamedAccessControlPolicy) {
-                assertNotNull("The name of an NamedAccessControlPolicy must not be null.", ((NamedAccessControlPolicy) policies[i]).getName());
-            } else if (policies[i] instanceof AccessControlList) {
-                assertNotNull("The entries of an AccessControlList must not be null.", ((AccessControlList) policies[i]).getAccessControlEntries());
+        for (AccessControlPolicy policy : policies) {
+            if (policy instanceof NamedAccessControlPolicy) {
+                assertNotNull("The name of an NamedAccessControlPolicy must not be null.", ((NamedAccessControlPolicy) policy).getName());
+            } else if (policy instanceof AccessControlList) {
+                assertNotNull("The entries of an AccessControlList must not be null.", ((AccessControlList) policy).getAccessControlEntries());
             }
         }
     }
@@ -150,8 +148,8 @@ public class AccessControlPolicyTest extends AbstractAccessControlTest {
         }
 
         AccessControlPolicy[] policies = acMgr.getPolicies(path);
-        for (int i = 0; i < policies.length; i++) {
-            assertFalse("The applicable policies obtained should not be present among the policies obtained through AccessControlManager.getPolicies.", acps.contains(policies[i]));
+        for (AccessControlPolicy policy : policies) {
+            assertFalse("The applicable policies obtained should not be present among the policies obtained through AccessControlManager.getPolicies.", acps.contains(policy));
         }
     }
 
@@ -201,9 +199,9 @@ public class AccessControlPolicyTest extends AbstractAccessControlTest {
             AccessControlPolicy policy = it.nextAccessControlPolicy();
             acMgr.setPolicy(path, policy);
 
-            AccessControlPolicy[] policies = acMgr.getPolicies(path);
-            for (int i = 0; i < policies.length; i++) {
-                if (policy.equals(policies[i])) {
+            AccessControlPolicy[] plcs = acMgr.getPolicies(path);
+            for (AccessControlPolicy plc : plcs) {
+                if (policy.equals(plc)) {
                     // ok
                     return;
                 }
@@ -228,8 +226,8 @@ public class AccessControlPolicyTest extends AbstractAccessControlTest {
         // access the policies already present at path and test if updating
         // (resetting) the policies works as well.
         AccessControlPolicy[] policies = acMgr.getPolicies(path);
-        for (int i = 0; i < policies.length; i++) {
-            acMgr.setPolicy(path, policies[i]);
+        for (AccessControlPolicy policy : policies) {
+            acMgr.setPolicy(path, policy);
         }
     }
 
@@ -342,8 +340,8 @@ public class AccessControlPolicyTest extends AbstractAccessControlTest {
             acMgr.removePolicy(path, policy);
 
             AccessControlPolicy[] plcs = acMgr.getPolicies(path);
-            for (int i = 0; i < plcs.length; i++) {
-                if (plcs[i].equals(policy)) {
+            for (AccessControlPolicy plc : plcs) {
+                if (plc.equals(policy)) {
                     fail("RemovePolicy must remove the policy that has been set before.");
                 }
             }

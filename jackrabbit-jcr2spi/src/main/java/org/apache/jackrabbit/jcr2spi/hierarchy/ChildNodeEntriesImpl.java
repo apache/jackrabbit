@@ -753,8 +753,7 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
                 List<LinkedEntries.LinkNode> l = snsMap.get(qName);
                 if (l != null) {
                     List<NodeEntry> nodeEntries = new ArrayList<NodeEntry>(l.size());
-                    for (Iterator<LinkedEntries.LinkNode> it = l.iterator(); it.hasNext();) {
-                        LinkedEntries.LinkNode ln = it.next();
+                    for (LinkedEntries.LinkNode ln : l) {
                         nodeEntries.add(ln.getNodeEntry());
                     }
                     return nodeEntries;
@@ -833,8 +832,7 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
                     // look in snsMap
                     List<LinkedEntries.LinkNode> l = snsMap.get(name);
                     if (l != null) {
-                        for (Iterator<LinkedEntries.LinkNode> it = l.iterator(); it.hasNext();) {
-                            LinkedEntries.LinkNode ln = it.next();
+                        for (LinkedEntries.LinkNode ln : l) {
                             if (uniqueID.equals(ln.getNodeEntry().getUniqueID())) {
                                 return ln;
                             }

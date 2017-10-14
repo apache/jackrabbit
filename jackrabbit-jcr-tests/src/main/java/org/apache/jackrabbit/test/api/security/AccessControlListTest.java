@@ -85,8 +85,7 @@ public class AccessControlListTest extends AbstractAccessControlTest {
             // restore original entries (remove others).
             AccessControlList list = getList(acMgr, path);
             AccessControlEntry[] entries = list.getAccessControlEntries();
-            for (int i = 0; i < entries.length; i++) {
-                AccessControlEntry ace = entries[i];
+            for (AccessControlEntry ace : entries) {
                 if (testPrincipal.equals(ace.getPrincipal())) {
                     list.removeAccessControlEntry(ace);
                 }
@@ -113,9 +112,9 @@ public class AccessControlListTest extends AbstractAccessControlTest {
             }
         }
         AccessControlPolicy[] acps = acMgr.getPolicies(path);
-        for (int i = 0; i < acps.length; i++) {
-            if (acps[i] instanceof AccessControlList) {
-                return (AccessControlList) acps[i] ;
+        for (AccessControlPolicy acp : acps) {
+            if (acp instanceof AccessControlList) {
+                return (AccessControlList) acp;
             }
         }
         throw new NotExecutableException("No AccessControlList at " + path);
@@ -124,8 +123,7 @@ public class AccessControlListTest extends AbstractAccessControlTest {
     private static List<Privilege> currentPrivileges(AccessControlList acl, Principal principal) throws RepositoryException {
         List<Privilege> privileges = new ArrayList<Privilege>();
         AccessControlEntry[] entries = acl.getAccessControlEntries();
-        for (int i = 0; i < entries.length; i++) {
-            AccessControlEntry ace = entries[i];
+        for (AccessControlEntry ace : entries) {
             if (principal.equals(ace.getPrincipal())) {
                 privileges.addAll(Arrays.asList(ace.getPrivileges()));
             }
@@ -140,9 +138,9 @@ public class AccessControlListTest extends AbstractAccessControlTest {
         // call must succeed.
         AccessControlEntry[] entries = acl.getAccessControlEntries();
         assertNotNull("AccessControlList#getAccessControlEntries must not return null.", entries);
-        for (int i = 0; i < entries.length; i++) {
-            assertNotNull("An ACE must contain a principal", entries[i].getPrincipal());
-            Privilege[] privs = entries[i].getPrivileges();
+        for (AccessControlEntry ace : entries) {
+            assertNotNull("An ACE must contain a principal", ace.getPrincipal());
+            Privilege[] privs = ace.getPrivileges();
             assertTrue("An ACE must contain at least a single privilege", privs != null && privs.length > 0);
         }
     }
@@ -156,10 +154,9 @@ public class AccessControlListTest extends AbstractAccessControlTest {
         AccessControlEntry entry = null;
         if (acl.addAccessControlEntry(testPrincipal, privileges)) {
             AccessControlEntry[] aces = acl.getAccessControlEntries();
-            for (int i = 0; i < aces.length; i++) {
-                if (aces[i].getPrincipal().equals(testPrincipal) &&
-                    Arrays.asList(privileges).equals(Arrays.asList(aces[i].getPrivileges()))) {
-                    entry = aces[i];
+            for (AccessControlEntry ace : aces) {
+                if (ace.getPrincipal().equals(testPrincipal) && Arrays.asList(privileges).equals(Arrays.asList(ace.getPrivileges()))) {
+                    entry = ace;
                 }
             }
             if (entry == null) throw new NotExecutableException();
@@ -175,9 +172,9 @@ public class AccessControlListTest extends AbstractAccessControlTest {
         checkCanModifyAc(path);
 
         Privilege aggregate = null;
-        for (int i = 0; i < privs.length; i++) {
-            if (privs[i].isAggregate()) {
-                aggregate = privs[i];
+        for (Privilege priv : privs) {
+            if (priv.isAggregate()) {
+                aggregate = priv;
                 break;
             }
         }
@@ -199,9 +196,9 @@ public class AccessControlListTest extends AbstractAccessControlTest {
         checkCanModifyAc(path);
 
         Privilege aggregate = null;
-        for (int i = 0; i < privs.length; i++) {
-            if (privs[i].isAggregate()) {
-                aggregate = privs[i];
+        for (Privilege priv : privs) {
+            if (priv.isAggregate()) {
+                aggregate = priv;
                 break;
             }
         }
@@ -213,8 +210,8 @@ public class AccessControlListTest extends AbstractAccessControlTest {
         acl.addAccessControlEntry(testPrincipal, new Privilege[] {aggregate});
 
         Privilege[] privs = aggregate.getAggregatePrivileges();
-        for (int i = 0; i < privs.length; i++) {
-            boolean modified = acl.addAccessControlEntry(testPrincipal, new Privilege[] {privs[i]});
+        for (Privilege priv : privs) {
+            boolean modified = acl.addAccessControlEntry(testPrincipal, new Privilege[] { priv });
             assertFalse("Adding the aggregated privs individually later on must not modify the policy", modified);
         }
     }
@@ -224,9 +221,9 @@ public class AccessControlListTest extends AbstractAccessControlTest {
 
         Privilege abstractPriv = null;
         Privilege[] allPrivs = acMgr.privilegeFromName(Privilege.JCR_ALL).getAggregatePrivileges();
-        for (int i = 0; i < allPrivs.length; i++) {
-            if (allPrivs[i].isAbstract()) {
-                abstractPriv = allPrivs[i];
+        for (Privilege priv : allPrivs) {
+            if (priv.isAbstract()) {
+                abstractPriv = priv;
                 break;
             }
         }
@@ -251,25 +248,25 @@ public class AccessControlListTest extends AbstractAccessControlTest {
 
         Set<Privilege> assignedPrivs = new HashSet<Privilege>();
         AccessControlEntry[] entries = acl.getAccessControlEntries();
-        for (int i = 0; i < entries.length; i++) {
-            if (entries[i].getPrincipal().equals(testPrincipal)) {
-                Privilege[] prvs = entries[i].getPrivileges();
-                for (int j = 0; j < prvs.length; j++) {
-                    if (prvs[j].isAggregate()) {
-                        assignedPrivs.addAll(Arrays.asList(prvs[j].getAggregatePrivileges()));
+        for (AccessControlEntry ace : entries) {
+            if (ace.getPrincipal().equals(testPrincipal)) {
+                Privilege[] prvs = ace.getPrivileges();
+                for (Privilege prv : prvs) {
+                    if (prv.isAggregate()) {
+                        assignedPrivs.addAll(Arrays.asList(prv.getAggregatePrivileges()));
                     } else {
-                        assignedPrivs.add(prvs[j]);
+                        assignedPrivs.add(prv);
                     }
                 }
             }
         }
 
         Set<Privilege> expected = new HashSet<Privilege>();
-        for (int i = 0; i < privs.length; i++) {
-            if (privs[i].isAggregate()) {
-                expected.addAll(Arrays.asList(privs[i].getAggregatePrivileges()));
+        for (Privilege priv : privs) {
+            if (priv.isAggregate()) {
+                expected.addAll(Arrays.asList(priv.getAggregatePrivileges()));
             } else {
-                expected.add(privs[i]);
+                expected.add(priv);
             }
         }
         assertTrue("getAccessControlEntries must contain an entry or entries that grant at least the added privileges.", assignedPrivs.containsAll(expected));
@@ -392,8 +389,8 @@ public class AccessControlListTest extends AbstractAccessControlTest {
         acl.addAccessControlEntry(testPrincipal, privs);
 
         AccessControlEntry[] aces = acl.getAccessControlEntries();
-        for (int i = 0; i < aces.length; i++) {
-            acl.removeAccessControlEntry(aces[i]);
+        for (AccessControlEntry ace : aces) {
+            acl.removeAccessControlEntry(ace);
         }
         assertEquals("After removing all ACEs the ACL must be empty", 0, acl.getAccessControlEntries().length);
     }

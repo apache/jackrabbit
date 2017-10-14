@@ -18,7 +18,6 @@ package org.apache.jackrabbit.test.api.nodetype;
 
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Set;
 
 import javax.jcr.ItemNotFoundException;
@@ -187,8 +186,8 @@ public class NodeTypeTest extends AbstractJCRTest {
 
         NodeType supertypes[] = type.getSupertypes();
         boolean hasNTBase = false;
-        for (int i = 0; i < supertypes.length; i++) {
-            if (supertypes[i].getName().equals(ntBase)) {
+        for (NodeType supertype : supertypes) {
+            if (supertype.getName().equals(ntBase)) {
                 hasNTBase = true;
                 break;
             }
@@ -242,11 +241,10 @@ public class NodeTypeTest extends AbstractJCRTest {
                     subtypeNames.containsAll(declaredSubtypeNames));
             
             // check the reverse relation
-            for (Iterator<String> it = subtypeNames.iterator(); it.hasNext(); ) {
-                String subtypename = it.next();
-                boolean isDeclared = declaredSubtypeNames.contains(subtypename);
+            for (String subtypeName : subtypeNames) {
+                boolean isDeclared = declaredSubtypeNames.contains(subtypeName);
                 
-                NodeType subtype = manager.getNodeType(subtypename);
+                NodeType subtype = manager.getNodeType(subtypeName);
                 Set<String> supertypeNames = asSetOfNames(subtype.getSupertypes());
                 
                 assertTrue(name + " should occur in set of super types: " + supertypeNames,
@@ -334,10 +332,10 @@ public class NodeTypeTest extends AbstractJCRTest {
             PropertyDefinition defs[] = type.getPropertyDefinitions();
 
             try {
-                for (int i = 0; i < declaredDefs.length; i++) {
+                for (PropertyDefinition declaredDef : declaredDefs) {
                     boolean exists = false;
-                    for (int j = 0; j < defs.length; j++) {
-                        if (defs[j].getName().equals(declaredDefs[i].getName())) {
+                    for (PropertyDefinition def : defs) {
+                        if (def.getName().equals(declaredDef.getName())) {
                             exists = true;
                             break;
                         }
@@ -368,8 +366,8 @@ public class NodeTypeTest extends AbstractJCRTest {
             NodeType type = types.nextNodeType();
             PropertyDefinition defs[] = type.getPropertyDefinitions();
             boolean hasJCRPrimaryType = false;
-            for (int i = 0; i < defs.length; i++) {
-                if (defs[i].getName().equals(jcrPrimaryType)) {
+            for (PropertyDefinition def : defs) {
+                if (def.getName().equals(jcrPrimaryType)) {
                     hasJCRPrimaryType = true;
                     break;
                 }
@@ -395,10 +393,10 @@ public class NodeTypeTest extends AbstractJCRTest {
             NodeDefinition defs[] = type.getChildNodeDefinitions();
 
             try {
-                for (int i = 0; i < declaredDefs.length; i++) {
+                for (NodeDefinition declaredDef : declaredDefs) {
                     boolean exists = false;
-                    for (int j = 0; j < defs.length; j++) {
-                        if (defs[j].getName().equals(declaredDefs[i].getName())) {
+                    for (NodeDefinition def : defs) {
+                        if (def.getName().equals(declaredDef.getName())) {
                             exists = true;
                             break;
                         }
@@ -488,8 +486,8 @@ public class NodeTypeTest extends AbstractJCRTest {
      */
     private Set<String> asSetOfNames(NodeType[] types) {
         Set<String> result = new HashSet<String>();
-        for (int i = 0; i < types.length; i++) {
-            result.add(types[i].getName());
+        for (NodeType type : types) {
+            result.add(type.getName());
         }
         return result;
     }

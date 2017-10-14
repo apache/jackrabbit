@@ -69,12 +69,11 @@ public class ReferenceConstraintTest extends ValueConstraintTest {
 
     public void testGetDefinition() throws RepositoryException {
         String[] qDefs = getQDefinitions();
-        for (int i = 0; i < qDefs.length; i++) {
-            ValueConstraint vc = createValueConstraint(qDefs[i]);
+        for (String qDef : qDefs) {
+            ValueConstraint vc = createValueConstraint(qDef);
             String jcrConstraint = vc.getDefinition(resolver);
-
-            assertFalse(qDefs[i].equals(jcrConstraint));
-            assertEquals(resolver.getJCRName(ValueConstraint.NAME_FACTORY.create(qDefs[i])), jcrConstraint);
+            assertFalse(qDef.equals(jcrConstraint));
+            assertEquals(resolver.getJCRName(ValueConstraint.NAME_FACTORY.create(qDef)), jcrConstraint);
         }
     }
 }

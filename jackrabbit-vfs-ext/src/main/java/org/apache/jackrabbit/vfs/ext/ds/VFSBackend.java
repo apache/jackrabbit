@@ -349,9 +349,8 @@ public class VFSBackend extends AbstractBackend {
         FileObject tempFileObject = getBaseFolderObject();
 
         try {
-            for (int i = 0; i < segments.length; i++) {
-                tempFileObject = tempFileObject.getChild(segments[i]);
-
+            for (String segment : segments) {
+                tempFileObject = tempFileObject.getChild(segment);
                 if (tempFileObject == null) {
                     return null;
                 }

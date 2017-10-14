@@ -164,13 +164,11 @@ public abstract class AbstractQOMTest extends AbstractQueryTest {
         }
 
         // check if all expected are in result
-        for (Iterator<String> it = expectedPaths.iterator(); it.hasNext();) {
-            String path = it.next();
+        for (String path : expectedPaths) {
             assertTrue(path + " is not part of the result set", resultPaths.contains(path));
         }
         // check result does not contain more than expected
-        for (Iterator<String> it = resultPaths.iterator(); it.hasNext();) {
-            String path = it.next();
+        for (String path : resultPaths) {
             assertTrue(path + " is not expected to be part of the result set", expectedPaths.contains(path));
         }
     }

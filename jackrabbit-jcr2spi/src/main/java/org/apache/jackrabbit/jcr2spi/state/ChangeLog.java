@@ -84,12 +84,12 @@ public class ChangeLog {
         List<NodeState> changedPrimaryTypes = new ArrayList<NodeState>();
 
         Operation[] ops = operations.toArray(new Operation[operations.size()]);
-        for (int i = 0; i < ops.length; i++) {
-            ops[i].persisted();
-            if (ops[i] instanceof SetMixin) {
-                changedMixins.add(((SetMixin) ops[i]).getNodeState());
-            } else if (ops[i] instanceof SetPrimaryType) {
-                changedPrimaryTypes.add(((SetPrimaryType) ops[i]).getNodeState());
+        for (Operation op : ops) {
+            op.persisted();
+            if (op instanceof SetMixin) {
+                changedMixins.add(((SetMixin) op).getNodeState());
+            } else if (op instanceof SetPrimaryType) {
+                changedPrimaryTypes.add(((SetPrimaryType) op).getNodeState());
             }
         }
         // process all remaining states that were not covered by the

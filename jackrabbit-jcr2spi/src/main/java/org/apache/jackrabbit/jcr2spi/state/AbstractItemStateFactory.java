@@ -67,11 +67,11 @@ public abstract class AbstractItemStateFactory implements ItemStateFactory {
      */
     void notifyCreated(ItemState createdState) {
         ItemStateCreationListener[] listeners = getListeners();
-        for (int i = 0; i < listeners.length; i++) {
+        for (ItemStateCreationListener listener : listeners) {
             // notify listeners when this item state is saved or invalidated
-            createdState.addListener(listeners[i]);
+            createdState.addListener(listener);
             // now inform about creation
-            listeners[i].created(createdState);
+            listener.created(createdState);
         }
     }
 
@@ -81,9 +81,9 @@ public abstract class AbstractItemStateFactory implements ItemStateFactory {
      */
     void notifyUpdated(ItemState state, int previousStatus) {
         ItemStateCreationListener[] listeners = getListeners();
-        for (int i = 0; i < listeners.length; i++) {
+        for (ItemStateCreationListener listener : listeners) {
             // now inform about creation
-            listeners[i].statusChanged(state, previousStatus);
+            listener.statusChanged(state, previousStatus);
         }
     }
 }

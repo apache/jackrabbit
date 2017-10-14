@@ -138,14 +138,14 @@ public class TransactionContext {
         beforeOperation();
 
         TransactionException txe = null;
-        for (int i = 0; i < resources.length; i++) {
+        for (InternalXAResource resource : resources) {
             try {
-                resources[i].prepare(this);
+                resource.prepare(this);
             } catch (TransactionException e) {
                 txe = e;
                 break;
             } catch (Exception e) {
-                txe = new TransactionException("Error while preparing resource " + resources, e);
+                txe = new TransactionException("Error while preparing resource " + resource, e);
                 break;
             }
         }
@@ -185,8 +185,7 @@ public class TransactionContext {
         beforeOperation();
 
         TransactionException txe = null;
-        for (int i = 0; i < resources.length; i++) {
-            InternalXAResource resource = resources[i];
+        for (InternalXAResource resource : resources) {
             if (txe != null) {
                 try {
                     resource.rollback(this);
@@ -235,8 +234,7 @@ public class TransactionContext {
         beforeOperation();
 
         int errors = 0;
-        for (int i = 0; i < resources.length; i++) {
-            InternalXAResource resource = resources[i];
+        for (InternalXAResource resource : resources) {
             try {
                 resource.rollback(this);
             } catch (Exception e) {
@@ -259,8 +257,8 @@ public class TransactionContext {
      * methods.
      */
     private void beforeOperation() {
-        for (int i = 0; i < resources.length; i++) {
-            resources[i].beforeOperation(this);
+        for (InternalXAResource resource : resources) {
+            resource.beforeOperation(this);
         }
     }
 
@@ -269,8 +267,8 @@ public class TransactionContext {
      * methods.
      */
     private void afterOperation() {
-        for (int i = 0; i < resources.length; i++) {
-            resources[i].afterOperation(this);
+        for (InternalXAResource resource : resources) {
+            resource.afterOperation(this);
         }
     }
 
