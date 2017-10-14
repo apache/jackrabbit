@@ -103,16 +103,16 @@ public abstract class ValueConstraintTest extends TestCase {
     }
 
     public void testCreateInvalidValueConstraints() throws RepositoryException {
-        try {
-            String[] invalidQDefs = getInvalidQDefinitions();
-            for (int i = 0; i < invalidQDefs.length; i++) {
-                createValueConstraint(invalidQDefs[i]);
+        String[] invalidQDefs = getInvalidQDefinitions();
+        for (String invalidQDef : invalidQDefs) {
+            try {
+                createValueConstraint(invalidQDef);
                 fail("Creating an invalid definition should throw InvalidConstraintException");
+            } catch (InvalidConstraintException e) {
+                //ok
+            } catch (IllegalArgumentException e) {
+                //ok
             }
-        } catch (InvalidConstraintException e) {
-            //ok
-        } catch (IllegalArgumentException e) {
-            // ok
         }
     }
 
