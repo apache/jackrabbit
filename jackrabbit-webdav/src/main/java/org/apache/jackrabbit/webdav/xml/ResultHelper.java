@@ -96,7 +96,7 @@ public final class ResultHelper {
             probe.endElement("uri", "e", "p:e");
             probe.endPrefixMapping("p");
             probe.endDocument();
-            return writer.toString().indexOf("xmlns") == -1;
+            return !writer.toString().contains("xmlns");
         } catch (Exception e) {
             throw new UnsupportedOperationException("XML serialization fails");
         }

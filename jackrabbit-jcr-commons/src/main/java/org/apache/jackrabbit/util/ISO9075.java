@@ -50,7 +50,7 @@ public class ISO9075 {
         if (name.length() == 0) {
             return name;
         }
-        if (XMLChar.isValidName(name) && name.indexOf("_x") < 0) {
+        if (XMLChar.isValidName(name) && !name.contains("_x")) {
             // already valid
             return name;
         } else {
@@ -122,7 +122,7 @@ public class ISO9075 {
      */
     public static String decode(String name) {
         // quick check
-        if (name.indexOf("_x") < 0) {
+        if (!name.contains("_x")) {
             // not encoded
             return name;
         }

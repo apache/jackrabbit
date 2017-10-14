@@ -521,11 +521,7 @@ class TreeComparator extends Assert {
      *         change.
      */
     public boolean propertyValueMayChange(String propertyName) {
-        if (sc.propertyValueMayChange.indexOf(" " + propertyName + " ") < 0) {
-            return false;
-        } else {
-            return true;
-        }
+        return sc.propertyValueMayChange.contains(" " + propertyName + " ");
     }
 
     /**

@@ -411,13 +411,13 @@ public class NodeReadMethodsTest extends AbstractJCRTest {
                 Node n = nodes4.nextNode();
                 assertTrue(assertString4 + "name comparison failed: *" +
                         shortenName + "* not found in " + n.getName(),
-                        n.getName().indexOf(shortenName) != -1);
+                        n.getName().contains(shortenName));
             }
             // test if the number of found nodes is correct
             int numExpected4 = 0;
             for (int i = 0; i < allNodes.size(); i++) {
                 Node n = allNodes.get(i);
-                if (n.getName().indexOf(shortenName) != -1) {
+                if (n.getName().contains(shortenName)) {
                     numExpected4++;
                 }
             }
@@ -533,13 +533,13 @@ public class NodeReadMethodsTest extends AbstractJCRTest {
                 Node n = nodes5.nextNode();
                 assertTrue(assertString5 + "name comparison failed: *" +
                         shortenName + "* not found in " + n.getName(),
-                        n.getName().indexOf(shortenName) != -1);
+                        n.getName().contains(shortenName));
             }
             // test if the number of found nodes is correct
             int numExpected5 = 0;
             for (int i = 0; i < allNodes.size(); i++) {
                 Node n = allNodes.get(i);
-                if (n.getName().indexOf(shortenName) != -1) {
+                if (n.getName().contains(shortenName)) {
                     numExpected5++;
                 }
             }
@@ -700,13 +700,13 @@ public class NodeReadMethodsTest extends AbstractJCRTest {
                 Property p = properties4.nextProperty();
                 assertTrue(assertString4 + "name comparison failed: *" +
                         shortenName + "* not found in " + p.getName(),
-                        p.getName().indexOf(shortenName) != -1);
+                        p.getName().contains(shortenName));
             }
             // test if the number of found properties is correct
             int numExpected4 = 0;
             for (int i = 0; i < allProperties.size(); i++) {
                 Property p = allProperties.get(i);
-                if (p.getName().indexOf(shortenName) != -1) {
+                if (p.getName().contains(shortenName)) {
                     numExpected4++;
                 }
             }
@@ -808,13 +808,13 @@ public class NodeReadMethodsTest extends AbstractJCRTest {
                 Property p = properties5.nextProperty();
                 assertTrue(assertString5 + "name comparison failed: *" +
                         shortenName + "* not found in " + p.getName(),
-                        p.getName().indexOf(shortenName) != -1);
+                        p.getName().contains(shortenName));
             }
             // test if the number of found properties is correct
             int numExpected5 = 0;
             for (int i = 0; i < allProperties.size(); i++) {
                 Property p = allProperties.get(i);
-                if (p.getName().indexOf(shortenName) != -1) {
+                if (p.getName().contains(shortenName)) {
                     numExpected5++;
                 }
             }
