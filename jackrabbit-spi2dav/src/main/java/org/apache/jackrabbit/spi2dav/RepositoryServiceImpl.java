@@ -2477,7 +2477,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
                     eventPath = uriResolver.getQPath(href, sessionInfo);
                 } catch (RepositoryException e) {
                     // should not occur
-                    log.error("Internal error while building Event: ()", e.getMessage());
+                    log.error("Internal error while building Event: {}", e.getMessage());
                     continue;
                 }
 
