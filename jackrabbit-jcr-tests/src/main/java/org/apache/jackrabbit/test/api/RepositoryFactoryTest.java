@@ -37,7 +37,7 @@ public class RepositoryFactoryTest extends AbstractJCRTest {
 
     public void testEmptyParameters() throws Exception {
         // must not throw
-        getRepositoryFactory().getRepository(Collections.EMPTY_MAP);
+        getRepositoryFactory().getRepository(Collections.emptyMap());
     }
 
     protected RepositoryFactory getRepositoryFactory()

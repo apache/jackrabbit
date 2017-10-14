@@ -84,7 +84,7 @@ public class EventImpl implements Event, Serializable {
     public EventImpl(int type, Path path, ItemId itemId, NodeId parentId,
                      Name primaryNodeTypeName, Name[] mixinTypeNames,
                      String userId) {
-        this(type, path, itemId, parentId, primaryNodeTypeName, mixinTypeNames, userId, null, Long.MIN_VALUE, Collections.EMPTY_MAP);
+        this(type, path, itemId, parentId, primaryNodeTypeName, mixinTypeNames, userId, null, Long.MIN_VALUE, Collections.emptyMap());
     }
 
     /**
