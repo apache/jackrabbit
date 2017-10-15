@@ -209,7 +209,10 @@ public class ClientEventPoll extends Thread {
                 // extract the listener id from the remote event and find
                 // the locally registered event listener
                 Long id = remoteEvent.getListenerId();
-                EventListener listener = listenerMap.get(id);
+                EventListener listener;
+                synchronized (this) {
+                    listener = listenerMap.get(id);
+                }
 
                 // if the listener is not registered (anymore), the event is
                 // silently ignored, running is checked and the server asked again
