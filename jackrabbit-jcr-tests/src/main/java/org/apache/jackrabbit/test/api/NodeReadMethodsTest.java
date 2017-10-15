@@ -119,9 +119,10 @@ public class NodeReadMethodsTest extends AbstractJCRTest {
 
         // build name from path
         String path = childNode.getPath();
-        String name = path.substring(path.lastIndexOf("/") + 1);
-        if (name.indexOf("[") != -1) {
-            name = name.substring(0, name.indexOf("["));
+        String name = path.substring(path.lastIndexOf('/') + 1);
+        final int leftSquareBracketPos = name.indexOf('[');
+        if (leftSquareBracketPos != -1) {
+            name = name.substring(0, leftSquareBracketPos);
         }
         assertEquals("getName() must be the same as the last item in the path",
                 name,
