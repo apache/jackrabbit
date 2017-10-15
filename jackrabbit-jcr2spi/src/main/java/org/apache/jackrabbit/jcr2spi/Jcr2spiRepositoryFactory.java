@@ -148,8 +148,7 @@ public class Jcr2spiRepositoryFactory implements RepositoryFactory {
         if (configParam instanceof RepositoryConfig) {
             config = (RepositoryConfig) configParam;
             if (serviceFactory != null) {
-                log.warn("Ignoring {} since {} was specified", PARAM_REPOSITORY_SERVICE_FACTORY,
-                        PARAM_REPOSITORY_CONFIG);
+                log.warn("Ignoring " + PARAM_REPOSITORY_SERVICE_FACTORY + " since " + PARAM_REPOSITORY_CONFIG + " was specified");
             }
         } else {
             if (serviceFactory == null) {
@@ -173,7 +172,7 @@ public class Jcr2spiRepositoryFactory implements RepositoryFactory {
             return null;
         }
 
-        log.debug("Acquiring RepositoryServiceFactory from {}", PARAM_REPOSITORY_SERVICE_FACTORY);
+        log.debug("Acquiring RepositoryServiceFactory from " + PARAM_REPOSITORY_SERVICE_FACTORY);
 
         if (serviceFactoryParam instanceof RepositoryServiceFactory) {
             log.debug("Found RepositoryServiceFactory {}", serviceFactoryParam);
@@ -269,10 +268,10 @@ public class Jcr2spiRepositoryFactory implements RepositoryFactory {
 
         private static CacheBehaviour getCacheBehaviour(Map<?, ?> parameters) throws RepositoryException {
             Object paramCacheBehaviour = parameters.get(PARAM_CACHE_BEHAVIOR);
-            log.debug("Setting CacheBehaviour from {}", PARAM_CACHE_BEHAVIOR);
+            log.debug("Setting CacheBehaviour from " + PARAM_CACHE_BEHAVIOR);
 
             if (paramCacheBehaviour == null) {
-                log.debug("{} not set, defaulting to {}", PARAM_CACHE_BEHAVIOR, DEFAULT_CACHE_BEHAVIOR);
+                log.debug(PARAM_CACHE_BEHAVIOR + " not set, defaulting to {}", DEFAULT_CACHE_BEHAVIOR);
                 return DEFAULT_CACHE_BEHAVIOR;
             } else if (paramCacheBehaviour instanceof CacheBehaviour) {
                 log.debug("Setting CacheBehaviour to {}", paramCacheBehaviour);
@@ -286,7 +285,7 @@ public class Jcr2spiRepositoryFactory implements RepositoryFactory {
                     log.debug("Setting CacheBehaviour to {}", CacheBehaviour.OBSERVATION);
                     return CacheBehaviour.OBSERVATION;
                 } else {
-                    log.error("Invalid valid for CacheBehaviour: {} {}", PARAM_CACHE_BEHAVIOR, cacheBehaviour);
+                    log.error("Invalid valid for CacheBehaviour: " + PARAM_CACHE_BEHAVIOR + " {}", cacheBehaviour);
                     throw new RepositoryException("Invalid value for CacheBehaviour: " + cacheBehaviour);
                 }
             } else {
@@ -298,10 +297,10 @@ public class Jcr2spiRepositoryFactory implements RepositoryFactory {
 
         private static int getItemCacheSize(Map<?, ?> parameters) throws RepositoryException {
             Object paramItemCacheSize = parameters.get(PARAM_ITEM_CACHE_SIZE);
-            log.debug("Setting ItemCacheSize from {}", PARAM_ITEM_CACHE_SIZE);
+            log.debug("Setting ItemCacheSize from " + PARAM_ITEM_CACHE_SIZE);
 
             if (paramItemCacheSize == null) {
-                log.debug("{} not set, defaulting to {}", PARAM_ITEM_CACHE_SIZE, DEFAULT_ITEM_CACHE_SIZE);
+                log.debug(PARAM_ITEM_CACHE_SIZE + " not set, defaulting to " + DEFAULT_ITEM_CACHE_SIZE);
                 return DEFAULT_ITEM_CACHE_SIZE;
             } else if (paramItemCacheSize instanceof Integer) {
                 log.debug("Setting ItemCacheSize to {}", paramItemCacheSize);
@@ -324,10 +323,10 @@ public class Jcr2spiRepositoryFactory implements RepositoryFactory {
 
         private static int getPollTimeout(Map<?, ?> parameters) throws RepositoryException {
             Object paramPollTimeOut = parameters.get(PARAM_POLL_TIME_OUT);
-            log.debug("Setting PollTimeout from {}", PARAM_POLL_TIME_OUT);
+            log.debug("Setting PollTimeout from " + PARAM_POLL_TIME_OUT);
 
             if (paramPollTimeOut == null) {
-                log.debug("{} not set, defaulting to {}", PARAM_POLL_TIME_OUT, DEFAULT_POLL_TIME_OUT);
+                log.debug(PARAM_POLL_TIME_OUT + " not set, defaulting to " + DEFAULT_POLL_TIME_OUT);
                 return DEFAULT_POLL_TIME_OUT;
             } else if (paramPollTimeOut instanceof Integer) {
                 log.debug("Setting PollTimeout to {}", paramPollTimeOut);
