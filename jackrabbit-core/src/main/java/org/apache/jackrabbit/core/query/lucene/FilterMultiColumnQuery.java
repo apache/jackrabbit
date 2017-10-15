@@ -68,7 +68,9 @@ public class FilterMultiColumnQuery implements MultiColumnQuery {
                 searcher, orderings, resultFetchHint)) {
 
             {
-                log.debug(Arrays.asList(getSelectorNames()).toString());
+                if (log.isDebugEnabled()) {
+                    log.debug(Arrays.asList(getSelectorNames()).toString());
+                }
             }
 
             public ScoreNode[] nextScoreNodes() throws IOException {
