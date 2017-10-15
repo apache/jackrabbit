@@ -362,12 +362,11 @@ public class S3Backend extends AbstractBackend {
                 copReq.setNewObjectMetadata(new ObjectMetadata());
                 Copy copy = tmx.copy(s3ReqDecorator.decorate(copReq));
                 copy.waitForCompletion();
-                LOG.debug("[{}] touched. time taken [{}] ms ", new Object[] {
-                    identifier, (System.currentTimeMillis() - start) });
+                LOG.debug("[{}] touched. time taken [{}] ms ",
+                        identifier, System.currentTimeMillis() - start);
             } else {
                 LOG.trace("[{}] touch not required. time taken [{}] ms ",
-                    new Object[] { identifier,
-                        (System.currentTimeMillis() - start) });
+                        identifier, System.currentTimeMillis() - start);
             }
 
         } catch (Exception e) {
@@ -499,8 +498,8 @@ public class S3Backend extends AbstractBackend {
             Thread.currentThread().setContextClassLoader(
                 getClass().getClassLoader());
             s3service.deleteObject(bucket, key);
-            LOG.debug("Identifier [{}] deleted. It took [{}]ms.", new Object[] {
-                identifier, (System.currentTimeMillis() - start) });
+            LOG.debug("Identifier [{}] deleted. It took [{}]ms.",
+                    identifier, System.currentTimeMillis() - start);
         } catch (AmazonServiceException e) {
             throw new DataStoreException(
                 "Could not getLastModified of dataIdentifier " + identifier, e);

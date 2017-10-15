@@ -47,9 +47,7 @@ public class StatManager {
         boolean allEnabled = getBoolean(ALL_STATS_ENABLED_PROPERTY);
         queryStat.setEnabled(allEnabled
                 || getBoolean(QUERY_STATS_ENABLED_PROPERTY));
-        log.debug(
-                "Started StatManager. QueryStat is enabled {}",
-                new Object[] { queryStat.isEnabled() });
+        log.debug("Started StatManager. QueryStat is enabled {}", queryStat.isEnabled());
     }
 
     public QueryStatCore getQueryStat() {

@@ -607,8 +607,7 @@ public class SearchIndex extends AbstractQueryHandler {
         // initialize spell checker
         spellChecker = createSpellChecker();
 
-        log.info("Index initialized: {} Version: {}",
-                new Object[]{path, index.getIndexFormatVersion()});
+        log.info("Index initialized: {} Version: {}", path, index.getIndexFormatVersion());
         if (!index.getIndexFormatVersion().equals(getIndexFormatVersion())) {
             log.warn("Using Version {} for reading. Please re-index version " +
                     "storage for optimal performance.",

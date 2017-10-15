@@ -662,10 +662,8 @@ class CachingIndexReader extends FilterIndexReader {
                 for (int i = 0; i < inSegmentParents.length; i++) {
                     inSegmentParents[i] = ii.readInt();
                 }
-                log.debug(
-                        "persisted cache initialized {} DocIds in {} ms",
-                        new Object[] { inSegmentParents.length,
-                                System.currentTimeMillis() - time });
+                log.debug("persisted cache initialized {} DocIds in {} ms",
+                        inSegmentParents.length, System.currentTimeMillis() - time);
                 return true;
             } catch (FileNotFoundException ignore) {
                 // expected in the case where the file-based cache has not been

@@ -256,8 +256,7 @@ public class LocalCache {
         long diff = (System.currentTimeMillis() - cacheMissDuration.get()) / 1000;
         // logged at 5 minute interval minimum
         if (diff > 5 * 60) {
-            LOG.info("local cache misses [{}] in [{}] sec", new Object[] {
-                cacheMissCounter.getAndSet(0), diff });
+            LOG.info("local cache misses [{}] in [{}] sec", cacheMissCounter.getAndSet(0), diff);
             cacheMissDuration.set(System.currentTimeMillis());
         }
         
