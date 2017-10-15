@@ -702,10 +702,12 @@ public class NodeImpl extends ItemImpl implements Node, JackrabbitNode {
                         // we need to check if the item doesn't exist in the ism
                         ItemStateManager ism = sessionContext.getItemStateManager();
                         if (!ism.hasItemState(childId)) {
-                            log.warn("Child named " + entry.getName() + " (index " + entry.getIndex() + ", " +
-                                    "node id " + childId + ") " +
-                                    "not found when trying to remove " + getPath() + " " +
-                                    "(node id " + getNodeId() + ") - ignored", e);
+                            if (log.isWarnEnabled()) {
+                                log.warn("Child named " + entry.getName() + " (index " + entry.getIndex() + ", " +
+                                        "node id " + childId + ") " +
+                                        "not found when trying to remove " + getPath() + " " +
+                                        "(node id " + getNodeId() + ") - ignored", e);
+                            }
                             ignoreError = true;
                         }
                     }
