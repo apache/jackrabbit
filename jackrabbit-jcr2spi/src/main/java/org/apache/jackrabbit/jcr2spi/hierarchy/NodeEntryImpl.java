@@ -1256,7 +1256,7 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
         } catch (ItemNotFoundException e) {
             log.debug("Property with name {} does not exist (anymore)", child.getName());
         } catch (RepositoryException e) {
-            log.debug("Unable to access child property " + child.getName(), e.getMessage());
+            log.debug("Unable to access child property {}", child.getName(), e);
         }
     }
 

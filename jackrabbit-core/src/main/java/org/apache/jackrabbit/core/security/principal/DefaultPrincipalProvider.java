@@ -277,7 +277,7 @@ public class DefaultPrincipalProvider extends AbstractPrincipalProvider implemen
                     log.debug("Cannot find authorizable for principal {}", princ.getName());
                 }
             } catch (RepositoryException e) {
-                log.warn("Failed to determine membership for " + princ.getName(), e.getMessage());
+                log.warn("Failed to determine membership for {}", princ.getName(), e);
             }
         return membership;
     }

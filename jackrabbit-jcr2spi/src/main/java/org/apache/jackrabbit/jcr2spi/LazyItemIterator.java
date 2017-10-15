@@ -137,7 +137,7 @@ public class LazyItemIterator implements NodeIterator, PropertyIterator, Version
             try {
                 nextItem = itemMgr.getItem(entry);
             } catch (RepositoryException e) {
-                log.warn("Failed to fetch item " + entry.getName() + ", skipping.", e.getMessage());
+                log.warn("Failed to fetch item {}, skipping.", entry.getName(), e);
                 // reduce the size... and try the next one
                 size--;
             }

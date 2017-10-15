@@ -825,8 +825,8 @@ public class S3Backend extends AbstractBackend {
                     copy.waitForCopyResult();
                     LOG.debug("[{}] renamed to [{}] ", oldKey, newS3Key);
                 } catch (InterruptedException ie) {
-                    LOG.error(" Exception in renaming [{}] to [{}] ",
-                        new Object[] { ie, oldKey, newS3Key });
+                    LOG.error("Exception in renaming [{}] to [{}]",
+                        new Object[] { oldKey, newS3Key, ie });
                 }
             } finally {
                 if (contextClassLoader != null) {

@@ -1058,10 +1058,10 @@ public class CachingHierarchyManager extends HierarchyManagerImpl
                 long now = System.currentTimeMillis();
                 final String msg = "Cache id = {};size = {};max = {}";
                 if (log.isTraceEnabled()) {
-                    log.trace(msg, new Object[]{id, this.cache.size(), upperLimit}, new Exception());
+                    log.trace(msg, new Object[] { id, this.cache.size(), upperLimit, new Exception() });
                 } else if (now > timeStamp + CACHE_STATISTICS_LOG_INTERVAL_MILLIS) {
                     timeStamp = now;
-                    log.debug(msg, new Object[]{id, this.cache.size(), upperLimit}, new Exception());
+                    log.debug(msg, new Object[] { id, this.cache.size(), upperLimit, new Exception() });
                 }
             }
         }
