@@ -412,7 +412,7 @@ public class LocalCache {
     /**
      * This method tries purging of local cache. It checks if local cache
      * has exceeded the defined limit then it triggers purge cache job in a
-     * seperate thread.
+     * separate thread.
      */
     synchronized void tryPurge() {
         if (!isInPurgeMode()
@@ -511,7 +511,7 @@ public class LocalCache {
             synchronized (this) {
                 Long oldValue = cache.get(fileName);
                 if (oldValue == null) {
-                    long flength = value.longValue();
+                    long flength = value;
                     currentSizeInBytes += flength;
                     return super.put(fileName.replace("\\", "/"), value);
                 }
