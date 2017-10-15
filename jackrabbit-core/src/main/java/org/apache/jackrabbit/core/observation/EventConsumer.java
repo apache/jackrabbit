@@ -248,10 +248,8 @@ class EventConsumer {
             long time = System.currentTimeMillis();
             listener.onEvent(it);
             time = System.currentTimeMillis() - time;
-            if (log.isDebugEnabled()) {
-                log.debug("listener {} processed events in {} ms.",
-                        listener.getClass().getName(), time);
-            }
+            log.debug("listener {} processed events in {} ms.",
+                    listener.getClass().getName(), time);
         } else {
             // otherwise skip this listener
         }
