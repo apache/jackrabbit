@@ -26,6 +26,7 @@ import javax.jcr.nodetype.NodeType;
 import javax.jcr.nodetype.NodeTypeIterator;
 import javax.jcr.nodetype.NodeTypeManager;
 
+import org.apache.commons.lang.text.StrBuilder;
 import org.apache.jackrabbit.test.AbstractJCRTest;
 
 /**
@@ -83,11 +84,11 @@ public class NodeMixinUtil {
 
         NodeTypeManager manager = session.getWorkspace().getNodeTypeManager();
         NodeTypeIterator mixins = manager.getMixinNodeTypes();
-        StringBuffer s = new StringBuffer("X");
+        StrBuilder s = new StrBuilder("X");
         while (mixins.hasNext()) {
             s.append(mixins.nextNodeType().getName());
         }
-        return s.toString().replaceAll(":", "");
+        return s.deleteAll(':').toString();
     }
 
 

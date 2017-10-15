@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.spi2dav;
 
+import org.apache.commons.lang.text.StrBuilder;
 import org.apache.http.HttpResponse;
 import org.apache.jackrabbit.commons.webdav.JcrRemotingConstants;
 import org.apache.jackrabbit.spi.commons.conversion.NameException;
@@ -101,7 +102,7 @@ class URIResolverImpl implements URIResolver {
         if (cache.containsItemId(itemId)) {
             return cache.getUri(itemId);
         } else {
-            StringBuffer uriBuffer = new StringBuffer();
+            StrBuilder uriBuffer = new StrBuilder();
 
             Path path = itemId.getPath();
             String uniqueID = itemId.getUniqueID();
@@ -152,8 +153,8 @@ class URIResolverImpl implements URIResolver {
             // resolve relative-path part unless it denotes the root-item
             if (path != null && !path.denotesRoot()) {
                 String jcrPath = service.getNamePathResolver(sessionInfo).getJCRPath(path);
-                if (!path.isAbsolute() && !uriBuffer.toString().endsWith("/")) {
-                    uriBuffer.append("/");
+                if (!path.isAbsolute() && !uriBuffer.endsWith("/")) {
+                    uriBuffer.append('/');
                 }
                 uriBuffer.append(Text.escapePath(jcrPath));
             }

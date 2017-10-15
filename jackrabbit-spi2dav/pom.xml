@@ -116,6 +116,10 @@
   </build>
   <dependencies>
     <dependency>
+      <groupId>commons-lang</groupId>
+      <artifactId>commons-lang</artifactId>
+    </dependency>
+    <dependency>
       <groupId>org.apache.jackrabbit</groupId>
       <artifactId>jackrabbit-spi</artifactId>
       <version>${project.version}</version>

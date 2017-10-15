@@ -66,6 +66,10 @@
       <groupId>concurrent</groupId>
       <artifactId>concurrent</artifactId>
     </dependency>
+    <dependency>
+      <groupId>commons-lang</groupId>
+      <artifactId>commons-lang</artifactId>
+    </dependency>
   </dependencies>
 
 </project>

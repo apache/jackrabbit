@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.test.api.nodetype;
 
+import org.apache.commons.lang.text.StrBuilder;
 import org.apache.jackrabbit.test.AbstractJCRTest;
 
 import javax.jcr.RepositoryException;
@@ -77,7 +78,7 @@ public class NodeTypeManagerTest extends AbstractJCRTest {
                 type.getName());
 
 
-        StringBuffer notExistingName = new StringBuffer("X");
+        StrBuilder notExistingName = new StrBuilder("X");
         NodeTypeIterator types = manager.getAllNodeTypes();
         while (types.hasNext()) {
             // build a name which is for sure not existing
@@ -85,7 +86,7 @@ public class NodeTypeManagerTest extends AbstractJCRTest {
             notExistingName.append(types.nextNodeType().getName());
         }
         try {
-            manager.getNodeType(notExistingName.toString().replaceAll(":", ""));
+            manager.getNodeType(notExistingName.deleteAll(':').toString());
             fail("getNodeType(String nodeTypeName) must throw a " +
                     "NoSuchNodeTypeException if no according NodeType " +
                     "does exist");

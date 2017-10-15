@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.test.api;
 
+import org.apache.commons.lang.text.StrBuilder;
 import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.apache.jackrabbit.test.NotExecutableException;
 
@@ -266,7 +267,7 @@ public class NodeReadMethodsTest extends AbstractJCRTest {
     public void testGetNode()
             throws NotExecutableException, RepositoryException {
 
-        StringBuffer notExistingPath = new StringBuffer("X");
+        StrBuilder notExistingPath = new StrBuilder("X");
         NodeIterator nodes = testRootNode.getNodes();
         while (nodes.hasNext()) {
             // build a path that for sure is not existing
@@ -275,7 +276,7 @@ public class NodeReadMethodsTest extends AbstractJCRTest {
         }
 
         try {
-            testRootNode.getNode(notExistingPath.toString().replaceAll(":", ""));
+            testRootNode.getNode(notExistingPath.deleteAll(':').toString());
             fail("getNode(String relPath) must throw a PathNotFoundException" +
                     "if no node exists at relPath");
         } catch (PathNotFoundException e) {
@@ -555,7 +556,7 @@ public class NodeReadMethodsTest extends AbstractJCRTest {
      */
     public void testGetProperty()
             throws NotExecutableException, RepositoryException {
-        StringBuffer notExistingPath = new StringBuffer("X");
+        StrBuilder notExistingPath = new StrBuilder("X");
         PropertyIterator properties = testRootNode.getProperties();
         while (properties.hasNext()) {
             // build a path that for sure is not existing
@@ -564,7 +565,7 @@ public class NodeReadMethodsTest extends AbstractJCRTest {
         }
 
         try {
-            testRootNode.getProperty(notExistingPath.toString().replaceAll(":", ""));
+            testRootNode.getProperty(notExistingPath.deleteAll(':').toString());
             fail("getProperty(String relPath) must throw a " +
                     "PathNotFoundException if no node exists at relPath");
         } catch (PathNotFoundException e) {
@@ -607,17 +608,16 @@ public class NodeReadMethodsTest extends AbstractJCRTest {
         }
         PropertyIterator allPropertiesIt = node.getProperties();
         List<Property> allProperties = new ArrayList<Property>();
-        StringBuffer notExistingPropertyName = new StringBuffer();
+        StrBuilder notExistingPropertyName = new StrBuilder();
         while (allPropertiesIt.hasNext()) {
             Property p = allPropertiesIt.nextProperty();
             allProperties.add(p);
-            notExistingPropertyName.append(p.getName() + "X");
+            notExistingPropertyName.append(p.getName()).append('X');
         }
-
 
         // test that an empty NodeIterator is returned
         // when the pattern is not matching any child node
-        String pattern0 = notExistingPropertyName.toString().replaceAll(":", "");
+        String pattern0 = notExistingPropertyName.deleteAll(':').toString();
         NodeIterator properties0 = node.getNodes(pattern0);
         try {
             properties0.nextNode();
@@ -991,22 +991,22 @@ public class NodeReadMethodsTest extends AbstractJCRTest {
         Node node = testRootNode;
 
         NodeIterator nodes = node.getNodes();
-        StringBuffer notExistingNodeName = new StringBuffer();
+        StrBuilder notExistingNodeName = new StrBuilder();
         while (nodes.hasNext()) {
             Node n = nodes.nextNode();
             assertTrue("hasNode(String relPath) returns false although " +
                     "node at relPath is existing",
                     node.hasNode(n.getName()));
-            notExistingNodeName.append(n.getName() + "X");
+            notExistingNodeName.append(n.getName()).append('X');
         }
-        if (notExistingNodeName.toString().equals("")) {
+        if (notExistingNodeName.length() == 0) {
             throw new NotExecutableException("Workspace does not have sufficient content for this test. " +
                     "Root node must have at least one child node.");
         }
 
         assertFalse("hasNode(String relPath) returns true although " +
                 "node at relPath is not existing",
-                node.hasNode(notExistingNodeName.toString().replaceAll(":", "")));
+                node.hasNode(notExistingNodeName.deleteAll(':').toString()));
     }
 
     /**
@@ -1044,21 +1044,21 @@ public class NodeReadMethodsTest extends AbstractJCRTest {
         Node node = testRootNode;
 
         PropertyIterator properties = node.getProperties();
-        StringBuffer notExistingPropertyName = new StringBuffer();
+        StrBuilder notExistingPropertyName = new StrBuilder();
         while (properties.hasNext()) {
             Property p = properties.nextProperty();
             assertTrue("node.hasProperty(\"relPath\") returns false " +
                     "although property at relPath is existing",
                     node.hasProperty(p.getName()));
-            notExistingPropertyName.append(p.getName() + "X");
+            notExistingPropertyName.append(p.getName()).append('X');
         }
-        if (notExistingPropertyName.toString().equals("")) {
+        if (notExistingPropertyName.length() == 0) {
             fail("Root node must at least have one property: jcr:primaryType");
         }
 
         assertFalse("node.hasProperty(\"relPath\") returns true " +
                 "although property at relPath is not existing",
-                node.hasProperty(notExistingPropertyName.toString().replaceAll(":", "")));
+                node.hasProperty(notExistingPropertyName.deleteAll(':').toString()));
     }
 
     /**
