@@ -894,7 +894,7 @@ class ItemSaveOperation implements SessionWriteOperation<Object> {
                 String msg = itemMgr.safeGetJCRPath(id)
                     + ": failed to restore transient state";
                 if (log.isDebugEnabled()) {
-                    log.warn(msg, re);
+                    log.debug(msg, re);
                 } else {
                     log.warn(msg);
                 }

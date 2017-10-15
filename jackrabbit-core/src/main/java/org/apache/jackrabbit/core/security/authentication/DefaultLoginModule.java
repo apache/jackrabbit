@@ -228,7 +228,7 @@ public class DefaultLoginModule extends AbstractLoginModule {
                 return TokenBasedAuthentication.getUserId(tokenCredentials, session);
             } catch (RepositoryException e) {
                 if (log.isDebugEnabled()) {
-                    log.warn("Failed to retrieve UserID from token-based credentials", e);
+                    log.debug("Failed to retrieve UserID from token-based credentials", e);
                 } else {
                     log.warn("Failed to retrieve UserID from token-based credentials: {}", (Object) e);
                 }
