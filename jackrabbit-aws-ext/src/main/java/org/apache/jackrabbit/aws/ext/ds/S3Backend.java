@@ -313,12 +313,11 @@ public class S3Backend extends AbstractBackend {
     public void touchAsync(final DataIdentifier identifier,
             final long minModifiedDate, final AsyncTouchCallback callback)
             throws DataStoreException {
+        if (callback == null) {
+            throw new IllegalArgumentException("callback parameter cannot be null in touchAsync");
+        }
         ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
         try {
-            if (callback == null) {
-                throw new IllegalArgumentException(
-                    "callback parameter cannot be null in touchAsync");
-            }
             Thread.currentThread().setContextClassLoader(
                 getClass().getClassLoader());
 
