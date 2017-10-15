@@ -32,7 +32,7 @@ public final class JcrPath {
     public final int flags;
 
     // create tests
-    private static ArrayList list = new ArrayList();
+    private static final ArrayList<JcrPath> list = new ArrayList<JcrPath>();
     static {
         // absolute paths
         list.add(new JcrPath("/", NOR|VAL));
