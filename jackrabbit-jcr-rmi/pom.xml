@@ -45,23 +45,6 @@
   <build>
     <plugins>
       <plugin>
-        <artifactId>maven-antrun-plugin</artifactId>
-        <executions>
-          <execution>
-            <id>rmic</id>
-            <phase>process-classes</phase>
-            <configuration>
-              <target>
-                <rmic base="${project.build.outputDirectory}" verify="true" classpathref="maven.compile.classpath" />
-              </target>
-            </configuration>
-            <goals>
-              <goal>run</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
         <groupId>org.apache.felix</groupId>
         <artifactId>maven-bundle-plugin</artifactId>
         <extensions>true</extensions>
@@ -70,7 +53,7 @@
             <Bundle-Category>jcr,jackrabbit</Bundle-Category>
             <Bundle-DocURL>http://jackrabbit.apache.org/</Bundle-DocURL>
             <Export-Package>
-              org.apache.jackrabbit.rmi.*;version=${project.version}
+              org.apache.jackrabbit.rmi.*;version=3.0.0
             </Export-Package>
             <!-- optional resolution XA -->
             <Import-Package>
