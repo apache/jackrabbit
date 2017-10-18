@@ -128,8 +128,7 @@ public class RepositoryContext {
     /**
      *  flag to indicate if GC is running
      */
-    
-    private boolean gcRunning;
+    private volatile boolean gcRunning;
 
     /**
      * Creates a component context for the given repository.
@@ -460,7 +459,7 @@ public class RepositoryContext {
      * 
      * @return gcRunning status
      */
-    public boolean isGcRunning() {
+    public synchronized boolean isGcRunning() {
         return gcRunning;
     }
 
