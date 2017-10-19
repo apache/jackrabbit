@@ -44,7 +44,9 @@
 
   <properties>
     <test.opts.memory>-Xmx256m</test.opts.memory>
-    <test.opts>${test.opts.coverage} ${test.opts.memory} -enableassertions</test.opts>
+    <!-- JCR-4200 and SUREFIRE-1424 -->
+    <test.opts.modules>-XX:+IgnoreUnrecognizedVMOptions --add-modules=java.xml.bind</test.opts.modules>
+    <test.opts>${test.opts.modules} ${test.opts.coverage} ${test.opts.memory} -enableassertions</test.opts>
     <jetty.version>8.2.0.v20160908</jetty.version>
     <tika.version>1.7</tika.version>
     <project.reporting.outputEncoding>${project.build.sourceEncoding}</project.reporting.outputEncoding>
