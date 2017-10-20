@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.WeakHashMap;
 
 import javax.jcr.NamespaceRegistry;
 import javax.jcr.PropertyType;
@@ -37,7 +38,6 @@ import javax.jcr.nodetype.NoSuchNodeTypeException;
 import javax.jcr.nodetype.NodeTypeExistsException;
 import javax.jcr.version.OnParentVersionAction;
 
-import org.apache.commons.collections.map.ReferenceMap;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.QItemDefinition;
 import org.apache.jackrabbit.spi.QNodeDefinition;
@@ -75,8 +75,10 @@ public class NodeTypeRegistryImpl implements NodeTypeRegistry, EffectiveNodeType
     /**
      * Listeners (soft references)
      */
-    @SuppressWarnings("unchecked")
-    private final Map<NodeTypeRegistryListener, NodeTypeRegistryListener> listeners = Collections.synchronizedMap(new ReferenceMap(ReferenceMap.WEAK, ReferenceMap.WEAK));
+    // This is a weak set. Although Java does not have a WeakSet (see
+    // https://stackoverflow.com/questions/4062919/why-does-exist-weakhashmap-but-absent-weakset )
+    // we can emulate a weak set by creating a WeakHashMap with value type Void.
+    private final Map<NodeTypeRegistryListener, Void> listeners = Collections.synchronizedMap(new WeakHashMap<NodeTypeRegistryListener, Void>());
 
     /**
      * Create a new <code>NodeTypeRegistry</code>
@@ -118,15 +120,19 @@ public class NodeTypeRegistryImpl implements NodeTypeRegistry, EffectiveNodeType
      * @see NodeTypeRegistry#addListener(NodeTypeRegistryListener)
      */
     public void addListener(NodeTypeRegistryListener listener) {
-        if (!listeners.containsKey(listener)) {
-            listeners.put(listener, listener);
+        if (listener == null) {
+            throw new NullPointerException("listener must not be null.");
         }
+        listeners.put(listener, null);
     }
 
     /**
      * @see NodeTypeRegistry#removeListener(NodeTypeRegistryListener)
      */
     public void removeListener(NodeTypeRegistryListener listener) {
+        if (listener == null) {
+            throw new NullPointerException("listener must not be null.");
+        }
         listeners.remove(listener);
     }
 
@@ -510,10 +516,12 @@ public class NodeTypeRegistryImpl implements NodeTypeRegistry, EffectiveNodeType
      * Notify the listeners that a node type <code>ntName</code> has been registered.
      */
     private void notifyRegistered(Name ntName) {
-        for (NodeTypeRegistryListener ntrl : copyListeners()) {
-            if (ntrl != null) {
-                ntrl.nodeTypeRegistered(ntName);
+        for (final NodeTypeRegistryListener ntrl : copyListeners()) {
+            // See: https://stackoverflow.com/a/46699068/196844
+            if (ntrl == null) {
+                break;
             }
+            ntrl.nodeTypeRegistered(ntName);
         }
     }
 
@@ -521,10 +529,12 @@ public class NodeTypeRegistryImpl implements NodeTypeRegistry, EffectiveNodeType
      * Notify the listeners that a node type <code>ntName</code> has been re-registered.
      */
     private void notifyReRegistered(Name ntName) {
-        for (NodeTypeRegistryListener ntrl : copyListeners()) {
-            if (ntrl != null) {
-                ntrl.nodeTypeReRegistered(ntName);
+        for (final NodeTypeRegistryListener ntrl : copyListeners()) {
+            // See: https://stackoverflow.com/a/46699068/196844
+            if (ntrl == null) {
+                break;
             }
+            ntrl.nodeTypeReRegistered(ntName);
         }
     }
 
@@ -532,21 +542,26 @@ public class NodeTypeRegistryImpl implements NodeTypeRegistry, EffectiveNodeType
      * Notify the listeners that a node type <code>ntName</code> has been unregistered.
      */
     private void notifyUnregistered(Name ntName) {
-        for (NodeTypeRegistryListener ntrl : copyListeners()) {
-            if (ntrl != null) {
-                ntrl.nodeTypeUnregistered(ntName);
+        for (final NodeTypeRegistryListener ntrl : copyListeners()) {
+            // See: https://stackoverflow.com/a/46699068/196844
+            if (ntrl == null) {
+                break;
             }
+            ntrl.nodeTypeUnregistered(ntName);
         }
     }
 
     private NodeTypeRegistryListener[] copyListeners() {
-        // copy listeners to array to avoid ConcurrentModificationException
-        NodeTypeRegistryListener[] lstnrs = new NodeTypeRegistryListener[listeners.size()];
-        int cnt = 0;
-        for (NodeTypeRegistryListener ntrl : listeners.values()) {
-            lstnrs[cnt++] = ntrl;
+        // listeners is a synchronized map backed by a WeakHashMap. To ensure
+        // that we do not wastefully create an array that is too small to store
+        // the NodeTypeRegistryListener instances (which can happen if a listener
+        // is added between the time that size() returns and toArray() begins),
+        // we need to synchronize on listeners for the duration of the size()
+        // and toArray() calls.
+        final Set<NodeTypeRegistryListener> keys = listeners.keySet();
+        synchronized (listeners) {
+            return keys.toArray(new NodeTypeRegistryListener[keys.size()]);
         }
-        return lstnrs;
     }
 
     private void internalRegister(Map<QNodeTypeDefinition, EffectiveNodeType> defMap) {

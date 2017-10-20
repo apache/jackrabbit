@@ -40,7 +40,6 @@ import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.nodetype.NoSuchNodeTypeException;
 import javax.jcr.version.OnParentVersionAction;
 
-import org.apache.commons.collections.map.ReferenceMap;
 import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.core.cluster.NodeTypeEventChannel;
 import org.apache.jackrabbit.core.cluster.NodeTypeEventListener;
@@ -62,6 +61,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import EDU.oswego.cs.dl.util.concurrent.ConcurrentReaderHashMap;
+import java.util.WeakHashMap;
 
 /**
  * A <code>NodeTypeRegistry</code> ...
@@ -119,9 +119,11 @@ public class NodeTypeRegistry implements NodeTypeEventListener {
     /**
      * Listeners (weak references)
      */
-    @SuppressWarnings("unchecked")
-    private final Map<NodeTypeRegistryListener, NodeTypeRegistryListener> listeners =
-            Collections.synchronizedMap(new ReferenceMap(ReferenceMap.WEAK, ReferenceMap.WEAK));
+    // This is a weak set. Although Java does not have a WeakSet (see
+    // https://stackoverflow.com/questions/4062919/why-does-exist-weakhashmap-but-absent-weakset )
+    // we can emulate a weak set by creating a WeakHashMap with value type Void.
+    private final Map<NodeTypeRegistryListener, Void> listeners =
+            Collections.synchronizedMap(new WeakHashMap<NodeTypeRegistryListener, Void>());
 
     /**
      * Node type event channel.
@@ -575,20 +577,24 @@ public class NodeTypeRegistry implements NodeTypeEventListener {
      * Add a <code>NodeTypeRegistryListener</code>
      *
      * @param listener the new listener to be informed on (un)registration
-     *                 of node types
+     *                 of node types. May not be <code>null</code>.
      */
     public void addListener(NodeTypeRegistryListener listener) {
-        if (!listeners.containsKey(listener)) {
-            listeners.put(listener, listener);
+        if (listener == null) {
+            throw new NullPointerException("listener must not be null.");
         }
+        listeners.put(listener, null);
     }
 
     /**
      * Remove a <code>NodeTypeRegistryListener</code>
      *
-     * @param listener an existing listener
+     * @param listener an existing listener, which may not be <code>null</code>.
      */
     public void removeListener(NodeTypeRegistryListener listener) {
+        if (listener == null) {
+            throw new NullPointerException("listener must not be null.");
+        }
         listeners.remove(listener);
     }
 
@@ -1836,13 +1842,27 @@ public class NodeTypeRegistry implements NodeTypeEventListener {
      * @param ntName node type name
      */
     private void notifyRegistered(Name ntName) {
-        // copy listeners to array to avoid ConcurrentModificationException
-        NodeTypeRegistryListener[] la = listeners.values().toArray(
-                        new NodeTypeRegistryListener[listeners.size()]);
-        for (NodeTypeRegistryListener aLa : la) {
-            if (aLa != null) {
-                aLa.nodeTypeRegistered(ntName);
+        // copy listeners to an array to avoid ConcurrentModificationException
+        //
+        // listeners is a synchronized map backed by a WeakHashMap. To ensure
+        // that we do not wastefully create an array that is too small to store
+        // the NodeTypeRegistryListener instances (which can happen if a listener
+        // is added between the time that size() returns and toArray() begins),
+        // we need to synchronize on listeners for the duration of the size()
+        // and toArray() calls.
+        final NodeTypeRegistryListener[] la;
+        {
+            final Set<NodeTypeRegistryListener> keys = listeners.keySet();
+            synchronized (listeners) {
+                la = keys.toArray(new NodeTypeRegistryListener[keys.size()]);
             }
+        }
+        for (final NodeTypeRegistryListener l : la) {
+            // See: https://stackoverflow.com/a/46699068/196844
+            if (l == null) {
+                break;
+            }
+            l.nodeTypeRegistered(ntName);
         }
     }
 
@@ -1851,28 +1871,56 @@ public class NodeTypeRegistry implements NodeTypeEventListener {
      * @param ntName node type name
      */
     private void notifyReRegistered(Name ntName) {
-        // copy listeners to array to avoid ConcurrentModificationException
-        NodeTypeRegistryListener[] la = listeners.values().toArray(
-                        new NodeTypeRegistryListener[listeners.size()]);
-        for (NodeTypeRegistryListener aLa : la) {
-            if (aLa != null) {
-                aLa.nodeTypeReRegistered(ntName);
+        // copy listeners to an array to avoid ConcurrentModificationException
+        //
+        // listeners is a synchronized map backed by a WeakHashMap. To ensure
+        // that we do not wastefully create an array that is too small to store
+        // the NodeTypeRegistryListener instances (which can happen if a listener
+        // is added between the time that size() returns and toArray() begins),
+        // we need to synchronize on listeners for the duration of the size()
+        // and toArray() calls.
+        final NodeTypeRegistryListener[] la;
+        {
+            final Set<NodeTypeRegistryListener> keys = listeners.keySet();
+            synchronized (listeners) {
+                la = keys.toArray(new NodeTypeRegistryListener[keys.size()]);
             }
+        }
+        for (final NodeTypeRegistryListener l : la) {
+            // See: https://stackoverflow.com/a/46699068/196844
+            if (l == null) {
+                break;
+            }
+            l.nodeTypeReRegistered(ntName);
         }
     }
 
     /**
-     * Notify the listeners that oone or more node types have been unregistered.
+     * Notify the listeners that one or more node types have been unregistered.
      * @param names node type names
      */
     private void notifyUnregistered(Collection<Name> names) {
-        // copy listeners to array to avoid ConcurrentModificationException
-        NodeTypeRegistryListener[] la = listeners.values().toArray(
-                        new NodeTypeRegistryListener[listeners.size()]);
-        for (NodeTypeRegistryListener aLa : la) {
-            if (aLa != null) {
-                aLa.nodeTypesUnregistered(names);
+        // copy listeners to an array to avoid ConcurrentModificationException
+        //
+        // listeners is a synchronized map backed by a WeakHashMap. To ensure
+        // that we do not wastefully create an array that is too small to store
+        // the NodeTypeRegistryListener instances (which can happen if a listener
+        // is added between the time that size() returns and toArray() begins),
+        // we need to synchronize on listeners for the duration of the size()
+        // and toArray() calls.
+        final NodeTypeRegistryListener[] la;
+        {
+            final Set<NodeTypeRegistryListener> keys = listeners.keySet();
+            synchronized (listeners) {
+                la = keys.toArray(new NodeTypeRegistryListener[keys.size()]);
             }
+        }
+        for (final NodeTypeRegistryListener l : la) {
+            // See: https://stackoverflow.com/a/46699068/196844
+            if (l == null) {
+                break;
+            }
+            l.nodeTypesUnregistered(names);
         }
     }
 }

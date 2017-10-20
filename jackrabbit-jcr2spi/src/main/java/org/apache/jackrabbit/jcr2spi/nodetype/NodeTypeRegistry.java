@@ -46,14 +46,14 @@ public interface NodeTypeRegistry {
      * Add a <code>NodeTypeRegistryListener</code>
      *
      * @param listener the new listener to be informed on (un)registration
-     *                 of node types
+     *                 of node types. May not be <code>null</code>.
      */
     void addListener(NodeTypeRegistryListener listener);
 
     /**
      * Remove a <code>NodeTypeRegistryListener</code>
      *
-     * @param listener an existing listener
+     * @param listener an existing listener, which may not be <code>null</code>.
      */
     void removeListener(NodeTypeRegistryListener listener);
 
