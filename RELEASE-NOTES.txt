@@ -1,28 +1,42 @@
-Release Notes -- Apache Jackrabbit -- Version 2.15.6
+Release Notes -- Apache Jackrabbit -- Version 2.15.7
 
 Introduction
 ------------
 
-This is Apache Jackrabbit(TM) 2.15.6, a fully compliant implementation of the
+This is Apache Jackrabbit(TM) 2.15.7, a fully compliant implementation of the
 Content Repository for Java(TM) Technology API, version 2.0 (JCR 2.0) as
 specified in the Java Specification Request 283 (JSR 283).
 
-Apache Jackrabbit 2.15.6 is an unstable release cut directly from
+Apache Jackrabbit 2.15.7 is an unstable release cut directly from
 Jackrabbit trunk, with a focus on new features and other
 improvements. For production use we recommend the latest stable 2.14.x
 release.
 
-Changes in Jackrabbit 2.15.6
+Changes in Jackrabbit 2.15.7
 ----------------------------
 
 Bug
 
-    [JCR-4173] - Unable to receive observation events when connecting via DavEx
-    [JCR-4179] - Test failures with Java 9 when using javax.imageio.spi.ServiceRegistry
+    [JCR-3929] - ConsistencyCheck may fail on empty repository
+    [JCR-4183] - Jackrabbit standalone jar isn't working under JDK 8
+    [JCR-4185] - spi2dav URIResolverImpl should check status code before attempting to parse multistatus
+    [JCR-4188] - avoid use of sun.security.acl.GroupImpl in PrincipalManagerTest
+
+Improvement
+
+    [JCR-4182] - new release checksum requirements
 
 Task
 
-    [JCR-4177] - move Mockito version to parent pom
+    [JCR-4184] - migrate from org.mortbay.jetty to org.eclipse.jetty
+    [JCR-4186] - Use current Derby version
+
+Sub-task
+
+    [JCR-4190] - maven-assembly-plugin:2.6:single failing with Java 9
+    [JCR-4195] - jcr-rmi on java 9: Cannot use SUN rmic, as it is not available
+    [JCR-4196] - update surefire and failsafe plugins for use with java 9
+    [JCR-4200] - javax.transaction.UserTransaction hidden by surefire plugin in with Java 9
 
 
 In addition to the above-mentioned changes, this release contains
