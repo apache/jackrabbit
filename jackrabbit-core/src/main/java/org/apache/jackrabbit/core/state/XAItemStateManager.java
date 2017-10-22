@@ -60,7 +60,8 @@ public class XAItemStateManager extends LocalItemStateManager implements Interna
      * manager is in one of the {@link #prepare}, {@link #commit}, {@link
      * #rollback} methods.
      */
-    private final Map commitLogs = Collections.synchronizedMap(new IdentityHashMap());
+    private final Map<Thread, ChangeLog> commitLogs =
+            Collections.synchronizedMap(new IdentityHashMap<Thread, ChangeLog>());
 
     /**
      * Current instance-local change log.
@@ -213,7 +214,7 @@ public class XAItemStateManager extends LocalItemStateManager implements Interna
      * change log was found.
      */
     public ChangeLog getChangeLog() {
-        ChangeLog changeLog = (ChangeLog) commitLogs.get(Thread.currentThread());
+        ChangeLog changeLog = commitLogs.get(Thread.currentThread());
         if (changeLog == null) {
             changeLog = txLog;
         }
@@ -578,7 +579,7 @@ public class XAItemStateManager extends LocalItemStateManager implements Interna
      * in a subsequent transaction (see JCR-1554).
      */
     public void stateModified(ItemState modified) {
-        ChangeLog changeLog = (ChangeLog) commitLogs.get(Thread.currentThread());
+        ChangeLog changeLog = commitLogs.get(Thread.currentThread());
         if (changeLog != null) {
             ItemState local;
             if (modified.getContainer() != this) {

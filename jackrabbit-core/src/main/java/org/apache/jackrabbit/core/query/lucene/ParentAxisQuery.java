@@ -121,7 +121,7 @@ class ParentAxisQuery extends Query {
      * @return 'ParentAxisQuery'.
      */
     public String toString(String field) {
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         sb.append("ParentAxisQuery(");
         sb.append(contextQuery);
         sb.append(", ");

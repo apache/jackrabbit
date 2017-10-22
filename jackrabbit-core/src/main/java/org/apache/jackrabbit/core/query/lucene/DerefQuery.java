@@ -114,14 +114,14 @@ class DerefQuery extends Query {
      * @return 'DerefQuery'.
      */
     public String toString(String field) {
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         sb.append("DerefQuery(");
         sb.append(refProperty);
         sb.append(", ");
         sb.append(contextQuery);
         sb.append(", ");
         sb.append(nameTest);
-        sb.append(")");
+        sb.append(')');
         return sb.toString();
     }
 

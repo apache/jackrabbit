@@ -98,7 +98,7 @@ public class VersionControlledItemCollection extends DefaultItemCollection
      */
     @Override
     public String getSupportedMethods() {
-        StringBuffer sb = new StringBuffer(super.getSupportedMethods());
+        StringBuilder sb = new StringBuilder(super.getSupportedMethods());
         // Versioning support
         sb.append(", ").append(VersionableResource.METHODS);
         if (isVersionControlled()) {

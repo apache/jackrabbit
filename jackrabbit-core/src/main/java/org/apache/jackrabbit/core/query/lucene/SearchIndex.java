@@ -592,7 +592,7 @@ public class SearchIndex extends AbstractQueryHandler {
                     check.repair(true);
                 } else {
                     List<ConsistencyCheckError> errors = check.getErrors();
-                    if (errors.size() == 0) {
+                    if (errors.isEmpty()) {
                         log.info("No errors detected.");
                     }
                     for (ConsistencyCheckError err : errors) {

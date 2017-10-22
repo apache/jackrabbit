@@ -56,7 +56,7 @@ public class SimpleExcerptProvider implements ExcerptProvider {
      */
     public String getExcerpt(NodeId id, int maxFragments, int maxFragmentSize)
             throws IOException {
-        StringBuffer text = new StringBuffer();
+        StringBuilder text = new StringBuilder();
         try {
             NodeState nodeState = (NodeState) ism.getItemState(id);
             String separator = "";
@@ -85,6 +85,8 @@ public class SimpleExcerptProvider implements ExcerptProvider {
             }
             text.append(" ...");
         }
-        return "<excerpt><fragment>" + text.toString() + "</fragment></excerpt>";
+        text.insert(0, "<excerpt><fragment>");
+        text.append("</fragment></excerpt>");
+        return text.toString();
     }
 }

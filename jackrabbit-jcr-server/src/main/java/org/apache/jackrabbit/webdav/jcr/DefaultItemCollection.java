@@ -164,7 +164,7 @@ public class DefaultItemCollection extends AbstractItemResource
     public String getSupportedMethods() {
         String ms = super.getSupportedMethods();
         if (isOrderable()) {
-            StringBuffer sb = new StringBuffer(ms);
+            StringBuilder sb = new StringBuilder(ms);
             sb.append(", ").append(OrderingResource.METHODS);
             return sb.toString();
         } else {
@@ -485,7 +485,7 @@ public class DefaultItemCollection extends AbstractItemResource
                     } else {
                         BufferedReader r = new BufferedReader(new InputStreamReader(inputContext.getInputStream(), charSet));
                         String line;
-                        StringBuffer value = new StringBuffer();
+                        StringBuilder value = new StringBuilder();
                         while ((line = r.readLine()) != null) {
                             value.append(line);
                         }

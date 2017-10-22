@@ -110,11 +110,11 @@ public class IfHeader implements Header {
      */
     public IfHeader(String[] tokens) {
         allTokens.addAll(Arrays.asList(tokens));
-        StringBuffer b = new StringBuffer();
+        StringBuilder b = new StringBuilder();
         for (String token : tokens) {
-            b.append("(").append("<");
+            b.append("(<");
             b.append(token);
-            b.append(">").append(")");
+            b.append(">)");
         }
         headerValue = b.toString();
         ifHeader = parse();
@@ -460,7 +460,7 @@ public class IfHeader implements Header {
      * @throws IOException if a problem occurs during reading.
      */
     private String readWord(Reader reader, char end) throws IOException {
-        StringBuffer buf = new StringBuffer();
+        StringBuilder buf = new StringBuilder();
 
         // read the word value
         int c = reader.read();

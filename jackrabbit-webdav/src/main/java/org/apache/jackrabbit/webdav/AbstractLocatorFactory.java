@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.webdav;
 
+import org.apache.commons.lang.text.StrBuilder;
 import org.apache.jackrabbit.webdav.util.EncodeUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -90,7 +91,7 @@ public abstract class AbstractLocatorFactory implements DavLocatorFactory {
         }
 
         // build prefix string and remove all prefixes from the given href.
-        StringBuffer b = new StringBuffer("");
+        StrBuilder b = new StrBuilder();
         if (prefix != null && prefix.length() > 0) {
             b.append(prefix);
             if (href.startsWith(prefix)) {
@@ -98,7 +99,7 @@ public abstract class AbstractLocatorFactory implements DavLocatorFactory {
             }
         }
         if (pathPrefix != null && pathPrefix.length() > 0) {
-            if (!b.toString().endsWith(pathPrefix)) {
+            if (!b.endsWith(pathPrefix)) {
                 b.append(pathPrefix);
             }
             if (href.startsWith(pathPrefix)) {
@@ -230,7 +231,7 @@ public abstract class AbstractLocatorFactory implements DavLocatorFactory {
             this.resourcePath = resourcePath;
             this.factory = factory;
 
-            StringBuffer buf = new StringBuffer(prefix);
+            StringBuilder buf = new StringBuilder(prefix);
             // NOTE: no need to append the workspace path, since it must
             // be part of the resource path.
             if (resourcePath != null && resourcePath.length() > 0) {
@@ -242,7 +243,7 @@ public abstract class AbstractLocatorFactory implements DavLocatorFactory {
             }
             int length = buf.length();
             if (length == 0 || (length > 0 && buf.charAt(length - 1) != '/')) {
-                buf.append("/");
+                buf.append('/');
             }
             this.href = buf.toString();
         }

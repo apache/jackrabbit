@@ -71,10 +71,10 @@ public abstract class AbstractQOMTest extends AbstractQueryTest {
         List<String> expectedPaths = new ArrayList<String>();
         log.println("expected:");
         for (int i = 0; i < nodes.length; i++) {
-            StringBuffer aggregatedPaths = new StringBuffer();
+            StringBuilder aggregatedPaths = new StringBuilder();
             for (int j = 0; j < nodes[i].length; j++) {
                 aggregatedPaths.append(getPath(nodes[i][j]));
-                aggregatedPaths.append("|");
+                aggregatedPaths.append('|');
             }
             expectedPaths.add(aggregatedPaths.toString());
             log.println(aggregatedPaths.toString());
@@ -84,10 +84,10 @@ public abstract class AbstractQOMTest extends AbstractQueryTest {
         log.println("result:");
         for (RowIterator it = result.getRows(); it.hasNext();) {
             Row r = it.nextRow();
-            StringBuffer aggregatedPaths = new StringBuffer();
+            StringBuilder aggregatedPaths = new StringBuilder();
             for (int i = 0; i < selectorNames.length; i++) {
                 aggregatedPaths.append(getPath(r.getNode(selectorNames[i])));
-                aggregatedPaths.append("|");
+                aggregatedPaths.append('|');
             }
             resultPaths.add(aggregatedPaths.toString());
             log.println(aggregatedPaths.toString());
@@ -141,10 +141,10 @@ public abstract class AbstractQOMTest extends AbstractQueryTest {
         Set<String> expectedPaths = new HashSet<String>();
         log.println("expected:");
         for (int i = 0; i < nodes.length; i++) {
-            StringBuffer aggregatedPaths = new StringBuffer();
+            StringBuilder aggregatedPaths = new StringBuilder();
             for (int j = 0; j < nodes[i].length; j++) {
                 aggregatedPaths.append(getPath(nodes[i][j]));
-                aggregatedPaths.append("|");
+                aggregatedPaths.append('|');
             }
             expectedPaths.add(aggregatedPaths.toString());
             log.println(aggregatedPaths.toString());
@@ -154,23 +154,21 @@ public abstract class AbstractQOMTest extends AbstractQueryTest {
         log.println("result:");
         for (RowIterator it = result.getRows(); it.hasNext();) {
             Row r = it.nextRow();
-            StringBuffer aggregatedPaths = new StringBuffer();
+            StringBuilder aggregatedPaths = new StringBuilder();
             for (int i = 0; i < selectorNames.length; i++) {
                 aggregatedPaths.append(getPath(r.getNode(selectorNames[i])));
-                aggregatedPaths.append("|");
+                aggregatedPaths.append('|');
             }
             resultPaths.add(aggregatedPaths.toString());
             log.println(aggregatedPaths.toString());
         }
 
         // check if all expected are in result
-        for (Iterator<String> it = expectedPaths.iterator(); it.hasNext();) {
-            String path = it.next();
+        for (String path : expectedPaths) {
             assertTrue(path + " is not part of the result set", resultPaths.contains(path));
         }
         // check result does not contain more than expected
-        for (Iterator<String> it = resultPaths.iterator(); it.hasNext();) {
-            String path = it.next();
+        for (String path : resultPaths) {
             assertTrue(path + " is not expected to be part of the result set", expectedPaths.contains(path));
         }
     }

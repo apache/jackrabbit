@@ -108,7 +108,7 @@ public abstract class Operation {
     }
 
     protected String getRandomText(int numChars) {
-        StringBuffer tmp = new StringBuffer(numChars);
+        StringBuilder tmp = new StringBuilder(numChars);
         for (int i = 0; i < numChars; i++) {
             char c = (char) (rand.nextInt(('z' + 1) - 'a') + 'a');
             tmp.append(c);

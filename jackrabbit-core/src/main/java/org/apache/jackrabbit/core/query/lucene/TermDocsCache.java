@@ -24,6 +24,7 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.TermDocs;
 import org.apache.lucene.index.Term;
@@ -94,7 +95,7 @@ public class TermDocsCache {
      * @throws IOException if an error occurs while reading from the index.
      */
     public TermDocs termDocs(final Term t) throws IOException {
-        if (t == null || t.field() != field) {
+        if (t == null || !StringUtils.equals(t.field(), field)) {
             return reader.termDocs(t);
         }
 

@@ -318,9 +318,9 @@ public class LuceneQueryFactory {
         } else {
             // final path element is a property name
             Name propName = fts.getPropertyQName();
-            StringBuffer tmp = new StringBuffer();
+            StringBuilder tmp = new StringBuilder();
             tmp.append(nsMappings.getPrefix(propName.getNamespaceURI()));
-            tmp.append(":").append(FieldNames.FULLTEXT_PREFIX);
+            tmp.append(':').append(FieldNames.FULLTEXT_PREFIX);
             tmp.append(propName.getLocalName());
             fieldname = tmp.toString();
         }

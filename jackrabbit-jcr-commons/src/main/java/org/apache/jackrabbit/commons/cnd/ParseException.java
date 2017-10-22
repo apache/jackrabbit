@@ -105,7 +105,12 @@ public class ParseException extends Exception {
      */
     public String getMessage() {
         String message = super.getMessage();
-        StringBuffer b = new StringBuffer(message == null ? "" : message);
+        StringBuilder b;
+        if (message == null) {
+            b = new StringBuilder();
+        } else {
+            b = new StringBuilder(message);
+        }
         String delim = " (";
         if (systemId != null && !systemId.equals("")) {
             b.append(delim);

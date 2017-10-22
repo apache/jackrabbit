@@ -22,7 +22,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.SequenceInputStream;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -552,7 +551,7 @@ public abstract class TestCaseBase extends TestCase {
             RandomInputStream in = new RandomInputStream(size + offset, size);
             DataRecord rec = ds.addRecord(in);
             list.add(rec);
-            map.put(rec, new Integer(size));
+            map.put(rec, size);
         }
         Random random = new Random(1);
         for (int i = 0; i < list.size(); i++) {

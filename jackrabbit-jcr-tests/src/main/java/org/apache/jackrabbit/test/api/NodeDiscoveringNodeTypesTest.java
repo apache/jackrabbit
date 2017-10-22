@@ -126,9 +126,9 @@ public class NodeDiscoveringNodeTypesTest extends AbstractJCRTest {
                 types.length,
                 names.length);
 
-        StringBuffer namesString = new StringBuffer();
+        StringBuilder namesString = new StringBuilder();
         for (int i = 0; i < names.length; i++) {
-            namesString.append("|" + names[i].getString() + "|");
+            namesString.append('|').append(names[i].getString()).append('|');
         }
 
         for (int i = 0; i < types.length; i++) {

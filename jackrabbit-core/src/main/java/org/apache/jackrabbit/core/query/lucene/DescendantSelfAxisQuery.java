@@ -183,14 +183,14 @@ class DescendantSelfAxisQuery extends Query implements JackrabbitQuery {
      * {@inheritDoc}
      */
     public String toString(String field) {
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         sb.append("DescendantSelfAxisQuery(");
         sb.append(contextQuery);
         sb.append(", ");
         sb.append(subQuery);
         sb.append(", ");
         sb.append(minLevels);
-        sb.append(")");
+        sb.append(')');
         return sb.toString();
     }
 

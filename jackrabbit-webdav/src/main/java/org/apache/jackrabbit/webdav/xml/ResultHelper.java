@@ -96,7 +96,7 @@ public final class ResultHelper {
             probe.endElement("uri", "e", "p:e");
             probe.endPrefixMapping("p");
             probe.endDocument();
-            return writer.toString().indexOf("xmlns") == -1;
+            return !writer.toString().contains("xmlns");
         } catch (Exception e) {
             throw new UnsupportedOperationException("XML serialization fails");
         }
@@ -144,25 +144,25 @@ public final class ResultHelper {
     }
 
     /**
-     * Special content handler fixing issues with xmlns attraibutes handling.
+     * Special content handler fixing issues with xmlns attributes handling.
      */
     private static final class SerializingContentHandler extends DefaultHandler {
         /**
          * The prefixes of startPrefixMapping() declarations for the coming element.
          */
-        private List prefixList = new ArrayList();
+        private List<String> prefixList = new ArrayList<String>();
 
         /**
          * The URIs of startPrefixMapping() declarations for the coming element.
          */
-        private List uriList = new ArrayList();
+        private List<String> uriList = new ArrayList<String>();
 
         /**
          * Maps of URI<->prefix mappings. Used to work around a bug in the Xalan
          * serializer.
          */
-        private Map uriToPrefixMap = new HashMap();
-        private Map prefixToUriMap = new HashMap();
+        private Map<String, String> uriToPrefixMap = new HashMap<String, String>();
+        private Map<String, String> prefixToUriMap = new HashMap<String, String>();
 
         /**
          * True if there has been some startPrefixMapping() for the coming element.
@@ -183,7 +183,7 @@ public final class ResultHelper {
          * @see #checkPrefixMapping(String, String)
          * @see <a href="https://issues.apache.org/jira/browse/JCR-1767">JCR-1767</a>
          */
-        private final List addedPrefixMappings = new ArrayList();
+        private final List<List<String>> addedPrefixMappings = new ArrayList<List<String>>();
 
         /**
          * The adapted content handler instance.
@@ -270,9 +270,9 @@ public final class ResultHelper {
                 }
 
                 int last = addedPrefixMappings.size() - 1;
-                List prefixes = (List) addedPrefixMappings.get(last);
+                List<String> prefixes = addedPrefixMappings.get(last);
                 if (prefixes == null) {
-                    prefixes = new ArrayList();
+                    prefixes = new ArrayList<String>();
                     addedPrefixMappings.set(last, prefixes);
                 }
                 prefixes.add(prefix);
@@ -315,8 +315,8 @@ public final class ResultHelper {
                 for (int mapping = 0; mapping < mappingCount; mapping++) {
 
                     // Build infos for this namespace
-                    String uri = (String) this.uriList.get(mapping);
-                    String prefix = (String) this.prefixList.get(mapping);
+                    String uri = this.uriList.get(mapping);
+                    String prefix = this.prefixList.get(mapping);
                     String qName = prefix.equals("") ? "xmlns" : ("xmlns:" + prefix);
 
                     // Search for the corresponding xmlns* attribute
@@ -379,11 +379,11 @@ public final class ResultHelper {
             
             // JCR-1767: Generate extra prefix un-mapping calls where needed
             int last = addedPrefixMappings.size() - 1;
-            List prefixes = (List) addedPrefixMappings.remove(last);
+            List<String> prefixes = addedPrefixMappings.remove(last);
             if (prefixes != null) {
-                Iterator iterator = prefixes.iterator();
+                Iterator<String> iterator = prefixes.iterator();
                 while (iterator.hasNext()) {
-                    endPrefixMapping((String) iterator.next());
+                    endPrefixMapping(iterator.next());
                 }
             }
         }

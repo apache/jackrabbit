@@ -40,7 +40,7 @@ public class SQLOrderByTest extends AbstractQueryTest {
         isReadOnly = true;
         super.setUp();
         // setup common base statement
-        StringBuffer tmp = new StringBuffer("SELECT ").append(escapeIdentifierForSQL(propertyName1));
+        StringBuilder tmp = new StringBuilder("SELECT ").append(escapeIdentifierForSQL(propertyName1));
         tmp.append(" FROM ").append(escapeIdentifierForSQL(testNodeType));
         tmp.append(" WHERE ").append(escapeIdentifierForSQL(propertyName1)).append(" IS NOT NULL");
         tmp.append(" ORDER BY ");

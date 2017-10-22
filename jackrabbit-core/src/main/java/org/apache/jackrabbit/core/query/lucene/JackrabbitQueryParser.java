@@ -70,7 +70,7 @@ public class JackrabbitQueryParser extends QueryParser {
      */
     public Query parse(String textsearch) throws ParseException {
         // replace escaped ' with just '
-        StringBuffer rewritten = new StringBuffer();
+        StringBuilder rewritten = new StringBuilder(textsearch.length());
         // the default lucene query parser recognizes 'AND' and 'NOT' as
         // keywords.
         textsearch = textsearch.replaceAll("AND", "and");
@@ -211,7 +211,7 @@ public class JackrabbitQueryParser extends QueryParser {
      * @return the translated String.
      */
     private String translateWildcards(String input) {
-        StringBuffer translated = new StringBuffer(input.length());
+        StringBuilder translated = new StringBuilder(input.length());
         boolean escaped = false;
         for (int i = 0; i < input.length(); i++) {
             if (input.charAt(i) == '\\') {

@@ -75,7 +75,7 @@ public class VersionHistoryItemCollection extends DefaultItemCollection
      */
     @Override
     public String getSupportedMethods() {
-        StringBuffer sb = new StringBuffer(ItemResourceConstants.METHODS);
+        StringBuilder sb = new StringBuilder(ItemResourceConstants.METHODS);
         sb.append(", ").append(VersionHistoryResource.METHODS);
         return sb.toString();
     }

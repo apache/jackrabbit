@@ -111,14 +111,14 @@ public class PredicateDerefQuery extends Query {
      * @return 'DerefQuery'.
      */
     public String toString(String field) {
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         sb.append("PredicateDerefQuery(");
         sb.append(subQuery);
         sb.append(", ");
         sb.append(nameTest);
         sb.append(", ");
         sb.append(refProperty);
-        sb.append(")");
+        sb.append(')');
         return sb.toString();
     }
 

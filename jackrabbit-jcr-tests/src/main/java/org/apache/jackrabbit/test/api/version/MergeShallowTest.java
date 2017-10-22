@@ -53,11 +53,11 @@ public class MergeShallowTest extends AbstractMergeTest {
         NodeIterator iter = vm2.merge(nodeToMerge.getPath(),
                 superuser.getWorkspace().getName(), true, false);
         if (iter.hasNext()) {
-            StringBuffer failed = new StringBuffer();
-            while (iter.hasNext()) {
+            StringBuilder failed = new StringBuilder();
+            do {
                 failed.append(iter.nextNode().getPath());
                 failed.append(", ");
-            }
+            } while (iter.hasNext());
             fail("Merge must not fail. failed nodes: " + failed);
             return;
         }
@@ -76,11 +76,11 @@ public class MergeShallowTest extends AbstractMergeTest {
         NodeIterator iter = vm2.merge(nodeToMerge.getPath(),
                 superuser.getWorkspace().getName(), true, true);
         if (iter.hasNext()) {
-            StringBuffer failed = new StringBuffer();
-            while (iter.hasNext()) {
+            StringBuilder failed = new StringBuilder();
+            do {
                 failed.append(iter.nextNode().getPath());
                 failed.append(", ");
-            }
+            } while (iter.hasNext());
             fail("Merge must not fail. failed nodes: " + failed);
             return;
         }

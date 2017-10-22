@@ -82,8 +82,10 @@ public class PathTest extends TestCase {
             if (test.isValid() && !test.isAbsolute()) {
                 Path p = resolver.getQPath(test.path);
 
-                StringBuffer expJcrAnc = new StringBuffer(test.path);
-                expJcrAnc.append((test.path.endsWith("/") ? "" : "/"));
+                StringBuilder expJcrAnc = new StringBuilder(test.path);
+                if (!test.path.endsWith("/")) {
+                    expJcrAnc.append('/');
+                }
                 expJcrAnc.append("../../../../..");
 
                 Path ancestor = resolver.getQPath(expJcrAnc.toString()).getNormalizedPath();

@@ -355,7 +355,7 @@ class ItemInfoJsonHandler implements JsonHandler {
 
     private String getValueURI() throws RepositoryException {
         Path propertyPath = pFactory.create(getCurrentNodeInfo().getPath(), name, true);
-        StringBuffer sb = new StringBuffer(rootURI);
+        StringBuilder sb = new StringBuilder(rootURI);
         sb.append(Text.escapePath(resolver.getJCRPath(propertyPath)));
         return sb.toString();
     }

@@ -227,7 +227,7 @@ public class UpperLowerCaseQueryTest extends AbstractQueryTest {
             throw new IllegalArgumentException("values and matches must have same length");
         }
         // create log message
-        StringBuffer logMsg = new StringBuffer();
+        StringBuilder logMsg = new StringBuilder();
         logMsg.append("queryTerm: ").append(queryTerm);
         logMsg.append(" values: ");
         String separator = "";
@@ -235,9 +235,9 @@ public class UpperLowerCaseQueryTest extends AbstractQueryTest {
             logMsg.append(separator);
             separator = ", ";
             if (matches[i]) {
-                logMsg.append("+");
+                logMsg.append('+');
             } else {
-                logMsg.append("-");
+                logMsg.append('-');
             }
             logMsg.append(values[i]);
         }

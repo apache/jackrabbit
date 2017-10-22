@@ -80,11 +80,11 @@ public class JsonParser {
      */
     public void parse(Reader reader) throws IOException {
 
-        //StringBuffer key = new StringBuffer();
-        StringBuffer value = new StringBuffer();
+        //StringBuilder key = new StringBuilder();
+        StringBuilder value = new StringBuilder();
 
         int state;
-        Stack complexVStack = new Stack();
+        Stack<Object> complexVStack = new Stack<Object>();
 
         int next = reader.read();
         if (next == '{') {
@@ -202,7 +202,7 @@ public class JsonParser {
      */
     private static String nextString(Reader r, char quote) throws IOException {
         int c;
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         for (;;) {
             c = r.read();
             switch (c) {
@@ -248,7 +248,7 @@ public class JsonParser {
     }
 
     private static String next(Reader r, int n) throws IOException {
-        StringBuffer b = new StringBuffer(n);
+        StringBuilder b = new StringBuilder(n);
         while (n-- > 0) {
             int c = r.read();
             if (c < 0) {
@@ -274,7 +274,7 @@ public class JsonParser {
         return next;
     }
 
-    private StringBuffer resetValue(StringBuffer value) throws IOException {
+    private StringBuilder resetValue(StringBuilder value) throws IOException {
         if (value != null && value.length() > 0) {
             String v = value.toString();
             if (NULL.equals(v)) {
@@ -291,6 +291,6 @@ public class JsonParser {
                 handler.value(l);
             }
         }
-        return new StringBuffer();
+        return new StringBuilder();
     }
 }

@@ -25,6 +25,7 @@ import javax.jcr.Property;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -46,9 +47,7 @@ public class DefaultItemFilter implements ItemFilter {
      */
     public void setFilteredURIs(String[] uris) {
         if (uris != null) {
-            for (String uri : uris) {
-                uriFilter.add(uri);
-            }
+            uriFilter.addAll(Arrays.asList(uris));
         }
     }
 
@@ -57,9 +56,7 @@ public class DefaultItemFilter implements ItemFilter {
      */
     public void setFilteredPrefixes(String[] prefixes) {
         if (prefixes != null) {
-            for (String prefix : prefixes) {
-                prefixFilter.add(prefix);
-            }
+            prefixFilter.addAll(Arrays.asList(prefixes));
         }
     }
 
@@ -68,9 +65,7 @@ public class DefaultItemFilter implements ItemFilter {
      */
     public void setFilteredNodetypes(String[] nodetypeNames) {
         if (nodetypeNames != null) {
-            for (String nodetypeName : nodetypeNames) {
-                nodetypeFilter.add(nodetypeName);
-            }
+            nodetypeFilter.addAll(Arrays.asList(nodetypeNames));
         }
     }
 

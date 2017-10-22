@@ -77,7 +77,7 @@ public class DavLocatorFactoryImpl extends AbstractLocatorFactory {
     @Override
     protected String getResourcePath(String repositoryPath, String wspPath) {
         if (wspPath != null) {
-            StringBuffer b = new StringBuffer(wspPath);
+            StringBuilder b = new StringBuilder(wspPath);
             if (repositoryPath != null) {
                 b.append(ItemResourceConstants.ROOT_ITEM_RESOURCEPATH);
                 if (!ItemResourceConstants.ROOT_ITEM_PATH.equals(repositoryPath)) {

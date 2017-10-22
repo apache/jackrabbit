@@ -157,7 +157,7 @@ public class DomUtil {
      * @see #isText(Node)
      */
     public static String getText(Element element) {
-        StringBuffer content = new StringBuffer();
+        StringBuilder content = new StringBuilder();
         if (element != null) {
             NodeList nodes = element.getChildNodes();
             for (int i = 0; i < nodes.getLength(); i++) {
@@ -744,8 +744,8 @@ public class DomUtil {
         if (namespace == null || namespace.equals(Namespace.EMPTY_NAMESPACE)) {
             return localName;
         }
-        StringBuffer b = new StringBuffer("{");
-        b.append(namespace.getURI()).append("}");
+        StringBuilder b = new StringBuilder("{");
+        b.append(namespace.getURI()).append('}');
         b.append(localName);
         return b.toString();
     }
@@ -769,8 +769,8 @@ public class DomUtil {
             || Namespace.EMPTY_NAMESPACE.getPrefix().equals(namespace.getPrefix())) {
             return localName;
         }
-        StringBuffer buf = new StringBuffer(namespace.getPrefix());
-        buf.append(":");
+        StringBuilder buf = new StringBuilder(namespace.getPrefix());
+        buf.append(':');
         buf.append(localName);
         return buf.toString();
     }

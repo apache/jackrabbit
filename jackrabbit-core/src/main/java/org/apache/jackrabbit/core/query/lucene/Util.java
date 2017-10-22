@@ -381,7 +381,7 @@ public class Util {
         // - escape all non alphabetic characters
         // - escape constructs like \<alphabetic char> into \\<alphabetic char>
         // - replace non escaped _ % into . and .*
-        StringBuffer regexp = new StringBuffer();
+        StringBuilder regexp = new StringBuilder();
         boolean escaped = false;
         for (int i = 0; i < likePattern.length(); i++) {
             if (likePattern.charAt(i) == '\\') {

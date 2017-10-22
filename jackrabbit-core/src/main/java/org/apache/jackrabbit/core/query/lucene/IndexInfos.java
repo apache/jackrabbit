@@ -214,6 +214,10 @@ class IndexInfos implements Cloneable {
         return indexes.size();
     }
 
+    boolean isEmpty() {
+        return indexes.isEmpty();
+    }
+
     /**
      * @return the time when this index infos where last modified.
      */

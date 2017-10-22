@@ -577,7 +577,7 @@ public class CachingHierarchyManagerTest extends TestCase {
      * @return path
      */
     private static Path toPath(String s) {
-        StringBuffer buf = new StringBuffer("{}");
+        StringBuilder buf = new StringBuilder("{}");
         int start = 1, length = s.length();
         while (start < length) {
             int end = s.indexOf('/', start);

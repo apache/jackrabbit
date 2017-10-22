@@ -60,10 +60,10 @@ public final class DavCompliance {
     public static final String OBSERVATION = "observation";
 
     public static String concatComplianceClasses(String[] complianceClasses) {
-        StringBuffer b = new StringBuffer();
+        StringBuilder b = new StringBuilder();
         for (int i = 0; i < complianceClasses.length; i++) {
             if (i > 0) {
-                b.append(",");
+                b.append(',');
             }
             b.append(complianceClasses[i]);
         }

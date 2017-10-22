@@ -117,7 +117,7 @@ public abstract class AbstractNode extends AbstractItem implements Node {
      */
     public String getPath() throws RepositoryException {
         try {
-            StringBuffer buffer = new StringBuffer(getParent().getPath());
+            StringBuilder buffer = new StringBuilder(getParent().getPath());
             if (buffer.length() > 1) {
                 buffer.append('/');
             }

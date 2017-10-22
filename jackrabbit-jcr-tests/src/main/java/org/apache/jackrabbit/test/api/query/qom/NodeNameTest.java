@@ -317,13 +317,13 @@ public class NodeNameTest extends AbstractQOMTest {
     }
 
     private String createLexicographicallyGreater(String name) {
-        StringBuffer tmp = new StringBuffer(name);
+        StringBuilder tmp = new StringBuilder(name);
         tmp.setCharAt(tmp.length() - 1, (char) (tmp.charAt(tmp.length() - 1) + 1));
         return tmp.toString();
     }
 
     private String createLexicographicallyLesser(String name) {
-        StringBuffer tmp = new StringBuffer(name);
+        StringBuilder tmp = new StringBuilder(name);
         tmp.setCharAt(tmp.length() - 1, (char) (tmp.charAt(tmp.length() - 1) - 1));
         return tmp.toString();
     }

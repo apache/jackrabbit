@@ -118,8 +118,9 @@ public abstract class AbstractDavProperty<T> implements DavProperty<T> {
                 Node n = document.importNode((Node)value, true);
                 elem.appendChild(n);
             } else if (value instanceof Node[]) {
-                for (int i = 0; i < ((Node[])value).length; i++) {
-                    Node n = document.importNode(((Node[])value)[i], true);
+                Node[] nodes = (Node[]) value;
+                for (Node node : nodes) {
+                    Node n = document.importNode(node, true);
                     elem.appendChild(n);
                 }
             } else if (value instanceof Collection) {

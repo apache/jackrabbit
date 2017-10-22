@@ -275,12 +275,12 @@ public abstract class Pattern {
         }
 
         public String toString() {
-            return new StringBuffer()
-                .append("(")
+            return new StringBuilder()
+                .append('(')
                 .append(pattern1)
-                .append("|")
+                .append('|')
                 .append(pattern2)
-                .append(")")
+                .append(')')
             .toString();
         }
     }
@@ -308,12 +308,12 @@ public abstract class Pattern {
         }
 
         public String toString() {
-            return new StringBuffer()
-                .append("(")
+            return new StringBuilder()
+                .append('(')
                 .append(pattern1)
                 .append(", ")
                 .append(pattern2)
-                .append(")")
+                .append(')')
             .toString();
         }
     }
@@ -362,8 +362,8 @@ public abstract class Pattern {
         }
 
         public String toString() {
-            return new StringBuffer()
-                .append("(")
+            return new StringBuilder()
+                .append('(')
                 .append(pattern)
                 .append(")*")
             .toString();
@@ -410,10 +410,10 @@ public abstract class Pattern {
         }
 
         public String toString() {
-            return new StringBuffer()
-                .append("\"")
+            return new StringBuilder()
+                .append('"')
                 .append(path)
-                .append("\"")
+                .append('"')
             .toString();
         }
     }
@@ -458,10 +458,10 @@ public abstract class Pattern {
         }
 
         public String toString() {
-            return new StringBuffer()
-                .append("\"")
+            return new StringBuilder()
+                .append('"')
                 .append(name)
-                .append("\"")
+                .append('"')
             .toString();
         }
     }
@@ -491,12 +491,12 @@ public abstract class Pattern {
         }
 
         public String toString() {
-            return new StringBuffer()
+            return new StringBuilder()
                 .append("\"{")
                 .append(namespaceUriStr)
-                .append("}")
+                .append('}')
                 .append(localNameStr)
-                .append("\"")
+                .append('"')
             .toString();
         }
     }

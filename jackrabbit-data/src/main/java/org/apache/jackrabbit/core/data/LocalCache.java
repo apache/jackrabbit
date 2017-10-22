@@ -213,7 +213,7 @@ public class LocalCache {
         AsyncUploadCacheResult result = new AsyncUploadCacheResult();
         result.setFile(src);
         result.setAsyncUpload(false);
-        boolean destExists = false;
+        boolean destExists;
         if ((destExists = dest.exists())
             || (src.exists() && !dest.exists() && !src.equals(dest)
                 && canAdmitFile(src.length())
@@ -412,7 +412,7 @@ public class LocalCache {
     /**
      * This method tries purging of local cache. It checks if local cache
      * has exceeded the defined limit then it triggers purge cache job in a
-     * seperate thread.
+     * separate thread.
      */
     synchronized void tryPurge() {
         if (!isInPurgeMode()
@@ -484,7 +484,7 @@ public class LocalCache {
                 if (flength != null) {
                     LOG.debug("cache entry [{}], with size [{}] removed.",
                         fileName, flength);
-                    currentSizeInBytes -= flength.longValue();
+                    currentSizeInBytes -= flength;
                 }
             } else if (!getFile(fileName).exists()) {
                 // second attempt. remove from cache if file doesn't exists
@@ -493,7 +493,7 @@ public class LocalCache {
                     LOG.debug(
                         "file not exists. cache entry [{}], with size [{}] removed.",
                         fileName, flength);
-                    currentSizeInBytes -= flength.longValue();
+                    currentSizeInBytes -= flength;
                 }
             } else {
                 LOG.info("not able to remove cache entry [{}], size [{}]", key,
@@ -511,7 +511,7 @@ public class LocalCache {
             synchronized (this) {
                 Long oldValue = cache.get(fileName);
                 if (oldValue == null) {
-                    long flength = value.longValue();
+                    long flength = value;
                     currentSizeInBytes += flength;
                     return super.put(fileName.replace("\\", "/"), value);
                 }

@@ -31,7 +31,7 @@ public class LogPrintWriter extends PrintWriter {
     /**
      * Internal buffer.
      */
-    private StringBuffer buffer = new StringBuffer();
+    private final StringBuilder buffer = new StringBuilder();
 
     /**
      * Logger for message output.
@@ -97,42 +97,52 @@ public class LogPrintWriter extends PrintWriter {
     }
 
     public void write(int c) {
-        buffer.append(c);
+        synchronized (buffer) {
+            buffer.append(c);
+        }
     }
 
     public void write(char cbuf[], int off, int len) {
-        buffer.append(cbuf, off, len);
+        synchronized (buffer) {
+            buffer.append(cbuf, off, len);
+        }
     }
 
     public void write(String str, int off, int len) {
-        buffer.append(str.substring(off, off + len));
+        synchronized (buffer) {
+            buffer.append(str, off, off + len);
+        }
     }
 
     public void println() {
-        if (log == null) {
-            // only add newline when operating on a writer
-            buffer.append('\n');
+        synchronized (buffer) {
+            if (log == null) {
+                // only add newline when operating on a writer
+                buffer.append('\n');
+            }
+            flushBuffer();
         }
-        flushBuffer();
     }
 
     //-----------------------< private methods >--------------------------------
 
     private void flushBuffer() {
-        if (buffer.length() == 0) {
-            return;
-        }
-        if (log != null) {
-            log.debug(buffer.toString());
-        } else {
-            try {
-                out.write(buffer.toString());
-            } catch (IOException e) {
-                this.setError();
+        synchronized (buffer) {
+            if (buffer.length() == 0) {
+                return;
             }
+            if (log != null) {
+                log.debug(buffer.toString());
+            } else {
+                try {
+                    out.write(buffer.toString());
+                } catch (IOException e) {
+                    this.setError();
+                }
+            }
+            // reset buffer
+            buffer.setLength(0);
         }
-        // reset buffer
-        buffer.setLength(0);
     }
 
     //------------------------< inter classes >---------------------------------

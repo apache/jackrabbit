@@ -104,15 +104,15 @@ class DefinitionValidator {
             }
         }
         if (list.size() > 0) {
-            StringBuffer msg = new StringBuffer();
+            StringBuilder msg = new StringBuilder();
             msg.append("the following node types could not be registered because of unresolvable dependencies: ");
-            Iterator<QNodeTypeDefinition> iterator = list.iterator();
-            while (iterator.hasNext()) {
-                msg.append(iterator.next().getName());
-                msg.append(" ");
+            for (QNodeTypeDefinition ntd : list) {
+                msg.append(ntd.getName());
+                msg.append(' ');
             }
-            log.error(msg.toString());
-            throw new InvalidNodeTypeDefinitionException(msg.toString());
+            String msgAsString = msg.toString();
+            log.error(msgAsString);
+            throw new InvalidNodeTypeDefinitionException(msgAsString);
         }
         return ntMap;
     }
@@ -473,7 +473,7 @@ class DefinitionValidator {
             Name stName = supertypes[i];
             int pos = inheritanceChain.lastIndexOf(stName);
             if (pos >= 0) {
-                StringBuffer buf = new StringBuffer();
+                StringBuilder buf = new StringBuilder();
                 for (int j = 0; j < inheritanceChain.size(); j++) {
                     if (j == pos) {
                         buf.append("--> ");
@@ -517,7 +517,7 @@ class DefinitionValidator {
             Name nt = childNodeNTs[i];
             int pos = definingParentNTs.lastIndexOf(nt);
             if (pos >= 0) {
-                StringBuffer buf = new StringBuffer();
+                StringBuilder buf = new StringBuilder();
                 for (int j = 0; j < definingParentNTs.size(); j++) {
                     if (j == pos) {
                         buf.append("--> ");

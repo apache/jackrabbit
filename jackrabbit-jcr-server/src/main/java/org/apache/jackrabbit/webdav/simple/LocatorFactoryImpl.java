@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.webdav.simple;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.jackrabbit.util.Text;
 import org.apache.jackrabbit.webdav.DavLocatorFactory;
 import org.apache.jackrabbit.webdav.DavResourceLocator;
@@ -39,14 +40,14 @@ public class LocatorFactoryImpl implements DavLocatorFactory {
 
     public DavResourceLocator createResourceLocator(String prefix, String href) {
         // build prefix string and remove all prefixes from the given href.
-        StringBuffer b = new StringBuffer("");
+        StringBuilder b = new StringBuilder();
         if (prefix != null && prefix.length() > 0) {
             b.append(prefix);
             if (href.startsWith(prefix)) {
                 href = href.substring(prefix.length());
             }
         }
-        if (repositoryPrefix != null && repositoryPrefix.length() > 0 && !prefix.endsWith(repositoryPrefix)) {
+        if (repositoryPrefix != null && repositoryPrefix.length() > 0 && !StringUtils.endsWith(prefix, repositoryPrefix)) {
             b.append(repositoryPrefix);
             if (href.startsWith(repositoryPrefix)) {
                 href = href.substring(repositoryPrefix.length());

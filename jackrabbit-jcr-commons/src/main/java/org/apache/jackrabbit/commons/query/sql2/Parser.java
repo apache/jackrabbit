@@ -955,7 +955,7 @@ public class Parser {
     }
 
     private InvalidQueryException getSyntaxError() {
-        if (expected == null || expected.size() == 0) {
+        if (expected == null || expected.isEmpty()) {
             return getSyntaxError(null);
         } else {
             StringBuilder buff = new StringBuilder();

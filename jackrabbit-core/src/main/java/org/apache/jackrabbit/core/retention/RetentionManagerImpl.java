@@ -140,7 +140,7 @@ public class RetentionManagerImpl extends ProtectedItemModifier implements Reten
                 }
             }
             if (newValues.size() < vls.length) {
-                if (newValues.size() == 0) {
+                if (newValues.isEmpty()) {
                     removeItem(p);
                 } else {
                     setProperty(n, REP_HOLD, newValues.toArray(new Value[newValues.size()]));

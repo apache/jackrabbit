@@ -112,10 +112,7 @@ class ChildNodeAttic {
     }
 
     boolean remove(NodeEntry movedEntry) {
-        if (attic.contains(movedEntry)) {
-            return attic.remove(movedEntry);
-        }
-        return false;
+        return attic.remove(movedEntry);
     }
 
     Iterator<NodeEntryImpl> iterator() {

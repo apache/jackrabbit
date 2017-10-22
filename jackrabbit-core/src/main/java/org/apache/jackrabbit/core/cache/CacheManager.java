@@ -188,7 +188,7 @@ public class CacheManager implements CacheAccessListener {
         synchronized (caches) {
             list.addAll(caches.keySet());
         }
-        if (list.size() == 0) {
+        if (list.isEmpty()) {
             // nothing to do
             return;
         }

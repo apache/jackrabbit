@@ -89,7 +89,7 @@ public class Help implements Command {
         iter = descriptors.iterator();
         while (iter.hasNext()) {
             CommandLine desc = (CommandLine) iter.next();
-            StringBuffer buf = new StringBuffer(desc.getName());
+            StringBuilder buf = new StringBuilder(desc.getName());
             buf.setLength(tabPos);
             for (int i = desc.getName().length(); i < buf.length(); i++) {
                 buf.setCharAt(i, ' ');

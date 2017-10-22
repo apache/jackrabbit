@@ -71,7 +71,7 @@ public class OrderQueryNode extends QueryNode {
      * @throws  IllegalStateException  if no order specification is set
      */
     public void setAscending(boolean value) {
-        if (specs.size() == 0) {
+        if (specs.isEmpty()) {
             throw new IllegalStateException("No order specification set");
         }
 
@@ -87,7 +87,7 @@ public class OrderQueryNode extends QueryNode {
      * @throws  IllegalStateException  if no order specification is set
      */
     public void setPath(Path path) {
-        if (specs.size() == 0) {
+        if (specs.isEmpty()) {
             throw new IllegalStateException("No order specification set");
         }
 
@@ -103,10 +103,10 @@ public class OrderQueryNode extends QueryNode {
      * @throws  IllegalStateException  if no order specification is set
      */
     public void setFunction(String name) {
-        if (specs.size() == 0) {
+        if (specs.isEmpty()) {
             throw new IllegalStateException("No order specification set");
         }
-        
+
         OrderSpec orderSpec = specs.get(specs.size() - 1);
         orderSpec.setFunction(name);
     }

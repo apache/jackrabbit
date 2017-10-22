@@ -119,7 +119,7 @@ public abstract class AbstractJCR2SPITest extends TestCase implements Repository
      */
     public static final String toJCRPath(Path path) {
         Element[] elems = path.getElements();
-        StringBuffer jcrPath = new StringBuffer();
+        StringBuilder jcrPath = new StringBuilder();
 
         for (int k = 0; k < elems.length; k++) {
             jcrPath.append(elems[k].getName().getLocalName());

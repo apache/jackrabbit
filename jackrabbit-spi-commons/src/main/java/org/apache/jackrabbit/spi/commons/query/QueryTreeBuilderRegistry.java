@@ -42,15 +42,15 @@ public class QueryTreeBuilderRegistry {
     /**
      * List of <code>QueryTreeBuilder</code> instances known to the classloader.
      */
-    private static final List BUILDERS = new ArrayList();
+    private static final List<QueryTreeBuilder> BUILDERS = new ArrayList<QueryTreeBuilder>();
 
     /**
      * Set of languages known to the registered builders.
      */
-    private static final Set LANGUAGES;
+    private static final Set<String> LANGUAGES;
 
     static {
-        Set languages = new HashSet();
+        Set<String> languages = new HashSet<String>();
         try {
             Iterator it = ServiceLoader.load(QueryTreeBuilder.class,
                     QueryTreeBuilderRegistry.class.getClassLoader()).iterator();
@@ -76,7 +76,7 @@ public class QueryTreeBuilderRegistry {
     public static QueryTreeBuilder getQueryTreeBuilder(String language)
             throws InvalidQueryException {
         for (int i = 0; i < BUILDERS.size(); i++) {
-            QueryTreeBuilder builder = (QueryTreeBuilder) BUILDERS.get(i);
+            QueryTreeBuilder builder = BUILDERS.get(i);
             if (builder.canHandle(language)) {
                 return builder;
             }
@@ -91,6 +91,6 @@ public class QueryTreeBuilderRegistry {
      * @return String array containing the names of the supported languages.
      */
     public static String[] getSupportedLanguages() {
-        return (String[]) LANGUAGES.toArray(new String[LANGUAGES.size()]);
+        return LANGUAGES.toArray(new String[LANGUAGES.size()]);
     }
 }

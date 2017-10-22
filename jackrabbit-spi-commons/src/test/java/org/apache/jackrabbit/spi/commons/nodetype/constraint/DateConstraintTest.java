@@ -48,11 +48,11 @@ public class DateConstraintTest extends ValueConstraintTest {
         Calendar c2 = Calendar.getInstance();
         c2.setTime(new Date());
 
-        StringBuffer b = new StringBuffer("(");
+        StringBuilder b = new StringBuilder("(");
         b.append(new DateValue(c1).getString());
-        b.append(",");
+        b.append(',');
         b.append(new DateValue(c2).getString());
-        b.append(")");
+        b.append(')');
 
         return new String[] {b.toString()};
     }

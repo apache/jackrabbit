@@ -1047,7 +1047,7 @@ public class ItemManager implements ItemStateListener {
      */
     public synchronized String toString() {
         StringBuilder builder = new StringBuilder();
-        builder.append("ItemManager (" + super.toString() + ")\n");
+        builder.append("ItemManager (").append(super.toString()).append(")\n");
         builder.append("Items in cache:\n");
         synchronized (itemCache) {
             for (ItemId id : itemCache.keySet()) {
@@ -1062,7 +1062,7 @@ public class ItemManager implements ItemStateListener {
                 } else {
                     builder.append("          ");
                 }
-                builder.append(id + "\t" + safeGetJCRPath(id) + " (" + item + ")\n");
+                builder.append(id).append('\t').append(safeGetJCRPath(id)).append(" (").append(item).append(")\n");
             }
         }
         return builder.toString();

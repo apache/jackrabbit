@@ -62,7 +62,7 @@ public class FSBackend extends AbstractBackend {
     public void init(CachingDataStore store, String homeDir, String config)
                     throws DataStoreException {
         super.init(store, homeDir, config);
-        Properties initProps = null;
+        Properties initProps;
         // Check is configuration is already provided. That takes precedence
         // over config provided via file based config
         if (this.properties != null) {

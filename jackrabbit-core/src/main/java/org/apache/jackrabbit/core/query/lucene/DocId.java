@@ -368,14 +368,16 @@ abstract class DocId {
          * @return a String representation for this <code>DocId</code>.
          */
         public String toString() {
-            StringBuffer sb = new StringBuffer("MultiUUIDDocId(");
-            String separator = "";
+            StringBuilder sb = new StringBuilder("MultiUUIDDocId(");
+            boolean first = true;
             for (UUIDDocId docId : docIds) {
-                sb.append(separator);
-                separator = ", ";
+                if (!first) {
+                    sb.append(", ");
+                }
                 sb.append(docId.id);
+                first = false;
             }
-            sb.append(")");
+            sb.append(')');
             return sb.toString();
         }
     }

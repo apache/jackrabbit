@@ -217,7 +217,7 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
         // use //* if no path has been set
         PathQueryNode pathNode = root.getLocationNode();
         pathNode.setAbsolute(true);
-        if (pathConstraints.size() == 0) {
+        if (pathConstraints.isEmpty()) {
             LocationStepQueryNode step = factory.createLocationStepQueryNode(pathNode);
             step.setNameTest(null);
             step.setIncludeDescendants(true);
@@ -768,7 +768,7 @@ public class JCRSQLQueryBuilder implements JCRSQLParserVisitor {
         if (from == to || (pattern.indexOf(from) < 0 && pattern.indexOf(to) < 0)) {
             return pattern;
         }
-        StringBuffer translated = new StringBuffer(pattern.length());
+        StringBuilder translated = new StringBuilder(pattern.length());
         boolean escaped = false;
         for (int i = 0; i < pattern.length(); i++) {
             if (pattern.charAt(i) == from) {

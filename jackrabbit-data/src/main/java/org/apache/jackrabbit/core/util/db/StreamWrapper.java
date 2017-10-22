@@ -22,7 +22,6 @@ import java.io.InputStream;
 import java.sql.SQLException;
 
 import org.apache.commons.io.input.CloseShieldInputStream;
-import org.apache.jackrabbit.core.util.db.ConnectionHelper.RetryManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

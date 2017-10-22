@@ -341,7 +341,7 @@ public class MultiIndex {
      * @throws IOException if an error occurs while reading from the index.
      */
     int numDocs() throws IOException {
-        if (indexNames.size() == 0) {
+        if (indexNames.isEmpty()) {
             return volatileIndex.getNumDocuments();
         } else {
             CachingMultiIndexReader reader = getIndexReader();
@@ -376,7 +376,7 @@ public class MultiIndex {
                             Path rootPath)
             throws IOException {
         // only do an initial index if there are no indexes at all
-        if (indexNames.size() == 0) {
+        if (indexNames.isEmpty()) {
             reindexing = true;
             try {
                 long count = 0;
@@ -1650,7 +1650,7 @@ public class MultiIndex {
          * @inheritDoc
          */
         public String toString() {
-            StringBuffer logLine = new StringBuffer();
+            StringBuilder logLine = new StringBuilder();
             logLine.append(Long.toString(getTransactionId()));
             logLine.append(' ');
             logLine.append(Action.ADD_INDEX);
@@ -1742,7 +1742,7 @@ public class MultiIndex {
          * @inheritDoc
          */
         public String toString() {
-            StringBuffer logLine = new StringBuffer(ENTRY_LENGTH);
+            StringBuilder logLine = new StringBuilder(ENTRY_LENGTH);
             logLine.append(Long.toString(getTransactionId()));
             logLine.append(' ');
             logLine.append(Action.ADD_NODE);
@@ -1858,7 +1858,7 @@ public class MultiIndex {
          * @inheritDoc
          */
         public String toString() {
-            StringBuffer logLine = new StringBuffer();
+            StringBuilder logLine = new StringBuilder();
             logLine.append(Long.toString(getTransactionId()));
             logLine.append(' ');
             logLine.append(Action.CREATE_INDEX);
@@ -1933,7 +1933,7 @@ public class MultiIndex {
          * @inheritDoc
          */
         public String toString() {
-            StringBuffer logLine = new StringBuffer();
+            StringBuilder logLine = new StringBuilder();
             logLine.append(Long.toString(getTransactionId()));
             logLine.append(' ');
             logLine.append(Action.DELETE_INDEX);
@@ -2021,7 +2021,7 @@ public class MultiIndex {
          * @inheritDoc
          */
         public String toString() {
-            StringBuffer logLine = new StringBuffer(ENTRY_LENGTH);
+            StringBuilder logLine = new StringBuilder(ENTRY_LENGTH);
             logLine.append(Long.toString(getTransactionId()));
             logLine.append(' ');
             logLine.append(Action.DELETE_NODE);
@@ -2124,7 +2124,7 @@ public class MultiIndex {
          * @inheritDoc
          */
         public String toString() {
-            StringBuffer logLine = new StringBuffer();
+            StringBuilder logLine = new StringBuilder();
             logLine.append(Long.toString(getTransactionId()));
             logLine.append(' ');
             logLine.append(Action.VOLATILE_COMMIT);

@@ -752,7 +752,7 @@ public abstract class CachingDataStore extends AbstractDataStore implements
                 synchronized (uploadRetryMap) {
                     Integer retry = uploadRetryMap.get(identifier);
                     if (retry == null) {
-                        retry = new Integer(1);
+                        retry = 1;
                     } else {
                         retry++;
                     }

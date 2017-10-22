@@ -444,34 +444,34 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
             log.debug("Already ordered behind 'afterEntry'.");
             // nothing to do
             return;
-        } else {
-            // reorder named map
-            Name insertName = insertLN.qName;
-            if (entriesByName.containsSiblings(insertName)) {
-                int position = -1; // default: reorder to the end.
-                if (afterLN == entries.getHeader()) {
-                    // move to the beginning
-                    position = 0;
-                } else {
-                    // count all SNS-entries that are before 'afterLN' in order to
-                    // determine the new position of the reordered node regarding
-                    // his siblings.
-                    position = 0;
-                    for (Iterator<LinkedEntries.LinkNode> it = entries.linkNodeIterator(); it.hasNext(); ) {
-                        LinkedEntries.LinkNode ln = it.next();
-                        if (insertName.equals(ln.qName) && (ln != insertLN)) {
-                            position++;
-                        }
-                        if (ln == afterLN) {
-                            break;
-                        }
+        }
+
+        // reorder named map
+        Name insertName = insertLN.qName;
+        if (entriesByName.containsSiblings(insertName)) {
+            int position = -1; // default: reorder to the end.
+            if (afterLN == entries.getHeader()) {
+                // move to the beginning
+                position = 0;
+            } else {
+                // count all SNS-entries that are before 'afterLN' in order to
+                // determine the new position of the reordered node regarding
+                // his siblings.
+                position = 0;
+                for (Iterator<LinkedEntries.LinkNode> it = entries.linkNodeIterator(); it.hasNext(); ) {
+                    LinkedEntries.LinkNode ln = it.next();
+                    if (insertName.equals(ln.qName) && (ln != insertLN)) {
+                        position++;
+                    }
+                    if (ln == afterLN) {
+                        break;
                     }
                 }
-                entriesByName.reorder(insertName, insertLN, position);
             }
-            // reorder in linked list
-            entries.reorderNode(insertLN, currentAfter);
+            entriesByName.reorder(insertName, insertLN, position);
         }
+        // reorder in linked list
+        entries.reorderNode(insertLN, currentAfter);
     }
 
     //-------------------------------------------------< AbstractLinkedList >---
@@ -753,8 +753,7 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
                 List<LinkedEntries.LinkNode> l = snsMap.get(qName);
                 if (l != null) {
                     List<NodeEntry> nodeEntries = new ArrayList<NodeEntry>(l.size());
-                    for (Iterator<LinkedEntries.LinkNode> it = l.iterator(); it.hasNext();) {
-                        LinkedEntries.LinkNode ln = it.next();
+                    for (LinkedEntries.LinkNode ln : l) {
                         nodeEntries.add(ln.getNodeEntry());
                     }
                     return nodeEntries;
@@ -833,8 +832,7 @@ final class ChildNodeEntriesImpl implements ChildNodeEntries {
                     // look in snsMap
                     List<LinkedEntries.LinkNode> l = snsMap.get(name);
                     if (l != null) {
-                        for (Iterator<LinkedEntries.LinkNode> it = l.iterator(); it.hasNext();) {
-                            LinkedEntries.LinkNode ln = it.next();
+                        for (LinkedEntries.LinkNode ln : l) {
                             if (uniqueID.equals(ln.getNodeEntry().getUniqueID())) {
                                 return ln;
                             }

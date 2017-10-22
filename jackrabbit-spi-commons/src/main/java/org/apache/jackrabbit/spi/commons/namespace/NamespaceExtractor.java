@@ -44,7 +44,7 @@ import java.io.FileInputStream;
 public class NamespaceExtractor {
     private static Logger log = LoggerFactory.getLogger(NamespaceExtractor.class);
     private final NamespaceMapping mapping = new NamespaceMapping();
-    private final Map basePrefixes = new HashMap();
+    private final Map<String, Integer> basePrefixes = new HashMap<String, Integer>();
     private String defaultBasePrefix;
 
     /**
@@ -89,13 +89,13 @@ public class NamespaceExtractor {
                 // if prefix already used
                 if (mapping.hasPrefix(prefix)){
                     int c;
-                    Integer co = (Integer) basePrefixes.get(prefix);
+                    Integer co = basePrefixes.get(prefix);
                     if (co == null) {
-                        basePrefixes.put(prefix, new Integer(1));
+                        basePrefixes.put(prefix, 1);
                         c = 1;
                     } else {
-                        c = co.intValue() + 1;
-                        basePrefixes.put(prefix, new Integer(c));
+                        c = co + 1;
+                        basePrefixes.put(prefix, c);
                     }
                     prefix = prefix + "_" + c;
                 }

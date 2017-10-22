@@ -210,7 +210,7 @@ public class WildcardQuery extends Query implements Transformable {
         /** Prints a user-readable version of this query. */
         @Override
         public String toString(String field) {
-            StringBuffer buffer = new StringBuffer();
+            StringBuilder buffer = new StringBuilder();
             buffer.append(field);
             buffer.append(':');
             buffer.append(ToStringUtils.boost(getBoost()));

@@ -50,11 +50,11 @@ public class TokenMgrError extends Error
    int errorCode;
 
    /**
-    * Replaces unprintable characters by their espaced (or unicode escaped)
+    * Replaces unprintable characters by their escaped (or unicode escaped)
     * equivalents in the given string
     */
    protected static final String addEscapes(String str) {
-      StringBuffer retval = new StringBuffer();
+      StringBuilder retval = new StringBuilder(str.length());
       char ch;
       for (int i = 0; i < str.length(); i++) {
         switch (str.charAt(i))
@@ -88,7 +88,7 @@ public class TokenMgrError extends Error
            default:
               if ((ch = str.charAt(i)) < 0x20 || ch > 0x7e) {
                  String s = "0000" + Integer.toString(ch, 16);
-                 retval.append("\\u" + s.substring(s.length() - 4, s.length()));
+                 retval.append("\\u").append(s, s.length() - 4, s.length());
               } else {
                  retval.append(ch);
               }

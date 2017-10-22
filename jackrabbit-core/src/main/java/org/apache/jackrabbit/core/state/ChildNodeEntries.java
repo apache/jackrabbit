@@ -193,7 +193,7 @@ class ChildNodeEntries implements Cloneable {
         }
 
         // clean up name lookup map if necessary
-        if (siblings.size() == 0) {
+        if (siblings.isEmpty()) {
             // no more entries with that name left:
             // remove from name lookup map as well
             nameMap.remove(nodeName);

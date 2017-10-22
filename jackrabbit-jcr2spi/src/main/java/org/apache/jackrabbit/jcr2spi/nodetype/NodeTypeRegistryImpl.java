@@ -192,11 +192,11 @@ public class NodeTypeRegistryImpl implements NodeTypeRegistry, EffectiveNodeType
             Set<Name> dependents = registeredNTDefs.getDependentNodeTypes(ntName);
             dependents.removeAll(nodeTypeNames);
             if (dependents.size() > 0) {
-                StringBuffer msg = new StringBuffer();
+                StringBuilder msg = new StringBuilder();
                 msg.append(ntName).append(" can not be removed because the following node types depend on it: ");
                 for (Name name : dependents) {
                     msg.append(name);
-                    msg.append(" ");
+                    msg.append(' ');
                 }
                 throw new RepositoryException(msg.toString());
             }
@@ -740,7 +740,6 @@ public class NodeTypeRegistryImpl implements NodeTypeRegistry, EffectiveNodeType
             StringBuilder builder = new StringBuilder();
             for (QNodeTypeDefinition ntd : getValues()) {
                 builder.append(ntd.getName());
-                Name[] supertypes = ntd.getSupertypes();
                 builder.append("\n\tSupertypes");
                 for (Name supertype : ntd.getSupertypes()) {
                     builder.append("\n\t\t").append(supertype);
@@ -770,10 +769,11 @@ public class NodeTypeRegistryImpl implements NodeTypeRegistry, EffectiveNodeType
                         }
                     }
                     QValue[] defVals = pd.getDefaultValues();
-                    StringBuffer defaultValues = new StringBuffer();
+                    final String defaultValuesAsString;
                     if (defVals == null) {
-                        defaultValues.append("<null>");
+                        defaultValuesAsString = "<null>";
                     } else {
+                        StringBuilder defaultValues = new StringBuilder();
                         for (QValue defVal : defVals) {
                             if (defaultValues.length() > 0) {
                                 defaultValues.append(", ");
@@ -784,8 +784,9 @@ public class NodeTypeRegistryImpl implements NodeTypeRegistry, EffectiveNodeType
                                 defaultValues.append(defVal.toString());
                             }
                         }
+                        defaultValuesAsString = defaultValues.toString();
                     }
-                    builder.append("\n\t\tDefaultValue\t").append(defaultValues.toString());
+                    builder.append("\n\t\tDefaultValue\t").append(defaultValuesAsString);
                     builder.append("\n\t\tAutoCreated\t").append(pd.isAutoCreated());
                     builder.append("\n\t\tMandatory\t").append(pd.isMandatory());
                     builder.append("\n\t\tOnVersion\t").append(OnParentVersionAction.nameFromValue(pd.getOnParentVersion()));

@@ -728,8 +728,8 @@ public abstract class DatabaseFileSystem implements FileSystem {
                                 conHelper.exec(updateDataSQL,
                                         new Object[]{
                                             new StreamWrapper(in, length),
-                                            new Long(System.currentTimeMillis()),
-                                            new Long(length),
+                                            System.currentTimeMillis(),
+                                            length,
                                             parentDir,
                                             name
                                         });
@@ -743,8 +743,8 @@ public abstract class DatabaseFileSystem implements FileSystem {
                                             parentDir,
                                             name,
                                             new StreamWrapper(in, length),
-                                            new Long(System.currentTimeMillis()),
-                                            new Long(length)
+                                            System.currentTimeMillis(),
+                                            length
                                         });
                             }
                         }
@@ -921,7 +921,7 @@ public abstract class DatabaseFileSystem implements FileSystem {
                         new Object[]{
                                 parentDir,
                                 name,
-                                new Long(System.currentTimeMillis())});
+                                System.currentTimeMillis()});
             } catch (SQLException e) {
                 String msg = "failed to create folder entry: " + folderPath;
                 log.error(msg, e);

@@ -49,7 +49,7 @@ public class ServiceStubImpl extends RepositoryServiceStub {
         if (service == null) {
             Repository repository;
             try {
-                repository = RepositoryStub.getInstance(Collections.EMPTY_MAP).getRepository();
+                repository = RepositoryStub.getInstance(Collections.emptyMap()).getRepository();
             } catch (RepositoryStubException e) {
                 throw new RepositoryException(e);
             }

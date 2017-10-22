@@ -127,7 +127,7 @@ public class VersionItemCollection extends DefaultItemCollection
      */
     @Override
     public String getSupportedMethods() {
-        StringBuffer sb = new StringBuffer(ItemResourceConstants.METHODS);
+        StringBuilder sb = new StringBuilder(ItemResourceConstants.METHODS);
         sb.append(", ").append(VersionResource.METHODS);
         return sb.toString();
     }

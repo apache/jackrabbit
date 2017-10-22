@@ -100,8 +100,8 @@ public class AbstractQueryTest extends AbstractJCRTest {
         int count = 0;
         log.println("Properties:");
         String[] propNames = result.getColumnNames();
-        for (RowIterator it = result.getRows(); it.hasNext(); count++) {
-            StringBuffer msg = new StringBuffer();
+        StringBuilder msg = new StringBuilder();
+        for (RowIterator it = result.getRows(); it.hasNext(); count++, msg.setLength(0)) {
             Value[] values = it.nextRow().getValues();
             for (int i = 0; i < propNames.length; i++) {
                 msg.append("  ").append(propNames[i]).append(": ");
@@ -111,7 +111,7 @@ public class AbstractQueryTest extends AbstractJCRTest {
                     msg.append(values[i].getString());
                 }
             }
-            log.println(msg);
+            log.println(msg.toString());
         }
         if (count == 0) {
             log.println("  NONE");

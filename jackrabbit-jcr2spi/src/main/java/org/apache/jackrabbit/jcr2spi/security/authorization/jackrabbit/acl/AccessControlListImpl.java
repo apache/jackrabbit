@@ -111,7 +111,7 @@ class AccessControlListImpl implements JackrabbitAccessControlList, AccessContro
                 // the isAllow flag
                 boolean isAllow = NT_REP_GRANT_ACE.equals(aceNode.getNodeTypeName());
                 // build the entry
-                AccessControlEntry ace = new AccessControlEntryImpl(principal, privileges, isAllow, restrictions, Collections.EMPTY_MAP, resolver, qValueFactory);
+                AccessControlEntry ace = new AccessControlEntryImpl(principal, privileges, isAllow, restrictions, Collections.emptyMap(), resolver, qValueFactory);
                 entries.add(ace);
             } catch (RepositoryException e) {
                 log.debug("Fail to create Entry for "+ aceNode.getName().toString());
@@ -183,7 +183,7 @@ class AccessControlListImpl implements JackrabbitAccessControlList, AccessContro
     public boolean addEntry(Principal principal, Privilege[] privileges,
                             boolean isAllow, Map<String, Value> restrictions)
             throws AccessControlException, RepositoryException {
-        return addEntry(principal, privileges, isAllow, restrictions, Collections.EMPTY_MAP);
+        return addEntry(principal, privileges, isAllow, restrictions, Collections.emptyMap());
     }
 
     @Override

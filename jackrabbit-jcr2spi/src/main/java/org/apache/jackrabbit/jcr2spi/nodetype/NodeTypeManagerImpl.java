@@ -410,7 +410,7 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager implements Node
      */
     public String toString() {
         StringBuilder builder = new StringBuilder();
-        builder.append("NodeTypeManager (" + super.toString() + ")\n");
+        builder.append("NodeTypeManager (").append(super.toString()).append(")\n");
         builder.append("All NodeTypes:\n");
         try {
             NodeTypeIterator iter = this.getAllNodeTypes();
@@ -419,68 +419,72 @@ public class NodeTypeManagerImpl extends AbstractNodeTypeManager implements Node
                 builder.append(nt.getName());
                 builder.append("\n\tSupertypes");
                 for (NodeType supertype : nt.getSupertypes()) {
-                    builder.append("\n\t\t" + supertype.getName());
+                    builder.append("\n\t\t").append(supertype.getName());
                 }
-                builder.append("\n\tMixin\t" + nt.isMixin());
-                builder.append("\n\tOrderableChildNodes\t" + nt.hasOrderableChildNodes());
-                builder.append("\n\tPrimaryItemName\t" + (nt.getPrimaryItemName() == null ? "<null>" : nt.getPrimaryItemName()));
+                builder.append("\n\tMixin\t").append(nt.isMixin());
+                builder.append("\n\tOrderableChildNodes\t").append(nt.hasOrderableChildNodes());
+                builder.append("\n\tPrimaryItemName\t").append(nt.getPrimaryItemName() == null ? "<null>" : nt.getPrimaryItemName());
                 for (PropertyDefinition aPd : nt.getPropertyDefinitions()) {
                     builder.append("\n\tPropertyDefinition");
-                    builder.append(" (declared in " + aPd.getDeclaringNodeType().getName() + ") ");
-                    builder.append("\n\t\tName\t\t" + (aPd.getName()));
+                    builder.append(" (declared in ").append(aPd.getDeclaringNodeType().getName()).append(") ");
+                    builder.append("\n\t\tName\t\t").append(aPd.getName());
                     String type = aPd.getRequiredType() == 0 ? "null" : PropertyType.nameFromValue(aPd.getRequiredType());
-                    builder.append("\n\t\tRequiredType\t" + type);
+                    builder.append("\n\t\tRequiredType\t").append(type);
                     String[] vca = aPd.getValueConstraints();
-                    StringBuffer constraints = new StringBuffer();
+                    final String constraintsAsString;
                     if (vca == null) {
-                        constraints.append("<null>");
+                        constraintsAsString = "<null>";
                     } else {
+                        StringBuilder constraints = new StringBuilder();
                         for (String aVca : vca) {
                             if (constraints.length() > 0) {
                                 constraints.append(", ");
                             }
                             constraints.append(aVca);
                         }
+                        constraintsAsString = constraints.toString();
                     }
-                    builder.append("\n\t\tValueConstraints\t" + constraints.toString());
+                    builder.append("\n\t\tValueConstraints\t").append(constraintsAsString);
                     Value[] defVals = aPd.getDefaultValues();
-                    StringBuffer defaultValues = new StringBuffer();
+                    final String defaultValuesAsString;
                     if (defVals == null) {
-                        defaultValues.append("<null>");
+                        defaultValuesAsString = "<null>";
                     } else {
+                        StringBuilder defaultValues = new StringBuilder();
                         for (Value defVal : defVals) {
                             if (defaultValues.length() > 0) {
                                 defaultValues.append(", ");
                             }
                             defaultValues.append(defVal.getString());
                         }
+                        defaultValuesAsString = defaultValues.toString();
                     }
-                    builder.append("\n\t\tDefaultValue\t" + defaultValues.toString());
-                    builder.append("\n\t\tAutoCreated\t" + aPd.isAutoCreated());
-                    builder.append("\n\t\tMandatory\t" + aPd.isMandatory());
-                    builder.append("\n\t\tOnVersion\t" + OnParentVersionAction.nameFromValue(aPd.getOnParentVersion()));
-                    builder.append("\n\t\tProtected\t" + aPd.isProtected());
-                    builder.append("\n\t\tMultiple\t" + aPd.isMultiple());
+                    builder.append("\n\t\tDefaultValue\t").append(defaultValuesAsString);
+                    builder.append("\n\t\tAutoCreated\t").append(aPd.isAutoCreated());
+                    builder.append("\n\t\tMandatory\t").append(aPd.isMandatory());
+                    builder.append("\n\t\tOnVersion\t").append(OnParentVersionAction.nameFromValue(aPd.getOnParentVersion()));
+                    builder.append("\n\t\tProtected\t").append(aPd.isProtected());
+                    builder.append("\n\t\tMultiple\t").append(aPd.isMultiple());
                 }
                 for (NodeDefinition aNd : nt.getChildNodeDefinitions()) {
                     builder.append("\n\tNodeDefinition");
-                    builder.append(" (declared in " + aNd.getDeclaringNodeType() + ") ");
-                    builder.append("\n\t\tName\t\t" + aNd.getName());
+                    builder.append(" (declared in ").append(aNd.getDeclaringNodeType()).append(") ");
+                    builder.append("\n\t\tName\t\t").append(aNd.getName());
                     NodeType[] reqPrimaryTypes = aNd.getRequiredPrimaryTypes();
                     if (reqPrimaryTypes != null && reqPrimaryTypes.length > 0) {
                         for (NodeType reqPrimaryType : reqPrimaryTypes) {
-                            builder.append("\n\t\tRequiredPrimaryType\t" + reqPrimaryType.getName());
+                            builder.append("\n\t\tRequiredPrimaryType\t").append(reqPrimaryType.getName());
                         }
                     }
                     NodeType defPrimaryType = aNd.getDefaultPrimaryType();
                     if (defPrimaryType != null) {
-                        builder.append("\n\t\tDefaultPrimaryType\t" + defPrimaryType.getName());
+                        builder.append("\n\t\tDefaultPrimaryType\t").append(defPrimaryType.getName());
                     }
-                    builder.append("\n\t\tAutoCreated\t" + aNd.isAutoCreated());
-                    builder.append("\n\t\tMandatory\t" + aNd.isMandatory());
-                    builder.append("\n\t\tOnVersion\t" + OnParentVersionAction.nameFromValue(aNd.getOnParentVersion()));
-                    builder.append("\n\t\tProtected\t" + aNd.isProtected());
-                    builder.append("\n\t\tAllowsSameNameSiblings\t" + aNd.allowsSameNameSiblings());
+                    builder.append("\n\t\tAutoCreated\t").append(aNd.isAutoCreated());
+                    builder.append("\n\t\tMandatory\t").append(aNd.isMandatory());
+                    builder.append("\n\t\tOnVersion\t").append(OnParentVersionAction.nameFromValue(aNd.getOnParentVersion()));
+                    builder.append("\n\t\tProtected\t").append(aNd.isProtected());
+                    builder.append("\n\t\tAllowsSameNameSiblings\t").append(aNd.allowsSameNameSiblings());
                 }
             }
         } catch (RepositoryException e) {

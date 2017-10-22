@@ -76,7 +76,7 @@ public class TokenProvider extends ProtectedItemModifier {
 
     private static final char DELIM = '_';
 
-    private static final Set<String> RESERVED_ATTRIBUTES = new HashSet(3);
+    private static final Set<String> RESERVED_ATTRIBUTES = new HashSet<String>(3);
     static {
         RESERVED_ATTRIBUTES.add(TOKEN_ATTRIBUTE);
         RESERVED_ATTRIBUTES.add(TOKEN_ATTRIBUTE_EXPIRY);

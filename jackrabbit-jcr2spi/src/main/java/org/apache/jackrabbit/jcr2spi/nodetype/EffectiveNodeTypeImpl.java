@@ -106,7 +106,7 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
      * @see EffectiveNodeType#getAllQNodeDefinitions()
      */
     public QNodeDefinition[] getAllQNodeDefinitions() {
-        if (namedItemDefs.size() == 0 && unnamedItemDefs.size() == 0) {
+        if (namedItemDefs.isEmpty() && unnamedItemDefs.isEmpty()) {
             return QNodeDefinition.EMPTY_ARRAY;
         }
         ArrayList<QItemDefinition> defs = new ArrayList<QItemDefinition>(namedItemDefs.size() + unnamedItemDefs.size());
@@ -123,7 +123,7 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
                 }
             }
         }
-        if (defs.size() == 0) {
+        if (defs.isEmpty()) {
             return QNodeDefinition.EMPTY_ARRAY;
         }
         return defs.toArray(new QNodeDefinition[defs.size()]);
@@ -133,7 +133,7 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
      * @see EffectiveNodeType#getAllQPropertyDefinitions()
      */
     public QPropertyDefinition[] getAllQPropertyDefinitions() {
-        if (namedItemDefs.size() == 0 && unnamedItemDefs.size() == 0) {
+        if (namedItemDefs.isEmpty() && unnamedItemDefs.isEmpty()) {
             return QPropertyDefinition.EMPTY_ARRAY;
         }
         ArrayList<QItemDefinition> defs = new ArrayList<QItemDefinition>(namedItemDefs.size() + unnamedItemDefs.size());
@@ -149,7 +149,7 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
                 }
             }
         }
-        if (defs.size() == 0) {
+        if (defs.isEmpty()) {
             return QPropertyDefinition.EMPTY_ARRAY;
         }
         return defs.toArray(new QPropertyDefinition[defs.size()]);
@@ -161,7 +161,7 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
     public QNodeDefinition[] getAutoCreateQNodeDefinitions() {
         // since auto-create items must have a name,
         // we're only searching the named item definitions
-        if (namedItemDefs.size() == 0) {
+        if (namedItemDefs.isEmpty()) {
             return QNodeDefinition.EMPTY_ARRAY;
         }
         ArrayList<QItemDefinition> defs = new ArrayList<QItemDefinition>(namedItemDefs.size());
@@ -172,7 +172,7 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
                 }
             }
         }
-        if (defs.size() == 0) {
+        if (defs.isEmpty()) {
             return QNodeDefinition.EMPTY_ARRAY;
         }
         return defs.toArray(new QNodeDefinition[defs.size()]);
@@ -184,7 +184,7 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
     public QPropertyDefinition[] getAutoCreateQPropertyDefinitions() {
         // since auto-create items must have a name,
         // we're only searching the named item definitions
-        if (namedItemDefs.size() == 0) {
+        if (namedItemDefs.isEmpty()) {
             return QPropertyDefinition.EMPTY_ARRAY;
         }
         ArrayList<QItemDefinition> defs = new ArrayList<QItemDefinition>(namedItemDefs.size());
@@ -195,7 +195,7 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
                 }
             }
         }
-        if (defs.size() == 0) {
+        if (defs.isEmpty()) {
             return QPropertyDefinition.EMPTY_ARRAY;
         }
         return defs.toArray(new QPropertyDefinition[defs.size()]);
@@ -207,7 +207,7 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
     public QPropertyDefinition[] getMandatoryQPropertyDefinitions() {
         // since mandatory items must have a name,
         // we're only searching the named item definitions
-        if (namedItemDefs.size() == 0) {
+        if (namedItemDefs.isEmpty()) {
             return QPropertyDefinition.EMPTY_ARRAY;
         }
         ArrayList<QItemDefinition> defs = new ArrayList<QItemDefinition>(namedItemDefs.size());
@@ -218,7 +218,7 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
                 }
             }
         }
-        if (defs.size() == 0) {
+        if (defs.isEmpty()) {
             return QPropertyDefinition.EMPTY_ARRAY;
         }
         return defs.toArray(new QPropertyDefinition[defs.size()]);
@@ -230,7 +230,7 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
     public QNodeDefinition[] getMandatoryQNodeDefinitions() {
         // since mandatory items must have a name,
         // we're only searching the named item definitions
-        if (namedItemDefs.size() == 0) {
+        if (namedItemDefs.isEmpty()) {
             return QNodeDefinition.EMPTY_ARRAY;
         }
         ArrayList<QItemDefinition> defs = new ArrayList<QItemDefinition>(namedItemDefs.size());
@@ -241,7 +241,7 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
                 }
             }
         }
-        if (defs.size() == 0) {
+        if (defs.isEmpty()) {
             return QNodeDefinition.EMPTY_ARRAY;
         }
         return defs.toArray(new QNodeDefinition[defs.size()]);
@@ -252,7 +252,7 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
      */
     public QNodeDefinition[] getNamedQNodeDefinitions(Name name) {
         List<QItemDefinition> list = namedItemDefs.get(name);
-        if (list == null || list.size() == 0) {
+        if (list == null || list.isEmpty()) {
             return QNodeDefinition.EMPTY_ARRAY;
         }
         ArrayList<QItemDefinition> defs = new ArrayList<QItemDefinition>(list.size());
@@ -261,7 +261,7 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
                 defs.add(qDef);
             }
         }
-        if (defs.size() == 0) {
+        if (defs.isEmpty()) {
             return QNodeDefinition.EMPTY_ARRAY;
         }
         return defs.toArray(new QNodeDefinition[defs.size()]);
@@ -271,7 +271,7 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
      * @see EffectiveNodeType#getUnnamedQNodeDefinitions()
      */
     public QNodeDefinition[] getUnnamedQNodeDefinitions() {
-        if (unnamedItemDefs.size() == 0) {
+        if (unnamedItemDefs.isEmpty()) {
             return QNodeDefinition.EMPTY_ARRAY;
         }
         ArrayList<QItemDefinition> defs = new ArrayList<QItemDefinition>(unnamedItemDefs.size());
@@ -280,7 +280,7 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
                 defs.add(qDef);
             }
         }
-        if (defs.size() == 0) {
+        if (defs.isEmpty()) {
             return QNodeDefinition.EMPTY_ARRAY;
         }
         return defs.toArray(new QNodeDefinition[defs.size()]);
@@ -291,7 +291,7 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
      */
     public QPropertyDefinition[] getNamedQPropertyDefinitions(Name name) {
         List<QItemDefinition> list = namedItemDefs.get(name);
-        if (list == null || list.size() == 0) {
+        if (list == null || list.isEmpty()) {
             return QPropertyDefinition.EMPTY_ARRAY;
         }
         ArrayList<QItemDefinition> defs = new ArrayList<QItemDefinition>(list.size());
@@ -300,7 +300,7 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
                 defs.add(qDef);
             }
         }
-        if (defs.size() == 0) {
+        if (defs.isEmpty()) {
             return QPropertyDefinition.EMPTY_ARRAY;
         }
         return defs.toArray(new QPropertyDefinition[defs.size()]);
@@ -310,7 +310,7 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
      * @see EffectiveNodeType#getUnnamedQPropertyDefinitions()
      */
     public QPropertyDefinition[] getUnnamedQPropertyDefinitions() {
-        if (unnamedItemDefs.size() == 0) {
+        if (unnamedItemDefs.isEmpty()) {
             return QPropertyDefinition.EMPTY_ARRAY;
         }
         ArrayList<QItemDefinition> defs = new ArrayList<QItemDefinition>(unnamedItemDefs.size());
@@ -319,7 +319,7 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
                 defs.add(qDef);
             }
         }
-        if (defs.size() == 0) {
+        if (defs.isEmpty()) {
             return QPropertyDefinition.EMPTY_ARRAY;
         }
         return defs.toArray(new QPropertyDefinition[defs.size()]);
@@ -437,14 +437,14 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
     }
 
     private QItemDefinition[] getNamedItemDefs() {
-        if (namedItemDefs.size() == 0) {
+        if (namedItemDefs.isEmpty()) {
             return QItemDefinition.EMPTY_ARRAY;
         }
         ArrayList<QItemDefinition> defs = new ArrayList<QItemDefinition>(namedItemDefs.size());
         for (List<QItemDefinition> list : namedItemDefs.values()) {
             defs.addAll(list);
         }
-        if (defs.size() == 0) {
+        if (defs.isEmpty()) {
             return QItemDefinition.EMPTY_ARRAY;
         }
         return defs.toArray(new QItemDefinition[defs.size()]);
@@ -452,14 +452,14 @@ public class EffectiveNodeTypeImpl implements Cloneable, EffectiveNodeType {
 
     private QItemDefinition[] getNamedItemDefs(Name name) {
         List<QItemDefinition> list = namedItemDefs.get(name);
-        if (list == null || list.size() == 0) {
+        if (list == null || list.isEmpty()) {
             return QNodeDefinition.EMPTY_ARRAY;
         }
         return list.toArray(new QItemDefinition[list.size()]);
     }
 
     private QItemDefinition[] getUnnamedItemDefs() {
-        if (unnamedItemDefs.size() == 0) {
+        if (unnamedItemDefs.isEmpty()) {
             return QItemDefinition.EMPTY_ARRAY;
         }
         return unnamedItemDefs.toArray(new QItemDefinition[unnamedItemDefs.size()]);

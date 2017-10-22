@@ -136,12 +136,12 @@ public class EventImpl
 
         while (elements.hasNext()) {
             String rawname = DomUtil.getText(elements.nextElement());
-            Name name = null;
+            Name name;
 
             try {
                 name = resolver.getQName(rawname);
 
-                if (results.size() == 0) {
+                if (results.isEmpty()) {
                     results = Collections.singletonList(name);
                 } else if (results.size() == 1) {
                     results = new ArrayList<Name>(results);

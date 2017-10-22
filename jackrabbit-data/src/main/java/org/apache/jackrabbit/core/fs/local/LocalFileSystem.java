@@ -18,8 +18,6 @@ package org.apache.jackrabbit.core.fs.local;
 
 import org.apache.jackrabbit.core.fs.FileSystem;
 import org.apache.jackrabbit.core.fs.FileSystemException;
-import org.apache.jackrabbit.core.fs.local.FileUtil;
-import org.apache.jackrabbit.core.fs.local.HandleMonitor;
 import org.apache.jackrabbit.util.LazyFileInputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -78,7 +76,7 @@ public class LocalFileSystem implements FileSystem {
      * @param enable
      */
     public void setEnableHandleMonitor(String enable) {
-        setEnableHandleMonitor(Boolean.valueOf(enable).booleanValue());
+        setEnableHandleMonitor(Boolean.valueOf(enable));
     }
 
     /**

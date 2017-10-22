@@ -159,7 +159,7 @@ public class SessionReadMethodsTest extends AbstractJCRTest {
      */
     public void testGetAttributeFailure() {
         String names[] = session.getAttributeNames();
-        StringBuffer notExistingName = new StringBuffer("X");
+        StringBuilder notExistingName = new StringBuilder("X");
         for (int i = 0; i < names.length; i++) {
             notExistingName.append(names[i]);
         }
@@ -206,16 +206,16 @@ public class SessionReadMethodsTest extends AbstractJCRTest {
      */
     private String getNonExistingPath() throws RepositoryException {
         // build path to a node that does not exist
-        StringBuffer tmp = new StringBuffer();
+        StringBuilder tmp = new StringBuilder();
         if (testRootNode.getName().length() > 0) {
-            tmp.append("/").append(testRootNode.getName());
+            tmp.append('/').append(testRootNode.getName());
         }
         int count = 0;
         String nodeName = "node";
         while (testRootNode.hasNode(nodeName + count)) {
             count++;
         }
-        tmp.append("/").append(nodeName + count);
+        tmp.append('/').append(nodeName + count);
         return tmp.toString();
     }
 

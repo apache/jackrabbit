@@ -79,12 +79,12 @@ public abstract class AbstractConfig {
     }
 
     public String toMapName(String name, char delim) {
-        StringBuffer ret = new StringBuffer();
+        StringBuilder ret = new StringBuilder();
         String[] elems = Text.explode(name, delim);
         ret.append(elems[0]);
         for (int i=1; i<elems.length; i++) {
             ret.append(elems[i].substring(0, 1).toUpperCase());
-            ret.append(elems[i].substring(1));
+            ret.append(elems[i], 1, elems[i].length());
         }
         return ret.toString();
     }

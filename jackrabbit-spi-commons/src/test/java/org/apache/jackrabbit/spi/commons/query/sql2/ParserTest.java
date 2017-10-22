@@ -242,7 +242,7 @@ public class ParserTest extends TestCase {
 
     public void fuzz(String query) throws Exception {
         for (int i = 0; i < 100; i++) {
-            StringBuffer buff = new StringBuffer(query);
+            StringBuilder buff = new StringBuilder(query);
             int changes = 1 + (int) Math.abs(random.nextGaussian() * 2);
             for (int j = 0; j < changes; j++) {
                 char newChar;

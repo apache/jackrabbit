@@ -157,7 +157,7 @@ public class QueryImpl extends AbstractQueryImpl {
                     sessionContext.getJCRName(DEFAULT_SELECTOR_NAME), pn, pn);
             columns.put(name, col);
         }
-        if (columns.size() == 0) {
+        if (columns.isEmpty()) {
             // use node type constraint
             LocationStepQueryNode[] steps = root.getLocationNode().getPathSteps();
             final Name[] ntName = new Name[1];

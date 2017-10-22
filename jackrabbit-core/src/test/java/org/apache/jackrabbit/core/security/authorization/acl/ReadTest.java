@@ -355,7 +355,7 @@ public class ReadTest extends AbstractEvaluationTest {
 
         // first deny access to 'path' (read-access is granted in the test setup)
         Privilege[] read = privilegesFromName(Privilege.JCR_READ);
-        withdrawPrivileges(path, read, Collections.EMPTY_MAP);
+        withdrawPrivileges(path, read, Collections.emptyMap());
 
         Session testSession = getTestSession();
         assertFalse(testSession.nodeExists(path));
@@ -378,7 +378,7 @@ public class ReadTest extends AbstractEvaluationTest {
         assertFalse(canGetNode(testSession, ccPath));
         assertFalse(testSession.propertyExists(childNPath + '/' + JcrConstants.JCR_PRIMARYTYPE));
 
-        givePrivileges(ccPath, read, Collections.EMPTY_MAP);
+        givePrivileges(ccPath, read, Collections.emptyMap());
         assertTrue(testSession.nodeExists(ccPath));
         assertTrue(canGetNode(testSession, ccPath));
         assertTrue(testSession.propertyExists(ccPath + '/' + JcrConstants.JCR_PRIMARYTYPE));
@@ -395,7 +395,7 @@ public class ReadTest extends AbstractEvaluationTest {
 
         // first deny access to 'path' (read-access is granted in the test setup)
         Privilege[] read = privilegesFromName(Privilege.JCR_READ);
-        withdrawPrivileges(path, read, Collections.EMPTY_MAP);
+        withdrawPrivileges(path, read, Collections.emptyMap());
 
         Session testSession = getTestSession();
         assertFalse(testSession.nodeExists(path));
@@ -441,17 +441,17 @@ public class ReadTest extends AbstractEvaluationTest {
 
             Privilege[] read = privilegesFromName(Privilege.JCR_READ);
 
-            withdrawPrivileges(path, group1.getPrincipal(), read, Collections.EMPTY_MAP);
+            withdrawPrivileges(path, group1.getPrincipal(), read, Collections.emptyMap());
             Map<String, Value> emptyStringRestriction = new HashMap<String, Value>(getRestrictions(superuser, path));
             emptyStringRestriction.put(AccessControlConstants.P_GLOB.toString(), vf.createValue(""));
             givePrivileges(path, group1.getPrincipal(), read, emptyStringRestriction);
 
-            withdrawPrivileges(childNPath, group2.getPrincipal(), read, Collections.EMPTY_MAP);
+            withdrawPrivileges(childNPath, group2.getPrincipal(), read, Collections.emptyMap());
             emptyStringRestriction = new HashMap<String, Value>(getRestrictions(superuser, childNPath));
             emptyStringRestriction.put(AccessControlConstants.P_GLOB.toString(), vf.createValue(""));
             givePrivileges(childNPath, group2.getPrincipal(), read, emptyStringRestriction);
 
-            withdrawPrivileges(childNPath2, group3.getPrincipal(), read, Collections.EMPTY_MAP);
+            withdrawPrivileges(childNPath2, group3.getPrincipal(), read, Collections.emptyMap());
             emptyStringRestriction = new HashMap<String, Value>(getRestrictions(superuser, childNPath2));
             emptyStringRestriction.put(AccessControlConstants.P_GLOB.toString(), vf.createValue(""));
             givePrivileges(childNPath2, group3.getPrincipal(), read, emptyStringRestriction);

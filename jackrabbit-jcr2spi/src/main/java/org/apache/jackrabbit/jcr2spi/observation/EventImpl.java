@@ -62,7 +62,7 @@ final class EventImpl implements Event {
     /**
      * Cached String value of this <code>Event</code> instance.
      */
-    private String stringValue;
+    private transient String stringValue;
 
     /**
      * Creates a new {@link javax.jcr.observation.Event} instance based on an
@@ -154,7 +154,7 @@ final class EventImpl implements Event {
     @Override
     public String toString() {
         if (stringValue == null) {
-            StringBuffer sb = new StringBuffer();
+            StringBuilder sb = new StringBuilder();
             sb.append("Event: Path: ");
             try {
                 sb.append(getPath());

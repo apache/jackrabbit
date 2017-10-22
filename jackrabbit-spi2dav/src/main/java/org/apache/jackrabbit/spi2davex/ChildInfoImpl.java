@@ -39,7 +39,7 @@ public class ChildInfoImpl implements ChildInfo {
      */
     private final int index;
 
-    private int hashCode;
+    private transient int hashCode;
 
     /**
      * Creates a new serializable <code>ChildInfoImpl</code>.
@@ -86,11 +86,11 @@ public class ChildInfoImpl implements ChildInfo {
     public int hashCode() {
         // build hashCode (format: <name>/<name>/<index>/<uniqueID>)
         if (hashCode == 0) {
-            StringBuffer sb = new StringBuffer();
+            StringBuilder sb = new StringBuilder();
             sb.append(name.toString());
-            sb.append("/");
+            sb.append('/');
             sb.append(index);
-            sb.append("/");
+            sb.append('/');
             if (uniqueId != null) {
                 sb.append(uniqueId);
             }
@@ -120,7 +120,7 @@ public class ChildInfoImpl implements ChildInfo {
      */
     @Override
     public String toString() {
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         sb.append(name.toString());
         sb.append(" : ").append(index);
         sb.append(" : ").append((uniqueId == null) ? "-" : uniqueId);

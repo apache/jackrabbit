@@ -106,7 +106,7 @@ public class Text {
 
         MessageDigest md = MessageDigest.getInstance(algorithm);
         byte[] digest = md.digest(data);
-        StringBuffer res = new StringBuffer(digest.length * 2);
+        StringBuilder res = new StringBuilder(digest.length * 2);
         for (int i = 0; i < digest.length; i++) {
             byte b = digest[i];
             res.append(hexTable[(b >> 4) & 15]);
@@ -171,7 +171,7 @@ public class Text {
      * @return the concatenated string
      */
     public static String implode(String[] arr, String delim) {
-        StringBuffer buf = new StringBuffer();
+        StringBuilder buf = new StringBuilder();
         for (int i = 0; i < arr.length; i++) {
             if (i > 0) {
                 buf.append(delim);
@@ -182,12 +182,12 @@ public class Text {
     }
 
     /**
-     * Replaces all occurences of <code>oldString</code> in <code>text</code>
+     * Replaces all occurrences of <code>oldString</code> in <code>text</code>
      * with <code>newString</code>.
      *
      * @param text
      * @param oldString old substring to be replaced with <code>newString</code>
-     * @param newString new substring to replace occurences of <code>oldString</code>
+     * @param newString new substring to replace occurrences of <code>oldString</code>
      * @return a string
      */
     public static String replace(String text, String oldString, String newString) {
@@ -199,15 +199,15 @@ public class Text {
             return text;
         }
         int lastPos = 0;
-        StringBuffer sb = new StringBuffer(text.length());
+        StringBuilder sb = new StringBuilder(text.length());
         while (pos != -1) {
-            sb.append(text.substring(lastPos, pos));
+            sb.append(text, lastPos, pos);
             sb.append(newString);
             lastPos = pos + oldString.length();
             pos = text.indexOf(oldString, lastPos);
         }
         if (lastPos < text.length()) {
-            sb.append(text.substring(lastPos));
+            sb.append(text, lastPos, text.length());
         }
         return sb.toString();
     }
@@ -223,7 +223,7 @@ public class Text {
         if (text == null) {
             throw new IllegalArgumentException("null argument");
         }
-        StringBuffer buf = null;
+        StringBuilder buf = null;
         int length = text.length();
         int pos = 0;
         for (int i = 0; i < length; i++) {
@@ -235,10 +235,10 @@ public class Text {
                 case '"':
                 case '\'':
                     if (buf == null) {
-                        buf = new StringBuffer();
+                        buf = new StringBuilder();
                     }
                     if (i > 0) {
-                        buf.append(text.substring(pos, i));
+                        buf.append(text, pos, i);
                     }
                     pos = i + 1;
                     break;
@@ -261,7 +261,7 @@ public class Text {
             return text;
         } else {
             if (pos < length) {
-                buf.append(text.substring(pos));
+                buf.append(text, pos, text.length());
             }
             return buf.toString();
         }
@@ -342,7 +342,7 @@ public class Text {
         try {
             BitSet validChars = isPath ? URISaveEx : URISave;
             byte[] bytes = string.getBytes("utf-8");
-            StringBuffer out = new StringBuffer(bytes.length);
+            StringBuilder out = new StringBuilder(bytes.length);
             for (int i = 0; i < bytes.length; i++) {
                 int c = bytes[i] & 0xff;
                 if (validChars.get(c) && c != escape) {
@@ -468,7 +468,7 @@ public class Text {
      * @return the escaped name
      */
     public static String escapeIllegalJcrChars(String name) {
-        StringBuffer buffer = new StringBuffer(name.length() * 2);
+        StringBuilder buffer = new StringBuilder(name.length() * 2);
         for (int i = 0; i < name.length(); i++) {
             char ch = name.charAt(i);
             if (ch == '%' || ch == '/' || ch == ':' || ch == '[' || ch == ']'
@@ -495,8 +495,8 @@ public class Text {
      * @return the escaped string
      */
     public static String escapeIllegalXpathSearchChars(String s) {
-        StringBuffer sb = new StringBuffer();
-        sb.append(s.substring(0, (s.length() - 1)));
+        StringBuilder sb = new StringBuilder();
+        sb.append(s, 0, s.length() - 1);
         char c = s.charAt(s.length() - 1);
         // NOTE: keep this in sync with _ESCAPED_CHAR below!
         if (c == '!' || c == '(' || c == ':' || c == '^'
@@ -519,10 +519,10 @@ public class Text {
      * @return the unescaped name
      */
     public static String unescapeIllegalJcrChars(String name) {
-        StringBuffer buffer = new StringBuffer(name.length());
+        StringBuilder buffer = new StringBuilder(name.length());
         int i = name.indexOf('%');
         while (i > -1 && i + 2 < name.length()) {
-            buffer.append(name.toCharArray(), 0, i);
+            buffer.append(name, 0, i);
             int a = Character.digit(name.charAt(i + 1), 16);
             int b = Character.digit(name.charAt(i + 2), 16);
             if (a > -1 && b > -1) {
@@ -736,7 +736,7 @@ public class Text {
     public static String replaceVariables(Properties variables, String value,
                                           boolean ignoreMissing)
             throws IllegalArgumentException {
-        StringBuffer result = new StringBuffer();
+        StringBuilder result = new StringBuilder();
 
         // Value:
         // +--+-+--------+-+-----------------+
@@ -744,7 +744,7 @@ public class Text {
         // +--+-+--------+-+-----------------+
         int p = 0, q = value.indexOf("${");                // Find first ${
         while (q != -1) {
-            result.append(value.substring(p, q));          // Text before ${
+            result.append(value, p, q);                    // Text before ${
             p = q;
             q = value.indexOf("}", q + 2);                 // Find }
             if (q != -1) {
@@ -763,7 +763,7 @@ public class Text {
                 q = value.indexOf("${", p);                // Find next ${
             }
         }
-        result.append(value.substring(p, value.length())); // Trailing text
+        result.append(value, p, value.length());           // Trailing text
 
         return result.toString();
     }

@@ -2183,7 +2183,7 @@ public class RepositoryServiceImpl implements RepositoryService, DavConstants {
         if (nodeTypeNames != null) {
             resolvedTypeNames = new HashSet<Name>();
             // make sure node type definitions are available
-            if (nodeTypeDefinitions.size() == 0) {
+            if (nodeTypeDefinitions.isEmpty()) {
                 getQNodeTypeDefinitions(sessionInfo);
             }
             synchronized (nodeTypeDefinitions) {

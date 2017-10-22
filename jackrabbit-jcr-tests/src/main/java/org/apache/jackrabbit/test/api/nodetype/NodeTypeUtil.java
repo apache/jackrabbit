@@ -479,7 +479,7 @@ public class NodeTypeUtil {
     public static String getUndefinedChildNodeName(NodeType nodeType) {
 
         NodeDefinition nodeDefs[] = nodeType.getChildNodeDefinitions();
-        StringBuffer s = new StringBuffer("X");
+        StringBuilder s = new StringBuilder("X");
 
         for (int i = 0; i < nodeDefs.length; i++) {
             s.append(nodeDefs[i].getName());
@@ -620,7 +620,7 @@ public class NodeTypeUtil {
                     }
                     if (satisfied) {
                         // build a binary value absMin < size > absMax
-                        StringBuffer content = new StringBuffer();
+                        StringBuilder content = new StringBuilder();
                         for (int i = 0; i <= absMin + 1; i++) {
                             content.append("X");
                         }
@@ -635,8 +635,16 @@ public class NodeTypeUtil {
                             return session.getValueFactory().createValue("0", PropertyType.BINARY);
                         } else if (!maxBoundless) {
                             // build a binary value of size > absMax
-                            StringBuffer content = new StringBuffer();
-                            for (int i = 0; i <= absMax; i = i + 10) {
+                            final int absMaxAsInt;
+                            if (absMax < 0) {
+                                absMaxAsInt = -1;
+                            } else if (absMax + 10L >= Integer.MAX_VALUE) {
+                                absMaxAsInt = Integer.MAX_VALUE - 11;
+                            } else {
+                                absMaxAsInt = (int)absMax;
+                            }
+                            StringBuilder content = new StringBuilder(absMax < 0 ? 0 : absMaxAsInt + 10);
+                            for (int i = 0; i <= absMaxAsInt; i += 10) {
                                 content.append("0123456789");
                             }
                             return session.getValueFactory().createValue(content.toString(), PropertyType.BINARY);
@@ -865,7 +873,7 @@ public class NodeTypeUtil {
                         return null;
                     } else {
                         // build a name that is for sure not part of the constraints
-                        StringBuffer name = new StringBuffer("X");
+                        StringBuilder name = new StringBuilder("X");
                         for (int i = 0; i < constraints.length; i++) {
                             name.append(constraints[i].replaceAll(":", ""));
                         }
@@ -880,7 +888,7 @@ public class NodeTypeUtil {
                         return null;
                     } else {
                         // build a path that is for sure not part of the constraints
-                        StringBuffer path = new StringBuffer("X");
+                        StringBuilder path = new StringBuilder("X");
                         for (int i = 0; i < constraints.length; i++) {
                             path.append(constraints[i]);
                         }
@@ -908,7 +916,7 @@ public class NodeTypeUtil {
                         return null;
                     } else {
                         // build a string that will probably not satisfy the constraints
-                        StringBuffer value = new StringBuffer("X");
+                        StringBuilder value = new StringBuilder("X");
                         for (int i = 0; i < constraints.length; i++) {
                             value.append(constraints[i]);
                         }

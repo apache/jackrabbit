@@ -102,7 +102,7 @@ public class SearchInfo implements SearchConstants, XmlSerializable {
         this.language = language;
         this.languageNamespace = languageNamespace;
         this.query = query;
-        this.namespaces = Collections.unmodifiableMap(new HashMap(namespaces));
+        this.namespaces = Collections.unmodifiableMap(new HashMap<String, String>(namespaces));
     }
 
     /**

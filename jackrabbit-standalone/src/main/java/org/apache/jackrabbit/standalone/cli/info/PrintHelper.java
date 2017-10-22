@@ -131,7 +131,7 @@ final class PrintHelper {
             } else if (o instanceof String) {
                 text[column] = (String) o;
             } else if (o instanceof Collection) {
-                StringBuffer sb = new StringBuffer();
+                StringBuilder sb = new StringBuilder();
                 Iterator i = ((Collection) o).iterator();
                 while (i.hasNext()) {
                     String str = (String) i.next();

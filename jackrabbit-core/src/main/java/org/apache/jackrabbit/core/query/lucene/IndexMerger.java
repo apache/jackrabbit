@@ -144,7 +144,7 @@ class IndexMerger implements IndexListener {
         // therefore we have to synchronize this block
         synchronized (lock) {
             // initially create buckets
-            if (indexBuckets.size() == 0) {
+            if (indexBuckets.isEmpty()) {
                 long lower = 0;
                 long upper = minMergeDocs;
                 while (upper < maxMergeDocs) {

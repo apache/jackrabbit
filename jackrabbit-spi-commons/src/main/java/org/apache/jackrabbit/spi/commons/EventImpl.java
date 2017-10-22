@@ -84,7 +84,7 @@ public class EventImpl implements Event, Serializable {
     public EventImpl(int type, Path path, ItemId itemId, NodeId parentId,
                      Name primaryNodeTypeName, Name[] mixinTypeNames,
                      String userId) {
-        this(type, path, itemId, parentId, primaryNodeTypeName, mixinTypeNames, userId, null, Long.MIN_VALUE, Collections.EMPTY_MAP);
+        this(type, path, itemId, parentId, primaryNodeTypeName, mixinTypeNames, userId, null, Long.MIN_VALUE, Collections.emptyMap());
     }
 
     /**
@@ -187,8 +187,8 @@ public class EventImpl implements Event, Serializable {
     //-------------------------------------------------------------< Object >---
     @Override
     public String toString() {
-        return new StringBuffer(getClass().getName())
-            .append("[")
+        return new StringBuilder(getClass().getName())
+            .append('[')
             .append("eventTypes: ").append(type).append(", ")
             .append("absPath: ").append(path).append(", ")
             .append("itemId: ").append(itemId).append(", ")
@@ -196,7 +196,7 @@ public class EventImpl implements Event, Serializable {
             .append("primaryNodeTypeName: ").append(primaryNodeTypeName).append(", ")
             .append("mixinTypeNames: ").append(Arrays.toString(mixinTypeNames)).append(", ")
             .append("userId").append(userId)
-            .append("]")
+            .append(']')
             .toString();
     }
     

@@ -117,14 +117,14 @@ public final class ScoreNode {
     }
 
     public String toString() {
-        StringBuffer sb = new StringBuffer(id.toString());
-        sb.append("(");
+        StringBuilder sb = new StringBuilder(id.toString());
+        sb.append('(');
         if (doc != -1) {
             sb.append(doc);
         } else {
-            sb.append("?");
+            sb.append('?');
         }
-        sb.append(")");
+        sb.append(')');
         return sb.toString();
     }
 }

@@ -272,17 +272,17 @@ class JsonDiffHandler implements DiffHandler {
      * @throws RepositoryException
      */
     String getItemPath(String diffPath) throws RepositoryException {
-        StringBuffer itemPath;
+        StringBuilder itemPath;
         if (!diffPath.startsWith("/")) {
             // diff path is relative to the item path retrieved from the
             // request URI -> calculate item path.
-            itemPath = new StringBuffer(requestItemPath);
+            itemPath = new StringBuilder(requestItemPath);
             if (!requestItemPath.endsWith("/")) {
                 itemPath.append('/');
             }
             itemPath.append(diffPath);
         } else {
-            itemPath = new StringBuffer(diffPath);
+            itemPath = new StringBuilder(diffPath);
         }
         return normalize(itemPath.toString());
     }
@@ -1000,7 +1000,7 @@ class JsonDiffHandler implements DiffHandler {
             try {
                 // Multi-valued property with values present in the request
                 // multi-part
-                if (values.size() == 0) {
+                if (values.isEmpty()) {
                     values = Arrays.asList(extractValuesFromRequest(getPath()));
                 }
 

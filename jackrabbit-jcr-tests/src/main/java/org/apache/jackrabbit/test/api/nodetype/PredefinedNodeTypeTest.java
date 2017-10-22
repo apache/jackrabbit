@@ -310,7 +310,7 @@ public class PredefinedNodeTypeTest extends AbstractJCRTest {
     private void testPredefinedNodeType(String name, boolean propsVariant)
             throws NotExecutableException {
         try {
-            StringBuffer spec = new StringBuffer();
+            StringBuilder spec = new StringBuilder();
             String resource =
                 "org/apache/jackrabbit/test/api/nodetype/spec/"
                 + name.replace(':', '-') + ".txt";

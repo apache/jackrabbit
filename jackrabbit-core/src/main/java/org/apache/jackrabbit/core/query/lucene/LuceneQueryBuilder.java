@@ -237,7 +237,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
 
         Query q = builder.createLuceneQuery();
         if (builder.exceptions.size() > 0) {
-            StringBuffer msg = new StringBuffer();
+            StringBuilder msg = new StringBuilder();
             for (Exception exception : builder.exceptions) {
                 msg.append(exception.toString()).append('\n');
             }
@@ -391,7 +391,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
         } catch (RepositoryException e) {
             exceptions.add(e);
         }
-        if (terms.size() == 0) {
+        if (terms.isEmpty()) {
             // exception occured
             return new BooleanQuery();
         } else if (terms.size() == 1) {
@@ -415,9 +415,9 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
             } else {
                 // final path element is a property name
                 Name propName = relPath.getName();
-                StringBuffer tmp = new StringBuffer();
+                StringBuilder tmp = new StringBuilder();
                 tmp.append(nsMappings.getPrefix(propName.getNamespaceURI()));
-                tmp.append(":").append(FieldNames.FULLTEXT_PREFIX);
+                tmp.append(':').append(FieldNames.FULLTEXT_PREFIX);
                 tmp.append(propName.getLocalName());
                 fieldname = tmp.toString();
             }
@@ -769,8 +769,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                         Query q;
                         if (transform[0] == TransformConstants.TRANSFORM_UPPER_CASE) {
                             q = new CaseTermQuery.Upper(t);
-                        } else
-                        if (transform[0] == TransformConstants.TRANSFORM_LOWER_CASE) {
+                        } else if (transform[0] == TransformConstants.TRANSFORM_LOWER_CASE) {
                             q = new CaseTermQuery.Lower(t);
                         } else {
                             q = new JackrabbitTermQuery(t);
@@ -853,8 +852,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                         Query q;
                         if (transform[0] == TransformConstants.TRANSFORM_UPPER_CASE) {
                             q = new CaseTermQuery.Upper(t);
-                        } else
-                        if (transform[0] == TransformConstants.TRANSFORM_LOWER_CASE) {
+                        } else if (transform[0] == TransformConstants.TRANSFORM_LOWER_CASE) {
                             q = new CaseTermQuery.Lower(t);
                         } else {
                             q = new JackrabbitTermQuery(t);
@@ -882,8 +880,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                         Query q;
                         if (transform[0] == TransformConstants.TRANSFORM_UPPER_CASE) {
                             q = new CaseTermQuery.Upper(t);
-                        } else
-                        if (transform[0] == TransformConstants.TRANSFORM_LOWER_CASE) {
+                        } else if (transform[0] == TransformConstants.TRANSFORM_LOWER_CASE) {
                             q = new CaseTermQuery.Lower(t);
                         } else {
                             q = new JackrabbitTermQuery(t);
@@ -1153,7 +1150,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
                     break;
             }
         }
-        if (values.size() == 0) {
+        if (values.isEmpty()) {
             // use literal as is then try to guess other types
             values.add(literal);
 
@@ -1202,7 +1199,7 @@ public class LuceneQueryBuilder implements QueryNodeVisitor {
             }
         }
         // if still no values use literal as is
-        if (values.size() == 0) {
+        if (values.isEmpty()) {
             values.add(literal);
             log.debug("Using literal " + literal + " as is.");
         }

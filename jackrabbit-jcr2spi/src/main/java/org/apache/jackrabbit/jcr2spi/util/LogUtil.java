@@ -106,7 +106,7 @@ public final class LogUtil {
         if (p == null || pathResolver == null) {
             return itemId.toString();
         } else {
-            StringBuffer bf = new StringBuffer();
+            StringBuilder bf = new StringBuilder();
             String uniqueID = itemId.getUniqueID();
             if (uniqueID != null) {
                 bf.append(uniqueID).append(" - ");
