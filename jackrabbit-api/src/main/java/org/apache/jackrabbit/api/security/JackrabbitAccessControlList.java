@@ -27,7 +27,7 @@ import javax.jcr.security.AccessControlList;
 import javax.jcr.security.AccessControlPolicy;
 import javax.jcr.security.Privilege;
 
-import aQute.bnd.annotation.ProviderType;
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * <code>JackrabbitAccessControlList</code> is an extension of the <code>AccessControlList</code>.
