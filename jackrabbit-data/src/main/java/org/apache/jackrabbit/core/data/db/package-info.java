@@ -15,5 +15,5 @@
  * limitations under the License.
  */
 /* see JCR-4060 */
-@aQute.bnd.annotation.Version("2.13.6")
+@org.osgi.annotation.versioning.Version("2.13.6")
 package org.apache.jackrabbit.core.data.db;

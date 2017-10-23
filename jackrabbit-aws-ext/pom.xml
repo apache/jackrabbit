@@ -37,8 +37,8 @@
             <artifactId>jcr</artifactId>
         </dependency>
         <dependency>
-            <groupId>biz.aQute</groupId>
-            <artifactId>bndlib</artifactId>
+            <groupId>org.osgi</groupId>
+            <artifactId>org.osgi.annotation</artifactId>
             <scope>provided</scope>
         </dependency>
         <dependency>

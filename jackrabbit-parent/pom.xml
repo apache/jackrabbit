@@ -572,6 +572,11 @@
         <version>1.43.0</version>
       </dependency>
       <dependency>
+        <groupId>org.osgi</groupId>
+        <artifactId>org.osgi.annotation</artifactId>
+        <version>6.0.0</version>
+      </dependency>
+      <dependency>
         <groupId>cglib</groupId>
         <artifactId>cglib</artifactId>
         <version>2.1_3</version>

@@ -14,5 +14,5 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-@aQute.bnd.annotation.Version("2.3")
+@org.osgi.annotation.versioning.Version("2.3")
 package org.apache.jackrabbit.commons.cnd;
