@@ -567,11 +567,6 @@
         <version>${jetty.version}</version>
       </dependency>
       <dependency>
-        <groupId>biz.aQute</groupId>
-        <artifactId>bndlib</artifactId>
-        <version>1.43.0</version>
-      </dependency>
-      <dependency>
         <groupId>org.osgi</groupId>
         <artifactId>org.osgi.annotation</artifactId>
         <version>6.0.0</version>

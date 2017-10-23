@@ -18,5 +18,5 @@
 /**
  * Jackrabbit repository statistics
  */
-@aQute.bnd.annotation.Version("1.2.0")
+@org.osgi.annotation.versioning.Version("1.2.0")
 package org.apache.jackrabbit.api.stats;
