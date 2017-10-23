@@ -18,6 +18,6 @@
 /**
  * Token credentials.
  */
-@aQute.bnd.annotation.Version("2.3")
+@org.osgi.annotation.versioning.Version("2.3")
 @aQute.bnd.annotation.Export(optional = "provide:=true")
 package org.apache.jackrabbit.api.security.authentication.token;
