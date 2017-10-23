@@ -18,7 +18,7 @@ package org.apache.jackrabbit.api.security;
 
 import javax.jcr.security.AccessControlPolicy;
 
-import aQute.bnd.annotation.ProviderType;
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * <code>JackrabbitAccessControlPolicy</code> is an extension of the

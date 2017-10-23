@@ -21,7 +21,7 @@ import javax.jcr.Value;
 import javax.jcr.ValueFormatException;
 import javax.jcr.security.AccessControlEntry;
 
-import aQute.bnd.annotation.ProviderType;
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * <code>JackrabbitAccessControlEntry</code> is a Jackrabbit specific extension

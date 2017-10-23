@@ -24,10 +24,11 @@ import javax.jcr.security.AccessControlException;
 import javax.jcr.security.AccessControlManager;
 import javax.jcr.security.AccessControlPolicy;
 import javax.jcr.security.Privilege;
+
 import java.security.Principal;
 import java.util.Set;
 
-import aQute.bnd.annotation.ProviderType;
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * <code>JackrabbitAccessControlManager</code> provides extensions to the
