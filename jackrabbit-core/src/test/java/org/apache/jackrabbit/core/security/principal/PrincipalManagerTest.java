@@ -16,17 +16,18 @@
  */
 package org.apache.jackrabbit.core.security.principal;
 
-import javax.jcr.RepositoryException;
-import javax.jcr.Session;
 import java.security.Principal;
 import java.security.acl.Group;
 import java.util.Properties;
+
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
 
 import org.apache.jackrabbit.api.security.principal.JackrabbitPrincipal;
 import org.apache.jackrabbit.api.security.principal.PrincipalIterator;
 import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.apache.jackrabbit.test.NotExecutableException;
-import sun.security.acl.GroupImpl;
+import org.mockito.Mockito;
 
 
 /**
@@ -35,7 +36,7 @@ import sun.security.acl.GroupImpl;
 public class PrincipalManagerTest extends AbstractJCRTest {
 
     private static final String TESTGROUP_NAME = "org.apache.jackrabbit.core.security.principal.PrincipalManagerTest.testgroup";
-    private static final Group TESTGROUP = new GroupImpl(TESTGROUP_NAME);
+    private static final Group TESTGROUP = Mockito.mock(Group.class);
 
     private static class CustomPrincipalProvider extends AbstractPrincipalProvider {
 
