@@ -31,7 +31,7 @@
     </encoder>
   </appender>
 
-  <logger name="org.mortbay.log" level="${log.level}" additivity="false">
+  <logger name="org.eclipse.log" level="${log.level}" additivity="false">
     <appender-ref ref="jetty"/>
   </logger>
 
