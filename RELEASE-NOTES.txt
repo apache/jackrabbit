@@ -24,6 +24,7 @@ Task
     [JCR-4189] - Jackrabbit should compile & test on Java 9
     [JCR-4205] - Upgrade JTA dependency to javax.transaction-api 1.2
     [JCR-4206] - Switch to official OSGi versioning annotations
+    [JCR-4212] - add SHA512 checksums to releases
 
 Sub-task
 
