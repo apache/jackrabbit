@@ -157,6 +157,12 @@
                         <include name="*.?ar" />
                       </fileset>
                     </checksum>
+                    <checksum algorithm="SHA-512" fileext=".sha512">
+                      <fileset dir="${basedir}/target/${project.version}">
+                        <include name="*.zip" />
+                        <include name="*.?ar" />
+                      </fileset>
+                    </checksum>
                     <checksum file="${basedir}/target/${project.version}/jackrabbit-${project.version}-src.zip" algorithm="SHA1" property="checksum" />
                     <echo file="${basedir}/target/vote.txt">
 From: ${username}@apache.org
