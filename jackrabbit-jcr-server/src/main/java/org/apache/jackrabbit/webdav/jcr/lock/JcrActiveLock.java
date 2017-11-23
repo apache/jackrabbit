@@ -71,7 +71,7 @@ public class JcrActiveLock extends AbstractActiveLock implements ActiveLock, Dav
         try {
             return !lock.isLive();
         } catch (RepositoryException e) {
-            log.error("Unexpected error: " + e.getMessage());
+            log.error("Unexpected error: {}", e.getMessage());
             return false;
         }
     }

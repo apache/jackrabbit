@@ -67,8 +67,7 @@ class LockableFileRevision {
                 file.createNewFile();
             }
         } catch (IOException e) {
-            String msg = "I/O error while attempting to create new file '" + file + "': " + e.getMessage();
-            log.warn(msg);
+            log.warn("I/O error while attempting to create new file '{}': {}", file, e.getMessage());
         }
     }
 
@@ -90,8 +89,7 @@ class LockableFileRevision {
                     try {
                         raf.close();
                     } catch (IOException e) {
-                        String msg = "I/O error while closing file " + file.getPath() + ": " + e.getMessage();
-                        log.warn(msg);
+                        log.warn("I/O error while closing file {}: {}", file.getPath(), e.getMessage());
                     }
                     raf = null;
                 }
@@ -108,8 +106,7 @@ class LockableFileRevision {
             try {
                 lock.release();
             } catch (IOException e) {
-                String msg = "I/O error while releasing lock: " + e.getMessage();
-                log.warn(msg);
+                log.warn("I/O error while releasing lock: {}", e.getMessage());
             }
             lock = null;
 
@@ -117,8 +114,7 @@ class LockableFileRevision {
                 try {
                     raf.close();
                 } catch (IOException e) {
-                    String msg = "I/O error while closing file: " + e.getMessage();
-                    log.warn(msg);
+                    log.warn("I/O error while closing file: {}", e.getMessage());
                 }
             }
             raf = null;

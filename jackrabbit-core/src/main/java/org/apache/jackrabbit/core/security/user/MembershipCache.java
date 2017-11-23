@@ -554,7 +554,7 @@ public class MembershipCache implements UserConstants, SynchronousEventListener,
         try {
             refs = session.getNodeByIdentifier(authorizableNodeIdentifier).getWeakReferences(null);
         } catch (RepositoryException e) {
-            log.error("Failed to retrieve membership references of " + authorizableNodeIdentifier + ".", e);
+            log.error("Failed to retrieve membership references of {}.", authorizableNodeIdentifier, e);
         }
         return refs;
     }

@@ -188,7 +188,7 @@ public class RepositoryAccessServlet extends HttpServlet {
             try {
                 jndiContext = new InitialContext(config.getJndiConfig().getJndiEnv());
             } catch (NamingException e) {
-                log.error("Create initial context: " + e.toString());
+                log.error("Create initial context: {}", (Object) e);
             }
         }
         return jndiContext;

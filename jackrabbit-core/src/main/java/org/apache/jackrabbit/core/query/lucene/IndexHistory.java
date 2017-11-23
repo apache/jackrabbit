@@ -88,7 +88,7 @@ class IndexHistory {
                         IndexInfos infos = new IndexInfos(dir, INDEXES, gen);
                         indexInfosMap.put(gen, infos);
                     } catch (IOException e) {
-                        log.warn("ignoring invalid index infos file: " + name);
+                        log.warn("ignoring invalid index infos file: {}", name);
                     }
                 }
             }
@@ -134,12 +134,12 @@ class IndexHistory {
      */
     void pruneOutdated() {
         long threshold = System.currentTimeMillis() - maxAge;
-        log.debug("Pruning index infos older than: " + threshold + "(" + indexDir + ")");
+        log.debug("Pruning index infos older than: {}({})", threshold, indexDir);
         Iterator<IndexInfos> it = indexInfosMap.values().iterator();
         // never prune the current generation
         if (it.hasNext()) {
             IndexInfos infos = it.next();
-            log.debug("Skipping first index infos. generation=" + infos.getGeneration());
+            log.debug("Skipping first index infos. generation={}", infos.getGeneration());
         }
         while (it.hasNext()) {
             IndexInfos infos = (IndexInfos) it.next();
@@ -160,7 +160,7 @@ class IndexHistory {
                             log.debug("Deleted redo log with generation={}, timestamp={}",
                                     infos.getGeneration(), lastModified);
                         } catch (IOException e) {
-                            log.warn("Unable to delete: " + indexDir + "/" + logName);
+                            log.warn("Unable to delete: {}/{}", indexDir, logName);
                             continue;
                         }
                     }
@@ -171,7 +171,7 @@ class IndexHistory {
                                 infos.getGeneration());
                         it.remove();
                     } catch (IOException e) {
-                        log.warn("Unable to delete: " + indexDir + "/" + infos.getFileName());
+                        log.warn("Unable to delete: {}/{}", indexDir, infos.getFileName());
                     }
                 } catch (IOException e) {
                     log.warn("Failed to check if {} is outdated: {}",

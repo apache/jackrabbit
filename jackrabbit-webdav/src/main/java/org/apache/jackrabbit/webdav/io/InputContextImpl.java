@@ -82,7 +82,7 @@ public class InputContextImpl implements InputContext {
             try {
                 return Long.parseLong(length);
             } catch (NumberFormatException ex) {
-                log.error("broken Content-Length header: " + length);
+                log.error("broken Content-Length header: {}", length);
                 return -1;
             }
         }

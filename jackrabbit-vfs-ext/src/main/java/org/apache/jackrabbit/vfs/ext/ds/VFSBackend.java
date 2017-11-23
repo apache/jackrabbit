@@ -189,7 +189,7 @@ public class VFSBackend extends AbstractBackend {
             throw new DataStoreException("Object identifiers not resolved.", e);
         }
 
-        LOG.debug("Found " + identifiers.size() + " identifiers.");
+        LOG.debug("Found {} identifiers.", identifiers.size());
 
         return identifiers.iterator();
     }
@@ -630,7 +630,7 @@ public class VFSBackend extends AbstractBackend {
                     touchFile.delete();
                 }
             } catch (FileSystemException e) {
-                LOG.warn("Could not delete touch file for " + fileObject.getName().getFriendlyURI(), e);
+                LOG.warn("Could not delete touch file for {}", fileObject.getName().getFriendlyURI(), e);
             }
         }
 
@@ -664,7 +664,7 @@ public class VFSBackend extends AbstractBackend {
                 parentFolder = parentFolder.getParent();
             }
         } catch (IOException e) {
-            LOG.warn("Error in parents deletion for " + fileObject.getName().getFriendlyURI(), e);
+            LOG.warn("Error in parents deletion for {}", fileObject.getName().getFriendlyURI(), e);
         }
     }
 
@@ -712,7 +712,7 @@ public class VFSBackend extends AbstractBackend {
                         if (deleteRecordFileObject(fileObject)) {
                             deleteIdSet.add(identifier);
                         } else {
-                            LOG.warn("Failed to delete old file " + fileObject.getName().getFriendlyURI());
+                            LOG.warn("Failed to delete old file {}", fileObject.getName().getFriendlyURI());
                         }
                     }
                 }
@@ -760,7 +760,7 @@ public class VFSBackend extends AbstractBackend {
             try {
                 write(identifier, file, true, callback);
             } catch (DataStoreException e) {
-                LOG.error("Could not upload [" + identifier + "], file[" + file + "]", e);
+                LOG.error("Could not upload [{}], file[{}]", new Object[] { identifier, file, e });
             }
         }
     }
@@ -805,7 +805,7 @@ public class VFSBackend extends AbstractBackend {
             try {
                 touch(identifier, minModifiedDate, true, callback);
             } catch (DataStoreException e) {
-                LOG.error("Could not touch [" + identifier + "]", e);
+                LOG.error("Could not touch [{}]", identifier, e);
             }
         }
     }

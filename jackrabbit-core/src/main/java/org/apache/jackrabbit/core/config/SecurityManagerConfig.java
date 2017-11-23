@@ -79,7 +79,7 @@ public class SecurityManagerConfig extends BeanConfig {
             try {
                 cl = Class.forName(uidClassConfig.getClassName(), true, uidClassConfig.getClassLoader());
             } catch (ClassNotFoundException e) {
-                log.error("Configured bean implementation class " + uidClassConfig.getClassName() + " was not found -> Ignoring UserIdClass element.", e);
+                log.error("Configured bean implementation class {} was not found -> Ignoring UserIdClass element.", uidClassConfig.getClassName(), e);
             }
         }
         this.uidClass = cl;

@@ -133,7 +133,7 @@ class ACLTemplate extends AbstractACLTemplate {
                     AccessControlEntry entry = new Entry(principal, privilegeMgr.getBits(privilegeNames), isAllow, restrictions);
                     entries.add(entry);
                 } else {
-                    log.warn("ACE must be of nodetype rep:ACE -> ignored child-node " + aceNode.getPath());
+                    log.warn("ACE must be of nodetype rep:ACE -> ignored child-node {}", aceNode.getPath());
                 }
             }
         } // else: no-node at all or no acl-node present.
@@ -235,7 +235,7 @@ class ACLTemplate extends AbstractACLTemplate {
                             boolean isAllow, Map<String, Value> restrictions)
             throws AccessControlException, RepositoryException {
         if (restrictions == null || restrictions.isEmpty()) {
-            log.debug("Restrictions missing. Using default: rep:nodePath = " + getPath() + "; rep:glob = null.");
+            log.debug("Restrictions missing. Using default: rep:nodePath = {}; rep:glob = null.", getPath());
             // default restrictions:
             restrictions = Collections.singletonMap(jcrNodePathName,
                     valueFactory.createValue(getPath(), PropertyType.PATH));

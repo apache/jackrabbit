@@ -138,7 +138,7 @@ class NodeDefinitionTemplateImpl
                     rptNames[i] = resolver.getJCRName(requiredPrimaryTypeNames[i]);
                 } catch (NamespaceException e) {
                     // should never get here
-                    log.error("invalid node type name: " + requiredPrimaryTypeNames[i], e);
+                    log.error("invalid node type name: {}", requiredPrimaryTypeNames[i], e);
                     rptNames[i] = requiredPrimaryTypeNames[i].toString();
                 }
             }

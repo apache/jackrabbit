@@ -121,7 +121,7 @@ public class LitmusTest extends TestCase {
 
             return rv == 0;
         } catch (Exception e) {
-            log.warn("litmus is not available: " + litmus, e);
+            log.warn("litmus is not available: {}", litmus, e);
             return false;
         }
     }

@@ -264,8 +264,8 @@ public class GarbageCollector implements DataStoreGarbageCollector {
                 NodeId lastId = null;
                 for (NodeInfo info : batch.values()) {
                     count++;
-                    if (count % 1000 == 0) {
-                        LOG.debug(pm.toString() + " ("+pmCount + "/" + pmList.length + "): analyzed " + count + " nodes...");
+                    if (count % 1000 == 0 && LOG.isDebugEnabled()) {
+                        LOG.debug(pm + " (" + pmCount + "/" + pmList.length + "): analyzed " + count + " nodes...");
                     }
                     lastId = info.getId();
                     if (callback != null) {
@@ -309,7 +309,9 @@ public class GarbageCollector implements DataStoreGarbageCollector {
                 try {
                     Set<Future<Void>> futures = new HashSet<Future<Void>>();
                     List<List<NodeId>> lists = splitIntoParts(allNodeIds, splits);
-                    LOG.debug(splits + " concurrent Threads will be started. Split Size: " + lists.get(0).size()+" Total Size: " + overAllCount);
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug(splits + " concurrent Threads will be started. Split Size: " + lists.get(0).size() + " Total Size: " + overAllCount);
+                    }
                     for (int i = 0; i < splits; i++) {
                         List<NodeId> subList = lists.get(i);
                         futures.add(executorService.submit(new ScanNodeIdListTask(i + 1, subList, pm, pmCount)));
@@ -332,11 +334,11 @@ public class GarbageCollector implements DataStoreGarbageCollector {
         int count = 0;
         for (NodeId id : nodeList) {
             count++;
-            if (count % 1000 == 0) {
+            if (count % 1000 == 0 && LOG.isDebugEnabled()) {
                 if (split > 0) {
-                    LOG.debug("[Split " + split + "] " + pm.toString() + " (" + pmCount + "/" + pmList.length + "): analyzed " + count + " nodes [" + nodeList.size() + "]...");
+                    LOG.debug("[Split " + split + "] " + pm + " (" + pmCount + "/" + pmList.length + "): analyzed " + count + " nodes [" + nodeList.size() + "]...");
                 } else {
-                    LOG.debug(pm.toString() + " (" + pmCount + "/" + pmList.length + "): analyzed " + count + " nodes [" + nodeList.size() + "]...");
+                    LOG.debug(pm + " (" + pmCount + "/" + pmList.length + "): analyzed " + count + " nodes [" + nodeList.size() + "]...");
                 }
             }
             if (callback != null) {

@@ -42,7 +42,7 @@ public class AddVersionLabel extends VersionOperation {
         Node n = getNode();
         String name = n.getBaseVersion().getName();
         String label = getRandomText(3);
-        log.info(n.getPath() + ":" + name + " -> " + label);
+        log.info("{}:{} -> {}", new Object[] { n.getPath(), name, label });
         n.getVersionHistory().addVersionLabel(name, label, true);
         return wrapWithIterator(n);
     }

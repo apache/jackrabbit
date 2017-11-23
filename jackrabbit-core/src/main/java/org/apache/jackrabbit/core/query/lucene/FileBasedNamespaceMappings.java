@@ -117,7 +117,7 @@ public class FileBasedNamespaceMappings extends AbstractNamespaceMappings {
             prefix = String.valueOf(prefixCount);
             prefixToURI.put(prefix, uri);
             uriToPrefix.put(uri, prefix);
-            log.debug("adding new namespace mapping: " + prefix + " -> " + uri);
+            log.debug("adding new namespace mapping: {} -> {}", prefix, uri);
             try {
                 store();
             } catch (IOException e) {
@@ -146,7 +146,7 @@ public class FileBasedNamespaceMappings extends AbstractNamespaceMappings {
                 for (Object o : props.keySet()) {
                     String prefix = (String) o;
                     String uri = props.getProperty(prefix);
-                    log.debug(prefix + " -> " + uri);
+                    log.debug("{} -> {}", prefix, uri);
                     prefixToURI.put(prefix, uri);
                     uriToPrefix.put(uri, prefix);
                 }

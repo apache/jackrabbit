@@ -111,7 +111,7 @@ public class RepositoryImpl extends AbstractRepository implements Referenceable 
         try {
             return (v == null) ? null : v.getString();
         } catch (RepositoryException e) {
-            log.error("corrupt descriptor value: " + key, e);
+            log.error("corrupt descriptor value: {}", key, e);
             return null;
         }
     }

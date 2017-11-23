@@ -234,9 +234,9 @@ public class JCRWebdavServer implements DavSessionProvider {
                 
                 // TODO: review again if using ConcurrentMap#putIfAbsent() was more appropriate.
                 sessionMap.put(session, new HashSet<Object>());
-                log.debug("login: User '" + repSession.getUserID() + "' logged in.");
+                log.debug("login: User '{}' logged in.", repSession.getUserID());
             } else {
-                log.debug("login: Retrieved cached session for user '" + getUserID(session) + "'");
+                log.debug("login: Retrieved cached session for user '{}'", getUserID(session));
             }
             addReference(session, request);
             return session;
@@ -268,10 +268,10 @@ public class JCRWebdavServer implements DavSessionProvider {
             Set<Object> referenceSet = sessionMap.get(session);
             if (referenceSet != null) {
                 if (referenceSet.remove(reference)) {
-                    log.debug("Removed reference " + reference + " to session " + session);
+                    log.debug("Removed reference {} to session {}", reference, session);
                     referenceToSessionMap.remove(reference);
                 } else {
-                    log.warn("Failed to remove reference " + reference + " to session " + session);
+                    log.warn("Failed to remove reference {} to session {}", reference, session);
                 }
                 if (referenceSet.isEmpty()) {
                     log.debug("No more references present on webdav session -> clean up.");
@@ -280,14 +280,14 @@ public class JCRWebdavServer implements DavSessionProvider {
                         Session repSession = DavSessionImpl.getRepositorySession(session);
                         String usr = getUserID(session) ;
                         sessionProvider.releaseSession(repSession);
-                        log.debug("Login: User '" + usr + "' logged out");
+                        log.debug("Login: User '{}' logged out", usr);
                     } catch (DavException e) {
                         // should not occur, since we originally built a
                         // DavSessionImpl that wraps a repository session.
-                        log.error("Unexpected error: " + e.getMessage(), e.getCause());
+                        log.error("Unexpected error: {}", e.getMessage(), e.getCause());
                     }
                 } else {
-                    log.debug(referenceSet.size() + " references remaining on webdav session " + session);
+                    log.debug("{} references remaining on webdav session {}", referenceSet.size(), session);
                 }
             } else {
                 log.error("Failed to remove reference from session. No entry in cache found.");

@@ -208,7 +208,7 @@ public class FSBackend extends AbstractBackend {
             String name = f.getName();
             identifiers.add(new DataIdentifier(name));
         }
-        LOG.debug("Found " + identifiers.size() + " identifiers.");
+        LOG.debug("Found {} identifiers.", identifiers.size());
         return identifiers.iterator();
     }
 
@@ -299,7 +299,7 @@ public class FSBackend extends AbstractBackend {
                 if (file.delete()) {
                     deleteEmptyParentDirs(file);
                 } else {
-                    LOG.warn("Failed to delete file " + file.getAbsolutePath());
+                    LOG.warn("Failed to delete file {}", file.getAbsolutePath());
                 }
             }
         }
@@ -418,7 +418,7 @@ public class FSBackend extends AbstractBackend {
                 parent = parent.getParentFile();
             }
         } catch (IOException e) {
-            LOG.warn("Error in parents deletion for " + file.getAbsoluteFile(),
+            LOG.warn("Error in parents deletion for {}", file.getAbsoluteFile(),
                 e);
         }
     }
@@ -450,8 +450,7 @@ public class FSBackend extends AbstractBackend {
                         if (file.delete()) {
                             deleteIdSet.add(id);
                         } else {
-                            LOG.warn("Failed to delete old file "
-                                + file.getAbsolutePath());
+                            LOG.warn("Failed to delete old file {}", file.getAbsolutePath());
                         }
                     }
                 }

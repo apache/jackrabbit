@@ -73,7 +73,7 @@ class TraversingNodeResolver extends NodeResolver {
                 return collectNode(nodeName, ntName, root.getNodes());
             } catch (PathNotFoundException e) {
                 // should not get here
-                log.warn("Error while retrieving node " + sr);
+                log.warn("Error while retrieving node {}", sr, e);
             }
         } // else: searchRoot does not exist yet -> omit the search
         return null;
@@ -97,7 +97,7 @@ class TraversingNodeResolver extends NodeResolver {
                 }
             } catch (PathNotFoundException e) {
                 // should not get here
-                log.warn("Error while retrieving node " + sr);
+                log.warn("Error while retrieving node {}", sr, e);
             }
         } // else: searchRoot does not exist yet -> omit the search
         return null;
@@ -118,7 +118,7 @@ class TraversingNodeResolver extends NodeResolver {
                 return new NodeIteratorAdapter(matchSet);
             } catch (PathNotFoundException e) {
                 // should not get here
-                log.warn("Error while retrieving node " + sr);
+                log.warn("Error while retrieving node {}", sr, e);
             }
         } // else: searchRoot does not exist yet -> omit the search
         return NodeIteratorAdapter.EMPTY;
@@ -142,7 +142,7 @@ class TraversingNodeResolver extends NodeResolver {
                 return new NodeIteratorAdapter(matchingNodes.values());
             } catch (PathNotFoundException e) {
                 // should not get here
-                log.warn("Error while retrieving node " + sr);
+                log.warn("Error while retrieving node {}", sr, e);
             }
         } // else: searchRoot does not exist yet -> omit the search
         return NodeIteratorAdapter.EMPTY;

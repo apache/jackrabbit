@@ -52,7 +52,7 @@ public final class LogUtil {
         try {
             return pathResolver.getJCRPath(qPath);
         } catch (NamespaceException e) {
-            log.error("failed to convert " + qPath + " to JCR path.");
+            log.error("failed to convert {} to JCR path.", qPath);
             // return string representation of internal path as a fallback
             return qPath.toString();
         }
@@ -70,7 +70,7 @@ public final class LogUtil {
         try {
             return safeGetJCRPath(itemState.getHierarchyEntry().getPath(), pathResolver);
         } catch (RepositoryException e) {
-            log.error("failed to convert " + itemState.toString() + " to JCR path.");
+            log.error("failed to convert {} to JCR path.", itemState);
             return itemState.toString();
         }
     }
@@ -88,7 +88,7 @@ public final class LogUtil {
         try {
             return nameResolver.getJCRName(qName);
         } catch (NamespaceException e) {
-            log.error("failed to convert " + qName + " to JCR name.");
+            log.error("failed to convert {} to JCR name.", qName);
             return qName.toString();
         }
     }

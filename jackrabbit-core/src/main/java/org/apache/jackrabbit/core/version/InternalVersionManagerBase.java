@@ -97,7 +97,7 @@ abstract class InternalVersionManagerBase implements InternalVersionManager {
         // lock handling via getItem()
         InternalVersion v = (InternalVersion) getItem(id);
         if (v == null) {
-            log.warn("Versioning item not found: " + id);
+            log.warn("Versioning item not found: {}", id);
         }
         return v;
     }
@@ -109,9 +109,9 @@ abstract class InternalVersionManagerBase implements InternalVersionManager {
         // lock handling via getItem()
         InternalVersionItem item = getItem(id);
         if (item == null) {
-            log.warn("Versioning item not found: " + id);
+            log.warn("Versioning item not found: {}", id);
         } else if (!(item instanceof InternalBaseline)) {
-            log.warn("Versioning item is not a baseline: " + id);
+            log.warn("Versioning item is not a baseline: {}", id);
             item = null;
         }
         return (InternalBaseline) item;
@@ -124,7 +124,7 @@ abstract class InternalVersionManagerBase implements InternalVersionManager {
         // lock handling via getItem()
         InternalActivity v = (InternalActivity) getItem(id);
         if (v == null) {
-            log.warn("Versioning item not found: " + id);
+            log.warn("Versioning item not found: {}", id);
         }
         return v;
     }
@@ -453,9 +453,7 @@ abstract class InternalVersionManagerBase implements InternalVersionManager {
             // end update
             operation.save();
 
-            log.debug(
-                    "Created new version history " + history.getNodeId()
-                    + " for " + node + ".");
+            log.debug("Created new version history {} for {}.", history.getNodeId(), node);
             return history;
         } catch (ItemStateException e) {
             throw new RepositoryException(e);
@@ -486,8 +484,7 @@ abstract class InternalVersionManagerBase implements InternalVersionManager {
             // end update
             operation.save();
 
-            log.debug("Created new activity " + activityId
-                    + " with title " + title + ".");
+            log.debug("Created new activity {} with title {}.", activityId, title);
             return pNode;
         } catch (ItemStateException e) {
             throw new RepositoryException(e);
@@ -535,7 +532,7 @@ abstract class InternalVersionManagerBase implements InternalVersionManager {
             }
             operation.save();
         } catch (ItemStateException e) {
-            log.error("Error while storing: " + e.toString());
+            log.error("Error while storing: {}", (Object) e);
         } finally {
             operation.close();
         }
@@ -780,7 +777,7 @@ abstract class InternalVersionManagerBase implements InternalVersionManager {
             history.removeVersion(name);
             operation.save();
         } catch (ItemStateException e) {
-            log.error("Error while storing: " + e.toString());
+            log.error("Error while storing: {}", (Object) e);
         } finally {
             operation.close();
         }
@@ -803,7 +800,7 @@ abstract class InternalVersionManagerBase implements InternalVersionManager {
             parent.store();
             operation.save();
         } catch (ItemStateException e) {
-            log.error("Error while storing: " + e.toString());
+            log.error("Error while storing: {}", (Object) e);
         } finally {
             operation.close();
         }
@@ -830,7 +827,7 @@ abstract class InternalVersionManagerBase implements InternalVersionManager {
             operation.save();
             return v;
         } catch (ItemStateException e) {
-            log.error("Error while storing: " + e.toString());
+            log.error("Error while storing: {}", (Object) e);
             return null;
         } finally {
             operation.close();

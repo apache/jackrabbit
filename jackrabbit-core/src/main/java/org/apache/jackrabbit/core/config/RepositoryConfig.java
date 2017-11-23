@@ -593,7 +593,7 @@ public class RepositoryConfig
         if (!workspaces.containsKey(defaultWorkspace)) {
             if (!workspaces.isEmpty()) {
                 log.warn("Potential misconfiguration. No configuration found "
-                        + "for default workspace: " + defaultWorkspace);
+                        + "for default workspace: {}", defaultWorkspace);
             }
             // create initial default workspace
             createWorkspaceConfig(defaultWorkspace, (StringBuffer)null);

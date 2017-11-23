@@ -525,7 +525,7 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
             // check for root element
             if (elem.denotesRoot()) {
                 if (getParent() != null) {
-                    log.warn("NodeEntry out of 'hierarchy'" + workspacePath.toString());
+                    log.warn("NodeEntry out of 'hierarchy'{}", workspacePath);
                     return null;
                 }
                 continue;
@@ -567,7 +567,7 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
         try {
             return getNodeEntry(nodeName, index) != null;
         } catch (RepositoryException e) {
-            log.debug("Unable to determine if a child node with name " + nodeName + " exists.");
+            log.debug("Unable to determine if a child node with name {} exists.", nodeName);
             return false;
         }
     }
@@ -1254,9 +1254,9 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
                 } // nodestate not yet loaded -> ignore change
             }
         } catch (ItemNotFoundException e) {
-            log.debug("Property with name " + child.getName() + " does not exist (anymore)");
+            log.debug("Property with name {} does not exist (anymore)", child.getName());
         } catch (RepositoryException e) {
-            log.debug("Unable to access child property " + child.getName(), e.getMessage());
+            log.debug("Unable to access child property {}", child.getName(), e);
         }
     }
 
@@ -1484,7 +1484,7 @@ public class NodeEntryImpl extends HierarchyEntryImpl implements NodeEntry {
         switch (operation.getStatus()) {
             case Operation.STATUS_PERSISTED:
                 if (Status.isTerminal(rmEntry.getStatus())) {
-                    log.debug("Removal of State " + rmEntry + " has already been completed.");
+                    log.debug("Removal of State {} has already been completed.", rmEntry);
                 }
                 rmEntry.remove();
                 break;

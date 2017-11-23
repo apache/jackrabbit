@@ -600,15 +600,14 @@ public class SearchIndex extends AbstractQueryHandler {
                     }
                 }
             } catch (Exception e) {
-                log.warn("Failed to run consistency check on index: " + e);
+                log.warn("Failed to run consistency check on index: {}", (Object) e);
             }
         }
 
         // initialize spell checker
         spellChecker = createSpellChecker();
 
-        log.info("Index initialized: {} Version: {}",
-                new Object[]{path, index.getIndexFormatVersion()});
+        log.info("Index initialized: {} Version: {}", path, index.getIndexFormatVersion());
         if (!index.getIndexFormatVersion().equals(getIndexFormatVersion())) {
             log.warn("Using Version {} for reading. Please re-index version " +
                     "storage for optimal performance.",
@@ -676,8 +675,7 @@ public class SearchIndex extends AbstractQueryHandler {
                             state, getNamespaceMappings(),
                             index.getIndexFormatVersion()));
                 } catch (RepositoryException e) {
-                    log.warn("Exception while creating document for node: "
-                            + state.getNodeId() + ": " + e.toString());
+                    log.warn("Exception while creating document for node: {}: {}", state.getNodeId(), e);
                 }
             }
         }
@@ -702,8 +700,7 @@ public class SearchIndex extends AbstractQueryHandler {
                             state, getNamespaceMappings(),
                             index.getIndexFormatVersion()));
                 } catch (RepositoryException e) {
-                    log.warn("Exception while creating document for node: "
-                            + state.getNodeId(), e);
+                    log.warn("Exception while creating document for node: {}", state.getNodeId(), e);
                 }
             }
 
@@ -840,7 +837,7 @@ public class SearchIndex extends AbstractQueryHandler {
         getContext().destroy();
         super.close();
         closed = true;
-        log.info("Index closed: " + path);
+        log.info("Index closed: {}", path);
     }
 
     /**
@@ -1004,7 +1001,7 @@ public class SearchIndex extends AbstractQueryHandler {
                 try {
                     url = file.toURI().toURL();
                 } catch (MalformedURLException e) {
-                    log.warn("Invalid Tika configuration path: " + file, e);
+                    log.warn("Invalid Tika configuration path: {}", file, e);
                 }
             } else {
                 ClassLoader loader = SearchIndex.class.getClassLoader();
@@ -1020,7 +1017,7 @@ public class SearchIndex extends AbstractQueryHandler {
             try {
                 config = new TikaConfig(url);
             } catch (Exception e) {
-                log.warn("Tika configuration not available: " + url, e);
+                log.warn("Tika configuration not available: {}", url, e);
             }
         }
         if (config == null) {
@@ -1288,10 +1285,9 @@ public class SearchIndex extends AbstractQueryHandler {
             idxCfg.init(docElement, getContext(), namespaceMappings);
             return idxCfg;
         } catch (Exception e) {
-            log.warn("Exception initializing indexing configuration from: "
-                    + indexingConfigPath, e);
+            log.warn("Exception initializing indexing configuration from: {}", indexingConfigPath, e);
         }
-        log.warn(indexingConfigPath + " ignored.");
+        log.warn("{} ignored.", indexingConfigPath);
         return null;
     }
 
@@ -1306,8 +1302,7 @@ public class SearchIndex extends AbstractQueryHandler {
                 sp = (SynonymProvider) synonymProviderClass.newInstance();
                 sp.initialize(createSynonymProviderConfigResource());
             } catch (Exception e) {
-                log.warn("Exception initializing synonym provider: "
-                        + synonymProviderClass, e);
+                log.warn("Exception initializing synonym provider: {}", synonymProviderClass, e);
                 sp = null;
             }
         }
@@ -1419,8 +1414,7 @@ public class SearchIndex extends AbstractQueryHandler {
                 spCheck = (SpellChecker) spellCheckerClass.newInstance();
                 spCheck.init(this);
             } catch (Exception e) {
-                log.warn("Exception initializing spell checker: "
-                        + spellCheckerClass, e);
+                log.warn("Exception initializing spell checker: {}", spellCheckerClass, e);
             }
         }
         return spCheck;
@@ -1449,11 +1443,11 @@ public class SearchIndex extends AbstractQueryHandler {
 
             if (configStream == null) {
                 // only warn if not available also in the classpath
-                log.warn("File does not exist: " + indexingConfigPath);
+                log.warn("File does not exist: {}", indexingConfigPath);
                 return null;
             }
         } else if (!config.canRead()) {
-            log.warn("Cannot read file: " + indexingConfigPath);
+            log.warn("Cannot read file: {}", indexingConfigPath);
             return null;
         }
         try {
@@ -1472,9 +1466,9 @@ public class SearchIndex extends AbstractQueryHandler {
         } catch (ParserConfigurationException e) {
             log.warn("Unable to create XML parser", e);
         } catch (IOException e) {
-            log.warn("Exception parsing " + indexingConfigPath, e);
+            log.warn("Exception parsing {}", indexingConfigPath, e);
         } catch (SAXException e) {
-            log.warn("Exception parsing " + indexingConfigPath, e);
+            log.warn("Exception parsing {}", indexingConfigPath, e);
         } finally {
             if (configStream != null) {
                 try {
@@ -1611,8 +1605,7 @@ public class SearchIndex extends AbstractQueryHandler {
                         state.getNodeId(), e.getMessage());
             } catch (Exception e) {
                 // do not fail if aggregate cannot be created
-                log.warn("Exception while building indexing aggregate for "
-                        + state.getNodeId(), e);
+                log.warn("Exception while building indexing aggregate for {}", state.getNodeId(), e);
             }
         }
     }
@@ -1697,7 +1690,7 @@ public class SearchIndex extends AbstractQueryHandler {
             try {
                 root = aggregateRule.getAggregateRoot(state);
             } catch (Exception e) {
-                log.warn("Unable to get aggregate root for " + state.getNodeId(), e);
+                log.warn("Unable to get aggregate root for {}", state.getNodeId(), e);
             }
             if (root == null) {
                 continue;
@@ -2418,7 +2411,7 @@ public class SearchIndex extends AbstractQueryHandler {
             Class<?> similarityClass = Class.forName(className);
             similarity = (Similarity) similarityClass.newInstance();
         } catch (Exception e) {
-            log.warn("Invalid Similarity class: " + className, e);
+            log.warn("Invalid Similarity class: {}", className, e);
         }
     }
 
@@ -2640,9 +2633,7 @@ public class SearchIndex extends AbstractQueryHandler {
                 try {
                     r = deserializer.deserialize(record);
                 } catch (JournalException e) {
-                    log.error(
-                            "Unable to read revision '" + record.getRevision()
-                                    + "'.", e);
+                    log.error("Unable to read revision '{}'.", record.getRevision(), e);
                 }
                 if (r == null) {
                     continue;

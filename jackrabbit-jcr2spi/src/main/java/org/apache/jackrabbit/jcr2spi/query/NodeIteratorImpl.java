@@ -220,13 +220,13 @@ public class NodeIteratorImpl implements ScoreNodeIterator {
                     next = (Node) tmp;
                     nextScore = row.getScore(null);
                 } else {
-                    log.warn("Item with Id is not a Node: " + nextId);
+                    log.warn("Item with Id is not a Node: {}", nextId);
                     // try next
                     invalid++;
                     pos++;
                 }
             } catch (Exception e) {
-                log.warn("Exception retrieving Node with Id: " + nextId);
+                log.warn("Exception retrieving Node with Id: {}", nextId);
                 // try next
                 invalid++;
                 pos++;

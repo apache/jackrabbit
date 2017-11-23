@@ -73,7 +73,7 @@ class BatchReadConfig {
             try {
                 int depth = Integer.parseInt(depthStr);
                 if (depth < DEPTH_INFINITE) {
-                    log.warn("invalid depth " + depthStr + " -> ignoring.");
+                    log.warn("invalid depth {} -> ignoring.", depthStr);
                     continue;
                 }
                 if (NAME_DEFAULT.equals(name)) {
@@ -83,7 +83,7 @@ class BatchReadConfig {
                 }
             } catch (NumberFormatException e) {
                 // invalid entry in the properties file -> ignore
-                log.warn("Invalid depth value for name " + name + ". " + depthStr + " cannot be parsed into an integer.");
+                log.warn("Invalid depth value for name {}. {} cannot be parsed into an integer.", name, depthStr);
             }
         }
     }

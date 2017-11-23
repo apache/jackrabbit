@@ -211,7 +211,7 @@ class IndexMerger implements IndexListener {
      * @inheritDoc
      */
     public void documentDeleted(Term id) {
-        log.debug("document deleted: " + id.text());
+        log.debug("document deleted: {}", id.text());
         synchronized (busyMergers) {
             for (Worker w : busyMergers) {
                 w.documentDeleted(id);
@@ -245,7 +245,7 @@ class IndexMerger implements IndexListener {
         try {
             indexReplacement.writeLock().lockInterruptibly();
         } catch (InterruptedException e) {
-            log.warn("Interrupted while acquiring index replacement exclusive lock: " + e);
+            log.warn("Interrupted while acquiring index replacement exclusive lock: {}", (Object) e);
             // try to stop IndexMerger without the sync
         }
 
@@ -529,13 +529,13 @@ class IndexMerger implements IndexListener {
                             for (IndexReader reader : readers) {
                                 docCount += reader.numDocs();
                             }
-                            log.info("merged " + docCount + " documents in " + time + " ms into " + index.getName() + ".");
+                            log.info("merged {} documents in {} ms into {}.", new Object[] { docCount, time, index.getName() });
                         } finally {
                             for (IndexReader reader : readers) {
                                 try {
                                     Util.closeOrRelease(reader);
                                 } catch (IOException e) {
-                                    log.warn("Unable to close IndexReader: " + e);
+                                    log.warn("Unable to close IndexReader: {}", (Object) e);
                                 }
                             }
                         }
@@ -559,7 +559,7 @@ class IndexMerger implements IndexListener {
                     } finally {
                         if (!success) {
                             // delete index
-                            log.debug("deleting index " + index.getName());
+                            log.debug("deleting index {}", index.getName());
                             multiIndex.deleteIndex(index);
                             // add task again and retry
                             addMergeTask(task);
@@ -585,7 +585,7 @@ class IndexMerger implements IndexListener {
          * @inheritDoc
          */
         public void documentDeleted(Term id) {
-            log.debug("document deleted: " + id.text());
+            log.debug("document deleted: {}", id.text());
             deletedDocuments.add(id);
         }
 

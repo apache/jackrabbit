@@ -42,7 +42,7 @@ public class AddNode extends Operation {
      */
     public NodeIterator execute() throws Exception {
         Node n = getNode();
-        log.info(n.getPath() + "/" + name);
+        log.info("{}/{}", n.getPath(), name);
         return wrapWithIterator(getNode().addNode(name));
     }
 }

@@ -131,7 +131,7 @@ public class ResourceConfig {
         try {
             parse(configURL.openStream());
         } catch (IOException e) {
-            log.debug("Invalid resource configuration: " + e.getMessage());
+            log.debug("Invalid resource configuration: {}", e.getMessage());
         }
     }
 
@@ -198,7 +198,7 @@ public class ResourceConfig {
                             setParameters(handler, iohEl);
                             ioManager.addIOHandler(handler);
                         } else {
-                            log.warn("Not a valid IOHandler : " + getClassName(iohEl));
+                            log.warn("Not a valid IOHandler : {}", getClassName(iohEl));
                         }
                     }
                 } else {
@@ -225,7 +225,7 @@ public class ResourceConfig {
                             setParameters(handler, iohEl);
                             propManager.addPropertyHandler(handler);
                         } else {
-                            log.warn("Not a valid PropertyHandler : " + getClassName(iohEl));
+                            log.warn("Not a valid PropertyHandler : {}", getClassName(iohEl));
                         }
                     }
                 } else {
@@ -252,7 +252,7 @@ public class ResourceConfig {
                             setParameters(handler, iohEl);
                             cmManager.addCopyMoveHandler(handler);
                         } else {
-                            log.warn("Not a valid CopyMoveHandler : " + getClassName(iohEl));
+                            log.warn("Not a valid CopyMoveHandler : {}", getClassName(iohEl));
                         }
                     }
                 } else {
@@ -293,11 +293,11 @@ public class ResourceConfig {
                 log.warn("Ignoring deprecated mimetypeproperties settings");
             }
         } catch (IOException e) {
-            log.debug("Invalid resource configuration: " + e.getMessage());
+            log.debug("Invalid resource configuration: {}", e.getMessage());
         } catch (ParserConfigurationException e) {
-            log.warn("Failed to parse resource configuration: " + e.getMessage());
+            log.warn("Failed to parse resource configuration: {}", e.getMessage());
         } catch (SAXException e) {
-            log.warn("Failed to parse resource configuration: " + e.getMessage());
+            log.warn("Failed to parse resource configuration: {}", e.getMessage());
         }
     }
 
@@ -356,7 +356,7 @@ public class ResourceConfig {
                     log.error("Invalid configuration: missing 'class' element");
                 }
             } catch (Exception e) {
-                log.error("Error while create class instance: " + e.getMessage());
+                log.error("Error while create class instance: {}", e.getMessage());
             }
         }
         return instance;
@@ -412,10 +412,11 @@ public class ResourceConfig {
                                     || type.isAssignableFrom(Double.class)) {
                                 setter.invoke(instance, Double.valueOf(value));
                             } else {
-                                log.error("Cannot set configuration property " + name);
+                                log.error("Cannot set configuration property {}", name);
                             }
                         } catch (Exception e) {
-                            log.error("Invalid format (" + value + ") for property " + name + " of class " + instance.getClass().getName(), e);
+                            log.error("Invalid format ({}) for property {} of class {}",
+                                    new Object[] { value, name, instance.getClass().getName(), e });
                         }
                     }
                 }

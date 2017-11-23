@@ -84,7 +84,7 @@ public class CachingHierarchyManagerConsistencyTest extends AbstractJCRTest {
                         } catch (PathNotFoundException e) {
                             // ignore
                         } catch (RepositoryException e) {
-                            log.error(e.toString() + " Unable to get item with path: " + path);
+                            log.error("{} Unable to get item with path: {}", e, path);
                             exceptions.add(e);
                         }
                     }
@@ -103,7 +103,7 @@ public class CachingHierarchyManagerConsistencyTest extends AbstractJCRTest {
             superuser.getWorkspace().getObservationManager().removeEventListener(listener);
         }
 
-        log.info("" + exceptions.size() + " exception(s) occurred.");
+        log.info("{} exception(s) occurred.", exceptions.size());
         if (!exceptions.isEmpty()) {
             throw exceptions.get(0);
         }

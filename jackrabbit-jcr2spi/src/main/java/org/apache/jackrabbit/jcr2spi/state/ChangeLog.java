@@ -117,7 +117,7 @@ public class ChangeLog {
                     break;
                 case Status.NEW:
                     // illegal. should not get here.
-                    log.error("ChangeLog still contains NEW state: " + state.getName());
+                    log.error("ChangeLog still contains NEW state: {}", state.getName());
                     state.setStatus(Status.EXISTING);
                     break;
                 case Status.MODIFIED:
@@ -125,7 +125,7 @@ public class ChangeLog {
                 case Status.STALE_DESTROYED:
                 case Status.STALE_MODIFIED:
                     // illegal.
-                    log.error("ChangeLog contains state (" + state.getName() + ") with illegal status " + Status.getName(state.getStatus()));
+                    log.error("ChangeLog contains state ({}) with illegal status {}", state.getName(), Status.getName(state.getStatus()));
                     break;
                 case Status.EXISTING:
                     if (state.isNode() && changedMixins.contains(state)) {
@@ -164,13 +164,13 @@ public class ChangeLog {
                     break;
                 case Status.NEW:
                     // illegal. should not get here.
-                    log.error("ChangeLog still contains NEW state: " + state.getName());
+                    log.error("ChangeLog still contains NEW state: {}", state.getName());
                     state.getHierarchyEntry().revert();
                     break;
                 case Status.MODIFIED:
                 case Status._UNDEFINED_:
                     // illegal.
-                    log.error("ChangeLog contains state (" + state.getName() + ") with illegal status " + Status.getName(state.getStatus()));
+                    log.error("ChangeLog contains state ({}) with illegal status {}", state.getName(), Status.getName(state.getStatus()));
                     break;
                 case Status.EXISTING:
                 case Status.REMOVED:

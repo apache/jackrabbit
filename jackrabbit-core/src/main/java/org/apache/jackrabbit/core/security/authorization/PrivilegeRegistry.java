@@ -829,9 +829,9 @@ public final class PrivilegeRegistry implements PrivilegeEventListener {
                         throw new RepositoryException("Declared aggregate name '"+ declaredAggregateName.toString() +"'refers to the same custom privilege.");
                     }
                     if (registeredPrivileges.containsKey(declaredAggregateName)) {
-                        log.debug("Declared aggregate name '"+ declaredAggregateName.toString() +"' referring to registered privilege.");
+                        log.debug("Declared aggregate name '{}' referring to registered privilege.", declaredAggregateName);
                     } else if (toRegister.containsKey(declaredAggregateName)) {
-                        log.debug("Declared aggregate name '"+ declaredAggregateName.toString() +"' referring to un-registered privilege.");
+                        log.debug("Declared aggregate name '{}' referring to un-registered privilege.", declaredAggregateName);
                         // need to check for circular aggregates
                         if (isCircularAggregation(stub, declaredAggregateName, toRegister)) {
                             throw new RepositoryException("Detected circular aggregation within custom privilege caused by " + declaredAggregateName.toString());

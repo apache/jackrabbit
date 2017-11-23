@@ -138,7 +138,7 @@ public class RetentionRegistryImpl implements RetentionRegistry, SynchronousEven
                         // node doesn't exist any more or hold/retention has been removed.
                         // ignore. upon close() the file will not contain the given nodeId
                         // any more.
-                        log.warn("Unable to read retention policy / holds from node '" + nodeId + "': " + e.getMessage());
+                        log.warn("Unable to read retention policy / holds from node '{}': {}", nodeId, e.getMessage());
                     }
                 }
             } finally {
@@ -183,9 +183,9 @@ public class RetentionRegistryImpl implements RetentionRegistry, SynchronousEven
                     }
                 }
             } catch (FileSystemException fse) {
-                log.error("Error while saving locks to '" + retentionFile.getPath() + "': " + fse.getMessage());
+                log.error("Error while saving locks to '{}': {}", retentionFile.getPath(), fse.getMessage());
             } catch (IOException ioe) {
-                log.error("Error while saving locks to '" + retentionFile.getPath() + "': " + ioe.getMessage());
+                log.error("Error while saving locks to '{}': {}", retentionFile.getPath(), ioe.getMessage());
             } finally {
                 IOUtils.closeQuietly(writer);
             }

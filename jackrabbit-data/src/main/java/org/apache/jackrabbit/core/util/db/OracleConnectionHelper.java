@@ -57,9 +57,8 @@ public class OracleConnectionHelper extends ConnectionHelper {
             if (metaData.getDriverMajorVersion() < 10) {
                 // Oracle drivers prior to version 10 only support
                 // writing BLOBs up to 32k in size...
-                log.warn("Unsupported driver version detected: "
-                        + metaData.getDriverName()
-                        + " v" + metaData.getDriverVersion());
+                log.warn("Unsupported driver version detected: {} v{}",
+                        metaData.getDriverName(), metaData.getDriverVersion());
             }
         } catch (SQLException e) {
             log.warn("Can not retrieve driver version", e);

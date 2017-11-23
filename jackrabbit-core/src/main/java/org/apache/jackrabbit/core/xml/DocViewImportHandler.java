@@ -202,9 +202,7 @@ class DocViewImportHandler extends TargetImportHandler {
             } catch (IllegalNameException ine) {
                 // decoded name would be illegal according to jsr 170,
                 // use encoded name as a fallback
-                log.warn("encountered illegal encoded name '"
-                        + name.getLocalName() + "': "
-                        + ine.getMessage());
+                log.warn("encountered illegal encoded name '{}': {}", name.getLocalName(), ine.getMessage());
             }
         }
         return name;

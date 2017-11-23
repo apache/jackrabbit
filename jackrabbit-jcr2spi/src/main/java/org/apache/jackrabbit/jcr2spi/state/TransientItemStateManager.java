@@ -419,10 +419,10 @@ public class TransientItemStateManager implements ItemStateCreationListener {
             case Status.MODIFIED:
             case Status.INVALIDATED:
                 // MODIFIED, INVALIDATED: ignore.
-                log.debug("Item " + state.getName() + " changed status from " + Status.getName(previousStatus) + " to " + Status.getName(state.getStatus()) + ".");
+                log.debug("Item {} changed status from {} to {}.", new Object[] { state.getName(), Status.getName(previousStatus), Status.getName(state.getStatus()) });
                 break;
             default:
-                log.error("ItemState "+ state.getName() + " has invalid status: " + state.getStatus());
+                log.error("ItemState {} has invalid status: {}", state.getName(), state.getStatus());
         }
     }
 

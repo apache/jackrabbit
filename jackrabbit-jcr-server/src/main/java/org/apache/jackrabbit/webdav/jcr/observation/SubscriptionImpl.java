@@ -353,7 +353,7 @@ public class SubscriptionImpl implements Subscription, ObservationConstants, Eve
             try {
                 obsMgr.removeEventListener(this);
             } catch (RepositoryException e) {
-                log.warn("Exception while unsubscribing: " + e);
+                log.warn("Exception while unsubscribing: {}", (Object) e);
             }
         }
         notifyAll();
@@ -610,9 +610,9 @@ public class SubscriptionImpl implements Subscription, ObservationConstants, Eve
                 // suspend the subscription
                 suspend();
             } catch (RepositoryException e) {
-                log.warn("Unable to register TransactionListener: " + e);
+                log.warn("Unable to register TransactionListener: {}", (Object) e);
             } catch (DavException e) {
-                log.warn("Unable to register TransactionListener: " + e);
+                log.warn("Unable to register TransactionListener: {}", (Object) e);
             }
         }
 
@@ -628,9 +628,9 @@ public class SubscriptionImpl implements Subscription, ObservationConstants, Eve
                 // remove this transaction event
                 obsMgr.removeEventListener(this);
             } catch (RepositoryException e) {
-                log.warn("Unable to remove listener: " + e);
+                log.warn("Unable to remove listener: {}", (Object) e);
             } catch (DavException e) {
-                log.warn("Unable to resume Subscription: " + e);
+                log.warn("Unable to resume Subscription: {}", (Object) e);
             }
         }
     }

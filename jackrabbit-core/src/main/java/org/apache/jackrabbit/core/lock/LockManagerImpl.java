@@ -194,7 +194,7 @@ public class LockManagerImpl
                     log.debug("Try to unlock expired lock. NodeId {}", id);
                     unlock(holder.getNodeById(id));
                 } catch (RepositoryException e) {
-                    log.warn("Unable to expire the lock. NodeId " + id, e);
+                    log.warn("Unable to expire the lock. NodeId {}", id, e);
                 }
             }
         }
@@ -236,8 +236,7 @@ public class LockManagerImpl
             try {
                 timeoutHint = Long.parseLong(parts[1]);
             } catch (NumberFormatException e) {
-                log.warn("Unexpected timeout hint "
-                        + parts[1] + " for lock token " + token, e);
+                log.warn("Unexpected timeout hint {} for lock token {}", new Object[] { parts[1], token, e });
             }
         }
 
@@ -256,7 +255,7 @@ public class LockManagerImpl
             info.setLive(true);
             lockMap.put(path, info);
         } catch (RepositoryException e) {
-            log.warn("Unable to recreate lock '" + token + "': " + e.getMessage());
+            log.warn("Unable to recreate lock '{}': {}", token, e.getMessage());
             log.debug("Root cause: ", e);
         } finally {
         	release();
@@ -300,12 +299,10 @@ public class LockManagerImpl
                 writer.newLine();
             }
         } catch (FileSystemException fse) {
-            log.warn("I/O error while saving locks to '"
-                    + locksFile.getPath() + "': " + fse.getMessage());
+            log.warn("I/O error while saving locks to '{}': {}", locksFile.getPath(), fse.getMessage());
             log.debug("Root cause: ", fse);
         } catch (IOException ioe) {
-            log.warn("I/O error while saving locks to '"
-                    + locksFile.getPath() + "': " + ioe.getMessage());
+            log.warn("I/O error while saving locks to '{}': {}", locksFile.getPath(), ioe.getMessage());
             log.debug("Root cause: ", ioe);
         } finally {
             IOUtils.closeQuietly(writer);
@@ -480,7 +477,7 @@ public class LockManagerImpl
                     try {
                         lockMap.put(element.getPath(), info);
                     } catch (MalformedPathException e) {
-                        log.warn("Ignoring invalid lock path: " + info, e);
+                        log.warn("Ignoring invalid lock path: {}", info, e);
                     }
                 }
             }
@@ -1131,10 +1128,10 @@ public class LockManagerImpl
                         sysSession.getQPath(event.getPath()).getNormalizedPath(),
                         event.getType());
             } catch (MalformedPathException e) {
-                log.info("Unable to get event's path: " + e.getMessage());
+                log.info("Unable to get event's path: {}", e.getMessage());
                 continue;
             } catch (RepositoryException e) {
-                log.info("Unable to get event's path: " + e.getMessage());
+                log.info("Unable to get event's path: {}", e.getMessage());
                 continue;
             }
 
@@ -1311,7 +1308,7 @@ public class LockManagerImpl
                             NodeImpl node = (NodeImpl) systemSession.getItemManager().getItem(getId());
                             node.unlock();
                         } catch (RepositoryException re) {
-                            log.warn("Unable to remove session-scoped lock on node '" + getLockToken() + "': " + e.getMessage());
+                            log.warn("Unable to remove session-scoped lock on node '{}': {}", getLockToken(), e.getMessage());
                             log.debug("Root cause: ", e);
                         }
                     }

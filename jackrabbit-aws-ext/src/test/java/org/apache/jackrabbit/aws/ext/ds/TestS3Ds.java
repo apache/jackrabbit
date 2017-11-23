@@ -106,7 +106,7 @@ public class TestS3Ds extends TestCaseBase {
     }
 
     public void deleteBucket(String bucket) throws Exception {
-        LOG.info("deleting bucket [" + bucket + "]");
+        LOG.info("deleting bucket [{}]", bucket);
         Properties props = Utils.readConfig(config);
         AmazonS3Client s3service = Utils.openService(props);
         TransferManager tmx = new TransferManager(s3service);
@@ -132,10 +132,10 @@ public class TestS3Ds extends TestCaseBase {
                 }
             }
             s3service.deleteBucket(bucket);
-            LOG.info("bucket [ " + bucket + "] deleted");
+            LOG.info("bucket [{}] deleted", bucket);
 
         } else {
-            LOG.info("bucket [" + bucket + "] doesn't exists");
+            LOG.info("bucket [{}] doesn't exist", bucket);
         }
         tmx.shutdownNow();
         s3service.shutdown();

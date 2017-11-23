@@ -30,7 +30,7 @@ public final class CacheBehaviour {
      * maintenance even though the repository implementation might support
      * observation.
      */
-    public static final CacheBehaviour INVALIDATE = new CacheBehaviour();
+    public static final CacheBehaviour INVALIDATE = new CacheBehaviour("INVALIDATE");
 
     /**
      * Cache maintenance is done using events from the repository. After an
@@ -39,8 +39,16 @@ public final class CacheBehaviour {
      * events. This strategy requires that the repository implementation
      * supports observation.
      */
-    public static final CacheBehaviour OBSERVATION = new CacheBehaviour();
+    public static final CacheBehaviour OBSERVATION = new CacheBehaviour("OBSERVATION");
 
-    private CacheBehaviour() {
+    private final String name;
+
+    private CacheBehaviour(String name) {
+        this.name = name;
+    }
+
+    @Override
+    public String toString() {
+        return name;
     }
 }

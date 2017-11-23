@@ -192,7 +192,7 @@ public class WebdavRequestImpl implements WebdavRequest, DavConstants {
                 if (auth == null) {
                     //verify that href is an absolute path
                     if (ref.startsWith("//") || !ref.startsWith("/")) {
-                        log.warn("expected absolute path but found " + ref);
+                        log.warn("expected absolute path but found {}", ref);
                         throw new DavException(DavServletResponse.SC_BAD_REQUEST);
                     }
                 } else if (!auth.equals(httpRequest.getHeader("Host"))) {
@@ -202,7 +202,7 @@ public class WebdavRequestImpl implements WebdavRequest, DavConstants {
                     throw new DavException(DavServletResponse.SC_FORBIDDEN);
                 }
             } catch (URISyntaxException e) {
-                log.warn("malformed uri: " + href, e);
+                log.warn("malformed uri: {}", href, e);
                 throw new DavException(DavServletResponse.SC_BAD_REQUEST);
             }
             // cut off the context path
@@ -498,7 +498,7 @@ public class WebdavRequestImpl implements WebdavRequest, DavConstants {
                     }
                 }
             } else {
-                log.debug("Unknown element in DAV:propertyupdate: " + el.getNodeName());
+                log.debug("Unknown element in DAV:propertyupdate: {}", el.getNodeName());
                 // unknown child elements are ignored
             }
         }
@@ -680,7 +680,7 @@ public class WebdavRequestImpl implements WebdavRequest, DavConstants {
                 try {
                     pos = new Position(typeNSegment[0], typeNSegment[1]);
                 } catch (IllegalArgumentException e) {
-                    log.error("Cannot parse Position header: " + e.getMessage());
+                    log.error("Cannot parse Position header: {}", e.getMessage());
                 }
             }
         }

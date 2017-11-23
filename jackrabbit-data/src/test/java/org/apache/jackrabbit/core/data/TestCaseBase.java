@@ -92,8 +92,7 @@ public abstract class TestCaseBase extends TestCase {
                 delSuccessFul = FileUtils.deleteQuietly(new File(dataStoreDir));
                 count++;
             }
-            LOG.info("setup : directory [" + dataStoreDir + "] deleted ["
-                + delSuccessFul + "]");
+            LOG.info("setup : directory [{}] deleted [{}]", dataStoreDir, delSuccessFul);
         }
     }
 
@@ -106,8 +105,7 @@ public abstract class TestCaseBase extends TestCase {
             delSuccessFul = FileUtils.deleteQuietly(new File(dataStoreDir));
             count++;
         }
-        LOG.info("tearDown : directory [" + dataStoreDir + "] deleted ["
-            + delSuccessFul + "]");
+        LOG.info("tearDown : directory [{}] deleted [{}]", dataStoreDir, delSuccessFul);
     }
     /**
      * Testcase to validate {@link DataStore#addRecord(InputStream)} API.
@@ -115,12 +113,9 @@ public abstract class TestCaseBase extends TestCase {
     public void testAddRecord() {
         try {
             long start = System.currentTimeMillis();
-            LOG.info("Testcase: " + this.getClass().getName()
-                + "#addRecord, testDir=" + dataStoreDir);
+            LOG.info("Testcase: {}#addRecord, testDir={}", getClass().getName(), dataStoreDir);
             doAddRecordTest();
-            LOG.info("Testcase: " + this.getClass().getName()
-                + "#addRecord finished, time taken = ["
-                + (System.currentTimeMillis() - start) + "]ms");
+            LOG.info("Testcase: {}#addRecord finished, time taken = [{}]ms", getClass().getName(), System.currentTimeMillis() - start);
         } catch (Exception e) {
             LOG.error("error:", e);
             fail(e.getMessage());
@@ -133,12 +128,9 @@ public abstract class TestCaseBase extends TestCase {
     public void testGetRecord() {
         try {
             long start = System.currentTimeMillis();
-            LOG.info("Testcase: " + this.getClass().getName()
-                + "#testGetRecord, testDir=" + dataStoreDir);
+            LOG.info("Testcase: {}#testGetRecord, testDir={}", getClass().getName(), dataStoreDir);
             doGetRecordTest();
-            LOG.info("Testcase: " + this.getClass().getName()
-                + "#testGetRecord finished, time taken = ["
-                + (System.currentTimeMillis() - start) + "]ms");
+            LOG.info("Testcase: {}#testGetRecord finished, time taken = [{}]ms", getClass().getName(), System.currentTimeMillis() - start);
         } catch (Exception e) {
             LOG.error("error:", e);
         }
@@ -150,12 +142,9 @@ public abstract class TestCaseBase extends TestCase {
     public void testGetAllIdentifiers() {
         try {
             long start = System.currentTimeMillis();
-            LOG.info("Testcase: " + this.getClass().getName()
-                + "#testGetAllIdentifiers, testDir=" + dataStoreDir);
+            LOG.info("Testcase: {}#testGetAllIdentifiers, testDir={}", getClass().getName(), dataStoreDir);
             doGetAllIdentifiersTest();
-            LOG.info("Testcase: " + this.getClass().getName()
-                + "#testGetAllIdentifiers finished, time taken = ["
-                + (System.currentTimeMillis() - start) + "]ms");
+            LOG.info("Testcase: {}#testGetAllIdentifiers finished, time taken = [{}]ms", getClass().getName(), System.currentTimeMillis() - start);
         } catch (Exception e) {
             LOG.error("error:", e);
             fail(e.getMessage());
@@ -169,12 +158,9 @@ public abstract class TestCaseBase extends TestCase {
     public void testUpdateLastModifiedOnAccess() {
         try {
             long start = System.currentTimeMillis();
-            LOG.info("Testcase: " + this.getClass().getName()
-                + "#testUpdateLastModifiedOnAccess, testDir=" + dataStoreDir);
+            LOG.info("Testcase: {}#testUpdateLastModifiedOnAccess, testDir={}", getClass().getName(), dataStoreDir);
             doUpdateLastModifiedOnAccessTest();
-            LOG.info("Testcase: " + this.getClass().getName()
-                + "#testUpdateLastModifiedOnAccess finished, time taken = ["
-                + (System.currentTimeMillis() - start) + "]ms");
+            LOG.info("Testcase: {}#testUpdateLastModifiedOnAccess finished, time taken = [{}]ms", getClass().getName(), System.currentTimeMillis() - start);
         } catch (Exception e) {
             LOG.error("error:", e);
         }
@@ -187,12 +173,9 @@ public abstract class TestCaseBase extends TestCase {
     public void testDeleteRecord() {
         try {
             long start = System.currentTimeMillis();
-            LOG.info("Testcase: " + this.getClass().getName()
-                + "#testDeleteRecord, testDir=" + dataStoreDir);
+            LOG.info("Testcase: {}#testDeleteRecord, testDir={}", getClass().getName(), dataStoreDir);
             doDeleteRecordTest();
-            LOG.info("Testcase: " + this.getClass().getName()
-                + "#testDeleteRecord finished, time taken = ["
-                + (System.currentTimeMillis() - start) + "]ms");
+            LOG.info("Testcase: {}#testDeleteRecord finished, time taken = [{}]ms", getClass().getName(), System.currentTimeMillis() - start);
         } catch (Exception e) {
             LOG.error("error:", e);
             fail(e.getMessage());
@@ -205,12 +188,9 @@ public abstract class TestCaseBase extends TestCase {
     public void testDeleteAllOlderThan() {
         try {
             long start = System.currentTimeMillis();
-            LOG.info("Testcase: " + this.getClass().getName()
-                + "#testDeleteAllOlderThan, testDir=" + dataStoreDir);
+            LOG.info("Testcase: {}#testDeleteAllOlderThan, testDir={}", getClass().getName(), dataStoreDir);
             doDeleteAllOlderThan();
-            LOG.info("Testcase: " + this.getClass().getName()
-                + "#testDeleteAllOlderThan finished, time taken = ["
-                + (System.currentTimeMillis() - start) + "]ms");
+            LOG.info("Testcase: {}#testDeleteAllOlderThan finished, time taken = [{}]ms", getClass().getName(), System.currentTimeMillis() - start);
         } catch (Exception e) {
             LOG.error("error:", e);
             fail(e.getMessage());
@@ -223,12 +203,9 @@ public abstract class TestCaseBase extends TestCase {
     public void testReference() {
         try {
             long start = System.currentTimeMillis();
-            LOG.info("Testcase: " + this.getClass().getName()
-                + "#testReference, testDir=" + dataStoreDir);
+            LOG.info("Testcase: {}#testReference, testDir={}", getClass().getName(), dataStoreDir);
             doReferenceTest();
-            LOG.info("Testcase: " + this.getClass().getName()
-                + "#testReference finished, time taken = ["
-                + (System.currentTimeMillis() - start) + "]ms");
+            LOG.info("Testcase: {}#testReference finished, time taken = [{}]ms", getClass().getName(), System.currentTimeMillis() - start);
         } catch (Exception e) {
             LOG.error("error:", e);
             fail(e.getMessage());
@@ -241,12 +218,9 @@ public abstract class TestCaseBase extends TestCase {
     public void testSingleThread() {
         try {
             long start = System.currentTimeMillis();
-            LOG.info("Testcase: " + this.getClass().getName()
-                + "#testSingleThread, testDir=" + dataStoreDir);
+            LOG.info("Testcase: {}#testSingleThread, testDir={}", getClass().getName(), dataStoreDir);
             doTestSingleThread();
-            LOG.info("Testcase: " + this.getClass().getName()
-                + "#testSingleThread finished, time taken = ["
-                + (System.currentTimeMillis() - start) + "]ms");
+            LOG.info("Testcase: {}#testSingleThread finished, time taken = [{}]ms", getClass().getName(), System.currentTimeMillis() - start);
         } catch (Exception e) {
             LOG.error("error:", e);
             fail(e.getMessage());
@@ -260,12 +234,9 @@ public abstract class TestCaseBase extends TestCase {
     public void testMultiThreaded() {
         try {
             long start = System.currentTimeMillis();
-            LOG.info("Testcase: " + this.getClass().getName()
-                + "#testMultiThreaded, testDir=" + dataStoreDir);
+            LOG.info("Testcase: {}#testMultiThreaded, testDir={}", getClass().getName(), dataStoreDir);
             doTestMultiThreaded();
-            LOG.info("Testcase: " + this.getClass().getName()
-                + "#testMultiThreaded finished, time taken = ["
-                + (System.currentTimeMillis() - start) + "]ms");
+            LOG.info("Testcase: {}#testMultiThreaded finished, time taken = [{}]ms", getClass().getName(), System.currentTimeMillis() - start);
         } catch (Exception e) {
             LOG.error("error:", e);
             fail(e.getMessage());
@@ -378,12 +349,12 @@ public abstract class TestCaseBase extends TestCase {
         data = new byte[dataLength];
         random.nextBytes(data);
         DataRecord rec2 = ds.addRecord(new ByteArrayInputStream(data));
-        LOG.debug("rec2 timestamp=" + rec2.getLastModified());
+        LOG.debug("rec2 timestamp={}", rec2.getLastModified());
 
         // sleep for some time to ensure that async upload completes in backend.
         sleep(6000);
         long updateTime = System.currentTimeMillis();
-        LOG.debug("updateTime=" + updateTime);
+        LOG.debug("updateTime={}", updateTime);
         ds.updateModifiedDateOnAccess(updateTime);
 
         // sleep to workaround System.currentTimeMillis granularity.
@@ -399,7 +370,7 @@ public abstract class TestCaseBase extends TestCase {
         rec1 = ds.getRecord(rec1.getIdentifier());
 
         assertEquals("rec1 touched", true, rec1.getLastModified() > updateTime);
-        LOG.debug("rec2 timestamp=" + rec2.getLastModified());
+        LOG.debug("rec2 timestamp={}", rec2.getLastModified());
         assertEquals("rec2 not touched", true,
             rec2.getLastModified() < updateTime);
         assertEquals("rec3 touched", true, rec3.getLastModified() > updateTime);

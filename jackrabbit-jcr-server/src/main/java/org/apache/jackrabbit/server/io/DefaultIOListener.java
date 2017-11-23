@@ -40,20 +40,20 @@ public class DefaultIOListener implements IOListener {
      * @see IOListener#onBegin(IOHandler, IOContext)
      */
     public void onBegin(IOHandler handler, IOContext ioContext) {
-        ioLog.debug("Starting IOHandler (" + handler.getName() + ")");
+        ioLog.debug("Starting IOHandler ({})", handler.getName());
     }
 
     /**
      * @see IOListener#onEnd(IOHandler, IOContext, boolean)
      */
     public void onEnd(IOHandler handler, IOContext ioContext, boolean success) {
-        ioLog.debug("Result for IOHandler (" + handler.getName() + "): " + (success ? "OK" : "Failed"));
+        ioLog.debug("Result for IOHandler ({}): {}", handler.getName(), success ? "OK" : "Failed");
     }
 
     /**
      * @see IOListener#onError(IOHandler, IOContext, Exception)
      */
     public void onError(IOHandler ioHandler, IOContext ioContext, Exception e) {
-        ioLog.debug("Error: " + e.getMessage());
+        ioLog.debug("Error: {}", e.getMessage());
     }
 }

@@ -122,7 +122,7 @@ public class LazyItemIterator implements NodeIterator, PropertyIterator {
                     next = itemMgr.getItem(id);
                 }
             } catch (ItemNotFoundException e) {
-                log.debug("ignoring nonexistent item " + id);
+                log.debug("ignoring nonexistent item {}", id);
                 // remove invalid id
                 idList.remove(pos);
 
@@ -145,12 +145,12 @@ public class LazyItemIterator implements NodeIterator, PropertyIterator {
 
                 // try next
             } catch (AccessDeniedException e) {
-                log.debug("ignoring nonexistent item " + id);
+                log.debug("ignoring nonexistent item {}", id);
                 // remove invalid id
                 idList.remove(pos);
                 // try next
             } catch (RepositoryException e) {
-                log.error("failed to fetch item " + id + ", skipping...", e);
+                log.error("failed to fetch item {}, skipping...", id, e);
                 // remove invalid id
                 idList.remove(pos);
                 // try next
@@ -222,7 +222,7 @@ public class LazyItemIterator implements NodeIterator, PropertyIterator {
             ItemId id = idList.get(pos);
             // eliminate invalid items from this iterator
             while (!itemMgr.itemExists(id)) {
-                log.debug("ignoring nonexistent item " + id);
+                log.debug("ignoring nonexistent item {}", id);
                 // remove invalid id
                 idList.remove(pos);
                 if (pos >= idList.size()) {

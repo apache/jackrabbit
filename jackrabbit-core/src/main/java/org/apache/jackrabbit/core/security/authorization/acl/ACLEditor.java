@@ -374,8 +374,8 @@ public class ACLEditor extends ProtectedItemModifier implements AccessControlEdi
             try {
                 NameParser.checkFormat(name);
             } catch (NameException e) {
+                log.debug("Invalid path name for Permission: {}. Defaulting to: " + DEFAULT_ACE_NAME, name);
                 name = DEFAULT_ACE_NAME;
-                log.debug("Invalid path name for Permission: " + name + ".");
             }
         }
         int i = 0;

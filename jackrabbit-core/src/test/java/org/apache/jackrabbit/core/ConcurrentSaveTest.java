@@ -76,9 +76,9 @@ public class ConcurrentSaveTest extends AbstractJCRTest {
                     for (int i = 0; i < NUM_NODES; i++) {
                         Node n = testNode.addNode("node" + i);
                         n.setProperty("foo", "some text");
-                        log.info("creating node: node" + i);
+                        log.info("creating node: node{}", i);
                         testNode.save();
-                        log.info("created node: node" + i);
+                        log.info("created node: node{}", i);
                         // give other thread a chance to catch up
                         yield();
                     }
@@ -100,9 +100,9 @@ public class ConcurrentSaveTest extends AbstractJCRTest {
                         Node n = rootNode.getNode("node" + i);
                         // remove property
                         n.setProperty("foo", (Value) null);
-                        log.info("removing property from node: node" + i);
+                        log.info("removing property from node: node{}", i);
                         n.save();
-                        log.info("property removed from node: node" + i);
+                        log.info("property removed from node: node{}", i);
                     }
                 } catch (Exception e) {
                     exceptions.add(e);

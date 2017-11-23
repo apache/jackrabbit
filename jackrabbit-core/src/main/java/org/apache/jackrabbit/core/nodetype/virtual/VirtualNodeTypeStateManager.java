@@ -162,7 +162,7 @@ public class VirtualNodeTypeStateManager implements NodeTypeRegistryListener {
                         NODE_TYPES_PATH, null);
             }
         } catch (RepositoryException e) {
-            log.error("Unable to index new nodetype: " + e.toString());
+            log.error("Unable to index new nodetype: {}", (Object) e);
         }
     }
 
@@ -199,7 +199,7 @@ public class VirtualNodeTypeStateManager implements NodeTypeRegistryListener {
                 virtProvider.onNodeTypesRemoved(names);
             }
         } catch (RepositoryException e) {
-            log.error("Unable to index removed nodetypes: " + names, e);
+            log.error("Unable to index removed nodetypes: {}", names, e);
         }
     }
 

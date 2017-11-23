@@ -267,7 +267,7 @@ public abstract class JcrRemotingServlet extends JCRWebdavServerServlet {
                     brConfig.load(in);
                 }
             } catch (IOException e) {
-                log.debug("Unable to build BatchReadConfig from " + brConfigParam + ".");
+                log.debug("Unable to build BatchReadConfig from {}.", brConfigParam);
             }
         }
 
@@ -283,7 +283,7 @@ public abstract class JcrRemotingServlet extends JCRWebdavServerServlet {
                 protectedRemoveManager = new ProtectedRemoveManager(protectedHandlerConfig);
             }
         } catch (IOException e) {
-            log.debug("Unable to create ProtectedRemoveManager from " + protectedHandlerConfig , e);
+            log.debug("Unable to create ProtectedRemoveManager from {}", protectedHandlerConfig, e);
         } finally{
             if (in != null){
                 try {
@@ -316,10 +316,9 @@ public abstract class JcrRemotingServlet extends JCRWebdavServerServlet {
             try {
                 tmp = tmp.getCanonicalFile();
                 tmp.mkdirs();
-                log.debug("  temp-directory = " + tmp.getPath());
+                log.debug("  temp-directory = {}", tmp.getPath());
             } catch (IOException e) {
-                log.warn("Invalid temporary directory " + tmp.getPath()
-                        + ", using system default instead", e);
+                log.warn("Invalid temporary directory {}, using system default instead", tmp.getPath(), e);
                 tmp = null;
             }
         }

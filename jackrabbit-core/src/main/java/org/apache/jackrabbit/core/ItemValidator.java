@@ -539,7 +539,7 @@ public class ItemValidator {
             // return string representation of id as a fallback
             return id.toString();
         } catch (RepositoryException e) {
-            log.error(id + ": failed to build path");
+            log.error("{}: failed to build path", id);
             // return string representation of id as a fallback
             return id.toString();
         }

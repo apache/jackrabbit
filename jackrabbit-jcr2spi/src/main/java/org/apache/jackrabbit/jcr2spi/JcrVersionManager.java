@@ -281,7 +281,7 @@ public class JcrVersionManager implements javax.jcr.version.VersionManager {
                 return (Node) itemManager.getItem(session.getHierarchyManager().getNodeEntry(activityId));
             } catch (ItemNotFoundException e) {
                 // the activity doesn't exist any more.
-                log.warn("Activity node with id " + activityId + " doesn't exist any more.");
+                log.warn("Activity node with id {} doesn't exist any more.", activityId);
                 activityId = null;
                 return null;
             }

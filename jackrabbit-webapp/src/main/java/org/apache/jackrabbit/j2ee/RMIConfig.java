@@ -137,7 +137,7 @@ public class RMIConfig extends AbstractConfig {
                 rmiName = uri.getPath();
 
             } catch (URISyntaxException e) {
-                log.warn("Cannot parse RMI URI '" + rmiUri + "'.", e);
+                log.warn("Cannot parse RMI URI '{}'.", rmiUri, e);
                 rmiUri = null; // clear RMI URI use another one
                 rmiHost = null; // use default host, ignore rmi-host param
             }
@@ -154,7 +154,7 @@ public class RMIConfig extends AbstractConfig {
             rmiPort = Registry.REGISTRY_PORT;
         } else if (rmiPort < -1 || rmiPort > 0xFFFF) {
             // emit a warning if out of range, use defualt in this case
-            log.warn("Invalid port in rmi-port param " + rmiPort + ". using default port.");
+            log.warn("Invalid port in rmi-port param {}. using default port.", rmiPort);
             rmiPort = Registry.REGISTRY_PORT;
         }
 

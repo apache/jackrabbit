@@ -173,14 +173,16 @@ public class SessionState {
         if (!lock.tryLock()) {
             if (isWriteOperation
                     && operation instanceof SessionWriteOperation) {
-                Exception trace = new Exception(
-                        "Stack trace of concurrent access to " + session);
-                log.warn("Attempt to perform " + operation
-                        + " while another thread is concurrently writing"
-                        + " to " + session + ". Blocking until the other"
-                        + " thread is finished using this session. Please"
-                        + " review your code to avoid concurrent use of"
-                        + " a session.", trace);
+                if (log.isWarnEnabled()) {
+                    Exception trace = new Exception(
+                            "Stack trace of concurrent access to " + session);
+                    log.warn("Attempt to perform " + operation
+                            + " while another thread is concurrently writing"
+                            + " to " + session + ". Blocking until the other"
+                            + " thread is finished using this session. Please"
+                            + " review your code to avoid concurrent use of"
+                            + " a session.", trace);
+                }
             } else if (log.isDebugEnabled()) {
                 Exception trace = new Exception(
                         "Stack trace of concurrent access to " + session);
@@ -260,13 +262,15 @@ public class SessionState {
         String session = context.getSessionImpl().toString();
 
         if (!lock.tryLock()) {
-            Exception trace = new Exception(
-                    "Stack trace of concurrent access to " + session);
-            log.warn("Attempt to close " + session + " while another"
-                    + " thread is concurrently accessing this session."
-                    + " Blocking until the other thread is finished"
-                    + " using this session. Please review your code"
-                    + " to avoid concurrent use of a session.", trace);
+            if (log.isWarnEnabled()) {
+                Exception trace = new Exception(
+                        "Stack trace of concurrent access to " + session);
+                log.warn("Attempt to close " + session + " while another"
+                        + " thread is concurrently accessing this session."
+                        + " Blocking until the other thread is finished"
+                        + " using this session. Please review your code"
+                        + " to avoid concurrent use of a session.", trace);
+            }
             lock.lock();
         }
         try {
@@ -277,15 +281,17 @@ public class SessionState {
                         + " was originally closed");
                 return true;
             } else {
-                Exception trace = new Exception(
-                        "Stack trace of the duplicate attempt to close "
-                        + session);
-                log.warn("Attempt to close " + session + " after it has"
-                        + " already been closed. Please review your code"
-                        + " for proper session management.", trace);
-                log.warn(session + " has already been closed. See the"
-                        + " attached exception for a trace of where this"
-                        + " session was closed.", closed);
+                if (log.isWarnEnabled()) {
+                    Exception trace = new Exception(
+                            "Stack trace of the duplicate attempt to close "
+                            + session);
+                    log.warn("Attempt to close " + session + " after it has"
+                            + " already been closed. Please review your code"
+                            + " for proper session management.", trace);
+                    log.warn(session + " has already been closed. See the"
+                            + " attached exception for a trace of where this"
+                            + " session was closed.", closed);
+                }
                 return false;
             }
         } finally {

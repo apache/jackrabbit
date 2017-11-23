@@ -185,7 +185,7 @@ class DocOrderScoreNodeIterator implements ScoreNodeIterator {
                             try {
                                 node1 = (NodeImpl) itemMgr.getItem(n1.getNodeId());
                             } catch (RepositoryException e) {
-                                log.warn("Node " + n1.getNodeId() + " does not exist anymore: " + e);
+                                log.warn("Node {} does not exist anymore: {}", n1.getNodeId(), e);
                                 // node does not exist anymore
                                 invalidIDs.add(n1.getNodeId());
                                 SortFailedException sfe = new SortFailedException();
@@ -196,7 +196,7 @@ class DocOrderScoreNodeIterator implements ScoreNodeIterator {
                             try {
                                 node2 = (NodeImpl) itemMgr.getItem(n2.getNodeId());
                             } catch (RepositoryException e) {
-                                log.warn("Node " + n2.getNodeId() + " does not exist anymore: " + e);
+                                log.warn("Node {} does not exist anymore: {}", n2.getNodeId(), e);
                                 // node does not exist anymore
                                 invalidIDs.add(n2.getNodeId());
                                 SortFailedException sfe = new SortFailedException();
@@ -242,10 +242,10 @@ class DocOrderScoreNodeIterator implements ScoreNodeIterator {
                                 }
                             }
                             log.error("Internal error: unable to determine document order of nodes:");
-                            log.error("\tNode1: " + node1.getPath());
-                            log.error("\tNode2: " + node2.getPath());
+                            log.error("\tNode1: {}", node1.getPath());
+                            log.error("\tNode2: {}", node2.getPath());
                         } catch (RepositoryException e) {
-                            log.error("Exception while sorting nodes in document order: " + e.toString(), e);
+                            log.error("Exception while sorting nodes in document order: {}", e, e);
                         }
                         // if we get here something went wrong
                         // remove both uuids from array

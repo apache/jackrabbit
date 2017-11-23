@@ -188,7 +188,7 @@ public final class Utils {
     private static void deleteIfPossible(final File file) {
         boolean deleted = file.delete();
         if (!deleted) {
-            LOG.warn("Could not delete " + file.getAbsolutePath());
+            LOG.warn("Could not delete {}", file.getAbsolutePath());
         }
     }
 

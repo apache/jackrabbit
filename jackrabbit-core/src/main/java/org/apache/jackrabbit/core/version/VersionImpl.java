@@ -165,7 +165,7 @@ public class VersionImpl extends NodeImpl implements Version {
                 InternalVersion other = ((VersionImpl) otherItem).getInternalVersion();
                 return other.getId().equals(getInternalVersion().getId());
             } catch (RepositoryException e) {
-                log.warn("Unable to retrieve internal version objects: " + e.getMessage());
+                log.warn("Unable to retrieve internal version objects: {}", e.getMessage());
                 log.debug("Stack dump:", e);
             }
         }

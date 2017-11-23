@@ -169,7 +169,7 @@ public abstract class AbstractLoginModule implements LoginModule {
                     return; // abort. not even a default principal provider
                 }
             }
-            log.debug("- PrincipalProvider -> '" + principalProvider.getClass().getName() + "'");
+            log.debug("- PrincipalProvider -> '{}'", principalProvider.getClass().getName());
 
             // call implementation for additional setup
             doInit(callbackHandler, repositoryCb.getSession(), options);
@@ -313,7 +313,7 @@ public abstract class AbstractLoginModule implements LoginModule {
         if (creds == null) {
             log.debug("No credentials available -> try default (anonymous) authentication.");
         } else if (!supportsCredentials(creds)) {
-            log.debug("Unsupported credentials implementation : " + creds.getClass().getName());
+            log.debug("Unsupported credentials implementation : {}", creds.getClass().getName());
             return false;
         }
         
@@ -518,9 +518,9 @@ public abstract class AbstractLoginModule implements LoginModule {
                 callbackHandler.handle(new Callback[]{impers});
                 impersonator = impers.getImpersonator();
             } catch (UnsupportedCallbackException e) {
-                log.warn(e.getCallback().getClass().getName() + " not supported: Unable to perform Impersonation.");
+                log.warn("{} not supported: Unable to perform Impersonation.", e.getCallback().getClass().getName());
             } catch (IOException e) {
-                log.error("Impersonation-Callback failed: " + e.getMessage() + ": Unable to perform Impersonation.");
+                log.error("Impersonation-Callback failed: {}: Unable to perform Impersonation.", e.getMessage());
             }
         } else if (credentials instanceof SimpleCredentials) {
             SimpleCredentials sc = (SimpleCredentials) credentials;
@@ -563,7 +563,7 @@ public abstract class AbstractLoginModule implements LoginModule {
             } catch (UnsupportedCallbackException e) {
                 log.warn("Credentials-Callback not supported try Name-Callback");
             } catch (IOException e) {
-                log.error("Credentials-Callback failed: " + e.getMessage() + ": try Name-Callback");
+                log.error("Credentials-Callback failed: {}: try Name-Callback", e.getMessage());
             }
         }
         // if still no credentials -> try to retrieve them from the subject.
@@ -630,7 +630,7 @@ public abstract class AbstractLoginModule implements LoginModule {
                 } catch (UnsupportedCallbackException e) {
                     log.warn("Credentials- or NameCallback must be supported");
                 } catch (IOException e) {
-                    log.error("Name-Callback failed: " + e.getMessage());
+                    log.error("Name-Callback failed: {}", e.getMessage());
                 }
             }
         }

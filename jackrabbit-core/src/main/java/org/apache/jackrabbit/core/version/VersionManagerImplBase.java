@@ -145,15 +145,13 @@ abstract public class VersionManagerImplBase {
         if (isCheckedOut(state)) {
             if (checkout && !checkin) {
                 // pure checkout
-                String msg = safeGetJCRPath(state) + ": Node is already checked-out. ignoring.";
-                log.debug(msg);
+                log.debug("{}: Node is already checked-out. ignoring.", safeGetJCRPath(state));
                 return null;
             }
         } else {
             if (!checkout) {
                 // pure checkin
-                String msg = safeGetJCRPath(state) + ": Node is already checked-in. ignoring.";
-                log.debug(msg);
+                log.debug("{}: Node is already checked-in. ignoring.", safeGetJCRPath(state));
                 if (isFull) {
                     return getBaseVersionId(state);
                 } else {

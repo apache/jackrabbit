@@ -70,12 +70,12 @@ class CachingEntryCollector extends EntryCollector {
             throw new RepositoryException("Invalid value " + strategy + " specified for system property " + propname);
         }
 
-        log.info("Cache Update Strategy: " + strategy);
+        log.info("Cache Update Strategy: {}", strategy);
 
         propname = "org.apache.jackrabbit.core.security.authorization.acl.CachingEntryCollector.cacheNoACL";
         cacheNoAcl = Boolean.parseBoolean(System.getProperty(propname, "false"));
 
-        log.info("Caching entries with no ACLs: " + cacheNoAcl);
+        log.info("Caching entries with no ACLs: {}", cacheNoAcl);
     }
 
     @Override
@@ -352,21 +352,21 @@ class CachingEntryCollector extends EntryCollector {
         @SuppressWarnings("unchecked")
         public EntryCache() {
             int maxsize = 5000;
-            String propname = "org.apache.jackrabbit.core.security.authorization.acl.CachingEntryCollector.maxsize";
+            final String propname = "org.apache.jackrabbit.core.security.authorization.acl.CachingEntryCollector.maxsize";
             try {
                 maxsize = Integer.parseInt(System.getProperty(propname, Integer.toString(maxsize)));
             } catch (NumberFormatException ex) {
-                log.debug("Parsing system property " + propname + " with value: " + System.getProperty(propname), ex);
+                log.debug("Parsing system property " + propname + " with value: {}", System.getProperty(propname), ex);
             }
 
-            log.info("Creating cache with max size of: " + maxsize);
+            log.info("Creating cache with max size of: {}", maxsize);
 
             cache = new GrowingLRUMap(1024, maxsize);
 
             String propsrname = "org.apache.jackrabbit.core.security.authorization.acl.CachingEntryCollector.scroot";
             specialCaseRoot = Boolean.parseBoolean(System.getProperty(propsrname, "true"));
 
-            log.info("Root is special-cased: " + specialCaseRoot);
+            log.info("Root is special-cased: {}", specialCaseRoot);
         }
 
         public boolean specialCasesRoot() {

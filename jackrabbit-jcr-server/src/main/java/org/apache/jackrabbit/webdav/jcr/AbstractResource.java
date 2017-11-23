@@ -820,10 +820,10 @@ abstract class AbstractResource implements DavResource, TransactionResource,
 
                 } catch (DavException e) {
                     // should not occur
-                    log.error("Error while building MultiStatusResponse from Event: " + e.getMessage());
+                    log.error("Error while building MultiStatusResponse from Event: {}", e.getMessage());
                 } catch (RepositoryException e) {
                     // should not occur
-                    log.error("Error while building MultiStatusResponse from Event: " + e.getMessage());
+                    log.error("Error while building MultiStatusResponse from Event: {}", e.getMessage());
                 }
             }
         }

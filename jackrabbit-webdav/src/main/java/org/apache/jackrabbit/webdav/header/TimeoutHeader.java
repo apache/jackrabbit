@@ -93,7 +93,7 @@ public class TimeoutHeader implements Header, DavConstants {
                     timeout = 1000L * Long.parseLong(timeoutStr.substring(secondsInd, i));
                 } catch (NumberFormatException ignore) {
                     // ignore and return 'undefined' timeout
-                    log.error("Invalid timeout format: " + timeoutStr);
+                    log.error("Invalid timeout format: {}", timeoutStr);
                 }
             } else if (timeoutStr.equalsIgnoreCase(TIMEOUT_INFINITE)) {
                 timeout = INFINITE_TIMEOUT;

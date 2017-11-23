@@ -230,7 +230,7 @@ class DefaultRedoLog implements RedoLog {
                 try {
                     collector.collect(MultiIndex.Action.fromString(line));
                 } catch (IllegalArgumentException e) {
-                    log.warn("Malformed redo entry: " + e.getMessage());
+                    log.warn("Malformed redo entry: {}", e.getMessage());
                 }
             }
         } finally {
@@ -238,7 +238,7 @@ class DefaultRedoLog implements RedoLog {
                 try {
                     in.close();
                 } catch (IOException e) {
-                    log.warn("Exception while closing redo log: " + e.toString());
+                    log.warn("Exception while closing redo log: {}", (Object) e);
                 }
             }
         }

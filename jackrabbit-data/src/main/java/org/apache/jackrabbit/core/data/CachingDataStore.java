@@ -725,11 +725,11 @@ public abstract class CachingDataStore extends AbstractDataStore implements
                 getRecord(identifier);
             }
         } catch (IOException ie) {
-            LOG.warn("Cannot remove pending file upload. Dataidentifer [ "
-                + identifier + "], file [" + file.getAbsolutePath() + "]", ie);
+            LOG.warn("Cannot remove pending file upload. Dataidentifer [{}], file [{}]",
+                    new Object[] { identifier, file.getAbsolutePath(), ie });
         } catch (DataStoreException dse) {
-            LOG.warn("Cannot remove pending file upload. Dataidentifer [ "
-                + identifier + "], file [" + file.getAbsolutePath() + "]", dse);
+            LOG.warn("Cannot remove pending file upload. Dataidentifer [{}], file [{}]",
+                    new Object[] { identifier, file.getAbsolutePath(), dse });
         }
     }
 
@@ -739,12 +739,10 @@ public abstract class CachingDataStore extends AbstractDataStore implements
         File file = result.getFile();
         String fileName = getFileName(identifier);
         if (result.getException() != null) {
-            LOG.warn("Async Upload failed. Dataidentifer [ " + identifier
-                + "], file [" + file.getAbsolutePath() + "]",
-                result.getException());
+            LOG.warn("Async Upload failed. Dataidentifer [{}], file [{}]",
+                    new Object[] { identifier, file.getAbsolutePath(), result.getException() });
         } else {
-            LOG.warn("Async Upload failed. Dataidentifer [ " + identifier
-                + "], file [" + file.getAbsolutePath() + "]");
+            LOG.warn("Async Upload failed. Dataidentifer [{}], file [{}]", identifier, file.getAbsolutePath());
         }
         // Retry failed upload upto uploadRetries times.
         try {
@@ -774,8 +772,8 @@ public abstract class CachingDataStore extends AbstractDataStore implements
                 }
             }
         } catch (IOException ie) {
-            LOG.warn("Cannot retry failed async file upload. Dataidentifer [ "
-                + identifier + "], file [" + file.getAbsolutePath() + "]", ie);
+            LOG.warn("Cannot retry failed async file upload. Dataidentifer [{}], file [{}]",
+                    new Object[] { identifier, file.getAbsolutePath(), ie });
         }
     }
 
@@ -792,8 +790,8 @@ public abstract class CachingDataStore extends AbstractDataStore implements
                 "Async Upload Aborted. Dataidentifer [{}], file [{}] removed from AsyncCache.",
                 identifier, file.getAbsolutePath());
         } catch (IOException ie) {
-            LOG.warn("Cannot remove pending file upload. Dataidentifer [ "
-                + identifier + "], file [" + file.getAbsolutePath() + "]", ie);
+            LOG.warn("Cannot remove pending file upload. Dataidentifer [{}], file [{}]",
+                    new Object[] { identifier, file.getAbsolutePath(), ie });
         }
     }
 

@@ -98,7 +98,7 @@ public abstract class JCRWebdavServerServlet extends AbstractWebdavServlet {
         // set resource path prefix
         pathPrefix = getInitParameter(INIT_PARAM_RESOURCE_PATH_PREFIX);
         getServletContext().setAttribute(CTX_ATTR_RESOURCE_PATH_PREFIX, pathPrefix);
-        log.debug(INIT_PARAM_RESOURCE_PATH_PREFIX + " = " + pathPrefix);
+        log.debug(INIT_PARAM_RESOURCE_PATH_PREFIX + " = {}", pathPrefix);
 
         txMgr = new TxLockManagerImpl();
         subscriptionMgr = new SubscriptionManagerImpl();
@@ -139,7 +139,7 @@ public abstract class JCRWebdavServerServlet extends AbstractWebdavServlet {
                 return false;
             }
         } catch (DavException e) {
-            log.error("Internal error: " + e.toString());
+            log.error("Internal error: {}", (Object) e);
             return false;
         }
 
@@ -164,7 +164,7 @@ public abstract class JCRWebdavServerServlet extends AbstractWebdavServlet {
                 try {
                     server = new JCRWebdavServer(repository, getSessionProvider(), Integer.parseInt(cl));
                 } catch (NumberFormatException e) {
-                    log.debug("Invalid value '" + cl+ "' for init-param 'concurrency-level'. Using default instead.");
+                    log.debug("Invalid value '{}' for init-param 'concurrency-level'. Using default instead.", cl);
                     server = new JCRWebdavServer(repository, getSessionProvider());
                 }
             } else {

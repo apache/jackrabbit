@@ -62,7 +62,7 @@ public class Util {
                     field.dispose();
                 }
             } catch (IOException ex) {
-                log.warn("Exception while disposing index document: " + ex);
+                log.warn("Exception while disposing index document: {}", (Object) ex);
             }
         }
     }

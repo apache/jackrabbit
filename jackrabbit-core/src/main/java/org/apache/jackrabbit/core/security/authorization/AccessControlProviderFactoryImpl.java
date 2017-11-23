@@ -77,7 +77,7 @@ public class AccessControlProviderFactoryImpl implements AccessControlProviderFa
             prov = bc.newInstance(AccessControlProvider.class);
             props = bc.getParameters();
         } else {
-            log.debug("No ac-provider configuration for workspace " + workspaceName + " -> using defaults.");
+            log.debug("No ac-provider configuration for workspace {} -> using defaults.", workspaceName);
             if (workspaceName.equals(secWorkspaceName) && !workspaceName.equals(defaultWorkspaceName)) {
                 // UserAccessControlProvider is designed to work with an extra
                 // workspace storing user and groups. therefore avoid returning
@@ -86,7 +86,7 @@ public class AccessControlProviderFactoryImpl implements AccessControlProviderFa
             } else {
                 prov = new ACLProvider();
             }
-            log.debug("Default provider for workspace " + workspaceName + " = " + prov.getClass().getName());
+            log.debug("Default provider for workspace {} = {}", workspaceName, prov.getClass().getName());
             props = Collections.emptyMap();
         }
 

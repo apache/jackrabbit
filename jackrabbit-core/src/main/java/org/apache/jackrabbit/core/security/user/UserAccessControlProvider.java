@@ -334,7 +334,7 @@ public class UserAccessControlProvider extends AbstractAccessControlProvider
                 auth = uMgr.createGroup(prnc);
             } else {
                 if (!auth.isGroup()) {
-                    log.warn("Cannot create group '" + principalName + "'; User with that principal already exists.");
+                    log.warn("Cannot create group '{}'; User with that principal already exists.", principalName);
                     auth = null;
                 }
             }
@@ -412,7 +412,7 @@ public class UserAccessControlProvider extends AbstractAccessControlProvider
             if (userNode == null) {
                 // no Node corresponding to user for which the permissions are
                 // calculated -> no permissions/privileges.
-                log.debug("No node at " + userNodePath);
+                log.debug("No node at {}", userNodePath);
                 return Result.EMPTY;
             }
 

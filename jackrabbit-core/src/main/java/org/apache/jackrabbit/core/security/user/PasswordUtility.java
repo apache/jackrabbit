@@ -153,7 +153,7 @@ public class PasswordUtility {
                     MessageDigest.getInstance(algorithm);
                     return algorithm;
                 } catch (NoSuchAlgorithmException e) {
-                    log.debug("Invalid algorithm detected " + algorithm);
+                    log.debug("Invalid algorithm detected {}", algorithm);
                 }
             }
         }
@@ -229,7 +229,7 @@ public class PasswordUtility {
             try {
                 return Integer.parseInt(str);
             } catch (NumberFormatException e) {
-                log.debug("Expected number of iterations. Found: " + str);
+                log.debug("Expected number of iterations. Found: {}", str);
             }
         }
 

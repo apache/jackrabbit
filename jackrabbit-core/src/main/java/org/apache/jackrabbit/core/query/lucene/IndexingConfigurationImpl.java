@@ -177,9 +177,9 @@ public class IndexingConfigurationImpl
                                         + FieldNames.FULLTEXT_PREFIX + fieldName.substring(idx + 1);
                                 Object prevAnalyzer = analyzers.put(fieldName, analyzer);
                                 if (prevAnalyzer != null) {
-                                    log.warn("Property " + propName.getLocalName()
+                                    log.warn("Property {}"
                                             + " has been configured for multiple analyzers. "
-                                            + " Last configured analyzer is used");
+                                            + " Last configured analyzer is used", propName.getLocalName());
                                 }
                             }
                         }

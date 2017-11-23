@@ -493,7 +493,7 @@ public class DavResourceImpl implements DavResource, BindableResource, JcrConsta
                         DavResource childRes = factory.createResource(resourceLocator, session);
                         list.add(childRes);
                     } else {
-                        log.debug("Filtered resource '" + n.getName() + "'.");
+                        log.debug("Filtered resource '{}'.", n.getName());
                     }
                 }
             } catch (RepositoryException e) {
@@ -521,7 +521,7 @@ public class DavResourceImpl implements DavResource, BindableResource, JcrConsta
             // don't allow creation of nodes if this resource represents a protected
             // item or if the new resource would be filtered out
             if (isFilteredResource(member) || node.getDefinition().isProtected()) {
-                log.debug("Forbidden to add member: " + member.getDisplayName());
+                log.debug("Forbidden to add member: {}", member.getDisplayName());
                 throw new DavException(DavServletResponse.SC_FORBIDDEN);
             }
 
@@ -534,10 +534,10 @@ public class DavResourceImpl implements DavResource, BindableResource, JcrConsta
             // persist changes after successful import
             node.save();
         } catch (RepositoryException e) {
-            log.error("Error while importing resource: " + e.toString());
+            log.error("Error while importing resource: {}", (Object) e);
             throw new JcrDavException(e);
         } catch (IOException e) {
-            log.error("Error while importing resource: " + e.toString());
+            log.error("Error while importing resource: {}", (Object) e);
             throw new DavException(DavServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
         }
     }
@@ -555,7 +555,7 @@ public class DavResourceImpl implements DavResource, BindableResource, JcrConsta
 
         // don't allow removal of nodes, that would be filtered out
         if (isFilteredResource(member)) {
-            log.debug("Avoid removal of filtered resource: " + member.getDisplayName());
+            log.debug("Avoid removal of filtered resource: {}", member.getDisplayName());
             throw new DavException(DavServletResponse.SC_FORBIDDEN);
         }
 
@@ -1048,7 +1048,7 @@ public class DavResourceImpl implements DavResource, BindableResource, JcrConsta
 
         public void setProperty(Object propertyName, Object propertyValue) {
             if (propertyValue == null) {
-                log.warn("Ignore 'setProperty' for " + propertyName + "with null value.");
+                log.warn("Ignore 'setProperty' for {} with null value.", propertyName);
                 return;
             }
 

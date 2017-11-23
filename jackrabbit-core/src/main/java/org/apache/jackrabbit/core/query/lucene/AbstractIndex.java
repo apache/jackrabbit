@@ -415,7 +415,7 @@ abstract class AbstractIndex {
             try {
                 indexWriter.close();
             } catch (IOException e) {
-                log.warn("Exception closing index writer: " + e.toString());
+                log.warn("Exception closing index writer: {}", (Object) e);
             }
             indexWriter = null;
         }
@@ -423,7 +423,7 @@ abstract class AbstractIndex {
             try {
                 indexReader.close();
             } catch (IOException e) {
-                log.warn("Exception closing index reader: " + e.toString());
+                log.warn("Exception closing index reader: {}", (Object) e);
             }
             indexReader = null;
         }
@@ -431,7 +431,7 @@ abstract class AbstractIndex {
             try {
                 readOnlyReader.release();
             } catch (IOException e) {
-                log.warn("Exception closing index reader: " + e.toString());
+                log.warn("Exception closing index reader: {}", (Object) e);
             }
             readOnlyReader = null;
         }
@@ -439,7 +439,7 @@ abstract class AbstractIndex {
             try {
                 sharedReader.release();
             } catch (IOException e) {
-                log.warn("Exception closing index reader: " + e.toString());
+                log.warn("Exception closing index reader: {}", (Object) e);
             }
             sharedReader = null;
         }

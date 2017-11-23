@@ -164,7 +164,7 @@ public class Installer {
                 try {
                     installRepositoryConfig(config);
                 } catch (IOException e) {
-                    log.error("Error while installing new repository config '{}': {}", repXml, e.toString());
+                    log.error("Error while installing new repository config '{}': {}", repXml, e);
                     return C_BOOTSTRAP_EXISTS;
                 }
             }
@@ -182,7 +182,7 @@ public class Installer {
         try {
             installBootstrap(bootstrapConfigFile, repHome, repXml);
         } catch (IOException e) {
-            log.error("Error while installing '{}': {}", bootstrapConfigFile.getPath(), e.toString());
+            log.error("Error while installing '{}': {}", bootstrapConfigFile.getPath(), e);
             return C_INSTALL_ERROR;
         }
         return C_INSTALL_OK;

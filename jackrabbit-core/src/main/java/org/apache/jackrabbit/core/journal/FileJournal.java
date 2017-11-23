@@ -115,7 +115,7 @@ public class FileJournal extends AbstractJournal {
                 throw new JournalException(msg);
             }
             String revision = new File(repHome, DEFAULT_INSTANCE_FILE_NAME).getPath();
-            log.info("Revision not specified, using: " + revision);
+            log.info("Revision not specified, using: {}", revision);
             setRevision(revision);
         }
         if (directory == null) {
@@ -142,7 +142,7 @@ public class FileJournal extends AbstractJournal {
         journalFile = new File(rootDirectory, basename + "." + LOG_EXTENSION);
         globalRevision = new LockableFileRevision(new File(rootDirectory, REVISION_NAME));
 
-        log.info("FileJournal initialized at path: " + directory);
+        log.info("FileJournal initialized at path: {}", directory);
     }
 
     /**

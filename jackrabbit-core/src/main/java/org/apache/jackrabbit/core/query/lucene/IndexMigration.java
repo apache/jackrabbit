@@ -140,7 +140,7 @@ public class IndexMigration {
         if (!directoryManager.rename(migrationName, index.getName())) {
             throw new IOException("failed to move migrated directory " + migrationDir);
         }
-        log.info("Migrated " + index.getName());
+        log.info("Migrated {}", index.getName());
     }
 
     //---------------------------< internal helper >----------------------------

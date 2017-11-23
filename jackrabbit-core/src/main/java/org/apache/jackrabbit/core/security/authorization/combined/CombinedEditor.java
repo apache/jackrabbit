@@ -113,7 +113,7 @@ class CombinedEditor implements AccessControlEditor {
                 // return as soon as the first editor successfully handled the
                 // specified template
                 editor.setPolicy(nodePath, template);
-                log.debug("Set template " + template + " using " + editor);
+                log.debug("Set template {} using {}", template, editor);
                 return;
             } catch (AccessControlException e) {
                 log.debug(e.getMessage());
@@ -135,7 +135,7 @@ class CombinedEditor implements AccessControlEditor {
                 // return as soon as the first editor successfully handled the
                 // specified template
                 editor.removePolicy(nodePath, policy);
-                log.debug("Removed template " + policy + " using " + editor);
+                log.debug("Removed template {} using {}", policy, editor);
                 return;
             } catch (AccessControlException e) {
                 log.debug(e.getMessage());

@@ -342,7 +342,7 @@ public abstract class QueryResultImpl implements JackrabbitQueryResult {
                 try {
                     result.close();
                 } catch (IOException e) {
-                    log.warn("Unable to close query result: " + e);
+                    log.warn("Unable to close query result: {}", (Object) e);
                 }
             }
         }
@@ -569,7 +569,7 @@ public abstract class QueryResultImpl implements JackrabbitQueryResult {
                         }
                         getResults(num);
                     } catch (RepositoryException e) {
-                        log.warn("Exception getting more results: " + e);
+                        log.warn("Exception getting more results: {}", (Object) e);
                     }
                     // check again
                     if (nextPos >= resultNodes.size()) {

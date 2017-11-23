@@ -665,7 +665,7 @@ public abstract class AbstractBundlePersistenceManager implements
                 // check consistency
                 NodeId parentId = state.getParentId();
                 if (!modified.containsKey(parentId) && !deleted.contains(parentId)) {
-                    log.warn("Deleted node state's parent is not modified or deleted: " + parentId + "/" + state.getId());
+                    log.warn("Deleted node state's parent is not modified or deleted: {}/{}", parentId, state.getId());
                 }
             } else {
                 PropertyId id = (PropertyId) state.getId();

@@ -91,8 +91,8 @@ public final class DbUtility {
         if (message != null) {
             LOG.error(message);
         }
-        LOG.error("       Reason: " + e.getMessage());
-        LOG.error("   State/Code: " + e.getSQLState() + "/" + e.getErrorCode());
+        LOG.error("       Reason: {}", e.getMessage());
+        LOG.error("   State/Code: {}/{}", e.getSQLState(), e.getErrorCode());
         LOG.debug("   dump:", e);
     }
 }

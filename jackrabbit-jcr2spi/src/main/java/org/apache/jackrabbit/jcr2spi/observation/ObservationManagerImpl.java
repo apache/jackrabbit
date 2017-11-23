@@ -188,7 +188,7 @@ public class ObservationManagerImpl implements ObservationManager, InternalEvent
                 try {
                     listener.onEvent(eventIter);
                 } catch (Throwable t) {
-                    log.warn("EventConsumer threw exception: " + t.toString());
+                    log.warn("EventConsumer threw exception: {}", (Object) t);
                     log.debug("Stacktrace: ", t);
                     // move on to the next listener
                 }

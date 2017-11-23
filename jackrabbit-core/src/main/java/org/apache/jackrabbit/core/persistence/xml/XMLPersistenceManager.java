@@ -367,8 +367,8 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
                     }
                 } else {
                     // empty non-STRING value
-                    log.warn(state.getPropertyId() + ": ignoring empty value of type "
-                            + PropertyType.nameFromValue(type));
+                    log.warn("{}: ignoring empty value of type {}",
+                            state.getPropertyId(), PropertyType.nameFromValue(type));
                 }
             }
             walker.leaveElement();

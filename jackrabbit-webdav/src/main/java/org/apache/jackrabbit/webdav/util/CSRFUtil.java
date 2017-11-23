@@ -107,7 +107,7 @@ public class CSRFUtil {
                     allowedReferrerHosts.add(entry.trim());
                 }
             }
-            log.debug("CSRF protection enabled, allowed referrers: " + allowedReferrerHosts);
+            log.debug("CSRF protection enabled, allowed referrers: {}", allowedReferrerHosts);
         }
     }
 
@@ -144,7 +144,7 @@ public class CSRFUtil {
             // empty referrer headers are not allowed for POST + relevant
             // content types (see JCR-3909)
             if (refHeader == null) {
-                log.debug("POST with content type " + ct + " blocked due to missing referer header field");
+                log.debug("POST with content type {} blocked due to missing referer header field", ct);
                 return false;
             }
 
@@ -155,12 +155,12 @@ public class CSRFUtil {
                 // names
                 boolean ok = host == null || host.equals(request.getServerName()) || allowedReferrerHosts.contains(host);
                 if (!ok) {
-                    log.debug("POST with content type " + ct + " blocked due to referer header field being: " + refHeader);
+                    log.debug("POST with content type {} blocked due to referer header field being: {}", ct, refHeader);
                 }
                 return ok;
             } catch (URISyntaxException ex) {
                 // referrer malformed -> block access
-                log.debug("POST with content type " + ct + " blocked due to malformed referer header field: " + refHeader);
+                log.debug("POST with content type {} blocked due to malformed referer header field: {}", ct, refHeader);
                 return false;
             }
         }

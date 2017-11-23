@@ -145,7 +145,7 @@ public class DavResourceFactoryImpl implements DavResourceFactory {
                     resource = new DefaultItemResource(locator, session, this, null);
                 }
             } catch (RepositoryException e) {
-                log.error("Failed to build resource from item '"+ locator.getRepositoryPath() + "'");
+                log.error("Failed to build resource from item '{}'", locator.getRepositoryPath());
                 throw new JcrDavException(e);
             }
         }
@@ -182,7 +182,7 @@ public class DavResourceFactoryImpl implements DavResourceFactory {
             try {
                 resource = createResourceForItem(locator, sessionImpl);
             } catch (RepositoryException e) {
-                log.debug("Creating resource for non-existing repository item: " + locator.getRepositoryPath());
+                log.debug("Creating resource for non-existing repository item: {}", locator.getRepositoryPath());
                 // todo: is this correct?
                 resource = new VersionControlledItemCollection(locator, sessionImpl, this, null);
             }
@@ -243,7 +243,7 @@ public class DavResourceFactoryImpl implements DavResourceFactory {
             try {
                 vc = ((VersionControlledResource)resource).getVersionHistory() != null;
             } catch (DavException e) {
-                log.debug("Resource '" + resource.getHref() + "' is not version-controlled.");
+                log.debug("Resource '{}' is not version-controlled.", resource.getHref());
             }
         }
         return vc;

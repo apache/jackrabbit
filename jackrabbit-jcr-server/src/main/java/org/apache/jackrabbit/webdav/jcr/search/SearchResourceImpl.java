@@ -179,7 +179,7 @@ public class SearchResourceImpl implements SearchResource {
                     try {
                         session.setNamespacePrefix(nsReg.getPrefix(uri), uri);
                     } catch (RepositoryException e) {
-                        log.warn("Unable to reset mapping of namespace: " + uri);
+                        log.warn("Unable to reset mapping of namespace: {}", uri);
                     }
                 }
             }

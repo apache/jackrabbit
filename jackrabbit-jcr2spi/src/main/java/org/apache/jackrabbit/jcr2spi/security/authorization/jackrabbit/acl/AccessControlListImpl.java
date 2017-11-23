@@ -114,7 +114,7 @@ class AccessControlListImpl implements JackrabbitAccessControlList, AccessContro
                 AccessControlEntry ace = new AccessControlEntryImpl(principal, privileges, isAllow, restrictions, Collections.EMPTY_MAP, resolver, qValueFactory);
                 entries.add(ace);
             } catch (RepositoryException e) {
-                log.debug("Fail to create Entry for "+ aceNode.getName().toString());
+                log.debug("Fail to create Entry for {}", aceNode.getName());
             }
         }
     }

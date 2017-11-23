@@ -83,12 +83,12 @@ public class Status implements DavConstants, XmlSerializable{
                 ++start;
             }
             if (!"HTTP".equals(statusLine.substring(at, at += 4))) {
-                log.warn("Status-Line '" + statusLine + "' does not start with HTTP");
+                log.warn("Status-Line '{}' does not start with HTTP", statusLine);
             }
             //handle the HTTP-Version
             at = statusLine.indexOf(' ', at);
             if (at <= 0) {
-                log.warn("Unable to parse HTTP-Version from the status line: '" + statusLine + "'");
+                log.warn("Unable to parse HTTP-Version from the status line: '{}'", statusLine);
             }
             String version = (statusLine.substring(start, at)).toUpperCase();
             //advance through spaces

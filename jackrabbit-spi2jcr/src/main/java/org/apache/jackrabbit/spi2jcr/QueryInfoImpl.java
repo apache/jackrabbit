@@ -107,8 +107,7 @@ class QueryInfoImpl implements QueryInfo {
                                 (Row) super.next(), columnNames, selectorNames,
                                 idFactory, resolver, qValueFactory);
                     } catch (RepositoryException e) {
-                        log.warn("Exception when creating QueryResultRowImpl: " +
-                                e.getMessage(), e);
+                        log.warn("Exception when creating QueryResultRowImpl: {}", e.getMessage(), e);
                         throw new NoSuchElementException();
                     }
                 }

@@ -400,12 +400,12 @@ public class TxLockManagerImpl implements TxLockManager {
      */
     private static void removeExpired(Transaction tx, TransactionMap responsibleMap,
                                       TransactionResource resource) {
-        log.debug("Removing expired transaction lock " + tx);
+        log.debug("Removing expired transaction lock {}", tx);
         try {
             tx.rollback(resource);
             removeReferences(tx, responsibleMap, resource);
         } catch (DavException e) {
-            log.error("Error while removing expired transaction lock: " + e.getMessage());
+            log.error("Error while removing expired transaction lock: {}", e.getMessage());
         }
     }
 
@@ -419,7 +419,7 @@ public class TxLockManagerImpl implements TxLockManager {
      */
     private static void addReferences(Transaction tx, TransactionMap responsibleMap,
                                       TransactionResource resource) {
-        log.debug("Adding transactionId '" + tx.getId() + "' as session lock token.");
+        log.debug("Adding transactionId '{}' as session lock token.", tx.getId());
         resource.getSession().addLockToken(tx.getId());
 
         responsibleMap.put(tx.getId(), tx);
@@ -435,7 +435,7 @@ public class TxLockManagerImpl implements TxLockManager {
      */
     private static void removeReferences(Transaction tx, TransactionMap responsibleMap,
                                          TransactionResource resource) {
-        log.debug("Removing transactionId '" + tx.getId() + "' from session lock tokens.");
+        log.debug("Removing transactionId '{}' from session lock tokens.", tx.getId());
         resource.getSession().removeLockToken(tx.getId());
 
         responsibleMap.remove(tx.getId());
@@ -589,7 +589,7 @@ public class TxLockManagerImpl implements TxLockManager {
                     throw new DavException(DavServletResponse.SC_CONFLICT, "Unable to start local transaction: no repository item present at " + getResourcePath());
                 }
             } catch (RepositoryException e) {
-                log.error("Unexpected error: " + e.getMessage());
+                log.error("Unexpected error: {}", e.getMessage());
                 throw new JcrDavException(e);
             }
         }

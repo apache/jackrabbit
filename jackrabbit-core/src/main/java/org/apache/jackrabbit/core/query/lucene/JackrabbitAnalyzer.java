@@ -57,14 +57,14 @@ public class JackrabbitAnalyzer extends Analyzer {
         try {
             analyzerClass = Class.forName(className);
         } catch (ClassNotFoundException e) {
-            log.warn(className + " could not be found", e);
+            log.warn("{} could not be found", className, e);
             return DEFAULT_ANALYZER;
         }
         if (!Analyzer.class.isAssignableFrom(analyzerClass)) {
-            log.warn(className + " is not a Lucene Analyzer");
+            log.warn("{} is not a Lucene Analyzer", className);
             return DEFAULT_ANALYZER;
         } else if (JackrabbitAnalyzer.class.isAssignableFrom(analyzerClass)) {
-            log.warn(className + " can not be used as a JackrabbitAnalyzer component");
+            log.warn("{} can not be used as a JackrabbitAnalyzer component", className);
             return DEFAULT_ANALYZER;
         }
 
@@ -90,7 +90,7 @@ public class JackrabbitAnalyzer extends Analyzer {
             }
         }
 
-        log.warn(className + " could not be instantiated", cause);
+        log.warn("{} could not be instantiated", className, cause);
         return DEFAULT_ANALYZER;
     }
 

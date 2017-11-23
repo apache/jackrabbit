@@ -651,7 +651,7 @@ public class WorkspaceManager
         try {
             updateSync.acquire();
         } catch (InterruptedException e) {
-            log.warn("Exception while disposing WorkspaceManager: " + e);
+            log.warn("Exception while disposing WorkspaceManager: {}", (Object) e);
             return;
         }
         try {
@@ -667,7 +667,7 @@ public class WorkspaceManager
             service.dispose(sessionInfo);
             cache.dispose();
         } catch (Exception e) {
-            log.warn("Exception while disposing WorkspaceManager: " + e);
+            log.warn("Exception while disposing WorkspaceManager: {}", (Object) e);
         } finally {
             updateSync.release();
         }
@@ -820,7 +820,7 @@ public class WorkspaceManager
                     try {
                         lstnr.onEvent(eventBundle);
                     } catch (Exception e) {
-                        log.warn("Exception in event polling thread: " + e);
+                        log.warn("Exception in event polling thread: {}", (Object) e);
                         log.debug("Dump:", e);
                     }
                 }
@@ -864,7 +864,7 @@ public class WorkspaceManager
                 ItemState target = changeLog.getTarget();
                 batch = service.createBatch(sessionInfo, target.getId());
                 for (Operation op : changeLog.getOperations()) {
-                    log.debug("executing " + op.getName());
+                    log.debug("executing {}", op.getName());
                     op.accept(this);
                 }
             } catch (RepositoryException e) {
@@ -904,7 +904,7 @@ public class WorkspaceManager
          * @throws javax.jcr.version.VersionException
          */
         private void execute(Operation workspaceOperation) throws RepositoryException, ConstraintViolationException, AccessDeniedException, ItemExistsException, NoSuchNodeTypeException, UnsupportedRepositoryOperationException, VersionException {
-            log.debug("executing " + workspaceOperation.getName());
+            log.debug("executing {}", workspaceOperation.getName());
             workspaceOperation.accept(this);
         }
 
@@ -1249,11 +1249,11 @@ public class WorkspaceManager
                         onEventReceived(bundles, iel);
                     }
                 } catch (UnsupportedRepositoryOperationException e) {
-                    log.error("SPI implementation does not support observation: " + e);
+                    log.error("SPI implementation does not support observation: {}", (Object) e);
                     // terminate
                     break;
                 } catch (RepositoryException e) {
-                    log.info("Workspace=" + wspName + ": Exception while retrieving event bundles: " + e);
+                    log.info("Workspace={}: Exception while retrieving event bundles: {}", wspName, e);
                     log.debug("Dump:", e);
                 } catch (InterruptedException e) {
                     // terminate

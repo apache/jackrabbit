@@ -217,10 +217,10 @@ public abstract class AbstractNodeType implements NodeType {
         try {
             ntName = resolver.getQName(nodeTypeName);
         } catch (NamespaceException e) {
-            log.warn("invalid node type name: " + nodeTypeName, e);
+            log.warn("invalid node type name: {}", nodeTypeName, e);
             return false;
         } catch (NameException e) {
-            log.warn("invalid node type name: " + nodeTypeName, e);
+            log.warn("invalid node type name: {}", nodeTypeName, e);
             return false;
         }
         return isNodeType(ntName);

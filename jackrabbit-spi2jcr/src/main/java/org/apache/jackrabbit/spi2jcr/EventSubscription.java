@@ -208,7 +208,7 @@ class EventSubscription implements Subscription, EventListener {
                 Event spiEvent = eventFactory.fromJCREvent(events.nextEvent());
                 spiEvents.add(spiEvent);
             } catch (Exception ex) {
-                log.warn("Unable to create SPI Event: " + ex);
+                log.warn("Unable to create SPI Event: {}", (Object) ex);
             }
         }
         EventBundle bundle = new EventBundleImpl(spiEvents, isLocal);

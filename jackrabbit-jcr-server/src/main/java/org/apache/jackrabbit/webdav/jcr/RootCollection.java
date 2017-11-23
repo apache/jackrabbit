@@ -111,7 +111,7 @@ public class RootCollection extends AbstractResource {
                     prop = new JcrSupportedPrivilegesProperty(getRepositorySession()).asDavProperty();
                 }
             } catch (RepositoryException e) {
-                log.error("Failed to build SupportedPrivilegeSet property: " + e.getMessage());
+                log.error("Failed to build SupportedPrivilegeSet property: {}", e.getMessage());
             }
         }
         return prop;

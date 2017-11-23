@@ -160,7 +160,7 @@ public class SessionImporter implements Importer, SessionListener {
        if (parent == null) {
            // parent node was skipped, skip this child node also
            parents.push(null); // push null onto stack for skipped node
-           log.debug("Skipping node '" + nodeInfo.getName() + "'.");
+           log.debug("Skipping node '{}'.", nodeInfo.getName());
            return;
        }
 
@@ -182,7 +182,7 @@ public class SessionImporter implements Importer, SessionListener {
                    if (def.isProtected() && entExisting.includesNodeType(nodeInfo.getNodeTypeName())) {
                        // skip protected node
                        parents.push(null); // push null onto stack for skipped node
-                       log.debug("skipping protected node " + LogUtil.safeGetJCRPath(existing, session.getPathResolver()));
+                       log.debug("skipping protected node {}", LogUtil.safeGetJCRPath(existing, session.getPathResolver()));
                        return;
                    }
                    if (def.isAutoCreated() && entExisting.includesNodeType(nodeInfo.getNodeTypeName())) {
@@ -433,7 +433,7 @@ public class SessionImporter implements Importer, SessionListener {
         // do create new nodeState
         QNodeDefinition def = session.getItemDefinitionProvider().getQNodeDefinition(parentNtNames, nodeInfo.getName(), nodeInfo.getNodeTypeName());
         if (def.isProtected()) {
-            log.debug("Skipping protected nodeState (" + nodeInfo.getName() + ")");
+            log.debug("Skipping protected nodeState ({})", nodeInfo.getName());
             return null;
         } else {
             Name ntName = nodeInfo.getNodeTypeName();
@@ -481,7 +481,7 @@ public class SessionImporter implements Importer, SessionListener {
                 def = existing.getDefinition();
                 if (def.isProtected()) {
                     // skip protected property
-                    log.debug("skipping protected property " + LogUtil.safeGetJCRPath(existing, session.getPathResolver()));
+                    log.debug("skipping protected property {}", LogUtil.safeGetJCRPath(existing, session.getPathResolver()));
                     return;
                 }
                 if (def.isAutoCreated()
@@ -510,7 +510,7 @@ public class SessionImporter implements Importer, SessionListener {
             }
             if (def.isProtected()) {
                 // skip protected property
-                log.debug("skipping protected property " + propName);
+                log.debug("skipping protected property {}", propName);
                 return;
             }
         }

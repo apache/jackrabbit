@@ -351,7 +351,8 @@ public class UserManagerImpl extends ProtectedItemModifier
         try {
             nr = new IndexNodeResolver(session, session);
         } catch (RepositoryException e) {
-            log.debug("UserManager: no QueryManager available for workspace '" + session.getWorkspace().getName() + "' -> Use traversing node resolver.");
+            log.debug("UserManager: no QueryManager available for workspace '{}' -> Use traversing node resolver.",
+                    session.getWorkspace().getName());
             nr = new TraversingNodeResolver(session, session);
         }
         authResolver = nr;
@@ -398,7 +399,7 @@ public class UserManagerImpl extends ProtectedItemModifier
     public int getMemberSplitSize() {
         int splitSize = config.getConfigValue(PARAM_GROUP_MEMBERSHIP_SPLIT_SIZE, 0);
         if (splitSize != 0 && splitSize < 4) {
-            log.warn("Invalid value {} for {}. Expected integer >= 4", splitSize, PARAM_GROUP_MEMBERSHIP_SPLIT_SIZE);
+            log.warn("Invalid value {} for " + PARAM_GROUP_MEMBERSHIP_SPLIT_SIZE + ". Expected integer >= 4", splitSize);
             splitSize = 0;
         }
         return splitSize;
@@ -601,7 +602,7 @@ public class UserManagerImpl extends ProtectedItemModifier
                 session.save();
             }
 
-            log.debug("User created: " + userID + "; " + userNode.getPath());
+            log.debug("User created: {}; {}", userID, userNode.getPath());
             return user;
         } catch (RepositoryException e) {
             // something went wrong -> revert changes and re-throw
@@ -686,7 +687,7 @@ public class UserManagerImpl extends ProtectedItemModifier
                 session.save();
             }
 
-            log.debug("Group created: " + groupID + "; " + groupNode.getPath());
+            log.debug("Group created: {}; {}", groupID, groupNode.getPath());
             return group;
         } catch (RepositoryException e) {
             session.refresh(false);
@@ -844,18 +845,18 @@ public class UserManagerImpl extends ProtectedItemModifier
                     authorz = createUser(n);
                 } else {
                     /* user node outside of configured tree -> return null */
-                    log.error("User node '" + path + "' outside of configured user tree ('" + usersPath + "') -> Not a valid user.");
+                    log.error("User node '{}' outside of configured user tree ('{}') -> Not a valid user.", path, usersPath);
                 }
             } else if (n.isNodeType(NT_REP_GROUP)) {
                 if (Text.isDescendant(groupsPath, path)) {
                     authorz = createGroup(n);
                 } else {
                     /* group node outside of configured tree -> return null */
-                    log.error("Group node '" + path + "' outside of configured group tree ('" + groupsPath + "') -> Not a valid group.");
+                    log.error("Group node '{}' outside of configured group tree ('{}') -> Not a valid group.", path, groupsPath);
                 }
             } else {
                 /* else some other node type -> return null. */
-                log.warn("Unexpected user/group node type " + n.getPrimaryNodeType().getName());
+                log.warn("Unexpected user/group node type {}", n.getPrimaryNodeType().getName());
             }
         } /* else no matching node -> return null */
         return authorz;
@@ -1027,21 +1028,21 @@ public class UserManagerImpl extends ProtectedItemModifier
             if (!isAutoSave()) {
                 session.save();
             }
-            log.info("... created admin user with id \'" + adminId + "\' and default pw.");
+            log.info("... created admin user with id '{}' and default pw.", adminId);
         } catch (ItemExistsException e) {
             NodeImpl conflictingNode = session.getNodeById(buildNodeId(adminId));
             String conflictPath = conflictingNode.getPath();
-            log.error("Detected conflicting node " + conflictPath + " of node type " + conflictingNode.getPrimaryNodeType().getName() + ".");
+            log.error("Detected conflicting node {} of node type {}.", conflictPath, conflictingNode.getPrimaryNodeType().getName());
 
             // TODO move conflicting node of type rep:User instead of removing and recreating.
             conflictingNode.remove();
-            log.info("Removed conflicting node at " + conflictPath);
+            log.info("Removed conflicting node at {}", conflictPath);
 
             admin = createUser(adminId, adminId);
             if (!isAutoSave()) {
                 session.save();
             }
-            log.info("Resolved conflict and (re)created admin user with id \'" + adminId + "\' and default pw.");
+            log.info("Resolved conflict and (re)created admin user with id '{}' and default pw.", adminId);
         }
         return admin;
     }
@@ -1396,13 +1397,13 @@ public class UserManagerImpl extends ProtectedItemModifier
             if (config != null) {
                 d = config.getConfigValue(PARAM_DEFAULT_DEPTH, DEFAULT_DEPTH);
                 if (d <= 0) {
-                    log.warn("Invalid defaultDepth '" + d + "' -> using default.");
+                    log.warn("Invalid defaultDepth '{}' -> using default.", d);
                     d = DEFAULT_DEPTH;
                 }
                 expand = config.getConfigValue(PARAM_AUTO_EXPAND_TREE, false);
                 size = config.getConfigValue(PARAM_AUTO_EXPAND_SIZE, DEFAULT_SIZE);
                 if (expand && size <= 0) {
-                    log.warn("Invalid autoExpandSize '" + size + "' -> using default.");
+                    log.warn("Invalid autoExpandSize '{}' -> using default.", size);
                     size = DEFAULT_SIZE;
                 }
             }
@@ -1440,7 +1441,7 @@ public class UserManagerImpl extends ProtectedItemModifier
             while (((NodeImpl) folder).hasNode(nodeName)) {
                 NodeImpl colliding = ((NodeImpl) folder).getNode(nodeName);
                 if (colliding.isNodeType(NT_REP_AUTHORIZABLE_FOLDER)) {
-                    log.warn("Existing folder node collides with user/group to be created. Expanding path: " + colliding.getPath());
+                    log.warn("Existing folder node collides with user/group to be created. Expanding path: {}", colliding.getPath());
                     folder = colliding;
                 } else {
                     // should never get here as folder creation above already
@@ -1567,7 +1568,7 @@ public class UserManagerImpl extends ProtectedItemModifier
                          - note, that this behavior has been preferred over tmp.
                            removing and recreating the colliding authorizable node.
                         */
-                        log.warn("Auto-expanding aborted. An existing authorizable node '" + n.getName() +"'conflicts with intermediate folder to be created.");
+                        log.warn("Auto-expanding aborted. An existing authorizable node '{}' conflicts with intermediate folder to be created.", n.getName());
                         break;
                     } else {
                         // should never get here: some other, unexpected node type

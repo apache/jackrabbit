@@ -132,7 +132,7 @@ public class SubscriptionManagerImpl implements SubscriptionManager, Transaction
                     subscription.getNodetypeNameFilters(),
                     subscription.isNoLocal());
         } catch (RepositoryException e) {
-            log.error("Unable to register eventlistener: "+e.getMessage());
+            log.error("Unable to register eventlistener: {}", e.getMessage());
             throw new JcrDavException(e);
         }
     }
@@ -174,7 +174,7 @@ public class SubscriptionManagerImpl implements SubscriptionManager, Transaction
             resource.getSession().removeReference(sId);
 
         } catch (RepositoryException e) {
-            log.error("Unable to remove eventlistener: "+e.getMessage());
+            log.error("Unable to remove eventlistener: {}", e.getMessage());
             throw new JcrDavException(e);
         }
     }

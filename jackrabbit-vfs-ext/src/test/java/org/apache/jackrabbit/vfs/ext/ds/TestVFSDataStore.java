@@ -150,12 +150,11 @@ public class TestVFSDataStore extends TestCaseBase {
     public void testSetFileSystemOptionsPropertiesInString() throws Exception {
         try {
             long start = System.currentTimeMillis();
-            LOG.info("Testcase: " + this.getClass().getName()
-                + "#setFileSystemOptionsPropertiesInString, testDir=" + dataStoreDir);
+            LOG.info("Testcase: {}#setFileSystemOptionsPropertiesInString, testDir={}",
+                    getClass().getName(), dataStoreDir);
             doSetFileSystemOptionsPropertiesInString();
-            LOG.info("Testcase: " + this.getClass().getName()
-                + "#setFileSystemOptionsPropertiesInString finished, time taken = ["
-                + (System.currentTimeMillis() - start) + "]ms");
+            LOG.info("Testcase: {}#setFileSystemOptionsPropertiesInString finished, time taken = [{}]ms",
+                    getClass().getName(), System.currentTimeMillis() - start);
         } catch (Exception e) {
             LOG.error("error:", e);
             fail(e.getMessage());

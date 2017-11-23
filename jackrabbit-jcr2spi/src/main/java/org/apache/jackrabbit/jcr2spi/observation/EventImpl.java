@@ -159,7 +159,7 @@ final class EventImpl implements Event {
             try {
                 sb.append(getPath());
             } catch (RepositoryException e) {
-                log.error("Exception retrieving path: " + e);
+                log.error("Exception retrieving path: {}", (Object) e);
                 sb.append("[Error retrieving path]");
             }
             sb.append(", ").append(valueOf(getType())).append(": ");

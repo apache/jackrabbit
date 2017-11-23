@@ -256,8 +256,8 @@ class BundleWriter {
                                         values[i] = InternalValue.create(blobStore.get(blobId));
                                     }
                                 } catch (Exception e) {
-                                    log.error("Error while reloading blob. truncating. id="
-                                            + state.getId() + " idx=" + i + " size=" + size, e);
+                                    log.error("Error while reloading blob. truncating. id={} idx={} size={}",
+                                            new Object[] { state.getId(), i, size, e });
                                     values[i] = InternalValue.create(new byte[0]);
                                 }
                                 val.discard();

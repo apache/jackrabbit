@@ -122,7 +122,7 @@ public abstract class ItemState {
 
             case STATUS_UNDEFINED:
                 // see http://issues.apache.org/jira/browse/JCR-897
-                log.debug("creating ItemState instance with initialStatus=" + STATUS_UNDEFINED + ", id=" + overlayedState.getId());
+                log.debug("creating ItemState instance with initialStatus=" + STATUS_UNDEFINED + ", id={}", overlayedState.getId());
                 status = initialStatus;
                 break;
 

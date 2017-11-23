@@ -153,7 +153,7 @@ public class NodeTypeDefinitionImpl implements NodeTypeDefinition {
                 dstn[i] = resolver.getJCRName(stNames[i]);
             } catch (NamespaceException e) {
                 // should never get here
-                log.error("invalid node type name: " + stNames[i], e);
+                log.error("invalid node type name: {}", stNames[i], e);
                 dstn[i] = stNames[i].toString();
             }
         }

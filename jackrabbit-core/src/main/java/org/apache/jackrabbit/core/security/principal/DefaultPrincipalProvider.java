@@ -129,7 +129,7 @@ public class DefaultPrincipalProvider extends AbstractPrincipalProvider implemen
                 return everyonePrincipal;
             }
         } catch (RepositoryException e) {
-            log.error("Failed to access Authorizable for Principal " + principalName, e);
+            log.error("Failed to access Authorizable for Principal {}", principalName, e);
         }
         return null;
     }
@@ -274,10 +274,10 @@ public class DefaultPrincipalProvider extends AbstractPrincipalProvider implemen
                         membership.add(gp);
                     }
                 } else {
-                    log.debug("Cannot find authorizable for principal " + princ.getName());
+                    log.debug("Cannot find authorizable for principal {}", princ.getName());
                 }
             } catch (RepositoryException e) {
-                log.warn("Failed to determine membership for " + princ.getName(), e.getMessage());
+                log.warn("Failed to determine membership for {}", princ.getName(), e);
             }
         return membership;
     }

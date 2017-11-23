@@ -85,12 +85,12 @@ public class HttpLock extends BaseDavRequest {
         if (ltHeader == null || ltHeader.length == 0) {
             return null;
         } else if (ltHeader.length != 1) {
-            LOG.debug("Multiple 'Lock-Token' header fields in response for " + getURI() + ": " + Arrays.asList(ltHeader));
+            LOG.debug("Multiple 'Lock-Token' header fields in response for {}: {}", getURI(), Arrays.asList(ltHeader));
             return null;
         } else {
             String v = ltHeader[0].getValue().trim();
             if (!v.startsWith("<") || !v.endsWith(">")) {
-                LOG.debug("Invalid 'Lock-Token' header field in response for " + getURI() + ": " + Arrays.asList(ltHeader));
+                LOG.debug("Invalid 'Lock-Token' header field in response for {}: {}", getURI(), Arrays.asList(ltHeader));
                 return null;
             } else {
                 return v.substring(1, v.length() - 1);

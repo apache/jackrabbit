@@ -77,7 +77,7 @@ public class XPathQueryEvaluator implements XPathQueryBuilder.ConditionVisitor {
         Direction sortDir = builder.getSortDirection();
         if (bound != null) {
             if (sortCol == null) {
-                log.warn("Ignoring bound {} since no sort order is specified");
+                log.warn("Ignoring bound {} since no sort order is specified", bound);
             } else {
                 Condition boundCondition = builder.property(sortCol, getCollation(sortDir), bound);
                 condition = condition == null

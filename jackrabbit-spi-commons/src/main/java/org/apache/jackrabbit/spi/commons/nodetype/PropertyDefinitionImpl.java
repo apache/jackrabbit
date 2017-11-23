@@ -100,7 +100,8 @@ public class PropertyDefinitionImpl extends ItemDefinitionImpl implements Proper
             } catch (RepositoryException e) {
                 // should never get here
                 String propName = (getName() == null) ? "[null]" : getName();
-                log.error("illegal default value specified for property " + propName + " in node type " + getDeclaringNodeType(), e);
+                log.error("illegal default value specified for property {} in node type {}",
+                        new Object[] { propName, getDeclaringNodeType(), e });
                 return null;
             }
         }

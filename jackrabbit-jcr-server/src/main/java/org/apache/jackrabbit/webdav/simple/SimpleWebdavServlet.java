@@ -141,7 +141,7 @@ public abstract class SimpleWebdavServlet extends AbstractWebdavServlet {
             resourcePathPrefix = resourcePathPrefix.substring(0, resourcePathPrefix.length() - 1);
         }
         getServletContext().setAttribute(CTX_ATTR_RESOURCE_PATH_PREFIX, resourcePathPrefix);
-        log.info(INIT_PARAM_RESOURCE_PATH_PREFIX + " = '" + resourcePathPrefix + "'");
+        log.info(INIT_PARAM_RESOURCE_PATH_PREFIX + " = '{}'", resourcePathPrefix);
 
         config = new ResourceConfig(getDetector());
         String configParam = getInitParameter(INIT_PARAM_RESOURCE_CONFIG);

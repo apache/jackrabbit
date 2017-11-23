@@ -139,7 +139,7 @@ public class ConsistencyCheck {
         pathBuilder.addLast(NameConstants.JCR_NODETYPES);
         try {
             Path path = pathBuilder.getPath();
-            log.info("consistency check will skip " + path);
+            log.info("consistency check will skip {}", path);
             ignoredPaths.add(path);
         } catch (MalformedPathException e) {
             //will never happen
@@ -190,12 +190,12 @@ public class ConsistencyCheck {
                 if (error.repairable()) {
                     error.repair();
                 } else {
-                    log.warn("Not repairable: " + error);
+                    log.warn("Not repairable: {}", error);
                     notRepairable++;
                 }
             } catch (Exception e) {
                 if (ignoreFailure) {
-                    log.warn("Exception while repairing: " + error, e);
+                    log.warn("Exception while repairing: {}", error, e);
                 } else if (e instanceof IOException) {
                     throw (IOException) e;
                 } else {
@@ -203,9 +203,9 @@ public class ConsistencyCheck {
                 }
             }
         }
-        log.info("Repaired " + (errors.size() - notRepairable) + " errors.");
+        log.info("Repaired {} errors.", errors.size() - notRepairable);
         if (notRepairable > 0) {
-            log.warn("" + notRepairable + " error(s) not repairable.");
+            log.warn("{} error(s) not repairable.", notRepairable);
         }
     }
 
@@ -222,7 +222,7 @@ public class ConsistencyCheck {
      * @throws IOException if an error occurs while running the check.
      */
     private void run() throws IOException {
-        log.info("Checking index of workspace " + handler.getContext().getWorkspace());
+        log.info("Checking index of workspace {}", handler.getContext().getWorkspace());
         loadNodes();
         if (nodeIds != null) {
             checkIndexConsistency();
@@ -246,7 +246,7 @@ public class ConsistencyCheck {
                 try {
                     final ConsistencyCheckError error = iterator.next();
                     if (!error.doubleCheck(handler, stateMgr)) {
-                        log.info("False positive: " + error.toString());
+                        log.info("False positive: {}", error);
                         iterator.remove();
                     }
                 } catch (RepositoryException e) {
@@ -271,7 +271,7 @@ public class ConsistencyCheck {
 
                     count++;
                     if (count % 1000 == 0) {
-                        log.info(pm + ": loaded " + count + " node ids...");
+                        log.info("{}: loaded {} node ids...", pm, count);
                     }
 
                     nodeIds.put(nodeId, Boolean.FALSE);
@@ -301,7 +301,7 @@ public class ConsistencyCheck {
             for (int i = 0; i < reader.maxDoc(); i++) {
                 if (i > 10 && i % (reader.maxDoc() / 5) == 0) {
                     long progress = Math.round((100.0 * (float) i) / ((float) reader.maxDoc() * 2f));
-                    log.info("progress: " + progress + "%");
+                    log.info("progress: {}%", progress);
                 }
                 if (reader.isDeleted(i)) {
                     continue;
@@ -335,7 +335,7 @@ public class ConsistencyCheck {
             for (int i = 0; i < reader.maxDoc(); i++) {
                 if (i > 10 && i % (reader.maxDoc() / 5) == 0) {
                     long progress = Math.round((100.0 * (float) i) / ((float) reader.maxDoc() * 2f));
-                    log.info("progress: " + (progress + 50) + "%");
+                    log.info("progress: {}%", progress + 50);
                 }
                 if (reader.isDeleted(i)) {
                     continue;
@@ -394,7 +394,7 @@ public class ConsistencyCheck {
             try {
                 if (++i > 10 && i % (size / 10) == 0) {
                     long progress = Math.round((100.0 * (float) i) / (float) size);
-                    log.info("progress: " + progress + "%");
+                    log.info("progress: {}%", progress);
                 }
                 if (!indexed && !isIgnored(nodeId) && !isExcluded(nodeId)) {
                     NodeState nodeState = getNodeState(nodeId);
@@ -403,7 +403,7 @@ public class ConsistencyCheck {
                     }
                 }
             } catch (ItemStateException e) {
-                log.error("Failed to check node: " + nodeId, e);
+                log.error("Failed to check node: {}", nodeId, e);
             }
         }
     }
@@ -449,11 +449,11 @@ public class ConsistencyCheck {
         if (parentId != null) {
             final NodeState parentState = getNodeState(parentId);
             if (parentState == null) {
-                log.warn("Node missing from index is orphaned node: " + nodeId);
+                log.warn("Node missing from index is orphaned node: {}", nodeId);
                 return true;
             }
             if (!parentState.hasChildNodeEntry(nodeId)) {
-                log.warn("Node missing from index is abandoned node: " + nodeId);
+                log.warn("Node missing from index is abandoned node: {}", nodeId);
                 return true;
             }
         }
@@ -531,7 +531,7 @@ public class ConsistencyCheck {
             NodeId ancestorId = parentId;
             while (ancestorId != null && nodeIds.containsKey(ancestorId) && nodeIds.get(ancestorId)) {
                 NodeState n = (NodeState) stateMgr.getItemState(ancestorId);
-                log.info("Repairing missing node " + getPath(n) + " (" + ancestorId + ")");
+                log.info("Repairing missing node {} ({})", getPath(n), ancestorId);
                 Document d = index.createDocument(n);
                 index.addDocument(d);
                 nodeIds.put(n.getNodeId(), Boolean.TRUE);
@@ -581,7 +581,7 @@ public class ConsistencyCheck {
          * No operation.
          */
         public void repair() {
-            log.warn("Unknown parent for " + id + " cannot be repaired");
+            log.warn("Unknown parent for {} cannot be repaired", id);
         }
 
         @Override
@@ -626,7 +626,7 @@ public class ConsistencyCheck {
             index.removeAllDocuments(id);
             try {
                 NodeState node = (NodeState) stateMgr.getItemState(id);
-                log.info("Re-indexing node with wrong parent in index: " + getPath(node));
+                log.info("Re-indexing node with wrong parent in index: {}", getPath(node));
                 Document d = index.createDocument(node);
                 index.addDocument(d);
                 nodeIds.put(node.getNodeId(), Boolean.TRUE);
@@ -681,7 +681,7 @@ public class ConsistencyCheck {
             // then re-index the node
             try {
                 NodeState node = (NodeState) stateMgr.getItemState(id);
-                log.info("Re-indexing duplicate node occurrences in index: " + getPath(node));
+                log.info("Re-indexing duplicate node occurrences in index: {}", getPath(node));
                 Document d = index.createDocument(node);
                 index.addDocument(d);
                 nodeIds.put(node.getNodeId(), Boolean.TRUE);
@@ -719,7 +719,7 @@ public class ConsistencyCheck {
          * @throws IOException if an error occurs while repairing.
          */
         public void repair() throws IOException {
-            log.info("Removing deleted node from index: " + id);
+            log.info("Removing deleted node from index: {}", id);
             index.removeDocument(id);
         }
 
@@ -751,7 +751,7 @@ public class ConsistencyCheck {
         void repair() throws Exception {
             try {
                 NodeState nodeState = (NodeState) stateMgr.getItemState(id);
-                log.info("Adding missing node to index: " + getPath(nodeState));
+                log.info("Adding missing node to index: {}", getPath(nodeState));
                 final Iterator<NodeId> remove = Collections.<NodeId>emptyList().iterator();
                 final Iterator<NodeState> add = Collections.singletonList(nodeState).iterator();
                 handler.updateNodes(remove, add);

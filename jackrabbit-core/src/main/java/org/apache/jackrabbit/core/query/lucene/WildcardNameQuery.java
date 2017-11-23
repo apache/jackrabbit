@@ -64,7 +64,7 @@ public class WildcardNameQuery extends WildcardQuery {
             sb.append(nsMappings.getPrefix(resolver.getURI(prefix)));
         } catch (NamespaceException e) {
             // prefix in pattern is probably unknown
-            log.debug("unknown namespace prefix in pattern: " + pattern);
+            log.debug("unknown namespace prefix in pattern: {}", pattern);
             // -> ignore and use empty string for index internal prefix
             //    this will not match anything
         }

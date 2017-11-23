@@ -220,8 +220,8 @@ public abstract class DatabasePersistenceManager extends AbstractPersistenceMana
 
         DatabaseMetaData meta = con.getMetaData();
         try {
-            log.info("Database: " + meta.getDatabaseProductName() + " / " + meta.getDatabaseProductVersion());
-            log.info("Driver: " + meta.getDriverName() + " / " + meta.getDriverVersion());
+            log.info("Database: {} / {}", meta.getDatabaseProductName(), meta.getDatabaseProductVersion());
+            log.info("Driver: {} / {}", meta.getDriverName(), meta.getDriverVersion());
         } catch (SQLException e) {
             log.warn("Can not retrieve database and driver name / version", e);
         }
@@ -566,7 +566,7 @@ public abstract class DatabasePersistenceManager extends AbstractPersistenceMana
                         try {
                             blobStore.remove(blobId);
                         } catch (Exception e) {
-                            log.warn("failed to remove from BLOBStore: " + blobId, e);
+                            log.warn("failed to remove from BLOBStore: {}", blobId, e);
                         }
                     }
                 }
@@ -973,8 +973,8 @@ public abstract class DatabasePersistenceManager extends AbstractPersistenceMana
         if (message != null) {
             log.error(message);
         }
-        log.error("    reason: " + se.getMessage());
-        log.error("state/code: " + se.getSQLState() + "/" + se.getErrorCode());
+        log.error("    reason: {}", se.getMessage());
+        log.error("state/code: {}/{}", se.getSQLState(), se.getErrorCode());
         log.debug("      dump:", se);
     }
 

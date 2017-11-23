@@ -393,9 +393,9 @@ public class SearchManager implements SynchronousEventListener {
                     // an external event
                     EventImpl e = addedNodes.get(id);
                     if (e == null || !e.isExternal()) {
-                        log.error("Unable to index node " + id + ": does not exist");
+                        log.error("Unable to index node {}: does not exist", id);
                     } else {
-                        log.info("Node no longer available " + id + ", skipped.");
+                        log.info("Node no longer available {}, skipped.", id);
                     }
                 }
                 return item;

@@ -158,7 +158,7 @@ class EventConsumer {
                 try {
                     granted = canRead(state);
                 } catch (RepositoryException e) {
-                    log.warn("Unable to check access rights for item: " + targetId);
+                    log.warn("Unable to check access rights for item: {}", targetId);
                 }
                 if (!granted) {
                     if (denied == null) {
@@ -196,7 +196,7 @@ class EventConsumer {
                 try {
                     granted = canRead(evState);
                 } catch (RepositoryException e) {
-                    log.warn("Unable to check access rights for item: " + targetId);
+                    log.warn("Unable to check access rights for item: {}", targetId);
                 }
                 if (!granted) {
                     if (denied == null) {
@@ -248,10 +248,8 @@ class EventConsumer {
             long time = System.currentTimeMillis();
             listener.onEvent(it);
             time = System.currentTimeMillis() - time;
-            if (log.isDebugEnabled()) {
-                log.debug("listener {} processed events in {} ms.",
-                        listener.getClass().getName(), time);
-            }
+            log.debug("listener {} processed events in {} ms.",
+                    listener.getClass().getName(), time);
         } else {
             // otherwise skip this listener
         }

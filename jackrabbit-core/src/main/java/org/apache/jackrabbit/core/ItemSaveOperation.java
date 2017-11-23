@@ -173,7 +173,7 @@ class ItemSaveOperation implements SessionWriteOperation<Object> {
                                         }
                                     } catch (ItemStateException ise) {
                                         // should never get here
-                                        log.warn("failed to retrieve transient state: " + newParentId, ise);
+                                        log.warn("failed to retrieve transient state: {}", newParentId, ise);
                                     }
                                 }
                             }
@@ -330,8 +330,7 @@ class ItemSaveOperation implements SessionWriteOperation<Object> {
                                 + "removed externally: " + this);
 
                     default:
-                        log.warn("Unexpected item state status: "
-                                + transientState.getStatus() + " of " + this);
+                        log.warn("Unexpected item state status: {} of {}", transientState.getStatus(), this);
                         // ignore
                         break;
                 }
@@ -360,8 +359,7 @@ class ItemSaveOperation implements SessionWriteOperation<Object> {
                             + " removed externally: " + this);
 
                 default:
-                    log.warn("Unexpected item state status:"
-                            + state.getStatus() + " of " + this);
+                    log.warn("Unexpected item state status:{} of {}", state.getStatus(), this);
                     // ignore
                     break;
             }
@@ -896,7 +894,7 @@ class ItemSaveOperation implements SessionWriteOperation<Object> {
                 String msg = itemMgr.safeGetJCRPath(id)
                     + ": failed to restore transient state";
                 if (log.isDebugEnabled()) {
-                    log.warn(msg, re);
+                    log.debug(msg, re);
                 } else {
                     log.warn(msg);
                 }

@@ -42,7 +42,7 @@ public class RemoveVersionLabel extends VersionOperation {
         String[] labels = vh.getVersionLabels();
         if (labels.length > 0) {
             String label = labels[getRandom().nextInt(labels.length)];
-            log.info(n.getPath() + " -> " + label);
+            log.info("{} -> {}", n.getPath(), label);
             vh.removeVersionLabel(label);
         }
         return wrapWithIterator(n);

@@ -152,13 +152,13 @@ public class DefaultItemResource extends AbstractItemResource {
             transformer.transform(
                     new DOMSource(doc), new SAXResult(handler));
         } catch (SAXException e) {
-            log.error("Failed to set up XML serializer for " + item, e);
+            log.error("Failed to set up XML serializer for {}", item, e);
         } catch (TransformerConfigurationException e) {
-            log.error("Failed to set up XML transformer for " + item, e);
+            log.error("Failed to set up XML transformer for {}", item, e);
         } catch (ParserConfigurationException e) {
-            log.error("Failed to set up XML document for " + item, e);
+            log.error("Failed to set up XML document for {}", item, e);
         } catch (TransformerException e) {
-            log.error("Failed to serialize the values of " + item, e);
+            log.error("Failed to serialize the values of {}", item, e);
         }
     }
 
@@ -176,7 +176,7 @@ public class DefaultItemResource extends AbstractItemResource {
                 binary.dispose();
             }
         } catch (RepositoryException e) {
-            log.error("Cannot obtain stream from " + item, e);
+            log.error("Cannot obtain stream from {}", item, e);
         }
     }
 
@@ -202,7 +202,7 @@ public class DefaultItemResource extends AbstractItemResource {
                     }
                 }
             } catch (RepositoryException e) {
-                log.error("Failed to retrieve resource properties: "+e.getMessage());
+                log.error("Failed to retrieve resource properties: {}", e.getMessage());
             }
         }
 
@@ -396,7 +396,7 @@ public class DefaultItemResource extends AbstractItemResource {
                     properties.add(new ValuesProperty(prop.getValue()));
                 }
             } catch (RepositoryException e) {
-                log.error("Failed to retrieve resource properties: "+e.getMessage());
+                log.error("Failed to retrieve resource properties: {}", e.getMessage());
             }
         }
     }
@@ -414,7 +414,7 @@ public class DefaultItemResource extends AbstractItemResource {
                 return true;
             }
         } catch (RepositoryException e) {
-            log.error("Error while retrieving property definition: " + e.getMessage());
+            log.error("Error while retrieving property definition: {}", e.getMessage());
         }
         return false;
     }

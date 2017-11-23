@@ -371,14 +371,14 @@ public class DatabaseJournal extends AbstractJournal implements DatabaseAware {
         // Now write the localFileRevision (or 0 if it does not exist) to the LOCAL_REVISIONS
         // table, but only if the LOCAL_REVISIONS table has no entry yet for this cluster node
         long localRevision = databaseRevision.init(localFileRevision);
-        log.info("Initialized local revision to " + localRevision);
+        log.info("Initialized local revision to {}", localRevision);
 
         // Start the clean-up thread if necessary.
         if (janitorEnabled) {
             janitorThread = new Thread(new RevisionTableJanitor(), "Jackrabbit-ClusterRevisionJanitor");
             janitorThread.setDaemon(true);
             janitorThread.start();
-            log.info("Cluster revision janitor thread started; first run scheduled at " + janitorNextRun.getTime());
+            log.info("Cluster revision janitor thread started; first run scheduled at {}", janitorNextRun.getTime());
         } else {
             log.info("Cluster revision janitor thread not started");
         }
@@ -856,7 +856,7 @@ public class DatabaseJournal extends AbstractJournal implements DatabaseAware {
         public void run() {
             while (!Thread.currentThread().isInterrupted()) {
                 try {
-                    log.info("Next clean-up run scheduled at " + janitorNextRun.getTime());
+                    log.info("Next clean-up run scheduled at {}", janitorNextRun.getTime());
                     long sleepTime = janitorNextRun.getTimeInMillis() - System.currentTimeMillis();
                     if (sleepTime > 0) {
                         Thread.sleep(sleepTime);
@@ -886,7 +886,7 @@ public class DatabaseJournal extends AbstractJournal implements DatabaseAware {
                 // Clean up if necessary:
                 if (cleanUp) {
                     conHelper.exec(cleanRevisionStmtSQL, minRevision);
-                    log.info("Cleaned old revisions up to revision " + minRevision + ".");
+                    log.info("Cleaned old revisions up to revision {}.", minRevision);
                 }
 
             } catch (Exception e) {

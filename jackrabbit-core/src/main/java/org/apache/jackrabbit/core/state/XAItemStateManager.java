@@ -589,7 +589,7 @@ public class XAItemStateManager extends LocalItemStateManager implements Interna
                         local.pull();
                     }
                 } catch (NoSuchItemStateException e) {
-                    log.warn("Modified state marked for deletion: " + modified.getId());
+                    log.warn("Modified state marked for deletion: {}", modified.getId());
                 }
             }
         }

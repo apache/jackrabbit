@@ -52,7 +52,7 @@ public class SessionSaveOperation implements SessionWriteOperation<Object> {
                 ItemImpl item = context.getItemManager().getItem(transientRoot);
                 path = item.getPath();
             } catch (Exception e) {
-                LOG.warn("Could not get the path", e);
+                LOG.debug("Could not get the path", e);
                 path = "?";
             }
             if (LOG_WITH_STACKTRACE) {

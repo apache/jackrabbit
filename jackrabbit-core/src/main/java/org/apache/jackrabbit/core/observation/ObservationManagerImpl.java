@@ -189,7 +189,7 @@ public class ObservationManagerImpl implements EventStateCollectionFactory,
             EventListenerIterator it = getRegisteredEventListeners();
             while (it.hasNext()) {
                 EventListener l = it.nextEventListener();
-                log.debug("removing EventListener: " + l);
+                log.debug("removing EventListener: {}", l);
                 removeEventListener(l);
             }
         } catch (RepositoryException e) {

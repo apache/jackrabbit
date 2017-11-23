@@ -497,7 +497,7 @@ public class InternalVersionManagerImpl extends InternalVersionManagerBase
                                 vh.reload();
                                 versionItems.put(vh.getId(), vh);
                             } catch (RepositoryException e) {
-                                log.warn("Unable to update version history: " + e.toString());
+                                log.warn("Unable to update version history: {}", (Object) e);
                             }
                         }
                     }

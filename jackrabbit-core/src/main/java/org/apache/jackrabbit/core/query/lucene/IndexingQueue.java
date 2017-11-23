@@ -102,7 +102,7 @@ class IndexingQueue {
                 log.debug("added node {}. New size of indexing queue: {}",
                         uuid, pendingDocuments.size());
             } catch (IllegalArgumentException e) {
-                log.warn("Invalid UUID in indexing queue store: " + uuid);
+                log.warn("Invalid UUID in indexing queue store: {}", uuid);
             } catch (RepositoryException e) {
                 // node does not exist anymore
                 log.debug("Node with uuid {} does not exist anymore", uuid);

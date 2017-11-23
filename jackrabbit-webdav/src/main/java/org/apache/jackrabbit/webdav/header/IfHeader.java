@@ -286,7 +286,7 @@ public class IfHeader implements Header {
                 }
             }
         } catch (IOException ioe) {
-            log.error("parseTagged: Problem parsing If header: "+ioe.toString());
+            log.error("parseTagged: Problem parsing If header: {}", (Object) ioe);
         }
 
         return map;
@@ -330,7 +330,7 @@ public class IfHeader implements Header {
                 }
             }
         } catch (IOException ioe) {
-            log.error("parseUntagged: Problem parsing If header: "+ioe.toString());
+            log.error("parseUntagged: Problem parsing If header: {}", (Object) ioe);
         }
         return list;
     }
@@ -500,12 +500,12 @@ public class IfHeader implements Header {
         String effString = (effChar < 0) ? "<EOF>" : String.valueOf((char) effChar);
 
         // log the error
-        log.error("logIllegalState: Unexpected character '"+effString+"' in state "+state+", expected any of "+expChar);
+        log.error("logIllegalState: Unexpected character '{}' in state {}, expected any of {}", new Object[] { effString, state, expChar });
 
         // catch up if a reader is given
         if (reader != null && effChar >= 0) {
             try {
-                log.debug("logIllegalState: Catch up to any of "+expChar);
+                log.debug("logIllegalState: Catch up to any of {}", expChar);
                 do {
                     reader.mark(1);
                     effChar = reader.read();
@@ -514,7 +514,7 @@ public class IfHeader implements Header {
                     reader.reset();
                 }
             } catch (IOException ioe) {
-                log.error("logIllegalState: IO Problem catching up to any of "+expChar);
+                log.error("logIllegalState: IO Problem catching up to any of {}", expChar);
             }
         }
     }
@@ -770,11 +770,11 @@ public class IfHeader implements Header {
          *      given tag and token.
          */
         public boolean match(String token, String etag) {
-            log.debug("match: Trying to match token="+token+", etag="+etag);
+            log.debug("match: Trying to match token={}, etag={}", token, etag);
             for (int i=0; i < size(); i++) {
                 IfListEntry ile = get(i);
                 if (!ile.match(token, etag)) {
-                    log.debug("match: Entry "+i+"-"+ile+" does not match");
+                    log.debug("match: Entry {}-{} does not match", i, ile);
                     return false;
                 }
             }
@@ -836,11 +836,11 @@ public class IfHeader implements Header {
          *      and etag, else <code>false</code> is returned.
          */
         public boolean matches(String resource, String token, String etag) {
-            log.debug("matches: Trying to match token="+token+", etag="+etag);
+            log.debug("matches: Trying to match token={}, etag={}", token, etag);
 
             for (IfList il : this) {
                 if (il.match(token, etag)) {
-                    log.debug("matches: Found match with " + il);
+                    log.debug("matches: Found match with {}", il);
                     return true;
                 }
             }
@@ -874,11 +874,11 @@ public class IfHeader implements Header {
          *      or if the entry for the resource matches the token and etag.
          */
         public boolean matches(String resource, String token, String etag) {
-            log.debug("matches: Trying to match resource="+resource+", token="+token+","+etag);
+            log.debug("matches: Trying to match resource={}, token={},{}", new Object[] { resource, token, etag });
 
             IfHeaderList list = get(resource);
             if (list == null) {
-                log.debug("matches: No entry for tag "+resource+", assuming match");
+                log.debug("matches: No entry for tag {}, assuming match", resource);
                 return true;
             } else {
                 return list.matches(resource, token, etag);

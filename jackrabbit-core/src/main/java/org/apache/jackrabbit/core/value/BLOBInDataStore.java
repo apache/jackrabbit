@@ -95,7 +95,7 @@ class BLOBInDataStore extends BLOBFileValue implements ReferenceBinary {
         try {
             return getDataRecord().getLength();
         } catch (DataStoreException e) {
-            log.warn("getSize for " + identifier + " failed", e);
+            log.warn("getSize for {} failed", identifier, e);
             return -1;
         }
     }
@@ -109,7 +109,7 @@ class BLOBInDataStore extends BLOBFileValue implements ReferenceBinary {
         try {
             return getDataRecord().getReference();
         } catch (DataStoreException e) {
-            log.warn("Unable to access the reference to " + identifier, e);
+            log.warn("Unable to access the reference to {}", identifier, e);
             return null;
         }
     }

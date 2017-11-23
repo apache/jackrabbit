@@ -341,7 +341,7 @@ public class ItemManagerImpl implements ItemManager, ItemStateCreationListener {
                 createNodeInstance((NodeState) state);
             } catch (RepositoryException e) {
                 // log warning and ignore
-                log.warn("Unable to create Node instance: " + e.getMessage());
+                log.warn("Unable to create Node instance: {}", e.getMessage());
             }
         } else {
             createPropertyInstance((PropertyState) state);

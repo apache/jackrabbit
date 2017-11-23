@@ -41,7 +41,7 @@ public class Checkout extends VersionOperation {
     public NodeIterator execute() throws Exception {
         Node n = getNode();
         if (!n.isCheckedOut()) {
-            log.info(n.getPath() + ":" + n.getBaseVersion().getName());
+            log.info("{}:{}", n.getPath(), n.getBaseVersion().getName());
             n.checkout();
         }
         return wrapWithIterator(n);

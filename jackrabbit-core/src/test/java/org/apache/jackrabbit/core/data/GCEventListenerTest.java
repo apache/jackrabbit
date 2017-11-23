@@ -95,7 +95,7 @@ public class GCEventListenerTest extends AbstractJCRTest implements MarkEventLis
                 assertTrue("Not a PM scan - without a real node", gotNode);
             }
             int deleted = gc.sweep();
-            LOG.debug("Deleted " + deleted);
+            LOG.debug("Deleted {}", deleted);
             assertTrue("Should delete at least one item", deleted >= 0);
             gc.close();
         }
@@ -114,7 +114,7 @@ public class GCEventListenerTest extends AbstractJCRTest implements MarkEventLis
     public void beforeScanning(Node n) throws RepositoryException {
         String s = getNodeName(n);
         if (s != null) {
-            LOG.debug("scanning " + s);
+            LOG.debug("scanning {}", s);
         }
     }
 

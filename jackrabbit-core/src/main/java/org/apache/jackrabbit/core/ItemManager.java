@@ -223,7 +223,7 @@ public class ItemManager implements ItemStateListener {
                 def = ent.getApplicableChildNodeDef(
                         cne.getName(), state.getNodeTypeName(), ntReg);
                 log.warn("Fallback to nt:unstructured due to unknown child " +
-                        "node definition for type '" + state.getNodeTypeName() + "'");
+                        "node definition for type '{}'", state.getNodeTypeName());
             }
             return sessionContext.getNodeTypeManager().getNodeDefinition(def);
         } catch (NodeTypeConflictException e) {
@@ -272,7 +272,7 @@ public class ItemManager implements ItemStateListener {
                 def = ent.getApplicablePropertyDef(state.getName(),
                         state.getType(), state.isMultiValued());
                 log.warn("Fallback to nt:unstructured due to unknown property " +
-                        "definition for '" + state.getName() + "'");
+                        "definition for '{}'", state.getName());
             }
             return sessionContext.getNodeTypeManager().getPropertyDefinition(def);
         } catch (ItemStateException e) {
@@ -933,7 +933,7 @@ public class ItemManager implements ItemStateListener {
             }
             ItemId id = data.getId();
             if (itemCache.containsKey(id)) {
-                log.debug("overwriting cached item " + id);
+                log.debug("overwriting cached item {}", id);
             }
             if (log.isDebugEnabled()) {
                 log.debug("caching item " + id);
@@ -993,7 +993,7 @@ public class ItemManager implements ItemStateListener {
         try {
             return session.getJCRPath(path);
         } catch (NamespaceException e) {
-            log.error("failed to convert " + path.toString() + " to JCR path.");
+            log.error("failed to convert {} to JCR path.", path);
             // return string representation of internal path as a fallback
             return path.toString();
         }
@@ -1010,7 +1010,7 @@ public class ItemManager implements ItemStateListener {
         try {
             return safeGetJCRPath(hierMgr.getPath(id));
         } catch (RepositoryException re) {
-            log.error(id + ": failed to determine path to");
+            log.error("{}: failed to determine path to", id);
             // return string representation if id as a fallback
             return id.toString();
         }
@@ -1261,7 +1261,7 @@ public class ItemManager implements ItemStateListener {
             }
             Object old = map.put(data.getPrimaryParentId(), data);
             if (old != null) {
-                log.debug("overwriting cached item: " + old);
+                log.debug("overwriting cached item: {}", old);
             }
         }
 

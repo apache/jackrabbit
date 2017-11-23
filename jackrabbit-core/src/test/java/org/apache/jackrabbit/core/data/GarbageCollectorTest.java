@@ -70,7 +70,7 @@ public class GarbageCollectorTest extends AbstractJCRTest implements ScanEventLi
             gc.mark();
             fail("Exception 'session has been closed' expected");
         } catch (RepositoryException e) {
-            LOG.debug("Expected exception caught: " + e.getMessage());
+            LOG.debug("Expected exception caught: {}", e.getMessage());
         }
         if (ex[0] != null) {
             throw ex[0];
@@ -166,7 +166,7 @@ public class GarbageCollectorTest extends AbstractJCRTest implements ScanEventLi
         LOG.debug("scanning...");
         gc.mark();
         int count = listIdentifiers(gc);
-        LOG.debug("stop scanning; currently " + count + " identifiers");
+        LOG.debug("stop scanning; currently {} identifiers", count);
         LOG.debug("deleting...");
         gc.getDataStore().clearInUse();
         assertTrue(gc.sweep() > 0);
@@ -243,7 +243,7 @@ public class GarbageCollectorTest extends AbstractJCRTest implements ScanEventLi
         Iterator<DataIdentifier> it = gc.getDataStore().getAllIdentifiers();
         while (it.hasNext()) {
             DataIdentifier id = it.next();
-            LOG.debug("  " + id);
+            LOG.debug("  {}", id);
             count++;
         }
         return count;
@@ -292,7 +292,7 @@ public class GarbageCollectorTest extends AbstractJCRTest implements ScanEventLi
     public void afterScanning(Node n) throws RepositoryException {
         if (n != null && n.getPath().startsWith("/testroot/node")) {
             String path = n.getPath();
-            LOG.debug("scanned: " + path);
+            LOG.debug("scanned: {}", path);
         }
     }
 

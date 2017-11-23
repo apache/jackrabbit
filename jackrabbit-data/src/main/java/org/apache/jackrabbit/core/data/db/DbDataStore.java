@@ -529,7 +529,7 @@ public class DbDataStore extends AbstractDataStore
                     list.add(identifier);
                 }
             }
-            log.debug("Found " + list.size() + " identifiers.");
+            log.debug("Found {} identifiers.", list.size());
             return list.iterator();
         } catch (Exception e) {
             throw convert("Can not read records", e);
@@ -766,7 +766,7 @@ public class DbDataStore extends AbstractDataStore
     }
 
     public void updateModifiedDateOnAccess(long before) {
-        log.debug("Update modifiedDate on access before " + before);
+        log.debug("Update modifiedDate on access before {}", before);
         minModifiedDate = before;
     }
 

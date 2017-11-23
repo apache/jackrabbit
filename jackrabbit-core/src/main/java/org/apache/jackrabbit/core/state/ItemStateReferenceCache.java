@@ -176,7 +176,7 @@ public class ItemStateReferenceCache implements ItemStateCache {
             ItemState s = segment.put(id, state);
             // overwriting the same instance is OK
             if (s != null && s != state) {
-                log.warn("overwriting cached entry " + id);
+                log.warn("overwriting cached entry {}", id);
             }
         }
     }
