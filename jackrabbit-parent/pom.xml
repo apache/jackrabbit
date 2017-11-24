@@ -340,7 +340,7 @@
                 <goal>baseline</goal>
               </goals>
               <configuration>
-                <comparisonVersion>2.14.0</comparisonVersion>
+                <comparisonVersion>2.16.0</comparisonVersion>
               </configuration>
             </execution>
           </executions>
