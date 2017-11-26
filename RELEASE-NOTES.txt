@@ -1,38 +1,26 @@
-Release Notes -- Apache Jackrabbit -- Version 2.15.8
+Release Notes -- Apache Jackrabbit -- Version 2.17.0
 
 Introduction
 ------------
 
-This is Apache Jackrabbit(TM) 2.15.8, a fully compliant implementation of the
+This is Apache Jackrabbit(TM) 2.17.0, a fully compliant implementation of the
 Content Repository for Java(TM) Technology API, version 2.0 (JCR 2.0) as
 specified in the Java Specification Request 283 (JSR 283).
 
-Apache Jackrabbit 2.15.8 is an unstable release cut directly from
+Apache Jackrabbit 2.17.0 is an unstable release cut directly from
 Jackrabbit trunk, with a focus on new features and other
-improvements. For production use we recommend the latest stable 2.14.x
+improvements. For production use we recommend the latest stable 2.16.x
 release.
 
-Changes in Jackrabbit 2.15.8
+Changes in Jackrabbit 2.17.0
 ----------------------------
-
-Improvement
-
-    [JCR-4207] - Use Derby 10.14.1.0
 
 Task
 
-    [JCR-4189] - Jackrabbit should compile & test on Java 9
-    [JCR-4205] - Upgrade JTA dependency to javax.transaction-api 1.2
-    [JCR-4206] - Switch to official OSGi versioning annotations
-    [JCR-4212] - add SHA512 checksums to releases
-
-Sub-task
-
-    [JCR-4191] - baseline checks fails for jackrabbit-webdav under Java 9
-
+    [JCR-4218] - switch bundle comparisonVersion
 
 In addition to the above-mentioned changes, this release contains
-all the changes included up to the Apache Jackrabbit 2.14.x release.
+all the changes included up to the Apache Jackrabbit 2.16.x release.
 
 For more detailed information about all the changes in this and other
 Jackrabbit releases, please see the Jackrabbit issue tracker at
