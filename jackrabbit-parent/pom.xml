@@ -48,7 +48,7 @@
     <test.opts.modules>-XX:+IgnoreUnrecognizedVMOptions --add-modules=java.xml.bind</test.opts.modules>
     <test.opts>${test.opts.modules} ${test.opts.coverage} ${test.opts.memory} -enableassertions</test.opts>
     <jetty.version>8.2.0.v20160908</jetty.version>
-    <tika.version>1.7</tika.version>
+    <tika.version>1.16</tika.version>
     <project.reporting.outputEncoding>${project.build.sourceEncoding}</project.reporting.outputEncoding>
     <!-- Note that we're using SLF4J API version 1.6 when compiling     -->
     <!-- core Oak components but more recent SLF4J and Logback versions -->
