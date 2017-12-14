@@ -18,6 +18,15 @@ Changes in Jackrabbit 2.17.0
 Task
 
     [JCR-4218] - switch bundle comparisonVersion
+    [JCR-4221] - Upgrade Apache HttpComponents to 4.5.4
+    [JCR-4222] - Document reduced RMI interop with older servers after java-9 related changes
+    [JCR-4223] - Upgrade commons-fileupload dependency to 1.3.3
+    [JCR-4224] - Upgrade tomcat-servlet dependency to 7.0.82
+    [JCR-4225] - Upgrade commons-chains dependency to 1.2
+    [JCR-4226] - Upgrade tika-parsers dependency to 2.16
+    [JCR-4228] - Update Oak dependency to latest 1.0 stable release
+    [JCR-4231] - Upgrade aws-java-sdk-s3 dependency to 1.11.241
+    [JCR-4233] - Update H2DB test dependency
 
 In addition to the above-mentioned changes, this release contains
 all the changes included up to the Apache Jackrabbit 2.16.x release.
