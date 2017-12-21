@@ -1,38 +1,46 @@
-Release Notes -- Apache Jackrabbit -- Version 2.8.6
+Release Notes -- Apache Jackrabbit -- Version 2.8.7
 
 Introduction
 ------------
 
-This is Apache Jackrabbit(TM) 2.8.6, a fully compliant implementation of the
+This is Apache Jackrabbit(TM) 2.8.7, a fully compliant implementation of the
 Content Repository for Java(TM) Technology API, version 2.0 (JCR 2.0) as
 specified in the Java Specification Request 283 (JSR 283).
 
-Apache Jackrabbit 2.8.6 is a patch release that contains fixes and
+Apache Jackrabbit 2.8.7 is a patch release that contains fixes and
 improvements over Jackrabbit 2.8. Jackrabbit 2.8.x releases are considered
 stable and targeted for production use.
 
-Changes since Jackrabbit 2.8.5
+Changes since Jackrabbit 2.8.6
 ------------------------------
 
 Bug
 
-    [JCR-4079] - incorrect PROPPATCH response error handling
-    [JCR-4118] - RepositoryChecker creates invalid node names
-    [JCR-4121] - ConcurrentModificationException in InternalVersionHistoryImpl.fixLegacy()
-    [JCR-4133] - fix javadoc problems that are errors with JDK8
+    [JCR-3901] - TCK LockManagerTest does not allow new JCR 2.0 functionality for lock token transfers
+    [JCR-4146] - json extension is removed by AbstractWebdavServlet on COPY request
+    [JCR-4173] - Unable to receive observation events when connecting via DavEx
 
 Improvement
 
-    [JCR-3924] - Allow release-deploy to skip tests
+    [JCR-4074] - jackrabbit-jcr2dav: add system property to disable davex support for testing
+    [JCR-4182] - new release checksum requirements
 
 Task
 
-    [JCR-4122] - align parent pom references with Oak
-    [JCR-4129] - get rid of unused org.json dependency
+    [JCR-4139] - Update commons-fileupload dependency to 1.3.2
+    [JCR-4142] - update junit dependency to 4.12
+    [JCR-4145] - upgrade clirr plugin to 2.8
+    [JCR-4177] - move Mockito version to parent pom
+    [JCR-4212] - add SHA512 checksums to releases
+    [JCR-4223] - Upgrade commons-fileupload dependency to 1.3.3
+
+Sub-task
+
+    [JCR-4165] - WebDAV servlet: reject unknown/unsupported content codings with 4xx status code
 
 
 In addition to the above-mentioned changes, this release contains
-all the changes included up to the Apache Jackrabbit 2.8.3 release.
+all the changes included up to the Apache Jackrabbit 2.8.6 release.
 
 For more detailed information about all the changes in this and other
 Jackrabbit releases, please see the Jackrabbit issue tracker at
