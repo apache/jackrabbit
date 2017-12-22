@@ -126,13 +126,18 @@
     <dependency>
       <groupId>commons-chain</groupId>
       <artifactId>commons-chain</artifactId>
-      <version>1.0</version>
+      <version>1.2</version>
       <exclusions>
         <exclusion>
           <groupId>commons-logging</groupId>
           <artifactId>commons-logging</artifactId>
         </exclusion>
       </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>commons-digester</groupId>
+      <artifactId>commons-digester</artifactId>
+      <version>1.8.1</version>
     </dependency>
     <dependency>
       <groupId>jline</groupId>
