@@ -770,12 +770,11 @@ public class RepositoryStartupServlet extends AbstractRepositoryServlet {
      * @param req the request
      * @param resp the response
      * @param loc the location for the redirect
-     * @throws ServletException if an servlet error occurs.
      * @throws IOException if an I/O error occurs.
      */
     private void redirect(HttpServletRequest req,
                           HttpServletResponse resp, String loc)
-            throws ServletException, IOException {
+            throws IOException {
         String cp = req.getContextPath();
         if (cp == null || cp.equals("/")) {
             cp = "";
