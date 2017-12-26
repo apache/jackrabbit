@@ -30,6 +30,7 @@ import java.util.Calendar;
 import java.util.TimeZone;
 import java.math.BigDecimal;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.io.InputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -345,7 +346,7 @@ public abstract class AbstractQValue implements QValue, Serializable {
             try {
                 InputStream stream = getStream();
                 try {
-                    Reader reader = new InputStreamReader(stream, "UTF-8");
+                    Reader reader = new InputStreamReader(stream, StandardCharsets.UTF_8);
                     Writer writer = new StringWriter();
                     char[] buffer = new char[1024];
                     int n = reader.read(buffer);

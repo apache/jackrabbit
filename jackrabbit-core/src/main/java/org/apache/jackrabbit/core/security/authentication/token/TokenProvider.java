@@ -175,9 +175,6 @@ public class TokenProvider extends ProtectedItemModifier {
             } catch (NoSuchAlgorithmException e) {
                 // error while generating login token
                 log.error(error, e);
-            } catch (UnsupportedEncodingException e) {
-                // error while generating login token
-                log.error(error, e);
             } catch (AccessDeniedException e) {
                 log.warn(error, e);
             }

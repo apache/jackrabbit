@@ -53,6 +53,8 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
 import java.io.Writer;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -80,7 +82,7 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
     /**
      * The default encoding used in serialization
      */
-    public static final String DEFAULT_ENCODING = "UTF-8";
+    public static final Charset DEFAULT_ENCODING = StandardCharsets.UTF_8;
 
     /**
      * The XML elements and attributes used in serialization
@@ -544,19 +546,11 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
             OutputStream os = nodeFile.getOutputStream();
             Writer writer = null;
             try {
-                String encoding = DEFAULT_ENCODING;
-                try {
-                    writer = new BufferedWriter(new OutputStreamWriter(os, encoding));
-                } catch (UnsupportedEncodingException e) {
-                    // should never get here!
-                    OutputStreamWriter osw = new OutputStreamWriter(os);
-                    encoding = osw.getEncoding();
-                    writer = new BufferedWriter(osw);
-                }
+                writer = new BufferedWriter(new OutputStreamWriter(os, DEFAULT_ENCODING));
 
                 String parentId = (state.getParentId() == null) ? "" : state.getParentId().toString();
                 String encodedNodeType = Text.encodeIllegalXMLCharacters(state.getNodeTypeName().toString());
-                writer.write("<?xml version=\"1.0\" encoding=\"" + encoding + "\"?>\n");
+                writer.write("<?xml version=\"1.0\" encoding=\"" + DEFAULT_ENCODING.name() + "\"?>\n");
                 writer.write("<" + NODE_ELEMENT + " "
                         + UUID_ATTRIBUTE + "=\"" + id + "\" "
                         + PARENTUUID_ATTRIBUTE + "=\"" + parentId + "\" "
@@ -618,15 +612,7 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
             // write property state to xml file
             Writer writer = null;
             try {
-                String encoding = DEFAULT_ENCODING;
-                try {
-                    writer = new BufferedWriter(new OutputStreamWriter(os, encoding));
-                } catch (UnsupportedEncodingException e) {
-                    // should never get here!
-                    OutputStreamWriter osw = new OutputStreamWriter(os);
-                    encoding = osw.getEncoding();
-                    writer = new BufferedWriter(osw);
-                }
+                writer = new BufferedWriter(new OutputStreamWriter(os, DEFAULT_ENCODING));
 
                 String typeName;
                 int type = state.getType();
@@ -637,7 +623,7 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
                     throw new ItemStateException("unexpected property-type ordinal: " + type, iae);
                 }
 
-                writer.write("<?xml version=\"1.0\" encoding=\"" + encoding + "\"?>\n");
+                writer.write("<?xml version=\"1.0\" encoding=\"" + DEFAULT_ENCODING.name() + "\"?>\n");
                 writer.write("<" + PROPERTY_ELEMENT + " "
                         + NAME_ATTRIBUTE + "=\"" + Text.encodeIllegalXMLCharacters(state.getName().toString()) + "\" "
                         + PARENTUUID_ATTRIBUTE + "=\"" + state.getParentId() + "\" "
@@ -815,16 +801,9 @@ public class XMLPersistenceManager extends AbstractPersistenceManager {
             OutputStream os = refsFile.getOutputStream();
             BufferedWriter writer = null;
             try {
-                String encoding = DEFAULT_ENCODING;
-                try {
-                    writer = new BufferedWriter(new OutputStreamWriter(os, encoding));
-                } catch (UnsupportedEncodingException e) {
-                    // should never get here!
-                    OutputStreamWriter osw = new OutputStreamWriter(os);
-                    encoding = osw.getEncoding();
-                    writer = new BufferedWriter(osw);
-                }
-                writer.write("<?xml version=\"1.0\" encoding=\"" + encoding + "\"?>\n");
+                writer = new BufferedWriter(new OutputStreamWriter(os, DEFAULT_ENCODING));
+
+                writer.write("<?xml version=\"1.0\" encoding=\"" + DEFAULT_ENCODING.name() + "\"?>\n");
                 writer.write("<" + NODEREFERENCES_ELEMENT + " "
                         + TARGETID_ATTRIBUTE + "=\"" + refs.getTargetId() + "\">\n");
                 // write references (i.e. the id's of the REFERENCE properties)

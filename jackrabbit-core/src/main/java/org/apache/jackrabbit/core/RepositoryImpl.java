@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.StringReader;
+import java.nio.charset.StandardCharsets;
 import java.security.AccessControlContext;
 import java.security.AccessController;
 import java.util.ArrayList;
@@ -587,7 +588,7 @@ public class RepositoryImpl extends AbstractRepository
                 uuidFile.makeParentDirs();
                 OutputStream out = uuidFile.getOutputStream();
                 try {
-                    out.write(ROOT_NODE_ID.toString().getBytes("US-ASCII"));
+                    out.write(ROOT_NODE_ID.toString().getBytes(StandardCharsets.US_ASCII));
                     return ROOT_NODE_ID;
                 } finally {
                     IOUtils.closeQuietly(out);

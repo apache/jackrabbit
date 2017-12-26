@@ -30,6 +30,7 @@ import org.apache.jackrabbit.spi.commons.name.NameConstants;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.GregorianCalendar;
@@ -410,7 +411,7 @@ class BundleReader {
                     int len = in.readInt();
                     byte[] bytes = new byte[len];
                     in.readFully(bytes);
-                    String stringVal = new String(bytes, "UTF-8");
+                    String stringVal = new String(bytes, StandardCharsets.UTF_8);
 
                     // https://issues.apache.org/jira/browse/JCR-3083
                     if (PropertyType.DATE == entry.getType()) {
@@ -518,7 +519,7 @@ class BundleReader {
                 }
             }
 
-            String local = new String(readBytes((b & 0x0f) + 1, 0x10), "UTF-8");
+            String local = new String(readBytes((b & 0x0f) + 1, 0x10), StandardCharsets.UTF_8);
 
             return NameFactoryImpl.getInstance().create(uri, local);
         }
@@ -659,7 +660,7 @@ class BundleReader {
 
     private String readString() throws IOException {
         if (version >= BundleBinding.VERSION_3) {
-            return new String(readBytes(0, 0), "UTF-8");
+            return new String(readBytes(0, 0), StandardCharsets.UTF_8);
         } else {
             return in.readUTF();
         }

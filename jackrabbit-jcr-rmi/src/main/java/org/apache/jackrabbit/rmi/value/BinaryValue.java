@@ -22,6 +22,7 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.util.Calendar;
 
 import javax.jcr.Binary;
@@ -72,7 +73,7 @@ class BinaryValue implements Value, Serializable {
         try {
             InputStream stream = value.getStream();
             try {
-                Reader reader = new InputStreamReader(stream, "UTF-8");
+                Reader reader = new InputStreamReader(stream, StandardCharsets.UTF_8);
                 StringBuilder builder = new StringBuilder();
                 char[] buffer = new char[1024];
                 int n = reader.read(buffer);

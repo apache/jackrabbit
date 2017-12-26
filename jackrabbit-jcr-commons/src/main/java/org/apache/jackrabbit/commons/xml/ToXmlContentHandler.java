@@ -22,6 +22,7 @@ import java.io.OutputStreamWriter;
 import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
 import java.io.Writer;
+import java.nio.charset.StandardCharsets;
 
 import org.xml.sax.Attributes;
 import org.xml.sax.ContentHandler;
@@ -98,13 +99,8 @@ public class ToXmlContentHandler extends DefaultHandler {
      * @param stream XML output stream
      */
     public ToXmlContentHandler(OutputStream stream) {
-        try {
-            this.writer = new OutputStreamWriter(stream, "UTF-8");
-            this.declaration = "version=\"1.0\" encoding=\"UTF-8\"";
-        } catch (UnsupportedEncodingException e) {
-            // should never happen
-            throw new IllegalStateException("UTF-8 is not supported!");
-        }
+        this.writer = new OutputStreamWriter(stream, StandardCharsets.UTF_8);
+        this.declaration = "version=\"1.0\" encoding=\"UTF-8\"";
     }
 
     /**

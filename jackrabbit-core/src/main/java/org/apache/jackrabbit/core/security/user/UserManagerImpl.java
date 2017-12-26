@@ -52,6 +52,7 @@ import javax.jcr.lock.LockException;
 import javax.jcr.nodetype.ConstraintViolationException;
 import javax.jcr.version.VersionException;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.security.NoSuchAlgorithmException;
 import java.security.Principal;
 import java.util.HashSet;
@@ -773,8 +774,6 @@ public class UserManagerImpl extends ProtectedItemModifier
                 pwHash = PasswordUtility.buildPasswordHash(password, algorithm, PasswordUtility.DEFAULT_SALT_SIZE, iterations);
             } catch (NoSuchAlgorithmException e) {
                 throw new RepositoryException(e);
-            } catch (UnsupportedEncodingException e) {
-                throw new RepositoryException(e);
             }
         } else {
             pwHash = password;
@@ -1052,15 +1051,10 @@ public class UserManagerImpl extends ProtectedItemModifier
      *
      * @param id The user/group id that needs to be converted to a valid NodeId.
      * @return a new <code>NodeId</code>.
-     * @throws RepositoryException If an error occurs.
      */
-    private NodeId buildNodeId(String id) throws RepositoryException {
-        try {
-            UUID uuid = UUID.nameUUIDFromBytes(id.toLowerCase().getBytes("UTF-8"));
-            return new NodeId(uuid);
-        } catch (UnsupportedEncodingException e) {
-            throw new RepositoryException("Unexpected error while build ID hash", e);
-        }
+    private NodeId buildNodeId(String id) {
+        UUID uuid = UUID.nameUUIDFromBytes(id.toLowerCase().getBytes(StandardCharsets.UTF_8));
+        return new NodeId(uuid);
     }
 
     /**
