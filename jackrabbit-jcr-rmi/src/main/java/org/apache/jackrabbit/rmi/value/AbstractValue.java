@@ -23,6 +23,7 @@ import java.io.FilterInputStream;
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.util.Calendar;
 
 import javax.jcr.Binary;
@@ -97,31 +98,27 @@ abstract class AbstractValue implements Value, Serializable {
      * by {@link #getString()}. Subclasses 
      */
     public Binary getBinary() throws RepositoryException {
-        try {
-            final byte[] value = getString().getBytes("UTF-8");
-            return new Binary() {
-                public int read(byte[] b, long position) {
-                    if (position >= value.length) {
-                        return -1;
-                    } else {
-                        int p = (int) position;
-                        int n = Math.min(b.length, value.length - p);
-                        System.arraycopy(value, p, b, 0, n);
-                        return n;
-                    }
+        final byte[] value = getString().getBytes(StandardCharsets.UTF_8);
+        return new Binary() {
+            public int read(byte[] b, long position) {
+                if (position >= value.length) {
+                    return -1;
+                } else {
+                    int p = (int) position;
+                    int n = Math.min(b.length, value.length - p);
+                    System.arraycopy(value, p, b, 0, n);
+                    return n;
                 }
-                public InputStream getStream() {
-                    return new ByteArrayInputStream(value);
-                }
-                public long getSize() {
-                    return value.length;
-                }
-                public void dispose() {
-                }
-            };
-        } catch (UnsupportedEncodingException e) {
-            throw new RepositoryException("UTF-8 is not supported", e);
-        }
+            }
+            public InputStream getStream() {
+                return new ByteArrayInputStream(value);
+            }
+            public long getSize() {
+                return value.length;
+            }
+            public void dispose() {
+            }
+        };
     }
 
     /**

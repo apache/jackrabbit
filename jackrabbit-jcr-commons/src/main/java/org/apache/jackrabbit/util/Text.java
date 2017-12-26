@@ -18,6 +18,7 @@ package org.apache.jackrabbit.util;
 
 import java.io.ByteArrayOutputStream;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -350,24 +351,20 @@ public class Text {
      * @throws NullPointerException if <code>string</code> is <code>null</code>.
      */
     public static String escape(String string, char escape, boolean isPath) {
-        try {
-            BitSet validChars = isPath ? URISaveEx : URISave;
-            byte[] bytes = string.getBytes("utf-8");
-            StringBuilder out = new StringBuilder(bytes.length);
-            for (byte aByte : bytes) {
-                int c = aByte & 0xff;
-                if (validChars.get(c) && c != escape) {
-                    out.append((char) c);
-                } else {
-                    out.append(escape);
-                    out.append(hexTable[(c >> 4) & 0x0f]);
-                    out.append(hexTable[(c) & 0x0f]);
-                }
+        BitSet validChars = isPath ? URISaveEx : URISave;
+        byte[] bytes = string.getBytes(StandardCharsets.UTF_8);
+        StringBuilder out = new StringBuilder(bytes.length);
+        for (byte aByte : bytes) {
+            int c = aByte & 0xff;
+            if (validChars.get(c) && c != escape) {
+                out.append((char) c);
+            } else {
+                out.append(escape);
+                out.append(hexTable[(c >> 4) & 0x0f]);
+                out.append(hexTable[(c) & 0x0f]);
             }
-            return out.toString();
-        } catch (UnsupportedEncodingException e) {
-            throw new InternalError(e.toString());
         }
+        return out.toString();
     }
 
     /**
@@ -413,31 +410,26 @@ public class Text {
      *                                        escape character
      */
     public static String unescape(String string, char escape)  {
-        try {
-            byte[] utf8 = string.getBytes("utf-8");
+        byte[] utf8 = string.getBytes(StandardCharsets.UTF_8);
 
-            // Check whether escape occurs at invalid position
-            if ((utf8.length >= 1 && utf8[utf8.length - 1] == escape) ||
-                (utf8.length >= 2 && utf8[utf8.length - 2] == escape)) {
-                throw new IllegalArgumentException("Premature end of escape sequence at end of input");
-            }
-
-            ByteArrayOutputStream out = new ByteArrayOutputStream(utf8.length);
-            for (int k = 0; k < utf8.length; k++) {
-                byte b = utf8[k];
-                if (b == escape) {
-                    out.write((decodeDigit(utf8[++k]) << 4) + decodeDigit(utf8[++k]));
-                }
-                else {
-                    out.write(b);
-                }
-            }
-
-            return new String(out.toByteArray(), "utf-8");
+        // Check whether escape occurs at invalid position
+        if ((utf8.length >= 1 && utf8[utf8.length - 1] == escape) ||
+            (utf8.length >= 2 && utf8[utf8.length - 2] == escape)) {
+            throw new IllegalArgumentException("Premature end of escape sequence at end of input");
         }
-        catch (UnsupportedEncodingException e) {
-            throw new InternalError(e.toString());
+
+        ByteArrayOutputStream out = new ByteArrayOutputStream(utf8.length);
+        for (int k = 0; k < utf8.length; k++) {
+            byte b = utf8[k];
+            if (b == escape) {
+                out.write((decodeDigit(utf8[++k]) << 4) + decodeDigit(utf8[++k]));
+            }
+            else {
+                out.write(b);
+            }
         }
+
+        return new String(out.toByteArray(), StandardCharsets.UTF_8);
     }
 
     /**

@@ -21,6 +21,7 @@ import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.TimeZone;
@@ -368,7 +369,7 @@ public class BundleDumper {
                         int len = in.readInt();
                         byte[] bytes = new byte[len];
                         in.readFully(bytes);
-                        buffer.append("  value: string: ").append(new String(bytes, "UTF-8")).append("\n");
+                        buffer.append("  value: string: ").append(new String(bytes, StandardCharsets.UTF_8)).append("\n");
                     }
             }
         }
@@ -463,7 +464,7 @@ public class BundleDumper {
                     namespaces[ns] = uri;
                 }
             }
-            String local = new String(readBytes((b & 0x0f) + 1, 0x10), "UTF-8");
+            String local = new String(readBytes((b & 0x0f) + 1, 0x10), StandardCharsets.UTF_8);
             return uri + ":" + local;
         }
     }
@@ -603,7 +604,7 @@ public class BundleDumper {
 
     private String readString() throws IOException {
         if (version >= VERSION_3) {
-            return new String(readBytes(0, 0), "UTF-8");
+            return new String(readBytes(0, 0), StandardCharsets.UTF_8);
         } else {
             return in.readUTF();
         }

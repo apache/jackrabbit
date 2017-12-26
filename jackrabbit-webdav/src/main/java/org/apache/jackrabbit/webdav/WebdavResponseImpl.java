@@ -42,6 +42,7 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.io.Writer;
+import java.nio.charset.StandardCharsets;
 import java.util.Locale;
 
 /**
@@ -141,7 +142,7 @@ public class WebdavResponseImpl implements WebdavResponse {
                 // JCR-2636: Need to use an explicit OutputStreamWriter
                 // instead of relying on the built-in UTF-8 serialization
                 // to avoid problems with surrogate pairs on Sun JRE 1.5.
-                Writer writer = new OutputStreamWriter(out, "UTF-8");
+                Writer writer = new OutputStreamWriter(out, StandardCharsets.UTF_8);
                 DomUtil.transformDocument(doc, writer);
                 writer.flush();
 

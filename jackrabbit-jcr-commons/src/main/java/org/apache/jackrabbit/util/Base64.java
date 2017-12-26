@@ -26,6 +26,7 @@ import java.io.Reader;
 import java.io.StringWriter;
 import java.io.Writer;
 import java.io.BufferedWriter;
+import java.nio.charset.StandardCharsets;
 
 /**
  * <code>Base64</code> provides Base64 encoding/decoding of strings and streams.
@@ -239,7 +240,7 @@ public class Base64 {
     public static String encode(String data) {
         try {
             StringWriter buffer = new StringWriter();
-            byte[] b = data.getBytes("UTF-8");
+            byte[] b = data.getBytes(StandardCharsets.UTF_8);
             encode(b, 0, b.length, buffer);
             return buffer.toString();
         } catch (IOException e) { // should never happen
@@ -261,7 +262,7 @@ public class Base64 {
         try {
             ByteArrayOutputStream buffer = new ByteArrayOutputStream();
             decode(data, buffer);
-            return new String(buffer.toByteArray(), "UTF-8");
+            return new String(buffer.toByteArray(), StandardCharsets.UTF_8);
         } catch (IllegalArgumentException e) {
             return data;
         } catch (IOException e) { // should never happen

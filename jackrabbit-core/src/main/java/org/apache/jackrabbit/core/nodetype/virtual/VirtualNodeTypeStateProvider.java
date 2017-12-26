@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.core.nodetype.virtual;
 
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Collection;
@@ -251,11 +252,9 @@ public class VirtualNodeTypeStateProvider extends AbstractVISProvider {
     private static NodeId calculateStableId(String name) throws RepositoryException {
         try {
             MessageDigest md = MessageDigest.getInstance("MD5");
-            byte[] digest = md.digest(name.getBytes("utf-8"));
+            byte[] digest = md.digest(name.getBytes(StandardCharsets.UTF_8));
             return new NodeId(digest);
         } catch (NoSuchAlgorithmException e) {
-            throw new RepositoryException(e);
-        } catch (UnsupportedEncodingException e) {
             throw new RepositoryException(e);
         }
     }
