@@ -282,10 +282,9 @@ public class ACLEditor extends ProtectedItemModifier implements AccessControlEdi
      *
      * @param path the path
      * @return the node
-     * @throws PathNotFoundException if not found
      * @throws RepositoryException if an error occurs
      */
-    private NodeImpl getNode(String path) throws PathNotFoundException, RepositoryException {
+    private NodeImpl getNode(String path) throws RepositoryException {
         return (NodeImpl) session.getNode(path);
     }
 
