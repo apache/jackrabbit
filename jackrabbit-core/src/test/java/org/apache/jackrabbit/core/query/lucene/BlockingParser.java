@@ -16,16 +16,22 @@
  */
 package org.apache.jackrabbit.core.query.lucene;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collections;
 import java.util.Set;
+
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 
 import org.apache.tika.metadata.Metadata;
 import org.apache.tika.mime.MediaType;
 import org.apache.tika.parser.EmptyParser;
 import org.apache.tika.parser.ParseContext;
 import org.apache.tika.sax.XHTMLContentHandler;
+import org.w3c.dom.Document;
 import org.xml.sax.ContentHandler;
+import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
 public class BlockingParser extends EmptyParser {
@@ -76,10 +82,19 @@ public class BlockingParser extends EmptyParser {
             Metadata metadata, ParseContext context)
             throws SAXException {
         waitIfBlocked();
-        XHTMLContentHandler xhtml = new XHTMLContentHandler(handler, metadata);
-        xhtml.startDocument();
-        xhtml.element("p", "The quick brown fox jumped over the lazy dog.");
-        xhtml.endDocument();
+        try {
+            DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+            Document doc = dbf.newDocumentBuilder().parse(new InputSource(stream));
+            String contents = doc.getDocumentElement().getTextContent();
+            XHTMLContentHandler xhtml = new XHTMLContentHandler(handler, metadata);
+            xhtml.startDocument();
+            xhtml.element("p", contents);
+            xhtml.endDocument();
+        } catch (ParserConfigurationException ex) {
+            throw new SAXException(ex);
+        } catch (IOException ex) {
+            throw new SAXException(ex);
+        }
     }
 
 }
