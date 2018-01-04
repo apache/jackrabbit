@@ -246,6 +246,10 @@
               <goals>
                 <goal>prepare-agent-integration</goal>
               </goals>
+              <configuration>
+                <skip>${skip.coverage}</skip>
+                <propertyName>test.opts.coverage</propertyName>
+              </configuration>
             </execution>
             <execution>
               <id>default-report</id>
