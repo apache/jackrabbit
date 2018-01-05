@@ -52,6 +52,6 @@
 
   </parsers>
 
-  <service-loader initializableProblemHandler="ignore"/>
+  <service-loader initializableProblemHandler="ignore" dynamic="true"/>
 
 </properties>
