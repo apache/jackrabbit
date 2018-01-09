@@ -301,6 +301,7 @@ public class ConnectionHelper {
         Connection con = null;
         Statement stmt = null;
         boolean inBatchMode = inBatchMode();
+        long start = System.currentTimeMillis();
         try {
             con = getConnection(inBatchMode);
             if (params == null || params.length == 0) {
@@ -313,6 +314,8 @@ public class ConnectionHelper {
             }
         } finally {
             closeResources(con, stmt, null, inBatchMode);
+            long duration = System.currentTimeMillis() - start;
+            log.debug("SQL-Execution [{}] took [{}] ms.", sql, duration);
         }
     }
 
@@ -339,12 +342,14 @@ public class ConnectionHelper {
         Connection con = null;
         PreparedStatement stmt = null;
         boolean inBatchMode = inBatchMode();
+        long start = System.currentTimeMillis();
         try {
             con = getConnection(inBatchMode);
             stmt = con.prepareStatement(sql);
             return execute(stmt, params).getUpdateCount();
         } finally {
             closeResources(con, stmt, null, inBatchMode);
+            log.debug("SQL-Execution [{}] took [{}] ms.", sql, (System.currentTimeMillis() - start) );
         }
     }
 
@@ -389,6 +394,7 @@ public class ConnectionHelper {
         PreparedStatement stmt = null;
         ResultSet rs = null;
         boolean inBatchMode = inBatchMode();
+        long start = System.currentTimeMillis();
         try {
             con = getConnection(inBatchMode);
             if (returnGeneratedKeys) {
@@ -421,6 +427,8 @@ public class ConnectionHelper {
         } catch (SQLException e) {
             closeResources(con, stmt, rs, inBatchMode);
             throw e;
+        } finally {
+            log.debug("SQL-Execution [{}] took [{}] ms.", sql, (System.currentTimeMillis() - start) );
         }
     }
 
