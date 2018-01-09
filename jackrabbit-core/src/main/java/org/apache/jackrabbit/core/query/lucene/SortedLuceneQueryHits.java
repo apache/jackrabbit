@@ -152,12 +152,15 @@ public final class SortedLuceneQueryHits extends AbstractQueryHits {
     //-------------------------------< internal >-------------------------------
 
     private void getHits() throws IOException {
+    	long time = System.nanoTime();
         TopFieldCollector collector = TopFieldCollector.create(sort, numHits, false, true, false, false);
         searcher.search(query, collector);
         size = collector.getTotalHits();
         offset += scoreDocs.length;
         scoreDocs = collector.topDocs(offset, numHits).scoreDocs;
-        log.debug("getHits() {}/{}", scoreDocs.length, numHits);
+        time = System.nanoTime() - time;
+        final long timeMs = time / 1000000;
+        log.debug("getHits() in {} ms. {}/{}/{}", new Object[] {timeMs, scoreDocs.length, numHits, size});
         // double hits for next round
         numHits *= 2;
     }
