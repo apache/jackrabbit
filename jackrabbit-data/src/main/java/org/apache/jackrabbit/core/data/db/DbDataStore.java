@@ -510,6 +510,7 @@ public class DbDataStore extends AbstractDataStore
                 updateLastModifiedDate(key, 0);
             }
             // DELETE FROM DATASTORE WHERE LAST_MODIFIED<?
+            log.debug(deleteOlderSQL + " - Scanstart [" + min + "]");
             return conHelper.update(deleteOlderSQL, min);
         } catch (Exception e) {
             throw convert("Can not delete records", e);
