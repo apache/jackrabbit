@@ -240,6 +240,7 @@ public abstract class AbstractJournal implements Journal {
      * @throws JournalException if an error occurs
      */
     protected void doSync(long startRevision) throws JournalException {
+    	log.debug("Synchronize contents from journal. StartRevision: " + startRevision);
         RecordIterator iterator = getRecords(startRevision);
         long stopRevision = Long.MIN_VALUE;
 
@@ -289,6 +290,7 @@ public abstract class AbstractJournal implements Journal {
      * @throws JournalException if an error occurs
      */
     public void lockAndSync() throws JournalException {
+    	log.debug("Lock the journal revision and synchronize to the latest change.");
         if (internalVersionManager != null) {
             VersioningLock.ReadLock lock =
                 internalVersionManager.acquireReadLock();
@@ -314,6 +316,7 @@ public abstract class AbstractJournal implements Journal {
 
         try {
             // lock
+        	log.debug("internalLockAndSync.doLock()");
             doLock();
             try {
                 // and sync
@@ -321,6 +324,7 @@ public abstract class AbstractJournal implements Journal {
                 succeeded = true;
             } finally {
                 if (!succeeded) {
+                	log.debug("internalLockAndSync.doUnlock(false)");
                     doUnlock(false);
                 }
             }
@@ -338,7 +342,9 @@ public abstract class AbstractJournal implements Journal {
      *                   successful
      */
     public void unlock(boolean successful) {
+    	log.debug("Unlock the journal revision. Successful: " + successful);
     	try {
+        	log.debug("unlock.doUnlock("+successful+")");
     		doUnlock(successful);
     	} finally {
     		//Should not happen that a RuntimeException will be thrown in subCode, but it's safer
