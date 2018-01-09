@@ -495,6 +495,7 @@ public class DatabaseJournal extends AbstractJournal implements DatabaseAware {
         } finally {
             DbUtility.close(rs);
             if (!succeeded) {
+            	log.debug("doLock.doUnlock(false)");
                 doUnlock(false);
             }
         }
@@ -516,7 +517,7 @@ public class DatabaseJournal extends AbstractJournal implements DatabaseAware {
     private void endBatch(boolean successful) {
         if (--lockLevel == 0) {
             try {
-                conHelper.endBatch(successful);;
+                conHelper.endBatch(successful);
             } catch (SQLException e) {
                 log.error("failed to end batch", e);
             }
