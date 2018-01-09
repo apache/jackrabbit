@@ -187,6 +187,14 @@ public class LazyTextExtractorField extends AbstractField {
                 // not being present. This is equivalent to disabling
                 // selected media types in configuration, so we can simply
                 // ignore these errors.
+                if (!writeOutContentHandler.isWriteLimitReached(e)) {
+                    log.debug("Failed to extract text from a binary property."
+                            + " This is a fairly common case, and nothing to"
+                            + " worry about. The stack trace is included to"
+                            + " help improve the text extraction feature.", e);
+                    setExtractedText("TextExtractionError");
+                    return;
+                }
             } catch (Throwable t) {
                 // Capture and report any other full text extraction problems.
                 // The special STOP exception is used for normal termination.
