@@ -799,10 +799,10 @@ public abstract class AbstractBundlePersistenceManager implements
     private void putBundle(NodePropBundle bundle) throws ItemStateException {
         long time = System.nanoTime();
         storeBundle(bundle);
-        if (auditLogger.isDebugEnabled()) {
-        	auditLogger.debug("{} ({})", bundle.getId(), bundle.getSize());
-        }
         time = System.nanoTime() - time;
+        if (auditLogger.isDebugEnabled()) {
+            auditLogger.debug("{} ({})", bundle.getId(), bundle.getSize());
+        }
         writeDuration.addAndGet(time);
         final long timeMs = time / 1000000;
         log.debug("Stored bundle {} in {}ms", bundle.getId(), timeMs);
