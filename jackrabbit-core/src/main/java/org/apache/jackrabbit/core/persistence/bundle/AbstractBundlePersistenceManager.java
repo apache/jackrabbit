@@ -764,10 +764,11 @@ public abstract class AbstractBundlePersistenceManager implements
             throws ItemStateException {
         long time = System.nanoTime();
         NodePropBundle bundle = loadBundle(id);
-        cacheMissDuration.addAndGet(System.nanoTime() - time);
-        cacheMissCounter.incrementAndGet();
+        time = System.nanoTime() - time;
+        cacheMissDuration.addAndGet(time);
         final long timeMs = time / 1000000;
-        log.debug("Loading bundle {} in {}ms", id, timeMs);
+        log.debug("Loaded bundle {} in {}ms", id, timeMs);
+        cacheMissCounter.incrementAndGet();
         if (bundle != null) {
             bundle.markOld();
             bundles.put(id, bundle, bundle.getSize());
@@ -801,10 +802,11 @@ public abstract class AbstractBundlePersistenceManager implements
         if (auditLogger.isDebugEnabled()) {
         	auditLogger.debug("{} ({})", bundle.getId(), bundle.getSize());
         }
-        writeDuration.addAndGet(System.nanoTime() - time);
-        writeCounter.incrementAndGet();
+        time = System.nanoTime() - time;
+        writeDuration.addAndGet(time);
         final long timeMs = time / 1000000;
         log.debug("Stored bundle {} in {}ms", bundle.getId(), timeMs);
+        writeCounter.incrementAndGet();
 
         bundle.markOld();
 
