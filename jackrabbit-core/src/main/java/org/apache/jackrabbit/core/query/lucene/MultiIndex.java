@@ -1295,9 +1295,12 @@ public class MultiIndex {
                 && idleTime > handler.getVolatileIdleTime() * 1000) {
             try {
                 if (redoLog.hasEntries()) {
+                    long time = System.currentTimeMillis();
                     log.debug("Flushing index after being idle for "
                             + idleTime + " ms.");
                     safeFlush();
+                    time = System.currentTimeMillis() - time;
+                    log.debug("Index flushed in " + time + " ms.");
                 }
             } catch (IOException e) {
                 log.error("Unable to commit volatile index", e);
