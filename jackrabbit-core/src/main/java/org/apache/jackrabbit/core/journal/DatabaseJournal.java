@@ -495,7 +495,7 @@ public class DatabaseJournal extends AbstractJournal implements DatabaseAware {
         } finally {
             DbUtility.close(rs);
             if (!succeeded) {
-            	log.debug("doLock.doUnlock(false)");
+                log.debug("doLock.doUnlock(false)");
                 doUnlock(false);
             }
         }
