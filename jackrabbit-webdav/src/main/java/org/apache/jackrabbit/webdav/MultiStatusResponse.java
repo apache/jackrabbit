@@ -268,6 +268,13 @@ public class MultiStatusResponse implements XmlSerializable, DavConstants {
     }
 
     /**
+     * @return {@code true} if the response is of type "propstat" (containing information about individual properties)
+     */
+    public boolean isPropStat() {
+        return this.type == TYPE_PROPSTAT;
+    }
+
+    /**
      * @param document
      * @see org.apache.jackrabbit.webdav.xml.XmlSerializable#toXml(org.w3c.dom.Document)
      */
