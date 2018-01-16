@@ -646,8 +646,13 @@ public abstract class JcrRemotingServlet extends JCRWebdavServerServlet {
 
         @Override
         public DavResourceLocator createResourceLocator(String prefix, String href) {
+            return createResourceLocator(prefix, href, false);
+        }
+
+        @Override
+        public DavResourceLocator createResourceLocator(String prefix, String href, boolean forDestination) {
             DavResourceLocator loc = super.createResourceLocator(prefix, href);
-            if (endsWithJson(href)) {
+            if (!forDestination && endsWithJson(href)) {
                 loc = new WrappingLocator(super.createResourceLocator(prefix, href));
             }
             return loc;

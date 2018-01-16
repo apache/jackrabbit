@@ -135,6 +135,15 @@ public abstract class AbstractLocatorFactory implements DavLocatorFactory {
     }
 
     /**
+     * Like {@link #createResourceLocator(String, String)}, but by setting
+     * {@code forDestination} to {@code true} any special processing of URI
+     * suffixes can be disabled.
+     */
+    public DavResourceLocator createResourceLocator(String prefix, String href, boolean forDestination) {
+        return createResourceLocator(prefix, href);
+    }
+
+   /**
      * Create a new <code>DavResourceLocator</code> from the specified prefix,
      * workspace path and resource path, without modifying the specified Strings.
      * Note, that it is expected that the resource path starts with the
