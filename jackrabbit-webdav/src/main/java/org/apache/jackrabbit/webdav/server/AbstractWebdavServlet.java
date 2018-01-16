@@ -88,6 +88,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Enumeration;
 import java.util.List;
 
 /**
@@ -280,6 +282,17 @@ abstract public class AbstractWebdavServlet extends HttpServlet implements DavCo
             if (!csrfUtil.isValidRequest(webdavRequest)) {
                 webdavResponse.sendError(HttpServletResponse.SC_FORBIDDEN);
                 return;
+            }
+
+            // JCR-4165: reject any content-coding in request until we can
+            // support it (see JCR-4166)
+            List<String> ces = getContentCodings(request);
+            if (!ces.isEmpty()) {
+                webdavResponse.setStatus(HttpServletResponse.SC_UNSUPPORTED_MEDIA_TYPE);
+                webdavResponse.setHeader("Accept-Encoding", "identity");
+                webdavResponse.setContentType("text/plain; charset=UTF-8");
+                webdavResponse.getWriter().println("Content-Encodings not supported, but received: " + ces);
+                webdavResponse.getWriter().flush();
             }
 
             // check matching if=header for lock-token relevant operations
@@ -1388,5 +1401,22 @@ abstract public class AbstractWebdavServlet extends HttpServlet implements DavCo
      */
     protected OutputContext getOutputContext(DavServletResponse response, OutputStream out) {
         return new OutputContextImpl(response, out);
+    }
+
+    private List<String> getContentCodings(HttpServletRequest request) {
+        List<String> result = Collections.emptyList();
+        for (@SuppressWarnings("unchecked")
+        Enumeration<String> ceh = request.getHeaders("Content-Encoding"); ceh.hasMoreElements();) {
+            for (String h : ceh.nextElement().split(",")) {
+                if (!h.trim().isEmpty()) {
+                    if (result.isEmpty()) {
+                        result = new ArrayList<String>();
+                    }
+                    result.add(h.trim());
+                }
+            }
+        }
+
+        return result;
     }
 }
