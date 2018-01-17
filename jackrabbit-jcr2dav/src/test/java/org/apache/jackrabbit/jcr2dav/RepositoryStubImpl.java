@@ -16,6 +16,8 @@
  */
 package org.apache.jackrabbit.jcr2dav;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
 
 import javax.jcr.Repository;
@@ -88,8 +90,14 @@ public class RepositoryStubImpl extends JackrabbitRepositoryStub {
 
         if (client == null) {
             try {
-                client = JcrUtils.getRepository(
-                        "http://localhost:" + connector.getLocalPort() + "/");
+                Map<String, String> parameters = new HashMap<String, String>();
+
+                String uri = "http://localhost:" + connector.getLocalPort() + "/";
+
+                String parmName = System.getProperty(this.getClass().getName() + ".REPURIPARM", JcrUtils.REPOSITORY_URI);
+                parameters.put(parmName, uri);
+
+                client = JcrUtils.getRepository(parameters);
             } catch (Exception e) {
                 throw new RepositoryStubException(e);
             }
@@ -103,5 +111,4 @@ public class RepositoryStubImpl extends JackrabbitRepositoryStub {
             server.stop();
         }
     }
-
 }
