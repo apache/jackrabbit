@@ -21,7 +21,6 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 import java.security.Principal;
 import java.util.Map;
 import java.util.Properties;
@@ -190,8 +189,8 @@ public abstract class RepositoryStub {
                 try {
                     props.load(new FileInputStream(implPropFile));
                 } catch (IOException e) {
-                    throw new RepositoryStubException("Unable to load config file: "
-                            + implProp + " " + e.toString());
+                    throw new RepositoryStubException(
+                            "Unable to load config file: " + implProp, e);
                 }
             } else {
                 throw new RepositoryStubException("File does not exist: " + implProp);
@@ -205,8 +204,8 @@ public abstract class RepositoryStub {
                 try {
                     props.load(is);
                 } catch (IOException e) {
-                    throw new RepositoryStubException("Exception reading "
-                            + STUB_IMPL_PROPS + ": " + e.toString());
+                    throw new RepositoryStubException(
+                            "Exception reading " + STUB_IMPL_PROPS, e);
                 }
             }
         }
@@ -222,18 +221,8 @@ public abstract class RepositoryStub {
             Class stubClass = Class.forName(className);
             Constructor constr = stubClass.getConstructor(new Class[]{Properties.class});
             stub = (RepositoryStub) constr.newInstance(new Object[]{props});
-        } catch (ClassCastException e) {
-            throw new RepositoryStubException(e.toString());
-        } catch (NoSuchMethodException e) {
-            throw new RepositoryStubException(e.toString());
-        } catch (ClassNotFoundException e) {
-            throw new RepositoryStubException(e.toString());
-        } catch (InstantiationException e) {
-            throw new RepositoryStubException(e.toString());
-        } catch (IllegalAccessException e) {
-            throw new RepositoryStubException(e.toString());
-        } catch (InvocationTargetException e) {
-            throw new RepositoryStubException(e.toString());
+        } catch (Exception e) {
+            throw new RepositoryStubException(e);
         }
 
         return stub;

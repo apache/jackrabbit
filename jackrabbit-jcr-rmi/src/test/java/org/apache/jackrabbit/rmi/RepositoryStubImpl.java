@@ -77,7 +77,7 @@ public class RepositoryStubImpl extends JackrabbitRepositoryStub {
                 repository =
                     laf.getRepository((RemoteRepository) ois.readObject());
             } catch (Exception e) {
-                throw new RepositoryStubException(e.getMessage());
+                throw new RepositoryStubException(e);
             }
         }
         return repository;

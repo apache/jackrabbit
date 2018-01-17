@@ -82,8 +82,7 @@ public class RepositoryStubImpl extends JackrabbitRepositoryStub {
             try {
                 server.start();
             } catch (Exception e) {
-                e.printStackTrace();
-                throw new RepositoryStubException(e.getMessage());
+                throw new RepositoryStubException(e);
             }
         }
 
@@ -92,8 +91,7 @@ public class RepositoryStubImpl extends JackrabbitRepositoryStub {
                 client = JcrUtils.getRepository(
                         "http://localhost:" + connector.getLocalPort() + "/");
             } catch (Exception e) {
-                e.printStackTrace();
-                throw new RepositoryStubException(e.getMessage());
+                throw new RepositoryStubException(e);
             }
         }
 

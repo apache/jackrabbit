@@ -154,12 +154,8 @@ public class JackrabbitRepositoryStub extends RepositoryStub {
             }
 
             return getOrCreateRepository(dir, xml);
-
         } catch (Exception e) {
-            RepositoryStubException exception =
-                    new RepositoryStubException("Failed to start repository");
-            exception.initCause(e);
-            throw exception;
+            throw new RepositoryStubException("Failed to start repository", e);
         }
     }
 
