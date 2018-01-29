@@ -17,40 +17,45 @@
 package org.apache.jackrabbit.api.security.principal;
 
 import java.security.Principal;
-import java.security.acl.Group;
 
 /**
- * This interface defines the principal manager which is the clients view on
- * all principals known to the repository. Each principal manager is bound to
- * a session and is restricted by the respective access control. The principal
+ * This interface defines the principal manager which is the clients view on all
+ * principals known to the repository. Each principal manager is bound to a
+ * session and is restricted by the respective access control. The principal
  * manager in addition provides basic search facilities.
  * <p>
- * A <strong>{@link Principal}</strong> is an object used to connect
- * to any kind of security mechanism. Example for this are the
+ * A <strong>{@link Principal}</strong> is an object used to connect to any kind
+ * of security mechanism. Example for this are the
  * {@link javax.security.auth.spi.LoginModule login modules} that use principals
  * to process the login procedure. <br>
- * A principal can be a member of a <strong>{@link Group}</strong>. A
+ * A principal can be a member of a <strong>{@link GroupPrincipal}</strong>. A
  * group is a principal itself and can therefore be a member of a group again.
  * <p>
  * Please note the following security considerations that need to be respected
  * when implementing the PrincipalManager: All principals returned by this
- * manager as well as {@link Group#members()} must respect access restrictions
- * that may be present for the <code>Session</code> this manager has been built
- * for. The same applies for {@link #getGroupMembership(Principal)}.
+ * manager as well as {@link GroupPrincipal#members()} must respect access
+ * restrictions that may be present for the <code>Session</code> this manager
+ * has been built for. The same applies for
+ * {@link #getGroupMembership(Principal)}.
+ * <p>
+ * Since Jackrabbit 2.18, a new interface has been introduced to represent the
+ * concept of a group of principals: {@link GroupPrincipal}, alongside
+ * {@code java.security.acl.Group} which is deprecated to be deleted. Until the
+ * final deletion of {@code java.security.acl.Group}, the 2 interfaces will be
+ * used concurrently for backwards compatibility reasons. See JCR-4249 for more
+ * details.
  */
 public interface PrincipalManager {
 
     /**
      * Filter flag indicating that only <code>Principal</code>s that do NOT
-     * represent a {@link java.security.acl.Group group} should be searched
-     * and returned.
+     * represent a group should be searched and returned.
      */
     int SEARCH_TYPE_NOT_GROUP = 1;
 
     /**
      * Filter flag indicating that only <code>Principal</code>s that represent
-     * a {@link java.security.acl.Group group} of Principals should be searched
-     * and returned.
+     * a group of Principals should be searched and returned.
      */
     int SEARCH_TYPE_GROUP = 2;
 
@@ -75,7 +80,7 @@ public interface PrincipalManager {
     /**
      * Returns the principal with the given name if is known to this manager
      * (with respect to the sessions access rights).
-     * Please note that due to security reasons Group principals will only
+     * Please note that due to security reasons group principals will only
      * reveal those members that are visible to the Session this
      * <code>PrincipalManager</code> has been built for.
      *
