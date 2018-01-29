@@ -3,30 +3,42 @@ Release Notes -- Apache Jackrabbit -- Version 2.17.0
 Introduction
 ------------
 
-This is Apache Jackrabbit(TM) 2.17.0, a fully compliant implementation of the
+This is Apache Jackrabbit(TM) 2.17.1, a fully compliant implementation of the
 Content Repository for Java(TM) Technology API, version 2.0 (JCR 2.0) as
 specified in the Java Specification Request 283 (JSR 283).
 
-Apache Jackrabbit 2.17.0 is an unstable release cut directly from
+Apache Jackrabbit 2.17.1 is an unstable release cut directly from
 Jackrabbit trunk, with a focus on new features and other
 improvements. For production use we recommend the latest stable 2.16.x
 release.
 
-Changes in Jackrabbit 2.17.0
+Changes in Jackrabbit 2.17.1
 ----------------------------
+
+Bug
+
+    [JCR-4241] - Jacoco plugin fails with exception
+    [JCR-4242] - Build failure: unapproved license
+
+Improvement
+
+    [JCR-4001] - When using Node.getProperties(String namePattern) also child nodes are processed
+    [JCR-4237] - cleanup throws clauses of private methods
+    [JCR-4238] - use StandardCharsets to avoid having to handle UnsupportedEncodingException
+    [JCR-4239] - Suppress Tika startup warnings
+    [JCR-4249] - Introduce replacement for java.security.acl.Group
 
 Task
 
-    [JCR-4218] - switch bundle comparisonVersion
-    [JCR-4221] - Upgrade Apache HttpComponents to 4.5.4
-    [JCR-4222] - Document reduced RMI interop with older servers after java-9 related changes
-    [JCR-4223] - Upgrade commons-fileupload dependency to 1.3.3
-    [JCR-4224] - Upgrade tomcat-servlet dependency to 7.0.82
-    [JCR-4225] - Upgrade commons-chains dependency to 1.2
-    [JCR-4226] - Upgrade tika-parsers dependency to 2.16
-    [JCR-4228] - Update Oak dependency to latest 1.0 stable release
-    [JCR-4231] - Upgrade aws-java-sdk-s3 dependency to 1.11.241
-    [JCR-4233] - Update H2DB test dependency
+    [JCR-4215] - Use Tika version 1.17
+    [JCR-4229] - Remove Oak dependency in webapp
+    [JCR-4236] - remove obsolete textFilterClasses config parameters
+    [JCR-4240] - IndexingQueueTest relies on Tika behavior that is changed in Tika 1.17
+    [JCR-4244] - Upgrade tomcat dependency to 8.5.24
+    [JCR-4247] - Update commons-io dependency
+    [JCR-4248] - Upgrade httpcore dependency to 4.4.9
+    [JCR-4250] - remove guava dependency
+    [JCR-4252] - Upgrade httpclient dependency to 4.5.5
 
 In addition to the above-mentioned changes, this release contains
 all the changes included up to the Apache Jackrabbit 2.16.x release.
