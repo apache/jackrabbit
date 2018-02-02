@@ -186,6 +186,7 @@ A staged Maven repository is available for review at:
 
 The command for running automated checks against this release candidate is:
 
+    # run in SVN checkout of https://dist.apache.org/repos/dist/dev/jackrabbit/
     $ sh check-release.sh ${project.version} ${checksum}
 
 Please vote on releasing this package as Apache Jackrabbit ${project.version}.
@@ -213,6 +214,22 @@ A release vote template has been generated for you:
     file://${basedir}/target/vote.txt
                     </echo>
                     <echo />
+                    <echo file="${basedir}/target/announcement.txt">
+From: ${username}@apache.org
+To: announce@apache.org, announce@jackrabbit.apache.org, users@jackrabbit.apache.org, dev@jackrabbit.apache.org, oak-dev@jackrabbit.apache.org
+Subject: [ANNOUNCE] Apache Jackrabbit ${project.version} released
+
+The Apache Jackrabbit community is pleased to announce the release of
+Apache Jackrabbit ${project.version}. The release is available for download at:
+
+     http://jackrabbit.apache.org/downloads.html
+
+See the full release notes below for details about this release:
+
+                    </echo>
+                    <concat destfile="${basedir}/target/announcement.txt" append="true">
+                      <filelist files="RELEASE-NOTES.txt"/>
+                    </concat>
                   </tasks>
                 </configuration>
               </execution>
