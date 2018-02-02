@@ -42,6 +42,8 @@ public class IndexingQueueTest extends AbstractIndexingTest {
     private static final File TEMP_DIR =
         new File(System.getProperty("java.io.tmpdir"));
 
+    private static final String TESTCONTENT = "<?xml version='1.0'?>\n<blocked>The quick brown fox jumps over the lazy dog.</blocked>";
+    
     public void testQueue() throws Exception {
         SearchIndex index = getSearchIndex();
         IndexingQueue queue = index.getIndex().getIndexingQueue();
@@ -50,7 +52,7 @@ public class IndexingQueueTest extends AbstractIndexingTest {
         assertEquals(0, queue.getNumPendingDocuments());
 
         Node resource = testRootNode.addNode(nodeName1, "nt:resource");
-        resource.setProperty("jcr:data", "", PropertyType.BINARY);
+        resource.setProperty("jcr:data", TESTCONTENT, PropertyType.BINARY);
         resource.setProperty("jcr:lastModified", Calendar.getInstance());
         resource.setProperty("jcr:mimeType", BlockingParser.TYPE.toString());
         session.save();
@@ -169,7 +171,7 @@ public class IndexingQueueTest extends AbstractIndexingTest {
             // create files
             Node file = folder.addNode("file" + i, "nt:file");
             Node resource = file.addNode("jcr:content", "nt:resource");
-            resource.setProperty("jcr:data", "", PropertyType.BINARY);
+            resource.setProperty("jcr:data", TESTCONTENT, PropertyType.BINARY);
             resource.setProperty("jcr:lastModified", Calendar.getInstance());
             resource.setProperty("jcr:mimeType", BlockingParser.TYPE.toString());
             count++;
