@@ -17,10 +17,10 @@
 package org.apache.jackrabbit.spi.commons.value;
 
 import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.util.Calendar;
 
 import javax.jcr.Binary;
@@ -105,31 +105,27 @@ public final class QValueValue implements Value {
         if (getType() == PropertyType.NAME || getType() == PropertyType.PATH) {
             // qualified name/path value needs to be resolved,
             // delegate conversion to getString() method
-            try {
-                final byte[] value = getString().getBytes("UTF-8");
-                return new Binary() {
-                    public int read(byte[] b, long position) {
-                        if (position >= value.length) {
-                            return -1;
-                        } else {
-                            int p = (int) position;
-                            int n = Math.min(b.length, value.length - p);
-                            System.arraycopy(value, p, b, 0, n);
-                            return n;
-                        }
+            final byte[] value = getString().getBytes(StandardCharsets.UTF_8);
+            return new Binary() {
+                public int read(byte[] b, long position) {
+                    if (position >= value.length) {
+                        return -1;
+                    } else {
+                        int p = (int) position;
+                        int n = Math.min(b.length, value.length - p);
+                        System.arraycopy(value, p, b, 0, n);
+                        return n;
                     }
-                    public InputStream getStream() {
-                        return new ByteArrayInputStream(value);
-                    }
-                    public long getSize() {
-                        return value.length;
-                    }
-                    public void dispose() {
-                    }
-                };
-            } catch (UnsupportedEncodingException ex) {
-                throw new RepositoryException("UTF-8 is not supported", ex);
-            }
+                }
+                public InputStream getStream() {
+                    return new ByteArrayInputStream(value);
+                }
+                public long getSize() {
+                    return value.length;
+                }
+                public void dispose() {
+                }
+            };
         } else {
             return qvalue.getBinary();
         }
@@ -163,11 +159,7 @@ public final class QValueValue implements Value {
         if (stream == null) {
             if (getType() == PropertyType.NAME || getType() == PropertyType.PATH) {
                 // qualified name/path value needs to be resolved
-                try {
-                    stream = new ByteArrayInputStream(getString().getBytes("UTF-8"));
-                } catch (UnsupportedEncodingException ex) {
-                    throw new RepositoryException("UTF-8 is not supported", ex);
-                }
+                stream = new ByteArrayInputStream(getString().getBytes(StandardCharsets.UTF_8));
             } else {
                 stream = qvalue.getStream();
             }

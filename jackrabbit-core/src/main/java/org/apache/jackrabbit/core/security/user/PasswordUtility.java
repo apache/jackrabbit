@@ -17,7 +17,8 @@
 
 package org.apache.jackrabbit.core.security.user;
 
-import java.io.UnsupportedEncodingException;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
@@ -35,7 +36,7 @@ public class PasswordUtility {
 
     private static final char DELIMITER = '-';
     private static final int NO_ITERATIONS = 1;    
-    private static final String ENCODING = "UTF-8";
+    private static final Charset ENCODING = StandardCharsets.UTF_8;
 
     public static final String DEFAULT_ALGORITHM = "SHA-256";
     public static final int DEFAULT_SALT_SIZE = 8;
@@ -53,9 +54,8 @@ public class PasswordUtility {
      * @param password The password to be hashed.
      * @return The password hash.
      * @throws NoSuchAlgorithmException If {@link #DEFAULT_ALGORITHM} is not supported.
-     * @throws UnsupportedEncodingException If utf-8 is not supported.
      */
-    public static String buildPasswordHash(String password) throws NoSuchAlgorithmException, UnsupportedEncodingException {
+    public static String buildPasswordHash(String password) throws NoSuchAlgorithmException {
         return buildPasswordHash(password, DEFAULT_ALGORITHM, DEFAULT_SALT_SIZE, DEFAULT_ITERATIONS);
     }
 
@@ -71,10 +71,9 @@ public class PasswordUtility {
      * integer is lower than 1 the {@link #DEFAULT_ITERATIONS default} value is used.
      * @return  The password hash.
      * @throws NoSuchAlgorithmException If the specified algorithm is not supported.
-     * @throws UnsupportedEncodingException If utf-8 is not supported.
      */
     public static String buildPasswordHash(String password, String algorithm,
-                                           int saltSize, int iterations) throws NoSuchAlgorithmException, UnsupportedEncodingException {
+                                           int saltSize, int iterations) throws NoSuchAlgorithmException {
         if (password == null) {
             throw new IllegalArgumentException("Password may not be null.");
         }
@@ -127,8 +126,6 @@ public class PasswordUtility {
             } // hashedPassword is plaintext -> return false
         } catch (NoSuchAlgorithmException e) {
             log.warn(e.getMessage());
-        } catch (UnsupportedEncodingException e) {
-            log.warn(e.getMessage());
         }
         return false;
     }
@@ -164,7 +161,7 @@ public class PasswordUtility {
 
     //------------------------------------------------------------< private >---
 
-    private static String generateHash(String pwd, String algorithm, String salt, int iterations) throws NoSuchAlgorithmException, UnsupportedEncodingException {
+    private static String generateHash(String pwd, String algorithm, String salt, int iterations) throws NoSuchAlgorithmException {
         StringBuilder passwordHash = new StringBuilder();
         passwordHash.append('{').append(algorithm).append('}');
         if (salt != null && salt.length() > 0) {
@@ -196,7 +193,7 @@ public class PasswordUtility {
         return res.toString();
     }
 
-    private static String generateDigest(String data, String algorithm, int iterations) throws UnsupportedEncodingException, NoSuchAlgorithmException {
+    private static String generateDigest(String data, String algorithm, int iterations) throws NoSuchAlgorithmException {
         byte[] bytes = data.getBytes(ENCODING);
         MessageDigest md = MessageDigest.getInstance(algorithm);
 

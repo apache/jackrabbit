@@ -52,6 +52,7 @@ import java.io.FilterInputStream;
 import java.io.OutputStream;
 import java.io.BufferedOutputStream;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -738,7 +739,7 @@ public class ValueHelper {
         } else {
             String textVal = value.getString();
             if (enforceBase64) {
-                byte bytes[] = textVal.getBytes("UTF-8");
+                byte bytes[] = textVal.getBytes(StandardCharsets.UTF_8);
                 Base64.encode(bytes, 0, bytes.length, writer);
             }
             else {

@@ -45,6 +45,7 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.io.Writer;
+import java.nio.charset.StandardCharsets;
 
 /**
  * <code>BufferedStringValue</code> represents an appendable
@@ -122,7 +123,7 @@ class BufferedStringValue implements TextValue {
         if (base64) {
             ByteArrayOutputStream out = new ByteArrayOutputStream();
             Base64.decode(value, out);
-            value = new String(out.toByteArray(), "UTF-8");
+            value = new String(out.toByteArray(), StandardCharsets.UTF_8);
         }
         return value;
     }
@@ -161,7 +162,7 @@ class BufferedStringValue implements TextValue {
 
     private Reader openReader() throws IOException {
         return new InputStreamReader(
-                new BufferedInputStream(new FileInputStream(tmpFile)), "UTF-8");
+                new BufferedInputStream(new FileInputStream(tmpFile)), StandardCharsets.UTF_8);
     }
 
     /**
@@ -199,7 +200,7 @@ class BufferedStringValue implements TextValue {
                 TransientFileFactory fileFactory = TransientFileFactory.getInstance();
                 tmpFile = fileFactory.createTransientFile("txt", null, null);
                 BufferedOutputStream fout = new BufferedOutputStream(new FileOutputStream(tmpFile));
-                writer = new OutputStreamWriter(fout, "UTF-8");
+                writer = new OutputStreamWriter(fout, StandardCharsets.UTF_8);
                 writer.write(buffer.toString());
                 writer.write(chars, start, len);
                 // reset the in-memory buffer
