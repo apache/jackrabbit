@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.core.data;
 
+import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 
 import javax.crypto.Mac;
@@ -98,7 +99,7 @@ public abstract class AbstractDataStore implements DataStore {
 
             Mac mac = Mac.getInstance(ALGORITHM);
             mac.init(new SecretKeySpec(getReferenceKey(), ALGORITHM));
-            byte[] hash = mac.doFinal(id.getBytes("UTF-8"));
+            byte[] hash = mac.doFinal(id.getBytes(StandardCharsets.UTF_8));
 
             return id + ':' + encodeHexString(hash);
         } catch (Exception e) {

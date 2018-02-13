@@ -21,6 +21,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.Reader;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -790,7 +791,7 @@ public class NodeTypeRegistry implements NodeTypeEventListener {
         try {
             in = getClass().getClassLoader().getResourceAsStream(BUILTIN_NODETYPES_RESOURCE_PATH);
             if (in != null) {
-                Reader r = new InputStreamReader(in, "utf-8");
+                Reader r = new InputStreamReader(in, StandardCharsets.UTF_8);
                 store.loadCND(r, BUILTIN_NODETYPES_RESOURCE_PATH);
             }
         } catch (IOException ioe) {
