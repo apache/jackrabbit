@@ -29,7 +29,6 @@ import static javax.jcr.PropertyType.STRING;
 import static javax.jcr.PropertyType.UNDEFINED;
 import static javax.jcr.PropertyType.WEAKREFERENCE;
 
-import com.google.common.collect.ImmutableSet;
 import org.apache.jackrabbit.util.Base64;
 import org.apache.jackrabbit.util.Text;
 import org.apache.jackrabbit.util.TransientFileFactory;
@@ -53,7 +52,9 @@ import java.io.OutputStream;
 import java.io.BufferedOutputStream;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -71,18 +72,26 @@ public class ValueHelper {
 
     private static final Map<Integer, Set<Integer>> SUPPORTED_CONVERSIONS = new HashMap<Integer, Set<Integer>>();
     static {
-        SUPPORTED_CONVERSIONS.put(DATE, ImmutableSet.of(STRING, BINARY, DOUBLE, DECIMAL, LONG));
-        SUPPORTED_CONVERSIONS.put(DOUBLE, ImmutableSet.of(STRING, BINARY, DECIMAL, DATE, LONG));
-        SUPPORTED_CONVERSIONS.put(DECIMAL, ImmutableSet.of(STRING, BINARY, DOUBLE, DATE, LONG));
-        SUPPORTED_CONVERSIONS.put(LONG, ImmutableSet.of(STRING, BINARY, DECIMAL, DATE, DOUBLE));
-        SUPPORTED_CONVERSIONS.put(BOOLEAN, ImmutableSet.of(STRING, BINARY));
-        SUPPORTED_CONVERSIONS.put(NAME, ImmutableSet.of(STRING, BINARY, PATH, PropertyType.URI));
-        SUPPORTED_CONVERSIONS.put(PATH, ImmutableSet.of(STRING, BINARY, NAME, PropertyType.URI));
-        SUPPORTED_CONVERSIONS.put(PropertyType.URI, ImmutableSet.of(STRING, BINARY, NAME, PATH));
-        SUPPORTED_CONVERSIONS.put(REFERENCE, ImmutableSet.of(STRING, BINARY, WEAKREFERENCE));
-        SUPPORTED_CONVERSIONS.put(WEAKREFERENCE, ImmutableSet.of(STRING, BINARY, REFERENCE));
+        SUPPORTED_CONVERSIONS.put(DATE, immutableSetOf(STRING, BINARY, DOUBLE, DECIMAL, LONG));
+        SUPPORTED_CONVERSIONS.put(DOUBLE, immutableSetOf(STRING, BINARY, DECIMAL, DATE, LONG));
+        SUPPORTED_CONVERSIONS.put(DECIMAL, immutableSetOf(STRING, BINARY, DOUBLE, DATE, LONG));
+        SUPPORTED_CONVERSIONS.put(LONG, immutableSetOf(STRING, BINARY, DECIMAL, DATE, DOUBLE));
+        SUPPORTED_CONVERSIONS.put(BOOLEAN, immutableSetOf(STRING, BINARY));
+        SUPPORTED_CONVERSIONS.put(NAME, immutableSetOf(STRING, BINARY, PATH, PropertyType.URI));
+        SUPPORTED_CONVERSIONS.put(PATH, immutableSetOf(STRING, BINARY, NAME, PropertyType.URI));
+        SUPPORTED_CONVERSIONS.put(PropertyType.URI, immutableSetOf(STRING, BINARY, NAME, PATH));
+        SUPPORTED_CONVERSIONS.put(REFERENCE, immutableSetOf(STRING, BINARY, WEAKREFERENCE));
+        SUPPORTED_CONVERSIONS.put(WEAKREFERENCE, immutableSetOf(STRING, BINARY, REFERENCE));
     }
 
+    private static Set<Integer> immutableSetOf(int... types) {
+        Set<Integer> t = new HashSet<Integer>();
+        for (int type : types) {
+            t.add(type);
+        }
+        return Collections.unmodifiableSet(t);
+    }
+    
     public static boolean isSupportedConversion(int fromType, int toType) {
         if (fromType == toType) {
             return true;
