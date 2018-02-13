@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.GregorianCalendar;
@@ -464,7 +465,7 @@ class BundleWriter {
             if (local.length() == 0) {
                 throw new IOException("Attempt to write an empty local name: " + name);
             }
-            byte[] bytes = local.getBytes("UTF-8");
+            byte[] bytes = local.getBytes(StandardCharsets.UTF_8);
             int len = Math.min(bytes.length - 1, 0x0f);
 
             out.writeByte(0x80 | ns << 4 | len);
@@ -707,7 +708,7 @@ class BundleWriter {
      * @throws IOException if an I/O error occurs
      */
     private void writeString(String value) throws IOException {
-        writeBytes(value.getBytes("UTF-8"), 0);
+        writeBytes(value.getBytes(StandardCharsets.UTF_8), 0);
     }
 
     /**

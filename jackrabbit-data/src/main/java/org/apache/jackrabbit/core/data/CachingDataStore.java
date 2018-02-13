@@ -24,6 +24,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.lang.ref.WeakReference;
+import java.nio.charset.StandardCharsets;
 import java.security.DigestOutputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -681,11 +682,7 @@ public abstract class CachingDataStore extends AbstractDataStore implements
 
     @Override
     protected byte[] getOrCreateReferenceKey() throws DataStoreException {
-        try {
-            return secret.getBytes("UTF-8");
-        } catch (UnsupportedEncodingException e) {
-            throw new DataStoreException(e);
-        }
+        return secret.getBytes(StandardCharsets.UTF_8);
     }
 
     public Set<String> getPendingUploads() {

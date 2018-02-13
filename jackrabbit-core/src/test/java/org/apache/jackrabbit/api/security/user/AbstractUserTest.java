@@ -31,6 +31,7 @@ import javax.jcr.SimpleCredentials;
 import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.security.auth.Subject;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.security.NoSuchAlgorithmException;
 import java.security.Principal;
 import java.util.Collections;
@@ -103,11 +104,9 @@ public abstract class AbstractUserTest extends AbstractJCRTest {
             try {
                 StringBuilder password = new StringBuilder();
                 password.append("{").append(SecurityConstants.DEFAULT_DIGEST).append("}");
-                password.append(Text.digest(SecurityConstants.DEFAULT_DIGEST, uid.getBytes("UTF-8")));
+                password.append(Text.digest(SecurityConstants.DEFAULT_DIGEST, uid.getBytes(StandardCharsets.UTF_8)));
                 return password.toString();
             } catch (NoSuchAlgorithmException e) {
-                throw new IllegalArgumentException(e.toString());
-            } catch (UnsupportedEncodingException e) {
                 throw new IllegalArgumentException(e.toString());
             }
         } else {
