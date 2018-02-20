@@ -40,6 +40,13 @@ public class OutputContextImplTest extends TestCase {
             public void setHeader(String name, String value) {
                 assertTrue(Long.parseLong(value) > Integer.MAX_VALUE);
             }
+            @Override
+            public String getContentType() {
+                return null;
+            }
+            @Override
+            public void setCharacterEncoding(String charset) {
+            }
         };
 
         OutputContext ctx = new OutputContextImpl(response, null);
