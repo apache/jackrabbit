@@ -296,5 +296,21 @@ public class BasicCredentialsProviderTest extends TestCase {
         public String getRealPath(String path) {
             return null;
         }
+
+        public int getRemotePort() {
+            return 0;
+        }
+
+        public String getLocalName() {
+            return null;
+        }
+
+        public String getLocalAddr() {
+            return null;
+        }
+
+        public int getLocalPort() {
+            return 0;
+        }
     }
 }

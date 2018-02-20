@@ -1014,4 +1014,20 @@ public class WebdavRequestImpl implements WebdavRequest, DavConstants {
     public String getRealPath(String s) {
         return httpRequest.getRealPath(s);
     }
+
+    public int getRemotePort() {
+        return httpRequest.getRemotePort();
+    }
+
+    public String getLocalName() {
+        return httpRequest.getLocalName();
+    }
+
+    public String getLocalAddr() {
+        return httpRequest.getLocalAddr();
+    }
+
+    public int getLocalPort() {
+        return httpRequest.getLocalPort();
+    }
 }

@@ -311,4 +311,12 @@ public class WebdavResponseImpl implements WebdavResponse {
     public Locale getLocale() {
         return httpResponse.getLocale();
     }
+
+    public String getContentType() {
+        return httpResponse.getContentType();
+    }
+
+    public void setCharacterEncoding(String charset) {
+        httpResponse.setCharacterEncoding(charset);
+    }
 }
