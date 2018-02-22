@@ -11,6 +11,9 @@ Apache Jackrabbit 2.8.7 is a patch release that contains fixes and
 improvements over Jackrabbit 2.8. Jackrabbit 2.8.x releases are considered
 stable and targeted for production use.
 
+Note that an "end of life" date has already been planned for this branch. See
+<http://jackrabbit.apache.org/jcr/jackrabbit-roadmap.html> for details.
+
 Changes since Jackrabbit 2.8.6
 ------------------------------
 
