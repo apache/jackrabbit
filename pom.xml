@@ -145,12 +145,6 @@
                         <include name="jackrabbit-jca/target/*-${project.version}.rar*" />
                       </fileset>
                     </copy>
-                    <checksum algorithm="MD5" fileext=".md5">
-                      <fileset dir="${basedir}/target/${project.version}">
-                        <include name="*.zip" />
-                        <include name="*.?ar" />
-                      </fileset>
-                    </checksum>
                     <checksum algorithm="SHA1" fileext=".sha1">
                       <fileset dir="${basedir}/target/${project.version}">
                         <include name="*.zip" />
