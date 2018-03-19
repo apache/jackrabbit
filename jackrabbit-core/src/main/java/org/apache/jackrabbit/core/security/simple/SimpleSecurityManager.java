@@ -17,7 +17,6 @@
 package org.apache.jackrabbit.core.security.simple;
 
 import java.security.Principal;
-import java.security.acl.Group;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -56,6 +55,7 @@ import org.apache.jackrabbit.core.security.authorization.AccessControlProvider;
 import org.apache.jackrabbit.core.security.authorization.WorkspaceAccessManager;
 import org.apache.jackrabbit.core.security.principal.AdminPrincipal;
 import org.apache.jackrabbit.core.security.principal.EveryonePrincipal;
+import org.apache.jackrabbit.core.security.principal.GroupPrincipals;
 import org.apache.jackrabbit.core.security.principal.PrincipalIteratorAdapter;
 import org.apache.jackrabbit.core.security.principal.PrincipalManagerImpl;
 import org.apache.jackrabbit.core.security.principal.PrincipalProvider;
@@ -272,7 +272,7 @@ public class SimpleSecurityManager implements JackrabbitSecurityManager {
             // are the same (not totally correct) and thus return the name
             // of the first non-group principal.
             for (Principal p : subject.getPrincipals()) {
-                if (!(p instanceof Group)) {
+                if (!GroupPrincipals.isGroup(p)) {
                     uid = p.getName();
                     break;
                 }
@@ -338,8 +338,8 @@ public class SimpleSecurityManager implements JackrabbitSecurityManager {
             Principal p = getPrincipal(simpleFilter);
             if (p == null) {
                 return PrincipalIteratorAdapter.EMPTY;
-            } else if (p instanceof Group && searchType == PrincipalManager.SEARCH_TYPE_NOT_GROUP ||
-                       !(p instanceof Group) && searchType == PrincipalManager.SEARCH_TYPE_GROUP) {
+            } else if (GroupPrincipals.isGroup(p) && searchType == PrincipalManager.SEARCH_TYPE_NOT_GROUP ||
+                       !GroupPrincipals.isGroup(p) && searchType == PrincipalManager.SEARCH_TYPE_GROUP) {
                 return PrincipalIteratorAdapter.EMPTY;
             } else {
                 return new PrincipalIteratorAdapter(Collections.singletonList(p));

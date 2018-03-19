@@ -22,7 +22,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.security.Principal;
-import java.security.acl.Group;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -33,6 +32,7 @@ import javax.jcr.Session;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.core.config.RepositoryConfig;
+import org.apache.jackrabbit.core.security.principal.GroupPrincipals;
 import org.apache.jackrabbit.test.NotExecutableException;
 import org.apache.jackrabbit.test.RepositoryStub;
 import org.apache.jackrabbit.test.RepositoryStubException;
@@ -208,7 +208,7 @@ public class JackrabbitRepositoryStub extends RepositoryStub {
 
         if (session instanceof SessionImpl) {
             for (Principal p : ((SessionImpl)session).getSubject().getPrincipals()) {
-                if (! (p instanceof Group)) {
+                if (!GroupPrincipals.isGroup(p)) {
                     knownPrincipal = p;
                 }
             }

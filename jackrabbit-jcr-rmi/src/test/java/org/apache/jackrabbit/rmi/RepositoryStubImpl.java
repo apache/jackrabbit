@@ -22,7 +22,6 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.rmi.server.RemoteObject;
 import java.security.Principal;
-import java.security.acl.Group;
 import java.util.Properties;
 
 import javax.jcr.Repository;
@@ -37,6 +36,7 @@ import org.apache.jackrabbit.rmi.client.LocalAdapterFactory;
 import org.apache.jackrabbit.rmi.remote.RemoteRepository;
 import org.apache.jackrabbit.rmi.server.RemoteAdapterFactory;
 import org.apache.jackrabbit.rmi.server.ServerAdapterFactory;
+import org.apache.jackrabbit.rmi.server.principal.ServerGroup;
 import org.apache.jackrabbit.test.RepositoryStubException;
 
 public class RepositoryStubImpl extends JackrabbitRepositoryStub {
@@ -89,7 +89,7 @@ public class RepositoryStubImpl extends JackrabbitRepositoryStub {
                 new SimpleCredentials("admin", "admin".toCharArray()));
         try {
             for (Principal principal : session.getSubject().getPrincipals()) {
-                if (!(principal instanceof Group)) {
+                if (!ServerGroup.isGroup(principal)) {
                     return principal;
                 }
             }

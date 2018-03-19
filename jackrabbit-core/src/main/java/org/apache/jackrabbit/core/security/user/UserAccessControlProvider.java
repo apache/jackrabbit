@@ -37,6 +37,7 @@ import org.apache.jackrabbit.core.security.authorization.Permission;
 import org.apache.jackrabbit.core.security.authorization.PrivilegeBits;
 import org.apache.jackrabbit.core.security.authorization.PrivilegeManagerImpl;
 import org.apache.jackrabbit.core.security.authorization.PrivilegeRegistry;
+import org.apache.jackrabbit.core.security.principal.GroupPrincipals;
 import org.apache.jackrabbit.core.security.principal.PrincipalImpl;
 import org.apache.jackrabbit.spi.Name;
 import org.apache.jackrabbit.spi.Path;
@@ -54,7 +55,6 @@ import javax.jcr.security.AccessControlPolicy;
 import javax.jcr.security.Privilege;
 
 import java.security.Principal;
-import java.security.acl.Group;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
@@ -271,7 +271,7 @@ public class UserAccessControlProvider extends AbstractAccessControlProvider
         try {
             UserManager uMgr = session.getUserManager();
             for (Principal p : principals) {
-                if (!(p instanceof Group) && p instanceof ItemBasedPrincipal
+                if (!(GroupPrincipals.isGroup(p)) && p instanceof ItemBasedPrincipal
                         && uMgr.getAuthorizable(p) != null) {
                     return (ItemBasedPrincipal) p;
                 }

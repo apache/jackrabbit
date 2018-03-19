@@ -17,7 +17,6 @@
 package org.apache.jackrabbit.core;
 
 import java.security.Principal;
-import java.security.acl.Group;
 import java.util.Calendar;
 
 import javax.jcr.ItemExistsException;
@@ -35,6 +34,7 @@ import javax.jcr.security.Privilege;
 
 import org.apache.jackrabbit.api.security.JackrabbitAccessControlList;
 import org.apache.jackrabbit.commons.JcrUtils;
+import org.apache.jackrabbit.core.security.principal.GroupPrincipals;
 import org.apache.jackrabbit.test.AbstractJCRTest;
 import org.apache.jackrabbit.test.NotExecutableException;
 import org.apache.jackrabbit.test.RepositoryHelper;
@@ -89,7 +89,7 @@ public class NodeImplTest extends AbstractJCRTest {
         SessionImpl s = (SessionImpl) helper.getReadOnlySession();
         try {
             for (Principal p : s.getSubject().getPrincipals()) {
-                if (!(p instanceof Group)) {
+                if (!GroupPrincipals.isGroup(p)) {
                     return p;
                 }
             }

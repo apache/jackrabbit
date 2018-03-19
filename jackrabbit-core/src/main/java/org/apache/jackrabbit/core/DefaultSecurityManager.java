@@ -59,6 +59,7 @@ import org.apache.jackrabbit.core.security.authorization.WorkspaceAccessManager;
 import org.apache.jackrabbit.core.security.principal.AbstractPrincipalProvider;
 import org.apache.jackrabbit.core.security.principal.AdminPrincipal;
 import org.apache.jackrabbit.core.security.principal.DefaultPrincipalProvider;
+import org.apache.jackrabbit.core.security.principal.GroupPrincipals;
 import org.apache.jackrabbit.core.security.principal.PrincipalManagerImpl;
 import org.apache.jackrabbit.core.security.principal.PrincipalProvider;
 import org.apache.jackrabbit.core.security.principal.PrincipalProviderRegistry;
@@ -354,7 +355,7 @@ public class DefaultSecurityManager implements JackrabbitSecurityManager {
             Set<Principal> s = subject.getPrincipals(cl);
             if (!s.isEmpty()) {
                 for (Principal p : s) {
-                    if (!(p instanceof java.security.acl.Group)) {
+                    if (!GroupPrincipals.isGroup(p)) {
                         return p.getName();
                     }
                 }

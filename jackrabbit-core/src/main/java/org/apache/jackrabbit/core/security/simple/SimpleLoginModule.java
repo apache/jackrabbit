@@ -18,6 +18,7 @@ package org.apache.jackrabbit.core.security.simple;
 
 import org.apache.jackrabbit.core.security.authentication.AbstractLoginModule;
 import org.apache.jackrabbit.core.security.authentication.Authentication;
+import org.apache.jackrabbit.core.security.principal.GroupPrincipals;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,7 +29,6 @@ import javax.security.auth.Subject;
 import javax.security.auth.callback.CallbackHandler;
 import javax.security.auth.login.LoginException;
 import java.security.Principal;
-import java.security.acl.Group;
 import java.util.Map;
 
 /**
@@ -52,7 +52,7 @@ public class SimpleLoginModule extends AbstractLoginModule {
      */
     @Override
     protected boolean impersonate(Principal principal, Credentials credentials) throws RepositoryException, LoginException {
-        if (principal instanceof Group) {
+        if (GroupPrincipals.isGroup(principal)) {
             return false;
         }
         Subject impersSubject = getImpersonatorSubject(credentials);
@@ -64,7 +64,7 @@ public class SimpleLoginModule extends AbstractLoginModule {
      */
     @Override
     protected Authentication getAuthentication(Principal principal, Credentials creds) throws RepositoryException {
-        if (principal instanceof Group) {
+        if (GroupPrincipals.isGroup(principal)) {
             return null;
         }
         return new Authentication() {
@@ -93,7 +93,7 @@ public class SimpleLoginModule extends AbstractLoginModule {
     protected Principal getPrincipal(Credentials credentials) {
         String userId = getUserID(credentials);
         Principal principal = principalProvider.getPrincipal(userId);
-        if (principal == null || principal instanceof Group) {
+        if (principal == null || GroupPrincipals.isGroup(principal)) {
             // no matching user principal
             return null;
         } else {

@@ -38,6 +38,7 @@ import javax.jcr.RepositoryException;
 import javax.jcr.UnsupportedRepositoryOperationException;
 import javax.jcr.Value;
 
+import org.apache.jackrabbit.api.security.principal.GroupPrincipal;
 import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.jackrabbit.api.security.user.Group;
 import org.apache.jackrabbit.api.security.user.UserManager;
@@ -290,7 +291,7 @@ class GroupImpl extends AuthorizableImpl implements Group {
     /**
      * Principal Implementation
      */
-    private class NodeBasedGroup extends NodeBasedPrincipal implements java.security.acl.Group {
+    private class NodeBasedGroup extends NodeBasedPrincipal implements java.security.acl.Group, GroupPrincipal {
 
         private NodeBasedGroup(String name) {
             super(name);
@@ -308,10 +309,21 @@ class GroupImpl extends AuthorizableImpl implements Group {
         }
 
         /**
+         * @return Always <code>false</code>. Group membership must be edited
+         *         using the enclosing <code>GroupImpl</code> object.
+         * @see java.security.acl.Group#isMember(Principal)
+         */
+        public boolean removeMember(Principal user) {
+            return false;
+        }
+
+        //----------------------------------------------------------< GroupPrincipal >---
+
+        /**
          * Returns true, if the given <code>Principal</code> is represented by
          * a Authorizable, that is a member of the underlying UserGroup.
          *
-         * @see java.security.acl.Group#isMember(Principal)
+         * @see org.apache.jackrabbit.api.security.principal.GroupPrincipal#isMember(Principal)
          */
         public boolean isMember(Principal member) {
             // shortcut for everyone group -> avoid collecting all members
@@ -329,19 +341,10 @@ class GroupImpl extends AuthorizableImpl implements Group {
         }
 
         /**
-         * @return Always <code>false</code>. Group membership must be edited
-         *         using the enclosing <code>GroupImpl</code> object.
-         * @see java.security.acl.Group#isMember(Principal)
-         */
-        public boolean removeMember(Principal user) {
-            return false;
-        }
-
-        /**
          * Return all principals that refer to every member of the underlying
          * user group.
          *
-         * @see java.security.acl.Group#members()
+         * @see org.apache.jackrabbit.api.security.principal.GroupPrincipal#members()
          */
         public Enumeration<? extends Principal> members() {
             return Collections.enumeration(getMembers());
