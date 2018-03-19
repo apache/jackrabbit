@@ -17,12 +17,12 @@
 package org.apache.jackrabbit.core.security.principal;
 
 import java.security.Principal;
-import java.security.acl.Group;
 import java.util.Properties;
 
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
+import org.apache.jackrabbit.api.security.principal.GroupPrincipal;
 import org.apache.jackrabbit.api.security.principal.JackrabbitPrincipal;
 import org.apache.jackrabbit.api.security.principal.PrincipalIterator;
 import org.apache.jackrabbit.test.AbstractJCRTest;
@@ -36,7 +36,7 @@ import org.mockito.Mockito;
 public class PrincipalManagerTest extends AbstractJCRTest {
 
     private static final String TESTGROUP_NAME = "org.apache.jackrabbit.core.security.principal.PrincipalManagerTest.testgroup";
-    private static final Group TESTGROUP = Mockito.mock(Group.class);
+    private static final GroupPrincipal TESTGROUP = Mockito.mock(GroupPrincipal.class);
 
     private static class CustomPrincipalProvider extends AbstractPrincipalProvider {
 

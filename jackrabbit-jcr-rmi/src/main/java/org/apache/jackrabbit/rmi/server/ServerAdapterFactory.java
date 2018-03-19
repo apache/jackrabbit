@@ -18,7 +18,6 @@ package org.apache.jackrabbit.rmi.server;
 
 import java.rmi.RemoteException;
 import java.security.Principal;
-import java.security.acl.Group;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -514,8 +513,8 @@ public class ServerAdapterFactory implements RemoteAdapterFactory {
     }
 
     public RemotePrincipal getRemotePrincipal(final Principal principal) throws RemoteException {
-        if (principal instanceof Group) {
-            return new ServerGroup((Group) principal, this);
+        if (ServerGroup.isGroup(principal)) {
+            return new ServerGroup(principal, this);
         }
 
         return new ServerPrincipal(principal, this);

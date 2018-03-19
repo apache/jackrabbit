@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.api.security.user;
 
+import org.apache.jackrabbit.api.security.principal.GroupPrincipal;
 import org.apache.jackrabbit.test.NotExecutableException;
 
 import javax.jcr.RepositoryException;
@@ -417,8 +418,8 @@ public class GroupTest extends AbstractUserTest {
             newGroup2.addMember(auth);
             save(superuser);
 
-            java.security.acl.Group ngPrincipal = (java.security.acl.Group) newGroup.getPrincipal();
-            java.security.acl.Group ng2Principal = (java.security.acl.Group) newGroup2.getPrincipal();
+            GroupPrincipal ngPrincipal = (GroupPrincipal) newGroup.getPrincipal();
+            GroupPrincipal ng2Principal = (GroupPrincipal) newGroup2.getPrincipal();
 
             assertFalse(ng2Principal.isMember(ngPrincipal));
 

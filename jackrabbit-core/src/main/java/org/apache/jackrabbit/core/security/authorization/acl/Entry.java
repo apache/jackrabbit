@@ -17,7 +17,6 @@
 package org.apache.jackrabbit.core.security.authorization.acl;
 
 import java.security.Principal;
-import java.security.acl.Group;
 import java.util.ArrayList;
 import java.util.List;
 import javax.jcr.NodeIterator;
@@ -33,6 +32,7 @@ import org.apache.jackrabbit.core.security.authorization.AccessControlConstants;
 import org.apache.jackrabbit.core.security.authorization.GlobPattern;
 import org.apache.jackrabbit.core.security.authorization.PrivilegeBits;
 import org.apache.jackrabbit.core.security.authorization.PrivilegeManagerImpl;
+import org.apache.jackrabbit.core.security.principal.GroupPrincipals;
 import org.apache.jackrabbit.core.value.InternalValue;
 import org.apache.jackrabbit.spi.Name;
 import org.slf4j.Logger;
@@ -87,7 +87,7 @@ class Entry implements AccessControlConstants {
                 boolean isGroupEntry = false;
                 Principal princ = principalMgr.getPrincipal(principalName);
                 if (princ != null) {
-                    isGroupEntry = (princ instanceof Group);
+                    isGroupEntry = GroupPrincipals.isGroup(princ);
                 }
 
                 InternalValue[] privValues = aceNode.getProperty(P_PRIVILEGES).internalGetValues();

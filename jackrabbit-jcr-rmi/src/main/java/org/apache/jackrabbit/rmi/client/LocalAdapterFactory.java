@@ -403,7 +403,7 @@ public interface LocalAdapterFactory {
      * Factory method for creating a local adapter for a remote principal.
      * <p>
      * If <code>remote</code> is a {@link RemoteGroup} the
-     * principal returned implements the <code>java.security.acl.Group</code>
+     * principal returned implements the <code>org.apache.jackrabbit.api.security.principal.GroupPrincipal</code>
      * interface.
      *
      * @param remote principal
@@ -418,7 +418,7 @@ public interface LocalAdapterFactory {
      * Each entry in the <code>remote</code> iterator which is a
      * {@link RemoteGroup} will be
      * provided as a principal implementing the
-     * <code>java.security.acl.Group</code> interface.
+     * <code>org.apache.jackrabbit.api.security.principal.GroupPrincipal</code> interface.
      *
      * @param remote remote principal iterator
      * @return local principal iterator

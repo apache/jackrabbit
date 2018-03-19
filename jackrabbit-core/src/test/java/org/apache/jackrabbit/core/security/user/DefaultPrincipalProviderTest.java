@@ -22,6 +22,7 @@ import java.util.Set;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
+import org.apache.jackrabbit.api.security.principal.GroupPrincipal;
 import org.apache.jackrabbit.api.security.principal.PrincipalIterator;
 import org.apache.jackrabbit.api.security.user.AbstractUserTest;
 import org.apache.jackrabbit.api.security.user.Authorizable;
@@ -163,7 +164,7 @@ public class DefaultPrincipalProviderTest extends AbstractUserTest {
         try {
             Principal p = principalProvider.getPrincipal(testName);
             assertNotNull(p);
-            assertTrue(p instanceof java.security.acl.Group);
+            assertTrue(p instanceof GroupPrincipal);
         } finally {
             a.remove();
             save(superuser);
@@ -175,7 +176,7 @@ public class DefaultPrincipalProviderTest extends AbstractUserTest {
         try {
             Principal p = principalProvider.getPrincipal(testName);
             assertNotNull(p);
-            assertFalse(p instanceof java.security.acl.Group);
+            assertFalse(p instanceof GroupPrincipal);
         } finally {
             a.remove();
             save(superuser);
@@ -245,15 +246,15 @@ public class DefaultPrincipalProviderTest extends AbstractUserTest {
             save(superuser);
 
             Principal groupPrincipal = principalProvider.getPrincipal(g.getPrincipal().getName());
-            assertTrue(groupPrincipal instanceof java.security.acl.Group);
-            assertTrue(((java.security.acl.Group) groupPrincipal).isMember(u.getPrincipal()));
+            assertTrue(groupPrincipal instanceof GroupPrincipal);
+            assertTrue(((GroupPrincipal) groupPrincipal).isMember(u.getPrincipal()));
 
             // remove the user from the group and assert the user is no longer a member of the group
             g.removeMember(u);
             save(superuser);
 
             groupPrincipal = principalProvider.getPrincipal(g.getPrincipal().getName());
-            assertFalse(((java.security.acl.Group) groupPrincipal).isMember(u.getPrincipal()));
+            assertFalse(((GroupPrincipal) groupPrincipal).isMember(u.getPrincipal()));
         } finally {
             if (null != g) { g.remove(); }
             if (null != u) { u.remove(); }

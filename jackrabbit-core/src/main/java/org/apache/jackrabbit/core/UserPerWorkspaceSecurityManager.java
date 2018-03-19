@@ -25,6 +25,7 @@ import org.apache.jackrabbit.core.security.authentication.AuthContextProvider;
 import org.apache.jackrabbit.core.security.authorization.WorkspaceAccessManager;
 import org.apache.jackrabbit.core.security.principal.AbstractPrincipalProvider;
 import org.apache.jackrabbit.core.security.principal.DefaultPrincipalProvider;
+import org.apache.jackrabbit.core.security.principal.GroupPrincipals;
 import org.apache.jackrabbit.core.security.principal.PrincipalManagerImpl;
 import org.apache.jackrabbit.core.security.principal.PrincipalProvider;
 import org.apache.jackrabbit.core.security.principal.PrincipalProviderRegistry;
@@ -40,7 +41,6 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.security.auth.Subject;
 import java.security.Principal;
-import java.security.acl.Group;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -361,7 +361,7 @@ public class UserPerWorkspaceSecurityManager extends DefaultSecurityManager {
             } else {
                 UserManager umgr = UserPerWorkspaceSecurityManager.this.getSystemUserManager(workspaceName);
                 for (Principal principal : principals) {
-                    if (!(principal instanceof Group)) {
+                    if (!GroupPrincipals.isGroup(principal)) {
                         // check if the workspace identified by the given workspace
                         // name contains a user with this principal
                         if (umgr.getAuthorizable(principal) != null) {

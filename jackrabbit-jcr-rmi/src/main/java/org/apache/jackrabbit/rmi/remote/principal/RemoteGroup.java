@@ -22,7 +22,7 @@ import java.rmi.RemoteException;
 import org.apache.jackrabbit.rmi.remote.RemoteIterator;
 
 /**
- * Remote version of the JCR {@link java.security.acl.Group Group} interface.
+ * Remote version of the JCR {@link org.apache.jackrabbit.api.security.principal.GroupPrincipal GroupPrincipal} interface.
  * Used by the {@link org.apache.jackrabbit.rmi.server.principal.ServerGroup
  * ServerGroup} and
  * {@link org.apache.jackrabbit.rmi.client.principal.ClientGroup ClientGroup}
@@ -36,19 +36,19 @@ import org.apache.jackrabbit.rmi.remote.RemoteIterator;
  * returned as remote references to the corresponding remote interface. RMI
  * errors are signaled with RemoteExceptions.
  *
- * @see java.security.acl.Group
+ * @see org.apache.jackrabbit.api.security.principal.GroupPrincipal
  * @see org.apache.jackrabbit.rmi.client.principal.ClientGroup
  * @see org.apache.jackrabbit.rmi.server.principal.ServerGroup
  */
 public interface RemoteGroup extends RemotePrincipal {
 
     /**
-     * @see java.security.acl.Group#isMember(java.security.Principal)
+     * @see org.apache.jackrabbit.api.security.principal.GroupPrincipal#isMember(java.security.Principal)
      */
     boolean isMember(String member) throws RemoteException;
 
     /**
-     * @see java.security.acl.Group#members()
+     * @see org.apache.jackrabbit.api.security.principal.GroupPrincipal#members()
      */
     RemoteIterator members() throws RemoteException;
 

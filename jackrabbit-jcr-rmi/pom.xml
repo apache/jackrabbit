@@ -53,7 +53,7 @@
             <Bundle-Category>jcr,jackrabbit</Bundle-Category>
             <Bundle-DocURL>http://jackrabbit.apache.org/</Bundle-DocURL>
             <Export-Package>
-              org.apache.jackrabbit.rmi.*;version=3.0.0
+              org.apache.jackrabbit.rmi.*;version=3.1.0
             </Export-Package>
             <!-- optional resolution XA -->
             <Import-Package>

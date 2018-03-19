@@ -27,6 +27,7 @@ import java.util.List;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
+import org.apache.jackrabbit.api.security.principal.GroupPrincipal;
 import org.apache.jackrabbit.api.security.principal.ItemBasedPrincipal;
 import org.apache.jackrabbit.api.security.principal.JackrabbitPrincipal;
 import org.apache.jackrabbit.api.security.principal.PrincipalIterator;
@@ -190,17 +191,16 @@ public class PrincipalManagerImpl implements PrincipalManager {
      * everyone principal.
      */
     private Principal disguise(Principal principal, PrincipalProvider provider) {
-        if (!(principal instanceof Group) || principal instanceof EveryonePrincipal) {
+        if (!GroupPrincipals.isGroup(principal) || principal instanceof EveryonePrincipal) {
             // nothing to do.
             return principal;
         }
-        Group gr = (Group) principal;
         // make sure all groups except for the 'everyone' group expose only
         // principals visible to the session.
         if (principal instanceof ItemBasedPrincipal) {
-            return new ItemBasedCheckedGroup(gr, provider);
+            return new ItemBasedCheckedGroup(principal, provider);
         } else {
-            return new CheckedGroup(gr, provider);
+            return new CheckedGroup(principal, provider);
         }
     }
 
@@ -212,12 +212,12 @@ public class PrincipalManagerImpl implements PrincipalManager {
      * due to the fact, that the principal provider is not bound to a particular
      * Session object.
      */
-    private class CheckedGroup implements Group, JackrabbitPrincipal {
+    private class CheckedGroup implements Group, GroupPrincipal, JackrabbitPrincipal {
 
-        final Group delegatee;
+        final Principal delegatee;
         private final PrincipalProvider provider;
 
-        private CheckedGroup(Group delegatee, PrincipalProvider provider) {
+        private CheckedGroup(Principal delegatee, PrincipalProvider provider) {
             this.delegatee = delegatee;
             this.provider = provider;
         }
@@ -230,12 +230,13 @@ public class PrincipalManagerImpl implements PrincipalManager {
             throw new UnsupportedOperationException("Not implemented");
         }
 
+        @Override
         public boolean isMember(Principal member) {
-            return delegatee.isMember(member);
+            return GroupPrincipals.isMember(delegatee, member);
         }
 
         public Enumeration<? extends Principal> members() {
-            Iterator<? extends Principal> it = Collections.list(delegatee.members()).iterator();
+            Iterator<? extends Principal> it = Collections.list(GroupPrincipals.members(delegatee)).iterator();
             final PrincipalIterator members = new CheckedPrincipalIterator(it, provider);
             return new Enumeration<Principal>() {
                 public boolean hasMoreElements() {
@@ -268,7 +269,7 @@ public class PrincipalManagerImpl implements PrincipalManager {
      */
     private class ItemBasedCheckedGroup extends CheckedGroup implements ItemBasedPrincipal {
 
-        private ItemBasedCheckedGroup(Group delegatee, PrincipalProvider provider) {
+        private ItemBasedCheckedGroup(Principal delegatee, PrincipalProvider provider) {
             super(delegatee, provider);
             if (!(delegatee instanceof ItemBasedPrincipal)) {
                 throw new IllegalArgumentException();

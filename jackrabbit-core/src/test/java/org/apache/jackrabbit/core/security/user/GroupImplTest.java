@@ -17,6 +17,7 @@
 package org.apache.jackrabbit.core.security.user;
 
 import org.apache.jackrabbit.api.JackrabbitSession;
+import org.apache.jackrabbit.api.security.principal.GroupPrincipal;
 import org.apache.jackrabbit.api.security.principal.ItemBasedPrincipal;
 import org.apache.jackrabbit.api.security.principal.PrincipalManager;
 import org.apache.jackrabbit.api.security.user.AbstractUserTest;
@@ -109,7 +110,7 @@ public class GroupImplTest extends AbstractUserTest {
             g = userMgr.createGroup(EveryonePrincipal.NAME);
             save(superuser);
 
-            java.security.acl.Group principal = (java.security.acl.Group) g.getPrincipal();
+            GroupPrincipal principal = (GroupPrincipal) g.getPrincipal();
             assertTrue(principal.isMember(new Principal() {
 
                 public String getName() {

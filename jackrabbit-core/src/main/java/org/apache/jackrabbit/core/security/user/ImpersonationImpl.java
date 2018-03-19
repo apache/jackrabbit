@@ -17,7 +17,6 @@
 package org.apache.jackrabbit.core.security.user;
 
 import java.security.Principal;
-import java.security.acl.Group;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -31,6 +30,7 @@ import org.apache.jackrabbit.api.security.user.Authorizable;
 import org.apache.jackrabbit.api.security.user.Impersonation;
 import org.apache.jackrabbit.core.NodeImpl;
 import org.apache.jackrabbit.core.PropertyImpl;
+import org.apache.jackrabbit.core.security.principal.GroupPrincipals;
 import org.apache.jackrabbit.core.security.principal.PrincipalImpl;
 import org.apache.jackrabbit.core.security.principal.PrincipalIteratorAdapter;
 import org.apache.jackrabbit.value.StringValue;
@@ -145,7 +145,7 @@ class ImpersonationImpl implements Impersonation, UserConstants {
         if (!allows) {
             // check if subject belongs to administrator user
             for (Principal p : subject.getPrincipals()) {
-                if (p instanceof Group) {
+                if (GroupPrincipals.isGroup(p)) {
                     continue;
                 }
                 Authorizable a = userManager.getAuthorizable(p);

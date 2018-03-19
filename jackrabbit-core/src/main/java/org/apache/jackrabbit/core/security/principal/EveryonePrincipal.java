@@ -16,6 +16,7 @@
  */
 package org.apache.jackrabbit.core.security.principal;
 
+import org.apache.jackrabbit.api.security.principal.GroupPrincipal;
 import org.apache.jackrabbit.api.security.principal.JackrabbitPrincipal;
 
 import java.security.Principal;
@@ -24,7 +25,7 @@ import java.util.Enumeration;
 /**
  * The EveryonePrincipal contains all principals (excluding itself).
  */
-public final class EveryonePrincipal implements java.security.acl.Group, JackrabbitPrincipal {
+public final class EveryonePrincipal implements java.security.acl.Group, GroupPrincipal, JackrabbitPrincipal {
 
     public static final String NAME = "everyone";
     private static final EveryonePrincipal INSTANCE = new EveryonePrincipal();

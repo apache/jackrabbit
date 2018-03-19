@@ -24,7 +24,6 @@ import org.apache.jackrabbit.test.NotExecutableException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import java.security.Principal;
-import java.security.acl.Group;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Set;
@@ -35,7 +34,7 @@ import java.util.Set;
 public class PrincipalManagerTest extends AbstractJCRTest {
 
     private PrincipalManager principalMgr;
-    private Group everyone;
+    private GroupPrincipal everyone;
 
     @Override
     protected void setUp() throws Exception {
@@ -45,7 +44,7 @@ public class PrincipalManagerTest extends AbstractJCRTest {
             throw new NotExecutableException();
         }
         principalMgr = ((JackrabbitSession) superuser).getPrincipalManager();
-        everyone = (Group) principalMgr.getEveryone();
+        everyone = (GroupPrincipal) principalMgr.getEveryone();
     }
 
     private static Principal[] getPrincipals(Session session) {
@@ -55,7 +54,7 @@ public class PrincipalManagerTest extends AbstractJCRTest {
     }
 
     private static boolean isGroup(Principal p) {
-        return p instanceof java.security.acl.Group;
+        return p instanceof GroupPrincipal;
     }
 
     public void testGetEveryone() {
@@ -145,7 +144,7 @@ public class PrincipalManagerTest extends AbstractJCRTest {
         while (it.hasNext()) {
             Principal p = it.nextPrincipal();
             if (isGroup(p) && !p.equals(principalMgr.getEveryone())) {
-                Enumeration<? extends Principal> en = ((java.security.acl.Group) p).members();
+                Enumeration<? extends Principal> en = ((GroupPrincipal) p).members();
                 while (en.hasMoreElements()) {
                     Principal memb = en.nextElement();
                     assertTrue(principalMgr.hasPrincipal(memb.getName()));
@@ -198,7 +197,7 @@ public class PrincipalManagerTest extends AbstractJCRTest {
 
             assertTrue(isGroup(p));
 
-            Enumeration<? extends Principal> members = ((java.security.acl.Group) p).members();
+            Enumeration<? extends Principal> members = ((GroupPrincipal) p).members();
             while (members.hasMoreElements()) {
                 Principal memb = members.nextElement();
 

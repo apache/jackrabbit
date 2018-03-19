@@ -19,6 +19,7 @@ package org.apache.jackrabbit.core.security.authorization.acl;
 import org.apache.jackrabbit.api.JackrabbitSession;
 import org.apache.jackrabbit.api.security.JackrabbitAccessControlList;
 import org.apache.jackrabbit.api.security.JackrabbitAccessControlEntry;
+import org.apache.jackrabbit.api.security.principal.GroupPrincipal;
 import org.apache.jackrabbit.api.security.principal.PrincipalIterator;
 import org.apache.jackrabbit.api.security.principal.PrincipalManager;
 import org.apache.jackrabbit.core.SessionImpl;
@@ -34,12 +35,9 @@ import javax.jcr.Value;
 import javax.jcr.security.AccessControlEntry;
 import javax.jcr.security.Privilege;
 import java.security.Principal;
-import java.security.acl.Group;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * <code>ACLTemplateTest</code>...
@@ -145,7 +143,7 @@ public class ACLTemplateTest extends AbstractACLTemplateTest {
         Principal grPrincipal = null;
         PrincipalIterator it = pMgr.findPrincipals("", PrincipalManager.SEARCH_TYPE_GROUP);
         while (it.hasNext()) {
-            Group gr = (Group) it.nextPrincipal();
+            GroupPrincipal gr = (GroupPrincipal) it.nextPrincipal();
             if (!everyone.equals(gr)) {
                 grPrincipal = gr;
             }
@@ -168,7 +166,7 @@ public class ACLTemplateTest extends AbstractACLTemplateTest {
     public void testSetEntryForGroupPrincipal() throws RepositoryException, NotExecutableException {
         JackrabbitAccessControlList pt = createEmptyTemplate(getTestPath());
         Privilege[] privs = privilegesFromName(Privilege.JCR_READ);
-        Group grPrincipal = (Group) principalMgr.getEveryone();
+        GroupPrincipal grPrincipal = (GroupPrincipal) principalMgr.getEveryone();
 
         // adding allow-entry must succeed
         assertTrue(pt.addAccessControlEntry(grPrincipal, privs));

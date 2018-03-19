@@ -81,7 +81,8 @@ public interface PrincipalProvider {
     /**
      * Returns an iterator over all group principals for which the given
      * principal is either direct or indirect member of. If a principal is
-     * a direct member of a group, then <code>{@link java.security.acl.Group#isMember(Principal)}</code>
+     * a direct member of a group, then
+     * <code>{@link org.apache.jackrabbit.api.security.principal.GroupPrincipal#isMember(Principal)}</code>
      * evaluates to <code>true</code>. A principal is an indirect member of a
      * group if any of its groups (to any degree of separation) is direct member
      * of the group.
