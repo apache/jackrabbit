@@ -55,7 +55,7 @@
     <java.version>1.8</java.version>
     <java.version.signature>java18</java.version.signature>
     <skip.coverage>true</skip.coverage>
-    <jacoco.version>0.7.9</jacoco.version>
+    <jacoco.version>0.8.1</jacoco.version>
   </properties>
 
   <url>http://jackrabbit.apache.org/</url>
