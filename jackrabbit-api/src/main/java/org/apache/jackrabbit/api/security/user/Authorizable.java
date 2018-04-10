@@ -29,7 +29,6 @@ import javax.jcr.Value;
  * with an <code>Authorizable</code> (see below) and allow to access and
  * modify additional properties such as e.g. full name, e-mail or address.
  * <p>
- * <p>
  * Please note the difference between <code>Authorizable</code> and
  * {@link java.security.Principal Principal}:<br>
  * An <code>Authorizable</code> is repository object that is neither associated
@@ -44,7 +43,6 @@ import javax.jcr.Value;
  * <p>
  * Consequently an one-to-many relationship exists between Authorizable
  * and Principal (see also {@link #getPrincipal()}.
- * <p>
  * <p>
  * The interfaces derived from Authorizable are defined as follows:
  * <ul>
