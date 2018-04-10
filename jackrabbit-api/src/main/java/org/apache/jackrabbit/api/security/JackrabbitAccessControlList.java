@@ -153,7 +153,7 @@ public interface JackrabbitAccessControlList extends JackrabbitAccessControlPoli
      * @param restrictions A map of additional restrictions used to narrow the
      * effect of the entry to be created. The map must map JCR names to a single
      * {@link javax.jcr.Value} object.
-     * @param restrictions A map of additional multivalued restrictions used to narrow the
+     * @param mvRestrictions A map of additional multivalued restrictions used to narrow the
      * effect of the entry to be created. The map must map JCR names to a
      * {@link javax.jcr.Value} array.
      * @return true if this policy has changed by incorporating the given entry;

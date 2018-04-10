@@ -738,6 +738,7 @@ public class JcrUtils {
      * <code>Iterable</code> will throw an <code>IllegalStateException</code> if
      * its <code>iterator()</code> method is invoked a second time.</strong>
      *
+     * @param <I> type
      * @param iterator
      *            The input <code>Iterator</code>
      * @return The wrapping <code>Iterable</code>

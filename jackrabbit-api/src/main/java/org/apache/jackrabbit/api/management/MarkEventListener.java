@@ -26,7 +26,9 @@ public interface MarkEventListener {
 
     /**
      * This method is called before a node is scanned.
+     * 
+     * @param node node to be scanned
      */
-    void beforeScanning(Node n) throws RepositoryException;
+    void beforeScanning(Node node) throws RepositoryException;
 
 }
