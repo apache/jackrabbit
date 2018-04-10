@@ -42,7 +42,6 @@ public final class ItemNameMatcher {
      * would match
      * <p>
      * {@code "foo:bar"}, but also {@code "jcr:whatever"}.
-     * <p>
      * <pre>
      * The EBNF for pattern is:
      *

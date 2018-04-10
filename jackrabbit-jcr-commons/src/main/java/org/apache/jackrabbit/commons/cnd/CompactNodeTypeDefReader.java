@@ -39,7 +39,6 @@ import java.util.List;
  * parser's constructor takes a {@link DefinitionBuilderFactory} for
  * <code>T</code> and <code>N</code>.
  * <p>
- * <p>
  * The EBNF grammar of the compact node type definition:<br>
  * <pre>
  * Cnd ::= {NamespaceMapping | NodeTypeDef}
