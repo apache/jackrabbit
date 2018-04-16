@@ -656,13 +656,14 @@ public class SearchIndex extends AbstractQueryHandler {
         Set<NodeId> removedIds = new HashSet<NodeId>();
         Set<NodeId> addedIds = new HashSet<NodeId>();
 
+        long time = System.currentTimeMillis();
         Collection<NodeId> removeCollection = new ArrayList<NodeId>();
         while (remove.hasNext()) {
             NodeId id = remove.next();
             removeCollection.add(id);
             removedIds.add(id);
         }
-
+        
         Collection<Document> addCollection = new ArrayList<Document>();
         while (add.hasNext()) {
             NodeState state = add.next();
@@ -681,6 +682,8 @@ public class SearchIndex extends AbstractQueryHandler {
                 }
             }
         }
+        time = System.currentTimeMillis() - time;
+        log.debug("created the removeCollection {} and addCollection {} in {}ms", new Object[] {removeCollection.size(), addCollection.size(), time});
 
         index.update(removeCollection, addCollection);
 
