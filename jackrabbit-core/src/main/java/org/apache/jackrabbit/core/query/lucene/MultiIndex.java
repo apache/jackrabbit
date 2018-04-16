@@ -435,10 +435,14 @@ public class MultiIndex {
             executeAndLog(new Start(transactionId));
 
 
+            long time = System.currentTimeMillis();
             for (NodeId id : remove) {
                 executeAndLog(new DeleteNode(transactionId, id));
             }
+            time = System.currentTimeMillis() - time;
+            log.debug("{} documents deleted in {}ms", remove.size(), time);
 
+            time = System.currentTimeMillis();
             for (Document document : add) {
                 if (document != null) {
                     executeAndLog(new AddNode(transactionId, document));
@@ -446,6 +450,8 @@ public class MultiIndex {
                     checkVolatileCommit();
                 }
             }
+            time = System.currentTimeMillis() - time;
+            log.debug("{} documents added in {}ms", add.size(), time);
             executeAndLog(new Commit(transactionId));
         } finally {
             synchronized (updateMonitor) {
