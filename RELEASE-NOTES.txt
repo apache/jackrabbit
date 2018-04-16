@@ -17,6 +17,7 @@ Changes in Jackrabbit 2.14.5
 Bug
 
     [JCR-4241] - Jacoco plugin fails with exception
+    [JCR-4242] - Build failure: unapproved license
 
 Improvement
 
