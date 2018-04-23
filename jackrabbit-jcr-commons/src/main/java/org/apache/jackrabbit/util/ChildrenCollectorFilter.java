@@ -30,6 +30,7 @@ import org.apache.jackrabbit.commons.iterator.PropertyIteratorAdapter;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 
 /**
  * <code>ChildrenCollectorFilter</code> is a utility class
@@ -64,7 +65,7 @@ public class ChildrenCollectorFilter extends TraversingItemVisitor.Default {
             boolean collectNodes, boolean collectProperties, int maxLevel) {
         super(false, maxLevel);
         this.namePattern = namePattern;
-        nameGlobs = null;
+        this.nameGlobs = null;
         this.children = children;
         this.collectNodes = collectNodes;
         this.collectProperties = collectProperties;
@@ -86,7 +87,7 @@ public class ChildrenCollectorFilter extends TraversingItemVisitor.Default {
             boolean collectNodes, boolean collectProperties, int maxLevel) {
         super(false, maxLevel);
         this.nameGlobs = nameGlobs;
-        namePattern = null;
+        this.namePattern = null;
         this.children = children;
         this.collectNodes = collectNodes;
         this.collectProperties = collectProperties;
@@ -110,17 +111,26 @@ public class ChildrenCollectorFilter extends TraversingItemVisitor.Default {
 
     public static PropertyIterator collectProperties(
             Node node, String namePattern) throws RepositoryException {
-        Collection<Item> properties = new ArrayList<Item>();
-        node.accept(new ChildrenCollectorFilter(
-                namePattern, properties, false, true, 1));
+        Collection<Item> properties = Collections.emptySet();
+        PropertyIterator pit = node.getProperties();
+        while (pit.hasNext()) {
+            Property p = pit.nextProperty();
+            if (matches(p.getName(), namePattern)) {
+                properties = addToCollection(properties, p);
+            }
+        }
         return new PropertyIteratorAdapter(properties);
     }
 
-    public static PropertyIterator collectProperties(
-            Node node, String[] nameGlobs) throws RepositoryException {
-        Collection<Item> properties = new ArrayList<Item>();
-        node.accept(new ChildrenCollectorFilter(
-                nameGlobs, properties, false, true, 1));
+    public static PropertyIterator collectProperties(Node node, String[] nameGlobs) throws RepositoryException {
+        Collection<Item> properties = Collections.emptySet();
+        PropertyIterator pit = node.getProperties();
+        while (pit.hasNext()) {
+            Property p = pit.nextProperty();
+            if (matches(p.getName(), nameGlobs)) {
+                properties = addToCollection(properties, p);
+            }
+        }
         return new PropertyIteratorAdapter(properties);
     }
 
@@ -178,5 +188,19 @@ public class ChildrenCollectorFilter extends TraversingItemVisitor.Default {
      */
     public static boolean matches(String name, String[] nameGlobs) {
         return ItemNameMatcher.matches(name, nameGlobs);
+    }
+    
+    private static Collection<Item> addToCollection(Collection<Item> c, Item p) {
+        Collection<Item> nc = c;
+        if (c.isEmpty()) {
+            nc = Collections.singleton(p);
+        } else if (c.size() == 1) {
+            nc = new ArrayList<Item>(c);
+            nc.add(p);
+        } else {
+            nc.add(p);
+        }
+
+        return nc;
     }
 }
