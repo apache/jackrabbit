@@ -18,6 +18,7 @@ package org.apache.jackrabbit.core.data;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -219,6 +220,13 @@ public class ConsistencyCheckerImplTest extends TestCase {
         assertNotNull("Cluster node did not receive update event", listener.changes);
         assertTrue("Expected lostAndFound to be modified", listener.changes.isModified(lostAndFoundId));
         assertTrue("Expected orphan to be modified", listener.changes.isModified(orphanedId));
+    }
+
+    public void testEmptyRepo() throws RepositoryException {
+        List<NodePropBundle> t = Collections.emptyList();
+        MockPersistenceManager pm = new MockPersistenceManager(t);
+        ConsistencyCheckerImpl checker = new ConsistencyCheckerImpl(pm, null, null, null);
+        checker.check(null, false);
     }
 
     public void testDoubleCheckOrphanedNode() throws RepositoryException {
@@ -450,6 +458,11 @@ public class ConsistencyCheckerImplTest extends TestCase {
         @Override
         protected NodePropBundle loadBundle(final NodeId id) {
             return bundles.get(id);
+        }
+
+        @Override
+        public boolean exists(final NodeId id) {
+            return bundles.containsKey(id);
         }
 
         @Override
