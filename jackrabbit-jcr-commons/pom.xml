@@ -99,10 +99,6 @@
       <optional>true</optional>
     </dependency>
     <dependency>
-      <groupId>com.google.guava</groupId>
-      <artifactId>guava</artifactId>
-    </dependency>
-    <dependency>
       <groupId>biz.aQute</groupId>
       <artifactId>bndlib</artifactId>
       <scope>provided</scope>
