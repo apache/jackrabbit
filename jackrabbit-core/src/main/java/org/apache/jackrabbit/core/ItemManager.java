@@ -408,10 +408,9 @@ public class ItemManager implements ItemStateListener {
      * in which case the itemId present with the specified <code>data</code> is used.
      * @return true if the item with the given <code>data</code> can be read;
      * <code>false</code> otherwise.
-     * @throws AccessDeniedException
      * @throws RepositoryException
      */
-    private boolean canRead(ItemData data, Path path) throws AccessDeniedException, RepositoryException {
+    private boolean canRead(ItemData data, Path path) throws RepositoryException {
         // JCR-1601: cached item may just have been invalidated
         ItemState state = data.getState();
         if (state == null) {
