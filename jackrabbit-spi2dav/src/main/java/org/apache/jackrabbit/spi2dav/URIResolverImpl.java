@@ -280,13 +280,15 @@ class URIResolverImpl implements URIResolver {
         try {
             method = new PropFindMethod(uri, nameSet, DavConstants.DEPTH_0);
 
-            service.getClient(sessionInfo).executeMethod(method);
+            int status = service.getClient(sessionInfo).executeMethod(method);
+            if (status != DavServletResponse.SC_MULTI_STATUS) {
+                throw new ItemNotFoundException("Unable to retrieve the node with id " + uri + ", response status was: " + status);
+            }
             MultiStatusResponse[] responses = method.getResponseBodyAsMultiStatus().getResponses();
             if (responses.length != 1) {
                 throw new ItemNotFoundException("Unable to retrieve the node with id " + uri);
             }
             return buildNodeId(parentId, uri, responses[0], sessionInfo.getWorkspaceName(), service.getNamePathResolver(sessionInfo));
-
         } catch (IOException e) {
             throw new RepositoryException(e);
         } catch (DavException e) {
