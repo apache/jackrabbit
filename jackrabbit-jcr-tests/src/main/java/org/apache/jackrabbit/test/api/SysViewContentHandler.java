@@ -557,10 +557,9 @@ class SysViewContentHandler extends DefaultHandler {
      * @param nodeElem The node to check.
      * @param noRecurse Boolean if child nodes should be exported at all.
      * @throws RepositoryException
-     * @throws SAXException
      */
     private void checkChildren(NodeElemData nodeElem, boolean noRecurse)
-            throws RepositoryException, SAXException {
+            throws RepositoryException {
 
         Hashtable<String, ChildNodeElem> childElemsFound = nodeElem.childNodeElemNames;
         boolean totalSumOk = false;

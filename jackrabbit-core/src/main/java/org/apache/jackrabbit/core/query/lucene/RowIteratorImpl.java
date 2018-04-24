@@ -155,8 +155,7 @@ class RowIteratorImpl implements RowIterator {
                     NamePathResolver resolver,
                     ValueFactory valueFactory,
                     ExcerptProvider exProvider,
-                    SpellSuggestion spellSuggestion)
-            throws NamespaceException {
+                    SpellSuggestion spellSuggestion) {
         this.scoreNodes = scoreNodes;
         this.columns = columns;
         this.selectorNames.addAll(Arrays.asList(selectorNames));
