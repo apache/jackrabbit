@@ -728,6 +728,16 @@ public abstract class AbstractJCRTest extends JUnitTest {
         }
     }
 
+    /**
+     * Checks that the repository supports locking, otherwise aborts with
+     * {@link NotExecutableException}.
+     * @throws NotExecutableException when the repository does not support locking
+     */
+    protected void ensureLockingSupported() throws RepositoryException, NotExecutableException {
+        if (!isSupported(Repository.OPTION_LOCKING_SUPPORTED)) {
+            throw new NotExecutableException("This repository does not support locking.");
+        }
+    }
 
     private boolean canSetProperty(NodeType nodeType, String propertyName, int propertyType, boolean isMultiple) {
         PropertyDefinition propDefs[] = nodeType.getPropertyDefinitions();
