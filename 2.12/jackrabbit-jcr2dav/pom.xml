@@ -1,0 +1,206 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+   Licensed to the Apache Software Foundation (ASF) under one or more
+   contributor license agreements.  See the NOTICE file distributed with
+   this work for additional information regarding copyright ownership.
+   The ASF licenses this file to You under the Apache License, Version 2.0
+   (the "License"); you may not use this file except in compliance with
+   the License.  You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+  -->
+
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+<!-- ====================================================================== -->
+<!-- P R O J E C T  D E S C R I P T I O N                                   -->
+<!-- ====================================================================== -->
+  <parent>
+    <groupId>org.apache.jackrabbit</groupId>
+    <artifactId>jackrabbit-parent</artifactId>
+    <version>2.12.9</version>
+    <relativePath>../jackrabbit-parent/pom.xml</relativePath>
+  </parent>
+  <artifactId>jackrabbit-jcr2dav</artifactId>
+  <name>Jackrabbit JCR to WebDAV</name>
+
+  <properties>
+    <org.apache.jackrabbit.jcr2dav.RepositoryStubImpl.port>0</org.apache.jackrabbit.jcr2dav.RepositoryStubImpl.port>
+  </properties>
+
+  <profiles>
+    <profile>
+      <id>integrationTesting</id>
+      <build>
+        <plugins>
+          <plugin>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <configuration>
+              <argLine>-Xmx256m</argLine>
+              <fork>true</fork>
+              <systemProperties>
+                <property>
+                  <name>jackrabbit.test.integration</name>
+                  <value>true</value>
+                </property>
+                <property>
+                  <name>org.apache.jackrabbit.jcr2dav.RepositoryStubImpl.port</name>
+                  <value>${org.apache.jackrabbit.jcr2dav.RepositoryStubImpl.port}</value>
+                </property>
+                <property>
+                  <name>known.issues</name>
+                  <value>
+                      <!--
+
+                      This is the list of failing TCK and jcr2spi tests in a jcr2spi - spi2davex setup.
+
+                      A comprehensive list of missing JCR 2.0 features can be found at
+                      https://issues.apache.org/jira/browse/JCR-2003
+
+                      Known issues of jcr2spi and spi2dav(ex) are listed at
+                      https://issues.apache.org/jira/secure/IssueNavigator.jspa?reset=true&jqlQuery=project+%3D+JCR+AND+component+%3D+jackrabbit-jcr2spi+AND+status+%3D+Open+ORDER+BY+priority+DESC&mode=hide
+                      https://issues.apache.org/jira/secure/IssueNavigator.jspa?reset=true&jqlQuery=project+%3D+JCR+AND+component+%3D+jackrabbit-spi2dav+AND+status+%3D+Open+ORDER+BY+priority+DESC&mode=hide
+
+                      -->
+                      <!-- ***** PLEASE update spi2dav/pom.xml as well ***** -->
+                      <!-- wrong exception: ConstraintViolationEx. instead SAXException/InvalidSerializedDataEx.-->
+                      org.apache.jackrabbit.test.api.SerializationTest#testNodeTypeConstraintViolationWorkspace
+                      <!-- JCR-2538 : impersonation not implemented -->
+                      org.apache.jackrabbit.test.api.ImpersonateTest
+                      <!-- JCR-2099 : shareable nodes -->
+                      org.apache.jackrabbit.test.api.ShareableNodeTest
+                      <!-- JCR-2228 : life cycle management -->
+                      org.apache.jackrabbit.test.api.LifecycleTest
+                      <!-- lock token transfer -->
+                      org.apache.jackrabbit.test.api.lock.LockManagerTest#testAddInvalidLockToken
+                      org.apache.jackrabbit.test.api.lock.LockManagerTest#testAddLockTokenToAnotherSession
+                      org.apache.jackrabbit.test.api.lock.LockManagerTest#testLockTransfer2
+                      org.apache.jackrabbit.jcr2spi.lock.OpenScopedLockTest#testLogoutHasNoEffect
+                      <!-- JCR-3207 -->
+                      org.apache.jackrabbit.test.api.observation.NodeReorderTest#testNodeReorderMove
+                      <!-- JCR-2533 : missing impl of checkQueryStatement -->                      
+                      org.apache.jackrabbit.test.api.query.CreateQueryTest#testUnknownQueryLanguage
+                      <!-- JCR-2533 : missing impl of checkQueryStatement -->
+                      org.apache.jackrabbit.test.api.query.qom.BindVariableValueTest
+                      <!-- JCR-2112 : simple versioning not implemented -->
+                      org.apache.jackrabbit.test.api.version.simple
+                      <!-- JCR-2104 : activities and configuration -->
+                      org.apache.jackrabbit.test.api.version.ActivitiesTest
+                      org.apache.jackrabbit.test.api.version.MergeActivityTest#testMergeActivity                     
+                      org.apache.jackrabbit.test.api.version.ConfigurationsTest
+                      <!-- JCR-2560 -->
+                      org.apache.jackrabbit.jcr2spi.IsSameTest#testIsSameProperty3
+                      org.apache.jackrabbit.jcr2spi.IsSameTest#testIsSameProperty4
+                      org.apache.jackrabbit.jcr2spi.IsSameTest#testIsSameNode7
+                      <!-- Known, general issue of the Jcr2Spi - SPI setup.
+                           No notification about changes to registered namespace(s) -->                        
+                      org.apache.jackrabbit.jcr2spi.name.NamespaceRegistryTest#testReRegisteredNamespace
+                      org.apache.jackrabbit.jcr2spi.name.NamespaceRegistryTest#testReRegisteredNamespaceVisibility
+                      org.apache.jackrabbit.test.api.query.qom.EquiJoinConditionTest#testRightOuterJoin1<!--JCR-3493, JCR-3498-->
+                      org.apache.jackrabbit.test.api.query.qom.EquiJoinConditionTest#testLeftOuterJoin2<!--JCR-3493, JCR-3498-->
+
+                    <!-- security related tests -->
+                      <!-- The following 5 tests don't make too much sense on a jcr-client that doesn't necessarily should
+                           know about the concrete implementation and thus might just collection all information and
+                           delegate any optimization to the server-side -->
+                      org.apache.jackrabbit.test.api.security.AccessControlListTest#testAddAggregatedPrivilegesSeparately <!-- JCR-3832 -->
+                      org.apache.jackrabbit.test.api.security.AccessControlListTest#testAddAccessControlEntryInvalidPrincipal
+                      org.apache.jackrabbit.test.api.security.AccessControlListTest#testAddAccessControlEntryInvalidPrivilege
+                      org.apache.jackrabbit.test.api.security.AccessControlListTest#testAddAccessControlEntryTwice
+                      org.apache.jackrabbit.test.api.security.AccessControlListTest#testAddAccessControlEntryAgain
+                      <!-- Tests to verify -->
+                      org.apache.jackrabbit.test.api.security.RSessionAccessControlPolicyTest#testGetApplicablePolicies
+                      org.apache.jackrabbit.test.api.security.RSessionAccessControlPolicyTest#testGetPolicy
+                      
+                     org.apache.jackrabbit.test.api.query.qom.NodeLocalNameTest#testStringLiteralInvalidName        <!-- OAK-3265, JCR-3913 -->
+                     org.apache.jackrabbit.test.api.query.qom.NodeLocalNameTest#testPathLiteral                     <!-- OAK-3265, JCR-3913 -->
+                     org.apache.jackrabbit.test.api.query.qom.NodeLocalNameTest#testURILiteral                      <!-- OAK-3265, JCR-3913 -->
+                  </value>
+                </property>
+                <property>
+                  <name>derby.system.durability</name>
+                  <value>test</value>
+                </property>
+                <property>
+                  <name>derby.storage.fileSyncTransactionLog</name>
+                  <value>true</value>
+                </property>
+                <property>
+                  <name>derby.stream.error.file</name>
+                  <value>target/derby.log</value>
+                </property>
+              </systemProperties>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
+
+  <dependencies>
+    <dependency>
+      <groupId>javax.jcr</groupId>
+      <artifactId>jcr</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.jackrabbit</groupId>
+      <artifactId>jackrabbit-jcr2spi</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.jackrabbit</groupId>
+      <artifactId>jackrabbit-spi2dav</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.jackrabbit</groupId>
+      <artifactId>jackrabbit-jcr-tests</artifactId>
+      <version>${project.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+       <groupId>org.apache.jackrabbit</groupId>
+       <artifactId>jackrabbit-jcr2spi</artifactId>
+       <version>${project.version}</version>
+       <classifier>tests</classifier>
+       <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.jackrabbit</groupId>
+      <artifactId>jackrabbit-core</artifactId>
+      <version>${project.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.jackrabbit</groupId>
+      <artifactId>jackrabbit-jcr-server</artifactId>
+      <version>${project.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.jetty</groupId>
+      <artifactId>jetty-server</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.jetty</groupId>
+      <artifactId>jetty-servlet</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>ch.qos.logback</groupId>
+      <artifactId>logback-classic</artifactId>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+</project>

@@ -1,0 +1,2729 @@
+/*
+ * Generated using "maven jackrabbit:generage-xpath-parser-jjt" from the
+ * the following files with the following copyright and license notices:
+ *
+ * javacc.xsl, jjtree.xsl, and strip.xsl:
+ * --------------------------------------
+ * Copyright (c) 2002 World Wide Web Consortium,
+ * (Massachusetts Institute of Technology, Institut National de
+ * Recherche en Informatique et en Automatique, Keio University). All
+ * Rights Reserved. This program is distributed under the W3C's Software
+ * Intellectual Property License. This program is distributed in the
+ * hope that it will be useful, but WITHOUT ANY WARRANTY; without even
+ * the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ * PURPOSE.
+ * See W3C License http://www.w3.org/Consortium/Legal/ for more details.
+ *
+ * jjtree-jackrabbit.xsl:
+ * ----------------------
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * xpath-grammar.xml:
+ * ------------------
+ * Copyright (c) 2002 W3C(r) (http://www.w3.org/) (MIT (http://www.lcs.mit.edu/), 
+ * INRIA (http://www.inria.fr/), Keio (http://www.keio.ac.jp/)), 
+ * All Rights Reserved.
+ * See http://www.w3.org/Consortium/Legal/ipr-notice-20000612#Copyright.
+ * W3C liability 
+ * (http://www.w3.org/Consortium/Legal/ipr-notice-20000612#Legal_Disclaimer), 
+ * trademark 
+ * (http://www.w3.org/Consortium/Legal/ipr-notice-20000612#W3C_Trademarks), 
+ * document use 
+ * (http://www.w3.org/Consortium/Legal/copyright-documents-19990405), 
+ * and software licensing rules 
+ * (http://www.w3.org/Consortium/Legal/copyright-software-19980720) 
+ * apply.
+ */
+options {
+
+	  
+          STATIC = false;
+	   MULTI=false;
+	   VISITOR=true ;     // invokes the JJTree Visitor support
+	   NODE_SCOPE_HOOK=false;
+	   NODE_USES_PARSER=true;
+	
+}
+
+
+    PARSER_BEGIN(XPath)
+
+
+	package org.apache.jackrabbit.spi.commons.query.xpath;
+	
+import java.io.*;		
+import java.util.Stack;
+import java.util.Vector;
+
+public class XPath {
+      
+
+      boolean m_isMatchPattern = false;
+      boolean isStep = false;
+
+		  Stack binaryTokenStack = new Stack();
+		  
+		  public Node createNode(int id) {
+			  return null;
+		  }
+		  
+		  
+		  
+		  public static void main(String args[])
+		     throws Exception
+		  {
+         int numberArgsLeft = args.length;
+         int argsStart = 0;
+         boolean isMatchParser = false;
+         if(numberArgsLeft > 0)
+         {
+           if(args[argsStart].equals("-match"))
+           {
+             isMatchParser = true;
+             System.out.println("Match Pattern Parser");
+             argsStart++;
+             numberArgsLeft--;
+           }
+         }
+		     if(numberArgsLeft > 0)
+		    {
+			try
+			{
+        final boolean dumpTree = true;
+        if(args[0].endsWith(".xquery"))
+        {
+          System.out.println("Running test for: "+args[0]);
+          File file = new File(args[0]);
+          FileInputStream fis = new FileInputStream(file);
+          XPath parser = new XPath(fis);
+          SimpleNode tree = parser.XPath2();
+          if(dumpTree)
+            tree.dump("|") ;
+        }
+        else
+        {
+				for(int i = argsStart; i < args.length; i++)
+				{
+					System.out.println();
+					System.out.println("Test["+i+"]: "+args[i]);
+					XPath parser = new XPath(new java.io.StringBufferInputStream(args[i]));
+          SimpleNode tree;
+          if(isMatchParser)
+          {
+					tree = parser.XPath2();
+          }
+          else
+          {
+					tree = parser.XPath2();
+          }
+					((SimpleNode)tree.jjtGetChild(0)).dump("|") ;
+				}
+				System.out.println("Success!!!!");
+        }
+			}
+			catch(ParseException pe)
+			{
+				System.err.println(pe.getMessage());
+			}
+			return;
+		   }
+		    java.io.DataInputStream dinput = new java.io.DataInputStream(System.in);
+		    while(true)
+		    {
+			  try
+			  {
+			      System.err.println("Type Expression: ");
+			      String input =  dinput.readLine(); 
+			      if(null == input || input.trim().length() == 0)
+			        break;  
+			      XPath parser = new XPath(new java.io.StringBufferInputStream(input));
+          SimpleNode tree;
+          if(isMatchParser)
+          {
+					tree = parser.XPath2();
+          }
+          else
+          {
+					tree = parser.XPath2();
+          }
+			      ((SimpleNode)tree.jjtGetChild(0)).dump("|") ;
+			  }
+			  catch(ParseException pe)
+			  {
+			  	System.err.println(pe.getMessage());
+			  }
+			  catch(Exception e)
+			  {
+			  	System.err.println(e.getMessage());
+			  }
+		    }		    
+		  }
+		}
+
+    PARSER_END(XPath)
+
+	
+
+TOKEN_MGR_DECLS : {
+  private Stack stateStack = new Stack();
+  // private Vector persistentLexStates  = new Vector();
+  static final int PARENMARKER = 2000;
+  
+  /**
+   * Push the current state onto the state stack.
+   */
+  private void pushState()
+  {
+    // System.err.println("pushing: "+curLexState); printLinePos();
+    stateStack.addElement(new Integer(curLexState));
+  }
+  
+  /**
+   * Push the given state onto the state stack.
+   * @param state Must be a valid state.
+   */
+  private void pushState(int state)
+  {
+    stateStack.push(new Integer(state));
+  }
+  
+  /**
+   * Pop the state on the state stack, and switch to that state.
+   */
+  private void popState()
+  {
+    if (stateStack.size() == 0)
+    {
+      printLinePos();
+    }
+
+    int nextState = ((Integer) stateStack.pop()).intValue();
+    // System.err.println("pop "+nextState); printLinePos();
+    if(nextState == PARENMARKER)
+      printLinePos();
+    SwitchTo(nextState);
+  }
+  
+  /**
+   * Push the given state onto the state stack.
+   * @param state Must be a valid state.
+   */
+  private boolean isState(int state)
+  {
+	for (int i = 0; i < stateStack.size(); i++) {
+        if(((Integer) stateStack.elementAt(i)).intValue() == state)
+        {
+        	return true;
+        }
+	}
+	return false;
+  }
+
+  /**
+   * Push a parenthesis state.  This pushes, in addition to the 
+   * lexical state value, a special marker that lets 
+   * resetParenStateOrSwitch(int state)
+   * know if it should pop and switch.  Used for the comma operator.
+   */
+  private void pushParenState(int commaState, int rparState)
+  {
+    stateStack.push(new Integer(rparState));
+    stateStack.push(new Integer(commaState));
+    stateStack.push(new Integer(PARENMARKER));
+    SwitchTo(commaState);
+  }
+
+
+  /**
+   * Print the current line position.
+   */
+  public void printLinePos()
+  {
+    System.err.println("Line: " + input_stream.getEndLine());
+  }
+}
+
+
+		SimpleNode XPath2() :
+		{}
+		{
+		  QueryList()<EOF>
+		  { return jjtThis ; }
+		}
+      
+<DEFAULT>
+TOKEN :
+{
+ < IntegerLiteral : <Digits> > : OPERATOR
+}
+
+<DEFAULT>
+TOKEN :
+{
+ < DecimalLiteral : (("." <Digits>) | (<Digits> "." (["0" - "9"])*)) > : OPERATOR
+}
+
+<DEFAULT>
+TOKEN :
+{
+ < DoubleLiteral : (("." <Digits>) | (<Digits> ("." (["0" - "9"])*)?)) ["e", "E"] (["+", "-"])? <Digits> > : OPERATOR
+}
+
+<DEFAULT, OPERATOR>
+TOKEN :
+{
+ < StringLiteral : (("\"" ((("\"" "\"") | ~["\""]))* "\"") | ("'" ((("'" "'") | ~["'"]))* "'")) > : OPERATOR
+}
+
+<KINDTESTFORPI>
+TOKEN :
+{
+ < StringLiteralForKindTest : (("\"" ((("\"" "\"") | ~["\""]))* "\"") | ("'" ((("'" "'") | ~["'"]))* "'")) > : KINDTESTFORPI
+}
+
+<DEFAULT>
+TOKEN :
+{
+ < XQueryVersion : "xquery" (<skip_>)* "version" > : XQUERYVERSION
+}
+
+<XQUERYVERSION>
+TOKEN :
+{
+ < StringLiteralForVersion : (("\"" ((("\"" "\"") | ~["\""]))* "\"") | ("'" ((("'" "'") | ~["'"]))* "'")) > : XQUERYVERSION
+}
+
+<XQUERYVERSION>
+TOKEN :
+{
+ < XQueryEncoding : "encoding" > : XQUERYVERSION
+}
+
+<DEFAULT, ITEMTYPE>
+TOKEN :
+{
+ < AtStringLiteral : "at" (<skip_>)* <URLLiteral> > : DEFAULT
+}
+
+<NAMESPACEDECL, NAMESPACEKEYWORD>
+TOKEN :
+{
+ < URLLiteral : (("\"" ((("\"" "\"") | ~["\""]))* "\"") | ("'" ((("'" "'") | ~["'"]))* "'")) > : DEFAULT
+}
+
+<DEFAULT>
+TOKEN :
+{
+ < ModuleNamespace : "module" (<skip_>)* "namespace" > : NAMESPACEDECL
+}
+<DEFAULT, OPERATOR, KINDTEST, NAMESPACEDECL, XMLSPACE_DECL, SINGLETYPE, ITEMTYPE, NAMESPACEKEYWORD, VARNAME, OCCURRENCEINDICATOR, CLOSEKINDTEST, XQUERYVERSION>
+SKIP:
+{
+  < <skip_>>
+}
+
+TOKEN :
+{
+  < #skip_ : (((<WhitespaceChar>)+ )) >
+}
+
+
+<OCCURRENCEINDICATOR>
+SKIP :
+{
+ < NotOccurrenceIndicator : ~["*", "?", "+"] > { input_stream.backup(1); } : OPERATOR
+}
+
+<DEFAULT>
+TOKEN :
+{
+ < ProcessingInstructionStart : "<?" > { pushState(OPERATOR); } : PROCESSING_INSTRUCTION
+}
+
+<ELEMENT_CONTENT>
+TOKEN :
+{
+ < ProcessingInstructionStartForElementContent : "<?" > { pushState(); } : PROCESSING_INSTRUCTION
+}
+
+<PROCESSING_INSTRUCTION, PROCESSING_INSTRUCTION_CONTENT>
+TOKEN :
+{
+ < ProcessingInstructionEnd : "?>" > { popState(); }
+}
+
+<DEFAULT>
+TOKEN :
+{
+ < AxisChild : "child" (<skip_>)* "::" > : DEFAULT
+}
+
+<DEFAULT>
+TOKEN :
+{
+ < AxisDescendant : "descendant" (<skip_>)* "::" > : DEFAULT
+}
+
+<DEFAULT>
+TOKEN :
+{
+ < AxisParent : "parent" (<skip_>)* "::" > : DEFAULT
+}
+
+<DEFAULT>
+TOKEN :
+{
+ < AxisAttribute : "attribute" (<skip_>)* "::" > : DEFAULT
+}
+
+<DEFAULT>
+TOKEN :
+{
+ < AxisSelf : "self" (<skip_>)* "::" > : DEFAULT
+}
+
+<DEFAULT>
+TOKEN :
+{
+ < AxisDescendantOrSelf : "descendant-or-self" (<skip_>)* "::" > : DEFAULT
+}
+
+<DEFAULT>
+TOKEN :
+{
+ < AxisAncestor : "ancestor" (<skip_>)* "::" > : DEFAULT
+}
+
+<DEFAULT>
+TOKEN :
+{
+ < AxisFollowingSibling : "following-sibling" (<skip_>)* "::" > : DEFAULT
+}
+
+<DEFAULT>
+TOKEN :
+{
+ < AxisPrecedingSibling : "preceding-sibling" (<skip_>)* "::" > : DEFAULT
+}
+
+<DEFAULT>
+TOKEN :
+{
+ < AxisFollowing : "following" (<skip_>)* "::" > : DEFAULT
+}
+
+<DEFAULT>
+TOKEN :
+{
+ < AxisPreceding : "preceding" (<skip_>)* "::" > : DEFAULT
+}
+
+<DEFAULT>
+TOKEN :
+{
+ < AxisAncestorOrSelf : "ancestor-or-self" (<skip_>)* "::" > : DEFAULT
+}
+
+<DEFAULT>
+TOKEN :
+{
+ < DefineFunction : "declare" (<skip_>)+ "function" > : DEFAULT
+}
+
+<DEFAULT>
+TOKEN :
+{
+ < DeclareOrdering : "declare" (<skip_>)+ "ordering" > : OPERATOR
+}
+
+<OPERATOR>
+TOKEN :
+{
+ < Ordered : "ordered" > : DEFAULT
+}
+
+<OPERATOR>
+TOKEN :
+{
+ < Unordered : "unordered" > : DEFAULT
+}
+
+<DEFAULT>
+TOKEN :
+{
+ < DeclareDefaultOrderingEmpty : "declare" (<skip_>)+ "default" (<skip_>)+ "order" > : OPERATOR
+}
+
+<DEFAULT>
+TOKEN :
+{
+ < DeclareInheritNamespaces : "declare" (<skip_>)+ "inherit-namespaces" > : OPERATOR
+}
+
+<OPERATOR>
+TOKEN :
+{
+ < Yes : "yes" > : DEFAULT
+}
+
+<OPERATOR>
+TOKEN :
+{
+ < No : "no" > : DEFAULT
+}
+
+<OPERATOR, ITEMTYPE>
+TOKEN :
+{
+ < External : "external" > : DEFAULT
+}
+
+<OPERATOR, ITEMTYPE>
+TOKEN :
+{
+ < Or : "or" > : DEFAULT
+}
+
+<OPERATOR, ITEMTYPE>
+TOKEN :
+{
+ < And : "and" > : DEFAULT
+}
+
+<OPERATOR, ITEMTYPE>
+TOKEN :
+{
+ < Div : "div" > : DEFAULT
+}
+
+<OPERATOR, ITEMTYPE>
+TOKEN :
+{
+ < Idiv : "idiv" > : DEFAULT
+}
+
+<OPERATOR, ITEMTYPE>
+TOKEN :
+{
+ < Mod : "mod" > : DEFAULT
+}
+
+<OPERATOR>
+TOKEN :
+{
+ < Multiply : "*" > : DEFAULT
+}
+
+<OPERATOR, ITEMTYPE>
+TOKEN :
+{
+ < In : "in" > : DEFAULT
+}
+
+<PROCESSING_INSTRUCTION>
+TOKEN :
+{
+ < PITarget : <NCName> > : PROCESSING_INSTRUCTION
+}
+
+TOKEN :
+{
+ < #Prefix : <NCName> >
+}
+
+TOKEN :
+{
+ < #LocalPart : <NCName> >
+}
+
+<DEFAULT, OPERATOR, ITEMTYPE>
+TOKEN :
+{
+ < VariableIndicator : "$" > : VARNAME
+}
+
+<VARNAME>
+TOKEN :
+{
+ < VarName : <QName> > : OPERATOR
+}
+
+TOKEN :
+{
+ < #ValidationMode : ("lax" | "strict") >
+}
+
+<OPERATOR>
+TOKEN :
+{
+ < SchemaModeForDeclareConstruction : ("preserve" | "strip") > : DEFAULT
+}
+
+<CLOSEKINDTEST>
+TOKEN :
+{
+ < Nillable : "?" > : CLOSEKINDTEST
+}
+
+<DEFAULT>
+TOKEN :
+{
+ < DeclareConstruction : "declare" (<skip_>)+ "construction" > : OPERATOR
+}
+
+<OPERATOR, ITEMTYPE>
+TOKEN :
+{
+ < Satisfies : "satisfies" > : DEFAULT
+}
+
+<OPERATOR, ITEMTYPE>
+TOKEN :
+{
+ < Return : "return" > : DEFAULT
+}
+
+<OPERATOR, ITEMTYPE>
+TOKEN :
+{
+ < Then : "then" > : DEFAULT
+}
+
+<OPERATOR, ITEMTYPE>
+TOKEN :
+{
+ < Else : "else" > : DEFAULT
+}
+
+<OPERATOR>
+TOKEN :
+{
+ < Default : "default" > : OPERATOR
+}
+
+<DEFAULT>
+TOKEN :
+{
+ < DeclareXMLSpace : "declare" (<skip_>)+ "xmlspace" > : XMLSPACE_DECL
+}
+
+<DEFAULT>
+TOKEN :
+{
+ < DeclareBaseURI : "declare" (<skip_>)+ "base-uri" > : NAMESPACEDECL
+}
+
+<XMLSPACE_DECL>
+TOKEN :
+{
+ < XMLSpacePreserve : "preserve" > : DEFAULT
+}
+
+<XMLSPACE_DECL>
+TOKEN :
+{
+ < XMLSpaceStrip : "strip" > : DEFAULT
+}
+
+<NAMESPACEKEYWORD>
+TOKEN :
+{
+ < Namespace : "namespace" > : NAMESPACEDECL
+}
+
+<DEFAULT>
+TOKEN :
+{
+ < DeclareNamespace : "declare" (<skip_>)+ "namespace" > : NAMESPACEDECL
+}
+
+<OPERATOR, ITEMTYPE>
+TOKEN :
+{
+ < To : "to" > : DEFAULT
+}
+
+<OPERATOR, ITEMTYPE>
+TOKEN :
+{
+ < Where : "where" > : DEFAULT
+}
+
+<OPERATOR>
+TOKEN :
+{
+ < Collation : "collation" > : OPERATOR
+}
+
+<OPERATOR, ITEMTYPE>
+TOKEN :
+{
+ < Intersect : "intersect" > : DEFAULT
+}
+
+<OPERATOR, ITEMTYPE>
+TOKEN :
+{
+ < Union : "union" > : DEFAULT
+}
+
+<OPERATOR, ITEMTYPE>
+TOKEN :
+{
+ < Except : "except" > : DEFAULT
+}
+
+<DEFAULT, OPERATOR, ITEMTYPE>
+TOKEN :
+{
+ < As : "as" > : ITEMTYPE
+}
+
+<OPERATOR, ITEMTYPE>
+TOKEN :
+{
+ < AtWord : "at" > : DEFAULT
+}
+
+<OPERATOR, ITEMTYPE>
+TOKEN :
+{
+ < Case : "case" > : ITEMTYPE
+}
+
+<OPERATOR, ITEMTYPE>
+TOKEN :
+{
+ < Instanceof : "instance" (<skip_>)+ "of" > : ITEMTYPE
+}
+
+<OPERATOR, ITEMTYPE>
+TOKEN :
+{
+ < Castable : "castable" (<skip_>)+ "as" > : SINGLETYPE
+}
+
+<ITEMTYPE>
+TOKEN :
+{
+ < Item : "item" (<skip_>)* "(" (<skip_>)* ")" > : OCCURRENCEINDICATOR
+}
+
+<DEFAULT>
+TOKEN :
+{
+ < ElementType : "element" (<skip_>)* "(" > { pushState(OPERATOR); } : KINDTEST
+}
+
+<DEFAULT>
+TOKEN :
+{
+ < AttributeType : "attribute" (<skip_>)* "(" > { pushState(OPERATOR); } : KINDTEST
+}
+
+<DEFAULT>
+TOKEN :
+{
+ < SchemaElementType : "schema-element" (<skip_>)* "(" > { pushState(OPERATOR); } : KINDTEST
+}
+
+<DEFAULT>
+TOKEN :
+{
+ < SchemaAttributeType : "schema-attribute" (<skip_>)* "(" > { pushState(OPERATOR); } : KINDTEST
+}
+
+<DEFAULT>
+TOKEN :
+{
+ < OrderedOpen : "ordered" (<skip_>)* "{" > { pushState(OPERATOR); } : DEFAULT
+}
+
+<DEFAULT>
+TOKEN :
+{
+ < UnorderedOpen : "unordered" (<skip_>)* "{" > { pushState(OPERATOR); } : DEFAULT
+}
+
+<DEFAULT>
+TOKEN :
+{
+ < ElementQNameLbrace : "element" (<skip_>)+ <QName> (<skip_>)* "{" > { pushState(OPERATOR); }
+}
+
+<DEFAULT>
+TOKEN :
+{
+ < AttributeQNameLbrace : "attribute" (<skip_>)+ <QName> (<skip_>)* "{" > { pushState(OPERATOR); }
+}
+
+<DEFAULT>
+TOKEN :
+{
+ < PINCNameLbrace : "processing-instruction" (<skip_>)+ <NCName> (<skip_>)* "{" > { pushState(OPERATOR); }
+}
+
+<DEFAULT>
+TOKEN :
+{
+ < PILbrace : "processing-instruction" (<skip_>)* "{" > { pushState(OPERATOR); }
+}
+
+<DEFAULT>
+TOKEN :
+{
+ < CommentLbrace : "comment" (<skip_>)* "{" > { pushState(OPERATOR); }
+}
+
+<DEFAULT>
+TOKEN :
+{
+ < ElementLbrace : "element" (<skip_>)* "{" > { pushState(OPERATOR); } : DEFAULT
+}
+
+<DEFAULT>
+TOKEN :
+{
+ < AttributeLbrace : "attribute" (<skip_>)* "{" > { pushState(OPERATOR); } : DEFAULT
+}
+
+<DEFAULT>
+TOKEN :
+{
+ < TextLbrace : "text" (<skip_>)* "{" > { pushState(OPERATOR); }
+}
+
+<DEFAULT>
+TOKEN :
+{
+ < DeclareCollation : "declare" (<skip_>)+ "default" (<skip_>)+ "collation" > : NAMESPACEDECL
+}
+
+<NAMESPACEKEYWORD>
+TOKEN :
+{
+ < DefaultElement : "default" (<skip_>)+ "element" > : NAMESPACEKEYWORD
+}
+
+<DEFAULT>
+TOKEN :
+{
+ < DeclareDefaultElement : "declare" (<skip_>)+ "default" (<skip_>)+ "element" > : NAMESPACEKEYWORD
+}
+
+<DEFAULT>
+TOKEN :
+{
+ < DeclareDefaultFunction : "declare" (<skip_>)+ "default" (<skip_>)+ "function" > : NAMESPACEKEYWORD
+}
+
+<ITEMTYPE>
+TOKEN :
+{
+ < EmptyTok : "empty" (<skip_>)* "(" (<skip_>)* ")" > : OPERATOR
+}
+
+<DEFAULT>
+TOKEN :
+{
+ < ImportSchemaToken : "import" (<skip_>)+ "schema" > : NAMESPACEKEYWORD
+}
+
+<DEFAULT>
+TOKEN :
+{
+ < ImportModuleToken : "import" (<skip_>)+ "module" > : NAMESPACEKEYWORD
+}
+
+TOKEN :
+{
+ < #Nmstart : (<Letter> | "_") >
+}
+
+TOKEN :
+{
+ < #Nmchar : (<Letter> | <CombiningChar> | <Extender> | <Digit> | "." | "-" | "_") >
+}
+
+<DEFAULT>
+TOKEN :
+{
+ < Star : "*" > : OPERATOR
+}
+
+<KINDTEST>
+TOKEN :
+{
+ < AnyName : "*" > : CLOSEKINDTEST
+}
+
+<DEFAULT>
+TOKEN :
+{
+ < NCNameColonStar : <NCName> ":" "*" > : OPERATOR
+}
+
+<DEFAULT>
+TOKEN :
+{
+ < StarColonNCName : "*" ":" <NCName> > : OPERATOR
+}
+
+<DEFAULT>
+TOKEN :
+{
+ < Root : "/" > : DEFAULT
+}
+
+<DEFAULT>
+TOKEN :
+{
+ < RootDescendants : "//" > : DEFAULT
+}
+
+<OPERATOR>
+TOKEN :
+{
+ < Slash : "/" > : DEFAULT
+}
+
+<OPERATOR>
+TOKEN :
+{
+ < SlashSlash : "//" > : DEFAULT
+}
+
+<OPERATOR, ITEMTYPE>
+TOKEN :
+{
+ < Equals : "=" > : DEFAULT
+}
+
+<NAMESPACEDECL>
+TOKEN :
+{
+ < AssignEquals : "=" > : NAMESPACEDECL
+}
+
+<OPERATOR, ITEMTYPE>
+TOKEN :
+{
+ < Is : "is" > : DEFAULT
+}
+
+<OPERATOR, ITEMTYPE>
+TOKEN :
+{
+ < NotEquals : "!=" > : DEFAULT
+}
+
+<OPERATOR, ITEMTYPE>
+TOKEN :
+{
+ < LtEquals : "<=" > : DEFAULT
+}
+
+<OPERATOR, ITEMTYPE>
+TOKEN :
+{
+ < LtLt : "<<" > : DEFAULT
+}
+
+<OPERATOR, ITEMTYPE>
+TOKEN :
+{
+ < GtEquals : ">=" > : DEFAULT
+}
+
+<OPERATOR, ITEMTYPE>
+TOKEN :
+{
+ < GtGt : ">>" > : DEFAULT
+}
+
+<OPERATOR, ITEMTYPE>
+TOKEN :
+{
+ < FortranEq : "eq" > : DEFAULT
+}
+
+<OPERATOR, ITEMTYPE>
+TOKEN :
+{
+ < FortranNe : "ne" > : DEFAULT
+}
+
+<OPERATOR, ITEMTYPE>
+TOKEN :
+{
+ < FortranGt : "gt" > : DEFAULT
+}
+
+<OPERATOR, ITEMTYPE>
+TOKEN :
+{
+ < FortranGe : "ge" > : DEFAULT
+}
+
+<OPERATOR, ITEMTYPE>
+TOKEN :
+{
+ < FortranLt : "lt" > : DEFAULT
+}
+
+<OPERATOR, ITEMTYPE>
+TOKEN :
+{
+ < FortranLe : "le" > : DEFAULT
+}
+
+<OPERATOR, ITEMTYPE>
+TOKEN :
+{
+ < ColonEquals : ":=" > : DEFAULT
+}
+
+<OPERATOR, ITEMTYPE>
+TOKEN :
+{
+ < Lt : "<" > : DEFAULT
+}
+
+<OPERATOR, ITEMTYPE>
+TOKEN :
+{
+ < Gt : ">" > : DEFAULT
+}
+
+<OPERATOR, ITEMTYPE>
+TOKEN :
+{
+ < Minus : "-" > : DEFAULT
+}
+
+<OPERATOR>
+TOKEN :
+{
+ < Plus : "+" > : DEFAULT
+}
+
+<DEFAULT>
+TOKEN :
+{
+ < UnaryMinus : "-" > : DEFAULT
+}
+
+<DEFAULT>
+TOKEN :
+{
+ < UnaryPlus : "+" > : DEFAULT
+}
+
+<OPERATOR, OCCURRENCEINDICATOR>
+TOKEN :
+{
+ < OccurrenceZeroOrOne : "?" > : OPERATOR
+}
+
+<OCCURRENCEINDICATOR>
+TOKEN :
+{
+ < OccurrenceZeroOrMore : "*" > : OPERATOR
+}
+
+<OCCURRENCEINDICATOR>
+TOKEN :
+{
+ < OccurrenceOneOrMore : "+" > : OPERATOR
+}
+
+<OPERATOR, ITEMTYPE>
+TOKEN :
+{
+ < Vbar : "|" > : DEFAULT
+}
+
+<DEFAULT, ITEMTYPE>
+TOKEN :
+{
+ < Lpar : "(" > : DEFAULT
+}
+
+<DEFAULT>
+TOKEN :
+{
+ < At : "@" > : DEFAULT
+}
+
+<OPERATOR, ITEMTYPE>
+TOKEN :
+{
+ < Lbrack : "[" > : DEFAULT
+}
+
+<OPERATOR>
+TOKEN :
+{
+ < Rbrack : "]" > : OPERATOR
+}
+
+<DEFAULT, OPERATOR>
+TOKEN :
+{
+ < Rpar : ")" > : OPERATOR
+}
+
+<KINDTEST, KINDTESTFORPI, CLOSEKINDTEST>
+TOKEN :
+{
+ < RparForKindTest : ")" > { popState(); }
+}
+
+<DEFAULT>
+TOKEN :
+{
+ < Some : "some" (<skip_>)* <VariableIndicator> > : VARNAME
+}
+
+<DEFAULT>
+TOKEN :
+{
+ < Every : "every" (<skip_>)* <VariableIndicator> > : VARNAME
+}
+
+<DEFAULT, OPERATOR>
+TOKEN :
+{
+ < ForVariable : "for" (<skip_>)* <VariableIndicator> > : VARNAME
+}
+
+<DEFAULT, OPERATOR>
+TOKEN :
+{
+ < LetVariable : "let" (<skip_>)* <VariableIndicator> > : VARNAME
+}
+
+<OPERATOR, ITEMTYPE>
+TOKEN :
+{
+ < CastAs : "cast" (<skip_>)+ "as" > : SINGLETYPE
+}
+
+<OPERATOR, ITEMTYPE>
+TOKEN :
+{
+ < TreatAs : "treat" (<skip_>)+ "as" > : ITEMTYPE
+}
+
+<DEFAULT>
+TOKEN :
+{
+ < ValidateLbrace : "validate" (<skip_>)* "{" > { pushState(OPERATOR); } : DEFAULT
+}
+
+<DEFAULT>
+TOKEN :
+{
+ < ValidateSchemaMode : "validate" (<skip_>)+ <ValidationMode> > { pushState(OPERATOR); } : DEFAULT
+}
+
+TOKEN :
+{
+ < #Digits : (["0" - "9"])+  >
+}
+
+<DEFAULT>
+TOKEN :
+{
+ < DocumentLpar : "document-node" (<skip_>)* "(" > { pushState(OPERATOR); } : KINDTEST
+}
+
+<ITEMTYPE>
+TOKEN :
+{
+ < DocumentLparForKindTest : "document-node" (<skip_>)* "(" > { pushState(OCCURRENCEINDICATOR); } : KINDTEST
+}
+
+<DEFAULT>
+TOKEN :
+{
+ < DocumentLbrace : "document" (<skip_>)* "{" > { pushState(OPERATOR); }
+}
+
+<DEFAULT>
+TOKEN :
+{
+ < NodeLpar : "node" (<skip_>)* "(" > { pushState(OPERATOR); } : KINDTEST
+}
+
+<DEFAULT>
+TOKEN :
+{
+ < CommentLpar : "comment" (<skip_>)* "(" > { pushState(OPERATOR); } : KINDTEST
+}
+
+<DEFAULT>
+TOKEN :
+{
+ < TextLpar : "text" (<skip_>)* "(" > { pushState(OPERATOR); } : KINDTEST
+}
+
+<DEFAULT>
+TOKEN :
+{
+ < ProcessingInstructionLpar : "processing-instruction" (<skip_>)* "(" > { pushState(OPERATOR); } : KINDTESTFORPI
+}
+
+<ITEMTYPE>
+TOKEN :
+{
+ < ElementTypeForKindTest : "element" (<skip_>)* "(" > { pushState(OCCURRENCEINDICATOR); } : KINDTEST
+}
+
+<KINDTEST>
+TOKEN :
+{
+ < ElementTypeForDocumentTest : "element" (<skip_>)* "(" > { pushState(KINDTEST); } : KINDTEST
+}
+
+<ITEMTYPE>
+TOKEN :
+{
+ < AttributeTypeForKindTest : "attribute" (<skip_>)* "(" > { pushState(OCCURRENCEINDICATOR); } : KINDTEST
+}
+
+<ITEMTYPE>
+TOKEN :
+{
+ < SchemaElementTypeForKindTest : "schema-element" (<skip_>)* "(" > { pushState(OCCURRENCEINDICATOR); } : KINDTEST
+}
+
+<KINDTEST>
+TOKEN :
+{
+ < SchemaElementTypeForDocumentTest : "schema-element" (<skip_>)* "(" > { pushState(KINDTEST); } : KINDTEST
+}
+
+<ITEMTYPE>
+TOKEN :
+{
+ < SchemaAttributeTypeForKindTest : "schema-attribute" (<skip_>)* "(" > { pushState(OCCURRENCEINDICATOR); } : KINDTEST
+}
+
+<ITEMTYPE>
+TOKEN :
+{
+ < ProcessingInstructionLparForKindTest : "processing-instruction" (<skip_>)* "(" > { pushState(OCCURRENCEINDICATOR); } : KINDTESTFORPI
+}
+
+<ITEMTYPE>
+TOKEN :
+{
+ < TextLparForKindTest : "text" (<skip_>)* "(" > { pushState(OCCURRENCEINDICATOR); } : KINDTEST
+}
+
+<ITEMTYPE>
+TOKEN :
+{
+ < CommentLparForKindTest : "comment" (<skip_>)* "(" > { pushState(OCCURRENCEINDICATOR); } : KINDTEST
+}
+
+<ITEMTYPE>
+TOKEN :
+{
+ < NodeLparForKindTest : "node" (<skip_>)* "(" > { pushState(OCCURRENCEINDICATOR); } : KINDTEST
+}
+
+<DEFAULT>
+TOKEN :
+{
+ < IfLpar : "if" (<skip_>)* "(" > : DEFAULT
+}
+
+<DEFAULT>
+TOKEN :
+{
+ < TypeswitchLpar : "typeswitch" (<skip_>)* "(" > : DEFAULT
+}
+
+<DEFAULT, OPERATOR, ITEMTYPE>
+TOKEN :
+{
+ < Comma : "," > : DEFAULT
+}
+
+<CLOSEKINDTEST>
+TOKEN :
+{
+ < CommaForKindTest : "," > : KINDTEST
+}
+
+<DEFAULT, OPERATOR, XQUERYVERSION, ITEMTYPE>
+TOKEN :
+{
+ < SemiColon : ";" > : DEFAULT
+}
+
+<DEFAULT, OPERATOR>
+TOKEN :
+{
+ < QuerySeparator : "%%%" > : DEFAULT
+}
+
+<START_TAG>
+TOKEN :
+{
+ < OpenQuot : "\"" > : QUOT_ATTRIBUTE_CONTENT
+}
+
+<QUOT_ATTRIBUTE_CONTENT>
+TOKEN :
+{
+ < CloseQuot : "\"" > : START_TAG
+}
+
+<DEFAULT>
+TOKEN :
+{
+ < Dot : "." > : OPERATOR
+}
+
+<DEFAULT>
+TOKEN :
+{
+ < DotDot : ".." > : OPERATOR
+}
+
+<OPERATOR, ITEMTYPE>
+TOKEN :
+{
+ < OrderBy : "order" (<skip_>)+ "by" > : DEFAULT
+}
+
+<OPERATOR, ITEMTYPE>
+TOKEN :
+{
+ < OrderByStable : "stable" (<skip_>)+ "order" (<skip_>)+ "by" > : DEFAULT
+}
+
+<OPERATOR>
+TOKEN :
+{
+ < Ascending : "ascending" > : OPERATOR
+}
+
+<OPERATOR>
+TOKEN :
+{
+ < Descending : "descending" > : OPERATOR
+}
+
+<OPERATOR>
+TOKEN :
+{
+ < EmptyGreatest : "empty" (<skip_>)+ "greatest" > : OPERATOR
+}
+
+<OPERATOR>
+TOKEN :
+{
+ < EmptyLeast : "empty" (<skip_>)+ "least" > : OPERATOR
+}
+
+<DEFAULT>
+TOKEN :
+{
+ < DefineVariable : "declare" (<skip_>)+ "variable" (<skip_>)* <VariableIndicator> > : VARNAME
+}
+
+<ITEMTYPE>
+TOKEN :
+{
+ < QNameForSequenceType : (<Prefix> ":")? <LocalPart> > : OCCURRENCEINDICATOR
+}
+
+<SINGLETYPE, ITEMTYPE>
+TOKEN :
+{
+ < QNameForAtomicType : (<Prefix> ":")? <LocalPart> > : OPERATOR
+}
+
+<KINDTEST>
+TOKEN :
+{
+ < QNameForItemType : (<Prefix> ":")? <LocalPart> > : CLOSEKINDTEST
+}
+
+<EXT_NAME>
+SPECIAL_TOKEN :
+{
+ < ExtensionQName : (<Prefix> ":")? <LocalPart> > : EXT_CONTENT
+}
+
+<DEFAULT>
+TOKEN :
+{
+ < QNameLpar : <QName> (<skip_>)* "(" > : DEFAULT
+}
+
+<NAMESPACEDECL>
+TOKEN :
+{
+ < NCNameForPrefix : <Nmstart> (<Nmchar>)* > : NAMESPACEDECL
+}
+
+<KINDTESTFORPI>
+TOKEN :
+{
+ < NCNameForPI : <Nmstart> (<Nmchar>)* > : KINDTESTFORPI
+}
+
+<DEFAULT>
+TOKEN :
+{
+ < CdataSectionStart : "<![CDATA[" > { pushState(OPERATOR); } : CDATA_SECTION
+}
+
+<ELEMENT_CONTENT>
+TOKEN :
+{
+ < CdataSectionStartForElementContent : "<![CDATA[" > { pushState(); } : CDATA_SECTION
+}
+
+<CDATA_SECTION>
+TOKEN :
+{
+ < CdataSectionEnd : ("]" "]" ">") > { popState(); }
+}
+
+<ELEMENT_CONTENT, QUOT_ATTRIBUTE_CONTENT, APOS_ATTRIBUTE_CONTENT>
+TOKEN :
+{
+ < PredefinedEntityRef : "&" ("lt" | "gt" | "amp" | "quot" | "apos") ";" >
+}
+
+<ELEMENT_CONTENT, QUOT_ATTRIBUTE_CONTENT, APOS_ATTRIBUTE_CONTENT>
+TOKEN :
+{
+ < CharRef : "&#" (<Digits> | ("x" <HexDigits>)) ";" >
+}
+
+TOKEN :
+{
+ < #HexDigits : (["0" - "9", "a" - "f", "A" - "F"])+  >
+}
+
+<ELEMENT_CONTENT>
+TOKEN :
+{
+ < StartTagOpen : "<" > { pushState(); } : START_TAG
+}
+
+<DEFAULT>
+TOKEN :
+{
+ < StartTagOpenRoot : "<" > { pushState(OPERATOR); } : START_TAG
+}
+
+<START_TAG>
+TOKEN :
+{
+ < StartTagClose : ">" > : ELEMENT_CONTENT
+}
+
+<START_TAG>
+TOKEN :
+{
+ < EmptyTagClose : "/>" > { popState(); }
+}
+
+<ELEMENT_CONTENT>
+TOKEN :
+{
+ < EndTagOpen : "</" > : END_TAG
+}
+
+<END_TAG>
+TOKEN :
+{
+ < EndTagClose : ">" > { popState(); }
+}
+
+<START_TAG>
+TOKEN :
+{
+ < ValueIndicator : "=" > : START_TAG
+}
+
+<START_TAG, END_TAG>
+TOKEN :
+{
+ < TagQName : <QName> >
+}
+
+<ELEMENT_CONTENT, QUOT_ATTRIBUTE_CONTENT, APOS_ATTRIBUTE_CONTENT>
+TOKEN :
+{
+ < Lbrace : "{" > { pushState(); } : DEFAULT
+}
+
+<DEFAULT, OPERATOR, KINDTEST, CLOSEKINDTEST>
+TOKEN :
+{
+ < LbraceExprEnclosure : "{" > { pushState(OPERATOR); } : DEFAULT
+}
+
+<ELEMENT_CONTENT, QUOT_ATTRIBUTE_CONTENT, APOS_ATTRIBUTE_CONTENT>
+TOKEN :
+{
+ < LCurlyBraceEscape : "{{" >
+}
+
+<ELEMENT_CONTENT, QUOT_ATTRIBUTE_CONTENT, APOS_ATTRIBUTE_CONTENT>
+TOKEN :
+{
+ < RCurlyBraceEscape : "}}" >
+}
+
+<QUOT_ATTRIBUTE_CONTENT>
+TOKEN :
+{
+ < EscapeQuot : "\"\"" > : QUOT_ATTRIBUTE_CONTENT
+}
+
+<APOS_ATTRIBUTE_CONTENT>
+TOKEN :
+{
+ < EscapeApos : "''" > : APOS_ATTRIBUTE_CONTENT
+}
+
+<ELEMENT_CONTENT>
+TOKEN :
+{
+ < ElementContentChar : <Char> > : ELEMENT_CONTENT
+}
+
+<QUOT_ATTRIBUTE_CONTENT>
+TOKEN :
+{
+ < QuotAttrContentChar : <Char> > : QUOT_ATTRIBUTE_CONTENT
+}
+
+<APOS_ATTRIBUTE_CONTENT>
+TOKEN :
+{
+ < AposAttrContentChar : <Char> > : APOS_ATTRIBUTE_CONTENT
+}
+
+<XML_COMMENT>
+TOKEN :
+{
+ < CommentContentChar : <Char> > : XML_COMMENT
+}
+
+<XML_COMMENT>
+TOKEN :
+{
+ < CommentContentCharDash : "-" <Char> > : XML_COMMENT
+}
+
+<PROCESSING_INSTRUCTION_CONTENT>
+TOKEN :
+{
+ < PIContentChar : ["\t", "\r", "\n", "\u0020" - "\uFFFD"] > : PROCESSING_INSTRUCTION_CONTENT
+}
+
+<CDATA_SECTION>
+TOKEN :
+{
+ < CDataSectionChar : ["\t", "\r", "\n", "\u0020" - "\uFFFD"] > : CDATA_SECTION
+}
+
+<START_TAG>
+TOKEN :
+{
+ < OpenApos : "'" > : APOS_ATTRIBUTE_CONTENT
+}
+
+<APOS_ATTRIBUTE_CONTENT>
+TOKEN :
+{
+ < CloseApos : "'" > : START_TAG
+}
+
+SPECIAL_TOKEN :
+{
+ < #Pragma : <ExtensionStart> (<SForExt>)? <PragmaKeyword> <SForExt> <ExtensionQName> (<SForExt> <ExtensionContents>)? <ExtensionEnd> >
+}
+
+SPECIAL_TOKEN :
+{
+ < #MUExtension : <ExtensionStart> (<SForExt>)? <Extension> <SForExt> <ExtensionQName> (<SForExt> <ExtensionContents>)? <ExtensionEnd> >
+}
+
+SPECIAL_TOKEN :
+{
+ < #ExtensionContents : (<ExtensionContentChar>)* >
+}
+
+<DEFAULT, OPERATOR, NAMESPACEDECL, NAMESPACEKEYWORD, XMLSPACE_DECL, ITEMTYPE, VARNAME, EXPR_COMMENT>
+SPECIAL_TOKEN :
+{
+ < ExtensionStart : "(::" > { pushState(); } : EXT_KEY
+}
+
+<EXT_CONTENT>
+SPECIAL_TOKEN :
+{
+ < ExtensionContentChar : <Char> >
+}
+
+<EXT_CONTENT>
+SPECIAL_TOKEN :
+{
+ < ExtensionEnd : "::)" > { popState(); }
+}
+
+SKIP :
+{
+ < #Comment : <CommentStart> ((<CommentContents>))* <CommentEnd> >
+}
+
+SPECIAL_TOKEN :
+{
+ < #CommentContents : (<CommentContent>)+  >
+}
+
+<DEFAULT, OPERATOR, NAMESPACEDECL, NAMESPACEKEYWORD, XMLSPACE_DECL, SINGLETYPE, ITEMTYPE, KINDTEST, KINDTESTFORPI, CLOSEKINDTEST, OCCURRENCEINDICATOR, VARNAME, EXPR_COMMENT>
+SPECIAL_TOKEN :
+{
+ < CommentStart : "(:" > { pushState(); } : EXPR_COMMENT
+}
+
+<EXPR_COMMENT>
+SPECIAL_TOKEN :
+{
+ < CommentContent : <Char> >
+}
+
+<EXPR_COMMENT>
+SPECIAL_TOKEN :
+{
+ < CommentEnd : ":)" > { popState(); }
+}
+
+<EXT_KEY>
+SPECIAL_TOKEN :
+{
+ < PragmaKeyword : "pragma" > : EXT_NAME
+}
+
+<EXT_KEY>
+SPECIAL_TOKEN :
+{
+ < Extension : "extension" > : EXT_NAME
+}
+
+<DEFAULT>
+TOKEN :
+{
+ < XmlCommentStart : "<!--" > { pushState(OPERATOR); } : XML_COMMENT
+}
+
+<ELEMENT_CONTENT>
+TOKEN :
+{
+ < XmlCommentStartForElementContent : "<!--" > { pushState(); } : XML_COMMENT
+}
+
+<XML_COMMENT>
+TOKEN :
+{
+ < XmlCommentEnd : "-->" > { popState(); }
+}
+
+<DEFAULT>
+TOKEN :
+{
+ < QName : (<Prefix> ":")? <LocalPart> > : OPERATOR
+}
+
+TOKEN :
+{
+ < #NCName : <Nmstart> (<Nmchar>)* >
+}
+
+<START_TAG, END_TAG>
+TOKEN :
+{
+ < S : (<WhitespaceChar>)+  >
+}
+
+<PROCESSING_INSTRUCTION>
+TOKEN :
+{
+ < SForPI : (<WhitespaceChar>)+  > : PROCESSING_INSTRUCTION_CONTENT
+}
+
+<EXT_CONTENT, EXT_KEY, EXT_NAME>
+SPECIAL_TOKEN :
+{
+ < SForExt : (<WhitespaceChar>)+  >
+}
+
+TOKEN :
+{
+ < #Char : ["\t", "\r", "\n", "\u0020" - "\uFFFD"] >
+}
+
+<DEFAULT, OPERATOR>
+TOKEN :
+{
+ < Rbrace : "}" > { popState(); }
+}
+
+TOKEN :
+{
+ < #WhitespaceChar : ["\t", "\r", "\n", " "] >
+}
+
+TOKEN :
+{
+ < #Letter : (<BaseChar> | <Ideographic>) >
+}
+
+TOKEN :
+{
+ < #BaseChar : ["\u0041" - "\u005a", "\u0061" - "\u007a", "\u00c0" - "\u00d6", "\u00d8" - "\u00f6", "\u00f8" - "\u00ff", "\u0100" - "\u0131", "\u0134" - "\u013e", "\u0141" - "\u0148", "\u014a" - "\u017e", "\u0180" - "\u01c3", "\u01cd" - "\u01f0", "\u01f4" - "\u01f5", "\u01fa" - "\u0217", "\u0250" - "\u02a8", "\u02bb" - "\u02c1", "\u0386", "\u0388" - "\u038a", "\u038c", "\u038e" - "\u03a1", "\u03a3" - "\u03ce", "\u03d0" - "\u03d6", "\u03da", "\u03dc", "\u03de", "\u03e0", "\u03e2" - "\u03f3", "\u0401" - "\u040c", "\u040e" - "\u044f", "\u0451" - "\u045c", "\u045e" - "\u0481", "\u0490" - "\u04c4", "\u04c7" - "\u04c8", "\u04cb" - "\u04cc", "\u04d0" - "\u04eb", "\u04ee" - "\u04f5", "\u04f8" - "\u04f9", "\u0531" - "\u0556", "\u0559", "\u0561" - "\u0586", "\u05d0" - "\u05ea", "\u05f0" - "\u05f2", "\u0621" - "\u063a", "\u0641" - "\u064a", "\u0671" - "\u06b7", "\u06ba" - "\u06be", "\u06c0" - "\u06ce", "\u06d0" - "\u06d3", "\u06d5", "\u06e5" - "\u06e6", "\u0905" - "\u0939", "\u093d", "\u0958" - "\u0961", "\u0985" - "\u098c", "\u098f" - "\u0990", "\u0993" - "\u09a8", "\u09aa" - "\u09b0", "\u09b2", "\u09b6" - "\u09b9", "\u09dc" - "\u09dd", "\u09df" - "\u09e1", "\u09f0" - "\u09f1", "\u0a05" - "\u0a0a", "\u0a0f" - "\u0a10", "\u0a13" - "\u0a28", "\u0a2a" - "\u0a30", "\u0a32" - "\u0a33", "\u0a35" - "\u0a36", "\u0a38" - "\u0a39", "\u0a59" - "\u0a5c", "\u0a5e", "\u0a72" - "\u0a74", "\u0a85" - "\u0a8b", "\u0a8d", "\u0a8f" - "\u0a91", "\u0a93" - "\u0aa8", "\u0aaa" - "\u0ab0", "\u0ab2" - "\u0ab3", "\u0ab5" - "\u0ab9", "\u0abd", "\u0ae0", "\u0b05" - "\u0b0c", "\u0b0f" - "\u0b10", "\u0b13" - "\u0b28", "\u0b2a" - "\u0b30", "\u0b32" - "\u0b33", "\u0b36" - "\u0b39", "\u0b3d", "\u0b5c" - "\u0b5d", "\u0b5f" - "\u0b61", "\u0b85" - "\u0b8a", "\u0b8e" - "\u0b90", "\u0b92" - "\u0b95", "\u0b99" - "\u0b9a", "\u0b9c", "\u0b9e" - "\u0b9f", "\u0ba3" - "\u0ba4", "\u0ba8" - "\u0baa", "\u0bae" - "\u0bb5", "\u0bb7" - "\u0bb9", "\u0c05" - "\u0c0c", "\u0c0e" - "\u0c10", "\u0c12" - "\u0c28", "\u0c2a" - "\u0c33", "\u0c35" - "\u0c39", "\u0c60" - "\u0c61", "\u0c85" - "\u0c8c", "\u0c8e" - "\u0c90", "\u0c92" - "\u0ca8", "\u0caa" - "\u0cb3", "\u0cb5" - "\u0cb9", "\u0cde", "\u0ce0" - "\u0ce1", "\u0d05" - "\u0d0c", "\u0d0e" - "\u0d10", "\u0d12" - "\u0d28", "\u0d2a" - "\u0d39", "\u0d60" - "\u0d61", "\u0e01" - "\u0e2e", "\u0e30", "\u0e32" - "\u0e33", "\u0e40" - "\u0e45", "\u0e81" - "\u0e82", "\u0e84", "\u0e87" - "\u0e88", "\u0e8a", "\u0e8d", "\u0e94" - "\u0e97", "\u0e99" - "\u0e9f", "\u0ea1" - "\u0ea3", "\u0ea5", "\u0ea7", "\u0eaa" - "\u0eab", "\u0ead" - "\u0eae", "\u0eb0", "\u0eb2" - "\u0eb3", "\u0ebd", "\u0ec0" - "\u0ec4", "\u0f40" - "\u0f47", "\u0f49" - "\u0f69", "\u10a0" - "\u10c5", "\u10d0" - "\u10f6", "\u1100", "\u1102" - "\u1103", "\u1105" - "\u1107", "\u1109", "\u110b" - "\u110c", "\u110e" - "\u1112", "\u113c", "\u113e", "\u1140", "\u114c", "\u114e", "\u1150", "\u1154" - "\u1155", "\u1159", "\u115f" - "\u1161", "\u1163", "\u1165", "\u1167", "\u1169", "\u116d" - "\u116e", "\u1172" - "\u1173", "\u1175", "\u119e", "\u11a8", "\u11ab", "\u11ae" - "\u11af", "\u11b7" - "\u11b8", "\u11ba", "\u11bc" - "\u11c2", "\u11eb", "\u11f0", "\u11f9", "\u1e00" - "\u1e9b", "\u1ea0" - "\u1ef9", "\u1f00" - "\u1f15", "\u1f18" - "\u1f1d", "\u1f20" - "\u1f45", "\u1f48" - "\u1f4d", "\u1f50" - "\u1f57", "\u1f59", "\u1f5b", "\u1f5d", "\u1f5f" - "\u1f7d", "\u1f80" - "\u1fb4", "\u1fb6" - "\u1fbc", "\u1fbe", "\u1fc2" - "\u1fc4", "\u1fc6" - "\u1fcc", "\u1fd0" - "\u1fd3", "\u1fd6" - "\u1fdb", "\u1fe0" - "\u1fec", "\u1ff2" - "\u1ff4", "\u1ff6" - "\u1ffc", "\u2126", "\u212a" - "\u212b", "\u212e", "\u2180" - "\u2182", "\u3041" - "\u3094", "\u30a1" - "\u30fa", "\u3105" - "\u312c", "\uac00" - "\ud7a3"] >
+}
+
+TOKEN :
+{
+ < #Ideographic : ["\u4e00" - "\u9fa5", "\u3007", "\u3021" - "\u3029"] >
+}
+
+TOKEN :
+{
+ < #CombiningChar : ["\u0300" - "\u0345", "\u0360" - "\u0361", "\u0483" - "\u0486", "\u0591" - "\u05a1", "\u05a3" - "\u05b9", "\u05bb" - "\u05bd", "\u05bf", "\u05c1" - "\u05c2", "\u05c4", "\u064b" - "\u0652", "\u0670", "\u06d6" - "\u06dc", "\u06dd" - "\u06df", "\u06e0" - "\u06e4", "\u06e7" - "\u06e8", "\u06ea" - "\u06ed", "\u0901" - "\u0903", "\u093c", "\u093e" - "\u094c", "\u094d", "\u0951" - "\u0954", "\u0962" - "\u0963", "\u0981" - "\u0983", "\u09bc", "\u09be", "\u09bf", "\u09c0" - "\u09c4", "\u09c7" - "\u09c8", "\u09cb" - "\u09cd", "\u09d7", "\u09e2" - "\u09e3", "\u0a02", "\u0a3c", "\u0a3e", "\u0a3f", "\u0a40" - "\u0a42", "\u0a47" - "\u0a48", "\u0a4b" - "\u0a4d", "\u0a70" - "\u0a71", "\u0a81" - "\u0a83", "\u0abc", "\u0abe" - "\u0ac5", "\u0ac7" - "\u0ac9", "\u0acb" - "\u0acd", "\u0b01" - "\u0b03", "\u0b3c", "\u0b3e" - "\u0b43", "\u0b47" - "\u0b48", "\u0b4b" - "\u0b4d", "\u0b56" - "\u0b57", "\u0b82" - "\u0b83", "\u0bbe" - "\u0bc2", "\u0bc6" - "\u0bc8", "\u0bca" - "\u0bcd", "\u0bd7", "\u0c01" - "\u0c03", "\u0c3e" - "\u0c44", "\u0c46" - "\u0c48", "\u0c4a" - "\u0c4d", "\u0c55" - "\u0c56", "\u0c82" - "\u0c83", "\u0cbe" - "\u0cc4", "\u0cc6" - "\u0cc8", "\u0cca" - "\u0ccd", "\u0cd5" - "\u0cd6", "\u0d02" - "\u0d03", "\u0d3e" - "\u0d43", "\u0d46" - "\u0d48", "\u0d4a" - "\u0d4d", "\u0d57", "\u0e31", "\u0e34" - "\u0e3a", "\u0e47" - "\u0e4e", "\u0eb1", "\u0eb4" - "\u0eb9", "\u0ebb" - "\u0ebc", "\u0ec8" - "\u0ecd", "\u0f18" - "\u0f19", "\u0f35", "\u0f37", "\u0f39", "\u0f3e", "\u0f3f", "\u0f71" - "\u0f84", "\u0f86" - "\u0f8b", "\u0f90" - "\u0f95", "\u0f97", "\u0f99" - "\u0fad", "\u0fb1" - "\u0fb7", "\u0fb9", "\u20d0" - "\u20dc", "\u20e1", "\u302a" - "\u302f", "\u3099", "\u309a"] >
+}
+
+TOKEN :
+{
+ < #Digit : ["\u0030" - "\u0039", "\u0660" - "\u0669", "\u06f0" - "\u06f9", "\u0966" - "\u096f", "\u09e6" - "\u09ef", "\u0a66" - "\u0a6f", "\u0ae6" - "\u0aef", "\u0b66" - "\u0b6f", "\u0be7" - "\u0bef", "\u0c66" - "\u0c6f", "\u0ce6" - "\u0cef", "\u0d66" - "\u0d6f", "\u0e50" - "\u0e59", "\u0ed0" - "\u0ed9", "\u0f20" - "\u0f29"] >
+}
+
+TOKEN :
+{
+ < #Extender : ["\u00b7", "\u02d0", "\u02d1", "\u0387", "\u0640", "\u0e46", "\u0ec6", "\u3005", "\u3031" - "\u3035", "\u309d" - "\u309e", "\u30fc" - "\u30fe"] >
+}
+
+<OPERATOR>
+SKIP :
+{
+ < NotOperatorKeyword : (["0" - "9", "a" - "z", "A" - "Z"])+  >
+}
+
+<DEFAULT>
+SKIP :
+{
+ < NotNumber : (("." <Digits>) | (<Digits> ("." (["0" - "9"])*)?)) (["e", "E"] (["+", "-"])? <Digits>)? ["a" - "z", "A" - "Z"] (["0" - "9", "a" - "z", "A" - "Z"])* > : OPERATOR
+}
+void QueryList()  :
+{}
+{
+  Module() (<QuerySeparator> [Module()])*
+}
+
+void Module()  :
+{}
+{
+  [VersionDecl()] (MainModule() | LibraryModule())
+}
+
+void VersionDecl()  :
+{}
+{
+  <XQueryVersion>{jjtThis.processToken(token);} #XQueryVersion(true) <StringLiteralForVersion>{jjtThis.processToken(token);} #StringLiteralForVersion(true) [<XQueryEncoding>{jjtThis.processToken(token);} #XQueryEncoding(true) <StringLiteralForVersion>{jjtThis.processToken(token);} #StringLiteralForVersion(true)] Separator()
+}
+
+void MainModule()  :
+{}
+{
+  Prolog() QueryBody()
+}
+
+void LibraryModule()  :
+{}
+{
+  ModuleDecl() Prolog()
+}
+
+void ModuleDecl()  :
+{}
+{
+  <ModuleNamespace>{jjtThis.processToken(token);} #ModuleNamespace(true) <NCNameForPrefix>{jjtThis.processToken(token);} #NCNameForPrefix(true) <AssignEquals>{jjtThis.processToken(token);} #AssignEquals(true) <URLLiteral>{jjtThis.processToken(token);} #URLLiteral(true) Separator()
+}
+
+void Prolog()  :
+{}
+{
+  (Setter() Separator())* ((Import() | NamespaceDecl() | DefaultNamespaceDecl()) Separator())* ((VarDecl() | FunctionDecl()) Separator())*
+}
+
+void Setter()  :
+{}
+{
+  (XMLSpaceDecl() | DefaultCollationDecl() | BaseURIDecl() | ConstructionDecl() | OrderingModeDecl() | EmptyOrderingDecl() | InheritNamespacesDecl())
+}
+
+void Import()  :
+{}
+{
+  (SchemaImport() | ModuleImport())
+}
+
+void Separator()  :
+{}
+{
+  <SemiColon>
+}
+
+void NamespaceDecl()  :
+{}
+{
+  <DeclareNamespace>{jjtThis.processToken(token);} #DeclareNamespace(true) <NCNameForPrefix>{jjtThis.processToken(token);} #NCNameForPrefix(true) <AssignEquals>{jjtThis.processToken(token);} #AssignEquals(true) <URLLiteral>{jjtThis.processToken(token);} #URLLiteral(true)
+}
+
+void XMLSpaceDecl()  :
+{}
+{
+  <DeclareXMLSpace>{jjtThis.processToken(token);} #DeclareXMLSpace(true) (<XMLSpacePreserve>{jjtThis.processToken(token);} #XMLSpacePreserve(true) | <XMLSpaceStrip>{jjtThis.processToken(token);} #XMLSpaceStrip(true))
+}
+
+void DefaultNamespaceDecl()  :
+{}
+{
+  (<DeclareDefaultElement>{jjtThis.processToken(token);} #DeclareDefaultElement(true) | <DeclareDefaultFunction>{jjtThis.processToken(token);} #DeclareDefaultFunction(true)) <Namespace>{jjtThis.processToken(token);} #Namespace(true) <URLLiteral>{jjtThis.processToken(token);} #URLLiteral(true)
+}
+
+void OrderingModeDecl()  :
+{}
+{
+  <DeclareOrdering>{jjtThis.processToken(token);} #DeclareOrdering(true) (<Ordered>{jjtThis.processToken(token);} #Ordered(true) | <Unordered>{jjtThis.processToken(token);} #Unordered(true))
+}
+
+void EmptyOrderingDecl()  :
+{}
+{
+  <DeclareDefaultOrderingEmpty>{jjtThis.processToken(token);} #DeclareDefaultOrderingEmpty(true) (<EmptyGreatest>{jjtThis.processToken(token);} #EmptyGreatest(true) | <EmptyLeast>{jjtThis.processToken(token);} #EmptyLeast(true))
+}
+
+void InheritNamespacesDecl()  :
+{}
+{
+  <DeclareInheritNamespaces>{jjtThis.processToken(token);} #DeclareInheritNamespaces(true) (<Yes>{jjtThis.processToken(token);} #Yes(true) | <No>{jjtThis.processToken(token);} #No(true))
+}
+
+void DefaultCollationDecl()  :
+{}
+{
+  <DeclareCollation>{jjtThis.processToken(token);} #DeclareCollation(true) <URLLiteral>{jjtThis.processToken(token);} #URLLiteral(true)
+}
+
+void BaseURIDecl()  :
+{}
+{
+  <DeclareBaseURI>{jjtThis.processToken(token);} #DeclareBaseURI(true) <URLLiteral>{jjtThis.processToken(token);} #URLLiteral(true)
+}
+
+void SchemaImport()  :
+{}
+{
+  <ImportSchemaToken>{jjtThis.processToken(token);} #ImportSchemaToken(true) [SchemaPrefix()] <URLLiteral>{jjtThis.processToken(token);} #URLLiteral(true) [<AtStringLiteral>{jjtThis.processToken(token);} #AtStringLiteral(true) (<Comma> <StringLiteral>{jjtThis.processToken(token);} #StringLiteral(true))*]
+}
+
+void SchemaPrefix()  :
+{}
+{
+  ((<Namespace>{jjtThis.processToken(token);} #Namespace(true) <NCNameForPrefix>{jjtThis.processToken(token);} #NCNameForPrefix(true) <AssignEquals>{jjtThis.processToken(token);} #AssignEquals(true)) | (<DefaultElement>{jjtThis.processToken(token);} #DefaultElement(true) <Namespace>{jjtThis.processToken(token);} #Namespace(true)))
+}
+
+void ModuleImport()  :
+{}
+{
+  <ImportModuleToken>{jjtThis.processToken(token);} #ImportModuleToken(true) [<Namespace>{jjtThis.processToken(token);} #Namespace(true) <NCNameForPrefix>{jjtThis.processToken(token);} #NCNameForPrefix(true) <AssignEquals>{jjtThis.processToken(token);} #AssignEquals(true)] <URLLiteral>{jjtThis.processToken(token);} #URLLiteral(true) [<AtStringLiteral>{jjtThis.processToken(token);} #AtStringLiteral(true) (<Comma> <StringLiteral>{jjtThis.processToken(token);} #StringLiteral(true))*]
+}
+
+void VarDecl()  :
+{}
+{
+  <DefineVariable>{jjtThis.processToken(token);} #DefineVariable(true) <VarName>{jjtThis.processToken(token);} #VarName(true) [TypeDeclaration()] ((<ColonEquals>{jjtThis.processToken(token);} #ColonEquals(true) ExprSingle()) | <External>{jjtThis.processToken(token);} #External(true))
+}
+
+void ConstructionDecl()  :
+{}
+{
+  <DeclareConstruction>{jjtThis.processToken(token);} #DeclareConstruction(true) <SchemaModeForDeclareConstruction>{jjtThis.processToken(token);} #SchemaModeForDeclareConstruction(true)
+}
+
+void FunctionDecl()  :
+{}
+{
+  <DefineFunction>{jjtThis.processToken(token);} #DefineFunction(true) <QNameLpar>{jjtThis.processToken(token);} #QNameLpar(true) [ParamList()] (<Rpar> (<As> {jjtThis.processToken(token);} #As(true) SequenceType())?) (EnclosedExpr() | <External>{jjtThis.processToken(token);} #External(true))
+}
+
+void ParamList()  :
+{}
+{
+  Param() (<Comma> Param())*
+}
+
+void Param()  :
+{}
+{
+  <VariableIndicator> <VarName>{jjtThis.processToken(token);} #VarName(true) [TypeDeclaration()]
+}
+
+void EnclosedExpr()  :
+{}
+{
+  (<Lbrace>{jjtThis.processToken(token);} #Lbrace(true) | <LbraceExprEnclosure>{jjtThis.processToken(token);} #LbraceExprEnclosure(true)) Expr() <Rbrace>{jjtThis.processToken(token);} #Rbrace(true)
+}
+
+void QueryBody()  :
+{}
+{
+  (Expr())
+}
+
+void Expr()  :
+{}
+{
+  ExprSingle() (<Comma> ExprSingle())*
+}
+
+void ExprSingle()  #void :
+{}
+{
+  (FLWORExpr() | QuantifiedExpr() | TypeswitchExpr() | IfExpr() | OrExpr())
+}
+
+void FLWORExpr()  :
+{}
+{
+  ((ForClause() | LetClause()))+  [WhereClause()] [OrderByClause()] <Return> ExprSingle()
+}
+
+void ForClause()  #void :
+{}
+{
+  <ForVariable> <VarName>{jjtThis.processToken(token);} #VarName(true) [TypeDeclaration()] [PositionalVar()] <In>{jjtThis.processToken(token);} #In(true) ExprSingle() (<Comma> <VariableIndicator> <VarName>{jjtThis.processToken(token);} #VarName(true) [TypeDeclaration()] [PositionalVar()] <In>{jjtThis.processToken(token);} #In(true) ExprSingle())*
+}
+
+void PositionalVar()  :
+{}
+{
+  <AtWord>{jjtThis.processToken(token);} #AtWord(true) <VariableIndicator> <VarName>{jjtThis.processToken(token);} #VarName(true)
+}
+
+void LetClause()  :
+{}
+{
+  <LetVariable>{jjtThis.processToken(token);} #LetVariable(true) <VarName>{jjtThis.processToken(token);} #VarName(true) [TypeDeclaration()] <ColonEquals>{jjtThis.processToken(token);} #ColonEquals(true) ExprSingle() (<Comma> <VariableIndicator> <VarName>{jjtThis.processToken(token);} #VarName(true) [TypeDeclaration()] <ColonEquals>{jjtThis.processToken(token);} #ColonEquals(true) ExprSingle())*
+}
+
+void WhereClause()  :
+{}
+{
+  <Where>{jjtThis.processToken(token);} #Where(true) ExprSingle()
+}
+
+void OrderByClause()  :
+{}
+{
+  (<OrderBy>{jjtThis.processToken(token);} #OrderBy(true) | <OrderByStable>{jjtThis.processToken(token);} #OrderByStable(true)) OrderSpecList()
+}
+
+void OrderSpecList()  :
+{}
+{
+  OrderSpec() (<Comma> OrderSpec())*
+}
+
+void OrderSpec()  :
+{}
+{
+  ExprSingle() OrderModifier()
+}
+
+void OrderModifier()  :
+{}
+{
+  [(<Ascending>{jjtThis.processToken(token);} #Ascending(true) | <Descending>{jjtThis.processToken(token);} #Descending(true))] [(<EmptyGreatest>{jjtThis.processToken(token);} #EmptyGreatest(true) | <EmptyLeast>{jjtThis.processToken(token);} #EmptyLeast(true))] [<Collation>{jjtThis.processToken(token);} #Collation(true) <StringLiteral>{jjtThis.processToken(token);} #StringLiteral(true)]
+}
+
+void QuantifiedExpr()  :
+{}
+{
+  (<Some>{jjtThis.processToken(token);} #Some(true) | <Every>{jjtThis.processToken(token);} #Every(true)) <VarName>{jjtThis.processToken(token);} #VarName(true) [TypeDeclaration()] <In>{jjtThis.processToken(token);} #In(true) ExprSingle() (<Comma> <VariableIndicator> <VarName>{jjtThis.processToken(token);} #VarName(true) [TypeDeclaration()] <In>{jjtThis.processToken(token);} #In(true) ExprSingle())* <Satisfies>{jjtThis.processToken(token);} #Satisfies(true) ExprSingle()
+}
+
+void TypeswitchExpr()  :
+{}
+{
+  <TypeswitchLpar> Expr() <Rpar> (CaseClause())+  <Default>{jjtThis.processToken(token);} #Default(true) [<VariableIndicator> <VarName>{jjtThis.processToken(token);} #VarName(true)] <Return> ExprSingle()
+}
+
+void CaseClause()  :
+{}
+{
+  <Case>{jjtThis.processToken(token);} #Case(true) [<VariableIndicator> <VarName>{jjtThis.processToken(token);} #VarName(true) <As>{jjtThis.processToken(token);} #As(true)] SequenceType() <Return> ExprSingle()
+}
+
+void IfExpr()  :
+{}
+{
+  <IfLpar> Expr() <Rpar> <Then> ExprSingle() <Else> ExprSingle()
+}
+
+void OperatorExpr()  #void  :
+{}
+{
+	OrExpr()
+}
+
+void OrExpr() #OrExpr(> 1) :
+{}
+{
+  AndExpr() (<Or>
+        
+         {binaryTokenStack.push(token);}
+			 AndExpr()
+		{
+         try
+         {
+		       jjtThis.processToken((Token)binaryTokenStack.pop());
+         }
+         catch(java.util.EmptyStackException e)
+         {
+           token_source.printLinePos();
+           e.printStackTrace();
+           throw e;
+         }
+		}
+		 #OrExpr(2))*
+}
+
+void AndExpr() #AndExpr(> 1) :
+{}
+{
+  ComparisonExpr() (<And>
+        
+         {binaryTokenStack.push(token);}
+			 ComparisonExpr()
+		{
+         try
+         {
+		       jjtThis.processToken((Token)binaryTokenStack.pop());
+         }
+         catch(java.util.EmptyStackException e)
+         {
+           token_source.printLinePos();
+           e.printStackTrace();
+           throw e;
+         }
+		}
+		 #AndExpr(2))*
+}
+
+void ComparisonExpr() #ComparisonExpr(> 1) :
+{}
+{
+  RangeExpr() ((ValueComp() | GeneralComp() | NodeComp()) RangeExpr()
+		{
+         try
+         {
+		       jjtThis.processToken((Token)binaryTokenStack.pop());
+         }
+         catch(java.util.EmptyStackException e)
+         {
+           token_source.printLinePos();
+           e.printStackTrace();
+           throw e;
+         }
+		}
+		 #ComparisonExpr(2))?
+}
+
+void RangeExpr() #RangeExpr(> 1) :
+{}
+{
+  AdditiveExpr() (<To>
+        
+         {binaryTokenStack.push(token);}
+			 AdditiveExpr()
+		{
+         try
+         {
+		       jjtThis.processToken((Token)binaryTokenStack.pop());
+         }
+         catch(java.util.EmptyStackException e)
+         {
+           token_source.printLinePos();
+           e.printStackTrace();
+           throw e;
+         }
+		}
+		 #RangeExpr(2))?
+}
+
+void AdditiveExpr() #AdditiveExpr(> 1) :
+{}
+{
+  MultiplicativeExpr() ((<Plus>
+        
+         {binaryTokenStack.push(token);}
+			 | <Minus>
+        
+         {binaryTokenStack.push(token);}
+			) MultiplicativeExpr()
+		{
+         try
+         {
+		       jjtThis.processToken((Token)binaryTokenStack.pop());
+         }
+         catch(java.util.EmptyStackException e)
+         {
+           token_source.printLinePos();
+           e.printStackTrace();
+           throw e;
+         }
+		}
+		 #AdditiveExpr(2))*
+}
+
+void MultiplicativeExpr() #MultiplicativeExpr(> 1) :
+{}
+{
+  UnionExpr() ((<Multiply>
+        
+         {binaryTokenStack.push(token);}
+			 | <Div>
+        
+         {binaryTokenStack.push(token);}
+			 | <Idiv>
+        
+         {binaryTokenStack.push(token);}
+			 | <Mod>
+        
+         {binaryTokenStack.push(token);}
+			) UnionExpr()
+		{
+         try
+         {
+		       jjtThis.processToken((Token)binaryTokenStack.pop());
+         }
+         catch(java.util.EmptyStackException e)
+         {
+           token_source.printLinePos();
+           e.printStackTrace();
+           throw e;
+         }
+		}
+		 #MultiplicativeExpr(2))*
+}
+
+void UnionExpr() #UnionExpr(> 1) :
+{}
+{
+  IntersectExceptExpr() ((<Union>
+        
+         {binaryTokenStack.push(token);}
+			 | <Vbar>
+        
+         {binaryTokenStack.push(token);}
+			) IntersectExceptExpr()
+		{
+         try
+         {
+		       jjtThis.processToken((Token)binaryTokenStack.pop());
+         }
+         catch(java.util.EmptyStackException e)
+         {
+           token_source.printLinePos();
+           e.printStackTrace();
+           throw e;
+         }
+		}
+		 #UnionExpr(2))*
+}
+
+void IntersectExceptExpr() #IntersectExceptExpr(> 1) :
+{}
+{
+  InstanceofExpr() ((<Intersect>
+        
+         {binaryTokenStack.push(token);}
+			 | <Except>
+        
+         {binaryTokenStack.push(token);}
+			) InstanceofExpr()
+		{
+         try
+         {
+		       jjtThis.processToken((Token)binaryTokenStack.pop());
+         }
+         catch(java.util.EmptyStackException e)
+         {
+           token_source.printLinePos();
+           e.printStackTrace();
+           throw e;
+         }
+		}
+		 #IntersectExceptExpr(2))*
+}
+
+void InstanceofExpr() #InstanceofExpr(> 1) :
+{}
+{
+  TreatExpr() (<Instanceof> SequenceType())?
+}
+
+void TreatExpr() #TreatExpr(> 1) :
+{}
+{
+  CastableExpr() (<TreatAs> SequenceType())?
+}
+
+void CastableExpr() #CastableExpr(> 1) :
+{}
+{
+  CastExpr() (<Castable> SingleType())?
+}
+
+void CastExpr() #CastExpr(> 1) :
+{}
+{
+  UnaryExpr() (<CastAs>{jjtThis.processToken(token);} #CastAs(true) SingleType())?
+}
+
+void UnaryExpr() #UnaryExpr(keepUnary) :
+{boolean keepUnary=false;}
+{
+  (<UnaryMinus>{keepUnary=true;jjtThis.processToken(token);} #UnaryMinus(true) | <UnaryPlus>{keepUnary=true;jjtThis.processToken(token);} #UnaryPlus(true))* ValueExpr()
+}
+
+void ValueExpr() #void :
+{}
+{
+  (ValidateExpr() | PathExpr())
+}
+
+void GeneralComp()  #void :
+{}
+{
+  (<Equals>
+        
+         {binaryTokenStack.push(token);}
+			 | <NotEquals>
+        
+         {binaryTokenStack.push(token);}
+			 | <Lt>
+        
+         {binaryTokenStack.push(token);}
+			 | <LtEquals>
+        
+         {binaryTokenStack.push(token);}
+			 | <Gt>
+        
+         {binaryTokenStack.push(token);}
+			 | <GtEquals>
+        
+         {binaryTokenStack.push(token);}
+			)
+}
+
+void ValueComp()  #void :
+{}
+{
+  (<FortranEq>
+        
+         {binaryTokenStack.push(token);}
+			 | <FortranNe>
+        
+         {binaryTokenStack.push(token);}
+			 | <FortranLt>
+        
+         {binaryTokenStack.push(token);}
+			 | <FortranLe>
+        
+         {binaryTokenStack.push(token);}
+			 | <FortranGt>
+        
+         {binaryTokenStack.push(token);}
+			 | <FortranGe>
+        
+         {binaryTokenStack.push(token);}
+			)
+}
+
+void NodeComp()  #void :
+{}
+{
+  (<Is>
+        
+         {binaryTokenStack.push(token);}
+			 | <LtLt>
+        
+         {binaryTokenStack.push(token);}
+			 | <GtGt>
+        
+         {binaryTokenStack.push(token);}
+			)
+}
+
+void ValidateExpr()  :
+{}
+{
+  (<ValidateLbrace>{jjtThis.processToken(token);} #ValidateLbrace(true) | (<ValidateSchemaMode>{jjtThis.processToken(token);} #ValidateSchemaMode(true) <LbraceExprEnclosure>{jjtThis.processToken(token);} #LbraceExprEnclosure(true))) Expr() <Rbrace>{jjtThis.processToken(token);} #Rbrace(true)
+}
+
+void PathExpr()  #PathExpr(>0) :
+{}
+{
+  ((<Root>{jjtThis.processToken(token);} #Root(true) [RelativePathExpr()]) | (<RootDescendants>{jjtThis.processToken(token);} #RootDescendants(true) RelativePathExpr()) | RelativePathExpr())
+}
+
+void RelativePathExpr()  #void :
+{}
+{
+  StepExpr() ((<Slash> | <SlashSlash>{jjtThis.processToken(token);} #SlashSlash(true)) StepExpr())*
+}
+
+void StepExpr()  #StepExpr(>1 || isStep) :
+{boolean savedIsStep = isStep; isStep=false;}
+{
+  ({isStep=true;}AxisStep(){isStep = savedIsStep;} | FilterExpr(){isStep = savedIsStep;})
+}
+
+void AxisStep()  #void :
+{}
+{
+  (ForwardStep() | ReverseStep()) PredicateList()
+}
+
+void ForwardStep()  #void :
+{}
+{
+  ((ForwardAxis() NodeTest()) | AbbrevForwardStep())
+}
+
+void ForwardAxis()  #void :
+{}
+{
+  (<AxisChild>{jjtThis.processToken(token);} #AxisChild(true) | <AxisDescendant>{jjtThis.processToken(token);} #AxisDescendant(true) | <AxisAttribute>{jjtThis.processToken(token);} #AxisAttribute(true) | <AxisSelf>{jjtThis.processToken(token);} #AxisSelf(true) | <AxisDescendantOrSelf>{jjtThis.processToken(token);} #AxisDescendantOrSelf(true) | <AxisFollowingSibling>{jjtThis.processToken(token);} #AxisFollowingSibling(true) | <AxisFollowing>{jjtThis.processToken(token);} #AxisFollowing(true))
+}
+
+void AbbrevForwardStep()  #void :
+{}
+{
+  [<At>{jjtThis.processToken(token);} #At(true)] NodeTest()
+}
+
+void ReverseStep()  #void :
+{}
+{
+  ((ReverseAxis() NodeTest()) | AbbrevReverseStep())
+}
+
+void ReverseAxis()  #void :
+{}
+{
+  (<AxisParent>{jjtThis.processToken(token);} #AxisParent(true) | <AxisAncestor>{jjtThis.processToken(token);} #AxisAncestor(true) | <AxisPrecedingSibling>{jjtThis.processToken(token);} #AxisPrecedingSibling(true) | <AxisPreceding>{jjtThis.processToken(token);} #AxisPreceding(true) | <AxisAncestorOrSelf>{jjtThis.processToken(token);} #AxisAncestorOrSelf(true))
+}
+
+void AbbrevReverseStep()  #void :
+{}
+{
+  <DotDot>{jjtThis.processToken(token);} #DotDot(true)
+}
+
+void NodeTest()  :
+{}
+{
+  (KindTest() | NameTest())
+}
+
+void NameTest()  :
+{}
+{
+  (<QName>{jjtThis.processToken(token);} #QName(true) | Wildcard())
+}
+
+void Wildcard()  #void :
+{}
+{
+  (<Star>{jjtThis.processToken(token);} #Star(true) | <NCNameColonStar>{jjtThis.processToken(token);} #NCNameColonStar(true) | <StarColonNCName>{jjtThis.processToken(token);} #StarColonNCName(true))
+}
+
+void FilterExpr()  #void :
+{}
+{
+  PrimaryExpr() PredicateList()
+}
+
+void PredicateList()  #PredicateList(> 0) :
+{}
+{
+  (Predicate())*
+}
+
+void Predicate()  #Predicate(> 0) :
+{}
+{
+  <Lbrack> Expr() <Rbrack>
+}
+
+void PrimaryExpr()  #void :
+{}
+{
+  (Literal() | VarRef() | ParenthesizedExpr() | {isStep=true;}ContextItemExpr() | FunctionCall() | Constructor() | OrderedExpr() | UnorderedExpr())
+}
+
+void Literal()  #void :
+{}
+{
+  (NumericLiteral() | <StringLiteral>{jjtThis.processToken(token);} #StringLiteral(true))
+}
+
+void NumericLiteral()  #void :
+{}
+{
+  (<IntegerLiteral>{jjtThis.processToken(token);} #IntegerLiteral(true) | <DecimalLiteral>{jjtThis.processToken(token);} #DecimalLiteral(true) | <DoubleLiteral>{jjtThis.processToken(token);} #DoubleLiteral(true))
+}
+
+void VarRef()  #void :
+{}
+{
+  <VariableIndicator> <VarName>{jjtThis.processToken(token);} #VarName(true)
+}
+
+void ParenthesizedExpr()  #void :
+{}
+{
+  <Lpar> [Expr()] <Rpar>
+}
+
+void ContextItemExpr()  #void :
+{}
+{
+  <Dot>{jjtThis.processToken(token);} #Dot(true)
+}
+
+void OrderedExpr()  #void :
+{}
+{
+  <OrderedOpen>{jjtThis.processToken(token);} #OrderedOpen(true) Expr() <Rbrace>{jjtThis.processToken(token);} #Rbrace(true)
+}
+
+void UnorderedExpr()  #void :
+{}
+{
+  <UnorderedOpen>{jjtThis.processToken(token);} #UnorderedOpen(true) Expr() <Rbrace>{jjtThis.processToken(token);} #Rbrace(true)
+}
+
+void FunctionCall()  :
+{}
+{
+  (<QNameLpar>{jjtThis.processToken(token);} #QNameLpar(true)) [ExprSingle() (<Comma> ExprSingle())*] <Rpar>
+}
+
+void Constructor()  :
+{}
+{
+  (DirectConstructor() | ComputedConstructor())
+}
+
+void DirectConstructor()  :
+{}
+{
+  (DirElemConstructor() | DirCommentConstructor() | DirPIConstructor())
+}
+
+void DirElemConstructor()  :
+{}
+{
+  (<StartTagOpenRoot>{jjtThis.processToken(token);} #StartTagOpenRoot(true) | <StartTagOpen>{jjtThis.processToken(token);} #StartTagOpen(true)) <TagQName>{jjtThis.processToken(token);} #TagQName(true) DirAttributeList() (<EmptyTagClose>{jjtThis.processToken(token);} #EmptyTagClose(true) | (<StartTagClose>{jjtThis.processToken(token);} #StartTagClose(true) (DirElemContent())* <EndTagOpen>{jjtThis.processToken(token);} #EndTagOpen(true) <TagQName>{jjtThis.processToken(token);} #TagQName(true) [<S>{jjtThis.processToken(token);} #S(true)] <EndTagClose>{jjtThis.processToken(token);} #EndTagClose(true)))
+}
+
+void DirAttributeList()  :
+{}
+{
+  (<S>{jjtThis.processToken(token);} #S(true) [<TagQName>{jjtThis.processToken(token);} #TagQName(true) [<S>{jjtThis.processToken(token);} #S(true)] <ValueIndicator>{jjtThis.processToken(token);} #ValueIndicator(true) [<S>{jjtThis.processToken(token);} #S(true)] DirAttributeValue()])*
+}
+
+void DirAttributeValue()  :
+{}
+{
+  ((<OpenQuot>{jjtThis.processToken(token);} #OpenQuot(true) ((<EscapeQuot>{jjtThis.processToken(token);} #EscapeQuot(true) | QuotAttrValueContent()))* <CloseQuot>{jjtThis.processToken(token);} #CloseQuot(true)) | (<OpenApos>{jjtThis.processToken(token);} #OpenApos(true) ((<EscapeApos>{jjtThis.processToken(token);} #EscapeApos(true) | AposAttrValueContent()))* <CloseApos>{jjtThis.processToken(token);} #CloseApos(true)))
+}
+
+void QuotAttrValueContent()  :
+{}
+{
+  (<QuotAttrContentChar>{jjtThis.processToken(token);} #QuotAttrContentChar(true) | CommonContent())
+}
+
+void AposAttrValueContent()  :
+{}
+{
+  (<AposAttrContentChar>{jjtThis.processToken(token);} #AposAttrContentChar(true) | CommonContent())
+}
+
+void DirElemContent()  :
+{}
+{
+  (DirectConstructor() | <ElementContentChar>{jjtThis.processToken(token);} #ElementContentChar(true) | CDataSection() | CommonContent())
+}
+
+void CommonContent()  :
+{}
+{
+  (<PredefinedEntityRef>{jjtThis.processToken(token);} #PredefinedEntityRef(true) | <CharRef>{jjtThis.processToken(token);} #CharRef(true) | <LCurlyBraceEscape>{jjtThis.processToken(token);} #LCurlyBraceEscape(true) | <RCurlyBraceEscape>{jjtThis.processToken(token);} #RCurlyBraceEscape(true) | EnclosedExpr())
+}
+
+void DirCommentConstructor()  :
+{}
+{
+  (<XmlCommentStartForElementContent>{jjtThis.processToken(token);} #XmlCommentStartForElementContent(true) | <XmlCommentStart>{jjtThis.processToken(token);} #XmlCommentStart(true)) DirCommentContents() <XmlCommentEnd>{jjtThis.processToken(token);} #XmlCommentEnd(true)
+}
+
+void DirCommentContents()  :
+{}
+{
+  ((<CommentContentChar>{jjtThis.processToken(token);} #CommentContentChar(true) | <CommentContentCharDash>{jjtThis.processToken(token);} #CommentContentCharDash(true)))*
+}
+
+void DirPIConstructor()  :
+{}
+{
+  (<ProcessingInstructionStartForElementContent>{jjtThis.processToken(token);} #ProcessingInstructionStartForElementContent(true) | <ProcessingInstructionStart>{jjtThis.processToken(token);} #ProcessingInstructionStart(true)) <PITarget>{jjtThis.processToken(token);} #PITarget(true) [<SForPI>{jjtThis.processToken(token);} #SForPI(true) DirPIContents()] <ProcessingInstructionEnd>{jjtThis.processToken(token);} #ProcessingInstructionEnd(true)
+}
+
+void DirPIContents()  :
+{}
+{
+  (<PIContentChar>{jjtThis.processToken(token);} #PIContentChar(true))*
+}
+
+void CDataSection()  :
+{}
+{
+  (<CdataSectionStartForElementContent>{jjtThis.processToken(token);} #CdataSectionStartForElementContent(true) | <CdataSectionStart>{jjtThis.processToken(token);} #CdataSectionStart(true)) CDataSectionContents() <CdataSectionEnd>{jjtThis.processToken(token);} #CdataSectionEnd(true)
+}
+
+void CDataSectionContents()  :
+{}
+{
+  (<CDataSectionChar>{jjtThis.processToken(token);} #CDataSectionChar(true))*
+}
+
+void ComputedConstructor()  :
+{}
+{
+  (CompDocConstructor() | CompElemConstructor() | CompAttrConstructor() | CompTextConstructor() | CompCommentConstructor() | CompPIConstructor())
+}
+
+void CompDocConstructor()  :
+{}
+{
+  <DocumentLbrace>{jjtThis.processToken(token);} #DocumentLbrace(true) Expr() <Rbrace>{jjtThis.processToken(token);} #Rbrace(true)
+}
+
+void CompElemConstructor()  :
+{}
+{
+  (<ElementQNameLbrace>{jjtThis.processToken(token);} #ElementQNameLbrace(true) | (<ElementLbrace>{jjtThis.processToken(token);} #ElementLbrace(true) Expr() <Rbrace>{jjtThis.processToken(token);} #Rbrace(true) <LbraceExprEnclosure>{jjtThis.processToken(token);} #LbraceExprEnclosure(true))) [ContentExpr()] <Rbrace>{jjtThis.processToken(token);} #Rbrace(true)
+}
+
+void ContentExpr()  :
+{}
+{
+  Expr()
+}
+
+void CompAttrConstructor()  :
+{}
+{
+  (<AttributeQNameLbrace>{jjtThis.processToken(token);} #AttributeQNameLbrace(true) | (<AttributeLbrace>{jjtThis.processToken(token);} #AttributeLbrace(true) Expr() <Rbrace>{jjtThis.processToken(token);} #Rbrace(true) <LbraceExprEnclosure>{jjtThis.processToken(token);} #LbraceExprEnclosure(true))) [Expr()] <Rbrace>{jjtThis.processToken(token);} #Rbrace(true)
+}
+
+void CompTextConstructor()  :
+{}
+{
+  <TextLbrace>{jjtThis.processToken(token);} #TextLbrace(true) Expr() <Rbrace>{jjtThis.processToken(token);} #Rbrace(true)
+}
+
+void CompCommentConstructor()  :
+{}
+{
+  <CommentLbrace>{jjtThis.processToken(token);} #CommentLbrace(true) Expr() <Rbrace>{jjtThis.processToken(token);} #Rbrace(true)
+}
+
+void CompPIConstructor()  :
+{}
+{
+  (<PINCNameLbrace>{jjtThis.processToken(token);} #PINCNameLbrace(true) | (<PILbrace>{jjtThis.processToken(token);} #PILbrace(true) Expr() <Rbrace>{jjtThis.processToken(token);} #Rbrace(true) <LbraceExprEnclosure>{jjtThis.processToken(token);} #LbraceExprEnclosure(true))) [Expr()] <Rbrace>{jjtThis.processToken(token);} #Rbrace(true)
+}
+
+void SingleType()  :
+{}
+{
+  AtomicType() [<OccurrenceZeroOrOne>{jjtThis.processToken(token);} #OccurrenceZeroOrOne(true)]
+}
+
+void TypeDeclaration()  :
+{}
+{
+  <As>{jjtThis.processToken(token);} #As(true) SequenceType()
+}
+
+void SequenceType()  :
+{}
+{
+  ((ItemType() [OccurrenceIndicator()]) | <EmptyTok>{jjtThis.processToken(token);} #EmptyTok(true))
+}
+
+void OccurrenceIndicator()  #void :
+{}
+{
+  (<OccurrenceZeroOrOne>{jjtThis.processToken(token);} #OccurrenceZeroOrOne(true) | <OccurrenceZeroOrMore>{jjtThis.processToken(token);} #OccurrenceZeroOrMore(true) | <OccurrenceOneOrMore>{jjtThis.processToken(token);} #OccurrenceOneOrMore(true))
+}
+
+void ItemType()  #void :
+{}
+{
+  (AtomicType() | KindTest() | <Item>{jjtThis.processToken(token);} #Item(true))
+}
+
+void AtomicType()  :
+{}
+{
+  (<QNameForAtomicType>{jjtThis.processToken(token);} #QNameForAtomicType(true) | <QNameForSequenceType>{jjtThis.processToken(token);} #QNameForSequenceType(true))
+}
+
+void KindTest()  #void :
+{}
+{
+  (DocumentTest() | ElementTest() | AttributeTest() | SchemaElementTest() | SchemaAttributeTest() | PITest() | CommentTest() | TextTest() | AnyKindTest())
+}
+
+void AnyKindTest()  :
+{}
+{
+  (<NodeLpar> | <NodeLparForKindTest>{jjtThis.processToken(token);} #NodeLparForKindTest(true)) <RparForKindTest>
+}
+
+void DocumentTest()  :
+{}
+{
+  (<DocumentLpar>{jjtThis.processToken(token);} #DocumentLpar(true) | <DocumentLparForKindTest>{jjtThis.processToken(token);} #DocumentLparForKindTest(true)) [(ElementTest() | SchemaElementTest())] <RparForKindTest>
+}
+
+void TextTest()  :
+{}
+{
+  (<TextLpar> | <TextLparForKindTest>{jjtThis.processToken(token);} #TextLparForKindTest(true)) <RparForKindTest>
+}
+
+void CommentTest()  :
+{}
+{
+  (<CommentLpar> | <CommentLparForKindTest>{jjtThis.processToken(token);} #CommentLparForKindTest(true)) <RparForKindTest>
+}
+
+void PITest()  :
+{}
+{
+  (<ProcessingInstructionLpar> | <ProcessingInstructionLparForKindTest>{jjtThis.processToken(token);} #ProcessingInstructionLparForKindTest(true)) [(<NCNameForPI>{jjtThis.processToken(token);} #NCNameForPI(true) | <StringLiteralForKindTest>{jjtThis.processToken(token);} #StringLiteralForKindTest(true))] <RparForKindTest>
+}
+
+void AttributeTest()  :
+{}
+{
+  (<AttributeType>{jjtThis.processToken(token);} #AttributeType(true) | <AttributeTypeForKindTest>{jjtThis.processToken(token);} #AttributeTypeForKindTest(true)) [(AttribNameOrWildcard() [<CommaForKindTest>{jjtThis.processToken(token);} #CommaForKindTest(true) TypeName()])] <RparForKindTest>
+}
+
+void AttribNameOrWildcard()  :
+{}
+{
+  (AttributeName() | <AnyName>{jjtThis.processToken(token);} #AnyName(true))
+}
+
+void SchemaAttributeTest()  :
+{}
+{
+  (<SchemaAttributeType>{jjtThis.processToken(token);} #SchemaAttributeType(true) | <SchemaAttributeTypeForKindTest>{jjtThis.processToken(token);} #SchemaAttributeTypeForKindTest(true)) AttributeDeclaration() <RparForKindTest>
+}
+
+void AttributeDeclaration()  :
+{}
+{
+  AttributeName()
+}
+
+void ElementTest()  :
+{}
+{
+  (<ElementType>{jjtThis.processToken(token);} #ElementType(true) | <ElementTypeForKindTest>{jjtThis.processToken(token);} #ElementTypeForKindTest(true) | <ElementTypeForDocumentTest>{jjtThis.processToken(token);} #ElementTypeForDocumentTest(true)) [(ElementNameOrWildcard() [<CommaForKindTest>{jjtThis.processToken(token);} #CommaForKindTest(true) TypeName() [<Nillable>{jjtThis.processToken(token);} #Nillable(true)]])] <RparForKindTest>
+}
+
+void ElementNameOrWildcard()  :
+{}
+{
+  (ElementName() | <AnyName>{jjtThis.processToken(token);} #AnyName(true))
+}
+
+void SchemaElementTest()  :
+{}
+{
+  (<SchemaElementType>{jjtThis.processToken(token);} #SchemaElementType(true) | <SchemaElementTypeForKindTest>{jjtThis.processToken(token);} #SchemaElementTypeForKindTest(true) | <SchemaElementTypeForDocumentTest>{jjtThis.processToken(token);} #SchemaElementTypeForDocumentTest(true)) ElementDeclaration() <RparForKindTest>
+}
+
+void ElementDeclaration()  :
+{}
+{
+  ElementName()
+}
+
+void AttributeName()  :
+{}
+{
+  <QNameForItemType>{jjtThis.processToken(token);} #QNameForItemType(true)
+}
+
+void ElementName()  :
+{}
+{
+  <QNameForItemType>{jjtThis.processToken(token);} #QNameForItemType(true)
+}
+
+void TypeName()  :
+{}
+{
+  <QNameForItemType>{jjtThis.processToken(token);} #QNameForItemType(true)
+}
+

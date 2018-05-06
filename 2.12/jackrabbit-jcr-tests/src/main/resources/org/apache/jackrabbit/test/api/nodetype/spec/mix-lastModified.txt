@@ -1,0 +1,22 @@
+NodeTypeName
+  mix:lastModified
+IsMixin
+  true
+HasOrderableChildNodes
+  false
+PrimaryItemName
+  null
+PropertyDefinition
+  Name jcr:lastModified
+  RequiredType DATE
+  DefaultValues null
+  Mandatory false
+  Protected false
+  Multiple false
+PropertyDefinition
+  Name jcr:lastModifiedBy
+  RequiredType STRING
+  DefaultValues null
+  Mandatory false
+  Protected false
+  Multiple false
