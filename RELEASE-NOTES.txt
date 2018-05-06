@@ -21,6 +21,7 @@ Bug
     [JCR-4185] - spi2dav URIResolverImpl should check status code before attempting to parse multistatus
     [JCR-4188] - avoid use of sun.security.acl.GroupImpl in PrincipalManagerTest
     [JCR-4241] - Jacoco plugin fails with exception
+    [JCR-4242] - Build failure: unapproved license
 
 Improvement
 
