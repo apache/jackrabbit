@@ -1,44 +1,37 @@
-Release Notes -- Apache Jackrabbit -- Version 2.17.2
+Release Notes -- Apache Jackrabbit -- Version 2.17.3
 
 Introduction
 ------------
 
-This is Apache Jackrabbit(TM) 2.17.2, a fully compliant implementation of the
+This is Apache Jackrabbit(TM) 2.17.3, a fully compliant implementation of the
 Content Repository for Java(TM) Technology API, version 2.0 (JCR 2.0) as
 specified in the Java Specification Request 283 (JSR 283).
 
-Apache Jackrabbit 2.17.2 is an unstable release cut directly from
+Apache Jackrabbit 2.17.3 is an unstable release cut directly from
 Jackrabbit trunk, with a focus on new features and other
 improvements. For production use we recommend the latest stable 2.16.x
 release.
 
-Changes in Jackrabbit 2.17.2
+Changes in Jackrabbit 2.17.3
 ----------------------------
+
+Bug
+
+    [JCR-4291] - FileInputStream for workspace.xml not closed in RepositoryConfig.loadWorkspaceConfig(File)
 
 Improvement
 
-    [JCR-4253] - RepositoryConfig: add some handling for mkdir failure
+    [JCR-4287] - Improve Debug-Log in SearchIndex and MultiIndex
+    [JCR-4292] - davex: preserve cause in exceptions and log affected URI
 
 Task
 
-    [JCR-4246] - java.security.acl deprecated in Java 10, marked for removal in Java 11
-    [JCR-4254] - Update Logback version to >= 1.2.0, SLF4J accordingly
-    [JCR-4261] - webapp: align jsons-simple dependencies internally and with oak
-    [JCR-4262] - jcr-server: align org.apache.felix.scr.annotations with oak
-    [JCR-4263] - jcr-server, jackrabbit-bundle: align org.osgi dependencies with oak
-    [JCR-4264] - jackrabbit-standalone: align commons-cli dependency with oak
-    [JCR-4266] - Update servlet-api to 2.5
-    [JCR-4271] - Remove redundant JavaDoc link to Java 7 API
-    [JCR-4272] - Upgrade surefire and failsafe plugins to 2.21.0
-    [JCR-4273] - Mention SHA512 checksums in release notes
-    [JCR-4274] - stop advertising MD5 checksums
-    [JCR-4275] - Incorrect link to KEYS in release notes
-    [JCR-4277] - stop creating MD5 checksums for releases
-
-Sub-task
-
-    [JCR-4258] - Remove SimpleJBossAccessManager in preparation of upcoming acl changes
-    [JCR-4280] - code coverage checks fail on Java 10
+    [JCR-4288] - Upgrade tika-parsers dependency to 2.18
+    [JCR-4290] - remove unused commons-codec dependency
+    [JCR-4293] - jackrabbit-core: observation tests should not rely on mix:lockable mixin type
+    [JCR-4294] - TCK tests should pass on repositories without locking support
+    [JCR-4296] - Upgrade httpmime dependency to 4.5.5
+    [JCR-4299] - Update derby dependency to 10.14.2.0
 
 
 In addition to the above-mentioned changes, this release contains
