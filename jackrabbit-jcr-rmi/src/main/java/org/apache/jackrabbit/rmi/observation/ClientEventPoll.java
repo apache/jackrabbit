@@ -271,10 +271,8 @@ public class ClientEventPoll extends Thread {
          *
          * @param remoteEvent The {@link RemoteEventCollection.RemoteEvent} instance
          *      providing the data for this event.
-         *
-         * @throws RemoteException if an RMI error occurrs.
          */
-        private JCREvent(RemoteEventCollection.RemoteEvent remoteEvent) throws RemoteException {
+        private JCREvent(RemoteEventCollection.RemoteEvent remoteEvent) {
             remote = remoteEvent;
         }
 
