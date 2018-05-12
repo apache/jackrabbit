@@ -243,7 +243,9 @@ public class ConsistencyCheckerImpl {
                     allInfos.putAll(batch);
                 }
 
-                if (pm.exists(lastId)) {
+                if (lastId == null) {
+                    log.info("No nodes exists, skipping");
+                } else if (pm.exists(lastId)) {
                     for (Map.Entry<NodeId, NodeInfo> entry : allInfos.entrySet()) {
                         checkBundleConsistency(entry.getKey(), entry.getValue(), allInfos);
                     }
