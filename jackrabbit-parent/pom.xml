@@ -49,15 +49,9 @@
     <jetty.version>8.2.0.v20160908</jetty.version>
     <tika.version>1.17</tika.version>
     <project.reporting.outputEncoding>${project.build.sourceEncoding}</project.reporting.outputEncoding>
-    <!-- Note that we're using SLF4J API version 1.6 when compiling     -->
-    <!-- core Oak components but more recent SLF4J and Logback versions -->
-    <!-- when compiling and running test cases and the oak-run jar.     -->
-    <!-- This way it's possible to use Oak also in environments that    -->
-    <!-- only provide SLF4J version 1.6, while still using a more       -->
-    <!-- recent version when we are in control the runtime environment. -->
-    <slf4j.api.version>1.6.6</slf4j.api.version>
-    <slf4j.version>1.7.4</slf4j.version> <!-- sync with logback version -->
-    <logback.version>1.0.12</logback.version>
+    <slf4j.api.version>1.7.25</slf4j.api.version>
+    <slf4j.version>1.7.25</slf4j.version> <!-- sync with logback version -->
+    <logback.version>1.2.3</logback.version>
     <java.version>1.8</java.version>
     <java.version.signature>java18</java.version.signature>
     <skip.coverage>true</skip.coverage>
