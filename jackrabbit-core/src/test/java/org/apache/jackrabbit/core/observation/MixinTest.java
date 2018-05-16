@@ -59,12 +59,12 @@ public class MixinTest extends AbstractObservationTest {
      */
     public void testMultipleMixin() throws RepositoryException {
         testRootNode.addNode(nodeName1, testNodeType).addMixin(mixReferenceable);
-        testRootNode.addNode(nodeName2, testNodeType).addMixin(mixLockable);
+        testRootNode.addNode(nodeName2, testNodeType).addMixin(mixTitle);
         testRootNode.addNode(nodeName3, testNodeType).addMixin(mixReferenceable);
         testRootNode.save();
 
         EventResult propertyAddedListener = new EventResult(log);
-        addEventListener(propertyAddedListener, new String[]{mixReferenceable, mixLockable}, Event.PROPERTY_ADDED);
+        addEventListener(propertyAddedListener, new String[]{mixReferenceable, mixTitle}, Event.PROPERTY_ADDED);
         try {
             testRootNode.getNode(nodeName1).setProperty(propertyName1, "test");
             testRootNode.getNode(nodeName2).setProperty(propertyName1, "test");
@@ -86,10 +86,10 @@ public class MixinTest extends AbstractObservationTest {
     public void testMultipleMixinOnNode() throws RepositoryException {
         Node node1 = testRootNode.addNode(nodeName1, testNodeType);
         node1.addMixin(mixReferenceable);
-        node1.addMixin(mixLockable);
+        node1.addMixin(mixTitle);
         Node node2 = testRootNode.addNode(nodeName2, testNodeType);
         Node node3 = testRootNode.addNode(nodeName3, testNodeType);
-        node3.addMixin(mixLockable);
+        node3.addMixin(mixTitle);
         node3.addMixin(mixReferenceable);
         testRootNode.save();
 
