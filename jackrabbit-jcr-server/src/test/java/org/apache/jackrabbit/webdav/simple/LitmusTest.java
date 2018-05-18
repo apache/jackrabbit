@@ -28,7 +28,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.commons.JcrUtils;
 import org.apache.jackrabbit.util.Text;
 import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.server.bio.SocketConnector;
+import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.slf4j.Logger;
@@ -51,11 +51,12 @@ public class LitmusTest extends TestCase {
                     "jcr-jackrabbit://" + Text.escapePath(dir.getCanonicalPath()));
             Session session = repository.login(); // for the TransientRepository
             try {
-                SocketConnector connector = new SocketConnector();
+                Server server = new Server();
+
+                ServerConnector connector = new ServerConnector(server);
                 connector.setHost("localhost");
                 connector.setPort(Integer.getInteger("litmus.port", 0));
 
-                Server server = new Server();
                 server.addConnector(connector);
 
                 ServletHolder holder = new ServletHolder(
