@@ -18,9 +18,11 @@ package org.apache.jackrabbit.api.security.authorization;
 
 import java.security.Principal;
 import java.util.Set;
-import javax.annotation.Nonnull;
+
 import javax.jcr.security.AccessControlException;
 import javax.jcr.security.AccessControlPolicy;
+
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Extension of the JCR {@link javax.jcr.security.AccessControlPolicy AccessControlPolicy}
@@ -46,7 +48,7 @@ public interface PrincipalSetPolicy extends AccessControlPolicy {
      * implementation specific actions on the those items where this policy
      * takes effect.
      */
-    @Nonnull
+    @NotNull
     Set<Principal> getPrincipals();
 
     /**
@@ -59,7 +61,7 @@ public interface PrincipalSetPolicy extends AccessControlPolicy {
      * principals is considered invalid or if another access control specific
      * error occurs.
      */
-    boolean addPrincipals(@Nonnull Principal... principals) throws AccessControlException;
+    boolean addPrincipals(@NotNull Principal... principals) throws AccessControlException;
 
     /**
      * Remove the specified {@code Principal}s for the set of allowed principals
@@ -72,5 +74,5 @@ public interface PrincipalSetPolicy extends AccessControlPolicy {
      * principals is considered invalid or if another access control specific
      * error occurs.
      */
-    boolean removePrincipals(@Nonnull Principal... principals) throws AccessControlException;
+    boolean removePrincipals(@NotNull Principal... principals) throws AccessControlException;
 }
