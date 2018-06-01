@@ -336,7 +336,8 @@
                 <goal>baseline</goal>
               </goals>
               <configuration>
-                <comparisonVersion>2.16.0</comparisonVersion>
+                <!-- this should refer to the latest stable release -->
+                <comparisonVersion>2.16.1</comparisonVersion>
               </configuration>
             </execution>
           </executions>
