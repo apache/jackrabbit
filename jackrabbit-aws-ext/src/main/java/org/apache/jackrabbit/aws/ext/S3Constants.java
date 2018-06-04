@@ -108,6 +108,11 @@ public final class S3Constants {
     public static final String PROXY_PORT = "proxyPort";
 
     /**
+     * Path style access flag true/false
+     */
+    public static final String S3_PATH_STYLE_ACCESS = "pathStyleAccess";
+    
+    /**
      * private constructor so that class cannot initialized from outside.
      */
     private S3Constants() {
