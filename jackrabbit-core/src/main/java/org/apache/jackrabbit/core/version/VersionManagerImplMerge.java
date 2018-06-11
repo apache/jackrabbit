@@ -440,10 +440,8 @@ abstract public class VersionManagerImplMerge extends VersionManagerImplRestore 
      * Returns a set of nodeid from the jcr:mergeFailed property of the given state
      * @param state the state
      * @return set of node ids
-     * @throws RepositoryException if an error occurs
      */
-    private Set<NodeId> getMergeFailed(NodeStateEx state)
-            throws RepositoryException {
+    private Set<NodeId> getMergeFailed(NodeStateEx state) {
         Set<NodeId> set = new HashSet<NodeId>();
         if (state.hasProperty(NameConstants.JCR_MERGEFAILED)) {
             InternalValue[] vals = state.getPropertyValues(NameConstants.JCR_MERGEFAILED);

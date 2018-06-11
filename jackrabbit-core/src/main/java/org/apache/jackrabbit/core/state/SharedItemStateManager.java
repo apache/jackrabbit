@@ -987,8 +987,7 @@ public class SharedItemStateManager
             }
         }
 
-        private void addReferences(PropertyState property) throws NoSuchItemStateException,
-                ItemStateException {
+        private void addReferences(PropertyState property) throws ItemStateException {
             if (property.getType() == PropertyType.REFERENCE) {
                 InternalValue[] values = property.getValues();
                 for (int i = 0; values != null && i < values.length; i++) {
@@ -1018,7 +1017,7 @@ public class SharedItemStateManager
         }
 
         private void removeReferences(ItemState state)
-                throws NoSuchItemStateException, ItemStateException {
+                throws ItemStateException {
             if (!state.isNode()) {
                 PropertyState property = (PropertyState) state;
                 if (property.getType() == PropertyType.REFERENCE) {
