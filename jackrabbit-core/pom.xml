@@ -328,8 +328,8 @@ org.apache.jackrabbit.core.ReplacePropertyWhileOthersReadTest <!-- JCR-3835 -->
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>org.apache.geronimo.specs</groupId>
-      <artifactId>geronimo-jta_1.0.1B_spec</artifactId>
+      <groupId>javax.transaction</groupId>
+      <artifactId>javax.transaction-api</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>
