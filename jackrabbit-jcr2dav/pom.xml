@@ -170,8 +170,13 @@ org.apache.jackrabbit.test.api.query.qom.EquiJoinConditionTest#testLeftOuterJoin
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>org.mortbay.jetty</groupId>
-      <artifactId>jetty</artifactId>
+      <groupId>org.eclipse.jetty</groupId>
+      <artifactId>jetty-server</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.jetty</groupId>
+      <artifactId>jetty-servlet</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>

@@ -27,10 +27,10 @@ import org.apache.jackrabbit.core.JackrabbitRepositoryStub;
 import org.apache.jackrabbit.server.remoting.davex.JcrRemotingServlet;
 import org.apache.jackrabbit.test.RepositoryStubException;
 import org.apache.jackrabbit.webdav.jcr.JCRWebdavServerServlet;
-import org.mortbay.jetty.Server;
-import org.mortbay.jetty.bio.SocketConnector;
-import org.mortbay.jetty.servlet.Context;
-import org.mortbay.jetty.servlet.ServletHolder;
+import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.bio.SocketConnector;
+import org.eclipse.jetty.servlet.ServletContextHandler;
+import org.eclipse.jetty.servlet.ServletHolder;
 
 public class RepositoryStubImpl extends JackrabbitRepositoryStub {
 
@@ -77,9 +77,8 @@ public class RepositoryStubImpl extends JackrabbitRepositoryStub {
                     JCRWebdavServerServlet.INIT_PARAM_MISSING_AUTH_MAPPING,
                     "");
 
-            Context context = new Context(server, "/");
-            context.addServlet(holder, "/*");
-            server.addHandler(context);
+            ServletContextHandler schandler = new ServletContextHandler(server, "/");
+            schandler.addServlet(holder, "/*");
 
             try {
                 server.start();

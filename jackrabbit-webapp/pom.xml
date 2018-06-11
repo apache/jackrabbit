@@ -145,13 +145,13 @@
   <build>
     <plugins>
       <plugin>
-         <groupId>org.mortbay.jetty</groupId>
+         <groupId>org.eclipse.jetty</groupId>
          <artifactId>maven-jetty-plugin</artifactId>
          <version>${jetty.version}</version>
          <configuration>
            <scanIntervalSeconds>10</scanIntervalSeconds>
            <connectors>
-             <connector implementation="org.mortbay.jetty.nio.SelectChannelConnector">
+             <connector implementation="org.eclipse.jetty.nio.SelectChannelConnector">
                <port>8080</port>
                <maxIdleTime>60000</maxIdleTime>
              </connector>
