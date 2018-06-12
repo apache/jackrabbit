@@ -212,9 +212,12 @@
         <plugin>
           <artifactId>maven-failsafe-plugin</artifactId>
           <configuration>
-            <systemPropertyVariables>
-              <derby.stream.error.file>target/derby.log</derby.stream.error.file>
-            </systemPropertyVariables>
+            <systemProperties>
+              <property>
+                <name>derby.stream.error.file</name>
+                <value>target/derby.log</value>
+              </property>
+            </systemProperties>
             <excludes>
                 <exclude>**/BackwardsCompatibilityIT.java</exclude> <!-- JCR-3640 -->
             </excludes>
