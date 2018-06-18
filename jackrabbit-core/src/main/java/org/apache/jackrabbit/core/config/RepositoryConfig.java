@@ -192,10 +192,13 @@ public class RepositoryConfig
 
     private static void installRepositorySkeleton(
             File dir, File xml, URL resource)
-            throws IOException {
+            throws IOException, ConfigurationException {
         if (!dir.exists()) {
             log.info("Creating repository directory {}", dir);
-            dir.mkdirs();
+            boolean dirCreated = dir.mkdirs();
+            if (!dirCreated) {
+                throw new ConfigurationException("Cannot create repository directory " + dir);
+            }
         }
 
         if (!xml.exists()) {
@@ -541,7 +544,10 @@ public class RepositoryConfig
         // Get the physical workspace root directory (create it if not found)
         File directory = new File(workspaceDirectory);
         if (!directory.exists()) {
-            directory.mkdirs();
+            boolean directoryCreated = directory.mkdirs();
+            if (!directoryCreated) {
+                throw new ConfigurationException("Cannot create workspace root directory " + directory);
+            }
         }
 
         // Get all workspace subdirectories
