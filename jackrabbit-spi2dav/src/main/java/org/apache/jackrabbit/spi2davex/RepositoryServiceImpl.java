@@ -40,6 +40,7 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.mime.FormBodyPart;
+import org.apache.http.entity.mime.HttpMultipartMode;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.jackrabbit.JcrConstants;
@@ -615,7 +616,8 @@ public class RepositoryServiceImpl extends org.apache.jackrabbit.spi2dav.Reposit
             // engine has a form-size restriction (JCR-3726)
             Utils.addPart(PARAM_DIFF, buf.toString(), parts);
 
-            MultipartEntityBuilder b = MultipartEntityBuilder.create();
+            // JCR-4317: need RFC6532 mode so that values are encoded in UTF-8
+            MultipartEntityBuilder b = MultipartEntityBuilder.create().setMode(HttpMultipartMode.RFC6532);
             for (FormBodyPart p : parts) {
                 b.addPart(p.getName(), p.getBody());
             }
