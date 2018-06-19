@@ -16,24 +16,18 @@
  */
 package org.apache.jackrabbit.jcr2spi;
 
-import org.apache.jackrabbit.test.AbstractJCRTest;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.io.ByteArrayInputStream;
 
 import javax.jcr.Node;
-import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.lock.LockException;
+
+import org.apache.jackrabbit.test.AbstractJCRTest;
 
 /**
  * <code>AddNodeTest</code>...
  */
 public class AddNodeTest extends AbstractJCRTest {
-
-    /**
-     * logger instance
-     */
-    private static final Logger log = LoggerFactory.getLogger(AddNodeTest.class);
 
     /**
      * Writing to a locked node must throw LockException even if the lock
@@ -48,7 +42,7 @@ public class AddNodeTest extends AbstractJCRTest {
             Node node = s.getNode(testRootNode.getPath());
             Node n = node.addNode(nodeName1);
             n.setProperty(propertyName1, "value");
-            
+
             testRootNode.lock(true, true);
 
             s.save();
@@ -56,6 +50,28 @@ public class AddNodeTest extends AbstractJCRTest {
             // success
         } finally {
             s.logout();
+        }
+    }
+
+    public void testAddNodeNonASCII() throws Exception {
+        String testName = "test - \u20ac";
+        Session s = getHelper().getSuperuserSession();
+        try {
+            Node node = s.getNode(testRootNode.getPath());
+            Node n = node.addNode(testName, "nt:file");
+            Node c = n.addNode("jcr:content", "nt:resource");
+            c.setProperty("jcr:data", s.getValueFactory().createBinary(new ByteArrayInputStream("hello world".getBytes("UTF-8"))));
+            s.save();
+        } finally {
+            s.logout();
+        }
+
+        Session s2 = getHelper().getReadOnlySession();
+        try {
+            Node node = s2.getNode(testRootNode.getPath()).getNode(testName);
+            assertEquals(testName, node.getName());
+        } finally {
+            s2.logout();
         }
     }
 }
