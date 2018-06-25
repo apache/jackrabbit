@@ -1,3 +1,14 @@
+===============================
+This Release Branch Is Retired!
+===============================
+
+Note that this release branch was retired in September 2017.
+
+See <https://issues.apache.org/jira/browse/JCR-4163> and
+<https://jackrabbit.apache.org/jcr/jackrabbit-roadmap.html>
+for further information.
+
+
 =============================================================
 Welcome to Apache Jackrabbit  <http://jackrabbit.apache.org/>
 =============================================================
