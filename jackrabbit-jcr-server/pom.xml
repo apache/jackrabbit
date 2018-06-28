@@ -49,7 +49,7 @@
       <plugin>
         <groupId>org.apache.felix</groupId>
         <artifactId>maven-scr-plugin</artifactId>
-        <version>1.12.0</version>
+        <version>1.24.0</version>
         <executions>
             <execution>
               <id>generate-scr-scrdescriptor</id>

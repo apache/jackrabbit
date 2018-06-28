@@ -159,7 +159,7 @@ org.apache.jackrabbit.core.ReplacePropertyWhileOthersReadTest <!-- JCR-3835 -->
      <plugin>
        <groupId>org.apache.maven.plugins</groupId>
        <artifactId>maven-jar-plugin</artifactId>
-       <version>2.4</version>
+       <version>3.0.2</version>
        <configuration>
           <excludes>
             <exclude>logback-test.xml</exclude>
