@@ -1,37 +1,48 @@
-Release Notes -- Apache Jackrabbit -- Version 2.17.3
+Release Notes -- Apache Jackrabbit -- Version 2.17.4
 
 Introduction
 ------------
 
-This is Apache Jackrabbit(TM) 2.17.3, a fully compliant implementation of the
+This is Apache Jackrabbit(TM) 2.17.4, a fully compliant implementation of the
 Content Repository for Java(TM) Technology API, version 2.0 (JCR 2.0) as
 specified in the Java Specification Request 283 (JSR 283).
 
-Apache Jackrabbit 2.17.3 is an unstable release cut directly from
+Apache Jackrabbit 2.17.4 is an unstable release cut directly from
 Jackrabbit trunk, with a focus on new features and other
 improvements. For production use we recommend the latest stable 2.16.x
 release.
 
-Changes in Jackrabbit 2.17.3
+Changes in Jackrabbit 2.17.4
 ----------------------------
 
 Bug
 
-    [JCR-4291] - FileInputStream for workspace.xml not closed in RepositoryConfig.loadWorkspaceConfig(File)
+    [JCR-4317] - davex remoting fails for non-ASCII characters in node names
+    [JCR-4324] - NPE on Version.getLinearPredecessor() implementation
 
 Improvement
 
-    [JCR-4287] - Improve Debug-Log in SearchIndex and MultiIndex
-    [JCR-4292] - davex: preserve cause in exceptions and log affected URI
+    [JCR-3211] - Support HTTP proxy in SPI2DAV
 
 Task
 
-    [JCR-4288] - Upgrade tika-parsers dependency to 2.18
-    [JCR-4290] - remove unused commons-codec dependency
-    [JCR-4293] - jackrabbit-core: observation tests should not rely on mix:lockable mixin type
-    [JCR-4294] - TCK tests should pass on repositories without locking support
-    [JCR-4296] - Upgrade httpmime dependency to 4.5.5
-    [JCR-4299] - Update derby dependency to 10.14.2.0
+    [JCR-4301] - get rid of JSR 305 dependency
+    [JCR-4302] - BTreeManager: fix Eclipse compiler error
+    [JCR-4304] - update Jetty to supported version 9.2.*
+    [JCR-4307] - Update animal-sniffer-maven-plugin to 1.16
+    [JCR-4312] - set baseline comparisonVersion to latest stable (2.16.1)
+    [JCR-4316] - set baseline comparisonVersion to latest stable (2.16.2)
+    [JCR-4318] - Update failsafe and surefire plugin versions to 2.22.0
+    [JCR-4320] - Update spotbugs plugin to 3.1.5
+    [JCR-4321] - Update maven plugins from org.apache.maven.plugins
+    [JCR-4322] - Consistent use of log4j versions
+    [JCR-4323] - webapp: update Tomcat dependency to 8.5.32
+    [JCR-4326] - Update aws java sdk version to 1.11.330 (consistent with Oak)
+    [JCR-4327] - Update httpcore dependency to 4.4.10
+
+Sub-task
+
+    [JCR-4306] - switch to findbugs replacement that is still maintained (spotbugs)
 
 
 In addition to the above-mentioned changes, this release contains
