@@ -48,7 +48,6 @@
               org.apache.jackrabbit.api.*;version=${project.version}
             </Export-Package>
             <Import-Package>
-              *,
               <!-- Optional dependencies from jackrabbit-core -->
               org.apache.jackrabbit.test;resolution:=optional,
               <!-- Optional dependencies from jackrabbit-webdav -->
@@ -60,7 +59,8 @@
               org.apache.xml.utils;resolution:=optional,
               org.apache.xalan.serialize;resolution:=optional,
               org.apache.xalan.templates;resolution:=optional,
-              org.apache.derby.impl.drda;resolution:=optional
+              org.apache.derby.impl.drda;resolution:=optional,
+              *
             </Import-Package>
             <Bundle-Activator>
               org.apache.jackrabbit.bundle.Activator
