@@ -20,12 +20,13 @@ package org.apache.jackrabbit.api.binary;
 
 import java.net.URL;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import javax.jcr.AccessDeniedException;
 import javax.jcr.Binary;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * Extension interface for {@link Session} that provides the capability to upload binary files
@@ -144,7 +145,7 @@ public interface HttpBinaryProvider {
      * @throws {@link InvalidHttpUploadTokenException} if the upload token is not parseable, signature
      * doesn't match, or is otherwise invalid; {@link RepositoryException} if binary upload is not supported
      */
-    @Nonnull
+    @NotNull
     Binary completeHttpUpload(String uploadToken) throws InvalidHttpUploadTokenException, RepositoryException;
 
     /**

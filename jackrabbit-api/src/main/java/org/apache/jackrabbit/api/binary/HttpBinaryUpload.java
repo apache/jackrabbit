@@ -20,7 +20,8 @@ package org.apache.jackrabbit.api.binary;
 
 import java.net.URL;
 import java.util.Collection;
-import javax.annotation.Nonnull;
+
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Describes uploading a binary through HTTP requests in a single or multiple parts (chunks).
@@ -169,6 +170,6 @@ public interface HttpBinaryUpload {
      *
      * @return one or more URLs for uploading the binary in one or more parts
      */
-    @Nonnull
+    @NotNull
     Collection<URL> getUploadURLs();
 }
