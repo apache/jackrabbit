@@ -36,7 +36,7 @@
 
   <properties>
     <oak.version>1.0.39</oak.version>
-    <tomcat.version>7.0.82</tomcat.version>
+    <tomcat.version>7.0.90</tomcat.version>
   </properties>
 
   <dependencies>
