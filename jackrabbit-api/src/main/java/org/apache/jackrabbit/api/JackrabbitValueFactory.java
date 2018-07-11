@@ -13,10 +13,16 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
  */
 
-/**
- * Jackrabbit extensions for JCR core interfaces
- */
-@org.osgi.annotation.versioning.Version("2.5.0")
 package org.apache.jackrabbit.api;
+
+import javax.jcr.RepositoryException;
+import javax.jcr.ValueFactory;
+
+import org.apache.jackrabbit.api.binary.BinaryUpload;
+
+public interface JackrabbitValueFactory extends ValueFactory {
+    BinaryUpload initiateBinaryUpload(long maxSize, int maxParts) throws RepositoryException;
+}
