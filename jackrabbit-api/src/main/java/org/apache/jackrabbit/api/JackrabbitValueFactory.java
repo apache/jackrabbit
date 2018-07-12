@@ -22,9 +22,9 @@ import javax.jcr.Binary;
 import javax.jcr.RepositoryException;
 import javax.jcr.ValueFactory;
 
-import org.apache.jackrabbit.api.binary.BinaryUpload;
+import org.apache.jackrabbit.api.binary.BinaryDirectUpload;
 
 public interface JackrabbitValueFactory extends ValueFactory {
-    BinaryUpload initiateBinaryUpload(long maxSize, int maxParts) throws RepositoryException;
+    BinaryDirectUpload initiateBinaryUpload(long maxSize, int maxParts) throws RepositoryException;
     Binary completeBinaryUpload(String uploadToken) throws RepositoryException;
 }

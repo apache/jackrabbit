@@ -20,12 +20,8 @@ package org.apache.jackrabbit.api.binary;
 
 import java.net.URL;
 
-public interface BinaryUpload {
-    Iterable<URL> getURLs();
+import javax.jcr.RepositoryException;
 
-    long getMinPartSize();
-
-    long getMaxPartSize();
-
-    String getUploadToken();
+public interface BinaryDirectDownload {
+    URL getURL() throws RepositoryException;
 }
