@@ -80,7 +80,7 @@ public interface RemoteNamespaceRegistry extends Remote {
 
     /**
      * Remote version of the
-     * {@link javax.jcr.NamespaceRegistry#getURIs() NamespaceRegistry,getURIs()}
+     * {@link javax.jcr.NamespaceRegistry#getURIs() NamespaceRegistry,getUploadURIs()}
      * method.
      *
      * @return namespace uris
@@ -91,7 +91,7 @@ public interface RemoteNamespaceRegistry extends Remote {
 
     /**
      * Remote version of the
-     * {@link javax.jcr.NamespaceRegistry#getURI(String) NamespaceRegistry.getURI(String)}
+     * {@link javax.jcr.NamespaceRegistry#getURI(String) NamespaceRegistry.getDownloadURI(String)}
      * method.
      *
      * @param prefix namespace prefix
