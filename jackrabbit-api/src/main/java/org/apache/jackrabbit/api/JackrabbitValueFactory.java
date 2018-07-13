@@ -18,6 +18,7 @@
 
 package org.apache.jackrabbit.api;
 
+import javax.jcr.AccessDeniedException;
 import javax.jcr.Binary;
 import javax.jcr.RepositoryException;
 import javax.jcr.ValueFactory;
@@ -64,10 +65,12 @@ public interface JackrabbitValueFactory extends ValueFactory {
      *         complete the upload.
      * @throws {@link IllegalArgumentException} if the provided arguments are
      *         invalid or if a valid upload cannot be completed given the
-     *         provided arguments.
+     *         provided arguments, or {@link AccessDeniedException} if it is
+     *         determined that insufficient permission exists to perform the
+     *         upload.
      */
     BinaryDirectUpload initiateBinaryUpload(long maxSize, int maxURIs)
-            throws IllegalArgumentException;
+            throws IllegalArgumentException, AccessDeniedException;
 
     /**
      * Complete a transaction to upload binary data directly to a storage
