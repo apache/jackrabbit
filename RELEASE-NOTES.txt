@@ -27,7 +27,7 @@ Task
 
 
 In addition to the above-mentioned changes, this release contains
-all the changes included up to the Apache Jackrabbit 2.8.6 release.
+all the changes included up to the Apache Jackrabbit 2.8.8 release.
 
 For more detailed information about all the changes in this and other
 Jackrabbit releases, please see the Jackrabbit issue tracker at
