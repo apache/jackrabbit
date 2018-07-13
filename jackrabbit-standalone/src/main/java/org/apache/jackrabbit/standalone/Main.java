@@ -40,10 +40,9 @@ import org.apache.jackrabbit.servlet.jackrabbit.JackrabbitRepositoryServlet;
 import org.apache.jackrabbit.standalone.cli.CommandException;
 import org.apache.jackrabbit.standalone.cli.CommandHelper;
 import org.apache.jackrabbit.standalone.cli.JcrClient;
-import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.NCSARequestLog;
 import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.server.bio.SocketConnector;
+import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.server.handler.RequestLogHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.webapp.WebAppContext;
@@ -68,9 +67,9 @@ public class Main {
 
     private final WebAppContext webapp = new WebAppContext();
 
-    private final Connector connector = new SocketConnector();
-
     private final Server server = new Server();
+
+    private final ServerConnector connector = new ServerConnector(server);
 
     private Main(String[] args) throws ParseException {
         options.addOption("?", "help", false, "print this message");

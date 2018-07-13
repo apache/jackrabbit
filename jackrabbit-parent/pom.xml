@@ -46,7 +46,7 @@
     <test.opts.memory>-Xmx256m</test.opts.memory>
     <test.opts.modules />
     <test.opts>${test.opts.modules} ${test.opts.coverage} ${test.opts.memory} -enableassertions</test.opts>
-    <jetty.version>8.2.0.v20160908</jetty.version>
+    <jetty.version>9.2.24.v20180105</jetty.version>
     <tika.version>1.18</tika.version>
     <project.reporting.outputEncoding>${project.build.sourceEncoding}</project.reporting.outputEncoding>
     <slf4j.api.version>1.7.25</slf4j.api.version>
