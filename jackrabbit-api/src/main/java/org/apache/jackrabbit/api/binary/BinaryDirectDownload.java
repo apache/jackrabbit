@@ -30,7 +30,7 @@ import org.jetbrains.annotations.Nullable;
  */
 public interface BinaryDirectDownload {
     /**
-     * Get a URI for downloading the binary directly from a storage location.
+     * Get a URI for downloading a binary directly from a storage location.
      * This is probably a signed URI with a short TTL, although the API does
      * not require it to be so.
      *
@@ -42,4 +42,28 @@ public interface BinaryDirectDownload {
      */
     @Nullable
     URI getDownloadURI() throws RepositoryException;
+
+    /**
+     * Get a URI for downloading a binary directly from a storage location with
+     * the provided {@link BinaryDirectDownloadOptions}.  This is probably a
+     * signed URI with a short TTL, although the API does not require it to be
+     * so.
+     * <p>
+     * The implementation will attempt to apply the specified {@code
+     * downloadOptions} to the subsequent download.  For example, if the caller
+     * knows that the URL refers to a specific type of content, the caller can
+     * specify that content type by setting it in the {@code downloadOptions}.
+     *
+     * @param downloadOptions A {@link BinaryDirectDownloadOptions} instance
+     *         which the caller can use to request specific options on the
+     *         binary to be downloaded.
+     * @return A URI for downloading the binary directly, or {@code null} if the
+     *         binary cannot be download directly or if the underlying
+     *         implementation does not support this capability.
+     * @throws {@link RepositoryException} if an error occurs trying to locate
+     *         the binary.
+     */
+    @Nullable
+    URI getDownloadURI(BinaryDirectDownloadOptions downloadOptions)
+            throws RepositoryException;
 }
