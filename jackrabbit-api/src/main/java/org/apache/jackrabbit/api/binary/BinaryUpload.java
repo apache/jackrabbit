@@ -20,31 +20,33 @@ package org.apache.jackrabbit.api.binary;
 
 import java.net.URI;
 
+import org.apache.jackrabbit.api.JackrabbitValueFactory;
+import org.osgi.annotation.versioning.ProviderType;
+
 /**
  * This extension interface provides a mechanism whereby a client can upload a
  * binary directly to the storage location.  An object of this type can be
  * created by a call to {@link
- * org.apache.jackrabbit.api.JackrabbitValueFactory#initiateBinaryUpload(long, int)}
- * which will return an object of this type, if the underlying implementation
- * supports direct upload functionality.  When calling this method, the client
- * indicates the expected size of the binary and the number of URIs that it is
- * willing to accept.  The implementation will attempt to create a {@link
- * BinaryDirectUpload} that is suited for enabling the client to complete the
- * upload successfully.
+ * JackrabbitValueFactory#initiateBinaryUpload(long, int)} which will return an
+ * object of this type, if the underlying implementation supports direct upload
+ * functionality.  When calling this method, the client indicates the expected
+ * size of the binary and the number of URIs that it is willing to accept.  The
+ * implementation will attempt to create a {@link BinaryUpload} that is suited
+ * for enabling the client to complete the upload successfully.
  * <p>
- * Using a {@link BinaryDirectUpload}, a client can then use one or more of the
+ * Using a {@link BinaryUpload}, a client can then use one or more of the
  * included URIs for uploading the binary directly by calling {@link
  * #getUploadURIs()} and iterating through the URIs returned.  Multi-part
  * uploads are supported by the interface, although they may not be supported
  * by the underlying implementation.
  * <p>
  * Once a client finishes uploading the binary data, the client must then call
- * {@link org.apache.jackrabbit.api.JackrabbitValueFactory#completeBinaryUpload(String)}
- * to complete the upload.  This call requires an upload token which can be
- * obtained from a {@link BinaryDirectUpload} by calling {@link
- * #getUploadToken()}.
+ * {@link JackrabbitValueFactory#completeBinaryUpload(String)} to complete the
+ * upload.  This call requires an upload token which can be obtained from a
+ * {@link BinaryUpload} by calling {@link #getUploadToken()}.
  */
-public interface BinaryDirectUpload {
+@ProviderType
+public interface BinaryUpload {
     /**
      * Returns an {@link Iterable} of URIs that can be used for uploading binary
      * data directly to a storage location.  The first URI can be used for
@@ -111,19 +113,19 @@ public interface BinaryDirectUpload {
      * <p>
      * The API guarantees that a client can successfully complete a direct
      * upload of the binary data of the requested size using the provided URIs
-     * by splitting the binary data into parts of the size returned by {@link
-     * #getMaxPartSize()}.
+     * by splitting the binary data into parts of the size returned by this
+     * method.
      * <p>
      * The client is not required to use part sizes of this size; smaller sizes
      * may be used so long as they are at least as large as the size returned by
      * {@link #getMinPartSize()}.
      * <p>
      * If the binary size used by a client when calling {@link
-     * org.apache.jackrabbit.api.JackrabbitValueFactory#initiateBinaryUpload(long, int)}
-     * ends up being smaller than the size of the actual binary being uploaded,
-     * these API guarantees no longer apply, and it may not be possible to
-     * complete the upload using the URIs provided.  In such cases, the client
-     * should restart the transaction using the correct size.
+     * JackrabbitValueFactory#initiateBinaryUpload(long, int)} ends up being
+     * smaller than the size of the actual binary being uploaded, these API
+     * guarantees no longer apply, and it may not be possible to complete the
+     * upload using the URIs provided.  In such cases, the client should restart
+     * the transaction using the correct size.
      *
      * @return The maximum size of an upload part for multi-part uploads.
      */
@@ -131,11 +133,11 @@ public interface BinaryDirectUpload {
 
     /**
      * Returns the upload token to be used in a subsequent call to {@link
-     * org.apache.jackrabbit.api.JackrabbitValueFactory#completeBinaryUpload(String)}.
-     * This upload token is used by the implementation to identify this upload.
-     * Clients should treat the upload token as an immutable string, as the
-     * underlying implementation may choose to implement techniques to detect
-     * tampering and reject the upload if the token is modified.
+     * JackrabbitValueFactory#completeBinaryUpload(String)}.  This upload token
+     * is used by the implementation to identify this upload.  Clients should
+     * treat the upload token as an immutable string, as the underlying
+     * implementation may choose to implement techniques to detect tampering and
+     * reject the upload if the token is modified.
      *
      * @return This upload's unique upload token.
      */
