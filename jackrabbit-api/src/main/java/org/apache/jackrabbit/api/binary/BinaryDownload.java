@@ -48,7 +48,9 @@ public interface BinaryDownload extends Binary {
      *
      * @param downloadOptions A {@link BinaryDownloadOptions} instance
      *         which is used to request specific options on the binary to be
-     *         downloaded.
+     *         downloaded.  {@link BinaryDownloadOptions#DEFAULT} should be used
+     *         if the caller wishes to accept the service provider default
+     *         behavior.
      * @return A URI for downloading the binary directly, or {@code null} if the
      *         binary cannot be download directly or if the underlying
      *         implementation does not support this capability.
