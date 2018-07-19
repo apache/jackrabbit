@@ -21,20 +21,21 @@ package org.apache.jackrabbit.api.binary;
 import java.net.URI;
 
 import org.apache.jackrabbit.api.JackrabbitValueFactory;
+import org.jetbrains.annotations.NotNull;
 import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * This extension interface provides a mechanism whereby a client can upload a
- * binary directly to the storage location.  An object of this type can be
+ * binary directly to a storage location.  An object of this type can be
  * created by a call to {@link
  * JackrabbitValueFactory#initiateBinaryUpload(long, int)} which will return an
- * object of this type, if the underlying implementation supports direct upload
+ * object of this type if the underlying implementation supports direct upload
  * functionality.  When calling this method, the client indicates the expected
  * size of the binary and the number of URIs that it is willing to accept.  The
- * implementation will attempt to create a {@link BinaryUpload} that is suited
- * for enabling the client to complete the upload successfully.
+ * implementation will attempt to create an instance of this class that is
+ * suited to enabling the client to complete the upload successfully.
  * <p>
- * Using a {@link BinaryUpload}, a client can then use one or more of the
+ * Using an instance of this class, a client can then use one or more of the
  * included URIs for uploading the binary directly by calling {@link
  * #getUploadURIs()} and iterating through the URIs returned.  Multi-part
  * uploads are supported by the interface, although they may not be supported
@@ -42,16 +43,16 @@ import org.osgi.annotation.versioning.ProviderType;
  * <p>
  * Once a client finishes uploading the binary data, the client must then call
  * {@link JackrabbitValueFactory#completeBinaryUpload(String)} to complete the
- * upload.  This call requires an upload token which can be obtained from a
- * {@link BinaryUpload} by calling {@link #getUploadToken()}.
+ * upload.  This call requires an upload token which can be obtained from an
+ * instance of this class by calling {@link #getUploadToken()}.
  */
 @ProviderType
 public interface BinaryUpload {
     /**
-     * Returns an {@link Iterable} of URIs that can be used for uploading binary
-     * data directly to a storage location.  The first URI can be used for
-     * uploading binary data as a single entity, or multiple URIs can be used
-     * if the client wishes to do multi-part uploads.
+     * Returns an Iterable of URIs that can be used for uploading binary data
+     * directly to a storage location.  The first URI can be used for uploading
+     * binary data as a single entity, or multiple URIs can be used if the
+     * client wishes to do multi-part uploads.
      * <p>
      * Clients are not necessarily required to use all of the URIs provided.  A
      * client may choose to use fewer, or even only one of the URIs.  However,
@@ -73,14 +74,12 @@ public interface BinaryUpload {
      * <p>
      * While the API supports multi-part uploading via multiple upload URIs,
      * implementations are not required to support multi-part uploading.  If the
-     * underlying implementation does not support multi-part uploading a single
-     * URI will be returned in the {@link Iterable} regardless of the size of
-     * the data being uploaded.
+     * underlying implementation does not support multi-part uploading, a single
+     * URI will be returned regardless of the size of the data being uploaded.
      * <p>
      * Some storage providers also support multi-part uploads by reusing a
      * single URI multiple times, in which case the implementation may also
-     * return a single URI in the {@link Iterable} regardless of the size of the
-     * data being uploaded.
+     * return a single URI regardless of the size of the data being uploaded.
      * <p>
      * You should consult both the DataStore implementation documentation and
      * the storage service provider documentation for details on such matters as
@@ -89,6 +88,7 @@ public interface BinaryUpload {
      * @return Iterable of URIs that can be used for uploading directly to a
      *         storage location.
      */
+    @NotNull
     Iterable<URI> getUploadURIs();
 
     /**
@@ -120,9 +120,9 @@ public interface BinaryUpload {
      * may be used so long as they are at least as large as the size returned by
      * {@link #getMinPartSize()}.
      * <p>
-     * If the binary size used by a client when calling {@link
+     * If the binary size specified by a client when calling {@link
      * JackrabbitValueFactory#initiateBinaryUpload(long, int)} ends up being
-     * smaller than the size of the actual binary being uploaded, these API
+     * smaller than the actual size of the binary being uploaded, these API
      * guarantees no longer apply, and it may not be possible to complete the
      * upload using the URIs provided.  In such cases, the client should restart
      * the transaction using the correct size.
@@ -141,5 +141,6 @@ public interface BinaryUpload {
      *
      * @return This upload's unique upload token.
      */
+    @NotNull
     String getUploadToken();
 }

@@ -24,6 +24,7 @@ import javax.jcr.RepositoryException;
 import javax.jcr.ValueFactory;
 
 import org.apache.jackrabbit.api.binary.BinaryUpload;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.osgi.annotation.versioning.ProviderType;
 
@@ -41,10 +42,11 @@ public interface JackrabbitValueFactory extends ValueFactory {
      * location.  {@link IllegalArgumentException} will be thrown if an upload
      * cannot be supported for the required parameters, or if the parameters are
      * otherwise invalid.  For example, if the value of {@code maxSize} exceeds
-     * the size limits for a single binary of the implementation or the service
-     * provider, or if the value of {@code maxSize} divided by {@code maxParts}
-     * exceeds the size limit for an upload or upload part of the implementation
-     * or the service provider, {@link IllegalArgumentException} may be thrown.
+     * the size limits for a single binary upload for the implementation or the
+     * service provider, or if the value of {@code maxSize} divided by {@code
+     * maxParts} exceeds the size limit for an upload or upload part of the
+     * implementation or the service provider, {@link IllegalArgumentException}
+     * may be thrown.
      * <p>
      * Each service provider has specific limitations on upload sizes,
      * multi-part upload support, part sizes, etc. which can result in {@link
@@ -64,20 +66,24 @@ public interface JackrabbitValueFactory extends ValueFactory {
      *         should be restarted by calling this method again with the correct
      *         size.
      * @param maxURIs The maximum number of upload URIs that the client can
-     *         accept.  The implementation will ensure that an upload of
-     *         {@code maxSize} can be completed by splitting the binary into
-     *         a number of parts not to exceed the value of {@code maxURIs}.  If
-     *         this is not possible, {@link IllegalArgumentException} will be
-     *         thrown.  A client may specify -1 for this value, indicating that
-     *         any number of URIs may be returned.
-     * @return A {@link BinaryUpload} that can be used by the client to
-     *         complete the upload, or {@code null} if the implementation does
-     *         not support the direct upload feature.
+     *         accept.  The implementation will ensure that an upload of size
+     *         {@code maxSize} can be completed by splitting the value of {@code
+     *         maxSize} into parts, such that the size of the largest part does
+     *         not exceed any known implementation or service provider
+     *         limitations on upload part size and such that the number of parts
+     *         does not exceed the value of {@code maxURIs}.  If this is not
+     *         possible, {@link IllegalArgumentException} will be thrown.  A
+     *         client may specify -1 for this value, indicating that any number
+     *         of URIs may be returned.
+     * @return A {@link BinaryUpload} that can be used by the client to complete
+     *         the upload via a call to {@link #completeBinaryUpload(String)},
+     *         or {@code null} if the implementation does not support the direct
+     *         upload feature.
      * @throws IllegalArgumentException if the provided arguments are
      *         invalid or if a valid upload cannot be completed given the
      *         provided arguments.
-     * @thorws AccessDeniedException determined that insufficient permission
-     *         exists to perform the upload.
+     * @throws AccessDeniedException if it is determined that insufficient
+     *         permission exists to perform the upload.
      */
     @Nullable
     BinaryUpload initiateBinaryUpload(long maxSize, int maxURIs)
@@ -101,15 +107,15 @@ public interface JackrabbitValueFactory extends ValueFactory {
      * implementations will sign the string and verify the signature when this
      * method is called.
      *
-     * @param uploadToken A string that is used to identify the direct upload
+     * @param uploadToken A String that is used to identify the direct upload
      *         transaction.
-     * @return The uploaded binary, or {@code null} if the implementation does
-     *         not support the direct upload feature.
+     * @return The uploaded {@link Binary}, or {@code null} if the
+     *         implementation does not support the direct upload feature.
      * @throws IllegalArgumentException if the {@code uploadToken} is
      *         unreadable or invalid.
-     * @throws RepositoryException} repository access error occurs.
+     * @throws RepositoryException if a repository access error occurs.
      */
     @Nullable
-    Binary completeBinaryUpload(String uploadToken)
+    Binary completeBinaryUpload(@NotNull String uploadToken)
             throws IllegalArgumentException, RepositoryException;
 }
